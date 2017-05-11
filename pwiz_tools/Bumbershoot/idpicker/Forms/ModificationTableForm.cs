@@ -41,6 +41,7 @@ using IDPicker.DataModel;
 using IDPicker.Controls;
 using PopupControl;
 using pwiz.CLI.data;
+using pwiz.Common.Collections;
 using proteome = pwiz.CLI.proteome;
 
 namespace IDPicker.Forms

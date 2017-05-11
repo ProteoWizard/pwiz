@@ -53,6 +53,7 @@ using NHibernate.Criterion;
 using BrightIdeasSoftware;
 using PopupControl;
 using Microsoft.WindowsAPICodePack.Taskbar;
+using pwiz.Common.Collections;
 using BreadCrumbControl = IDPicker.Controls.BreadCrumbControl;
 using Protein = IDPicker.DataModel.Protein;
 using SpectrumSource = IDPicker.DataModel.SpectrumSource;
@@ -1131,10 +1132,10 @@ namespace IDPicker
                     if (File.Exists(idpDB_filepath))
                     {
                         if (!warnOnce && MessageBox.Show("Some of these files have already been converted. Do you want to reconvert them?",
-                                                         "Result already converted",
-                                                         MessageBoxButtons.YesNo,
-                                                         MessageBoxIcon.Exclamation,
-                                                         MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+                                "Result already converted",
+                                MessageBoxButtons.YesNo,
+                                MessageBoxIcon.Exclamation,
+                                MessageBoxDefaultButton.Button2) != DialogResult.Yes)
                             skipReconvert = true;
                         warnOnce = true;
                         if (skipReconvert)
@@ -1149,10 +1150,10 @@ namespace IDPicker
 
                 // determine if merged filepath exists and that it's a valid idpDB
                 var potentialPaths = filepaths.Select(item =>
-                                                      Path.Combine(Path.GetDirectoryName(item) ?? string.Empty,
-                                                                   Path.GetFileNameWithoutExtension(item) ??
+                    Path.Combine(Path.GetDirectoryName(item) ?? string.Empty,
+                        Path.GetFileNameWithoutExtension(item) ??
 
-                                                                   string.Empty) + ".idpDB").ToList();
+                        string.Empty) + ".idpDB").ToList();
 
                 // for Mascot files (*.dat), use parseSource() to get the real filename, else save time by just using filename without extension
                 var sourceNames = filepaths.Select(o => Path.Combine(Path.GetDirectoryName(o), o.ToLower().EndsWith(".dat") ? Parser.ParseSource(o) : Path.GetFileNameWithoutExtension(o.Replace(".pep.xml", ".pepXML")) + Path.GetExtension(o)));
@@ -1285,9 +1286,22 @@ namespace IDPicker
                     var merger = new MergerWrapper(mergeTargetFilepath, idpDB_filepaths);
                     toolStripStatusLabel.Text = "Merging results...";
                     merger.MergingProgress += progressMonitor.UpdateProgress;
-                    merger.Start();
 
-                    idpDB_filepaths = new List<string>() {mergeTargetFilepath};
+                    try
+                    {
+                        merger.Start();
+                        idpDB_filepaths = new List<string>() {mergeTargetFilepath};
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex.Message.Contains("same peptide maps to different sets of proteins"))
+                        {
+                            Program.HandleUserError(ex);
+                            return;
+                        }
+                        else
+                            throw;
+                    }
                 }
 
                 // HACK: this needs to be handled more gracefully
@@ -1299,11 +1313,11 @@ namespace IDPicker
                     string oldFilename = mergeTargetFilepath;
                     bool copyLocal = true;
                     Invoke(new MethodInvoker(() =>
-                                                 {
-                                                     var form = new NonFixedDriveWarningForm();
-                                                     if (form.ShowDialog(this) == DialogResult.Ignore)
-                                                         copyLocal = false;
-                                                 }));
+                    {
+                        var form = new NonFixedDriveWarningForm();
+                        if (form.ShowDialog(this) == DialogResult.Ignore)
+                            copyLocal = false;
+                    }));
 
                     if (copyLocal)
                     {
@@ -1335,7 +1349,7 @@ namespace IDPicker
                     statusStrip.Refresh();
                 }));
 
-                var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(mergeTargetFilepath, new SessionFactoryConfig { WriteSqlToConsoleOut = true });
+                var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(mergeTargetFilepath, new SessionFactoryConfig {WriteSqlToConsoleOut = true});
                 if (logForm != null) logForm.SetSessionFactory(sessionFactory);
 
                 BeginInvoke(new MethodInvoker(() =>
@@ -1369,11 +1383,11 @@ namespace IDPicker
                     {
                         bool embedGeneMetadata = true;
                         Invoke(new MethodInvoker(() =>
-                                                     {
-                                                         var form = new EmbedGeneMetadataWarningForm();
-                                                         if (form.ShowDialog(this) == DialogResult.Ignore)
-                                                             embedGeneMetadata = false;
-                                                     }));
+                        {
+                            var form = new EmbedGeneMetadataWarningForm();
+                            if (form.ShowDialog(this) == DialogResult.Ignore)
+                                embedGeneMetadata = false;
+                        }));
 
                         if (embedGeneMetadata)
                         {
@@ -1449,7 +1463,7 @@ namespace IDPicker
                     if (TestUILayout)
                     {
                         int i = 0;
-                        foreach(var form in dockPanel.Contents)
+                        foreach (var form in dockPanel.Contents)
                         {
                             ++i;
                             form.DockingHandler.DockAreas = (form.DockingHandler.DockAreas | DockAreas.Float);
@@ -1478,6 +1492,10 @@ namespace IDPicker
             catch (Exception ex)
             {
                 Program.HandleException(ex);
+            }
+            finally
+            {
+                BeginInvoke(new MethodInvoker(() => { clearProgress(); }));
             }
         }
 

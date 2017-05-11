@@ -82,6 +82,13 @@ namespace IDPicker
             return output.ToArray();
         }
 
+        public static string UniqueSubstring (string item, IEnumerable<string> items)
+        {
+            string sequence;
+            UniqueSubstring(item, items, out sequence);
+            return sequence;
+        }
+
         public static int UniqueSubstring (string item, IEnumerable<string> items, out string sequence)
         {
             sequence = item;

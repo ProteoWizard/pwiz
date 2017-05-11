@@ -40,6 +40,7 @@ class PWIZ_API_DECL IterationListener
     public:
 
     enum Status {Status_Ok, Status_Cancel};
+    static std::string no_message;
 
     struct UpdateMessage
     {
@@ -47,7 +48,7 @@ class PWIZ_API_DECL IterationListener
         size_t iterationCount; // 0 == unknown
         const std::string& message;
 
-        UpdateMessage(size_t index, size_t count, const std::string& message = std::string()) 
+        UpdateMessage(size_t index, size_t count, const std::string& message = no_message)
         :   iterationIndex(index), iterationCount(count), message(message)
         {}
     };

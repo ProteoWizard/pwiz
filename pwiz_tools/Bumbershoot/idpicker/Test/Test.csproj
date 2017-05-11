@@ -172,6 +172,10 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\Common\CommonUtil.csproj">
+      <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
+      <Name>CommonUtil</Name>
+    </ProjectReference>
     <ProjectReference Include="..\IDPicker.csproj">
       <Project>{5C5FC1C6-F9FF-4E2A-A53B-0865FBB9F9D9}</Project>
       <Name>IDPicker</Name>

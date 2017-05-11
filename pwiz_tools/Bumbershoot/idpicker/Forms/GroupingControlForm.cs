@@ -37,6 +37,7 @@ using BrightIdeasSoftware;
 using NHibernate;
 using NHibernate.Linq;
 using IDPicker.DataModel;
+using pwiz.Common.Collections;
 
 namespace IDPicker.Forms
 {

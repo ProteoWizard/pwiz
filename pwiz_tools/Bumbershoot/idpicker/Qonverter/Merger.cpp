@@ -62,6 +62,20 @@ static bool isPathOnFixedDrive(const std::string& path)
 
 namespace {
 
+boost::format mismatchedPeptideMappingSql(
+    "DROP TABLE IF EXISTS NewPeptideProteinMapping;\n"
+    "CREATE TEMP TABLE NewPeptideProteinMapping AS SELECT SUBSTR(pd.Sequence, pi.Offset + 1, pi.Length) AS Peptide, COUNT(DISTINCT pro.Accession) AS AccessionCount\n"
+    "FROM %1%.Protein pro\n"
+    "JOIN %1%.ProteinData pd ON pi.Protein = pd.Id\n"
+    "JOIN %1%.PeptideInstance pi ON pro.Id = pi.Protein\n"
+    "GROUP BY pi.Peptide;\n"
+    "DROP TABLE IF EXISTS OldPeptideProteinMapping;\n"
+    "CREATE TEMP TABLE OldPeptideProteinMapping AS SELECT SUBSTR(pd.Sequence, pi.Offset + 1, pi.Length) AS Peptide, COUNT(DISTINCT pro.Accession) AS AccessionCount\n"
+    "FROM merged.Protein pro\n"
+    "JOIN merged.ProteinData pd ON pi.Protein = pd.Id\n"
+    "JOIN merged.PeptideInstance pi ON pro.Id = pi.Protein\n"
+    "GROUP BY pi.Peptide;\n");
+
 boost::format mergeProteinsSql(
     "DROP TABLE IF EXISTS ProteinMergeMap;\n"
     "CREATE TABLE ProteinMergeMap(BeforeMergeId INTEGER PRIMARY KEY, AfterMergeId INT);\n"
@@ -179,8 +193,8 @@ boost::format addNewProteinsSql(
     "    FROM NewProteins\n"
     "    JOIN %1%.Protein newPro ON BeforeMergeId = newPro.Id;\n"
     "\n"
-    "INSERT INTO merged.ProteinMetadata (Id, Description)\n"
-    "    SELECT AfterMergeId, Description\n"
+    "INSERT INTO merged.ProteinMetadata (Id, Description, Hash)\n"
+    "    SELECT AfterMergeId, Description, Hash\n"
     "    FROM NewProteins\n"
     "    JOIN %1%.ProteinMetadata newPro ON BeforeMergeId = newPro.Id;\n"
     "\n"
@@ -386,6 +400,7 @@ struct Merger::Impl
 
     private:
 
+    boost::format mismatchedPeptideMappingSql;
     boost::format mergeProteinsSql;
     boost::format mergePeptideInstancesSql;
     boost::format mergeAnalysesSql;
@@ -414,6 +429,7 @@ struct Merger::Impl
 
     void initializeSqlFormats()
     {
+        mismatchedPeptideMappingSql = ::mismatchedPeptideMappingSql;
         mergeProteinsSql = ::mergeProteinsSql;
         mergePeptideInstancesSql = ::mergePeptideInstancesSql;
         mergeAnalysesSql = ::mergeAnalysesSql;
@@ -443,6 +459,7 @@ struct Merger::Impl
 
     void clearSqlFormats()
     {
+        mismatchedPeptideMappingSql.clear_binds();
         mergeProteinsSql.clear_binds();
         mergePeptideInstancesSql.clear_binds();
         mergeAnalysesSql.clear_binds();
@@ -627,43 +644,34 @@ struct Merger::Impl
 
             sqlite3pp::transaction transaction(inMemoryDb);
 
-            try
-            {
-                mergeProteins(inMemoryDb);
-                mergePeptideInstances(inMemoryDb);
-                mergeSpectrumSourceGroups(inMemoryDb);
-                mergeSpectrumSources(inMemoryDb);
-                mergeSpectrumSourceGroupLinks(inMemoryDb);
-                mergeSpectra(inMemoryDb);
-                mergeModifications(inMemoryDb);
-                mergePeptideSpectrumMatchScoreNames(inMemoryDb);
-                mergeAnalyses(inMemoryDb);
-                addNewProteins(inMemoryDb);
-                addNewPeptideInstances(inMemoryDb);
-                addNewPeptides(inMemoryDb);
-                addNewModifications(inMemoryDb);
-                addNewSpectrumSourceGroups(inMemoryDb);
-                addNewSpectrumSources(inMemoryDb);
-                addNewSpectrumSourceGroupLinks(inMemoryDb);
-                addNewSpectra(inMemoryDb);
-                addNewPeptideSpectrumMatches(inMemoryDb);
-                addNewPeptideSpectrumMatchScoreNames(inMemoryDb);
-                addNewPeptideSpectrumMatchScores(inMemoryDb);
-                addNewPeptideModifications(inMemoryDb);
-                addNewAnalyses(inMemoryDb);
-                addNewAnalysisParameters(inMemoryDb);
-                addNewQonverterSettings(inMemoryDb);
+            mergeProteins(inMemoryDb);
+            mergePeptideInstances(inMemoryDb);
+            mergeSpectrumSourceGroups(inMemoryDb);
+            mergeSpectrumSources(inMemoryDb);
+            mergeSpectrumSourceGroupLinks(inMemoryDb);
+            mergeSpectra(inMemoryDb);
+            mergeModifications(inMemoryDb);
+            mergePeptideSpectrumMatchScoreNames(inMemoryDb);
+            mergeAnalyses(inMemoryDb);
+            addNewProteins(inMemoryDb);
+            addNewPeptideInstances(inMemoryDb);
+            addNewPeptides(inMemoryDb);
+            addNewModifications(inMemoryDb);
+            addNewSpectrumSourceGroups(inMemoryDb);
+            addNewSpectrumSources(inMemoryDb);
+            addNewSpectrumSourceGroupLinks(inMemoryDb);
+            addNewSpectra(inMemoryDb);
+            addNewPeptideSpectrumMatches(inMemoryDb);
+            addNewPeptideSpectrumMatchScoreNames(inMemoryDb);
+            addNewPeptideSpectrumMatchScores(inMemoryDb);
+            addNewPeptideModifications(inMemoryDb);
+            addNewAnalyses(inMemoryDb);
+            addNewAnalysisParameters(inMemoryDb);
+            addNewQonverterSettings(inMemoryDb);
 
-                mergeMergedFiles(inMemoryDb, sqliteSafeMergeSourceFilepath);
+            mergeMergedFiles(inMemoryDb, sqliteSafeMergeSourceFilepath);
 
-                clearSqlFormats();
-            }
-            catch (runtime_error& e)
-            {
-                //if (OnMergingProgress(new Exception("Error merging " + mergeSourceFilepath, e), mergedFiles))
-                //    break;
-                throw runtime_error("Error merging " + mergeSourceFilepath + ": " + e.what());
-            }
+            clearSqlFormats();
 
             getNewMaxIds(inMemoryDb);
             transaction.commit();
@@ -694,51 +702,52 @@ struct Merger::Impl
         initializeTarget(db);
 
         sqlite3pp::transaction transaction(db);
-        try
-        {
-            mergeProteins(db);
-            mergePeptideInstances(db);
-            mergeSpectrumSourceGroups(db);
-            mergeSpectrumSources(db);
-            mergeSpectrumSourceGroupLinks(db);
-            mergeSpectra(db);
-            mergeModifications(db);
-            mergePeptideSpectrumMatchScoreNames(db);
-            mergeAnalyses(db);
-            addNewProteins(db);
-            addNewPeptideInstances(db);
-            addNewPeptides(db);
-            addNewModifications(db);
-            addNewSpectrumSourceGroups(db);
-            addNewSpectrumSources(db);
-            addNewSpectrumSourceGroupLinks(db);
-            addNewSpectra(db);
-            addNewPeptideSpectrumMatches(db);
-            addNewPeptideSpectrumMatchScoreNames(db);
-            addNewPeptideSpectrumMatchScores(db);
-            addNewPeptideModifications(db);
-            addNewAnalyses(db);
-            addNewAnalysisParameters(db);
-            addNewQonverterSettings(db);
-            addIntegerSet(db);
-            db.execute("UPDATE SpectrumSourceMetadata SET MsDataBytes = NULL");
 
-            deleteEmptySpectrumSourceGroups(db);
+        mergeProteins(db);
+        mergePeptideInstances(db);
+        mergeSpectrumSourceGroups(db);
+        mergeSpectrumSources(db);
+        mergeSpectrumSourceGroupLinks(db);
+        mergeSpectra(db);
+        mergeModifications(db);
+        mergePeptideSpectrumMatchScoreNames(db);
+        mergeAnalyses(db);
+        addNewProteins(db);
+        addNewPeptideInstances(db);
+        addNewPeptides(db);
+        addNewModifications(db);
+        addNewSpectrumSourceGroups(db);
+        addNewSpectrumSources(db);
+        addNewSpectrumSourceGroupLinks(db);
+        addNewSpectra(db);
+        addNewPeptideSpectrumMatches(db);
+        addNewPeptideSpectrumMatchScoreNames(db);
+        addNewPeptideSpectrumMatchScores(db);
+        addNewPeptideModifications(db);
+        addNewAnalyses(db);
+        addNewAnalysisParameters(db);
+        addNewQonverterSettings(db);
+        addIntegerSet(db);
+        db.execute("UPDATE SpectrumSourceMetadata SET MsDataBytes = NULL");
 
-            db.execute("DETACH DATABASE merged");
-        }
-        catch (runtime_error& e)
-        {
-            //OnMergingProgress(ex, 1);
-            throw runtime_error(string("Error merging connection: ") + e.what());
-        }
+        deleteEmptySpectrumSourceGroups(db);
+
+        db.execute("DETACH DATABASE merged");
 
         // if merging to a temporary file, copy it back to the real target; TemporaryFile dtor will remove temporary file
         if (tempMergeTargetFilepath != mergeTargetFilepath)
             bfs::copy_file(tempMergeTargetFilepath, mergeTargetFilepath);
     }
 
-    void mergeProteins(sqlite3pp::database& db) { db.execute((mergeProteinsSql % MaxProteinId % mergeSourceDatabase).str()); }
+    void mergeProteins(sqlite3pp::database& db)
+    {
+        db.execute((mismatchedPeptideMappingSql % mergeSourceDatabase).str());
+        if (sqlite3pp::query(db, "SELECT COUNT(*) FROM NewPeptideProteinMapping new, OldPeptideProteinMapping old WHERE new.Peptide = old.Peptide AND new.AccessionCount != old.AccessionCount").begin()->get<sqlite3_int64>(0) > 0)
+            throw runtime_error("the same peptide maps to different sets of proteins (which is not allowed); this can be caused by merging idpDBs that were imported with different protein databases, or merging after applying 'Crop Assembly'");
+
+        db.execute((mergeProteinsSql % MaxProteinId % mergeSourceDatabase).str());
+    }
+
     void mergePeptideInstances(sqlite3pp::database& db) { db.execute((mergePeptideInstancesSql % MaxPeptideInstanceId % MaxPeptideId % mergeSourceDatabase).str()); }
     void mergeAnalyses(sqlite3pp::database& db) { db.execute((mergeAnalysesSql % MaxAnalysisId % mergeSourceDatabase).str()); }
     void mergeSpectrumSourceGroups(sqlite3pp::database& db) { db.execute((mergeSpectrumSourceGroupsSql % MaxSpectrumSourceGroupId % mergeSourceDatabase).str()); }
@@ -887,7 +896,7 @@ struct ThreadStatus
     ThreadStatus(const boost::exception_ptr& e) : userCanceled(false), exception(e) {}
 };
 
-void executePairwiseFileMergerTask(std::deque<shared_ptr<MergeTask> >& sourceQueue, ThreadStatus& status, boost::mutex& queueMutex, size_t& filesMerged, size_t& filesTotal)
+void executePairwiseFileMergerTask(std::deque<shared_ptr<MergeTask> >& sourceQueue, ThreadStatus& status, boost::mutex& queueMutex, boost::atomic_size_t& filesMerged, boost::atomic_size_t& filesTotal)
 {
     vector<shared_ptr<MergeTask> > mergeTasks(2);
     vector<string> sourceFilepaths(2);
@@ -997,8 +1006,8 @@ void Merger::merge(const string& mergeTargetFilepath, const std::vector<string>&
 
     int processorCount = min(maxThreads, (int)boost::thread::hardware_concurrency());
 
-    size_t filesTotal = mergeSourceFilepaths.size();
-    size_t filesMerged = 0;
+    boost::atomic_size_t filesTotal(mergeSourceFilepaths.size());
+    boost::atomic_size_t filesMerged(0);
 
     // prevent boost::path::codecvt facet initialization race condition
     bfs::unique_path("%%%%%%%%%%%%%%%%.idpDB");

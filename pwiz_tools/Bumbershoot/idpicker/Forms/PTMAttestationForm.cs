@@ -24,6 +24,7 @@
 
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -46,7 +47,7 @@ using pwiz.CLI.cv;
 using proteome = pwiz.CLI.proteome;
 using chemistry = pwiz.CLI.chemistry;
 using phosphoRS = IMP.PhosphoRS;
-using System.Collections.Concurrent;
+using pwiz.Common.Collections;
 
 namespace IDPicker.Forms
 {

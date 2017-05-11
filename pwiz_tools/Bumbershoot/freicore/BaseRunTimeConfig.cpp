@@ -31,6 +31,21 @@ namespace freicore
     {
     }
 
+    BaseRunTimeConfig::BaseRunTimeConfig(const BaseRunTimeConfig& rhs)
+    {
+        m_treatWarningsAsErrors = rhs.m_treatWarningsAsErrors;
+        m_warnings.str(rhs.m_warnings.str());
+        m_variables = rhs.getVariables();
+    }
+
+    BaseRunTimeConfig& BaseRunTimeConfig::operator=(const BaseRunTimeConfig& rhs)
+    {
+        m_treatWarningsAsErrors = rhs.m_treatWarningsAsErrors;
+        m_warnings.str(rhs.m_warnings.str());
+        m_variables = rhs.getVariables();
+        return *this;
+    }
+
     void BaseRunTimeConfig::initializeFromBuffer( const string& cfgStr )
     {
         if (&cfgStr != &this->cfgStr)
@@ -121,7 +136,7 @@ namespace freicore
         setVariables(newVars);
     }
 
-    RunTimeVariableMap BaseRunTimeConfig::getVariables( bool hideDefaultValues )
+    RunTimeVariableMap BaseRunTimeConfig::getVariables( bool hideDefaultValues ) const
     {
         return m_variables;
     }

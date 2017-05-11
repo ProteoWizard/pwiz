@@ -32,6 +32,7 @@
 #include "pwiz/data/proteome/ProteinListCache.hpp"
 #include "pwiz/data/proteome/ProteomeDataFile.hpp"
 #include "pwiz/utility/chemistry/Ion.hpp"
+#include "pwiz/utility/misc/SHA1.h"
 #include "Parser.hpp"
 #include "Qonverter.hpp"
 #include "SchemaUpdater.hpp"
@@ -423,7 +424,7 @@ struct ParserImpl
                       "CREATE TABLE IF NOT EXISTS Modification (Id INTEGER PRIMARY KEY, MonoMassDelta NUMERIC, AvgMassDelta NUMERIC, Formula TEXT, Name TEXT);"
                       "CREATE TABLE IF NOT EXISTS Protein (Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup INT, Length INT, GeneId TEXT, GeneGroup INT);"
                       "CREATE TABLE IF NOT EXISTS ProteinData (Id INTEGER PRIMARY KEY, Sequence TEXT);"
-                      "CREATE TABLE IF NOT EXISTS ProteinMetadata (Id INTEGER PRIMARY KEY, Description TEXT, TaxonomyId INT, GeneName TEXT, Chromosome TEXT, GeneFamily TEXT, GeneDescription TEXT);"
+                      "CREATE TABLE IF NOT EXISTS ProteinMetadata (Id INTEGER PRIMARY KEY, Description TEXT, Hash BLOB, TaxonomyId INT, GeneName TEXT, Chromosome TEXT, GeneFamily TEXT, GeneDescription TEXT);"
                       "CREATE TABLE IF NOT EXISTS Peptide (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, PeptideGroup INT, DecoySequence TEXT);"
                       "CREATE TABLE IF NOT EXISTS PeptideInstance (Id INTEGER PRIMARY KEY, Protein INT, Peptide INT, Offset INT, Length INT, NTerminusIsSpecific INT, CTerminusIsSpecific INT, MissedCleavages INT);"
                       "CREATE TABLE IF NOT EXISTS PeptideSpectrumMatch (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, ObservedNeutralMass NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);"
@@ -1232,12 +1233,14 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
     {
         sqlite::command insertProtein(idpDb, "INSERT INTO Protein (Id, Accession, IsDecoy, Cluster, ProteinGroup, Length) VALUES (?,?,0,0,0,?)");
         sqlite::command insertProteinData(idpDb, "INSERT INTO ProteinData (Id, Sequence) VALUES (?,?)");
-        sqlite::command insertProteinMetadata(idpDb, "INSERT INTO ProteinMetadata (Id, Description) VALUES (?,?)");
+        sqlite::command insertProteinMetadata(idpDb, "INSERT INTO ProteinMetadata (Id, Description, Hash) VALUES (?,?,?)");
         sqlite::command insertPeptideInstance(idpDb, "INSERT INTO PeptideInstance (Id, Protein, Peptide, Offset, Length, NTerminusIsSpecific, CTerminusIsSpecific, MissedCleavages) VALUES (?,?,?,?,?,?,?,?)");
 
         sqlite3_int64 nextProteinId = sqlite::query(idpDb, "SELECT MAX(Id) FROM Protein").begin()->get<int>(0);
         sqlite3_int64 nextPeptideInstanceId = sqlite::query(idpDb, "SELECT MAX(Id) FROM PeptideInstance").begin()->get<int>(0);
         int maxProteinLength = 0;
+        CSHA1 hasher;
+        char hash[20];
 
         const string& decoyPrefix = parserTask.analysis->importSettings.qonverterSettings.decoyPrefix;
         vector<string> cleavageAgentRegexes = pwiz::identdata::cleavageAgentRegexes(parser.analysis.enzymes);
@@ -1378,7 +1381,14 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
                         insertProteinData.execute();
                         insertProteinData.reset();
 
-                        insertProteinMetadata.binder() << nextProteinId << protein->description;
+                        hasher.Reset();
+                        hasher.Update(reinterpret_cast<const unsigned char*>(&protein->sequence()[0]), protein->sequence().length());
+                        hasher.Final();
+                        hasher.GetHash(reinterpret_cast<unsigned char*>(hash));
+
+                        insertProteinMetadata.bind(1, nextProteinId);
+                        insertProteinMetadata.bind(2, protein->description);
+                        insertProteinMetadata.bind(3, reinterpret_cast<void*>(hash), 20);
                         insertProteinMetadata.execute();
                         insertProteinMetadata.reset();
                     }

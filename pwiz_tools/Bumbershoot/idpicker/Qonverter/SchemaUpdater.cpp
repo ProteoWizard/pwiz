@@ -29,8 +29,8 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/chemistry/Chemistry.hpp"
+#include "pwiz/utility/misc/SHA1.h"
 #include "boost/crc.hpp"
-
 
 using namespace pwiz::util;
 namespace sqlite = sqlite3pp;
@@ -38,7 +38,7 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 16;
+const int CURRENT_SCHEMA_REVISION = 17;
 
 namespace SchemaUpdater {
 
@@ -191,13 +191,44 @@ void WithinMassTolerancePPM(sqlite3_context* context, int numValues, sqlite3_val
 }
 
 
+void update_16_to_17(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
+{
+    ITERATION_UPDATE(ilr, 16, CURRENT_SCHEMA_REVISION, "updating schema version")
+
+    db.execute("ALTER TABLE ProteinMetadata ADD COLUMN Hash BLOB");
+    sqlite::command cmd(db, "UPDATE ProteinMetadata SET Hash = ? WHERE Id = ?");
+    sqlite::query q(db, "SELECT Id, Sequence FROM ProteinData");
+    sqlite3_int64 proId;
+    string sequence;
+    CSHA1 hasher;
+    char hash[20];
+
+    BOOST_FOREACH(sqlite::query::rows row, q)
+    {
+        row.getter() >> proId >> sequence;
+
+        hasher.Reset();
+        hasher.Update(reinterpret_cast<unsigned char*>(&sequence[0]), sequence.length());
+        hasher.Final();
+        hasher.GetHash(reinterpret_cast<unsigned char*>(hash));
+
+        cmd.bind(1, reinterpret_cast<void*>(hash), 20);
+        cmd.bind(2, proId);
+        cmd.execute();
+        cmd.reset();
+    }
+
+    //update_17_to_18(db, ilr, vacuumNeeded);
+}
+
+
 void update_15_to_16(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 15, CURRENT_SCHEMA_REVISION, "updating schema version")
 
     db.execute("ALTER TABLE FilterHistory ADD COLUMN PrecursorMzTolerance TEXT");
 
-    //update_16_to_17(db, ilr, vacuumNeeded);
+    update_16_to_17(db, ilr, vacuumNeeded);
 }
 
 void update_14_to_15(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
@@ -749,6 +780,8 @@ bool update(sqlite3* idpDbConnection, const IterationListenerRegistry* ilr)
         update_14_to_15(db, ilr, vacuumNeeded);
     else if (schemaRevision == 15)
         update_15_to_16(db, ilr, vacuumNeeded);
+    else if (schemaRevision == 16)
+        update_16_to_17(db, ilr, vacuumNeeded);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +

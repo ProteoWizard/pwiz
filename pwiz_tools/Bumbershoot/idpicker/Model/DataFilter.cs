@@ -28,6 +28,7 @@ using System.Linq;
 using System.Text;
 using IDPicker.DataModel;
 using NHibernate.Linq;
+using pwiz.Common.Collections;
 using MZTolerance = pwiz.CLI.chemistry.MZTolerance;
 
 namespace IDPicker.DataModel

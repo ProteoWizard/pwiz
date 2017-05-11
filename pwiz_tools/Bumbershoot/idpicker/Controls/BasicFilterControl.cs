@@ -30,7 +30,9 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using ExtensionMethods;
 using IDPicker.DataModel;
+using pwiz.Common.Collections;
 
 namespace IDPicker.Controls
 {

@@ -110,36 +110,47 @@ void ToAutomationVector(cli::array<managed_value_type>^ managedArray, automation
 } // namespace pwiz
 
 
+namespace {
+
+/// prepends function with a single level of scope,
+/// e.g. "Reader::read()" instead of "pwiz::data::msdata::Reader::read()"
+template <typename T>
+std::string trimFunctionMacro(const char* function, const T& param)
+{
+    std::vector<boost::iterator_range<std::string::const_iterator> > tokens;
+    std::string functionStr(function);
+    boost::algorithm::split(tokens, functionStr, boost::is_any_of(":"), boost::algorithm::token_compress_on);
+    std::string what("[");
+    if (tokens.size() > 1)
+    {
+        boost::range::copy(*(tokens.rbegin() + 1), std::back_inserter(what));
+        what += "::";
+        if (boost::range::equal(*(tokens.rbegin() + 1), *tokens.rbegin()))
+            what += "ctor";
+        else if (tokens.rbegin()->front() == '~')
+            what += "dtor";
+        else
+            boost::range::copy(*tokens.rbegin(), std::back_inserter(what));
+    }
+    else if (tokens.size() > 0)
+        boost::range::copy(*tokens.rbegin(), std::back_inserter(what));
+    what += "(" + lexical_cast<std::string>(param) + ")] ";
+    return what;
+}
+
+} // namespace
+
+
 /// forwards managed exception to unmanaged code;
 /// prepends function with a single level of scope,
 /// e.g. "Reader::read()" instead of "pwiz::data::msdata::Reader::read()"
-#define CATCH_AND_FORWARD \
+#define CATCH_AND_FORWARD_EX(param) \
     catch (std::exception&) {throw;} \
     catch (_com_error& e) {throw std::runtime_error(string("COM error: ") + e.ErrorMessage());} \
     /*catch (CException* e) {std::auto_ptr<CException> exceptionDeleter(e); char message[1024]; e->GetErrorMessage(message, 1024); throw std::runtime_error(string("MFC error: ") + message);}*/ \
-    catch (System::Exception^ e) \
-    { \
-        std::vector<boost::iterator_range<std::string::const_iterator> > tokens; \
-        std::string function(__FUNCTION__); \
-        boost::algorithm::split(tokens, function, boost::is_any_of(":"), boost::algorithm::token_compress_on); \
-        std::string what("["); \
-        if (tokens.size() > 1) \
-        { \
-            boost::range::copy(*(tokens.rbegin()+1), std::back_inserter(what)); \
-            what += "::"; \
-            if (boost::range::equal(*(tokens.rbegin()+1), *tokens.rbegin())) \
-                what += "ctor"; \
-            else if (tokens.rbegin()->front() == '~') \
-                what += "dtor"; \
-            else \
-                boost::range::copy(*tokens.rbegin(), std::back_inserter(what)); \
-        } \
-        else if (tokens.size() > 0) \
-            boost::range::copy(*tokens.rbegin(), std::back_inserter(what)); \
-        what += "] "; \
-        what += pwiz::util::ToStdString(e->Message); \
-        throw std::runtime_error(what); \
-    }
+    catch (System::AggregateException^ e) { throw std::runtime_error(trimFunctionMacro(__FUNCTION__, (param)) + pwiz::util::ToStdString(e->ToString())); } \
+    catch (System::Exception^ e) { throw std::runtime_error(trimFunctionMacro(__FUNCTION__, (param)) + pwiz::util::ToStdString(e->Message)); }
 
+#define CATCH_AND_FORWARD CATCH_AND_FORWARD_EX("")
 
 #endif // _CPP_CLI_UTILITIES_HPP_

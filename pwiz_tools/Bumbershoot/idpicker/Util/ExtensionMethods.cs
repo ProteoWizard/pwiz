@@ -29,6 +29,7 @@ using System.Data;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -253,66 +254,6 @@ namespace IDPicker
         }
     }
 
-    public static class SystemLinqExtensionMethods
-    {
-        public static IOrderedEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, SortOrder sortOrder)
-        {
-            switch (sortOrder)
-            {
-                case SortOrder.Ascending: return source.OrderBy(keySelector);
-                case SortOrder.Descending: return source.OrderByDescending(keySelector);
-                case SortOrder.None: default: throw new ArgumentException();
-            }
-        }
-
-        public static int SequenceCompareTo<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second) where TSource : IComparable<TSource>
-        {
-            int result = 0;
-            var itr1 = first.GetEnumerator();
-            var itr2 = second.GetEnumerator();
-            bool itr1Valid = true, itr2Valid = true;
-            while (true)
-            {
-                itr1Valid = itr1.MoveNext();
-                itr2Valid = itr2.MoveNext();
-
-                if (!itr1Valid && !itr2Valid) break;
-                if (itr1Valid && !itr2Valid) return 1;
-                if (!itr1Valid && itr2Valid) return -1;
-
-                result = itr1.Current.CompareTo(itr2.Current);
-                if (result != 0)
-                    break;
-            }
-            return result;
-        }
-
-        public static bool IsNullOrEmpty<TSource> (this IEnumerable<TSource> list)
-        {
-            if (list == null)
-                return true;
-
-            var genericCollection = list as ICollection<TSource>;
-            if (genericCollection != null)
-                return genericCollection.Count == 0;
-
-            var nonGenericCollection = list as System.Collections.ICollection;
-            if (nonGenericCollection != null)
-                return nonGenericCollection.Count == 0;
-
-            var string_ = list as string;
-            if (string_ != null)
-                return String.IsNullOrEmpty(string_);
-
-            return !list.Any();
-        }
-
-        public static ReadOnlyCollection<TSource> AsReadOnly<TSource> (this IList<TSource> list)
-        {
-            return list == null ? null : new ReadOnlyCollection<TSource>(list);
-        }
-    }
-
     public static class RandomShuffleExtensionMethods
     {
         static Random defaultRng = new Random(0);
@@ -382,6 +323,13 @@ namespace IDPicker
         public static System.Windows.Point GetCenterPoint(this System.Windows.Rect bounds)
         {
             return new System.Windows.Point(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2);
+        }
+
+        public static void DoubleBuffered(this DataGridView dgv, bool setting)
+        {
+            Type dgvType = dgv.GetType();
+            PropertyInfo pi = dgvType.GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic);
+            pi.SetValue(dgv, setting, null);
         }
     }
 

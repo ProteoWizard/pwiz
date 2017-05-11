@@ -30,6 +30,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 
 namespace IDPicker.Forms
 {

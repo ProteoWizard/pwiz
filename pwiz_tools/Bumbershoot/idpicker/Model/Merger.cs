@@ -83,7 +83,7 @@ namespace IDPicker.DataModel
             }
 
             if (mergeException != null)
-                throw new Exception("", mergeException); // preserve stack trace
+                throw mergeException;
         }
 
         class IterationListenerProxy : pwiz.CLI.util.IterationListener
@@ -124,6 +124,8 @@ namespace IDPicker.DataModel
                     MergingException = ex
                 };
                 MergingProgress(this, eventArgs);
+                if (ex != null)
+                    mergeException = ex;
                 return eventArgs.Cancel;
             }
             else if (ex != null)

@@ -33,6 +33,7 @@ using System.Globalization;
 using NHibernate;
 using NHibernate.Linq;
 using Iesi.Collections.Generic;
+using pwiz.Common.Collections;
 using Color = System.Drawing.Color;
 using XmlSerializer = System.Runtime.Serialization.NetDataContractSerializer;
 using SortOrder = System.Windows.Forms.SortOrder;

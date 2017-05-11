@@ -35,6 +35,7 @@ using IDPicker;
 using IDPicker.DataModel;
 using Microsoft.Win32;
 using NHibernate;
+using pwiz.Common.Collections;
 
 namespace CustomDataSourceDialog
 {

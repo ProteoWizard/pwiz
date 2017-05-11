@@ -35,6 +35,7 @@ using System.Drawing;
 using System.Drawing.Text;
 using DigitalRune.Windows.Docking;
 using IDPicker.DataModel;
+using pwiz.Common.Collections;
 using proteome = pwiz.CLI.proteome;
 
 namespace IDPicker

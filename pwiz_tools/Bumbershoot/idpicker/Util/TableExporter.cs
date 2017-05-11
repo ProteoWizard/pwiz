@@ -29,8 +29,8 @@ using System.Reflection;
 using System.Text;
 using System.IO;
 using System.Windows.Forms;
-
 using Microsoft.Office.Interop;
+using pwiz.Common.Collections;
 
 namespace IDPicker
 {

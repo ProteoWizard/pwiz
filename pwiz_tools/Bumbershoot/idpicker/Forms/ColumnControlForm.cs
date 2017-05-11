@@ -33,6 +33,7 @@ using System.Windows.Forms;
 using BrightIdeasSoftware;
 using IDPicker.DataModel;
 using IDPicker.Controls;
+using pwiz.Common.Collections;
 
 namespace IDPicker.Forms
 {

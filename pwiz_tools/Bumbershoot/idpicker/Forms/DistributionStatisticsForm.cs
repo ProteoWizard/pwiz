@@ -39,6 +39,7 @@ using IDPicker.DataModel;
 using ZedGraph;
 using MathNet.Numerics.Distributions;
 using MathNet.Numerics.Statistics;
+using pwiz.Common.Collections;
 
 namespace IDPicker.Forms
 {

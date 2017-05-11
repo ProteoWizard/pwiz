@@ -39,6 +39,7 @@ using BrightIdeasSoftware;
 using PopupControl;
 using IDPicker.DataModel;
 using IDPicker.Controls;
+using pwiz.Common.Collections;
 
 namespace IDPicker.Forms
 {

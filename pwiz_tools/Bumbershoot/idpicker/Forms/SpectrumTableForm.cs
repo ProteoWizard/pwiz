@@ -41,6 +41,7 @@ using PopupControl;
 using IDPicker.DataModel;
 using IDPicker.Controls;
 using NHibernate;
+using pwiz.Common.Collections;
 
 namespace IDPicker.Forms
 {

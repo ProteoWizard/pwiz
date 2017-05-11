@@ -179,6 +179,8 @@ void getSources(sqlite::database& idpDb,
         {
             if (itr->spectrumNativeIds.empty())
                 throw runtime_error("query returned no spectra for source \"" + itr->name + "\"");
+            if (itr == sources.end())
+                throw runtime_error("found Spectrum.Source value that does not correspond to any SpectrumSource: " + lexical_cast<string>(sourceId));
             ++itr;
         }
         itr->spectrumIds.push_back(row.get<sqlite3_int64>(1));

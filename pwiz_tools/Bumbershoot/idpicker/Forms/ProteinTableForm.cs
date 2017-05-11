@@ -41,6 +41,7 @@ using PopupControl;
 using IDPicker;
 using IDPicker.DataModel;
 using IDPicker.Controls;
+using pwiz.Common.Collections;
 
 namespace IDPicker.Forms
 {

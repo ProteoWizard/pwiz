@@ -453,6 +453,18 @@ rule dotNET-dependencies ( properties * )
     }
 }
 
+install install_cli
+    : # sources
+        Qonverter//idpQonvert
+        Qonverter//idpQuery
+        Qonverter//idpAssemble
+        Qonverter//gene2protein.db3
+    : # requirements
+        <conditional>@install-location
+        <conditional>@install-vendor-api-dependencies
+        <conditional>@install-identdata-dependencies
+    ;
+
 install install
     : # sources
         Qonverter//idpQonvert

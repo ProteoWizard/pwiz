@@ -93,7 +93,7 @@
         BOOST_PP_SEQ_FOR_EACH( RTCONFIG_INIT_DEFAULT_VAR, ~, configVariables ) \
         if (m_warnings.tellp() > 0) throw runtime_error(m_warnings.str()); /* initialization errors are bugs */ \
     } \
-    RunTimeVariableMap getVariables( bool hideDefaultValues = false ) \
+    RunTimeVariableMap getVariables( bool hideDefaultValues = false ) const \
     { \
         baseConfigName::getVariables( hideDefaultValues ); \
         BOOST_PP_SEQ_FOR_EACH( RTCONFIG_FILL_MAP, m_variables, configVariables ) \
@@ -177,18 +177,20 @@ namespace freicore
     struct BaseRunTimeConfig
     {
     protected:
-        RunTimeVariableMap m_variables;
+        mutable RunTimeVariableMap m_variables;
         bool m_treatWarningsAsErrors;
-        ostringstream m_warnings;
+        mutable ostringstream m_warnings;
 
     public:
         string cfgStr;
 
                                     BaseRunTimeConfig(bool treatWarningsAsErrors = true);
+                                    BaseRunTimeConfig(const BaseRunTimeConfig& rhs);
+        BaseRunTimeConfig&          operator=(const BaseRunTimeConfig& rhs);
         virtual                     ~BaseRunTimeConfig() {}
 
         virtual void                initializeFromBuffer( const string& cfgStr );
-        virtual    RunTimeVariableMap  getVariables( bool hideDefaultValues = false );
+        virtual    RunTimeVariableMap  getVariables( bool hideDefaultValues = false ) const;
         virtual void                setVariables( RunTimeVariableMap& vars );
         virtual void                dump();
         virtual void                finalize();

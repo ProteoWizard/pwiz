@@ -105,12 +105,17 @@ void test()
     for (size_t i=0; i<iterationCount; i++)
         registry.broadcastUpdateMessage(IterationListener::UpdateMessage(i, iterationCount));
 
+    // repeating last iteration should not create new messages
+    registry.broadcastUpdateMessage(IterationListener::UpdateMessage(iterationCount - 1, iterationCount));
+    registry.broadcastUpdateMessage(IterationListener::UpdateMessage(iterationCount - 1, iterationCount));
+    registry.broadcastUpdateMessage(IterationListener::UpdateMessage(iterationCount - 1, iterationCount));
+
     // validate
 
-    unit_assert(test3.count() == 9); // 0 2 5 8 11 14 17 20 23
-    unit_assert(test4.count() == 7);
-    unit_assert(test5.count() == 6);
-    unit_assert(test6.count() == 5);
+    unit_assert_operator_equal(9, test3.count()); // 0 2 5 8 11 14 17 20 23
+    unit_assert_operator_equal(7, test4.count());
+    unit_assert_operator_equal(6, test5.count());
+    unit_assert_operator_equal(5, test6.count());
 
     if (os_) *os_ << endl;
 }

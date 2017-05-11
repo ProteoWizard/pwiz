@@ -28,9 +28,12 @@ using System.IO;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using IDPicker.DataModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IDPicker;
+using pwiz.Common.Collections;
+
 
 namespace Test
 {
@@ -205,67 +208,61 @@ namespace Test
             Assert.AreEqual("3-444", uniqueSubstring);
         }
 
-        void downgrade_12_to_11(SQLiteConnection connection)
+        /// <summary>
+        /// A very limited parser of SQLite CREATE TABLE statements intended to make it easier to drop columns:
+        /// (i.e. rename table, create new table without the dropped columns, insert old table's data into new table, delete old table)
+        /// </summary>
+        string dropColumns(SQLiteConnection con, string tableName, params string[] columnNames)
         {
-            connection.ExecuteNonQuery(@"DROP TABLE XICMetrics;
-                                         CREATE TABLE XICMetrics (PsmId INTEGER PRIMARY KEY, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC);
-                                         INSERT INTO XICMetrics VALUES (1,0,0,0,0)");
-        }
+            string createTableStatement = con.ExecuteQuery(String.Format("SELECT sql FROM sqlite_master WHERE tbl_name='{0}'", tableName)).First().GetString(0).Replace("\n", "");
+            var tableAndColumns = Regex.Match(createTableStatement, @"^CREATE TABLE (.+?)\((.*?)\)$");
+            if (!tableAndColumns.Success)
+                throw new Exception("failed to find table name or columns in create table statement: " + createTableStatement);
 
-        void downgrade_7_to_4(SQLiteConnection connection)
-        {
-            // just rename table; the extra columns will be ignored
-            connection.ExecuteNonQuery("ALTER TABLE FilterHistory RENAME TO FilteringCriteria");
-        }
-
-        void downgrade_4_to_3(SQLiteConnection connection)
-        {
-            // move MsDataBytes to SpectrumSource table and return to bugged INT key for DistinctMatchQuantitation
-            connection.ExecuteNonQuery(@"CREATE TABLE TempSpectrumSource (Id INTEGER PRIMARY KEY, Name TEXT, URL TEXT, Group_ INT, MsDataBytes BLOB, TotalSpectraMS1 INT, TotalIonCurrentMS1 NUMERIC, TotalSpectraMS2 INT, TotalIonCurrentMS2 NUMERIC, QuantitationMethod INT);
-                                         INSERT INTO TempSpectrumSource SELECT ss.Id, Name, URL, Group_, MsDataBytes, TotalSpectraMS1, TotalIonCurrentMS1, TotalSpectraMS2, TotalIonCurrentMS2, QuantitationMethod FROM SpectrumSource ss JOIN SpectrumSourceMetadata ssmd ON ss.Id=ssmd.Id;
-                                         DROP TABLE SpectrumSource;
-                                         ALTER TABLE TempSpectrumSource RENAME TO SpectrumSource;
-                                         DROP TABLE SpectrumSourceMetadata;
-                                         DROP TABLE DistinctMatchQuantitation;
-                                         CREATE TABLE DistinctMatchQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);
-                                         UPDATE About SET SchemaRevision = 3;
-                                        ");
-        }
-
-        void downgrade_3_to_2(SQLiteConnection connection)
-        {
-            // delete quantitation tables and quantitative columns from SpectrumSource
-            connection.ExecuteNonQuery(@"DROP TABLE SpectrumQuantitation;
-                                         DROP TABLE DistinctMatchQuantitation;
-                                         DROP TABLE PeptideQuantitation;
-                                         DROP TABLE ProteinQuantitation;
-                                         CREATE TABLE TempSpectrumSource (Id INTEGER PRIMARY KEY, Name TEXT, URL TEXT, Group_ INT, MsDataBytes BLOB);
-                                         INSERT INTO TempSpectrumSource SELECT Id, Name, URL, Group_, MsDataBytes FROM SpectrumSource;
-                                         DROP TABLE SpectrumSource;
-                                         ALTER TABLE TempSpectrumSource RENAME TO SpectrumSource;
-                                         UPDATE About SET SchemaRevision = 2;
-                                        ");
-        }
-
-        void downgrade_2_to_1(SQLiteConnection connection)
-        {
-            // add an empty ScanTimeInSeconds column
-            connection.ExecuteNonQuery(@"CREATE TABLE NewSpectrum (Id INTEGER PRIMARY KEY, Source INT, Index_ INT, NativeID TEXT, PrecursorMZ NUMERIC, ScanTimeInSeconds NUMERIC);
-                                         INSERT INTO NewSpectrum SELECT Id, Source, Index_, NativeID, PrecursorMZ, 0 FROM Spectrum;
-                                         DROP TABLE Spectrum;
-                                         ALTER TABLE NewSpectrum RENAME TO Spectrum;
-                                         UPDATE About SET SchemaRevision = 1;
-                                        ");
-        }
-
-        void downgrade_1_to_0(SQLiteConnection connection)
-        {
-            connection.ExecuteNonQuery(@"CREATE TABLE NewPeptideSpectrumMatch (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);
-                                         INSERT INTO NewPeptideSpectrumMatch SELECT Id, Spectrum, Analysis, Peptide, QValue, ObservedNeutralMass, ObservedNeutralMass-MolecularWeightError, MonoisotopicMassError, MolecularWeightError, Rank, Charge FROM PeptideSpectrumMatch;
-                                         DROP TABLE PeptideSpectrumMatch;
-                                         ALTER TABLE NewPeptideSpectrumMatch RENAME TO PeptideSpectrumMatch;
-                                         DROP TABLE About;
-                                        ");
+            string table = tableAndColumns.Groups[1].Captures[0].Value;
+            string columns = tableAndColumns.Groups[2].Captures[0].Value;
+            const string sqliteTypePattern = @"(?:\w*TEXT\w*)" +
+                                             @"|(?:\w*CHAR\w*)" +
+                                             @"|(?:\w*CLOB\w*)" +
+                                             @"|(?:\w*INT\w*)" +
+                                             @"|(?:\w*BLOB\w*)" +
+                                             @"|(?:\w*REAL\w*)" +
+                                             @"|(?:\w*FLOA\w*)" +
+                                             @"|(?:\w*DOUB\w*)" +
+                                             @"|(?:\w*BOOL\w*)" +
+                                             @"|(?:\w*DECI\w*)" +
+                                             @"|(?:\w*DATE\w*)" +
+                                             @"|(?:\w*NUM\w*)";
+            const string sqliteColumnConstraints = @"(?:CONSTRAINT\s*\S+\s*)?" +
+                                                   @"(?:PRIMARY KEY)" +
+                                                   @"|(?:AUTOINCREMENT)" +
+                                                   @"|(?:NOT NULL)" +
+                                                   @"|(?:UNIQUE)";
+            string sqliteColumnDefinition = String.Format("(?:(?:(\"[^\"]+)\"(?:\\s+(?:{0}))(?:\\s+(?:{1}))*)|(?:\\s*([^,]+)(?:\\s+(?:{0}))(?:\\s+(?:{1}))*))", sqliteTypePattern, sqliteColumnConstraints);
+            string sqliteColumnDefinitionList = String.Format("({0})+", sqliteColumnDefinition);
+            var columnMatches = Regex.Matches(columns, sqliteColumnDefinitionList, RegexOptions.IgnoreCase);
+            if (columnMatches.Count == 0)
+                throw new Exception("failed to find any columns in the create table statement: " + createTableStatement);
+            var keptColumnDefinitions = new List<string>();
+            var keptColumnNames = new List<string>();
+            foreach (Match columnMatch in columnMatches)
+            {
+                string columnDefinition = columnMatch.Value;
+                string columnName = columnMatch.Groups[3].Value;
+                if (columnNames.All(o => columnName.Trim('"') != o))
+                {
+                    keptColumnDefinitions.Add(columnDefinition);
+                    keptColumnNames.Add(columnName);
+                }
+            }
+            string newColumnDefinitions = String.Join(", ", keptColumnDefinitions);
+            string newColumnNames = String.Join(", ", keptColumnNames);
+            string newTableName = String.Format("\"{0}_new\"", table.Trim('"', ' '));
+            string newCreateTableStatement = createTableStatement.Replace("CREATE TABLE " + table, "CREATE TABLE " + newTableName).Replace(columns, newColumnDefinitions);
+            return String.Format(@"{3};
+                                 INSERT INTO {0} ({2}) SELECT {2} FROM {1};
+                                 DROP TABLE {1}; ALTER TABLE {0} RENAME TO {1};",
+                                 newTableName, tableName, newColumnNames, newCreateTableStatement);
         }
 
         void testModelFile(TestModel testModel, string filename)
@@ -298,17 +295,101 @@ namespace Test
             }
         }
 
+        class DowngradeInfo
+        {
+            public DowngradeInfo(string rawSql, string tableToDropColumnsFrom = null, params string[] droppedColumns)
+            {
+                RawSql = rawSql;
+                TableToDropColumnsFrom = tableToDropColumnsFrom;
+                DroppedColumns = droppedColumns;
+            }
+
+            public string RawSql { get; private set; }
+            public string TableToDropColumnsFrom { get; private set; }
+            public string[] DroppedColumns { get; private set; }
+        }
+
         void downgradeToRevision(string filename, int revision)
         {
             using (var connection = new SQLiteConnection(String.Format("Data Source={0};Version=3", filename)))
             {
                 connection.Open();
-                if (revision < 12) downgrade_12_to_11(connection);
-                if (revision < 7) downgrade_7_to_4(connection);
-                if (revision < 4) downgrade_4_to_3(connection);
-                if (revision < 3) downgrade_3_to_2(connection);
-                if (revision < 2) downgrade_2_to_1(connection);
-                if (revision < 1) downgrade_1_to_0(connection);
+
+                var comparer = new ComparisonForwarder<int>((a, b) => b.CompareTo(a));
+                var downgradeStatementMap = new SortedList<int, List<DowngradeInfo>>(comparer)
+                {
+                    {17, new List<DowngradeInfo> {new DowngradeInfo(null, "ProteinMetadata", "Hash")}},
+                    {16, new List<DowngradeInfo> {new DowngradeInfo(null, "FilterHistory", "PrecursorMzTolerance")}},
+                    //{15, "DROP TABLE IsobaricSampleMapping"},
+                    {14, new List<DowngradeInfo> {new DowngradeInfo(null, "SpectrumSource", "QuantitationSettings")}},
+                    {13, new List<DowngradeInfo> {new DowngradeInfo("DROP TABLE PeptideModificationProbability")}},
+                    {12, new List<DowngradeInfo> {new DowngradeInfo("DROP TABLE XICMetrics; CREATE TABLE XICMetrics (PsmId INTEGER PRIMARY KEY, PeakIntensity NUMERIC, PeakArea NUMERIC, PeakSNR NUMERIC, PeakTimeInSeconds NUMERIC);")}},
+                    {11, new List<DowngradeInfo> {new DowngradeInfo(null, "FilterHistory", "GeneGroups", "Genes")}},
+                    {10, new List<DowngradeInfo> {new DowngradeInfo("DROP TABLE XICMetrics; DROP TABLE IF EXISTS XICMetricsSettings")}},
+                    {9, new List<DowngradeInfo> {new DowngradeInfo(null, "FilterHistory", "GeneLevelFiltering", "DistinctMatchFormat")}},
+                    {8, new List<DowngradeInfo>
+                        {
+                            new DowngradeInfo(null, "Protein", "GeneId", "GeneGroup"),
+                            new DowngradeInfo(null, "ProteinMetadata", "TaxonomyId", "GeneName", "Chromosome", "GeneFamily", "GeneDescription")
+                        }
+                    },
+
+                    {7, new List<DowngradeInfo>
+                        {
+                            new DowngradeInfo("ALTER TABLE FilterHistory RENAME TO FilteringCriteria;",
+                                              "FilterHistory",
+                                              "Clusters", "ProteinGroups", "Proteins", "DistinctPeptides", "DistinctMatches", "FilteredSpectra", "ProteinFDR", "PeptideFDR", "SpectrumFDR")
+                        }
+                    },
+
+                    {4, new List<DowngradeInfo>
+                        {
+                            new DowngradeInfo(@"CREATE TABLE NewSpectrumSource (Id INTEGER PRIMARY KEY, Name TEXT, URL TEXT, Group_ INT, MsDataBytes BLOB, TotalSpectraMS1 INT, TotalIonCurrentMS1 NUMERIC, TotalSpectraMS2 INT, TotalIonCurrentMS2 NUMERIC, QuantitationMethod INT);
+                                                INSERT INTO NewSpectrumSource SELECT ss.Id, Name, URL, Group_, MsDataBytes, TotalSpectraMS1, TotalIonCurrentMS1, TotalSpectraMS2, TotalIonCurrentMS2, QuantitationMethod FROM SpectrumSource ss, SpectrumSourceMetadata ssmd WHERE ss.Id=ssmd.Id;
+                                                DROP TABLE SpectrumSource;
+                                                ALTER TABLE NewSpectrumSource RENAME TO SpectrumSource;
+                                                DROP TABLE SpectrumSourceMetadata;
+                                                DROP TABLE DistinctMatchQuantitation;
+                                                CREATE TABLE DistinctMatchQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);")
+                        }
+                    },
+
+                    {3, new List<DowngradeInfo> {new DowngradeInfo(@"DROP TABLE SpectrumQuantitation;
+                                                                     DROP TABLE DistinctMatchQuantitation;
+                                                                     DROP TABLE PeptideQuantitation;
+                                                                     DROP TABLE ProteinQuantitation;",
+                                                                   "SpectrumSource",
+                                                                   "TotalSpectraMS1", "TotalIonCurrentMS1", "TotalSpectraMS2", "TotalIonCurrentMS2", "QuantitationMethod")
+                    }},
+
+                    {2, new List<DowngradeInfo> {new DowngradeInfo(@"CREATE TABLE NewSpectrum (Id INTEGER PRIMARY KEY, Source INT, Index_ INT, NativeID TEXT, PrecursorMZ NUMERIC, ScanTimeInSeconds NUMERIC);
+                                                                     INSERT INTO NewSpectrum SELECT Id, Source, Index_, NativeID, PrecursorMZ, 0 FROM Spectrum;
+                                                                     DROP TABLE Spectrum;
+                                                                     ALTER TABLE NewSpectrum RENAME TO Spectrum;")
+                    }},
+
+                    {1, new List<DowngradeInfo> {new DowngradeInfo(@"CREATE TABLE NewPeptideSpectrumMatch (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);
+                                                                     INSERT INTO NewPeptideSpectrumMatch SELECT Id, Spectrum, Analysis, Peptide, QValue, ObservedNeutralMass, ObservedNeutralMass-MolecularWeightError, MonoisotopicMassError, MolecularWeightError, Rank, Charge FROM PeptideSpectrumMatch;
+                                                                     DROP TABLE PeptideSpectrumMatch;
+                                                                     ALTER TABLE NewPeptideSpectrumMatch RENAME TO PeptideSpectrumMatch;
+                                                                     DROP TABLE About;")
+                    }}
+                };
+                for (int i = 0; i < downgradeStatementMap.Count && downgradeStatementMap.Keys[i] > revision; ++i)
+                {
+                    foreach (var downgradeInfo in downgradeStatementMap.Values[i])
+                    {
+                        var sql = new StringBuilder();
+                        if (downgradeInfo.TableToDropColumnsFrom != null && downgradeInfo.DroppedColumns != null)
+                            sql.Append(dropColumns(connection, downgradeInfo.TableToDropColumnsFrom, downgradeInfo.DroppedColumns));
+                        if (downgradeInfo.RawSql != null)
+                            sql.Append(downgradeInfo.RawSql);
+                        connection.ExecuteNonQuery(sql.ToString());
+                    }
+                }
+
+                if (revision > 0)
+                    connection.ExecuteNonQuery("UPDATE About SET SchemaRevision = " + revision.ToString());
             }
         }
 
@@ -316,7 +397,7 @@ namespace Test
         [TestCategory("Model")]
         public void TestSchemaUpdater()
         {
-            Assert.AreEqual(16, SchemaUpdater.CurrentSchemaRevision);
+            Assert.AreEqual(17, SchemaUpdater.CurrentSchemaRevision);
 
             var testModel = new TestModel() { TestContext = TestContext };
             TestModel.ClassInitialize(TestContext);
@@ -326,15 +407,6 @@ namespace Test
             string filename = null;
 
             // test all revisions without a data filter applied
-            // we don't need to test upgrade from 15 to 17; the extra column (PrecursorMzTolerance) is ignored
-            // we don't need to test upgrade from 14 to 15; the extra table (IsobaricSampleMapping) is ignored
-            // we don't need to test upgrade from 13 to 14; the extra column (QuantitationSettings) are ignored
-            // we don't need to test upgrade from 12 to 13; the extra table (PeptideModificationProbability) is ignored and necessary for the current NHibernate bindings
-            // we don't need to test upgrade from 11 to 12; the changed table (XICMetrics) is ignored
-            // we don't need to test upgrade from 10 to 11; the extra columns (GeneGroups, Genes) are ignored
-            // we don't need to test upgrade from 9 to 10; the extra tables (XICMetrics, XICMetricsSettings) are ignored
-            // we don't need to test upgrade from 8 to 9; the extra columns (GeneLevelFiltering, DistinctMatchFormat) are ignored
-            // we don't need to test upgrade from 7 to 8; the extra columns are ignored
             // we don't need to test upgrade from 5 to 6; it simply forces reapplication of the basic filters
             // we don't need to test upgrade from 4 to 5; it's a simple null value fix
 

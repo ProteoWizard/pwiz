@@ -180,6 +180,8 @@ namespace IDPicker.DataModel
         public virtual string GeneFamily { get; set; }
         public virtual string GeneDescription { get; set; }
 
+        public virtual byte[] Hash { get; protected set; }
+
         #region Transient instance members
         public Protein()
         {

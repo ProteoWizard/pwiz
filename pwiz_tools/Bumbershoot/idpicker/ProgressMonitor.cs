@@ -89,9 +89,6 @@ namespace IDPicker
 
         public void UpdateProgress (object sender, MergerWrapper.MergingProgressEventArgs e)
         {
-            if (e.MergingException != null)
-                Program.HandleException(e.MergingException);
-
             if (ProgressUpdate == null)
                 return;
 

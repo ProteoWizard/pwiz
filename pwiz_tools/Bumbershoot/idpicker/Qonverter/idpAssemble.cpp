@@ -506,7 +506,7 @@ int main(int argc, const char* argv[])
     int maxThreads = 8;
     string batchFile;
     bool summarizeSources = false;
-    MessageSeverity logLevel = MessageSeverity::Warning;
+    MessageSeverity logLevel = MessageSeverity::BriefInfo;
 
     boost::log::formatter fmt = expr::stream << expr::attr<MessageSeverity::domain, severity_tag>("Severity") << expr::smessage;
 
