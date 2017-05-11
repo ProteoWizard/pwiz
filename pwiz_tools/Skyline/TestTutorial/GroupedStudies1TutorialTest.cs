@@ -43,6 +43,7 @@ using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
@@ -250,7 +251,7 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot("Skyline window maximized", 9);
 
-            if (!IsPauseForScreenShots)
+            if (!IsFullData)
                 TestApplyToAll();
 
             if (IsPauseForScreenShots)
@@ -316,7 +317,7 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(findDlg, findDlg.Close);
 
                 var findView = WaitForOpenForm<FindResultsForm>();
-                int expectedItems = IsFullData ? 457 : 290;
+                int expectedItems = IsFullData ? 460 : 290;
                 try
                 {
                     WaitForConditionUI(1000, () => findView.ItemCount == expectedItems);
@@ -548,7 +549,7 @@ namespace pwiz.SkylineTestTutorial
             var pathTruncated = PropertyPath.Parse("Results!*.Value.CountTruncated");
             int expectedItems = 148;
             if (IsFullData)
-                expectedItems = initialTestExecution ? 222 : 221;
+                expectedItems = initialTestExecution ? 223 : 221;
             try
             {
                 WaitForConditionUI(1000, () => documentGrid.RowCount == expectedItems &&
@@ -849,9 +850,18 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot("Cromatogram graph (B) - no peak - Formate width 3.2", 45);
 
+                int count = IsFullData ? 15 : 10;
+                AssertUserSetCount(count);
+                if (IsPauseForScreenShots)
+                    RunUI(() => SkylineWindow.SaveDocument());
+                else
+                {
+                    AssertUserSetSaved(count, false);
+                    AssertUserSetSaved(count, true);
+                }
+
                 RunUI(() =>
                 {
-                    SkylineWindow.SaveDocument();
                     var filePathFinished = GetTestPath(@"Heart Failure\Rat_plasma.sky.zip");
                     SkylineWindow.OpenSharedFile(filePathFinished);
                 });
@@ -875,6 +885,28 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.OpenFile(filePathFinished);
                 });
             }
+        }
+
+        private static void AssertUserSetSaved(int count, bool compactFormat)
+        {
+            RunUI(() =>
+            {
+                Settings.Default.CompactFormatOption = compactFormat
+                    ? CompactFormatOption.ALWAYS.Name
+                    : CompactFormatOption.NEVER.Name;
+
+                SkylineWindow.SaveDocument();
+                SkylineWindow.NewDocument();
+                SkylineWindow.OpenFile(Settings.Default.MruList[0]);
+            });
+            WaitForDocumentLoaded();
+            AssertUserSetCount(count);
+        }
+
+        private static void AssertUserSetCount(int count)
+        {
+            Assert.AreEqual(count,
+                SkylineWindow.Document.MoleculeTransitionGroups.Sum(tg => tg.ChromInfos.Count(c => c.IsUserSetManual)));
         }
 
         private void PrepareForStatistics()
@@ -1008,7 +1040,7 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot<DocumentGridForm>("Document Grid with MissingData field", 55);
 
-                int expectedRows = IsFullData ? 223 : 149;
+                int expectedRows = IsFullData ? 224 : 149;
                 const int expectedRowsAbbreviated = 221; // When not all of the tests are run
                 RunUI(() =>
                 {
