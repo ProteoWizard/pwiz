@@ -563,7 +563,7 @@ namespace pwiz.Skyline.SettingsUI
             listPeptide.EndUpdate();
         }
 
-        public static void GetPeptideInfo(ViewLibraryPepInfo pinfo, ViewLibraryPepInfo pepInfo, 
+        public static void GetPeptideInfo(ViewLibraryPepInfo pepInfo, 
                                         LibKeyModificationMatcher matcher, byte[] lookupPool, 
                                         out SrmSettings settings, out TransitionGroup transitionGroup, out ExplicitMods mods)
         {
@@ -582,15 +582,15 @@ namespace pwiz.Skyline.SettingsUI
             }
             else if (!pepInfo.Key.IsPrecursorKey)
             {
-                var peptide = new Peptide(null, pinfo.GetAASequence(lookupPool),
+                var peptide = new Peptide(null, pepInfo.GetAASequence(lookupPool),
                                           null, null, 0);
-                transitionGroup = new TransitionGroup(peptide, pinfo.Charge,
+                transitionGroup = new TransitionGroup(peptide, pepInfo.Charge,
                                                       IsotopeLabelType.light, true, null);
 
                 // Because the document modifications do not explain this peptide, a set of
                 // explicit modifications must be constructed, even if they are empty.
                 IList<ExplicitMod> staticModList = new List<ExplicitMod>();
-                IEnumerable<ModificationInfo> modList = GetModifications(pinfo);
+                IEnumerable<ModificationInfo> modList = GetModifications(pepInfo);
                 foreach (var modInfo in modList)
                 {
                     var smod = new StaticMod("temp", // Not L10N
@@ -674,7 +674,7 @@ namespace pwiz.Skyline.SettingsUI
 
                         ExplicitMods mods;
                         var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
-                        GetPeptideInfo(_peptides[index], pepInfo, _matcher, _lookupPool, out settings, out transitionGroup, out mods);
+                        GetPeptideInfo(pepInfo, _matcher, _lookupPool, out settings, out transitionGroup, out mods);
 
                         // Make sure the types and charges in the settings are at the head
                         // of these lists to give them top priority, and get rankings correct.
@@ -2207,7 +2207,7 @@ namespace pwiz.Skyline.SettingsUI
                     ExplicitMods mods;
                     TransitionGroup transitionGroup;
                     SrmSettings settings;
-                    GetPeptideInfo(_pepInfo, _pepInfo, _matcher, _lookupPool, out settings, out transitionGroup, out mods);
+                    GetPeptideInfo(_pepInfo, _matcher, _lookupPool, out settings, out transitionGroup, out mods);
                     var pCalc = settings.GetPrecursorCalc(transitionGroup.LabelType, mods);
                     var massH = pCalc.GetPrecursorMass(_pepInfo.Sequence);
                     double mz = SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorCharge));
