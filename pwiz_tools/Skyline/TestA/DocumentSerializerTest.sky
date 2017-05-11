@@ -89,7 +89,7 @@
           <collision_energy>22.856671</collision_energy>
           <transition_lib_info rank="6" intensity="1846" />
           <transition_results>
-            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="3847.00854" background="271.247131" height="658.8465" fwhm="0.07704971" truncated="false" identified="false" rank="5" points_across="10" user_set="FALSE">
+            <transition_peak replicate="D_102_REP1" retention_time="13.3954334" start_time="13.2614336" end_time="13.6299334" area="3847.00854" background="271.247131" height="658.8465" fwhm="0.07704971" truncated="false" identified="false" rank="5" points_across="10" user_set="TRUE">
               <annotation name="TextAnnotation">A</annotation>
               <annotation name="TransitionResultAnnotation">G</annotation>
             </transition_peak>

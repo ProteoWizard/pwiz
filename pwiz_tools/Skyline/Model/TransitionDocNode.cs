@@ -595,6 +595,7 @@ namespace pwiz.Skyline.Model
                     transitionPeak.Fwhm = transitionChromInfo.Fwhm;
                     transitionPeak.IsFwhmDegenerate = transitionChromInfo.IsFwhmDegenerate;
                     transitionPeak.Truncated = DataValues.ToOptional(transitionChromInfo.IsTruncated);
+                    transitionPeak.UserSet = DataValues.ToUserSet(transitionChromInfo.UserSet);
                     switch (transitionChromInfo.Identified)
                     {
                         case PeakIdentification.ALIGNED:
