@@ -292,15 +292,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 bool isShowingMs = displayTrans.Any(nodeTran => nodeTran.IsMs1);
                 bool isShowingMsMs = displayTrans.Any(nodeTran => !nodeTran.IsMs1);
                 bool isFullScanMs = document.Settings.TransitionSettings.FullScan.IsEnabledMs && isShowingMs;
-                if (isFullScanMs)
+                if (!isMultiSelect)
                 {
-                    if (!isShowingMsMs && parentGroupNode.HasIsotopeDist)
-                        ExpectedVisible = AreaExpectedValue.isotope_dist;
-                }
-                else
-                {
-                    if (parentGroupNode.HasLibInfo)
-                        ExpectedVisible = AreaExpectedValue.library;
+                    if (isFullScanMs)
+                    {
+                        if (!isShowingMsMs && parentGroupNode.HasIsotopeDist)
+                            ExpectedVisible = AreaExpectedValue.isotope_dist;
+                    }
+                    else
+                    {
+                        if (parentGroupNode.HasLibInfo)
+                            ExpectedVisible = AreaExpectedValue.library;
+                    }
                 }
             }
             var expectedValue = IsExpectedVisible ? ExpectedVisible : AreaExpectedValue.none;

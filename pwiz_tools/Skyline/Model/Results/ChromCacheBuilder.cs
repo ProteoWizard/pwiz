@@ -843,20 +843,21 @@ namespace pwiz.Skyline.Model.Results
 
             public bool CreateConversion()
             {
+                if (_dictSeqToTime == null)
+                    return false;
+
                 lock (_dictSeqToTime)   // not necessary, but make Resharper happy
                 {
-                    if (_dictSeqToTime == null)
-                        return false;
-
                     var listTimes = new List<double>();
                     var listIrts = new List<double>();
-                    foreach (string sequence in _calculator.GetStandardPeptides(_dictSeqToTime.Keys))
+                    int minCount;
+                    foreach (string sequence in _calculator.ChooseRegressionPeptides(_dictSeqToTime.Keys, out minCount))
                     {
                         listTimes.Add(_dictSeqToTime[sequence]);
                         listIrts.Add(_calculator.ScoreSequence(sequence).Value);
                     }
                     RegressionLine line;
-                    if (!RCalcIrt.TryGetRegressionLine(listIrts, listTimes, RCalcIrt.MinRegressionPoints(listIrts.Count), out line))
+                    if (!RCalcIrt.TryGetRegressionLine(listIrts, listTimes, minCount, out line))
                         return false;
 
                     _conversion = new RegressionLineElement(line);

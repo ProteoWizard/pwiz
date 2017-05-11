@@ -1219,11 +1219,12 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         private readonly bool _allowNegative;
 
-        public MeasuredRetentionTime(string peptideSequence, double retentionTime, bool allowNegative = false)
+        public MeasuredRetentionTime(string peptideSequence, double retentionTime, bool allowNegative = false, bool isStandard = false)
         {
             Assume.IsFalse(String.IsNullOrEmpty(peptideSequence));
             PeptideSequence = peptideSequence;
             RetentionTime = retentionTime;
+            IsStandard = isStandard;
             _allowNegative = allowNegative;
 
             Validate();
@@ -1231,6 +1232,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public string PeptideSequence { get; private set; }
         public double RetentionTime { get; private set; }
+        public bool IsStandard { get; private set; }
 
         #region Implementation of IXmlSerializable
 
@@ -1313,6 +1315,12 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return (PeptideSequence.GetHashCode() * 397) ^ RetentionTime.GetHashCode();
             }
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}: {1:F01}{2}", PeptideSequence, RetentionTime,   // Not L10N
+                IsStandard ? "*" : String.Empty);   // Not L10N
         }
 
         #endregion

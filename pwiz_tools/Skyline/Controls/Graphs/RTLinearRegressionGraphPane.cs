@@ -467,12 +467,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 var standards = new HashSet<string>();
                 if (RTGraphController.PointsType == PointsTypeRT.standards)
                     standards = document.GetRetentionTimeStandards();
-
                 
-                //Only used if we are comparing two runs
+                // Only used if we are comparing two runs
                 Dictionary<string, double> origTimesDict = IsRunToRun ? new Dictionary<string, double>() : null;
                 Dictionary<string, double> targetTimesDict = IsRunToRun ?  new Dictionary<string, double>() : null;
-
 
                 // CONSIDER: Retention time prediction for small molecules?
                 foreach (var nodePeptide in document.Peptides)
@@ -486,7 +484,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                 continue;
                             break;
                         case PointsTypeRT.standards:
-                            if (!standards.Contains(document.Settings.GetModifiedSequence(nodePeptide)))
+                            if (!standards.Contains(document.Settings.GetModifiedSequence(nodePeptide))
+                                    || nodePeptide.GlobalStandardType != StandardType.IRT)  // In case of 15N labeled peptides, the unlabeled form may also show up
                                 continue;
                             break;
                         case PointsTypeRT.decoys:
@@ -540,7 +539,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 _originalTimes = originalTimes != null ? originalTimes.ToArray() : null;
-
 
                 _calculatorName = Settings.Default.RTCalculatorName;
 
@@ -735,8 +733,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 //For run to run all peptides are variables. There are no standards.
-                var standardPeptides = IsRunToRun ? new MeasuredRetentionTime[0] : _targetTimes.Where(pep => standardNames.Contains(pep.PeptideSequence)).ToArray();
-                var variableTargetPeptides = IsRunToRun ? _targetTimes.ToArray() : _targetTimes.Where(pep => !standardNames.Contains(pep.PeptideSequence)).ToArray();
+                var standardPeptides = IsRunToRun ? new MeasuredRetentionTime[0] : _targetTimes.Where(pep => pep.IsStandard && standardNames.Contains(pep.PeptideSequence)).ToArray();
+                var variableTargetPeptides = IsRunToRun ? _targetTimes.ToArray() : _targetTimes.Where(pep => !pep.IsStandard || !standardNames.Contains(pep.PeptideSequence)).ToArray();
                 var variableOrigPeptides = _originalTimes;
 
                 //Throws DatabaseNotConnectedException
@@ -1046,7 +1044,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                 RetentionTimeStatistics statistics, RetentionTimeRegression regression, string name, Color color)
             {
                 double[] lineScores, lineTimes;
-                if (statistics == null)
+                if (statistics == null || regression == null)
                 {
                     lineScores = new double[0];
                     lineTimes = new double[0];

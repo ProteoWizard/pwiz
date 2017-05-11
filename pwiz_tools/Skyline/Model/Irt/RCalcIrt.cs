@@ -140,11 +140,6 @@ namespace pwiz.Skyline.Model.Irt
                                     dbPeptide.TimeSource);
         }
 
-        public static int MinRegressionPoints(int independentCount)
-        {
-            return (int) Math.Round(Math.Max(MIN_PEPTIDES_COUNT, independentCount*MIN_PEPTIDES_PERCENT));
-        }
-
         public static bool TryGetRegressionLine(IList<double> listIndependent, IList<double> listDependent, int minPoints, out RegressionLine line, IList<Tuple<double, double>> removedValues = null)
         {
             line = null;
@@ -613,7 +608,15 @@ namespace pwiz.Skyline.Model.Irt
         public HashSet<int> MissingIndices { get; private set; }
         public HashSet<int> OutlierIndices { get; private set; }
 
-        public int MinPoints { get { return RCalcIrt.MinRegressionPoints(TimesFiltered.Length); } }
+        public int MinPoints
+        {
+            get
+            {
+                return (int) Math.Round(Math.Max(RCalcIrt.MIN_PEPTIDES_COUNT,
+                    TimesFiltered.Length * RCalcIrt.MIN_PEPTIDES_PERCENT));
+            }
+        }
+
         private RegressionLine _regressionRefined;
         public RegressionLine RegressionRefined { get { return _regressionRefined; } private set { _regressionRefined = value; } }
         public RegressionLine Regression { get; private set; }
