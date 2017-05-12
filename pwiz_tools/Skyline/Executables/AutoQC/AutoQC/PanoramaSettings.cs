@@ -30,8 +30,6 @@ namespace AutoQC
     [XmlRoot("panorama_settings")]
     public class PanoramaSettings: IXmlSerializable, IConfigSettings
     {
-        public static readonly byte[] entropy = Encoding.Unicode.GetBytes("Encrypt Panorama password");
-        
         public bool PublishToPanorama { get; set; }
         public string PanoramaServerUrl { get; set; }
         public string PanoramaUserEmail { get; set; }
@@ -157,8 +155,8 @@ namespace AutoQC
             try
             {
                 var encrypted = ProtectedData.Protect(
-                    Encoding.Unicode.GetBytes(password), entropy,
-                    DataProtectionScope.LocalMachine);
+                    Encoding.UTF8.GetBytes(password), null,
+                    DataProtectionScope.CurrentUser);
                 return Convert.ToBase64String(encrypted);
             }
             catch (Exception e)
@@ -178,9 +176,9 @@ namespace AutoQC
             try
             {
                 byte[] decrypted = ProtectedData.Unprotect(
-                    Convert.FromBase64String(encryptedPassword), entropy,
-                    DataProtectionScope.LocalMachine);
-                return Encoding.Unicode.GetString(decrypted);
+                    Convert.FromBase64String(encryptedPassword), null,
+                    DataProtectionScope.CurrentUser);
+                return Encoding.UTF8.GetString(decrypted);
             }
             catch (Exception e)
             {
