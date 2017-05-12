@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Xml;
@@ -25,6 +27,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi
 {
@@ -98,6 +101,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         {
             username,
             password,
+            password_encrypted,
             server_url,
         }
 
@@ -119,7 +123,23 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         {
             // Read tag attributes
             Username = reader.GetAttribute(ATTR.username) ?? string.Empty;
-            Password = reader.GetAttribute(ATTR.password) ?? string.Empty;
+            string encryptedPassword = reader.GetAttribute(ATTR.password_encrypted);
+            if (encryptedPassword != null)
+            {
+                try
+                {
+                    Password = TextUtil.DecryptString(encryptedPassword);
+                }
+                catch (Exception)
+                {
+                    Password = string.Empty;
+                }
+            }
+            else
+            {
+                Password = reader.GetAttribute(ATTR.password) ?? string.Empty;
+            }
+
             ServerUrl = reader.GetAttribute(ATTR.server_url);
             // Consume tag
             reader.Read();
@@ -131,7 +151,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             // Write tag attributes
             writer.WriteAttributeString(ATTR.server_url, ServerUrl);
             writer.WriteAttributeString(ATTR.username, Username);
-            writer.WriteAttributeString(ATTR.password, Password);
+            if (!string.IsNullOrEmpty(Password))
+            {
+                writer.WriteAttributeString(ATTR.password_encrypted, TextUtil.EncryptString(Password));
+            }
         }
         #endregion
 

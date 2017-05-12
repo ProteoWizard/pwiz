@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
@@ -296,6 +297,21 @@ namespace pwiz.Skyline.Util.Extensions
             var listFilters = filters.ToList();
             listFilters.Add(FileDialogFilter(Resources.TextUtil_FileDialogFiltersAll_All_Files, ".*")); // Not L10N
             return string.Join("|", listFilters); // Not L10N
+        }
+
+        /// <summary>
+        /// Encrypts a string. This encryption uses the user's (i.e. not machine) key, so it is 
+        /// appropriate for strings that are marked with the [UserScopedSetting].
+        /// It is not appropriate for any setting marked [ApplicationScopedSetting]
+        /// </summary>
+        public static string EncryptString(string str)
+        {
+            return Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(str), null, DataProtectionScope.CurrentUser));
+        }
+
+        public static string DecryptString(string str)
+        {
+            return Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(str), null, DataProtectionScope.CurrentUser));
         }
     }
 

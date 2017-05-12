@@ -255,6 +255,7 @@ namespace pwiz.Skyline.Util
         {
             username,
             password,
+            password_encrypted,
             uri
         }
 
@@ -276,7 +277,22 @@ namespace pwiz.Skyline.Util
         {
             // Read tag attributes
             Username = reader.GetAttribute(ATTR.username) ?? string.Empty;
-            Password = reader.GetAttribute(ATTR.password) ?? string.Empty;
+            string encryptedPassword = reader.GetAttribute(ATTR.password_encrypted);
+            if (encryptedPassword != null)
+            {
+                try
+                {
+                    Password = TextUtil.DecryptString(encryptedPassword);
+                }
+                catch (Exception)
+                {
+                    Password = string.Empty;
+                }
+            }
+            else
+            {
+                Password = reader.GetAttribute(ATTR.password) ?? string.Empty;
+            }
             string uriText = reader.GetAttribute(ATTR.uri);
             if (string.IsNullOrEmpty(uriText))
             {
@@ -300,7 +316,10 @@ namespace pwiz.Skyline.Util
         {
             // Write tag attributes
             writer.WriteAttributeString(ATTR.username, Username);
-            writer.WriteAttributeString(ATTR.password, Password);
+            if (!string.IsNullOrEmpty(Password))
+            {
+                writer.WriteAttributeString(ATTR.password_encrypted, TextUtil.EncryptString(Password));
+            }
             writer.WriteAttribute(ATTR.uri, URI);
         }
         #endregion
