@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.btnEdit = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
@@ -43,12 +44,15 @@
             this.btnViewLog1 = new System.Windows.Forms.Button();
             this.tabMain = new System.Windows.Forms.TabControl();
             this.tabFront = new System.Windows.Forms.TabPage();
+            this.btnImportConfigs = new System.Windows.Forms.Button();
+            this.btnExportConfigs = new System.Windows.Forms.Button();
             this.tabLog = new System.Windows.Forms.TabPage();
             this.btnOpenFolder = new System.Windows.Forms.Button();
             this.btnViewLog2 = new System.Windows.Forms.Button();
             this.lblConfigSelect = new System.Windows.Forms.Label();
             this.textBoxLog = new System.Windows.Forms.RichTextBox();
             this.comboConfigs = new System.Windows.Forms.ComboBox();
+            this.toolTip_MainForm = new System.Windows.Forms.ToolTip(this.components);
             this.tabMain.SuspendLayout();
             this.tabFront.SuspendLayout();
             this.tabLog.SuspendLayout();
@@ -179,6 +183,8 @@
             // tabFront
             // 
             this.tabFront.BackColor = System.Drawing.Color.Transparent;
+            this.tabFront.Controls.Add(this.btnImportConfigs);
+            this.tabFront.Controls.Add(this.btnExportConfigs);
             this.tabFront.Controls.Add(this.listViewConfigs);
             this.tabFront.Controls.Add(this.labelSavedConfigurations);
             this.tabFront.Controls.Add(this.btnViewLog1);
@@ -193,6 +199,28 @@
             this.tabFront.Size = new System.Drawing.Size(731, 525);
             this.tabFront.TabIndex = 0;
             this.tabFront.Text = "Configurations";
+            // 
+            // btnImportConfigs
+            // 
+            this.btnImportConfigs.Location = new System.Drawing.Point(603, 380);
+            this.btnImportConfigs.Name = "btnImportConfigs";
+            this.btnImportConfigs.Size = new System.Drawing.Size(75, 23);
+            this.btnImportConfigs.TabIndex = 11;
+            this.btnImportConfigs.Text = "Import...";
+            this.toolTip_MainForm.SetToolTip(this.btnImportConfigs, "Import saved configurations...");
+            this.btnImportConfigs.UseVisualStyleBackColor = true;
+            this.btnImportConfigs.Click += new System.EventHandler(this.btnImport_Click);
+            // 
+            // btnExportConfigs
+            // 
+            this.btnExportConfigs.Location = new System.Drawing.Point(603, 340);
+            this.btnExportConfigs.Name = "btnExportConfigs";
+            this.btnExportConfigs.Size = new System.Drawing.Size(75, 23);
+            this.btnExportConfigs.TabIndex = 10;
+            this.btnExportConfigs.Text = "Export...";
+            this.toolTip_MainForm.SetToolTip(this.btnExportConfigs, "Export saved configurations...");
+            this.btnExportConfigs.UseVisualStyleBackColor = true;
+            this.btnExportConfigs.Click += new System.EventHandler(this.btnExport_Click);
             // 
             // tabLog
             // 
@@ -298,6 +326,9 @@
         private System.Windows.Forms.ComboBox comboConfigs;
         private System.Windows.Forms.Button btnViewLog2;
         private System.Windows.Forms.Button btnOpenFolder;
+        private System.Windows.Forms.Button btnImportConfigs;
+        private System.Windows.Forms.Button btnExportConfigs;
+        private System.Windows.Forms.ToolTip toolTip_MainForm;
 
     }
 }

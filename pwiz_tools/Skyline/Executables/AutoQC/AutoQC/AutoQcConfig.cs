@@ -37,6 +37,7 @@ namespace AutoQC
         public void ReadXml(XmlReader reader)
         {
             Name = reader.GetAttribute(ATTR.name);
+            
             // TODO: Configurations shouldn't start automatically when the program starts up. 
             //       Remove this attribute from the config XML?
             IsEnabled = false; // reader.GetBoolAttribute(ATTR.is_enabled);
@@ -47,7 +48,10 @@ namespace AutoQC
             DateTime.TryParse(reader.GetAttribute(ATTR.modified), out dateTime);
             Modified = dateTime;
 
-            reader.Read();
+            do
+            {
+                reader.Read();
+            } while (reader.NodeType != XmlNodeType.Element);
 
             var mainSettings = new MainSettings();
             mainSettings.ReadXml(reader);

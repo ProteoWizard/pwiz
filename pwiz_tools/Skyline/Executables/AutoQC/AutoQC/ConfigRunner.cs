@@ -130,7 +130,7 @@ namespace AutoQC
             {
                 ChangeStatus(RunnerStatus.Error);
                 _logger.LogException(ex);
-                throw ex;
+                throw;
             }
 
             RunBackgroundWorker(RunConfiguration, ProcessFilesCompleted);

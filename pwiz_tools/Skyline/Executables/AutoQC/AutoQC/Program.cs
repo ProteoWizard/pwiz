@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 using System;
+using System.Configuration;
 using System.Deployment.Application;
 using System.IO;
 using System.Windows.Forms;
@@ -36,7 +37,7 @@ namespace AutoQC
             // Initialize log4net -- global application logging
             XmlConfigurator.Configure();
 
-            var form = new MainForm(LOG);
+            var form = new MainForm();
             var version = ApplicationDeployment.IsNetworkDeployed
                 ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
                 : "";
@@ -70,9 +71,14 @@ namespace AutoQC
             Application.Run(form);       
         }
 
-        public static void LogProgramError(string message)
+        public static void LogError(string message)
         {
             LOG.Error(message);
+        }
+
+        public static void LogInfo(string message)
+        {
+            LOG.Info(message);
         }
   
     }

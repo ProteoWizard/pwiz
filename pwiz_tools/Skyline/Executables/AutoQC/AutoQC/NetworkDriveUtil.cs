@@ -54,7 +54,7 @@ namespace AutoQC
                 return true;
             }
 
-            Program.LogProgramError(
+            Program.LogError(
                 string.Format(
                     "Unable to reconnect to network drive. Network deive letter: {0}. Network drive path: {1}",
                     _networkDriveLetter, _networkDrivePath));

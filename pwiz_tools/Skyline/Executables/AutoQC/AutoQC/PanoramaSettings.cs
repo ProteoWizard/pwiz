@@ -163,9 +163,8 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                // TODO:Throw error
-                //LogErrorOutput("Error encrypting password.");
-                //LogErrorOutput(e.Message);
+                Program.LogError("Error encrypting password. " + e.Message);
+  
             }
             return string.Empty;
         }
@@ -185,9 +184,7 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                // TODO:Throw error
-                //LogErrorOutput("Error decrypting password.");
-                //LogErrorOutput(e.Message);   
+                Program.LogError("Error decrypting password. " + e.Message);      
             }
             return string.Empty;
         }

@@ -19,12 +19,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
 using AutoQC.Properties;
 using log4net;
 
@@ -41,22 +44,18 @@ namespace AutoQC
         // ItemCheck and ItemChecked events on the listview are ignored until then.
         private bool _loaded;
 
-        //public const string SKYLINE_RUNNER = "SkylineRunner.exe";
-        public const string SKYLINE_RUNNER = "SkylineDailyRunner.exe";
+        public const string SKYLINE_RUNNER = "SkylineRunner.exe";
+        // public const string SKYLINE_RUNNER = "SkylineDailyRunner.exe";
 
         // Path to SkylineRunner.exe / SkylineDailyRunner.exe
         // Expect SkylineRunner to be in the same directory as AutoQC
         public static readonly string SkylineRunnerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
             SKYLINE_RUNNER);
 
-        private readonly ILog _logger;
-
         private IAutoQcLogger _currentAutoQcLogger;
 
-        public MainForm(ILog logger)
+        public MainForm()
         {
-            _logger = logger;
-
             InitializeComponent();
 
             columnSorter = new ListViewColumnSorter();
@@ -79,7 +78,7 @@ namespace AutoQC
 
         private void ReadSavedConfigurations()
         {
-            _logger.Info("Reading configurations from saved settings.");
+            Program.LogInfo("Reading configurations from saved settings.");
             var configList = Settings.Default.ConfigList;
             var sortedConfig = configList.OrderByDescending(c => c.Created);
             _configRunners = new Dictionary<string, ConfigRunner>();
@@ -99,7 +98,7 @@ namespace AutoQC
             _configRunners.TryGetValue(selectedConfig, out configRunner);
             if (configRunner == null)
             {
-                _logger.Error(string.Format("Could not get a config runner for configuration \"{0}\"", selectedConfig));
+                Program.LogError(string.Format("Could not get a config runner for configuration \"{0}\"", selectedConfig));
             }
             return configRunner;
         }
@@ -116,7 +115,7 @@ namespace AutoQC
             {
                 if (!configRunner.IsConfigEnabled())
                     continue;
-                _logger.Info(string.Format("Starting configuration {0}", configRunner.GetConfigName()));
+                Program.LogInfo(string.Format("Starting configuration {0}", configRunner.GetConfigName()));
                 StartConfigRunner(configRunner); 
             }
         }
@@ -143,12 +142,12 @@ namespace AutoQC
             }
             if (config.IsEnabled)
             {
-                _logger.Info(string.Format("Starting configuration \"{0}\"", config.Name));
+                Program.LogInfo(string.Format("Starting configuration \"{0}\"", config.Name));
                 StartConfigRunner(configRunner);
             }
             else
             {
-                _logger.Info(string.Format("Stopping configuration \"{0}\"", config.Name));
+                Program.LogInfo(string.Format("Stopping configuration \"{0}\"", config.Name));
                 configRunner.Stop();
             }
         }
@@ -163,7 +162,7 @@ namespace AutoQC
         private void btnNewConfig_Click(object sender, EventArgs e)
         {
 //            MessageBox.Show(Application.UserAppDataPath + " directory");
-            _logger.Info("Creating new configuration");
+            Program.LogInfo("Creating new configuration");
             var configForm = new AutoQcConfigForm(this);
             configForm.StartPosition = FormStartPosition.CenterParent;
             ShowConfigForm(configForm);
@@ -179,7 +178,7 @@ namespace AutoQC
                 return;
             }
 
-            _logger.Info(string.Format("{0} configuration \"{1}\"", (configRunner.IsStopped() ? "Editing" : "Viewing"),
+            Program.LogInfo(string.Format("{0} configuration \"{1}\"", (configRunner.IsStopped() ? "Editing" : "Viewing"),
                 configRunner.GetConfigName()));
 
             var configForm = new AutoQcConfigForm(configRunner.Config, configRunner, this);
@@ -194,7 +193,7 @@ namespace AutoQC
             {
                 return;
             }
-            _logger.Info(string.Format("Copying configuration \"{0}\"", configRunner.GetConfigName()));
+            Program.LogInfo(string.Format("Copying configuration \"{0}\"", configRunner.GetConfigName()));
             var newConfig = configRunner.Config.Copy();
             newConfig.Name = null;
             var configForm = new AutoQcConfigForm(newConfig, null, this);
@@ -203,7 +202,7 @@ namespace AutoQC
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            _logger.Info("Delete clicked");
+            Program.LogInfo("Delete clicked");
             // Get the selected configuration
             var configRunner = GetSelectedConfigRunner();
             if (configRunner == null)
@@ -243,6 +242,120 @@ namespace AutoQC
             if (doDelete != DialogResult.Yes) return;
 
             RemoveConfiguration(configRunner.Config);
+        }
+
+        private void btnExport_Click(object sender, EventArgs e)
+        {
+            Settings.Default.Save();
+
+            var dialog = new SaveFileDialog { Title = "Save configurations...", Filter = "XML Files(*.xml)|*.xml" };
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+            var filePath = dialog.FileName;
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
+            config.SaveAs(filePath);
+        }
+
+        private void btnImport_Click(object sender, EventArgs e)
+        {
+            var dialog = new OpenFileDialog();
+            dialog.Filter = "XML Files(*.xml)|*.xml";
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+            var filePath = dialog.FileName;
+
+            List<AutoQcConfig> readConfigs = new List<AutoQcConfig>();
+            try
+            {
+                using (var stream = new FileStream(filePath, FileMode.Open))
+                {
+                    using (var reader = XmlReader.Create(stream))
+                    {
+                        reader.MoveToContent();
+
+                        var done = false;
+                        while (reader.Read() && !done)
+                        {
+                            switch (reader.NodeType)
+                            {
+                                case XmlNodeType.Element:
+
+                                    if (reader.Name == "autoqc_config")
+                                    {
+                                        AutoQcConfig config = AutoQcConfig.Deserialize(reader);
+                                        readConfigs.Add(config);
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(string.Format("Could not import configurations from file {0}", filePath),
+                    "Import Configurations Error",
+                    MessageBoxButtons.OK);
+                return;
+            }
+
+            if (readConfigs.Count == 0)
+            {
+                MessageBox.Show(string.Format("Could not import configurations from file {0}", filePath),
+                    "Import Configurations",
+                    MessageBoxButtons.OK);  
+            }
+
+            var validationErrors = new List<string>();
+            var duplicateConfigs = new List<string>();
+            var numAdded = 0;
+            foreach (AutoQcConfig config in readConfigs)
+            {
+                // Make sure that the configuration name is unique
+                if (GetConfig(config.Name) != null)
+                {
+                    // If a configuration with the same name already exists, don't add it
+                    duplicateConfigs.Add(config.Name);
+                    continue;
+                }
+                
+                try
+                {
+                    config.Validate();
+                }
+                catch (Exception ex)
+                {
+                    validationErrors.Add(string.Format("\"{0}\" Error: {1}", config.Name, ex.Message));
+                    continue;
+                }
+
+                config.IsEnabled = false;
+                AddConfiguration(config);
+                numAdded++;
+            }
+
+            var message = new StringBuilder("Number of configurations imported:");
+            message.Append(numAdded).Append(Environment.NewLine);
+            if (duplicateConfigs.Count > 0)
+            {
+                message.Append("The following configurations already exist and were not imported:")
+                    .Append(Environment.NewLine);
+                foreach (var name in duplicateConfigs)
+                {
+                    message.Append("\"").Append(name).Append("\"").Append(Environment.NewLine);
+                }
+            }
+            if (validationErrors.Count > 0)
+            {
+                message.Append("The following configurations could not be validated and were not imported:")
+                    .Append(Environment.NewLine);
+                foreach (var error in validationErrors)
+                {
+                    message.Append(error).Append(Environment.NewLine);
+                }
+            }
+            MessageBox.Show(message.ToString(), "Import Configurations", MessageBoxButtons.OK);
+            
         }
 
         private void listViewConfigs_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -535,7 +648,7 @@ namespace AutoQC
 
         public void AddConfiguration(AutoQcConfig config, int index)
         {
-            _logger.Info(string.Format("Adding configuration \"{0}\"", config.Name));
+            Program.LogInfo(string.Format("Adding configuration \"{0}\"", config.Name));
             var lvi = new ListViewItem(config.Name);
             lvi.Checked = config.IsEnabled;
             lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.
@@ -568,7 +681,7 @@ namespace AutoQC
 
         private int RemoveConfiguration(AutoQcConfig config)
         {
-            _logger.Info(string.Format("Removing configuration \"{0}\"", config.Name));
+            Program.LogInfo(string.Format("Removing configuration \"{0}\"", config.Name));
             var lvi = listViewConfigs.FindItemWithText(config.Name);
             var lviIndex = lvi == null ? -1 : lvi.Index;
             if (lvi != null)
@@ -722,11 +835,6 @@ namespace AutoQC
                 return function();
             }
             return default(T);
-        }
-
-        public void LogException(string message)
-        {
-            _logger.Error(message);
         }
     }
 

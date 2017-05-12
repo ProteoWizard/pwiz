@@ -168,7 +168,7 @@ namespace AutoQC
 
             LogError(line);
 
-            Program.LogProgramError(line);
+            Program.LogError(line);
         }
 
         public string GetFile()
