@@ -184,7 +184,8 @@ namespace pwiz.Skyline.Model.Results
                     fileIndexes.Add(fileIndex);
                 }
             }
-            var chromatograms = chromatogramGroupInfo.TransitionPointSets.ToArray();
+            var chromatograms = Enumerable.Range(0, chromatogramGroupInfo.NumTransitions)
+                .Select(chromatogramGroupInfo.GetRawTransitionInfo).ToArray();
             Assume.IsTrue(Equals(chromatogramGroupInfo.NumTransitions, chromatograms.Length));
             var keptTransitionIndexes = new List<int>();
             double minRetentionTime = Double.MaxValue;

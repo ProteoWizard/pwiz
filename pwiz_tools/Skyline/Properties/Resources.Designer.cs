@@ -18116,6 +18116,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to process chromatograms for the molecule &apos;{0}&apos; because one chromatogram ends at time &apos;{1}&apos; and the other ends at time &apos;{2}&apos;..
+        /// </summary>
+        public static string PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___ {
+            get {
+                return ResourceManager.GetString("PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule_" +
+                        "__0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2" +
+                        "___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unexpected null peak list.
         /// </summary>
         public static string PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list {

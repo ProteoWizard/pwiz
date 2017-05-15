@@ -9464,6 +9464,9 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings" xml:space="preserve">
     <value>Updating document settings to match edits.</value>
   </data>
+  <data name="PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___" xml:space="preserve">
+    <value>Unable to process chromatograms for the molecule '{0}' because one chromatogram ends at time '{1}' and the other ends at time '{2}'.</value>
+  </data>
   <data name="PeptideTipProvider_RenderTip_Precursor_m_z" xml:space="preserve">
     <value>Precursor m/z</value>
   </data>
