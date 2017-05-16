@@ -292,7 +292,6 @@ namespace pwiz.Common.Collections
         /// Sorts an IList of values. Similar to Array.Sort()
         /// </summary>
         /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <typeparam name="TValue">The type of the value.</typeparam>
         /// <param name="keys">The list to be sorted.</param>
         /// <param name="comparer">The comparer object used to compare keys. If null, will use Comparer.Default.</param>
         public static void Sort<TKey>(this IList<TKey> keys, IComparer comparer = null)
