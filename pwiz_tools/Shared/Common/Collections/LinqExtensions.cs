@@ -31,6 +31,7 @@ namespace pwiz.Common.Collections
     {
         public static IOrderedEnumerable<TSource> OrderBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, SortOrder sortOrder)
         {
+            // ReSharper disable RedundantCaseLabel
             switch (sortOrder)
             {
                 case SortOrder.Ascending: return source.OrderBy(keySelector);
@@ -38,28 +39,37 @@ namespace pwiz.Common.Collections
                 case SortOrder.None:
                 default: throw new ArgumentException();
             }
+            // ReSharper restore RedundantCaseLabel
         }
 
         public static int SequenceCompareTo<TSource>(this IEnumerable<TSource> first, IEnumerable<TSource> second) where TSource : IComparable<TSource>
         {
-            int result = 0;
-            var itr1 = first.GetEnumerator();
-            var itr2 = second.GetEnumerator();
-            bool itr1Valid = true, itr2Valid = true;
-            while (true)
+            using (var itr1 = first.GetEnumerator())
+            using (var itr2 = second.GetEnumerator())
             {
-                itr1Valid = itr1.MoveNext();
-                itr2Valid = itr2.MoveNext();
+                while (true)
+                {
+                    bool itr1Valid = itr1.MoveNext();
+                    bool itr2Valid = itr2.MoveNext();
 
-                if (!itr1Valid && !itr2Valid) break;
-                if (itr1Valid && !itr2Valid) return 1;
-                if (!itr1Valid && itr2Valid) return -1;
+                    if (!itr1Valid || !itr2Valid)
+                    {
+                        if (itr1Valid)
+                        {
+                            return 1;
+                        }
+                        if (itr2Valid)
+                        {
+                            return -1;
+                        }
+                        return 0;
+                    }
 
-                result = itr1.Current.CompareTo(itr2.Current);
-                if (result != 0)
-                    break;
+                    int result = itr1.Current.CompareTo(itr2.Current);
+                    if (result != 0)
+                        return result;
+                }
             }
-            return result;
         }
 
         public static bool IsNullOrEmpty<TSource>(this IEnumerable<TSource> list)
@@ -71,7 +81,7 @@ namespace pwiz.Common.Collections
             if (genericCollection != null)
                 return genericCollection.Count == 0;
 
-            var nonGenericCollection = list as System.Collections.ICollection;
+            var nonGenericCollection = list as ICollection;
             if (nonGenericCollection != null)
                 return nonGenericCollection.Count == 0;
 
@@ -89,8 +99,8 @@ namespace pwiz.Common.Collections
 
         public static void AddRange<T>(this IList<T> list, IEnumerable<T> items)
         {
-            if (list == null) throw new ArgumentNullException("list");
-            if (items == null) throw new ArgumentNullException("items");
+            if (list == null) throw new ArgumentNullException("list"); // Not L10N
+            if (items == null) throw new ArgumentNullException("items"); // Not L10N
 
             if (list is List<T>)
             {
@@ -107,8 +117,8 @@ namespace pwiz.Common.Collections
 
         public static void InsertRange<T>(this IList<T> list, int index, IEnumerable<T> items)
         {
-            if (list == null) throw new ArgumentNullException("list");
-            if (items == null) throw new ArgumentNullException("items");
+            if (list == null) throw new ArgumentNullException("list"); // Not L10N
+            if (items == null) throw new ArgumentNullException("items"); // Not L10N
 
             if (list is List<T>)
             {
@@ -126,7 +136,7 @@ namespace pwiz.Common.Collections
 
         public static void RemoveRange<T>(this IList<T> list, int index, int count)
         {
-            if (list == null) throw new ArgumentNullException("list");
+            if (list == null) throw new ArgumentNullException("list"); // Not L10N
 
             if (list is List<T>)
             {
@@ -149,7 +159,7 @@ namespace pwiz.Common.Collections
             public FuncEqualityComparer(Func<T, T, bool> comparer)
             {
                 if (comparer == null)
-                    throw new ArgumentNullException("comparer cannot be null");
+                    throw new ArgumentNullException("comparer"); // Not L10N
 
                 this.comparer = comparer;
             }
@@ -167,7 +177,7 @@ namespace pwiz.Common.Collections
 
         public static bool Contains<T>(this IEnumerable<T> list, T item, Func<T, T, bool> compareFunc)
         {
-            return list.Contains(item, new FuncEqualityComparer<T>(compareFunc));
+            return list.Any(x => compareFunc(x, item));
         }
 
         private static int GetMedian(int low, int hi)
@@ -264,12 +274,13 @@ namespace pwiz.Common.Collections
         }
 
         /// <summary>
-        /// Co-sorts two lists of values using default comparator. Similar to Array.Sort()
+        /// Co-sorts two ILists of values, i.e. if the key at index 42 in the unsorted list moves to index 24 in the sorted list, the value at index 42 also moves to index 24. Similar to Array.Sort().
         /// </summary>
-        /// <typeparam name="TKey"></typeparam>
-        /// <typeparam name="TValue"></typeparam>
-        /// <param name="keys"></param>
-        /// <param name="values"></param>
+        /// <typeparam name="TKey">The type of the keys.</typeparam>
+        /// <typeparam name="TValue">The type of the values.</typeparam>
+        /// <param name="keys">The list to be sorted.</param>
+        /// <param name="values">The list to be co-sorted.</param>
+        /// <param name="comparer">The comparer object used to compare keys. If null, will use Comparer.Default.</param>
         public static void Sort<TKey, TValue>(this IList<TKey> keys, IList<TValue> values, IComparer comparer = null)
         {
             if (comparer == null) comparer = Comparer.Default;
@@ -278,36 +289,17 @@ namespace pwiz.Common.Collections
         }
 
         /// <summary>
-        /// Binary searches the list for value (assumes the list is sorted by comparer), and returns the index of the value if it exists.
-        /// If it doesn't, returns a negative number which is the complement of the index of the first value after the searched value.
+        /// Sorts an IList of values. Similar to Array.Sort()
         /// </summary>
-        /// <typeparam name="TItem">The type of the item.</typeparam>
-        /// <typeparam name="TSearch">The type of the searched item.</typeparam>
-        /// <param name="list">The list to be searched.</param>
-        /// <param name="value">The value to search for.</param>
-        /// <param name="comparer">The comparer that is used to compare the value with the list items.</param>
-        /// <remarks>from http://stackoverflow.com/a/2948872/638445 </remarks>
-        public static int BinarySearch<TItem, TSearch>(this IList<TItem> list, TSearch value, Func<TSearch, TItem, int> comparer)
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TValue">The type of the value.</typeparam>
+        /// <param name="keys">The list to be sorted.</param>
+        /// <param name="comparer">The comparer object used to compare keys. If null, will use Comparer.Default.</param>
+        public static void Sort<TKey>(this IList<TKey> keys, IComparer comparer = null)
         {
-            if (list == null) throw new ArgumentNullException("list");
-            if (comparer == null) throw new ArgumentNullException("comparer");
-
-            int lower = 0;
-            int upper = list.Count - 1;
-
-            while (lower <= upper)
-            {
-                int middle = lower + (upper - lower) / 2;
-                int comparisonResult = comparer(value, list[middle]);
-                if (comparisonResult < 0)
-                    upper = middle - 1;
-                else if (comparisonResult > 0)
-                    lower = middle + 1;
-                else
-                    return middle;
-            }
-
-            return ~lower;
+            if (comparer == null) comparer = Comparer.Default;
+            var sorter = new SorterObjectArray<TKey, TKey>(keys, null, comparer);
+            sorter.QuickSort(0, keys.Count - 1);
         }
 
         /// <summary>
@@ -315,53 +307,25 @@ namespace pwiz.Common.Collections
         /// If it doesn't, returns a negative number which is the complement of the index of the first value after the searched value.
         /// </summary>
         /// <typeparam name="TItem">The type of the item.</typeparam>
-        /// <param name="list">The list to be searched.</param>
+        /// <param name="items">The list to be searched.</param>
         /// <param name="value">The value to search for.</param>
-        /// <remarks>from http://stackoverflow.com/a/2948872/638445 </remarks>
-        public static int BinarySearch<TItem>(this IList<TItem> list, TItem value)
+        public static int BinarySearch<TItem>(this IList<TItem> items, TItem value) where TItem : IComparable
         {
-            return BinarySearch(list, value, Comparer<TItem>.Default);
-        }
-
-        /// <summary>
-        /// Binary searches the list for value (assumes the list is sorted by comparer), and returns the index of the value if it exists.
-        /// If it doesn't, returns a negative number which is the complement of the index of the first value after the searched value.
-        /// </summary>
-        /// <typeparam name="TItem">The type of the item.</typeparam>
-        /// <param name="list">The list to be searched.</param>
-        /// <param name="value">The value to search for.</param>
-        /// <param name="comparer">The comparer that is used to compare the value with the list items.</param>
-        /// <remarks>from http://stackoverflow.com/a/2948872/638445 </remarks>
-        public static int BinarySearch<TItem>(this IList<TItem> list, TItem value, IComparer<TItem> comparer)
-        {
-            return list.BinarySearch(value, comparer.Compare);
-        }
-
-        /// <summary>
-        /// Binary searches the list for the first element greater than or equal to value (assumes the list is sorted by comparer), and returns its index (or Count if value is greater than the last element).
-        /// </summary>
-        /// <typeparam name="TItem">The type of the item.</typeparam>
-        /// <param name="list">The list to be searched.</param>
-        /// <param name="value">The value to search for.</param>
-        /// <param name="comparer">The comparer that is used to compare the value with the list items.</param>
-        public static int LowerBound<TItem>(this IList<TItem> list, TItem value, IComparer<TItem> comparer)
-        {
-            int index = list.BinarySearch(value, comparer.Compare);
-            if (index < 0)
-                return ~index;
-            return index;
+            return CollectionUtil.BinarySearch(items, value);
         }
 
         /// <summary>
         /// Binary searches the list for the first element greater than or equal to value (assumes the list is sorted by the default comparer), and returns its index (or Count if value is greater than the last element).
         /// </summary>
         /// <typeparam name="TItem">The type of the item.</typeparam>
-        /// <param name="list">The list to be searched.</param>
+        /// <param name="items">The list to be searched.</param>
         /// <param name="value">The value to search for.</param>
-        /// <param name="comparer">The comparer that is used to compare the value with the list items.</param>
-        public static int LowerBound<TItem>(this IList<TItem> list, TItem value)
+        public static int LowerBound<TItem>(this IList<TItem> items, TItem value) where TItem : IComparable
         {
-            return list.LowerBound(value, Comparer<TItem>.Default);
+            int index = items.BinarySearch(value);
+            if (index < 0)
+                return ~index;
+            return index;
         }
     }
 }
