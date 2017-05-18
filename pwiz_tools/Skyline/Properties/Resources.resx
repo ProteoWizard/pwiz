@@ -3246,8 +3246,8 @@ Are you sure you want to continue?</value>
   <data name="PublishDocumentDlg_btnBrowse_Click_Shared_Files" xml:space="preserve">
     <value>Shared Files</value>
   </data>
-  <data name="RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_caclculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_" xml:space="preserve">
-    <value>In certain cases, you may want to have Skyline re-caclculate peaks and re-score them based on the existing chromatogram data. Chromatograms will not be re-imported from raw data files, but peak integration information may change.</value>
+  <data name="RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_calculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_" xml:space="preserve">
+    <value>In certain cases, you may want to have Skyline re-calculate peaks and re-score them based on the existing chromatogram data. Chromatograms will not be re-imported from raw data files, but peak integration information may change.</value>
   </data>
   <data name="SkylineWindow_ImportFasta_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications" xml:space="preserve">
     <value>Would you like to use the Unimod definitions for the following modifications?</value>

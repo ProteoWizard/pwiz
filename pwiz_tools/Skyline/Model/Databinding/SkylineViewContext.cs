@@ -235,6 +235,7 @@ namespace pwiz.Skyline.Model.Databinding
                 char separator = saveFileDialog.FilterIndex == 2
                     ? TextUtil.SEPARATOR_TSV
                     : TextUtil.GetCsvSeparator(DataSchema.DataSchemaLocalizer.FormatProvider);
+                SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
                 return ExportToFile(owner, viewInfo, saveFileDialog.FileName, GetDsvWriter(separator));
             }
         }

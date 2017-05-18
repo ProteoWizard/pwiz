@@ -1245,16 +1245,19 @@ namespace pwiz.Skyline.Model.Results
                             listKeepTextIdBytes.Add(_textIdBytes[j]);
 
                         start = lastEntry.StartScoreIndex;
-                        end = start + lastEntry.NumPeaks*scoreTypes.Length;
-                        scoreCount += end - start;
-                        if (scoreCount > 0)
+                        if (start != -1)
                         {
-                            _scores.WriteArray(
-                                (scores, startIndex, count) =>
-                                    FastWrite.WriteFloats(fsScores.FileStream.SafeFileHandle, scores, startIndex,
-                                        count),
-                                start,
-                                end - start);
+                            end = start + lastEntry.NumPeaks * scoreTypes.Length;
+                            scoreCount += end - start;
+                            if (scoreCount > 0)
+                            {
+                                _scores.WriteArray(
+                                    (scores, startIndex, count) =>
+                                        FastWrite.WriteFloats(fsScores.FileStream.SafeFileHandle, scores, startIndex,
+                                            count),
+                                    start,
+                                    end - start);
+                            }
                         }
                     }
 

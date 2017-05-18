@@ -1753,18 +1753,17 @@ namespace pwiz.Skyline
 
                 menu.DropDownItems.Clear();
 
-                nodeGroupTree = (TransitionGroupTreeNode) nodePepTree.FirstNode;
-                while (!Equals(nodeGroupTree.DocNode.TransitionGroup.LabelType, isotopeLabelType))
+                var transitionGroupDocNode = nodePepTree.DocNode.TransitionGroups
+                    .FirstOrDefault(transitionGroup => Equals(transitionGroup.TransitionGroup.LabelType,
+                        isotopeLabelType));
+                if (transitionGroupDocNode == null)
                 {
-                    var next = nodeGroupTree.NextNode;
-                    if (next == null)
-                        return;
-                    nodeGroupTree = (TransitionGroupTreeNode) next;
+                    return;
                 }
                 var item = new ToolStripMenuItem(Resources.SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All, null, removePeakContextMenuItem_Click);
                 menu.DropDownItems.Insert(0, item);
 
-                var handler = new RemovePeakHandler(this, nodeGroupTree.Path, nodeGroupTree.DocNode, null);
+                var handler = new RemovePeakHandler(this, new IdentityPath(nodePepTree.Path, transitionGroupDocNode.Id), transitionGroupDocNode, null);
                 item = new ToolStripMenuItem(isotopeLabelType.Title, null, handler.menuItem_Click);
                 menu.DropDownItems.Insert(0, item);
             }

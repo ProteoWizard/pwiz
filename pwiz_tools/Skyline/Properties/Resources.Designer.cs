@@ -20402,11 +20402,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to In certain cases, you may want to have Skyline re-caclculate peaks and re-score them based on the existing chromatogram data. Chromatograms will not be re-imported from raw data files, but peak integration information may change..
+        ///   Looks up a localized string similar to In certain cases, you may want to have Skyline re-calculate peaks and re-score them based on the existing chromatogram data. Chromatograms will not be re-imported from raw data files, but peak integration information may change..
         /// </summary>
-        public static string RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_caclculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_ {
+        public static string RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_calculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_ {
             get {
-                return ResourceManager.GetString(@"RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_caclculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_", resourceCulture);
+                return ResourceManager.GetString(@"RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_calculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_", resourceCulture);
             }
         }
         
