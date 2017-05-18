@@ -2281,6 +2281,7 @@
     <EmbeddedResource Include="FileUI\ShareListDlg.zh-CHS.resx">
       <DependentUpon>ShareListDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.ja.resx" />
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>ColumnToolTips.Designer.cs</LastGenOutput>
@@ -2290,6 +2291,7 @@
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.zh-CHS.resx" />
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.ja.resx" />
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>

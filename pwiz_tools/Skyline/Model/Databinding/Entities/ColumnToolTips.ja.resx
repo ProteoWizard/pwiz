@@ -1,0 +1,760 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+		Microsoft ResX Schema
+
+		Version 1.3
+
+		The primary goals of this format is to allow a simple XML format 
+		that is mostly human readable. The generation and parsing of the 
+		various data types are done through the TypeConverter classes 
+		associated with the data types.
+
+		Example:
+
+		... ado.net/XML headers & schema ...
+		<resheader name="resmimetype">text/microsoft-resx</resheader>
+		<resheader name="version">1.3</resheader>
+		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+		<data name="Name1">this is my long string</data>
+		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+			[base64 mime encoded serialized .NET Framework object]
+		</data>
+		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+			[base64 mime encoded string representing a byte array form of the .NET Framework object]
+		</data>
+
+		There are any number of "resheader" rows that contain simple 
+		name/value pairs.
+
+		Each data row contains a name, and value. The row also contains a 
+		type or mimetype. Type corresponds to a .NET class that support 
+		text/value conversion through the TypeConverter architecture. 
+		Classes that don't support this are serialized and stored with the 
+		mimetype set.
+
+		The mimetype is used for serialized objects, and tells the 
+		ResXResourceReader how to depersist the object. This is currently not 
+		extensible. For a given mimetype the value must be set accordingly:
+
+		Note - application/x-microsoft.net.object.binary.base64 is the format 
+		that the ResXResourceWriter will generate, however the reader can 
+		read any of the formats listed below.
+
+		mimetype: application/x-microsoft.net.object.binary.base64
+		value   : The object must be serialized with 
+			: System.Serialization.Formatters.Binary.BinaryFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.soap.base64
+		value   : The object must be serialized with 
+			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.bytearray.base64
+		value   : The object must be serialized into a byte array 
+			: using a System.ComponentModel.TypeConverter
+			: and then encoded with base64 encoding.
+	-->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Accuracy">
+    <value>計算濃度に対するアナライト濃度比（繰り返し測定で指定）</value>
+  </data>
+  <data name="AcquiredTime">
+    <value>質量分析計が前回この繰り返し測定データの取得を 開始した日時です。1.1より古いバージョンでファイルがインポートされた場合には#N/Aとなります。</value>
+  </data>
+  <data name="AnalyteConcentration">
+    <value>品質管理基準外にスパイクしたアナライトの既知量です。</value>
+  </data>
+  <data name="Area">
+    <value>トランジションピークの曲線下の面積（AUC）からバックグラウンドを引いたものです。</value>
+  </data>
+  <data name="AreaNormalized">
+    <value>ドキュメント内の全トランジションのArea値合計に対して正規化された Areaです。</value>
+  </data>
+  <data name="AreaRatio">
+    <value>最初の内部標準標識タイプでの該当するトランジションに対するこのトランジションの Area比です。バージョン0.7より前では、これは常にLight/Heavyであり、 Heavyトランジション上に表示されていました。</value>
+  </data>
+  <data name="AverageMassErrorPPM">
+    <value>平均質量誤差(PPM)</value>
+  </data>
+  <data name="AverageMeasuredRetentionTime">
+    <value>全繰り返し測定の平均ペプチド保持時間</value>
+  </data>
+  <data name="Background">
+    <value>両側の積分境界線とベースライン、および積分境界線とトランジションピークのクロマトグラムの 交点の強度の低い方から引いたその境界線に垂直な直線とで形成される長方形の 面積です。</value>
+  </data>
+  <data name="BeginPos">
+    <value>ペプチドに含まれるタンパク質シークエンス内の最初の（N末端）アミノ酸の位置です。 タンパク質シークエンスがない場合には#N/Aとなります。  </value>
+  </data>
+  <data name="BestReplicate">
+    <value>この繰り返し測定で全体的なペプチドのピークスコアが最も高くなる場合には真となります。</value>
+  </data>
+  <data name="BestRetentionTime">
+    <value>プリカーサーに対する最大強度が最も高いトランジションの 保持時間値です。</value>
+  </data>
+  <data name="CalculatedConcentration">
+    <value>アナライト濃度は、以下のいずれかによって計算されます：  1. 校正曲線を使用（[ペプチド設定] &gt; [定量] に[回帰適合]が指定されている場合）  2. 内部標準（またはサロゲート）に対する比率を使用し、内部標準濃度を掛ける</value>
+  </data>
+  <data name="CalibrationCurve">
+    <value>試料タイプが[標準]で[アナライト濃度]が指定されている繰り返し測定を使用して計算された校正曲線です。</value>
+  </data>
+  <data name="CleavageAa">
+    <value>その後のペプチドが断片化によって開裂されているペプチド内（C末端）の特定アミノ酸残基です。 （P、M、S、Tなど）</value>
+  </data>
+  <data name="CollisionEnergy">
+    <value>Skyline内での装置/ベンダー固有のデフォルト衝突エネルギー式による プリカーサーイオンの衝突エネルギー</value>
+  </data>
+  <data name="ConcentrationMultiplier">
+    <value>特定のペプチドまたは分子の特定の濃度を得るために繰り返し測定の「アナライト濃度」に乗じる値です。</value>
+  </data>
+  <data name="CountTruncated">
+    <value>取得時間範囲内のピークの両側で強度が全体のピーク高さの1%より高い 範囲を積分するプリカーサーのトランジション数です。 </value>
+  </data>
+  <data name="Cv">
+    <value>Cv</value>
+  </data>
+  <data name="CvArea">
+    <value>トランジションのArea値の変動係数（CV）です。</value>
+  </data>
+  <data name="CvAreaNormalized">
+    <value>トランジションのAreaNormalized値 の変動係数（CV）です。</value>
+  </data>
+  <data name="CvAreaRatio">
+    <value>トランジションのAreaRatio値の変動係数（CV）です。</value>
+  </data>
+  <data name="CvBestRetentionTime">
+    <value>プリカーサーのBestRetentionTime値の 変動係数（CV）です。</value>
+  </data>
+  <data name="CvFwhm">
+    <value>トランジションのFwhm（ピーク幅）値の変動係数（CV）です。</value>
+  </data>
+  <data name="CvMaxFwhm">
+    <value>プリカーサーのMaxFwhm（ピーク幅）値の変動係数（CV） です。</value>
+  </data>
+  <data name="CvMaxHeight">
+    <value>Cvの最大高さ</value>
+  </data>
+  <data name="CvRetentionTime">
+    <value>トランジションのRetentionTime値の変動係数（CV）です。</value>
+  </data>
+  <data name="CvTotalArea">
+    <value>プリカーサーのTotalArea値の変動係数（CV） です。</value>
+  </data>
+  <data name="CvTotalAreaNormalized">
+    <value>プリカーサーのTotalAreaNormalized値の変動係数（CV） です。</value>
+  </data>
+  <data name="CvTotalAreaRatio">
+    <value>プリカーサーのTotalAreaRatio値の変動係数（CV） です。</value>
+  </data>
+  <data name="DeclusteringPotential">
+    <value>Skyline内での装置/ベンダー固有のデフォルトのデクラスタリング ポテンシャル式によるプリカーサーイオンのデクラスタリングポテンシャルです。</value>
+  </data>
+  <data name="DecoyMzShift">
+    <value>デコイm/zを作成するためにプリカーサーに加えられる m/zのシフトです。</value>
+  </data>
+  <data name="DetectionQValue">
+    <value>mProphetモデルの適用後に選択された各ターゲットピークに割り当てられる偽探索率（FDR）スコアです。</value>
+  </data>
+  <data name="DetectionZScore">
+    <value>mProphetモデルの適用後に選択された各ピーク（ターゲットおよびデコイ）に割り当てられる正規化されたmProphetスコアです。平均デコイスコアからの標準偏差（SD）数として表現されます。</value>
+  </data>
+  <data name="EndPos">
+    <value>ペプチドに含まれるタンパク質シークエンスの最後の（C末端）アミノ酸の 位置です。タンパク質シークエンスがない場合には#N/Aとなります。</value>
+  </data>
+  <data name="EndTime">
+    <value>トランジションピークの積分終了境界における保持時間です。</value>
+  </data>
+  <data name="EstimatedValue">
+    <value>線形回帰の勾配です。</value>
+  </data>
+  <data name="ErrorMessage">
+    <value>この値を計算しようとしている間にエラーがあった場合のエラーメッセージのテキストです。</value>
+  </data>
+  <data name="ExplicitCollisionEnergy">
+    <value>ターゲットのSRMメソッドまたはトランジションリストで使用することが望まれる衝突エネルギーです。他のすべてのモデルと最適化ライブラリの値をオーバーライドします。</value>
+  </data>
+  <data name="ExplicitCompensationVoltage">
+    <value>ターゲットのSRMメソッドまたはトランジションリストで使用することが望まれる補償電圧（イオン移動度フィルタ）です。他のすべてのモデルと最適化ライブラリの値をオーバーライドします。</value>
+  </data>
+  <data name="ExplicitConeVoltage">
+    <value>ターゲットのSRMメソッドまたはトランジションリストで使用することが望まれるコーン電圧（Waters製装置のみ）です。</value>
+  </data>
+  <data name="ExplicitDeclusteringPotential">
+    <value>ターゲットのSRMメソッドまたはトランジションリストで使用することが望まれるデクラスタリングポテンシャル（SCIEX製装置のみ）です。他のすべてのモデルの値をオーバーライドします。</value>
+  </data>
+  <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
+    <value>イオン移動度高エネルギー質量スペクトルからのクロマトグラムの抽出に使用することが望まれるドリフト時間高エネルギーオフセット（ミリ秒単位）です。他のすべてのモデルの値をオーバーライドします。</value>
+  </data>
+  <data name="ExplicitDriftTimeMsec">
+    <value>イオン移動度質量スペクトルからのクロマトグラムの抽出に使用することが望まれるドリフト時間（ミリ秒単位）です。他のすべてのモデルの値をオーバーライドします。</value>
+  </data>
+  <data name="ExplicitGlobalStandardArea">
+    <value>「グローバル標準に対する比率」の計算に使用する値です。  特定の繰り返し測定のピーク面積を、Skyline以外で計算した値で除算して正規化するときにこれを使用します。</value>
+  </data>
+  <data name="ExplicitRetentionTime">
+    <value>ターゲットに使用する予測保持時間（分単位）です。他のすべての予測メソッドをオーバーライドします。</value>
+  </data>
+  <data name="ExplicitRetentionTimeWindow">
+    <value>ターゲットに使用することが望まれる保持時間ウィンドウ（分単位）です。この値の計算に使用されるその他すべての設定をオーバーライドします。</value>
+  </data>
+  <data name="ExplicitSLens">
+    <value>ターゲットのSRMメソッドまたはトランジションリストで使用することが望まれるS-レンズ値（Thermo製装置のみ）です。</value>
+  </data>
+  <data name="FileIndex">
+    <value>ファイルインデックス</value>
+  </data>
+  <data name="FileName">
+    <value>データのインポート元ファイル名</value>
+  </data>
+  <data name="Files">
+    <value>ファイル</value>
+  </data>
+  <data name="FoldChangeResult">
+    <value>2つのグループ間での値の比較結果です。</value>
+  </data>
+  <data name="FragmentIon">
+    <value>プロダクトイオンペプチド断片名です（y8、y10、b7など）。</value>
+  </data>
+  <data name="FragmentIonOrdinal">
+    <value>その後のペプチドが断片化によって開裂されているペプチド内のアミノ酸の 位置（C末端）です。（8、10、7など）</value>
+  </data>
+  <data name="FragmentIonType">
+    <value>プロダクトイオンのタイプ（y、b、c、z、a、x、プリカーサー）</value>
+  </data>
+  <data name="FullScanFilterWidth">
+    <value>フルスキャンフィルタ幅</value>
+  </data>
+  <data name="Fwhm">
+    <value>トランジションピークの半値全幅（FWHM）です。</value>
+  </data>
+  <data name="FwhmDegenerate">
+    <value>FWHM縮退</value>
+  </data>
+  <data name="Height">
+    <value>トランジションピーク積分境界間の点の最大強度です。 </value>
+  </data>
+  <data name="Group">
+    <value>対照グループと比較した繰り返し測定の注釈値です。</value>
+  </data>
+  <data name="Identified">
+    <value>ピーク積分境界間において結果ファイルにMS/MSペプチド同定がある 場合には真となります。</value>
+  </data>
+  <data name="Intercept">
+    <value>近似直線または曲線のY切片</value>
+  </data>
+  <data name="InternalStandardConcentration">
+    <value>試料内の内部標準数量です。</value>
+  </data>
+  <data name="IonFormula">
+    <value>完全電荷状態（および同位体標識）のイオンを質量分析計で測定するための原子化学式です。</value>
+  </data>
+  <data name="IsDecoy">
+    <value>これがデコイプリカーサーであれば真です。</value>
+  </data>
+  <data name="IsotopeDistIndex">
+    <value>モノアイソトピックピークであればゼロ、M+1であれば1、M+2であれば2などとなります。 </value>
+  </data>
+  <data name="IsotopeDistProportion">
+    <value>この同位体ピークに対して予測される全体的な同位体分布 比率です。現在では、高分解能MS1スキャンからフィルタされたプリカーサートランジションに 対してのみ利用可能です。</value>
+  </data>
+  <data name="IsotopeDistRank">
+    <value>予測された同位体分布に対してすべての同位体ピークでのIsotopeDistProportion に基づく順位です。ユーザーインターフェイスでは[(irank #)]と表示されます。現在では、高分解能MS1スキャンからフィルタされたプリカーサートランジションに 対してのみ利用可能です。</value>
+  </data>
+  <data name="IsotopeDotProduct">
+    <value>上記には内積計算を説明していますが、これはプリカーサーの各プリカーサー （M、M+1、M+2など）ピーク面積と予測同位体分布強度との間のものです。トランジションが プリカーサー同位体でない場合やクロマトグラムが高分解能MS1データから抽出されなかった場合には #N/Aとなります。</value>
+  </data>
+  <data name="IsotopeLabelType">
+    <value>プリカーサーイオンに関連付けられた標識タイプ名（Light/Heavy）です。 どの同位体修飾が適用されたかを示します</value>
+  </data>
+  <data name="Key">
+    <value>キー</value>
+  </data>
+  <data name="LibraryDotProduct">
+    <value>プリカーサーの各トランジションピーク面積と一致したMS/MSスペクトル ライブラリスペクトルにおける一致するイオンピーク強度との内積です（注：v1.4同様、 これは現在1 – Arcos(dotp)/(Pi/2)となっています。ここでdotpが上記に説明する値であり、 正規化スペクトルコントラスト角度とも言います）。プリカーサーに一致するライブラリスペクトルがない 場合やトランジションが4個未満の場合には#N/Aとなります。これは35であり、 メソッドの最適化に使用します。トランジションが6個以上ある場合に最もうまく機能します。 </value>
+  </data>
+  <data name="LibraryIntensity">
+    <value>一致するライブラリスペクトルでトランジションプロダクトイオンに 該当するMS/MSピーク強度です。</value>
+  </data>
+  <data name="LibraryName">
+    <value>MS/MSスペクトルライブラリのスペクトルがプリカーサーイオンに関連付けられて いる場合には、MS/MSスペクトルライブラリ名となります。</value>
+  </data>
+  <data name="LibraryRank">
+    <value>トランジションフィルタ設定で許可されるすべてのトランジションでの このトランジションのLibraryIntensityに基づく順位です。ユーザーインターフェイスでは[(rank #)]と表示されます。</value>
+  </data>
+  <data name="LibraryScore1">
+    <value>タンパク質のプリカーサーの順位付けに使用されるまたは使用されない 可能性もあるペプチド生データのライブラリスコアです。</value>
+  </data>
+  <data name="LibraryScore2">
+    <value>タンパク質のプリカーサーの順位付けに使用されるまたは使用されない 可能性もあるペプチド生データのライブラリスコアです。</value>
+  </data>
+  <data name="LibraryScore3">
+    <value>タンパク質のプリカーサーの順位付けに使用されるまたは使用されない 可能性もあるペプチド生データのライブラリスコアです。</value>
+  </data>
+  <data name="LibraryType">
+    <value>MS/MSスペクトルライブラリのスペクトルがプリカーサーイオンに関連付けられて いる場合には、MS/MSスペクトルライブラリのタイプ（BiblioSpec、GPM、NIST）となります。</value>
+  </data>
+  <data name="Losses">
+    <value>この断片によるすべてのニュートラルロスのカンマ区切りリスト</value>
+  </data>
+  <data name="LossNeutralMass">
+    <value>この断片によるすべてのニュートラルロスの合計質量です。</value>
+  </data>
+  <data name="MassErrorPPM">
+    <value>質量誤差PPM</value>
+  </data>
+  <data name="Max">
+    <value>最大値</value>
+  </data>
+  <data name="MaxBestRetentionTime">
+    <value>プリカーサーBestRetentionTimeの最大値です。</value>
+  </data>
+  <data name="MaxEndTime">
+    <value>プリカーサーの全トランジションEndTimeの最大値です。手動で編集 されない限り、プリカーサーのすべてのトランジションは同じ積分境界を使用します。</value>
+  </data>
+  <data name="MaxFwhm">
+    <value>プリカーサーのトランジション半値全幅（FWHM）の最大値です。 </value>
+  </data>
+  <data name="MaxHeight">
+    <value>最大高さ</value>
+  </data>
+  <data name="MaxRetentionTime">
+    <value>トランジションRetentionTimeの最大値です。</value>
+  </data>
+  <data name="Mean">
+    <value>平均</value>
+  </data>
+  <data name="MeanArea">
+    <value>トランジションAreaの平均値です。</value>
+  </data>
+  <data name="MeanAreaNormalized">
+    <value>トランジションAreaNormalizedの平均値です。</value>
+  </data>
+  <data name="MeanAreaRatio">
+    <value>トランジションAreaRatioの平均値です。</value>
+  </data>
+  <data name="MeanBestRetentionTime">
+    <value>プリカーサーBestRetentionTimeの平均値です。</value>
+  </data>
+  <data name="MeanFwhm">
+    <value>トランジションFwhm（ピーク幅）の平均値です。</value>
+  </data>
+  <data name="MeanMaxFwhm">
+    <value>プリカーサーMaxFwhm（ピーク幅）の平均値です。</value>
+  </data>
+  <data name="MeanMaxHeight">
+    <value>最大高さの平均値</value>
+  </data>
+  <data name="MeanRetentionTime">
+    <value>トランジションRetentionTimeの平均値です。</value>
+  </data>
+  <data name="MeanTotalArea">
+    <value>プリカーサーTotalAreaの平均値です。</value>
+  </data>
+  <data name="MeanTotalAreaNormalized">
+    <value>プリカーサーTotalAreaNormalizedの平均値です。</value>
+  </data>
+  <data name="MeanTotalAreaRatio">
+    <value> プリカーサーTotalAreaRatioの平均値です。</value>
+  </data>
+  <data name="Min">
+    <value>最小値</value>
+  </data>
+  <data name="MinBestRetentionTime">
+    <value>プリカーサーBestRetentionTimeの最小値です。</value>
+  </data>
+  <data name="MinRetentionTime">
+    <value>トランジションRetentionTimeの最小値です。</value>
+  </data>
+  <data name="MinStartTime">
+    <value>プリカーサーの全トランジションStartTimeの最小値です。手動で編集 されない限り、プリカーサーのすべてのトランジションは同じ積分境界を使用します。</value>
+  </data>
+  <data name="MissedCleavages">
+    <value>ペプチドシークエンス内の切断部位欠損数</value>
+  </data>
+  <data name="ModifiedSequence">
+    <value>システインアルキル化などすべてのアミノ酸修飾を含むペプチドシークエンスです。 （例：AGLC[+57]QTFVYGGC[+57]R）</value>
+  </data>
+  <data name="ModifiedTime">
+    <value>ディスク上で元の質量分析計ファイルが前回編集された日時 </value>
+  </data>
+  <data name="MoleculeFormula">
+    <value>質量分析計で測定されるニュートラルな非標識分子の原子化学式です。</value>
+  </data>
+  <data name="MoleculeName">
+    <value>ニュートラルな非標識低分子に割り当て可能な一般名です。</value>
+  </data>
+  <data name="MSLevel">
+    <value>結果がプリカーサー強度（MSレベル1）のみを使用して取得されたか、プロダクト強度（MSレベル2）を使用して取得されたかを示します。</value>
+  </data>
+  <data name="NextAa">
+    <value>次のAa</value>
+  </data>
+  <data name="NormalizationMethod">
+    <value>絶対的定量化とグループ比較を目的にこの特定の分子で使用する正規化メソッドをオーバーライドします。</value>
+  </data>
+  <data name="NormalizedArea">
+    <value>そのペプチド/分子に指定された「正規化メソッド」または  [設定] &gt; [ペプチド設定] &gt; [定量化]で指定される正規化メソッドを使用したペプチド/分子強度の正規化によって取得される値です。</value>
+  </data>
+  <data name="OptCollisionEnergy">
+    <value>衝突エネルギーが最適化されている場合には、OptStepに 該当する衝突エネルギー値</value>
+  </data>
+  <data name="OptCompensationVoltage">
+    <value>補償電圧が最適化されている場合には、OptStepに該当する補償電圧値（イオン移動度フィルタリング用）</value>
+  </data>
+  <data name="OptDeclusteringPotential">
+    <value>デクラスタリングポテンシャルが最適化されている場合には、 OptStepに該当するデクラスタリングポテンシャル値</value>
+  </data>
+  <data name="OptStep">
+    <value>最適化されているパラメーターのデフォルト値からの距離を示す最適化 ステップ値です。デフォルトのパラメーター値または繰り返し測定で最適化が実施されていない 場合には0となります。</value>
+  </data>
+  <data name="PeakRank">
+    <value>同じプリカーサーのその他すべてのトランジションに加えてこのトランジションの Areaに基づく順位です。</value>
+  </data>
+  <data name="PeakRankByLevel">
+    <value>MSレベルによる特定の繰り返し測定におけるピーク面積順位付け（MS1とMS/MSの順位付けは別になります）</value>
+  </data>
+  <data name="Peptide">
+    <value>ペプチド</value>
+  </data>
+  <data name="PeptideDocumentLocation">
+    <value>Skylineドキュメント内のペプチドの一意識別子です。選択を変更するためにSkyline内に呼び戻す外部ツールの記述時に使用できます。</value>
+  </data>
+  <data name="PeptideModifiedSequence">
+    <value>構造修飾デルタ質量（例：AC[+57]GR）のみで注釈が付く アミノ酸シークエンスです。</value>
+  </data>
+  <data name="PeptideNote">
+    <value>編集メニューで[メモ編集]をクリックすると表示される、ペプチドに関連付けられている フリーテキストメモ</value>
+  </data>
+  <data name="PeptidePeakFoundRatio">
+    <value>ペプチドピーク検出率</value>
+  </data>
+  <data name="PeptideResult">
+    <value>ペプチド結果</value>
+  </data>
+  <data name="PeptideResultDocumentLocation">
+    <value>ドキュメント内のペプチド結果の一意識別子です。インタラクティブな外部ツールの記述時に使用できます。</value>
+  </data>
+  <data name="PeptideResults">
+    <value>ペプチド結果</value>
+  </data>
+  <data name="PeptideRetentionTime">
+    <value>各繰り返し測定実行のペプチド保持時間です。</value>
+  </data>
+  <data name="Peptides">
+    <value>ペプチド</value>
+  </data>
+  <data name="PeptideSequence">
+    <value> ペプチドのアミノ酸シークエンスです。</value>
+  </data>
+  <data name="PointCount">
+    <value>曲線適合で使用されたデータポイント数です。</value>
+  </data>
+  <data name="Precursor">
+    <value>プリカーサー</value>
+  </data>
+  <data name="PrecursorCharge">
+    <value>  プリカーサーイオンと関連付けられた電荷です。  </value>
+  </data>
+  <data name="PrecursorMz">
+    <value>プリカーサーイオンの質量電荷比（m/z）です。</value>
+  </data>
+  <data name="PrecursorNeutralMass">
+    <value>プリカーサーのニュートラル質量（ダルトン単位）</value>
+  </data>
+  <data name="PrecursorNote">
+    <value>編集メニューで[メモ編集]をクリックすると表示される、プリカーサーに関連 付けられているフリーテキストメモ</value>
+  </data>
+  <data name="PrecursorPeakFoundRatio">
+    <value>ピークが測定されたトランジションのペプチド内のトランジション総数に 対する比です。ペプチドツリー表示のピークインジケーターは、 緑＝1.0（すべてのトランジションを積分）、オレンジ＞＝0.5、赤＜0.5に該当します。</value>
+  </data>
+  <data name="PrecursorReplicateNote">
+    <value>結果グリッドを使用すると表示される、プリカーサーの結果 セットに関連付けられているフリーテキストメモ。</value>
+  </data>
+  <data name="PrecursorResult">
+    <value>プリカーサー結果</value>
+  </data>
+  <data name="PrecursorResults">
+    <value>プリカーサー結果</value>
+  </data>
+  <data name="PrecursorResultsSummary">
+    <value>プリカーサー結果概要</value>
+  </data>
+  <data name="Precursors">
+    <value>プリカーサー</value>
+  </data>
+  <data name="PredictedResultRetentionTime">
+    <value>各繰り返し測定実行のペプチド保持時間です。</value>
+  </data>
+  <data name="PredictedRetentionTime">
+    <value>測定結果と保持時間カルキュレーター（現在はSSRCalc 3.0のみ 利用可能）との間の保持時間回帰によって予測される保持時間です。保持時間回帰が 割り当てられていない場合には#N/Aとなります。</value>
+  </data>
+  <data name="PreviousAa">
+    <value>前のAa</value>
+  </data>
+  <data name="ProductCharge">
+    <value>プロダクトイオンの電荷（z）です。</value>
+  </data>
+  <data name="ProductDecoyMzShift">
+    <value>デコイm/zを作成するためにプロダクトイオンに 適用されるm/zのシフト</value>
+  </data>
+  <data name="ProductMz">
+    <value>プロダクトイオンの質量電荷比（m/z）です。</value>
+  </data>
+  <data name="ProductNeutralMass">
+    <value>プロダクトイオンペプチド断片のニュートラル質量（ダルトン単位）です。</value>
+  </data>
+  <data name="Protein">
+    <value>タンパク質</value>
+  </data>
+  <data name="ProteinAccession">
+    <value>タンパク質アクセッション</value>
+  </data>
+  <data name="ProteinDescription">
+    <value>タンパク質を一般のFASTAシークエンスファイルからSkylineにインポート すると、タンパク質の表記が加えられます。また、ペプチドツリー表示内でタンパク質名に マウスをポイントしてもタンパク質の表記が表示されます。</value>
+  </data>
+  <data name="ProteinGene">
+    <value>タンパク質遺伝子</value>
+  </data>
+  <data name="ProteinName">
+    <value>定義されているまたはSkylineに入力されているタンパク質名（場合によっては アクセッション番号と併せて入力されている）</value>
+  </data>
+  <data name="ProteinNote">
+    <value>編集メニューで[メモ編集]をクリックすると表示される、タンパク質に関連付けられている フリーテキストメモ</value>
+  </data>
+  <data name="ProteinPreferredName">
+    <value>タンパク質推奨名</value>
+  </data>
+  <data name="Proteins">
+    <value>タンパク質</value>
+  </data>
+  <data name="ProteinSequence">
+    <value>タンパク質を一般のFASTAシークエンスファイルからSkylineにインポート すると、タンパク質のフルシークエンスにアクセスできます。また、ペプチドツリー表示内でタンパク質名に マウスをポイントしてもタンパク質のシークエンスが表示されます。</value>
+  </data>
+  <data name="ProteinSpecies">
+    <value>タンパク質生物種</value>
+  </data>
+  <data name="QuadraticCoefficient">
+    <value>二次回帰のx2乗の項の係数です。</value>
+  </data>
+  <data name="Quantification">
+    <value>アナライトを定量化するための校正曲線や正規化メソッドの使用に関連する値です。</value>
+  </data>
+  <data name="Range">
+    <value>範囲</value>
+  </data>
+  <data name="RangeBestRetentionTime">
+    <value>MaxBestRetentionTimeとMinBestRetentionTime との差です。これを使用すると測定された保持時間の展開を評価できます。 </value>
+  </data>
+  <data name="RangeRetentionTime">
+    <value>MaxRetentionTimeとMinRetentionTime との差です。これを使用すると測定された保持時間の展開を評価できます。</value>
+  </data>
+  <data name="RatioDotProduct">
+    <value>比率内積</value>
+  </data>
+  <data name="RatioToStandard">
+    <value>LightのHeavyに対するペプチド面積比</value>
+  </data>
+  <data name="Replicate">
+    <value>繰り返し測定</value>
+  </data>
+  <data name="ReplicateCount">
+    <value>有効な強度を持ち、結果に貢献する繰り返し測定回数です。</value>
+  </data>
+  <data name="ReplicateIndex">
+    <value>繰り返し測定インデックス</value>
+  </data>
+  <data name="ReplicateName">
+    <value>インポート時にデータに割り当てられる繰り返し測定名です。</value>
+  </data>
+  <data name="ReplicatePath">
+    <value>繰り返し測定パス</value>
+  </data>
+  <data name="Replicates">
+    <value>繰り返し測定</value>
+  </data>
+  <data name="ResultFile">
+    <value>結果ファイル</value>
+  </data>
+  <data name="Results">
+    <value>結果</value>
+  </data>
+  <data name="RetentionTime">
+    <value>トランジションピークの最大強度での保持時間です。</value>
+  </data>
+  <data name="RetentionTimeCalculatorScore">
+    <value>現在の保持スコアカルキュレーター（SSRCalcまたは iRTスコアなど）を使用している場合のカルキュレーターからのペプチドの生データスコアです。  </value>
+  </data>
+  <data name="RSquared">
+    <value>決定係数</value>
+  </data>
+  <data name="SampleName">
+    <value>試料が複数あるWIFFファイルからデータがインポートされた場合の試料名です。 他のファイルタイプの場合にはファイル名となります。</value>
+  </data>
+  <data name="SampleType">
+    <value>試料のタイプです。以下のいずれかとなります。  不明（試料測定中）  標準（校正曲線で使用するように既知量のアナライトを含む外部標準）  品質管理（校正を確認するように既知量のアナライトを含む）  溶媒  空白  二重空白</value>
+  </data>
+  <data name="Slope">
+    <value>近似曲線または直線の線形項の係数です。</value>
+  </data>
+  <data name="StandardType">
+    <value>標準タイプ</value>
+  </data>
+  <data name="StartTime">
+    <value>トランジションピークの積分開始境界における保持時間です。</value>
+  </data>
+  <data name="Stdev">
+    <value>Stdev</value>
+  </data>
+  <data name="StdevArea">
+    <value>トランジションのArea値の標準偏差です。</value>
+  </data>
+  <data name="StdevAreaNormalized">
+    <value>トランジションのAreaNormalized値の標準偏差です。</value>
+  </data>
+  <data name="StdevAreaRatio">
+    <value>トランジションのAreaRatio値の標準偏差です。</value>
+  </data>
+  <data name="StdevBestRetentionTime">
+    <value>プリカーサーのBestRetentionTime値の 標準偏差です。</value>
+  </data>
+  <data name="StdevFwhm">
+    <value>トランジションのFwhm（ピーク幅）値の標準偏差です。</value>
+  </data>
+  <data name="StdevMaxFwhm">
+    <value>プリカーサーのMaxFwhm（ピーク幅）値の標準偏差です。</value>
+  </data>
+  <data name="StdevMaxHeight">
+    <value>Stdev最大高さ</value>
+  </data>
+  <data name="StdevRetentionTime">
+    <value>トランジションのRetentionTime値の標準偏差です。</value>
+  </data>
+  <data name="StdevTotalArea">
+    <value>プリカーサーのTotalArea値の標準偏差です。</value>
+  </data>
+  <data name="StdevTotalAreaNormalized">
+    <value>Stdev総面積の正規化</value>
+  </data>
+  <data name="StdevTotalAreaRatio">
+    <value>プリカーサーのTotalAreaNormalized値の標準偏差 です。</value>
+  </data>
+  <data name="TotalArea">
+    <value>特定のプリカーサーに対する各トランジションすべての合計 Area値です。</value>
+  </data>
+  <data name="TotalAreaFragment">
+    <value>総面積断片</value>
+  </data>
+  <data name="TotalAreaMs1">
+    <value>総面積MS1</value>
+  </data>
+  <data name="TotalAreaNormalized">
+    <value>ドキュメント内の全ペプチドプリカーサーに対するTotalArea値の合計に対して正規化された TotalAreaです。</value>
+  </data>
+  <data name="TotalAreaRatio">
+    <value>最初の内部標準標識タイプに対するこのプリカーサーの TotalArea比です。バージョン0.7の前は、これは常にLight/Heavyであり、Heavyプリカーサーに表示 されていました。</value>
+  </data>
+  <data name="TotalBackground">
+    <value>特定のプリカーサーに対する各トランジションすべての合計Background値です。</value>
+  </data>
+  <data name="TotalBackgroundFragment">
+    <value>総バックグラウンド断片</value>
+  </data>
+  <data name="TotalBackgroundMs1">
+    <value>総バックグラウンドMS1</value>
+  </data>
+  <data name="Transition">
+    <value>トランジション</value>
+  </data>
+  <data name="TransitionCount">
+    <value>このプリカーサー下にあるトランジションの数です。</value>
+  </data>
+  <data name="TransitionIsDecoy">
+    <value>デコイトランジションの場合は真です。</value>
+  </data>
+  <data name="TransitionNote">
+    <value>編集メニューで[メモ編集]をクリックすると表示される、トランジションに関連付けられて いるフリーテキストメモ</value>
+  </data>
+  <data name="TransitionReplicateNote">
+    <value>結果グリッドを使用すると表示される、トランジションの結果セットに 関連付けられているフリーテキストメモ。</value>
+  </data>
+  <data name="TransitionResult">
+    <value>トランジション結果</value>
+  </data>
+  <data name="TransitionResults">
+    <value>トランジション結果</value>
+  </data>
+  <data name="TransitionResultsSummary">
+    <value>トランジション結果概要</value>
+  </data>
+  <data name="Transitions">
+    <value>トランジション</value>
+  </data>
+  <data name="Truncated">
+    <value>ピークの積分において取得時間範囲内のピークの両側で強度が全体のピーク高さの1%より高い 範囲がある場合には真です。</value>
+  </data>
+  <data name="UserSetPeak">
+    <value>デフォルトのピーク選択または境界が手動で変更された場合は真です。</value>
+  </data>
+  <data name="UserSetTotal">
+    <value>デフォルトのピーク選択または境界が手動で変更された場合は真です。</value>
+  </data>
+  <data name="Value">
+    <value>値</value>
+  </data>
+  <data name="CollisionalCrossSection">
+    <value>イオン移動度を二乗オングストロームで表したものです。通常はドリフト時間に変換され、イオン移動度質量スペクトルからのクロマトグラムの抽出に使用されます。</value>
+  </data>
+  <data name="DriftTimeFragment">
+    <value>断片イオンのイオン移動度ドリフト時間（ミリ秒単位）です。エネルギー衝突が増えるため、通常は移動が速くなります。</value>
+  </data>
+  <data name="DriftTimeMS1">
+    <value>プリカーサーイオンのイオン移動度ドリフト時間（ミリ秒単位）です。エネルギーが低いため、通常は断片イオンよりも少し遅い移動となります。</value>
+  </data>
+  <data name="DriftTimeWindow">
+    <value>クロマトグラムの抽出で使用されるイオン移動度ドリフト時間ウィンドウ（ミリ秒単位）</value>
+  </data>
+  <data name="ExplicitCollisionalCrossSection">
+    <value>イオン移動度質量スペクトルからのクロマトグラムの抽出に使用され、ドリフト時間に変換するために望まれる衝突断面積（二乗オングストローム単位）です。他のすべてのモデル値をオーバーライドします。 </value>
+  </data>
+</root>
