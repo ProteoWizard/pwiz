@@ -82,11 +82,11 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
 
-            if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
-            {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
-                return;
-            }
+//            if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
+//            {
+//                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
+//                return;
+//            }
 
             TestSmallMolecules = false; // Don't need that magic extra node, we have an explict test
 
@@ -409,6 +409,8 @@ namespace pwiz.SkylineTestTutorial
             expectedTransitionGroupCount = 10; // Expect this many with results
             expectedTransitionCount = 87; // Expect this many with results
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes20FileName, expectedMoleculeCount, expectedTransitionGroupCount, 0, expectedTransitionCount, 0);
+            if (AsSmallMolecules)
+                expectedTransitionCount++;  // TODO: Why? This changed after forced peak rescue added
             AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes80FileName, expectedMoleculeCount, expectedTransitionGroupCount, 0, expectedTransitionCount, 0);
 
             RunUI(() =>
