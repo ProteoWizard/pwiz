@@ -83,7 +83,7 @@ namespace pwiz.SkylineTestTutorial
         /// <summary>
         /// Change to true to write coefficient arrays
         /// </summary>
-        private bool IsRecordMode { get { return true; } }
+        private bool IsRecordMode { get { return false; } }
 
         private readonly string[] EXPECTED_COEFFICIENTS =
         {
