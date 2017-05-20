@@ -155,7 +155,7 @@ namespace pwiz.SkylineTest.Results
 
                 var docResultsSingle = docResults.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
 
-                AssertResult.IsDocumentResultsState(docResultsSingle, "test", 9, 2, 9, 8, 27);
+                AssertResult.IsDocumentResultsState(docResultsSingle, "test", 9, 2, 9, 10, 27);
 
                 // Add mzXML version of test sample
                 listChromatograms.Add(new ChromatogramSet("test-mzXML", new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("051309_digestion-s3.mzXML")) }));
@@ -205,8 +205,8 @@ namespace pwiz.SkylineTest.Results
                                                 Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
                                             errorList[0].ErrorMessage,
                                             2);
-            Assert.AreEqual(errorList[0].Column, 1);
-            Assert.AreEqual(errorList[0].Row, 19);
+            Assert.AreEqual(errorList[0].Column, 2);
+            Assert.AreEqual(errorList[0].LineNum, 19);
 
             doc = doc.ChangeSettings(settings.ChangeTransitionInstrument(inst => inst.ChangeMaxMz(1800)));
             inputs = new MassListInputs(path)

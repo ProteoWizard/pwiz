@@ -183,7 +183,7 @@ namespace pwiz.Common.PeakFinding
             return (float) (sum - firstValue/2 - lastValue/2);
         }
 
-        private float SafeGetIntensity(int index)
+        public float SafeGetIntensity(int index)
         {
             if (index < 0 || index >= _allIntensities.Count)
             {

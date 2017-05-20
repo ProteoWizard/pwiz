@@ -38,9 +38,11 @@
             this.buttonOk = new System.Windows.Forms.Button();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.labelErrors = new System.Windows.Forms.Label();
+            this.cbShowText = new System.Windows.Forms.CheckBox();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.LineText = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewErrors)).BeginInit();
             this.SuspendLayout();
@@ -56,7 +58,8 @@
             this.dataGridViewErrors.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.dataGridViewTextBoxColumn1,
             this.dataGridViewTextBoxColumn2,
-            this.dataGridViewTextBoxColumn3});
+            this.dataGridViewTextBoxColumn3,
+            this.LineText});
             this.dataGridViewErrors.DataSource = this.bindingSourceGrid;
             this.dataGridViewErrors.Name = "dataGridViewErrors";
             this.dataGridViewErrors.ReadOnly = true;
@@ -81,6 +84,13 @@
             resources.ApplyResources(this.labelErrors, "labelErrors");
             this.labelErrors.Name = "labelErrors";
             // 
+            // cbShowText
+            // 
+            resources.ApplyResources(this.cbShowText, "cbShowText");
+            this.cbShowText.Name = "cbShowText";
+            this.cbShowText.UseVisualStyleBackColor = true;
+            this.cbShowText.CheckedChanged += new System.EventHandler(this.cbShowText_CheckedChanged);
+            // 
             // dataGridViewTextBoxColumn1
             // 
             this.dataGridViewTextBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
@@ -93,7 +103,7 @@
             // 
             // dataGridViewTextBoxColumn2
             // 
-            this.dataGridViewTextBoxColumn2.DataPropertyName = "Row";
+            this.dataGridViewTextBoxColumn2.DataPropertyName = "LineNum";
             dataGridViewCellStyle2.Format = "N0";
             dataGridViewCellStyle2.NullValue = null;
             this.dataGridViewTextBoxColumn2.DefaultCellStyle = dataGridViewCellStyle2;
@@ -111,12 +121,20 @@
             this.dataGridViewTextBoxColumn3.Name = "dataGridViewTextBoxColumn3";
             this.dataGridViewTextBoxColumn3.ReadOnly = true;
             // 
+            // LineText
+            // 
+            this.LineText.DataPropertyName = "LineText";
+            resources.ApplyResources(this.LineText, "LineText");
+            this.LineText.Name = "LineText";
+            this.LineText.ReadOnly = true;
+            // 
             // ImportTransitionListErrorDlg
             // 
             this.AcceptButton = this.buttonOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
+            this.Controls.Add(this.cbShowText);
             this.Controls.Add(this.dataGridViewErrors);
             this.Controls.Add(this.buttonOk);
             this.Controls.Add(this.buttonCancel);
@@ -128,6 +146,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceGrid)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewErrors)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -138,8 +157,10 @@
         private System.Windows.Forms.Button buttonOk;
         private Controls.DataGridViewEx dataGridViewErrors;
         private System.Windows.Forms.BindingSource bindingSourceGrid;
+        private System.Windows.Forms.CheckBox cbShowText;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
+        private System.Windows.Forms.DataGridViewTextBoxColumn LineText;
     }
 }

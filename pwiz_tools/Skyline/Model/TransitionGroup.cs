@@ -560,11 +560,9 @@ namespace pwiz.Skyline.Model
                               double ionMz, IonType type, int charge, TransitionLosses losses)
         {
             LibraryRankedSpectrumInfo.RankedMI rmi;
-            return (transitionRanks != null &&
-                    transitionRanks.TryGetValue(ionMz, out rmi) &&
-                    rmi.IonType == type &&
-                    rmi.Charge == charge &&
-                    Equals(rmi.Losses, losses));
+            return transitionRanks != null &&
+                   transitionRanks.TryGetValue(ionMz, out rmi) &&
+                   rmi.MatchedIons.Contains(mfi => mfi.IonType == type && mfi.Charge == charge && Equals(mfi.Losses, losses));
         }
 
         public static IList<IList<ExplicitLoss>> CalcPotentialLosses(string sequence,
@@ -855,12 +853,19 @@ namespace pwiz.Skyline.Model
                             this, settings, mods, useFilter, MAX_MATCHED_MSMS_PEAKS);
                         foreach (var rmi in spectrumInfoR.PeaksRanked)
                         {
-                            if (!transitionRanks.ContainsKey(rmi.PredictedMz))
+                            var firstIon = rmi.MatchedIons.First();
+                            if (!transitionRanks.ContainsKey(firstIon.PredictedMz))
                             {
-                                transitionRanks.Add(rmi.PredictedMz, rmi);
+                                transitionRanks.Add(firstIon.PredictedMz, rmi);
                             }
-                            if (!useFilter && rmi.PredictedMz2 != 0 && !transitionRanks.ContainsKey(rmi.PredictedMz2))
-                                transitionRanks.Add(rmi.PredictedMz2, rmi);
+                            if (!useFilter)
+                            {
+                                foreach (var otherIon in rmi.MatchedIons.Skip(1))
+                                {
+                                    if (!transitionRanks.ContainsKey(otherIon.PredictedMz))
+                                        transitionRanks.Add(otherIon.PredictedMz, rmi);
+                                }
+                            }
                         }
                     }
                 }

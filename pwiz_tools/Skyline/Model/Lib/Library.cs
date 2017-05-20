@@ -1605,10 +1605,9 @@ namespace pwiz.Skyline.Model.Lib
                 for (int i = 0; i < infoOther.SpectrumPeaks.Peaks.Length; ++i)
                 {
                     spectrumErrors.Add(new TransitionImportErrorInfo(string.Format(Resources.SpectrumMzInfo_CombineSpectrumInfo_Two_incompatible_transition_groups_for_sequence__0___precursor_m_z__1__, 
-                                                                                   Key.Sequence,
-                                                                                   PrecursorMz),
-                                                                     null,
-                                                                     null));
+                            Key.Sequence,
+                            PrecursorMz),
+                                                                     null, null, null));
                 }
                 return this;
             }

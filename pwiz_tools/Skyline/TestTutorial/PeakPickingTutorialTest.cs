@@ -83,12 +83,12 @@ namespace pwiz.SkylineTestTutorial
         /// <summary>
         /// Change to true to write coefficient arrays
         /// </summary>
-        private bool IsRecordMode { get { return false; } }
+        private bool IsRecordMode { get { return true; } }
 
         private readonly string[] EXPECTED_COEFFICIENTS =
         {
-            "0.0174|-1.1425|0.2313|1.9599|1.5171|0.0478|0.1870|0.0454| null |0.4290|6.4581|-0.0815|0.4892|0.6203| null | null | null | null | null ", // Not L10N
-            "0.1009| null | null | null |6.6851|-0.0636|0.7279|0.9784| null | null | null | null | null | null | null | null | null | null | null ", // Not L10N
+            "-0.0328|-1.1391|0.2356|1.9433|1.1626|0.0359|0.1891|0.1578| null |0.5210|6.6354|-0.0517|0.5002|0.6283| null | null | null | null | null ", // Not L10N
+            "0.1068| null | null | null |6.6094|-0.0639|0.7115|0.9515| null | null | null | null | null | null | null | null | null | null | null ", // Not L10N
         };
 
         protected override void DoTest()
@@ -182,7 +182,7 @@ namespace pwiz.SkylineTestTutorial
             var editDlg = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlg.AddPeakScoringModel);
             RunUI(() => editDlg.TrainModel());
             PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form trained model", 6);
-            RunUI(() => Assert.AreEqual(0.569, editDlg.PeakCalculatorsGrid.Items[4].PercentContribution ?? 0, 0.005));
+            RunUI(() => Assert.AreEqual(0.603, editDlg.PeakCalculatorsGrid.Items[4].PercentContribution ?? 0, 0.005));
 
             RunUI(() => editDlg.SelectedGraphTab = 2);
             PauseForScreenShot<EditPeakScoringModelDlg.PvalueTab>("Edit Peak Scoring Model form p value graph metafile", 7);

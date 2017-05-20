@@ -32,6 +32,7 @@ namespace pwiz.Common.PeakFinding
         bool FwhmDegenerate { get; }
         bool Identified { get; }
         int Length { get; }
+
         /// <summary>
         /// Change the boundaries of the peak without recalculating the area.
         /// TODO(nicksh): this method should be remove so that IFoundPeak can
@@ -39,5 +40,7 @@ namespace pwiz.Common.PeakFinding
         /// the boundaries of a peak without recomputing the area.
         /// </summary>
         void ResetBoundaries(int startIndex, int endIndex);
+
+        float SafeGetIntensity(int index);
     }
 }

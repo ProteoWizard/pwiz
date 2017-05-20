@@ -310,7 +310,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 foreach (RankedMI rmi in _spectrum)
                 {
-                    if (rmi.Ordinal > 0)
+                    if (rmi.MatchedIons != null)
                         yield return rmi;
                 }
             }
@@ -360,6 +360,7 @@ namespace pwiz.Skyline.Model.Lib
             public double maxMz { get; set; }
             public bool matchAll { get; set; }
             public bool matched { get; set; }
+            public const int MAX_MATCH = 6;
             private readonly HashSet<double> _seenMz = new HashSet<double>();
             private double _seenFirst;
             public bool IsSeen(double mz)
@@ -409,26 +410,13 @@ namespace pwiz.Skyline.Model.Lib
 
             public int Rank { get; private set; }
 
-            public IonType IonType { get; private set; }
-            public IonType IonType2 { get; private set; }
-
-            public int Ordinal { get; private set; }
-            public int Ordinal2 { get; private set; }
-
-            public int Charge { get; private set; }
-            public int Charge2 { get; private set; }
-
-            public TransitionLosses Losses { get; private set; }
-            public TransitionLosses Losses2 { get; private set; }
-
             public int IndexMz { get; private set; }
 
             public float Intensity { get { return _mi.Intensity; } }
 
             public double ObservedMz { get { return _mi.Mz; } }
 
-            public double PredictedMz { get; private set; }
-            public double PredictedMz2 { get; private set; }
+            public IList<MatchedFragmentIon> MatchedIons { get; private set; }
 
             public void CalculateRank(RankParams rp)
             {
@@ -544,33 +532,23 @@ namespace pwiz.Skyline.Model.Lib
                     if (losses != null)
                         predictedMass -= losses.Mass;
                     double predictedMz = SequenceMassCalc.GetMZ(predictedMass, charge);
-                    if (Ordinal > 0)
+                    if (MatchedIons != null)
                     {
                         // If first type was excluded from causing a ranking, but second does, then make it the first
                         // Otherwise, this can cause very mysterious failures to rank transitions that appear in the
                         // document.
+                        var match = new MatchedFragmentIon(type, ordinal, charge, losses, predictedMz);
                         if (Rank == 0 && ApplyRanking(rp, type, offset, losses, charge, filter, start, end, startMz, ionMz))
                         {
-                            IonType2 = IonType;
-                            Charge2 = Charge;
-                            Ordinal2 = Ordinal;
-                            Losses2 = Losses;
-                            PredictedMz2 = PredictedMz;
-
-                            IonType = type;
-                            Charge = charge;
-                            Ordinal = ordinal;
-                            Losses = losses;
-                            PredictedMz = predictedMz;
+                            MatchedIons.Insert(0, match);
                         }
                         else
                         {
-                            IonType2 = type;
-                            Charge2 = charge;
-                            Ordinal2 = ordinal;
-                            Losses2 = losses;
-                            PredictedMz2 = predictedMz;
+                            MatchedIons.Add(match);
                         }
+                        if (MatchedIons.Count < RankParams.MAX_MATCH)
+                            return true;
+
                         rp.matched = true;
                         return false;
                     }
@@ -582,12 +560,8 @@ namespace pwiz.Skyline.Model.Lib
 
                         ApplyRanking(rp, type, offset, losses, charge, filter, start, end, startMz, ionMz);
 
-                        IonType = type;
-                        Charge = charge;
-                        Ordinal = ordinal;
-                        Losses = losses;
-                        PredictedMz = predictedMz;
-                        rp.matched = (!rp.matchAll);
+                        MatchedIons = new List<MatchedFragmentIon>{new MatchedFragmentIon(type, ordinal, charge, losses, predictedMz)};
+                        rp.matched = !rp.matchAll;
                         return rp.matchAll;
                     }
                 }
@@ -633,5 +607,27 @@ namespace pwiz.Skyline.Model.Lib
                 return 1;
             return -OrderMz(mi1, mi2);
         }
+    }
+
+    public class MatchedFragmentIon
+    {
+        public MatchedFragmentIon(IonType ionType, int ordinal, int charge, TransitionLosses losses, double predictedMz)
+        {
+            IonType = ionType;
+            Ordinal = ordinal;
+            Charge = charge;
+            Losses = losses;
+            PredictedMz = predictedMz;
+        }
+
+        public IonType IonType { get; private set; }
+
+        public int Ordinal { get; private set; }
+
+        public int Charge { get; private set; }
+
+        public TransitionLosses Losses { get; private set; }
+
+        public double PredictedMz { get; private set; }
     }
 }

@@ -395,6 +395,7 @@ namespace pwiz.Skyline.Model
             }
 
             var lines = new List<string>(Inputs.ReadLines());
+            long linesSeen = 0;
 
             if (progressMonitor != null)
             {
@@ -423,6 +424,7 @@ namespace pwiz.Skyline.Model
                 if (headers != null)
                 {
                     lines.RemoveAt(0);
+                    linesSeen++;
                     decoyColumn = headers.IndexOf(col => decoyNames.Contains(col.ToLowerInvariant()));
                     irtColumn = headers.IndexOf(col => irtNames.Contains(col.ToLowerInvariant()));
                     libraryColumn = headers.IndexOf(col => libraryNames.Contains(col.ToLowerInvariant()));
@@ -442,6 +444,7 @@ namespace pwiz.Skyline.Model
                         // Check for a possible header row
                         headers = lines[0].Split(Separator);
                         lines.RemoveAt(0);
+                        linesSeen++;
                         _rowReader = GeneralRowReader.Create(lines, headers, decoyColumn, FormatProvider, Separator, Settings, irtColumn, libraryColumn);
                     }
                     if (_rowReader == null)
@@ -457,11 +460,10 @@ namespace pwiz.Skyline.Model
             PeptideGroupBuilder seqBuilder = null;
 
             // Process lines
-            long lineIndex = 0;
             foreach (string row in lines)
             {
-                lineIndex++;
-                var errorInfo = _rowReader.NextRow(row, lineIndex);
+                linesSeen++;
+                var errorInfo = _rowReader.NextRow(row, linesSeen);
                 if (errorInfo != null)
                 {
                     errorList.Add(errorInfo);
@@ -478,7 +480,7 @@ namespace pwiz.Skyline.Model
                         return new PeptideGroupDocNode[0];
                     }
 
-                    int percentComplete = (int)(lineIndex * 100 / lines.Count);
+                    int percentComplete = (int)(linesSeen * 100 / lines.Count);
 
                     if (status.PercentComplete != percentComplete)
                     {
@@ -488,7 +490,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                seqBuilder = AddRow(seqBuilder, _rowReader, dictNameSeq, peptideGroupsNew, lineIndex, sourceFile, irtPeptides, librarySpectra, errorList);
+                seqBuilder = AddRow(seqBuilder, _rowReader, dictNameSeq, peptideGroupsNew, row, linesSeen, sourceFile, irtPeptides, librarySpectra, errorList);
             }
 
             // Add last sequence.
@@ -546,6 +548,7 @@ namespace pwiz.Skyline.Model
                                            MassListRowReader rowReader,
                                            IDictionary<string, FastaSequence> dictNameSeq,
                                            ICollection<PeptideGroupDocNode> peptideGroupsNew,
+                                           string lineText,
                                            long lineNum,
                                            string sourceFile,
                                            List<MeasuredRetentionTime> irtPeptides,
@@ -559,20 +562,20 @@ namespace pwiz.Skyline.Model
             if (irt == null && rowReader.IrtColumn != -1)
             {
                 var error = new TransitionImportErrorInfo(string.Format(Resources.MassListImporter_AddRow_Invalid_iRT_value_at_precusor_m_z__0__for_peptide__1_, 
-                                                                        rowReader.TransitionInfo.PrecursorMz, 
-                                                                        rowReader.TransitionInfo.ModifiedSequence),
+                        rowReader.TransitionInfo.PrecursorMz, 
+                        rowReader.TransitionInfo.ModifiedSequence),
                                                           rowReader.IrtColumn,
-                                                          lineNum);
+                                                          lineNum, lineText);
                 errorList.Add(error);
                 return seqBuilder;
             }
             if (libraryIntensity == null && rowReader.LibraryColumn != -1)
             {
                 var error = new TransitionImportErrorInfo(string.Format(Resources.MassListImporter_AddRow_Invalid_library_intensity_at_precursor__0__for_peptide__1_, 
-                                                                        rowReader.TransitionInfo.PrecursorMz, 
-                                                                        rowReader.TransitionInfo.ModifiedSequence),
+                        rowReader.TransitionInfo.PrecursorMz, 
+                        rowReader.TransitionInfo.ModifiedSequence),
                                                           rowReader.LibraryColumn,
-                                                          lineNum);
+                                                          lineNum, lineText);
                 errorList.Add(error);
                 return seqBuilder;
             }
@@ -598,7 +601,7 @@ namespace pwiz.Skyline.Model
             }
             try
             {
-                seqBuilder.AppendTransition(info, irt, libraryIntensity, productMz, lineNum);
+                seqBuilder.AppendTransition(info, irt, libraryIntensity, productMz, lineText, lineNum);
             }
             catch (InvalidDataException x)
             {
@@ -719,33 +722,33 @@ namespace pwiz.Skyline.Model
                 if (!FastaSequence.IsExSequence(info.PeptideSequence))
                 {
                     return new TransitionImportErrorInfo(string.Format(Resources.MassListRowReader_NextRow_Invalid_peptide_sequence__0__found,
-                                                                       info.PeptideSequence), 
+                            info.PeptideSequence), 
                                                          PeptideColumn,
-                                                         lineNum);
+                                                         lineNum, line);
                 }
                 if (!info.DefaultLabelType.IsLight && !IsHeavyTypeAllowed(info.DefaultLabelType))
                 {
                     return new TransitionImportErrorInfo(TextUtil.SpaceSeparate(Resources.MassListRowReader_NextRow_Isotope_labeled_entry_found_without_matching_settings_,
-                                                                                Resources.MassListRowReader_NextRow_Check_the_Modifications_tab_in_Transition_Settings),
+                            Resources.MassListRowReader_NextRow_Check_the_Modifications_tab_in_Transition_Settings),
                                                          LabelTypeColumn,
-                                                         lineNum);
+                                                         lineNum, line);
                 }
 
                 TransitionImportErrorInfo errorInfo;
-                info = CalcPrecursorExplanations(info, lineNum, out errorInfo);
+                info = CalcPrecursorExplanations(info, line, lineNum, out errorInfo);
                 if (errorInfo != null)
                 {
                     return errorInfo;
                 }
 
-                TransitionInfo = CalcTransitionExplanations(info, lineNum, out errorInfo);
+                TransitionInfo = CalcTransitionExplanations(info, line, lineNum, out errorInfo);
                 return errorInfo;
 
             }
 
             protected abstract ExTransitionInfo CalcTransitionInfo(long lineNum);
 
-            private ExTransitionInfo CalcPrecursorExplanations(ExTransitionInfo info, long lineNum, out TransitionImportErrorInfo errorInfo)
+            private ExTransitionInfo CalcPrecursorExplanations(ExTransitionInfo info, string lineText, long lineNum, out TransitionImportErrorInfo errorInfo)
             {
                 // Enumerate all possible variable modifications looking for an explanation
                 // for the precursor information
@@ -818,30 +821,30 @@ namespace pwiz.Skyline.Model
                     precursorMz = Math.Round(SequenceMassCalc.PersistentMZ(precursorMz), MZ_ROUND_DIGITS);
                     double deltaMz = Math.Round(Math.Abs(precursorMz - nearestMz), MZ_ROUND_DIGITS);
                     errorInfo = new TransitionImportErrorInfo(TextUtil.SpaceSeparate(string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_,
-                                                                                        precursorMz, nearestMz, deltaMz, info.PeptideSequence),
-                                                                                   Resources.MzMatchException_suggestion),
+                                precursorMz, nearestMz, deltaMz, info.PeptideSequence),
+                            Resources.MzMatchException_suggestion),
                                                               PrecursorColumn,
-                                                              lineNum);
+                                                              lineNum, lineText);
                     
                 }
                 else if (!Settings.TransitionSettings.Instrument.IsMeasurable(precursorMz))
                 {
                     precursorMz = Math.Round(SequenceMassCalc.PersistentMZ(precursorMz), MZ_ROUND_DIGITS);
                     errorInfo = new TransitionImportErrorInfo(TextUtil.SpaceSeparate(string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_out_of_range_for_the_instrument_settings_,
-                                                                                                  precursorMz, info.PeptideSequence),
-                                                                                    Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
+                                precursorMz, info.PeptideSequence),
+                            Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
                                                               PrecursorColumn,
-                                                              lineNum);
+                                                              lineNum, lineText);
                 }
                 // If it's within the instrument settings but not measurable, problem must be in the isolation scheme
                 else if (!Settings.TransitionSettings.IsMeasurablePrecursor(precursorMz))
                 {
                     precursorMz = Math.Round(SequenceMassCalc.PersistentMZ(precursorMz), MZ_ROUND_DIGITS);
                     errorInfo = new TransitionImportErrorInfo(TextUtil.SpaceSeparate(string.Format(Resources.MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_outside_the_range_covered_by_the_DIA_isolation_scheme_,
-                                                                                                  precursorMz, info.PeptideSequence),
-                                                                                    Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_isolation_scheme_in_the_full_scan_settings_),
+                                precursorMz, info.PeptideSequence),
+                            Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_isolation_scheme_in_the_full_scan_settings_),
                                                               PrecursorColumn,
-                                                              lineNum);
+                                                              lineNum, lineText);
                 }
 
                 return info;
@@ -866,7 +869,7 @@ namespace pwiz.Skyline.Model
                 return TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, tolerance, isCustomIon, isDecoy, out massShift, out nearestCharge);
             }
 
-            private ExTransitionInfo CalcTransitionExplanations(ExTransitionInfo info, long lineNum, out TransitionImportErrorInfo errorInfo)
+            private ExTransitionInfo CalcTransitionExplanations(ExTransitionInfo info, string lineText, long lineNum, out TransitionImportErrorInfo errorInfo)
             {
                 errorInfo = null;
                 string sequence = info.PeptideSequence;
@@ -880,6 +883,7 @@ namespace pwiz.Skyline.Model
                     double[,] productMasses = calc.GetFragmentIonMasses(sequence);
                     var potentialLosses = TransitionGroup.CalcPotentialLosses(sequence,
                         Settings.PeptideSettings.Modifications, mods, calc.MassType);
+                    var types = Settings.TransitionSettings.Filter.IonTypes;
 
                     IonType? ionType;
                     int? ordinal;
@@ -887,6 +891,7 @@ namespace pwiz.Skyline.Model
                     int massShift;
                     int productCharge = TransitionCalc.CalcProductCharge(productPrecursorMass,
                                                                          transitionExp.Precursor.PrecursorCharge,
+                                                                         types,
                                                                          productMasses,
                                                                          potentialLosses,
                                                                          productMz,
@@ -914,18 +919,18 @@ namespace pwiz.Skyline.Model
                     // TODO: Consistent central formatting for m/z values
                     // Use Math.Round() to avoid forcing extra decimal places
                     errorInfo = new TransitionImportErrorInfo(string.Format(Resources.MassListRowReader_CalcTransitionExplanations_Product_m_z_value__0__in_peptide__1__has_no_matching_product_ion,
-                                                                            productMz, info.PeptideSequence),
+                            productMz, info.PeptideSequence),
                                                               ProductColumn,
-                                                              lineNum);
+                                                              lineNum, lineText);
                 }
                 else if (!Settings.TransitionSettings.Instrument.IsMeasurable(productMz))
                 {
                     productMz = Math.Round(productMz, MZ_ROUND_DIGITS);
                     errorInfo = new TransitionImportErrorInfo(TextUtil.SpaceSeparate(string.Format(Resources.MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_,
-                                                                                        productMz, info.PeptideSequence),
-                                                                                    Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
+                                productMz, info.PeptideSequence),
+                            Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
                                                               ProductColumn,
-                                                              lineNum);
+                                                              lineNum, lineText);
                 }
 
                 return info;
@@ -1015,6 +1020,7 @@ namespace pwiz.Skyline.Model
             {
                 double maxProductMz = 0;
                 int maxIndex = -1;
+                var types = settings.TransitionSettings.Filter.IonTypes;
                 foreach (var transitionExp in transitionExps)
                 {
                     var mods = transitionExp.Precursor.VariableMods;
@@ -1039,6 +1045,7 @@ namespace pwiz.Skyline.Model
                         int massShift;
                         int charge = TransitionCalc.CalcProductCharge(productPrecursorMass,
                                                                       transitionExp.Precursor.PrecursorCharge,
+                                                                      types,
                                                                       productMasses,
                                                                       potentialLosses,
                                                                       productMz,
@@ -2030,7 +2037,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public void AppendTransition(ExTransitionInfo info, double? irt, double? libraryIntensity, double productMz, long lineNum)
+        public void AppendTransition(ExTransitionInfo info, double? irt, double? libraryIntensity, double productMz, string lineText, long lineNum)
         {
             _autoManageChildren = false;
             // Treat this like a peptide list from now on.
@@ -2074,9 +2081,9 @@ namespace pwiz.Skyline.Model
                     {
                         var precursorMz = Math.Round(info.PrecursorMz, MassListImporter.MZ_ROUND_DIGITS);
                         var errorInfo = new TransitionImportErrorInfo(string.Format(Resources.PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_0__m_z__1__with_a_single_set_of_modifications,
-                                                                                    info.PeptideSequence, precursorMz),
+                                info.PeptideSequence, precursorMz),
                                                                         null,
-                                                                        lineNum);
+                                                                        lineNum, lineText);
                         _peptideGroupErrorInfo.Add(errorInfo);
                         return;
                     }
@@ -2117,9 +2124,9 @@ namespace pwiz.Skyline.Model
             {
                 var precursorMz = Math.Round(_activePrecursorMz, MassListImporter.MZ_ROUND_DIGITS);
                 var errorInfo = new TransitionImportErrorInfo(string.Format(Resources.PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0___peptide__1___with_a_single_precursor,
-                                                                            precursorMz, info.PeptideSequence),
+                        precursorMz, info.PeptideSequence),
                                                                 null,
-                                                                lineNum);
+                                                                lineNum, lineText);
                 _peptideGroupErrorInfo.Add(errorInfo);
                 return;
             }
@@ -2131,9 +2138,9 @@ namespace pwiz.Skyline.Model
             {
                 var precursorMz = Math.Round(info.PrecursorMz, MassListImporter.MZ_ROUND_DIGITS);
                 var errorInfo = new TransitionImportErrorInfo(string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
-                                                                            info.PeptideSequence, precursorMz, _irtValue, irt),
+                        info.PeptideSequence, precursorMz, _irtValue, irt),
                                                               null,
-                                                              lineNum);
+                                                              lineNum, lineText);
                 _peptideGroupErrorInfo.Add(errorInfo);
                 return;
             }
@@ -2256,9 +2263,8 @@ namespace pwiz.Skyline.Model
                         {
                             var precursorMz = Math.Round(groupTriple.PrecursorMz, MassListImporter.MZ_ROUND_DIGITS);
                             var errorInfo = new TransitionImportErrorInfo(string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Missing_iRT_value_for_peptide__0___precursor_m_z__1_,
-                                                                                        _activePeptide.Sequence, precursorMz),
-                                                                            null,
-                                                                            null);
+                                    _activePeptide.Sequence, precursorMz),
+                                                                            null, null, null);
                             _peptideGroupErrorInfo.Add(errorInfo);
                         }
                         continue;
@@ -2272,9 +2278,8 @@ namespace pwiz.Skyline.Model
                         {
                             var precursorMz = Math.Round(groupTriple.PrecursorMz, MassListImporter.MZ_ROUND_DIGITS);
                             var errorInfo = new TransitionImportErrorInfo(string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
-                                                                                        _activePeptide.Sequence, precursorMz, irt1.Value, irt2.Value),
-                                                                            null,
-                                                                            null);
+                                    _activePeptide.Sequence, precursorMz, irt1.Value, irt2.Value),
+                                                                            null, null, null);
                             _peptideGroupErrorInfo.Add(errorInfo);
                         }
                         continue;
@@ -2449,15 +2454,17 @@ namespace pwiz.Skyline.Model
 
     public class TransitionImportErrorInfo
     {
-        public long? Row { get; private set; }
+        public long? LineNum { get; private set; }
         public int? Column { get; private set; }
         public string ErrorMessage { get; private set; }
+        public string LineText { get; private set; }
 
-        public TransitionImportErrorInfo(string errorMessage, int? column, long? row)
+        public TransitionImportErrorInfo(string errorMessage, int? columnIndex, long? lineNum, string lineText)
         {
             ErrorMessage = errorMessage;
-            Column = column;
-            Row = row;
+            LineText = lineText;
+            Column = columnIndex + 1;   // 1 based column number for reporting to a user
+            LineNum = lineNum;
         }
     }
 

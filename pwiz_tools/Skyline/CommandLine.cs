@@ -1526,7 +1526,7 @@ namespace pwiz.Skyline
                     : Resources.CommandLine_ImportTransitionList_Warning___line__0___column__1____2_;
                 foreach (var errorMessage in errorList)
                 {
-                    _out.WriteLine(messageFormat, errorMessage.Row, errorMessage.Column, errorMessage.ErrorMessage);
+                    _out.WriteLine(messageFormat, errorMessage.LineNum, errorMessage.Column, errorMessage.ErrorMessage);
                 }
                 if (!commandArgs.IsIgnoreTransitionErrors)
                     return false;

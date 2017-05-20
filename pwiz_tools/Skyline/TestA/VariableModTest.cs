@@ -352,8 +352,8 @@ namespace pwiz.SkylineTestA
                                                 Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
                                          errorList[0].ErrorMessage,
                                          2);
-            Assert.AreEqual(1, errorList[0].Column);
-            Assert.AreEqual(40, errorList[0].Row);
+            Assert.AreEqual(2, errorList[0].Column);
+            Assert.AreEqual(40, errorList[0].LineNum);
 
             var docHighMax = document.ChangeSettings(document.Settings.ChangeTransitionInstrument(inst => inst.ChangeMaxMz(1800)));
             var docList = docHighMax.ImportMassList(inputsPhospho, null, out pathTo);
@@ -372,8 +372,8 @@ namespace pwiz.SkylineTestA
             AssertEx.AreComparableStrings(Resources.MassListRowReader_CalcTransitionExplanations_Product_m_z_value__0__in_peptide__1__has_no_matching_product_ion,
                                          errorList[0].ErrorMessage,
                                          2);
-            Assert.AreEqual(1, errorList[0].Column);
-            Assert.AreEqual(2, errorList[0].Row);
+            Assert.AreEqual(2, errorList[0].Column);
+            Assert.AreEqual(2, errorList[0].LineNum);
             
             var docMultiLos = docHighMax.ChangeSettings(docHighMax.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeMaxNeutralLosses(2)));

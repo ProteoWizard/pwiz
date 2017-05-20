@@ -386,7 +386,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     string sequence = nodePep.Peptide.Sequence;
                     int imageIndex = PeptideTreeNode.GetPeakImageIndex(nodePep, SkylineWindow.SequenceTree);
-                    if ((sequence != null) && sequence.StartsWith("YLA")) // Not L10N
+                    if ((sequence != null) && (sequence.StartsWith("YLA") || sequence.StartsWith("YEV"))) // Not L10N
                     {
                         Assert.AreEqual((int)SequenceTree.StateImageId.keep, imageIndex,
                             string.Format("Expected keep icon for the peptide {0}, found {1}", sequence, imageIndex));
@@ -600,8 +600,8 @@ namespace pwiz.SkylineTestTutorial
             });
             RunUI(() =>
             {
-                PeakMatcherTestUtil.SelectAndApplyPeak("ESDTSYVSLK", 564.7746, "A_02", false, 21.4320);
-                PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(21.49805, 21.43202, 21.26673, 21.3659));
+                PeakMatcherTestUtil.SelectAndApplyPeak("ESDTSYVSLK", 564.7746, "A_02", false, 18.34195);
+                PeakMatcherTestUtil.VerifyPeaks(MakeVerificationDictionary(18.34, 18.34, 18.28, 18.28));
             });
             RunUI(() =>
             {

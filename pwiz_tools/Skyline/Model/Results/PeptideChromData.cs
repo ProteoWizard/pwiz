@@ -711,19 +711,21 @@ namespace pwiz.Skyline.Model.Results
 
             while (listEnumerators.Count > 0)
             {
-                double maxScore = 0;
+                ChromDataPeakList maxPeak = null;
+                bool maxStandard = false;
                 int iMaxEnumerator = -1;
 
                 // Check each enumerator for the next highest peak score
                 for (int i = 0; i < listEnumerators.Count; i++)
                 {
+                    var dataSet = listUnmerged[i];
                     var dataPeakList = listEnumerators[i].Current;
                     if (dataPeakList == null)
                         throw new InvalidOperationException(Resources.PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list);
-                    double score = dataPeakList.CombinedScore;
-                    if (score > maxScore)
+                    if (Compare(dataPeakList, dataSet.IsStandard, maxPeak, maxStandard) > 0)
                     {
-                        maxScore = score;
+                        maxPeak = dataPeakList;
+                        maxStandard = dataSet.IsStandard;
                         iMaxEnumerator = i;
                     }
                 }
@@ -734,7 +736,6 @@ namespace pwiz.Skyline.Model.Results
 
                 var maxData = listUnmerged[iMaxEnumerator];
                 var maxEnumerator = listEnumerators[iMaxEnumerator];
-                var maxPeak = maxEnumerator.Current;
                 Assume.IsNotNull(maxPeak);
 
                 allPeaks.Add(new PeptideChromDataPeak(maxData, maxPeak));
@@ -745,6 +746,22 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
             return allPeaks;
+        }
+
+        private int Compare(ChromDataPeakList p1, bool s1, ChromDataPeakList p2, bool s2)
+        {
+            if (p1 == null && p2 == null)
+                return 0;
+            if (p1 == null)
+                return -1;
+            if (p2 == null)
+                return 1;
+            // Standards come first, because it is all about finding the standard
+            // when one is present, regardless of how good analyte signal may look
+            if (s1 != s2)
+                return s1 ? 1 : -1;
+            // Then just order by score
+            return p1.CombinedScore.CompareTo(p2.CombinedScore);
         }
 
         public void Add(PeptideDocNode nodePep, ChromDataSet chromDataSet)
@@ -1047,6 +1064,7 @@ namespace pwiz.Skyline.Model.Results
             get
             {
                 return from peak in this
+                       orderby peak.IsStandard descending
                        orderby peak.PeakGroup != null ? peak.PeakGroup.CombinedScore : 0 descending
                        select peak;
             }

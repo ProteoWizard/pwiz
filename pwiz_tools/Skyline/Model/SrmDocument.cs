@@ -1200,7 +1200,7 @@ namespace pwiz.Skyline.Model
                 }
                 catch (LineColNumberedIoException x)
                 {
-                    errorList.Add(new TransitionImportErrorInfo(x.PlainMessage, x.ColumnIndex, x.LineNumber));  // CONSIDER: worth the effort to pull row and column info from error message?
+                    errorList.Add(new TransitionImportErrorInfo(x.PlainMessage, x.ColumnIndex, x.LineNumber, null));  // CONSIDER: worth the effort to pull row and column info from error message?
                 }
                 return docNewSmallMolecules;
             }

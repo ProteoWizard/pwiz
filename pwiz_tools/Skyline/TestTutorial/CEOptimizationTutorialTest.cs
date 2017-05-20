@@ -166,7 +166,7 @@ namespace pwiz.SkylineTestTutorial
                                                 unscheduledName,
                                                 docUnsched.MoleculeCount,
                                                 docUnsched.MoleculeTransitionGroupCount, 0,
-                                                docUnsched.MoleculeTransitionCount - 1, 0);
+                                                docUnsched.MoleculeTransitionCount, 0);
 
             RunUI(() =>
             {

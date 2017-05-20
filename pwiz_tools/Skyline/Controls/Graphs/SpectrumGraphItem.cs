@@ -24,7 +24,6 @@ using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using ZedGraph;
 using pwiz.Skyline.Properties;
@@ -172,11 +171,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!IsVisibleIon(rmi))
                     continue;
 
-                IonType type = IsVisibleIon(rmi.IonType, rmi.Ordinal, rmi.Charge) ?
-                                                                                      rmi.IonType : rmi.IonType2;
+                var matchedIon = rmi.MatchedIons.First(IsVisibleIon);
 
                 Color color;
-                switch (type)
+                switch (matchedIon.IonType)
                 {
                     default: color = COLOR_NONE; break;
                     case IonType.a: color = COLOR_A; break;
@@ -189,7 +187,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     case IonType.precursor: color = COLOR_PRECURSOR; break;
                 }
 
-                if (IsMatch(rmi.PredictedMz))
+                if (rmi.MatchedIons.Any(mfi => IsMatch(mfi.PredictedMz)))
                 {
                     color = COLOR_SELECTED;
                 }
@@ -210,8 +208,10 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!_ionMatches.TryGetValue(point.X, out rmi) || !IsVisibleIon(rmi))
                 return null;
 
+            var matchedIon = rmi.MatchedIons.First(IsVisibleIon);
+
             FontSpec fontSpec;
-            switch (rmi.IonType)
+            switch (matchedIon.IonType)
             {
                 default: fontSpec = FONT_SPEC_NONE; break;
                 case IonType.a: fontSpec = FONT_SPEC_A; break;
@@ -223,7 +223,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // FUTURE: Add custom ions when LibraryRankedSpectrumInfo can support them
                 case IonType.precursor: fontSpec = FONT_SPEC_PRECURSOR; break;
             }
-            if (IsMatch(rmi.PredictedMz))
+            if (rmi.MatchedIons.Any(mfi => IsMatch(mfi.PredictedMz)))
                 fontSpec = FONT_SPEC_SELECTED;
             return new PointAnnotation(GetLabel(rmi), fontSpec);
         }
@@ -239,43 +239,26 @@ namespace pwiz.Skyline.Controls.Graphs
        
         private string GetLabel(LibraryRankedSpectrumInfo.RankedMI rmi)
         {
-            string[] parts = new string[2];
-            int i = 0;
-            bool visible1 = IsVisibleIon(rmi.IonType, rmi.Ordinal, rmi.Charge);
-            bool visible2 = IsVisibleIon(rmi.IonType2, rmi.Ordinal2, rmi.Charge2);
-            // Show the m/z values in the labels, if they should both be visible, and
+            // Show the m/z values in the labels, if multiple should be visible, and
             // they have different display values.
-            bool showMzInLabel = ShowMz && visible1 && visible2 &&
-                GetDisplayMz(rmi.PredictedMz) != GetDisplayMz(rmi.PredictedMz2);
-
-            if (visible1)
-            {
-                parts[i++] = GetLabel(rmi.IonType, rmi.Ordinal, rmi.Losses,
-                    rmi.Charge, rmi.PredictedMz, rmi.Rank, showMzInLabel);
-            }
-            if (visible2)
-            {
-                parts[i] = GetLabel(rmi.IonType2, rmi.Ordinal2, rmi.Losses2,
-                    rmi.Charge2, rmi.PredictedMz2, 0, showMzInLabel);
-            }
+            bool showMzInLabel = ShowMz &&
+                                 rmi.MatchedIons.Where(IsVisibleIon)
+                                     .Select(mfi => GetDisplayMz(mfi.PredictedMz))
+                                     .Distinct()
+                                     .Count() > 1;
+                
             StringBuilder sb = new StringBuilder();
-            foreach (string part in parts)
+            foreach (var mfi in rmi.MatchedIons.Where(IsVisibleIon))
             {
-                if (part == null)
-                    continue;
                 if (sb.Length > 0)
-                {
-                    if (showMzInLabel)
-                        sb.AppendLine();
-                    else
-                        sb.Append(", "); // Not L10N
-                }
-                sb.Append(part);
+                    sb.AppendLine();
+
+                sb.Append(GetLabel(mfi, sb.Length == 0 ? rmi.Rank : 0, showMzInLabel));
             }
             // If predicted m/z should be displayed, but hasn't been yet, then display now.
             if (ShowMz && !showMzInLabel)
             {
-                sb.AppendLine().Append(GetDisplayMz(rmi.PredictedMz));
+                sb.AppendLine().Append(GetDisplayMz(rmi.MatchedIons.First().PredictedMz));
             }
             // If showing observed m/z, and it is different from the predicted m/z, then display it last.
             if (ShowObservedMz)
@@ -285,20 +268,20 @@ namespace pwiz.Skyline.Controls.Graphs
             return sb.ToString();
         }
 
-        private string GetLabel(IonType type, int ordinal, TransitionLosses losses, int charge, double mz, int rank, bool showMz)
+        private string GetLabel(MatchedFragmentIon mfi, int rank, bool showMz)
         {
-            var label = new StringBuilder(type.GetLocalizedString());
-            if (!Transition.IsPrecursor(type))
-                label.Append(ordinal.ToString(LocalizationHelper.CurrentCulture));
-            if (losses != null)
+            var label = new StringBuilder(mfi.IonType.GetLocalizedString());
+            if (!Transition.IsPrecursor(mfi.IonType))
+                label.Append(mfi.Ordinal.ToString(LocalizationHelper.CurrentCulture));
+            if (mfi.Losses != null)
             {
                 label.Append(" -"); // Not L10N
-                label.Append(Math.Round(losses.Mass, 1));
+                label.Append(Math.Round(mfi.Losses.Mass, 1));
             }
-            string chargeIndicator = (charge == 1 ? string.Empty : Transition.GetChargeIndicator(charge));
+            string chargeIndicator = (mfi.Charge == 1 ? string.Empty : Transition.GetChargeIndicator(mfi.Charge));
             label.Append(chargeIndicator);
             if (showMz)
-                label.Append(string.Format(" = {0:F01}", mz)); // Not L10N
+                label.Append(string.Format(" = {0:F01}", mfi.PredictedMz)); // Not L10N
             if (rank > 0 && ShowRanks)
                 label.Append(TextUtil.SEPARATOR_SPACE).Append(string.Format("({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, rank))); // Not L10N
             return label.ToString();
@@ -315,17 +298,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool IsVisibleIon(LibraryRankedSpectrumInfo.RankedMI rmi)
         {
-            bool singleIon = (rmi.Ordinal2 == 0);
+            bool singleIon = (rmi.MatchedIons.Count == 1);
             if (ShowDuplicates && singleIon)
                 return false;
-            return IsVisibleIon(rmi.IonType, rmi.Ordinal, rmi.Charge) ||
-                   IsVisibleIon(rmi.IonType2, rmi.Ordinal2, rmi.Charge2);
+            return rmi.MatchedIons.Any(IsVisibleIon);
         }
 
-        private bool IsVisibleIon(IonType type, int ordinal, int charge)
+        private bool IsVisibleIon(MatchedFragmentIon mfi)
         {
             // Show precursor ions when they are supposed to be shown, regardless of charge
-            return ordinal > 0 && ShowTypes.Contains(type) && (type == IonType.precursor || ShowCharges.Contains(charge));
+            return mfi.Ordinal > 0 && ShowTypes.Contains(mfi.IonType) &&
+                (mfi.IonType == IonType.precursor || ShowCharges.Contains(mfi.Charge));
         }
     }
 

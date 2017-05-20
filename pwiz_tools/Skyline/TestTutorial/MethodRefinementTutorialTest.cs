@@ -343,7 +343,7 @@ namespace pwiz.SkylineTestTutorial
                 refineDlg.DotProductThreshold = Statistics.AngleToNormalizedContrastAngle(0.95);    // Convert from original cos(angle) dot-product
                 refineDlg.OkDialog();
             });
-            WaitForCondition(() => SkylineWindow.Document.PeptideCount < 75);
+            WaitForCondition(() => SkylineWindow.Document.PeptideCount < 76);
 //            foreach (var peptideDocNode in SkylineWindow.Document.Peptides)
 //            {
 //                var nodeGroup = ((TransitionGroupDocNode) peptideDocNode.Children[0]);
@@ -352,8 +352,8 @@ namespace pwiz.SkylineTestTutorial
 //            }
             RunUI(() =>
             {
-                Assert.AreEqual(74, SkylineWindow.Document.PeptideCount);
-                Assert.AreEqual(222, SkylineWindow.Document.PeptideTransitionCount);
+                Assert.AreEqual(75, SkylineWindow.Document.PeptideCount);
+                Assert.AreEqual(225, SkylineWindow.Document.PeptideTransitionCount);
                 SkylineWindow.CollapsePeptides();
                 SkylineWindow.Undo();
             });

@@ -73,5 +73,10 @@ namespace pwiz.Skyline.FileUI
                 // No pasting.
             }
         }
+
+        private void cbShowText_CheckedChanged(object sender, System.EventArgs e)
+        {
+            LineText.Visible = cbShowText.Checked;
+        }
     }
 }

@@ -715,9 +715,9 @@ namespace pwiz.Skyline.EditUI
                     if (errorList.Any())
                     {
                         var firstError = errorList[0];
-                        if (firstError.Row.HasValue)
+                        if (firstError.LineNum.HasValue)
                         {
-                            throw new LineColNumberedIoException(firstError.ErrorMessage, firstError.Row.Value, firstError.Column ?? -1);
+                            throw new LineColNumberedIoException(firstError.ErrorMessage, firstError.LineNum.Value, (firstError.Column ?? 0) - 1);
                         }
                         else
                         {

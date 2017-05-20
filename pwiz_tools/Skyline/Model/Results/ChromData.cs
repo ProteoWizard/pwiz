@@ -25,6 +25,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -34,6 +35,19 @@ namespace pwiz.Skyline.Model.Results
         /// Maximum number of peaks to label on a graph
         /// </summary>
         private const int MAX_PEAKS = 20;
+
+        /// <summary>
+        /// Minimum number of points required to determine a forced peak integration
+        /// actually coelutes with the dominant peak.
+        /// </summary>
+        private const int MIN_COELUTION_RESCUE_POINTS = 5;
+
+        /// <summary>
+        /// Minimum value of R (Pearson's) to determine a forced peak integration
+        /// actually coelutes with the dominant peak.
+        /// </summary>
+        private const double MIN_COELUTION_RESCUE_CORRELATION = 0.95;
+
 
         public ChromData(ChromKey key, int providerId)
         {
@@ -234,7 +248,44 @@ namespace pwiz.Skyline.Model.Results
             }
 
             peak = CalcPeak(peakMax.StartIndex, peakMax.EndIndex);
+            // If a forced peak is found to be sufficiently coeluting with the max peak, then clear the forced flag
+            if ((flags & ChromPeak.FlagValues.forced_integration) != 0 && AreCoeluting(peakMax, peak))
+                flags &= ~ChromPeak.FlagValues.forced_integration;
             return new ChromPeak(Finder, peak, flags, TimeIntensities, RawTimes);
+        }
+
+        private bool AreCoeluting(IFoundPeak peakMax, IFoundPeak peak)
+        {
+            if (peak.Area == 0)
+                return false;
+            int start = peakMax.StartIndex, end = peakMax.EndIndex;
+            if (peak.StartIndex != start || peak.EndIndex != end)
+                return false;
+            int len = peakMax.Length;
+            if (len < MIN_COELUTION_RESCUE_POINTS)
+                return false;
+            double maxBaseline = Math.Min(peakMax.SafeGetIntensity(start), peakMax.SafeGetIntensity(end));
+            double peakBaseline = Math.Min(peak.SafeGetIntensity(start), peak.SafeGetIntensity(end));
+            double[] maxIntens = new double[len];
+            double[] peakIntens = new double[len];
+            bool seenUnequal = false;
+            for (int i = 0; i < len; i++)
+            {
+                double maxI = maxIntens[i] = peakMax.SafeGetIntensity(i + start) - maxBaseline;
+                double peakI = peakIntens[i] = peak.SafeGetIntensity(i + start) - peakBaseline;
+                if (maxI != peakI)
+                    seenUnequal = true;
+            }
+            // Avoid self-rescue
+            if (!seenUnequal)
+                return false;
+            var statMax = new Statistics(maxIntens);
+            var statPeak = new Statistics(peakIntens);
+            double r = statMax.R(statPeak);
+            if (r < MIN_COELUTION_RESCUE_CORRELATION)
+                return false;
+
+            return true;    // For debugging
         }
 
         public void Interpolate(float[] timesNew, bool inferZeros)
