@@ -582,13 +582,16 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="CompactFormatOption" Type="System.String" Scope="User">
-      <Value Profile="(Default)"></Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="ExportPolarityFilterEnum" Type="System.String" Scope="User">
       <Value Profile="(Default)">all</Value>
     </Setting>
     <Setting Name="RTRegressionMethod" Type="System.String" Scope="User">
       <Value Profile="(Default)">linear</Value>
+    </Setting>
+    <Setting Name="CurrentColorScheme" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

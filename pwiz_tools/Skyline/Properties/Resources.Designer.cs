@@ -3707,6 +3707,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline classic.
+        /// </summary>
+        public static string ColorSchemeList_DEFAULT_Skyline_classic {
+            get {
+                return ResourceManager.GetString("ColorSchemeList_DEFAULT_Skyline_classic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Colorblind friendly.
+        /// </summary>
+        public static string ColorSchemeList_GetDefaults_Colorblind_friendly {
+            get {
+                return ResourceManager.GetString("ColorSchemeList_GetDefaults_Colorblind_friendly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Distinct.
+        /// </summary>
+        public static string ColorSchemeList_GetDefaults_Distinct {
+            get {
+                return ResourceManager.GetString("ColorSchemeList_GetDefaults_Distinct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Eggplant lemonade.
+        /// </summary>
+        public static string ColorSchemeList_GetDefaults_Eggplant_lemonade {
+            get {
+                return ResourceManager.GetString("ColorSchemeList_GetDefaults_Eggplant_lemonade", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to find table for {0}.
         /// </summary>
         public static string ColumnSet_GetColumnInfos_Unable_to_find_table_for__0_ {
@@ -7886,6 +7922,35 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_less_than_or_equ" +
                         "al_to__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The color scheme &apos;{0}&apos; already exists..
+        /// </summary>
+        public static string EditCustomThemeDlg_buttonSave_Click_The_color_scheme___0___already_exists_ {
+            get {
+                return ResourceManager.GetString("EditCustomThemeDlg_buttonSave_Click_The_color_scheme___0___already_exists_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Colors must be entered in HEX or RGB format..
+        /// </summary>
+        public static string EditCustomThemeDlg_dataGridViewColors_DataError_Colors_must_be_entered_in_HEX_or_RGB_format_ {
+            get {
+                return ResourceManager.GetString("EditCustomThemeDlg_dataGridViewColors_DataError_Colors_must_be_entered_in_HEX_or_" +
+                        "RGB_format_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to parse the color &apos;{0}&apos;. Use HEX or RGB format..
+        /// </summary>
+        public static string EditCustomThemeDlg_DoPaste_Unable_to_parse_the_color___0____Use_HEX_or_RGB_format_ {
+            get {
+                return ResourceManager.GetString("EditCustomThemeDlg_DoPaste_Unable_to_parse_the_color___0____Use_HEX_or_RGB_format" +
+                        "_", resourceCulture);
             }
         }
         

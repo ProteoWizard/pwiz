@@ -40,6 +40,7 @@ EditCEDlg,TestOptimization
 EditChorusAccountDlg,*
 EditCoVDlg,TestOptimization
 EditCustomMoleculeDlg,TestEditCustomMoleculeDlg
+EditCustomThemeDlg, TestEditCustomTheme
 EditDPDlg,TestEditDialogs
 EditDriftTimePredictorDlg,TestIonMobility
 EditEnzymeDlg,TestEditSettingsTypes

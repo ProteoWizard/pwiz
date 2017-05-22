@@ -2361,5 +2361,17 @@ namespace pwiz.Skyline.Properties {
                 this["RTRegressionMethod"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string CurrentColorScheme {
+            get {
+                return ((string)(this["CurrentColorScheme"]));
+            }
+            set {
+                this["CurrentColorScheme"] = value;
+            }
+        }
     }
 }

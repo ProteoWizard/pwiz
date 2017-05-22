@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -3298,70 +3299,12 @@ namespace pwiz.Skyline.Controls.Graphs
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
         }
 
-        public static readonly Color[] COLORS_GROUPS =
-            {
-                ChromGraphItem.ColorSelected,
-                Color.Blue,
-                Color.Maroon,
-                Color.Purple,
-                Color.Orange,
-                Color.Green,
-                Color.Yellow,
-                Color.LightBlue,
-            };
+        public static Color[] COLORS_GROUPS
+        {
+            get { return ColorScheme.CurrentColorScheme.PrecursorColors.ToArray(); }
+        }
 
-        public static readonly Color[] COLORS_LIBRARY =
-            {
-                Color.Blue,
-                Color.BlueViolet,
-                Color.Brown,
-                Color.Chocolate,
-                Color.DarkCyan,
-                Color.Green,
-                Color.Orange,
-//                Color.Navy,
-                Color.FromArgb(0x75, 0x70, 0xB3),
-                Color.Purple,
-                Color.LimeGreen,
-                Color.Gold,
-                Color.Magenta,
-                Color.Maroon,
-                Color.OliveDrab,
-                Color.RoyalBlue,
-            };
-
-//        public static readonly Color[] COLORS_MANI =
-//            {
-//                Color.FromArgb(0x1B,0x9E,0x77), 
-//                Color.FromArgb(0x37,0x7E,0xB8),
-//                Color.FromArgb(0x4D,0xAF,0x4A),
-//                Color.FromArgb(0x75,0x70,0xB3),
-//                Color.FromArgb(0x98,0x4E,0xA3),
-//                Color.FromArgb(0x99,0x99,0x99),
-//                Color.FromArgb(0xA6,0x56,0x28),
-//                Color.FromArgb(0xD9,0x5F,0x02),
-//                Color.FromArgb(0xE4,0x1A,0x1C),
-//                Color.FromArgb(0xE6,0xAB,0x02),
-//                Color.FromArgb(0xE7,0x29,0x8A),
-//                Color.FromArgb(0xF7,0x81,0xBF),
-//                Color.FromArgb(0xFF,0x7F,0x00),
-//            };
-
-//        private static readonly Color[] COLORS_HEURISTIC =
-//            {
-//                Color.SkyBlue,
-//                Color.Plum,
-//                Color.Peru,
-//                Color.Moccasin,
-//                Color.LightSeaGreen,
-//                Color.LightGreen,
-//                Color.LightSalmon,
-//                Color.LightCoral,
-//                Color.MediumTurquoise,
-//                Color.Plum,
-//                Color.PaleGreen,
-//                Color.Pink,
-//            };
+        public static Color[] COLORS_LIBRARY {get { return ColorScheme.CurrentColorScheme.TransitionColors.ToArray(); }}
 
         public static int GetColorIndex(TransitionGroupDocNode nodeGroup, int countLabelTypes, ref int? charge,
                                         ref int iCharge)

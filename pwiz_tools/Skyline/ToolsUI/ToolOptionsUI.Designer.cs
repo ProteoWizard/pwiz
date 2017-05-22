@@ -46,6 +46,8 @@ namespace pwiz.Skyline.ToolsUI
             this.lblCompactDocumentFormat = new System.Windows.Forms.Label();
             this.checkBoxShowWizard = new System.Windows.Forms.CheckBox();
             this.tabDisplay = new System.Windows.Forms.TabPage();
+            this.comboColorScheme = new System.Windows.Forms.ComboBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.powerOfTenCheckBox = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
@@ -172,10 +174,25 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // tabDisplay
             // 
+            this.tabDisplay.Controls.Add(this.comboColorScheme);
+            this.tabDisplay.Controls.Add(this.label1);
             this.tabDisplay.Controls.Add(this.powerOfTenCheckBox);
             resources.ApplyResources(this.tabDisplay, "tabDisplay");
             this.tabDisplay.Name = "tabDisplay";
             this.tabDisplay.UseVisualStyleBackColor = true;
+            // 
+            // comboColorScheme
+            // 
+            this.comboColorScheme.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboColorScheme.FormattingEnabled = true;
+            resources.ApplyResources(this.comboColorScheme, "comboColorScheme");
+            this.comboColorScheme.Name = "comboColorScheme";
+            this.comboColorScheme.SelectedIndexChanged += new System.EventHandler(this.comboColorScheme_SelectedIndexChanged);
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
             // 
             // powerOfTenCheckBox
             // 
@@ -246,5 +263,7 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.CheckBox powerOfTenCheckBox;
         private System.Windows.Forms.ComboBox comboCompactFormatOption;
         private System.Windows.Forms.Label lblCompactDocumentFormat;
+        private System.Windows.Forms.ComboBox comboColorScheme;
+        private System.Windows.Forms.Label label1;
     }
 }

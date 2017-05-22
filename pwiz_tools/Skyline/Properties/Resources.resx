@@ -9470,4 +9470,25 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="PeptideTipProvider_RenderTip_Precursor_m_z" xml:space="preserve">
     <value>Precursor m/z</value>
   </data>
+  <data name="ColorSchemeList_GetDefaults_Eggplant_lemonade" xml:space="preserve">
+    <value>Eggplant lemonade</value>
+  </data>
+  <data name="ColorSchemeList_GetDefaults_Distinct" xml:space="preserve">
+    <value>Distinct</value>
+  </data>
+  <data name="ColorSchemeList_GetDefaults_Colorblind_friendly" xml:space="preserve">
+    <value>Colorblind friendly</value>
+  </data>
+  <data name="EditCustomThemeDlg_buttonSave_Click_The_color_scheme___0___already_exists_" xml:space="preserve">
+    <value>The color scheme '{0}' already exists.</value>
+  </data>
+  <data name="EditCustomThemeDlg_dataGridViewColors_DataError_Colors_must_be_entered_in_HEX_or_RGB_format_" xml:space="preserve">
+    <value>Colors must be entered in HEX or RGB format.</value>
+  </data>
+  <data name="EditCustomThemeDlg_DoPaste_Unable_to_parse_the_color___0____Use_HEX_or_RGB_format_" xml:space="preserve">
+    <value>Unable to parse the color '{0}'. Use HEX or RGB format.</value>
+  </data>
+  <data name="ColorSchemeList_DEFAULT_Skyline_classic" xml:space="preserve">
+    <value>Skyline classic</value>
+  </data>
 </root>

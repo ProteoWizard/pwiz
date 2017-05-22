@@ -418,7 +418,7 @@
     <value>2</value>
   </data>
   <data name="comboCompactFormatOption.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 64</value>
+    <value>17, 32</value>
   </data>
   <data name="comboCompactFormatOption.Size" type="System.Drawing.Size, System.Drawing">
     <value>162, 21</value>
@@ -442,7 +442,7 @@
     <value>True</value>
   </data>
   <data name="lblCompactDocumentFormat.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 48</value>
+    <value>14, 16</value>
   </data>
   <data name="lblCompactDocumentFormat.Size" type="System.Drawing.Size, System.Drawing">
     <value>260, 13</value>
@@ -451,7 +451,7 @@
     <value>2</value>
   </data>
   <data name="lblCompactDocumentFormat.Text" xml:space="preserve">
-    <value>Use compact format when saving Skyline documents:</value>
+    <value>&amp;Use compact format when saving Skyline documents:</value>
   </data>
   <data name="&gt;&gt;lblCompactDocumentFormat.Name" xml:space="preserve">
     <value>lblCompactDocumentFormat</value>
@@ -472,7 +472,7 @@
     <value>NoControl</value>
   </data>
   <data name="checkBoxShowWizard.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 6</value>
+    <value>17, 91</value>
   </data>
   <data name="checkBoxShowWizard.Size" type="System.Drawing.Size, System.Drawing">
     <value>103, 17</value>
@@ -522,11 +522,59 @@
   <data name="&gt;&gt;tabMisc.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="comboColorScheme.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 31</value>
+  </data>
+  <data name="comboColorScheme.Size" type="System.Drawing.Size, System.Drawing">
+    <value>159, 21</value>
+  </data>
+  <data name="comboColorScheme.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;comboColorScheme.Name" xml:space="preserve">
+    <value>comboColorScheme</value>
+  </data>
+  <data name="&gt;&gt;comboColorScheme.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboColorScheme.Parent" xml:space="preserve">
+    <value>tabDisplay</value>
+  </data>
+  <data name="&gt;&gt;comboColorScheme.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 15</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>74, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>&amp;Color scheme:</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>tabDisplay</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="powerOfTenCheckBox.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="powerOfTenCheckBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 17</value>
+    <value>17, 91</value>
   </data>
   <data name="powerOfTenCheckBox.Size" type="System.Drawing.Size, System.Drawing">
     <value>214, 17</value>
@@ -535,7 +583,7 @@
     <value>0</value>
   </data>
   <data name="powerOfTenCheckBox.Text" xml:space="preserve">
-    <value>Always use scientific notation on graphs</value>
+    <value>&amp;Always use scientific notation on graphs</value>
   </data>
   <data name="&gt;&gt;powerOfTenCheckBox.Name" xml:space="preserve">
     <value>powerOfTenCheckBox</value>
@@ -547,7 +595,7 @@
     <value>tabDisplay</value>
   </data>
   <data name="&gt;&gt;powerOfTenCheckBox.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="tabDisplay.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>

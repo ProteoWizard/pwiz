@@ -48,6 +48,7 @@ using System.Windows.Forms;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Properties
@@ -1054,6 +1055,23 @@ namespace pwiz.Skyline.Properties
             {
                 this["CalibrationCurveOptions"] = value; // Not L10N
             }
+        }
+
+        [UserScopedSetting]
+        public ColorSchemeList ColorSchemes 
+        {
+            get
+            {
+                var colorSchemes = (ColorSchemeList)this["ColorSchemes"]; // Not L10N
+                if (colorSchemes == null)
+                {
+                    colorSchemes = new ColorSchemeList();
+                    colorSchemes.AddDefaults();
+                    ColorSchemes = colorSchemes;
+                }
+                return colorSchemes;
+            }
+            set { this["ColorSchemes"] = value; }  // Not L10N
         }
     }
 

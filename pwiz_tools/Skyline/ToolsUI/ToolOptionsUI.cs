@@ -23,6 +23,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Serialization;
+using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -33,6 +34,7 @@ namespace pwiz.Skyline.ToolsUI
     {
         private readonly SettingsListBoxDriver<Server> _driverServers;
         private readonly SettingsListBoxDriver<ChorusAccount> _driverChorusAccounts;
+        private readonly SettingsListComboDriver<ColorScheme> _driverColorSchemes;
 
         public ToolOptionsUI()
         {
@@ -45,6 +47,8 @@ namespace pwiz.Skyline.ToolsUI
             _driverServers.LoadList();
             _driverChorusAccounts = new SettingsListBoxDriver<ChorusAccount>(listBoxChorusAccounts, Settings.Default.ChorusAccountList);
             _driverChorusAccounts.LoadList();
+            _driverColorSchemes = new SettingsListComboDriver<ColorScheme>(comboColorScheme, Settings.Default.ColorSchemes, true);
+            _driverColorSchemes.LoadList(Settings.Default.CurrentColorScheme);
 
             // Hide ability to turn off live reports
             //tabControl.TabPages.Remove(tabMisc);
@@ -110,6 +114,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     Settings.Default.CompactFormatOption = compactFormatOption.Name;
                 }
+                Settings.Default.CurrentColorScheme = comboColorScheme.SelectedItem as string;
             }
             base.OnClosed(e);
         }
@@ -142,5 +147,26 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         #endregion
+
+        private void comboColorScheme_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ColorScheme newColorScheme = _driverColorSchemes.SelectedItem;
+            if (newColorScheme != null)
+            {
+                Settings.Default.CurrentColorScheme = newColorScheme.Name;
+                Program.MainWindow.UpdateGraphPanes();
+            }
+            _driverColorSchemes.SelectedIndexChangedEvent(sender, e);
+        }
+
+        public ComboBox getColorCB()
+        {
+            return comboColorScheme;
+        }
+
+        public SettingsListComboDriver<ColorScheme> getColorDrive()
+        {
+            return _driverColorSchemes;
+        }
     }
 }

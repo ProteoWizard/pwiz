@@ -1194,6 +1194,7 @@
     <Compile Include="Model\SrmDocumentSharing.cs" />
     <Compile Include="Model\ModificationMatcher.cs" />
     <Compile Include="Model\StandardType.cs" />
+    <Compile Include="Model\Themes\ColorScheme.cs" />
     <Compile Include="Model\Tools\ToolDescription.cs" />
     <Compile Include="Model\Tools\ToolInstaller.cs" />
     <Compile Include="Model\Tools\ToolMacros.cs" />
@@ -2957,6 +2958,9 @@
     <EmbeddedResource Include="ToolsUI\EditChorusAccountDlg.zh-CHS.resx">
       <DependentUpon>EditChorusAccountDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\EditCustomThemeDlg.resx">
+      <DependentUpon>EditCustomThemeDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.ja.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -3085,6 +3089,12 @@
     </Compile>
     <Compile Include="ToolsUI\EditChorusAccountDlg.Designer.cs">
       <DependentUpon>EditChorusAccountDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\EditCustomThemeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\EditCustomThemeDlg.Designer.cs">
+      <DependentUpon>EditCustomThemeDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\EditServerDlg.cs">
       <SubType>Form</SubType>
