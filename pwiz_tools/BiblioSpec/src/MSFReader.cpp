@@ -27,7 +27,7 @@ namespace BiblioSpec
                          const char* msfFile, 
                          const ProgressIndicator* parent_progress)
         : BuildParser(maker, msfFile, parent_progress),
-        msfName_(msfFile), schemaVersion_(-1), filtered_(has_extension(msfFile, ".pdResult"))
+        msfName_(msfFile), schemaVersionMajor_(-1), schemaVersionMinor_(-1), filtered_(has_extension(msfFile, ".pdResult"))
     {
         setSpecFileName(msfFile, false);
         lookUpBy_ = INDEX_ID;
@@ -51,6 +51,10 @@ namespace BiblioSpec
             }
         }
     }
+    
+    bool MSFReader::versionLess(int major, int minor) const {
+        return schemaVersionMajor_ < major || (schemaVersionMajor_ == major && schemaVersionMinor_ < minor);
+    }
 
     bool MSFReader::parseFile()
     {
@@ -71,13 +75,16 @@ namespace BiblioSpec
             vector<string> versionPieces;
             boost::split(versionPieces, version, boost::is_any_of("."));
             try {
-                schemaVersion_ = lexical_cast<int>(versionPieces.front());
-                Verbosity::debug("Schema version is %d (%s)", schemaVersion_, version.c_str());
+                schemaVersionMajor_ = lexical_cast<int>(versionPieces.front());
+                if (versionPieces.size() > 1) {
+                    schemaVersionMinor_ = lexical_cast<int>(versionPieces[1]);
+                }
+                Verbosity::debug("Schema version is %d (%s)", schemaVersionMajor_, version.c_str());
             } catch (bad_lexical_cast &) {
                 Verbosity::error("Unknown schema version format: '%s'", version.c_str());
             }
         }
-        if (schemaVersion_ < 0) {
+        if (schemaVersionMajor_ < 0) {
             Verbosity::error("Could not determine schema version.");
         }
 
@@ -110,23 +117,27 @@ namespace BiblioSpec
      */
     void MSFReader::collectSpectra()
     {
-        int specCount = !filtered_ ?
-            getRowCount("SpectrumHeaders WHERE SpectrumID IN (SELECT DISTINCT SpectrumID FROM Peptides)") :
-            getRowCount("MSnSpectrumInfo WHERE SpectrumID IN (SELECT DISTINCT MSnSpectrumInfoSpectrumID FROM TargetPsmsMSnSpectrumInfo)");
-        Verbosity::status("Parsing %d spectra.", specCount);
-        ProgressIndicator progress(specCount);
+        int specCount = 0;
+        sqlite3_stmt* statement = NULL; // id, rt, mass, charge, peaks
 
-        sqlite3_stmt* statement = !filtered_ ?
-            getStmt(
+        if (filtered_ || !versionLess(2, 2)) { // < 2.2 and filtered, or 2.2+
+            specCount = getRowCount("MSnSpectrumInfo WHERE SpectrumID IN (SELECT DISTINCT MSnSpectrumInfoSpectrumID FROM TargetPsmsMSnSpectrumInfo)");
+            statement = getStmt(
+                "SELECT SpectrumID, MSnSpectrumInfo.RetentionTime, Mass, Charge, Spectrum "
+                "FROM MSnSpectrumInfo "
+                "JOIN MassSpectrumItems ON MSnSpectrumInfo.SpectrumID = MassSpectrumItems.ID "
+                "WHERE SpectrumID");
+        } else {
+            specCount = getRowCount("SpectrumHeaders WHERE SpectrumID IN (SELECT DISTINCT SpectrumID FROM Peptides)");
+            statement = getStmt(
                 "SELECT SpectrumID, RetentionTime, Mass, Charge, Spectrum "
                 "FROM SpectrumHeaders "
                 "JOIN Spectra ON SpectrumHeaders.UniqueSpectrumID = Spectra.UniqueSpectrumID "
-                "WHERE SpectrumID IN (SELECT DISTINCT SpectrumID FROM Peptides)") :
-            getStmt(
-                "SELECT SpectrumID, RetentionTime, Mass, Charge, Spectrum "
-                "FROM MSnSpectrumInfo "
-                "JOIN MassSpectrumItems ON MSnSpectrumInfo.SpectrumID = MassSpectrumItems.ID "
-                "WHERE SpectrumID IN (SELECT DISTINCT MSnSpectrumInfoSpectrumID FROM TargetPsmsMSnSpectrumInfo)");
+                "WHERE SpectrumID IN (SELECT DISTINCT SpectrumID FROM Peptides)");
+        }
+
+        Verbosity::status("Parsing %d spectra.", specCount);
+        ProgressIndicator progress(specCount);
 
         // turn each row of returned table into a spectrum
         while (hasNext(statement))
@@ -149,7 +160,7 @@ namespace BiblioSpec
 
             // add spectrum to map
             spectra_[specId] = specData;
-            spectraChargeStates_[specId] = (int)charge;
+            spectraChargeStates_[specId] = (int)charge; // needed for versions < 2.2
 
             progress.increment();
         }
@@ -255,12 +266,8 @@ namespace BiblioSpec
             throw BlibException(false, "Unknown error while parsing spectrum file %d.", specId);
         }
     }
-
-    /**
-     * Parse all PSMs.
-     */
-    void MSFReader::collectPsms()
-    {
+    
+    void MSFReader::collectPsms() {
         sqlite3_stmt* statement;
         int resultCount;
         map<int, double> alts; // peptide id --> alt score, for breaking ties when q-values are identical
@@ -268,8 +275,18 @@ namespace BiblioSpec
         altScoreNames.push_back("XCorr");
         altScoreNames.push_back("IonScore");
 
-        if (!filtered_)
-        {
+        if (!versionLess(2, 2)) {
+            for (vector<string>::const_iterator i = altScoreNames.begin(); i != altScoreNames.end(); i++) {
+                if (!columnExists(msfFile_, "TargetPsms", *i)) {
+                    continue;
+                }
+                statement = getStmt("SELECT PeptideID, " + *i + " FROM TargetPsms");
+                while (hasNext(statement)) {
+                    alts[sqlite3_column_int(statement, 0)] = sqlite3_column_double(statement, 1);
+                }
+                break;
+            }
+        } else if (!filtered_) {
             for (vector<string>::const_iterator i = altScoreNames.begin(); i != altScoreNames.end(); i++) {
                 statement = getStmt(
                     "SELECT PeptideID, ScoreValue "
@@ -284,23 +301,20 @@ namespace BiblioSpec
             }
         }
 
-        bool qValues = hasQValues();
-        if (!qValues)
-        {
+        // set result count and statement (PeptideID, SpectrumID, unmodified sequence, q-value[, WorkflowID, SpectrumFileName])
+        if (!hasQValues()) {
             // no q-value fields in this database, error unless user wants everything
-            if (getScoreThreshold(SQT) < 1)
+            if (getScoreThreshold(SQT) < 1) {
                 throw BlibException(false, "This file does not contain q-values. You can set "
                                     "a cut-off score of 0 in order to build a library from it, "
                                     "but this may cause your library to include a lot "
                                     "of false-positives.");
+            }
             resultCount = getRowCount("Peptides");
-            statement = getStmt("SELECT PeptideID, SpectrumID, Sequence FROM Peptides");
-        }
-        else
-        {
+            statement = getStmt("SELECT PeptideID, SpectrumID, Sequence, '0' FROM Peptides");
+        } else {
             // get peptides with q-value <= threshold
-            if (!filtered_)
-            {
+            if (!filtered_ && versionLess(2, 2)) {
                 statement = getStmt(
                     "SELECT Peptides.PeptideID, SpectrumID, Sequence, FieldValue "
                     "FROM Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
@@ -310,11 +324,8 @@ namespace BiblioSpec
                     "Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
                     "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName IN ('q-Value', 'Percolator q-Value')) "
                     "AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
-            }
-            else
-            {
-                try
-                {
+            } else {
+                try {
                     statement = getStmt(
                         "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, PercolatorqValue, "
                         "WorkflowID, SpectrumFileName "
@@ -323,9 +334,7 @@ namespace BiblioSpec
                     resultCount = getRowCount(
                         "TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
                         "WHERE PercolatorqValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
-                }
-                catch (BlibException& e)
-                {
+                } catch (BlibException& e) {
                     statement = getStmt(
                         "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, qValue, "
                         "WorkflowID, SpectrumFileName "
@@ -342,39 +351,31 @@ namespace BiblioSpec
 
         initFileNameMap();
         map<int, ProcessedMsfSpectrum> processedSpectra;
-        ModSet modSet = ModSet(msfFile_, filtered_);
+        ModSet modSet = ModSet(msfFile_, !versionLess(2, 2) || filtered_);
         map<int, int> fileIdMap = getFileIds();
 
         // turn each row of returned table into a psm
-        while (hasNext(statement))
-        {
+        while (hasNext(statement)) {
             int peptideId = sqlite3_column_int(statement, 0);
             int specId = sqlite3_column_int(statement, 1);
             string sequence = lexical_cast<string>(sqlite3_column_text(statement, 2));
-            double qvalue = qValues ? sqlite3_column_double(statement, 3) : 0.0;
+            double qvalue = sqlite3_column_double(statement, 3);
 
             map<int, double>::const_iterator altIter = alts.find(peptideId);
             double altScore = (altIter != alts.end()) ? altIter->second : -numeric_limits<double>::max();
 
             // check if we already processed a peptide that references this spectrum
             map<int, ProcessedMsfSpectrum>::iterator processedSpectraSearch = processedSpectra.find(specId);
-            if (processedSpectraSearch != processedSpectra.end())
-            {
+            if (processedSpectraSearch != processedSpectra.end()) {
                 ProcessedMsfSpectrum& processed = processedSpectraSearch->second;
                 // not an ambigous spectrum (yet)
-                if (!processed.ambiguous)
-                {
-                    // worse than other score, skip this
-                    if (qvalue > processed.qvalue || (qvalue == processed.qvalue && altScore < processed.altScore))
-                    {
+                if (!processed.ambiguous) {
+                    if (qvalue > processed.qvalue || (qvalue == processed.qvalue && altScore < processed.altScore)) { // worse than other score, skip this
                         Verbosity::debug("Peptide %d (%s) had a worse score than another peptide (%s) "
                                          "referencing spectrum %d (ignoring this peptide).",
                                          peptideId, sequence.c_str(), processed.psm->unmodSeq.c_str(), specId);
                         continue;
-                    }
-                    // equal, discard other and skip this
-                    else if (qvalue == processed.qvalue && altScore == processed.altScore)
-                    {
+                    } else if (qvalue == processed.qvalue && altScore == processed.altScore) { // equal, discard other and skip this
                         Verbosity::debug("Peptide %d (%s) had the same score as another peptide (%s) "
                                          "referencing spectrum %d (ignoring both peptides).",
                                          peptideId, sequence.c_str(), processed.psm->unmodSeq.c_str(), specId);
@@ -385,10 +386,7 @@ namespace BiblioSpec
                         processed.psm = NULL;
                         processed.ambiguous = true;
                         continue;
-                    }
-                    // better than other score, discard other
-                    else
-                    {
+                    } else { // better than other score, discard other
                         Verbosity::debug("Peptide %d (%s) had a better score than another peptide (%s) "
                                          "referencing spectrum %d (ignoring other peptide).",
                                          peptideId, sequence.c_str(), processed.psm->unmodSeq.c_str(), specId);
@@ -398,25 +396,17 @@ namespace BiblioSpec
                         processed.qvalue = qvalue;
                         processed.altScore = altScore;
                     }
-                }
-                // ambigous spectrum, check if score is better
-                else
-                {
+                } else { // ambigous spectrum, check if score is better
                     Verbosity::debug("Peptide %d (%s) with score %f references same spectrum as other peptides "
                                      "that had score %f.", peptideId, sequence.c_str(), qvalue, processed.qvalue);
-                    if (qvalue < processed.qvalue || (qvalue == processed.qvalue && altScore > processed.altScore))
-                    {
+                    if (qvalue < processed.qvalue || (qvalue == processed.qvalue && altScore > processed.altScore)) {
                         curPSM_ = new PSM();
                         processedSpectraSearch->second = ProcessedMsfSpectrum(curPSM_, qvalue, altScore);
-                    }
-                    else
-                    {
+                    } else {
                         continue;
                     }
                 }
-            }
-            else
-            {
+            } else {
                 // unseen spectrum
                 curPSM_ = new PSM();
                 processedSpectra[specId] = ProcessedMsfSpectrum(curPSM_, qvalue, altScore);
@@ -424,14 +414,14 @@ namespace BiblioSpec
 
             curPSM_->charge = spectraChargeStates_[specId];
             curPSM_->unmodSeq = sequence;
-            curPSM_->mods = !filtered_
+            curPSM_->mods = versionLess(2, 2) && !filtered_
                 ? modSet.getMods(peptideId)
                 : modSet.getMods(sqlite3_column_int(statement, 4), peptideId);
             curPSM_->specIndex = specId;
             curPSM_->score = qvalue;
 
             string psmFileName;
-            if (!filtered_) {
+            if (!filtered_ && versionLess(2, 2)) {
                 map<int, int>::iterator fileIdMapAccess = fileIdMap.find(peptideId);
                 if (fileIdMapAccess == fileIdMap.end()) {
                     throw BlibException(false, "No FileID for PSM %d.", peptideId);
@@ -444,8 +434,7 @@ namespace BiblioSpec
 
             // filename
             map< string, map< PSM_SCORE_TYPE, vector<PSM*> > >::iterator fileMapAccess = fileMap_.find(psmFileName);
-            if (fileMapAccess == fileMap_.end())
-            {
+            if (fileMapAccess == fileMap_.end()) {
                 map< PSM_SCORE_TYPE, vector<PSM*> > tmpMap;
                 fileMap_[psmFileName] = tmpMap;
                 fileMapAccess = fileMap_.find(psmFileName);
@@ -455,14 +444,11 @@ namespace BiblioSpec
             PSM_SCORE_TYPE scoreType = PERCOLATOR_QVALUE;
             map< PSM_SCORE_TYPE, vector<PSM*> >& scoreMap = fileMapAccess->second;
             map< PSM_SCORE_TYPE, vector<PSM*> >::iterator scoreMapAccess = scoreMap.find(scoreType);
-            if (scoreMapAccess == scoreMap.end())
-            {
+            if (scoreMapAccess == scoreMap.end()) {
                 vector<PSM*> tmpVec;
                 tmpVec.push_back(curPSM_);
                 scoreMap[scoreType] = tmpVec;
-            }
-            else
-            {
+            } else {
                 scoreMapAccess->second.push_back(curPSM_);
             }
 
@@ -473,9 +459,11 @@ namespace BiblioSpec
     /**
      * Initialize fileNameMap_, which maps FileID to their filenames.
      */
-    void MSFReader::initFileNameMap()
-    {
-        string fileTable = (schemaVersion_ < 2) ? "FileInfos" : "WorkflowInputFiles";
+    void MSFReader::initFileNameMap() {
+        if (!versionLess(2, 2)) {
+            return; // don't need to do this since info is already in TargetPsms table
+        }
+        string fileTable = (schemaVersionMajor_ < 2) ? "FileInfos" : "WorkflowInputFiles";
         sqlite3_stmt* statement = getStmt(
             "SELECT FileID, FileName FROM " + fileTable);
         while (hasNext(statement))
@@ -516,34 +504,34 @@ namespace BiblioSpec
     /**
      * Returns the name of the file, given the FileID.
      */
-    string MSFReader::fileIdToName(int fileId)
-    {
+    string MSFReader::fileIdToName(int fileId) {
         map<int, string>::iterator mapAccess = fileNameMap_.find(fileId);
-        if (mapAccess == fileNameMap_.end())
-        {
+        if (mapAccess == fileNameMap_.end()) {
             throw BlibException(false, "Invalid FileID: %d.", fileId);
         }
-
         return mapAccess->second;
     }
 
     /**
      * Return whether the MSF file has q-values or not.
      */
-    bool MSFReader::hasQValues()
-    {
-        if (filtered_)
-        {
+    bool MSFReader::hasQValues() {
+        sqlite3_stmt* statement;
+
+        if (!versionLess(2, 2)) {
+            return columnExists(msfFile_, "TargetPsms", "PercolatorqValue");
+        }
+
+        if (filtered_) {
             return true;
         }
 
-        sqlite3_stmt* statement = getStmt(
+         statement = getStmt(
             "SELECT FieldID "
             "FROM CustomDataFields "
             "WHERE DisplayName IN ('q-Value', 'Percolator q-Value') "
             "LIMIT 1");
-        if (!hasNext(statement))
-        {
+        if (!hasNext(statement)) {
             return false;
         }
         sqlite3_finalize(statement);
@@ -551,34 +539,37 @@ namespace BiblioSpec
     }
 
     MSFReader::ModSet::ModSet(sqlite3* db, bool filtered) {
-        sqlite3_stmt* stmt = !filtered
-            ? MSFReader::getStmt(db,
+        sqlite3_stmt* stmt;
+        if (!filtered) {
+            stmt = MSFReader::getStmt(db,
                 "SELECT '0', PeptideID, Position, DeltaMass "
                 "FROM PeptidesAminoAcidModifications "
                 "JOIN AminoAcidModifications "
-                "   ON PeptidesAminoAcidModifications.AminoAcidModificationID = AminoAcidModifications.AminoAcidModificationID")
-            : MSFReader::getStmt(db,
+                "   ON PeptidesAminoAcidModifications.AminoAcidModificationID = AminoAcidModifications.AminoAcidModificationID");
+        } else {
+            bool alternateTName = MSFReader::tableExists(db, "FoundModificationsTargetPsms");
+            string tName = !alternateTName ? "TargetPsmsFoundModifications" : "FoundModificationsTargetPsms";
+            stmt = MSFReader::getStmt(db,
                 "SELECT TargetPsmsWorkflowID, TargetPsmsPeptideID, Position, DeltaMonoisotopicMass "
-                "FROM TargetPsmsFoundModifications "
+                "FROM " + tName + " "
                 "JOIN FoundModifications "
-                "   ON TargetPsmsFoundModifications.FoundModificationsModificationID = FoundModifications.ModificationID");
+                "   ON " + tName + ".FoundModificationsModificationID = FoundModifications.ModificationID");
+        }
 
         // turn each row of returned table into a seqmod to be added to the map
-        while (MSFReader::hasNext(stmt))
-        {
+        while (MSFReader::hasNext(stmt)) {
             int workflowId = sqlite3_column_int(stmt, 0);
             int peptideId = sqlite3_column_int(stmt, 1);
             // mod indices are 0 based in unfiltered, 1 based in filtered
             int pos = sqlite3_column_int(stmt, 2);
-            if (!filtered)
+            if (!filtered) {
                 ++pos;
+            }
             addMod(workflowId, peptideId, pos, sqlite3_column_double(stmt, 3));
         }
 
         // get terminal mods if PeptidesTerminalModifications table exists
-        stmt = MSFReader::getStmt(db,
-            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'PeptidesTerminalModifications'");
-        if (MSFReader::hasNext(stmt) && sqlite3_column_int(stmt, 0) == 1) {
+        if (MSFReader::tableExists(db, "PeptidesTerminalModifications")) {
             sqlite3_finalize(stmt);
             stmt = MSFReader::getStmt(db,
                 "SELECT PeptidesTerminalModifications.PeptideID, PositionType, DeltaMass, Sequence "
@@ -648,10 +639,9 @@ namespace BiblioSpec
     /**
      * Return a map that maps PeptideID to the FileID.
      */
-    map<int, int> MSFReader::getFileIds()
-    {
+    map<int, int> MSFReader::getFileIds() {
         map<int, int> fileIdMap;
-        if (!filtered_) {
+        if (!filtered_ && versionLess(2, 2)) {
             sqlite3_stmt* statement = getStmt(
                 "SELECT PeptideID, FileID "
                 "FROM Peptides "
@@ -800,8 +790,7 @@ namespace BiblioSpec
      * Attempts to return the next row of the SQLite statement. Returns true on success.
      * Otherwise, finalize the statement and return false.
      */
-    bool MSFReader::hasNext(sqlite3_stmt* statement)
-    {
+    bool MSFReader::hasNext(sqlite3_stmt* statement) {
         if (sqlite3_step(statement) != SQLITE_ROW) {
             sqlite3_finalize(statement);
             return false;
@@ -821,6 +810,48 @@ namespace BiblioSpec
         sqlite3_finalize(statement);
 
         return count;
+    }
+
+    bool MSFReader::tableExists(sqlite3* handle, string table) {
+        sqlite3_stmt* statement = getStmt(handle, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = '" + table + "'");
+        bool found = hasNext(statement) && sqlite3_column_int(statement, 0) == 1;
+        sqlite3_finalize(statement);
+        return found;
+    }
+
+    bool MSFReader::columnExists(sqlite3* handle, string table, string columnName) {
+        sqlite3_stmt* statement = getStmt(handle, "PRAGMA table_info(" + table + ")");
+        int numCols = sqlite3_column_count(statement);
+        int nameIndex = -1;
+        for (int i = 0; i < numCols; i++) {
+            string cur(sqlite3_column_name(statement, i));
+            if (boost::iequals(cur, "name")) {
+                nameIndex = i;
+                break;
+            }
+        }
+
+        bool found = false;
+        set<string> foundCols;
+        while (hasNext(statement)) {
+            string cur = lexical_cast<string>(sqlite3_column_text(statement, nameIndex));
+            if (boost::iequals(cur, columnName)) {
+                found = true;
+                break;
+            }
+            foundCols.insert(cur);
+        }
+        sqlite3_finalize(statement);
+
+        if (found) {
+            Verbosity::debug("Searched in table '%s' for column '%s', found",
+                             table.c_str(), columnName.c_str());
+        } else {
+            Verbosity::debug("Searched in table '%s' for column '%s', not found in: %s",
+                             table.c_str(), columnName.c_str(), boost::algorithm::join(foundCols, ", ").c_str());
+        }
+
+        return found;
     }
 
     // SpecFileReader methods

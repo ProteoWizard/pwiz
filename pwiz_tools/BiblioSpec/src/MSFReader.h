@@ -97,13 +97,14 @@ namespace BiblioSpec
 
         sqlite3* msfFile_;
         const char* msfName_;
-        int schemaVersion_;
+        int schemaVersionMajor_, schemaVersionMinor_;
         bool filtered_; // msf is complete, unfiltered; pdResult is filtered and persistent version of msf
         map< string, map< PSM_SCORE_TYPE, vector<PSM*> > > fileMap_;
         map<int, string> fileNameMap_;
         map<int, SpecData*> spectra_;
         map<int, int> spectraChargeStates_;
 
+        bool versionLess(int major, int minor) const;
         void collectSpectra();
         string unzipSpectrum(int specId, const void* src, size_t srcLen);
         void readSpectrum(int specId, string& spectrumXml, int* numPeaks, double** mzs, float** intensities);
@@ -129,6 +130,8 @@ namespace BiblioSpec
         static sqlite3_stmt* getStmt(sqlite3* handle, const string& query);
         static bool hasNext(sqlite3_stmt* statement);
         int getRowCount(string table);
+        static bool tableExists(sqlite3* handle, string table);
+        static bool columnExists(sqlite3* handle, string table, string columnName);
 
         // SpecFileReader interface
         virtual void openFile(const char*, bool mzSort = false);
