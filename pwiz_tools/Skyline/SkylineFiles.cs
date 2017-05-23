@@ -2225,6 +2225,50 @@ namespace pwiz.Skyline
                 return;
             }
 
+            var missingIrtPeptides = CheckMissingIrtPeptides(DocumentUI).ToArray();
+            if (missingIrtPeptides.Any())
+            {
+                var numStandards = RCalcIrtPeptides(DocumentUI).Count();
+                var numDocument = numStandards - missingIrtPeptides.Length;
+                var numRequired = RCalcIrt.MinStandardCount(numStandards);
+                var message = TextUtil.LineSeparate(
+                    Resources.SkylineWindow_ImportResults_The_following_iRT_standard_peptides_are_missing_from_the_document_,
+                    string.Empty,
+                    TextUtil.LineSeparate(missingIrtPeptides),
+                    string.Empty,
+                    string.Format(Resources.SkylineWindow_ImportResults_With__0__standard_peptides___1__are_required_with_a_correlation_of__2__,
+                                  numStandards, numRequired, RCalcIrt.MIN_IRT_TO_TIME_CORRELATION));
+                if (numDocument < numRequired)
+                {
+                    message = TextUtil.LineSeparate(
+                        message,
+                        numDocument > 0
+                            ? string.Format(Resources.SkylineWindow_ImportResults_The_document_only_contains__0__of_these_iRT_standard_peptides_, numDocument)
+                            : Resources.SkylineWindow_ImportResults_The_document_does_not_contain_any_of_these_iRT_standard_peptides_,
+                        string.Empty,
+                        Resources.SkylineWindow_ImportResults_Add_missing_iRT_standard_peptides_to_your_document_or_change_the_retention_time_predictor_);
+                    MessageDlg.Show(this, message);
+                    return;
+                }
+                else
+                {
+                    var numExceptions = numDocument - numRequired;
+                    message = TextUtil.LineSeparate(
+                        message,
+                        string.Format(Resources.SkylineWindow_ImportResults_The_document_contains__0__of_these_iRT_standard_peptides_, numDocument),
+                        numExceptions > 0
+                            ? string.Format(Resources.SkylineWindow_ImportResults_A_maximum_of__0__may_be_missing_and_or_outliers_for_a_successful_import_, numExceptions)
+                            : Resources.SkylineWindow_ImportResults_None_may_be_missing_or_outliers_for_a_successful_import_,
+                        string.Empty,
+                        Resources.SkylineWindow_ImportResults_Do_you_want_to_continue_);
+                    using (var dlg = new MultiButtonMsgDlg(message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
+                    {
+                        if (dlg.ShowDialog(this) == DialogResult.No)
+                            return;
+                    }
+                }
+            }
+
             using (ImportResultsDlg dlg = new ImportResultsDlg(DocumentUI, DocumentFilePath))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -2315,6 +2359,11 @@ namespace pwiz.Skyline
             {
                 return dlg.ShowDialog(this) == DialogResult.OK;
             }
+        }
+
+        private static IEnumerable<string> CheckMissingIrtPeptides(SrmDocument document)
+        {
+            return RCalcIrtPeptides(document).Except(document.Peptides.Select(nodePep => nodePep.ModifiedSequence));
         }
 
         public SrmDocument ImportResults(SrmDocument doc, List<KeyValuePair<string, MsDataFileUri[]>> namedResults, string optimize)

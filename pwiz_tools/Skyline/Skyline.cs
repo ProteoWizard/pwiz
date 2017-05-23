@@ -3035,25 +3035,31 @@ namespace pwiz.Skyline
         private IrtStandard RCalcIrtStandard(out HashSet<string> missingPeptides)
         {
             missingPeptides = new HashSet<string>();
-            var rt = Document.Settings.PeptideSettings.Prediction.RetentionTime;
-            if (rt != null)
+            var calcPeptides = RCalcIrtPeptides(Document).ToArray();
+            return calcPeptides.Any() ? IrtStandard.WhichStandard(calcPeptides, out missingPeptides) : IrtStandard.NULL;
+        }
+
+        private static IEnumerable<string> RCalcIrtPeptides(SrmDocument document)
+        {
+            if (!document.Settings.HasRTPrediction)
+                yield break;
+
+            var calc = document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;
+            if (calc == null)
+                yield break;
+
+            try                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
             {
-                var calc = rt.Calculator as RCalcIrt;
-                if (calc != null)
-                {
-                    try
-                    {
-                        calc = calc.Initialize(null) as RCalcIrt;
-                    }
-                    catch
-                    {
-                        return IrtStandard.NULL;
-                    }
-                    if (calc != null)
-                        return IrtStandard.WhichStandard(calc.GetStandardPeptides().ToArray(), out missingPeptides);
-                }
+                calc = calc.Initialize(null) as RCalcIrt;
             }
-            return IrtStandard.NULL;
+            catch
+            {
+                yield break;
+            }
+
+            if (calc != null)
+                foreach (var peptide in calc.GetStandardPeptides())
+                    yield return peptide;
         }
 
         private void transitionSettingsMenuItem_Click(object sender, EventArgs e)

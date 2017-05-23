@@ -63,6 +63,7 @@
             this.gridViewStandard = new pwiz.Skyline.Controls.DataGridViewEx();
             this.columnStandardSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnStandardIrt = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.labelNumStandards = new System.Windows.Forms.Label();
             this.gridViewLibrary = new pwiz.Skyline.Controls.DataGridViewEx();
             this.columnLibrarySequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnLibraryIrt = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -200,6 +201,7 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.labelNumStandards);
             this.splitContainer1.Panel2.Controls.Add(this.gridViewLibrary);
             this.splitContainer1.Panel2.Controls.Add(this.btnPeptides);
             this.splitContainer1.Panel2.Controls.Add(this.label4);
@@ -240,6 +242,8 @@
             dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.gridViewStandard.RowHeadersDefaultCellStyle = dataGridViewCellStyle5;
+            this.gridViewStandard.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.gridViewStandard_RowsAdded);
+            this.gridViewStandard.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.gridViewStandard_RowsRemoved);
             // 
             // columnStandardSequence
             // 
@@ -258,6 +262,11 @@
             this.columnStandardIrt.DefaultCellStyle = dataGridViewCellStyle3;
             resources.ApplyResources(this.columnStandardIrt, "columnStandardIrt");
             this.columnStandardIrt.Name = "columnStandardIrt";
+            // 
+            // labelNumStandards
+            // 
+            resources.ApplyResources(this.labelNumStandards, "labelNumStandards");
+            this.labelNumStandards.Name = "labelNumStandards";
             // 
             // gridViewLibrary
             // 
@@ -383,5 +392,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn columnLibraryIrt;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.ComboBox comboStandards;
+        private System.Windows.Forms.Label labelNumStandards;
     }
 }

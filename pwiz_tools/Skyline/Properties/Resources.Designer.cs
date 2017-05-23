@@ -8660,6 +8660,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} Standard peptide ({1} required).
+        /// </summary>
+        public static string EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptide___1__required_ {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptide___1__required_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Standard peptides ({1} required).
+        /// </summary>
+        public static string EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptides___1__required_ {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptides___1__required_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The peptide {0} appears in the {1} table more than once..
         /// </summary>
         public static string EditIrtCalcDlg_ValidatePeptideList_The_peptide__0__appears_in_the__1__table_more_than_once {
@@ -23129,6 +23147,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A maximum of {0} may be missing or outliers for a successful import..
+        /// </summary>
+        public static string SkylineWindow_ImportResults_A_maximum_of__0__may_be_missing_and_or_outliers_for_a_successful_import_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_A_maximum_of__0__may_be_missing_and_or_outliers_for_a" +
+                        "_successful_import_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A regression for declustering potention must be selected in the Prediction tab of the Transition Settings in order to import optimization data for decluserting potential..
         /// </summary>
         public static string SkylineWindow_ImportResults_A_regression_for_declustering_potention_must_be_selected_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimization_data_for_decluserting_potential {
@@ -23136,6 +23164,25 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("SkylineWindow_ImportResults_A_regression_for_declustering_potention_must_be_selec" +
                         "ted_in_the_Prediction_tab_of_the_Transition_Settings_in_order_to_import_optimiza" +
                         "tion_data_for_decluserting_potential", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add missing iRT standard peptides to your document or change the retention time predictor..
+        /// </summary>
+        public static string SkylineWindow_ImportResults_Add_missing_iRT_standard_peptides_to_your_document_or_change_the_retention_time_predictor_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_Add_missing_iRT_standard_peptides_to_your_document_or" +
+                        "_change_the_retention_time_predictor_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you want to continue?.
+        /// </summary>
+        public static string SkylineWindow_ImportResults_Do_you_want_to_continue_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_Do_you_want_to_continue_", resourceCulture);
             }
         }
         
@@ -23154,6 +23201,66 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ImportResults_Import_results {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportResults_Import_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None may be missing or outliers for a successful import..
+        /// </summary>
+        public static string SkylineWindow_ImportResults_None_may_be_missing_or_outliers_for_a_successful_import_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_None_may_be_missing_or_outliers_for_a_successful_impo" +
+                        "rt_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document contains {0} of these iRT standard peptides..
+        /// </summary>
+        public static string SkylineWindow_ImportResults_The_document_contains__0__of_these_iRT_standard_peptides_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_The_document_contains__0__of_these_iRT_standard_pepti" +
+                        "des_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document does not contain any of these iRT standard peptides..
+        /// </summary>
+        public static string SkylineWindow_ImportResults_The_document_does_not_contain_any_of_these_iRT_standard_peptides_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_The_document_does_not_contain_any_of_these_iRT_standa" +
+                        "rd_peptides_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document only contains {0} of these iRT standard peptides..
+        /// </summary>
+        public static string SkylineWindow_ImportResults_The_document_only_contains__0__of_these_iRT_standard_peptides_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_The_document_only_contains__0__of_these_iRT_standard_" +
+                        "peptides_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following iRT standard peptides are missing from the document:.
+        /// </summary>
+        public static string SkylineWindow_ImportResults_The_following_iRT_standard_peptides_are_missing_from_the_document_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_The_following_iRT_standard_peptides_are_missing_from_" +
+                        "the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0} standard peptides, {1} are required with a correlation of {2}..
+        /// </summary>
+        public static string SkylineWindow_ImportResults_With__0__standard_peptides___1__are_required_with_a_correlation_of__2__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_With__0__standard_peptides___1__are_required_with_a_c" +
+                        "orrelation_of__2__", resourceCulture);
             }
         }
         

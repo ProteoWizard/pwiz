@@ -774,4 +774,113 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(dlg);
         }
     }
+
+    [TestClass]
+    public class IrtImportResultsTest : AbstractFunctionalTest
+    {
+        [TestMethod]
+        public void IrtImportResultsFunctionalTest()
+        {
+            RunFunctionalTest();
+        }
+
+        protected override void DoTest()
+        {
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var irtCalc = ShowDialog<EditIrtCalcDlg>(peptideSettings.AddCalculator);
+            var testDir = TestContext.TestDir;
+            RunUI(() =>
+            {
+                irtCalc.CalcName = "Biognosys-10";
+                irtCalc.CreateDatabase(Path.Combine(testDir, "test.irtdb"));
+                irtCalc.IrtStandards = IrtStandard.BIOGNOSYS_10;
+            });
+            OkDialog(irtCalc, irtCalc.OkDialog);
+            var addPeptides = ShowDialog<AddIrtStandardsToDocumentDlg>(peptideSettings.OkDialog);
+            RunUI(() => addPeptides.NumTransitions = 3);
+            OkDialog(addPeptides, addPeptides.BtnYesClick);
+            RunUI(() => SkylineWindow.SaveDocument(Path.Combine(testDir, "test.sky")));
+            
+            // Test opening ImportResultsDlg with all 10 iRT standard peptides in the document
+            removePeptidesAndImport(IrtStandard.BIOGNOSYS_10, 0);
+
+            // Test with 1 missing
+            removePeptidesAndImport(IrtStandard.BIOGNOSYS_10, 1);
+
+            // Test with 2 missing (minimum)
+            removePeptidesAndImport(IrtStandard.BIOGNOSYS_10, 1);
+
+            // Test with 3 missing (below minimum)
+            removePeptidesAndImport(IrtStandard.BIOGNOSYS_10, 1);
+
+            // Test with all missing
+            RunUI(() => SkylineWindow.Paste("PEPTIDER")); // Put in a single peptide so we don't get an error on import results
+            removePeptidesAndImport(IrtStandard.BIOGNOSYS_10, 7);
+        }
+
+        private static void removePeptidesAndImport(IrtStandard standard, int numPeptides)
+        {
+            string[] standardPeptides = null;
+            List<string> removedPeptides = null;
+            RunUI(() =>
+            {
+                standardPeptides = standard.Peptides.Select(pep => pep.Sequence).ToArray();
+                removedPeptides = standardPeptides.Except(SkylineWindow.DocumentUI.Peptides.Select(nodePep => nodePep.ModifiedSequence)).ToList();
+            }); 
+            var toRemove = standardPeptides.Except(removedPeptides).ToArray();
+            if (numPeptides > toRemove.Length)
+                Assert.Fail("Not enough peptides to remove");
+
+            for (var i = 0; i < numPeptides; i++)
+            {
+                RemovePeptide(toRemove[i]);
+                removedPeptides.Add(toRemove[i]);
+            }
+
+            if (!removedPeptides.Any())
+            {
+                var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+                OkDialog(importResultsDlg, importResultsDlg.CancelDialog);
+                return;
+            }
+
+            var docCount = standardPeptides.Length - removedPeptides.Count;
+            if (docCount >= RCalcIrt.MinStandardCount(standardPeptides.Length))
+            {
+                var allowedMissing = docCount - RCalcIrt.MinStandardCount(standardPeptides.Length);
+                var warningDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+                RunUI(() =>
+                {
+                    foreach (var pep in removedPeptides)
+                    {
+                        Assert.IsTrue(warningDlg.Message.Contains(pep));
+                    }
+                    Assert.IsTrue(warningDlg.Message.Contains(
+                        string.Format(Resources.SkylineWindow_ImportResults_The_document_contains__0__of_these_iRT_standard_peptides_, docCount)));
+                    Assert.IsTrue(warningDlg.Message.Contains(
+                        allowedMissing > 0
+                            ? string.Format(Resources.SkylineWindow_ImportResults_A_maximum_of__0__may_be_missing_and_or_outliers_for_a_successful_import_, allowedMissing)
+                            : Resources.SkylineWindow_ImportResults_None_may_be_missing_or_outliers_for_a_successful_import_));
+                });
+                OkDialog(warningDlg, warningDlg.BtnCancelClick);
+            }
+            else
+            {
+                var errorDlg = ShowDialog<MessageDlg>(SkylineWindow.ImportResults);
+                RunUI(() =>
+                {
+                    foreach (var pep in removedPeptides)
+                    {
+                        Assert.IsTrue(errorDlg.Message.Contains(pep));
+                    }
+                    Assert.IsTrue(errorDlg.Message.Contains(
+                        docCount > 0
+                            ? string.Format(Resources.SkylineWindow_ImportResults_The_document_only_contains__0__of_these_iRT_standard_peptides_, docCount)
+                            : Resources.SkylineWindow_ImportResults_The_document_does_not_contain_any_of_these_iRT_standard_peptides_));
+                    Assert.IsTrue(errorDlg.Message.Contains(Resources.SkylineWindow_ImportResults_Add_missing_iRT_standard_peptides_to_your_document_or_change_the_retention_time_predictor_));
+                });
+                OkDialog(errorDlg, errorDlg.OkDialog);
+            }
+        }
+    }
 }

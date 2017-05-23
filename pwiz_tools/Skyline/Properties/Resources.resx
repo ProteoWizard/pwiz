@@ -9491,4 +9491,37 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="ColorSchemeList_DEFAULT_Skyline_classic" xml:space="preserve">
     <value>Skyline classic</value>
   </data>
+  <data name="SkylineWindow_ImportResults_The_following_iRT_standard_peptides_are_missing_from_the_document_" xml:space="preserve">
+    <value>The following iRT standard peptides are missing from the document:</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_With__0__standard_peptides___1__are_required_with_a_correlation_of__2__" xml:space="preserve">
+    <value>With {0} standard peptides, {1} are required with a correlation of {2}.</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_only_contains__0__of_these_iRT_standard_peptides_" xml:space="preserve">
+    <value>The document only contains {0} of these iRT standard peptides.</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Do_you_want_to_continue_" xml:space="preserve">
+    <value>Do you want to continue?</value>
+  </data>
+  <data name="EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptides___1__required_" xml:space="preserve">
+    <value>{0} Standard peptides ({1} required)</value>
+  </data>
+  <data name="EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptide___1__required_" xml:space="preserve">
+    <value>{0} Standard peptide ({1} required)</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_contains__0__of_these_iRT_standard_peptides_" xml:space="preserve">
+    <value>The document contains {0} of these iRT standard peptides.</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_does_not_contain_any_of_these_iRT_standard_peptides_" xml:space="preserve">
+    <value>The document does not contain any of these iRT standard peptides.</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_A_maximum_of__0__may_be_missing_and_or_outliers_for_a_successful_import_" xml:space="preserve">
+    <value>A maximum of {0} may be missing or outliers for a successful import.</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_None_may_be_missing_or_outliers_for_a_successful_import_" xml:space="preserve">
+    <value>None may be missing or outliers for a successful import.</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Add_missing_iRT_standard_peptides_to_your_document_or_change_the_retention_time_predictor_" xml:space="preserve">
+    <value>Add missing iRT standard peptides to your document or change the retention time predictor.</value>
+  </data>
 </root>

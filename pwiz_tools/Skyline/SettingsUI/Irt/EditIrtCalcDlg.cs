@@ -1151,6 +1151,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
+        private void gridViewStandard_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
+        {
+            UpdateNumStandards();
+        }
+
+        private void gridViewStandard_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
+        {
+            UpdateNumStandards();
+        }
+
         private void gridViewLibrary_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
             UpdateNumPeptides();
@@ -1159,6 +1169,14 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private void gridViewLibrary_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
         {
             UpdateNumPeptides();
+        }
+
+        private void UpdateNumStandards()
+        {
+            labelNumStandards.Text = string.Format(StandardPeptideCount == 1
+                                                       ? Resources.EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptide___1__required_
+                                                       : Resources.EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptides___1__required_,
+                                                   StandardPeptideCount, RCalcIrt.MinStandardCount(StandardPeptideCount));
         }
 
         private void UpdateNumPeptides()
