@@ -28,6 +28,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -1448,13 +1449,20 @@ namespace pwiz.Skyline.Controls
             return (labelType.IsLight ? Light : Heavy);
         }
 
+        public static IList<Color> GetModColors()
+        {
+            // CONSIDER: Maybe make this customizable with its own color scheme some day
+            return ColorSchemeList.DEFAULT.PrecursorColors;
+        }
+
         public static Color GetModColor(IsotopeLabelType labelType)
         {
             if (labelType.IsLight)
                 return Color.Black;
 
-            int indexColor = labelType.SortOrder % GraphChromatogram.COLORS_GROUPS.Length;
-            return GraphChromatogram.COLORS_GROUPS[indexColor];
+            var colors = GetModColors();
+            int indexColor = labelType.SortOrder % colors.Count;
+            return colors[indexColor];
         }
     }
 }

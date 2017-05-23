@@ -192,11 +192,11 @@ namespace pwiz.Skyline.Controls.Graphs
                         // ReSharper disable ExpressionIsAlwaysNull
                         int iColorGroup = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
                         // ReSharper restore ExpressionIsAlwaysNull
-                        color = COLORS_GROUPS[iColorGroup % COLORS_GROUPS.Length];
+                        color = COLORS_GROUPS[iColorGroup % COLORS_GROUPS.Count];
                     }
                     else if (displayType == DisplayTypeChrom.total)
                     {
-                        color = COLORS_GROUPS[iColor%COLORS_GROUPS.Length];
+                        color = COLORS_GROUPS[iColor%COLORS_GROUPS.Count];
                     }
                     else if (identityPath.Equals(selectedPath) && step == 0)
                     {
@@ -204,7 +204,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else
                     {
-                        color = COLORS_TRANSITION[(iColor + colorOffset)%COLORS_TRANSITION.Length];
+                        color = COLORS_TRANSITION[(iColor + colorOffset)%COLORS_TRANSITION.Count];
                     }
                     iColor++;
 

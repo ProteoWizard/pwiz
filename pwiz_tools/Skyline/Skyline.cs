@@ -2577,6 +2577,14 @@ namespace pwiz.Skyline
             SequenceTree.OnTextZoomChanged();
         }
 
+        public void ChangeColorScheme()
+        {
+            UpdateGraphPanes();
+            // Because changing text size already did everything we needed to update
+            // the Targets view text.
+            ChangeTextSize(Program.MainWindow.TargetsTextFactor);            
+        }
+
         public void OpenLibraryExplorer(string libraryName)
         {
             var viewLibraryDlg = new ViewLibraryDlg(_libraryManager, libraryName, this) { Owner = this };

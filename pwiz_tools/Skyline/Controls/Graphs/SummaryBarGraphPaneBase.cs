@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
@@ -35,8 +37,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        protected static Color[] COLORS_TRANSITION {get { return GraphChromatogram.COLORS_LIBRARY; }}
-        protected static Color[] COLORS_GROUPS {get { return GraphChromatogram.COLORS_GROUPS; }}
+        protected static IList<Color> COLORS_TRANSITION {get { return GraphChromatogram.COLORS_LIBRARY; }}
+        protected static IList<Color> COLORS_GROUPS {get { return GraphChromatogram.COLORS_GROUPS; }}
 
         protected static int GetColorIndex(TransitionGroupDocNode nodeGroup, int countLabelTypes, ref int? charge, ref int iCharge)
         {

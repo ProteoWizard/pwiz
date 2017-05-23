@@ -154,7 +154,7 @@ namespace pwiz.Skyline.ToolsUI
             if (newColorScheme != null)
             {
                 Settings.Default.CurrentColorScheme = newColorScheme.Name;
-                Program.MainWindow.UpdateGraphPanes();
+                Program.MainWindow.ChangeColorScheme();
             }
             _driverColorSchemes.SelectedIndexChangedEvent(sender, e);
         }

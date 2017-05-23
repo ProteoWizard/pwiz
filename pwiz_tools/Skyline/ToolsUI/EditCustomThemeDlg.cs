@@ -369,7 +369,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             UpdateColorCount(NewScheme);
             ColorScheme.ColorSchemeDemo = NewScheme;
-            Program.MainWindow.UpdateGraphPanes();
+            Program.MainWindow.ChangeColorScheme();
         }
 
         private void UpdateColorCount(ColorScheme scheme)

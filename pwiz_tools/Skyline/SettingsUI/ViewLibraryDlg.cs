@@ -772,7 +772,7 @@ namespace pwiz.Skyline.SettingsUI
                                 GraphSpectrum.MakeChromatogramInfo(SignedMz.ZERO, libraryChromGroup, chromData, out chromatogramInfo, out transitionChromInfo);
                                 var nodeGroup = new TransitionGroupDocNode(transitionGroup, new TransitionDocNode[0]);
                                 var color =
-                                    GraphChromatogram.COLORS_LIBRARY[iChromData%GraphChromatogram.COLORS_LIBRARY.Length];
+                                    GraphChromatogram.COLORS_LIBRARY[iChromData%GraphChromatogram.COLORS_LIBRARY.Count];
                                 var graphItem = new ChromGraphItem(nodeGroup, null, chromatogramInfo, iChromData == iChromDataPrimary ? transitionChromInfo : null, null,
                                    new[] { iChromData == iChromDataPrimary }, null, 0, false, false, 0,
                                    color, Settings.Default.ChromatogramFontSize, 1);

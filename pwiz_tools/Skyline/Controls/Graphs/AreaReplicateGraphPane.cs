@@ -409,11 +409,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     else if (parentNode is PeptideDocNode)
                     {
                         int iColorGroup = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
-                        color = COLORS_GROUPS[iColorGroup % COLORS_GROUPS.Length];
+                        color = COLORS_GROUPS[iColorGroup % COLORS_GROUPS.Count];
                     }
                     else if (displayType == DisplayTypeChrom.total)
                     {
-                        color = COLORS_GROUPS[iColor%COLORS_GROUPS.Length];
+                        color = COLORS_GROUPS[iColor%COLORS_GROUPS.Count];
                     }
                     else if (docNode.Equals(selectedNode) && step == 0)
                     {
@@ -421,7 +421,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else
                     {
-                        color = COLORS_TRANSITION[(iColor + colorOffset) % COLORS_TRANSITION.Length];
+                        color = COLORS_TRANSITION[(iColor + colorOffset) % COLORS_TRANSITION.Count];
                     }
                     iColor++;
                     // If showing ratios, do not add the standard type to the graph,

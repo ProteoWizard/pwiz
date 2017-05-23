@@ -521,14 +521,14 @@ namespace pwiz.Skyline.Controls.Graphs
                                         matchingTransition = displayTransitions[iChromData];
                                         color =
                                             GraphChromatogram.COLORS_LIBRARY[
-                                                (iChromData + colorOffset)%GraphChromatogram.COLORS_LIBRARY.Length];
+                                                (iChromData + colorOffset)%GraphChromatogram.COLORS_LIBRARY.Count];
                                     }
                                     else
                                     {
                                         matchingTransition = null;
                                         color =
                                             GraphChromatogram.COLORS_GROUPS[
-                                                iChromData%GraphChromatogram.COLORS_GROUPS.Length];
+                                                iChromData%GraphChromatogram.COLORS_GROUPS.Count];
                                     }
 
                                     TransitionChromInfo tranPeakInfo;

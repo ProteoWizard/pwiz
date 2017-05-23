@@ -509,6 +509,7 @@ namespace pwiz.Skyline.Controls
         protected double _textZoomFactor;
         protected string _widthText;
         protected int _widthCustom;
+        protected IList<Color> _groupColors;
 
         protected virtual int WidthCustom
         {

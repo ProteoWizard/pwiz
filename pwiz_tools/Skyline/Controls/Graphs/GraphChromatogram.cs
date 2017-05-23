@@ -1407,7 +1407,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    color = COLORS_LIBRARY[(iColor + colorOffset) % COLORS_LIBRARY.Length];
+                    color = COLORS_LIBRARY[(iColor + colorOffset) % COLORS_LIBRARY.Count];
                 }
 
                 TransitionChromInfo tranPeakInfoGraph = null;
@@ -1727,9 +1727,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         width++;
                     }
                     else if (nodeGroup.HasLibInfo)
-                        color = COLORS_LIBRARY[iColor % COLORS_LIBRARY.Length];
+                        color = COLORS_LIBRARY[iColor % COLORS_LIBRARY.Count];
                     else
-                        color = COLORS_LIBRARY[iColor % COLORS_LIBRARY.Length];
+                        color = COLORS_LIBRARY[iColor % COLORS_LIBRARY.Count];
                     //                                color = COLORS_HEURISTIC[iColor % COLORS_HEURISTIC.Length];
 
                     TransitionChromInfo tranPeakInfoGraph = null;
@@ -1893,7 +1893,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     infoPrimary.Transform(Transform);
 
                     int iColor = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
-                    Color color = COLORS_GROUPS[iColor % COLORS_GROUPS.Length];
+                    Color color = COLORS_GROUPS[iColor % COLORS_GROUPS.Count];
 
                     bool[] annotateAll = new bool[infoPrimary.NumPeaks];
                     for (int j = 0; j < annotateAll.Length; j++)
@@ -3299,12 +3299,12 @@ namespace pwiz.Skyline.Controls.Graphs
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
         }
 
-        public static Color[] COLORS_GROUPS
+        public static IList<Color> COLORS_GROUPS
         {
-            get { return ColorScheme.CurrentColorScheme.PrecursorColors.ToArray(); }
+            get { return ColorScheme.CurrentColorScheme.PrecursorColors; }
         }
 
-        public static Color[] COLORS_LIBRARY {get { return ColorScheme.CurrentColorScheme.TransitionColors.ToArray(); }}
+        public static IList<Color> COLORS_LIBRARY { get { return ColorScheme.CurrentColorScheme.TransitionColors; }}
 
         public static int GetColorIndex(TransitionGroupDocNode nodeGroup, int countLabelTypes, ref int? charge,
                                         ref int iCharge)

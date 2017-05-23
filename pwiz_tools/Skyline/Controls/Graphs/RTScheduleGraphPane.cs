@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     internal class RTScheduleGraphPane : SummaryGraphPane
     {
-        private static readonly Color[] COLORS_WINDOW = GraphChromatogram.COLORS_LIBRARY;
+        private static readonly IList<Color> COLORS_WINDOW = GraphChromatogram.COLORS_LIBRARY;
 
         public static double[] ScheduleWindows
         {
@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 var docWindow = document.ChangeSettings(settings);
 
-                AddCurve(docWindow, COLORS_WINDOW[(i+1)%COLORS_WINDOW.Length]);
+                AddCurve(docWindow, COLORS_WINDOW[(i+1)%COLORS_WINDOW.Count]);
             }
 
             AxisChange();

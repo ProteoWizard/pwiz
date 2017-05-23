@@ -126,8 +126,8 @@ namespace pwiz.Skyline.Controls.Graphs
             foreach (var pointPairList in _graphData.PointPairLists)
             {
                 Color color = displayType == DisplayTypeChrom.total
-                    ? COLORS_GROUPS[iColor++ % COLORS_GROUPS.Length]
-                    : COLORS_TRANSITION[(iColor++ + colorOffset)% COLORS_TRANSITION.Length];
+                    ? COLORS_GROUPS[iColor++ % COLORS_GROUPS.Count]
+                    : COLORS_TRANSITION[(iColor++ + colorOffset)% COLORS_TRANSITION.Count];
 
                 BarItem curveItem;
                 if (HiLowMiddleErrorBarItem.IsHiLoMiddleErrorList(pointPairList))

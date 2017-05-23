@@ -220,7 +220,7 @@ namespace pwiz.Skyline.Model
                                     {
                                         continue;
                                     }
-                                    Color color = GraphChromatogram.COLORS_LIBRARY[iColor % GraphChromatogram.COLORS_LIBRARY.Length];
+                                    Color color = GraphChromatogram.COLORS_LIBRARY[iColor % GraphChromatogram.COLORS_LIBRARY.Count];
                                     iColor++;
                                     result.Add(new Chromatogram
                                     {
