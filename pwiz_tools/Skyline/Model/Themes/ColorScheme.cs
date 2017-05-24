@@ -41,8 +41,7 @@ namespace pwiz.Skyline.Model.Themes
         }
 
         private ColorScheme()
-        {
-            
+        {            
         }
 
         public new ColorScheme ChangeName(string name)
@@ -67,6 +66,11 @@ namespace pwiz.Skyline.Model.Themes
 
         #region Implementation of IXmlSerializable
 
+        public static ColorScheme Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new ColorScheme());
+        }
+
         enum EL
         {
             color
@@ -86,6 +90,7 @@ namespace pwiz.Skyline.Model.Themes
         public override void ReadXml(XmlReader reader)
         {
             base.ReadXml(reader);
+            reader.ReadStartElement();  // Consume tag
             List<Color> groupColors = new List<Color>();
             List<Color> libraryColors = new List<Color>();
             while (reader.IsStartElement(EL.color))
@@ -102,9 +107,11 @@ namespace pwiz.Skyline.Model.Themes
                 {
                     libraryColors.Add(color);
                 }
+                reader.Read();  // Consume tag
             }
             PrecursorColors = ImmutableList.ValueOf(groupColors);
             TransitionColors = ImmutableList.ValueOf(libraryColors);
+            reader.ReadEndElement(); // Consume end tag
         }
 
         public override void WriteXml(XmlWriter writer)
@@ -119,7 +126,6 @@ namespace pwiz.Skyline.Model.Themes
             {
                 WriteColor(writer, GROUP_NAME_TRANSITION, color);
             }
-            writer.WriteEndElement();
         }
 
         private void WriteColor(XmlWriter writer, string groupName, Color color)
