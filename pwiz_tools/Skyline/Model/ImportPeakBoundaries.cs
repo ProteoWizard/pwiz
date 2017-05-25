@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model
         public static readonly string[][] FIELD_NAMES =
         {
             new[] {"PeptideModifiedSequence", "FullPeptideName", "EG.ModifiedSequence", ColumnCaptions.PeptideModifiedSequence},
-            new[] {"FileName", "filename", "R.FileName", ColumnCaptions.FileName},
+            new[] {"align_origfilename", "FileName", "filename", "R.FileName", ColumnCaptions.FileName},
             new[] {"MinStartTime", "leftWidth", ColumnCaptions.MinStartTime},
             new[] {"MaxEndTime", "rightWidth", ColumnCaptions.MaxEndTime},
             new[] {"PrecursorCharge", "Charge", "FG.Charge", ColumnCaptions.PrecursorCharge},

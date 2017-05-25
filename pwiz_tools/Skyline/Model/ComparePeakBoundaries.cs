@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -164,6 +165,11 @@ namespace pwiz.Skyline.Model
                         {
                             var trueInfo = trueResults[m];
                             var pickedInfo = pickedResults[m];
+                            // For TRIC testing at the moment
+//                            double? qvaluePicked = PeakBoundsMatch.GetScoreValue(pickedInfo,
+//                                MProphetResultsHandler.AnnotationName, ci => pickedInfo.QValue);
+//                            if (qvaluePicked.HasValue && qvaluePicked.Value > 0.01)
+//                                continue;
                             var fileInfo = set.GetFileInfo(trueInfo.FileId);
                             var filePath = fileInfo.FilePath;
                             var key = new MatchKey(trueGroup.Id.GlobalIndex, trueInfo.FileId.GlobalIndex);
@@ -184,6 +190,10 @@ namespace pwiz.Skyline.Model
                     foreach (var match in matches.Where(match => match.PickedApex.HasValue))
                     {
                         match.PickedApex = match.PickedApex / 60;
+                        if (match.PickedStartBoundary.HasValue)
+                            match.PickedStartBoundary = match.PickedStartBoundary / 60;
+                        if (match.PickedEndBoundary.HasValue)
+                            match.PickedEndBoundary = match.PickedEndBoundary / 60;
                     }
                 }
             }
@@ -221,6 +231,8 @@ namespace pwiz.Skyline.Model
     public class PeakBoundsMatch
     {
         public const double DELTA = 1e-4;
+        public const double PERCENT_HIGH_OVERLAP = 0.25;
+        public const double MAX_APEX_DELTA = 20.0 / 60.0;
 
         public TransitionGroupChromInfo ChromInfoTrue { get; private set; }
         public TransitionGroupChromInfo ChromInfoPicked { get; private set; }
@@ -231,10 +243,13 @@ namespace pwiz.Skyline.Model
         public double? QValue { get; private set; }
         public double? Score { get; private set; }
         public double? PickedApex { get; set; }
+        public double? PickedStartBoundary { get; set; }
+        public double? PickedEndBoundary { get; set; }
 
         public string FileName { get { return FilePath.GetFileNameWithoutExtension(); } }
         public string Sequence { get { return NodeGroup.TransitionGroup.Peptide.Sequence; }}
-        public int Charge { get { return NodeGroup.TransitionGroup.PrecursorCharge; } } 
+        public int Charge { get { return NodeGroup.TransitionGroup.PrecursorCharge; } }
+        public double? TrueApex { get { return ChromInfoTrue.RetentionTime; } }
         public double? TrueStartBoundary { get { return ChromInfoTrue.StartRetentionTime; } }
         public double? TrueEndBoundary { get { return ChromInfoTrue.EndRetentionTime; } }
         public bool IsMissingTruePeak { get { return TrueEndBoundary == null; } }
@@ -252,7 +267,42 @@ namespace pwiz.Skyline.Model
             } 
         }
 
-        public bool IsFalsePositive { get { return !IsPickedApexBetweenCuratedBoundaries && !IsMissingPickedPeak; } }
+        public bool IsClosePeakApex
+        {
+            get
+            {
+                return PickedApex != null && TrueApex != null &&
+                       Math.Abs(PickedApex.Value - TrueApex.Value) < MAX_APEX_DELTA;
+            }
+        }
+
+        public bool IsHighlyOverlapping
+        {
+            get
+            {
+                if (ChromInfoTrue == null || ChromInfoPicked == null ||
+                        !ChromInfoTrue.StartRetentionTime.HasValue || !ChromInfoPicked.StartRetentionTime.HasValue)
+                    return false;
+
+                double rangeTotal = (ChromInfoTrue.EndRetentionTime.Value - ChromInfoTrue.StartRetentionTime.Value) +
+                                    (ChromInfoPicked.EndRetentionTime.Value - ChromInfoPicked.StartRetentionTime.Value);
+                double rangeIntersect = Math.Min(ChromInfoTrue.EndRetentionTime.Value, ChromInfoPicked.EndRetentionTime.Value) -
+                                        Math.Max(ChromInfoTrue.StartRetentionTime.Value, ChromInfoPicked.StartRetentionTime.Value);
+                if (rangeIntersect <= 0)
+                    return false;
+                double rangeHalf = rangeTotal / 2;
+                if (rangeIntersect / rangeHalf < PERCENT_HIGH_OVERLAP)
+                    return false;
+                return true;
+            }
+        }
+
+        public bool IsMatch { get { return IsMatchSkyline; } }
+
+        private bool IsMatchSkyline { get { return IsPickedApexBetweenCuratedBoundaries || IsHighlyOverlapping; } }
+        private bool IsMatchOpenSwath { get { return IsPickedApexBetweenCuratedBoundaries || IsClosePeakApex; } }
+
+        public bool IsFalsePositive { get { return !IsMatch && !IsMissingPickedPeak; } }
 
         public PeakBoundsMatch(TransitionGroupChromInfo chromInfoTrue, 
                                TransitionGroupChromInfo chromInfoPicked, 
@@ -292,39 +342,33 @@ namespace pwiz.Skyline.Model
             else
             {
                 PickedApex = ChromInfoPicked.RetentionTime;
+                PickedStartBoundary = ChromInfoPicked.StartRetentionTime;
+                PickedEndBoundary = ChromInfoPicked.EndRetentionTime;
             }
-            string qValueString = ChromInfoPicked.Annotations.GetAnnotation(MProphetResultsHandler.AnnotationName);
-            double qValueDouble;
-            if (qValueString == null)
-                QValue = ChromInfoPicked.QValue;
-            else if (!double.TryParse(qValueString, out qValueDouble))
+            QValue = GetScoreValue(ChromInfoPicked, MProphetResultsHandler.AnnotationName, ci => ci.QValue);
+            if (QValue == null && !IsMissingPickedPeak && !hasNoQValues)
             {
-                if (!IsMissingPickedPeak && !hasNoQValues)
-                {
-                    throw new IOException(string.Format(Resources.PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_, Sequence, FileName));
-                }
-                QValue = null;
+                throw new IOException(string.Format(Resources.PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_, Sequence, FileName));
             }
-            else
+            Score = GetScoreValue(ChromInfoPicked, MProphetResultsHandler.MAnnotationName, ci => ci.ZScore);
+            if (Score == null && !IsMissingPickedPeak && !hasNoScores)
             {
-                QValue = qValueDouble;
+                throw new IOException(string.Format(Resources.PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_, Sequence, FileName));
             }
-            string scoreString = ChromInfoPicked.Annotations.GetAnnotation(MProphetResultsHandler.MAnnotationName);
-            double scoreDouble;
-            if (scoreString == null)
-                Score = ChromInfoPicked.ZScore;
-            else if (!double.TryParse(scoreString, out scoreDouble))
+        }
+
+        public static double? GetScoreValue(TransitionGroupChromInfo groupChromInfo, string annotationName, Func<TransitionGroupChromInfo, double?> getNativeValue)
+        {
+            if (groupChromInfo != null)
             {
-                if (!IsMissingPickedPeak && !hasNoScores)
-                {
-                    throw new IOException(string.Format(Resources.PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_, Sequence, FileName));
-                }
-                Score = null;
+                string scoreValueString = groupChromInfo.Annotations.GetAnnotation(annotationName);
+                if (scoreValueString == null)
+                    return getNativeValue(groupChromInfo);
+                double scoreValueDouble;
+                if (double.TryParse(scoreValueString, out scoreValueDouble))
+                    return scoreValueDouble;
             }
-            else
-            {
-                Score = scoreDouble;
-            }
+            return null;
         }
 
         /// <summary>

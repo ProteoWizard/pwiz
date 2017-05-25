@@ -1444,10 +1444,8 @@ namespace pwiz.Skyline
                 MessageDlg.Show(this, Resources.SkylineWindow_ShowCompareModelsDlg_The_document_must_be_fully_loaded_in_order_to_compare_model_peak_picking_);
                 return;
             }
-            using (var dlg = new ComparePeakPickingDlg(document))
-            {
-                dlg.ShowDialog(this);
-            }
+            var dlg = new ComparePeakPickingDlg(document);
+            dlg.Show(this);
         }
 
         private void mProphetFeaturesMenuItem_Click(object sender, EventArgs e)

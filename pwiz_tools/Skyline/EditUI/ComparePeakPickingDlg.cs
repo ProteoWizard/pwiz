@@ -26,6 +26,7 @@ using System.Linq;
 using System.Windows.Forms;
 using NHibernate.Util;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -282,6 +283,35 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        private void dataGridViewScore_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            ClickGridViewScore(e.RowIndex);
+        }
+
+        public void ClickGridViewScore(int rowIndex)
+        {
+            if (0 > rowIndex || rowIndex >= _scoreGridViewDriver.Items.Count)
+                return;
+
+            var match = _scoreGridViewDriver.Items[rowIndex];
+            var nodeGlobalIndex = match.NodeGroup.TransitionGroup.GlobalIndex;
+            var filePath = match.FilePath;
+            var skylineWindow = Program.MainWindow;
+            var document = skylineWindow.DocumentUI;
+            int groupIndex = document.MoleculeTransitionGroups.ToArray()
+                .IndexOf(g => g.TransitionGroup.GlobalIndex == nodeGlobalIndex);
+            if (groupIndex == -1)
+            {
+                MessageDlg.Show(this,
+                    string.Format("Unable to find the peptide {0} with charge state {1}", match.Sequence, match.Charge));
+                return;
+            }
+            skylineWindow.SelectedPath = document.GetPathTo((int) SrmDocument.Level.TransitionGroups, groupIndex);
+            var resultMatch = document.Settings.MeasuredResults.FindMatchingMSDataFile(filePath);
+            if (resultMatch != null)
+                skylineWindow.SelectedResultsIndex = resultMatch.FileOrder;
+        }
+
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
@@ -289,7 +319,7 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            DialogResult = DialogResult.OK;
+            Close();
         }
 
         #region Grid
