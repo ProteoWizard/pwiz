@@ -199,32 +199,30 @@ namespace pwiz.Common.Chemistry
         {
             var result = new Dictionary<string, int>();
             string currentElement = null;
-            int currentQuantity = 0;
+            int? currentQuantity = null;
             foreach (char ch in formula)
             {
                 if (Char.IsDigit(ch))
                 {
-                    currentQuantity = currentQuantity * 10 + (ch - '0');
+                    currentQuantity = (currentQuantity??0) * 10 + (ch - '0');
                 }
                 else if (Char.IsUpper(ch))
                 {
+                    // Close out current element, if any
                     if (currentElement != null)
                     {
-                        if (currentQuantity == 0)
+                        int previousAtomCount;
+                        var currentAtomCount = currentQuantity ?? 1; // No count declared implies 1
+                        if (result.TryGetValue(currentElement, out previousAtomCount))
                         {
-                            currentQuantity = 1;
+                            result[currentElement] = previousAtomCount + currentAtomCount;
                         }
-                        int previous;
-                        if (result.TryGetValue(currentElement, out previous))
+                        else if (currentAtomCount != 0) // Beware explicitly declared 0 count
                         {
-                            result[currentElement] = previous + currentQuantity;
-                        }
-                        else
-                        {
-                            result.Add(currentElement, previous + currentQuantity);
+                            result.Add(currentElement, previousAtomCount + currentAtomCount);
                         }
                     }
-                    currentQuantity = 0;
+                    currentQuantity = null;
                     currentElement = string.Empty + ch;
                 }
                 // Allow apostrophe for heavy isotopes (e.g. C' for 13C)
@@ -235,19 +233,15 @@ namespace pwiz.Common.Chemistry
             }
             if (currentElement != null)
             {
-                if (currentQuantity == 0)
+                int previousAtomCount;
+                var currentAtomCount = currentQuantity ?? 1; // No count declared implies 1
+                if (result.TryGetValue(currentElement, out previousAtomCount))
                 {
-                    currentQuantity = 1;
+                    result[currentElement] = previousAtomCount + currentAtomCount;
                 }
-
-                int previous;
-                if (result.TryGetValue(currentElement, out previous))
+                else if (currentAtomCount != 0) // Beware explicitly declared 0 count
                 {
-                    result[currentElement] = previous + currentQuantity;
-                }
-                else
-                {
-                    result.Add(currentElement, previous + currentQuantity);
+                    result.Add(currentElement, currentAtomCount);
                 }
             }
             return result;
