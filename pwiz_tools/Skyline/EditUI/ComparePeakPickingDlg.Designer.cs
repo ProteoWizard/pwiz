@@ -53,7 +53,9 @@ namespace pwiz.Skyline.EditUI
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle11 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle12 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle13 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.btnCancel = new System.Windows.Forms.Button();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle14 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle15 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle16 = new System.Windows.Forms.DataGridViewCellStyle();
             this.btnOk = new System.Windows.Forms.Button();
             this.dataGridViewScoreDetails = new System.Windows.Forms.TabControl();
             this.tabROC = new System.Windows.Forms.TabPage();
@@ -69,13 +71,16 @@ namespace pwiz.Skyline.EditUI
             this.label2 = new System.Windows.Forms.Label();
             this.comboBoxDetails = new System.Windows.Forms.ComboBox();
             this.dataGridViewScore = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.File = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Sequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.File = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.Sequence = new System.Windows.Forms.DataGridViewLinkColumn();
             this.Charge = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.PeakMatch = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Score = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.PickedApex = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.qValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.PickedApex = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.PickedStart = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.PickedEnd = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.TrueApex = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.TrueStart = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.TrueEnd = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.bindingSourceScore = new System.Windows.Forms.BindingSource(this.components);
@@ -86,8 +91,8 @@ namespace pwiz.Skyline.EditUI
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.dataGridViewScoreComparison = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewLinkColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.PeakMatch1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.PeakMatch2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -101,8 +106,9 @@ namespace pwiz.Skyline.EditUI
             this.endTrue = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.bindingSourceScoreCompare = new System.Windows.Forms.BindingSource(this.components);
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.checkObserved = new System.Windows.Forms.CheckBox();
             this.buttonApply = new System.Windows.Forms.Button();
-            this.label7 = new System.Windows.Forms.Label();
+            this.labelCutoff = new System.Windows.Forms.Label();
             this.textBoxFilesQCutoff = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.comboBoxFilesYAxis = new System.Windows.Forms.ComboBox();
@@ -122,13 +128,6 @@ namespace pwiz.Skyline.EditUI
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceScoreCompare)).BeginInit();
             this.tabPage2.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // btnCancel
-            // 
-            resources.ApplyResources(this.btnCancel, "btnCancel");
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
@@ -279,20 +278,26 @@ namespace pwiz.Skyline.EditUI
             this.Charge,
             this.PeakMatch,
             this.Score,
-            this.PickedApex,
             this.qValue,
+            this.PickedApex,
+            this.PickedStart,
+            this.PickedEnd,
+            this.TrueApex,
             this.TrueStart,
             this.TrueEnd});
             this.dataGridViewScore.DataSource = this.bindingSourceScore;
             this.dataGridViewScore.Name = "dataGridViewScore";
             this.dataGridViewScore.ReadOnly = true;
+            this.dataGridViewScore.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewScore_CellContentClick);
             // 
             // File
             // 
-            this.File.DataPropertyName = "FileName";
+            this.File.DataPropertyName = "ReplicateName";
             resources.ApplyResources(this.File, "File");
             this.File.Name = "File";
             this.File.ReadOnly = true;
+            this.File.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.File.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // Sequence
             // 
@@ -300,6 +305,8 @@ namespace pwiz.Skyline.EditUI
             resources.ApplyResources(this.Sequence, "Sequence");
             this.Sequence.Name = "Sequence";
             this.Sequence.ReadOnly = true;
+            this.Sequence.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.Sequence.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // Charge
             // 
@@ -310,7 +317,7 @@ namespace pwiz.Skyline.EditUI
             // 
             // PeakMatch
             // 
-            this.PeakMatch.DataPropertyName = "IsPickedApexBetweenCuratedBoundaries";
+            this.PeakMatch.DataPropertyName = "IsMatch";
             resources.ApplyResources(this.PeakMatch, "PeakMatch");
             this.PeakMatch.Name = "PeakMatch";
             this.PeakMatch.ReadOnly = true;
@@ -325,32 +332,62 @@ namespace pwiz.Skyline.EditUI
             this.Score.Name = "Score";
             this.Score.ReadOnly = true;
             // 
-            // PickedApex
-            // 
-            this.PickedApex.DataPropertyName = "PickedApex";
-            dataGridViewCellStyle2.Format = "N2";
-            dataGridViewCellStyle2.NullValue = null;
-            this.PickedApex.DefaultCellStyle = dataGridViewCellStyle2;
-            resources.ApplyResources(this.PickedApex, "PickedApex");
-            this.PickedApex.Name = "PickedApex";
-            this.PickedApex.ReadOnly = true;
-            // 
             // qValue
             // 
             this.qValue.DataPropertyName = "QValue";
-            dataGridViewCellStyle3.Format = "E2";
-            dataGridViewCellStyle3.NullValue = null;
-            this.qValue.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle2.Format = "E2";
+            dataGridViewCellStyle2.NullValue = null;
+            this.qValue.DefaultCellStyle = dataGridViewCellStyle2;
             resources.ApplyResources(this.qValue, "qValue");
             this.qValue.Name = "qValue";
             this.qValue.ReadOnly = true;
             // 
+            // PickedApex
+            // 
+            this.PickedApex.DataPropertyName = "PickedApex";
+            dataGridViewCellStyle3.Format = "N2";
+            dataGridViewCellStyle3.NullValue = null;
+            this.PickedApex.DefaultCellStyle = dataGridViewCellStyle3;
+            resources.ApplyResources(this.PickedApex, "PickedApex");
+            this.PickedApex.Name = "PickedApex";
+            this.PickedApex.ReadOnly = true;
+            // 
+            // PickedStart
+            // 
+            this.PickedStart.DataPropertyName = "PickedStartBoundary";
+            dataGridViewCellStyle4.Format = "N2";
+            dataGridViewCellStyle4.NullValue = null;
+            this.PickedStart.DefaultCellStyle = dataGridViewCellStyle4;
+            resources.ApplyResources(this.PickedStart, "PickedStart");
+            this.PickedStart.Name = "PickedStart";
+            this.PickedStart.ReadOnly = true;
+            // 
+            // PickedEnd
+            // 
+            this.PickedEnd.DataPropertyName = "PickedEndBoundary";
+            dataGridViewCellStyle5.Format = "N2";
+            dataGridViewCellStyle5.NullValue = null;
+            this.PickedEnd.DefaultCellStyle = dataGridViewCellStyle5;
+            resources.ApplyResources(this.PickedEnd, "PickedEnd");
+            this.PickedEnd.Name = "PickedEnd";
+            this.PickedEnd.ReadOnly = true;
+            // 
+            // TrueApex
+            // 
+            this.TrueApex.DataPropertyName = "TrueApex";
+            dataGridViewCellStyle6.Format = "N2";
+            dataGridViewCellStyle6.NullValue = null;
+            this.TrueApex.DefaultCellStyle = dataGridViewCellStyle6;
+            resources.ApplyResources(this.TrueApex, "TrueApex");
+            this.TrueApex.Name = "TrueApex";
+            this.TrueApex.ReadOnly = true;
+            // 
             // TrueStart
             // 
             this.TrueStart.DataPropertyName = "TrueStartBoundary";
-            dataGridViewCellStyle4.Format = "N2";
-            dataGridViewCellStyle4.NullValue = null;
-            this.TrueStart.DefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle7.Format = "N2";
+            dataGridViewCellStyle7.NullValue = null;
+            this.TrueStart.DefaultCellStyle = dataGridViewCellStyle7;
             resources.ApplyResources(this.TrueStart, "TrueStart");
             this.TrueStart.Name = "TrueStart";
             this.TrueStart.ReadOnly = true;
@@ -358,9 +395,9 @@ namespace pwiz.Skyline.EditUI
             // TrueEnd
             // 
             this.TrueEnd.DataPropertyName = "TrueEndBoundary";
-            dataGridViewCellStyle5.Format = "N2";
-            dataGridViewCellStyle5.NullValue = null;
-            this.TrueEnd.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle8.Format = "N2";
+            dataGridViewCellStyle8.NullValue = null;
+            this.TrueEnd.DefaultCellStyle = dataGridViewCellStyle8;
             resources.ApplyResources(this.TrueEnd, "TrueEnd");
             this.TrueEnd.Name = "TrueEnd";
             this.TrueEnd.ReadOnly = true;
@@ -434,13 +471,16 @@ namespace pwiz.Skyline.EditUI
             this.dataGridViewScoreComparison.DataSource = this.bindingSourceScoreCompare;
             this.dataGridViewScoreComparison.Name = "dataGridViewScoreComparison";
             this.dataGridViewScoreComparison.ReadOnly = true;
+            this.dataGridViewScoreComparison.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewScoreComparison_CellContentClick);
             // 
             // dataGridViewTextBoxColumn1
             // 
-            this.dataGridViewTextBoxColumn1.DataPropertyName = "FileName";
+            this.dataGridViewTextBoxColumn1.DataPropertyName = "ReplicateName";
             resources.ApplyResources(this.dataGridViewTextBoxColumn1, "dataGridViewTextBoxColumn1");
             this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
             this.dataGridViewTextBoxColumn1.ReadOnly = true;
+            this.dataGridViewTextBoxColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewTextBoxColumn1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // dataGridViewTextBoxColumn2
             // 
@@ -448,6 +488,8 @@ namespace pwiz.Skyline.EditUI
             resources.ApplyResources(this.dataGridViewTextBoxColumn2, "dataGridViewTextBoxColumn2");
             this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
             this.dataGridViewTextBoxColumn2.ReadOnly = true;
+            this.dataGridViewTextBoxColumn2.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewTextBoxColumn2.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // dataGridViewTextBoxColumn3
             // 
@@ -473,9 +515,9 @@ namespace pwiz.Skyline.EditUI
             // Score1
             // 
             this.Score1.DataPropertyName = "Score1";
-            dataGridViewCellStyle6.Format = "N2";
-            dataGridViewCellStyle6.NullValue = null;
-            this.Score1.DefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle9.Format = "N2";
+            dataGridViewCellStyle9.NullValue = null;
+            this.Score1.DefaultCellStyle = dataGridViewCellStyle9;
             resources.ApplyResources(this.Score1, "Score1");
             this.Score1.Name = "Score1";
             this.Score1.ReadOnly = true;
@@ -483,9 +525,9 @@ namespace pwiz.Skyline.EditUI
             // Score2
             // 
             this.Score2.DataPropertyName = "Score2";
-            dataGridViewCellStyle7.Format = "N2";
-            dataGridViewCellStyle7.NullValue = null;
-            this.Score2.DefaultCellStyle = dataGridViewCellStyle7;
+            dataGridViewCellStyle10.Format = "N2";
+            dataGridViewCellStyle10.NullValue = null;
+            this.Score2.DefaultCellStyle = dataGridViewCellStyle10;
             resources.ApplyResources(this.Score2, "Score2");
             this.Score2.Name = "Score2";
             this.Score2.ReadOnly = true;
@@ -493,9 +535,9 @@ namespace pwiz.Skyline.EditUI
             // QValue1
             // 
             this.QValue1.DataPropertyName = "QValue1";
-            dataGridViewCellStyle8.Format = "E2";
-            dataGridViewCellStyle8.NullValue = null;
-            this.QValue1.DefaultCellStyle = dataGridViewCellStyle8;
+            dataGridViewCellStyle11.Format = "E2";
+            dataGridViewCellStyle11.NullValue = null;
+            this.QValue1.DefaultCellStyle = dataGridViewCellStyle11;
             resources.ApplyResources(this.QValue1, "QValue1");
             this.QValue1.Name = "QValue1";
             this.QValue1.ReadOnly = true;
@@ -503,9 +545,9 @@ namespace pwiz.Skyline.EditUI
             // QValue2
             // 
             this.QValue2.DataPropertyName = "QValue2";
-            dataGridViewCellStyle9.Format = "E2";
-            dataGridViewCellStyle9.NullValue = null;
-            this.QValue2.DefaultCellStyle = dataGridViewCellStyle9;
+            dataGridViewCellStyle12.Format = "E2";
+            dataGridViewCellStyle12.NullValue = null;
+            this.QValue2.DefaultCellStyle = dataGridViewCellStyle12;
             resources.ApplyResources(this.QValue2, "QValue2");
             this.QValue2.Name = "QValue2";
             this.QValue2.ReadOnly = true;
@@ -513,9 +555,9 @@ namespace pwiz.Skyline.EditUI
             // leftApex
             // 
             this.leftApex.DataPropertyName = "Apex1";
-            dataGridViewCellStyle10.Format = "N2";
-            dataGridViewCellStyle10.NullValue = null;
-            this.leftApex.DefaultCellStyle = dataGridViewCellStyle10;
+            dataGridViewCellStyle13.Format = "N2";
+            dataGridViewCellStyle13.NullValue = null;
+            this.leftApex.DefaultCellStyle = dataGridViewCellStyle13;
             resources.ApplyResources(this.leftApex, "leftApex");
             this.leftApex.Name = "leftApex";
             this.leftApex.ReadOnly = true;
@@ -523,9 +565,9 @@ namespace pwiz.Skyline.EditUI
             // rightApex
             // 
             this.rightApex.DataPropertyName = "Apex2";
-            dataGridViewCellStyle11.Format = "N2";
-            dataGridViewCellStyle11.NullValue = null;
-            this.rightApex.DefaultCellStyle = dataGridViewCellStyle11;
+            dataGridViewCellStyle14.Format = "N2";
+            dataGridViewCellStyle14.NullValue = null;
+            this.rightApex.DefaultCellStyle = dataGridViewCellStyle14;
             resources.ApplyResources(this.rightApex, "rightApex");
             this.rightApex.Name = "rightApex";
             this.rightApex.ReadOnly = true;
@@ -533,9 +575,9 @@ namespace pwiz.Skyline.EditUI
             // startTrue
             // 
             this.startTrue.DataPropertyName = "TrueStart";
-            dataGridViewCellStyle12.Format = "N2";
-            dataGridViewCellStyle12.NullValue = null;
-            this.startTrue.DefaultCellStyle = dataGridViewCellStyle12;
+            dataGridViewCellStyle15.Format = "N2";
+            dataGridViewCellStyle15.NullValue = null;
+            this.startTrue.DefaultCellStyle = dataGridViewCellStyle15;
             resources.ApplyResources(this.startTrue, "startTrue");
             this.startTrue.Name = "startTrue";
             this.startTrue.ReadOnly = true;
@@ -543,17 +585,18 @@ namespace pwiz.Skyline.EditUI
             // endTrue
             // 
             this.endTrue.DataPropertyName = "TrueEnd";
-            dataGridViewCellStyle13.Format = "N2";
-            dataGridViewCellStyle13.NullValue = null;
-            this.endTrue.DefaultCellStyle = dataGridViewCellStyle13;
+            dataGridViewCellStyle16.Format = "N2";
+            dataGridViewCellStyle16.NullValue = null;
+            this.endTrue.DefaultCellStyle = dataGridViewCellStyle16;
             resources.ApplyResources(this.endTrue, "endTrue");
             this.endTrue.Name = "endTrue";
             this.endTrue.ReadOnly = true;
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.checkObserved);
             this.tabPage2.Controls.Add(this.buttonApply);
-            this.tabPage2.Controls.Add(this.label7);
+            this.tabPage2.Controls.Add(this.labelCutoff);
             this.tabPage2.Controls.Add(this.textBoxFilesQCutoff);
             this.tabPage2.Controls.Add(this.label6);
             this.tabPage2.Controls.Add(this.comboBoxFilesYAxis);
@@ -562,6 +605,13 @@ namespace pwiz.Skyline.EditUI
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // checkObserved
+            // 
+            resources.ApplyResources(this.checkObserved, "checkObserved");
+            this.checkObserved.Name = "checkObserved";
+            this.checkObserved.UseVisualStyleBackColor = true;
+            this.checkObserved.CheckedChanged += new System.EventHandler(this.checkObserved_CheckedChanged);
+            // 
             // buttonApply
             // 
             resources.ApplyResources(this.buttonApply, "buttonApply");
@@ -569,15 +619,16 @@ namespace pwiz.Skyline.EditUI
             this.buttonApply.UseVisualStyleBackColor = true;
             this.buttonApply.Click += new System.EventHandler(this.buttonApply_Click);
             // 
-            // label7
+            // labelCutoff
             // 
-            resources.ApplyResources(this.label7, "label7");
-            this.label7.Name = "label7";
+            resources.ApplyResources(this.labelCutoff, "labelCutoff");
+            this.labelCutoff.Name = "labelCutoff";
             // 
             // textBoxFilesQCutoff
             // 
             resources.ApplyResources(this.textBoxFilesQCutoff, "textBoxFilesQCutoff");
             this.textBoxFilesQCutoff.Name = "textBoxFilesQCutoff";
+            this.textBoxFilesQCutoff.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxFilesQCutoff_KeyDown);
             // 
             // label6
             // 
@@ -609,6 +660,7 @@ namespace pwiz.Skyline.EditUI
             this.zedGraphFiles.ScrollMinX = 0D;
             this.zedGraphFiles.ScrollMinY = 0D;
             this.zedGraphFiles.ScrollMinY2 = 0D;
+            this.zedGraphFiles.Resize += new System.EventHandler(this.zedGraphFiles_Resize);
             // 
             // buttonAdd
             // 
@@ -627,6 +679,7 @@ namespace pwiz.Skyline.EditUI
             // checkedListCompare
             // 
             resources.ApplyResources(this.checkedListCompare, "checkedListCompare");
+            this.checkedListCompare.CheckOnClick = true;
             this.checkedListCompare.FormattingEnabled = true;
             this.checkedListCompare.Name = "checkedListCompare";
             this.checkedListCompare.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListCompare_ItemCheck);
@@ -638,15 +691,12 @@ namespace pwiz.Skyline.EditUI
             // 
             // ComparePeakPickingDlg
             // 
-            this.AcceptButton = this.btnOk;
-            this.CancelButton = this.btnCancel;
             resources.ApplyResources(this, "$this");
             this.Controls.Add(this.label1);
             this.Controls.Add(this.checkedListCompare);
             this.Controls.Add(this.buttonEdit);
             this.Controls.Add(this.buttonAdd);
             this.Controls.Add(this.dataGridViewScoreDetails);
-            this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -674,7 +724,6 @@ namespace pwiz.Skyline.EditUI
 
         #endregion
 
-        private Button btnCancel;
         private Button btnOk;
         private TabControl dataGridViewScoreDetails;
         private TabPage tabROC;
@@ -698,17 +747,32 @@ namespace pwiz.Skyline.EditUI
         private Label label3;
         private BindingSource bindingSourceScoreCompare;
         private CheckBox checkBoxConflicts;
-        private DataGridViewTextBoxColumn File;
-        private DataGridViewTextBoxColumn Sequence;
+        private Label label5;
+        private ComboBox comboBoxYAxis;
+        private TabPage tabPage2;
+        private ZedGraphControl zedGraphFiles;
+        private Label label6;
+        private ComboBox comboBoxFilesYAxis;
+        private Label labelCutoff;
+        private TextBox textBoxFilesQCutoff;
+        private Button buttonApply;
+        private CheckBox checkBoxXRange;
+        private CheckBox checkBoxIDLabels;
+        private CheckBox checkBoxExpectedFp;
+        private DataGridViewLinkColumn File;
+        private DataGridViewLinkColumn Sequence;
         private DataGridViewTextBoxColumn Charge;
         private DataGridViewTextBoxColumn PeakMatch;
         private DataGridViewTextBoxColumn Score;
-        private DataGridViewTextBoxColumn PickedApex;
         private DataGridViewTextBoxColumn qValue;
+        private DataGridViewTextBoxColumn PickedApex;
+        private DataGridViewTextBoxColumn PickedStart;
+        private DataGridViewTextBoxColumn PickedEnd;
+        private DataGridViewTextBoxColumn TrueApex;
         private DataGridViewTextBoxColumn TrueStart;
         private DataGridViewTextBoxColumn TrueEnd;
-        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
-        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
+        private DataGridViewLinkColumn dataGridViewTextBoxColumn1;
+        private DataGridViewLinkColumn dataGridViewTextBoxColumn2;
         private DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
         private DataGridViewTextBoxColumn PeakMatch1;
         private DataGridViewTextBoxColumn PeakMatch2;
@@ -720,17 +784,6 @@ namespace pwiz.Skyline.EditUI
         private DataGridViewTextBoxColumn rightApex;
         private DataGridViewTextBoxColumn startTrue;
         private DataGridViewTextBoxColumn endTrue;
-        private Label label5;
-        private ComboBox comboBoxYAxis;
-        private TabPage tabPage2;
-        private ZedGraphControl zedGraphFiles;
-        private Label label6;
-        private ComboBox comboBoxFilesYAxis;
-        private Label label7;
-        private TextBox textBoxFilesQCutoff;
-        private Button buttonApply;
-        private CheckBox checkBoxXRange;
-        private CheckBox checkBoxIDLabels;
-        private CheckBox checkBoxExpectedFp;
+        private CheckBox checkObserved;
     }
 }

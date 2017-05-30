@@ -158,6 +158,9 @@ namespace pwiz.Skyline.EditUI
                 try
                 {
                     longWaitDlg.PerformWork(this, 1000, pm => BoundaryComparer.GenerateComparison(Document, pm));
+                    if (longWaitDlg.IsCanceled)
+                        return;
+
                     if (BoundaryComparer.Matches.Count == 0)
                     {
                         throw new IOException(Resources.AddPeakCompareDlg_OkDialog_Document_has_no_eligible_chromatograms_for_analysis___Valid_chromatograms_must_not_be_decoys_or_iRT_standards_);

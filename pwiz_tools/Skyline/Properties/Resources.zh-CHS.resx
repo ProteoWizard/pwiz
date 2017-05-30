@@ -1425,9 +1425,6 @@
   <data name="SkylineWindow_ImportMassList_Creating_Spectral_Library" xml:space="preserve">
     <value>创建谱图库</value>
   </data>
-  <data name="ComparePeakPickingDlg_UpdateGraph__0_05_observed_false_positive_rate" xml:space="preserve">
-    <value>0.05 观察的错误判断比率</value>
-  </data>
   <data name="AminoAcid_ValidateAAList_The_amino_acid__0__is_repeated_in_the_value__1__" xml:space="preserve">
     <value>氨基酸“{0}”在值“{1}”中重复。</value>
   </data>
@@ -3344,9 +3341,6 @@
   </data>
   <data name="PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>软件包安装失败。在即时窗口中记录输出失败。</value>
-  </data>
-  <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison" xml:space="preserve">
-    <value>重复测定比较</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_entry" xml:space="preserve">
     <value>条目</value>
@@ -6543,9 +6537,6 @@
   </data>
   <data name="CommandLine_ExportInstrumentFile_" xml:space="preserve">
     <value>错误： 您必须借助“--exp-file=path/to/file”参数来指定写入的导出文件。无离子对列表将被导出。</value>
-  </data>
-  <data name="ComparePeakPickingDlg_UpdateGraph__0_05_significance_threshold" xml:space="preserve">
-    <value>0.05 重要阈值</value>
   </data>
   <data name="FastaSeqV01_GetPeptideList_Attempt_to_get_peptide_list_from_uncleaved_FASTA_sequence" xml:space="preserve">
     <value>尝试从未裂解的 FASTA 序列获取肽列。</value>

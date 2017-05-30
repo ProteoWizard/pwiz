@@ -94,14 +94,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     var fileId = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FileId : null;
                     var settings = context.Document.Settings;
                     var predictor = settings.PeptideSettings.Prediction.RetentionTime;
+                    var fullScan = settings.TransitionSettings.FullScan;
                     string seqModified = settings.GetSourceTextId(summaryPeakData.NodePep);
                     if (predictor != null)
                     {
+                        double window = predictor.TimeWindow;
+                        if (fullScan.IsEnabled && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
+                            window = fullScan.RetentionTimeFilterLength*2;
+
                         prediction = new RetentionTimePrediction(predictor.GetRetentionTime(seqModified, fileId),
-                            predictor.TimeWindow);
+                            window);
                     }
 
-                    var fullScan = settings.TransitionSettings.FullScan;
                     if (prediction == null && fullScan.IsEnabled && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
                     {
                         var filePath = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FilePath : null;
@@ -121,8 +125,21 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
             if (prediction == null || !prediction.Time.HasValue)
                 return float.NaN;
-            // CONSIDER: Do the division first, and then the cast
-            return ((float) RtScoreFunction(measuredRT.Value - prediction.Time.Value) / (float) RtScoreNormalizer(prediction.Window));
+            double rtDelta = Math.Abs(measuredRT.Value - prediction.Time.Value);
+            double maxDelta = prediction.Window / 2;
+            if (rtDelta > maxDelta)
+            {
+                // For full-scan extraction based on the predicted retention time, the vast majority of
+                // delta-RT values will be less than 1/2 the window, but if iRT starndards are included
+                // in the targets, they may be extracted with full-gradient chromatograms.
+                // This can really mess up training and peak picking for the standards, since something
+                // like a negative coefficient for delta-RT^2 can result in far away peaks having huge scores.
+                // So, here we limit the delta scores. But, this was too invasive to do for everything.
+                var fullScan = context.Document.Settings.TransitionSettings.FullScan;
+                if (fullScan.IsEnabled && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
+                    rtDelta = maxDelta;
+            }
+            return (float) RtScoreFunction(rtDelta) / (float) RtScoreNormalizer(prediction.Window);
         }
 
         public double RtScoreNormalizer(double timeWindow)
@@ -147,7 +164,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override double RtScoreFunction(double rtValue)
         {
-            return Math.Abs(rtValue);
+            return rtValue;
         }
     }
 

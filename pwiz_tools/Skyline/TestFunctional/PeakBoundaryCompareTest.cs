@@ -310,7 +310,7 @@ namespace pwiz.SkylineTestFunctional
                 comparePeakPickingDlg.CheckBoxConflicts = true;
                 comparePeakPickingDlg.ComboCompare1Selected = string.Format(Resources.ComparePeakBoundaries_ComparePeakBoundaries__0___external_, "OpenSwathApex");
                 comparePeakPickingDlg.ComboCompare2Selected = string.Format(Resources.ComparePeakBoundaries_ComparePeakBoundaries__0___external_, "OpenSwathRename");
-                Assert.AreEqual(comparePeakPickingDlg.CountCompareGridEntries, 6);
+                Assert.AreEqual(4, comparePeakPickingDlg.CountCompareGridEntries);
             });
 
             OkDialog(comparePeakPickingDlg, comparePeakPickingDlg.OkDialog);
@@ -378,9 +378,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => addPeakCompareDlg.FileName = "OpenSwathBadApex");
             RunUI(() => addPeakCompareDlg.FilePath = peakBoundariesApex);
             MessageDlgError(addPeakCompareDlg.OkDialog, string.Format(Resources.AddPeakCompareDlg_OkDialog_Error_applying_imported_peak_boundaries___0_,
-                                                                      string.Format(Resources.PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_apex_retention_time_value_for_peptide__0__of_file__1__,
-                                                                                    "DITAFDETLFR",
-                                                                                    "napedro_L120420_007_SW")));
+                string.Format(Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_time_, "bad_apex", 3)));
         }
 
         private static void CheckNumberResults(ComparePeakPickingDlg comparePeakPickingDlg, int numResults)

@@ -1425,9 +1425,6 @@
   <data name="SkylineWindow_ImportMassList_Creating_Spectral_Library" xml:space="preserve">
     <value>スペクトルライブラリの作成中</value>
   </data>
-  <data name="ComparePeakPickingDlg_UpdateGraph__0_05_observed_false_positive_rate" xml:space="preserve">
-    <value>0.05観測された偽陽性率</value>
-  </data>
   <data name="AminoAcid_ValidateAAList_The_amino_acid__0__is_repeated_in_the_value__1__" xml:space="preserve">
     <value>値「{1}」でアミノ酸「{0}」が繰り返されています。</value>
   </data>
@@ -3344,9 +3341,6 @@
   </data>
   <data name="PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>パッケージのインストールに失敗しました。即時ウィンドウ内のログ出力エラー。</value>
-  </data>
-  <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison" xml:space="preserve">
-    <value>繰り返し測定の比較</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_entry" xml:space="preserve">
     <value>エントリ</value>
@@ -6543,9 +6537,6 @@
   </data>
   <data name="CommandLine_ExportInstrumentFile_" xml:space="preserve">
     <value>エラー： --exp-file=path/to/fileパラメータを使用して書き込む出力ファイルを指定しなければなりません。トランジションリストはエクスポートされません。</value>
-  </data>
-  <data name="ComparePeakPickingDlg_UpdateGraph__0_05_significance_threshold" xml:space="preserve">
-    <value>0.05有意性閾値</value>
   </data>
   <data name="FastaSeqV01_GetPeptideList_Attempt_to_get_peptide_list_from_uncleaved_FASTA_sequence" xml:space="preserve">
     <value>非切断FASTAシークエンスからペプチドリストを取得しようとしています。</value>

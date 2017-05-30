@@ -1425,9 +1425,6 @@
   <data name="SkylineWindow_ImportMassList_Creating_Spectral_Library" xml:space="preserve">
     <value>Creating Spectral Library</value>
   </data>
-  <data name="ComparePeakPickingDlg_UpdateGraph__0_05_observed_false_positive_rate" xml:space="preserve">
-    <value>0.05 observed false positive rate</value>
-  </data>
   <data name="AminoAcid_ValidateAAList_The_amino_acid__0__is_repeated_in_the_value__1__" xml:space="preserve">
     <value>The amino acid '{0}' is repeated in the value '{1}'.</value>
   </data>
@@ -3347,9 +3344,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>Package installation failed. Error log output in immediate window.</value>
-  </data>
-  <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison" xml:space="preserve">
-    <value>Replicate Comparison</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_entry" xml:space="preserve">
     <value>entry</value>
@@ -6544,9 +6538,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="CommandLine_ExportInstrumentFile_" xml:space="preserve">
     <value>Error: You must specify an output file to write to with the --exp-file=path/to/file parameter. No transition list will be exported.</value>
   </data>
-  <data name="ComparePeakPickingDlg_UpdateGraph__0_05_significance_threshold" xml:space="preserve">
-    <value>0.05 significance threshold</value>
-  </data>
   <data name="FastaSeqV01_GetPeptideList_Attempt_to_get_peptide_list_from_uncleaved_FASTA_sequence" xml:space="preserve">
     <value>Attempt to get peptide list from uncleaved FASTA sequence.</value>
   </data>
@@ -9523,5 +9514,29 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="SkylineWindow_ImportResults_Add_missing_iRT_standard_peptides_to_your_document_or_change_the_retention_time_predictor_" xml:space="preserve">
     <value>Add missing iRT standard peptides to your document or change the retention time predictor.</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_time_" xml:space="preserve">
+    <value>The value '{0}' on line {1} is not a valid time.</value>
+  </data>
+  <data name="ComparePeakPickingDlg_ClickGridViewItem_Unable_to_find_the_peptide__0__with_charge_state__1_" xml:space="preserve">
+    <value>Unable to find the peptide {0} with charge state {1}</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__Observed_FPR____0__" xml:space="preserve">
+    <value>Replicate Comparison (Observed FPR &lt; {0})</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__q_value____0__" xml:space="preserve">
+    <value>Replicate Comparison (q value &lt; {0})</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph__0__significance_threshold" xml:space="preserve">
+    <value>{0} significance threshold</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph__0__observed_false_positive_rate" xml:space="preserve">
+    <value>{0} observed false positive rate</value>
+  </data>
+  <data name="ComparePeakPickingDlg_checkObserved_CheckedChanged_Observed_FPR_" xml:space="preserve">
+    <value>Observed FPR:</value>
+  </data>
+  <data name="ComparePeakPickingDlg_checkObserved_CheckedChanged_Q_value_cutoff_" xml:space="preserve">
+    <value>Q value cutoff:</value>
   </data>
 </root>

@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public enum Field { modified_peptide, filename, start_time, end_time, charge, is_decoy, sample_name }
+        public enum Field { modified_peptide, filename, apex_time, start_time, end_time, charge, is_decoy, sample_name, q_value, score }
 
         public static readonly int[] REQUIRED_FIELDS =
             {
@@ -94,13 +94,16 @@ namespace pwiz.Skyline.Model
         // ReSharper disable NonLocalizedString
         public static readonly string[][] FIELD_NAMES =
         {
-            new[] {"PeptideModifiedSequence", "FullPeptideName", "EG.ModifiedSequence", ColumnCaptions.PeptideModifiedSequence},
-            new[] {"FileName", "filename", "R.FileName", ColumnCaptions.FileName},
+            new[] {"PeptideModifiedSequence", "ModifiedSequence", "FullPeptideName", "EG.ModifiedSequence", ColumnCaptions.PeptideModifiedSequence, ColumnCaptions.ModifiedSequence},
+            new[] {"align_origfilename", "FileName", "filename", "R.FileName", ColumnCaptions.FileName},
+            new[] {"Apex", "RetentionTime", "BestRetentionTime", "RT", ColumnCaptions.RetentionTime, ColumnCaptions.BestRetentionTime},
             new[] {"MinStartTime", "leftWidth", ColumnCaptions.MinStartTime},
             new[] {"MaxEndTime", "rightWidth", ColumnCaptions.MaxEndTime},
             new[] {"PrecursorCharge", "Charge", "FG.Charge", ColumnCaptions.PrecursorCharge},
             new[] {"PrecursorIsDecoy", "Precursor Is Decoy", "IsDecoy", "decoy", ColumnCaptions.IsDecoy},
-            new[] {"SampleName", ColumnCaptions.SampleName}
+            new[] {"SampleName", ColumnCaptions.SampleName},
+            new[] {"DetectionQValue", "m_score", ColumnCaptions.DetectionQValue},
+            new[] {"DetectionZScore", "d_score", ColumnCaptions.DetectionZScore},
         };
         // ReSharper restore NonLocalizedString
 
@@ -153,7 +156,7 @@ namespace pwiz.Skyline.Model
                     break;
                 linesRead++;
                 var dataFields = new DataFields(fieldIndices, line.ParseDsvFields(correctSeparator), FIELD_NAMES);
-                double? startTime = dataFields.GetTime(Field.start_time,
+                double? startTime = dataFields.GetTime(Field.start_time, 1.0,
                         Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_,
                         linesRead);
                 if (startTime.HasValue)
@@ -260,23 +263,26 @@ namespace pwiz.Skyline.Model
                 bool chargeSpecified = dataFields.TryGetCharge(linesRead, out charge);
                 string sampleName = dataFields.GetField(Field.sample_name);
 
-                double? startTime = null;
-                double? endTime = null;
-                if (changePeaks)
-                {
-                    startTime = dataFields.GetTime(Field.start_time, Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_, linesRead);
-                    if (startTime.HasValue)
-                        startTime = startTime / timeConversionFactor;
-                    endTime = dataFields.GetTime(Field.end_time, Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_, linesRead);
-                    if (endTime.HasValue)
-                        endTime = endTime / timeConversionFactor;
-                }
+                double? apexTime = dataFields.GetTime(Field.apex_time, timeConversionFactor,
+                    Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_time_, linesRead);
+                double? startTime = dataFields.GetTime(Field.start_time, timeConversionFactor,
+                    Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_, linesRead);
+                double? endTime = dataFields.GetTime(Field.end_time, timeConversionFactor,
+                    Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_, linesRead);
 
                 // Error if only one of startTime and endTime is null
                 if (startTime == null && endTime != null)
-                    throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Missing_start_time_on_line__0_, linesRead));
+                {
+                    if (changePeaks)
+                        throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Missing_start_time_on_line__0_, linesRead));
+                    endTime = null;
+                }
                 if (startTime != null && endTime == null)
-                    throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Missing_end_time_on_line__0_, linesRead));
+                {
+                    if (changePeaks)
+                        throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Missing_end_time_on_line__0_, linesRead));
+                    startTime = null;
+                }
                 // Add filename to second dictionary if not yet encountered
                 ChromSetFileMatch fileMatch;
                 if (!fileNameToFileMatch.TryGetValue(fileName, out fileMatch))
@@ -307,6 +313,16 @@ namespace pwiz.Skyline.Model
                 }
                 // Define the annotations to be added
                 var annotations = dataFields.GetAnnotations();
+                if (!changePeaks)
+                {
+                    if (apexTime.HasValue)
+                        annotations.Add(ComparePeakBoundaries.APEX_ANNOTATION, dataFields.GetField(Field.apex_time));
+                    if (startTime.HasValue && endTime.HasValue)
+                    {
+                        annotations.Add(ComparePeakBoundaries.START_TIME_ANNOTATION, dataFields.GetField(Field.start_time));
+                        annotations.Add(ComparePeakBoundaries.END_TIME_ANNOTATION, dataFields.GetField(Field.end_time));
+                    }
+                }
                 AnnotationsAdded = annotations.Keys.ToList();
 
                 // Loop over all the transition groups in that peptide to find matching charge,
@@ -563,84 +579,91 @@ namespace pwiz.Skyline.Model
         public bool UnrecognizedPeptidesCancel(IWin32Window parent)
         {
             const int itemsToShow = 10;
-            var peptides = UnrecognizedPeptides.ToList();
-            if (peptides.Any())
+            if (!ShowMissingMessage(parent, itemsToShow, UnrecognizedPeptides, p => p.ToString(), PeptideMessages))
+                return false;
+            if (!ShowMissingMessage(parent, itemsToShow, UnrecognizedFiles, f => f.ToString(), FileMessages))
+                return false;
+            if (!ShowMissingMessage(parent, itemsToShow, UnrecognizedChargeStates, c => c.PrintLine(' '), ChargeMessages))
+                return false;
+            return true;
+        }
+
+        private class MissingMessageLines
+        {
+            public MissingMessageLines(string first, string last)
             {
-                var sb = new StringBuilder();
-                sb.AppendLine(peptides.Count == 1
-                    ? Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide_in_the_peak_boundaries_file_was_not_recognized_
-                    : string.Format(Resources.SkylineWindow_ImportPeakBoundaries_The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized__,
-                                                  peptides.Count));
-                sb.AppendLine();
-                int peptidesToShow = Math.Min(peptides.Count, itemsToShow);
-                for (int i = 0; i < peptidesToShow; ++i)
-                {
-                    sb.AppendLine(peptides[i]);
-                }
-                if (peptidesToShow < peptides.Count)
-                {
-                    sb.AppendLine("..."); // Not L10N
-                }
-                sb.AppendLine();
-                sb.Append(peptides.Count == 1
-                    ? Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_peptide_
-                    : Resources.SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_peptides_);
-                var dlgPeptides = MultiButtonMsgDlg.Show(parent, sb.ToString(), MultiButtonMsgDlg.BUTTON_OK);
-                if (dlgPeptides == DialogResult.Cancel)
-                {
-                    return false;
-                }
+                First = first;
+                Last = last;
             }
-            var files = UnrecognizedFiles.ToList();
-            if (files.Any())
+
+            public string First { get; private set; }
+            public string Last { get; private set; }
+        }
+
+        private MissingMessageLines PeptideMessages(int count)
+        {
+            if (count == 1)
             {
-                var sb = new StringBuilder();
-                sb.AppendLine(files.Count == 1
-                    ? Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_file_name_in_the_peak_boundaries_file_was_not_recognized_
-                    : string.Format(Resources.SkylineWindow_ImportPeakBoundaries_The_following__0__file_names_in_the_peak_boundaries_file_were_not_recognized_,
-                             files.Count));
-                sb.AppendLine();
-                int filesToShow = Math.Min(files.Count, itemsToShow);
-                for (int i = 0; i < filesToShow; ++i)
-                {
-                    sb.AppendLine(files[i]);
-                }
-                if (filesToShow < files.Count)
-                {
-                    sb.AppendLine("..."); // Not L10N
-                }
-                sb.AppendLine();
-                sb.Append(files.Count == 1
-                    ? Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_file_
-                    : Resources.SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_files_);
-                var dlgFiles = MultiButtonMsgDlg.Show(parent, sb.ToString(), MultiButtonMsgDlg.BUTTON_OK);
-                if (dlgFiles == DialogResult.Cancel)
-                {
-                    return false;
-                }
+                return new MissingMessageLines(
+                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide_in_the_peak_boundaries_file_was_not_recognized_,
+                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_peptide_);
             }
-            var charges = UnrecognizedChargeStates.ToList();
-            if (charges.Any())
+            else
+            {
+                return new MissingMessageLines(
+                    string.Format(Resources.SkylineWindow_ImportPeakBoundaries_The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized__, count),
+                    Resources.SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_peptides_);
+            }
+        }
+
+        private MissingMessageLines FileMessages(int count)
+        {
+            if (count == 1)
+            {
+                return new MissingMessageLines(
+                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_file_name_in_the_peak_boundaries_file_was_not_recognized_,
+                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_file_);
+            }
+            else
+            {
+                return new MissingMessageLines(
+                    string.Format(Resources.SkylineWindow_ImportPeakBoundaries_The_following__0__file_names_in_the_peak_boundaries_file_were_not_recognized_, count),
+                    Resources.SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_files_);
+            }
+        }
+
+        private MissingMessageLines ChargeMessages(int count)
+        {
+            if (count == 1)
+            {
+                return new MissingMessageLines(
+                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide__file__and_charge_state_combination_was_not_recognized_,
+                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_these_charge_states_);
+            }
+            else
+            {
+                return new MissingMessageLines(
+                    string.Format(Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_, count),
+                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_charge_state_);
+            }
+        }
+
+        private bool ShowMissingMessage<TItem>(IWin32Window parent, int maxItems, HashSet<TItem> items, Func<TItem, string> printLine, Func<int, MissingMessageLines> getMessageLines)
+        {
+            if (items.Any())
             {
                 var sb = new StringBuilder();
-                sb.AppendLine(files.Count == 1
-                              ? Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide__file__and_charge_state_combination_was_not_recognized_
-                              : string.Format(Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_, 
-                                            charges.Count()));
+                var messageLines = getMessageLines(items.Count);
+                sb.AppendLine(messageLines.First);
                 sb.AppendLine();
-                int chargesToShow = Math.Min(charges.Count, itemsToShow);
-                for (int i = 0; i < chargesToShow; ++i)
-                {
-                    sb.AppendLine(charges[i].PrintLine(' ')); // Not L10N
-                }
-                if (chargesToShow < charges.Count)
-                {
+                int itemsToShow = Math.Min(items.Count, maxItems);
+                var itemsList = items.ToList();
+                for (int i = 0; i < itemsToShow; ++i)
+                    sb.AppendLine(printLine(itemsList[i])); // Not L10N
+                if (itemsToShow < items.Count)
                     sb.AppendLine("..."); // Not L10N
-                }
                 sb.AppendLine();
-                sb.Append(files.Count == 1
-                    ? Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_these_charge_states_
-                    : Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_charge_state_);
+                sb.Append(messageLines.Last);
                 var dlgFiles = MultiButtonMsgDlg.Show(parent, sb.ToString(), MultiButtonMsgDlg.BUTTON_OK);
                 if (dlgFiles == DialogResult.Cancel)
                 {
@@ -712,6 +735,12 @@ namespace pwiz.Skyline.Model
             public Dictionary<string, string> GetAnnotations()
             {
                 var annotations = new Dictionary<string, string>();
+                string qvalueText = GetField(Field.q_value);
+                if (qvalueText != null)
+                    annotations.Add(MProphetResultsHandler.AnnotationName, qvalueText);
+                string scoreText = GetField(Field.score);
+                if (scoreText != null)
+                    annotations.Add(MProphetResultsHandler.MAnnotationName, scoreText);
                 for (int i = FIELD_NAMES.Length; i < _fieldNames.Count; ++i)
                 {
                     string value = GetField(i);
@@ -721,19 +750,21 @@ namespace pwiz.Skyline.Model
                 return annotations;
             }
 
-            public double? GetTime(Field field, string message, long linesRead)
+            public double? GetTime(Field field, double timeConversionFactor, string message, long linesRead)
             {
-                double? startTime;
-                string startTimeString = GetField(field);
-                double startTimeTemp;
-                if (double.TryParse(startTimeString, out startTimeTemp))
-                    startTime = startTimeTemp;
+                string timeText = GetField(field);
+                if (timeText == null)
+                    return null;
+
+                double time;
+                if (double.TryParse(timeText, out time))
+                    return time / timeConversionFactor;
+
                 // #N/A means remove the peak
-                else if (startTimeString.Equals(TextUtil.EXCEL_NA))
-                    startTime = null;
-                else
-                    throw new IOException(string.Format(message, startTimeString, linesRead));
-                return startTime;
+                if (timeText.Equals(TextUtil.EXCEL_NA))
+                    return null;
+
+                throw new IOException(string.Format(message, timeText, linesRead));
             }
 
             public bool IsDecoy(long linesRead)

@@ -166,12 +166,12 @@ namespace pwiz.SkylineTestA
                 ImportThrowsException(docResults, string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(3).ToArray()),
                     Resources.PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line);
 
-                string headerRow = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(6));
-                string headerRowSpaced = string.Join(spaceSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(6));
                 string[] values =
                 {
-                    "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult)
+                    "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (4.0).ToString(cult), (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult)
                 };
+                string headerRow = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(values.Length));
+                string headerRowSpaced = string.Join(spaceSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(values.Length));
 
                 // 4. Mismatched field count
                 ImportThrowsException(docResults, TextUtil.LineSeparate(headerRow, string.Join(spaceSep, values)),
@@ -195,8 +195,9 @@ namespace pwiz.SkylineTestA
                 ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
                     Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_);
 
-                // But ok if not adjusting peaks
-                ImportNoException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)), true, false, false);
+                // Still not okay when not changing peaks, because we now store start and end times as annotations
+                ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
+                    Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_, true, false, false);
 
                 // 7. Invalid end time
                 valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] =
@@ -204,8 +205,9 @@ namespace pwiz.SkylineTestA
                 ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
                     Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_);
 
-                // But ok if not adjusting peaks
-                ImportNoException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)), true, false, false);
+                // Still not okay when not changing peaks, because we now store start and end times as annotations
+                ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSpaced, string.Join(spaceSep, valuesBadTime)),
+                    Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_, true, false, false);
 
                 // #N/A in times ok
                 valuesBadTime[(int)PeakBoundaryImporter.Field.start_time] =
@@ -249,15 +251,15 @@ namespace pwiz.SkylineTestA
                 // 12. Import with bad sample throws exception
                 string[] valuesSample =
                 {
-                    "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult), "badSample"
+                    "TPEVDDEALEK", "Q_2012_0918_RJ_13.raw", (4.0).ToString(cult), (3.5).ToString(cult), (4.5).ToString(cult), 2.ToString(cult), 0.ToString(cult), "badSample"
                 };
-                string headerRowSample = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES);
+                string headerRowSample = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(valuesSample.Length));
                 ImportThrowsException(docResults, TextUtil.LineSeparate(headerRowSample, string.Join(csvSep, valuesSample)),
                     Resources.PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__);
 
                 // 13. Decoys, charge state, and sample missing ok
-                var valuesFourFields = valuesSample.Take(4);
-                string headerFourFields = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(4));
+                var valuesFourFields = valuesSample.Take(5).ToArray();
+                string headerFourFields = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(valuesFourFields.Length));
                 ImportNoException(docResults, TextUtil.LineSeparate(headerFourFields, string.Join(csvSep, valuesFourFields)));
 
                 // 14. Valid (charge state, fileName, peptide) combo that is not in document gets skipped
@@ -292,11 +294,12 @@ namespace pwiz.SkylineTestA
                     _idMinTime1, _idMaxTime1, _idIdentified1, _idAreas1, _peptidesId, 0);
 
                 // 15. Decminal import format ok
-                var headerUnimod = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Take(4));
                 var valuesUnimod = new[]
-            {
-                "LGGLRPES[+" + string.Format("{0:F01}", 80.0) + "]PESLTSVSR", "100803_0005b_MCF7_TiTip3.wiff", (80.5).ToString(cult), (82.0).ToString(cult)
-            };
+                {
+                    "LGGLRPES[+" + string.Format("{0:F01}", 80.0) + "]PESLTSVSR", "100803_0005b_MCF7_TiTip3.wiff", (80.5).ToString(cult), (82.0).ToString(cult)
+                };
+                var headerUnimod = string.Join(csvSep, PeakBoundaryImporter.STANDARD_FIELD_NAMES.Where((s, i) =>
+                    i != (int)PeakBoundaryImporter.Field.apex_time).Take(valuesUnimod.Length));
                 ImportNoException(docResultsId, TextUtil.LineSeparate(headerUnimod, string.Join(csvSep, valuesUnimod)));
 
                 // 16. Integer import format ok

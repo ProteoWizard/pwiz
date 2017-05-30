@@ -26,8 +26,11 @@ using System.Linq;
 using System.Windows.Forms;
 using NHibernate.Util;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -37,7 +40,19 @@ namespace pwiz.Skyline.EditUI
 {
     public partial class ComparePeakPickingDlg : FormEx
     {
-        private readonly List<Color> _colors = new List<Color> {Color.Blue, Color.Crimson, Color.Cyan, Color.GreenYellow, Color.Gold, Color.Magenta, Color.Gray};
+        private readonly Color _colorSigLine = Color.DarkRed;
+
+        private readonly IList<Color> _colors;
+//        = new List<Color>
+//        {
+//            Color.Blue,
+//            Color.Crimson,
+//            Color.Cyan,
+//            Color.GreenYellow,
+//            Color.Gold,
+//            Color.Magenta,
+//            Color.Gray
+//        };
         private ComparePeakBoundariesList _peakBoundaryList;
         private readonly SimpleGridViewDriver<PeakBoundsMatch> _scoreGridViewDriver;
         private readonly SimpleGridViewDriver<PeakBoundsMatchPair> _compareGridViewDriver;
@@ -45,6 +60,9 @@ namespace pwiz.Skyline.EditUI
         private bool _xAxisFocus;
         private bool _showFpCutoff;
         private bool _showFpCutoffQ;
+
+        protected AxisLabelScaler _axisLabelScaler;
+
         private NormalizeType Normalizer;
          
         public SrmDocument Document { get; private set; }
@@ -54,7 +72,15 @@ namespace pwiz.Skyline.EditUI
         public ComparePeakPickingDlg(SrmDocument document)
         {
             InitializeComponent();
+            
+            _axisLabelScaler = new AxisLabelScaler(zedGraphFiles.GraphPane);
+            _colors =
+                Settings.Default.ColorSchemes.GetDefaults()
+                    .First(s => s.Name == Resources.ColorSchemeList_GetDefaults_Distinct)
+                    .TransitionColors;
+
             Document = document;
+
             _peakBoundaryList = new ComparePeakBoundariesList();
             _scoreGridViewDriver = new ComparePeakBoundariesGridViewDriver(dataGridViewScore,
                 bindingSourceScore, new SortableBindingList<PeakBoundsMatch>());
@@ -82,7 +108,12 @@ namespace pwiz.Skyline.EditUI
             comboBoxFilesYAxis.SelectedItem = Resources.ComparePeakPickingDlg_ComparePeakPickingDlg_Total_Correct_Peaks;
 
             InitializeGraphPanes();
-            textBoxFilesQCutoff.Text = 0.05.ToString(CultureInfo.CurrentCulture);
+
+            checkBoxXRange.Text = string.Format(checkBoxXRange.Text, Q_VALUE_SIG);
+            checkBoxIDLabels.Text = string.Format(checkBoxIDLabels.Text, Q_VALUE_SIG);
+            checkBoxExpectedFp.Text = string.Format(checkBoxExpectedFp.Text, Q_VALUE_SIG);
+
+            textBoxFilesQCutoff.Text = Q_VALUE_SIG.ToString(CultureInfo.CurrentCulture);
             _showFpCutoff = true;
             _showFpCutoffQ = true;
             UpdateTextBox();
@@ -154,9 +185,12 @@ namespace pwiz.Skyline.EditUI
             {
                 if (match.IsFalsePositive)
                     falsePositives++;
-                if (match.IsPickedApexBetweenCuratedBoundaries)
+                if (match.IsMatch)
                     truePositives++;
-                var rocPoint = new PointPair(falsePositives / (double)(truePositives + falsePositives), truePositives / scalingFactor);
+                // Null qValues get the worst score
+                double qValue = match.QValue ?? 1.0;
+                var rocPoint = new PointPair(falsePositives / (double)(truePositives + falsePositives), truePositives / scalingFactor)
+                                    {Tag = qValue};
                 rocPoints.Add(rocPoint);
             }
         }
@@ -186,7 +220,7 @@ namespace pwiz.Skyline.EditUI
             {
                 if (match.IsFalsePositive)
                     falsePositives++;
-                if (match.IsPickedApexBetweenCuratedBoundaries)
+                if (match.IsMatch)
                     truePositives++;
                 // Null qValues get the worst score
                 double qValue = match.QValue ?? 1.0;
@@ -195,12 +229,12 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        public void MakeFilesLists(ComparePeakBoundaries comparer, double falsePositiveCutoff, out PointPairList filesPoints, out List<string> filesNames)
+        public void MakeFilesLists(ComparePeakBoundaries comparer, double falsePositiveCutoff, bool observed, out PointPairList filesPoints, out List<string> filesNames)
         {
             filesPoints = new PointPairList();
             filesNames = new List<string>();
             var matches = comparer.Matches;
-            var matchesByFile = matches.GroupBy(match => match.FileName).OrderBy(group => group.Key);
+            var matchesByFile = matches.GroupBy(match => match.ReplicateName).OrderBy(group => group.Key);
             int i = 1;
             foreach (var matchGroup in matchesByFile)
             {
@@ -215,16 +249,35 @@ namespace pwiz.Skyline.EditUI
                     matchesInGroup.Sort(PeakBoundsMatch.CompareScore);
                 }
                 RocFromSortedMatches(matchesInGroup, Normalizer, out rocPoints);
-                double correctPeaks = GetCurveThreshold(rocPoints, falsePositiveCutoff);
-                filesPoints.Add(i++, correctPeaks);
+                var pointThreshold = GetCurveThreshold(rocPoints, falsePositiveCutoff, observed);
+                // Error is 2x the observed error rate, so that wiskers extend above and below bar item
+                // by the number of observed false-positives
+                filesPoints.Add(MeanErrorBarItem.MakePointPair(i++, pointThreshold.Y, pointThreshold.X * pointThreshold.Y * 2));
                 filesNames.Add(matchGroup.Key);
             }
         }
 
-        public static double GetCurveThreshold(PointPairList points, double cutoff)
+        public static PointPair GetCurveThreshold(PointPairList points, double cutoff, bool observed)
         {
-            var peptidesThreshPt = points.LastOrDefault(point => point.X < cutoff);
-            return peptidesThreshPt == null ? points.First().Y : peptidesThreshPt.Y;
+            var peptidesThreshPt = points.LastOrDefault(point => GetErrorRate(point, observed) < cutoff);
+            return peptidesThreshPt ?? points.First();
+        }
+
+        private static double GetErrorRate(PointPair point, bool observed)
+        {
+            // Use the observed false-positive rate
+            if (observed)
+                return point.X;
+
+            // Use the reported q value
+            try
+            {
+                return (double) point.Tag;
+            }
+            catch (Exception)
+            {
+                return 1.0;
+            }
         }
 
         public void UpdateAll()
@@ -282,6 +335,81 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        private void dataGridViewScore_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            ClickGridViewScore(e.RowIndex, e.ColumnIndex);
+        }
+
+        public void ClickGridViewScore(int rowIndex, int colIndex)
+        {
+            ClickGridViewItem(colIndex, GetSelectionInfo(rowIndex, _scoreGridViewDriver,
+                m => new SelectionInfo(m.TargetIndex, m.Sequence, m.Charge, m.FilePath)));
+        }
+
+
+        private void dataGridViewScoreComparison_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            ClickGridViewComparison(e.RowIndex, e.ColumnIndex);
+        }
+
+        private void ClickGridViewComparison(int rowIndex, int colIndex)
+        {
+            ClickGridViewItem(colIndex, GetSelectionInfo(rowIndex, _compareGridViewDriver,
+                m => new SelectionInfo(m.TargetIndex, m.Sequence, m.Charge, m.FilePath)));
+        }
+
+
+        private SelectionInfo GetSelectionInfo<TEl>(int rowIndex, SimpleGridViewDriver<TEl> driver, Func<TEl, SelectionInfo> getInfo)
+        {
+            if (0 > rowIndex || rowIndex >= driver.Items.Count)
+                return null;
+
+            var match = driver.Items[rowIndex];
+            return getInfo(match);
+        }
+
+        private class SelectionInfo
+        {
+            public SelectionInfo(int targetIndex, string sequence, int charge, MsDataFileUri filePath)
+            {
+                TargetIndex = targetIndex;
+                Sequence = sequence;
+                Charge = charge;
+                FilePath = filePath;
+            }
+
+            public int TargetIndex { get; private set; }
+            public string Sequence { get; private set; }
+            public int Charge { get; private set; }
+            public MsDataFileUri FilePath {get; private set; }
+        }
+
+        private void ClickGridViewItem(int colIndex, SelectionInfo selInfo)
+        {
+            if (selInfo == null)
+                return;
+
+            var nodeGlobalIndex = selInfo.TargetIndex;
+            var filePath = selInfo.FilePath;
+            var skylineWindow = Program.MainWindow;
+            var document = skylineWindow.DocumentUI;
+            if (colIndex > 0)
+            {
+                int groupIndex = document.MoleculeTransitionGroups.ToArray()
+                    .IndexOf(g => g.TransitionGroup.GlobalIndex == nodeGlobalIndex);
+                if (groupIndex == -1)
+                {
+                    MessageDlg.Show(this,
+                        string.Format(Resources.ComparePeakPickingDlg_ClickGridViewItem_Unable_to_find_the_peptide__0__with_charge_state__1_, selInfo.Sequence, selInfo.Charge));
+                    return;
+                }
+                skylineWindow.SelectedPath = document.GetPathTo((int)SrmDocument.Level.TransitionGroups, groupIndex);
+            }
+            var resultMatch = document.Settings.MeasuredResults.FindMatchingMSDataFile(filePath);
+            if (resultMatch != null)
+                skylineWindow.SelectedResultsIndex = resultMatch.FileOrder;
+        }
+
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
@@ -289,7 +417,7 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            DialogResult = DialogResult.OK;
+            Close();
         }
 
         #region Grid
@@ -417,8 +545,8 @@ namespace pwiz.Skyline.EditUI
 
         public const double MARGIN = 1.1;
         public const double MIN_SIG_FP = 5;
-        public const double Q_VALUE_SIG = 0.05;
-        public const double X_AXIS_FOCUS = 0.1;
+        public const double Q_VALUE_SIG = 0.01;
+        public const double X_AXIS_FOCUS = 0.05;
 
         public void UpdateGraph()
         {
@@ -435,7 +563,10 @@ namespace pwiz.Skyline.EditUI
             }
             rocPane.Title.Text = Resources.ComparePeakPickingDlg_UpdateGraph_ROC_Plot_Comparison;
             qqPane.Title.Text = Resources.ComparePeakPickingDlg_UpdateGraph_Q_Q_Comparison;
-            filesPane.Title.Text = Resources.ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison;
+            bool observed = checkObserved.Checked;
+            filesPane.Title.Text = string.Format(observed
+                ? Resources.ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__Observed_FPR____0__
+                : Resources.ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__q_value____0__, textBoxFilesQCutoff.Text);
             int i = -1;
             const double minRocY = 0;
             const double minRocX = 0;
@@ -463,10 +594,13 @@ namespace pwiz.Skyline.EditUI
                 }
 
                 PointPairList filesPoints;
-                MakeFilesLists(comparer, _qValueSig, out filesPoints, out filesNames);
+                MakeFilesLists(comparer, _qValueSig, observed, out filesPoints, out filesNames);
                 maxFilesY = Math.Max(maxFilesY, filesPoints.Select(point => point.Y).Max());
                 maxFilesX = Math.Max(maxFilesX, filesPoints.Select(point => point.X).Max());
-                filesPane.AddBar(comparer.Name , filesPoints, _colors[i % _colors.Count]);
+                var bar = new MeanErrorBarItem(comparer.Name, filesPoints, _colors[i % _colors.Count], Color.Black);
+                bar.Bar.Fill.Type = FillType.Solid;
+                bar.Bar.Border.IsVisible = false;
+                filesPane.CurveList.Add(bar);
 
                 if (!comparer.HasNoQValues)
                 {
@@ -494,13 +628,13 @@ namespace pwiz.Skyline.EditUI
             if (_showFpCutoffQ)
             {
                 var significancePoints = new PointPairList { { Q_VALUE_SIG, minQq }, { Q_VALUE_SIG, maxQq } };
-                var significanceCurve = new LineItem(Resources.ComparePeakPickingDlg_UpdateGraph__0_05_significance_threshold, significancePoints, Color.Red, SymbolType.None);
+                var significanceCurve = new LineItem(string.Format(Resources.ComparePeakPickingDlg_UpdateGraph__0__significance_threshold, Q_VALUE_SIG), significancePoints, _colorSigLine, SymbolType.None);
                 qqPane.CurveList.Add(significanceCurve);    
             }
             if (_showFpCutoff)
             {
                 var significancePointsRoc = new PointPairList { { Q_VALUE_SIG, minRocY }, { Q_VALUE_SIG, maxRocY * MARGIN } };
-                var significanceCurveRoc = new LineItem(Resources.ComparePeakPickingDlg_UpdateGraph__0_05_observed_false_positive_rate, significancePointsRoc, Color.Red, SymbolType.None);
+                var significanceCurveRoc = new LineItem(string.Format(Resources.ComparePeakPickingDlg_UpdateGraph__0__observed_false_positive_rate, Q_VALUE_SIG), significancePointsRoc, _colorSigLine, SymbolType.None);
                 rocPane.CurveList.Add(significanceCurveRoc);    
             }
 
@@ -525,6 +659,8 @@ namespace pwiz.Skyline.EditUI
             zedGraphFiles.AxisChange();
             zedGraphFiles.Refresh();
             filesPane.XAxis.Scale.TextLabels = filesNames.ToArray();
+            filesPane.XAxis.Type = AxisType.Text;
+            _axisLabelScaler.ScaleAxisLabels();
         }
 
         private static void PlaceLabelAtCutoff(IEnumerable<PointPair> graphPoints, GraphPane graphPane, double cutoff)
@@ -533,7 +669,10 @@ namespace pwiz.Skyline.EditUI
             if (closestPointToCutoff != null)
             {
                 double y = closestPointToCutoff.Y;
-                TextObj text = new TextObj(y.ToString("0.##"), cutoff, y) // Not L10N
+                string labelText = closestPointToCutoff.Tag == null
+                    ? string.Format("{0:F04}", y) // Not L10N
+                    : string.Format("{0:0.##} (q: {1:F04})", y, closestPointToCutoff.Tag); // Not L10N
+                TextObj text = new TextObj(labelText, cutoff, y) // Not L10N
                 {
                     FontSpec = {FontColor = Color.Black, StringAlignment = StringAlignment.Center, Size = 11.0F}
                 };
@@ -566,7 +705,18 @@ namespace pwiz.Skyline.EditUI
             UpdateGraph();
         }
 
+        private void textBoxFilesQCutoff_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+                ClickApply();
+        }
+
         private void buttonApply_Click(object sender, EventArgs e)
+        {
+            ClickApply();
+        }
+
+        public void ClickApply()
         {
             UpdateTextBox();
             UpdateGraph();
@@ -677,6 +827,19 @@ namespace pwiz.Skyline.EditUI
         }
 
         #endregion
+
+        private void zedGraphFiles_Resize(object sender, EventArgs e)
+        {
+            _axisLabelScaler.ScaleAxisLabels();
+        }
+
+        private void checkObserved_CheckedChanged(object sender, EventArgs e)
+        {
+            labelCutoff.Text = checkObserved.Checked
+                ? Resources.ComparePeakPickingDlg_checkObserved_CheckedChanged_Observed_FPR_
+                : Resources.ComparePeakPickingDlg_checkObserved_CheckedChanged_Q_value_cutoff_;
+            UpdateGraph();
+        }
     }
 
     class ComparePeakBoundariesGridViewDriver : SimpleGridViewDriver<PeakBoundsMatch>
@@ -770,15 +933,18 @@ namespace pwiz.Skyline.EditUI
            Match2 = match2;
         }
 
+        public MsDataFileUri FilePath { get { return Match1.FilePath; } }
         public string FileName { get { return Match1.FileName; } }
+        public string ReplicateName { get { return Match1.ReplicateName; } }
+        public int TargetIndex { get { return Match1.TargetIndex; } }
         public string Sequence { get { return Match1.Sequence; } }
         public int Charge { get { return Match1.Charge; } }
         public double? Score1 { get { return Match1.Score; } }
         public double? Score2 { get { return Match2.Score; } }
         public double? QValue1 { get { return Match1.QValue; } }
         public double? QValue2 { get { return Match2.QValue; } }
-        public bool IsMatch1 { get { return Match1.IsPickedApexBetweenCuratedBoundaries; } }
-        public bool IsMatch2 { get { return Match2.IsPickedApexBetweenCuratedBoundaries; } }
+        public bool IsMatch1 { get { return Match1.IsMatch; } }
+        public bool IsMatch2 { get { return Match2.IsMatch; } }
         public double? Apex1 { get { return Match1.PickedApex; } }
         public double? Apex2 { get { return Match2.PickedApex; } }
         public double? TrueStart { get { return Match1.TrueStartBoundary; } }
