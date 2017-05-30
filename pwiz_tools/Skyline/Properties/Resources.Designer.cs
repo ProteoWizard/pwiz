@@ -5893,6 +5893,34 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Observed FPR:.
+        /// </summary>
+        public static string ComparePeakPickingDlg_checkObserved_CheckedChanged_Observed_FPR_ {
+            get {
+                return ResourceManager.GetString("ComparePeakPickingDlg_checkObserved_CheckedChanged_Observed_FPR_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Q value cutoff:.
+        /// </summary>
+        public static string ComparePeakPickingDlg_checkObserved_CheckedChanged_Q_value_cutoff_ {
+            get {
+                return ResourceManager.GetString("ComparePeakPickingDlg_checkObserved_CheckedChanged_Q_value_cutoff_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find the peptide {0} with charge state {1}.
+        /// </summary>
+        public static string ComparePeakPickingDlg_ClickGridViewItem_Unable_to_find_the_peptide__0__with_charge_state__1_ {
+            get {
+                return ResourceManager.GetString("ComparePeakPickingDlg_ClickGridViewItem_Unable_to_find_the_peptide__0__with_charg" +
+                        "e_state__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Fraction of Manual ID&apos;s.
         /// </summary>
         public static string ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Manual_ID_s {
@@ -6005,20 +6033,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 0.05 observed false positive rate.
+        ///   Looks up a localized string similar to {0} observed false positive rate.
         /// </summary>
-        public static string ComparePeakPickingDlg_UpdateGraph__0_05_observed_false_positive_rate {
+        public static string ComparePeakPickingDlg_UpdateGraph__0__observed_false_positive_rate {
             get {
-                return ResourceManager.GetString("ComparePeakPickingDlg_UpdateGraph__0_05_observed_false_positive_rate", resourceCulture);
+                return ResourceManager.GetString("ComparePeakPickingDlg_UpdateGraph__0__observed_false_positive_rate", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 0.05 significance threshold.
+        ///   Looks up a localized string similar to {0} significance threshold.
         /// </summary>
-        public static string ComparePeakPickingDlg_UpdateGraph__0_05_significance_threshold {
+        public static string ComparePeakPickingDlg_UpdateGraph__0__significance_threshold {
             get {
-                return ResourceManager.GetString("ComparePeakPickingDlg_UpdateGraph__0_05_significance_threshold", resourceCulture);
+                return ResourceManager.GetString("ComparePeakPickingDlg_UpdateGraph__0__significance_threshold", resourceCulture);
             }
         }
         
@@ -6041,11 +6069,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Replicate Comparison.
+        ///   Looks up a localized string similar to Replicate Comparison (Observed FPR &lt; {0}).
         /// </summary>
-        public static string ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison {
+        public static string ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__Observed_FPR____0__ {
             get {
-                return ResourceManager.GetString("ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison", resourceCulture);
+                return ResourceManager.GetString("ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__Observed_FPR____0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate Comparison (q value &lt; {0}).
+        /// </summary>
+        public static string ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__q_value____0__ {
+            get {
+                return ResourceManager.GetString("ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__q_value____0__", resourceCulture);
             }
         }
         
@@ -17943,6 +17980,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time" +
                         "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; on line {1} is not a valid time..
+        /// </summary>
+        public static string PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_time_ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_time_", resourceCulture);
             }
         }
         

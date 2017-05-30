@@ -163,13 +163,13 @@
     <value>6, 24</value>
   </data>
   <data name="checkBoxIDLabels.Size" type="System.Drawing.Size, System.Drawing">
-    <value>133, 17</value>
+    <value>126, 17</value>
   </data>
   <data name="checkBoxIDLabels.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
   <data name="checkBoxIDLabels.Text" xml:space="preserve">
-    <value>Show #ID's at 0.05 FP</value>
+    <value>Show #ID's at {0} FP</value>
   </data>
   <data name="&gt;&gt;checkBoxIDLabels.Name" xml:space="preserve">
     <value>checkBoxIDLabels</value>
@@ -193,13 +193,13 @@
     <value>6, 6</value>
   </data>
   <data name="checkBoxXRange.Size" type="System.Drawing.Size, System.Drawing">
-    <value>155, 17</value>
+    <value>148, 17</value>
   </data>
   <data name="checkBoxXRange.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
   <data name="checkBoxXRange.Text" xml:space="preserve">
-    <value>Focus X Range on 0.05 FP</value>
+    <value>Focus X Range on {0} FP</value>
   </data>
   <data name="&gt;&gt;checkBoxXRange.Name" xml:space="preserve">
     <value>checkBoxXRange</value>
@@ -226,13 +226,13 @@
     <value>456, 2</value>
   </data>
   <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>67, 13</value>
+    <value>66, 13</value>
   </data>
   <data name="label5.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>Y Axis scale:</value>
+    <value>Y axis scale:</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -328,13 +328,13 @@
     <value>6, 19</value>
   </data>
   <data name="checkBoxExpectedFp.Size" type="System.Drawing.Size, System.Drawing">
-    <value>159, 17</value>
+    <value>152, 17</value>
   </data>
   <data name="checkBoxExpectedFp.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
   <data name="checkBoxExpectedFp.Text" xml:space="preserve">
-    <value>Show 0.05 expected FP line</value>
+    <value>Show {0} expected FP line</value>
   </data>
   <data name="&gt;&gt;checkBoxExpectedFp.Name" xml:space="preserve">
     <value>checkBoxExpectedFp</value>
@@ -457,7 +457,7 @@
     <value>True</value>
   </metadata>
   <data name="File.HeaderText" xml:space="preserve">
-    <value>File</value>
+    <value>Replicate</value>
   </data>
   <metadata name="Sequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -712,7 +712,7 @@
     <value>True</value>
   </metadata>
   <data name="dataGridViewTextBoxColumn1.HeaderText" xml:space="preserve">
-    <value>File</value>
+    <value>Replicate</value>
   </data>
   <metadata name="dataGridViewTextBoxColumn2.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -834,6 +834,33 @@
   <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="checkObserved.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkObserved.Location" type="System.Drawing.Point, System.Drawing">
+    <value>131, -1</value>
+  </data>
+  <data name="checkObserved.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 17</value>
+  </data>
+  <data name="checkObserved.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="checkObserved.Text" xml:space="preserve">
+    <value>observed</value>
+  </data>
+  <data name="&gt;&gt;checkObserved.Name" xml:space="preserve">
+    <value>checkObserved</value>
+  </data>
+  <data name="&gt;&gt;checkObserved.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkObserved.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;checkObserved.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="buttonApply.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
@@ -859,37 +886,37 @@
     <value>tabPage2</value>
   </data>
   <data name="&gt;&gt;buttonApply.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
-  <data name="label7.AutoSize" type="System.Boolean, mscorlib">
+  <data name="labelCutoff.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label7.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="labelCutoff.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="labelCutoff.Location" type="System.Drawing.Point, System.Drawing">
     <value>18, 1</value>
   </data>
-  <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
-    <value>79, 13</value>
+  <data name="labelCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>77, 13</value>
   </data>
-  <data name="label7.TabIndex" type="System.Int32, mscorlib">
+  <data name="labelCutoff.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="label7.Text" xml:space="preserve">
-    <value>Q Value Cutoff:</value>
+  <data name="labelCutoff.Text" xml:space="preserve">
+    <value>Q value cutoff:</value>
   </data>
-  <data name="&gt;&gt;label7.Name" xml:space="preserve">
-    <value>label7</value>
+  <data name="&gt;&gt;labelCutoff.Name" xml:space="preserve">
+    <value>labelCutoff</value>
   </data>
-  <data name="&gt;&gt;label7.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelCutoff.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelCutoff.Parent" xml:space="preserve">
     <value>tabPage2</value>
   </data>
-  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="&gt;&gt;labelCutoff.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="textBoxFilesQCutoff.Location" type="System.Drawing.Point, System.Drawing">
     <value>18, 17</value>
@@ -910,7 +937,7 @@
     <value>tabPage2</value>
   </data>
   <data name="&gt;&gt;textBoxFilesQCutoff.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="label6.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -925,13 +952,13 @@
     <value>451, 0</value>
   </data>
   <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
-    <value>67, 13</value>
+    <value>66, 13</value>
   </data>
   <data name="label6.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>Y Axis scale:</value>
+    <value>Y axis scale:</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -943,7 +970,7 @@
     <value>tabPage2</value>
   </data>
   <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="comboBoxFilesYAxis.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -967,7 +994,7 @@
     <value>tabPage2</value>
   </data>
   <data name="&gt;&gt;comboBoxFilesYAxis.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="zedGraphFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -991,7 +1018,7 @@
     <value>tabPage2</value>
   </data>
   <data name="&gt;&gt;zedGraphFiles.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="tabPage2.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -1057,7 +1084,7 @@
     <value>2</value>
   </data>
   <data name="buttonAdd.Text" xml:space="preserve">
-    <value>&amp;Add...</value>
+    <value>A&amp;dd...</value>
   </data>
   <data name="&gt;&gt;buttonAdd.Name" xml:space="preserve">
     <value>buttonAdd</value>
@@ -1605,13 +1632,13 @@
     <value>dataGridViewTextBoxColumn1</value>
   </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Windows.Forms.DataGridViewLinkColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn2.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn2</value>
   </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Windows.Forms.DataGridViewLinkColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn3.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn3</value>

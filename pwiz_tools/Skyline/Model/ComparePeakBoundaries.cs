@@ -34,7 +34,9 @@ namespace pwiz.Skyline.Model
 {
     public class ComparePeakBoundaries : XmlNamedElement
     {
-        public const string APEX_ANNOTATION = "Apex"; // Not L10N
+        public const string APEX_ANNOTATION = "annotation_Apex"; // Not L10N
+        public const string START_TIME_ANNOTATION = "annotation_StartTime"; // Not L10N
+        public const string END_TIME_ANNOTATION = "annotation_EndTime"; // Not L10N
 
         public bool IsModel { get; private set; }
         public PeakScoringModelSpec PeakScoringModel { get; private set; }
@@ -102,16 +104,17 @@ namespace pwiz.Skyline.Model
             else
             {
                 // Add in the necessary annotation definitions so that ImportPeakBoundaries can read them
-                _docCompare = AddAnnotationIfMissing(_docCompare, MProphetResultsHandler.AnnotationName);
-                _docCompare = AddAnnotationIfMissing(_docCompare, MProphetResultsHandler.MAnnotationName);
-                _docCompare = AddAnnotationIfMissing(_docCompare, APEX_ANNOTATION);
-                // But strip the values of these annotations if there were any
                 var annotationNamesToStrip = new List<string>
                 {
                     MProphetResultsHandler.AnnotationName,
                     MProphetResultsHandler.MAnnotationName,
-                    APEX_ANNOTATION
+                    APEX_ANNOTATION,
+                    START_TIME_ANNOTATION,
+                    END_TIME_ANNOTATION
                 };
+                foreach (var annotationName in annotationNamesToStrip)
+                    _docCompare = AddAnnotationIfMissing(_docCompare, annotationName);
+                // But strip the values of these annotations if there were any
                 var annotationNamesToKeep = _docCompare.Settings.DataSettings.AnnotationDefs
                     .Where(def => !annotationNamesToStrip.Contains(def.Name))
                     .Select(def => def.Name).ToList();
@@ -123,14 +126,15 @@ namespace pwiz.Skyline.Model
                 {
                     var line = reader.ReadLine();
                     var fieldNames = PeakBoundaryImporter.FIELD_NAMES.ToList();
-                    fieldNames.Add(new [] {APEX_ANNOTATION});
                     int fieldsTotal;
                     int[] fieldIndices;
                     var separator = PeakBoundaryImporter.DetermineCorrectSeparator(line, fieldNames,
                         PeakBoundaryImporter.REQUIRED_NO_CHROM, out fieldIndices, out fieldsTotal);
-                    ApexPresent = separator != null && fieldIndices.Last() != -1;
+                    ApexPresent = separator != null && fieldIndices[(int) PeakBoundaryImporter.Field.apex_time] != -1;
                 }
                 _docCompare = Importer.Import(FilePath, progressMonitor, lineCount, true, !ApexPresent);
+                if (progressMonitor.IsCanceled)
+                    return;
             }
             var matches = new List<PeakBoundsMatch>();
             var truePeptides = DocOriginal.Molecules.ToList();
@@ -139,6 +143,7 @@ namespace pwiz.Skyline.Model
             var chromatogramSets = DocOriginal.Settings.MeasuredResults.Chromatograms;
             for (int i = 0; i < chromatogramSets.Count; i++)
             {
+                var chromSet = chromatogramSets[i];
                 var set = chromatogramSets[i];
                 for (int j = 0; j < nTruePeptides; j++)
                 {
@@ -173,8 +178,8 @@ namespace pwiz.Skyline.Model
                             var fileInfo = set.GetFileInfo(trueInfo.FileId);
                             var filePath = fileInfo.FilePath;
                             var key = new MatchKey(trueGroup.Id.GlobalIndex, trueInfo.FileId.GlobalIndex);
-                            matches.Add(new PeakBoundsMatch(trueInfo, pickedInfo, key, filePath, trueGroup,
-                                HasNoQValues, HasNoScores, ApexPresent));
+                            matches.Add(new PeakBoundsMatch(trueInfo, pickedInfo, key, chromSet, filePath,
+                                trueGroup, HasNoQValues, HasNoScores, ApexPresent));
                         }
                     }
                 }
@@ -183,17 +188,21 @@ namespace pwiz.Skyline.Model
             // Detect if the apex time is in seconds, and if so adjust it to minutes
             if (ApexPresent)
             {
-                double maxTime = matches.Where(match => match.PickedApex.HasValue)
-                                        .Select(match => match.PickedApex.Value).Max();
+                var matchesWithApex = matches.Where(match => match.PickedApex.HasValue).ToArray();
+                double maxTime = 0;
+                if (matchesWithApex.Length > 0)
+                    maxTime = matchesWithApex.Select(match => match.PickedApex.Value).Max();
                 if (maxTime > PeakBoundaryImporter.GetMaxRt(DocOriginal))
                 {
-                    foreach (var match in matches.Where(match => match.PickedApex.HasValue))
+                    foreach (var match in matchesWithApex)
                     {
-                        match.PickedApex = match.PickedApex / 60;
-                        if (match.PickedStartBoundary.HasValue)
-                            match.PickedStartBoundary = match.PickedStartBoundary / 60;
-                        if (match.PickedEndBoundary.HasValue)
+                        // If the end is greater than the Apex, then it must also be in seconds (otherwise minutes)
+                        if (match.PickedEndBoundary.HasValue && match.PickedEndBoundary > match.PickedApex)
                             match.PickedEndBoundary = match.PickedEndBoundary / 60;
+                        match.PickedApex = match.PickedApex / 60;
+                        // If the start is now greater than the apex, then it must also be in seconds (otherwise minutes)
+                        if (match.PickedStartBoundary.HasValue && match.PickedStartBoundary > match.PickedApex)
+                            match.PickedStartBoundary = match.PickedStartBoundary / 60;
                     }
                 }
             }
@@ -231,8 +240,10 @@ namespace pwiz.Skyline.Model
     public class PeakBoundsMatch
     {
         public const double DELTA = 1e-4;
-        public const double PERCENT_HIGH_OVERLAP = 0.25;
+        public const double PERCENT_HIGH_OVERLAP = 0.5;
         public const double MAX_APEX_DELTA = 20.0 / 60.0;
+
+        private readonly ChromatogramSet _chromatogramSet;
 
         public TransitionGroupChromInfo ChromInfoTrue { get; private set; }
         public TransitionGroupChromInfo ChromInfoPicked { get; private set; }
@@ -247,8 +258,10 @@ namespace pwiz.Skyline.Model
         public double? PickedEndBoundary { get; set; }
 
         public string FileName { get { return FilePath.GetFileNameWithoutExtension(); } }
+        public string ReplicateName { get { return _chromatogramSet.Name; } }
         public string Sequence { get { return NodeGroup.TransitionGroup.Peptide.Sequence; }}
         public int Charge { get { return NodeGroup.TransitionGroup.PrecursorCharge; } }
+        public int TargetIndex { get { return NodeGroup.TransitionGroup.GlobalIndex; } }
         public double? TrueApex { get { return ChromInfoTrue.RetentionTime; } }
         public double? TrueStartBoundary { get { return ChromInfoTrue.StartRetentionTime; } }
         public double? TrueEndBoundary { get { return ChromInfoTrue.EndRetentionTime; } }
@@ -267,6 +280,18 @@ namespace pwiz.Skyline.Model
             } 
         }
 
+        public bool IsCuratedApexBetweenPickedBoundaries
+        {
+            get
+            {
+                return PickedStartBoundary != null &&
+                    PickedEndBoundary != null &&
+                    TrueApex != null &&
+                    PickedStartBoundary - DELTA <= TrueApex &&
+                    TrueApex <= PickedEndBoundary + DELTA;
+            }
+        }
+
         public bool IsClosePeakApex
         {
             get
@@ -280,39 +305,42 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                if (ChromInfoTrue == null || ChromInfoPicked == null ||
-                        !ChromInfoTrue.StartRetentionTime.HasValue || !ChromInfoPicked.StartRetentionTime.HasValue)
+                if (!PickedStartBoundary.HasValue || !TrueStartBoundary.HasValue)
                     return false;
 
-                double rangeTotal = (ChromInfoTrue.EndRetentionTime.Value - ChromInfoTrue.StartRetentionTime.Value) +
-                                    (ChromInfoPicked.EndRetentionTime.Value - ChromInfoPicked.StartRetentionTime.Value);
-                double rangeIntersect = Math.Min(ChromInfoTrue.EndRetentionTime.Value, ChromInfoPicked.EndRetentionTime.Value) -
-                                        Math.Max(ChromInfoTrue.StartRetentionTime.Value, ChromInfoPicked.StartRetentionTime.Value);
+                double rangeTotal = (TrueEndBoundary.Value - TrueStartBoundary.Value) +
+                    (PickedEndBoundary.Value - PickedStartBoundary.Value);
+                double rangeIntersect = Math.Min(TrueEndBoundary.Value, PickedEndBoundary.Value) -
+                                        Math.Max(TrueStartBoundary.Value, PickedStartBoundary.Value);
                 if (rangeIntersect <= 0)
                     return false;
                 double rangeHalf = rangeTotal / 2;
-                if (rangeIntersect / rangeHalf < PERCENT_HIGH_OVERLAP)
+                double percentOverlap = rangeIntersect / rangeHalf;
+                if (percentOverlap < PERCENT_HIGH_OVERLAP)
                     return false;
                 return true;
             }
         }
 
-        public bool IsMatch { get { return IsMatchSkyline; } }
+        public bool IsMatch { get { return PickedStartBoundary.HasValue ? IsMatchOverlap : IsMatchProximity; } }
 
-        private bool IsMatchSkyline { get { return IsPickedApexBetweenCuratedBoundaries || IsHighlyOverlapping; } }
-        private bool IsMatchOpenSwath { get { return IsPickedApexBetweenCuratedBoundaries || IsClosePeakApex; } }
+        private bool IsMatchOverlap { get { return IsPickedApexBetweenCuratedBoundaries || IsCuratedApexBetweenPickedBoundaries || IsHighlyOverlapping; } }
+        private bool IsMatchProximity { get { return IsPickedApexBetweenCuratedBoundaries || IsCuratedApexBetweenPickedBoundaries || IsClosePeakApex; } }
 
         public bool IsFalsePositive { get { return !IsMatch && !IsMissingPickedPeak; } }
 
         public PeakBoundsMatch(TransitionGroupChromInfo chromInfoTrue, 
                                TransitionGroupChromInfo chromInfoPicked, 
                                MatchKey key, 
+                               ChromatogramSet chromSet,
                                MsDataFileUri filePath, 
                                TransitionGroupDocNode nodeGroup, 
                                bool hasNoQValues, 
                                bool hasNoScores,
                                bool apexPresent)
         {
+            _chromatogramSet = chromSet;
+
             ChromInfoTrue = chromInfoTrue;
             ChromInfoPicked = chromInfoPicked;
             Key = key;
@@ -321,40 +349,38 @@ namespace pwiz.Skyline.Model
             // Read apex
             if (apexPresent)
             {
-                string apexString = ChromInfoPicked.Annotations.GetAnnotation(ComparePeakBoundaries.APEX_ANNOTATION);
-                double apexDouble;
-                if (!double.TryParse(apexString, out apexDouble))
-                {
-                    if (apexString == null || apexString.Equals(TextUtil.EXCEL_NA))
-                    {
-                        PickedApex = null;
+                PickedApex = ParsePickedTimeAnnotation(ComparePeakBoundaries.APEX_ANNOTATION);
+                PickedStartBoundary = ParsePickedTimeAnnotation(ComparePeakBoundaries.START_TIME_ANNOTATION);
+                PickedEndBoundary = ParsePickedTimeAnnotation(ComparePeakBoundaries.END_TIME_ANNOTATION);
                     }
                     else
                     {
-                        throw new IOException(string.Format(Resources.PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_apex_retention_time_value_for_peptide__0__of_file__1__, Sequence, FileName));
-                    }
-                }
-                else
-                {
-                    PickedApex = apexDouble;
-                }
-            }
-            else
-            {
                 PickedApex = ChromInfoPicked.RetentionTime;
                 PickedStartBoundary = ChromInfoPicked.StartRetentionTime;
                 PickedEndBoundary = ChromInfoPicked.EndRetentionTime;
-            }
+                    }
             QValue = GetScoreValue(ChromInfoPicked, MProphetResultsHandler.AnnotationName, ci => ci.QValue);
             if (QValue == null && !IsMissingPickedPeak && !hasNoQValues)
-            {
-                throw new IOException(string.Format(Resources.PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_, Sequence, FileName));
-            }
+                {
+                    throw new IOException(string.Format(Resources.PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_, Sequence, FileName));
+                }
             Score = GetScoreValue(ChromInfoPicked, MProphetResultsHandler.MAnnotationName, ci => ci.ZScore);
             if (Score == null && !IsMissingPickedPeak && !hasNoScores)
             {
                 throw new IOException(string.Format(Resources.PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_, Sequence, FileName));
             }
+                }
+
+        private double? ParsePickedTimeAnnotation(string annotationName)
+            {
+            string timeText = ChromInfoPicked.Annotations.GetAnnotation(annotationName);
+            double time;
+            if (double.TryParse(timeText, out time))
+                return time;
+            if (timeText == null || timeText.Equals(TextUtil.EXCEL_NA))
+                return null;
+
+            throw new IOException(string.Format(Resources.PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_apex_retention_time_value_for_peptide__0__of_file__1__, Sequence, FileName));
         }
 
         public static double? GetScoreValue(TransitionGroupChromInfo groupChromInfo, string annotationName, Func<TransitionGroupChromInfo, double?> getNativeValue)

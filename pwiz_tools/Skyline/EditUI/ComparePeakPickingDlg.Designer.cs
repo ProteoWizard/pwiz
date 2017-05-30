@@ -79,8 +79,8 @@ namespace pwiz.Skyline.EditUI
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.dataGridViewScoreComparison = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewLinkColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.PeakMatch1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.PeakMatch2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -94,8 +94,9 @@ namespace pwiz.Skyline.EditUI
             this.endTrue = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.bindingSourceScoreCompare = new System.Windows.Forms.BindingSource(this.components);
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.checkObserved = new System.Windows.Forms.CheckBox();
             this.buttonApply = new System.Windows.Forms.Button();
-            this.label7 = new System.Windows.Forms.Label();
+            this.labelCutoff = new System.Windows.Forms.Label();
             this.textBoxFilesQCutoff = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.comboBoxFilesYAxis = new System.Windows.Forms.ComboBox();
@@ -104,7 +105,7 @@ namespace pwiz.Skyline.EditUI
             this.buttonEdit = new System.Windows.Forms.Button();
             this.checkedListCompare = new System.Windows.Forms.CheckedListBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.File = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.File = new System.Windows.Forms.DataGridViewLinkColumn();
             this.Sequence = new System.Windows.Forms.DataGridViewLinkColumn();
             this.Charge = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.PeakMatch = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -358,13 +359,16 @@ namespace pwiz.Skyline.EditUI
             this.dataGridViewScoreComparison.DataSource = this.bindingSourceScoreCompare;
             this.dataGridViewScoreComparison.Name = "dataGridViewScoreComparison";
             this.dataGridViewScoreComparison.ReadOnly = true;
+            this.dataGridViewScoreComparison.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewScoreComparison_CellContentClick);
             // 
             // dataGridViewTextBoxColumn1
             // 
-            this.dataGridViewTextBoxColumn1.DataPropertyName = "FileName";
+            this.dataGridViewTextBoxColumn1.DataPropertyName = "ReplicateName";
             resources.ApplyResources(this.dataGridViewTextBoxColumn1, "dataGridViewTextBoxColumn1");
             this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
             this.dataGridViewTextBoxColumn1.ReadOnly = true;
+            this.dataGridViewTextBoxColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewTextBoxColumn1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // dataGridViewTextBoxColumn2
             // 
@@ -372,6 +376,8 @@ namespace pwiz.Skyline.EditUI
             resources.ApplyResources(this.dataGridViewTextBoxColumn2, "dataGridViewTextBoxColumn2");
             this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
             this.dataGridViewTextBoxColumn2.ReadOnly = true;
+            this.dataGridViewTextBoxColumn2.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewTextBoxColumn2.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // dataGridViewTextBoxColumn3
             // 
@@ -476,8 +482,9 @@ namespace pwiz.Skyline.EditUI
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.checkObserved);
             this.tabPage2.Controls.Add(this.buttonApply);
-            this.tabPage2.Controls.Add(this.label7);
+            this.tabPage2.Controls.Add(this.labelCutoff);
             this.tabPage2.Controls.Add(this.textBoxFilesQCutoff);
             this.tabPage2.Controls.Add(this.label6);
             this.tabPage2.Controls.Add(this.comboBoxFilesYAxis);
@@ -486,6 +493,13 @@ namespace pwiz.Skyline.EditUI
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // checkObserved
+            // 
+            resources.ApplyResources(this.checkObserved, "checkObserved");
+            this.checkObserved.Name = "checkObserved";
+            this.checkObserved.UseVisualStyleBackColor = true;
+            this.checkObserved.CheckedChanged += new System.EventHandler(this.checkObserved_CheckedChanged);
+            // 
             // buttonApply
             // 
             resources.ApplyResources(this.buttonApply, "buttonApply");
@@ -493,15 +507,16 @@ namespace pwiz.Skyline.EditUI
             this.buttonApply.UseVisualStyleBackColor = true;
             this.buttonApply.Click += new System.EventHandler(this.buttonApply_Click);
             // 
-            // label7
+            // labelCutoff
             // 
-            resources.ApplyResources(this.label7, "label7");
-            this.label7.Name = "label7";
+            resources.ApplyResources(this.labelCutoff, "labelCutoff");
+            this.labelCutoff.Name = "labelCutoff";
             // 
             // textBoxFilesQCutoff
             // 
             resources.ApplyResources(this.textBoxFilesQCutoff, "textBoxFilesQCutoff");
             this.textBoxFilesQCutoff.Name = "textBoxFilesQCutoff";
+            this.textBoxFilesQCutoff.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxFilesQCutoff_KeyDown);
             // 
             // label6
             // 
@@ -533,6 +548,7 @@ namespace pwiz.Skyline.EditUI
             this.zedGraphFiles.ScrollMinX = 0D;
             this.zedGraphFiles.ScrollMinY = 0D;
             this.zedGraphFiles.ScrollMinY2 = 0D;
+            this.zedGraphFiles.Resize += new System.EventHandler(this.zedGraphFiles_Resize);
             // 
             // buttonAdd
             // 
@@ -551,6 +567,7 @@ namespace pwiz.Skyline.EditUI
             // checkedListCompare
             // 
             resources.ApplyResources(this.checkedListCompare, "checkedListCompare");
+            this.checkedListCompare.CheckOnClick = true;
             this.checkedListCompare.FormattingEnabled = true;
             this.checkedListCompare.Name = "checkedListCompare";
             this.checkedListCompare.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListCompare_ItemCheck);
@@ -728,8 +745,8 @@ namespace pwiz.Skyline.EditUI
         private Label label3;
         private BindingSource bindingSourceScoreCompare;
         private CheckBox checkBoxConflicts;
-        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
-        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
+        private DataGridViewLinkColumn dataGridViewTextBoxColumn1;
+        private DataGridViewLinkColumn dataGridViewTextBoxColumn2;
         private DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
         private DataGridViewTextBoxColumn PeakMatch1;
         private DataGridViewTextBoxColumn PeakMatch2;
@@ -741,19 +758,20 @@ namespace pwiz.Skyline.EditUI
         private DataGridViewTextBoxColumn rightApex;
         private DataGridViewTextBoxColumn startTrue;
         private DataGridViewTextBoxColumn endTrue;
+        private CheckBox checkObserved;
         private Label label5;
         private ComboBox comboBoxYAxis;
         private TabPage tabPage2;
         private ZedGraphControl zedGraphFiles;
         private Label label6;
         private ComboBox comboBoxFilesYAxis;
-        private Label label7;
+        private Label labelCutoff;
         private TextBox textBoxFilesQCutoff;
         private Button buttonApply;
         private CheckBox checkBoxXRange;
         private CheckBox checkBoxIDLabels;
         private CheckBox checkBoxExpectedFp;
-        private DataGridViewTextBoxColumn File;
+        private DataGridViewLinkColumn File;
         private DataGridViewLinkColumn Sequence;
         private DataGridViewTextBoxColumn Charge;
         private DataGridViewTextBoxColumn PeakMatch;
