@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace pwiz.Common.DataBinding
@@ -96,8 +97,34 @@ namespace pwiz.Common.DataBinding
             if ((null != items) && (null != property))
 // ReSharper restore ConditionIsAlwaysTrueOrFalse
             {
-                var pc = new PropertyComparer<T>(property, direction);
-                items.Sort(pc);
+                bool reverseSort = direction == ListSortDirection.Descending;
+                // Create tuples which consist of:
+                // Item1: property value we are sorting on
+                // Item2: the original row index (or negative of that if we are sorting descending)
+                Tuple<object, int>[] propertyRowIndexes = Items.Select((item, index) => Tuple.Create(property.GetValue(item), 
+                    reverseSort ? -index : index)).ToArray();
+                // Sort the tuples. Because Item2 is the original row index, this is effectively a 
+                // stable sort.
+                try
+                {
+                    Array.Sort(propertyRowIndexes);
+                }
+                catch (Exception)
+                {
+                    // If there was a problem sorting the tuples, then just sort them as if they were strings.
+                    propertyRowIndexes = propertyRowIndexes.Select(rowIndex 
+                        => Tuple.Create(rowIndex.Item1 == null ? (object) null : rowIndex.Item1.ToString(), rowIndex.Item2))
+                        .ToArray();
+                    Array.Sort(propertyRowIndexes);
+                }
+                if (reverseSort)
+                {
+                    Array.Reverse(propertyRowIndexes);
+                }
+                // Replace the items in this list with the ones in sorted order.
+                var newItems = propertyRowIndexes.Select(rowIndex => items[reverseSort ? -rowIndex.Item2 : rowIndex.Item2]).ToArray();
+                items.Clear();
+                items.AddRange(newItems);
                 /* Set sorted */
                 _isSorted = true;
             }
@@ -139,106 +166,6 @@ namespace pwiz.Common.DataBinding
                 pdc = pdc.Sort();
             }
             return pdc;
-        }
-
-        #endregion
-
-        #region PropertyComparer<TKey>
-
-        internal class PropertyComparer<TKey> : IComparer<TKey>
-        {
-            /*
-            * The following code contains code implemented by Rockford Lhotka:
-            * msdn.microsoft.com/library/default.asp?url=/library/en-us/dnadvnet/html/vbnet01272004.asp" 
-            */
-            private readonly ListSortDirection _direction;
-            private readonly PropertyDescriptor _property;
-
-            public PropertyComparer(PropertyDescriptor property, ListSortDirection direction)
-            {
-                _property = property;
-                _direction = direction;
-            }
-
-            #region IComparer<TKey> Members
-
-            public int Compare(TKey xVal, TKey yVal)
-            {
-                /* Get property values */
-                object xValue = GetPropertyValue(xVal, _property);
-                object yValue = GetPropertyValue(yVal, _property);
-                /* Determine sort order */
-                if (_direction == ListSortDirection.Ascending)
-                {
-                    return CompareAscending(xValue, yValue);
-                }
-                else
-                {
-                    return CompareDescending(xValue, yValue);
-                }
-            }
-
-            #endregion
-
-            public bool Equals(TKey xVal, TKey yVal)
-            {
-                return xVal.Equals(yVal);
-            }
-
-            public int GetHashCode(TKey obj)
-            {
-                return obj.GetHashCode();
-            }
-
-            /* Compare two property values of any type */
-
-            private static int CompareAscending(object xValue, object yValue)
-            {
-                int result;
-                // Null sorts before objects with values.
-                if (xValue == null)
-                {
-                    result = (yValue == null) ? 0 : -1;
-                }
-                else if (yValue == null)
-                {
-                    result = 1;
-                }
-                else
-                {
-                    var value = xValue as IComparable;
-                    if (value != null)
-                    {
-                        /* If values implement IComparer */
-                        result = value.CompareTo(yValue);
-                    }
-                    else if (xValue.Equals(yValue))
-                    {
-                        /* If values don't implement IComparer but are equivalent */
-                        result = 0;
-                    }
-                    else
-                    {
-                        /* Values don't implement IComparer and are not equivalent, so compare as string values */
-                        result = String.Compare(xValue.ToString(), yValue.ToString(), StringComparison.Ordinal);
-                    }
-                }
-                /* Return result */
-                return result;
-            }
-
-            private static int CompareDescending(object xValue, object yValue)
-            {
-                /* Return result adjusted for ascending or descending sort order ie
-                   multiplied by 1 for ascending or -1 for descending */
-                return CompareAscending(xValue, yValue)*-1;
-            }
-
-            private static object GetPropertyValue(TKey value, PropertyDescriptor property)
-            {
-                /* Get property */
-                return property.GetValue(value);
-            }
         }
 
         #endregion
