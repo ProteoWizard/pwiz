@@ -136,7 +136,7 @@
             this.gBoxFoldChange.Controls.Add(this.numberLDFC);
             this.gBoxFoldChange.Controls.Add(this.labelLowerDesiredFC);
             this.gBoxFoldChange.Controls.Add(this.labelUpperDesiredFC);
-            this.gBoxFoldChange.Location = new System.Drawing.Point(198, 3);
+            this.gBoxFoldChange.Location = new System.Drawing.Point(3, 311);
             this.gBoxFoldChange.Name = "gBoxFoldChange";
             this.gBoxFoldChange.Size = new System.Drawing.Size(154, 74);
             this.gBoxFoldChange.TabIndex = 6;
@@ -164,7 +164,7 @@
             // btnDefault
             // 
             this.btnDefault.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnDefault.Location = new System.Drawing.Point(12, 414);
+            this.btnDefault.Location = new System.Drawing.Point(12, 444);
             this.btnDefault.Name = "btnDefault";
             this.btnDefault.Size = new System.Drawing.Size(93, 23);
             this.btnDefault.TabIndex = 7;
@@ -218,7 +218,7 @@
             this.groupBoxAuto.Controls.Add(this.flowLayoutPanel2);
             this.groupBoxAuto.Location = new System.Drawing.Point(3, 138);
             this.groupBoxAuto.Name = "groupBoxAuto";
-            this.groupBoxAuto.Size = new System.Drawing.Size(154, 111);
+            this.groupBoxAuto.Size = new System.Drawing.Size(178, 111);
             this.groupBoxAuto.TabIndex = 3;
             this.groupBoxAuto.TabStop = false;
             this.groupBoxAuto.Text = "Automatically calculate";
@@ -233,7 +233,7 @@
             this.flowLayoutPanel2.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanel2.Location = new System.Drawing.Point(3, 16);
             this.flowLayoutPanel2.Name = "flowLayoutPanel2";
-            this.flowLayoutPanel2.Size = new System.Drawing.Size(148, 92);
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(172, 92);
             this.flowLayoutPanel2.TabIndex = 15;
             // 
             // comboNormalizeTo
@@ -273,6 +273,7 @@
             // 
             // flowLayoutPanel1
             // 
+            this.flowLayoutPanel1.AutoScroll = true;
             this.flowLayoutPanel1.Controls.Add(this.labelNormalizeTo);
             this.flowLayoutPanel1.Controls.Add(this.comboNormalizeTo);
             this.flowLayoutPanel1.Controls.Add(this.cboxAllowMissingPeaks);
@@ -285,7 +286,7 @@
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(12, 12);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(200, 385);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(200, 417);
             this.flowLayoutPanel1.TabIndex = 14;
             // 
             // cbxSelectHighQualityFeatures
@@ -318,7 +319,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(313, 449);
+            this.ClientSize = new System.Drawing.Size(313, 479);
             this.Controls.Add(this.flowLayoutPanel1);
             this.Controls.Add(this.btnDefault);
             this.Controls.Add(this.btnCancel);

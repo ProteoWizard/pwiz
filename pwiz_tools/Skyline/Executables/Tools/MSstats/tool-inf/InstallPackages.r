@@ -36,17 +36,17 @@ install.packages("data.table" , repos='http://cran.us.r-project.org')
 #}
 
 #if (!is.element("limma",packages)){
-source("https://bioconductor.org/biocLite.R")
+source("http://bioconductor.org/biocLite.R")
 biocLite("limma")
 #}
 
 #if (!is.element("preprocessCore",packages)){
-source("https://bioconductor.org/biocLite.R")
+source("http://bioconductor.org/biocLite.R")
 biocLite("preprocessCore")
 #}
 
 #if (!is.element("marray",packages)){
-source("https://bioconductor.org/biocLite.R")
+source("http://bioconductor.org/biocLite.R")
 biocLite("marray")
 #}
 
@@ -57,12 +57,11 @@ install.packages("Rcpp" , repos='http://cran.us.r-project.org')
 install.packages("XML" , repos='http://cran.us.r-project.org')
 
 #if (!is.element("MSnbase",packages)){
-source("https://bioconductor.org/biocLite.R")
+source("http://bioconductor.org/biocLite.R")
 biocLite("MSnbase")
 #}
 
-## 2016.11 10 update by MC
-source("https://bioconductor.org/biocLite.R")
+source("http://bioconductor.org/biocLite.R")
 biocLite("MSstats")
 
 #if (!is.element("MSstats",packages) || packageVersion("MSstats") < "3.3.11" ){
