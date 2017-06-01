@@ -9467,8 +9467,8 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="ColorSchemeList_GetDefaults_Distinct" xml:space="preserve">
     <value>Distinct</value>
   </data>
-  <data name="ColorSchemeList_GetDefaults_Colorblind_friendly" xml:space="preserve">
-    <value>Colorblind friendly</value>
+  <data name="ColorSchemeList_GetDefaults_High_contrast" xml:space="preserve">
+    <value>High contrast</value>
   </data>
   <data name="EditCustomThemeDlg_buttonSave_Click_The_color_scheme___0___already_exists_" xml:space="preserve">
     <value>The color scheme '{0}' already exists.</value>

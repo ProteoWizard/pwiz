@@ -3716,15 +3716,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Colorblind friendly.
-        /// </summary>
-        public static string ColorSchemeList_GetDefaults_Colorblind_friendly {
-            get {
-                return ResourceManager.GetString("ColorSchemeList_GetDefaults_Colorblind_friendly", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Distinct.
         /// </summary>
         public static string ColorSchemeList_GetDefaults_Distinct {
@@ -3739,6 +3730,15 @@ namespace pwiz.Skyline.Properties {
         public static string ColorSchemeList_GetDefaults_Eggplant_lemonade {
             get {
                 return ResourceManager.GetString("ColorSchemeList_GetDefaults_Eggplant_lemonade", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to High contrast.
+        /// </summary>
+        public static string ColorSchemeList_GetDefaults_High_contrast {
+            get {
+                return ResourceManager.GetString("ColorSchemeList_GetDefaults_High_contrast", resourceCulture);
             }
         }
         

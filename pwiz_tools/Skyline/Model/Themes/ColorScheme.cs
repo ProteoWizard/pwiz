@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Model.Themes
                 Color.FromArgb(239, 233, 57), 
                 Color.FromArgb(133, 211, 116)
             });
-            yield return DEFAULT.ChangeName(Resources.ColorSchemeList_GetDefaults_Colorblind_friendly).ChangePrecursorColors(new[]
+            yield return DEFAULT.ChangeName(Resources.ColorSchemeList_GetDefaults_High_contrast).ChangePrecursorColors(new[]
             {
                 Color.FromArgb(179,70,126),
                 Color.FromArgb(146,181,64),
