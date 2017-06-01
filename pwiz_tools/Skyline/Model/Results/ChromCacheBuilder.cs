@@ -521,7 +521,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             listChromData.AddRange(dictPeptideChromData.Values);
-            listChromData.Sort(CompareKeys);
+            listChromData.Sort(CompareMaxRetentionTime);
 
             // Avoid holding onto chromatogram data sets for entire read
             dictPeptideChromData.Clear();
@@ -529,33 +529,26 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Compare data sets by maximum retention time.
+        /// Compare data sets by maximum retention time. If a dataset does not have a maximum
+        /// retention time, that is treated as infinity.
         /// </summary>
-        private int CompareKeys(PeptideChromDataSets p1, PeptideChromDataSets p2)
+        private int CompareMaxRetentionTime(PeptideChromDataSets p1, PeptideChromDataSets p2)
         {
-            var key1 = p1.FirstKey;
-            var key2 = p2.FirstKey;
-            return key1.CompareTo(key2);
-        }
-
-        private int ComparePeptideChromDataSets(PeptideChromDataSets p1, PeptideChromDataSets p2)
-        {
-            if (p1.NodePep != null && p2.NodePep != null)
+            var time1 = p1.FirstKey.OptionalMaxTime;
+            var time2 = p2.FirstKey.OptionalMaxTime;
+            if (time1.HasValue)
             {
-                bool s1 = string.Equals(p1.NodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT);
-                bool s2 = string.Equals(p2.NodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT);
-                // Import iRT standards before everything else
-                if (s1 != s2)
+                if (time2.HasValue)
                 {
-                    return s1 ? -1 : 1;
+                    return time1.Value.CompareTo(time2.Value);
                 }
-            }
-            else if (p1.NodePep == null)
-                return 1;
-            else if (p2.NodePep == null)
                 return -1;
-            // Otherwise, import in precursor m/z order
-            return Comparer.Default.Compare(p1.DataSets[0].PrecursorMz, p2.DataSets[0].PrecursorMz);
+            }
+            if (time2.HasValue)
+            {
+                return 1;
+            }
+            return 0;
         }
 
         private sealed class PeptidePrecursorMz
@@ -1079,7 +1072,7 @@ namespace pwiz.Skyline.Model.Results
                 var tc = listMzIndexChromatograms[ic];
                 var tt = listMzTrans[it];
                 int icNext = ic + 1, itNext = it + 1;
-                if (ChromKey.CompareTolerant(tc.Mz, tt.Mz, tolerance) != 0)
+                if (tc.Mz.CompareTolerant(tt.Mz, tolerance) != 0)
                 {
                     // Current transition and current chromatogram are not a match
                     // Advance in the list with the smaller m/z

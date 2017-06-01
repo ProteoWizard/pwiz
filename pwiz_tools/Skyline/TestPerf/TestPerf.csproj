@@ -135,6 +135,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MeasuredDriftTimesTutorialTest.cs" />
+    <Compile Include="PeakSortingTest.cs" />
     <Compile Include="PerfChorusGenerateChromatograms.cs" />
     <Compile Include="PerfDecoysMatchTest.cs" />
     <Compile Include="PerfGenerateChorusRequests.cs" />
