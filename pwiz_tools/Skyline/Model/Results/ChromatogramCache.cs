@@ -414,8 +414,7 @@ namespace pwiz.Skyline.Model.Results
 
         private static int CompareMz(SignedMz precursorMz1, SignedMz precursorMz2, float tolerance)
         {
-            return ChromKey.CompareTolerant(precursorMz1, precursorMz2,
-                tolerance);
+            return precursorMz1.CompareTolerant(precursorMz2, tolerance);
         }
 
         private static bool MatchMz(SignedMz mz1, SignedMz mz2, float tolerance)

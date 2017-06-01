@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Model.Results
                 var matchingTransitions = new List<TransitionDocNode>();
                 foreach (var transitionDocNode in transitionGroups.SelectMany(tg => tg.Transitions))
                 {
-                    if (0!=ChromKey.CompareTolerant(chromatogram.ProductMz, transitionDocNode.Mz, _tolerance))
+                    if (0!=chromatogram.ProductMz.CompareTolerant(transitionDocNode.Mz, _tolerance))
                     {
                         continue;
                     }

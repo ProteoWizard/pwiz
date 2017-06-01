@@ -1698,20 +1698,6 @@ namespace pwiz.Skyline.Model.Results
 
         public int CompareTo(ChromKey key)
         {
-            return CompareTo(key, (mz1, mz2) => mz1.CompareTo(mz2));
-        }
-
-        public int CompareTolerant(ChromKey key, float tolerance)
-        {
-            return CompareTo(key, (mz1, mz2) => mz1.CompareTolerant(mz2, tolerance));
-        }
-
-        /// <summary>
-        /// This comparison function shows up as a performance burden during import of large DIA data sets.
-        /// Be very careful changing it and be sure to profile your changes on a large DIA data set.
-        /// </summary>
-        private int CompareTo(ChromKey key, Func<SignedMz, SignedMz, int> compareMz)
-        {
             int c;
 
             // First deal with empty keys sorting to the end
@@ -1720,52 +1706,16 @@ namespace pwiz.Skyline.Model.Results
             if (key.IsEmpty)
                 return -1;
 
-            // OptionalCenterOfGravityTime is only set for SRM. Here we are ording
-            // everything by maximum retention time to know when chromatograms can be
-            // released during extraction.
-            if (!key.OptionalCenterOfGravityTime.HasValue)
-            {
-                // Order by maximum retention time.
-                if (OptionalMaxTime.HasValue && key.OptionalMaxTime.HasValue)
-                {
-                    c = OptionalMaxTime.Value.CompareTo(key.OptionalMaxTime.Value);
-                    if (c != 0)
-                        return c;
-                }
-                else if (OptionalMaxTime.HasValue != key.OptionalMaxTime.HasValue)
-                {
-                    return OptionalMaxTime.HasValue ? -1 : 1;
-                }
-            }
-
             // Order by precursor values
-            c = ComparePrecursors(key, compareMz);
+            c = ComparePrecursors(key);
             if (c != 0)
                 return c;
-
-            // For SRM data, order by time for chromatograms that are not highly overlapping
-            // since these are likely for different targets
-            if (OptionalMidTime.HasValue && key.OptionalMidTime.HasValue)
-            {
-                if (!HighlyOverlapping(key))
-                {
-                    c = OptionalMinTime.Value.CompareTo(key.OptionalMinTime.Value);
-                    if (c == 0)
-                        c = key.OptionalMaxTime.Value.CompareTo(OptionalMaxTime.Value);
-                    if (c != 0)
-                        return c;
-                }
-            }
-            else if (OptionalMidTime.HasValue != key.OptionalMidTime.HasValue)
-            {
-                return OptionalMidTime.HasValue ? 1 : -1;  // Don't really expect to be here, but best to be fully transitive
-            }
 
             // Order by scan-type source, product m/z, extraction width
             c = CompareSource(key);
             if (c != 0)
                 return c;
-            c = compareMz(Product, key.Product);
+            c = Product.CompareTo(key.Product);
             if (c != 0)
                 return c;
             c = CollisionEnergy.CompareTo(key.CollisionEnergy);
@@ -1776,41 +1726,17 @@ namespace pwiz.Skyline.Model.Results
             // CONSIDER(bspratt) - we're currently ignoring ion mobility for comparison
         }
 
-        private bool HighlyOverlapping(ChromKey key)
-        {
-            const double highOverlap = 0.95;    // 95% or more
-
-            if (!(OptionalMinTime.HasValue && OptionalMaxTime.HasValue && key.OptionalMinTime.HasValue && key.OptionalMaxTime.HasValue))
-                return false;
-            double overlap = Math.Abs(Math.Min(OptionalMaxTime.Value, key.OptionalMaxTime.Value) -
-                                      Math.Max(OptionalMinTime.Value, key.OptionalMinTime.Value));
-            return overlap/(OptionalMaxTime - OptionalMinTime) >= highOverlap;
-        }
-
         public int ComparePrecursors(ChromKey key)
-        {
-            return ComparePrecursors(key, (mz1, mz2) => mz1.CompareTo(mz2));
-        }
-
-        private int ComparePrecursors(ChromKey key, Func<SignedMz, SignedMz, int> compareMz)
         {
             // Order by precursor m/z, peptide sequence/custom ion id, extraction method
             // For SRM data, do not group discontiguous chromotagrams
-            int c = compareMz(Precursor, key.Precursor);
+            int c = Precursor.CompareTo(key.Precursor);
             if (c != 0)
                 return c;
             c = CompareTextId(key);
             if (c != 0)
                 return c;
-            if (key.TextId == null)
-            {
-                // SRM data - don't group if time ranges don't overlap
-                if ((OptionalMaxTime ?? 0) < (key.OptionalMinTime ?? 0))
-                    return -1;
-                if ((OptionalMinTime ?? 0) > (key.OptionalMaxTime ?? 0))
-                    return 1;
-            }
-            return Extractor - key.Extractor;
+            return Extractor.CompareTo(key.Extractor);
         }
 
         private int CompareTextId(ChromKey key)
@@ -1835,11 +1761,6 @@ namespace pwiz.Skyline.Model.Results
                 return Source.CompareTo(key.Source);
             // Flip comparison to put the known value first
             return key.Source.CompareTo(Source);
-        }
-
-        public static int CompareTolerant(SignedMz f1, SignedMz f2, float tolerance)
-        {
-            return f1.CompareTolerant(f2, tolerance);
         }
 
         private const string SUFFIX_CE = "CE="; // Not L10N
@@ -2146,7 +2067,7 @@ namespace pwiz.Skyline.Model.Results
             double deltaNearestMz = double.MaxValue;
             for (int i = startTran; i < endTran; i++)
             {
-                if (ChromKey.CompareTolerant(productMz, GetProductGlobal(i), tolerance) == 0)
+                if (productMz.CompareTolerant(GetProductGlobal(i), tolerance) == 0)
                 {
                     // If there is optimization data, return only the middle value, which
                     // was the regression value.
@@ -2189,7 +2110,7 @@ namespace pwiz.Skyline.Model.Results
             int endTran = startTran + _groupHeaderInfo.NumTransitions;
             for (int i = startTran; i < endTran; i++)
             {
-                if (ChromKey.CompareTolerant(productMz, GetProductGlobal(i), tolerance) == 0)
+                if (productMz.CompareTolerant(GetProductGlobal(i), tolerance) == 0)
                 {
                     int startOptTran, endOptTran;
                     GetOptimizationBounds(productMz, i, startTran, endTran, out startOptTran, out endOptTran);
@@ -2262,7 +2183,7 @@ namespace pwiz.Skyline.Model.Results
 
             for (int transitionNum = 0; transitionNum < NumTransitions; transitionNum++)
             {
-                if (ChromKey.CompareTolerant(nodeTran.Mz, GetProductGlobal(transitionNum + Header.StartTransitionIndex), tolerance) == 0)
+                if (nodeTran.Mz.CompareTolerant(GetProductLocal(transitionNum), tolerance) == 0)
                 {
                     countMatches++;
                     if (explicitRT != null)

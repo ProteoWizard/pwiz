@@ -118,10 +118,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             if (_chromKeyIndiceses != null)
             {
                 var tolerance = (float)ChromTaskList.SrmDocument.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-                Assume.IsNull(chromKey.OptionalMinTime);
-                Assume.IsNull(chromKey.OptionalMaxTime);
-                Assume.IsTrue(chromKey.DriftFilter.IsEmpty);
-                keyIndex = _chromKeyIndiceses.IndexOf(entry => entry.Key.CompareTolerant(chromKey, tolerance) == 0);
+                keyIndex = _chromKeyIndiceses.IndexOf(entry => EqualsTolerant(chromKey, entry.Key, tolerance));
             }
             if (keyIndex == -1 || _chromKeyIndiceses == null)   // Keep ReSharper from complaining
             {
@@ -141,6 +138,19 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             }
             timeIntensities = CoalesceIntensities(tranInfo.TimeIntensities);
             return true;
+        }
+
+        /// <summary>
+        /// Returns true if the two ChromKeys are close enough to match.
+        /// Chorus sometimes rounds off the numbers of the precursor and product mz's
+        /// of the chromatograms we ask for.
+        /// </summary>
+        private bool EqualsTolerant(ChromKey key1, ChromKey key2, float tolerance)
+        {
+            return Equals(key1.Source, key2.Source) && Equals(key1.TextId, key2.TextId) &&
+                   Equals(key1.Extractor, key2.Extractor)
+                   && 0 == key1.Precursor.CompareTolerant(key2.Precursor, tolerance)
+                   && 0 == key2.Product.CompareTolerant(key2.Product, tolerance);
         }
 
         /// <summary>
