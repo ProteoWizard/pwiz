@@ -198,9 +198,6 @@
   <data name="checkBoxIDLabels.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
-  <data name="checkBoxIDLabels.Text" xml:space="preserve">
-    <value>于 0.05 误判断比率显示 ID 编号</value>
-  </data>
   <data name="&gt;&gt;checkBoxIDLabels.Name" xml:space="preserve">
     <value>checkBoxIDLabels</value>
   </data>
@@ -227,9 +224,6 @@
   </data>
   <data name="checkBoxXRange.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
-  </data>
-  <data name="checkBoxXRange.Text" xml:space="preserve">
-    <value>将 X 范围集中在 0.05误判断比率上</value>
   </data>
   <data name="&gt;&gt;checkBoxXRange.Name" xml:space="preserve">
     <value>checkBoxXRange</value>
@@ -362,9 +356,6 @@
   </data>
   <data name="checkBoxExpectedFp.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
-  </data>
-  <data name="checkBoxExpectedFp.Text" xml:space="preserve">
-    <value>显示 0.05 预期 FP 行</value>
   </data>
   <data name="&gt;&gt;checkBoxExpectedFp.Name" xml:space="preserve">
     <value>checkBoxExpectedFp</value>
