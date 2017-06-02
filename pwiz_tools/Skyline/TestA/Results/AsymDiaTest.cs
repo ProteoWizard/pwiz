@@ -92,6 +92,8 @@ namespace pwiz.SkylineTestA.Results
                 TransitionGroupDocNode nodeGroup;
                 double ratio;
 
+                const double poorRatio = 0.25;
+                const double fixedRatio = 1.05;
                 {
                     // Import with symmetric isolation window
                     SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
@@ -99,7 +101,7 @@ namespace pwiz.SkylineTestA.Results
                     ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                     // The expected ratio is 1.0, but the symmetric isolation window should produce poor results
                     if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
-                        Assert.AreEqual(0.25, ratio, 0.05);
+                        Assert.AreEqual(poorRatio, ratio, 0.05);
 
                     // Revert to original document, and get rid of results cache
                     Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
@@ -118,7 +120,7 @@ namespace pwiz.SkylineTestA.Results
                     ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                     // Asymmetric should be a lot closer to 1.0
                     if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
-                        Assert.AreEqual(1.05, ratio, 0.05);
+                        Assert.AreEqual(fixedRatio, ratio, 0.05);
 
                     // Revert to original document, and get rid of results cache
                     Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
@@ -142,7 +144,7 @@ namespace pwiz.SkylineTestA.Results
                     ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                     // Asymmetric should be a lot closer to 1.0
                     if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
-                        Assert.AreEqual(1.05, ratio, 0.05);
+                        Assert.AreEqual(fixedRatio, ratio, 0.05);
 
                     // Revert to original document, and get rid of results cache
                     Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
@@ -166,7 +168,7 @@ namespace pwiz.SkylineTestA.Results
                     ratio = nodeGroup.Results[0][0].Ratio ?? 0;
                     // Asymmetric should be a lot closer to 1.0
                     if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
-                        Assert.AreEqual(1.05, ratio, 0.05);
+                        Assert.AreEqual(fixedRatio, ratio, 0.05);
 
                     // Revert to original document, and get rid of results cache
                     Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));

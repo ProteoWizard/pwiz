@@ -559,7 +559,7 @@ namespace pwiz.Skyline.Controls
             SelectedNode = node;
             _inhibitAfterSelect = false;
 
-            Refresh();
+            Invalidate();
         }
 
         protected override void OnAfterSelect(TreeViewEventArgs e)
@@ -910,7 +910,7 @@ namespace pwiz.Skyline.Controls
         {
             base.OnGotFocus(e);
             _focus = true;
-            Refresh();
+            Invalidate();
         }
 
         protected override void OnLostFocus(EventArgs e)
@@ -918,7 +918,7 @@ namespace pwiz.Skyline.Controls
             _focus = false;
             HideEffects();
             base.OnLostFocus(e);
-            Refresh();
+            Invalidate();
         }
 
         protected override void WndProc(ref Message m)

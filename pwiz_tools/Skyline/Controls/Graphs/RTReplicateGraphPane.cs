@@ -132,12 +132,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var peptidePaths = GetSelectedPeptides().GetUniquePeptidePaths().ToList();
             // if PeptideGroupTreeNode is selected but has only one child isMultiSelect should still be true
-            var isMultiSelect = peptidePaths.Count > 1 ||
+            IsMultiSelect = peptidePaths.Count > 1 ||
                 (peptidePaths.Count == 1 &&
                 GraphSummary.StateProvider.SelectedNodes.FirstOrDefault() is PeptideGroupTreeNode);
 
             GraphData graphData = new RTGraphData(document, 
-                isMultiSelect 
+                IsMultiSelect 
                 ? peptidePaths
                 : new[] { selectedPath }.AsEnumerable(), displayType, retentionTimeValue, replicateGroupOp);
             CanShowRTLegend = graphData.DocNodes.Count != 0;
@@ -170,7 +170,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var pointPairList = pointPairLists[iStep];
                     Color color;
                     var nodeGroup = docNode as TransitionGroupDocNode;
-                    if (isMultiSelect)
+                    if (IsMultiSelect)
                     {
                         var peptides = peptidePaths.Select(path => document.FindNode(path))
                             .Cast<PeptideDocNode>().ToArray();
@@ -213,7 +213,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         label = string.Format(Resources.RTReplicateGraphPane_UpdateGraph_Step__0__, step);
                     
                     BarItem curveItem = null;
-                    if(isMultiSelect)
+                    if(IsMultiSelect)
                     {
                         var hasNaN = false;
                         foreach(PointPair pp in pointPairList)
@@ -275,7 +275,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 YAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = true;
             }
             _parentNode = parentNode;
-            Legend.IsVisible = !isMultiSelect && Settings.Default.ShowRetentionTimesLegend;
+            Legend.IsVisible = !IsMultiSelect && Settings.Default.ShowRetentionTimesLegend;
             GraphSummary.GraphControl.Invalidate();
             AxisChange();
         }
