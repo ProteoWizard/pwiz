@@ -245,6 +245,8 @@ class PWIZ_API_DECL Digestion
         boost::shared_ptr<Impl> impl_;
     };
 
+    typedef const_iterator iterator;
+
     const_iterator begin() const;
     const_iterator end() const;
 

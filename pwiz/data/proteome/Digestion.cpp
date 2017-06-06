@@ -652,7 +652,8 @@ class Digestion::const_iterator::Impl
         :   digestionImpl_(*digestion.impl_),
             config_(digestionImpl_.config_),
             sequence_(digestionImpl_.peptide_.sequence()),
-            sites_(digestionImpl_.sites_)
+            sites_(digestionImpl_.sites_),
+            sitesSet_(digestionImpl_.sitesSet_)
     {
         digestionImpl_.digest();
         try
@@ -688,32 +689,28 @@ class Digestion::const_iterator::Impl
         // try each possible pair of digestion sites;
         // initialize begin_ and end_ to the first pair that meet
         // config's filtering criteria
-        for (size_t i=0; i < sites_.size(); ++i)
+        bool validSite = false;
+        for (begin_ = sites_.begin(); begin_ != sites_.end(); ++begin_)
         {
-            int testBegin = sites_[i];
-
-            for (size_t j=1; j < sites_.size(); ++j)
+            for (end_ = begin_, ++end_; end_ != sites_.end(); ++end_)
             {
-                int testEnd = sites_[j];
-
-                int curMissedCleavages = digestionImpl_.cleavageAgent_ == MS_unspecific_cleavage ? 0 : int(end_ - begin_)-1;
+                int curMissedCleavages = int(end_ - begin_) - 1;
                 if (curMissedCleavages > 0 && config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
                     --curMissedCleavages;
                 if (curMissedCleavages > config_.maximumMissedCleavages)
                     break;
 
-                int curLength = testEnd - testBegin;
+                int curLength = *end_ - *begin_;
                 if (curLength > config_.maximumLength)
                     break;
                 if (curLength < config_.minimumLength)
                     continue;
 
-                begin_ = sites_.begin()+i;
-                end_ = sites_.begin()+j;
+                validSite = true;
                 break;
             }
 
-            if (begin_ != sites_.end())
+            if (validSite)
                 break;
         }
     }
@@ -771,9 +768,7 @@ class Digestion::const_iterator::Impl
             string prefix = "";
             string suffix = "";
 
-            int missedCleavages = int(end_ - begin_)-1;
-            if (missedCleavages > 0 && config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
-                --missedCleavages;
+            int missedCleavages = 0;
 
             if (!peptide_.get())
             {
@@ -784,7 +779,13 @@ class Digestion::const_iterator::Impl
                         if(*begin_ >= 0 && *begin_ < (int) sequence_.length())
                             prefix = sequence_.substr(*begin_, 1); //this could be changed to be something other than 1 by a config option later
                         if(*end_ != (int) sequence_.length())
-                            suffix = sequence_.substr(*end_+1, 1);
+                            suffix = sequence_.substr(*end_ + 1, 1);
+
+                        missedCleavages = int(end_ - begin_) - 1;
+                        if (missedCleavages > 0 && config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
+                            --missedCleavages;
+                        if (missedCleavages > config_.maximumMissedCleavages)
+                            throw logic_error("digestion result exceeds maximumMissedClevages (something went wrong in a next*() function)");
 
                         peptide_.reset(
                             new DigestedPeptide(sequence_.begin()+(*begin_+1),
@@ -804,7 +805,16 @@ class Digestion::const_iterator::Impl
                         if(beginNonSpecific_ >= 0 && beginNonSpecific_ < (int) sequence_.length())
                             prefix = sequence_.substr(beginNonSpecific_, 1); //this could be changed to be something other than 1 by a config option later
                         if(endNonSpecific_ != (int) sequence_.length())
-                            suffix = sequence_.substr(endNonSpecific_+1, 1);
+                            suffix = sequence_.substr(endNonSpecific_ + 1, 1);
+
+                        if (digestionImpl_.cleavageAgent_ != MS_unspecific_cleavage && digestionImpl_.cleavageAgent_ != MS_no_cleavage)
+                        {
+                            for (int i = beginNonSpecific_+1; i < endNonSpecific_; ++i)
+                                if (sitesSet_.count(i) > 0)
+                                    ++missedCleavages;
+                            if (missedCleavages > 0 && config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
+                                --missedCleavages;
+                        }
 
                         peptide_.reset(
                             new DigestedPeptide(sequence_.begin()+(beginNonSpecific_+1),
@@ -1017,6 +1027,7 @@ class Digestion::const_iterator::Impl
     const Config& config_;
     const string& sequence_;
     const vector<int>& sites_;
+    const set<int>& sitesSet_;
 
     // used for all digests
     // fully specific: iterator to the current peptide's N terminal offset-1

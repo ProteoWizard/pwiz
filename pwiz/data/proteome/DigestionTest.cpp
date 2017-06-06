@@ -545,6 +545,45 @@ void testBSADigestion()
     unit_assert_operator_equal("VISLK", unspecificCleavagePeptides[2].sequence());
 }
 
+void testDigestionCriteria()
+{
+    // >P02769|ALBU_BOVIN Serum albumin - Bos taurus (Bovine).
+    Peptide bsa("MKWVTFISLLLLFSSAYSRGVFRRDTHKSEIAHRFKDLGEEHFKGLVLIAFSQYLQQCPF"
+                "DEHVKLVNELTEFAKTCVADESHAGCEKSLHTLFGDELCKVASLRETYGDMADCCEKQEP"
+                "ERNECFLSHKDDSPDLPKLKPDPNTLCDEFKADEKKFWGKYLYEIARRHPYFYAPELLYY"
+                "ANKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVA"
+                "RLSQKFPKAEFVEVTKLVTDLTKVHKECCHGDLLECADDRADLAKYICDNQDTISSKLKE"
+                "CCDKPLLEKSHCIAEVEKDAIPENLPPLTADFAEDKDVCKNYQEAKDAFLGSFLYEYSRR"
+                "HPEYAVSVLLRLAKEYEATLEECCAKDDPHACYSTVFDKLKHLVDEPQNLIKQNCDQFEK"
+                "LGEYGFQNALIVRYTRKVPQVSTPTLVEVSRSLGKVGTRCCTKPESERMPCTEDYLSLIL"
+                "NRLCVLHEKTPVSEKVTKCCTESLVNRRPCFSALTPDETYVPKAFDEKLFTFHADICTLP"
+                "DTEKQIKKQTALVELLKHKPKATEEQLKTVMENFVAFVDKCCAADDKEACFAVEGPKLVV"
+                "STQTALA");
+
+    for (const DigestedPeptide& peptide : Digestion(bsa, MS_Trypsin_P, Digestion::Config(3, 5, 40)))
+    {
+        unit_assert(peptide.missedCleavages() <= 3);
+        unit_assert(peptide.sequence().length() >= 5);
+        unit_assert(peptide.sequence().length() <= 40);
+    }
+
+    for (const DigestedPeptide& peptide : Digestion(bsa, MS_Trypsin_P, Digestion::Config(0, 3, 10)))
+    {
+        unit_assert(peptide.missedCleavages() <= 0);
+        unit_assert(peptide.sequence().length() >= 3);
+        unit_assert(peptide.sequence().length() <= 10);
+    }
+
+    for (const DigestedPeptide& peptide : Digestion(bsa, MS_Trypsin_P, Digestion::Config(10, 25, 100)))
+    {
+        unit_assert(peptide.missedCleavages() <= 10);
+        unit_assert(peptide.sequence().length() >= 25);
+        unit_assert(peptide.sequence().length() <= 100);
+    }
+
+    unit_assert_operator_equal(0, boost::distance(Digestion(bsa, MS_Trypsin_P, Digestion::Config(10, 1000, 2000))));
+}
+
 
 void testFind()
 {
@@ -642,6 +681,7 @@ void testThreadSafetyWorker(boost::barrier* testBarrier, ThreadStatus& status)
     {
         testCleavageAgents();
         testBSADigestion();
+        testDigestionCriteria();
         testFind();
     }
     catch (exception& e)
