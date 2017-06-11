@@ -1631,7 +1631,13 @@
     <EmbeddedResource Include="Alerts\SpectrumLibraryInfoDlg.zh-CHS.resx">
       <DependentUpon>SpectrumLibraryInfoDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\UpgradeDlg.ja.resx">
+      <DependentUpon>UpgradeDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\UpgradeDlg.resx">
+      <DependentUpon>UpgradeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\UpgradeDlg.zh-CHS.resx">
       <DependentUpon>UpgradeDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\UpgradeLicenseDlg.ja.resx">
@@ -1755,7 +1761,13 @@
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeGrid.zh-CHS.resx">
       <DependentUpon>FoldChangeGrid.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.ja.resx">
+      <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.resx">
+      <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.zh-CHS.resx">
       <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
@@ -2515,7 +2527,13 @@
       <DependentUpon>EditOptimizationLibraryDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\FilterMidasLibraryDlg.ja.resx">
+      <DependentUpon>FilterMidasLibraryDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\FilterMidasLibraryDlg.resx">
+      <DependentUpon>FilterMidasLibraryDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\FilterMidasLibraryDlg.zh-CHS.resx">
       <DependentUpon>FilterMidasLibraryDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\FormulaBox.ja.resx">
@@ -2958,7 +2976,13 @@
     <EmbeddedResource Include="ToolsUI\EditChorusAccountDlg.zh-CHS.resx">
       <DependentUpon>EditChorusAccountDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\EditCustomThemeDlg.ja.resx">
+      <DependentUpon>EditCustomThemeDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditCustomThemeDlg.resx">
+      <DependentUpon>EditCustomThemeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\EditCustomThemeDlg.zh-CHS.resx">
       <DependentUpon>EditCustomThemeDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.ja.resx">

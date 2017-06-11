@@ -152,7 +152,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var peptidePaths = GetSelectedPeptides().GetUniquePeptidePaths().ToList();
             var pepCount = peptidePaths.Count;
-            var isMultiSelect = pepCount > 1 ||
+            IsMultiSelect = pepCount > 1 ||
                                 (pepCount == 1 &&
                                  GraphSummary.StateProvider.SelectedNodes.FirstOrDefault() is PeptideGroupTreeNode);
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
@@ -292,7 +292,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 bool isShowingMs = displayTrans.Any(nodeTran => nodeTran.IsMs1);
                 bool isShowingMsMs = displayTrans.Any(nodeTran => !nodeTran.IsMs1);
                 bool isFullScanMs = document.Settings.TransitionSettings.FullScan.IsEnabledMs && isShowingMs;
-                if (!isMultiSelect)
+                if (!IsMultiSelect)
                 {
                     if (isFullScanMs)
                     {
@@ -308,7 +308,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             var expectedValue = IsExpectedVisible ? ExpectedVisible : AreaExpectedValue.none;
             var replicateGroupOp = GraphValues.ReplicateGroupOp.FromCurrentSettings(document.Settings);
-            var graphData = isMultiSelect  ? 
+            var graphData = IsMultiSelect  ? 
                 new AreaGraphData(document,
                     peptidePaths,
                     displayType,
@@ -393,7 +393,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var pointPairList = pointPairLists[iStep];
                     Color color;
                     var nodeGroup = docNode as TransitionGroupDocNode;
-                    if (isMultiSelect)
+                    if (IsMultiSelect)
                     {
                         var peptideDocNode = docNode as PeptideDocNode;
                         if (peptideDocNode == null)
@@ -441,13 +441,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     // Only use a MeanErrorBarItem if bars are not going to be stacked.
                     // TODO(nicksh): AreaGraphData.NormalizeTo does not know about MeanErrorBarItem 
-                    if (!isMultiSelect && BarSettings.Type != BarType.Stack && BarSettings.Type != BarType.PercentStack && normalizeData == AreaNormalizeToData.none)
+                    if (!IsMultiSelect && BarSettings.Type != BarType.Stack && BarSettings.Type != BarType.PercentStack && normalizeData == AreaNormalizeToData.none)
                     {
                         curveItem = new MeanErrorBarItem(label, pointPairList, color, Color.Black);
                     }
                     else 
                     {
-                        if (isMultiSelect)
+                        if (IsMultiSelect)
                         {
                              curveItem = new LineItem(label, pointPairList, color, SymbolType.None) 
                              {
@@ -476,10 +476,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     // Add area for this transition to each area entry
                     AddAreasToSums(pointPairList, sumAreas);
-                    if (isMultiSelect)
+                    if (IsMultiSelect)
                     {
                         var lineItem = (LineItem)curveItem;
-                        lineItem.Tag = new IdentityPath(identityPath, docNode.Id);
+                        lineItem.Tag = identityPath;
                         CurveList.Add(lineItem);
                     }
                     else
@@ -516,7 +516,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         yValue = (areaView == AreaNormalizeToView.area_maximum_view ? Math.Min(maxArea, .999) : maxArea);
                         break;
                 }
-                if (isMultiSelect)
+                if (IsMultiSelect)
                 {
                     GraphObjList.Add(new LineObj(Color.Black, selectedReplicateIndex + 1, 0, selectedReplicateIndex + 1, maxArea)
                     {
@@ -537,11 +537,11 @@ namespace pwiz.Skyline.Controls.Graphs
             bool resetAxes = (_parentNode == null || !ReferenceEquals(_parentNode.Id, parentNode.Id));
             _parentNode = parentNode;
 
-            UpdateAxes(resetAxes, aggregateOp, normalizeData, areaView, standardType, isMultiSelect);
+            UpdateAxes(resetAxes, aggregateOp, normalizeData, areaView, standardType);
         }
 
         private void UpdateAxes(bool resetAxes, GraphValues.AggregateOp aggregateOp, AreaNormalizeToData normalizeData,
-            AreaNormalizeToView areaView, IsotopeLabelType standardType, bool isMultiSelect)
+            AreaNormalizeToView areaView, IsotopeLabelType standardType)
         {
             if (resetAxes)
             {
@@ -633,7 +633,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!YAxis.Scale.MaxAuto && YAxis.Scale.Max == 100)
                     YAxis.Scale.MaxAuto = true;
             }
-            Legend.IsVisible = !isMultiSelect && Settings.Default.ShowPeakAreaLegend;
+            Legend.IsVisible = !IsMultiSelect && Settings.Default.ShowPeakAreaLegend;
             AxisChange();
 
             // Reformat Y-Axis for labels and whiskers

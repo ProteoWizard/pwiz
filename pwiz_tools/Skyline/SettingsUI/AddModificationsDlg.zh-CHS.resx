@@ -187,7 +187,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>此库看起来包含下列修饰。请选择您希望用于该库的修饰：</value>
+    <value>此库似乎包含下列修饰。请选择您希望用于该库的修饰：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

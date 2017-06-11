@@ -63,6 +63,8 @@ namespace pwiz.Skyline.Controls.Graphs
         protected DocNode _parentNode;
         protected IList<ReplicateGroup> _replicateGroups;
 
+        protected bool IsMultiSelect { get; set; }
+
         protected SummaryReplicateGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
@@ -116,7 +118,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Updated 10/3/2016 now can drill down to peptide level because multi peptide RT graph is supported.
             var resultIndicesArray = IndexOfReplicate(selectedIndex).ToArray();
             int iSelection = Array.IndexOf(resultIndicesArray, GraphSummary.ResultsIndex);
-            if (iSelection == resultIndicesArray.Length - 1 && !GraphChromatogram.IsSingleTransitionDisplay)
+            if (iSelection == resultIndicesArray.Length - 1 && (IsMultiSelect || !GraphChromatogram.IsSingleTransitionDisplay))
             {
                     GraphSummary.StateProvider.SelectPath(identityPath);
                     UpdateGraph(true);

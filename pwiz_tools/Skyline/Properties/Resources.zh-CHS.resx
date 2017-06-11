@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -1649,6 +1649,9 @@
   <data name="Print" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\print.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="SpectrumLibraryInfoDlg_SetDetailsText_Unique_peptides" xml:space="preserve">
+    <value>序列特异的肽段：{0}</value>
+  </data>
   <data name="ViewLibraryDlg_AddAllPeptides_Matching_Peptides" xml:space="preserve">
     <value>匹配肽</value>
   </data>
@@ -3282,8 +3285,8 @@
   <data name="AreaReplicateGraphPane_UpdateGraph_Peak_Area_Percentage" xml:space="preserve">
     <value>峰面积百分比</value>
   </data>
-  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the_iRT_database" xml:space="preserve">
-    <value>无新肽将添加至 iRT 数据库。</value>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the__0__" xml:space="preserve">
+    <value>不会向 {0} 添加新肽段。</value>
   </data>
   <data name="CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_Adding_ion_mobility_data_from__0_" xml:space="preserve">
     <value>从{0}添加离子迁移数据</value>
@@ -3341,6 +3344,9 @@
   </data>
   <data name="PythonInstaller_InstallPackages_Package_installation_failed__Error_log_output_in_immediate_window_" xml:space="preserve">
     <value>软件包安装失败。在即时窗口中记录输出失败。</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison" xml:space="preserve">
+    <value>重复测定比较</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_entry" xml:space="preserve">
     <value>条目</value>
@@ -4416,9 +4422,6 @@
   <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_or_Chromatogram_library" xml:space="preserve">
     <value>文件{0}不是 BiblioSpec 或 Chromatogram 库。</value>
   </data>
-  <data name="BackgroundProteomeManager_LoadBackground_Digesting__0__proteome" xml:space="preserve">
-    <value>消化 {0} 个蛋白质组</value>
-  </data>
   <data name="SkylineWindow_Paste_Paste_proteins" xml:space="preserve">
     <value>粘贴蛋白质</value>
   </data>
@@ -4962,8 +4965,8 @@
   <data name="SkylineWindow_CheckResults_The_data_file___0___is_missing__and_the_following_original_instrument_output_could_not_be_found_" xml:space="preserve">
     <value>数据文件“{0}”丢失，并且下列初始仪器输出无法找到：</value>
   </data>
-  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the_iRT_database" xml:space="preserve">
-    <value>1 个新肽将添加至 iRT 数据库。</value>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the__0__" xml:space="preserve">
+    <value>将向 {0} 添加 1 个新肽段。</value>
   </data>
   <data name="FastaImporter_ToFasta_Too_few_columns_found" xml:space="preserve">
     <value>发现的列过少</value>
@@ -5848,7 +5851,7 @@
     <value>请选择一个文件夹</value>
   </data>
   <data name="ValueMissingException_ValueMissingException_" xml:space="preserve">
-    <value>参数 {0}需要数值并且必须在“ --名称=值”的格式中指定。</value>
+    <value>参数 {0} 需要数值并且必须在“ --名称=值”的格式中指定</value>
   </data>
   <data name="AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_file_does_not_appear_to_contain_multiplexed_acquisition_data_" xml:space="preserve">
     <value>隔离方案的设定旨在用于多路传输，但文件看起来不包含多路复用的采集数据。</value>
@@ -5869,7 +5872,7 @@
     <value>起始边距</value>
   </data>
   <data name="ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified" xml:space="preserve">
-    <value>参数 {0}不应该具有指定的值</value>
+    <value>参数 {0} 不应该具有指定的值</value>
   </data>
   <data name="AllChromatogramsGraph_UpdateStatus_Joining_chromatograms___" xml:space="preserve">
     <value>加入色谱图…</value>
@@ -8108,7 +8111,7 @@
   <data name="BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory" xml:space="preserve">
     <value>添加输入目录</value>
   </data>
-    <data name="TransitionBinner_BinData_" xml:space="preserve">
+  <data name="TransitionBinner_BinData_" xml:space="preserve">
     <value>导入的谱图看起来缺少质荷比或强度值（{0} != {1}）</value>
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Publishing_document_to_Panorama" xml:space="preserve">
@@ -9060,15 +9063,6 @@
   <data name="CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___" xml:space="preserve">
     <value>错误： {1} 的值“{0}”无效，请使用“{2}”或“{3}”。</value>
   </data>
-  <data name="MidasLibSpec_FILTER_MIDAS_Library_Files" xml:space="preserve">
-    <value>MIDAS 库文件</value>
-  </data>
-  <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Create_MIDAS_Spectral_Library" xml:space="preserve">
-    <value>创建 MIDAS 谱图库</value>
-  </data>
-  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_" xml:space="preserve">
-    <value>本文档有 MIDAS 库。您想要从它建立谱图库吗？</value>
-  </data>
   <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library" xml:space="preserve">
     <value>正在完成建立库。</value>
   </data>
@@ -9126,7 +9120,7 @@
     <value>公式帮助</value>
   </data>
   <data name="FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__" xml:space="preserve">
-    <value>公式以标准化学表示法写入，例如“C2H6O”。 重同位素以素数表示（例如，C' 表示 C13），双素数表示丰富度较低的稳定同位素（例如，O" 表示 O17，O' 表示 O18）。</value>
+    <value>以标准化学表示法写入公式，例如“C2H6O”。 重同位素以素数表示（例如，C' 表示 C13），双素数表示丰富度较低的稳定同位素（例如，O" 表示 O17，O' 表示 O18）。</value>
   </data>
   <data name="PasteDlg_btnTransitionListHelp_Click_Transition_List_Help" xml:space="preserve">
     <value>离子对列表帮助</value>
@@ -9141,13 +9135,19 @@
   <data name="PasteDlg_btnTransitionListHelp_Click_2_" xml:space="preserve">
     <value>在小分子离子公式上注释：
 
-如果您的离子对列表格式将公式和加合物汇总在单一列（例如“C8H10N4O2[M+Na]”）中，那么使用“离子公式”列，而丢弃“加合物”列。 如果您的离子对列表将中性公式和加合物放置在不同的列中，那么对中性公式使用“离子公式”，而对加合物使用“加合物”列。</value>
+如果您的离子对列表格式将公式和加合物汇总在单一列（例如“C8H10N4O2[M+Na]”）中，那么使用“离子公式”列，而丢弃“加合物”列。 如果您的离子对列表将中和公式和加合物放置在不同的列中，那么对中和公式使用“离子公式”，而对加合物使用“加合物”列。</value>
   </data>
   <data name="DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_" xml:space="preserve">
     <value>峰宽度不得为负数。</value>
   </data>
   <data name="FastaImporter_Import_Error_at_or_around_line__0____1_" xml:space="preserve">
     <value>在 {0}: {1} 行上或其附近发生错误</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
+    <value>尝试向库添加 iRT 时出错。</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Adding_iRTs_to_Library" xml:space="preserve">
+    <value>向库添加 iRT</value>
   </data>
   <data name="Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator" xml:space="preserve">
     <value>只能通过修改 iRT 计算器更改 iRT 标准</value>
@@ -9193,5 +9193,329 @@
   </data>
     <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_" xml:space="preserve">
     <value>将全扫描子离子质量精确度更改为 {0} ppm。</value>
+  </data>
+  <data name="SpectrumLibraryInfoDlg_SetDetailsText_Unique_Precursors___0_" xml:space="preserve">
+    <value>唯一母离子：{0}</value>
+  </data>
+    <data name="UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__" xml:space="preserve">
+    <value>升级到 {0}（正在下载 {1} 个，共 {2} 个）</value>
+  </data>
+    <data name="UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_" xml:space="preserve">
+    <value>尝试升级失败。</value>
+  </data>
+    <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
+    <value>正在升级 {0}</value>
+  </data>
+    <data name="UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_" xml:space="preserve">
+    <value>尝试检查升级失败。</value>
+  </data>
+    <data name="UpgradeDlg_UpgradeDlg_No_update_was_found_" xml:space="preserve">
+    <value>未发现更新。</value>
+  </data>
+    <data name="UpgradeDlg_cbAtStartup_CheckedChanged_Maybe__Later" xml:space="preserve">
+    <value>或许稍后进行(&amp;L)</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library" xml:space="preserve">
+    <value>导出谱图库</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Failed_exporting_spectral_library_to__0__" xml:space="preserve">
+    <value>向 {0} 导出谱图库失败。</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____" xml:space="preserve">
+    <value>正在导出谱图库 {0}...</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_to_export_a_spectral_library_" xml:space="preserve">
+    <value>文档必须包含结果才能导出谱图库。</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_" xml:space="preserve">
+    <value>文档必须至少包含一个肽段母离子才能导出谱图库。</value>
+  </data>
+  <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_" xml:space="preserve">
+    <value>检查您的设置，确保正在使用库和有足够限制性的离子对选择。</value>
+  </data>
+    <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_" xml:space="preserve">
+    <value>检查您的设置，确保正在使用库。</value>
+  </data>
+  <data name="FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__transitions_in__1_n0__peptides_at_line__2_n0__" xml:space="preserve">
+    <value>此次导入会引起文档在第 {2:n0} 行的 {1:n0} 个肽段包含超过 {0:n0} 个离子对。</value>
+  </data>
+  <data name="FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__peptides_at_line__1_n0__" xml:space="preserve">
+    <value>此次导入会引起文档在第 {1:n0} 行包含超过 {0:n0} 个离子对。</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateListPeptide_Updating_list_of_peptides" xml:space="preserve">
+    <value>更新肽段列表</value>
+  </data>
+  <data name="DataGridViewPasteHandler_Paste_Pasting_row__0_" xml:space="preserve">
+    <value>粘贴行 {0}</value>
+  </data>
+  <data name="SkylineWindow_ReimportChromatograms_Reimporting_chromatograms" xml:space="preserve">
+    <value>重新导入色谱图</value>
+  </data>
+  <data name="DataGridViewPasteHandler_ClearCells_Cleared__0___1__rows" xml:space="preserve">
+    <value>已清除 {0} 行，共 {1} 行</value>
+  </data>
+  <data name="DataboundGridControl_DoFillDown_Filling__0___1__rows" xml:space="preserve">
+    <value>正在填写 {0} 行，共 {1} 行</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ImportRangesFromFiles_Reading_isolation_scheme___" xml:space="preserve">
+    <value>正在读取隔离方案...</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ImportRangesFromFiles_Failed_reading_isolation_scheme_" xml:space="preserve">
+    <value>读取隔离方案失败。</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ReadIsolationRanges_Missing_isolation_range_for_the_isolation_target__0__m_z_in_the_file__1_" xml:space="preserve">
+    <value>缺失文件 {1} 内的隔离目标 {0} 质荷比的隔离范围</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_" xml:space="preserve">
+    <value>未在 {0} 内找到重复的隔离方案</value>
+  </data>
+  <data name="SkylineVersion_GetCurrentVersionName_Current___0__" xml:space="preserve">
+    <value>当前 ({0})</value>
+  </data>
+  <data name="SkylineVersion_GetCurrentVersionName_Developer_Build" xml:space="preserve">
+    <value>开发者构建</value>
+  </data>
+  <data name="SkylineVersion_V3_6_Skyline_3_6" xml:space="preserve">
+    <value>Skyline 3.6</value>
+  </data>
+  <data name="GraphData_CorrelationLabel_Measured_Time___0__" xml:space="preserve">
+    <value>测量时间 ({0})</value>
+  </data>
+  <data name="GraphData_ResidualsLabel_Time_from_Regression___0__" xml:space="preserve">
+    <value>回归的时间 ({0})</value>
+  </data>
+  <data name="RegressionGraphPane_RegressionGraphPane_Missing" xml:space="preserve">
+    <value>缺失</value>
+  </data>
+  <data name="RegressionGraphPane_RegressionGraphPane_Outliers" xml:space="preserve">
+    <value>异常值</value>
+  </data>
+  <data name="AddIrtsResultsDlg_dataGridView_CellContentClick_Measured" xml:space="preserve">
+    <value>已测量</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_dataGridView_CellContentClick_iRT" xml:space="preserve">
+    <value>iRT</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success" xml:space="preserve">
+    <value>成功</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed" xml:space="preserve">
+    <value>失败</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined" xml:space="preserve">
+    <value>回归调整</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted" xml:space="preserve">
+    <value>已尝试回归</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library" xml:space="preserve">
+    <value>向库添加 iRT</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
+    <value>尝试向库添加 iRT 时出错。</value>
+  </data>
+  <data name="RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_" xml:space="preserve">
+    <value>{0}（至少 {1} 点）</value>
+  </data>
+  <data name="IrtDb_AddPeptides_Adding_peptides" xml:space="preserve">
+    <value>添加肽段</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_AddFastaFile_The_added_file_included__0__repeated_protein_sequences__Their_names_were_added_as_aliases_to_ensure_the_protein_list_contains_only_one_copy_of_each_sequence_" xml:space="preserve">
+    <value>添加的文件包含 {0} 个重复的蛋白质序列。它们的名称作为别名添加，以确保蛋白质列表只包含每个序列的一个副本。</value>
+  </data>
+  <data name="ViewLibraryDlg_EnsureDigested_The_background_proteome___0___is_in_an_older_format___In_order_to_be_able_to_efficiently_find_peptide_sequences__the_background_proteome_should_be_upgraded_to_the_latest_version___Do_you_want_to_upgrade_the_background_proteome_now_" xml:space="preserve">
+    <value>背景蛋白质组“{0}”使用旧格式。 为了能高效找到肽序列，应升级背景蛋白质组到最新版本。 是否想现在升级背景蛋白质组？</value>
+  </data>
+  <data name="ViewLibraryDlg_EnsureDigested_Copying_database" xml:space="preserve">
+    <value>复制数据库</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_Spectral_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_" xml:space="preserve">
+    <value>谱图库不可被修饰。您必须将此 iRT 计算器存储为新文件。</value>
+  </data>
+  <data name="ZipFileShare_AddFile_Failed_attempting_to_add_the_file__0_" xml:space="preserve">
+    <value>尝试添加文件 {0} 失败</value>
+  </data>
+  <data name="ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_" xml:space="preserve">
+    <value>在路径 {1} 中已经使用了名称“{0}”</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_" xml:space="preserve">
+    <value>碰撞横截面（平方埃）</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_collisional_cross_section_value__0_" xml:space="preserve">
+    <value>无效的碰撞横截面值 {0}</value>
+  </data>
+  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_collisional_cross_section_" xml:space="preserve">
+    <value>值 {0} 不是有效的碰撞横截面。</value>
+  </data>
+  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_high_energy_offset_" xml:space="preserve">
+    <value>值 {0} 不是有效的高能偏置。</value>
+  </data>
+  <data name="IsolationSchemeReader_ReadIsolationRangesFromFiles_Reading_isolation_scheme_from__0_" xml:space="preserve">
+    <value>正在读取 {0} 的隔离方案</value>
+  </data>
+  <data name="GraphFullScan_CreateGraph_Scan_Number_" xml:space="preserve">
+    <value>扫描编号：</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_OkDialog_You_must_enter_a_name_for_the_filtered_library_" xml:space="preserve">
+    <value>您必须为已过滤的库输入名称。</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_OkDialog_A_library_with_this_name_already_exists_" xml:space="preserve">
+    <value>已存在此名称的库。</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Multiple_MIDAS_libraries_in_document__Select_only_one_before_filtering_" xml:space="preserve">
+    <value>文档中有多个 MIDAS 库。在过滤前仅选择一个。</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_OkDialog_You_must_enter_a_path_for_the_filtered_library_" xml:space="preserve">
+    <value>您必须为已过滤的库输入路径。</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_btnBrowse_Click_Export_Filtered_MIDAS_Library" xml:space="preserve">
+    <value>导出已过滤的 MIDAS 库</value>
+  </data>
+  <data name="SrmDocumentSharing_MinimizeToFile_Writing_chromatograms" xml:space="preserve">
+    <value>正在写入色谱图</value>
+  </data>
+  <data name="AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_" xml:space="preserve">
+    <value>消息已被截短。按 Ctrl+C 将完整消息复制到剪贴板。</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library" xml:space="preserve">
+    <value>正在加载 MIDAS 库</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_" xml:space="preserve">
+    <value>加载中{0}</value>
+  </data>
+  <data name="EditIrtCalcDlg_RecalibrateStandards_Could_not_get_a_minimum_or_maximum_standard_peptide_" xml:space="preserve">
+    <value>无法获得最少或最多的标准肽段。</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_Recalibrate_iRT_Standard_Peptides" xml:space="preserve">
+    <value>重新校准 iRT 标准肽段</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_Recalibrating_iRT_standard_peptides_and_reprocessing_iRT_values" xml:space="preserve">
+    <value>重新校准 iRT 标准肽段并重新处理 iRT 值</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_An_error_occurred_while_recalibrating_" xml:space="preserve">
+    <value>重新校准时出错。</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_" xml:space="preserve">
+    <value>这样可以在稳定的色谱条件下改善保留时间校准。</value>
+  </data>
+  <data name="ProcessedIrtAverages_RecalibrateStandards_A_standard_peptide_was_missing_when_trying_to_recalibrate_" xml:space="preserve">
+    <value>尝试重新校准时缺失一个标准肽段。</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Processing_Retention_Times" xml:space="preserve">
+    <value>处理保留时间</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_" xml:space="preserve">
+    <value>处理保留时间时出错。</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_" xml:space="preserve">
+    <value>您想要重新校准与添加的肽有关的 iRT 标准值吗？</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal___import_cache_file_can_only_be_specified_once" xml:space="preserve">
+    <value>只能指定一次“--导入-缓存-文件”</value>
+  </data>
+  <data name="CommandArgs_GetFullPath_Failed_attempting_to_get_full_path_for__0_" xml:space="preserve">
+    <value>尝试获取 {0} 的完整路径失败</value>
+  </data>
+  <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1__" xml:space="preserve">
+    <value>正在训练得分模型（重复 {0} 个，共 {1} 个）</value>
+  </data>
+  <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_" xml:space="preserve">
+    <value>正在训练得分模型（重复 {0} 个，共 {1} 个 — {2:#,#} 个峰为 {3:0.#%} FDR）</value>
+  </data>
+  <data name="MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_" xml:space="preserve">
+    <value>得分模型已汇集（重复 {0} 个 — {1:#,#} 个峰为 {2:0.#%} FDR）</value>
+  </data>
+  <data name="CompactFormatOption_ALWAYS_Always" xml:space="preserve">
+    <value>总是</value>
+  </data>
+  <data name="CompactFormatOption_NEVER_Never" xml:space="preserve">
+    <value>从不</value>
+  </data>
+  <data name="CompactFormatOption_ONLY_FOR_LARGE_FILES_Only_for_large_files" xml:space="preserve">
+    <value>仅适合大文件</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for___exp_polarity__It_must_be_one_of_the_following___1_" xml:space="preserve">
+    <value>错误：“{0}”不是“--exp-polarity”的有效值。必须是以下一种：{1}</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor" xml:space="preserve">
+    <value>添加保留时间预测器</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_iRT_database" xml:space="preserve">
+    <value>iRT 数据库</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_spectral_library" xml:space="preserve">
+    <value>谱图库</value>
+  </data>
+  <data name="KdeAlignerFactory_ToString_KDE_Aligner" xml:space="preserve">
+    <value>核密度估计校准器</value>
+  </data>
+  <data name="LowessAlignerFactory_ToString_LOWESS_Aligner" xml:space="preserve">
+    <value>局部加权回归散点平滑法校准器</value>
+  </data>
+  <data name="PiecewiseLinearRegressionFunction_GetRegressionDescription_piecwise_linear_functions" xml:space="preserve">
+    <value>分段线性函数</value>
+  </data>
+  <data name="DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings" xml:space="preserve">
+    <value>更新文档设置以匹配编辑。</value>
+  </data>
+  <data name="PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___" xml:space="preserve">
+    <value>由于一个色谱图的结束时间为“{1}”，另一个色谱图的结束时间为“{2}”，所以无法处理分子“{0}”的色谱图。</value>
+  </data>
+  <data name="PeptideTipProvider_RenderTip_Precursor_m_z" xml:space="preserve">
+    <value>母离子质荷比</value>
+  </data>
+  <data name="ColorSchemeList_GetDefaults_Eggplant_lemonade" xml:space="preserve">
+    <value>茄色配柠檬色</value>
+  </data>
+  <data name="ColorSchemeList_GetDefaults_Distinct" xml:space="preserve">
+    <value>明显不同</value>
+  </data>
+  <data name="ColorSchemeList_GetDefaults_Colorblind_friendly" xml:space="preserve">
+    <value>高对比度</value>
+  </data>
+  <data name="EditCustomThemeDlg_buttonSave_Click_The_color_scheme___0___already_exists_" xml:space="preserve">
+    <value>配色方案“{0}”已经存在。</value>
+  </data>
+  <data name="EditCustomThemeDlg_dataGridViewColors_DataError_Colors_must_be_entered_in_HEX_or_RGB_format_" xml:space="preserve">
+    <value>必须以十六进制或红绿蓝格式输入颜色。</value>
+  </data>
+  <data name="EditCustomThemeDlg_DoPaste_Unable_to_parse_the_color___0____Use_HEX_or_RGB_format_" xml:space="preserve">
+    <value>无法解析颜色“{0}”。使用十六进制或红绿蓝格式。</value>
+  </data>
+  <data name="ColorSchemeList_DEFAULT_Skyline_classic" xml:space="preserve">
+    <value>Skyline 经典</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_following_iRT_standard_peptides_are_missing_from_the_document_" xml:space="preserve">
+    <value>文档缺失以下 iRT 标准肽段：</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_With__0__standard_peptides___1__are_required_with_a_correlation_of__2__" xml:space="preserve">
+    <value>在有 {0} 个标准肽段时，需要有与 {2} 关联的 {1}。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_only_contains__0__of_these_iRT_standard_peptides_" xml:space="preserve">
+    <value>文档仅包括这些 iRT 标准肽段中的 {0} 个。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Do_you_want_to_continue_" xml:space="preserve">
+    <value>您是否想要继续？</value>
+  </data>
+  <data name="EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptides___1__required_" xml:space="preserve">
+    <value>{0} 个标准肽段（需要 {1} 个）</value>
+  </data>
+  <data name="EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptide___1__required_" xml:space="preserve">
+    <value>{0} 个标准肽段（需要 {1} 个）</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_contains__0__of_these_iRT_standard_peptides_" xml:space="preserve">
+    <value>文档包括这些 iRT 标准肽段中的 {0} 个。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_does_not_contain_any_of_these_iRT_standard_peptides_" xml:space="preserve">
+    <value>文档不包括任何这些 iRT 标准肽段。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_A_maximum_of__0__may_be_missing_and_or_outliers_for_a_successful_import_" xml:space="preserve">
+    <value>可能缺失最多 {0} 个，或者是成功导入的异常值。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_None_may_be_missing_or_outliers_for_a_successful_import_" xml:space="preserve">
+    <value>可能无缺失，或者无成功导入的异常值。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Add_missing_iRT_standard_peptides_to_your_document_or_change_the_retention_time_predictor_" xml:space="preserve">
+    <value>将缺失的 iRT 标准肽段添加到您的文档，或者更改保留时间预测器。</value>
   </data>
 </root>

@@ -826,20 +826,36 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (ReferenceEquals(chromDataSet.NodeGroup, DataSets[i].NodeGroup))
                 {
-                    var nodeGroupPrecursorMz = chromDataSet.NodeGroup.PrecursorMz;
-                    var mzErrNewDataSet = Math.Abs(chromDataSet.PrecursorMz - nodeGroupPrecursorMz);
-                    var mzErrDataSetI = Math.Abs(DataSets[i].PrecursorMz - nodeGroupPrecursorMz);
-                    if (mzErrNewDataSet < mzErrDataSetI)
+                    // CONSIDER: The fact that this code just drops chromatograms from the SKYD file
+                    //           has already caused one issue, because it was only testing precursor m/z
+                    //           The test has been improved to also consider matching transition count
+                    //           but this may still need to be improved not to entirely discard sets
+                    //           of chromatograms.
+                    int comp = Compare(chromDataSet, DataSets[i], chromDataSet.NodeGroup.PrecursorMz);
+                    if (comp > 0)
                     {
                         DataSets.RemoveAt(i); // Proposed addition has better mz match than what we had before, so toss old values
                     }
-                    else if (mzErrNewDataSet > mzErrDataSetI)
+                    else
                     {
                         return; // Proposed addition has worse mz match that what's already in list, don't keep it
                     }
                 }
             }
             DataSets.Add(chromDataSet);
+        }
+
+        private int Compare(ChromDataSet d1, ChromDataSet d2, double expectedMz)
+        {
+            // Larger is better for transition match count
+            int trans1 = d1.TranCount;
+            int trans2 = d2.TranCount;
+            if (trans1 != trans2)
+                return trans1.CompareTo(trans2);
+            // Smaller is better for m/z delta
+            var deltaMz1 = Math.Abs(d1.PrecursorMz - expectedMz);
+            var deltaMz2 = Math.Abs(d2.PrecursorMz - expectedMz);
+            return deltaMz2.CompareTo(deltaMz1);
         }
 
         private bool FindAndMerge(ChromDataSet chromDataSet)
@@ -1064,7 +1080,8 @@ namespace pwiz.Skyline.Model.Results
             get
             {
                 return from peak in this
-                       orderby peak.IsStandard descending
+                       // CONSIDER: Prefer standards at this point? Standars should be defining the peak boundaries
+                       // orderby peak.IsStandard descending
                        orderby peak.PeakGroup != null ? peak.PeakGroup.CombinedScore : 0 descending
                        select peak;
             }

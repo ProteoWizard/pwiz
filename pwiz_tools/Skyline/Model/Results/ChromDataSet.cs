@@ -73,6 +73,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public int Count { get { return _listChromData.Count; } }
 
+        public int TranCount { get { return _listChromData.Count(d => d.DocNode != null); } }
+
         public InterpolationParams InterpolationParams { get; set; }
 
         public void Add(ChromData chromData)

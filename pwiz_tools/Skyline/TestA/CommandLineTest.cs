@@ -932,8 +932,7 @@ namespace pwiz.SkylineTestA
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsolePathCoverage_successfully_));
 
             Assert.AreEqual(11, CountInstances(Resources.CommandLineTest_ConsoleAddFastaTest_Warning, output));
-            // TODO: Until strings are fully localized, need to count English "Error" also
-            Assert.AreEqual(2, CountErrors(output, true));
+            Assert.AreEqual(2, CountErrors(output));
 
             //This test uses a broken Skyline file to test the InvalidDataException catch
             var brokenFile = commandFilesDir.GetTestPath("Broken_file.sky");
@@ -1005,8 +1004,7 @@ namespace pwiz.SkylineTestA
 
         private void TestUnexpectedValueFailures(IEnumerable<string> names)
         {
-            // TODO: Until strings are fully localized, need to count English "Error" also
-            TestNameValueFailures(names, arg => string.Format("{0}=true", arg), true);
+            TestNameValueFailures(names, arg => string.Format("{0}=true", arg));
         }
 
         private void TestNameValueFailures(IEnumerable<string> names, Func<string, string> getCommandLineForArg, bool allowUnlocalizedErrors = false)

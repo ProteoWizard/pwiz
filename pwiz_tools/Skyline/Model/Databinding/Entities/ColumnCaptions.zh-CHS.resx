@@ -489,6 +489,9 @@
   <data name="PointCount">
     <value>计数点</value>
   </data>
+  <data name="PointsAcrossPeak">
+    <value>峰内点</value>
+  </data>
   <data name="Precursor">
     <value>母离子</value>
   </data>
@@ -690,6 +693,9 @@
   <data name="StdevTotalAreaRatio">
     <value>总面积比标准偏差</value>
   </data>
+  <data name="TicArea">
+    <value>总离子电流面积</value>
+  </data>
   <data name="TotalArea">
     <value>总面积</value>
   </data>
@@ -777,6 +783,9 @@
   <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
     <value>明确漂移时间高能偏置毫秒</value>
   </data>
+  <data name="ExplicitCollisionalCrossSection">
+    <value>明确的碰撞横截面</value>
+  </data>
   <data name="ExplicitDriftTimeMsec">
     <value>明确的漂移时间毫秒</value>
   </data>
@@ -819,5 +828,16 @@
   <data name="MoleculeFormula">
     <value>分子式</value>
   </data>
-
+  <data name="CollisionalCrossSection">
+    <value>碰撞横截面</value>
+  </data>
+  <data name="DriftTimeMS1">
+    <value>漂移时间 MS1</value>
+  </data>
+  <data name="DriftTimeFragment">
+    <value>漂移时间片段</value>
+  </data>
+  <data name="DriftTimeWindow">
+    <value>漂移时间窗口</value>
+  </data>
 </root>

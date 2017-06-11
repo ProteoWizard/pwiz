@@ -454,7 +454,7 @@
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;textMeasureRTWindow.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>15</value>
   </data>
   <data name="cbUseMeasuredRT.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -485,7 +485,7 @@
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;cbUseMeasuredRT.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>16</value>
   </data>
   <data name="comboRetentionTime.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -510,7 +510,7 @@
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;comboRetentionTime.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>18</value>
   </data>
   <data name="cbAutoSelect.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -726,7 +726,7 @@
     <value>tabLibrary</value>
   </data>
   <data name="&gt;&gt;btnExplore.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="btnBuildLibrary.Location" type="System.Drawing.Point, System.Drawing">
     <value>255, 66</value>
@@ -735,7 +735,7 @@
     <value>92, 23</value>
   </data>
   <data name="btnBuildLibrary.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="btnBuildLibrary.Text" xml:space="preserve">
     <value>构建(&amp;B)…</value>
@@ -754,7 +754,7 @@ MS/MS谱图库。</value>
     <value>tabLibrary</value>
   </data>
   <data name="&gt;&gt;btnBuildLibrary.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="comboRank.Location" type="System.Drawing.Point, System.Drawing">
     <value>25, 87</value>
@@ -902,7 +902,7 @@ MS/MS谱图库。</value>
     <value>tabLibrary</value>
   </data>
   <data name="&gt;&gt;editLibraries.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="listLibraries.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -933,7 +933,7 @@ MS/MS谱图库。</value>
     <value>tabLibrary</value>
   </data>
   <data name="&gt;&gt;listLibraries.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="btnUpdateCalculator.Location" type="System.Drawing.Point, System.Drawing">
     <value>204, 34</value>
@@ -957,7 +957,7 @@ MS/MS谱图库。</value>
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;btnUpdateCalculator.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>13</value>
   </data>
   <data name="comboPeakScoringModel.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -1009,7 +1009,7 @@ MS/MS谱图库。</value>
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;btnUpdateIonMobilityLibraries.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>10</value>
   </data>
   <data name="comboDriftTimePredictor.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 215</value>
@@ -1033,214 +1033,7 @@ MS/MS谱图库。</value>
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;comboDriftTimePredictor.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="labelWidthAtDt0Units.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelWidthAtDt0Units.Location" type="System.Drawing.Point, System.Drawing">
-    <value>243, 315</value>
-  </data>
-  <data name="labelWidthAtDt0Units.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 13</value>
-  </data>
-  <data name="labelWidthAtDt0Units.TabIndex" type="System.Int32, mscorlib">
-    <value>18</value>
-  </data>
-  <data name="labelWidthAtDt0Units.Text" xml:space="preserve">
-    <value>msec</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDt0Units.Name" xml:space="preserve">
-    <value>labelWidthAtDt0Units</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDt0Units.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDt0Units.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDt0Units.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.Location" type="System.Drawing.Point, System.Drawing">
-    <value>279, 310</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip" xml:space="preserve">
-    <value>确定漂移时间匹配容忍度（漂移时间以毫秒为单位测量），其中： 
-dtMax = 测量的最大漂移时间
-W0 = 在 0 漂移时间时的宽度
-Wmax = 在 dtMax 时的宽度
-匹配中心在任何漂移时间“T”窗口的漂移时间的宽度“W”
-W = (W0 + T*(Wmax-W0)/dtMax)
-</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Name" xml:space="preserve">
-    <value>textSpectralLibraryDriftTimesWidthAtDtMax</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>385, 315</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 13</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.Text" xml:space="preserve">
-    <value>msec</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDtMaxUnits.Name" xml:space="preserve">
-    <value>labelWidthAtDtMaxUnits</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDtMaxUnits.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDtMaxUnits.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDtMaxUnits.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.Location" type="System.Drawing.Point, System.Drawing">
-    <value>137, 310</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.ToolTip" xml:space="preserve">
-    <value>确定漂移时间匹配容忍度（漂移时间以毫秒为单位测量），其中： 
-dtMax = 测量的最大漂移时间
-W0 = 在 0 漂移时间时的宽度
-Wmax = 在 dtMax 时的宽度
-匹配中心在任何漂移时间“T”窗口的漂移时间的宽度“W”
-W = (W0 + T*(Wmax-W0)/dtMax)
-</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Name" xml:space="preserve">
-    <value>textSpectralLibraryDriftTimesWidthAtDt0</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="labelWidthDtMax.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelWidthDtMax.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelWidthDtMax.Location" type="System.Drawing.Point, System.Drawing">
-    <value>276, 294</value>
-  </data>
-  <data name="labelWidthDtMax.Size" type="System.Drawing.Size, System.Drawing">
-    <value>84, 13</value>
-  </data>
-  <data name="labelWidthDtMax.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="labelWidthDtMax.Text" xml:space="preserve">
-    <value>DtMax 时的宽度(&amp;X)：</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtMax.Name" xml:space="preserve">
-    <value>labelWidthDtMax</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtMax.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtMax.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtMax.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="labelWidthDtZero.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelWidthDtZero.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelWidthDtZero.Location" type="System.Drawing.Point, System.Drawing">
-    <value>134, 294</value>
-  </data>
-  <data name="labelWidthDtZero.Size" type="System.Drawing.Size, System.Drawing">
-    <value>70, 13</value>
-  </data>
-  <data name="labelWidthDtZero.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="labelWidthDtZero.Text" xml:space="preserve">
-    <value>Dt0 时的宽度(&amp;0)：</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtZero.Name" xml:space="preserve">
-    <value>labelWidthDtZero</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtZero.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtZero.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;labelWidthDtZero.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="cbLinear.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbLinear.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="cbLinear.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 337</value>
-  </data>
-  <data name="cbLinear.Size" type="System.Drawing.Size, System.Drawing">
-    <value>110, 17</value>
-  </data>
-  <data name="cbLinear.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name="cbLinear.Text" xml:space="preserve">
-    <value>线性峰宽度(&amp;L)</value>
-  </data>
-  <data name="&gt;&gt;cbLinear.Name" xml:space="preserve">
-    <value>cbLinear</value>
-  </data>
-  <data name="&gt;&gt;cbLinear.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbLinear.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;cbLinear.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>11</value>
   </data>
   <data name="textSpectralLibraryDriftTimesResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 310</value>
@@ -1266,7 +1059,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>7</value>
   </data>
   <data name="cbUseSpectralLibraryDriftTimes.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1299,37 +1092,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;cbUseSpectralLibraryDriftTimes.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="labelResolvingPower.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelResolvingPower.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 292</value>
-  </data>
-  <data name="labelResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
-    <value>89, 13</value>
-  </data>
-  <data name="labelResolvingPower.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="labelResolvingPower.Text" xml:space="preserve">
-    <value>分辨力(&amp;P)：</value>
-  </data>
-  <data name="&gt;&gt;labelResolvingPower.Name" xml:space="preserve">
-    <value>labelResolvingPower</value>
-  </data>
-  <data name="&gt;&gt;labelResolvingPower.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelResolvingPower.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;labelResolvingPower.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>8</value>
   </data>
   <data name="comboBoxPeptideUniquenessConstraint.Items" xml:space="preserve">
     <value>无</value>
@@ -1369,6 +1132,96 @@ W = (W0 + T*(Wmax-W0)/dtMax)
   <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.Location" type="System.Drawing.Point, System.Drawing">
+    <value>279, 310</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip" xml:space="preserve">
+    <value>确定漂移时间匹配容忍度（漂移时间以毫秒为单位测量），其中： 
+dtMax = 测量的最大漂移时间
+W0 = 在 0 漂移时间时的宽度
+Wmax = 在 dtMax 时的宽度
+匹配中心在任何漂移时间“T”窗口的漂移时间的宽度“W”
+W = (W0 + T*(Wmax-W0)/dtMax)
+</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Name" xml:space="preserve">
+    <value>textSpectralLibraryDriftTimesWidthAtDtMax</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDt0.Location" type="System.Drawing.Point, System.Drawing">
+    <value>137, 310</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDt0.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDt0.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="textSpectralLibraryDriftTimesWidthAtDt0.ToolTip" xml:space="preserve">
+    <value>确定漂移时间匹配容忍度（漂移时间以毫秒为单位测量），其中： 
+dtMax = 测量的最大漂移时间
+W0 = 在 0 漂移时间时的宽度
+Wmax = 在 dtMax 时的宽度
+匹配中心在任何漂移时间“T”窗口的漂移时间的宽度“W”
+W = (W0 + T*(Wmax-W0)/dtMax)
+</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Name" xml:space="preserve">
+    <value>textSpectralLibraryDriftTimesWidthAtDt0</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="btnFilter.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnFilter.Location" type="System.Drawing.Point, System.Drawing">
+    <value>255, 96</value>
+  </data>
+  <data name="btnFilter.Size" type="System.Drawing.Size, System.Drawing">
+    <value>92, 23</value>
+  </data>
+  <data name="btnFilter.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="btnFilter.Text" xml:space="preserve">
+    <value>过滤(&amp;F)...</value>
+  </data>
+  <data name="btnFilter.ToolTip" xml:space="preserve">
+    <value>从 MIDAS 库过滤 MS/MS 谱图库</value>
+  </data>
+  <data name="&gt;&gt;btnFilter.Name" xml:space="preserve">
+    <value>btnFilter</value>
+  </data>
+  <data name="&gt;&gt;btnFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnFilter.Parent" xml:space="preserve">
+    <value>tabLibrary</value>
+  </data>
+  <data name="&gt;&gt;btnFilter.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -1401,7 +1254,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
   </data>
   <data name="&gt;&gt;labelPeptideUniquenessConstraint.ZOrder" xml:space="preserve">
     <value>0</value>
-  </data>  
+  </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1510,6 +1363,153 @@ W = (W0 + T*(Wmax-W0)/dtMax)
   <data name="&gt;&gt;tabDigestion.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="labelWidthAtDt0Units.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWidthAtDt0Units.Location" type="System.Drawing.Point, System.Drawing">
+    <value>243, 315</value>
+  </data>
+  <data name="labelWidthAtDt0Units.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 13</value>
+  </data>
+  <data name="labelWidthAtDt0Units.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="labelWidthAtDt0Units.Text" xml:space="preserve">
+    <value>msec</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDt0Units.Name" xml:space="preserve">
+    <value>labelWidthAtDt0Units</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDt0Units.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDt0Units.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDt0Units.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelWidthAtDtMaxUnits.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWidthAtDtMaxUnits.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWidthAtDtMaxUnits.Location" type="System.Drawing.Point, System.Drawing">
+    <value>385, 315</value>
+  </data>
+  <data name="labelWidthAtDtMaxUnits.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 13</value>
+  </data>
+  <data name="labelWidthAtDtMaxUnits.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="labelWidthAtDtMaxUnits.Text" xml:space="preserve">
+    <value>msec</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDtMaxUnits.Name" xml:space="preserve">
+    <value>labelWidthAtDtMaxUnits</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDtMaxUnits.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDtMaxUnits.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtDtMaxUnits.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="labelWidthDtMax.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWidthDtMax.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWidthDtMax.Location" type="System.Drawing.Point, System.Drawing">
+    <value>276, 294</value>
+  </data>
+  <data name="labelWidthDtMax.Size" type="System.Drawing.Size, System.Drawing">
+    <value>84, 13</value>
+  </data>
+  <data name="labelWidthDtMax.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="labelWidthDtMax.Text" xml:space="preserve">
+    <value>DtMax 时的宽度(&amp;X)：</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.Name" xml:space="preserve">
+    <value>labelWidthDtMax</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtMax.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="labelWidthDtZero.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWidthDtZero.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWidthDtZero.Location" type="System.Drawing.Point, System.Drawing">
+    <value>134, 294</value>
+  </data>
+  <data name="labelWidthDtZero.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 13</value>
+  </data>
+  <data name="labelWidthDtZero.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="labelWidthDtZero.Text" xml:space="preserve">
+    <value>Dt0 时的宽度(&amp;0)：</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.Name" xml:space="preserve">
+    <value>labelWidthDtZero</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;labelWidthDtZero.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="cbLinear.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbLinear.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbLinear.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 337</value>
+  </data>
+  <data name="cbLinear.Size" type="System.Drawing.Size, System.Drawing">
+    <value>110, 17</value>
+  </data>
+  <data name="cbLinear.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="cbLinear.Text" xml:space="preserve">
+    <value>线性峰宽度(&amp;L)</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.Name" xml:space="preserve">
+    <value>cbLinear</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.Parent" xml:space="preserve">
+    <value>tabPrediction</value>
+  </data>
+  <data name="&gt;&gt;cbLinear.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
   <data name="labelResolvingPower.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1538,7 +1538,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;labelResolvingPower.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>9</value>
   </data>
   <data name="label19.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1568,7 +1568,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;label19.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>12</value>
   </data>
   <data name="label14.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1595,7 +1595,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;label14.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>14</value>
   </data>
   <data name="label13.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1622,7 +1622,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;label13.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>17</value>
   </data>
   <data name="label9.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1649,7 +1649,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabPrediction</value>
   </data>
   <data name="&gt;&gt;label9.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>19</value>
   </data>
   <data name="tabPrediction.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -1892,13 +1892,13 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>6</value>
   </data>
   <data name="panelPick.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 136</value>
+    <value>3, 166</value>
   </data>
   <data name="panelPick.Size" type="System.Drawing.Size, System.Drawing">
     <value>357, 190</value>
   </data>
   <data name="panelPick.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;panelPick.Name" xml:space="preserve">
     <value>panelPick</value>
@@ -1910,7 +1910,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabLibrary</value>
   </data>
   <data name="&gt;&gt;panelPick.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="label11.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1937,7 +1937,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabLibrary</value>
   </data>
   <data name="&gt;&gt;label11.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="tabLibrary.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>

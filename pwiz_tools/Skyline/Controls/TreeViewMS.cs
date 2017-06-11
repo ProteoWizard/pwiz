@@ -320,19 +320,22 @@ namespace pwiz.Skyline.Controls
             Font = new Font(Font.FontFamily, (float)(DEFAULT_FONT_SIZE * Settings.Default.TextZoom));
         }
 
-	    private void InvalidateChangedNodes(IEnumerable<TreeNodeMS> nodes, ICollection<TreeNodeMS> unchangedNodes)
-	    {
-	        foreach (var node in nodes)
-	        {
-	            if (!unchangedNodes.Contains(node))
-	                InvalidateNode(node);
-	        }
-	    }
+        private void InvalidateChangedNodes(IEnumerable<TreeNodeMS> nodes, ICollection<TreeNodeMS> unchangedNodes)
+        {
+            if (IsInUpdate)
+                return;
 
-	    protected void InvalidateNode(TreeNodeMS node)
-	    {
-	        Invalidate(new Rectangle(0, node.BoundsMS.Top, ClientRectangle.Width, node.BoundsMS.Height));
-	    }
+            foreach (var node in nodes)
+            {
+                if (!unchangedNodes.Contains(node))
+                    InvalidateNode(node);
+            }
+        }
+
+        protected void InvalidateNode(TreeNodeMS node)
+        {
+            Invalidate(new Rectangle(0, node.BoundsMS.Top, ClientRectangle.Width, node.BoundsMS.Height));
+        }
 
         protected override void OnPaintBackground(PaintEventArgs pevent)
         {

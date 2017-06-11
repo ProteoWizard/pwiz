@@ -649,7 +649,8 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
-                raw.LocationScanIds = cacheHeader.locationScanIds;
+                // scan ids were not part of a .skyd file until version 9.
+                raw.LocationScanIds = cacheHeader.locationPeaks;
             }
             raw.CountBytesScanIds = cacheHeader.locationPeaks - raw.LocationScanIds;
             // Read list of files cached

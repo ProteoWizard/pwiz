@@ -123,17 +123,17 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>253, 193</value>
+    <value>243, 193</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
-    <value>95, 23</value>
+    <value>75, 23</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-    <value>同意します(&amp;A)</value>
+    <value>同意する(&amp;A)</value>
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
@@ -163,7 +163,7 @@
     <value>5</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>ライセンスの包括により：</value>
+    <value>以下のライセンスの包括により：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -190,7 +190,7 @@
     <value>4</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>新しい使用条件を承認する場合は、以下の同意するをクリックします。</value>
+    <value>新しい使用条件を承認する場合は、以下の [同意する] をクリックします。</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -241,9 +241,9 @@
     <value>2</value>
   </data>
   <data name="labelABSciex.Text" xml:space="preserve">
-    <value>Shimadzu's ファイルコンバータソフトウェア
+    <value>Shimadzuのファイルコンバータソフトウェア
 Copyright © 2014 by Shimadzu Corporation.
-著作権所有。</value>
+All rights reserved.</value>
   </data>
   <data name="&gt;&gt;labelABSciex.Name" xml:space="preserve">
     <value>labelABSciex</value>
@@ -315,7 +315,7 @@ Copyright © 2014 by Shimadzu Corporation.
     <value>1, 0</value>
   </data>
   <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>460, 175</value>
+    <value>410, 175</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -336,16 +336,16 @@ Copyright © 2014 by Shimadzu Corporation.
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>354, 193</value>
+    <value>324, 193</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>95, 23</value>
+    <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-    <value>同意しません(&amp;D)</value>
+    <value>同意しない(&amp;D)</value>
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
@@ -366,7 +366,7 @@ Copyright © 2014 by Shimadzu Corporation.
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>461, 228</value>
+    <value>411, 228</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterScreen</value>

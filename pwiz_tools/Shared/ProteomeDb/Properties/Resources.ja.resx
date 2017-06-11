@@ -158,4 +158,10 @@
   <data name="ProteomeDb_ProteomeDb__0__does_not_appear_to_be_a_valid___protDB__background_proteome_file_" xml:space="preserve">
     <value>{0}は、有効な「.protDB」バックグラウンドプロテオームファイルとして見なされません。</value>
   </data>
+  <data name="ProteomeDb_ProteomeDb_The_file__0__does_not_exist_" xml:space="preserve">
+    <value>ファイル{0}は存在しません。</value>
+  </data>
+  <data name="ProteomeDb_DigestProteins_Analyzing_protein_sequences" xml:space="preserve">
+    <value>タンパク質シークエンスを分析しています</value>
+  </data>
 </root>

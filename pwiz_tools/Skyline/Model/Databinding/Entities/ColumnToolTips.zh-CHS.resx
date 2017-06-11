@@ -340,11 +340,11 @@
 或色谱图非提取自高分辨率 MS1 数据。</value>
   </data>
   <data name="IsotopeLabelType">
-    <value>与母离子（轻/重）相关的标签类型名称，
-表明应用了哪些同位素修饰</value>
+    <value>
+与母离子（轻/重）相关的标签类型名称，</value>
   </data>
   <data name="Key">
-    <value>检索表</value>
+    <value>表明应用了哪些同位素修饰检索表</value>
   </data>
   <data name="LibraryDotProduct">
     <value>母离子的单个离子对峰面积与匹配的串联质谱谱图库谱图
@@ -503,16 +503,16 @@
 对应的去簇电压值</value>
   </data>
   <data name="OptStep">
-    <value>指明与正在优化的参数的默认值的距离的优化步骤值，
-预设参数值为 0；或者当重复测定
-中未进行优化时。</value>
+    <value>
+
+指明与正在优化的参数的默认值的距离的优化步骤值，</value>
   </data>
   <data name="PeakRank">
-    <value>排名系基于该离子对在相同母离子的所有其他离子对中
-的面积。</value>
+    <value>默认参数值为 0；或者当重复测定
+中未进行优化时。排名系基于该离子对在相同母离子的所有其他离子对中</value>
   </data>
   <data name="PeakRankByLevel">
-    <value>在特定重复测定中按质谱级别排名的峰面积（即 MS1 和串联质谱分开排名）</value>
+    <value>的面积。在特定重复测定中按质谱级别排名的峰面积（即 MS1 和串联质谱分开排名）</value>
   </data>
   <data name="Peptide">
     <value>肽</value>
@@ -556,9 +556,7 @@
     <value>母离子</value>
   </data>
   <data name="PrecursorCharge">
-    <value>
-	  与母离子相关的电荷。
-	</value>
+    <value>与母离子相关的电荷。</value>
   </data>
   <data name="PrecursorMz">
     <value>母离子的质荷比 (m/z)。</value>
@@ -770,6 +768,9 @@ SSRCalc 3.0）之间的保留时间回归预测的保留时间；
   <data name="StdevTotalAreaRatio">
     <value>母离子总面积归一
 化值的标准偏差。</value>
+  </data>
+  <data name="TicArea">
+    <value>总离子电流在整个运行中的积分。</value>
   </data>
   <data name="TotalArea">
     <value>特定母离子的所有单个离子对的面积值

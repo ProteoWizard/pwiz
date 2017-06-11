@@ -158,4 +158,10 @@
   <data name="ProteomeDb_ProteomeDb__0__does_not_appear_to_be_a_valid___protDB__background_proteome_file_" xml:space="preserve">
     <value>{0}似乎并非为有效的“.protDB”背景蛋白质组文件。</value>
   </data>
+  <data name="ProteomeDb_ProteomeDb_The_file__0__does_not_exist_" xml:space="preserve">
+    <value>文件{0}不存在。</value>
+  </data>
+  <data name="ProteomeDb_DigestProteins_Analyzing_protein_sequences" xml:space="preserve">
+    <value>分析蛋白质序列</value>
+  </data>
 </root>

@@ -92,10 +92,11 @@ namespace pwiz.Skyline.Model
         public static int[] REQUIRED_NO_CHROM { get { return REQUIRED_FIELDS.Take(2).ToArray(); }}
 
         // ReSharper disable NonLocalizedString
+        // NOTE: The first name is what appears in error messages about missing required fields
         public static readonly string[][] FIELD_NAMES =
         {
             new[] {"PeptideModifiedSequence", "ModifiedSequence", "FullPeptideName", "EG.ModifiedSequence", ColumnCaptions.PeptideModifiedSequence, ColumnCaptions.ModifiedSequence},
-            new[] {"align_origfilename", "FileName", "filename", "R.FileName", ColumnCaptions.FileName},
+            new[] {"FileName", "filename", "align_origfilename", "R.FileName", ColumnCaptions.FileName},
             new[] {"Apex", "RetentionTime", "BestRetentionTime", "RT", ColumnCaptions.RetentionTime, ColumnCaptions.BestRetentionTime},
             new[] {"MinStartTime", "leftWidth", ColumnCaptions.MinStartTime},
             new[] {"MaxEndTime", "rightWidth", ColumnCaptions.MaxEndTime},
@@ -504,8 +505,9 @@ namespace pwiz.Skyline.Model
                 // Keep ReSharper from complaining
                 if (fieldIndices != null)
                 {
-                    string[] missingFields = fieldIndices.Where((index, i) => index == -1 && requiredFields.Contains(i))
-                                                         .Select((index, i) => allFieldNames[i][0]).ToArray();
+                    string[] missingFields = fieldIndices.Select((index, i) => new Tuple<int, int>(index, i))
+                        .Where(t => t.Item1 == -1 && requiredFields.Contains(t.Item2))
+                        .Select(t => allFieldNames[t.Item2][0]).ToArray();
                     fieldNames = string.Join(", ", missingFields); // Not L10N
                 }
                 throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line, fieldNames));
