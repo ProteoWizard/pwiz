@@ -192,6 +192,60 @@
   <data name="&gt;&gt;peptideSearchSplitContainer.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="lblStandardPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="lblStandardPeptides.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblStandardPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 164</value>
+  </data>
+  <data name="lblStandardPeptides.Size" type="System.Drawing.Size, System.Drawing">
+    <value>114, 13</value>
+  </data>
+  <data name="lblStandardPeptides.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="lblStandardPeptides.Text" xml:space="preserve">
+    <value>iRT 标准肽段：</value>
+  </data>
+  <data name="&gt;&gt;lblStandardPeptides.Name" xml:space="preserve">
+    <value>lblStandardPeptides</value>
+  </data>
+  <data name="&gt;&gt;lblStandardPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblStandardPeptides.Parent" xml:space="preserve">
+    <value>peptideSearchSplitContainer.Panel2</value>
+  </data>
+  <data name="&gt;&gt;lblStandardPeptides.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboStandards.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 180</value>
+  </data>
+  <data name="comboStandards.Size" type="System.Drawing.Size, System.Drawing">
+    <value>170, 21</value>
+  </data>
+  <data name="comboStandards.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
+    <value>comboStandards</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Parent" xml:space="preserve">
+    <value>peptideSearchSplitContainer.Panel2</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="cbIncludeAmbiguousMatches.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -202,13 +256,13 @@
     <value>NoControl</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 230</value>
+    <value>14, 207</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Size" type="System.Drawing.Size, System.Drawing">
     <value>158, 17</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>6</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
     <value>包含不确定匹配项(&amp;I)</value>
@@ -223,7 +277,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="grpWorkflow.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
@@ -322,7 +376,7 @@
     <value>265, 93</value>
   </data>
   <data name="grpWorkflow.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>8</value>
   </data>
   <data name="grpWorkflow.Text" xml:space="preserve">
     <value>工作流</value>
@@ -337,7 +391,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;grpWorkflow.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -346,13 +400,13 @@
     <value>True</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 207</value>
+    <value>14, 230</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>156, 17</value>
   </data>
   <data name="cbFilterForDocumentPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>7</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Text" xml:space="preserve">
     <value>文档肽筛选器(&amp;F)</value>
@@ -367,7 +421,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;cbFilterForDocumentPeptides.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="btnRemFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -382,7 +436,7 @@
     <value>93, 23</value>
   </data>
   <data name="btnRemFile.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>3</value>
   </data>
   <data name="btnRemFile.Text" xml:space="preserve">
     <value>删除文件(&amp;R)</value>
@@ -397,7 +451,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;btnRemFile.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="listSearchFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -406,7 +460,7 @@
     <value>14, 25</value>
   </data>
   <data name="listSearchFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>265, 173</value>
+    <value>265, 134</value>
   </data>
   <data name="listSearchFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -421,7 +475,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;listSearchFiles.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="label7.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -448,7 +502,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="btnAddFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -460,7 +514,7 @@
     <value>93, 23</value>
   </data>
   <data name="btnAddFile.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>2</value>
   </data>
   <data name="btnAddFile.Text" xml:space="preserve">
     <value>添加文件(&amp;A)…</value>
@@ -475,7 +529,7 @@
     <value>peptideSearchSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;btnAddFile.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="&gt;&gt;peptideSearchSplitContainer.Panel2.Name" xml:space="preserve">
     <value>peptideSearchSplitContainer.Panel2</value>

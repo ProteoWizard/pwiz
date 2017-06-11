@@ -315,6 +315,9 @@
     <EmbeddedResource Include="DataBinding\Controls\Editor\DocumentationViewer.ja.resx">
       <DependentUpon>DocumentationViewer.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\Editor\DocumentationViewer.zh-CHS.resx">
+      <DependentUpon>DocumentationViewer.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\FilterTab.ja.resx">
       <DependentUpon>FilterTab.cs</DependentUpon>
       <SubType>Designer</SubType>
