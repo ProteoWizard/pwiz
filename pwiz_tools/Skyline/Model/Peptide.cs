@@ -176,7 +176,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public IEnumerable<PeptideDocNode> CreateDocNodes(SrmSettings settings, IPeptideFilter filter)
+        public IEnumerable<PeptideDocNode> CreateDocNodes(SrmSettings settings, IPeptideFilter filter, IVariableModFilter filterVariableMod = null)
         {
             int maxModCount = filter.MaxVariableMods ?? settings.PeptideSettings.Modifications.MaxVariableMods;
 
@@ -192,32 +192,7 @@ namespace pwiz.Skyline.Model
 
             // First build a list of the amino acids in this peptide which can be modified,
             // and the modifications which apply to them.
-            List<KeyValuePair<IList<StaticMod>, int>> listListMods = null;
-
-            var mods = settings.PeptideSettings.Modifications;
-            // Nothing to do, if no variable mods in the document
-            if (mods.HasVariableModifications)
-            {
-                // Enumerate each amino acid in the sequence
-                int len = Sequence.Length;
-                for (int i = 0; i < len; i++)
-                {
-                    char aa = Sequence[i];
-                    // Test each modification to see if it applies
-                    foreach (var mod in mods.VariableModifications)
-                    {
-                        // If the modification does apply, store it in the list
-                        if (mod.IsMod(aa, i, len))
-                        {
-                            if (listListMods == null)
-                                listListMods = new List<KeyValuePair<IList<StaticMod>, int>>();
-                            if (listListMods.Count == 0 || listListMods[listListMods.Count - 1].Value != i)
-                                listListMods.Add(new KeyValuePair<IList<StaticMod>, int>(new List<StaticMod>(), i));
-                            listListMods[listListMods.Count - 1].Key.Add(mod);
-                        }
-                    }
-                }
-            }
+            var listListMods = CalcApplicableMods(settings, filterVariableMod);
 
             // If no applicable modifications were found, return a single DocNode for the
             // peptide passed in
@@ -234,6 +209,60 @@ namespace pwiz.Skyline.Model
                         yield return nodePep;
                 }
             }
+        }
+
+        private List<KeyValuePair<IList<StaticMod>, int>> CalcApplicableMods(SrmSettings settings, IVariableModFilter filterVariableMod)
+        {
+            var mods = settings.PeptideSettings.Modifications;
+            // Nothing to do, if no variable mods in the document
+            if (!mods.HasVariableModifications)
+                return null;
+            // Enumerate each amino acid in the sequence
+            List<KeyValuePair<IList<StaticMod>, int>> listListMods = null;
+            int len = Sequence.Length;
+            for (int i = 0; i < len; i++)
+            {
+                if (filterVariableMod != null && !filterVariableMod.IsModIndex(i))
+                    continue;
+
+                char aa = Sequence[i];
+                bool matchingMods = false;
+                // Test each modification to see if it applies
+                foreach (var mod in mods.VariableModifications)
+                {
+                    if (!mod.IsMod(aa, i, len))
+                        continue;
+
+                    // If the modification applies, store it in the list
+                    if (listListMods == null)
+                        listListMods = new List<KeyValuePair<IList<StaticMod>, int>>();
+                    if (listListMods.Count == 0 || listListMods[listListMods.Count - 1].Value != i)
+                        listListMods.Add(new KeyValuePair<IList<StaticMod>, int>(new List<StaticMod>(), i));
+                    var listMods = listListMods[listListMods.Count - 1].Key;
+                    if (filterVariableMod == null)
+                        listMods.Add(mod);
+                    else
+                    {
+                        // If the filter matches, then only allow this one mod
+                        double? modMass = settings.TransitionSettings.Prediction.PrecursorMassType == MassType.Monoisotopic
+                            ? mod.MonoisotopicMass
+                            : mod.AverageMass;
+                        if (modMass.HasValue && filterVariableMod.IsModMass(i, modMass.Value))
+                        {
+                            // Clear all non-matching mods when the first match is found
+                            if (!matchingMods)
+                                listMods.Clear();
+                            matchingMods = true;
+                        }
+                        else if (matchingMods)
+                        {
+                            continue;   // Skip non-matching mods if matching
+                        }
+                        listMods.Add(mod);
+                    }
+                }
+            }
+            return listListMods;
         }
 
         /// <summary>

@@ -931,8 +931,8 @@ namespace pwiz.Skyline.SettingsUI
             int sepMS1FromMS2 = groupBoxMS2.Top - groupBoxMS1.Bottom;
             int sepMS2FromRT = groupBoxRetentionTimeToKeep.Top - groupBoxMS2.Bottom;
             int sepMS2FromSel = cbHighSelectivity.Top - groupBoxMS2.Bottom;
-            labelEnrichments.Hide();
-            comboEnrichments.Hide();
+            labelEnrichments.Visible = false;
+            comboEnrichments.Visible = false;
             groupBoxMS1.Height -= comboEnrichments.Bottom - textPrecursorIsotopeFilter.Bottom;
 
             if (workflow == ImportPeptideSearchDlg.Workflow.dda)
@@ -942,8 +942,8 @@ namespace pwiz.Skyline.SettingsUI
                 int precursorChargesTopDifference = lblPrecursorCharges.Top - groupBoxMS1.Top;
                 lblPrecursorCharges.Top = groupBoxMS1.Top;
                 textPrecursorCharges.Top -= precursorChargesTopDifference;
-                textPrecursorCharges.Show();
-                lblPrecursorCharges.Show();
+                textPrecursorCharges.Visible = true;
+                lblPrecursorCharges.Visible = true;
 
                 // Reposition MS1 filtering groupbox
                 groupBoxMS1.Top = textPrecursorCharges.Bottom + sepMS1FromMS2;
@@ -951,8 +951,8 @@ namespace pwiz.Skyline.SettingsUI
 
             int newRadioTimeAroundTop = radioUseSchedulingWindow.Top;
             int radioTimeAroundTopDifference = radioKeepAllTime.Top - newRadioTimeAroundTop;
-            radioUseSchedulingWindow.Hide();
-            flowLayoutPanelUseSchedulingWindow.Hide();
+            radioUseSchedulingWindow.Visible = false;
+            flowLayoutPanelUseSchedulingWindow.Visible = false;
             radioKeepAllTime.Top = newRadioTimeAroundTop;
             groupBoxRetentionTimeToKeep.Height -= radioTimeAroundTopDifference;
 
@@ -980,7 +980,7 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 // Hide MS/MS filtering groupbox entirely.
-                groupBoxMS2.Hide();
+                groupBoxMS2.Visible = false;
 
                 // Reposition selectivity checkbox and retention time filtering groupbox.
                 cbHighSelectivity.Top = groupBoxMS1.Bottom + sepMS2FromSel;

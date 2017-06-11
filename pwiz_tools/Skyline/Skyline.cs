@@ -2588,7 +2588,7 @@ namespace pwiz.Skyline
         public void OpenLibraryExplorer(string libraryName)
         {
             var viewLibraryDlg = new ViewLibraryDlg(_libraryManager, libraryName, this) { Owner = this };
-            viewLibraryDlg.Show();
+            viewLibraryDlg.Show(this);
         }
 
         private void statusToolStripMenuItem_Click(object sender, EventArgs e)
@@ -4531,7 +4531,7 @@ namespace pwiz.Skyline
                 // The next update to the UI will display errors.
                 if (ImportingResultsWindow == null)
                     ImportingResultsWindow = new AllChromatogramsGraph { Owner = this, ChromatogramManager = _chromatogramManager };
-                ImportingResultsWindow.Show();
+                ShowAllChromatogramsGraph();
                 ImportingResultsWindow.UpdateStatus((MultiProgressStatus) e.Progress);
                 return;
             }
@@ -4634,7 +4634,7 @@ namespace pwiz.Skyline
                 Assume.IsFalse(multiStatus.IsEmpty);    // Should never be starting results window with empty status
                 ImportingResultsWindow = new AllChromatogramsGraph { Owner = this, ChromatogramManager = _chromatogramManager };
                 if (Settings.Default.AutoShowAllChromatogramsGraph)
-                    ImportingResultsWindow.Show();
+                    ImportingResultsWindow.Show(this);
             }
             if (ImportingResultsWindow != null)
                 ImportingResultsWindow.UpdateStatus(multiStatus);
@@ -4647,7 +4647,7 @@ namespace pwiz.Skyline
                 if (ImportingResultsWindow.Visible)
                     ImportingResultsWindow.Activate();
                 else
-                    ImportingResultsWindow.Show();
+                    ImportingResultsWindow.Show(this);
                 UpdateProgressUI(); // Sets selected control
             }
         }

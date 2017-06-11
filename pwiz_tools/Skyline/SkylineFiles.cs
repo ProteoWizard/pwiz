@@ -2201,7 +2201,7 @@ namespace pwiz.Skyline
         {
             if (ImportingResultsWindow != null)
             {
-                ImportingResultsWindow.Show();
+                ShowAllChromatogramsGraph();
                 return;
             }
             ImportResults();

@@ -845,6 +845,25 @@ namespace pwiz.Skyline.Model.DocSettings
         int? MaxVariableMods { get; }
     }
 
+    /// <summary>
+    /// Filtering of variable modifications by location and mass to avoid
+    /// enumerating all globally possible peptide modifications when attempting
+    /// to match library spectra.
+    /// </summary>
+    public interface IVariableModFilter
+    {
+        /// <summary>
+        /// Returns true if any modification is possible at the given index.
+        /// </summary>
+        bool IsModIndex(int index);
+
+        /// <summary>
+        /// Returns true if the given modification mass is possible at the
+        /// given index.
+        /// </summary>
+        bool IsModMass(int index, double mass);
+    }
+
     [XmlRoot("peptide_filter")]
     public class PeptideFilter : Immutable, IValidating, IPeptideFilter, IXmlSerializable
     {

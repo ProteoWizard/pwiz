@@ -471,7 +471,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             var documentationGenerator = new DocumentationGenerator(ChooseColumnsTab.ViewInfo.ParentColumn);
             DocumentationViewer documentationViewer = new DocumentationViewer();
             documentationViewer.DocumentationHtml = documentationGenerator.GetDocumentationHtmlPage();
-            documentationViewer.Show();
+            documentationViewer.Show(this);
         }
 
         private void AddTooltipHandler(TreeView treeView)

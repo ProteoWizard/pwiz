@@ -196,6 +196,7 @@
     <Compile Include="IrtTest.cs" />
     <Compile Include="IsolationSchemeTest.cs" />
     <Compile Include="LibraryBuildShareTest.cs" />
+    <Compile Include="LibraryExplorerSpeedTest.cs" />
     <Compile Include="LibraryExplorerTest.cs" />
     <Compile Include="LiveReportsErrorTest.cs" />
     <Compile Include="LiveReportsFilterTest.cs" />
@@ -346,6 +347,7 @@
     <None Include="LabelPeakPickingTest.zip" />
     <None Include="LibraryBuildShareTest.zip" />
     <None Include="LibraryBuildTest.zip" />
+    <None Include="LibraryExplorerSpeedTest.zip" />
     <None Include="LibraryExplorerTest.zip" />
     <None Include="LibraryShareTest.zip" />
     <None Include="LiveReportsErrorTest.sky.zip" />

@@ -484,7 +484,7 @@ namespace pwiz.Skyline.FileUI
                 case ExportInstrumentType.WATERS_SYNAPT_TRANSFER:
                 case ExportInstrumentType.WATERS_SYNAPT_TRAP:
                 case ExportInstrumentType.WATERS_XEVO_QTOF:
-                    panelWaters.Show();
+                    panelWaters.Visible = true;
                     bool exportEdcEnabled = !_document.GetPrecursorsWithoutTopRank(
                         _exportProperties.PrimaryTransitionCount, _exportProperties.SchedulingReplicateNum).Any();
                     cbExportEdcMass.Enabled = exportEdcEnabled;
@@ -494,7 +494,7 @@ namespace pwiz.Skyline.FileUI
                     }
                     break;
                 default:
-                    panelWaters.Hide();
+                    panelWaters.Visible = false;
                     break;
             }
         }

@@ -541,26 +541,35 @@ namespace pwiz.Skyline.SettingsUI
             listPeptide.Items.Clear();
             if (_currentRange.Count > 0)
             {
-                int start = _pageInfo.StartIndex;
-                int end = _pageInfo.EndIndex;
-                new LongOperationRunner
+                try
                 {
-                    JobTitle = Resources.ViewLibraryDlg_UpdateListPeptide_Updating_list_of_peptides
-                }.Run(longWaitBroker =>
-                {
-                    for (int i = start; i < end; i++)
+                    int start = _pageInfo.StartIndex;
+                    int end = _pageInfo.EndIndex;
+                    new LongOperationRunner
                     {
-                        longWaitBroker.SetProgressCheckCancel(i - start, end - start);
-                        ViewLibraryPepInfo pepInfo = _peptides[i];
-                        int charge = pepInfo.Key.Charge;
-                        var diff = new SrmSettingsDiff(true, false, true, false, false, false);
-                        listPeptide.Items.Add(pepMatcher.AssociateMatchingPeptide(pepInfo, charge, diff));
-                    }
-                });
+                        JobTitle = Resources.ViewLibraryDlg_UpdateListPeptide_Updating_list_of_peptides
+                    }.Run(longWaitBroker =>
+                    {
+                        for (int i = start; i < end; i++)
+                        {
+                            if (IsUpdateCanceled)   // Allows tests to get out of this loop and fail
+                                break;
+                            longWaitBroker.SetProgressCheckCancel(i - start, end - start);
+                            ViewLibraryPepInfo pepInfo = _peptides[i];
+                            int charge = pepInfo.Key.Charge;
+                            var diff = new SrmSettingsDiff(true, false, true, false, false, false);
+                            listPeptide.Items.Add(pepMatcher.AssociateMatchingPeptide(pepInfo, charge, diff));
+                        }
+                    });
+                }
+                catch (OperationCanceledException)
+                {
+                }
 
-                listPeptide.SelectedIndex = selectPeptideIndex;
+                listPeptide.SelectedIndex = Math.Min(selectPeptideIndex, listPeptide.Items.Count - 1);
             }
             listPeptide.EndUpdate();
+            IsUpdateComplete = true;
         }
 
         public static void GetPeptideInfo(ViewLibraryPepInfo pepInfo, 
@@ -1617,6 +1626,11 @@ namespace pwiz.Skyline.SettingsUI
         // User wants to go to the previous page. Update the page info.
         private void PreviousLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
+            PreviousPage();
+        }
+
+        public void PreviousPage()
+        {
             _pageInfo.Page--;
             NextLink.Enabled = true;
             PreviousLink.Enabled = _pageInfo.Page > 1;
@@ -1628,6 +1642,11 @@ namespace pwiz.Skyline.SettingsUI
 
         // User wants to go to the next page. Update the page info.
         private void NextLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            NextPage();
+        }
+
+        public void NextPage()
         {
             _pageInfo.Page++;
             PreviousLink.Enabled = true;
@@ -1958,16 +1977,24 @@ namespace pwiz.Skyline.SettingsUI
 
         public bool HasUnmatchedPeptides
         {
-            get
-            {
-                foreach(var item in listPeptide.Items)
-                {
-                    if (!((ViewLibraryPepInfo)item).HasPeptide)
-                        return true;
-                }
-                return false;
-            }
+            get { return listPeptide.Items.Cast<ViewLibraryPepInfo>().Any(info => !info.HasPeptide); }
         }
+
+        public int UnmatchedPeptidesCount
+        {
+            get { return listPeptide.Items.Cast<ViewLibraryPepInfo>().Count(info => !info.HasPeptide); }
+        }
+
+        /// <summary>
+        /// Set to false and wait for set to true to track updates
+        /// </summary>
+        public bool IsUpdateComplete { get; set; }
+
+        /// <summary>
+        /// Set to avoid waiting on extremely long update. Since it executes on the
+        /// UI thread, it is very difficult to cancel otherwise during a test.
+        /// </summary>
+        public bool IsUpdateCanceled { get; set; }
 
         #endregion
 

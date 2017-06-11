@@ -224,15 +224,14 @@ namespace pwiz.Skyline.SettingsUI
             get { return btnFilter.Visible; }
             private set
             {
+                btnFilter.Visible = value;
                 if (value)
                 {
-                    btnFilter.Show();
                     btnExplore.Top = btnFilter.Bottom + 7;
                 }
                 else
                 {
                     btnExplore.Location = btnFilter.Location;
-                    btnFilter.Hide();
                 }
             }
         }

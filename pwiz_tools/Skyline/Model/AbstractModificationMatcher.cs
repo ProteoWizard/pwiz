@@ -463,9 +463,11 @@ namespace pwiz.Skyline.Model
 
             // Use the number of modifications as the maximum, if it is less than the current
             // settings to keep from over enumerating, which can be slow.
-            var filter = new MaxModFilter(Math.Min(seq.Count(c => c == '[' || c == '('),
-                                                   Settings.PeptideSettings.Modifications.MaxVariableMods));
-            foreach (var nodePep in peptide.CreateDocNodes(Settings, filter))
+            int seqModCount = seq.Count(c => c == '[' || c == '(');
+            var filterMaxMod = new MaxModFilter(Math.Min(seqModCount,
+                Settings.PeptideSettings.Modifications.MaxVariableMods));
+            var filterMod = new VariableModLocationFilter(seq);
+            foreach (var nodePep in peptide.CreateDocNodes(Settings, filterMaxMod, filterMod))
             {
                 var nodePepMod = CreateDocNodeFromSettings(seq, nodePep, diff, out nodeGroupMatched);
                 if (nodePepMod != null)
@@ -488,6 +490,134 @@ namespace pwiz.Skyline.Model
             }
 
             public int? MaxVariableMods { get; private set; }
+        }
+
+        public class VariableModLocationFilter : IVariableModFilter
+        {
+            private struct ModMass
+            {
+                public ModMass(double mass, int precision) : this()
+                {
+                    Precision = Math.Min(15, precision);    // Math.Round can only handle up to 15
+                    Mass = Math.Round(mass, Precision);
+                }
+
+                public double Mass { get; private set; }
+                public int Precision { get; private set; }
+
+                public override string ToString()
+                {
+                    string formatMass = "{0:F0" + Precision + "}";   // Not L10N
+                    return string.Format(formatMass, Mass);
+                }
+            }
+
+            private readonly ModMass?[] _mods;
+
+            public VariableModLocationFilter(string seq)
+            {
+                _mods = new ModMass?[seq.Length];    // Overallocation should not matter
+                int aaIndex = 0;
+                for (int i = 0; i < seq.Length - 1; i++)
+                {
+                    string closeChar = GetCloseChar(seq[i + 1]);
+                    if (closeChar != null)
+                    {
+                        int startIndex = i + 2;
+                        string modText;
+                        bool candidateSeen;
+                        int closeIndex = GetCloseIndex(seq, startIndex, closeChar, out modText, out candidateSeen);
+                        if (candidateSeen)
+                        {
+                            // If seen candidate(s) not expressible as text
+                            if (modText == null)
+                                _mods[aaIndex] = new ModMass(); // Add wildcard
+                            // Otherwise try determine an acceptable mass and precision
+                            else
+                            {
+                                int dotIndex = modText.IndexOf(".", StringComparison.Ordinal);    // Not L10N
+                                if (dotIndex == -1)
+                                    dotIndex = modText.Length - 1;  // Just before the close index for zero precision
+                                double mass;
+                                if (double.TryParse(modText, out mass))
+                                    _mods[aaIndex] = new ModMass(mass, modText.Length - dotIndex - 1);
+                                else
+                                    _mods[aaIndex] = new ModMass(); // Add wildcard
+                            }
+                        }
+
+                        i = closeIndex;
+                    }
+                    aaIndex++;
+                }
+            }
+
+            private const string HEAVY_LABEL_CLOSE = "}";   // Not L10N
+
+            private string GetCloseChar(char c)
+            {
+                switch (c)
+                {
+                    case '{': return HEAVY_LABEL_CLOSE;  // Not L10N: Heavy label
+                    case '(': return ")";  // Not L10N: Unimod modification
+                    case '[': return "]";  // Not L10N: Custome mod - delta mass or name
+                }
+                return null;
+            }
+
+            /// <summary>
+            /// Gets the closing character for a mod, handling strings of mods on after the other
+            /// </summary>
+            /// <param name="seq">The sequence with embedded mods</param>
+            /// <param name="startIndex">The start index of the mod text beyond the opening character</param>
+            /// <param name="closeChar">The character that closes the mod</param>
+            /// <param name="modText">The text that is the candidate modification</param>
+            /// <param name="candidateSeen">Set to true if a variable modification candidate was seen</param>
+            /// <returns>Index of the closing character</returns>
+            private int GetCloseIndex(string seq, int startIndex, string closeChar,
+                out string modText, out bool candidateSeen)
+            {
+                candidateSeen = false;
+                modText = null;
+                int closeIndex = -1;
+                while (closeChar != null)
+                {
+                    closeIndex = seq.IndexOf(closeChar, startIndex, StringComparison.Ordinal);  // Not L10N
+                    if (closeIndex == -1)
+                        closeIndex = seq.Length;
+                    if (closeChar != HEAVY_LABEL_CLOSE)
+                    {
+                        // Only non-heavy label mods are candidates for variable modifications
+                        modText = !candidateSeen ? seq.Substring(startIndex, closeIndex - startIndex) : null;
+                        // Record the first occurance, and otherwise return no text indicating
+                        // a wild card modification
+                        candidateSeen = true;
+                    }
+                    if (closeIndex >= seq.Length - 1)
+                        break;
+                    startIndex = closeIndex + 1;
+                    closeChar = GetCloseChar(seq[startIndex]);
+                }
+                return closeIndex;
+            }
+
+            public bool IsModIndex(int index)
+            {
+                return _mods[index].HasValue;
+            }
+
+            public bool IsModMass(int index, double mass)
+            {
+                var modNullable = _mods[index];
+                if (!modNullable.HasValue)
+                    return false;
+                var mod = modNullable.Value;
+                // Zero mass modification acts as a wildcard
+                if (mod.Mass == 0)
+                    return true;
+                // Otherwise, masses must match to the specified precision
+                return Math.Round(mass, mod.Precision) == Math.Round(mod.Mass, mod.Precision);
+            }
         }
 
         private PeptideDocNode CreateDocNodeFromSettings(string seq, PeptideDocNode nodePep, SrmSettingsDiff diff,

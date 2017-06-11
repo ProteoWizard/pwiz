@@ -43,13 +43,14 @@ namespace pwiz.Skyline.Model
             _dictAAMassPairs = new Dictionary<AATermKey, List<byte[]>>();
             _libKeys = libKeys.GetEnumerator();
             InitMatcherSettings(settings, defSetStatic, defSetHeavy);
-            MatcherPepMods = CreateMatcherPeptideSettings();
+            MatcherPepMods = CreateMatcherPeptideSettings(settings);
         }
 
         /// <summary>
         ///  Create PeptideModifications matching the modifications indicated in the library.
         /// </summary>
-        public PeptideModifications CreateMatcherPeptideSettings()
+        /// <param name="settings">The settings for the document for which the matches will be made</param>
+        public PeptideModifications CreateMatcherPeptideSettings(SrmSettings settings)
         {
             var lightMods = new List<StaticMod>();
             var heavyMods = new Dictionary<IsotopeLabelType, List<StaticMod>>();
@@ -90,7 +91,9 @@ namespace pwiz.Skyline.Model
             {
                 typedModifications.Add(new TypedModifications(labelType, heavyMods[labelType]));
             }
-            return new PeptideModifications(lightMods, typedModifications);
+            var mods = settings.PeptideSettings.Modifications;
+            return new PeptideModifications(lightMods, mods.MaxVariableMods, mods.MaxNeutralLosses,
+                typedModifications, new[] { IsotopeLabelType.heavy });
         }
 
 
