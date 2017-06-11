@@ -144,11 +144,8 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelCleavage.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>14</value>
   </data>
-  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="textCleavage.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 143</value>
   </data>
@@ -158,6 +155,9 @@
   <data name="textCleavage.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <data name="textCleavage.ToolTip" xml:space="preserve">
     <value>開裂が発生するアミノ酸残基の鎖（セパレータなし）</value>
   </data>
@@ -171,7 +171,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textCleavage.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="labelRestrict.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -198,7 +198,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelRestrict.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="textRestrict.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 199</value>
@@ -224,7 +224,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textRestrict.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="comboDirection.Items" xml:space="preserve">
     <value>C末端</value>
@@ -244,9 +244,6 @@
   <data name="comboDirection.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="comboDirection.ToolTip" xml:space="preserve">
     <value>切断が発生する切断アミノ酸残基の
 末端側 (NまたはCあるいは両方) です。</value>
@@ -261,7 +258,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboDirection.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -288,7 +285,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
     <value>190, 14</value>
@@ -312,7 +309,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>190, 44</value>
@@ -336,7 +333,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 31</value>
@@ -360,7 +357,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -387,7 +384,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="textRestrictN.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 311</value>
@@ -413,7 +410,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textRestrictN.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="textCleavageN.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 255</value>
@@ -438,7 +435,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textCleavageN.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="labelRestrictN.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -469,7 +466,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelRestrictN.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="labelCleavageN.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -499,7 +496,43 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelCleavageN.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
+  </data>
+  <data name="cbSemiCleavage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="cbSemiCleavage.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbSemiCleavage.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbSemiCleavage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 348</value>
+  </data>
+  <data name="cbSemiCleavage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>122, 17</value>
+  </data>
+  <data name="cbSemiCleavage.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="cbSemiCleavage.Text" xml:space="preserve">
+    <value>準切断を許可(&amp;A)</value>
+  </data>
+  <data name="cbSemiCleavage.ToolTip" xml:space="preserve">
+    <value>一端のみが切断部位と一致するペプチドを許可します。準切断検索結果を含むスペクトルライブラリのみと使用します。</value>
+  </data>
+  <data name="&gt;&gt;cbSemiCleavage.Name" xml:space="preserve">
+    <value>cbSemiCleavage</value>
+  </data>
+  <data name="&gt;&gt;cbSemiCleavage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbSemiCleavage.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbSemiCleavage.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -508,7 +541,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>277, 347</value>
+    <value>277, 377</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

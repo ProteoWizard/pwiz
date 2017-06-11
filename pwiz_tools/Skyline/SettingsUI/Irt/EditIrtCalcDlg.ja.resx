@@ -280,7 +280,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>10</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
@@ -307,7 +307,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>11</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
@@ -328,13 +328,13 @@
     <value>Top, Right</value>
   </data>
   <data name="btnCalibrate.Location" type="System.Drawing.Point, System.Drawing">
-    <value>285, 2</value>
+    <value>285, 16</value>
   </data>
   <data name="btnCalibrate.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnCalibrate.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="btnCalibrate.Text" xml:space="preserve">
     <value>校正(&amp;B)...</value>
@@ -349,19 +349,19 @@
     <value>splitContainer1.Panel2</value>
   </data>
   <data name="&gt;&gt;btnCalibrate.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="btnAddResults.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnAddResults.Location" type="System.Drawing.Point, System.Drawing">
-    <value>297, 518</value>
+    <value>297, 565</value>
   </data>
   <data name="btnAddResults.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnAddResults.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>9</value>
   </data>
   <data name="btnAddResults.Text" xml:space="preserve">
     <value>追加(&amp;A)...</value>
@@ -382,13 +382,13 @@
     <value>True</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-3, 15</value>
+    <value>3, 29</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
     <value>測定されたペプチド(&amp;M)：</value>
@@ -403,7 +403,7 @@
     <value>splitContainer1.Panel2</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="labelNumPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -412,13 +412,13 @@
     <value>True</value>
   </data>
   <data name="labelNumPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 523</value>
+    <value>9, 570</value>
   </data>
   <data name="labelNumPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>56, 13</value>
   </data>
   <data name="labelNumPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>8</value>
   </data>
   <data name="labelNumPeptides.Text" xml:space="preserve">
     <value>0個のペプチド</value>
@@ -499,13 +499,13 @@
     <value>Top, Right</value>
   </data>
   <data name="btnPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>204, 2</value>
+    <value>204, 16</value>
   </data>
   <data name="btnPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="btnPeptides.Text" xml:space="preserve">
     <value>ペプチド...</value>
@@ -523,7 +523,7 @@
     <value>splitContainer1.Panel2</value>
   </data>
   <data name="&gt;&gt;btnPeptides.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="splitContainer1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -553,7 +553,7 @@
     <value>0, 0</value>
   </data>
   <data name="gridViewStandard.Size" type="System.Drawing.Size, System.Drawing">
-    <value>360, 148</value>
+    <value>360, 168</value>
   </data>
   <data name="gridViewStandard.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -582,6 +582,33 @@
   <data name="&gt;&gt;splitContainer1.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="labelNumStandards.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelNumStandards.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 0</value>
+  </data>
+  <data name="labelNumStandards.Size" type="System.Drawing.Size, System.Drawing">
+    <value>73, 13</value>
+  </data>
+  <data name="labelNumStandards.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelNumStandards.Text" xml:space="preserve">
+    <value>0/0個のペプチド</value>
+  </data>
+  <data name="&gt;&gt;labelNumStandards.Name" xml:space="preserve">
+    <value>labelNumStandards</value>
+  </data>
+  <data name="&gt;&gt;labelNumStandards.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelNumStandards.Parent" xml:space="preserve">
+    <value>splitContainer1.Panel2</value>
+  </data>
+  <data name="&gt;&gt;labelNumStandards.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="gridViewLibrary.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -598,13 +625,13 @@
     <value>iRT値</value>
   </data>
   <data name="gridViewLibrary.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 31</value>
+    <value>0, 45</value>
   </data>
   <data name="gridViewLibrary.Size" type="System.Drawing.Size, System.Drawing">
-    <value>360, 150</value>
+    <value>360, 163</value>
   </data>
   <data name="gridViewLibrary.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;gridViewLibrary.Name" xml:space="preserve">
     <value>gridViewLibrary</value>
@@ -616,7 +643,7 @@
     <value>splitContainer1.Panel2</value>
   </data>
   <data name="&gt;&gt;gridViewLibrary.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel2.Name" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
@@ -631,10 +658,10 @@
     <value>1</value>
   </data>
   <data name="splitContainer1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>360, 333</value>
+    <value>360, 380</value>
   </data>
   <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
-    <value>148</value>
+    <value>168</value>
   </data>
   <data name="splitContainer1.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -682,7 +709,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>384, 554</value>
+    <value>384, 601</value>
   </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
     <value>370, 500</value>

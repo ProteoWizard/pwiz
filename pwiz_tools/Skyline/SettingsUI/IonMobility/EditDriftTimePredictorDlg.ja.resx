@@ -157,7 +157,7 @@
     <value>4, 4, 4, 4</value>
   </data>
   <data name="gridRegression.Size" type="System.Drawing.Size, System.Drawing">
-    <value>534, 117</value>
+    <value>682, 117</value>
   </data>
   <data name="gridRegression.TabIndex" type="System.Int32, mscorlib">
     <value>18</value>
@@ -255,7 +255,7 @@ W = 2T/R
     <value>4, 4, 4, 4</value>
   </data>
   <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>413, 22</value>
+    <value>561, 22</value>
   </data>
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -296,6 +296,15 @@ W = 2T/R
   <data name="MeasuredDriftTimeMsec.HeaderText" xml:space="preserve">
     <value>ドリフト時間（ミリ秒）</value>
   </data>
+  <metadata name="MeasuredDriftTimeCCSsqA.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="MeasuredDriftTimeCCSsqA.HeaderText" xml:space="preserve">
+    <value>CCS (sqA)</value>
+  </data>
+  <data name="MeasuredDriftTimeCCSsqA.Width" type="System.Int32, mscorlib">
+    <value>90</value>
+  </data>
   <metadata name="MeasuredDriftTimeHighEnergyOffsetMsec.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -318,7 +327,7 @@ W = 2T/R
     <value>4, 4, 4, 4</value>
   </data>
   <data name="gridMeasuredDriftTimes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>534, 211</value>
+    <value>682, 211</value>
   </data>
   <data name="gridMeasuredDriftTimes.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -375,7 +384,7 @@ W = 2T/R
     <value>Bottom, Right</value>
   </data>
   <data name="btnUseResults.Location" type="System.Drawing.Point, System.Drawing">
-    <value>433, 410</value>
+    <value>581, 410</value>
   </data>
   <data name="btnUseResults.Size" type="System.Drawing.Size, System.Drawing">
     <value>117, 28</value>
@@ -510,7 +519,7 @@ W = 2T/R
     <value>NoControl</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>450, 15</value>
+    <value>598, 15</value>
   </data>
   <data name="btnOk.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -543,7 +552,7 @@ W = 2T/R
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>450, 50</value>
+    <value>598, 50</value>
   </data>
   <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -876,7 +885,7 @@ W = 2T/R
     <value>8, 16</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>566, 681</value>
+    <value>714, 681</value>
   </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 4, 4, 4</value>
@@ -911,6 +920,12 @@ W = 2T/R
   <data name="&gt;&gt;Intercept.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;bindingChargeRegressionLines.Name" xml:space="preserve">
+    <value>bindingChargeRegressionLines</value>
+  </data>
+  <data name="&gt;&gt;bindingChargeRegressionLines.Type" xml:space="preserve">
+    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;MeasuredDriftTimeSequence.Name" xml:space="preserve">
     <value>MeasuredDriftTimeSequence</value>
   </data>
@@ -929,17 +944,17 @@ W = 2T/R
   <data name="&gt;&gt;MeasuredDriftTimeMsec.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;MeasuredDriftTimeCCSsqA.Name" xml:space="preserve">
+    <value>MeasuredDriftTimeCCSsqA</value>
+  </data>
+  <data name="&gt;&gt;MeasuredDriftTimeCCSsqA.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;MeasuredDriftTimeHighEnergyOffsetMsec.Name" xml:space="preserve">
     <value>MeasuredDriftTimeHighEnergyOffsetMsec</value>
   </data>
   <data name="&gt;&gt;MeasuredDriftTimeHighEnergyOffsetMsec.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;bindingChargeRegressionLines.Name" xml:space="preserve">
-    <value>bindingChargeRegressionLines</value>
-  </data>
-  <data name="&gt;&gt;bindingChargeRegressionLines.Type" xml:space="preserve">
-    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditDriftTimePredictorDlg</value>

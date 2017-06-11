@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -500,7 +500,7 @@
     <value>作成(&amp;C)...</value>
   </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>行{0}のエラー：プリカーサーm/z {1}は、イオン公式および電荷状態（差分 = {3}、トランジション設定 | 装置 | メソッド一致耐性誤差m/z = {4}）から計算された値{2}に一致しません。  表でm/z値を訂正してください。空欄にしておくと、Skylineが計算します。</value>
+    <value>エラー： iRTカルキュレーターなしでドキュメントをアッセイライブラリにインポートすると、{0}が既に存在するためにこれを作成できません。</value>
   </data>
   <data name="Pivoter_QualifyColumnInfo_AreaRatio" xml:space="preserve">
     <value>AreaRatio</value>
@@ -1648,6 +1648,9 @@
   </data>
   <data name="Print" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\print.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SpectrumLibraryInfoDlg_SetDetailsText_Unique_peptides" xml:space="preserve">
+    <value>ユニークペプチド：{0}</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_Matching_Peptides" xml:space="preserve">
     <value>一致するペプチド</value>
@@ -3241,7 +3244,7 @@
     <value>共有ファイル</value>
   </data>
   <data name="RescoreResultsDlg_RescoreResultsDlg_In_certain_cases__you_may_want_to_have_Skyline_re_calculate_peaks_and_re_score_them_based_on_the_existing_chromatogram_data___Chromatograms_will_not_be_re_imported_from_raw_data_files__but_peak_integration_information_may_change_" xml:space="preserve">
-    <value>特定の場合においては、既存のクロマトグラムデータに基づいてSkylineでピークを再計算、再スコアしたほうがよいでしょう。クロマトグラムは生データファイルから再インポートされることはありませんが、ピーク統合情報が変更されることがあります。</value>
+    <value>場合によっては、既存のクロマトグラムデータに基づいてSkylineでピークを再計算し、再スコアしたいこともあるかもしれません。クロマトグラムが生データファイルから再度インポートされることはありませんが、ピーク積分情報は変更となることがあります。</value>
   </data>
   <data name="SkylineWindow_ImportFasta_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications" xml:space="preserve">
     <value>以下の修飾にUnimod定義を使用しますか？</value>
@@ -3282,8 +3285,8 @@
   <data name="AreaReplicateGraphPane_UpdateGraph_Peak_Area_Percentage" xml:space="preserve">
     <value>ピーク領域パーセント</value>
   </data>
-  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the_iRT_database" xml:space="preserve">
-    <value>新しいペプチドはiRTデータベースに追加されません。</value>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the__0__" xml:space="preserve">
+    <value>{0}に追加される新しいペプチドはありません。</value>
   </data>
   <data name="CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_Adding_ion_mobility_data_from__0_" xml:space="preserve">
     <value>{0}からイオン移動度データを追加中</value>
@@ -4416,9 +4419,6 @@
   <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_or_Chromatogram_library" xml:space="preserve">
     <value>ファイル{0}はBiblioSpecまたはクロマトグラムライブラリではありません。</value>
   </data>
-  <data name="BackgroundProteomeManager_LoadBackground_Digesting__0__proteome" xml:space="preserve">
-    <value>{0}プロテオームの消化中</value>
-  </data>
   <data name="SkylineWindow_Paste_Paste_proteins" xml:space="preserve">
     <value>タンパク質の貼り付け</value>
   </data>
@@ -4962,8 +4962,8 @@
   <data name="SkylineWindow_CheckResults_The_data_file___0___is_missing__and_the_following_original_instrument_output_could_not_be_found_" xml:space="preserve">
     <value>データファイル「{0}」が欠損しており、以下の元の装置出力が見つかりませんでした：</value>
   </data>
-  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the_iRT_database" xml:space="preserve">
-    <value>iRTデータベースに1個の新しいペプチドが追加されます。</value>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the__0__" xml:space="preserve">
+    <value>{0}には1個の新しいペプチドが追加されます。</value>
   </data>
   <data name="FastaImporter_ToFasta_Too_few_columns_found" xml:space="preserve">
     <value>見つかった列数が少なすぎます</value>
@@ -5848,7 +5848,7 @@
     <value>フォルダを選択してください</value>
   </data>
   <data name="ValueMissingException_ValueMissingException_" xml:space="preserve">
-    <value>引数{0}には値が必要であり、--name=value形式で指定しなければなりません</value>
+    <value>引数{0}には値が必要であり、--name=value形式で指定する必要があります</value>
   </data>
   <data name="AbstractDemultiplexer_AnalyzeFile_Isolation_scheme_is_set_to_multiplexing_but_file_does_not_appear_to_contain_multiplexed_acquisition_data_" xml:space="preserve">
     <value>単離スキームは多重化に設定されていますが、ファイルに多重化取得データが含まれていないようです。</value>
@@ -8108,9 +8108,6 @@
   <data name="BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory" xml:space="preserve">
     <value>入力ディレクトリを追加</value>
   </data>
-  <data name="FastaImporter_Import_Document_size_limit_exceeded" xml:space="preserve">
-    <value>ドキュメントサイズ制限を超えました。</value>
-  </data>
   <data name="TransitionBinner_BinData_" xml:space="preserve">
     <value>インポートされたスペクトルには、m/zまたは強度値 ({0} != {1}) がないようです。</value>
   </data>
@@ -8232,7 +8229,7 @@
     <value>不変量</value>
   </data>
   <data name="CommandLine_CreateIrtDatabase_Error__Importing_an_assay_library_to_a_document_without_an_iRT_calculator_cannot_create__0___because_it_exists_" xml:space="preserve">
-    <value>エラー： iRTカルキュレーターなしでドキュメントをアッセイライブラリにインポートすると、{0}が既に存在するためにこれを作成できません。</value>
+    <value>エラー： iRTカルキュレータなしでドキュメントをアッセイライブラリにインポートすると、{0}が存在するためにこれを作成できません。</value>
   </data>
   <data name="MassListImporter_Import_Importing__0__" xml:space="preserve">
     <value>{0}のインポート中</value>
@@ -9063,15 +9060,6 @@
   <data name="CommandArgs_ParseArgsInternal_Error__Invalid_value___0___for__1___use___2___or___3___" xml:space="preserve">
     <value>エラー：{1}の値「{0}」が無効です。「{2}」か「{3}」を使用してください。</value>
   </data>
-  <data name="MidasLibSpec_FILTER_MIDAS_Library_Files" xml:space="preserve">
-    <value>MIDASライブラリファイル</value>
-  </data>
-  <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Create_MIDAS_Spectral_Library" xml:space="preserve">
-    <value>MIDASスペクトルライブラリの作成</value>
-  </data>
-  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_This_document_has_a_MIDAS_library__Would_you_like_to_build_a_spectral_library_from_it_" xml:space="preserve">
-    <value>このドキュメントにはMIDASライブラリがあります。 これからスペクトルライブラリを構築しますか？</value>
-  </data>
   <data name="PeptideSettingsUI_ShowBuildLibraryDlg_Finishing_up_building_library" xml:space="preserve">
     <value>ライブラリ構築の終了中</value>
   </data>
@@ -9154,6 +9142,12 @@
   <data name="FastaImporter_Import_Error_at_or_around_line__0____1_" xml:space="preserve">
     <value>行{0}上またはその周辺のエラー：{1}</value>
   </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
+    <value>iRTをライブラリに追加しようとしてエラーが発生しました。</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Adding_iRTs_to_Library" xml:space="preserve">
+    <value>iRTをライブラリに追加しています</value>
+  </data>
   <data name="Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator" xml:space="preserve">
     <value>iRT標準の変更は、iRTカルキュレーターを修正することでのみ可能です</value>
   </data>
@@ -9198,5 +9192,329 @@
   </data>
   <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_" xml:space="preserve">
     <value>フルスキャンのプロダクトの質量精度を{0} ppmに変更中です。</value>
+  </data>
+  <data name="SpectrumLibraryInfoDlg_SetDetailsText_Unique_Precursors___0_" xml:space="preserve">
+    <value>ユニークプリカーサー：{0}</value>
+  </data>
+  <data name="UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__" xml:space="preserve">
+    <value>{0}にアップグレードしています（{1}/{2}をダウンロードしています）</value>
+  </data>
+  <data name="UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_" xml:space="preserve">
+    <value>アップグレードに失敗しました。</value>
+  </data>
+  <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
+    <value>{0}をアップグレードしています</value>
+  </data>
+  <data name="UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_" xml:space="preserve">
+    <value>アップグレードの確認に失敗しました。</value>
+  </data>
+  <data name="UpgradeDlg_UpgradeDlg_No_update_was_found_" xml:space="preserve">
+    <value>アップデートが見つかりませんでした。</value>
+  </data>
+  <data name="UpgradeDlg_cbAtStartup_CheckedChanged_Maybe__Later" xml:space="preserve">
+    <value>後でもう一度確認してください(&amp;L)</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library" xml:space="preserve">
+    <value>スペクトルライブラリをエクスポート</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Failed_exporting_spectral_library_to__0__" xml:space="preserve">
+    <value>スペクトルライブラリの{0}へのエクスポートに失敗しました。</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____" xml:space="preserve">
+    <value>スペクトルライブラリ{0}をエクスポートしています...</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_to_export_a_spectral_library_" xml:space="preserve">
+    <value>スペクトルライブラリをエクスポートするには、ドキュメントに結果が含まれている必要があります。</value>
+  </data>
+  <data name="SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_" xml:space="preserve">
+    <value>スペクトルライブラリをエクスポートするには、ドキュメントに1つ以上のペプチドプリカーサーが含まれている必要があります。</value>
+  </data>
+  <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_" xml:space="preserve">
+    <value>設定をチェックし、ライブラリを使用しており、十分に制限されたトランジションを選択していることを確認してください。</value>
+  </data>
+  <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_" xml:space="preserve">
+    <value>設定をチェックし、ライブラリを使用していることを確認してください。</value>
+  </data>
+  <data name="FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__transitions_in__1_n0__peptides_at_line__2_n0__" xml:space="preserve">
+    <value>このインポートでは、ドキュメントの行{2:n0}の{1:n0}個のペプチドに{0:n0}個を超えるトランジションが含まれている必要があります。</value>
+  </data>
+  <data name="FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__peptides_at_line__1_n0__" xml:space="preserve">
+    <value>このインポートでは、ドキュメントの行{1:n0}に{0:n0}個を超えるペプチドが含まれている必要があります。</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateListPeptide_Updating_list_of_peptides" xml:space="preserve">
+    <value>ペプチドのリストを更新しています</value>
+  </data>
+  <data name="DataGridViewPasteHandler_Paste_Pasting_row__0_" xml:space="preserve">
+    <value>行{0}を貼り付けています</value>
+  </data>
+  <data name="SkylineWindow_ReimportChromatograms_Reimporting_chromatograms" xml:space="preserve">
+    <value>クロマトグラムを再インポートしています</value>
+  </data>
+  <data name="DataGridViewPasteHandler_ClearCells_Cleared__0___1__rows" xml:space="preserve">
+    <value>{0}/{1}行を消去しました</value>
+  </data>
+  <data name="DataboundGridControl_DoFillDown_Filling__0___1__rows" xml:space="preserve">
+    <value>{0}/{1}行を入力しています</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ImportRangesFromFiles_Reading_isolation_scheme___" xml:space="preserve">
+    <value>単離スキームを読み出しています...</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ImportRangesFromFiles_Failed_reading_isolation_scheme_" xml:space="preserve">
+    <value>単離スキームの読み出しに失敗しました。</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ReadIsolationRanges_Missing_isolation_range_for_the_isolation_target__0__m_z_in_the_file__1_" xml:space="preserve">
+    <value>ファイル{1}における単離ターゲット{0}m/zの欠損単離範囲</value>
+  </data>
+  <data name="EditIsolationSchemeDlg_ReadIsolationRanges_No_repeating_isolation_scheme_found_in__0_" xml:space="preserve">
+    <value>{0}に反復単離スキームがありません</value>
+  </data>
+  <data name="SkylineVersion_GetCurrentVersionName_Current___0__" xml:space="preserve">
+    <value>電流（{0}）</value>
+  </data>
+  <data name="SkylineVersion_GetCurrentVersionName_Developer_Build" xml:space="preserve">
+    <value>開発者ビルド</value>
+  </data>
+  <data name="SkylineVersion_V3_6_Skyline_3_6" xml:space="preserve">
+    <value>Skyline 3.6</value>
+  </data>
+  <data name="GraphData_CorrelationLabel_Measured_Time___0__" xml:space="preserve">
+    <value>測定時間（{0}）</value>
+  </data>
+  <data name="GraphData_ResidualsLabel_Time_from_Regression___0__" xml:space="preserve">
+    <value>回帰からの時間（{0}）</value>
+  </data>
+  <data name="RegressionGraphPane_RegressionGraphPane_Missing" xml:space="preserve">
+    <value>欠損</value>
+  </data>
+  <data name="RegressionGraphPane_RegressionGraphPane_Outliers" xml:space="preserve">
+    <value>異常値</value>
+  </data>
+  <data name="AddIrtsResultsDlg_dataGridView_CellContentClick_Measured" xml:space="preserve">
+    <value>測定済み</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_dataGridView_CellContentClick_iRT" xml:space="preserve">
+    <value>iRT(&amp;R)</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success" xml:space="preserve">
+    <value>成功</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Failed" xml:space="preserve">
+    <value>失敗</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Refined" xml:space="preserve">
+    <value>回帰の改良</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Regression_Attempted" xml:space="preserve">
+    <value>回帰の試行</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_Adding_iRTs_to_library" xml:space="preserve">
+    <value>iRTをライブラリに追加しています</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_LibraryBuildCompleteCallback_An_error_occurred_trying_to_add_iRTs_to_the_library_" xml:space="preserve">
+    <value>iRTをライブラリに追加しようとしてエラーが発生しました。</value>
+  </data>
+  <data name="RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_" xml:space="preserve">
+    <value>{0}（最低{1}点）</value>
+  </data>
+  <data name="IrtDb_AddPeptides_Adding_peptides" xml:space="preserve">
+    <value>ペプチドを追加しています</value>
+  </data>
+  <data name="BuildBackgroundProteomeDlg_AddFastaFile_The_added_file_included__0__repeated_protein_sequences__Their_names_were_added_as_aliases_to_ensure_the_protein_list_contains_only_one_copy_of_each_sequence_" xml:space="preserve">
+    <value>追加されたファイルには、{0}個の反復タンパク質シークエンスが含まれていました。タンパク質リストに各シークエンスのコピーが1つしか含まれないようにするために、これらの名前はエイリアスとして追加されました。</value>
+  </data>
+  <data name="ViewLibraryDlg_EnsureDigested_The_background_proteome___0___is_in_an_older_format___In_order_to_be_able_to_efficiently_find_peptide_sequences__the_background_proteome_should_be_upgraded_to_the_latest_version___Do_you_want_to_upgrade_the_background_proteome_now_" xml:space="preserve">
+    <value>バックグラウンドプロテオーム「{0}」が旧形式になっています。効率よくペプチドシークエンスを見つけるには、バックグラウンドプロテオームを最新版にアップグレードしてください。今すぐバックグラウンドプロテオームをアップグレードしますか？</value>
+  </data>
+  <data name="ViewLibraryDlg_EnsureDigested_Copying_database" xml:space="preserve">
+    <value>データベースをコピーしています</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_Spectral_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_" xml:space="preserve">
+    <value>スペクトラルライブラリは変更できません。このiRTカルキュレーターを新規ファイルとして保存する必要があります。</value>
+  </data>
+  <data name="ZipFileShare_AddFile_Failed_attempting_to_add_the_file__0_" xml:space="preserve">
+    <value>ファイル{0}の追加に失敗しました</value>
+  </data>
+  <data name="ZipFileShare_AddFile_The_name___0___is_already_in_use_from_the_path__1_" xml:space="preserve">
+    <value>「{0}」という名前は既にパス{1}で使用されています。</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_" xml:space="preserve">
+    <value>衝突断面積（Sq A）</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_collisional_cross_section_value__0_" xml:space="preserve">
+    <value>無効な衝突断面積値{0}</value>
+  </data>
+  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_collisional_cross_section_" xml:space="preserve">
+    <value>値{0}は有効な衝突断面積ではありません。</value>
+  </data>
+  <data name="MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_high_energy_offset_" xml:space="preserve">
+    <value>値{0}は有効な高エネルギーオフセットではありません。</value>
+  </data>
+  <data name="IsolationSchemeReader_ReadIsolationRangesFromFiles_Reading_isolation_scheme_from__0_" xml:space="preserve">
+    <value>{0}から単離スキームを読み出しています</value>
+  </data>
+  <data name="GraphFullScan_CreateGraph_Scan_Number_" xml:space="preserve">
+    <value>スキャン番号：</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_OkDialog_You_must_enter_a_name_for_the_filtered_library_" xml:space="preserve">
+    <value>フィルタされたライブラリの名前を入力してください。</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_OkDialog_A_library_with_this_name_already_exists_" xml:space="preserve">
+    <value>この名前のライブラリは既に存在します。</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Multiple_MIDAS_libraries_in_document__Select_only_one_before_filtering_" xml:space="preserve">
+    <value>ドキュメント内に複数のMIDASライブラリがあります。1つだけ選択してからフィルタしてください。</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_OkDialog_You_must_enter_a_path_for_the_filtered_library_" xml:space="preserve">
+    <value>フィルタされたライブラリのパスを入力してください。</value>
+  </data>
+  <data name="FilterMidasLibraryDlg_btnBrowse_Click_Export_Filtered_MIDAS_Library" xml:space="preserve">
+    <value>フィルタされたMIDASライブラリのエクスポート</value>
+  </data>
+  <data name="SrmDocumentSharing_MinimizeToFile_Writing_chromatograms" xml:space="preserve">
+    <value>クロマトグラムを書き込んでいます</value>
+  </data>
+  <data name="AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_" xml:space="preserve">
+    <value>メッセージが途切れています。Ctrl+Cを押してメッセージ全体をクリップボードにコピーしてください。</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library" xml:space="preserve">
+    <value>MIDASライブラリを読み込んでいます</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_" xml:space="preserve">
+    <value>{0}を読み込んでいます</value>
+  </data>
+  <data name="EditIrtCalcDlg_RecalibrateStandards_Could_not_get_a_minimum_or_maximum_standard_peptide_" xml:space="preserve">
+    <value>最小または最大標準ペプチドを取得できませんでした。</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_Recalibrate_iRT_Standard_Peptides" xml:space="preserve">
+    <value>iRT標準ペプチドの再校正</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_Recalibrating_iRT_standard_peptides_and_reprocessing_iRT_values" xml:space="preserve">
+    <value>iRT標準ペプチドを再校正してiRT値を再処理しています</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_An_error_occurred_while_recalibrating_" xml:space="preserve">
+    <value>再校正中にエラーが発生しました。</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_" xml:space="preserve">
+    <value>安定したクロマトグラフ条件では、これによって保持時間のアライメントが改善することがあります。</value>
+  </data>
+  <data name="ProcessedIrtAverages_RecalibrateStandards_A_standard_peptide_was_missing_when_trying_to_recalibrate_" xml:space="preserve">
+    <value>再校正しようとしたときに標準ペプチドがありませんでした。</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Processing_Retention_Times" xml:space="preserve">
+    <value>保持時間を処理しています</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_" xml:space="preserve">
+    <value>保持時間の処理中にエラーが発生しました。</value>
+  </data>
+  <data name="LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_" xml:space="preserve">
+    <value>追加されているペプチドに対してiRT標準値を再校正しますか？</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal___import_cache_file_can_only_be_specified_once" xml:space="preserve">
+    <value>--import-cache-fileは一度しか指定できません</value>
+  </data>
+  <data name="CommandArgs_GetFullPath_Failed_attempting_to_get_full_path_for__0_" xml:space="preserve">
+    <value>{0}のフルパスの取得に失敗しました</value>
+  </data>
+  <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1__" xml:space="preserve">
+    <value>スコアモデルのトレーニング（反復{0}/{1}）</value>
+  </data>
+  <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_" xml:space="preserve">
+    <value>スコアモデルをトレーニング（反復{0}/{1} - {2:#,#} ピーク位置：{3:0.#%} FDR）</value>
+  </data>
+  <data name="MProphetPeakScoringModel_Train_Scoring_model_converged__iteration__0_____1______peaks_at__2_0_____FDR_" xml:space="preserve">
+    <value>スコアモデルの収束（反復{0} - {1:#,#} ピーク位置：{2:0.#%} FDR）</value>
+  </data>
+  <data name="CompactFormatOption_ALWAYS_Always" xml:space="preserve">
+    <value>常に行う</value>
+  </data>
+  <data name="CompactFormatOption_NEVER_Never" xml:space="preserve">
+    <value>決して行わない</value>
+  </data>
+  <data name="CompactFormatOption_ONLY_FOR_LARGE_FILES_Only_for_large_files" xml:space="preserve">
+    <value>大きなファイルのみ</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for___exp_polarity__It_must_be_one_of_the_following___1_" xml:space="preserve">
+    <value>エラー:「{0}」は--exp-polarityに有効な値ではありません。値は以下のいずれかである必要があります：{1}</value>
+  </data>
+  <data name="LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor" xml:space="preserve">
+    <value>保持時間予測を追加</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_iRT_database" xml:space="preserve">
+    <value>iRTデータベース</value>
+  </data>
+  <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_spectral_library" xml:space="preserve">
+    <value>スペクトルライブラリ</value>
+  </data>
+  <data name="KdeAlignerFactory_ToString_KDE_Aligner" xml:space="preserve">
+    <value>KDEアライナー</value>
+  </data>
+  <data name="LowessAlignerFactory_ToString_LOWESS_Aligner" xml:space="preserve">
+    <value>LOWESSアライナー</value>
+  </data>
+  <data name="PiecewiseLinearRegressionFunction_GetRegressionDescription_piecwise_linear_functions" xml:space="preserve">
+    <value>区分線形関数</value>
+  </data>
+  <data name="DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings" xml:space="preserve">
+    <value>編集と一致するようにドキュメント設定をアップロードしています。</value>
+  </data>
+  <data name="PeptideChromDataSets_AddDataSet_Unable_to_process_chromatograms_for_the_molecule___0___because_one_chromatogram_ends_at_time___1___and_the_other_ends_at_time___2___" xml:space="preserve">
+    <value>分子「{0}」のクロマトグラムを処理できません。時間「{1}」で終わるクロマトグラムと時間「{2}」で終わるクロマトグラムがあります。</value>
+  </data>
+  <data name="PeptideTipProvider_RenderTip_Precursor_m_z" xml:space="preserve">
+    <value>プリカーサーm/z</value>
+  </data>
+  <data name="ColorSchemeList_GetDefaults_Eggplant_lemonade" xml:space="preserve">
+    <value>エッグプラントレモネード</value>
+  </data>
+  <data name="ColorSchemeList_GetDefaults_Distinct" xml:space="preserve">
+    <value>クリア</value>
+  </data>
+  <data name="ColorSchemeList_GetDefaults_Colorblind_friendly" xml:space="preserve">
+    <value>ハイコントラスト</value>
+  </data>
+  <data name="EditCustomThemeDlg_buttonSave_Click_The_color_scheme___0___already_exists_" xml:space="preserve">
+    <value>{0}」というカラースキームが既に存在しています。</value>
+  </data>
+  <data name="EditCustomThemeDlg_dataGridViewColors_DataError_Colors_must_be_entered_in_HEX_or_RGB_format_" xml:space="preserve">
+    <value>カラーはHEXまたはRGB形式で入力してください。</value>
+  </data>
+  <data name="EditCustomThemeDlg_DoPaste_Unable_to_parse_the_color___0____Use_HEX_or_RGB_format_" xml:space="preserve">
+    <value>カラー「{0}」を解析できません。HEXまたはRGB形式を使用してください。</value>
+  </data>
+  <data name="ColorSchemeList_DEFAULT_Skyline_classic" xml:space="preserve">
+    <value>Skylineクラシック</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_following_iRT_standard_peptides_are_missing_from_the_document_" xml:space="preserve">
+    <value>ドキュメントに次のiRT標準ペプチドがありません。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_With__0__standard_peptides___1__are_required_with_a_correlation_of__2__" xml:space="preserve">
+    <value>{0}個の標準ペプチドがある場合、{1}個には{2}の相関関係が必要です。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_only_contains__0__of_these_iRT_standard_peptides_" xml:space="preserve">
+    <value>ドキュメントには、このiRT標準ペプチドが{0}個しかありません。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Do_you_want_to_continue_" xml:space="preserve">
+    <value>続行しますか？</value>
+  </data>
+  <data name="EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptides___1__required_" xml:space="preserve">
+    <value>{0}個の標準ペプチド（{1}個必要）</value>
+  </data>
+  <data name="EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptide___1__required_" xml:space="preserve">
+    <value>{0}個の標準ペプチド（{1}個必要）</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_contains__0__of_these_iRT_standard_peptides_" xml:space="preserve">
+    <value>ドキュメントには、このiRT標準ペプチドが全く含まれていません。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_The_document_does_not_contain_any_of_these_iRT_standard_peptides_" xml:space="preserve">
+    <value>ドキュメントには、このiRT標準ペプチドが一切含まれていません。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_A_maximum_of__0__may_be_missing_and_or_outliers_for_a_successful_import_" xml:space="preserve">
+    <value>最大{0}個の欠損や異常値があっても、インポートできます。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_None_may_be_missing_or_outliers_for_a_successful_import_" xml:space="preserve">
+    <value>欠損や異常値があると、インポートできません。</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_Add_missing_iRT_standard_peptides_to_your_document_or_change_the_retention_time_predictor_" xml:space="preserve">
+    <value>欠損iRT標準ペプチドをドキュメントに追加するか、保持時間予測を変更します。</value>
   </data>
 </root>

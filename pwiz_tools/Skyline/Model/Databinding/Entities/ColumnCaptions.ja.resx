@@ -489,6 +489,9 @@
   <data name="PointCount">
     <value>点数</value>
   </data>
+  <data name="PointsAcrossPeak">
+    <value>ピーク全体でのポイント数</value>
+  </data>
   <data name="Precursor">
     <value>プリカーサー</value>
   </data>
@@ -690,6 +693,9 @@
   <data name="StdevTotalAreaRatio">
     <value>Stdev総面積比</value>
   </data>
+  <data name="TicArea">
+    <value>総イオン電流領域</value>
+  </data>
   <data name="TotalArea">
     <value>総面積</value>
   </data>
@@ -777,6 +783,9 @@
   <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
     <value>明示的ドリフト時間高エネルギーオフセットミリ秒</value>
   </data>
+  <data name="ExplicitCollisionalCrossSection">
+    <value>明示的衝突断面積</value>
+  </data>
   <data name="ExplicitDriftTimeMsec">
     <value>明示的ドリフト時間ミリ秒</value>
   </data>
@@ -818,5 +827,17 @@
   </data>
   <data name="MoleculeFormula">
     <value>分子式</value>
+  </data>
+  <data name="CollisionalCrossSection">
+    <value>衝突断面積</value>
+  </data>
+  <data name="DriftTimeMS1">
+    <value>ドリフト時間MS1</value>
+  </data>
+  <data name="DriftTimeFragment">
+    <value>ドリフト時間断片</value>
+  </data>
+  <data name="DriftTimeWindow">
+    <value>ドリフト時間ウィンドウ</value>
   </data>
 </root>

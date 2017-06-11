@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
 		Microsoft ResX Schema
@@ -678,6 +678,9 @@
   </data>
   <data name="StdevTotalAreaRatio">
     <value>プリカーサーのTotalAreaNormalized値の標準偏差 です。</value>
+  </data>
+  <data name="TicArea">
+    <value>実行時間全体における総イオン電流の積分</value>
   </data>
   <data name="TotalArea">
     <value>特定のプリカーサーに対する各トランジションすべての合計 Area値です。</value>
