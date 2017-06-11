@@ -539,10 +539,17 @@ namespace pwiz.Skyline.Model
                                 if (dotIndex == -1)
                                     dotIndex = modText.Length - 1;  // Just before the close index for zero precision
                                 double mass;
-                                if (double.TryParse(modText, out mass))
+                                if (double.TryParse(modText,
+                                    NumberStyles.Float | NumberStyles.AllowThousands,
+                                    CultureInfo.InvariantCulture,
+                                    out mass))
+                                {
                                     _mods[aaIndex] = new ModMass(mass, modText.Length - dotIndex - 1);
+                                }
                                 else
+                                {
                                     _mods[aaIndex] = new ModMass(); // Add wildcard
+                                }
                             }
                         }
 
