@@ -199,7 +199,7 @@
     <value>6</value>
   </data>
   <data name="checkBoxIDLabels.Text" xml:space="preserve">
-    <value>于 0.05 误判断比率显示 ID 编号</value>
+    <value>于 0.01 误判断比率显示 ID 编号</value>
   </data>
   <data name="&gt;&gt;checkBoxIDLabels.Name" xml:space="preserve">
     <value>checkBoxIDLabels</value>
@@ -229,7 +229,7 @@
     <value>5</value>
   </data>
   <data name="checkBoxXRange.Text" xml:space="preserve">
-    <value>将 X 范围集中在 0.05误判断比率上</value>
+    <value>将 X 范围集中在 0.01 误判断比率上</value>
   </data>
   <data name="&gt;&gt;checkBoxXRange.Name" xml:space="preserve">
     <value>checkBoxXRange</value>
@@ -364,7 +364,7 @@
     <value>3</value>
   </data>
   <data name="checkBoxExpectedFp.Text" xml:space="preserve">
-    <value>显示 0.05 预期 FP 行</value>
+    <value>显示 0.01 预期 FP 行</value>
   </data>
   <data name="&gt;&gt;checkBoxExpectedFp.Name" xml:space="preserve">
     <value>checkBoxExpectedFp</value>
