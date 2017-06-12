@@ -52,6 +52,7 @@ namespace pwiz.Skyline.Model.Hibernate
                 .SetProperty("connection.driver_class", typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName); // Not L10N
             Assembly assembly = typeof(SessionFactoryFactory).Assembly;
             configuration.SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName); // Not L10N
+            configuration.SetDefaultAssembly(assembly.FullName);
             configuration.AddInputStream(assembly.GetManifestResourceStream(typeof(SessionFactoryFactory).Namespace + ".mapping.xml")); // Not L10N
             if (settings != null)
                 AddRatioColumns(configuration, settings);
