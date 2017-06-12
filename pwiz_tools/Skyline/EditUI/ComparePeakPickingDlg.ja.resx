@@ -198,6 +198,9 @@
   <data name="checkBoxIDLabels.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
+  <data name="checkBoxIDLabels.Text" xml:space="preserve">
+    <value>0.01 FPで#IDを表示</value>
+  </data>
   <data name="&gt;&gt;checkBoxIDLabels.Name" xml:space="preserve">
     <value>checkBoxIDLabels</value>
   </data>
@@ -224,6 +227,9 @@
   </data>
   <data name="checkBoxXRange.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
+  </data>
+  <data name="checkBoxXRange.Text" xml:space="preserve">
+    <value>0.01 FPのX範囲にフォーカス</value>
   </data>
   <data name="&gt;&gt;checkBoxXRange.Name" xml:space="preserve">
     <value>checkBoxXRange</value>
@@ -356,6 +362,9 @@
   </data>
   <data name="checkBoxExpectedFp.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
+  </data>
+  <data name="checkBoxExpectedFp.Text" xml:space="preserve">
+    <value>0.01 予測FP行を表示</value>
   </data>
   <data name="&gt;&gt;checkBoxExpectedFp.Name" xml:space="preserve">
     <value>checkBoxExpectedFp</value>
