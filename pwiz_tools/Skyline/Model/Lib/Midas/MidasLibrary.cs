@@ -291,6 +291,8 @@ namespace pwiz.Skyline.Model.Lib.Midas
         private bool Load(IProgressMonitor monitor)
         {
             _spectra = null;
+            if (FilePath == null)
+                return false;
             var info = new FileInfo(FilePath);
             if (!info.Exists || info.Length == 0)
                 return false;
