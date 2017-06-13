@@ -75,7 +75,6 @@
             // 
             resources.ApplyResources(this.linkLabel1, "linkLabel1");
             this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.TabStop = true;
             this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
             // 
             // labelABSciex
@@ -128,9 +127,9 @@
         private System.Windows.Forms.PictureBox pictureSkyline;
         private System.Windows.Forms.Label labelABSciex;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.LinkLabel linkLabel1;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.LinkLabel linkLabel1;
     }
 }

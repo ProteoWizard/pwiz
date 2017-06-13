@@ -175,36 +175,18 @@ namespace pwiz.Skyline
                 }
                 LocalizationHelper.InitThread(Thread.CurrentThread);
 
-                // Make sure the user has agreed to the current license version
-                // or one more recent.
-                int licenseVersion = Settings.Default.LicenseVersionAccepted;
-                if (licenseVersion < LICENSE_VERSION_CURRENT && !NoSaveSettings)
+                if (!FunctionalTest)
                 {
-                    // If the user has never used the application before, then
-                    // they must have agreed to the current license agreement during
-                    // installation.  Otherwise, make sure they agree to the new
-                    // license agreement.
-                    if (Install.Type == Install.InstallType.release &&
-                            (licenseVersion != 0 || !Settings.Default.MainWindowSize.IsEmpty))
+                    using (var dlg = new UpgradeDlg(0))
                     {
-                        using (var dlg = new UpgradeDlg(licenseVersion))
+                        if (dlg.ShowDialog() == DialogResult.Cancel)
                         {
-                            if (dlg.ShowDialog() == DialogResult.Cancel)
-                                return;
+                            string urlInstall = Environment.Is64BitOperatingSystem
+                                ? "https://skyline.ms/skyline64.url"  // Not L10N
+                                : "https://skyline.ms/skyline32.url"; // Not L10N
+                            WebHelpers.OpenLink(null, urlInstall);
+                            return;
                         }
-                    }
-
-                    try
-                    {
-                        // Make sure the user never sees this again for this license version
-                        Settings.Default.LicenseVersionAccepted = LICENSE_VERSION_CURRENT;
-                        Settings.Default.Save();
-                    }
-// ReSharper disable EmptyGeneralCatchClause
-                    catch (Exception)
-// ReSharper restore EmptyGeneralCatchClause
-                    {
-                        // Just try to update the license version next time.
                     }
                 }
 

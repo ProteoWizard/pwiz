@@ -123,17 +123,17 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>243, 193</value>
+    <value>217, 193</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+    <value>101, 23</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-    <value>I &amp;Agree</value>
+    <value>Remind Me &amp;Later</value>
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
@@ -157,13 +157,10 @@
     <value>129, 36</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>155, 13</value>
+    <value>0, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
-  </data>
-  <data name="label4.Text" xml:space="preserve">
-    <value>Due to inclusion of the license for:</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -184,13 +181,13 @@
     <value>129, 149</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>224, 13</value>
+    <value>230, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>To accept the new terms, click I Agree below.</value>
+    <value>Click the Install Now button to begin upgrading.</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -207,17 +204,17 @@
   <data name="linkLabel1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="linkLabel1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="linkLabel1.Location" type="System.Drawing.Point, System.Drawing">
     <value>129, 112</value>
   </data>
   <data name="linkLabel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 13</value>
+    <value>0, 13</value>
   </data>
   <data name="linkLabel1.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
-  </data>
-  <data name="linkLabel1.Text" xml:space="preserve">
-    <value>Skyline License Agreement</value>
   </data>
   <data name="&gt;&gt;linkLabel1.Name" xml:space="preserve">
     <value>linkLabel1</value>
@@ -241,9 +238,7 @@
     <value>2</value>
   </data>
   <data name="labelABSciex.Text" xml:space="preserve">
-    <value>Shimadzu's File Converter Software
-Copyright © 2014 by Shimadzu Corporation.
-All rights reserved.</value>
+    <value>Manual installation is required to upgrade.</value>
   </data>
   <data name="&gt;&gt;labelABSciex.Name" xml:space="preserve">
     <value>labelABSciex</value>
@@ -267,13 +262,13 @@ All rights reserved.</value>
     <value>129, 13</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>260, 20</value>
+    <value>224, 20</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>Skyline license terms have changed</value>
+    <value>Skyline 3.7 has been released!</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -342,10 +337,10 @@ All rights reserved.</value>
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>0</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-    <value>I &amp;Decline</value>
+    <value>Install &amp;Now</value>
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
