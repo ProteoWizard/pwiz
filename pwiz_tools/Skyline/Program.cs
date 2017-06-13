@@ -182,8 +182,8 @@ namespace pwiz.Skyline
                         if (dlg.ShowDialog() == DialogResult.Cancel)
                         {
                             string urlInstall = Environment.Is64BitOperatingSystem
-                                ? "https://skyline.ms/skyline64.url"  // Not L10N
-                                : "https://skyline.ms/skyline32.url"; // Not L10N
+                                ? "http://skyline.ms/skyline64.url"  // Not L10N
+                                : "http://skyline.ms/skyline32.url"; // Not L10N
                             WebHelpers.OpenLink(null, urlInstall);
                             return;
                         }
