@@ -199,7 +199,7 @@
     <value>6</value>
   </data>
   <data name="checkBoxIDLabels.Text" xml:space="preserve">
-    <value>0.01 FPで#IDを表示</value>
+    <value>{0} FPで#IDを表示</value>
   </data>
   <data name="&gt;&gt;checkBoxIDLabels.Name" xml:space="preserve">
     <value>checkBoxIDLabels</value>
@@ -229,7 +229,7 @@
     <value>5</value>
   </data>
   <data name="checkBoxXRange.Text" xml:space="preserve">
-    <value>0.01 FPのX範囲にフォーカス</value>
+    <value>{0} FPのX範囲にフォーカス</value>
   </data>
   <data name="&gt;&gt;checkBoxXRange.Name" xml:space="preserve">
     <value>checkBoxXRange</value>
@@ -364,7 +364,7 @@
     <value>3</value>
   </data>
   <data name="checkBoxExpectedFp.Text" xml:space="preserve">
-    <value>0.01 予測FP行を表示</value>
+    <value>{0} 予測FP行を表示</value>
   </data>
   <data name="&gt;&gt;checkBoxExpectedFp.Name" xml:space="preserve">
     <value>checkBoxExpectedFp</value>
