@@ -76,7 +76,6 @@ class BuildParser : protected SAXHandler{
   string filepath_;       ///< path stripped from full name
   string fileroot_;       ///< filename stripped of path and extension
   string curSpecFileName_;///< name of the next spectrum file to parse
-  BlibBuilder& blibMaker_;  ///< object for creating library
   const ProgressIndicator* parentProgress_;  ///< progress of our caller
   ProgressIndicator* fileProgress_;  ///< progress of multiple spec files
   ProgressIndicator* specProgress_;  ///< progress of each spectrum in a file
@@ -97,6 +96,7 @@ class BuildParser : protected SAXHandler{
   double aaMasses_[128];
 
  protected:
+  BlibBuilder& blibMaker_;  ///< object for creating library
   ProgressIndicator* readAddProgress_;  ///< 2 steps: read file, add spec
   PSM* curPSM_;           ///< temp holding space for psm being parsed
   vector<PSM*> psms_;     ///< collected list of psms parsed from file

@@ -231,6 +231,16 @@ bool MascotResultsReader::parseFile(){
  
     readAddProgress_->increment(); // finished reading
 
+    // get max RefSpectra id before building tables
+    sqlite3_stmt* checkMax;
+    int maxRefSpectraId = -1;
+    if (sqlite3_prepare(blibMaker_.getDb(), "SELECT max(id) FROM RefSpectra", -1, &checkMax, NULL) == SQLITE_OK) {
+        if (sqlite3_step(checkMax) == SQLITE_ROW) {
+            maxRefSpectraId = sqlite3_column_int(checkMax, 0);
+        }
+        sqlite3_finalize(checkMax);
+    }
+
     // put all the collected spectra in the library
     map<string, vector<PSM*> >::iterator fileIterator = fileMap_.begin();
     for(; fileIterator != fileMap_.end(); ++fileIterator){
@@ -243,6 +253,14 @@ bool MascotResultsReader::parseFile(){
             setSpecFileName(fileIterator->first.c_str(), false);
             buildTables(MASCOT_IONS_SCORE, fileIterator->first);
         }
+    }
+
+    MascotSpecReader* mascotSpecReader = NULL;
+    if ((mascotSpecReader = dynamic_cast<MascotSpecReader*>(specReader_)) && mascotSpecReader->needsRtConversion()) {
+        Verbosity::status("Converting retention times to minutes for RefSpectra with id > %d.", maxRefSpectraId);
+        char stmtBuf[128];
+        sprintf(stmtBuf, "UPDATE RefSpectra SET retentionTime = retentionTime / 60.0 WHERE id > %d", maxRefSpectraId);
+        blibMaker_.sql_stmt(stmtBuf);
     }
 
     return true;

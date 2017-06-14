@@ -38,9 +38,8 @@ namespace BiblioSpec {
 
 class MascotSpecReader : public SpecFileReader {
  public:
-    MascotSpecReader(){
-        ms_file_ = NULL;
-        ms_results_ = NULL;
+    MascotSpecReader()
+        : ms_file_(NULL), ms_results_(NULL), disableRtConversion_(false), needsRtConversion_(false) {
     }
     MascotSpecReader(const char* filename,
                      ms_mascotresfile* ms_file, 
@@ -130,6 +129,7 @@ class MascotSpecReader : public SpecFileReader {
         string rtStr = spec.getRetentionTimes();
         try{
             returnData.retentionTime = boost::lexical_cast<double>(rtStr) / 60;
+            disableRtConversion_ = true;
             // seconds to minutes
         } catch (...){
             // if it wasn't there, try the title string
@@ -173,11 +173,17 @@ class MascotSpecReader : public SpecFileReader {
                         "file reading.");
         return false;
     }
+
+    bool needsRtConversion() const {
+        return needsRtConversion_;
+    }
     
  private:
     string filename_;   // keep around for reporting purposes
     ms_mascotresfile* ms_file_;    // get spec from here
     ms_mascotresults* ms_results_; // get pep from here (for m/z)
+    bool disableRtConversion_; // rt units known
+    bool needsRtConversion_; // rt units unknown and we've seen a retention time >750
 
     // TODO: This code is now duplicated in SpectrumList_MGF.cpp
     /**
@@ -185,7 +191,7 @@ class MascotSpecReader : public SpecFileReader {
      * two times, return the center of the range.  Possible formats to look
      * for are "Elution:<time> min", "RT:<time>min" and "rt=<time>,".
      */
-    double getRetentionTimeFromTitle(const string& title) const
+    double getRetentionTimeFromTitle(const string& title)
     {
         // text to search for preceeding and following time
         const char* startTags[4] = { "Elution:", "Elution from: ", "RT:", "rt=" };
@@ -203,8 +209,20 @@ class MascotSpecReader : public SpecFileReader {
             if (secondStartTags[format_idx] != NULL)
                 secondTime = getTime(title, secondStartTags[format_idx], endTags[format_idx], &position);
 
-            if (time != 0)
+            if (time != 0) {
+                if (!disableRtConversion_) {
+                    bool unitsKnownMin = format_idx == 0 || format_idx == 2;
+                    if (unitsKnownMin) {
+                        Verbosity::debug("RT conversion to minutes disabled");
+                        disableRtConversion_ = true;
+                        needsRtConversion_ = false;
+                    } else if (time > 750 && !needsRtConversion_) {
+                        Verbosity::debug("RT conversion to minutes enabled");
+                        needsRtConversion_ = true;
+                    }
+                }
                 break;
+            }
         } // try another format
 
         if (time != 0 && secondTime != 0)
@@ -241,9 +259,6 @@ class MascotSpecReader : public SpecFileReader {
             return 0;
         }
     }
-
-
-
 };
 
 } // namespace
@@ -254,19 +269,3 @@ class MascotSpecReader : public SpecFileReader {
  * c-basic-offset: 4
  * End:
  */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
