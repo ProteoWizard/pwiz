@@ -315,6 +315,7 @@ namespace pwiz.SkylineTestFunctional
             // Import merging by order with overflow and multiple files
             RunUI(SkylineWindow.Undo);
             Assert.AreEqual(docInitial, SkylineWindow.Document);
+            WaitForDocumentLoaded();
             RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(_documentPaths[0], _documentPaths[2]), dlg =>
             {
                 dlg.Action = MeasuredResults.MergeAction.merge_indices;
@@ -372,6 +373,7 @@ namespace pwiz.SkylineTestFunctional
             // Now import allowing matching peptides to be merged
             RunUI(SkylineWindow.Undo);
             Assert.AreEqual(docInitial, SkylineWindow.Document);
+            WaitForDocumentLoaded();
             RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(_documentPaths[0], _documentPaths[2]), dlg =>
             {
                 dlg.Action = MeasuredResults.MergeAction.add;
