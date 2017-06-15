@@ -78,7 +78,8 @@ namespace pwiz.SkylineTestFunctional
                     foreach (String report in reports)
                     {
                         WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete 
-                            && null != foldChangeGrid.FoldChangeBindingSource.GroupComparisonModel.Results);
+                            && null != foldChangeGrid.FoldChangeBindingSource.GroupComparisonModel.Results
+                            && null != foldChangeGrid.DataboundGridControl.BindingListSource.ViewContext);
 
                         // ReSharper disable AccessToForEachVariableInClosure
                         RunUI(() => { foldChangeGrid.DataboundGridControl.ChooseView(report); });
