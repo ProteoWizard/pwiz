@@ -1,0 +1,481 @@
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2017 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SQLite;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Xml;
+using System.Xml.Serialization;
+using pwiz.Common.Collections;
+using pwiz.Common.PeakFinding;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Lib.ChromLib;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
+// ReSharper disable InvokeAsExtensionMethod
+
+namespace pwiz.Skyline.Model.Lib
+{
+    [XmlRoot("elib_spec")]
+    public sealed class EncyclopeDiaSpec : LibrarySpec
+    {
+        public const string EXT = ".elib"; // Not L10N
+        public static string FILTER_ELIB
+        {
+            get { return TextUtil.FileDialogFilter(Resources.EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library, EXT); }
+        }
+
+        public EncyclopeDiaSpec(string name, string path)
+            : base(name, path)
+        {
+        }
+
+        public override Library LoadLibrary(ILoadMonitor loader)
+        {
+            return EncyclopeDiaLibrary.Load(this, loader);
+        }
+
+        public override IEnumerable<PeptideRankId> PeptideRankIds
+        {
+            get { return new[] { PEP_RANK_PICKED_INTENSITY }; }
+        }
+
+        public override string Filter
+        {
+            get { return FILTER_ELIB; }
+        }
+
+        #region Implementation of IXmlSerializable
+
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        private EncyclopeDiaSpec()
+        {
+        }
+
+        public static EncyclopeDiaSpec Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new EncyclopeDiaSpec());
+        }
+
+        #endregion
+    }
+
+    [XmlRoot("elib_library")]
+    public sealed class EncyclopeDiaLibrary : CachedLibrary<EncyclopeDiaLibrary.ElibSpectrumInfo>
+    {
+        private const int FORMAT_VERSION_CACHE = 1;
+        private ImmutableList<string> _sourceFiles;
+        private readonly PooledSqliteConnection _pooledSqliteConnection;
+
+        private EncyclopeDiaLibrary()
+        {
+            
+        }
+
+        public override void ReadXml(XmlReader reader)
+        {
+            base.ReadXml(reader);
+            reader.Read();
+        }
+
+        public static string FILTER_ELIB
+        {
+            get { return TextUtil.FileDialogFilter(Resources.EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries, EncyclopeDiaSpec.EXT); }
+        }
+
+        public EncyclopeDiaLibrary(EncyclopeDiaSpec spec) : base(spec)
+        {
+            LibrarySpec = spec;
+            FilePath = spec.FilePath;
+            CachePath = GetLibraryCachePath(FilePath);
+        }
+
+        private EncyclopeDiaLibrary(EncyclopeDiaSpec spec, IStreamManager streamManager) : this(spec)
+        {
+            _pooledSqliteConnection = new PooledSqliteConnection(streamManager.ConnectionPool, FilePath);
+        }
+
+        public EncyclopeDiaSpec LibrarySpec { get; private set; }
+        public string FilePath { get; private set; }
+        public override int CompareRevisions(Library library)
+        {
+            return 0;
+        }
+
+        public override LibrarySpec CreateSpec(string path)
+        {
+            return new EncyclopeDiaSpec(Name, path);
+        }
+
+        public override bool IsSameLibrary(Library library)
+        {
+            var encyclopediaLibrary = library as EncyclopeDiaLibrary;
+            if (encyclopediaLibrary == null)
+            {
+                return false;
+            }
+            return Equals(Name, encyclopediaLibrary.Name);
+        }
+
+        public override LibraryDetails LibraryDetails
+        {
+            get { return new LibraryDetails(); }
+        }
+
+        public override IPooledStream ReadStream
+        {
+            get { return _pooledSqliteConnection; }
+        }
+
+        public override string SpecFilter
+        {
+            get { return TextUtil.FileDialogFiltersAll(FILTER_ELIB); }
+        }
+
+        public static EncyclopeDiaLibrary Load(EncyclopeDiaSpec spec, ILoadMonitor loader)
+        {
+            if (File.Exists(spec.FilePath) && new FileInfo(spec.FilePath).Length > 0)
+            {
+                var library = new EncyclopeDiaLibrary(spec, loader.StreamManager);
+                if (library.Load(loader))
+                    return library;
+            }
+            return null;
+        }
+        private bool Load(ILoadMonitor loader)
+        {
+            if (LoadFromCache(loader))
+            {
+                return true;
+            }
+            if (LoadLibraryFromDatabase(loader))
+            {
+                WriteCache(loader);
+                return true;
+            }
+            return false;
+        }
+
+        private bool LoadLibraryFromDatabase(ILoadMonitor loader)
+        {
+            try
+            {
+                var status = new ProgressStatus(
+                    string.Format(Resources.ChromatogramLibrary_LoadLibraryFromDatabase_Reading_precursors_from__0_,
+                        Name));
+                loader.UpdateProgress(status);
+                var libKeySourceFileDatas = new Dictionary<LibKey, List<Tuple<string, double, FileData>>>();
+
+                using (var cmd = new SQLiteCommand(_pooledSqliteConnection.Connection))
+                {
+                    cmd.CommandText =
+                        "SELECT PeptideModSeq, PrecursorCharge, SourceFile, Score, RTInSeconds, RTInSecondsStart, RTInSecondsStop, CorrelationArray, CorrelationEncodedLength FROM entries"; // Not L10N
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            string modifiedSequence = SequenceMassCalc.NormalizeModifiedSequence(reader.GetString(0));
+                            var libKey = new LibKey(modifiedSequence, Convert.ToInt32(reader.GetValue(1)));
+                            // Tuple of filename, score, FileData
+                            List<Tuple<string, double, FileData>> sourceFileData;
+                            if (!libKeySourceFileDatas.TryGetValue(libKey, out sourceFileData))
+                            {
+                                sourceFileData = new List<Tuple<string, double, FileData>>();
+                                libKeySourceFileDatas.Add(libKey, sourceFileData);
+                            }
+                            float[] correlationArray = PrimitiveArrays.FromBytes<float>(PrimitiveArrays.ReverseBytesInBlocks(
+                                UtilDB.Uncompress((byte[])reader.GetValue(7), reader.GetInt32(8)), sizeof(float)));
+                            // Use the sum of the correlationArray as the score (negative since lower scores are better).
+                            // TODO(nicksh): when searleb fixes it so the "Score" column has non-zero values, use the "Score" column instead
+                            double score = correlationArray.Sum();
+                            sourceFileData.Add(Tuple.Create(reader.GetString(2), score,
+                                new FileData(reader.GetDouble(4),
+                                    new PeakBounds(reader.GetDouble(5), reader.GetDouble(6)))));
+                        }
+                    }
+                }
+                var sourceFiles = libKeySourceFileDatas
+                    .SelectMany(entry => entry.Value.Select(tuple => tuple.Item1))
+                    .Distinct()
+                    .ToArray();
+                Array.Sort(sourceFiles);
+                var sourceFileIds = sourceFiles.Select((file, index) => Tuple.Create(file, index))
+                    .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
+                var spectrumInfos =
+                    libKeySourceFileDatas.Select(entry => MakeSpectrumInfo(entry.Key, entry.Value, sourceFileIds));
+                SetLibraryEntries(spectrumInfos);
+                _sourceFiles = ImmutableList.ValueOf(sourceFiles);
+                loader.UpdateProgress(status.Complete());
+                return true;
+            }
+            catch (Exception e)
+            {
+                Trace.TraceWarning(
+                    Resources.ChromatogramLibrary_LoadLibraryFromDatabase_Error_loading_chromatogram_library__0_, e);
+                return false;
+            }
+        }
+
+        private void WriteCache(ILoadMonitor loader)
+        {
+            using (FileSaver fs = new FileSaver(CachePath, loader.StreamManager))
+            {
+                using (var stream = loader.StreamManager.CreateStream(fs.SafeName, FileMode.Create, true))
+                {
+                    PrimitiveArrays.WriteOneValue(stream, FORMAT_VERSION_CACHE);
+                    PrimitiveArrays.WriteOneValue(stream, _sourceFiles.Count);
+                    foreach (var file in _sourceFiles)
+                    {
+                        byte[] fileNameBytes = Encoding.UTF8.GetBytes(file);
+                        PrimitiveArrays.WriteOneValue(stream, fileNameBytes.Length);
+                        PrimitiveArrays.Write(stream, fileNameBytes);
+                    }
+                    PrimitiveArrays.WriteOneValue(stream, _libraryEntries.Length);
+                    foreach (var elibSpectrumInfo in _libraryEntries)
+                    {
+                        elibSpectrumInfo.Write(stream);
+                    }
+                    loader.StreamManager.Finish(stream);
+                    fs.Commit();
+                    loader.StreamManager.SetCache(FilePath, CachePath);
+                }
+            }
+        }
+
+        private static string GetLibraryCachePath(string filepath)
+        {
+            return Path.ChangeExtension(filepath, ".elibc"); // Not L10N
+        }
+
+        private bool LoadFromCache(ILoadMonitor loader)
+        {
+            if (!loader.StreamManager.IsCached(FilePath, CachePath))
+            {
+                return false;
+            }
+            try
+            {
+                using (var stream = loader.StreamManager.CreateStream(CachePath, FileMode.Open, true))
+                {
+                    int version = PrimitiveArrays.ReadOneValue<int>(stream);
+                    if (version != FORMAT_VERSION_CACHE)
+                    {
+                        return false;
+                    }
+                    int fileCount = PrimitiveArrays.ReadOneValue<int>(stream);
+                    List<String> sourceFiles = new List<string>(fileCount);
+                    while (sourceFiles.Count < fileCount)
+                    {
+                        int byteCount = PrimitiveArrays.ReadOneValue<int>(stream);
+                        byte[] bytes = new byte[byteCount];
+                        stream.Read(bytes, 0, bytes.Length);
+                        sourceFiles.Add(Encoding.UTF8.GetString(bytes));
+                    }
+                    int spectrumInfoCount = PrimitiveArrays.ReadOneValue<int>(stream);
+                    _sourceFiles = ImmutableList.ValueOf(sourceFiles);
+                    List<ElibSpectrumInfo> spectrumInfos = new List<ElibSpectrumInfo>();
+                    while (spectrumInfos.Count < spectrumInfoCount)
+                    {
+                        spectrumInfos.Add(ElibSpectrumInfo.Read(stream));
+                    }
+                    SetLibraryEntries(spectrumInfos);
+                    return true;
+                }
+            }
+            catch (Exception exception)
+            {
+                Trace.TraceWarning("Exception loading cache: {0}", exception); // Not L10N
+                return false;
+            }
+        }
+
+        private void SetLibraryEntries(IEnumerable<ElibSpectrumInfo> spectrumInfos)
+        {
+            var libraryEntries = spectrumInfos.ToArray();
+            Array.Sort(libraryEntries);
+            _libraryEntries = libraryEntries;
+            _setSequences = _libraryEntries
+                        .Select(info => new LibSeqKey(info.Key))
+                        .Distinct()
+                        .ToDictionary(key => key, key => true);
+        }
+
+        protected override SpectrumPeaksInfo.MI[] ReadSpectrum(ElibSpectrumInfo info)
+        {
+            return _pooledSqliteConnection.ExecuteWithConnection(connection =>
+            {
+                using (var cmd = new SQLiteCommand(connection))
+                {
+                    cmd.CommandText =
+                        "SELECT MassEncodedLength, MassArray, IntensityEncodedLength, IntensityArray FROM entries WHERE PrecursorCharge = ? AND PeptideModSeq = ? AND SourceFile = ?"; // Not L10N
+                    cmd.Parameters.Add(new SQLiteParameter(DbType.Int32) {Value = info.Key.Charge});
+                    cmd.Parameters.Add(new SQLiteParameter(DbType.String) {Value = info.Key.Sequence});
+                    cmd.Parameters.Add(new SQLiteParameter(DbType.String) {Value = _sourceFiles[info.BestFileId]});
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            double[] mzs = PrimitiveArrays.FromBytes<double>(
+                                PrimitiveArrays.ReverseBytesInBlocks(
+                                    UtilDB.Uncompress((byte[]) reader.GetValue(1), reader.GetInt32(0)),
+                                    sizeof(double)));
+                            float[] intensities =
+                                PrimitiveArrays.FromBytes<float>(PrimitiveArrays.ReverseBytesInBlocks(
+                                    UtilDB.Uncompress((byte[]) reader.GetValue(3), reader.GetInt32(2)), sizeof(float)));
+                            return mzs
+                                .Select(
+                                    (mz, index) => new SpectrumPeaksInfo.MI {Mz = mz, Intensity = intensities[index]})
+                                .ToArray();
+                        }
+                        return null;
+                    }
+                }
+            });
+        }
+
+        protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(ElibSpectrumInfo info)
+        {
+            return new ChromLibSpectrumHeaderInfo(Name, 0);
+        }
+
+        public override LibraryFiles LibraryFiles
+        {
+            get
+            {
+                return new LibraryFiles{FilePaths = _sourceFiles};
+            }
+        }
+
+        public override PeakBounds GetExplicitPeakBounds(MsDataFileUri filePath, IEnumerable<string> peptideSequences)
+        {
+            int fileId = FindFileInList(filePath, _sourceFiles);
+            if (fileId < 0)
+            {
+                return null;
+            }
+            foreach (var entry in LibraryEntriesWithSequences(peptideSequences))
+            {
+                FileData fileData;
+                if (entry.FileDatas.TryGetValue(fileId, out fileData))
+                {
+                    return fileData.PeakBounds;
+                }
+            }
+            return null;
+        }
+        public static EncyclopeDiaLibrary Deserialize(XmlReader reader)
+        {
+            EncyclopeDiaLibrary encyclopeDiaLibrary = new EncyclopeDiaLibrary();
+            encyclopeDiaLibrary.ReadXml(reader);
+            return encyclopeDiaLibrary;
+        }
+
+        private static ElibSpectrumInfo MakeSpectrumInfo(LibKey libKey,
+            ICollection<Tuple<string, double, FileData>> fileDatas, IDictionary<string, int> sourceFileIds)
+        {
+            double bestScore = double.MinValue;
+            string bestFileName = null;
+            foreach (var tuple in fileDatas)
+            {
+                if (bestFileName == null || tuple.Item2 > bestScore)
+                {
+                    bestFileName = tuple.Item1;
+                    bestScore = tuple.Item2;
+                }
+            }
+            return new ElibSpectrumInfo(libKey, sourceFileIds[bestFileName],
+                fileDatas.Select(
+                    tuple => new KeyValuePair<int, FileData>(sourceFileIds[tuple.Item1], tuple.Item3)));
+
+        }
+
+        public class ElibSpectrumInfo : ICachedSpectrumInfo, IComparable
+        {
+            public ElibSpectrumInfo(LibKey key, int bestFileId, IEnumerable<KeyValuePair<int, FileData>> fileDatas)
+            {
+                Key = key;
+                BestFileId = bestFileId;
+                FileDatas = ImmutableSortedList.FromValues(fileDatas);
+            }
+
+            public LibKey Key { get; private set; }
+            public int BestFileId { get; private set;}
+            public ImmutableSortedList<int, FileData> FileDatas { get; private set; }
+
+            public int CompareTo(object obj)
+            {
+                if (null == obj)
+                {
+                    return 1;
+                }
+                return Key.Compare(((ICachedSpectrumInfo)obj).Key);
+            }
+
+            public void Write(Stream stream)
+            {
+                Key.Write(stream);
+                PrimitiveArrays.WriteOneValue(stream, BestFileId);
+                PrimitiveArrays.WriteOneValue(stream, FileDatas.Count);
+                foreach (var peakBoundEntry in FileDatas)
+                {
+                    PrimitiveArrays.WriteOneValue(stream, peakBoundEntry.Key);
+                    PrimitiveArrays.WriteOneValue(stream, peakBoundEntry.Value.ApexTime);
+                    PrimitiveArrays.WriteOneValue(stream, peakBoundEntry.Value.PeakBounds.StartTime);
+                    PrimitiveArrays.WriteOneValue(stream, peakBoundEntry.Value.PeakBounds.EndTime);
+                }
+            }
+
+            public static ElibSpectrumInfo Read(Stream stream)
+            {
+                var libKey = LibKey.Read(stream);
+                int bestFileId = PrimitiveArrays.ReadOneValue<int>(stream);
+                int peakBoundCount = PrimitiveArrays.ReadOneValue<int>(stream);
+                var peakBounds = new List<KeyValuePair<int, FileData>>();
+                while (peakBounds.Count < peakBoundCount)
+                {
+                    var fileId = PrimitiveArrays.ReadOneValue<int>(stream);
+                    var apexTime = PrimitiveArrays.ReadOneValue<double>(stream);
+                    var startTime = PrimitiveArrays.ReadOneValue<double>(stream);
+                    var endTime = PrimitiveArrays.ReadOneValue<double>(stream);
+                    peakBounds.Add(new KeyValuePair<int, FileData>(fileId, new FileData(apexTime, new PeakBounds(startTime, endTime))));
+                }
+                return new ElibSpectrumInfo(libKey, bestFileId, peakBounds);
+            }
+        }
+        public class FileData
+        {
+            public FileData(double apexTime, PeakBounds peakBounds)
+            {
+                ApexTime = apexTime;
+                PeakBounds = peakBounds;
+            }
+            public double ApexTime { get; private set; }
+            public PeakBounds PeakBounds { get; private set; }
+        }
+
+    }
+}

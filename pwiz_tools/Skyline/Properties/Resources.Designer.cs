@@ -9977,6 +9977,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to EncyclopeDIA Libraries.
+        /// </summary>
+        public static string EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries {
+            get {
+                return ResourceManager.GetString("EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to EncyclopeDIA Library.
+        /// </summary>
+        public static string EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library {
+            get {
+                return ResourceManager.GetString("EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enzyme must have C-terminal cleavage to have C-terminal restrictions..
         /// </summary>
         public static string Enzyme_Validate_Enzyme_must_have_C_terminal_cleavage_to_have_C_terminal_restrictions_ {

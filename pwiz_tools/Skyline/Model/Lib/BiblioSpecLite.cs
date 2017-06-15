@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
@@ -31,7 +30,6 @@ using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -969,36 +967,24 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override SpectrumPeaksInfo.MI[] ReadSpectrum(BiblioLiteSpectrumInfo info)
         {
-            lock (_sqliteConnection)
+            return _sqliteConnection.ExecuteWithConnection(connection =>
             {
-                try
+                using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
                 {
-                        using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+                    select.CommandText = "SELECT * FROM [RefSpectraPeaks] WHERE [RefSpectraID] = ?"; // Not L10N
+                    select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
+
+                    using (SQLiteDataReader reader = select.ExecuteReader())
+                    {
+                        if (reader.Read())
                         {
-                            select.CommandText = "SELECT * FROM [RefSpectraPeaks] WHERE [RefSpectraID] = ?"; // Not L10N
-                            select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
-
-                            using (SQLiteDataReader reader = select.ExecuteReader())
-                            {
-                                if (reader.Read())
-                                {
-                                    int numPeaks = info.NumPeaks;
-                                    return ReadPeaks(reader, numPeaks);
-                                }
-                            }
+                            int numPeaks = info.NumPeaks;
+                            return ReadPeaks(reader, numPeaks);
                         }
+                    }
+                    return null;
                 }
-                catch (SQLiteException x)
-                {
-                    // If an exception is thrown, close the stream in case the failure is something
-                    // like a network failure that can be remedied by re-opening the stream.
-                    _sqliteConnection.CloseStream();
-                    throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_ReadSpectrum_Unexpected_SQLite_failure_reading__0__,
-                                                        FilePath), x);
-                }
-            }
-
-            return null;
+            });
         }
 
         private SpectrumPeaksInfo.MI[] ReadRedundantSpectrum(int spectrumId)
@@ -1080,26 +1066,12 @@ namespace pwiz.Skyline.Model.Lib
                 return null;
             }
             int fileId = _librarySourceFiles[iFile].Id;
-            foreach (var sequence in peptideSequences)
+            foreach (var item in LibraryEntriesWithSequences(peptideSequences))
             {
-                var libKey = new LibKey(sequence, 0);
-                int iFirstEntry = CollectionUtil.BinarySearch(_libraryEntries, item => item.Key.CompareSequence(libKey), true);
-                if (iFirstEntry < 0)
+                PeakBounds peakBoundaries;
+                if (item.PeakBoundariesByFileId.TryGetValue(fileId, out peakBoundaries))
                 {
-                    continue;
-                }
-                for (int index = iFirstEntry; index < _libraryEntries.Length; index++)
-                {
-                    var item = _libraryEntries[index];
-                    if (0 != libKey.CompareSequence(item.Key))
-                    {
-                        break;
-                    }
-                    PeakBounds peakBoundaries;
-                    if (item.PeakBoundariesByFileId.TryGetValue(fileId, out peakBoundaries))
-                    {
-                        return peakBoundaries;
-                    }
+                    return peakBoundaries;
                 }
             }
             return null;
@@ -1707,68 +1679,6 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         #endregion
-
-        private class PooledSqliteConnection : ConnectionId<SQLiteConnection>, IPooledStream
-        {
-            public PooledSqliteConnection(ConnectionPool connectionPool, string filePath) : base(connectionPool)
-            {
-                FilePath = filePath;
-                FileTime = File.GetLastWriteTime(FilePath);
-            }
-
-            private string FilePath { get; set; }
-            private DateTime FileTime { get; set; }
-
-            protected override IDisposable Connect()
-            {
-                DbProviderFactory fact = new SQLiteFactory();
-                SQLiteConnection conn = (SQLiteConnection) fact.CreateConnection();
-                if (conn != null)
-                {
-                    var connectionStringBuilder =
-                        SessionFactoryFactory.SQLiteConnectionStringBuilderFromFilePath(FilePath);
-                    connectionStringBuilder.Version = 3;
-
-                    conn.ConnectionString = connectionStringBuilder.ToString();
-                    conn.Open();
-                }
-                return conn;
-            }
-
-            Stream IPooledStream.Stream
-            {
-                get { throw new InvalidOperationException(); }
-            }
-
-            public bool IsModified
-            {
-                get
-                {
-                    // If it is still in the pool, then it can't have been modified
-                    return !IsOpen && !Equals(FileTime, File.GetLastWriteTime(FilePath));
-                }
-            }
-
-            public string ModifiedExplanation
-            {
-                get
-                {
-                    if (!IsModified)
-                        return "Unmodified";    // Not L10N
-                    return FileEx.GetElapsedTimeExplanation(FileTime, File.GetLastWriteTime(FilePath));
-                }
-            }
-
-            public bool IsOpen
-            {
-                get { return ConnectionPool.IsInPool(this); }
-            }
-
-            public void CloseStream()
-            {
-                Disconnect();
-            }
-        }
 
         private struct BiblioLiteSourceInfo
         {

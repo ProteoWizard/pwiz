@@ -51,7 +51,8 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_3_62 = new DocumentFormat(3.62); // Adds binary results 
         public static readonly DocumentFormat BINARY_RESULTS = VERSION_3_62; // First version that had binary results
         public static readonly DocumentFormat VERSION_3_7 = new DocumentFormat(3.7); // Release format
-        public static readonly DocumentFormat CURRENT = VERSION_3_7; 
+        public static readonly DocumentFormat VERSION_3_71 = new DocumentFormat(3.71);
+        public static readonly DocumentFormat CURRENT = VERSION_3_71; 
 
 
         private readonly double _versionNumber;

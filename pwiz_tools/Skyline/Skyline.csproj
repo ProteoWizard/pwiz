@@ -891,6 +891,7 @@
     <Compile Include="Model\Lib\ChromLib\Data\Protein.cs" />
     <Compile Include="Model\Lib\ChromLib\Data\SampleFile.cs" />
     <Compile Include="Model\Lib\ChromLib\Data\Transition.cs" />
+    <Compile Include="Model\Lib\EncylopeDiaLibrary.cs" />
     <Compile Include="Model\Lib\Midas\DbSpectrum.cs" />
     <Compile Include="Model\Lib\Midas\DbResultsFile.cs" />
     <Compile Include="Model\Lib\Midas\DbLibInfo.cs" />
@@ -3182,6 +3183,7 @@
     <Compile Include="Util\PanoramaUtil.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Util\PooledSqliteConnection.cs" />
     <Compile Include="Util\SystemMetrics.cs" />
     <Compile Include="Util\TextRendererHelper.cs" />
     <Compile Include="Util\UtilInstall.cs" />

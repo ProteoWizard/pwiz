@@ -2500,6 +2500,7 @@ namespace pwiz.Skyline.Model.DocSettings
             new XmlElementHelperSuper<NistLibrary, Library>(),
             new XmlElementHelperSuper<SpectrastLibrary, Library>(),
             new XmlElementHelperSuper<MidasLibrary, Library>(),
+            new XmlElementHelperSuper<EncyclopeDiaLibrary,Library>()
         };
 
         private static readonly IXmlElementHelper<LibrarySpec>[] LIBRARY_SPEC_HELPERS =
@@ -2511,6 +2512,7 @@ namespace pwiz.Skyline.Model.DocSettings
             new XmlElementHelperSuper<NistLibSpec, LibrarySpec>(),
             new XmlElementHelperSuper<SpectrastSpec, LibrarySpec>(),
             new XmlElementHelperSuper<MidasLibSpec, LibrarySpec>(), 
+            new XmlElementHelperSuper<EncyclopeDiaSpec,LibrarySpec>()
         };
 
         public static IXmlElementHelper<LibrarySpec>[] LibrarySpecXmlHelpers

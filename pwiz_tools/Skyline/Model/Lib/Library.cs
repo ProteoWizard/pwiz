@@ -1045,6 +1045,62 @@ namespace pwiz.Skyline.Model.Lib
                         yield return entry.Key;
             }
         }
+
+        protected IEnumerable<TInfo> LibraryEntriesWithSequences(IEnumerable<string> peptideSequences)
+        {
+            foreach (var sequence in peptideSequences)
+            {
+                var libKey = new LibKey(sequence, 0);
+                int iFirstEntry = CollectionUtil.BinarySearch(_libraryEntries, item => item.Key.CompareSequence(libKey), true);
+                if (iFirstEntry < 0)
+                {
+                    continue;
+                }
+                for (int index = iFirstEntry; index < _libraryEntries.Length; index++)
+                {
+                    var item = _libraryEntries[index];
+                    if (0 != libKey.CompareSequence(item.Key))
+                    {
+                        break;
+                    }
+                    yield return _libraryEntries[index];
+                }
+            }
+        }
+
+        // ReSharper disable PossibleMultipleEnumeration
+        protected int FindFileInList(MsDataFileUri sourceFile, IEnumerable<string> fileNames)
+        {
+            string sourceFileToString = sourceFile.ToString();
+            int iFile = 0;
+            foreach (var fileName in fileNames)
+            {
+                if (fileName.Equals(sourceFileToString))
+                {
+                    return iFile;
+                }
+                iFile++;
+            }
+            string baseName = sourceFile.GetFileNameWithoutExtension();
+            iFile = 0;
+            foreach (var fileName in fileNames)
+            {
+                try
+                {
+                    if (MeasuredResults.IsBaseNameMatch(baseName, Path.GetFileNameWithoutExtension(fileName)))
+                    {
+                        return iFile;
+                    }
+                }
+                catch (Exception)
+                {
+                    // Ignore: Invalid filename
+                }
+                iFile++;
+            }
+            return -1;
+        }
+        // ReSharper restore PossibleMultipleEnumeration
     }
 
     public sealed class LibraryRetentionTimes : IRetentionTimeProvider
@@ -1260,6 +1316,8 @@ namespace pwiz.Skyline.Model.Lib
                 return new SpectrastSpec(name, path);
             else if (Equals(ext, MidasLibSpec.EXT))
                 return new MidasLibSpec(name, path);
+            else if (Equals(ext, EncyclopeDiaSpec.EXT))
+                return new EncyclopeDiaSpec(name, path);
             return null;
         }
 

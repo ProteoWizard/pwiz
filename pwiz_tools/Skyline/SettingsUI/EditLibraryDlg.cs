@@ -208,7 +208,7 @@ namespace pwiz.Skyline.SettingsUI
                 SupportMultiDottedExtensions = true,
                 DefaultExt = BiblioSpecLibSpec.EXT,
                 Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Spectral_Libraries,
-                                                                                 BiblioSpecLiteSpec.EXT, ChromatogramLibrarySpec.EXT, XHunterLibSpec.EXT, NistLibSpec.EXT, SpectrastSpec.EXT, MidasLibSpec.EXT),
+                                                                                 BiblioSpecLiteSpec.EXT, ChromatogramLibrarySpec.EXT, XHunterLibSpec.EXT, NistLibSpec.EXT, SpectrastSpec.EXT, MidasLibSpec.EXT, EncyclopeDiaSpec.EXT),
                                                        TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Legacy_Libraries, BiblioSpecLibSpec.EXT))
             })
             {

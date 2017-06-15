@@ -9515,6 +9515,12 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="SkylineWindow_ImportResults_Add_missing_iRT_standard_peptides_to_your_document_or_change_the_retention_time_predictor_" xml:space="preserve">
     <value>Add missing iRT standard peptides to your document or change the retention time predictor.</value>
   </data>
+  <data name="EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library" xml:space="preserve">
+    <value>EncyclopeDIA Library</value>
+  </data>
+  <data name="EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries" xml:space="preserve">
+    <value>EncyclopeDIA Libraries</value>
+  </data>
   <data name="PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_time_" xml:space="preserve">
     <value>The value '{0}' on line {1} is not a valid time.</value>
   </data>
