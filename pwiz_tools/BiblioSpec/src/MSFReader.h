@@ -128,7 +128,7 @@ namespace BiblioSpec
         // sqlite helper functions
         sqlite3_stmt* getStmt(const string& query);
         static sqlite3_stmt* getStmt(sqlite3* handle, const string& query);
-        static bool hasNext(sqlite3_stmt* statement);
+        static bool hasNext(sqlite3_stmt** statement);
         int getRowCount(string table);
         static bool tableExists(sqlite3* handle, string table);
         static bool columnExists(sqlite3* handle, string table, string columnName);
