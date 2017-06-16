@@ -352,27 +352,31 @@ namespace pwiz.Skyline.Model
                 PickedApex = ParsePickedTimeAnnotation(ComparePeakBoundaries.APEX_ANNOTATION);
                 PickedStartBoundary = ParsePickedTimeAnnotation(ComparePeakBoundaries.START_TIME_ANNOTATION);
                 PickedEndBoundary = ParsePickedTimeAnnotation(ComparePeakBoundaries.END_TIME_ANNOTATION);
-                    }
-                    else
-                    {
+            }
+            else
+            {
                 PickedApex = ChromInfoPicked.RetentionTime;
                 PickedStartBoundary = ChromInfoPicked.StartRetentionTime;
                 PickedEndBoundary = ChromInfoPicked.EndRetentionTime;
-                    }
+            }
             QValue = GetScoreValue(ChromInfoPicked, MProphetResultsHandler.AnnotationName, ci => ci.QValue);
             if (QValue == null && !IsMissingPickedPeak && !hasNoQValues)
-                {
-                    throw new IOException(string.Format(Resources.PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_, Sequence, FileName));
-                }
+            {
+                throw new IOException(string.Format(
+                    Resources.PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_,
+                    Sequence, FileName));
+            }
             Score = GetScoreValue(ChromInfoPicked, MProphetResultsHandler.MAnnotationName, ci => ci.ZScore);
             if (Score == null && !IsMissingPickedPeak && !hasNoScores)
             {
-                throw new IOException(string.Format(Resources.PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_, Sequence, FileName));
+                throw new IOException(string.Format(
+                    Resources.PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_a_score_annotation_for_peptide__0__of_file__1_,
+                    Sequence, FileName));
             }
-                }
+        }
 
         private double? ParsePickedTimeAnnotation(string annotationName)
-            {
+        {
             string timeText = ChromInfoPicked.Annotations.GetAnnotation(annotationName);
             double time;
             if (double.TryParse(timeText, out time))
@@ -393,6 +397,10 @@ namespace pwiz.Skyline.Model
                 double scoreValueDouble;
                 if (double.TryParse(scoreValueString, out scoreValueDouble))
                     return scoreValueDouble;
+                if (scoreValueString == "Infinity") // Not L10N : Support some of our PeakView tests
+                    return double.MaxValue;
+                if (scoreValueString == "-Infinity") // Not L10N : Support some of our PeakView tests
+                    return double.MinValue;
             }
             return null;
         }

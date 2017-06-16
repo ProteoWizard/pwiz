@@ -18091,6 +18091,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to read a score annotation for peptide {0} of file {1}.
+        /// </summary>
+        public static string PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_a_score_annotation_for_peptide__0__of_file__1_ {
+            get {
+                return ResourceManager.GetString("PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_a_score_annotation_for_peptide__0_" +
+                        "_of_file__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to read apex retention time value for peptide {0} of file {1}..
         /// </summary>
         public static string PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_apex_retention_time_value_for_peptide__0__of_file__1__ {

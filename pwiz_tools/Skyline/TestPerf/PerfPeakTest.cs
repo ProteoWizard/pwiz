@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -41,39 +40,96 @@ using ZedGraph;
 
 namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
 {
-    //    [TestClass]       TODO(bspratt) This code was never intended by its author to be an actual test (it just uses the test framework for convenience).  It's very close to being ready for use as an actual test, but not quite, and so should be removed from our test regimen as it always fails.
+    [TestClass]       // TODO(bspratt) This code was never intended by its author to be an actual test (it just uses the test framework for convenience).  It's very close to being ready for use as an actual test, but not quite, and so should be removed from our test regimen as it always fails.
     public class PerfPeakTest : AbstractFunctionalTest
     {
-//        [TestMethod, Timeout(7200000)]
+        private struct DataSetParams
+        {
+            public DataSetParams(string url, IList<string> externals, IList<string> modelNames, IList<int> dialogSkips = null) : this()
+            {
+                Url = url;
+                Externals = externals;
+                ModelNames = modelNames;
+                DialogSkips = dialogSkips;
+            }
+
+            public string Url { get; private set; }
+            public IList<string> Externals { get; private set; }
+            public IList<string> ModelNames { get; private set; }
+            public IList<int> DialogSkips { get; private set; }
+        }
+
+        public static readonly string[] MODEL_NAMES = {"Skyline w/ mProphet", "Skyline Default", "Skyline Legacy", "Skyline w/ mProphet + Decoys"};
+
+        private static readonly string[] none = new string[0];
+        private static readonly string[] openSwath = { "OpenSwath.csv" };
+        private static readonly string[] spectronaut = { "Spectronaut.csv" };
+        private static readonly string[] peakView = { "PeakView.txt" };
+        private static readonly string[] peakViewSpectronaut = spectronaut.Concat(peakView).ToArray();
+        private static readonly string[] peakViewOpenSwath = openSwath.Concat(peakView).ToArray();
+        private static readonly string[] peakViewSpectronautOpenSwath = peakViewSpectronaut.Concat(openSwath).ToArray();
+        private static readonly string[] spectronautOpenSwath = spectronaut.Concat(openSwath).ToArray();
+        private static readonly string[] decoysAndSecond = MODEL_NAMES;
+        private static readonly string[] secondOnly = MODEL_NAMES.Take(3).ToArray();
+
+        private static readonly DataSetParams[] DataSets = 
+        {
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/Overlap10mz.zip",
+                none, decoysAndSecond), 
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/Overlap20mz.zip",
+                none, decoysAndSecond), 
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/Schilling_Ack.zip",
+                peakView, secondOnly, new[] { 1 }),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/Schilling_Mito.zip",
+                peakView, secondOnly, new[] { 1 }),
+//            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/ReiterSPRG.zip",
+//                spectronaut, decoysAndSecond),
+//            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/LudwigSPRG.zip",
+//                none, decoysAndSecond, new[] { 1 }),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikSwathHeavy.zip",
+                peakViewSpectronautOpenSwath, decoysAndSecond, new[] { 1, 1, 2 }),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikQeHeavy.zip",
+                spectronautOpenSwath, decoysAndSecond, new[] { 1, 2 }),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikSwath.zip",
+                peakViewSpectronautOpenSwath, decoysAndSecond, new[] { 1, 1, 2 }),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikQe.zip",
+                spectronaut, decoysAndSecond, new[] { 1 }),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikSwathLight.zip",
+                peakViewSpectronaut, decoysAndSecond, new[] { 0, 1 }),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikQeLight.zip",
+                spectronaut, decoysAndSecond, new[] { 1 }),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/OpenSWATH_Water.zip",
+                peakViewOpenSwath, decoysAndSecond, new List<int> { 2, 1 }),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/OpenSWATH_Yeast.zip",
+                peakViewOpenSwath, decoysAndSecond, new List<int> { 1, 1 }),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/OpenSWATH_Human.zip",
+                peakViewOpenSwath, decoysAndSecond, new List<int> { 2, 1 }),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/Olga_srm_course_vantage.zip",
+                none, decoysAndSecond),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/Olga_srm_course.zip",
+                none, decoysAndSecond),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HeartFailure.zip",
+                none, secondOnly),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/OvarianCancer.zip",
+                none, secondOnly),
+//            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/mProphetGS.zip",
+//                none, decoysAndSecond),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/MikeBHigh.zip",
+                none, secondOnly),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/SchillingDDA.zip",
+                none, secondOnly),
+            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HeldDIA.zip",
+                peakView, decoysAndSecond, new List<int> { 4 })
+        };
+
+        [TestMethod, Timeout(7200000)]
         public void TestPeakPerf()
         {
-            TestFilesZipPaths = new[]
-            {
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/Overlap10mz.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/Overlap20mz.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/Schilling_Ack.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/Schilling_Mito.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/ReiterSPRG.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/LudwigSPRG.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikSwathHeavy.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikQeHeavy.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikSwath.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikQe.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikSwathLight.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikQeLight.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/OpenSWATH_Water.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/OpenSWATH_Yeast.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/OpenSWATH_Human.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/Olga_srm_course_vantage.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/Olga_srm_course.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/HeartFailure.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/OvarianCancer.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/mProphetGS.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/MikeBHigh.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/SchillingDDA.zip",
-                 @"http://proteome.gs.washington.edu/software/test/skyline-perf/HeldDIA.zip",
-            };
-            // IsPauseForScreenShots = true;
+//            RunPerfTests = true;
+
+            TestFilesPersistent = new[] {"."};  // All persistent. No saving
+            TestFilesZipPaths = DataSets.Select(p => p.Url).ToArray();
+
             RunFunctionalTest();
         }
 
@@ -81,8 +137,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         /// Do we rescore the peaks before running the test?
         /// </summary>
         public bool RescorePeaks { get { return false; } }
-
-        public readonly static string[] MODEL_NAMES = {"Skyline w/ mProphet", "Skyline Default", "Skyline Legacy", "Skyline w/ mProphet + Decoys"};
 
         public const double LOW_SIG = 0.01;
 
@@ -94,71 +148,27 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             string resultsTable = Path.Combine(outDir, "results.txt");
             Directory.CreateDirectory(outDir); // In case it doesn't already exists
             File.Delete(resultsTable); // In case it does already exist
-            var none = new string[0];
-            var openSwath = new List<string> { "OpenSwath.csv" };
-            var spectronaut = new List<string> { "Spectronaut.csv" };
-            var peakView = new List<string> { "PeakView.txt" };
-            var peakViewSpectronaut = spectronaut.Concat(peakView).ToList();
-            var peakViewOpenSwath = openSwath.Concat(peakView).ToList();
-            var peakViewSpectronautOpenSwath = peakViewSpectronaut.Concat(openSwath).ToList();
-            var decoysAndSecond = MODEL_NAMES;
-            var secondOnly = MODEL_NAMES.Take(3).ToList();
 
-            int i = 0;
             using (var fs = new FileSaver(resultsTable))
             using (var resultsWriter = new StreamWriter(fs.SafeName))
             {
                 WriteHeader(resultsWriter);
-                // Overlap 10 mz
-                AnalyzeDirectory(i++, none, outDir, decoysAndSecond, resultsWriter);
-                // Overlap 20 mz
-                AnalyzeDirectory(i++, none, outDir, decoysAndSecond, resultsWriter);
-                // Schilling Ack
-                AnalyzeDirectory(i++, peakView, outDir, decoysAndSecond, resultsWriter, new List<int> { 1 });
-                // Schilling Mito
-                AnalyzeDirectory(i++, peakView, outDir, decoysAndSecond, resultsWriter, new List<int> { 1 });
-                // Reiter sPRG
-                AnalyzeDirectory(i++, spectronaut, outDir, decoysAndSecond, resultsWriter, new List<int> { 0 });
-                // Ludwig sPRG
-                AnalyzeDirectory(i++, none, outDir, decoysAndSecond, resultsWriter, new List<int> { 1 });
-                // Hasmik Swath Heavy only
-                AnalyzeDirectory(i++, peakViewSpectronautOpenSwath, outDir, decoysAndSecond, resultsWriter, new List<int> { 1, 1, 1 });
-                // Hasmik Qe Heavy only
-                AnalyzeDirectory(i++, spectronaut, outDir, decoysAndSecond, resultsWriter, new List<int> { 1 });
-                // Hasmik SWATH
-                AnalyzeDirectory(i++, peakViewSpectronautOpenSwath, outDir, decoysAndSecond, resultsWriter, new List<int> { 1, 1, 1 });
-                // Hasmik QE
-                AnalyzeDirectory(i++, spectronaut, outDir, decoysAndSecond, resultsWriter, new List<int> { 1 });
-                // Hasmik Swath Light only
-                AnalyzeDirectory(i++, peakViewSpectronaut, outDir, decoysAndSecond, resultsWriter, new List<int> { 0, 1 });
-                // Hasmik Qe Light only
-                AnalyzeDirectory(i++, spectronaut, outDir, decoysAndSecond, resultsWriter, new List<int> { 1 });
-                // OpenSwath_Water
-                AnalyzeDirectory(i++, peakViewOpenSwath, outDir, decoysAndSecond, resultsWriter, new List<int> { 2, 1 });
-                // OpenSwath_Yeast
-                AnalyzeDirectory(i++, peakViewOpenSwath, outDir, decoysAndSecond, resultsWriter, new List<int> { 1, 1 });
-                // OpenSwath_Human
-                AnalyzeDirectory(i++, peakViewOpenSwath, outDir, decoysAndSecond, resultsWriter, new List<int> { 2, 1 });
-                // Olga SRM Course vantage
-                AnalyzeDirectory(i++, none, outDir, decoysAndSecond, resultsWriter);
-                // Olga SRM Course
-                AnalyzeDirectory(i++, none, outDir, decoysAndSecond, resultsWriter);
-                // Heart Failure
-                AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
-                // Ovarian cancer
-                AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
-                // mProphet Gold
-                AnalyzeDirectory(i++, none, outDir, decoysAndSecond, resultsWriter);
-                // MikeB high (DDA dilution top 12 runs)
-                AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
-                // Schilling DDA (DDA dilution 15 runs)
-                AnalyzeDirectory(i++, none, outDir, secondOnly, resultsWriter);
-                // Held DIA
-                AnalyzeDirectory(i++, peakView, outDir, decoysAndSecond, resultsWriter, new List<int> { 4 });
+                for (int i = 0; i < DataSets.Length; i++)
+                {
+                    var p = DataSets[i];
+                    try
+                    {
+                        AnalyzeDirectory(i, p.Externals, outDir, p.ModelNames, resultsWriter, p.DialogSkips);
+                    }
+                    catch (Exception e)
+                    {
+                        Assert.Fail("Failed analyzing {0}\r\n{1}", p.Url, e);
+                    }
+                }
+
                 resultsWriter.Close();
                 fs.Commit();
             }
-
         }
 
         public void WriteHeader(TextWriter writer)
@@ -191,24 +201,21 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         public void AnalyzeDirectory(int index, IEnumerable<string> externals, string outDir, IList<string> modelNames, TextWriter resultsWriter, IList<int> dialogSkips = null)
         {
+            if (index >= TestFilesZipPaths.Length)
+                return;
+
             if(dialogSkips == null)
                 dialogSkips = new List<int>();
-            var directoryName = Path.GetFileNameWithoutExtension(TestFilesZipPaths[index]);
-            TestFilesPersistent = new [] {directoryName};
-            var testFilesDir = new TestFilesDir(TestContext, TestFilesZipPaths[index], null, TestFilesPersistent);
+            var fileUrl = TestFilesZipPaths[index];
+            var directoryName = Path.GetFileNameWithoutExtension(fileUrl);
+            var testFilesDir = new TestFilesDir(TestContext, fileUrl, null, new [] {directoryName});
             var directoryPath = testFilesDir.GetTestPath(directoryName);
-            if (outDir == null)
-                outDir = directoryPath;
-            else if (directoryName != null)
-                outDir = Path.Combine(outDir, directoryName);
-            Directory.CreateDirectory(outDir);
-            var sb = new StringBuilder(directoryName);
-            sb.Append(".sky");
-            var skylineName = sb.ToString();
+            var skylineName = directoryName + SrmDocument.EXT;
             var skylineDoc = Path.Combine(directoryPath, skylineName);
             var externalsPaths = externals.Select(name => Path.Combine(directoryPath, name));
 // ReSharper disable UnusedVariable
-            DataSetAnalyzer dataSetAnalyzer = new DataSetAnalyzer(skylineDoc, modelNames, externalsPaths, outDir, dialogSkips, resultsWriter, RescorePeaks);
+            var dataSetAnalyzer = new DataSetAnalyzer(index, skylineDoc, modelNames, externalsPaths, outDir,
+                dialogSkips, resultsWriter, RescorePeaks);
 // ReSharper restore UnusedVariable
         }
 
@@ -217,7 +224,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             public string OutDir { get; private set; }
 
-            public DataSetAnalyzer(string skylineDocument, 
+            public DataSetAnalyzer(int index,
+                                   string skylineDocument, 
                                    IList<string> modelNames, 
                                    IEnumerable<string> filePaths,
                                    string outDir,
@@ -249,7 +257,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     AddFile(comparePeakPickingDlg, fileName, filePath, dialogSkips[i]);
                     ++i;
                 }
-                comparePeakPickingDlg.ComboYAxis = Resources.ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Manual_ID_s;
+                RunUI(() => comparePeakPickingDlg.ComboYAxis = Resources.ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Manual_ID_s);
                 var trimmedDoc = Path.GetFileNameWithoutExtension(skylineDocument);
                 foreach (var comparePeakBoundaries in comparePeakPickingDlg.ComparePeakBoundariesList)
                 {
@@ -264,15 +272,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     double qValue05 = GetCurveThreshold(qqPoints, HIGH_SIG);
                     WriteLine(resultsWriter, trimmedDoc, comparePeakBoundaries.Name, peptides01, peptides05, peptidesAll, qValue01, qValue05);
                 }
-                var sbRoc = new StringBuilder(trimmedDoc);
-                sbRoc.Append("-roc.bmp");
-                comparePeakPickingDlg.ZedGraphRoc.MasterPane.GetImage().Save(Path.Combine(outDir, sbRoc.ToString()));
-                var sbQq = new StringBuilder(trimmedDoc);
-                sbQq.Append("-qq.bmp");
-                comparePeakPickingDlg.ZedGraphQq.MasterPane.GetImage().Save(Path.Combine(outDir, sbQq.ToString()));
-                var sbFiles = new StringBuilder(trimmedDoc);
-                sbFiles.Append("-files.bmp");
-                comparePeakPickingDlg.ZedGraphFile.MasterPane.GetImage().Save(Path.Combine(outDir, sbFiles.ToString()));
+                var baseName = (index+1) + "-" + trimmedDoc;
+                var rocPath = Path.Combine(outDir, baseName + "-roc.bmp");
+                RunUI(() => comparePeakPickingDlg.ZedGraphRoc.MasterPane.GetImage().Save(rocPath));
+                var qqPath = Path.Combine(outDir, baseName + "-qq.bmp");
+                RunUI(() => comparePeakPickingDlg.ZedGraphQq.MasterPane.GetImage().Save(qqPath));
+                var filesPath = Path.Combine(outDir, baseName + "-files.bmp");
+                RunUI(() => comparePeakPickingDlg.ZedGraphFile.MasterPane.GetImage().Save(filesPath));
                 // TODO: How can I copy the data using commands?
                 OkDialog(comparePeakPickingDlg, comparePeakPickingDlg.OkDialog);
             }
@@ -439,9 +445,15 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                         {
                             messageDlg = WaitForOpenForm<MultiButtonMsgDlg>();
                         }
-                        RunUI(messageDlg.Btn1Click);
-                        WaitForClosedForm<MultiButtonMsgDlg>();
+                        OkDialog(messageDlg, messageDlg.Btn1Click);
                     }
+                }
+                var messageDlgExtra = TryWaitForOpenForm<MultiButtonMsgDlg>(100);
+                if (messageDlgExtra != null)
+                {
+                    string message = messageDlgExtra.Message;
+                    OkDialog(messageDlgExtra, messageDlgExtra.BtnCancelClick);
+                    Assert.Fail("Unexpected message dialog after {0}: {1}", dialogSkip, message);
                 }
                 WaitForClosedForm<AddPeakCompareDlg>();
             }
