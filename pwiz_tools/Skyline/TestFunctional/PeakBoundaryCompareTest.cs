@@ -353,7 +353,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => addPeakCompareDlg.FileName = "OpenSwathBad");
             RunUI(() => addPeakCompareDlg.FilePath = peakBoundariesBadScore);
             MessageDlgError(addPeakCompareDlg.OkDialog, string.Format(Resources.AddPeakCompareDlg_OkDialog_Error_applying_imported_peak_boundaries___0_,
-                                                                      string.Format(Resources.PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_,
+                                                                      string.Format(Resources.PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_a_score_annotation_for_peptide__0__of_file__1_,
                                                                                     "APIPTALDTDSSK",
                                                                                     "napedro_L120420_007_SW")));
             // 9. File with missing q value column and score column produces error
