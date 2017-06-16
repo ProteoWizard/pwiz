@@ -68,7 +68,7 @@ namespace BiblioSpec
         // Get the schema version
         sqlite3_stmt* statement = getStmt(
             "SELECT SoftwareVersion FROM SchemaInfo");
-        if (hasNext(statement))
+        if (hasNext(&statement))
         {
             string version = lexical_cast<string>(sqlite3_column_text(statement, 0));
             sqlite3_finalize(statement);
@@ -140,7 +140,7 @@ namespace BiblioSpec
         ProgressIndicator progress(specCount);
 
         // turn each row of returned table into a spectrum
-        while (hasNext(statement))
+        while (hasNext(&statement))
         {
             int specId = sqlite3_column_int(statement, 0);
             double mass = sqlite3_column_double(statement, 2);
@@ -281,7 +281,7 @@ namespace BiblioSpec
                     continue;
                 }
                 statement = getStmt("SELECT PeptideID, " + *i + " FROM TargetPsms");
-                while (hasNext(statement)) {
+                while (hasNext(&statement)) {
                     alts[sqlite3_column_int(statement, 0)] = sqlite3_column_double(statement, 1);
                 }
                 break;
@@ -292,7 +292,7 @@ namespace BiblioSpec
                     "SELECT PeptideID, ScoreValue "
                     "FROM PeptideScores JOIN ProcessingNodeScores ON PeptideScores.ScoreID = ProcessingNodeScores.ScoreID "
                     "WHERE ScoreName = '" + *i + "'");
-                while (hasNext(statement)) {
+                while (hasNext(&statement)) {
                     alts[sqlite3_column_int(statement, 0)] = sqlite3_column_double(statement, 1);
                 }
                 if (!alts.empty()) {
@@ -355,7 +355,7 @@ namespace BiblioSpec
         map<int, int> fileIdMap = getFileIds();
 
         // turn each row of returned table into a psm
-        while (hasNext(statement)) {
+        while (hasNext(&statement)) {
             int peptideId = sqlite3_column_int(statement, 0);
             int specId = sqlite3_column_int(statement, 1);
             string sequence = lexical_cast<string>(sqlite3_column_text(statement, 2));
@@ -466,7 +466,7 @@ namespace BiblioSpec
         string fileTable = (schemaVersionMajor_ < 2) ? "FileInfos" : "WorkflowInputFiles";
         sqlite3_stmt* statement = getStmt(
             "SELECT FileID, FileName FROM " + fileTable);
-        while (hasNext(statement))
+        while (hasNext(&statement))
         {
             int thisId = sqlite3_column_int(statement, 0);
             string fileName = lexical_cast<string>(sqlite3_column_text(statement, 1));
@@ -531,7 +531,7 @@ namespace BiblioSpec
             "FROM CustomDataFields "
             "WHERE DisplayName IN ('q-Value', 'Percolator q-Value') "
             "LIMIT 1");
-        if (!hasNext(statement)) {
+        if (!hasNext(&statement)) {
             return false;
         }
         sqlite3_finalize(statement);
@@ -557,7 +557,7 @@ namespace BiblioSpec
         }
 
         // turn each row of returned table into a seqmod to be added to the map
-        while (MSFReader::hasNext(stmt)) {
+        while (MSFReader::hasNext(&stmt)) {
             int workflowId = sqlite3_column_int(stmt, 0);
             int peptideId = sqlite3_column_int(stmt, 1);
             // mod indices are 0 based in unfiltered, 1 based in filtered
@@ -570,7 +570,6 @@ namespace BiblioSpec
 
         // get terminal mods if PeptidesTerminalModifications table exists
         if (MSFReader::tableExists(db, "PeptidesTerminalModifications")) {
-            sqlite3_finalize(stmt);
             stmt = MSFReader::getStmt(db,
                 "SELECT PeptidesTerminalModifications.PeptideID, PositionType, DeltaMass, Sequence "
                 "FROM PeptidesTerminalModifications "
@@ -578,7 +577,7 @@ namespace BiblioSpec
                 "JOIN AminoAcidModifications ON TerminalModificationID = AminoAcidModificationID");
 
             // turn each row of returned table into a seqmod to be added to the map
-            while (MSFReader::hasNext(stmt)) {
+            while (MSFReader::hasNext(&stmt)) {
                 int peptideId = sqlite3_column_int(stmt, 0);
                 int positionType = sqlite3_column_int(stmt, 1);
                 int position;
@@ -649,7 +648,7 @@ namespace BiblioSpec
                 "JOIN MassPeaks ON SpectrumHeaders.MassPeakID = MassPeaks.MassPeakID");
 
             // process each row of the returned table
-            while (hasNext(statement))
+            while (hasNext(&statement))
             {
                 int peptideId = sqlite3_column_int(statement, 0);
                 int fileId = sqlite3_column_int(statement, 1);
@@ -790,9 +789,10 @@ namespace BiblioSpec
      * Attempts to return the next row of the SQLite statement. Returns true on success.
      * Otherwise, finalize the statement and return false.
      */
-    bool MSFReader::hasNext(sqlite3_stmt* statement) {
-        if (sqlite3_step(statement) != SQLITE_ROW) {
-            sqlite3_finalize(statement);
+    bool MSFReader::hasNext(sqlite3_stmt** statement) {
+        if (sqlite3_step(*statement) != SQLITE_ROW) {
+            sqlite3_finalize(*statement);
+            *statement = NULL;
             return false;
         }
         return true;
@@ -814,7 +814,7 @@ namespace BiblioSpec
 
     bool MSFReader::tableExists(sqlite3* handle, string table) {
         sqlite3_stmt* statement = getStmt(handle, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = '" + table + "'");
-        bool found = hasNext(statement) && sqlite3_column_int(statement, 0) == 1;
+        bool found = hasNext(&statement) && sqlite3_column_int(statement, 0) == 1;
         sqlite3_finalize(statement);
         return found;
     }
@@ -833,7 +833,7 @@ namespace BiblioSpec
 
         bool found = false;
         set<string> foundCols;
-        while (hasNext(statement)) {
+        while (hasNext(&statement)) {
             string cur = lexical_cast<string>(sqlite3_column_text(statement, nameIndex));
             if (boost::iequals(cur, columnName)) {
                 found = true;
