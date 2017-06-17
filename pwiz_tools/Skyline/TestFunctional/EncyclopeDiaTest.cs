@@ -52,6 +52,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(libListDlg, libListDlg.OkDialog);
             RunUI(()=>peptideSettingsUi.PickedLibraries = new []{libName});
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
+            WaitForDocumentLoaded();
             var libraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             var filterMatchedPeptidesDlg = ShowDialog<FilterMatchedPeptidesDlg>(libraryViewer.AddAllPeptides);
             OkDialog(filterMatchedPeptidesDlg, filterMatchedPeptidesDlg.OkDialog);
