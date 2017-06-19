@@ -9545,6 +9545,9 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="ComparePeakPickingDlg_checkObserved_CheckedChanged_Q_value_cutoff_" xml:space="preserve">
     <value>Q value cutoff:</value>
   </data>
+  <data name="Replicate_Name_There_is_already_a_replicate_named___0___" xml:space="preserve">
+    <value>There is already a replicate named '{0}'.</value>
+  </data>
   <data name="PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_a_score_annotation_for_peptide__0__of_file__1_" xml:space="preserve">
     <value>Unable to read a score annotation for peptide {0} of file {1}</value>
   </data>
