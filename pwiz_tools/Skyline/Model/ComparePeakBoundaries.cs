@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.Common.SystemUtil;
@@ -381,6 +382,8 @@ namespace pwiz.Skyline.Model
             double time;
             if (double.TryParse(timeText, out time))
                 return time;
+            else if (double.TryParse(timeText, NumberStyles.Float, CultureInfo.InvariantCulture, out time))
+                return time;
             if (timeText == null || timeText.Equals(TextUtil.EXCEL_NA))
                 return null;
 
@@ -396,6 +399,8 @@ namespace pwiz.Skyline.Model
                     return getNativeValue(groupChromInfo);
                 double scoreValueDouble;
                 if (double.TryParse(scoreValueString, out scoreValueDouble))
+                    return scoreValueDouble;
+                else if (double.TryParse(scoreValueString, NumberStyles.Float, CultureInfo.InvariantCulture, out scoreValueDouble))
                     return scoreValueDouble;
                 if (scoreValueString == "Infinity") // Not L10N : Support some of our PeakView tests
                     return double.MaxValue;

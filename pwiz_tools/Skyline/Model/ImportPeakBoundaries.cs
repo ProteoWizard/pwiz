@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -760,6 +761,8 @@ namespace pwiz.Skyline.Model
 
                 double time;
                 if (double.TryParse(timeText, out time))
+                    return time / timeConversionFactor;
+                else if (double.TryParse(timeText, NumberStyles.Float, CultureInfo.InvariantCulture, out time))
                     return time / timeConversionFactor;
 
                 // #N/A means remove the peak
