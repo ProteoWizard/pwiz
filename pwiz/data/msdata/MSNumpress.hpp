@@ -59,6 +59,13 @@ namespace MSNumpress {
 	double PWIZ_API_DECL optimalLinearFixedPoint(
 		const double *data, 
 		size_t dataSize);
+
+	double PWIZ_API_DECL optimalLinearFixedPointMass(
+			const double *data, 
+			size_t dataSize,
+			double mass_acc
+	);
+
 	
 	/**
 	 * Encodes the doubles in data by first using a 

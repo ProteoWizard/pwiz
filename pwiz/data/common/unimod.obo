@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 2016:07:01 11:23
+date: 2017:03:10 16:18
 
 saved-by: psi-pi_team
 default-namespace: UNIMOD
@@ -2520,7 +2520,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:121
 name: GG
-def: "Ubiquitinylation residue." [PMID:12872131, URL:http\://www.nottingham.ac.uk/biochemcourses/students/ub/ubindex.html, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=121]
+def: "Ubiquitinylation residue." [PMID:12872131, URL:http\://www.nottingham.ac.uk/biochemcourses/students/ub/ubindex.html, PMID:15055197, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=121]
 comment: The two glycine residues left on ubiquitinylated lysine after tryptic digestion.
 synonym: "glycineglycine" []
 xref: record_id "121"
@@ -2530,7 +2530,7 @@ xref: delta_composition "H(6) C(4) N(2) O(2)"
 xref: username_of_poster "gielbert"
 xref: group_of_poster "users"
 xref: date_time_posted "2003-04-30 13:32:37"
-xref: date_time_modified "2014-07-09 16:52:39"
+xref: date_time_modified "2017-03-06 08:47:05"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -2552,6 +2552,11 @@ xref: spec_4_hidden "1"
 xref: spec_4_site "C"
 xref: spec_4_position "Anywhere"
 xref: spec_4_classification "Other"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "N-term"
+xref: spec_5_position "Protein N-term"
+xref: spec_5_classification "Post-translational"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -4539,7 +4544,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:213
 name: ADP-Ribosyl
-def: "ADP Ribose addition." [RESID:AA0295, RESID:AA0169, FindMod:ADP, RESID:AA0168, PMID:15842200, RESID:AA0231, URL:http\://betelgeuse.u-strasbg.fr/DocPARP/DocPARG/images/Structure-pADPR.jpg, RESID:AA0237, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=213]
+def: "ADP Ribose addition." [RESID:AA0237, URL:http\://betelgeuse.u-strasbg.fr/DocPARP/DocPARG/images/Structure-pADPR.jpg, FindMod:ADP, RESID:AA0168, PMID:15842200, RESID:AA0231, RESID:AA0169, RESID:AA0295, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=213]
 xref: record_id "213"
 xref: delta_mono_mass "541.061110"
 xref: delta_avge_mass "541.3005"
@@ -4547,21 +4552,21 @@ xref: delta_composition "H(13) C(10) N(5) O(9) P(2) Pent"
 xref: username_of_poster "ionjockey"
 xref: group_of_poster "users"
 xref: date_time_posted "2004-05-27 20:53:37"
-xref: date_time_modified "2015-05-05 10:56:49"
+xref: date_time_modified "2017-01-13 15:56:14"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "R"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "N-linked glycosylation"
-xref: spec_1_neutral_loss_0_mono_mass "0.000000"
-xref: spec_1_neutral_loss_0_avge_mass "0.0000"
-xref: spec_1_neutral_loss_0_flag "false"
-xref: spec_1_neutral_loss_0_composition "0"
 xref: spec_1_neutral_loss_542_mono_mass "541.061110"
 xref: spec_1_neutral_loss_542_avge_mass "541.3005"
 xref: spec_1_neutral_loss_542_flag "false"
 xref: spec_1_neutral_loss_542_composition "H(13) C(10) N(5) O(9) P(2) Pent"
+xref: spec_1_neutral_loss_0_mono_mass "0.000000"
+xref: spec_1_neutral_loss_0_avge_mass "0.0000"
+xref: spec_1_neutral_loss_0_flag "false"
+xref: spec_1_neutral_loss_0_composition "0"
 xref: spec_2_group "2"
 xref: spec_2_hidden "1"
 xref: spec_2_site "C"
@@ -4572,14 +4577,14 @@ xref: spec_3_hidden "1"
 xref: spec_3_site "N"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "N-linked glycosylation"
-xref: spec_3_neutral_loss_542_mono_mass "541.061110"
-xref: spec_3_neutral_loss_542_avge_mass "541.3005"
-xref: spec_3_neutral_loss_542_flag "false"
-xref: spec_3_neutral_loss_542_composition "H(13) C(10) N(5) O(9) P(2) Pent"
 xref: spec_3_neutral_loss_0_mono_mass "0.000000"
 xref: spec_3_neutral_loss_0_avge_mass "0.0000"
 xref: spec_3_neutral_loss_0_flag "false"
 xref: spec_3_neutral_loss_0_composition "0"
+xref: spec_3_neutral_loss_542_mono_mass "541.061110"
+xref: spec_3_neutral_loss_542_avge_mass "541.3005"
+xref: spec_3_neutral_loss_542_flag "false"
+xref: spec_3_neutral_loss_542_composition "H(13) C(10) N(5) O(9) P(2) Pent"
 xref: spec_4_group "4"
 xref: spec_4_hidden "1"
 xref: spec_4_site "T"
@@ -5601,9 +5606,9 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:292
 name: IodoU-AMP
-def: "Cross-link of (Iodo)-uracil MP with W,F,Y." [PMID:6540775, PMID:11112526, PMID:11567090, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=292]
+def: "(Iodo)-uracil MP." [PMID:11567090, PMID:11112526, PMID:6540775, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=292]
 comment: One note about this chemistry is that for W you have to take care of O2 big time (and extract the I-uracil monophosphate with organics to get rid of residual iodide).
-synonym: "UV induced cross-link product of Iodo-U-amp with WFY" []
+synonym: "UV induced linkage of Iodo-U-amp with WFY" []
 xref: record_id "292"
 xref: delta_mono_mass "322.020217"
 xref: delta_avge_mass "322.1654"
@@ -5611,7 +5616,7 @@ xref: delta_composition "H(11) C(9) N(2) O(9) P"
 xref: username_of_poster "davidERICanderson"
 xref: group_of_poster "users"
 xref: date_time_posted "2005-03-04 22:57:55"
-xref: date_time_modified "2006-10-16 15:53:06"
+xref: date_time_modified "2017-01-31 13:36:23"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -6392,9 +6397,10 @@ is_a: UNIMOD:0 ! unimod root node
 
 [Term]
 id: UNIMOD:324
-name: DTBP
-def: "Dimethyl 3,3\'-dithiobispropionimidate." [URL:http\://www.piercenet.com/files/0668ss5.pdf, PMID:770170, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=324]
+name: Xlink:DTBPc
+def: "Dimethyl 3,3\'-dithiobispropionimidate." [URL:http\://tools.thermofisher.com/content/sfs/manuals/MAN0011314_ImidoesterCrsLnk_DMA_DMP_DMS_DTBP_UG.pdf, PMID:770170, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=324]
 comment: Imidoester cross-linker.
+synonym: "cleaved and reduced" []
 xref: record_id "324"
 xref: delta_mono_mass "87.014270"
 xref: delta_avge_mass "87.1435"
@@ -6402,23 +6408,26 @@ xref: delta_composition "H(5) C(3) N S"
 xref: username_of_poster "takesin"
 xref: group_of_poster "users"
 xref: date_time_posted "2005-05-18 08:43:26"
-xref: date_time_modified "2006-11-14 11:16:21"
+xref: date_time_modified "2017-03-10 16:18:08"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "N"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Chemical derivative"
+xref: spec_1_misc_notes "side reaction?"
 xref: spec_2_group "2"
 xref: spec_2_hidden "1"
 xref: spec_2_site "Q"
 xref: spec_2_position "Anywhere"
 xref: spec_2_classification "Chemical derivative"
+xref: spec_2_misc_notes "side reaction?"
 xref: spec_3_group "3"
 xref: spec_3_hidden "1"
 xref: spec_3_site "R"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Chemical derivative"
+xref: spec_3_misc_notes "side reaction?"
 xref: spec_4_group "4"
 xref: spec_4_hidden "1"
 xref: spec_4_site "K"
@@ -14962,7 +14971,7 @@ is_a: UNIMOD:0 ! unimod root node
 
 [Term]
 id: UNIMOD:824
-name: BMOE
+name: Xlink:BMOE
 def: "Addition of BMOE crosslinker." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=824]
 xref: record_id "824"
 xref: delta_mono_mass "220.048407"
@@ -14971,7 +14980,7 @@ xref: delta_composition "H(8) C(10) N(2) O(4)"
 xref: username_of_poster "Larsenmarsen"
 xref: group_of_poster ""
 xref: date_time_posted "2008-02-13 15:28:55"
-xref: date_time_modified "2008-03-05 16:47:02"
+xref: date_time_modified "2017-01-18 11:38:35"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -14983,8 +14992,8 @@ is_a: UNIMOD:0 ! unimod root node
 
 [Term]
 id: UNIMOD:825
-name: DFDNB
-def: "Addition of DFDNB crosslinker." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=825]
+name: Xlink:DFDNB
+def: "Addition of DFDNB crosslinker." [URL:http\://tools.thermofisher.com/content/sfs/manuals/MAN0011313_DFDNB_UG.pdf, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=825]
 xref: record_id "825"
 xref: delta_mono_mass "203.998263"
 xref: delta_avge_mass "204.0879"
@@ -14992,7 +15001,7 @@ xref: delta_composition "H(2) C(6) N(2) O(4) F(2)"
 xref: username_of_poster "Larsenmarsen"
 xref: group_of_poster ""
 xref: date_time_posted "2008-02-13 15:35:40"
-xref: date_time_modified "2008-03-05 16:48:47"
+xref: date_time_modified "2017-01-18 11:37:18"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -16548,7 +16557,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:943
 name: DimethylamineGMBS
-def: "Modified GMBS X linker for proteins." [URL:http\://www.piercenet.com/files/1763dh4.pdf, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=943]
+def: "Modified GMBS X linker." [URL:http\://tools.thermofisher.com/content/sfs/manuals/MAN0011551_GMBS_SulfoGMBS_UG.pdf, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=943]
 xref: record_id "943"
 xref: delta_mono_mass "267.158292"
 xref: delta_avge_mass "267.3241"
@@ -16556,7 +16565,7 @@ xref: delta_composition "H(21) C(13) N(3) O(3)"
 xref: username_of_poster "anikolakakis"
 xref: group_of_poster ""
 xref: date_time_posted "2009-11-04 20:26:57"
-xref: date_time_modified "2009-11-13 16:38:29"
+xref: date_time_modified "2017-01-18 11:52:27"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -17304,10 +17313,10 @@ xref: delta_composition "H(25) C(10) 13C(4) N(2) 15N O(2) S"
 xref: username_of_poster "jorogers6"
 xref: group_of_poster ""
 xref: date_time_posted "2010-04-22 22:05:46"
-xref: date_time_modified "2014-11-08 16:06:53"
+xref: date_time_modified "2016-09-22 14:38:08"
 xref: approved "0"
 xref: spec_1_group "1"
-xref: spec_1_hidden "0"
+xref: spec_1_hidden "1"
 xref: spec_1_site "C"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Isotopic label"
@@ -18015,8 +18024,9 @@ is_a: UNIMOD:0 ! unimod root node
 
 [Term]
 id: UNIMOD:1021
-name: Xlink:EGS
-def: "Monolink of EGS crosslinker to Lys or N-terminus." [PMID:36892, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1021]
+name: Xlink:EGS244
+def: "Water quenched monolink of EGS cross-linker." [URL:https\://tools.thermofisher.com/content/sfs/manuals/MAN0011281_EGS_SulfoEGS_UG.pdf, PMID:36892, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1021]
+synonym: "Ethylene glycolbis(succinimidylsuccinate)" []
 xref: record_id "1021"
 xref: delta_mono_mass "244.058303"
 xref: delta_avge_mass "244.1981"
@@ -18024,7 +18034,7 @@ xref: delta_composition "H(12) C(10) O(7)"
 xref: username_of_poster "Kramerh"
 xref: group_of_poster ""
 xref: date_time_posted "2011-02-07 17:40:36"
-xref: date_time_modified "2011-02-11 14:33:05"
+xref: date_time_modified "2017-02-02 11:01:33"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -18141,17 +18151,17 @@ is_a: UNIMOD:0 ! unimod root node
 
 [Term]
 id: UNIMOD:1028
-name: Xlink:EGScleaved
-def: "EGS crosslinker to Lys or N-terminus following hydroxylamine cleavage." [PMID:36892, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1028]
-synonym: "Cleavage product of EGS protein crosslinks by hydroylamine treatment" []
+name: Xlink:EGS115
+def: "Cleavage product of EGS protein crosslinks by hydroylamine treatment." [URL:https\://tools.thermofisher.com/content/sfs/manuals/MAN0011281_EGS_SulfoEGS_UG.pdf, PMID:36892, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1028]
+synonym: "Ethylene glycolbis(succinimidylsuccinate)" []
 xref: record_id "1028"
-xref: delta_mono_mass "99.032028"
-xref: delta_avge_mass "99.0880"
-xref: delta_composition "H(5) C(4) N O(2)"
+xref: delta_mono_mass "115.026943"
+xref: delta_avge_mass "115.0874"
+xref: delta_composition "H(5) C(4) N O(3)"
 xref: username_of_poster "Kramerh"
 xref: group_of_poster ""
 xref: date_time_posted "2011-02-25 17:16:45"
-xref: date_time_modified "2011-03-04 10:43:22"
+xref: date_time_modified "2017-02-02 11:01:16"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -24439,20 +24449,20 @@ xref: delta_composition "H(13) 2H(2) C(8) N 18O"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2012-02-15 12:05:48"
-xref: date_time_modified "2012-02-15 12:08:24"
+xref: date_time_modified "2016-09-22 15:14:06"
 xref: approved "0"
 xref: spec_1_group "1"
-xref: spec_1_hidden "0"
+xref: spec_1_hidden "1"
 xref: spec_1_site "K"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Isotopic label"
 xref: spec_2_group "2"
-xref: spec_2_hidden "0"
+xref: spec_2_hidden "1"
 xref: spec_2_site "N-term"
 xref: spec_2_position "Any N-term"
 xref: spec_2_classification "Isotopic label"
 xref: spec_3_group "3"
-xref: spec_3_hidden "0"
+xref: spec_3_hidden "1"
 xref: spec_3_site "Y"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Isotopic label"
@@ -25680,25 +25690,25 @@ xref: delta_composition "H(20) C(7) 13C(4) N 15N O(2)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2013-11-06 11:18:58"
-xref: date_time_modified "2013-11-06 11:26:11"
+xref: date_time_modified "2016-09-22 14:39:36"
 xref: approved "0"
 xref: spec_1_group "1"
-xref: spec_1_hidden "0"
+xref: spec_1_hidden "1"
 xref: spec_1_site "K"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Isotopic label"
 xref: spec_2_group "2"
-xref: spec_2_hidden "0"
+xref: spec_2_hidden "1"
 xref: spec_2_site "N-term"
 xref: spec_2_position "Any N-term"
 xref: spec_2_classification "Isotopic label"
 xref: spec_3_group "3"
-xref: spec_3_hidden "0"
+xref: spec_3_hidden "1"
 xref: spec_3_site "N-term"
 xref: spec_3_position "Protein N-term"
 xref: spec_3_classification "Isotopic label"
 xref: spec_4_group "4"
-xref: spec_4_hidden "0"
+xref: spec_4_hidden "1"
 xref: spec_4_site "Y"
 xref: spec_4_position "Anywhere"
 xref: spec_4_classification "Isotopic label"
@@ -25927,8 +25937,9 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:1399
 name: Dap-DSP
-def: "Diaminopimelic acid-DSP monolinked." [URL:http\://www.sigmaaldrich.com/catalog/product/sigma/07036?lang=en&region=GB, URL:http\://www.piercenet.com/product/dsp-lomants-reagent, PMID:http://www.ncbi.nlm.nih.gov/pubmed/322714?dopt=AbstractPlus, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1399]
+def: "Diaminopimelic acid-DSP monolinked." [PMID:http://www.ncbi.nlm.nih.gov/pubmed/322714?dopt=AbstractPlus, URL:http\://www.sigmaaldrich.com/catalog/product/sigma/07036?lang=en&region=GB, URL:https\://tools.thermofisher.com/content/sfs/manuals/MAN0011280_DTSSP_DSP_UG.pdf, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1399]
 comment: Gram negative peptidoglycan amino acid (DAP) mono-linked to DSP.
+synonym: "Xlink" []
 xref: record_id "1399"
 xref: delta_mono_mass "328.055148"
 xref: delta_avge_mass "328.4071"
@@ -25936,7 +25947,7 @@ xref: delta_composition "H(16) C(13) N(2) O(4) S(2)"
 xref: username_of_poster "grigorios"
 xref: group_of_poster ""
 xref: date_time_posted "2014-02-20 11:23:24"
-xref: date_time_modified "2014-03-01 17:37:05"
+xref: date_time_modified "2017-01-18 11:57:11"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -40172,6 +40183,402 @@ xref: spec_1_hidden "1"
 xref: spec_1_site "E"
 xref: spec_1_position "Any N-term"
 xref: spec_1_classification "Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1828
+name: LRGG+methyl
+def: "LeumethylArgGlyGly." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1828]
+comment: LRGG remnant of ubiquitin remaining attached to lysine with missed cleavage due to methylation of arginine.
+synonym: "LRGG ubiquitin remnant with methylated Arg" []
+xref: record_id "1828"
+xref: delta_mono_mass "397.243753"
+xref: delta_avge_mass "397.4725"
+xref: delta_composition "H(31) C(17) N(7) O(4)"
+xref: username_of_poster "bkatja"
+xref: group_of_poster ""
+xref: date_time_posted "2016-07-27 14:34:54"
+xref: date_time_modified "2016-09-23 13:43:32"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1829
+name: LRGG+dimethyl
+def: "LeudimethylArgGlyGly." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1829]
+comment: LRGG remnant of ubiquitin remaining attached to lysine with missed cleavage due to dimethylation of arginine.
+synonym: "LRGG ubiquitin remnant with dimethylated Arg" []
+xref: record_id "1829"
+xref: delta_mono_mass "411.259403"
+xref: delta_avge_mass "411.4991"
+xref: delta_composition "H(33) C(18) N(7) O(4)"
+xref: username_of_poster "bkatja"
+xref: group_of_poster ""
+xref: date_time_posted "2016-07-27 16:20:40"
+xref: date_time_modified "2016-09-23 13:43:57"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1830
+name: Biotin-tyramide
+def: "Biotin-Phenol." [URL:http\://www.iris-biotech.de/ls-3500, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1830]
+xref: record_id "1830"
+xref: delta_mono_mass "361.146012"
+xref: delta_avge_mass "361.4585"
+xref: delta_composition "H(23) C(18) N(3) O(3) S"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2016-08-04 08:05:43"
+xref: date_time_modified "2016-08-04 08:05:43"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "Y"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1831
+name: Tris
+def: "Tris adduct causes 104 Da addition at asparagine-succinimide intermediate." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1831]
+synonym: "tris adduct at asparagine tris adduct at IgG causes 104 Da addition" []
+xref: record_id "1831"
+xref: delta_mono_mass "104.071154"
+xref: delta_avge_mass "104.1277"
+xref: delta_composition "H(10) C(4) N O(2)"
+xref: username_of_poster "pradeepnpraveen"
+xref: group_of_poster ""
+xref: date_time_posted "2016-08-04 12:54:25"
+xref: date_time_modified "2016-09-23 13:48:56"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Artefact"
+xref: spec_1_misc_notes "NG sequence specifically after deamidation - Deamidated Asparagine with adjacent glycine are prone for this modification."
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1832
+name: IASD
+def: "Iodoacetamide derivative of stilbene (reaction product with thiol)." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1832]
+synonym: "4-acetamido-4'-((iodoacetyl)amino)stilbene-2,2'-disulfonic acid" []
+xref: record_id "1832"
+xref: delta_mono_mass "452.034807"
+xref: delta_avge_mass "452.4582"
+xref: delta_composition "H(16) C(18) N(2) O(8) S(2)"
+xref: username_of_poster "AberdeenProteomics"
+xref: group_of_poster ""
+xref: date_time_posted "2016-08-05 12:04:02"
+xref: date_time_modified "2016-09-23 13:49:37"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1833
+name: NP40
+def: "NP-40 synthetic polymer terminus." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1833]
+xref: record_id "1833"
+xref: delta_mono_mass "220.182715"
+xref: delta_avge_mass "220.3505"
+xref: delta_composition "H(24) C(15) O"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2016-08-22 14:48:48"
+xref: date_time_modified "2016-08-22 16:07:54"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N-term"
+xref: spec_1_position "Any N-term"
+xref: spec_1_classification "Other"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1834
+name: Tween20
+def: "Tween 20 synthetic polymer terminus." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1834]
+xref: record_id "1834"
+xref: delta_mono_mass "165.164326"
+xref: delta_avge_mass "165.2951"
+xref: delta_composition "H(21) C(12)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2016-08-22 14:51:41"
+xref: date_time_modified "2016-08-22 16:07:18"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N-term"
+xref: spec_1_position "Any N-term"
+xref: spec_1_classification "Other"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1835
+name: Tween80
+def: "Tween 80 synthetic polymer terminus." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1835]
+xref: record_id "1835"
+xref: delta_mono_mass "263.237491"
+xref: delta_avge_mass "263.4381"
+xref: delta_composition "H(31) C(18) O"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2016-08-22 14:52:52"
+xref: date_time_modified "2016-08-22 16:08:10"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C-term"
+xref: spec_1_position "Any C-term"
+xref: spec_1_classification "Other"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1836
+name: Triton
+def: "Triton synthetic polymer terminus." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1836]
+xref: record_id "1836"
+xref: delta_mono_mass "188.156501"
+xref: delta_avge_mass "188.3086"
+xref: delta_composition "H(20) C(14)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2016-08-22 14:53:44"
+xref: date_time_modified "2016-08-22 16:07:45"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C-term"
+xref: spec_1_position "Any C-term"
+xref: spec_1_classification "Other"
+xref: spec_1_misc_notes "Triton X-100"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Other"
+xref: spec_2_misc_notes "Triton X-114"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1837
+name: Brij35
+def: "Brij 35 synthetic polymer terminus." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1837]
+xref: record_id "1837"
+xref: delta_mono_mass "168.187801"
+xref: delta_avge_mass "168.3190"
+xref: delta_composition "H(24) C(12)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2016-08-22 14:55:48"
+xref: date_time_modified "2016-08-22 16:07:31"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N-term"
+xref: spec_1_position "Any N-term"
+xref: spec_1_classification "Other"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1838
+name: Brij58
+def: "Brij 58 synthetic polymer terminus." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1838]
+xref: record_id "1838"
+xref: delta_mono_mass "224.250401"
+xref: delta_avge_mass "224.4253"
+xref: delta_composition "H(32) C(16)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2016-08-22 14:56:22"
+xref: date_time_modified "2016-08-22 16:08:02"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N-term"
+xref: spec_1_position "Any N-term"
+xref: spec_1_classification "Other"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1839
+name: betaFNA
+def: "Beta-Funaltrexamine." [PMID:https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3523197/, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1839]
+comment: Covalently bound structure in Manglik et al., Fig. 1b-Fig1c. Chemical formula % Sigma catalog entry.
+xref: record_id "1839"
+xref: delta_mono_mass "454.210387"
+xref: delta_avge_mass "454.5155"
+xref: delta_composition "H(30) C(25) N(2) O(6)"
+xref: username_of_poster "shartson"
+xref: group_of_poster ""
+xref: date_time_posted "2016-08-26 19:59:17"
+xref: date_time_modified "2017-01-31 10:02:08"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "K"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1840
+name: dHex(1)Hex(7)HexNAc(4)
+def: "Fucosylated biantennary + 2 alphaGal." [PMID:http://www.ncbi.nlm.nih.gov/pubmed/23924801, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1840]
+xref: record_id "1840"
+xref: delta_mono_mass "2092.745164"
+xref: delta_avge_mass "2093.8955"
+xref: delta_composition "dHex Hex(7) HexNAc(4)"
+xref: username_of_poster "suckau"
+xref: group_of_poster ""
+xref: date_time_posted "2016-09-05 15:52:53"
+xref: date_time_modified "2016-09-09 16:57:21"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "N-linked glycosylation"
+xref: spec_1_misc_notes "observed in monoclonal antibodies"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1841
+name: Biotin:Thermo-21328
+def: "EZ-Link Sulfo-NHS-SS-Biotin." [URL:https\://tools.thermofisher.com/content/sfs/manuals/MAN0011183_EZ_SulfoNHS_SS_Biotin_UG.pdf, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1841]
+synonym: "also Biotin:Thermo-21331" []
+xref: record_id "1841"
+xref: delta_mono_mass "389.090154"
+xref: delta_avge_mass "389.5564"
+xref: delta_composition "H(23) C(15) N(3) O(3) S(3)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2016-11-11 10:34:53"
+xref: date_time_modified "2016-11-11 10:36:26"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1843
+name: PhosphoCytidine
+def: "Cytidine monophosphate." [URL:dx.doi.org/10.1038/nchembio0609-378, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1843]
+comment: By analogy with AMP.
+synonym: "CMP" []
+xref: record_id "1843"
+xref: delta_mono_mass "305.041287"
+xref: delta_avge_mass "305.1812"
+xref: delta_composition "H(12) C(9) N(3) O(7) P"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2017-02-01 17:36:16"
+xref: date_time_modified "2017-02-02 10:16:50"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "S"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "T"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Post-translational"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "Y"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1845
+name: AzidoF
+def: "Azidophenylalanine." [PMID:26597962, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1845]
+xref: record_id "1845"
+xref: delta_mono_mass "41.001397"
+xref: delta_avge_mass "41.0122"
+xref: delta_composition "H(-1) N(3)"
+xref: username_of_poster "astridb"
+xref: group_of_poster ""
+xref: date_time_posted "2017-02-17 09:53:27"
+xref: date_time_modified "2017-03-03 15:46:05"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "F"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1846
+name: Dimethylaminoethyl
+def: "Cys alkylation by dimethylaminoethyl halide." [PMID:20373501, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1846]
+xref: record_id "1846"
+xref: delta_mono_mass "71.073499"
+xref: delta_avge_mass "71.1210"
+xref: delta_composition "H(9) C(4) N"
+xref: username_of_poster "Kramerh"
+xref: group_of_poster ""
+xref: date_time_posted "2017-02-17 16:10:59"
+xref: date_time_modified "2017-03-03 15:50:09"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 

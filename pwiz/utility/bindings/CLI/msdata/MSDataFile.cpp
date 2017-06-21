@@ -126,6 +126,7 @@ static void translateConfig(MSDataFile::WriteConfig^ config, b::MSDataFile::Writ
         config2.binaryDataEncoderConfig.numpressOverrides[b::MS_intensity_array] = b::BinaryDataEncoder::Numpress_Slof;
     }
     config2.binaryDataEncoderConfig.numpressLinearErrorTolerance = config->numpressLinearErrorTolerance;
+    config2.binaryDataEncoderConfig.numpressLinearAbsMassAcc = config->numpressLinearAbsMassAcc;
     config2.binaryDataEncoderConfig.numpressSlofErrorTolerance = config->numpressSlofErrorTolerance;
 }
 

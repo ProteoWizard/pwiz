@@ -38,17 +38,15 @@
 
 // ["psi-ms.obo"]
 //   format-version: 1.2
-//   data-version: 4.0.1
-//   date: 15:07:2016 14:16
+//   data-version: 4.0.11
+//   date: 10:04:2017 10:10
 //   saved-by: Gerhard Mayer
-//   auto-generated-by: OBO-Edit 2.3
-//   import: http://www.berkeleybop.org/ontologies/pato/pato.obo
-//   import: http://www.berkeleybop.org/ontologies/uo/uo.obo
+//   auto-generated-by: OBO-Edit 2.3.1
+//   import: http://ontologies.berkeleybop.org/pato.obo
+//   import: http://ontologies.berkeleybop.org/uo.obo
 //   default-namespace: MS
 //   namespace-id-rule: * MS:$sequence(7,0,9999999)$
 //   remark: namespace: MS
-//   remark: version: 4.0.1
-//   remark: release date: 2016-07-15
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -67,7 +65,7 @@
 //
 // ["unimod.obo"]
 //   format-version: 1.2
-//   date: 2016:07:01 11:23
+//   date: 2017:03:10 16:18
 //
 // ["unit.obo"]
 //   format-version: 1.2
@@ -650,7 +648,7 @@ public enum class CVID
     /// <summary>autoflex TOF/TOF: Bruker Daltonics' autoflex TOF/TOF MS: MALDI TOF.</summary>
     MS_autoflex_TOF_TOF = 1000149,
 
-    /// <summary>Auto Spec Ultima NT: Waters AutoSpec Ultima NT MS.</summary>
+    /// <summary>Auto Spec Ultima NT: Waters magnetic sector based AutoSpec Ultima NT MS.</summary>
     MS_Auto_Spec_Ultima_NT = 1000150,
 
     /// <summary>BioTOF II: Bruker Daltonics' BioTOF II: ESI TOF.</summary>
@@ -767,17 +765,17 @@ public enum class CVID
     /// <summary>Q-Tof micro: Waters oa-ToF based Q-Tof micro.</summary>
     MS_Q_Tof_micro = 1000188,
 
-    /// <summary>Q-Tof ultima: Waters oa-ToF based Q-Tof Ultima.</summary>
-    MS_Q_Tof_ultima = 1000189,
+    /// <summary>Q-Tof Ultima: Waters oa-ToF based Q-Tof Ultima.</summary>
+    MS_Q_Tof_Ultima = 1000189,
 
     /// <summary>QSTAR: Applied Biosystems/MDS SCIEX QSTAR MS.</summary>
     MS_QSTAR = 1000190,
 
-    /// <summary>quattro micro: Waters oa-ToF based micro.</summary>
+    /// <summary>quattro micro: Waters (triple) quadrupole based micro.</summary>
     MS_quattro_micro = 1000191,
 
-    /// <summary>Quattro UItima: Waters oa-ToF based Ultima.</summary>
-    MS_Quattro_UItima = 1000192,
+    /// <summary>Quattro Ultima: Waters (triple) quadrupole based Ultima.</summary>
+    MS_Quattro_Ultima = 1000192,
 
     /// <summary>Surveyor MSQ: ThermoFinnigan Surveyor MSQ MS.</summary>
     MS_Surveyor_MSQ = 1000193,
@@ -5549,8 +5547,8 @@ public enum class CVID
     /// <summary>nanoACQUITY UPLC: Waters LC-system nanoACQUITY UPLC.</summary>
     MS_nanoACQUITY_UPLC = 1001766,
 
-    /// <summary>nanoACQUITY UPLC System with Technology: Waters LC-system nanoACQUITY UPLC System with Technology.</summary>
-    MS_nanoACQUITY_UPLC_System_with_Technology = 1001767,
+    /// <summary>nanoACQUITY UPLC System with 1D Technology: Waters LC-system nanoACQUITY UPLC System with 1D Technology.</summary>
+    MS_nanoACQUITY_UPLC_System_with_1D_Technology = 1001767,
 
     /// <summary>nanoACQUITY UPLC with HDX Technology: Waters LC-system nanoACQUITY UPLC with HDX Technology.</summary>
     MS_nanoACQUITY_UPLC_with_HDX_Technology = 1001768,
@@ -5615,7 +5613,7 @@ public enum class CVID
     /// <summary>Acquity TQD: Waters quadrupole based Acquity TQD.</summary>
     MS_Acquity_TQD = 1001788,
 
-    /// <summary>Quattro micro GC: Waters quadrupole based Quattro micro GC.</summary>
+    /// <summary>Quattro micro GC: Waters (triple) quadrupole based Quattro micro GC.</summary>
     MS_Quattro_micro_GC = 1001789,
 
     /// <summary>Xevo TQ MS: Waters quadrupole based Xevo TQ MS.</summary>
@@ -5633,8 +5631,8 @@ public enum class CVID
     /// <summary>Empower: Waters Empower software for liquid chromatography and mass spectrometry acquisition.</summary>
     MS_Empower = 1001795,
 
-    /// <summary>Unify: Waters Unify software for liquid chromatography and mass spectrometry acquisition.</summary>
-    MS_Unify = 1001796,
+    /// <summary>UNIFY: Waters UNIFY software for liquid chromatography and mass spectrometry acquisition.</summary>
+    MS_UNIFY = 1001796,
 
     /// <summary>travelling wave ion mobility mass spectrometer: An ion mobility mass spectrometry technique based on the superimposition of travelling voltage waves on a radially-confining RF voltage in a gas-filled, stacked-ring ion guide.</summary>
     MS_travelling_wave_ion_mobility_mass_spectrometer_OBSOLETE = 1001797,
@@ -5663,7 +5661,7 @@ public enum class CVID
     /// <summary>TruTOF: LECO bench-top GC time-of-flight mass spectrometer.</summary>
     MS_TruTOF = 1001804,
 
-    /// <summary>quantification datatype: The data type of the value reported in a QuantLayer for a feature, peptide, protein, protein group.</summary>
+    /// <summary>quantification datatype: The data type of the value reported in a QuantLayer.</summary>
     MS_quantification_datatype = 1001805,
 
     /// <summary>quantification object attribute: Attributes describing the details of an object relevant for reporting quantification workflows or values.</summary>
@@ -5759,7 +5757,7 @@ public enum class CVID
     /// <summary>spectral counting quantitation analysis: Spectral counting workflow (number of identified MS2 spectra as approximation of peptide / protein quant).</summary>
     MS_spectral_counting_quantitation_analysis = 1001836,
 
-    /// <summary>iTRAQ quantitation analysis: Quantification analysis using the SCIEX iTRAQ isobaric labelling workflow, wherein 2-8 reporter ions are measured in MS2 spectra near 114 m/z.</summary>
+    /// <summary>iTRAQ quantitation analysis: Quantification analysis using the SCIEX amine-reactive isobaric tags for relative and absolute quantification (iTRAQ) labelling workflow, wherein 2-8 reporter ions are measured in MS2 spectra near in the 114-121 m/z range.</summary>
     MS_iTRAQ_quantitation_analysis = 1001837,
 
     /// <summary>SRM quantitation analysis: Selected Reaction Monitoring workflow (XIC quantitation of precursor / fragment mass pair).</summary>
@@ -5774,8 +5772,8 @@ public enum class CVID
     /// <summary>LC-MS feature volume: Real (intensity times area) volume of the LC-MS feature.</summary>
     MS_LC_MS_feature_volume = 1001841,
 
-    /// <summary>peptide PSM count: The number of MS2 spectra identified for this peptide in spectral counting.</summary>
-    MS_peptide_PSM_count = 1001842,
+    /// <summary>sequence-level spectral count: The number of MS2 spectra identified for a raw peptide sequence without PTMs and charge state in spectral counting.</summary>
+    MS_sequence_level_spectral_count = 1001842,
 
     /// <summary>MS1 feature maximum intensity: Maximum intensity of MS1 feature.</summary>
     MS_MS1_feature_maximum_intensity = 1001843,
@@ -6305,7 +6303,7 @@ public enum class CVID
     /// <summary>isobaric label quantitation analysis: Quantitation analysis using an isobaric labelling workflow.</summary>
     MS_isobaric_label_quantitation_analysis = 1002009,
 
-    /// <summary>TMT quantitation analysis: Quantitation analysis using the Thermo Fisher tandem mass tag (TMT) labelling workflow.</summary>
+    /// <summary>TMT quantitation analysis: Quantitation analysis using the Thermo Fisher amine-reactive tandem mass tag (TMT) labelling workflow, wherein 2-10 reporter ions are measured in MS2 spectra in the 126-131 m/z.</summary>
     MS_TMT_quantitation_analysis = 1002010,
 
     /// <summary>desorption electrospray ionization: Combination of electrospray and desorption ionization method that ionizes gases, liquids and solids in open air under atmospheric pressure.</summary>
@@ -7112,7 +7110,7 @@ public enum class CVID
     /// <summary>Xevo G2-S QTof: Waters oa-ToF based Xevo G2-S QTof.</summary>
     MS_Xevo_G2_S_QTof = 1002276,
 
-    /// <summary>AutoSpec Premier: Waters AutoSpec Premier.</summary>
+    /// <summary>AutoSpec Premier: Waters AutoSpec Premier magnetic sector instrument.</summary>
     MS_AutoSpec_Premier = 1002277,
 
     /// <summary>Pegasus III: LECO nominal mass resolution time-of-flight GC mass spectrometer.</summary>
@@ -7931,7 +7929,7 @@ public enum class CVID
     /// <summary>normalized spectral abundance factor: A normalized spectral abundance factor (NSAF).</summary>
     MS_normalized_spectral_abundance_factor = 1002547,
 
-    /// <summary>distributed normalized spectral abundance factor: A distributed normalized spectral abundance factor (dNSAF.</summary>
+    /// <summary>distributed normalized spectral abundance factor: A distributed normalized spectral abundance factor (dNSAF).</summary>
     MS_distributed_normalized_spectral_abundance_factor = 1002548,
 
     /// <summary>PTM localization distinct peptide-level statistic: Statistic to convey the confidence of the localization of an amino acid modification on a peptide sequence.</summary>
@@ -8132,7 +8130,7 @@ public enum class CVID
     /// <summary>SILAC light reagent: The name of the sample labelled with the light SILAC label.</summary>
     MS_SILAC_light_reagent = 1002614,
 
-    /// <summary>TMT reagent: Tandem mass tag reagent.</summary>
+    /// <summary>TMT reagent: Tandem mass tag reagent used in TMT, glycoTMT, iodoTMT, aminoxyTMT or hydrazideTMT isobaric labeling.</summary>
     MS_TMT_reagent = 1002615,
 
     /// <summary>TMT reagent 126: The name of the sample labelled with the TMT reagent 126.</summary>
@@ -8153,7 +8151,7 @@ public enum class CVID
     /// <summary>TMT reagent 131: The name of the sample labelled with the TMT reagent 131.</summary>
     MS_TMT_reagent_131 = 1002621,
 
-    /// <summary>iTRAQ reagent: Isobaric tag for relative and absolute quantitation reagent.</summary>
+    /// <summary>iTRAQ reagent: Isobaric tag for relative and absolute quantitation (iTRAQ or iTRAQH) reagent.</summary>
     MS_iTRAQ_reagent = 1002622,
 
     /// <summary>iTRAQ reagent 113: The name of the sample labelled with the iTRAQ reagent 113.</summary>
@@ -8327,8 +8325,8 @@ public enum class CVID
     /// <summary>residue-pair-level global FDR: Estimation of the global false discovery rate of residue-pairs in cross-linking experiments.</summary>
     MS_residue_pair_level_global_FDR = 1002677,
 
-    /// <summary>supplemental higher energy beam-type collision-induced dissociation: A supplemental collision-induced dissociation process wherein the projectile ion has the translational energy higher than approximately 1000 eV.</summary>
-    MS_supplemental_higher_energy_beam_type_collision_induced_dissociation = 1002678,
+    /// <summary>supplemental beam-type collision-induced dissociation: A supplemental collision-induced dissociation process that occurs in a beam-type collision cell in addition to another primary type of dissociation.</summary>
+    MS_supplemental_beam_type_collision_induced_dissociation = 1002678,
 
     /// <summary>supplemental collision-induced dissociation: The dissociation of an ion after supplemental collisional excitation.</summary>
     MS_supplemental_collision_induced_dissociation = 1002679,
@@ -8410,6 +8408,198 @@ public enum class CVID
 
     /// <summary>protein group-level result list statistic: Attrbiute of an entire list of protein groups.</summary>
     MS_protein_group_level_result_list_statistic = 1002706,
+
+    /// <summary>Pegasus BT: LECO bench-top GC time-of-flight mass spectrometer.</summary>
+    MS_Pegasus_BT = 1002719,
+
+    /// <summary>MSPathFinder: PNNL top-down/bottom-up analysis software for identifying peptides and proteoforms in fragmentation mass spectra.</summary>
+    MS_MSPathFinder = 1002720,
+
+    /// <summary>MSPathFinder:SpecEValue: MSPathFinder spectral E-value.</summary>
+    MS_MSPathFinder_SpecEValue = 1002721,
+
+    /// <summary>MSPathFinder:EValue: MSPathFinder E-value.</summary>
+    MS_MSPathFinder_EValue = 1002722,
+
+    /// <summary>MSPathFinder:QValue: MSPathFinder Q-value.</summary>
+    MS_MSPathFinder_QValue = 1002723,
+
+    /// <summary>MSPathFinder:PepQValue: MSPathFinder peptide-level Q-value.</summary>
+    MS_MSPathFinder_PepQValue = 1002724,
+
+    /// <summary>MSPathFinder:RawScore: MSPathFinder raw score.</summary>
+    MS_MSPathFinder_RawScore = 1002725,
+
+    /// <summary>SYNAPT G2-Si: Waters Corporation SYNAPT G2-Si orthogonal acceleration time-of-flight mass spectrometer.</summary>
+    MS_SYNAPT_G2_Si = 1002726,
+
+    /// <summary>MALDI SYNAPT G2-Si: Waters Corporation MALDI SYNAPT G2-Si orthogonal acceleration time-of-flight mass spectrometer.</summary>
+    MS_MALDI_SYNAPT_G2_Si = 1002727,
+
+    /// <summary>Vion IMS QTof: Waters Corporation Vion IMS QTof orthogonal acceleration time-of-flight mass spectrometer.</summary>
+    MS_Vion_IMS_QTof = 1002728,
+
+    /// <summary>Xevo G2 XS Tof: Waters Corporation Xevo G2 XS Tof orthogonal acceleration time-of-flight mass spectrometer.</summary>
+    MS_Xevo_G2_XS_Tof = 1002729,
+
+    /// <summary>Xevo TQ-XS: Waters Corporation Xevo TQ-XS triple quadrupole mass spectrometer.</summary>
+    MS_Xevo_TQ_XS = 1002730,
+
+    /// <summary>Xevo TQ-S micro: Waters Corporation Xevo TQ-S micro triple quadrupole mass spectrometer.</summary>
+    MS_Xevo_TQ_S_micro = 1002731,
+
+    /// <summary>Orbitrap Fusion Lumos: Thermo Scientific Orbitrap Fusion Lumos mass spectrometer with Tribrid architecture consisting of quadrupole mass filter, linear ion trap and Orbitrap mass analyzers.</summary>
+    MS_Orbitrap_Fusion_Lumos = 1002732,
+
+    /// <summary>peptide-level spectral count: The number of MS2 spectra identified for a peptide sequence specified by the amino acid one-letter codes plus optional PTMs in spectral counting.</summary>
+    MS_peptide_level_spectral_count = 1002733,
+
+    /// <summary>peptide ion-level spectral count: The number of MS2 spectra identified for a molecular ion defined by the peptide sequence represented by the amino acid one-letter codes, plus optional PTMs plus optional charged aducts plus the charge state, in spectral counting.</summary>
+    MS_peptide_ion_level_spectral_count = 1002734,
+
+    /// <summary>feature-level quantification datatype: The data type of the value reported in a QuantLayer for a feature.</summary>
+    MS_feature_level_quantification_datatype = 1002735,
+
+    /// <summary>PSM-level quantification datatype: The data type of the value reported in a QuantLayer for a PSM.</summary>
+    MS_PSM_level_quantification_datatype = 1002736,
+
+    /// <summary>peptide-level quantification datatype: The data type of the value reported in a QuantLayer for a peptide.</summary>
+    MS_peptide_level_quantification_datatype = 1002737,
+
+    /// <summary>protein-level quantification datatype: The data type of the value reported in a QuantLayer for a protein.</summary>
+    MS_protein_level_quantification_datatype = 1002738,
+
+    /// <summary>protein group-level quantification datatype: The data type of the value reported in a QuantLayer for a protein group.</summary>
+    MS_protein_group_level_quantification_datatype = 1002739,
+
+    /// <summary>unmapped peptide: Within the context of a proteogenomics approach, a peptide sequence that has not been mapped to a genomic location.</summary>
+    MS_unmapped_peptide = 1002740,
+
+    /// <summary>unmapped protein: Within the context of a proteogenomics approach, a protein sequence that has not been mapped to a genomic location.</summary>
+    MS_unmapped_protein = 1002741,
+
+    /// <summary>noise array: A data array of noise values.</summary>
+    MS_noise_array = 1002742,
+
+    /// <summary>sampled noise m/z array: A data array of parallel, independent m/z values for a sampling of noise across a spectrum (typically much smaller than MS:1000514, the m/z array).</summary>
+    MS_sampled_noise_m_z_array = 1002743,
+
+    /// <summary>sampled noise intensity array: A data array of intensity values for the amplitude of noise variation superposed on the baseline (MS:1002745) across a spectrum (for use with MS:1002743, sampled noise m/z array).</summary>
+    MS_sampled_noise_intensity_array = 1002744,
+
+    /// <summary>sampled noise baseline array: A data array of baseline intensity values (the intensity in the absence of analytes) for a sampling of noise across a spectrum (for use with MS:1002743, sampled noise m/z array).</summary>
+    MS_sampled_noise_baseline_array = 1002745,
+
+    /// <summary>MS-Numpress linear prediction compression followed by zlib compression: Compression using MS-Numpress linear prediction compression and zlib.</summary>
+    MS_MS_Numpress_linear_prediction_compression_followed_by_zlib_compression = 1002746,
+
+    /// <summary>MS-Numpress positive integer compression followed by zlib compression: Compression using MS-Numpress positive integer compression and zlib.</summary>
+    MS_MS_Numpress_positive_integer_compression_followed_by_zlib_compression = 1002747,
+
+    /// <summary>MS-Numpress short logged float compression followed by zlib compression: Compression using MS-Numpress short logged float compression and zlib.</summary>
+    MS_MS_Numpress_short_logged_float_compression_followed_by_zlib_compression = 1002748,
+
+    /// <summary>Mascot:IntegratedSpectralLibrarySearch: Means that Mascot has integrated the search results of database and spectral library search into a single data set.</summary>
+    MS_Mascot_IntegratedSpectralLibrarySearch = 1002749,
+
+    /// <summary>NIST MSPepSearch: Search tool of the NIST (National Institute of Standrads and Technology) for spectral library searches.</summary>
+    MS_NIST_MSPepSearch = 1002750,
+
+    /// <summary>NIST MSP format: MSP text format defined by the NIST.</summary>
+    MS_NIST_MSP_format = 1002751,
+
+    /// <summary>database type spectral library: Database containing spectra.</summary>
+    MS_database_type_spectral_library = 1002752,
+
+    /// <summary>value between 0 and 1000 inclusive: Value range for scores.</summary>
+    MS_value_between_0_and_1000_inclusive = 1002753,
+
+    /// <summary>MSPepSearch:score: MSPepSearch score (0 for entirely dissimilar and 1000 for identical observed spectrum and library spectrum.</summary>
+    MS_MSPepSearch_score = 1002754,
+
+    /// <summary>combined ms-ms + spectral library search: A combined MS2 (with fragment ions) and spectral library search.</summary>
+    MS_combined_ms_ms___spectral_library_search = 1002755,
+
+    /// <summary>iodoTMT quantitation analysis: Quantitation analysis using the Thermo Fisher sulfhydryl-reactive iodo tandem mass tag (iodoTMT) labelling workflow.</summary>
+    MS_iodoTMT_quantitation_analysis = 1002756,
+
+    /// <summary>glyco-TMT quantitation analysis: Quantitation analysis using the Thermo Fisher carbonyl-reactive glyco-tandem mass tag (glyco-TMT) labelling workflow.</summary>
+    MS_glyco_TMT_quantitation_analysis = 1002757,
+
+    /// <summary>aminoxyTMT quantitation analysis: Quantitation analysis using the Thermo Fisher carbonyl-reactive aminoxy tandem mass tag (aminoxyTMT) labelling workflow.</summary>
+    MS_aminoxyTMT_quantitation_analysis = 1002758,
+
+    /// <summary>hydrazideTMT quantitation analysis: Quantitation analysis using the Thermo Fisher carbonyl-reactive hydrazide tandem mass tag (hydrazide-TMT) labelling workflow.</summary>
+    MS_hydrazideTMT_quantitation_analysis = 1002759,
+
+    /// <summary>iTRAQH quantitation analysis: Quantification analysis using the carbonyl-reactive isobaric tags for relative and absolute quantification hydrazide (iTRAQH) labelling workflow.</summary>
+    MS_iTRAQH_quantitation_analysis = 1002760,
+
+    /// <summary>DiART quantitation analysis: Quantification analysis using the amine-reactive deuterium isobaric amine reactive tag (DiART) labelling workflow.</summary>
+    MS_DiART_quantitation_analysis = 1002761,
+
+    /// <summary>DiLeu quantitation analysis: Quantification analysis using the amine-reactive dimethyl leucine (DiLeu) tag labelling workflow.</summary>
+    MS_DiLeu_quantitation_analysis = 1002762,
+
+    /// <summary>TMT reagent 127N: The name of the sample labelled with the TMT reagent 127N.</summary>
+    MS_TMT_reagent_127N = 1002763,
+
+    /// <summary>TMT reagent 127C: The name of the sample labelled with the TMT reagent 127C.</summary>
+    MS_TMT_reagent_127C = 1002764,
+
+    /// <summary>TMT reagent 128N: The name of the sample labelled with the TMT reagent 128N.</summary>
+    MS_TMT_reagent_128N = 1002765,
+
+    /// <summary>TMT reagent 128C: The name of the sample labelled with the TMT reagent 128C.</summary>
+    MS_TMT_reagent_128C = 1002766,
+
+    /// <summary>TMT reagent 129N: The name of the sample labelled with the TMT reagent 129N.</summary>
+    MS_TMT_reagent_129N = 1002767,
+
+    /// <summary>TMT reagent 129C: The name of the sample labelled with the TMT reagent 129C.</summary>
+    MS_TMT_reagent_129C = 1002768,
+
+    /// <summary>TMT reagent 130N: The name of the sample labelled with the TMT reagent 130N.</summary>
+    MS_TMT_reagent_130N = 1002769,
+
+    /// <summary>TMT reagent 130C: The name of the sample labelled with the TMT reagent 130C.</summary>
+    MS_TMT_reagent_130C = 1002770,
+
+    /// <summary>DiART reagent: Deuterium isobaric amine reactive tag labeling reagent.</summary>
+    MS_DiART_reagent = 1002771,
+
+    /// <summary>DiART reagent 114: The name of the sample labelled with the DiART reagent 114.</summary>
+    MS_DiART_reagent_114 = 1002772,
+
+    /// <summary>DiART reagent 115: The name of the sample labelled with the DiART reagent 115.</summary>
+    MS_DiART_reagent_115 = 1002773,
+
+    /// <summary>DiART reagent 116: The name of the sample labelled with the DiART reagent 116.</summary>
+    MS_DiART_reagent_116 = 1002774,
+
+    /// <summary>DiART reagent 117: The name of the sample labelled with the DiART reagent 117.</summary>
+    MS_DiART_reagent_117 = 1002775,
+
+    /// <summary>DiART reagent 118: The name of the sample labelled with the DiART reagent 118.</summary>
+    MS_DiART_reagent_118 = 1002776,
+
+    /// <summary>DiART reagent 119: The name of the sample labelled with the DiART reagent 119.</summary>
+    MS_DiART_reagent_119 = 1002777,
+
+    /// <summary>DiLeu reagent: Dimethyl leucine labeling reagent.</summary>
+    MS_DiLeu_reagent = 1002778,
+
+    /// <summary>DiLeu reagent 115: The name of the sample labelled with the DiLeu reagent 115.</summary>
+    MS_DiLeu_reagent_115 = 1002779,
+
+    /// <summary>DiLeu reagent 116: The name of the sample labelled with the DiLeu reagent 116.</summary>
+    MS_DiLeu_reagent_116 = 1002780,
+
+    /// <summary>DiLeu reagent 117: The name of the sample labelled with the DiLeu reagent 117.</summary>
+    MS_DiLeu_reagent_117 = 1002781,
+
+    /// <summary>DiLeu reagent 118: The name of the sample labelled with the DiLeu reagent 118.</summary>
+    MS_DiLeu_reagent_118 = 1002782,
 
     /// <summary>unimod root node: The root node of the unimod modifications ontology.</summary>
     UNIMOD_unimod_root_node = 100000000,
@@ -8927,7 +9117,7 @@ public enum class CVID
     /// <summary>Delta:Hg(1): Mercury Mercaptan.</summary>
     UNIMOD_Delta_Hg_1_ = 100000291,
 
-    /// <summary>IodoU-AMP: Cross-link of (Iodo)-uracil MP with W,F,Y.</summary>
+    /// <summary>IodoU-AMP: (Iodo)-uracil MP.</summary>
     UNIMOD_IodoU_AMP = 100000292,
 
     /// <summary>CAMthiopropanoyl: 3-(carbamidomethylthio)propanoyl.</summary>
@@ -8996,8 +9186,8 @@ public enum class CVID
     /// <summary>Xlink:B10621: Bis-N-I-sulfonerahodamine.</summary>
     UNIMOD_Xlink_B10621 = 100000323,
 
-    /// <summary>DTBP: Dimethyl 3,3\'-dithiobispropionimidate.</summary>
-    UNIMOD_DTBP = 100000324,
+    /// <summary>Xlink:DTBPc: Dimethyl 3,3\'-dithiobispropionimidate.</summary>
+    UNIMOD_Xlink_DTBPc = 100000324,
 
     /// <summary>FP-Biotin: 10-ethoxyphosphinyl-N-(biotinamidopentyl)decanamide.</summary>
     UNIMOD_FP_Biotin = 100000325,
@@ -10022,11 +10212,11 @@ public enum class CVID
     /// <summary>Gly-loss+Amide: Enzymatic glycine removal leaving an amidated C-terminus.</summary>
     UNIMOD_Gly_loss_Amide = 100000822,
 
-    /// <summary>BMOE: Addition of BMOE crosslinker.</summary>
-    UNIMOD_BMOE = 100000824,
+    /// <summary>Xlink:BMOE: Addition of BMOE crosslinker.</summary>
+    UNIMOD_Xlink_BMOE = 100000824,
 
-    /// <summary>DFDNB: Addition of DFDNB crosslinker.</summary>
-    UNIMOD_DFDNB = 100000825,
+    /// <summary>Xlink:DFDNB: Addition of DFDNB crosslinker.</summary>
+    UNIMOD_Xlink_DFDNB = 100000825,
 
     /// <summary>TMPP-Ac: Tris(2,4,6-trimethoxyphenyl)phosphonium acetic acid N-hydroxysuccinimide ester derivative.</summary>
     UNIMOD_TMPP_Ac = 100000827,
@@ -10217,7 +10407,7 @@ public enum class CVID
     /// <summary>SulfoGMBS: High molecular absorption label for proteins.</summary>
     UNIMOD_SulfoGMBS = 100000942,
 
-    /// <summary>DimethylamineGMBS: Modified GMBS X linker for proteins.</summary>
+    /// <summary>DimethylamineGMBS: Modified GMBS X linker.</summary>
     UNIMOD_DimethylamineGMBS = 100000943,
 
     /// <summary>Label:15N(2)2H(9): SILAC label.</summary>
@@ -10385,8 +10575,8 @@ public enum class CVID
     /// <summary>Xlink:DSS: Water-quenched monolink of DSS/BS3 crosslinker to Lys or N-terminus.</summary>
     UNIMOD_Xlink_DSS = 100001020,
 
-    /// <summary>Xlink:EGS: Monolink of EGS crosslinker to Lys or N-terminus.</summary>
-    UNIMOD_Xlink_EGS = 100001021,
+    /// <summary>Xlink:EGS244: Water quenched monolink of EGS cross-linker.</summary>
+    UNIMOD_Xlink_EGS244 = 100001021,
 
     /// <summary>Xlink:DST: Monolink of DST crosslinker to Lys or N-terminus.</summary>
     UNIMOD_Xlink_DST = 100001022,
@@ -10400,8 +10590,8 @@ public enum class CVID
     /// <summary>Xlink:DMP-de: Monolink of DMP crosslinker to Lys or N-terminus.</summary>
     UNIMOD_Xlink_DMP_de = 100001027,
 
-    /// <summary>Xlink:EGScleaved: EGS crosslinker to Lys or N-terminus following hydroxylamine cleavage.</summary>
-    UNIMOD_Xlink_EGScleaved = 100001028,
+    /// <summary>Xlink:EGS115: Cleavage product of EGS protein crosslinks by hydroylamine treatment.</summary>
+    UNIMOD_Xlink_EGS115 = 100001028,
 
     /// <summary>Biotin:Thermo-88310: Desthiobiotin modification of lysine.</summary>
     UNIMOD_Biotin_Thermo_88310 = 100001031,
@@ -12487,6 +12677,57 @@ public enum class CVID
 
     /// <summary>Glu->pyro-Glu+Methyl:2H(2)13C(1): Pyro-Glu from E + Methylation Medium.</summary>
     UNIMOD_Glu__pyro_Glu_Methyl_2H_2_13C_1_ = 100001827,
+
+    /// <summary>LRGG+methyl: LeumethylArgGlyGly.</summary>
+    UNIMOD_LRGG_methyl = 100001828,
+
+    /// <summary>LRGG+dimethyl: LeudimethylArgGlyGly.</summary>
+    UNIMOD_LRGG_dimethyl = 100001829,
+
+    /// <summary>Biotin-tyramide: Biotin-Phenol.</summary>
+    UNIMOD_Biotin_tyramide = 100001830,
+
+    /// <summary>Tris: Tris adduct causes 104 Da addition at asparagine-succinimide intermediate.</summary>
+    UNIMOD_Tris = 100001831,
+
+    /// <summary>IASD: Iodoacetamide derivative of stilbene (reaction product with thiol).</summary>
+    UNIMOD_IASD = 100001832,
+
+    /// <summary>NP40: NP-40 synthetic polymer terminus.</summary>
+    UNIMOD_NP40 = 100001833,
+
+    /// <summary>Tween20: Tween 20 synthetic polymer terminus.</summary>
+    UNIMOD_Tween20 = 100001834,
+
+    /// <summary>Tween80: Tween 80 synthetic polymer terminus.</summary>
+    UNIMOD_Tween80 = 100001835,
+
+    /// <summary>Triton: Triton synthetic polymer terminus.</summary>
+    UNIMOD_Triton = 100001836,
+
+    /// <summary>Brij35: Brij 35 synthetic polymer terminus.</summary>
+    UNIMOD_Brij35 = 100001837,
+
+    /// <summary>Brij58: Brij 58 synthetic polymer terminus.</summary>
+    UNIMOD_Brij58 = 100001838,
+
+    /// <summary>betaFNA: Beta-Funaltrexamine.</summary>
+    UNIMOD_betaFNA = 100001839,
+
+    /// <summary>dHex(1)Hex(7)HexNAc(4): Fucosylated biantennary + 2 alphaGal.</summary>
+    UNIMOD_dHex_1_Hex_7_HexNAc_4_ = 100001840,
+
+    /// <summary>Biotin:Thermo-21328: EZ-Link Sulfo-NHS-SS-Biotin.</summary>
+    UNIMOD_Biotin_Thermo_21328 = 100001841,
+
+    /// <summary>PhosphoCytidine: Cytidine monophosphate.</summary>
+    UNIMOD_PhosphoCytidine = 100001843,
+
+    /// <summary>AzidoF: Azidophenylalanine.</summary>
+    UNIMOD_AzidoF = 100001845,
+
+    /// <summary>Dimethylaminoethyl: Cys alkylation by dimethylaminoethyl halide.</summary>
+    UNIMOD_Dimethylaminoethyl = 100001846,
 
     /// <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
     UO_unit = 200000000,

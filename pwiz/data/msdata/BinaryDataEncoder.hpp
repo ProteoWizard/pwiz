@@ -60,6 +60,7 @@ class PWIZ_API_DECL BinaryDataEncoder
         double numpressFixedPoint;  // for Numpress_* use, 0=derive best value
         double numpressLinearErrorTolerance;  // guarantee abs(1.0-(encoded/decoded)) <= this, 0=do not guarantee anything
         double numpressSlofErrorTolerance;  // guarantee abs(1.0-(encoded/decoded)) <= this, 0=do not guarantee anything
+        double numpressLinearAbsMassAcc;  // absolute mass error for lossy linear compression in Th (e.g. use 1e-4 for 1ppm @ 100 Th)
 
         std::map<cv::CVID, Precision> precisionOverrides;
         std::map<cv::CVID, Numpress> numpressOverrides; 
@@ -71,7 +72,8 @@ class PWIZ_API_DECL BinaryDataEncoder
             numpress(Numpress_None),
             numpressFixedPoint(0.0),
             numpressLinearErrorTolerance(BinaryDataEncoder_default_numpressLinearErrorTolerance),
-            numpressSlofErrorTolerance(BinaryDataEncoder_default_numpressSlofErrorTolerance)
+            numpressSlofErrorTolerance(BinaryDataEncoder_default_numpressSlofErrorTolerance),
+            numpressLinearAbsMassAcc(-1.0)
         {}
     };
 

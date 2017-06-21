@@ -191,6 +191,9 @@ Config parseCommandLine(int argc, char** argv)
     std::string ms_numpress_linear_default = ss.str();
     bool ms_numpress_pic = false; // if true, use this numpress Pic compression
     double ms_numpress_slof = -1; // if >= 0, use this numpress slof compression with this tolerance
+    double ms_numpress_linear_abs_tolerance = -1; // if >= 0, use this numpress linear compression with this absolute Th tolerance
+	std::string ms_numpress_linear_abs_tolerance_str; // input as text
+	std::string ms_numpress_linear_abs_tolerance_str_default("-1"); // input as text
 	std::string ms_numpress_slof_str; // input as text, to help with the "msconvert --numpressslof foo.raw" case
     stringstream ss2;
     ss2 << boost::format("%4.2g") % BinaryDataEncoder_default_numpressSlofErrorTolerance;
@@ -282,6 +285,9 @@ Config parseCommandLine(int argc, char** argv)
         ("numpressLinear",
             po::value<std::string>(&ms_numpress_linear_str)->implicit_value(ms_numpress_linear_default),
             ": use numpress linear prediction compression for binary mz and rt data (relative accuracy loss will not exceed given tolerance arg, unless set to 0)")
+        ("numpressLinearAbsTol",
+            po::value<std::string>(&ms_numpress_linear_abs_tolerance_str)->implicit_value(ms_numpress_linear_abs_tolerance_str_default),
+            ": desired absolute tolerance for linear numpress prediction (e.g. use 1e-4 for a mass accuracy of 0.2 ppm at 500 m/z, default uses -1.0 for maximal accuracy). Note: setting this value may substantially reduce file size, this overrides relative accuracy tolerance.")
         ("numpressPic",
             po::value<bool>(&ms_numpress_pic)->zero_tokens(),
             ": use numpress positive integer compression for binary intensities (absolute accuracy loss will not exceed 0.5)")
@@ -488,6 +494,10 @@ Config parseCommandLine(int argc, char** argv)
             ms_numpress_slof = BinaryDataEncoder_default_numpressSlofErrorTolerance;
 		}
 	}
+	if (ms_numpress_linear_abs_tolerance_str.length()) // this argument needs to be numerical
+	{
+		ms_numpress_linear_abs_tolerance = string_to_double(ms_numpress_linear_abs_tolerance_str);
+	}
 	if (ms_numpress_linear_str.length()) // was that a numerical arg to --numpressLinear, or a filename?
 	{
 		try 
@@ -632,6 +642,14 @@ Config parseCommandLine(int argc, char** argv)
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_m_z_array] = BinaryDataEncoder::Numpress_Linear;
         config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_time_array] = BinaryDataEncoder::Numpress_Linear;
         config.writeConfig.binaryDataEncoderConfig.numpressLinearErrorTolerance = ms_numpress_linear;
+    }
+    if (ms_numpress_linear_abs_tolerance>=0) 
+    {
+        config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_m_z_array] = BinaryDataEncoder::Numpress_Linear;
+        config.writeConfig.binaryDataEncoderConfig.numpressOverrides[MS_time_array] = BinaryDataEncoder::Numpress_Linear;
+        config.writeConfig.binaryDataEncoderConfig.numpressLinearAbsMassAcc = ms_numpress_linear_abs_tolerance;
+        // this overrides any relative guarantees as the user specifically wants an absolute mass error guarantee
+        config.writeConfig.binaryDataEncoderConfig.numpressLinearErrorTolerance = 0;
     }
 
     return config;

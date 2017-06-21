@@ -88,6 +88,7 @@ public ref class MSDataFile : public MSData
         property bool numpressLinear; // lossy numerical representations for rt and mz
         property double numpressLinearErrorTolerance;  // guarantee abs(1.0-(encoded/decoded)) <= this, 0=do not guarantee anything
         property double numpressSlofErrorTolerance;  // guarantee abs(1.0-(encoded/decoded)) <= this, 0=do not guarantee anything
+		property double numpressLinearAbsMassAcc; // absolute mass error for lossy linear compression in Th (e.g. use 1e-4 for 1ppm @ 100 Th)
         property bool indexed;
         property bool gzipped;
 
@@ -98,8 +99,9 @@ public ref class MSDataFile : public MSData
             numpressSlof = false;
             numpressLinear = false;
             numpressLinearErrorTolerance = pwiz::msdata::BinaryDataEncoder_default_numpressLinearErrorTolerance;
-            numpressSlofErrorTolerance = pwiz::msdata::BinaryDataEncoder_default_numpressSlofErrorTolerance;
-            indexed = true;
+			numpressSlofErrorTolerance = pwiz::msdata::BinaryDataEncoder_default_numpressSlofErrorTolerance;
+			numpressLinearAbsMassAcc = -1.0;
+			indexed = true;
         }
     };
 

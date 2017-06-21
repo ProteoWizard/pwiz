@@ -1,15 +1,13 @@
 format-version: 1.2
-data-version: 4.0.1
-date: 15:07:2016 14:16
+data-version: 4.0.11
+date: 10:04:2017 10:10
 saved-by: Gerhard Mayer
-auto-generated-by: OBO-Edit 2.3
-import: http://www.berkeleybop.org/ontologies/pato/pato.obo
-import: http://www.berkeleybop.org/ontologies/uo/uo.obo
+auto-generated-by: OBO-Edit 2.3.1
+import: http://ontologies.berkeleybop.org/pato.obo
+import: http://ontologies.berkeleybop.org/uo.obo
 default-namespace: MS
 namespace-id-rule: * MS:$sequence(7,0,9999999)$
 remark: namespace: MS
-remark: version: 4.0.1
-remark: release date: 2016-07-15
 remark: coverage: Mass spectrometer output files and spectra interpretation
 remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -930,7 +928,6 @@ is_a: MS:1000525 ! spectrum representation
 id: MS:1000129
 name: negative scan
 def: "Polarity of the scan is negative." [PSI:MS]
-is_a: PATO:0002186 ! polarity
 is_a: MS:1000465 ! scan polarity
 is_a: MS:1000808 ! chromatogram attribute
 
@@ -938,7 +935,6 @@ is_a: MS:1000808 ! chromatogram attribute
 id: MS:1000130
 name: positive scan
 def: "Polarity of the scan is positive." [PSI:MS]
-is_a: PATO:0002186 ! polarity
 is_a: MS:1000465 ! scan polarity
 is_a: MS:1000808 ! chromatogram attribute
 
@@ -1070,7 +1066,7 @@ is_a: MS:1001534 ! Bruker Daltonics flex series
 [Term]
 id: MS:1000150
 name: Auto Spec Ultima NT
-def: "Waters AutoSpec Ultima NT MS." [PSI:MS]
+def: "Waters magnetic sector based AutoSpec Ultima NT MS." [PSI:MS]
 is_a: MS:1000126 ! Waters instrument model
 
 [Term]
@@ -1304,7 +1300,7 @@ is_a: MS:1000126 ! Waters instrument model
 
 [Term]
 id: MS:1000189
-name: Q-Tof ultima
+name: Q-Tof Ultima
 def: "Waters oa-ToF based Q-Tof Ultima." [PSI:MS]
 is_a: MS:1000126 ! Waters instrument model
 
@@ -1317,13 +1313,13 @@ is_a: MS:1000121 ! SCIEX instrument model
 [Term]
 id: MS:1000191
 name: quattro micro
-def: "Waters oa-ToF based micro." [PSI:MS]
+def: "Waters (triple) quadrupole based micro." [PSI:MS]
 is_a: MS:1000126 ! Waters instrument model
 
 [Term]
 id: MS:1000192
-name: Quattro UItima
-def: "Waters oa-ToF based Ultima." [PSI:MS]
+name: Quattro Ultima
+def: "Waters (triple) quadrupole based Ultima." [PSI:MS]
 is_a: MS:1000126 ! Waters instrument model
 
 [Term]
@@ -7116,7 +7112,7 @@ name: retention time(s)
 def: "OBSOLETE Retention time of the spectrum from the source file." [PSI:PI]
 comment: This term was made obsolete because scan start time (MS:1000016) should be used instead.
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001105 ! peptide result details
+is_a: MS:1001105 ! peptide sequence-level identification attribute
 is_a: MS:1001405 ! spectrum identification result details
 relationship: has_units UO:0000010 ! second
 relationship: has_units UO:0000031 ! minute
@@ -7226,7 +7222,7 @@ name: peptide raw area
 def: "OBSOLETE Peptide raw area." [PSI:PI]
 comment: This term was made obsolete because it is replaced by 'MS1 feature area' (MS:1001844).
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 is_obsolete: true
 
 [Term]
@@ -7234,35 +7230,35 @@ id: MS:1001131
 name: error on peptide area
 def: "Error on peptide area." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 
 [Term]
 id: MS:1001132
 name: peptide ratio
 def: "Peptide ratio." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 
 [Term]
 id: MS:1001133
 name: error on peptide ratio
 def: "Error on peptide ratio." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 
 [Term]
 id: MS:1001134
 name: protein ratio
 def: "Protein ratio." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002738 ! protein-level quantification datatype
 
 [Term]
 id: MS:1001135
 name: error on protein ratio
 def: "Error on protein ratio." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002738 ! protein-level quantification datatype
 
 [Term]
 id: MS:1001136
@@ -7270,7 +7266,7 @@ name: p-value (protein diff from 1 randomly)
 def: "OBSOLETE P-value (protein diff from 1 randomly)." [PSI:PI]
 comment: This term was made obsolete because it is replaced by 't-test p-value' (MS:1001855).
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002738 ! protein-level quantification datatype
 is_obsolete: true
 
 [Term]
@@ -7585,7 +7581,7 @@ name: p-value
 def: "OBSOLETE Quality estimation by p-value." [PSI:PI]
 comment: This term was made obsolete because now is split into peptide and protein terms.
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001092 ! peptide identification confidence metric
+is_a: MS:1001092 ! peptide sequence-level identification statistic
 is_a: MS:1001198 ! protein identification confidence metric
 is_obsolete: true
 
@@ -7634,7 +7630,7 @@ is_a: MS:1001450 ! decoy DB details
 id: MS:1001198
 name: protein identification confidence metric
 def: "Identification confidence metric for a protein." [PSI:PI]
-is_a: MS:1001116 ! single protein result details
+is_a: MS:1001116 ! single protein identification statistic
 
 [Term]
 id: MS:1001199
@@ -11385,8 +11381,8 @@ is_a: MS:1000126 ! Waters instrument model
 
 [Term]
 id: MS:1001767
-name: nanoACQUITY UPLC System with Technology
-def: "Waters LC-system nanoACQUITY UPLC System with Technology." [PSI:MS]
+name: nanoACQUITY UPLC System with 1D Technology
+def: "Waters LC-system nanoACQUITY UPLC System with 1D Technology." [PSI:MS]
 is_a: MS:1000126 ! Waters instrument model
 
 [Term]
@@ -11518,7 +11514,7 @@ is_a: MS:1000126 ! Waters instrument model
 [Term]
 id: MS:1001789
 name: Quattro micro GC
-def: "Waters quadrupole based Quattro micro GC." [PSI:MS]
+def: "Waters (triple) quadrupole based Quattro micro GC." [PSI:MS]
 is_a: MS:1000126 ! Waters instrument model
 
 [Term]
@@ -11556,8 +11552,8 @@ is_a: MS:1001457 ! data processing software
 
 [Term]
 id: MS:1001796
-name: Unify
-def: "Waters Unify software for liquid chromatography and mass spectrometry acquisition." [PSI:MS]
+name: UNIFY
+def: "Waters UNIFY software for liquid chromatography and mass spectrometry acquisition." [PSI:MS]
 is_a: MS:1000694 ! Waters software
 is_a: MS:1001456 ! analysis software
 is_a: MS:1001457 ! data processing software
@@ -11618,7 +11614,7 @@ is_a: MS:1001800 ! LECO instrument model
 [Term]
 id: MS:1001805
 name: quantification datatype
-def: "The data type of the value reported in a QuantLayer for a feature, peptide, protein, protein group." [PSI:MS]
+def: "The data type of the value reported in a QuantLayer." [PSI:MS]
 is_a: MS:1001129 ! quantification information
 
 [Term]
@@ -11817,7 +11813,8 @@ is_a: MS:1001833 ! quantitation analysis summary
 [Term]
 id: MS:1001837
 name: iTRAQ quantitation analysis
-def: "Quantification analysis using the SCIEX iTRAQ isobaric labelling workflow, wherein 2-8 reporter ions are measured in MS2 spectra near 114 m/z." [PSI:PI]
+def: "Quantification analysis using the SCIEX amine-reactive isobaric tags for relative and absolute quantification (iTRAQ) labelling workflow, wherein 2-8 reporter ions are measured in MS2 spectra near in the 114-121 m/z range." [PSI:PI, PMID:15385600]
+is_a: MS:1001833 ! quantitation analysis summary
 is_a: MS:1002009 ! isobaric label quantitation analysis
 
 [Term]
@@ -11837,35 +11834,35 @@ id: MS:1001840
 name: LC-MS feature intensity
 def: "Maximum peak intensity of the LC-MS feature." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002735 ! feature-level quantification datatype
 
 [Term]
 id: MS:1001841
 name: LC-MS feature volume
 def: "Real (intensity times area) volume of the LC-MS feature." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002735 ! feature-level quantification datatype
 
 [Term]
 id: MS:1001842
-name: peptide PSM count
-def: "The number of MS2 spectra identified for this peptide in spectral counting." [PSI:PI]
+name: sequence-level spectral count
+def: "The number of MS2 spectra identified for a raw peptide sequence without PTMs and charge state in spectral counting." [PSI:PI]
 xref: value-type:xsd\:int "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 
 [Term]
 id: MS:1001843
 name: MS1 feature maximum intensity
 def: "Maximum intensity of MS1 feature." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002735 ! feature-level quantification datatype
 
 [Term]
 id: MS:1001844
 name: MS1 feature area
 def: "Area of MS1 feature." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002735 ! feature-level quantification datatype
 
 [Term]
 id: MS:1001845
@@ -11902,7 +11899,7 @@ name: sum of MatchedFeature values
 def: "OBSOLETE Peptide quantification value calculated as sum of MatchedFeature quantification values." [PSI:PI]
 comment: This term was made obsolete because the concept MatchedFeature was dropped.
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002735 ! feature-level quantification datatype
 is_obsolete: true
 
 [Term]
@@ -11910,21 +11907,21 @@ id: MS:1001850
 name: normalized peptide value
 def: "Normalized peptide value." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 
 [Term]
 id: MS:1001851
 name: protein value: sum of peptide values
 def: "Protein quantification value calculated as sum of peptide values." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002738 ! protein-level quantification datatype
 
 [Term]
 id: MS:1001852
 name: normalized protein value
 def: "Normalized protein value." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002738 ! protein-level quantification datatype
 
 [Term]
 id: MS:1001853
@@ -11980,7 +11977,7 @@ id: MS:1001860
 name: protein value: mean of peptide ratios
 def: "Protein quantification value calculated as mean of peptide ratios." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002738 ! protein-level quantification datatype
 
 [Term]
 id: MS:1001861
@@ -12078,7 +12075,7 @@ name: FDRScore
 def: "OBSOLETE A smoothing of the distribution of q-values calculated for PSMs from individual search engines, such that ordering of result quality is maintained and all FDRScore values are guaranteed to have a value > 0." [PMID:19253293]
 comment: This term was made obsolete because it was split into the more specific terms for PSM-level FDRScore (1002355), distinct peptide-level FDRScore (MS:1002360), protein-level FDRScore (MS:1002365) and protein group-level FDRScore (MS:1002374).
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001143 ! search engine specific score for PSMs
+is_a: MS:1001143 ! PSM-level search engine specific statistic
 is_a: MS:1001153 ! search engine specific score
 is_obsolete: true
 
@@ -12190,28 +12187,28 @@ id: MS:1001890
 name: Progenesis:protein normalised abundance
 def: "The data type normalised abundance for proteins produced by Progenesis LC-MS." [PSI:MS]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002738 ! protein-level quantification datatype
 
 [Term]
 id: MS:1001891
 name: Progenesis:peptide normalised abundance
 def: "The data type normalised abundance for peptides produced by Progenesis LC-MS." [PSI:MS]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 
 [Term]
 id: MS:1001892
 name: Progenesis:protein raw abundance
 def: "The data type raw abundance for proteins produced by Progenesis LC-MS." [PSI:MS]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002738 ! protein-level quantification datatype
 
 [Term]
 id: MS:1001893
 name: Progenesis:peptide raw abundance
 def: "The data type raw abundance for peptide produced by Progenesis LC-MS." [PSI:MS]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 
 [Term]
 id: MS:1001894
@@ -12225,42 +12222,42 @@ id: MS:1001895
 name: Progenesis:peptide count
 def: "The data type peptide count produced by Progenesis LC-MS." [PSI:MS]
 xref: value-type:xsd\:int "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 
 [Term]
 id: MS:1001896
 name: Progenesis:feature intensity
 def: "The data type feature intensity produced by Progenesis LC-MS." [PSI:MS]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002735 ! feature-level quantification datatype
 
 [Term]
 id: MS:1001897
 name: MaxQuant:peptide counts (unique)
 def: "The data type peptide counts (unique) produced by MaxQuant." [PSI:MS]
 xref: value-type:xsd\:int "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 
 [Term]
 id: MS:1001898
 name: MaxQuant:peptide counts (all)
 def: "The data type peptide counts (all) produced by MaxQuant." [PSI:MS]
 xref: value-type:xsd\:int "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 
 [Term]
 id: MS:1001899
 name: MaxQuant:peptide counts (razor+unique)
 def: "The data type peptide counts (razor+unique) produced by MaxQuant." [PSI:MS]
 xref: value-type:xsd\:int "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 
 [Term]
 id: MS:1001900
 name: MaxQuant:sequence length
 def: "The data type sequence length produced by MaxQuant." [PSI:MS]
 xref: value-type:xsd\:int "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 
 [Term]
 id: MS:1001901
@@ -12281,7 +12278,7 @@ id: MS:1001903
 name: MaxQuant:feature intensity
 def: "The data type feature intensity produced by MaxQuant." [PSI:MS]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002735 ! feature-level quantification datatype
 
 [Term]
 id: MS:1001904
@@ -12295,14 +12292,14 @@ id: MS:1001905
 name: emPAI value
 def: "The emPAI value of protein abundance, produced from the emPAI algorithm." [PSI:MS]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002738 ! protein-level quantification datatype
 
 [Term]
 id: MS:1001906
 name: APEX value
 def: "The APEX value of protein abundance, produced from the APEX software." [PSI:MS]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002738 ! protein-level quantification datatype
 
 [Term]
 id: MS:1001907
@@ -13015,7 +13012,7 @@ is_a: MS:1001833 ! quantitation analysis summary
 [Term]
 id: MS:1002010
 name: TMT quantitation analysis
-def: "Quantitation analysis using the Thermo Fisher tandem mass tag (TMT) labelling workflow." [PSI:PI]
+def: "Quantitation analysis using the Thermo Fisher amine-reactive tandem mass tag (TMT) labelling workflow, wherein 2-10 reporter ions are measured in MS2 spectra in the 126-131 m/z." [PSI:PI, PMID:12713048]
 is_a: MS:1001833 ! quantitation analysis summary
 is_a: MS:1002009 ! isobaric label quantitation analysis
 
@@ -13395,14 +13392,14 @@ id: MS:1002064
 name: peptide consensus RT
 def: "Peptide consensus retention time." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 
 [Term]
 id: MS:1002065
 name: peptide consensus m/z
 def: "Peptide consensus mass/charge ratio." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 
 [Term]
 id: MS:1002066
@@ -13416,7 +13413,7 @@ id: MS:1002067
 name: protein value: median of peptide ratios
 def: "Protein quantification value calculated as median of peptide ratios." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002738 ! protein-level quantification datatype
 
 [Term]
 id: MS:1002068
@@ -13957,7 +13954,7 @@ id: MS:1002153
 name: protein level PSM counts
 def: "The number of spectra identified for this protein in spectral counting." [PSI:PI]
 xref: value-type:xsd\:int "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002738 ! protein-level quantification datatype
 
 [Term]
 id: MS:1002154
@@ -14311,7 +14308,8 @@ is_a: MS:1001861 ! quantification data processing
 [Term]
 id: MS:1002212
 name: IPTL quantitation analysis
-def: "Quantification analysis using a labelling strategy where both peptide termini are labelled so that the peptides from different labelling schema are isobaric." [PSI:PI]
+def: "Quantification analysis using a labelling strategy where both peptide termini are labelled so that the peptides from different labelling schema are isobaric." [PSI:PI, PMID:19655813]
+is_a: MS:1001833 ! quantitation analysis summary
 is_a: MS:1002009 ! isobaric label quantitation analysis
 
 [Term]
@@ -14707,7 +14705,7 @@ id: MS:1002268
 name: Byonic:Best LogProb
 def: "Best (most negative) log p-value of an individual PSM." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001116 ! single protein result details
+is_a: MS:1001116 ! single protein identification statistic
 is_a: MS:1001153 ! search engine specific score
 relationship: has_order MS:1002109 ! lower score better
 
@@ -14766,7 +14764,7 @@ is_a: MS:1000126 ! Waters instrument model
 [Term]
 id: MS:1002277
 name: AutoSpec Premier
-def: "Waters AutoSpec Premier." [PSI:MS]
+def: "Waters AutoSpec Premier magnetic sector instrument." [PSI:MS]
 is_a: MS:1000126 ! Waters instrument model
 
 [Term]
@@ -14985,19 +14983,19 @@ relationship: has_order MS:1002108 ! higher score better
 [Term]
 id: MS:1002312
 name: MS-Numpress linear prediction compression
-def: "Compression using MS-Numpress linear prediction compression." [https://github.com/fickludd/ms-numpress]
+def: "Compression using MS-Numpress linear prediction compression." [https://github.com/ms-numpress/ms-numpress]
 is_a: MS:1000572 ! binary data compression type
 
 [Term]
 id: MS:1002313
 name: MS-Numpress positive integer compression
-def: "Compression using MS-Numpress positive integer compression." [https://github.com/fickludd/ms-numpress]
+def: "Compression using MS-Numpress positive integer compression." [https://github.com/ms-numpress/ms-numpress]
 is_a: MS:1000572 ! binary data compression type
 
 [Term]
 id: MS:1002314
 name: MS-Numpress short logged float compression
-def: "Compression using MS-Numpress short logged float compression." [https://github.com/fickludd/ms-numpress]
+def: "Compression using MS-Numpress short logged float compression." [https://github.com/ms-numpress/ms-numpress]
 is_a: MS:1000572 ! binary data compression type
 
 [Term]
@@ -15669,7 +15667,7 @@ id: MS:1002408
 name: number of distinct protein sequences
 def: "The number of protein clusters that have been identified, which must match the number of clusters that pass the threshold in the file." [PSI:PI]
 xref: value-type:xsd\:int "The allowed value-type for this CV term."
-is_a: MS:1002405 ! protein cluster details
+is_a: MS:1002405 ! protein group-level result list attribute
 
 [Term]
 id: MS:1002409
@@ -15695,7 +15693,7 @@ id: MS:1002412
 name: total XIC area
 def: "Summed area of all the extracted ion chromatogram for the peptide (e.g. of all the transitions in SRM)." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002737 ! peptide-level quantification datatype
 
 [Term]
 id: MS:1002413
@@ -16132,6 +16130,7 @@ name: ion mobility drift time
 def: "Drift time of an ion or spectrum of ions as measured in an ion mobility mass spectrometer. This time might refer to the central value of a bin into which all ions within a narrow range of drift time have been aggregated." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000455 ! ion selection attribute
+is_a: MS:1000503 ! scan attribute
 relationship: has_units UO:0000028 ! millisecond
 
 [Term]
@@ -16278,7 +16277,7 @@ id: MS:1002499
 name: peptide level score
 def: "OBSOLETE Peptide level score." [PSI:PI]
 comment: This term was obsoleted because it was never intended to go in the CV.
-is_a: MS:1002358 ! search engine specific score for distinct peptides
+is_a: MS:1002358 ! search engine specific peptide sequence-level identification statistic
 is_obsolete: true
 
 [Term]
@@ -16406,14 +16405,14 @@ id: MS:1002518
 name: Progenesis:protein group normalised abundance
 def: "The data type normalised abundance for protein groups produced by Progenesis LC-MS." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002739 ! protein group-level quantification datatype
 
 [Term]
 id: MS:1002519
 name: Progenesis:protein group raw abundance
 def: "The data type raw abundance for protein groups produced by Progenesis LC-MS." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001805 ! quantification datatype
+is_a: MS:1002739 ! protein group-level quantification datatype
 
 [Term]
 id: MS:1002520
@@ -16608,7 +16607,7 @@ is_a: MS:1001805 ! quantification datatype
 [Term]
 id: MS:1002548
 name: distributed normalized spectral abundance factor
-def: "A distributed normalized spectral abundance factor (dNSAF." [DOI:10.1021/ac9023999, PMID:20166708] 
+def: "A distributed normalized spectral abundance factor (dNSAF)." [DOI:10.1021/ac9023999, PMID:20166708] 
 is_a: MS:1001805 ! quantification datatype
 
 [Term]
@@ -17039,7 +17038,7 @@ is_a: MS:1002611 ! SILAC reagent
 [Term]
 id: MS:1002615
 name: TMT reagent
-def: "Tandem mass tag reagent." [PSI:PI]
+def: "Tandem mass tag reagent used in TMT, glycoTMT, iodoTMT, aminoxyTMT or hydrazideTMT isobaric labeling." [PSI:PI]
 is_a: MS:1002602 ! quantification reagent
 
 [Term]
@@ -17081,7 +17080,7 @@ is_a: MS:1002615 ! TMT reagent
 [Term]
 id: MS:1002622
 name: iTRAQ reagent
-def: "Isobaric tag for relative and absolute quantitation reagent." [PSI:PI]
+def: "Isobaric tag for relative and absolute quantitation (iTRAQ or iTRAQH) reagent." [PSI:PI]
 is_a: MS:1002602 ! quantification reagent
 
 [Term]
@@ -17465,15 +17464,15 @@ relationship: has_regexp MS:1002665 ! ([:digit:]+[.][a|b]:[:digit:]+:[:digit:]+[
 
 [Term]
 id: MS:1002678
-name: supplemental higher energy beam-type collision-induced dissociation
-def: "A supplemental collision-induced dissociation process wherein the projectile ion has the translational energy higher than approximately 1000 eV." [PSI:MS]
+name: supplemental beam-type collision-induced dissociation
+def: "A supplemental collision-induced dissociation process that occurs in a beam-type collision cell in addition to another primary type of dissociation." [PSI:MS]
 is_a: MS:1000422 ! beam-type collision-induced dissociation
 
 [Term]
 id: MS:1002679
 name: supplemental collision-induced dissociation
 def: "The dissociation of an ion after supplemental collisional excitation." [PSI:MS]
-is_a: MS:1000044 ! dissociation method
+is_a: MS:1000133 ! collision-induced dissociation
 
 [Term]
 id: MS:1002680
@@ -17488,7 +17487,7 @@ id: MS:1002681
 name: OpenXQuest:combined score
 def: "OpenXQuest's combined score for a cross-link spectrum match." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001143 ! search engine specific score for PSMs
+is_a: MS:1001143 ! PSM-level search engine specific statistic
 is_a: MS:1001153 ! search engine specific score
 relationship: has_order MS:1002108 ! higher score better
 
@@ -17497,7 +17496,7 @@ id: MS:1002682
 name: OpenXQuest:xcorr xlink
 def: "OpenXQuest's cross-correlation of cross-linked ions subscore." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001143 ! search engine specific score for PSMs
+is_a: MS:1001143 ! PSM-level search engine specific statistic
 is_a: MS:1001153 ! search engine specific score
 relationship: has_order MS:1002108 ! higher score better
 
@@ -17506,7 +17505,7 @@ id: MS:1002683
 name: OpenXQuest:xcorr common
 def: "OpenXQuest's cross-correlation of unlinked ions subscore." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001143 ! search engine specific score for PSMs
+is_a: MS:1001143 ! PSM-level search engine specific statistic
 is_a: MS:1001153 ! search engine specific score
 relationship: has_order MS:1002108 ! higher score better
 
@@ -17515,7 +17514,7 @@ id: MS:1002684
 name: OpenXQuest:match-odds
 def: "OpenXQuest's match-odds subscore." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001143 ! search engine specific score for PSMs
+is_a: MS:1001143 ! PSM-level search engine specific statistic
 is_a: MS:1001153 ! search engine specific score
 relationship: has_order MS:1002108 ! higher score better
 relationship: has_domain MS:1002306 ! value greater than zero
@@ -17525,7 +17524,7 @@ id: MS:1002685
 name: OpenXQuest:intsum
 def: "OpenXQuest's sum of matched peak intensity subscore." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001143 ! search engine specific score for PSMs
+is_a: MS:1001143 ! PSM-level search engine specific statistic
 is_a: MS:1001153 ! search engine specific score
 relationship: has_order MS:1002108 ! higher score better
 relationship: has_domain MS:1002306 ! value greater than zero
@@ -17535,7 +17534,7 @@ id: MS:1002686
 name: OpenXQuest:wTIC
 def: "OpenXQuest's weighted percent of total ion current subscore." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001143 ! search engine specific score for PSMs
+is_a: MS:1001143 ! PSM-level search engine specific statistic
 is_a: MS:1001153 ! search engine specific score
 relationship: has_order MS:1002108 ! higher score better
 relationship: has_domain MS:1002305 ! value between 0 and 1 inclusive
@@ -17654,3 +17653,418 @@ name: protein group-level result list statistic
 def: "Attrbiute of an entire list of protein groups." [PSI:PI]
 is_a: MS:1002405 ! protein group-level result list attribute
 
+[Term]
+id: MS:1002719
+name: Pegasus BT
+def: "LECO bench-top GC time-of-flight mass spectrometer." [PSI:PI]
+is_a: MS:1001800 ! LECO instrument model
+
+[Term]
+id: MS:1002720
+name: MSPathFinder
+def: "PNNL top-down/bottom-up analysis software for identifying peptides and proteoforms in fragmentation mass spectra." [PSI:PI]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1002721
+name: MSPathFinder:SpecEValue
+def: "MSPathFinder spectral E-value." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002353 ! PSM-level e-value
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+relationship: has_order MS:1002109 ! lower score better
+
+[Term]
+id: MS:1002722
+name: MSPathFinder:EValue
+def: "MSPathFinder E-value." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002353 ! PSM-level e-value
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+relationship: has_order MS:1002109 ! lower score better
+
+[Term]
+id: MS:1002723
+name: MSPathFinder:QValue
+def: "MSPathFinder Q-value." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1002354 ! PSM-level q-value
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+
+[Term]
+id: MS:1002724
+name: MSPathFinder:PepQValue
+def: "MSPathFinder peptide-level Q-value." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+
+[Term]
+id: MS:1002725
+name: MSPathFinder:RawScore
+def: "MSPathFinder raw score." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+
+[Term]
+id: MS:1002726
+name: SYNAPT G2-Si
+def: "Waters Corporation SYNAPT G2-Si orthogonal acceleration time-of-flight mass spectrometer." [PSI:PI]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1002727
+name: MALDI SYNAPT G2-Si
+def: "Waters Corporation MALDI SYNAPT G2-Si orthogonal acceleration time-of-flight mass spectrometer." [PSI:PI]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1002728
+name: Vion IMS QTof
+def: "Waters Corporation Vion IMS QTof orthogonal acceleration time-of-flight mass spectrometer." [PSI:PI]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1002729
+name: Xevo G2 XS Tof
+def: "Waters Corporation Xevo G2 XS Tof orthogonal acceleration time-of-flight mass spectrometer." [PSI:PI]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1002730
+name: Xevo TQ-XS
+def: "Waters Corporation Xevo TQ-XS triple quadrupole mass spectrometer." [PSI:PI]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1002731
+name: Xevo TQ-S micro
+def: "Waters Corporation Xevo TQ-S micro triple quadrupole mass spectrometer." [PSI:PI]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1002732
+name: Orbitrap Fusion Lumos
+def: "Thermo Scientific Orbitrap Fusion Lumos mass spectrometer with Tribrid architecture consisting of quadrupole mass filter, linear ion trap and Orbitrap mass analyzers." [PSI:PI]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1002733
+name: peptide-level spectral count
+def: "The number of MS2 spectra identified for a peptide sequence specified by the amino acid one-letter codes plus optional PTMs in spectral counting." [PSI:PI]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: MS:1002737 ! peptide-level quantification datatype
+
+[Term]
+id: MS:1002734
+name: peptide ion-level spectral count
+def: "The number of MS2 spectra identified for a molecular ion defined by the peptide sequence represented by the amino acid one-letter codes, plus optional PTMs plus optional charged aducts plus the charge state, in spectral counting." [PSI:PI]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: MS:1002737 ! peptide-level quantification datatype
+
+[Term]
+id: MS:1002735
+name: feature-level quantification datatype
+def: "The data type of the value reported in a QuantLayer for a feature." [PSI:PI]
+is_a: MS:1001805 ! quantification datatype
+
+[Term]
+id: MS:1002736
+name: PSM-level quantification datatype
+def: "The data type of the value reported in a QuantLayer for a PSM." [PSI:PI]
+is_a: MS:1001805 ! quantification datatype
+
+[Term]
+id: MS:1002737
+name: peptide-level quantification datatype
+def: "The data type of the value reported in a QuantLayer for a peptide." [PSI:PI]
+is_a: MS:1001805 ! quantification datatype
+
+[Term]
+id: MS:1002738
+name: protein-level quantification datatype
+def: "The data type of the value reported in a QuantLayer for a protein." [PSI:PI]
+is_a: MS:1001805 ! quantification datatype
+
+[Term]
+id: MS:1002739
+name: protein group-level quantification datatype
+def: "The data type of the value reported in a QuantLayer for a protein group." [PSI:PI]
+is_a: MS:1001805 ! quantification datatype
+
+[Term]
+id: MS:1002740
+name: unmapped peptide
+def: "Within the context of a proteogenomics approach, a peptide sequence that has not been mapped to a genomic location." [PSI:PI]
+is_a: MS:1002636 ! proteogenomics attribute
+
+[Term]
+id: MS:1002741
+name: unmapped protein
+def: "Within the context of a proteogenomics approach, a protein sequence that has not been mapped to a genomic location." [PSI:PI]
+is_a: MS:1002636 ! proteogenomics attribute
+
+[Term]
+id: MS:1002742
+name: noise array
+def: "A data array of noise values." [PSI:MS]
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000523 "64-bit float"
+is_a: MS:1000513 ! binary data array
+
+[Term]
+id: MS:1002743
+name: sampled noise m/z array
+def: "A data array of parallel, independent m/z values for a sampling of noise across a spectrum (typically much smaller than MS:1000514, the m/z array)." [PSI:MS]
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000523 "64-bit float"
+is_a: MS:1000513 ! binary data array
+relationship: has_units MS:1000040 ! m/z 
+
+[Term]
+id: MS:1002744
+name: sampled noise intensity array
+def: "A data array of intensity values for the amplitude of noise variation superposed on the baseline (MS:1002745) across a spectrum (for use with MS:1002743, sampled noise m/z array)." [PSI:MS]
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000523 "64-bit float"
+is_a: MS:1000513 ! binary data array
+relationship: has_units MS:1000131 ! number of detector counts
+
+[Term]
+id: MS:1002745
+name: sampled noise baseline array
+def: "A data array of baseline intensity values (the intensity in the absence of analytes) for a sampling of noise across a spectrum (for use with MS:1002743, sampled noise m/z array)." [PSI:MS]
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000523 "64-bit float"
+is_a: MS:1000513 ! binary data array
+
+[Term]
+id: MS:1002746
+name: MS-Numpress linear prediction compression followed by zlib compression
+def: "Compression using MS-Numpress linear prediction compression and zlib." [https://github.com/ms-numpress/ms-numpress]
+is_a: MS:1000572 ! binary data compression type
+
+[Term]
+id: MS:1002747
+name: MS-Numpress positive integer compression followed by zlib compression
+def: "Compression using MS-Numpress positive integer compression and zlib." [https://github.com/ms-numpress/ms-numpress]
+is_a: MS:1000572 ! binary data compression type
+
+[Term]
+id: MS:1002748
+name: MS-Numpress short logged float compression followed by zlib compression
+def: "Compression using MS-Numpress short logged float compression and zlib." [https://github.com/ms-numpress/ms-numpress]
+is_a: MS:1000572 ! binary data compression type
+
+[Term]
+id: MS:1002749
+name: Mascot:IntegratedSpectralLibrarySearch
+def: "Means that Mascot has integrated the search results of database and spectral library search into a single data set." [PSI:PI]
+xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
+is_a: MS:1002095 ! Mascot input parameter
+
+[Term]
+id: MS:1002750
+name: NIST MSPepSearch
+def: "Search tool of the NIST (National Institute of Standrads and Technology) for spectral library searches." [PSI:PI]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1002751
+name: NIST MSP format
+def: "MSP text format defined by the NIST." [PSI:PI]
+is_a: MS:1001347 ! database file formats
+
+[Term]
+id: MS:1002752
+name: database type spectral library
+def: "Database containing spectra." [PSI:PI]
+is_a: MS:1001073 ! database type amino acid
+
+[Term]
+id: MS:1002753
+name: value between 0 and 1000 inclusive
+def: "Value range for scores." [PSI:PI]
+is_a: MS:1002304 ! domain range
+
+[Term]
+id: MS:1002754
+name: MSPepSearch:score
+def: "MSPepSearch score (0 for entirely dissimilar and 1000 for identical observed spectrum and library spectrum." [PSI:PI]
+is_a: MS:1001143 ! PSM-level search engine specific statistic
+relationship: has_order MS:1002108 ! higher score better
+relationship: has_domain MS:1002753 ! value between 0 and 1000 inclusive
+
+[Term]
+id: MS:1002755
+name: combined ms-ms + spectral library search
+def: "A combined MS2 (with fragment ions) and spectral library search." [PSI:PI]
+is_a: MS:1001080 ! search type
+
+[Term]
+id: MS:1002756
+name: iodoTMT quantitation analysis
+def: "Quantitation analysis using the Thermo Fisher sulfhydryl-reactive iodo tandem mass tag (iodoTMT) labelling workflow." [PSI:PI, PMID:24926564]
+is_a: MS:1001833 ! quantitation analysis summary
+is_a: MS:1002009 ! isobaric label quantitation analysis
+
+[Term]
+id: MS:1002757
+name: glyco-TMT quantitation analysis
+def: "Quantitation analysis using the Thermo Fisher carbonyl-reactive glyco-tandem mass tag (glyco-TMT) labelling workflow." [PSI:PI, PMID:22455665]
+is_a: MS:1001833 ! quantitation analysis summary
+is_a: MS:1002009 ! isobaric label quantitation analysis
+
+[Term]
+id: MS:1002758
+name: aminoxyTMT quantitation analysis
+def: "Quantitation analysis using the Thermo Fisher carbonyl-reactive aminoxy tandem mass tag (aminoxyTMT) labelling workflow." [PSI:PI, PMID:25337643]
+is_a: MS:1001833 ! quantitation analysis summary
+is_a: MS:1002009 ! isobaric label quantitation analysis
+
+[Term]
+id: MS:1002759
+name: hydrazideTMT quantitation analysis
+def: "Quantitation analysis using the Thermo Fisher carbonyl-reactive hydrazide tandem mass tag (hydrazide-TMT) labelling workflow." [PSI:PI, PMID:25337643]
+is_a: MS:1001833 ! quantitation analysis summary
+is_a: MS:1002009 ! isobaric label quantitation analysis
+
+[Term]
+id: MS:1002760
+name: iTRAQH quantitation analysis
+def: "Quantification analysis using the carbonyl-reactive isobaric tags for relative and absolute quantification hydrazide (iTRAQH) labelling workflow." [PSI:PI, PMID:22926130]
+is_a: MS:1001833 ! quantitation analysis summary
+is_a: MS:1002009 ! isobaric label quantitation analysis
+
+[Term]
+id: MS:1002761
+name: DiART quantitation analysis
+def: "Quantification analysis using the amine-reactive deuterium isobaric amine reactive tag (DiART) labelling workflow." [PSI:PI, PMID:20715779]
+is_a: MS:1001833 ! quantitation analysis summary
+is_a: MS:1002009 ! isobaric label quantitation analysis
+
+[Term]
+id: MS:1002762
+name: DiLeu quantitation analysis
+def: "Quantification analysis using the amine-reactive dimethyl leucine (DiLeu) tag labelling workflow." [PSI:PI, PMID:20715779]
+is_a: MS:1001833 ! quantitation analysis summary
+is_a: MS:1002009 ! isobaric label quantitation analysis
+
+[Term]
+id: MS:1002763
+name: TMT reagent 127N
+def: "The name of the sample labelled with the TMT reagent 127N." [PSI:PI]
+is_a: MS:1002615 ! TMT reagent
+
+[Term]
+id: MS:1002764
+name: TMT reagent 127C
+def: "The name of the sample labelled with the TMT reagent 127C." [PSI:PI]
+is_a: MS:1002615 ! TMT reagent
+
+[Term]
+id: MS:1002765
+name: TMT reagent 128N
+def: "The name of the sample labelled with the TMT reagent 128N." [PSI:PI]
+is_a: MS:1002615 ! TMT reagent
+
+[Term]
+id: MS:1002766
+name: TMT reagent 128C
+def: "The name of the sample labelled with the TMT reagent 128C." [PSI:PI]
+is_a: MS:1002615 ! TMT reagent
+
+[Term]
+id: MS:1002767
+name: TMT reagent 129N
+def: "The name of the sample labelled with the TMT reagent 129N." [PSI:PI]
+is_a: MS:1002615 ! TMT reagent
+
+[Term]
+id: MS:1002768
+name: TMT reagent 129C
+def: "The name of the sample labelled with the TMT reagent 129C." [PSI:PI]
+is_a: MS:1002615 ! TMT reagent
+
+[Term]
+id: MS:1002769
+name: TMT reagent 130N
+def: "The name of the sample labelled with the TMT reagent 130N." [PSI:PI]
+is_a: MS:1002615 ! TMT reagent
+
+[Term]
+id: MS:1002770
+name: TMT reagent 130C
+def: "The name of the sample labelled with the TMT reagent 130C." [PSI:PI]
+is_a: MS:1002615 ! TMT reagent
+
+[Term]
+id: MS:1002771
+name: DiART reagent
+def: "Deuterium isobaric amine reactive tag labeling reagent." [PSI:PI]
+is_a: MS:1002602 ! quantification reagent
+
+[Term]
+id: MS:1002772
+name: DiART reagent 114
+def: "The name of the sample labelled with the DiART reagent 114." [PSI:PI]
+is_a: MS:1002771 ! DiART reagent
+
+[Term]
+id: MS:1002773
+name: DiART reagent 115
+def: "The name of the sample labelled with the DiART reagent 115." [PSI:PI]
+is_a: MS:1002771 ! DiART reagent
+
+[Term]
+id: MS:1002774
+name: DiART reagent 116
+def: "The name of the sample labelled with the DiART reagent 116." [PSI:PI]
+is_a: MS:1002771 ! DiART reagent
+
+[Term]
+id: MS:1002775
+name: DiART reagent 117
+def: "The name of the sample labelled with the DiART reagent 117." [PSI:PI]
+is_a: MS:1002771 ! DiART reagent
+
+[Term]
+id: MS:1002776
+name: DiART reagent 118
+def: "The name of the sample labelled with the DiART reagent 118." [PSI:PI]
+is_a: MS:1002771 ! DiART reagent
+
+[Term]
+id: MS:1002777
+name: DiART reagent 119
+def: "The name of the sample labelled with the DiART reagent 119." [PSI:PI]
+is_a: MS:1002771 ! DiART reagent
+
+[Term]
+id: MS:1002778
+name: DiLeu reagent
+def: "Dimethyl leucine labeling reagent." [PSI:PI]
+is_a: MS:1002602 ! quantification reagent
+
+[Term]
+id: MS:1002779
+name: DiLeu reagent 115
+def: "The name of the sample labelled with the DiLeu reagent 115." [PSI:PI]
+is_a: MS:1002778 ! DiLeu reagent
+
+[Term]
+id: MS:1002780
+name: DiLeu reagent 116
+def: "The name of the sample labelled with the DiLeu reagent 116." [PSI:PI]
+is_a: MS:1002778 ! DiLeu reagent
+
+[Term]
+id: MS:1002781
+name: DiLeu reagent 117
+def: "The name of the sample labelled with the DiLeu reagent 117." [PSI:PI]
+is_a: MS:1002778 ! DiLeu reagent
+
+[Term]
+id: MS:1002782
+name: DiLeu reagent 118
+def: "The name of the sample labelled with the DiLeu reagent 118." [PSI:PI]
+is_a: MS:1002778 ! DiLeu reagent
