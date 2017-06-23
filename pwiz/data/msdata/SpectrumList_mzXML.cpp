@@ -455,6 +455,12 @@ class HandlerScan : public SAXParser::Handler
                 scan.set(MS_scan_start_time, retentionTime, UO_second);
             }
 
+            if (endMz <= 0)
+            {
+                // If instrument settings are omitted, note observed mz range instead
+                getAttribute(attributes, "lowMz", startMz);
+                getAttribute(attributes, "highMz", endMz);
+            }
             if (endMz > 0)
                 scan.scanWindows.push_back(ScanWindow(startMz, endMz, MS_m_z));
             
