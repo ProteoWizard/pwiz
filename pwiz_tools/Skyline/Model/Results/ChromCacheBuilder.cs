@@ -1358,7 +1358,7 @@ namespace pwiz.Skyline.Model.Results
                 _peakCount,
                 scoresIndex,
                 chromDataSet.MaxPeakIndex,
-                groupOfTimeIntensities.NumPoints,
+                groupOfTimeIntensities.NumInterpolatedPoints,
                 lenCompressed,
                 lenUncompressed,
                 location,

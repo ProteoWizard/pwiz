@@ -699,7 +699,7 @@ namespace pwiz.Skyline.Model.Results
                                                       startPeakIndex,
                                                       startScoreIndex,
                                                       maxPeakIndex,
-                                                      timeIntensitiesGroup.NumPoints,
+                                                      timeIntensitiesGroup.NumInterpolatedPoints,
                                                       lenCompressed,
                                                       lenUncompressed,
                                                       location,
