@@ -375,7 +375,7 @@ namespace pwiz.Skyline.Model.Serialization
                 short rank = (short) reader.GetIntAttribute(ATTR.rank);
                 short rankByLevel = (short) reader.GetIntAttribute(ATTR.rank_by_level, rank);
                 bool? truncated = reader.GetNullableBoolAttribute(ATTR.truncated);
-                short pointsAcross = (short) reader.GetIntAttribute(ATTR.points_across, 0);
+                short? pointsAcross = (short?) reader.GetNullableIntAttribute(ATTR.points_across);
                 var identified = reader.GetEnumAttribute(ATTR.identified, PeakIdentificationFastLookup.Dict,
                     PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
                 UserSet userSet = reader.GetEnumAttribute(ATTR.user_set, UserSetFastLookup.Dict,

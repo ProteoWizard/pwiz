@@ -209,53 +209,14 @@
       <Component Id="Clearcore2.StructuredStorage.dll">
         <File Source="$(var.Skyline.TargetDir)/Clearcore2.StructuredStorage.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="Clearcore2.UserLog.Types.dll">
+        <File Source="$(var.Skyline.TargetDir)/Clearcore2.UserLog.Types.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="Clearcore2.Utility.dll">
         <File Source="$(var.Skyline.TargetDir)/Clearcore2.Utility.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Clearcore2.XmlHelpers.dll">
         <File Source="$(var.Skyline.TargetDir)/Clearcore2.XmlHelpers.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="Microsoft.Practices.Unity.Configuration.dll">
-        <File Source="$(var.Skyline.TargetDir)/Microsoft.Practices.Unity.Configuration.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="Microsoft.Practices.Unity.dll">
-        <File Source="$(var.Skyline.TargetDir)/Microsoft.Practices.Unity.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="OFX.Core.Contracts.dll">
-        <File Source="$(var.Skyline.TargetDir)/OFX.Core.Contracts.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="OFX.Core.dll">
-        <File Source="$(var.Skyline.TargetDir)/OFX.Core.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="OFX.EventServices.dll">
-        <File Source="$(var.Skyline.TargetDir)/OFX.EventServices.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="OFX.Logging.dll">
-        <File Source="$(var.Skyline.TargetDir)/OFX.Logging.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="OFX.Security.Core.dll">
-        <File Source="$(var.Skyline.TargetDir)/OFX.Security.Core.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="protobuf_net.dll">
-        <File Source="$(var.Skyline.TargetDir)/protobuf-net.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="Sciex.Clearcore.FMan.dll">
-        <File Source="$(var.Skyline.TargetDir)/Sciex.Clearcore.FMan.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="Sciex.Data.Processing.dll">
-        <File Source="$(var.Skyline.TargetDir)/Sciex.Data.Processing.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="Sciex.Data.SimpleTypes.dll">
-        <File Source="$(var.Skyline.TargetDir)/Sciex.Data.SimpleTypes.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="Sciex.Data.XYData.dll">
-        <File Source="$(var.Skyline.TargetDir)/Sciex.Data.XYData.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="Sciex.FMan.dll">
-        <File Source="$(var.Skyline.TargetDir)/Sciex.FMan.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="Sciex.Wiff.dll">
-        <File Source="$(var.Skyline.TargetDir)/Sciex.Wiff.dll" KeyPath="yes"/>
       </Component>
       <Component Id="DataReader.dll">
         <File Source="$(var.Skyline.TargetDir)/DataReader.dll" KeyPath="yes"/>
@@ -271,6 +232,9 @@
         <File Source="$(var.Skyline.TargetDir)/fregistry_x64.dll" KeyPath="yes"/>
       </Component>
       <?endif?>
+      <Component Id="Google.Protobuf.dll">
+        <File Source="$(var.Skyline.TargetDir)/Google.Protobuf.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="Iesi.Collections.dll">
         <File Source="$(var.Skyline.TargetDir)/Iesi.Collections.dll" KeyPath="yes"/>
       </Component>
@@ -313,6 +277,12 @@
       <?endif?>
       <Component Id="Microsoft.ConcurrencyVisualizer.Markers.dll">
         <File Source="$(var.Skyline.TargetDir)/Microsoft.ConcurrencyVisualizer.Markers.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Microsoft.Practices.Unity.Configuration.dll">
+        <File Source="$(var.Skyline.TargetDir)/Microsoft.Practices.Unity.Configuration.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Microsoft.Practices.Unity.dll">
+        <File Source="$(var.Skyline.TargetDir)/Microsoft.Practices.Unity.dll" KeyPath="yes"/>
       </Component>
       <Component Id="MIDAC.dll">
         <File Source="$(var.Skyline.TargetDir)/MIDAC.dll" KeyPath="yes"/>
@@ -362,6 +332,27 @@
       <Component Id="NHibernate.dll">
         <File Source="$(var.Skyline.TargetDir)/NHibernate.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="OFX.Core.Contracts.dll">
+        <File Source="$(var.Skyline.TargetDir)/OFX.Core.Contracts.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="OFX.Core.dll">
+        <File Source="$(var.Skyline.TargetDir)/OFX.Core.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="OFX.EventServices.dll">
+        <File Source="$(var.Skyline.TargetDir)/OFX.EventServices.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="OFX.Logging.dll">
+        <File Source="$(var.Skyline.TargetDir)/OFX.Logging.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="OFX.Security.Core.dll">
+        <File Source="$(var.Skyline.TargetDir)/OFX.Security.Core.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="OFX.Security.Library.dll">
+        <File Source="$(var.Skyline.TargetDir)/OFX.Security.Library.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="OFX.Security.SQLiteProviders.dll">
+        <File Source="$(var.Skyline.TargetDir)/OFX.Security.SQLiteProviders.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="ProteomeDb.dll">
         <File Source="$(var.Skyline.TargetDir)/ProteomeDb.dll" KeyPath="yes"/>
       </Component>
@@ -373,6 +364,9 @@
       </Component>
       <Component Id="ProteowizardWrapper.pdb">
         <File Source="$(var.Skyline.TargetDir)/ProteowizardWrapper.pdb" KeyPath="yes"/>
+      </Component>
+      <Component Id="protobuf_net.dll">
+        <File Source="$(var.Skyline.TargetDir)/protobuf-net.dll" KeyPath="yes"/>
       </Component>
       <Component Id="pwiz.Common.dll">
         <File Source="$(var.Skyline.TargetDir)/pwiz.Common.dll" KeyPath="yes"/>
@@ -394,6 +388,24 @@
       </Component>
       <Component Id="quantitation_2.xsd">
         <File Source="$(var.Skyline.TargetDir)/quantitation_2.xsd" KeyPath="yes"/>
+      </Component>
+      <Component Id="Sciex.Clearcore.FMan.dll">
+        <File Source="$(var.Skyline.TargetDir)/Sciex.Clearcore.FMan.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Sciex.Data.Processing.dll">
+        <File Source="$(var.Skyline.TargetDir)/Sciex.Data.Processing.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Sciex.Data.SimpleTypes.dll">
+        <File Source="$(var.Skyline.TargetDir)/Sciex.Data.SimpleTypes.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Sciex.Data.XYData.dll">
+        <File Source="$(var.Skyline.TargetDir)/Sciex.Data.XYData.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Sciex.FMan.dll">
+        <File Source="$(var.Skyline.TargetDir)/Sciex.FMan.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Sciex.Wiff.dll">
+        <File Source="$(var.Skyline.TargetDir)/Sciex.Wiff.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Skyline.exe" Guid="{9C43D011-2748-480D-95EF-E7298E4E1B55}">
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe" Id="Skyline.exe_file" KeyPath="yes"/>
@@ -423,6 +435,12 @@
       </Component>
       <Component Id="Skyline.pdb">
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).pdb" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineCmd.exe">
+        <File Source="$(var.Skyline.TargetDir)/SkylineCmd.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="SkylineCmd.pdb">
+        <File Source="$(var.Skyline.TargetDir)/SkylineCmd.pdb" KeyPath="yes"/>
       </Component>
       <Component Id="SkylineData.ico">
         <File Source="$(var.Skyline.ProjectDir)/SkylineData.ico" KeyPath="yes"/>
