@@ -406,7 +406,7 @@ namespace pwiz.Topograph.Enrichment
             return result;
         }
 
-        internal Vector IntensityDictionaryToVector(IDictionary<double, double> dict, IList<MzRange> mzs)
+        internal Vector IntensityDictionaryToVector(IReadOnlyCollection<KeyValuePair<double, double>> dict, IList<MzRange> mzs)
         {
             var result = new DenseVector(mzs.Count);
             for (int iMz = 0; iMz < mzs.Count; iMz++)
