@@ -644,7 +644,7 @@ namespace pwiz.Skyline.Util
             var massDistOrdered = massDist.MassesSortedByAbundance();
             if (EqualDistMasses(massDistOrdered, monoMassCalc, secondMassCalc, thirdMassCalc))
                 return massDist;
-            var dictFixDist = new Dictionary<double, double>(massDist);
+            var dictFixDist = massDist.ToDictionary();
             ReplaceMass(dictFixDist, massDistOrdered, 0, monoMassCalc);
             ReplaceMass(dictFixDist, massDistOrdered, 1, secondMassCalc);
             ReplaceMass(dictFixDist, massDistOrdered, 2, thirdMassCalc);

@@ -732,7 +732,7 @@ namespace pwiz.Skyline.Model
         private MassDistribution GetMzDistribution(MoleculeUnsorted molecule, int charge, IsotopeAbundances abundances, double unexplainedMass, bool isMassH)
         {
             // Low resolution to get back only peaks at Dalton (i.e. neutron) boundaries
-            var md = new MassDistribution.Helper(_massResolution, _minimumAbundance);
+            var md = new MassDistribution(_massResolution, _minimumAbundance);
             var result = md;
             foreach (var element in molecule.Elements)
             {
