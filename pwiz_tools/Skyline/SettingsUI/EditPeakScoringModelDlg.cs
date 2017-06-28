@@ -109,6 +109,11 @@ namespace pwiz.Skyline.SettingsUI
             zedGraphQValues.GraphPane.Border.IsVisible = false;
         }
 
+        void gridPeakCalculators_Sorted(object sender, EventArgs e)
+        {
+            UpdateCalculatorGrid();
+        }
+
         /// <summary>
         /// Get/set the peak scoring model.
         /// </summary>
@@ -390,10 +395,10 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (_peakScoringModel.Parameters == null || _peakScoringModel.Parameters.Weights == null)
                 return false;
-            double weight = _peakScoringModel.Parameters.Weights[index];
-            if (double.IsNaN(weight))
+            var weight = PeakCalculatorWeights[index].Weight;
+            if (!weight.HasValue || double.IsNaN(weight.Value))
                 return false;
-            return _peakScoringModel.PeakFeatureCalculators[index].IsReversedScore ^ (weight < 0);
+            return _peakScoringModel.PeakFeatureCalculators[GetUnsortedIndex(index)].IsReversedScore ^ (weight.Value < 0);
         }
 
         private static void ProcessScores(double score, ref double min, ref double max, ref int countUnknownScores)
@@ -907,6 +912,11 @@ namespace pwiz.Skyline.SettingsUI
             UpdateCalculatorGrid();
         }
 
+        private int GetUnsortedIndex(int sortedIndex)
+        {
+            return _peakScoringModel.PeakFeatureCalculators.IndexOf(p => p.Name == PeakCalculatorWeights[sortedIndex].Name);
+        }
+
         private void UpdateCalculatorGrid()
         {
             var inactiveStyle = new DataGridViewCellStyle
@@ -920,15 +930,24 @@ namespace pwiz.Skyline.SettingsUI
                     ForeColor = Color.Red
                 };
 
-            // The score used for bootstrap cannot be disabled
-            if (gridPeakCalculators.RowCount > 0)
-            {
-                var bootstrapCell = gridPeakCalculators.Rows[0].Cells[(int) ColumnNames.enabled];
-                bootstrapCell.ReadOnly = true;
-                bootstrapCell.Style = inactiveStyle;
-            }
             for (int row = 0; row < gridPeakCalculators.RowCount; row++)
             {
+                int unsortedIndex = GetUnsortedIndex(row);
+                // Set row style to default
+                for (int i = 0; i < 4; ++i)
+                {
+                    var cell = gridPeakCalculators.Rows[row].Cells[i];
+                    cell.Style = new DataGridViewCellStyle();
+                    cell.ReadOnly = false;
+                    cell.ToolTipText = "";
+                }
+                if (unsortedIndex == 0)
+                {
+                    // The score used for bootstrap cannot be disabled
+                    var bootstrapCell = gridPeakCalculators.Rows[row].Cells[(int)ColumnNames.enabled];
+                    bootstrapCell.ReadOnly = true;
+                    bootstrapCell.Style = inactiveStyle;
+                }
                 // Show row in red if weight is the wrong sign
                 if (IsWrongSignWeight(row))
                 {
@@ -940,7 +959,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 }
                 // Show row in disabled style if the score is not eligible
-                if (!_targetDecoyGenerator.EligibleScores[row])
+                if (!_targetDecoyGenerator.EligibleScores[unsortedIndex])
                 {
                     for (int i = 0; i < 4; i++)
                     {

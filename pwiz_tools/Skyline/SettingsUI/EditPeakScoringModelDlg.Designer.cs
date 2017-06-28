@@ -144,6 +144,7 @@
             this.gridPeakCalculators.ShowEditingIcon = false;
             this.helpTip.SetToolTip(this.gridPeakCalculators, resources.GetString("gridPeakCalculators.ToolTip"));
             this.gridPeakCalculators.SelectionChanged += new System.EventHandler(this.gridPeakCalculators_SelectionChanged);
+            this.gridPeakCalculators.Sorted += new System.EventHandler(this.gridPeakCalculators_Sorted);
             // 
             // IsEnabled
             // 
