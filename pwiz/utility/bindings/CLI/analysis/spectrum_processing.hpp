@@ -35,6 +35,7 @@
     #using "pwiz_bindings_cli_common.dll" as_friend
     #using "pwiz_bindings_cli_msdata.dll" as_friend
 #endif
+#include "../chemistry/chemistry.hpp"
 
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
@@ -62,6 +63,8 @@ using boost::shared_ptr;
 
 namespace pwiz {
 namespace CLI {
+
+using namespace data;
 
 
 namespace msdata {
@@ -117,10 +120,18 @@ public delegate System::Nullable<bool> SpectrumList_FilterAcceptSpectrum(msdata:
 
 public ref class SpectrumList_FilterPredicate abstract
 {
+    /// <summary>controls whether spectra that pass the predicate are included or excluded from the result</summary>
+    public: enum class FilterMode
+    {
+        Include,
+        Exclude
+    };
+
     internal:
     pwiz::analysis::SpectrumList_Filter::Predicate* base_;
     ~SpectrumList_FilterPredicate() {SAFEDELETE(base_);}
 };
+
 
 public ref class SpectrumList_FilterPredicate_IndexSet : SpectrumList_FilterPredicate
 {
@@ -149,6 +160,54 @@ public ref class SpectrumList_FilterPredicate_ScanTimeRange : SpectrumList_Filte
 public ref class SpectrumList_FilterPredicate_MSLevelSet : SpectrumList_FilterPredicate
 {
     public: SpectrumList_FilterPredicate_MSLevelSet(System::String^ msLevelSet);
+};
+
+
+public ref class SpectrumList_FilterPredicate_ChargeStateSet : SpectrumList_FilterPredicate
+{
+    public: SpectrumList_FilterPredicate_ChargeStateSet(System::String^ chargeStateSet);
+};
+
+
+public ref class SpectrumList_FilterPredicate_PrecursorMzSet : SpectrumList_FilterPredicate
+{
+    public:  SpectrumList_FilterPredicate_PrecursorMzSet(System::Collections::Generic::IEnumerable<double>^ precursorMzSet, chemistry::MZTolerance tolerance, FilterMode mode);
+};
+
+
+public ref class SpectrumList_FilterPredicate_DefaultArrayLengthSet : SpectrumList_FilterPredicate
+{
+    public: SpectrumList_FilterPredicate_DefaultArrayLengthSet(System::String^ defaultArrayLengthSet);
+};
+
+
+public ref class SpectrumList_FilterPredicate_ActivationType : SpectrumList_FilterPredicate
+{
+public: SpectrumList_FilterPredicate_ActivationType(System::Collections::Generic::IEnumerable<CVID>^ filterItem, bool hasNoneOf);
+};
+
+
+public ref class SpectrumList_FilterPredicate_AnalyzerType : SpectrumList_FilterPredicate
+{
+    public: SpectrumList_FilterPredicate_AnalyzerType(System::Collections::Generic::IEnumerable<CVID>^ filterItem);
+};
+
+
+public ref class SpectrumList_FilterPredicate_Polarity : SpectrumList_FilterPredicate
+{
+    public: SpectrumList_FilterPredicate_Polarity(CVID polarity);
+};
+
+
+/*public ref class SpectrumList_FilterPredicate_MzPresent : SpectrumList_FilterPredicate
+{
+    public: SpectrumList_FilterPredicate_MzPresent(chemistry::MZTolerance mzt, System::Collections::Generic::Generic::ISet<double> mzSet, ThresholdFilter tf, FilterMode mode);
+};*/
+
+
+public ref class SpectrumList_FilterPredicate_ThermoScanFilter : SpectrumList_FilterPredicate
+{
+    public: SpectrumList_FilterPredicate_ThermoScanFilter(System::String^ matchString, bool matchExact, bool inverse);
 };
 
 
@@ -281,12 +340,27 @@ public:
     }
 };
 
+/// <summary>
+/// Simple local maxima peak detector; does not centroid
+/// </summary>
 public ref class LocalMaximumPeakDetector : public PeakDetector
 {
     public:
     LocalMaximumPeakDetector(unsigned int windowSize)
     {
         base_ = new pwiz::analysis::PeakDetectorPtr(new pwiz::analysis::LocalMaximumPeakDetector(windowSize));
+    }
+};
+
+/// <summary>
+/// Wavelet-based algorithm for performing peak-picking with a minimum wavelet-space signal-to-noise ratio; does not centroid
+/// </summary>
+public ref class CwtPeakDetector : public PeakDetector
+{
+    public:
+    CwtPeakDetector(double minSignalNoiseRatio, double minPeakSpace)
+    {
+        base_ = new pwiz::analysis::PeakDetectorPtr(new pwiz::analysis::CwtPeakDetector(minSignalNoiseRatio, 0, minPeakSpace));
     }
 };
 

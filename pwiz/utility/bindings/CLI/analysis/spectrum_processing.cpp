@@ -170,6 +170,51 @@ SpectrumList_FilterPredicate_MSLevelSet::SpectrumList_FilterPredicate_MSLevelSet
     base_ = new b::SpectrumList_FilterPredicate_MSLevelSet(parsedIndexSet);
 }
 
+SpectrumList_FilterPredicate_ChargeStateSet::SpectrumList_FilterPredicate_ChargeStateSet(System::String^ chargeStateSet)
+{
+    IntegerSet parsedIndexSet;
+    parsedIndexSet.parse(ToStdString(chargeStateSet));
+    base_ = new b::SpectrumList_FilterPredicate_ChargeStateSet(parsedIndexSet);
+}
+
+SpectrumList_FilterPredicate_PrecursorMzSet::SpectrumList_FilterPredicate_PrecursorMzSet(System::Collections::Generic::IEnumerable<double>^ precursorMzSet, chemistry::MZTolerance tolerance, FilterMode mode)
+{
+    std::set<double> nativeSet;
+    for each (double d in precursorMzSet) nativeSet.insert(d);
+    base_ = new b::SpectrumList_FilterPredicate_PrecursorMzSet(nativeSet,
+                                                               pwiz::chemistry::MZTolerance(tolerance.value, (pwiz::chemistry::MZTolerance::Units) tolerance.units),
+                                                               (b::SpectrumList_Filter::Predicate::FilterMode) mode);
+}
+
+SpectrumList_FilterPredicate_DefaultArrayLengthSet::SpectrumList_FilterPredicate_DefaultArrayLengthSet(System::String^ defaultArrayLengthSet)
+{}
+
+SpectrumList_FilterPredicate_ActivationType::SpectrumList_FilterPredicate_ActivationType(System::Collections::Generic::IEnumerable<CVID>^ filterItem, bool hasNoneOf)
+{
+    std::set<pwiz::cv::CVID> nativeSet;
+    for each (CVID d in filterItem) nativeSet.insert((pwiz::cv::CVID) d);
+    base_ = new b::SpectrumList_FilterPredicate_ActivationType(nativeSet, hasNoneOf);
+}
+
+SpectrumList_FilterPredicate_AnalyzerType::SpectrumList_FilterPredicate_AnalyzerType(System::Collections::Generic::IEnumerable<CVID>^ filterItem)
+{
+    std::set<pwiz::cv::CVID> nativeSet;
+    for each (CVID d in filterItem) nativeSet.insert((pwiz::cv::CVID) d);
+    base_ = new b::SpectrumList_FilterPredicate_AnalyzerType(nativeSet);
+}
+
+SpectrumList_FilterPredicate_Polarity::SpectrumList_FilterPredicate_Polarity(CVID polarity)
+{
+    base_ = new b::SpectrumList_FilterPredicate_Polarity((pwiz::cv::CVID) polarity);
+}
+
+//SpectrumList_FilterPredicate_MzPresent::SpectrumList_FilterPredicate_MzPresent(chemistry::MZTolerance mzt, System::Collections::Generic::Generic::ISet<double> mzSet, ThresholdFilter tf, FilterMode mode);
+
+SpectrumList_FilterPredicate_ThermoScanFilter::SpectrumList_FilterPredicate_ThermoScanFilter(System::String^ matchString, bool matchExact, bool inverse)
+{
+    base_ = new b::SpectrumList_FilterPredicate_ThermoScanFilter(ToStdString(matchString), matchExact, inverse);
+}
+
 
 
 // null deallactor to create shared_ptrs that do not delete when reset
