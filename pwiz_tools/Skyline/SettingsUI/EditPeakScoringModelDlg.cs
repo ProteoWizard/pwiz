@@ -939,7 +939,7 @@ namespace pwiz.Skyline.SettingsUI
                     var cell = gridPeakCalculators.Rows[row].Cells[i];
                     cell.Style = new DataGridViewCellStyle();
                     cell.ReadOnly = false;
-                    cell.ToolTipText = "";
+                    cell.ToolTipText = string.Empty;
                 }
                 if (unsortedIndex == 0)
                 {
