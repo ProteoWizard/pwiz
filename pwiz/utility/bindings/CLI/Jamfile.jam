@@ -187,6 +187,8 @@ lib pwiz_data_cli
         MSDataReader
         MSData_examples
         spectrum_processing
+        SpectrumList_PeakFilter
+        chemistry
     : # requirements
         $(data_libs)
         <link>shared
