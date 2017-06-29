@@ -234,6 +234,9 @@
   <data name="EstimatedValue">
     <value>Estimated Value</value>
   </data>
+  <data name="ExcludeFromCalibration">
+    <value>Exclude From Calibration</value>
+  </data>
   <data name="FileIndex">
     <value>File Index</value>
   </data>

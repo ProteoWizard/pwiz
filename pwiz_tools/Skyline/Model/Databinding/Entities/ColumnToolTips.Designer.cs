@@ -460,6 +460,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Whether the results in the replicate should be excluded from the peptide&apos;s calibration curve calculation..
+        /// </summary>
+        internal static string ExcludeFromCalibration {
+            get {
+                return ResourceManager.GetString("ExcludeFromCalibration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The exact desired collisional cross section (in square angstroms) to be converted to drift time and used in extracting chromatograms from ion mobility mass spectra, overriding all model values. .
         /// </summary>
         internal static string ExplicitCollisionalCrossSection {

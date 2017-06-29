@@ -102,6 +102,22 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public void ChangeChromInfo(EditDescription editDescription, PeptideChromInfo newChromInfo)
+        {
+            var newDocNode = Peptide.DocNode.ChangeResults(GetResultFile().ChangeChromInfo(Peptide.DocNode.Results, newChromInfo));
+            Peptide.ChangeDocNode(editDescription, newDocNode);
+        }
+
+        public bool ExcludeFromCalibration
+        {
+            get { return ChromInfo.ExcludeFromCalibration; }
+            set
+            {
+                ChangeChromInfo(EditDescription.SetColumn("ExcludeFromCalibration", value), // Not L10N
+                    ChromInfo.ChangeExcludeFromCalibration(value));
+            }
+        }
+
         public LinkValue<QuantificationResult> Quantification
         {
             get

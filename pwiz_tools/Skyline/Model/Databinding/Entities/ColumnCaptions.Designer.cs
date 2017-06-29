@@ -466,6 +466,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exclude From Calibration.
+        /// </summary>
+        public static string ExcludeFromCalibration {
+            get {
+                return ResourceManager.GetString("ExcludeFromCalibration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit Collisional Cross Section.
         /// </summary>
         public static string ExplicitCollisionalCrossSection {
