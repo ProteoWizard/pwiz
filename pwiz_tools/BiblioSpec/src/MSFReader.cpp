@@ -88,6 +88,14 @@ namespace BiblioSpec
             Verbosity::error("Could not determine schema version.");
         }
 
+        if (!hasQValues() && getScoreThreshold(SQT) < 1) {
+            // no q-value fields in this database, error unless user wants everything
+            throw BlibException(false, "This file does not contain q-values. You can set "
+                                       "a cut-off score of 0 in order to build a library from it, "
+                                       "but this may cause your library to include a lot "
+                                       "of false-positives.");
+        }
+
         collectSpectra();
         collectPsms();
 
@@ -275,7 +283,7 @@ namespace BiblioSpec
         altScoreNames.push_back("XCorr");
         altScoreNames.push_back("IonScore");
 
-        if (!versionLess(2, 2)) {
+        if (tableExists(msfFile_, "TargetPsms")) {
             for (vector<string>::const_iterator i = altScoreNames.begin(); i != altScoreNames.end(); i++) {
                 if (!columnExists(msfFile_, "TargetPsms", *i)) {
                     continue;
@@ -286,7 +294,7 @@ namespace BiblioSpec
                 }
                 break;
             }
-        } else if (!filtered_) {
+        } else if (tableExists(msfFile_, "PeptideScores") && tableExists(msfFile_, "ProcessingNodeScores")) {
             for (vector<string>::const_iterator i = altScoreNames.begin(); i != altScoreNames.end(); i++) {
                 statement = getStmt(
                     "SELECT PeptideID, ScoreValue "
@@ -302,19 +310,11 @@ namespace BiblioSpec
         }
 
         // set result count and statement (PeptideID, SpectrumID, unmodified sequence, q-value[, WorkflowID, SpectrumFileName])
-        if (!hasQValues()) {
-            // no q-value fields in this database, error unless user wants everything
-            if (getScoreThreshold(SQT) < 1) {
-                throw BlibException(false, "This file does not contain q-values. You can set "
-                                    "a cut-off score of 0 in order to build a library from it, "
-                                    "but this may cause your library to include a lot "
-                                    "of false-positives.");
-            }
-            resultCount = getRowCount("Peptides");
-            statement = getStmt("SELECT PeptideID, SpectrumID, Sequence, '0' FROM Peptides");
-        } else {
-            // get peptides with q-value <= threshold
-            if (!filtered_ && versionLess(2, 2)) {
+        if (!filtered_ && versionLess(2, 2)) {
+            if (!hasQValues()) {
+                statement = getStmt("SELECT PeptideID, SpectrumID, Sequence, '0', FROM Peptides");
+                resultCount = getRowCount("Peptides");
+            } else {
                 statement = getStmt(
                     "SELECT Peptides.PeptideID, SpectrumID, Sequence, FieldValue "
                     "FROM Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
@@ -324,27 +324,21 @@ namespace BiblioSpec
                     "Peptides JOIN CustomDataPeptides ON Peptides.PeptideID = CustomDataPeptides.PeptideID "
                     "WHERE FieldID IN (SELECT FieldID FROM CustomDataFields WHERE DisplayName IN ('q-Value', 'Percolator q-Value')) "
                     "AND FieldValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
-            } else {
-                try {
-                    statement = getStmt(
-                        "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, PercolatorqValue, "
-                        "WorkflowID, SpectrumFileName "
-                        "FROM TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
-                        "WHERE PercolatorqValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
-                    resultCount = getRowCount(
-                        "TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
-                        "WHERE PercolatorqValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
-                } catch (BlibException& e) {
-                    statement = getStmt(
-                        "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, qValue, "
-                        "WorkflowID, SpectrumFileName "
-                        "FROM TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
-                        "WHERE qValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
-                    resultCount = getRowCount(
-                        "TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID "
-                        "WHERE qValue <= " + lexical_cast<string>(getScoreThreshold(SQT)));
-                }
             }
+        } else {
+            string qValueCol;
+            string qValueWhere;
+            if (!hasQValues()) {
+                qValueCol = "'0'";
+            } else {
+                qValueCol = columnExists(msfFile_, "TargetPsms", "PercolatorqValue") ? "PercolatorqValue" : "qValue";
+                qValueWhere = " WHERE " + qValueCol + " <= " + lexical_cast<string>(getScoreThreshold(SQT));
+            }
+            statement = getStmt(
+                "SELECT PeptideID, MSnSpectrumInfoSpectrumID, Sequence, " + qValueCol + ", "
+                "WorkflowID, SpectrumFileName "
+                "FROM TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID" + qValueWhere);
+            resultCount = getRowCount("TargetPsms JOIN TargetPsmsMSnSpectrumInfo ON PeptideID = TargetPsmsPeptideID" + qValueWhere);
         }
         Verbosity::status("Parsing %d PSMs.", resultCount);
         ProgressIndicator progress(resultCount);
@@ -518,12 +512,9 @@ namespace BiblioSpec
     bool MSFReader::hasQValues() {
         sqlite3_stmt* statement;
 
-        if (!versionLess(2, 2)) {
-            return columnExists(msfFile_, "TargetPsms", "PercolatorqValue");
-        }
-
-        if (filtered_) {
-            return true;
+        if (filtered_ || !versionLess(2, 2)) {
+            return columnExists(msfFile_, "TargetPsms", "PercolatorqValue") ||
+                   columnExists(msfFile_, "TargetPsms", "qValue");
         }
 
          statement = getStmt(
