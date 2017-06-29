@@ -75,9 +75,6 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
                        ms_peptidesummary::MSPEPSUM_NO_PROTEIN_GROUPING |
                        ms_peptidesummary::MSPEPSUM_USE_HOMOLOGY_THRESH); 
 
-    // create the spec reader, sharing the file and results objects
-    delete specReader_;  
-    specReader_ = new MascotSpecReader(datFileName, ms_file_, ms_results_);
     // register the name with BuildParser, but don't try to open it
     this->setSpecFileName(datFileName, false);
 
@@ -85,6 +82,10 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
 
     // get distiller rawfiles
     getDistillerRawFiles(ms_params_, rawFiles_);
+
+    // create the spec reader, sharing the file and results objects
+    delete specReader_;  
+    specReader_ = new MascotSpecReader(datFileName, ms_file_, ms_results_, rawFiles_);
 
     // get modifications information
     for(int i=1; 0 != ms_params_->getFixedModsDelta(i); i++){

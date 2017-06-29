@@ -43,9 +43,11 @@ class MascotSpecReader : public SpecFileReader {
     }
     MascotSpecReader(const char* filename,
                      ms_mascotresfile* ms_file, 
-                     ms_mascotresults* ms_results = NULL){
+                     ms_mascotresults* ms_results = NULL,
+                     const std::vector<std::string>& rawfiles = std::vector<std::string>()){
         setFile(ms_file, ms_results);
         filename_ = filename;
+        numRawFiles_ = rawfiles.size();
     }
     virtual ~MascotSpecReader(){
         delete ms_results_;
@@ -108,8 +110,8 @@ class MascotSpecReader : public SpecFileReader {
      * Return true if spectrum found and successfully parsed, false if
      * spec not in file.
     */
-    virtual bool getSpectrum(int specId, 
-                             SpecData& returnData, 
+    virtual bool getSpectrum(int specId,
+                             SpecData& returnData,
                              SPEC_ID_TYPE findBy,
                              bool getPeaks = true)
     {
@@ -127,6 +129,11 @@ class MascotSpecReader : public SpecFileReader {
         ms_inputquery spec(*ms_file_, specId);
         // retention time is optional in .dat files
         string rtStr = spec.getRetentionTimes();
+        if (rtStr.empty()) {
+            for (size_t i = 0; i < numRawFiles_; i++)
+                if (!(rtStr = spec.getRetentionTimes(i)).empty())
+                    break;
+        }
         try{
             returnData.retentionTime = boost::lexical_cast<double>(rtStr) / 60;
             disableRtConversion_ = true;
@@ -182,6 +189,7 @@ class MascotSpecReader : public SpecFileReader {
     string filename_;   // keep around for reporting purposes
     ms_mascotresfile* ms_file_;    // get spec from here
     ms_mascotresults* ms_results_; // get pep from here (for m/z)
+    size_t numRawFiles_;
     bool disableRtConversion_; // rt units known
     bool needsRtConversion_; // rt units unknown and we've seen a retention time >750
 
