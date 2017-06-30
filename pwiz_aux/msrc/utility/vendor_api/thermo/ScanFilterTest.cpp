@@ -414,6 +414,22 @@ const TestScanFilter testScanFilters[] =
      TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
      TriBool_Unknown, TriBool_True, TriBool_True, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
      false, 0.0 },
+
+     {"+ c NSI SRM ms2 467.244 [491.281-491.283, 619.340-619.342, 720.388-720.390]",
+      "467.244", "0", "", "", "491.281 619.340 720.388", "491.283 619.342 720.390", 0, 2, -1, -1,
+      ScanFilterMassAnalyzerType_Unknown, PolarityType_Positive, DataPointType_Centroid,
+      IonizationType_NSI, AccurateMass_Unknown, ScanType_SRM, false, ActivationType_Unknown,
+      TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+      TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+      false, 0.0 },
+
+      {"+ c NSI Z ms3 467.244 350.18@hcd45.00 [491.281-491.283, 619.340-619.342, 720.388-720.390]",
+       "467.244 350.18", "0 45.00", "", "", "491.281 619.340 720.388", "491.283 619.342 720.390", 0, 3, -1, -1,
+       ScanFilterMassAnalyzerType_Unknown, PolarityType_Positive, DataPointType_Centroid,
+       IonizationType_NSI, AccurateMass_Unknown, ScanType_Zoom, false, ActivationType_Unknown,
+       TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+       TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+       false, 0.0 },
 };
 
 const size_t testScanFiltersSize = sizeof(testScanFilters) / sizeof(TestScanFilter);

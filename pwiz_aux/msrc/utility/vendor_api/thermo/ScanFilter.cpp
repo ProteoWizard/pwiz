@@ -464,7 +464,7 @@ const static boost::regex filterRegex("^(?<analyzer>FTMS|ITMS|TQMS|SQMS|TOFMS|SE
                          "(?<lockmass>lock)?\\s*"
                          "(?<multiplex>msx)?\\s*"
                          "(?<msMode>pr|(?:ms(?<msLevel>\\d+)?)|(?:cnl(?<analyzerScanOffset> \\d+(?:\\.\\d+)?)?)?)"
-                         "(?:\\s*(?<precursorMz>\\d+(?:\\.\\d+)?)(?:@(?<activationType>cid|hcd|etd)?(?<activationEnergy>-?\\d+(?:\\.\\d+)?))(?:@(?<saType>cid|hcd)?(?<saEnergy>-?\\d+(?:\\.\\d+)?))?)*\\s*"
+                         "(?:\\s*(?<precursorMz>\\d+(?:\\.\\d+)?)(?<activationGroup>(?:@(?<activationType>cid|hcd|etd)?(?<activationEnergy>-?\\d+(?:\\.\\d+)?))?)(?<saGroup>(?:@(?<saType>cid|hcd)?(?<saEnergy>-?\\d+(?:\\.\\d+)?))?))*\\s*"
                          "(?:\\[(?:(?:, )?(?<scanRangeStart>\\d+(?:\\.\\d+)?)-(?<scanRangeEnd>\\d+(?:\\.\\d+)?))+\\])?$",
                          boost::regex_constants::icase);
 
@@ -549,37 +549,96 @@ ScanFilter::parse(const string& filterLine)
             analyzer_scan_offset_ = lexical_cast<double>(bal::trim_copy(what["analyzerScanOffset"].str()));
         }
 
-        // for MS level > 1, expect one or more <isolation m/z>@<activation><energy> tuples (but activation type is optional, and there can be more than one @<activation><energy> suffix)
+        // for MS level > 1, expect one or more <isolation m/z>@<activation><energy> tuples (but there may be 0, 1, or 2 @<activation><energy> suffixes)
         if (msLevel_ == -1 || msLevel_ > 1)
         {
             const auto& precursorMZs = what["precursorMz"].captures();
             for (const auto& precursorMz : precursorMZs) precursorMZs_.push_back(lexical_cast<double>(precursorMz));
 
+            // if there are less activationTypes and/or activationEnergies than precursorMZs, check the activationGroups (which will be empty strings if it was missing)
             const auto& activationTypes = what["activationType"].captures();
             if (!activationTypes.empty())
-                activationType_ = parseActivationType(activationTypes[0]); // only use activation type from current precursor
+            {
+                if (activationTypes.size() < precursorMZs.size())
+                {
+                    const auto& activationGroups = what["activationGroup"].captures();
+                    if (!activationGroups.empty() && activationGroups[0].length() > 0)
+                        activationType_ = parseActivationType(activationTypes[0]);  // only use activation type from current (first) precursor
+                }
+                else
+                    activationType_ = parseActivationType(activationTypes[0]); // only use activation type from current (first) precursor
+            }
 
             const auto& activationEnergies = what["activationEnergy"].captures();
-            for (const auto& activationEnergy : activationEnergies) precursorEnergies_.push_back(lexical_cast<double>(activationEnergy));
+            if (activationEnergies.size() < precursorMZs.size())
+            {
+                precursorEnergies_.resize(precursorMZs.size(), 0); // every precursor must have an energy and it defaults to 0 if not present
+
+                const auto& activationGroups = what["activationGroup"].captures();
+                if (precursorMZs.size() != activationGroups.size())
+                    throw runtime_error("number of precursorMZs and activationGroups must be the same");
+
+                for (size_t i = 0, j = 0; i < activationEnergies.size() && j < activationGroups.size(); ++i)
+                {
+                    while (j < activationGroups.size() && activationGroups[j].length() == 0)
+                        ++j; // skip to the next precursor with an activation group
+                    if (j < activationGroups.size())
+                        precursorEnergies_[j] = lexical_cast<double>(activationEnergies[i]);
+                }
+            }
+            else // if every precursor has an energy, life is simpler
+            {
+                for (const auto& activationEnergy : activationEnergies) precursorEnergies_.push_back(lexical_cast<double>(activationEnergy));
+            }
 
             if (supplementalCIDOn_ == TriBool_True &&
                 activationType_ & ActivationType_ETD &&
                 !(activationType_ & ActivationType_CID || activationType_ & ActivationType_HCD))
             {
                 const auto& saTypes = what["saType"].captures();
-                for (const auto& saType : saTypes) saTypes_.push_back(parseActivationType(saType));
-
                 const auto& saEnergies = what["saEnergy"].captures();
-                for (const auto& saEnergy : saEnergies) saEnergies_.push_back(lexical_cast<double>(saEnergy));
+                if (saTypes.size() != saEnergies.size())
+                    throw runtime_error("number of saType and saEnergy groups must be the same");
 
-                // CONSIDER: does detector set always mean CID is really HCD?
-                if (detectorSet_ == TriBool_True &&
-                    massAnalyzerType_ == ScanFilterMassAnalyzerType_FTMS)
-                    activationType_ = static_cast<ActivationType>(activationType_ | ActivationType_HCD);
-                else if (!saTypes_.empty())
+                if (!saTypes.empty())
+                {
+                    if (saTypes.size() < precursorMZs.size())
+                    {
+                        saTypes_.resize(precursorMZs.size(), ActivationType_Unknown);
+                        saEnergies_.resize(precursorMZs.size(), 0); // every precursor must have an energy and it defaults to 0 if not present
+
+                        const auto& saGroups = what["saGroup"].captures();
+                        if (precursorMZs.size() != saGroups.size())
+                            throw runtime_error("number of precursorMZs and saGroups must be the same");
+
+                        for (size_t i = 0, j = 0; i < saEnergies_.size() && j < saGroups.size(); ++i)
+                        {
+                            while (j < saGroups.size() && saGroups[j].length() == 0)
+                                ++j; // skip to the next precursor with an SA group
+                            if (j < saGroups.size())
+                            {
+                                saTypes_[j] = parseActivationType(saTypes[i]);
+                                saEnergies_[j] = lexical_cast<double>(saEnergies[i]);
+                            }
+                        }
+                    }
+                    else // if every precursor has a populated saGroup, life is simpler
+                    {
+                        for (const auto& saType : saTypes) saTypes_.push_back(parseActivationType(saType));
+                        for (const auto& saEnergy : saEnergies) saEnergies_.push_back(lexical_cast<double>(saEnergy));
+                    }
+
                     activationType_ = static_cast<ActivationType>(activationType_ | saTypes_[0]); // only use SA type from current precursor
-                else
-                    activationType_ = static_cast<ActivationType>(activationType_ | ActivationType_CID);
+                }
+                else if (msLevel_ == 2) // if sa flag is set on ms2 scan with no saTypes, it's still supplemental CID or HCD
+                {
+                    // CONSIDER: does detector set always mean CID is really HCD?
+                    if (detectorSet_ == TriBool_True &&
+                        massAnalyzerType_ == ScanFilterMassAnalyzerType_FTMS)
+                        activationType_ = static_cast<ActivationType>(activationType_ | ActivationType_HCD);
+                    else
+                        activationType_ = static_cast<ActivationType>(activationType_ | ActivationType_CID);
+                }
             }
             else if (detectorSet_ == TriBool_True &&
                      massAnalyzerType_ == ScanFilterMassAnalyzerType_FTMS &&
