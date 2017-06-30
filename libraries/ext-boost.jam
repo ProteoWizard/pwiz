@@ -589,10 +589,12 @@ rule init ( version : location : options * )
                 <use>boost
                 <link>shared:<define>BOOST_REGEX_DYN_LINK=1
                 <define>BOOST_REGEX_NO_LIB=1
+                <define>BOOST_REGEX_MATCH_EXTRA
                 <toolset>msvc:<cxxflags>/wd4309
                 <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
             :
             :   <define>BOOST_REGEX_NO_LIB=1
+                <define>BOOST_REGEX_MATCH_EXTRA
                 <link>shared:<define>BOOST_REGEX_DYN_LINK=1
             ;
 

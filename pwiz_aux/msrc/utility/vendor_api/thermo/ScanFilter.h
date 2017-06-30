@@ -90,6 +90,9 @@ class PWIZ_API_DECL ScanFilter
 	std::vector<double> precursorMZs_; // one entry per ms level for level >= 2
 	std::vector<double> precursorEnergies_; // relative units; one entry per ms level for level >= 2
 
+    std::vector<ActivationType> saTypes_; // only seen with Fusion Lumos so far
+    std::vector<double> saEnergies_;
+
 	std::vector<double> scanRangeMin_;
 	std::vector<double> scanRangeMax_;
 

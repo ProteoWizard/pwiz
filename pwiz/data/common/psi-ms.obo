@@ -1,6 +1,6 @@
 format-version: 1.2
-data-version: 4.0.11
-date: 10:04:2017 10:10
+data-version: 4.0.13_rc1
+date: 23:06:2017 13:40
 saved-by: Gerhard Mayer
 auto-generated-by: OBO-Edit 2.3.1
 import: http://ontologies.berkeleybop.org/pato.obo
@@ -2488,9 +2488,8 @@ is_obsolete: true
 [Term]
 id: MS:1000353
 name: adduct ion
-def: "OBSOLETE Ion formed by the interaction of an ion with one or more atoms or molecules to form an ion containing all the constituent atoms of the precursor ion as well as the additional atoms from the associated atoms or molecules." [PSI:MS]
-comment: This child of the former purgatory term ion chemical type was made obsolete.
-is_obsolete: true
+def: "Ion formed by the interaction of an ion with one or more atoms or molecules to form an ion containing all the constituent atoms of the precursor ion as well as the additional atoms from the associated atoms or molecules." [PSI:MS]
+is_a: MS:1002806 ! ion
 
 [Term]
 id: MS:1000354
@@ -3258,8 +3257,8 @@ is_a: MS:1000490 ! Agilent instrument model
 
 [Term]
 id: MS:1000469
-name: 6120 Quadrupole LC/MS
-def: "The 6120 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a single quadrupole mass spectrometer from the 6100 Series of Agilent mass spectrometers. 6120 quadrupole mass spectrometer has m/z range of 10-1500, 2500 u/s scan speed and utilizes multiple signal acquisition." [PSI:MS]
+name: 6120A Quadrupole LC/MS
+def: "The 6120A Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a single quadrupole mass spectrometer from the 6100 Series of Agilent mass spectrometers. 6120 quadrupole mass spectrometer has m/z range of 10-1500, 2500 u/s scan speed and utilizes multiple signal acquisition." [PSI:MS]
 is_a: MS:1000490 ! Agilent instrument model
 
 [Term]
@@ -4689,8 +4688,8 @@ is_a: MS:1000490 ! Agilent instrument model
 
 [Term]
 id: MS:1000677
-name: 6520 Quadrupole Time-of-Flight LC/MS
-def: "The 6520 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer. This time of flight mass spectrometer has a m/z range of 50-12000, mass accuracy of less than 2 ppm and resolution greater than 26,000 at m/z 2722. It has multiple ion sources and can be used with multimode ion sources." [PSI:MS]
+name: 6520A Quadrupole Time-of-Flight LC/MS
+def: "The 6520A Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer. This time of flight mass spectrometer has a m/z range of 50-12000, mass accuracy of less than 2 ppm and resolution greater than 26,000 at m/z 2722. It has multiple ion sources and can be used with multimode ion sources." [PSI:MS]
 is_a: MS:1000490 ! Agilent instrument model
 
 [Term]
@@ -16158,7 +16157,7 @@ relationship: part_of MS:0000000 ! Proteomics Standards Initiative Mass Spectrom
 [Term]
 id: MS:1002480
 name: regular expression for a digital object identifier (DOI)
-def: "(10[.][0-9]\{4,\}(?:[.][0-9]+)*/(?:(?![\"&\'<>])[^ \t\\r\n\\v\\f])+)" [PSI:PI, http://dx.doi.org/]
+def: "(10[.][0-9]\{4,\}(?:[.][0-9]+)*/(?:(?![\"&\'<>])[^ \t\\r\n\\v\\f])+)." [PSI:PI, http://dx.doi.org/]
 is_a: MS:1002479 ! regular expression
 
 [Term]
@@ -16315,7 +16314,7 @@ is_a: MS:1001055 ! modification parameters
 [Term]
 id: MS:1002505
 name: regular expression for modification localization scoring
-def: "([:digit:]+:[0|1]\{1\}.[:digit:]+[Ee]{0,1}[+-]{0,1}[:digit:]*:[:digit:]+[|]\{1\}[:digit:]+:(true|false)\{1\})" [PSI:PI]
+def: "([:digit:]+:[0|1]\{1\}.[:digit:]+[Ee]{0,1}[+-]{0,1}[:digit:]*:[:digit:]+[|]\{1\}[:digit:]+:(true|false)\{1\})." [PSI:PI]
 is_a: MS:1002479 ! regular expression
 
 [Term]
@@ -17377,7 +17376,7 @@ relationship: has_regexp MS:1002665 ! ([:digit:]+[.][a|b]:[:digit:]+:[:digit:]+[
 [Term]
 id: MS:1002665
 name: regular expression for interaction scores derived from cross-linking
-def: "([:digit:]+[.][a|b]:([:digit:]+|null):[:digit:]+[.][:digit:]+([Ee][+-][0-9]+)*:(true|false]\{1\}))" [PSI:PI]
+def: "([:digit:]+[.][a|b]:([:digit:]+|null):[:digit:]+[.][:digit:]+([Ee][+-][0-9]+)*:(true|false]\{1\}))." [PSI:PI]
 is_a: MS:1002479 ! regular expression
 
 [Term]
@@ -18068,3 +18067,252 @@ id: MS:1002782
 name: DiLeu reagent 118
 def: "The name of the sample labelled with the DiLeu reagent 118." [PSI:PI]
 is_a: MS:1002778 ! DiLeu reagent
+
+[Term]
+id: MS:1002783
+name: 6550 iFunnel Q-TOF LC/MS
+def: "The 6550 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002784
+name: 6550A iFunnel Q-TOF LC/MS
+def: "The 6550A Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002785
+name: 6520B Q-TOF LC/MS
+def: "The 6520B Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002786
+name: 6530A Q-TOF LC/MS
+def: "The 6530A Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002787
+name: 6530B Q-TOF LC/MS
+def: "The 6530B Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002788
+name: 6538 Q-TOF LC/MS
+def: "The 6538 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002789
+name: 6540 Q-TOF LC/MS
+def: "The 6540 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002790
+name: 6542 Q-TOF LC/MS
+def: "The 6542 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002791
+name: 6545 Q-TOF LC/MS
+def: "The 6545 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002792
+name: 6560 Q-TOF LC/MS
+def: "The 6560 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002793
+name: 6570 Q-TOF LC/MS
+def: "The 6570 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002794
+name: 6120B Quadrupole LC/MS
+def: "The 6120B Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a single quadrupole mass spectrometer from the 6100 Series of Agilent mass spectrometers." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002795
+name: 6150 Quadrupole LC/MS
+def: "The 6150 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a single quadrupole mass spectrometer from the 6100 Series of Agilent mass spectrometers." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002796
+name: 6224 Time-of-Flight LC/MS
+def: "The 6224 Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002797
+name: 6230A Time-of-Flight LC/MS
+def: "The 6230A Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002798
+name: 6230B Time-of-Flight LC/MS
+def: "The 6230B Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002799
+name: 6430 Triple Quadrupole LC/MS
+def: "The 6430 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a Agilent triple quadrupole mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002800
+name: 6495A Triple Quadrupole LC/MS
+def: "The 6495A Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a Agilent triple quadrupole mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002801
+name: 6495B Triple Quadrupole LC/MS
+def: "The 6495B Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a Agilent triple quadrupole mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002802
+name: 7000A Triple Quadrupole GC/MS
+def: "The 7000A Quadrupole GC/MS system is a Agilent gas chromatography instrument combined with a Agilent triple quadrupole mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002803
+name: 7000B Triple Quadrupole GC/MS
+def: "The 7000B Quadrupole GC/MS system is a Agilent gas chromatography instrument combined with a Agilent triple quadrupole mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002804
+name: 7800 Quadrupole ICP-MS
+def: "The 7800 Quadrupole ICP-MS system is a Agilent inductively couple plasma instrument combined with a Agilent quadrupole mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002805
+name: 8800 Triple Quadrupole ICP-MS
+def: "The 8800 Quadrupole ICP-MS system is a Agilent inductively couple plasma instrument combined with a Agilent quadrupole mass spectrometer." [PSI:MS]
+is_a: MS:1000490 ! Agilent instrument model
+
+[Term]
+id: MS:1002806
+name: ion
+def: "An atomic or molecular species having a net positive or negative electric charge." [PSI:MS]
+relationship: part_of MS:0000000 ! Proteomics Standards Initiative Mass Spectrometry Ontology
+
+[Term]
+id: MS:1002807
+name: positive mode adduct ion
+def: "Adduct ion with positive ionization." [PSI:MS]
+is_a: MS:1000353 ! adduct ion
+
+[Term]
+id: MS:1002808
+name: negative mode adduct ion
+def: "Adduct ion with negative ionization." [PSI:MS]
+is_a: MS:1000353 ! adduct ion
+
+[Term]
+id: MS:1002809
+name: adduct ion attribute
+def: "Attribute describing an adduct formation." [PSI:PI]
+is_a: MS:1000547 ! object attribute
+
+[Term]
+id: MS:1002810
+name: adduct ion mass
+def: "Mass of an adduct formation specified by the given value." [DOI:10.1016/S1044-0305(99)00089-6, http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002809 ! adduct ion attribute
+
+[Term]
+id: MS:1002811
+name: adduct ion isotope
+def: "Isotope of the matrix molecule M of an adduct formation." [PMID:18790129]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002809 ! adduct ion attribute
+
+[Term]
+id: MS:1002812
+name: Regular expression for adduct ion formula
+def: "(\[[:digit:]{0,1}M([+][:digit:]{0,1}(H|K|(Na)|(Cl)|(Br)|(NH3)|(NH4)|(CH3OH)|(IsoProp)|(DMSO)|(FA)|(Hac)|(TFA)|(NaCOOH)|(HCOOH)|(CF3COOH)|(ACN))){0,}([-][:digit:]{0,1}(H|(H2O)|(CH2)|(CH4)|(NH3)|(CO)|(CO2)|(COCH2)|(HCOOH)|(C2H4)|(C4H8)|(C3H2O3)|(C5H8O4)|(C6H10O4)|(C6H10O5)|(C6H8O6))){0,}\][:digit:]{0,1}[+-])." [PSI:PI]
+is_a: MS:1002479 ! regular expression
+
+[Term]
+id: MS:1002813
+name: adduct ion formula
+def: "Adduct formation formula specified by the given value." [PMID:22111785, DOI:10.1016/S1044-0305(99)00089-6, http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002809 ! adduct ion attribute
+relationship: has_regexp MS:1002812 ! (\[[:digit:]{0,1}M([+][:digit:]{0,1}(H|K|(Na)|(Cl)|(Br)|(NH3)|(NH4)|(CH3OH)|(IsoProp)|(DMSO)|(FA)|(Hac)|(TFA)|(NaCOOH)|(HCOOH)|(CF3COOH)|(ACN))){0,}([-][:digit:]{0,1}(H|(H2O)|(CH2)|(CH4)|(NH3)|(CO)|(CO2)|(COCH2)|(HCOOH)|(C2H4)|(C4H8)|(C3H2O3)|(C5H8O4)|(C6H10O4)|(C6H10O5)|(C6H8O6))){0,}\][:digit:]{0,1}[+-])
+
+[Term]
+id: MS:1002814
+name: volt-second per square centimeter
+def: "An electrical mobility unit that equals the speed [cm/s] an ion reaches when pulled through a gas by a Voltage[V] over a certain distance [cm]." [PSI:PI]
+synonym: "Vs/cm^2" EXACT []
+is_a: UO:0000000 ! unit
+
+[Term]
+id: MS:1002815
+name: inverse reduced ion mobility
+def: "Ion mobility measurement for an ion or spectrum of ions as measured in an ion mobility mass spectrometer. This might refer to the central value of a bin into which all ions within a narrow range of mobilities have been aggregated." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1000455 ! ion selection attribute
+is_a: MS:1000503 ! scan attribute
+relationship: has_units MS:1002814 ! "volt-second per square centimeter"
+
+[Term]
+id: MS:1002816
+name: mean ion mobility array
+def: "Array of drift times or inverse reduced ion mobilities, averaged from a matrix of binned m/z and ion mobility values, corresponding to a spectrum of individual peaks encoded with an m/z array." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1000513 ! binary data array
+relationship: has_units UO:0000028 ! millisecond
+relationship: has_units UO:0000010 ! second
+relationship: has_units MS:1002814 ! "volt-second per square centimeter"
+
+[Term]
+id: MS:1002817
+name: Bruker TDF format
+def: "Bruker TDF raw file format." [PSI:MS]
+is_a: MS:1000560 ! mass spectrometer file format
+
+[Term]
+id: MS:1002818
+name: Bruker TDF nativeID format
+def: "Native format defined by frame=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger." [PSI:MS]
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
+id: MS:1002819
+name: Bruker TDF nativeID format, combined spectra
+def: "Bruker TDF comma separated list of spectra that have been combined prior to searching or interpretation." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1002646 ! native spectrum identifier format, combined spectra
+
+[Term]
+id: MS:1002820
+name: M+H ion
+def: "M+H ion from positive ion mode (M in the property ionMass denotes the mass of the neutral molecule)." [DOI:10.1016/S1044-0305(99)00089-6, http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator]
+property_value: ionMass: "M + 1.007276" xsd:string
+is_a: MS:1002807 ! positive mode adduct ion
+
+[Term]
+id: MS:1002821
+name: M-H ion
+def: "M-H ion from negative ion mode (M in the property ionMass denotes the mass of the neutral molecule)." [DOI:10.1016/S1044-0305(99)00089-6, http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator]
+property_value: ionMass: "M - 1.007276" xsd:string
+is_a: MS:1002808 ! negative mode adduct ion

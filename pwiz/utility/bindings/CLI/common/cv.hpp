@@ -38,8 +38,8 @@
 
 // ["psi-ms.obo"]
 //   format-version: 1.2
-//   data-version: 4.0.11
-//   date: 10:04:2017 10:10
+//   data-version: 4.0.13_rc1
+//   date: 23:06:2017 13:40
 //   saved-by: Gerhard Mayer
 //   auto-generated-by: OBO-Edit 2.3.1
 //   import: http://ontologies.berkeleybop.org/pato.obo
@@ -65,7 +65,7 @@
 //
 // ["unimod.obo"]
 //   format-version: 1.2
-//   date: 2017:03:10 16:18
+//   date: 2016:07:01 11:23
 //
 // ["unit.obo"]
 //   format-version: 1.2
@@ -1471,7 +1471,7 @@ public enum class CVID
     MS_secondary_electron_OBSOLETE = 1000352,
 
     /// <summary>adduct ion: Ion formed by the interaction of an ion with one or more atoms or molecules to form an ion containing all the constituent atoms of the precursor ion as well as the additional atoms from the associated atoms or molecules.</summary>
-    MS_adduct_ion_OBSOLETE = 1000353,
+    MS_adduct_ion = 1000353,
 
     /// <summary>aromatic ion: A planar cyclic ion that obeys the Hueckel (4n + 2) rule where n is a positive integer representing the number of conjugated Pi electrons. Charge delocalization leads to greater stability compared to a hypothetical localized structure.</summary>
     MS_aromatic_ion_OBSOLETE = 1000354,
@@ -1842,8 +1842,8 @@ public enum class CVID
     /// <summary>6110 Quadrupole LC/MS: The 6110 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with an entry level single quadrupole mass spectrometer from the 6100 Series of Agilent quadrupole mass spectrometers. 6110 Quadrupole mass spectrometer has m/z range of 10-1500 and 2500 u/s scan speed. It proves useful for wide range of SIM quantitative applications.</summary>
     MS_6110_Quadrupole_LC_MS = 1000468,
 
-    /// <summary>6120 Quadrupole LC/MS: The 6120 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a single quadrupole mass spectrometer from the 6100 Series of Agilent mass spectrometers. 6120 quadrupole mass spectrometer has m/z range of 10-1500, 2500 u/s scan speed and utilizes multiple signal acquisition.</summary>
-    MS_6120_Quadrupole_LC_MS = 1000469,
+    /// <summary>6120A Quadrupole LC/MS: The 6120A Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a single quadrupole mass spectrometer from the 6100 Series of Agilent mass spectrometers. 6120 quadrupole mass spectrometer has m/z range of 10-1500, 2500 u/s scan speed and utilizes multiple signal acquisition.</summary>
+    MS_6120A_Quadrupole_LC_MS = 1000469,
 
     /// <summary>6130 Quadrupole LC/MS: The 6130 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a single quadrupole mass spectrometer from the 6100 series of Agilent mass spectrometers. The 6130 quadrupole mass spectrometer has m/z range of 2-3000, 2500 u/s scan speed in standard mode and 5250 u/s speed in fast-scan mode. It also uses multiple signal acquisition.</summary>
     MS_6130_Quadrupole_LC_MS = 1000470,
@@ -2538,8 +2538,8 @@ public enum class CVID
     /// <summary>6510 Quadrupole Time-of-Flight LC/MS: The 6510 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer. This time of flight mass spectrometer has a m/z range of 50-12000, mass accuracy of less than 2 ppm and resolution greater than 13,000 at m/z 2722. It has multiple ion sources and can be used with multimode ion sources.</summary>
     MS_6510_Quadrupole_Time_of_Flight_LC_MS = 1000676,
 
-    /// <summary>6520 Quadrupole Time-of-Flight LC/MS: The 6520 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer. This time of flight mass spectrometer has a m/z range of 50-12000, mass accuracy of less than 2 ppm and resolution greater than 26,000 at m/z 2722. It has multiple ion sources and can be used with multimode ion sources.</summary>
-    MS_6520_Quadrupole_Time_of_Flight_LC_MS = 1000677,
+    /// <summary>6520A Quadrupole Time-of-Flight LC/MS: The 6520A Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer. This time of flight mass spectrometer has a m/z range of 50-12000, mass accuracy of less than 2 ppm and resolution greater than 26,000 at m/z 2722. It has multiple ion sources and can be used with multimode ion sources.</summary>
+    MS_6520A_Quadrupole_Time_of_Flight_LC_MS = 1000677,
 
     /// <summary>MassHunter Data Acquisition: Software for data acquisition of 6000 series instruments.</summary>
     MS_MassHunter_Data_Acquisition = 1000678,
@@ -7722,7 +7722,7 @@ public enum class CVID
     /// <summary>regular expression: Regular expression.</summary>
     MS_regular_expression = 1002479,
 
-    /// <summary>regular expression for a digital object identifier (DOI): (10[.][0-9]\{4,\}(?:[.][0-9]+)*/(?:(?![\"&\'<>])[^ \t\\r\n\\v\\f])+)</summary>
+    /// <summary>regular expression for a digital object identifier (DOI): (10[.][0-9]\{4,\}(?:[.][0-9]+)*/(?:(?![\"&\'<>])[^ \t\\r\n\\v\\f])+).</summary>
     MS_regular_expression_for_a_digital_object_identifier__DOI_ = 1002480,
 
     /// <summary>higher energy beam-type collision-induced dissociation: A collision-induced dissociation process wherein the projectile ion has the translational energy higher than approximately 1000 eV.</summary>
@@ -7797,7 +7797,7 @@ public enum class CVID
     /// <summary>modification index: The order of modifications to be referenced elsewhere in the document.</summary>
     MS_modification_index = 1002504,
 
-    /// <summary>regular expression for modification localization scoring: ([:digit:]+:[0|1]\{1\}.[:digit:]+[Ee]{0,1}[+-]{0,1}[:digit:]*:[:digit:]+[|]\{1\}[:digit:]+:(true|false)\{1\})</summary>
+    /// <summary>regular expression for modification localization scoring: ([:digit:]+:[0|1]\{1\}.[:digit:]+[Ee]{0,1}[+-]{0,1}[:digit:]*:[:digit:]+[|]\{1\}[:digit:]+:(true|false)\{1\}).</summary>
     MS_regular_expression_for_modification_localization_scoring = 1002505,
 
     /// <summary>modification position score: Modification position score.</summary>
@@ -8286,7 +8286,7 @@ public enum class CVID
     /// <summary>interaction score derived from cross-linking: Parent term for interaction scores derived from cross-linking.</summary>
     MS_interaction_score_derived_from_cross_linking = 1002664,
 
-    /// <summary>regular expression for interaction scores derived from cross-linking: ([:digit:]+[.][a|b]:([:digit:]+|null):[:digit:]+[.][:digit:]+([Ee][+-][0-9]+)*:(true|false]\{1\}))</summary>
+    /// <summary>regular expression for interaction scores derived from cross-linking: ([:digit:]+[.][a|b]:([:digit:]+|null):[:digit:]+[.][:digit:]+([Ee][+-][0-9]+)*:(true|false]\{1\})).</summary>
     MS_regular_expression_for_interaction_scores_derived_from_cross_linking = 1002665,
 
     /// <summary>impact II: Bruker Daltonics' impact II.</summary>
@@ -8600,6 +8600,126 @@ public enum class CVID
 
     /// <summary>DiLeu reagent 118: The name of the sample labelled with the DiLeu reagent 118.</summary>
     MS_DiLeu_reagent_118 = 1002782,
+
+    /// <summary>6550 iFunnel Q-TOF LC/MS: The 6550 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer.</summary>
+    MS_6550_iFunnel_Q_TOF_LC_MS = 1002783,
+
+    /// <summary>6550A iFunnel Q-TOF LC/MS: The 6550A Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer.</summary>
+    MS_6550A_iFunnel_Q_TOF_LC_MS = 1002784,
+
+    /// <summary>6520B Q-TOF LC/MS: The 6520B Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer.</summary>
+    MS_6520B_Q_TOF_LC_MS = 1002785,
+
+    /// <summary>6530A Q-TOF LC/MS: The 6530A Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer.</summary>
+    MS_6530A_Q_TOF_LC_MS = 1002786,
+
+    /// <summary>6530B Q-TOF LC/MS: The 6530B Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer.</summary>
+    MS_6530B_Q_TOF_LC_MS = 1002787,
+
+    /// <summary>6538 Q-TOF LC/MS: The 6538 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer.</summary>
+    MS_6538_Q_TOF_LC_MS = 1002788,
+
+    /// <summary>6540 Q-TOF LC/MS: The 6540 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer.</summary>
+    MS_6540_Q_TOF_LC_MS = 1002789,
+
+    /// <summary>6542 Q-TOF LC/MS: The 6542 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer.</summary>
+    MS_6542_Q_TOF_LC_MS = 1002790,
+
+    /// <summary>6545 Q-TOF LC/MS: The 6545 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer.</summary>
+    MS_6545_Q_TOF_LC_MS = 1002791,
+
+    /// <summary>6560 Q-TOF LC/MS: The 6560 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer.</summary>
+    MS_6560_Q_TOF_LC_MS = 1002792,
+
+    /// <summary>6570 Q-TOF LC/MS: The 6570 Quadrupole Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer.</summary>
+    MS_6570_Q_TOF_LC_MS = 1002793,
+
+    /// <summary>6120B Quadrupole LC/MS: The 6120B Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a single quadrupole mass spectrometer from the 6100 Series of Agilent mass spectrometers.</summary>
+    MS_6120B_Quadrupole_LC_MS = 1002794,
+
+    /// <summary>6150 Quadrupole LC/MS: The 6150 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a single quadrupole mass spectrometer from the 6100 Series of Agilent mass spectrometers.</summary>
+    MS_6150_Quadrupole_LC_MS = 1002795,
+
+    /// <summary>6224 Time-of-Flight LC/MS: The 6224 Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer.</summary>
+    MS_6224_Time_of_Flight_LC_MS = 1002796,
+
+    /// <summary>6230A Time-of-Flight LC/MS: The 6230A Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer.</summary>
+    MS_6230A_Time_of_Flight_LC_MS = 1002797,
+
+    /// <summary>6230B Time-of-Flight LC/MS: The 6230B Time-of-Flight LC/MS is a Agilent liquid chromatography instrument combined with a Agilent time of flight mass spectrometer.</summary>
+    MS_6230B_Time_of_Flight_LC_MS = 1002798,
+
+    /// <summary>6430 Triple Quadrupole LC/MS: The 6430 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a Agilent triple quadrupole mass spectrometer.</summary>
+    MS_6430_Triple_Quadrupole_LC_MS = 1002799,
+
+    /// <summary>6495A Triple Quadrupole LC/MS: The 6495A Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a Agilent triple quadrupole mass spectrometer.</summary>
+    MS_6495A_Triple_Quadrupole_LC_MS = 1002800,
+
+    /// <summary>6495B Triple Quadrupole LC/MS: The 6495B Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a Agilent triple quadrupole mass spectrometer.</summary>
+    MS_6495B_Triple_Quadrupole_LC_MS = 1002801,
+
+    /// <summary>7000A Triple Quadrupole GC/MS: The 7000A Quadrupole GC/MS system is a Agilent gas chromatography instrument combined with a Agilent triple quadrupole mass spectrometer.</summary>
+    MS_7000A_Triple_Quadrupole_GC_MS = 1002802,
+
+    /// <summary>7000B Triple Quadrupole GC/MS: The 7000B Quadrupole GC/MS system is a Agilent gas chromatography instrument combined with a Agilent triple quadrupole mass spectrometer.</summary>
+    MS_7000B_Triple_Quadrupole_GC_MS = 1002803,
+
+    /// <summary>7800 Quadrupole ICP-MS: The 7800 Quadrupole ICP-MS system is a Agilent inductively couple plasma instrument combined with a Agilent quadrupole mass spectrometer.</summary>
+    MS_7800_Quadrupole_ICP_MS = 1002804,
+
+    /// <summary>8800 Triple Quadrupole ICP-MS: The 8800 Quadrupole ICP-MS system is a Agilent inductively couple plasma instrument combined with a Agilent quadrupole mass spectrometer.</summary>
+    MS_8800_Triple_Quadrupole_ICP_MS = 1002805,
+
+    /// <summary>ion: An atomic or molecular species having a net positive or negative electric charge.</summary>
+    MS_ion = 1002806,
+
+    /// <summary>positive mode adduct ion: Adduct ion with positive ionization.</summary>
+    MS_positive_mode_adduct_ion = 1002807,
+
+    /// <summary>negative mode adduct ion: Adduct ion with negative ionization.</summary>
+    MS_negative_mode_adduct_ion = 1002808,
+
+    /// <summary>adduct ion attribute: Attribute describing an adduct formation.</summary>
+    MS_adduct_ion_attribute = 1002809,
+
+    /// <summary>adduct ion mass: Mass of an adduct formation specified by the given value.</summary>
+    MS_adduct_ion_mass = 1002810,
+
+    /// <summary>adduct ion isotope: Isotope of the matrix molecule M of an adduct formation.</summary>
+    MS_adduct_ion_isotope = 1002811,
+
+    /// <summary>Regular expression for adduct ion formula: (\[[:digit:]{0,1}M([+][:digit:]{0,1}(H|K|(Na)|(Cl)|(Br)|(NH3)|(NH4)|(CH3OH)|(IsoProp)|(DMSO)|(FA)|(Hac)|(TFA)|(NaCOOH)|(HCOOH)|(CF3COOH)|(ACN))){0,}([-][:digit:]{0,1}(H|(H2O)|(CH2)|(CH4)|(NH3)|(CO)|(CO2)|(COCH2)|(HCOOH)|(C2H4)|(C4H8)|(C3H2O3)|(C5H8O4)|(C6H10O4)|(C6H10O5)|(C6H8O6))){0,}\][:digit:]{0,1}[+-]).</summary>
+    MS_Regular_expression_for_adduct_ion_formula = 1002812,
+
+    /// <summary>adduct ion formula: Adduct formation formula specified by the given value.</summary>
+    MS_adduct_ion_formula = 1002813,
+
+    /// <summary>volt-second per square centimeter: An electrical mobility unit that equals the speed [cm/s] an ion reaches when pulled through a gas by a Voltage[V] over a certain distance [cm].</summary>
+    MS_volt_second_per_square_centimeter = 1002814,
+
+    /// <summary>Vs/cm^2: An electrical mobility unit that equals the speed [cm/s] an ion reaches when pulled through a gas by a Voltage[V] over a certain distance [cm].</summary>
+    MS_Vs_cm_2 = MS_volt_second_per_square_centimeter,
+
+    /// <summary>inverse reduced ion mobility: Ion mobility measurement for an ion or spectrum of ions as measured in an ion mobility mass spectrometer. This might refer to the central value of a bin into which all ions within a narrow range of mobilities have been aggregated.</summary>
+    MS_inverse_reduced_ion_mobility = 1002815,
+
+    /// <summary>mean ion mobility array: Array of drift times or inverse reduced ion mobilities, averaged from a matrix of binned m/z and ion mobility values, corresponding to a spectrum of individual peaks encoded with an m/z array.</summary>
+    MS_mean_ion_mobility_array = 1002816,
+
+    /// <summary>Bruker TDF format: Bruker TDF raw file format.</summary>
+    MS_Bruker_TDF_format = 1002817,
+
+    /// <summary>Bruker TDF nativeID format: Native format defined by frame=xsd:nonNegativeInteger scan=xsd:nonNegativeInteger.</summary>
+    MS_Bruker_TDF_nativeID_format = 1002818,
+
+    /// <summary>Bruker TDF nativeID format, combined spectra: Bruker TDF comma separated list of spectra that have been combined prior to searching or interpretation.</summary>
+    MS_Bruker_TDF_nativeID_format__combined_spectra = 1002819,
+
+    /// <summary>M+H ion: M+H ion from positive ion mode (M in the property ionMass denotes the mass of the neutral molecule).</summary>
+    MS_M_H_ion_1002820 = 1002820,
+
+    /// <summary>M-H ion: M-H ion from negative ion mode (M in the property ionMass denotes the mass of the neutral molecule).</summary>
+    MS_M_H_ion_1002821 = 1002821,
 
     /// <summary>unimod root node: The root node of the unimod modifications ontology.</summary>
     UNIMOD_unimod_root_node = 100000000,
@@ -9117,7 +9237,7 @@ public enum class CVID
     /// <summary>Delta:Hg(1): Mercury Mercaptan.</summary>
     UNIMOD_Delta_Hg_1_ = 100000291,
 
-    /// <summary>IodoU-AMP: (Iodo)-uracil MP.</summary>
+    /// <summary>IodoU-AMP: Cross-link of (Iodo)-uracil MP with W,F,Y.</summary>
     UNIMOD_IodoU_AMP = 100000292,
 
     /// <summary>CAMthiopropanoyl: 3-(carbamidomethylthio)propanoyl.</summary>
@@ -9186,8 +9306,8 @@ public enum class CVID
     /// <summary>Xlink:B10621: Bis-N-I-sulfonerahodamine.</summary>
     UNIMOD_Xlink_B10621 = 100000323,
 
-    /// <summary>Xlink:DTBPc: Dimethyl 3,3\'-dithiobispropionimidate.</summary>
-    UNIMOD_Xlink_DTBPc = 100000324,
+    /// <summary>DTBP: Dimethyl 3,3\'-dithiobispropionimidate.</summary>
+    UNIMOD_DTBP = 100000324,
 
     /// <summary>FP-Biotin: 10-ethoxyphosphinyl-N-(biotinamidopentyl)decanamide.</summary>
     UNIMOD_FP_Biotin = 100000325,
@@ -10212,11 +10332,11 @@ public enum class CVID
     /// <summary>Gly-loss+Amide: Enzymatic glycine removal leaving an amidated C-terminus.</summary>
     UNIMOD_Gly_loss_Amide = 100000822,
 
-    /// <summary>Xlink:BMOE: Addition of BMOE crosslinker.</summary>
-    UNIMOD_Xlink_BMOE = 100000824,
+    /// <summary>BMOE: Addition of BMOE crosslinker.</summary>
+    UNIMOD_BMOE = 100000824,
 
-    /// <summary>Xlink:DFDNB: Addition of DFDNB crosslinker.</summary>
-    UNIMOD_Xlink_DFDNB = 100000825,
+    /// <summary>DFDNB: Addition of DFDNB crosslinker.</summary>
+    UNIMOD_DFDNB = 100000825,
 
     /// <summary>TMPP-Ac: Tris(2,4,6-trimethoxyphenyl)phosphonium acetic acid N-hydroxysuccinimide ester derivative.</summary>
     UNIMOD_TMPP_Ac = 100000827,
@@ -10407,7 +10527,7 @@ public enum class CVID
     /// <summary>SulfoGMBS: High molecular absorption label for proteins.</summary>
     UNIMOD_SulfoGMBS = 100000942,
 
-    /// <summary>DimethylamineGMBS: Modified GMBS X linker.</summary>
+    /// <summary>DimethylamineGMBS: Modified GMBS X linker for proteins.</summary>
     UNIMOD_DimethylamineGMBS = 100000943,
 
     /// <summary>Label:15N(2)2H(9): SILAC label.</summary>
@@ -10575,8 +10695,8 @@ public enum class CVID
     /// <summary>Xlink:DSS: Water-quenched monolink of DSS/BS3 crosslinker to Lys or N-terminus.</summary>
     UNIMOD_Xlink_DSS = 100001020,
 
-    /// <summary>Xlink:EGS244: Water quenched monolink of EGS cross-linker.</summary>
-    UNIMOD_Xlink_EGS244 = 100001021,
+    /// <summary>Xlink:EGS: Monolink of EGS crosslinker to Lys or N-terminus.</summary>
+    UNIMOD_Xlink_EGS = 100001021,
 
     /// <summary>Xlink:DST: Monolink of DST crosslinker to Lys or N-terminus.</summary>
     UNIMOD_Xlink_DST = 100001022,
@@ -10590,8 +10710,8 @@ public enum class CVID
     /// <summary>Xlink:DMP-de: Monolink of DMP crosslinker to Lys or N-terminus.</summary>
     UNIMOD_Xlink_DMP_de = 100001027,
 
-    /// <summary>Xlink:EGS115: Cleavage product of EGS protein crosslinks by hydroylamine treatment.</summary>
-    UNIMOD_Xlink_EGS115 = 100001028,
+    /// <summary>Xlink:EGScleaved: EGS crosslinker to Lys or N-terminus following hydroxylamine cleavage.</summary>
+    UNIMOD_Xlink_EGScleaved = 100001028,
 
     /// <summary>Biotin:Thermo-88310: Desthiobiotin modification of lysine.</summary>
     UNIMOD_Biotin_Thermo_88310 = 100001031,
@@ -12677,57 +12797,6 @@ public enum class CVID
 
     /// <summary>Glu->pyro-Glu+Methyl:2H(2)13C(1): Pyro-Glu from E + Methylation Medium.</summary>
     UNIMOD_Glu__pyro_Glu_Methyl_2H_2_13C_1_ = 100001827,
-
-    /// <summary>LRGG+methyl: LeumethylArgGlyGly.</summary>
-    UNIMOD_LRGG_methyl = 100001828,
-
-    /// <summary>LRGG+dimethyl: LeudimethylArgGlyGly.</summary>
-    UNIMOD_LRGG_dimethyl = 100001829,
-
-    /// <summary>Biotin-tyramide: Biotin-Phenol.</summary>
-    UNIMOD_Biotin_tyramide = 100001830,
-
-    /// <summary>Tris: Tris adduct causes 104 Da addition at asparagine-succinimide intermediate.</summary>
-    UNIMOD_Tris = 100001831,
-
-    /// <summary>IASD: Iodoacetamide derivative of stilbene (reaction product with thiol).</summary>
-    UNIMOD_IASD = 100001832,
-
-    /// <summary>NP40: NP-40 synthetic polymer terminus.</summary>
-    UNIMOD_NP40 = 100001833,
-
-    /// <summary>Tween20: Tween 20 synthetic polymer terminus.</summary>
-    UNIMOD_Tween20 = 100001834,
-
-    /// <summary>Tween80: Tween 80 synthetic polymer terminus.</summary>
-    UNIMOD_Tween80 = 100001835,
-
-    /// <summary>Triton: Triton synthetic polymer terminus.</summary>
-    UNIMOD_Triton = 100001836,
-
-    /// <summary>Brij35: Brij 35 synthetic polymer terminus.</summary>
-    UNIMOD_Brij35 = 100001837,
-
-    /// <summary>Brij58: Brij 58 synthetic polymer terminus.</summary>
-    UNIMOD_Brij58 = 100001838,
-
-    /// <summary>betaFNA: Beta-Funaltrexamine.</summary>
-    UNIMOD_betaFNA = 100001839,
-
-    /// <summary>dHex(1)Hex(7)HexNAc(4): Fucosylated biantennary + 2 alphaGal.</summary>
-    UNIMOD_dHex_1_Hex_7_HexNAc_4_ = 100001840,
-
-    /// <summary>Biotin:Thermo-21328: EZ-Link Sulfo-NHS-SS-Biotin.</summary>
-    UNIMOD_Biotin_Thermo_21328 = 100001841,
-
-    /// <summary>PhosphoCytidine: Cytidine monophosphate.</summary>
-    UNIMOD_PhosphoCytidine = 100001843,
-
-    /// <summary>AzidoF: Azidophenylalanine.</summary>
-    UNIMOD_AzidoF = 100001845,
-
-    /// <summary>Dimethylaminoethyl: Cys alkylation by dimethylaminoethyl halide.</summary>
-    UNIMOD_Dimethylaminoethyl = 100001846,
 
     /// <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
     UO_unit = 200000000,

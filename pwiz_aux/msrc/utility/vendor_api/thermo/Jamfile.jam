@@ -117,12 +117,14 @@ lib pwiz_vendor_api_thermo
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <library>/ext/boost//thread
+        <library>/ext/boost//regex
         <conditional>@vendor-api-requirements
         <conditional>@msvc-requirement
     : # default-build
     : # usage-requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <library>/ext/boost//thread
+        <library>/ext/boost//regex
         <conditional>@vendor-api-usage-requirements
     ;
 

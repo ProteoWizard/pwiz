@@ -841,6 +841,9 @@ class ScanInfoImpl : public ScanInfo
     virtual double precursorMZ(long index, bool preferMonoisotope) const;
     virtual double precursorActivationEnergy(long index) const {return precursorActivationEnergies_[index];}
 
+    virtual ActivationType supplementalActivationType() const {return saType_;}
+    virtual double supplementalActivationEnergy() const {return saEnergy_;}
+
     virtual long parentCount() const {return precursorCount();}
     virtual long parentCharge() const {return precursorCharge();}
     virtual double parentMass(long index, bool preferMonoisotope) const {return precursorMZ(index, preferMonoisotope);}
@@ -888,13 +891,14 @@ class ScanInfoImpl : public ScanInfo
     string filter_;
     MassAnalyzerType massAnalyzerType_;
     IonizationType ionizationType_;
-    ActivationType activationType_;
+    ActivationType activationType_, saType_;
     long msLevel_;
     ScanType scanType_;
     PolarityType polarityType_;
     bool isEnhanced_;
     bool isDependent_;
     bool hasMultiplePrecursors_; // true for "MSX" mode
+    bool supplementalActivation_;
     vector<double> precursorMZs_;
     vector<double> precursorActivationEnergies_;
     vector<pair<double, double> > scanRanges_;
@@ -912,6 +916,7 @@ class ScanInfoImpl : public ScanInfo
     double frequency_;
 	bool faimsOn_;
 	double compensationVoltage_;
+    double saEnergy_;
 
     bool constantNeutralLoss_;
     double analyzerScanOffset_;
@@ -942,12 +947,14 @@ ScanInfoImpl::ScanInfoImpl(long scanNumber, RawFileImpl* raw)
     massAnalyzerType_(MassAnalyzerType_Unknown),
     ionizationType_(IonizationType_Unknown),
     activationType_(ActivationType_Unknown),
+    saType_(ActivationType_Unknown),
     msLevel_(1),
     scanType_(ScanType_Unknown),
     polarityType_(PolarityType_Unknown),
     isEnhanced_(false),
     isDependent_(false),
     hasMultiplePrecursors_(false),
+    supplementalActivation_(false),
     isProfileScan_(false),
     isCentroidScan_(false),
     packetCount_(0),
@@ -960,6 +967,9 @@ ScanInfoImpl::ScanInfoImpl(long scanNumber, RawFileImpl* raw)
     channelCount_(0),
     isUniformTime_(false),
     frequency_(0),
+    faimsOn_(false),
+    compensationVoltage_(0),
+    saEnergy_(0),
     statusLogInitialized_(init_once_flag_proxy),
     statusLogSize_(0),
     statusLogRT_(0),
@@ -1073,6 +1083,14 @@ void ScanInfoImpl::parseFilterString()
     hasMultiplePrecursors_ = filterParser.multiplePrecursorMode_;
     precursorMZs_.insert(precursorMZs_.end(), filterParser.precursorMZs_.begin(), filterParser.precursorMZs_.end());
     precursorActivationEnergies_.insert(precursorActivationEnergies_.end(), filterParser.precursorEnergies_.begin(), filterParser.precursorEnergies_.end());
+
+    supplementalActivation_ = filterParser.supplementalCIDOn_ && activationType_ & ActivationType_ETD;
+    if (supplementalActivation_)
+    {
+        saType_ = filterParser.saTypes_[0];
+        saEnergy_ = filterParser.saEnergies_[0];
+    }
+
     isProfileScan_ = filterParser.dataPointType_ == DataPointType_Profile;
     isCentroidScan_ = filterParser.dataPointType_ == DataPointType_Centroid;
 	faimsOn_ = filterParser.faimsOn_ == TriBool_True;

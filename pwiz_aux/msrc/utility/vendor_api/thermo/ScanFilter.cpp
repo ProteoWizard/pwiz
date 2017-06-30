@@ -27,6 +27,8 @@
 
 #include "ScanFilter.h"
 #include "pwiz/utility/misc/Std.hpp"
+#include <boost/regex.hpp>
+
 using namespace pwiz::vendor_api::Thermo;
 
 /*
@@ -192,9 +194,9 @@ ScanFilter::parsePolarityType(const string& word)
 DataPointType 
 ScanFilter::parseDataPointType(const string& word)
 {
-	if (word == "C")
+	if (bal::iequals(word, "C"))
 		return DataPointType_Centroid;
-	else if (word == "P")
+	else if (bal::iequals(word, "P"))
 		return DataPointType_Profile;
 	else
 		return DataPointType_Unknown;
@@ -203,7 +205,7 @@ ScanFilter::parseDataPointType(const string& word)
 IonizationType 
 ScanFilter::parseIonizationType(const string & word)
 {
-	if (word == "EI" )
+	if (word == "EI")
 		return IonizationType_EI;
 	else if (word == "CI")
 		return IonizationType_CI;
@@ -249,7 +251,7 @@ ScanFilter::parseAccurateMassType(const string& word)
 
 TriBool
 ScanFilter::parseCompensationVoltage(const string& word, double& voltage) {
-  if (word.find("CV=") == string::npos)
+  if (!bal::istarts_with(word, "cv="))
     return TriBool_False;
   else {
 	vector<string> nameVal;
@@ -262,7 +264,7 @@ ScanFilter::parseCompensationVoltage(const string& word, double& voltage) {
 ScanType 
 ScanFilter::parseScanType(const string& word)
 {
-	if (word == "FULL")
+	if (bal::iequals(word, "FULL"))
 		return ScanType_Full;
 	else if (word == "SIM")
 		return ScanType_SIM;
@@ -283,19 +285,19 @@ ScanFilter::parseScanType(const string& word)
 ActivationType 
 ScanFilter::parseActivationType(const string& word)
 {
-	if (word == "CID")
+	if (bal::iequals(word, "CID"))
 		return ActivationType_CID;
-	else if (word == "MPD")
+	else if (bal::iequals(word, "MPD"))
 		return ActivationType_MPD;
-	else if (word == "ECD")
+	else if (bal::iequals(word, "ECD"))
 		return ActivationType_ECD;
-	else if (word == "PQD")
+	else if (bal::iequals(word, "PQD"))
 		return ActivationType_PQD;
-	else if (word == "ETD")
+	else if (bal::iequals(word, "ETD"))
 		return ActivationType_ETD;
-	else if (word == "HCD")
+	else if (bal::iequals(word, "HCD"))
 		return ActivationType_HCD;
-	else if (word == "PTR")
+	else if (bal::iequals(word, "PTR"))
 		return ActivationType_PTR;
 	else
 		return ActivationType_Unknown;
@@ -422,6 +424,8 @@ ScanFilter::initialize()
     msLevel_ = 0;
     precursorMZs_.clear();
 	precursorEnergies_.clear();
+    saTypes_.clear();
+    saEnergies_.clear();
 	scanRangeMin_.clear();
 	scanRangeMax_.clear();
     compensationVoltage_ = 0.;
@@ -430,6 +434,39 @@ ScanFilter::initialize()
     analyzer_scan_offset_ = 0;
 }
 
+TriBool parseThermoBool(const boost::ssub_match& m)
+{
+    if (m.matched)
+        return *m.first == '!' ? TriBool_False : TriBool_True;
+    return TriBool_Unknown;
+}
+
+const static boost::regex filterRegex("^(?<analyzer>FTMS|ITMS|TQMS|SQMS|TOFMS|SECTOR)?\\s*"
+                         "(?:\\{(?<segment>\\d+),(?<event>\\d+)\\})?\\s*"
+                         "(?<polarity>\\+|-)\\s*"
+                         "(?<dataType>p|c)\\s*"
+                         "(?<source>EI|CI|FAB|ESI|APCI|NSI|TSP|FD|MALDI|GD)?\\s*"
+                         "(?<corona>!corona|corona)?\\s*"
+                         "(?<photoIonization>!pi|pi)?\\s*"
+                         "(?<sourceCID>!sid|sid=\\d+(?:\\.\\d+))?\\s*"
+                         "(?<detectorSet>!det|det=\\d+(?:\\.\\d+))?\\s*"
+                         "(?:cv=(?<compensationVoltage>-?\\d+(?:\\.\\d+)?))?\\s*"
+                         "(?<rapid>!r|r)?\\s*"
+                         "(?<turbo>!t|t)?\\s*"
+                         "(?<enhanced>!e|e)?\\s*"
+                         "(?<sps>SPS|K)?\\s*"
+                         "(?<dependent>\\!d|d)?\\s*"
+                         "(?<wideband>!w|w)?\\s*"
+                         "(?<ultra>!u|u)?\\s*"
+                         "(?<supplementalActivation>sa)?\\s*"
+                         "(?<accurateMass>!AM|AM|AMI|AME)?\\s*"
+                         "(?<scanType>FULL|SIM|SRM|CRM|Z|Q1MS|Q3MS)?\\s*"
+                         "(?<lockmass>lock)?\\s*"
+                         "(?<multiplex>msx)?\\s*"
+                         "(?<msMode>pr|(?:ms(?<msLevel>\\d+)?)|(?:cnl(?<analyzerScanOffset> \\d+(?:\\.\\d+)?)?)?)"
+                         "(?:\\s*(?<precursorMz>\\d+(?:\\.\\d+)?)(?:@(?<activationType>cid|hcd|etd)?(?<activationEnergy>-?\\d+(?:\\.\\d+)?))(?:@(?<saType>cid|hcd)?(?<saEnergy>-?\\d+(?:\\.\\d+)?))?)*\\s*"
+                         "(?:\\[(?:(?:, )?(?<scanRangeStart>\\d+(?:\\.\\d+)?)-(?<scanRangeEnd>\\d+(?:\\.\\d+)?))+\\])?$",
+                         boost::regex_constants::icase);
 
 void 
 ScanFilter::parse(const string& filterLine)
@@ -438,471 +475,125 @@ ScanFilter::parse(const string& filterLine)
 
     try
     {
+        boost::smatch what;
+        if (!boost::regex_match(filterLine, what, filterRegex, boost::match_extra))
+            throw runtime_error("[ScanFilter::parse()] error parsing \"" + filterLine + "\"");
 
-	    // almost all of the fields are optional
-        string filterLineCopy(filterLine);
-	    boost::to_upper(filterLineCopy);
-	    stringstream s(filterLineCopy);
-	    string w;
+        massAnalyzerType_ = parseMassAnalyzerType(what["analyzer"]);
 
-	    if (s.eof())
-		    return; // ok, empty line
-
-	    s >> w;
-
-	    massAnalyzerType_ = parseMassAnalyzerType(w);
-	    if (massAnalyzerType_ > ScanFilterMassAnalyzerType_Unknown) {
-		    // "analyzer" field was present
-		    if (s.eof())
-			    return;
-
-		    s >> w;
-	    }
-
-        // read Exactive scan segment and scan event
-        if (*w.begin() == '{' && *w.rbegin() == '}')
+        const auto& segment = what["segment"];
+        if (segment.matched)
         {
-            boost::trim_if(w, boost::is_any_of("{ }")); // trim flanking brackets and whitespace
-	        vector<string> segmentEventPair;
-	        boost::split(segmentEventPair, w, boost::is_any_of(","));
-		    segment_ = (int)lexical_cast<double>(segmentEventPair[0]);
-		    event_ = (int)lexical_cast<double>(segmentEventPair[1]);
-		    s >> w;
-	    }
-
-	    polarityType_ = parsePolarityType(w);
-	    if (polarityType_ > PolarityType_Unknown) {
-		    // "polarity" field was present
-		    if (s.eof())
-			    return;
-
-		    s >> w;
-	    }
-
-	    dataPointType_ = parseDataPointType(w);
-	    if (dataPointType_ > DataPointType_Unknown) {
-		    // "scan data type" field present
-		    if (s.eof())
-			    return;
-
-		    s >> w;
-	    }
-
-	    ionizationType_ = parseIonizationType(w);
-	    if (ionizationType_ > IonizationType_Unknown) {
-		    // "ionization mode" field present
-		    if (s.eof())
-			    return;
-
-		    s >> w;
-	    }
-
-	    bool advance = false;
-
-	    // corona
-	    if (w == "!CORONA") {
-		    coronaOn_ = TriBool_False;
-		    advance = true;
-	    }
-	    else if (w == "CORONA") {
-		    coronaOn_ = TriBool_True;
-		    advance = true;
-	    }
-	    if (advance) {
-		    if (s.eof())
-			    return;
-
-		    s >> w;
-		    advance = false;
-	    }
-
-	    // photoIonization
-	    if (w == "!PI") {
-		    photoIonizationOn_ = TriBool_False;
-		    advance = true;
-	    }
-	    else if (w == "PI") {
-		    photoIonizationOn_ = TriBool_True;
-		    advance = true;
-	    }
-	    if (advance) {
-		    if (s.eof())
-			    return;
-
-		    s >> w;
-		    advance = false;
-	    }
-
-	    // source CID
-	    if (w == "!SID") {
-		    sourceCIDOn_ = TriBool_False;
-		    advance = true;
-	    }
-	    else if (w.find("SID") == 0) { // handle cases where SID energy is explicit
-		    sourceCIDOn_ = TriBool_True;
-		    advance = true;
-	    }
-	    if (advance) {
-		    if (s.eof())
-			    return;
-
-		    s >> w;
-		    advance = false;
-	    }
-
-
-	    // detector
-	    if (w == "!DET") {
-		    detectorSet_ = TriBool_False;
-		    advance = true;
-	    }
-        else if (bal::starts_with(w, "DET")) {
-		    detectorSet_ = TriBool_True;
-		    advance = true;
-	    }
-	    if (advance) {
-		    if (s.eof())
-			    return;
-
-		    s >> w;
-		    advance = false;
-	    }
-
-
-        faimsOn_ = parseCompensationVoltage(w, compensationVoltage_) ? TriBool_True : TriBool_Unknown;
-
-        if (faimsOn_ == TriBool_True)
-            s >> w;
-
-
-	    // rapid
-	    if (w == "R") {
-		    turboScanOn_ = TriBool_True;
-		    advance = true;
-	    }
-	    if (advance) {
-		    if (s.eof())
-			    return;
-
-		    s >> w;
-		    advance = false;
-	    }
-
-
-	    // turboscan
-	    if (w == "!T") {
-		    turboScanOn_ = TriBool_False;
-		    advance = true;
-	    }
-	    else if (w == "T") {
-		    turboScanOn_ = TriBool_True;
-		    advance = true;
-	    }
-	    if (advance) {
-		    if (s.eof())
-			    return;
-
-		    s >> w;
-		    advance = false;
-	    }
-
-
-        // enhanced mode
-	    if (w == "!E") {
-		    enhancedOn_ = TriBool_False;
-		    advance = true;
-	    }
-	    else if (w == "E") {
-		    enhancedOn_ = TriBool_True;
-		    advance = true;
-	    }
-	    if (advance) {
-		    if (s.eof())
-			    return;
-
-		    s >> w;
-		    advance = false;
+            segment_ = (int)lexical_cast<double>(segment);
+            event_ = (int)lexical_cast<double>(what["event"]);
         }
 
+        polarityType_ = parsePolarityType(what["polarity"]);
+        dataPointType_ = parseDataPointType(what["dataType"]);
+        ionizationType_ = parseIonizationType(what["source"]);
 
-        // SPS mode
-        if (w == "SPS" || w == "K") {
-            spsOn_ = TriBool_True;
-            advance = true;
-        }
-        if (advance) {
-            if (s.eof())
-                return;
+        coronaOn_ = parseThermoBool(what["corona"]);
+        photoIonizationOn_ = parseThermoBool(what["photoIonization"]);
+        sourceCIDOn_ = parseThermoBool(what["sourceCID"]);
+        detectorSet_ = parseThermoBool(what["detectorSet"]);
 
-            s >> w;
-            advance = false;
-        }
+        turboScanOn_ = parseThermoBool(what["rapid"]);
+        if (turboScanOn_ == TriBool_Unknown)
+            turboScanOn_ = parseThermoBool(what["turbo"]);
 
+        spsOn_ = what["sps"].matched ? TriBool_True : TriBool_Unknown;
 
-	    // dependent type
-	    if (w == "!D") {
-		    dependentActive_ = TriBool_False;
-		    advance = true;
-	    }
-	    else if (w == "D") {
-		    dependentActive_ = TriBool_True;
-		    advance = true;
-	    }
-	    if (advance) {
-		    if (s.eof())
-			    return;
+        enhancedOn_ = parseThermoBool(what["enhanced"]);
+        dependentActive_ = parseThermoBool(what["dependent"]);
+        widebandOn_ = parseThermoBool(what["wideband"]);
+        ultraOn_ = parseThermoBool(what["ultra"]);
+        supplementalCIDOn_ = parseThermoBool(what["supplementalActivation"]);
+        lockMassOn_ = parseThermoBool(what["lockmass"]);
+        multiplePrecursorMode_ = what["multiplex"].matched;
 
-		    s >> w;
-		    advance = false;
-	    }
-
-	    // wideband
-	    if (w == "!W") {
-		    widebandOn_ = TriBool_False;
-		    advance = true;
-	    }
-	    else if (w == "W") {
-		    widebandOn_ = TriBool_True;
-		    advance = true;
-	    }
-	    if (advance) {
-		    if (s.eof())
-			    return;
-
-		    s >> w;
-		    advance = false;
-	    }
-
-	    // ultra mode
-	    if (w == "!U") {
-		    ultraOn_ = TriBool_False;
-		    advance = true;
-	    }
-	    else if (w == "U") {
-            ultraOn_ = TriBool_True;
-		    advance = true;
-	    }
-	    if (advance) {
-		    if (s.eof())
-			    return;
-
-		    s >> w;
-		    advance = false;
-	    }
-
-        // supplemental CID activation
-        if (w == "SA") {
-            supplementalCIDOn_ = TriBool_True;
-            advance = true;
-        }
-        if (advance) {
-            if (s.eof())
-                return;
-
-            s >> w;
-            advance = false;
-        }
-
-	    accurateMassType_ = parseAccurateMassType(w);
-	    if (accurateMassType_ > AccurateMass_Unknown) {
-		    // "accurate mass" field present
-		    if (s.eof())
-			    return;
-
-		    s >> w;
-	    }
-
-	    scanType_ = parseScanType(w);
-	    if (scanType_ > ScanType_Unknown) {
-		    if (scanType_ == ScanType_Q1MS || scanType_ == ScanType_Q3MS)
-            {
-			    msLevel_ = 1;
-                scanType_ = ScanType_Full;
-            }
-
-		    // "scan type" field present
-		    if (s.eof())
-			    return;
-
-            s >> w;
-	    }
-
-        if (w == "LOCK")
+        const auto& compensationVoltage = what["compensationVoltage"];
+        if (compensationVoltage.matched)
         {
-            lockMassOn_ = TriBool_True;
-
-            if (s.eof())
-                return;
-
-            s >> w;
+            faimsOn_ = TriBool_True;
+            compensationVoltage_ = lexical_cast<double>(compensationVoltage);
         }
 
-        if (w == "MSX")
+        accurateMassType_ = parseAccurateMassType(what["accurateMass"]);
+
+        scanType_ = parseScanType(what["scanType"]);
+        if (scanType_ == ScanType_Q1MS || scanType_ == ScanType_Q3MS)
         {
-            multiplePrecursorMode_ = true;
-
-            if (s.eof())
-                return;
-
-            s >> w;
+            msLevel_ = 1;
+            scanType_ = ScanType_Full;
         }
 
-
-        // MS order or PR keyword
-        if (w == "PR")
+        const auto& msMode = what["msMode"].str();
+        const auto& msLevel = what["msLevel"];
+        if (bal::iequals(msMode, "pr"))
         {
             msLevel_ = -1; // special value in lieu of an extra boolean + msLevel=0
-
-            if (s.eof())
-                return;
-
-            s >> w;
         }
-        else if (bal::starts_with(w, "MS"))
+        else if (bal::istarts_with(msMode, "ms"))
         {
-            if (w.length() == 2) {
+            if (!msLevel.matched)
                 msLevel_ = 1; // just "MS"
-            } else {
-                // MSn: extract int n
-                w.erase(0, 2);
-                msLevel_ = lexical_cast<int>(w); // take number after "ms"
-            }
-            if (s.eof())
-                return;
-
-            s >> w;
-        }
-        else if (bal::starts_with(w, "CNL"))
-        {
-            msLevel_ = 2; 
-            constantNeutralLoss_ = true;
-            if (s.eof())
-                return;
-            s >> w;
-        }
-
-        // for CNL expect to find MS_analyzer_scan_offset
-        if (constantNeutralLoss_)
-        {
-            analyzer_scan_offset_ = lexical_cast<double>(w);
-            s >> w;
-        }
-	    // for MS level > 1, expect one or more <isolation m/z>@<activation><energy> tuples
-	    else if (msLevel_ == -1 || msLevel_ > 1)
-        {
-            // if the marker is found, expect a <isolation m/z>@<activation><energy> tuple
-		    size_t markerPos = w.find('@');
-
-            if (markerPos == string::npos)
-            {
-                precursorMZs_.push_back(lexical_cast<double>(w));
-                precursorEnergies_.push_back(0.0);
-
-	            if (s.eof())
-		            return;
-
-	            s >> w;
-            }
             else
+                msLevel_ = lexical_cast<int>(msLevel); // take number after "ms"
+        }
+        else if (bal::istarts_with(msMode, "cnl"))
+        {
+            msLevel_ = 2;
+            constantNeutralLoss_ = true;
+
+            // for CNL expect to find MS_analyzer_scan_offset
+            analyzer_scan_offset_ = lexical_cast<double>(bal::trim_copy(what["analyzerScanOffset"].str()));
+        }
+
+        // for MS level > 1, expect one or more <isolation m/z>@<activation><energy> tuples (but activation type is optional, and there can be more than one @<activation><energy> suffix)
+        if (msLevel_ == -1 || msLevel_ > 1)
+        {
+            const auto& precursorMZs = what["precursorMz"].captures();
+            for (const auto& precursorMz : precursorMZs) precursorMZs_.push_back(lexical_cast<double>(precursorMz));
+
+            const auto& activationTypes = what["activationType"].captures();
+            if (!activationTypes.empty())
+                activationType_ = parseActivationType(activationTypes[0]); // only use activation type from current precursor
+
+            const auto& activationEnergies = what["activationEnergy"].captures();
+            for (const auto& activationEnergy : activationEnergies) precursorEnergies_.push_back(lexical_cast<double>(activationEnergy));
+
+            if (supplementalCIDOn_ == TriBool_True &&
+                activationType_ & ActivationType_ETD &&
+                !(activationType_ & ActivationType_CID || activationType_ & ActivationType_HCD))
             {
-                do
-                {
-		            char c=w[0];
-		            if (!(c >= '0' && c <= '9'))
-			            throw runtime_error("don't know how to parse \"" + w + "\"");
+                const auto& saTypes = what["saType"].captures();
+                for (const auto& saType : saTypes) saTypes_.push_back(parseActivationType(saType));
 
-	                size_t energyPos = markerPos+1;
-	                c = w[energyPos];
-	                if ((c < '0' || c > '9') && c != '-' && c != '+')
-                    {
-		                energyPos = w.find_first_of("0123456789-+", energyPos); // find first numeric character after the "@"
-		                if (energyPos != string::npos) {
+                const auto& saEnergies = what["saEnergy"].captures();
+                for (const auto& saEnergy : saEnergies) saEnergies_.push_back(lexical_cast<double>(saEnergy));
 
-                            ActivationType currentType = parseActivationType(w.substr(markerPos+1, energyPos-markerPos-1));
-
-                            // CONSIDER: does detector set always mean CID is really HCD?
-                            if (detectorSet_ == TriBool_True &&
-                                massAnalyzerType_ == ScanFilterMassAnalyzerType_FTMS &&
-                                currentType == ActivationType_CID)
-                                currentType = ActivationType_HCD;
-
-                            // only parse the left-most activation type because that corresponds to the current MS level
-                            if (activationType_ == ActivationType_Unknown)
-                            {
-                                activationType_ = currentType;
-                                if (supplementalCIDOn_ == TriBool_True)
-                                    activationType_ = static_cast<ActivationType>(activationType_ | ActivationType_CID);
-                                if (activationType_ == ActivationType_Unknown)
-                                    throw runtime_error("failed to parse activation type");
-                            }
-		                } else
-			                throw runtime_error("failed to find activation energy");
-	                }
-
-	                string mass = w.substr(0, markerPos);
-	                string energy = w.substr(energyPos);
-	                // cout << "got mass " << mass << " at " << energy << " energy using activation " << (int) activationMethod_ << " (from " << w << ")" << endl;
-	                precursorMZs_.push_back(lexical_cast<double>(mass));
-	                precursorEnergies_.push_back(lexical_cast<double>(energy));
-
-	                if (s.eof())
-		                return;
-
-	                s >> w;
-
-                    markerPos = w.find('@');
-                } while (markerPos != string::npos);
+                // CONSIDER: does detector set always mean CID is really HCD?
+                if (detectorSet_ == TriBool_True &&
+                    massAnalyzerType_ == ScanFilterMassAnalyzerType_FTMS)
+                    activationType_ = static_cast<ActivationType>(activationType_ | ActivationType_HCD);
+                else if (!saTypes_.empty())
+                    activationType_ = static_cast<ActivationType>(activationType_ | saTypes_[0]); // only use SA type from current precursor
+                else
+                    activationType_ = static_cast<ActivationType>(activationType_ | ActivationType_CID);
             }
-	    }
-
-	    // try to get activation type if not already set
-	    if (activationType_ == ActivationType_Unknown) {
-		    activationType_ = parseActivationType(w);
-
-            // CONSIDER: does detector set always mean CID is really HCD?
-            if (detectorSet_ == TriBool_True &&
-                massAnalyzerType_ == ScanFilterMassAnalyzerType_FTMS &&
-                activationType_ == ActivationType_CID)
+            else if (detectorSet_ == TriBool_True &&
+                     massAnalyzerType_ == ScanFilterMassAnalyzerType_FTMS &&
+                     activationType_ == ActivationType_CID)
+            {
                 activationType_ = ActivationType_HCD;
-		    else if (activationType_ > ActivationType_Unknown) {
-			    // "activation type" field present
-			    if (s.eof())
-				    return;
+            }
+        }
 
-			    s >> w;
-		    }
-	    }
+        const auto& scanRangeStarts = what["scanRangeStart"].captures();
+        for (const auto& scanRangeStart : scanRangeStarts) scanRangeMin_.push_back(lexical_cast<double>(scanRangeStart));
 
-
-	    // product masses or mass ranges
-	    // TODO: parse single values, for SIM, SRM, CRM
-	    // some test based on ms level?
-
-	    string w2;
-	    std::getline(s, w2); // get all tokens until closing bracket
-	    w.append(w2);
-	    boost::trim_if(w, boost::is_any_of("[ ]")); // trim flanking brackets and whitespace
-	    vector<string> massRangeStrs;
-	    boost::split(massRangeStrs, w, boost::is_any_of(","));
-	    for(size_t i=0; i < massRangeStrs.size(); ++i)
-	    {
-		    string& massRangeStr = massRangeStrs[i]; // "<rangeMin>-<rangeMax>"
-		    boost::trim(massRangeStr); // trim flanking whitespace
-		    vector<string> rangeMinMaxStrs;
-		    boost::split(rangeMinMaxStrs, massRangeStr, boost::is_any_of("-"));
-		    scanRangeMin_.push_back(lexical_cast<double>(rangeMinMaxStrs[0]));
-		    scanRangeMax_.push_back(lexical_cast<double>(rangeMinMaxStrs[1]));
-	    }
-
-	    if (s.eof())
-		    return;
-	    else {
-            ostringstream oss("unparsed scan filter elements: ");
-		    do {
-			    oss << w << endl;
-		    } while (s >> w);
-            throw runtime_error(oss.str());
-	    }
+        const auto& scanRangeEnds = what["scanRangeEnd"].captures();
+        for (const auto& scanRangeEnd : scanRangeEnds) scanRangeMax_.push_back(lexical_cast<double>(scanRangeEnd));
     }
     catch (exception& e)
     {

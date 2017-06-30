@@ -273,6 +273,9 @@ class PWIZ_API_DECL ScanInfo
     virtual double precursorMZ(long index, bool preferMonoisotope = true) const = 0;
     virtual double precursorActivationEnergy(long index) const = 0;
 
+    virtual ActivationType supplementalActivationType() const = 0;
+    virtual double supplementalActivationEnergy() const = 0;
+
     // "parent" synonym is deprecated
     virtual long parentCount() const = 0;
     virtual long parentCharge() const = 0;
