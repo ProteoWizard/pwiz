@@ -151,9 +151,13 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 activationType = ActivationType_CID; // assume CID
             string polarity = polarityStringForFilter(ci.polarityType);
 
-            SetActivationType(activationType, result->precursor.activation);
+            bool hasSupplemental = filterParser.supplementalCIDOn_ && !filterParser.saTypes_.empty() && filterParser.activationType_ == ActivationType_ETD;
+
+            setActivationType(activationType, hasSupplemental ? filterParser.saTypes_[0] : ActivationType_Unknown, result->precursor.activation);
             if (filterParser.activationType_ == ActivationType_CID)
                 result->precursor.activation.set(MS_collision_energy, filterParser.precursorEnergies_[0]);
+            if (hasSupplemental && !filterParser.saEnergies_.empty())
+                result->precursor.activation.set(MS_supplemental_collision_energy, filterParser.saEnergies_[0]);
 
             result->product.isolationWindow.set(MS_isolation_window_target_m_z, ci.q3, MS_m_z);
             result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
