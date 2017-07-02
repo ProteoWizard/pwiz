@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     [XmlRoot("legacy_peak_scoring_model")] // Not L10N
     public class LegacyScoringModel : PeakScoringModelSpec
     {
-        public static readonly string DEFAULT_NAME = Resources.LegacyScoringModel_DEFAULT_NAME_Default;
+        public static string DEFAULT_NAME { get { return Resources.LegacyScoringModel_DEFAULT_NAME_Default; } } 
 
         public static readonly double[] DEFAULT_WEIGHTS = {W0, W1, W2, W3, W4, W5, W6};
 

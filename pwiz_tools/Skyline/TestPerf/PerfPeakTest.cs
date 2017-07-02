@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -326,7 +327,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 RunEditPeakScoringDlg(null, true, editPeakScoringModelDlg =>
                 {
                     editPeakScoringModelDlg.PeakScoringModelName = MODEL_NAMES[0];
-                    editPeakScoringModelDlg.SelectedModelItem = "mProphet";
+                    editPeakScoringModelDlg.SelectedModelItem = MProphetPeakScoringModel.NAME;
                     editPeakScoringModelDlg.UsesDecoys = false;
                     editPeakScoringModelDlg.UsesSecondBest = true;
                     editPeakScoringModelDlg.TrainModel(true);
@@ -335,7 +336,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 RunEditPeakScoringDlg(null, true, editPeakScoringModelDlg =>
                 {
                     editPeakScoringModelDlg.PeakScoringModelName = MODEL_NAMES[1];
-                    editPeakScoringModelDlg.SelectedModelItem = "Default";
+                    editPeakScoringModelDlg.SelectedModelItem = LegacyScoringModel.DEFAULT_NAME;
                     editPeakScoringModelDlg.UsesDecoys = false;
                     editPeakScoringModelDlg.UsesSecondBest = true;
                     editPeakScoringModelDlg.TrainModel(true);
@@ -344,7 +345,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 RunEditPeakScoringDlg(null, true, editPeakScoringModelDlg =>
                 {
                     editPeakScoringModelDlg.PeakScoringModelName = MODEL_NAMES[2];
-                    editPeakScoringModelDlg.SelectedModelItem = "Default";
+                    editPeakScoringModelDlg.SelectedModelItem = LegacyScoringModel.DEFAULT_NAME;
                     editPeakScoringModelDlg.UsesDecoys = false;
                     editPeakScoringModelDlg.UsesSecondBest = true;
                     editPeakScoringModelDlg.PeakCalculatorsGrid.Items[6].IsEnabled = false;
@@ -359,7 +360,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     RunEditPeakScoringDlg(null, true, editPeakScoringModelDlg =>
                     {
                         editPeakScoringModelDlg.PeakScoringModelName = MODEL_NAMES[3];
-                        editPeakScoringModelDlg.SelectedModelItem = "mProphet";
+                        editPeakScoringModelDlg.SelectedModelItem = MProphetPeakScoringModel.NAME;
                         editPeakScoringModelDlg.UsesDecoys = true;
                         editPeakScoringModelDlg.UsesSecondBest = false;
                         editPeakScoringModelDlg.TrainModel(true);
@@ -425,6 +426,24 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             private static void AddFile(ComparePeakPickingDlg dlg, string fileName, string filePath, int dialogSkip = 0)
             {
+                if (TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV_INTL)
+                {
+                    var filePathIntl = Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty,
+                        Path.GetFileNameWithoutExtension(filePath) + "Intl" + Path.GetExtension(filePath));
+                    string[] fileLines = File.ReadAllLines(filePath);
+                    for (int i = 0; i < fileLines.Length; i++)
+                    {
+                        string line = fileLines[i];
+                        bool tsv = line.Contains(TextUtil.SEPARATOR_TSV);
+                        if (!tsv)
+                            line = line.Replace(TextUtil.SEPARATOR_CSV, TextUtil.SEPARATOR_CSV_INTL);
+                        if (i > 0)
+                            line = ReplaceDecimalPoint(line, tsv);
+                        fileLines[i] = line;
+                    }
+                    File.WriteAllLines(filePathIntl, fileLines);
+                    filePath = filePathIntl;
+                }
                 var addPeakCompareDlg = ShowDialog<AddPeakCompareDlg>(dlg.Add);
                 RunUI(() =>
                 {
@@ -456,6 +475,23 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     Assert.Fail("Unexpected message dialog after {0}: {1}", dialogSkip, message);
                 }
                 WaitForClosedForm<AddPeakCompareDlg>();
+            }
+
+            private static string ReplaceDecimalPoint(string line, bool tsv)
+            {
+                char separator = tsv ? TextUtil.SEPARATOR_TSV : TextUtil.SEPARATOR_CSV_INTL;
+                var fields = line.Split(separator);
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    string field = fields[i];
+                    string fieldConverted = field
+                        .Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+                    double fieldValue;
+                    // Convert if the field is numeric or contains modifications
+                    if (double.TryParse(fieldConverted, out fieldValue) || new Regex("\\[[+-]\\d+\\.\\d\\]").IsMatch(field))
+                        fields[i] = fieldConverted;
+                }
+                return string.Join(separator.ToString(), fields);
             }
 
             public static void TrainModel(string modelName)
