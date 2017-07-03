@@ -227,6 +227,7 @@
     <Component Feature="MainFeature"><File Id="_boost_regex.dll" Name="boost_regex-vc90-mt-1_37-x64-BDAL_20091123.dll" Source="msvc-release\boost_regex-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Id="_boost_system.dll" Name="boost_system-vc90-mt-1_37-x64-BDAL_20091123.dll" Source="msvc-release\boost_system-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Id="_boost_thread.dll" Name="boost_thread-vc90-mt-1_37-x64-BDAL_20091123.dll" Source="msvc-release\boost_thread-vc90-mt-1_37-x64-BDAL_20091123.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_timsdata.dll" Name="timsdata.dll" Source="msvc-release\timsdata.dll" KeyPath="yes"/></Component>
 <?else?>   
     <Component Feature="MainFeature"><File Id="_boost_date_time.dll" Name="boost_date_time-vc90-mt-1_37-BDAL_20091123.dll" Source="msvc-release\boost_date_time-vc90-mt-1_37-BDAL_20091123.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Id="_boost_regex.dll" Name="boost_regex-vc90-mt-1_37-BDAL_20091123.dll" Source="msvc-release\boost_regex-vc90-mt-1_37-BDAL_20091123.dll" KeyPath="yes"/></Component>
