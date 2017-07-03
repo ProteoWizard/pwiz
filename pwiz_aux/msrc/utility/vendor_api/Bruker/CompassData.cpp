@@ -28,7 +28,10 @@
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "CompassData.hpp"
 #include "Baf2Sql.hpp"
+
+#ifdef WIN64
 #include "TimsData.hpp"
+#endif
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
@@ -669,8 +672,10 @@ PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath,
 {
     if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
         return CompassDataPtr(new Baf2SqlImpl(rawpath));
+#ifdef WIN64
     else if (format == Reader_Bruker_Format_TDF)
         return CompassDataPtr(new TimsDataImpl(rawpath, false));
+#endif
 
     try {return CompassDataPtr(new CompassDataImpl(rawpath, format));} CATCH_AND_FORWARD
 }
