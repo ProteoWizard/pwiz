@@ -58,6 +58,9 @@ namespace pwiz.Skyline
     public static class Program
     {
         public const int LICENSE_VERSION_CURRENT = 5;   // Added Shimadzu license
+        public const int EXIT_CODE_SUCCESS = 0;
+        public const int EXIT_CODE_FAILURE_TO_START = 1;
+        public const int EXIT_CODE_RAN_WITH_ERRORS = 2;
 
         public static string MainToolServiceName { get; private set; }
         
@@ -88,7 +91,7 @@ namespace pwiz.Skyline
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        public static void Main(string[] args = null)
+        public static int Main(string[] args = null)
         {
             if (String.IsNullOrEmpty(Settings.Default.InstallationId)) // Each instance to have GUID
                 Settings.Default.InstallationId = Guid.NewGuid().ToString();
@@ -102,7 +105,7 @@ namespace pwiz.Skyline
                     string.Format(Resources.Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version, Name),
                     installLabel,
                     installUrl);
-                return;
+                return 1;
             }
 
             SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections, esp. Chorus
@@ -136,7 +139,7 @@ namespace pwiz.Skyline
                     }
                     else
                     {
-                        CommandLineRunner.RunCommand(args, writer);
+                        return CommandLineRunner.RunCommand(args, writer);
                     }
                 }
                 else
@@ -146,7 +149,7 @@ namespace pwiz.Skyline
                     clr.Start(args[0]);
                 }
 
-                return;
+                return EXIT_CODE_SUCCESS;
             }
             // The way Skyline command-line interface is run for an installation
             else if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
@@ -159,7 +162,7 @@ namespace pwiz.Skyline
 
                 // HACK: until the "invalid string binding" error is resolved, this will prevent an error dialog at exit
                 Process.GetCurrentProcess().Kill();
-                return;
+                return EXIT_CODE_SUCCESS;
             }
 
             try
@@ -193,7 +196,7 @@ namespace pwiz.Skyline
                         using (var dlg = new UpgradeLicenseDlg(licenseVersion))
                         {
                             if (dlg.ShowDialog() == DialogResult.Cancel)
-                                return;
+                                return EXIT_CODE_FAILURE_TO_START;
                         }
                     }
 
@@ -266,7 +269,7 @@ namespace pwiz.Skyline
                             if (StartWindow.ShowDialog() != DialogResult.OK)
                             {
                                 Application.Exit();
-                                return;
+                                return EXIT_CODE_SUCCESS;
                             }
 
                             MainWindow = StartWindow.MainWindow;
@@ -309,6 +312,7 @@ namespace pwiz.Skyline
             }
 
             MainWindow = null;
+            return EXIT_CODE_SUCCESS;
         }
 
         private static void SystemEventsOnDisplaySettingsChanged(object sender, EventArgs eventArgs)
@@ -598,11 +602,11 @@ namespace pwiz.Skyline
             return arg.Length > COMMAND_PREFIX.Length ? arg.Substring(COMMAND_PREFIX.Length) : string.Empty;
         }
 
-        public static void RunCommand(string[] inputArgs, CommandStatusWriter consoleOut)
+        public static int RunCommand(string[] inputArgs, CommandStatusWriter consoleOut)
         {
             using (CommandLine cmd = new CommandLine(consoleOut))
             {
-                cmd.Run(inputArgs);
+                return cmd.Run(inputArgs);
             }
         }
 

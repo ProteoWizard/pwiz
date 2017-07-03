@@ -78,7 +78,7 @@ namespace pwiz.Skyline
 
         public ResultsMemoryDocumentContainer DocContainer { get; private set; }
 
-        public void Run(string[] args)
+        public int Run(string[] args)
         {
             _importedResults = false;
 
@@ -87,7 +87,7 @@ namespace pwiz.Skyline
             if(!commandArgs.ParseArgs(args))
             {
                 _out.WriteLine(Resources.CommandLine_Run_Exiting___);
-                return;
+                return Program.EXIT_CODE_FAILURE_TO_START;
             }
 
             if (!string.IsNullOrEmpty(commandArgs.LogFile))
@@ -104,7 +104,7 @@ namespace pwiz.Skyline
                 catch (Exception)
                 {
                     oldOut.WriteLine(Resources.CommandLine_Run_Error__Failed_to_open_log_file__0_, commandArgs.LogFile);
-                    return;
+                    return Program.EXIT_CODE_FAILURE_TO_START;
                 }
                 using (oldOut)
                 {
@@ -131,12 +131,12 @@ namespace pwiz.Skyline
             if (commandArgs.ImportingSkyr)
             {
                 if (!ImportSkyr(commandArgs.SkyrPath, commandArgs.ResolveSkyrConflictsBySkipping))
-                    return;
+                    return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
             if (!commandArgs.RequiresSkylineDocument)
             {
                 // Exit quietly because Run(args[]) ran sucessfully. No work with a skyline document was called for.
-                return;
+                return Program.EXIT_CODE_SUCCESS;
             }
 
             _skylineFile = commandArgs.SkylineFile;
@@ -144,7 +144,7 @@ namespace pwiz.Skyline
                 (_skylineFile == null && _doc == null))
             {
                 _out.WriteLine(Resources.CommandLine_Run_Exiting___);
-                return;
+                return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
 
             try
@@ -166,6 +166,7 @@ namespace pwiz.Skyline
             {
                 DocContainer = null;
             }
+            return Program.EXIT_CODE_SUCCESS;
         }
 
         private void ProcessDocument(CommandArgs commandArgs)

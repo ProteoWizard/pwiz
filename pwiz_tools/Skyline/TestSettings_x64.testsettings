@@ -44,6 +44,7 @@
     <DeploymentItem filename="unimod_2.xsd" />
     <DeploymentItem filename="quantitation_1.xsd" />
     <DeploymentItem filename="quantitation_2.xsd" />
+    <DeploymentItem filename="SkylineCmd.exe" />
   </Deployment>
   <Execution hostProcessPlatform="MSIL">
     <Timeouts runTimeout="4800000" testTimeout="480000" />

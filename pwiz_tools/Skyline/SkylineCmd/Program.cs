@@ -25,7 +25,7 @@ namespace pwiz.SkylineCmd
     class Program
     {
         [STAThread]
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             Assembly assembly;
             // SkylineCmd and Skyline must be in the same directory
@@ -47,7 +47,7 @@ namespace pwiz.SkylineCmd
             }
             var programClass = assembly.GetType("pwiz.Skyline.Program"); // Not L10N
             var mainFunction = programClass.GetMethod("Main"); // Not L10N
-            mainFunction.Invoke(null, new object[]{args});
+            return (int) mainFunction.Invoke(null, new object[]{args});
         }
     }
 }

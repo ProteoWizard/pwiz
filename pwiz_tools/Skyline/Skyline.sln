@@ -248,8 +248,8 @@ Global
 		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Debug|x86.Build.0 = Debug|x86
 		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x64.ActiveCfg = Release|x64
 		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x64.Build.0 = Release|x64
-		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x86.ActiveCfg = Release|x64
-		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x86.Build.0 = Release|x64
+		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x86.ActiveCfg = Release|x86
+		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

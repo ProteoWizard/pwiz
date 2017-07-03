@@ -44,6 +44,7 @@
     <DeploymentItem filename="unimod_2.xsd" />
     <DeploymentItem filename="quantitation_1.xsd" />
     <DeploymentItem filename="quantitation_2.xsd" />
+    <DeploymentItem filename="SkylineCmd.exe" />
   </Deployment>
   <Execution>
     <Timeouts runTimeout="2400000" testTimeout="240000" />
