@@ -152,6 +152,10 @@ for line in open(logfile):
 			iseek = iseek.rpartition(pwizinc)[0]
 		if ("libraries/boost_aux" in line) : # forward looking boostiness
 			includes.add("libraries/boost_aux")
+		if ("libraries/Eigen" in line) : #  make sure we ship Eigen and include it
+			includes.add("libraries/Eigen")
+		if ("libraries/CSpline" in line) : #  make sure we ship CSpline and include it
+			includes.add("libraries/CSpline")
 #print tests
 #print srcs
 # print libnames
