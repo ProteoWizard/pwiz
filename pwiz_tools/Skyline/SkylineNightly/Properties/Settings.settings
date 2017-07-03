@@ -8,19 +8,10 @@
     <Setting Name="NightlyFolder" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="PerfTests" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+    <Setting Name="mode1" Type="System.String" Scope="User">
+      <Value Profile="(Default)">trunk</Value>
     </Setting>
-    <Setting Name="ReleaseBranch" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="StressTests" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="IntegrationBranchRun" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="ScheduledArg" Type="System.String" Scope="User">
+    <Setting Name="mode2" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>
