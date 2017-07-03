@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Model.Lib
                                 continue;
                             }
                             float[] correlationArray = PrimitiveArrays.FromBytes<float>(PrimitiveArrays.ReverseBytesInBlocks(
-                                UtilDB.Uncompress((byte[])reader.GetValue(7), reader.GetInt32(8)), sizeof(float)));
+                                UncompressEncyclopeDiaData((byte[])reader.GetValue(7), reader.GetInt32(8)), sizeof(float)));
                             // Use the sum of the correlationArray as the score (negative since lower scores are better).
                             // TODO(nicksh): when searleb fixes it so the "Score" column has non-zero values, use the "Score" column instead
                             double score = correlationArray.Sum();
@@ -385,11 +385,11 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             double[] mzs = PrimitiveArrays.FromBytes<double>(
                                 PrimitiveArrays.ReverseBytesInBlocks(
-                                    UtilDB.Uncompress((byte[])reader.GetValue(1), reader.GetInt32(0)),
+                                    UncompressEncyclopeDiaData((byte[])reader.GetValue(1), reader.GetInt32(0)),
                                     sizeof(double)));
                             float[] intensities =
                                 PrimitiveArrays.FromBytes<float>(PrimitiveArrays.ReverseBytesInBlocks(
-                                    UtilDB.Uncompress((byte[])reader.GetValue(3), reader.GetInt32(2)), sizeof(float)));
+                                    UncompressEncyclopeDiaData((byte[])reader.GetValue(3), reader.GetInt32(2)), sizeof(float)));
                             return mzs
                                 .Select(
                                     (mz, index) => new SpectrumPeaksInfo.MI { Mz = mz, Intensity = intensities[index] })
@@ -399,6 +399,21 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
             });
+        }
+
+        /// <summary>
+        /// Uncompress a block of data found in an EncyclopeDIA library.
+        /// </summary>
+        private byte[] UncompressEncyclopeDiaData(byte[] compressedBytes, int uncompressedSize)
+        {
+            // Pass -1 in for uncompressed length since EnclyclopeDIA always compresses
+            // the bytes even if the uncompressed size is equal to the compresssed size.
+            byte[] uncompressedBytes = UtilDB.Uncompress(compressedBytes, -1, false);
+            if (uncompressedBytes.Length != uncompressedSize)
+            {
+                throw new IOException(Resources.UtilDB_Uncompress_Failure_uncompressing_data);
+            }
+            return uncompressedBytes;
         }
 
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(ElibSpectrumInfo info)
