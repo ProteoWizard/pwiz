@@ -130,6 +130,16 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                                               string libraryName,
                                                               IProgressMonitor progressMonitor)
         {
+            IProgressStatus status = new ProgressStatus(Resources.BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition_list);
+            return CreateLibraryFromSpectra(librarySpec, listSpectra, libraryName, progressMonitor, ref status);
+        }
+
+        public BiblioSpecLiteLibrary CreateLibraryFromSpectra(BiblioSpecLiteSpec librarySpec,
+            IList<SpectrumMzInfo> listSpectra,
+            string libraryName,
+            IProgressMonitor progressMonitor,
+            ref IProgressStatus status)
+        {
             const string libAuthority = BiblioSpecLiteLibrary.DEFAULT_AUTHORITY;
             const int majorVer = 1;
             const int minorVer = 4;
@@ -145,7 +155,6 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             {
                 int progressPercent = 0;
                 int i = 0;
-                IProgressStatus status = new ProgressStatus(Resources.BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition_list);
                 var sourceFiles = new Dictionary<string, long>();
                 foreach (var spectrum in listSpectra)
                 {

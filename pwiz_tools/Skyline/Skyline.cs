@@ -3014,11 +3014,18 @@ namespace pwiz.Skyline
                                                     false);
 
                         var standardPepGroup = doc.PeptideGroups.First(nodePepGroup => new IdentityPath(nodePepGroup.Id).Equals(firstAdded));
-                        var pepList = (from nodePep in standardPepGroup.Peptides.Where(pep => !missingPeptides.Contains(pep.ModifiedSequence)) let tranGroupList =
-                                           (from TransitionGroupDocNode nodeTranGroup in nodePep.Children
-                                            select nodeTranGroup.ChangeChildren(nodeTranGroup.Children.Take(dlg.NumTransitions).ToList()))
-                                            .Cast<DocNode>().ToList()
-                                       select nodePep.ChangeChildren(tranGroupList)).Cast<DocNode>().ToList();
+                        var pepList = new List<DocNode>();
+                        foreach (var nodePep in standardPepGroup.Peptides.Where(pep => !missingPeptides.Contains(pep.ModifiedSequence)))
+                        {
+                            var tranGroupList = new List<DocNode>();
+                            foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
+                            {
+                                var transitions = nodeTranGroup.Transitions.Take(dlg.NumTransitions).ToArray();
+                                Array.Sort(transitions, TransitionGroup.CompareTransitions);
+                                tranGroupList.Add(nodeTranGroup.ChangeChildren(transitions.Cast<DocNode>().ToList()));
+                            }
+                            pepList.Add(nodePep.ChangeChildren(tranGroupList));
+                        }
                         var newStandardPepGroup = standardPepGroup.ChangeChildren(pepList);
                         return (SrmDocument) doc.ReplaceChild(newStandardPepGroup);
                     });

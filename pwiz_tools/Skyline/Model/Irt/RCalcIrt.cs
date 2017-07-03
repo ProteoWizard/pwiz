@@ -232,6 +232,11 @@ namespace pwiz.Skyline.Model.Irt
             return _database.StandardPeptides;
         }
 
+        public IEnumerable<DbIrtPeptide> GetDbIrtPeptides()
+        {
+            return _database.GetPeptides();
+        }
+
         public static ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor,
             IEnumerable<IRetentionTimeProvider> providers, int countProviders,
             DbIrtPeptide[] standardPeptideList, DbIrtPeptide[] items)

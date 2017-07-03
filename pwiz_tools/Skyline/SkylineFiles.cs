@@ -1246,9 +1246,24 @@ namespace pwiz.Skyline
                 }
             }
 
+            var rCalcIrt = document.Settings.HasRTPrediction
+                ? document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt
+                : null;
+            IProgressStatus status = new ProgressStatus();
+            if (rCalcIrt != null && progressMonitor != null)
+            {
+                progressMonitor.UpdateProgress(status = status.ChangeSegments(0, 2));
+            }
+
             using (var blibDb = BlibDb.CreateBlibDb(path))
             {
-                blibDb.CreateLibraryFromSpectra(new BiblioSpecLiteSpec(name, path), spectra.Values.ToList(), name, progressMonitor);
+                var libSpec = new BiblioSpecLiteSpec(name, path);
+                blibDb.CreateLibraryFromSpectra(libSpec, spectra.Values.ToList(), name, progressMonitor, ref status);
+            }
+
+            if (rCalcIrt != null)
+            {
+                IrtDb.CreateIrtDb(path).AddPeptides(progressMonitor, rCalcIrt.GetDbIrtPeptides().ToList(), ref status);
             }
         }
 

@@ -4,10 +4,14 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -28,32 +32,93 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("msstatstest.sky")));
             var doc = WaitForDocumentLoaded();
             var exported = TestFilesDir.GetTestPath("export.blib");
-            Skyline.SkylineWindow.ExportSpectralLibrary(SkylineWindow.DocumentFilePath, SkylineWindow.Document, exported, null);
+            var progress = new SilentProgressMonitor();
+            Skyline.SkylineWindow.ExportSpectralLibrary(SkylineWindow.DocumentFilePath, SkylineWindow.Document, exported, progress);
             Assert.IsTrue(File.Exists(exported));
 
-            var refSpectra = new List<DbRefSpectra>();
+            IList<DbRefSpectra> refSpectra;
             using (var connection = new SQLiteConnection(string.Format("Data Source='{0}';Version=3", exported)))
             {
                 connection.Open();
-                using (var select = new SQLiteCommand(connection)
+                refSpectra = GetRefSpectra(connection);
+            }
+            CheckRefSpectraAll(refSpectra);
+
+            // Add an iRT calculator and re-export spectral library
+            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var editIrtCalcDlg = ShowDialog<EditIrtCalcDlg>(peptideSettingsDlg.AddCalculator);
+            IList<DbIrtPeptide> irtPeptides = null;
+            RunUI(() =>
+            {
+                editIrtCalcDlg.CalcName = "Biognosys-11";
+                editIrtCalcDlg.CreateDatabase(TestFilesDir.GetTestPath("test.irtdb"));
+                editIrtCalcDlg.IrtStandards = IrtStandard.BIOGNOSYS_11;
+            });
+            var addIrtPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(editIrtCalcDlg.AddResults);
+            var recalibrateDlg = ShowDialog<MultiButtonMsgDlg>(addIrtPeptidesDlg.OkDialog);
+            OkDialog(recalibrateDlg, recalibrateDlg.BtnYesClick);
+            RunUI(() => irtPeptides = editIrtCalcDlg.AllPeptides.ToList());
+            OkDialog(editIrtCalcDlg, editIrtCalcDlg.OkDialog);
+            OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
+            doc = WaitForDocumentChange(doc);
+            Assert.IsTrue(doc.Settings.HasRTPrediction);
+            RunUI(() => SkylineWindow.SaveDocument());
+            var exportedWithIrts = TestFilesDir.GetTestPath("export-irts.blib");
+            var progress2 = new SilentProgressMonitor();
+            Skyline.SkylineWindow.ExportSpectralLibrary(SkylineWindow.DocumentFilePath, SkylineWindow.Document, exportedWithIrts, progress2);
+
+            IList<DbIrtPeptide> irtLibrary;
+            using (var connection = new SQLiteConnection(string.Format("Data Source='{0}';Version=3", exportedWithIrts)))
+            {
+                connection.Open();
+                refSpectra = GetRefSpectra(connection);
+                irtLibrary = GetIrtLibrary(connection);
+            }
+            CheckRefSpectraAll(refSpectra);
+            foreach (var peptide in irtLibrary)
+                CheckIrtPeptide(irtPeptides, peptide.PeptideModSeq, peptide.Irt, peptide.Standard);
+            Assert.IsTrue(!irtPeptides.Any());
+
+            // Try to export spectral library with no results
+            var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+            RunUI(() => manageResultsDlg.RemoveAllReplicates());
+            OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
+            WaitForDocumentChangeLoaded(doc);
+            var errDlg1 = ShowDialog<MessageDlg>(SkylineWindow.ShowExportSpectralLibraryDialog);
+            Assert.AreEqual(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_to_export_a_spectral_library_, errDlg1.Message);
+            OkDialog(errDlg1, errDlg1.OkDialog);
+            RunUI(() => SkylineWindow.Undo());
+
+            // Try to export spectral library with no precursors
+            RunUI(() => SkylineWindow.NewDocument());
+            var errDlg2 = ShowDialog<MessageDlg>(SkylineWindow.ShowExportSpectralLibraryDialog);
+            Assert.AreEqual(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_, errDlg2.Message);
+            OkDialog(errDlg2, errDlg2.OkDialog);
+        }
+
+        private static IList<DbRefSpectra> GetRefSpectra(SQLiteConnection connection)
+        {
+            var list = new List<DbRefSpectra>();
+            using (var select = new SQLiteCommand(connection) { CommandText = "SELECT * FROM RefSpectra" })
+            using (var reader = select.ExecuteReader())
+            {
+                while (reader.Read())
                 {
-                    CommandText = "SELECT * FROM RefSpectra"
-                })
-                using (var reader = select.ExecuteReader())
-                {
-                    while (reader.Read())
+                    list.Add(new DbRefSpectra
                     {
-                        refSpectra.Add(new DbRefSpectra
-                        {
-                            PeptideSeq = reader["peptideSeq"].ToString(),
-                            PeptideModSeq = reader["peptideModSeq"].ToString(),
-                            PrecursorCharge = int.Parse(reader["precursorCharge"].ToString()),
-                            PrecursorMZ = double.Parse(reader["precursorMZ"].ToString()),
-                            NumPeaks = ushort.Parse(reader["numPeaks"].ToString())
-                        });
-                    }
+                        PeptideSeq = reader["peptideSeq"].ToString(),
+                        PeptideModSeq = reader["peptideModSeq"].ToString(),
+                        PrecursorCharge = int.Parse(reader["precursorCharge"].ToString()),
+                        PrecursorMZ = double.Parse(reader["precursorMZ"].ToString()),
+                        NumPeaks = ushort.Parse(reader["numPeaks"].ToString())
+                    });
                 }
             }
+            return list;
+        }
+
+        private static void CheckRefSpectraAll(IList<DbRefSpectra> refSpectra)
+        {
             CheckRefSpectra(refSpectra, "APVPTGEVYFADSFDR", "APVPTGEVYFADSFDR", 2, 885.920, 4);
             CheckRefSpectra(refSpectra, "APVPTGEVYFADSFDR", "APVPTGEVYFADSFDR[+10.0]", 2, 890.924, 4);
             CheckRefSpectra(refSpectra, "AVTELNEPLSNEDR", "AVTELNEPLSNEDR", 2, 793.886, 4);
@@ -102,22 +167,6 @@ namespace pwiz.SkylineTestFunctional
             CheckRefSpectra(refSpectra, "VEATFGVDESNAK", "VEATFGVDESNAK", 2, 683.828, 3);
             CheckRefSpectra(refSpectra, "YILAGVENSK", "YILAGVENSK", 2, 547.298, 3);
             Assert.IsTrue(!refSpectra.Any());
-
-            // Try to export spectral library with no results
-            var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
-            RunUI(() => manageResultsDlg.RemoveAllReplicates());
-            OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
-            WaitForDocumentChangeLoaded(doc);
-            var errDlg1 = ShowDialog<MessageDlg>(SkylineWindow.ShowExportSpectralLibraryDialog);
-            Assert.AreEqual(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_results_to_export_a_spectral_library_, errDlg1.Message);
-            OkDialog(errDlg1, errDlg1.OkDialog);
-            RunUI(() => SkylineWindow.Undo());
-
-            // Try to export spectral library with no precursors
-            RunUI(() => SkylineWindow.NewDocument());
-            var errDlg2 = ShowDialog<MessageDlg>(SkylineWindow.ShowExportSpectralLibraryDialog);
-            Assert.AreEqual(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_, errDlg2.Message);
-            OkDialog(errDlg2, errDlg2.OkDialog);
         }
 
         private static void CheckRefSpectra(IList<DbRefSpectra> spectra, string peptideSeq, string peptideModSeq, int precursorCharge, double precursorMz, ushort numPeaks)
@@ -136,6 +185,39 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
             Assert.Fail("{0} [{1}], precursor charge {2}, precursor m/z {3}, with {4} peaks not found", peptideSeq, peptideModSeq, precursorCharge, precursorMz, numPeaks);
+        }
+
+        private static IList<DbIrtPeptide> GetIrtLibrary(SQLiteConnection connection)
+        {
+            var list = new List<DbIrtPeptide>();
+            using (var select = new SQLiteCommand(connection) { CommandText = "SELECT * FROM IrtLibrary" })
+            using (var reader = select.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    list.Add(new DbIrtPeptide(
+                        reader["PeptideModSeq"].ToString(),
+                        double.Parse(reader["Irt"].ToString()),
+                        bool.Parse(reader["Standard"].ToString()),
+                        int.Parse(reader["TimeSource"].ToString())));
+                }
+            }
+            return list;
+        }
+
+        private static void CheckIrtPeptide(IList<DbIrtPeptide> peptides, string peptideModSeq, double irt, bool standard)
+        {
+            for (var i = 0; i < peptides.Count; i++)
+            {
+                var peptide = peptides[i];
+                if (peptide.PeptideModSeq.Equals(peptideModSeq) &&
+                    Math.Abs(peptide.Irt - irt) < 0.001 &&
+                    peptide.Standard == standard)
+                {
+                    peptides.RemoveAt(i);
+                    return;
+                }
+            }
         }
     }
 }

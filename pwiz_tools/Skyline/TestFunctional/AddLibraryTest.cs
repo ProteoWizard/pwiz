@@ -160,7 +160,17 @@ namespace pwiz.SkylineTestFunctional
             var peptides = SkylineWindow.Document.PeptideGroups.First().Peptides.ToArray();
             Assert.AreEqual(standards.Length, peptides.Length);
             foreach (var peptide in peptides)
+            {
                 Assert.IsTrue(standards.Contains(peptide.ModifiedSequence));
+                foreach (var transitionGroup in peptide.TransitionGroups)
+                {
+                    var transitions = transitionGroup.Transitions.ToList();
+                    for (var i = 1; i < transitions.Count; i++)
+                    {
+                        Assert.IsTrue(TransitionGroup.CompareTransitions(transitions[i - 1], transitions[i]) < 0);
+                    }
+                }
+            }
 
             var mods = SkylineWindow.Document.Settings.PeptideSettings.Modifications;
             Assert.AreEqual(numStaticMods, mods.StaticModifications.Count);

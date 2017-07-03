@@ -188,6 +188,11 @@ namespace pwiz.Skyline.Model.Irt
         public IrtDb AddPeptides(IProgressMonitor monitor, IList<DbIrtPeptide> newPeptides)
         {
             IProgressStatus status = new ProgressStatus(Resources.IrtDb_AddPeptides_Adding_peptides);
+            return AddPeptides(monitor, newPeptides, ref status);
+        }
+
+        public IrtDb AddPeptides(IProgressMonitor monitor, IList<DbIrtPeptide> newPeptides, ref IProgressStatus status)
+        {
             var total = newPeptides.Count;
             var i = 0;
             using (var session = OpenWriteSession())
