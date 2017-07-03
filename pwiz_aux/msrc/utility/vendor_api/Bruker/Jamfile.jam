@@ -118,7 +118,7 @@ rule vendor-api-requirements ( properties * )
 
         if <address-model>64 in $(properties)
         {
-            result += <library>timsdata <source>TimsData.cpp ;
+            result += <library>timsdata ;
             result += <assembly-dependency>$(PLATFORM_API_PATH)/timsdata.dll ;
         }
     }
@@ -152,7 +152,6 @@ searched-lib timsdata
     : # requirements
         <link>shared:<define>PWIZ_DYN_LINK
         <name>timsdata
-        <address-model>64
         <conditional>@dll-arch-specific-path
     ;
 
@@ -180,6 +179,7 @@ if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
             <toolset>msvc:<using-clr>true # requires hacked msvc.jam
             <link>static # <using-clr>true and <link>shared don't mix
             <library>baf2sql
+            <address-model>64:<source>TimsData.cpp
             <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp
         : # default-build
         : # usage-requirements
