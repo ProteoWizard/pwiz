@@ -28,6 +28,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 #include "pwiz/data/msdata/SpectrumWorkerThreads.hpp"
+#include <boost/chrono.hpp>
 
 using namespace pwiz::data;
 using namespace pwiz::msdata;
@@ -40,10 +41,18 @@ several different ways, recording the time taken to iterate each way.
 
 */
 
+string keyValueProcessTimes(const boost::chrono::process_cpu_clock_times& times)
+{
+    return (boost::format("(real: %.3f; user: %.3f; sys: %.3f) seconds")
+            % (times.real / 1e9)
+            % (times.user / 1e9)
+            % (times.system / 1e9)).str();
+}
+
 
 void enumerateSpectra(const string& filename, DetailLevel detailLevel, const vector<string>& filters, const Reader::Config& config, bool reverseIteration)
 {
-    bpt::ptime start = bpt::microsec_clock::local_time();
+    auto start = boost::chrono::process_cpu_clock::now();
 
     FullReaderList readers; // for vendor Reader support
     vector<MSDataPtr> results;
@@ -59,11 +68,10 @@ void enumerateSpectra(const string& filename, DetailLevel detailLevel, const vec
     pwiz::analysis::SpectrumListFactory::wrap(msd, filters);
 
     SpectrumList& sl = *msd.run.spectrumListPtr;
+    auto stop = boost::chrono::process_cpu_clock::now();
+    cout << "Time to open file: " << keyValueProcessTimes((stop - start).count()) << endl;
 
-    bpt::ptime stop = bpt::microsec_clock::local_time();
-    cout << "Time to open file: " << bpt::to_simple_string(stop - start) << endl;
-
-    start = bpt::microsec_clock::local_time();
+    start = boost::chrono::process_cpu_clock::now();
 
     SpectrumWorkerThreads multithreadedSpectrumList(sl);
 
@@ -77,8 +85,8 @@ void enumerateSpectra(const string& filename, DetailLevel detailLevel, const vec
 
             if (i == size)
             {
-                stop = bpt::microsec_clock::local_time();
-                cout << "Time to get first spectrum: " << bpt::to_simple_string(stop - start) << endl;
+                stop = boost::chrono::process_cpu_clock::now();
+                cout << "Time to get first spectrum: " << keyValueProcessTimes((stop - start).count()) << endl;
             }
             totalArrayLength += s->defaultArrayLength;
             if (i == 1 || (i % 100) == 0)
@@ -93,8 +101,8 @@ void enumerateSpectra(const string& filename, DetailLevel detailLevel, const vec
 
             if (i == 0)
             {
-                stop = bpt::microsec_clock::local_time();
-                cout << "Time to get first spectrum: " << bpt::to_simple_string(stop - start) << endl;
+                stop = boost::chrono::process_cpu_clock::now();
+                cout << "Time to get first spectrum: " << keyValueProcessTimes((stop - start).count()) << endl;
             }
 
             totalArrayLength += s->defaultArrayLength;
@@ -103,8 +111,8 @@ void enumerateSpectra(const string& filename, DetailLevel detailLevel, const vec
         }
     cout << endl;
 
-    stop = bpt::microsec_clock::local_time();
-    cout << "Time to enumerate: " << bpt::to_simple_string(stop - start) << endl;
+    stop = boost::chrono::process_cpu_clock::now();
+    cout << "Time to enumerate: " << keyValueProcessTimes((stop - start).count()) << endl;
 }
 
 

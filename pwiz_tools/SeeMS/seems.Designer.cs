@@ -207,6 +207,7 @@ namespace seems
             this.previewAsMzMLToolStripMenuItem.Name = "previewAsMzMLToolStripMenuItem";
             this.previewAsMzMLToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
             this.previewAsMzMLToolStripMenuItem.Text = "Preview as mzML";
+            this.previewAsMzMLToolStripMenuItem.Visible = false;
             this.previewAsMzMLToolStripMenuItem.Click += new System.EventHandler(this.previewAsMzMLToolStripMenuItem_Click);
             // 
             // eventLogToolStripMenuItem
@@ -306,7 +307,7 @@ namespace seems
             this.openFileToolStripButton.AutoSize = false;
             this.openFileToolStripButton.BackColor = System.Drawing.SystemColors.Control;
             this.openFileToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.openFileToolStripButton.Image = ((System.Drawing.Image) (resources.GetObject("openFileToolStripButton.Image")));
+            this.openFileToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("openFileToolStripButton.Image")));
             this.openFileToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.openFileToolStripButton.Name = "openFileToolStripButton";
             this.openFileToolStripButton.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
@@ -357,7 +358,6 @@ namespace seems
             // 
             this.dockPanel.ActiveAutoHideContent = null;
             this.dockPanel.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.dockPanel.DefaultFloatingWindowSize = new System.Drawing.Size(300, 300);
             this.dockPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dockPanel.Location = new System.Drawing.Point(0, 49);
             this.dockPanel.Name = "dockPanel";
@@ -373,7 +373,7 @@ namespace seems
             this.Controls.Add(this.toolStripPanel2);
             this.Controls.Add(this.toolStripPanel1);
             this.DoubleBuffered = true;
-            this.Icon = ((System.Drawing.Icon) (resources.GetObject("$this.Icon")));
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.IsMdiContainer = true;
             this.MainMenuStrip = this.menuStrip1;
             this.MinimumSize = new System.Drawing.Size(400, 150);
@@ -381,10 +381,10 @@ namespace seems
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "SeeMS";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
-            this.ResizeBegin += new System.EventHandler(this.seems_ResizeBegin);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.seems_FormClosing);
-            this.Resize += new System.EventHandler(this.seems_Resize);
+            this.ResizeBegin += new System.EventHandler(this.seems_ResizeBegin);
             this.ResizeEnd += new System.EventHandler(this.seems_ResizeEnd);
+            this.Resize += new System.EventHandler(this.seems_Resize);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             this.toolStripPanel1.ResumeLayout(false);

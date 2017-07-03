@@ -309,6 +309,8 @@ namespace seems.Misc {
             
             private global::System.Data.DataColumn columnIsolationWindows;
             
+            private global::System.Data.DataColumn columnIonMobility;
+            
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public SpectrumTableDataTable() {
@@ -464,6 +466,14 @@ namespace seems.Misc {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public global::System.Data.DataColumn IonMobilityColumn {
+                get {
+                    return this.columnIonMobility;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             [global::System.ComponentModel.Browsable(false)]
             public int Count {
                 get {
@@ -499,7 +509,23 @@ namespace seems.Misc {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
-            public SpectrumTableRow AddSpectrumTableRow(string Id, int Index, string SpotId, string SpectrumType, int MsLevel, double ScanTime, ulong DataPoints, double BasePeakMz, double BasePeakIntensity, double TotalIonCurrent, string IcId, string DpId, string PrecursorInfo, string ScanInfo, string IsolationWindows) {
+            public SpectrumTableRow AddSpectrumTableRow(
+                        string Id, 
+                        int Index, 
+                        string SpotId, 
+                        string SpectrumType, 
+                        int MsLevel, 
+                        double ScanTime, 
+                        ulong DataPoints, 
+                        double BasePeakMz, 
+                        double BasePeakIntensity, 
+                        double TotalIonCurrent, 
+                        string IcId, 
+                        string DpId, 
+                        string PrecursorInfo, 
+                        string ScanInfo, 
+                        string IsolationWindows, 
+                        double IonMobility) {
                 SpectrumTableRow rowSpectrumTableRow = ((SpectrumTableRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         Id,
@@ -516,7 +542,8 @@ namespace seems.Misc {
                         DpId,
                         PrecursorInfo,
                         ScanInfo,
-                        IsolationWindows};
+                        IsolationWindows,
+                        IonMobility};
                 rowSpectrumTableRow.ItemArray = columnValuesArray;
                 this.Rows.Add(rowSpectrumTableRow);
                 return rowSpectrumTableRow;
@@ -561,6 +588,7 @@ namespace seems.Misc {
                 this.columnPrecursorInfo = base.Columns["PrecursorInfo"];
                 this.columnScanInfo = base.Columns["ScanInfo"];
                 this.columnIsolationWindows = base.Columns["IsolationWindows"];
+                this.columnIonMobility = base.Columns["IonMobility"];
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -596,6 +624,8 @@ namespace seems.Misc {
                 base.Columns.Add(this.columnScanInfo);
                 this.columnIsolationWindows = new global::System.Data.DataColumn("IsolationWindows", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnIsolationWindows);
+                this.columnIonMobility = new global::System.Data.DataColumn("IonMobility", typeof(double), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnIonMobility);
                 this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
                                 this.columnIndex}, true));
                 this.columnId.AllowDBNull = false;
@@ -614,6 +644,7 @@ namespace seems.Misc {
                 this.columnPrecursorInfo.Caption = "Precursor Info";
                 this.columnScanInfo.Caption = "Scan Info";
                 this.columnIsolationWindows.Caption = "Isolation Windows";
+                this.columnIonMobility.Caption = "Ion Mobility";
                 this.CaseSensitive = true;
             }
             
@@ -987,6 +1018,22 @@ namespace seems.Misc {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public double IonMobility {
+                get {
+                    try {
+                        return ((double)(this[this.tableSpectrumTable.IonMobilityColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'IonMobility\' in table \'SpectrumTable\' is DBNull.", e);
+                    }
+                }
+                set {
+                    this[this.tableSpectrumTable.IonMobilityColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public bool IsSpotIdNull() {
                 return this.IsNull(this.tableSpectrumTable.SpotIdColumn);
             }
@@ -1139,6 +1186,18 @@ namespace seems.Misc {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
             public void SetIsolationWindowsNull() {
                 this[this.tableSpectrumTable.IsolationWindowsColumn] = global::System.Convert.DBNull;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public bool IsIonMobilityNull() {
+                return this.IsNull(this.tableSpectrumTable.IonMobilityColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
+            public void SetIonMobilityNull() {
+                this[this.tableSpectrumTable.IonMobilityColumn] = global::System.Convert.DBNull;
             }
         }
         

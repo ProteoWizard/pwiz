@@ -190,7 +190,7 @@ namespace seems
 
                 string datasource = null;
                 foreach (string arg in args)
-                    if (!arg.StartsWith("--index") && !arg.StartsWith("id") && !arg.StartsWith("annotation"))
+                    if (!arg.StartsWith("--index") && !arg.StartsWith("--id") && !arg.StartsWith("--annotation"))
                     {
                         datasource = arg;
                         break;

@@ -55,9 +55,11 @@ namespace seems
             // initialize labels
             smootherSavitzkyGolayTrackBar_ValueChanged( null, null );
 
-            peakPickerAlgorithmComboBox.Items.Add( "Local Maximum" );
+            peakPickerAlgorithmComboBox.Items.Add("Local Maximum");
+            peakPickerAlgorithmComboBox.Items.Add("CantWaiT: continuous wavelet transform");
 
             peakPickerLocalMaximumParameters.Location = peakPickerParametersGroupBox.Location;
+            peakPickerCantWaitParameters.Location = peakPickerParametersGroupBox.Location;
         }
 
         private void smootherSavitzkyGolayTrackBar_ValueChanged( object sender, EventArgs e )

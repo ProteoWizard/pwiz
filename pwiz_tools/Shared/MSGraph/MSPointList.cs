@@ -253,7 +253,7 @@ namespace pwiz.MSGraph
 
         public int GetNearestMaxIndexToBin( int bin )
         {
-            if( _scaledMaxIndexList[bin] >= 0 )
+            if (_scaledMaxIndexList.Count > 0 && _scaledMaxIndexList[bin] >= 0)
                 return _scaledMaxIndexList[bin];
 
             int i=1;

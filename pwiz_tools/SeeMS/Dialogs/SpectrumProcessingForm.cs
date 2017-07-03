@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -31,6 +32,7 @@ using pwiz.CLI;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
 using ExtensionMethods;
+using pwiz.Common.Collections;
 
 namespace seems
 {
@@ -39,16 +41,109 @@ namespace seems
         private MassSpectrum currentSpectrum;
         public MassSpectrum CurrentSpectrum { get { return currentSpectrum; } }
 
-        public event EventHandler ProcessingChanged;
-        private void OnProcessingChanged( object sender, EventArgs e )
+        private IList<IProcessing> globalProcessingListOverride;
+        public IList<IProcessing> GlobalProcessingListOverride
         {
-            if( ProcessingChanged != null )
+            get { return globalProcessingListOverride; }
+            set
             {
-                ProcessingChanged( this, e );
+                globalProcessingListOverride = value;
+                clearGlobalOverrideToolStripMenuItem.Enabled = value.Count > 0;
+                OnProcessingChanged(this, new ProcessingChangedEventArgs(ProcessingChangedEventArgs.Scope.Global, CurrentSpectrum));
             }
         }
 
-        public List<IProcessing> ProcessingList
+        public enum OverrideMode
+        {
+            /// <summary>
+            /// Overrides are applied before per-spectrum processing.
+            /// </summary>
+            Before,
+
+            /// <summary>
+            /// Overrides are applied after per-spectrum processing.
+            /// </summary>
+            After,
+
+            /// <summary>
+            /// Overrides are applied in lieu of per-spectrum processing.
+            /// </summary>
+            Replace
+        }
+
+        private OverrideMode globalOverrideMode;
+        public OverrideMode GlobalOverrideMode
+        {
+            get { return globalOverrideMode; }
+            set
+            {
+                globalOverrideMode = value;
+                beforeToolStripMenuItem.Checked = afterToolStripMenuItem.Checked = replaceToolStripMenuItem.Checked = false;
+                switch (value)
+                {
+                    case OverrideMode.Before:
+                        beforeToolStripMenuItem.Checked = true;
+                        break;
+                    case OverrideMode.After:
+                        afterToolStripMenuItem.Checked = true;
+                        break;
+                    case OverrideMode.Replace:
+                        replaceToolStripMenuItem.Checked = true;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("value", value, "invalid override mode");
+                }
+                OnProcessingChanged(this, new ProcessingChangedEventArgs(ProcessingChangedEventArgs.Scope.Global, CurrentSpectrum));
+            }
+        }
+
+        private readonly Dictionary<ManagedDataSource, IList<IProcessing>> processingListOverrideBySource;
+
+        public class ProcessingChangedEventArgs : EventArgs
+        {
+            public enum Scope { Global, Run, Spectrum };
+            public Scope ChangeScope { get; private set; }
+            public MassSpectrum Spectrum { get; private set; }
+
+            public ProcessingChangedEventArgs(Scope scope, MassSpectrum spectrum)
+            {
+                ChangeScope = scope;
+                Spectrum = spectrum;
+            }
+        }
+
+        public event EventHandler<ProcessingChangedEventArgs> ProcessingChanged;
+
+        // determines the needed scope automatically
+        private void OnProcessingChanged( object sender, EventArgs e )
+        {
+            if (currentSpectrum != null) UpdateProcessing(currentSpectrum);
+            processingListView.Refresh();
+
+            if (ProcessingChanged == null) return;
+
+            ProcessingChangedEventArgs.Scope scope;
+            if (globalProcessingListOverride.Any())
+                scope = ProcessingChangedEventArgs.Scope.Global;
+            else if (processingListOverrideBySource.ContainsKey(currentSpectrum.Source))
+                scope = ProcessingChangedEventArgs.Scope.Run;
+            else
+                scope = ProcessingChangedEventArgs.Scope.Spectrum;
+
+            ProcessingChanged(this, new ProcessingChangedEventArgs(scope, CurrentSpectrum));
+        }
+
+        // caller specifies the scope
+        private void OnProcessingChanged(object sender, ProcessingChangedEventArgs e)
+        {
+            if (e.Spectrum != null) UpdateProcessing(e.Spectrum);
+            processingListView.Refresh();
+
+            if (ProcessingChanged == null) return;
+            ProcessingChanged(this, e);
+        }
+
+        public IList<IProcessing> ProcessingList
         {
             get
             {
@@ -56,9 +151,22 @@ namespace seems
             }
         }
 
-        public SpectrumList GetProcessingSpectrumList( SpectrumList spectrumList )
+        public SpectrumList GetProcessingSpectrumList( MassSpectrum spectrum, SpectrumList spectrumList )
         {
-            foreach( IProcessing item in ProcessingList )
+            IList<IProcessing> usedProcessingList = spectrum.ProcessingList.ToList();
+            if (globalProcessingListOverride.Any())
+            {
+                if (replaceToolStripMenuItem.Checked)
+                    usedProcessingList = globalProcessingListOverride;
+                else if (beforeToolStripMenuItem.Checked)
+                    usedProcessingList.InsertRange(0, globalProcessingListOverride);
+                else if (afterToolStripMenuItem.Checked)
+                    usedProcessingList.AddRange(globalProcessingListOverride);
+            }
+            else if (processingListOverrideBySource.ContainsKey(spectrum.Source))
+                usedProcessingList = processingListOverrideBySource[spectrum.Source];
+
+            foreach (IProcessing item in usedProcessingList)
             {
                 if( item.Enabled )
                     spectrumList = item.ProcessList( spectrumList );
@@ -70,6 +178,9 @@ namespace seems
         {
             InitializeComponent();
 
+            globalProcessingListOverride = new List<IProcessing>();
+            processingListOverrideBySource = new Dictionary<ManagedDataSource, IList<IProcessing>>();
+
             /*ImageList processingListViewLargeImageList = new ImageList();
             processingListViewLargeImageList.Images.Add( Properties.Resources.Centroider );
             processingListViewLargeImageList.Images.Add( Properties.Resources.Smoother );
@@ -78,19 +189,28 @@ namespace seems
             processingListViewLargeImageList.TransparentColor = Color.White;*/
         }
 
-        private void selectIndex( int index )
+        private void selectIndex(int index)
         {
             processingListView.SelectedIndices.Clear();
-            if( index >= 0 )
-                processingListView.SelectedIndices.Add( index );
+            if (index >= 0)
+            {
+                processingListView.SelectedIndices.Add(index);
+                globalOverrideToolStripButton.Enabled = runOverrideToolStripButton.Enabled = true;
+            }
         }
 
         public void UpdateProcessing( MassSpectrum spectrum )
         {
-            if( processingListView.VirtualListSize != spectrum.ProcessingList.Count )
+            int newVirtualSize = spectrum.ProcessingList.Count;
+            if (globalOverrideMode == OverrideMode.Replace)
+                newVirtualSize = globalProcessingListOverride.Count;
+            else
+                newVirtualSize += globalProcessingListOverride.Count;
+
+            if (processingListView.VirtualListSize != newVirtualSize)
             {
-                processingListView.VirtualListSize = spectrum.ProcessingList.Count;
-                selectIndex( spectrum.ProcessingList.Count - 1 );
+                processingListView.VirtualListSize = newVirtualSize;
+                selectIndex(newVirtualSize - 1);
             }
 
             if( currentSpectrum != spectrum )
@@ -112,14 +232,17 @@ namespace seems
 
             splitContainer.Panel2.Controls.Clear();
             if( processingListView.SelectedIndices.Count > 0 &&
-                currentSpectrum.ProcessingList.Count > processingListView.SelectedIndices[0] )
+                currentSpectrum.ProcessingList.Count > virtualIndexToSpectrumIndex((int)processingListView.SelectedIndices.Back()))
             {
-                lastSelectedProcessing = currentSpectrum.ProcessingList[processingListView.SelectedIndices[0]];
+                int firstSpectrumIndex = virtualIndexToSpectrumIndex(processingListView.SelectedIndices[0]);
+                int lastSpectrumIndex = virtualIndexToSpectrumIndex((int)processingListView.SelectedIndices.Back());
+
+                lastSelectedProcessing = getProcessingAtIndex(processingListView.SelectedIndices[0]);
                 splitContainer.Panel2.Controls.Add( lastSelectedProcessing.OptionsPanel );
                 lastSelectedProcessing.OptionsChanged += new EventHandler( OnProcessingChanged );
 
-                moveUpProcessingButton.Enabled = processingListView.SelectedIndices[0] > 0;
-                moveDownProcessingButton.Enabled = ( (int) processingListView.SelectedIndices.Back() ) < processingListView.Items.Count - 1;
+                moveUpProcessingButton.Enabled = firstSpectrumIndex > 0;
+                moveDownProcessingButton.Enabled = lastSpectrumIndex >= 0 && lastSpectrumIndex < processingListView.Items.Count - 1;
             } else
             {
                 lastSelectedProcessing = null;
@@ -137,13 +260,43 @@ namespace seems
             processingListView_SelectedIndexChanged( sender, e );
         }
 
+        // returns -1 if the virtual index does not correspond with a spectrum index
+        int virtualIndexToSpectrumIndex(int index)
+        {
+            if (globalOverrideMode == OverrideMode.Replace)
+            {
+                return -1;
+            }
+
+            if (globalOverrideMode == OverrideMode.Before)
+            {
+                if (index < globalProcessingListOverride.Count)
+                    return -1;
+                return index - globalProcessingListOverride.Count;
+            }
+
+            if (globalOverrideMode == OverrideMode.After)
+            {
+                if (index >= currentSpectrum.ProcessingList.Count)
+                    return -1;
+                return index;
+            }
+
+            return index;
+        }
+
         private void removeProcessingButton_Click( object sender, EventArgs e )
         {
-            int start = processingListView.SelectedIndices[0];
-            int count = processingListView.SelectedIndices.Count;
-            currentSpectrum.ProcessingList.RemoveRange( start, count );
+            int start = virtualIndexToSpectrumIndex(processingListView.SelectedIndices[0]);
+            if (start < 0)
+                return;
+            int count = Math.Min(currentSpectrum.ProcessingList.Count, processingListView.SelectedIndices.Count);
+            for (int i = start, end = start + count; i < end; ++i)
+                currentSpectrum.ProcessingList.RemoveAt(i);
             processingListView.VirtualListSize -= count;
             processingListView_SelectedIndexChanged( sender, e );
+            if (processingListView.VirtualListSize == 0)
+                globalOverrideToolStripButton.Enabled = runOverrideToolStripButton.Enabled = false;
             OnProcessingChanged( sender, e );
         }
 
@@ -152,8 +305,8 @@ namespace seems
             for( int i = 0; i < processingListView.SelectedIndices.Count; ++i )
             {
                 int prevIndex = processingListView.SelectedIndices[i] - 1;
-                currentSpectrum.ProcessingList.Insert( prevIndex, currentSpectrum.ProcessingList[processingListView.SelectedIndices[i]] );
-                currentSpectrum.ProcessingList.RemoveAt( processingListView.SelectedIndices[i] + 1 );
+                currentSpectrum.ProcessingList.Insert( prevIndex, currentSpectrum.ProcessingList[virtualIndexToSpectrumIndex(processingListView.SelectedIndices[i])] );
+                currentSpectrum.ProcessingList.RemoveAt(virtualIndexToSpectrumIndex(processingListView.SelectedIndices[i] + 1));
                 processingListView.Items[prevIndex].Selected = true;
                 processingListView.Items[prevIndex + 1].Selected = false;
             }
@@ -167,8 +320,8 @@ namespace seems
             {
                 int index = processingListView.SelectedIndices[i];
                 IProcessing p = currentSpectrum.ProcessingList[index];
-                currentSpectrum.ProcessingList.RemoveAt( index );
-                currentSpectrum.ProcessingList.Insert( index + 1, p );
+                currentSpectrum.ProcessingList.RemoveAt(virtualIndexToSpectrumIndex(index));
+                currentSpectrum.ProcessingList.Insert(virtualIndexToSpectrumIndex(index + 1), p);
                 processingListView.Items[index + 1].Selected = true;
                 processingListView.Items[index].Selected = false;
             }
@@ -190,7 +343,7 @@ namespace seems
                     e.Handled = true;
                     foreach( int index in processingListView.SelectedIndices )
                     {
-                        IProcessing processing = currentSpectrum.ProcessingList[index];
+                        IProcessing processing = getProcessingAtIndex(index);
                         processing.Enabled = !processing.Enabled;
                     }
                     OnProcessingChanged( sender, e );
@@ -207,16 +360,46 @@ namespace seems
                 removeToolStripMenuItem.Enabled = false;
         }
 
-        private void processingListView_RetrieveVirtualItem( object sender, RetrieveVirtualItemEventArgs e )
+        private IProcessing getProcessingAtIndex(int index)
         {
-            if( currentSpectrum.ProcessingList.Count <= e.ItemIndex )
+            if (currentSpectrum.ProcessingList.Count + globalProcessingListOverride.Count <= index)
+                return null;
+
+            if (globalOverrideMode == OverrideMode.Replace)
             {
-                e.Item = new ListViewItem( "error" );
-                return;
+                if (globalProcessingListOverride.Count <= index)
+                    return null;
+                return globalProcessingListOverride[index];
             }
 
-            IProcessing processing = currentSpectrum.ProcessingList[e.ItemIndex];
-            e.Item = new ListViewItem( new string[] { "", processing.ToString() } );
+            if (globalOverrideMode == OverrideMode.Before)
+            {
+                if (index < globalProcessingListOverride.Count)
+                    return globalProcessingListOverride[index];
+                return currentSpectrum.ProcessingList[index - globalProcessingListOverride.Count];
+            }
+
+            if (globalOverrideMode == OverrideMode.After)
+            {
+                if (index >= currentSpectrum.ProcessingList.Count)
+                    return globalProcessingListOverride[index - currentSpectrum.ProcessingList.Count];
+                return currentSpectrum.ProcessingList[index];
+            }
+
+            throw new ArgumentException("invalid global override mode");
+        }
+
+        private void processingListView_RetrieveVirtualItem( object sender, RetrieveVirtualItemEventArgs e )
+        {
+            var processing = getProcessingAtIndex(e.ItemIndex);
+
+            if (processing == null)
+            {
+                e.Item = new ListViewItem(new string[] {"", "error"});
+                return;
+            }
+            else
+                e.Item = new ListViewItem(new string[] {"", processing.ToString()});
 
             processingListView.Columns[1].Width = Math.Max( processingListView.Columns[1].Width,
                                                             e.Item.SubItems[1].Bounds.Width );
@@ -276,7 +459,7 @@ namespace seems
             ListViewItem item = processingListView.GetItemAt( e.X, e.Y );
             if( item != null && e.X < ( item.Bounds.Left + 16 ) )
             {
-                IProcessing processing = currentSpectrum.ProcessingList[item.Index];
+                IProcessing processing = getProcessingAtIndex(item.Index);
                 processing.Enabled = !processing.Enabled;
                 OnProcessingChanged( sender, e );
                 processingListView.Invalidate( item.Bounds );
@@ -288,11 +471,71 @@ namespace seems
             ListViewItem item = processingListView.GetItemAt( e.X, e.Y );
             if( item != null )
             {
-                IProcessing processing = currentSpectrum.ProcessingList[item.Index];
+                IProcessing processing = getProcessingAtIndex(item.Index);
                 processing.Enabled = !processing.Enabled;
                 OnProcessingChanged( sender, e );
                 processingListView.Invalidate( item.Bounds );
             }
+        }
+
+        private void global_withAllListedProcessorsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            globalProcessingListOverride = ProcessingList;
+            clearGlobalOverrideToolStripMenuItem.Enabled = true;
+            OnProcessingChanged(sender, new ProcessingChangedEventArgs(ProcessingChangedEventArgs.Scope.Global, CurrentSpectrum));
+        }
+
+        private void global_withCurrentlySelectedProcessorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            globalProcessingListOverride = new List<IProcessing> { lastSelectedProcessing };
+            clearGlobalOverrideToolStripMenuItem.Enabled = true;
+            OnProcessingChanged(sender, new ProcessingChangedEventArgs(ProcessingChangedEventArgs.Scope.Global, CurrentSpectrum));
+        }
+
+        private void clearGlobalOverrideToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            globalProcessingListOverride.Clear();
+            clearGlobalOverrideToolStripMenuItem.Enabled = false;
+            OnProcessingChanged(sender, new ProcessingChangedEventArgs(ProcessingChangedEventArgs.Scope.Global, CurrentSpectrum));
+        }
+
+        private void run_withAllListedProcessorsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            processingListOverrideBySource[currentSpectrum.Source] = ProcessingList;
+            OnProcessingChanged(sender, new ProcessingChangedEventArgs(ProcessingChangedEventArgs.Scope.Run, CurrentSpectrum));
+        }
+
+        private void run_withCurrentlySelectedProcessorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            processingListOverrideBySource[currentSpectrum.Source] = new List<IProcessing> {lastSelectedProcessing};
+            OnProcessingChanged(sender, new ProcessingChangedEventArgs(ProcessingChangedEventArgs.Scope.Run, CurrentSpectrum));
+        }
+
+        private void clearRunOverrideToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            processingListOverrideBySource.Remove(currentSpectrum.Source);
+            OnProcessingChanged(sender, new ProcessingChangedEventArgs(ProcessingChangedEventArgs.Scope.Run, CurrentSpectrum));
+        }
+
+        private void runOverrideToolStripButton_DropDownOpening(object sender, EventArgs e)
+        {
+            clearRunOverrideToolStripMenuItem.Enabled = processingListOverrideBySource.ContainsKey(currentSpectrum.Source);
+        }
+
+        private void global_overrideModeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!(sender is ToolStripMenuItem)) return;
+            var button = sender as ToolStripMenuItem;
+            if (!button.Checked) { button.Checked = true; return; }
+
+            if (beforeToolStripMenuItem == button)
+                GlobalOverrideMode = OverrideMode.Before;
+            else if(afterToolStripMenuItem == button)
+                GlobalOverrideMode = OverrideMode.After;
+            else if (replaceToolStripMenuItem == button)
+                GlobalOverrideMode = OverrideMode.Replace;
+
+            OnProcessingChanged(sender, new ProcessingChangedEventArgs(ProcessingChangedEventArgs.Scope.Global, CurrentSpectrum));
         }
     }
 }

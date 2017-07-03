@@ -89,6 +89,13 @@ namespace seems
             this.label11 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.chargeStateCalculatorOverrideExistingCheckBox = new System.Windows.Forms.CheckBox();
+            this.lockmassRefinerTabPage = new System.Windows.Forms.TabPage();
+            this.lockmassRefinerPanel = new System.Windows.Forms.Panel();
+            this.label14 = new System.Windows.Forms.Label();
+            this.lockmassToleranceTextBox = new System.Windows.Forms.TextBox();
+            this.lockmassToleranceLabel = new System.Windows.Forms.Label();
+            this.lockmassMzTextBox = new System.Windows.Forms.TextBox();
+            this.lockmassMzLabel = new System.Windows.Forms.Label();
             this.trackBar1 = new System.Windows.Forms.TrackBar();
             this.trackBar2 = new System.Windows.Forms.TrackBar();
             this.label6 = new System.Windows.Forms.Label();
@@ -100,13 +107,11 @@ namespace seems
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.label10 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
-            this.lockmassRefinerTabPage = new System.Windows.Forms.TabPage();
-            this.lockmassMzLabel = new System.Windows.Forms.Label();
-            this.lockmassMzTextBox = new System.Windows.Forms.TextBox();
-            this.lockmassRefinerPanel = new System.Windows.Forms.Panel();
-            this.lockmassToleranceTextBox = new System.Windows.Forms.TextBox();
-            this.lockmassToleranceLabel = new System.Windows.Forms.Label();
-            this.label14 = new System.Windows.Forms.Label();
+            this.peakPickerCantWaitParameters = new System.Windows.Forms.GroupBox();
+            this.label15 = new System.Windows.Forms.Label();
+            this.peakPickerCantWaitMinSNRTextBox = new System.Windows.Forms.TextBox();
+            this.peakPickerCantWaitMinPeakSpaceTextBox = new System.Windows.Forms.TextBox();
+            this.label16 = new System.Windows.Forms.Label();
             this.processingPanelsTabControl.SuspendLayout();
             this.thresholderTabPage.SuspendLayout();
             this.thresholderPanel.SuspendLayout();
@@ -124,12 +129,13 @@ namespace seems
             this.chargeStateCalculatorPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chargeStateCalculatorMaxChargeUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chargeStateCalculatorMinChargeUpDown)).BeginInit();
+            this.lockmassRefinerTabPage.SuspendLayout();
+            this.lockmassRefinerPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar2)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar3)).BeginInit();
-            this.lockmassRefinerTabPage.SuspendLayout();
-            this.lockmassRefinerPanel.SuspendLayout();
+            this.peakPickerCantWaitParameters.SuspendLayout();
             this.SuspendLayout();
             // 
             // processingPanelsTabControl
@@ -381,6 +387,7 @@ namespace seems
             // peakPickerPanel
             // 
             this.peakPickerPanel.BackColor = System.Drawing.SystemColors.Control;
+            this.peakPickerPanel.Controls.Add(this.peakPickerCantWaitParameters);
             this.peakPickerPanel.Controls.Add(this.peakPickerLocalMaximumParameters);
             this.peakPickerPanel.Controls.Add(this.peakPickerParametersGroupBox);
             this.peakPickerPanel.Controls.Add(this.peakPickerPreferVendorCentroidingCheckbox);
@@ -576,6 +583,72 @@ namespace seems
             this.chargeStateCalculatorOverrideExistingCheckBox.Text = "Override existing charge state";
             this.chargeStateCalculatorOverrideExistingCheckBox.UseVisualStyleBackColor = true;
             // 
+            // lockmassRefinerTabPage
+            // 
+            this.lockmassRefinerTabPage.Controls.Add(this.lockmassRefinerPanel);
+            this.lockmassRefinerTabPage.Location = new System.Drawing.Point(4, 22);
+            this.lockmassRefinerTabPage.Name = "lockmassRefinerTabPage";
+            this.lockmassRefinerTabPage.Padding = new System.Windows.Forms.Padding(3);
+            this.lockmassRefinerTabPage.Size = new System.Drawing.Size(708, 726);
+            this.lockmassRefinerTabPage.TabIndex = 4;
+            this.lockmassRefinerTabPage.Text = "Lockmass Refiner";
+            this.lockmassRefinerTabPage.UseVisualStyleBackColor = true;
+            // 
+            // lockmassRefinerPanel
+            // 
+            this.lockmassRefinerPanel.BackColor = System.Drawing.SystemColors.Control;
+            this.lockmassRefinerPanel.Controls.Add(this.label14);
+            this.lockmassRefinerPanel.Controls.Add(this.lockmassToleranceTextBox);
+            this.lockmassRefinerPanel.Controls.Add(this.lockmassToleranceLabel);
+            this.lockmassRefinerPanel.Controls.Add(this.lockmassMzTextBox);
+            this.lockmassRefinerPanel.Controls.Add(this.lockmassMzLabel);
+            this.lockmassRefinerPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lockmassRefinerPanel.Location = new System.Drawing.Point(3, 3);
+            this.lockmassRefinerPanel.Name = "lockmassRefinerPanel";
+            this.lockmassRefinerPanel.Size = new System.Drawing.Size(702, 720);
+            this.lockmassRefinerPanel.TabIndex = 2;
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(198, 40);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(43, 13);
+            this.label14.TabIndex = 4;
+            this.label14.Text = "Daltons";
+            // 
+            // lockmassToleranceTextBox
+            // 
+            this.lockmassToleranceTextBox.Location = new System.Drawing.Point(114, 37);
+            this.lockmassToleranceTextBox.Name = "lockmassToleranceTextBox";
+            this.lockmassToleranceTextBox.Size = new System.Drawing.Size(78, 20);
+            this.lockmassToleranceTextBox.TabIndex = 3;
+            // 
+            // lockmassToleranceLabel
+            // 
+            this.lockmassToleranceLabel.AutoSize = true;
+            this.lockmassToleranceLabel.Location = new System.Drawing.Point(3, 40);
+            this.lockmassToleranceLabel.Name = "lockmassToleranceLabel";
+            this.lockmassToleranceLabel.Size = new System.Drawing.Size(105, 13);
+            this.lockmassToleranceLabel.TabIndex = 2;
+            this.lockmassToleranceLabel.Text = "Lockmass tolerance:";
+            // 
+            // lockmassMzTextBox
+            // 
+            this.lockmassMzTextBox.Location = new System.Drawing.Point(114, 7);
+            this.lockmassMzTextBox.Name = "lockmassMzTextBox";
+            this.lockmassMzTextBox.Size = new System.Drawing.Size(78, 20);
+            this.lockmassMzTextBox.TabIndex = 1;
+            // 
+            // lockmassMzLabel
+            // 
+            this.lockmassMzLabel.AutoSize = true;
+            this.lockmassMzLabel.Location = new System.Drawing.Point(29, 10);
+            this.lockmassMzLabel.Name = "lockmassMzLabel";
+            this.lockmassMzLabel.Size = new System.Drawing.Size(79, 13);
+            this.lockmassMzLabel.TabIndex = 0;
+            this.lockmassMzLabel.Text = "Lockmass m/z:";
+            // 
             // trackBar1
             // 
             this.trackBar1.AutoSize = false;
@@ -698,71 +771,51 @@ namespace seems
             this.comboBox1.Size = new System.Drawing.Size(190, 21);
             this.comboBox1.TabIndex = 1;
             // 
-            // lockmassRefinerTabPage
+            // peakPickerCantWaitParameters
             // 
-            this.lockmassRefinerTabPage.Controls.Add(this.lockmassRefinerPanel);
-            this.lockmassRefinerTabPage.Location = new System.Drawing.Point(4, 22);
-            this.lockmassRefinerTabPage.Name = "lockmassRefinerTabPage";
-            this.lockmassRefinerTabPage.Padding = new System.Windows.Forms.Padding(3);
-            this.lockmassRefinerTabPage.Size = new System.Drawing.Size(708, 726);
-            this.lockmassRefinerTabPage.TabIndex = 4;
-            this.lockmassRefinerTabPage.Text = "Lockmass Refiner";
-            this.lockmassRefinerTabPage.UseVisualStyleBackColor = true;
+            this.peakPickerCantWaitParameters.Controls.Add(this.peakPickerCantWaitMinPeakSpaceTextBox);
+            this.peakPickerCantWaitParameters.Controls.Add(this.label16);
+            this.peakPickerCantWaitParameters.Controls.Add(this.peakPickerCantWaitMinSNRTextBox);
+            this.peakPickerCantWaitParameters.Controls.Add(this.label15);
+            this.peakPickerCantWaitParameters.Location = new System.Drawing.Point(11, 200);
+            this.peakPickerCantWaitParameters.Name = "peakPickerCantWaitParameters";
+            this.peakPickerCantWaitParameters.Size = new System.Drawing.Size(186, 85);
+            this.peakPickerCantWaitParameters.TabIndex = 9;
+            this.peakPickerCantWaitParameters.TabStop = false;
+            this.peakPickerCantWaitParameters.Text = "CantWaiT Parameters";
+            this.peakPickerCantWaitParameters.Visible = false;
             // 
-            // lockmassMzLabel
+            // label15
             // 
-            this.lockmassMzLabel.AutoSize = true;
-            this.lockmassMzLabel.Location = new System.Drawing.Point(29, 10);
-            this.lockmassMzLabel.Name = "lockmassMzLabel";
-            this.lockmassMzLabel.Size = new System.Drawing.Size(79, 13);
-            this.lockmassMzLabel.TabIndex = 0;
-            this.lockmassMzLabel.Text = "Lockmass m/z:";
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(6, 26);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(56, 13);
+            this.label15.TabIndex = 0;
+            this.label15.Text = "Min. SNR:";
             // 
-            // lockmassMzTextBox
+            // peakPickerCantWaitMinSNRTextBox
             // 
-            this.lockmassMzTextBox.Location = new System.Drawing.Point(114, 7);
-            this.lockmassMzTextBox.Name = "lockmassMzTextBox";
-            this.lockmassMzTextBox.Size = new System.Drawing.Size(78, 20);
-            this.lockmassMzTextBox.TabIndex = 1;
+            this.peakPickerCantWaitMinSNRTextBox.Location = new System.Drawing.Point(109, 23);
+            this.peakPickerCantWaitMinSNRTextBox.Name = "peakPickerCantWaitMinSNRTextBox";
+            this.peakPickerCantWaitMinSNRTextBox.Size = new System.Drawing.Size(62, 20);
+            this.peakPickerCantWaitMinSNRTextBox.TabIndex = 16;
             // 
-            // lockmassRefinerPanel
+            // peakPickerCantWaitMinPeakSpaceTextBox
             // 
-            this.lockmassRefinerPanel.BackColor = System.Drawing.SystemColors.Control;
-            this.lockmassRefinerPanel.Controls.Add(this.label14);
-            this.lockmassRefinerPanel.Controls.Add(this.lockmassToleranceTextBox);
-            this.lockmassRefinerPanel.Controls.Add(this.lockmassToleranceLabel);
-            this.lockmassRefinerPanel.Controls.Add(this.lockmassMzTextBox);
-            this.lockmassRefinerPanel.Controls.Add(this.lockmassMzLabel);
-            this.lockmassRefinerPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lockmassRefinerPanel.Location = new System.Drawing.Point(3, 3);
-            this.lockmassRefinerPanel.Name = "lockmassRefinerPanel";
-            this.lockmassRefinerPanel.Size = new System.Drawing.Size(702, 720);
-            this.lockmassRefinerPanel.TabIndex = 2;
+            this.peakPickerCantWaitMinPeakSpaceTextBox.Location = new System.Drawing.Point(109, 50);
+            this.peakPickerCantWaitMinPeakSpaceTextBox.Name = "peakPickerCantWaitMinPeakSpaceTextBox";
+            this.peakPickerCantWaitMinPeakSpaceTextBox.Size = new System.Drawing.Size(62, 20);
+            this.peakPickerCantWaitMinPeakSpaceTextBox.TabIndex = 18;
             // 
-            // lockmassToleranceTextBox
+            // label16
             // 
-            this.lockmassToleranceTextBox.Location = new System.Drawing.Point(114, 37);
-            this.lockmassToleranceTextBox.Name = "lockmassToleranceTextBox";
-            this.lockmassToleranceTextBox.Size = new System.Drawing.Size(78, 20);
-            this.lockmassToleranceTextBox.TabIndex = 3;
-            // 
-            // lockmassToleranceLabel
-            // 
-            this.lockmassToleranceLabel.AutoSize = true;
-            this.lockmassToleranceLabel.Location = new System.Drawing.Point(3, 40);
-            this.lockmassToleranceLabel.Name = "lockmassToleranceLabel";
-            this.lockmassToleranceLabel.Size = new System.Drawing.Size(105, 13);
-            this.lockmassToleranceLabel.TabIndex = 2;
-            this.lockmassToleranceLabel.Text = "Lockmass tolerance:";
-            // 
-            // label14
-            // 
-            this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(198, 40);
-            this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(43, 13);
-            this.label14.TabIndex = 4;
-            this.label14.Text = "Daltons";
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(6, 53);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(89, 13);
+            this.label16.TabIndex = 17;
+            this.label16.Text = "Min. peak space:";
             // 
             // ProcessingPanels
             // 
@@ -795,14 +848,16 @@ namespace seems
             this.chargeStateCalculatorPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chargeStateCalculatorMaxChargeUpDown)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.chargeStateCalculatorMinChargeUpDown)).EndInit();
+            this.lockmassRefinerTabPage.ResumeLayout(false);
+            this.lockmassRefinerPanel.ResumeLayout(false);
+            this.lockmassRefinerPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar2)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar3)).EndInit();
-            this.lockmassRefinerTabPage.ResumeLayout(false);
-            this.lockmassRefinerPanel.ResumeLayout(false);
-            this.lockmassRefinerPanel.PerformLayout();
+            this.peakPickerCantWaitParameters.ResumeLayout(false);
+            this.peakPickerCantWaitParameters.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -867,5 +922,10 @@ namespace seems
         public System.Windows.Forms.Panel lockmassRefinerPanel;
         public System.Windows.Forms.TextBox lockmassToleranceTextBox;
         public System.Windows.Forms.TextBox lockmassMzTextBox;
+        public System.Windows.Forms.GroupBox peakPickerCantWaitParameters;
+        private System.Windows.Forms.Label label15;
+        public System.Windows.Forms.TextBox peakPickerCantWaitMinPeakSpaceTextBox;
+        private System.Windows.Forms.Label label16;
+        public System.Windows.Forms.TextBox peakPickerCantWaitMinSNRTextBox;
     }
 }

@@ -28,6 +28,7 @@
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "CompassData.hpp"
 #include "Baf2Sql.hpp"
+#include "TimsData.hpp"
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
@@ -555,6 +556,8 @@ struct CompassDataImpl : public CompassData
         try {return MSSpectrumPtr(new MSSpectrumImpl(msSpectrumCollection_->default[scan], parameterCacheByMsLevel_, detailLevel));} CATCH_AND_FORWARD
     }
 
+    virtual pair<size_t, size_t> getFrameScanPair(int scanIndex) const { return make_pair(0ull, 0ull); }
+
     virtual size_t getLCSourceCount() const
     {
         if (!hasLCData_) return 0;
@@ -666,6 +669,8 @@ PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath,
 {
     if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
         return CompassDataPtr(new Baf2SqlImpl(rawpath));
+    else if (format == Reader_Bruker_Format_TDF)
+        return CompassDataPtr(new TimsDataImpl(rawpath, false));
 
     try {return CompassDataPtr(new CompassDataImpl(rawpath, format));} CATCH_AND_FORWARD
 }

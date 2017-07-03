@@ -57,7 +57,7 @@ namespace seems
 	/// <summary>
 	/// Contains the associated spectrum and chromatogram lists for a data source
 	/// </summary>
-	public class ManagedDataSource
+	public class ManagedDataSource : IComparable<ManagedDataSource>
 	{
 		public ManagedDataSource() { }
 
@@ -143,7 +143,12 @@ namespace seems
                 source.MSDataFile.run.spectrumList = tmp;
             }
         }
-	}
+
+        public int CompareTo(ManagedDataSource other)
+        {
+            return String.Compare(source.CurrentFilepath, other.source.CurrentFilepath, StringComparison.Ordinal);
+        }
+    }
 
 	/// <summary>
 	/// Manages the application
@@ -233,7 +238,7 @@ namespace seems
             DockPanel.ActivePaneChanged += new EventHandler( form_GotFocus );
 
             spectrumProcessingForm = new SpectrumProcessingForm();
-            spectrumProcessingForm.ProcessingChanged += new EventHandler( spectrumProcessingForm_ProcessingChanged );
+            spectrumProcessingForm.ProcessingChanged += spectrumProcessingForm_ProcessingChanged;
             //spectrumProcessingForm.GlobalProcessingOverrideButton.Click += new EventHandler( processingOverrideButton_Click );
             //spectrumProcessingForm.RunProcessingOverrideButton.Click += new EventHandler( processingOverrideButton_Click );
             spectrumProcessingForm.GotFocus += new EventHandler( form_GotFocus );
@@ -393,8 +398,31 @@ namespace seems
                 if( graphForm.FocusedPane != null &&
                     graphForm.FocusedItem.Tag is MassSpectrum )
                 {
-                    spectrumProcessingForm.UpdateProcessing( graphForm.FocusedItem.Tag as MassSpectrum );
-                    spectrumAnnotationForm.UpdateAnnotations( graphForm.FocusedItem.Tag as MassSpectrum );
+                    // if the focused pane has multiple items, and only one item has a processing or annotation, focus on that item instead
+                    var pane = graphForm.FocusedPane;
+                    var spectrum = graphForm.FocusedItem.Tag as MassSpectrum;
+                    if (pane.CurveList.Count > 1)
+                    {
+                        if (!spectrum.ProcessingList.Any())
+                        {
+                            var processedSpectrum = pane.CurveList.Select(o => o.Tag as MassSpectrum).FirstOrDefault(o => o != null && o.ProcessingList.Any()) ?? spectrum;
+                            spectrumProcessingForm.UpdateProcessing(processedSpectrum);
+                        }
+                        else
+                            spectrumProcessingForm.UpdateProcessing(spectrum);
+
+                        if (!spectrum.AnnotationList.Any())
+                        {
+                            var annotatedSpectrum = pane.CurveList.Select(o => o.Tag as MassSpectrum).FirstOrDefault(o => o != null && o.AnnotationList.Any()) ?? spectrum;
+                            spectrumAnnotationForm.UpdateAnnotations(annotatedSpectrum);
+                        }
+                        else
+                            spectrumAnnotationForm.UpdateAnnotations(spectrum);
+                        return;
+                    }
+
+                    spectrumProcessingForm.UpdateProcessing(spectrum);
+                    spectrumAnnotationForm.UpdateAnnotations(spectrum);
                 }
             } else if( form is SpectrumListForm )
             {
@@ -569,30 +597,24 @@ namespace seems
 					Application.DoEvents();
 				}
 				
-				// get all scans by sequential access
-				for( int i = 0; i < sl.size(); ++i )
+				// get first 100 scans by sequential access
+                spectrumListForm.BeginBulkLoad();
+
+                if (OnLoadDataSourceProgress(String.Format("Loading first 100 spectra from {0}...", managedDataSource.Source.Name), 0))
+                    return;
+
+				for( int i = 0; i < Math.Min(100, sl.size()); ++i )
 				{
                     if( i == index ) // skip the preloaded spectrum
                         continue;
 
                     MassSpectrum spectrum = managedDataSource.GetMassSpectrum( i );
-
-                    if (((i + 1) % 100) == 0 || (i + 1) == sl.size())
-                    {
-                        if (OnLoadDataSourceProgress(String.Format("Loading spectra from {0} ({1} of {2})...",
-                                                               managedDataSource.Source.Name, (i + 1), sl.size()),
-                                                     (i + 1) * 100 / sl.size()))
-                            return;
-                    }
-
                     spectrum.AnnotationSettings = defaultScanAnnotationSettings;
 					spectrumListForm.Add( spectrum );
 					source.Spectra.Add( spectrum );
 					if( !firstSpectrumLoaded )
 					{
 						firstSpectrumLoaded = true;
-						spectrumListForm.Show( DockPanel, DockState.DockBottom );
-                        Application.DoEvents();
 						if( firstChromatogramLoaded )
 						{
 							GraphForm spectrumGraph = CreateGraph();
@@ -604,10 +626,43 @@ namespace seems
                             showData(firstGraph, spectrum );
 						}
 					}
-					Application.DoEvents();
-				}
+                }
+                spectrumListForm.EndBulkLoad();
+                spectrumListForm.Show(DockPanel, DockState.DockBottom);
+                Application.DoEvents();
 
-                OnLoadDataSourceProgress("Finished loading source metadata.", 100);
+                // get the rest of the scans by sequential access
+                spectrumListForm.BeginBulkLoad();
+				for( int i = 100; i < sl.size(); ++i )
+				{
+                    if( i == index ) // skip the preloaded spectrum
+                        continue;
+
+                    if (((i + 1) % 1000) == 0 || (i + 1) == sl.size())
+                    {
+                        if (OnLoadDataSourceProgress(String.Format("Loading spectra from {0} ({1} of {2})...",
+                                                               managedDataSource.Source.Name, (i + 1), sl.size()),
+                                                     (i + 1) * 100 / sl.size()))
+                            return;
+                    }
+
+                    MassSpectrum spectrum = managedDataSource.GetMassSpectrum( i );
+                    spectrum.AnnotationSettings = defaultScanAnnotationSettings;
+					spectrumListForm.Add( spectrum );
+					source.Spectra.Add( spectrum );
+					Application.DoEvents();
+                }
+                spectrumListForm.EndBulkLoad();
+                Application.DoEvents();
+
+			    var ionMobilityColumn = spectrumListForm.GridView.Columns["IonMobility"];
+			    if (ionMobilityColumn != null && ionMobilityColumn.Visible)
+			    {
+			        var heatmapForm = new HeatmapForm(this, managedDataSource);
+			        heatmapForm.Show(DockPanel, DockState.Document);
+			    }
+
+			    OnLoadDataSourceProgress("Finished loading source metadata.", 100);
 
 			} catch( Exception ex )
 			{
@@ -985,96 +1040,68 @@ namespace seems
             }
         }
 
-        private void spectrumProcessingForm_ProcessingChanged( object sender, EventArgs e )
+        private void spectrumProcessingForm_ProcessingChanged( object sender, SpectrumProcessingForm.ProcessingChangedEventArgs e )
         {
-            if( sender is SpectrumProcessingForm )
+            if (!(sender is SpectrumProcessingForm)) return;
+
+            SpectrumProcessingForm spf = sender as SpectrumProcessingForm;
+
+            var sourcesToUpdate = new Set<ManagedDataSource>();
+
+            foreach( GraphForm form in CurrentGraphFormList )
             {
-                SpectrumProcessingForm spf = sender as SpectrumProcessingForm;
+                bool refresh = false;
 
-                foreach( GraphForm form in CurrentGraphFormList )
-                {
-                    bool refresh = false;
-                    foreach( Pane pane in form.PaneList )
-                        for( int i = 0; i < pane.Count; ++i )
-                        {
-                            if( pane[i].IsMassSpectrum &&
-                                pane[i].Id == spf.CurrentSpectrum.Id )
-                            {
-                                ( pane[i] as MassSpectrum ).SpectrumList = spectrumProcessingForm.GetProcessingSpectrumList( pane[i].Source.Source.MSDataFile.run.spectrumList );
-                                pane[i].Source.SpectrumListForm.UpdateRow(
-                                    pane[i].Source.SpectrumListForm.IndexOf( spf.CurrentSpectrum ),
-                                    ( pane[i] as MassSpectrum ).SpectrumList );
-                                refresh = true;
-                                break;
-                            }
-                        }
-                    if( refresh )
-                        form.Refresh();
-                }
-
-                foreach( DataPointTableForm form in CurrentDataPointTableFormList )
-                {
-                    bool refresh = false;
-                    foreach( GraphItem item in form.DataItems )
-                        if( item.IsMassSpectrum &&
-                            item.Id == spf.CurrentSpectrum.Id )
-                        {
-                            ( item as MassSpectrum ).SpectrumList = spectrumProcessingForm.GetProcessingSpectrumList( item.Source.Source.MSDataFile.run.spectrumList );
-                            refresh = true;
-                            break;
-                        }
-                    if( refresh )
-                        form.Refresh();
-                }
-
-                //getMetaSpectrum( spf.CurrentSpectrum ).DataProcessing = spf.datapro;
-            }
-        }
-
-        /*private void processingOverrideButton_Click( object sender, EventArgs e )
-        {
-            bool global = sender == spectrumProcessingForm.GlobalProcessingOverrideButton;
-            bool spectrum = sender == spectrumProcessingForm.GlobalProcessingOverrideButton || sender == spectrumProcessingForm.RunProcessingOverrideButton;
-
-            if( spectrum )
-            {
-                IList<ManagedDataSource> sources;
-                if( !global )
-                {
-                    sources = new List<ManagedDataSource>();
-                    sources.Add( spectrumProcessingForm.CurrentSpectrum.Source );
-                } else
-                    sources = dataSourceMap.Values;
-
-                foreach( ManagedDataSource source in sources )
-                {
-                    foreach( DataGridViewRow row in source.SpectrumListForm.GridView.Rows )
+                foreach( Pane pane in form.PaneList )
+                    foreach (GraphItem graphItem in pane)
                     {
-                        if( !row.Displayed )
+                        if (!graphItem.IsMassSpectrum) continue;
+                        var paneSpectrum = graphItem as MassSpectrum;
+
+                        if (e.ChangeScope == SpectrumProcessingForm.ProcessingChangedEventArgs.Scope.Spectrum && paneSpectrum.Id != e.Spectrum.Id)
+                            continue;
+                        if (e.ChangeScope == SpectrumProcessingForm.ProcessingChangedEventArgs.Scope.Run && paneSpectrum.Source != e.Spectrum.Source)
                             continue;
 
-                        source.SpectrumListForm.GetSpectrum(row.Index).DataProcessing = spectrumProcessingForm.ProcessingListView.DataProcessing;
-                        source.SpectrumListForm.UpdateRow( row.Index,
-                            spectrumProcessingForm.ProcessingListView.ProcessingWrapper( source.Source.MSDataFile.run.spectrumList ) );
-                        Application.DoEvents();
-                    }
-                }
+                        paneSpectrum.SpectrumList = spectrumProcessingForm.GetProcessingSpectrumList(paneSpectrum, paneSpectrum.Source.Source.MSDataFile.run.spectrumList);
 
-                foreach( GraphForm form in CurrentGraphFormList )
-                {
-                    foreach( Pane pane in form.PaneList )
-                        for( int i = 0; i < pane.Count; ++i )
+                        refresh = true;
+
+                        // for spectrum changes, the spectrumList only needs to update that row and we can stop looking at other panes
+                        if (e.ChangeScope == SpectrumProcessingForm.ProcessingChangedEventArgs.Scope.Spectrum)
                         {
-                            if( pane[i].IsMassSpectrum && ( global ||
-                                ( !global && spectrumProcessingForm.CurrentSpectrum.Source == pane[i].Source ) ) )
-                            {
-                                ( pane[i] as MassSpectrum ).SpectrumList = spectrumProcessingForm.ProcessingListView.ProcessingWrapper( pane[i].Source.Source.MSDataFile.run.spectrumList );
-                            }
+                            graphItem.Source.SpectrumListForm.UpdateRow(paneSpectrum.Source.SpectrumListForm.IndexOf(spf.CurrentSpectrum), paneSpectrum.SpectrumList);
+                            break;
                         }
+                        else if (e.ChangeScope == SpectrumProcessingForm.ProcessingChangedEventArgs.Scope.Run && graphItem.Source == e.Spectrum.Source ||
+                                 e.ChangeScope == SpectrumProcessingForm.ProcessingChangedEventArgs.Scope.Global)
+                            sourcesToUpdate.Add(paneSpectrum.Source);
+                    }
+                if( refresh )
                     form.Refresh();
-                }
             }
-        }*/
+
+            // update all rows for this spectrum's run (Scope.Run) or all runs (Scope.Global)
+            foreach (var source in sourcesToUpdate)
+                source.SpectrumListForm.UpdateAllRows();
+
+            foreach( DataPointTableForm form in CurrentDataPointTableFormList )
+            {
+                bool refresh = false;
+                foreach( GraphItem item in form.DataItems )
+                    if( item.IsMassSpectrum &&
+                        item.Id == spf.CurrentSpectrum.Id )
+                    {
+                        ( item as MassSpectrum ).SpectrumList = spectrumProcessingForm.GetProcessingSpectrumList(item as MassSpectrum, item.Source.Source.MSDataFile.run.spectrumList);
+                        refresh = true;
+                        break;
+                    }
+                if( refresh )
+                    form.Refresh();
+            }
+
+            //getMetaSpectrum( spf.CurrentSpectrum ).DataProcessing = spf.datapro;
+        }
 
         private void chromatogramListForm_CellDoubleClick( object sender, ChromatogramListCellDoubleClickEventArgs e )
         {
@@ -1224,5 +1251,5 @@ namespace seems
             KeyValuePair<string, MSDataFile> sourcePair = (KeyValuePair<string, MSDataFile>) threadArg;
             sourcePair.Value.write( sourcePair.Key );
         }
-    }
+	}
 }

@@ -85,8 +85,7 @@ namespace seems
 
     public abstract class ProcessingBase : IProcessing
     {
-        bool enabled;
-        public bool Enabled { get { return enabled; } set { enabled = value; } }
+        public bool Enabled { get; set; }
 
         public event EventHandler OptionsChanged;
         protected void OnOptionsChanged( object sender, EventArgs e )
@@ -97,7 +96,7 @@ namespace seems
 
         public ProcessingBase()
         {
-            enabled = true;
+            Enabled = true;
         }
 
         public abstract ProcessableListType ProcessList<ProcessableListType>( ProcessableListType innerList ) where ProcessableListType : class;
@@ -225,16 +224,22 @@ namespace seems
         private PeakDetector algorithm;
         private bool preferVendorPeakPicking;
         private uint localMaximumWindowSize;
+        private double minSNR;
+        private double minPeakSpace;
 
         public PeakPickingProcessor()
         {
             preferVendorPeakPicking = true;
             localMaximumWindowSize = 3;
-            algorithm = new LocalMaximumPeakDetector( localMaximumWindowSize );
+            minSNR = 1;
+            minPeakSpace = 0.1;
+            algorithm = new CwtPeakDetector(minSNR, minPeakSpace);
 
-            processingPanels.peakPickerPreferVendorCentroidingCheckbox.CheckedChanged += new EventHandler( optionsChanged );
-            processingPanels.peakPickerAlgorithmComboBox.SelectedIndexChanged += new EventHandler( optionsChanged );
-            processingPanels.peakPickerLocalMaximumWindowSizeTrackBar.ValueChanged += new EventHandler( optionsChanged );
+            processingPanels.peakPickerPreferVendorCentroidingCheckbox.CheckedChanged += optionsChanged;
+            processingPanels.peakPickerAlgorithmComboBox.SelectedIndexChanged += optionsChanged;
+            processingPanels.peakPickerLocalMaximumWindowSizeTrackBar.ValueChanged += optionsChanged;
+            processingPanels.peakPickerCantWaitMinSNRTextBox.TextChanged += optionsChanged;
+            processingPanels.peakPickerCantWaitMinPeakSpaceTextBox.TextChanged += optionsChanged;
         }
 
         void optionsChanged( object sender, EventArgs e )
@@ -249,7 +254,15 @@ namespace seems
                     localMaximumWindowSize = (uint) processingPanels.peakPickerLocalMaximumWindowSizeTrackBar.Value;
                     algorithm = new LocalMaximumPeakDetector( localMaximumWindowSize );
                     break;
+                case 1:
+                    minSNR = Convert.ToDouble(processingPanels.peakPickerCantWaitMinSNRTextBox.Text);
+                    minPeakSpace = Convert.ToDouble(processingPanels.peakPickerCantWaitMinPeakSpaceTextBox.Text);
+                    algorithm = new CwtPeakDetector( minSNR, minPeakSpace );
+                    break;
             }
+
+            processingPanels.peakPickerLocalMaximumParameters.Visible = algorithm is LocalMaximumPeakDetector;
+            processingPanels.peakPickerCantWaitParameters.Visible = algorithm is CwtPeakDetector;
 
             OnOptionsChanged( sender, e );
         }
@@ -258,6 +271,8 @@ namespace seems
         {
             if( algorithm is LocalMaximumPeakDetector )
                 return "Peak Picker (Local Maximum)";
+            else if( algorithm is CwtPeakDetector )
+                return "Peak Picker (CWT)";
             else
                 throw new Exception( "Invalid peak detection algorithm!" );
         }
@@ -267,6 +282,8 @@ namespace seems
             ProcessingMethod pm = new ProcessingMethod();
             if( algorithm is LocalMaximumPeakDetector )
                 pm.userParams.Add( new UserParam( "algorithm", "Local Maximum", "SeeMS" ) );
+            else if( algorithm is CwtPeakDetector )
+                pm.userParams.Add( new UserParam( "algorithm", "CWT", "SeeMS" ) );
             return pm;
         }
 
@@ -288,10 +305,16 @@ namespace seems
                 processingPanels.peakPickerPreferVendorCentroidingCheckbox.Checked = preferVendorPeakPicking;
                 if( algorithm is LocalMaximumPeakDetector )
                     processingPanels.peakPickerAlgorithmComboBox.SelectedIndex = 0;
+                else if( algorithm is CwtPeakDetector )
+                    processingPanels.peakPickerAlgorithmComboBox.SelectedIndex = 1;
 
                 processingPanels.peakPickerLocalMaximumParameters.Visible = algorithm is LocalMaximumPeakDetector;
+                processingPanels.peakPickerCantWaitParameters.Visible = algorithm is CwtPeakDetector;
 
-                processingPanels.peakPickerLocalMaximumWindowSizeTrackBar.Value = (int) localMaximumWindowSize;
+                processingPanels.peakPickerLocalMaximumWindowSizeTrackBar.Value = (int)localMaximumWindowSize;
+                processingPanels.peakPickerCantWaitMinSNRTextBox.Text = minSNR.ToString();
+                processingPanels.peakPickerCantWaitMinPeakSpaceTextBox.Text = minPeakSpace.ToString();
+
                 panel.Tag = this;
 
                 return panel;
@@ -306,10 +329,60 @@ namespace seems
         private ThresholdFilter.ThresholdingOrientation orientation;
         private double threshold;
 
+        public double Threshold
+        {
+            get { return threshold; }
+            set
+            {
+                threshold = value;
+                OnOptionsChanged(this, EventArgs.Empty);
+            }
+        }
+
+        public ThresholdFilter.ThresholdingOrientation Orientation
+        {
+            get { return orientation; }
+            set
+            {
+                orientation = value;
+                OnOptionsChanged(this, EventArgs.Empty);
+            }
+        }
+
+        public ThresholdFilter.ThresholdingBy_Type Type
+        {
+            get { return type; }
+            set
+            {
+                type = value;
+                OnOptionsChanged(this, EventArgs.Empty);
+            }
+        }
+
+        private double defaultThreshold(ThresholdFilter.ThresholdingBy_Type type)
+        {
+            switch (type)
+            {
+                default:
+                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_Count:
+                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_CountAfterTies:
+                    return 100;
+
+                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_AbsoluteIntensity:
+                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfBasePeakIntensity:
+                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensity:
+                    return 0;
+
+                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensityCutoff:
+                    return 1;
+            }
+        }
+
         public ThresholdingProcessor()
         {
             type = ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_Count;
             orientation = ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense;
+            threshold = defaultThreshold(type);
 
             processingPanels.thresholderValueTextBox.TextChanged += new EventHandler( optionsChanged );
             processingPanels.thresholderOrientationComboBox.TextChanged += new EventHandler( optionsChanged );
@@ -337,11 +410,12 @@ namespace seems
             if( panel.Tag != this )
                 return;
 
-            if( !Double.TryParse( processingPanels.thresholderValueTextBox.Text, out threshold ) )
-                threshold = 0;
-
             type = (ThresholdFilter.ThresholdingBy_Type) processingPanels.thresholderTypeComboBox.SelectedIndex;
-            orientation = (ThresholdFilter.ThresholdingOrientation) processingPanels.thresholderOrientationComboBox.SelectedIndex;
+            orientation = (ThresholdFilter.ThresholdingOrientation)processingPanels.thresholderOrientationComboBox.SelectedIndex;
+
+            if (!Double.TryParse(processingPanels.thresholderValueTextBox.Text, out threshold))
+                threshold = defaultThreshold(type);
+
             OnOptionsChanged( sender, e );
         }
 

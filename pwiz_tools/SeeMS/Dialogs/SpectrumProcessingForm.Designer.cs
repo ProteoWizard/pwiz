@@ -62,16 +62,28 @@ namespace seems
             this.peakPickerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.smootherToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.thresholderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.lockmassRefinerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addProcessingDropDownButton = new System.Windows.Forms.ToolStripDropDownButton();
             this.removeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
             this.removeProcessingButton = new System.Windows.Forms.ToolStripButton();
             this.moveUpProcessingButton = new System.Windows.Forms.ToolStripButton();
             this.moveDownProcessingButton = new System.Windows.Forms.ToolStripButton();
-            this.globalOverrideToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.runOverrideToolStripButton = new System.Windows.Forms.ToolStripButton();
+            this.globalOverrideToolStripButton = new System.Windows.Forms.ToolStripDropDownButton();
+            this.global_withAllListedProcessorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.global_withCurrentlySelectedProcessorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.clearGlobalOverrideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.overrideModeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.beforeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.afterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.replaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.runOverrideToolStripButton = new System.Windows.Forms.ToolStripDropDownButton();
+            this.run_withAllListedProcessorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.run_withCurrentlySelectedProcessorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.clearRunOverrideToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
-            this.lockmassRefinerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
             this.splitContainer.Panel1.SuspendLayout();
             this.splitContainer.SuspendLayout();
@@ -161,8 +173,8 @@ namespace seems
             this.thresholderToolStripMenuItem,
             this.lockmassRefinerToolStripMenuItem});
             this.addContextMenuStrip.Name = "addContextMenuStrip";
-            this.addContextMenuStrip.OwnerItem = this.addProcessingDropDownButton;
-            this.addContextMenuStrip.Size = new System.Drawing.Size(199, 136);
+            this.addContextMenuStrip.OwnerItem = this.addToolStripMenuItem;
+            this.addContextMenuStrip.Size = new System.Drawing.Size(199, 114);
             // 
             // chargeStateCalculatorToolStripMenuItem
             // 
@@ -191,6 +203,13 @@ namespace seems
             this.thresholderToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.thresholderToolStripMenuItem.Text = "Thresholder";
             this.thresholderToolStripMenuItem.Click += new System.EventHandler(this.thresholderToolStripMenuItem_Click);
+            // 
+            // lockmassRefinerToolStripMenuItem
+            // 
+            this.lockmassRefinerToolStripMenuItem.Name = "lockmassRefinerToolStripMenuItem";
+            this.lockmassRefinerToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.lockmassRefinerToolStripMenuItem.Text = "Lockmass Refiner";
+            this.lockmassRefinerToolStripMenuItem.Click += new System.EventHandler(this.lockmassRefinerToolStripMenuItem_Click);
             // 
             // addProcessingDropDownButton
             // 
@@ -265,21 +284,123 @@ namespace seems
             // 
             // globalOverrideToolStripButton
             // 
+            this.globalOverrideToolStripButton.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.global_withAllListedProcessorsToolStripMenuItem,
+            this.global_withCurrentlySelectedProcessorToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.overrideModeToolStripMenuItem,
+            this.toolStripSeparator2,
+            this.clearGlobalOverrideToolStripMenuItem});
             this.globalOverrideToolStripButton.Enabled = false;
             this.globalOverrideToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("globalOverrideToolStripButton.Image")));
             this.globalOverrideToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.globalOverrideToolStripButton.Name = "globalOverrideToolStripButton";
-            this.globalOverrideToolStripButton.Size = new System.Drawing.Size(169, 24);
+            this.globalOverrideToolStripButton.Size = new System.Drawing.Size(178, 24);
             this.globalOverrideToolStripButton.Text = "Override Global Processing";
+            // 
+            // global_withAllListedProcessorsToolStripMenuItem
+            // 
+            this.global_withAllListedProcessorsToolStripMenuItem.Name = "global_withAllListedProcessorsToolStripMenuItem";
+            this.global_withAllListedProcessorsToolStripMenuItem.Size = new System.Drawing.Size(249, 22);
+            this.global_withAllListedProcessorsToolStripMenuItem.Text = "With all listed processors";
+            this.global_withAllListedProcessorsToolStripMenuItem.Click += new System.EventHandler(this.global_withAllListedProcessorsToolStripMenuItem_Click);
+            // 
+            // global_withCurrentlySelectedProcessorToolStripMenuItem
+            // 
+            this.global_withCurrentlySelectedProcessorToolStripMenuItem.Name = "global_withCurrentlySelectedProcessorToolStripMenuItem";
+            this.global_withCurrentlySelectedProcessorToolStripMenuItem.Size = new System.Drawing.Size(249, 22);
+            this.global_withCurrentlySelectedProcessorToolStripMenuItem.Text = "With currently selected processor";
+            this.global_withCurrentlySelectedProcessorToolStripMenuItem.Click += new System.EventHandler(this.global_withCurrentlySelectedProcessorToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(246, 6);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(246, 6);
+            // 
+            // clearGlobalOverrideToolStripMenuItem
+            // 
+            this.clearGlobalOverrideToolStripMenuItem.Enabled = false;
+            this.clearGlobalOverrideToolStripMenuItem.Name = "clearGlobalOverrideToolStripMenuItem";
+            this.clearGlobalOverrideToolStripMenuItem.Size = new System.Drawing.Size(249, 22);
+            this.clearGlobalOverrideToolStripMenuItem.Text = "Clear global override";
+            this.clearGlobalOverrideToolStripMenuItem.Click += new System.EventHandler(this.clearGlobalOverrideToolStripMenuItem_Click);
+            // 
+            // overrideModeToolStripMenuItem
+            // 
+            this.overrideModeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.beforeToolStripMenuItem,
+            this.afterToolStripMenuItem,
+            this.replaceToolStripMenuItem});
+            this.overrideModeToolStripMenuItem.Name = "overrideModeToolStripMenuItem";
+            this.overrideModeToolStripMenuItem.Size = new System.Drawing.Size(249, 22);
+            this.overrideModeToolStripMenuItem.Text = "Override mode";
+            // 
+            // beforeToolStripMenuItem
+            // 
+            this.beforeToolStripMenuItem.CheckOnClick = true;
+            this.beforeToolStripMenuItem.Name = "beforeToolStripMenuItem";
+            this.beforeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.beforeToolStripMenuItem.Text = "Before";
+            this.beforeToolStripMenuItem.Click += new System.EventHandler(this.global_overrideModeToolStripMenuItem_Click);
+            // 
+            // afterToolStripMenuItem
+            // 
+            this.afterToolStripMenuItem.CheckOnClick = true;
+            this.afterToolStripMenuItem.Name = "afterToolStripMenuItem";
+            this.afterToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.afterToolStripMenuItem.Text = "After";
+            this.afterToolStripMenuItem.Click += new System.EventHandler(this.global_overrideModeToolStripMenuItem_Click);
+            // 
+            // replaceToolStripMenuItem
+            // 
+            this.replaceToolStripMenuItem.Checked = true;
+            this.replaceToolStripMenuItem.CheckOnClick = true;
+            this.replaceToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.replaceToolStripMenuItem.Name = "replaceToolStripMenuItem";
+            this.replaceToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.replaceToolStripMenuItem.Text = "Replace";
+            this.replaceToolStripMenuItem.Click += new System.EventHandler(this.global_overrideModeToolStripMenuItem_Click);
             // 
             // runOverrideToolStripButton
             // 
+            this.runOverrideToolStripButton.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.run_withAllListedProcessorsToolStripMenuItem,
+            this.run_withCurrentlySelectedProcessorToolStripMenuItem,
+            this.clearRunOverrideToolStripMenuItem});
             this.runOverrideToolStripButton.Enabled = false;
             this.runOverrideToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("runOverrideToolStripButton.Image")));
             this.runOverrideToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.runOverrideToolStripButton.Name = "runOverrideToolStripButton";
-            this.runOverrideToolStripButton.Size = new System.Drawing.Size(156, 24);
+            this.runOverrideToolStripButton.Size = new System.Drawing.Size(165, 24);
             this.runOverrideToolStripButton.Text = "Override Run Processing";
+            this.runOverrideToolStripButton.DropDownOpening += new System.EventHandler(this.runOverrideToolStripButton_DropDownOpening);
+            // 
+            // run_withAllListedProcessorsToolStripMenuItem
+            // 
+            this.run_withAllListedProcessorsToolStripMenuItem.Name = "run_withAllListedProcessorsToolStripMenuItem";
+            this.run_withAllListedProcessorsToolStripMenuItem.Size = new System.Drawing.Size(249, 22);
+            this.run_withAllListedProcessorsToolStripMenuItem.Text = "With all listed processors";
+            this.run_withAllListedProcessorsToolStripMenuItem.Click += new System.EventHandler(this.run_withAllListedProcessorsToolStripMenuItem_Click);
+            // 
+            // run_withCurrentlySelectedProcessorToolStripMenuItem
+            // 
+            this.run_withCurrentlySelectedProcessorToolStripMenuItem.Name = "run_withCurrentlySelectedProcessorToolStripMenuItem";
+            this.run_withCurrentlySelectedProcessorToolStripMenuItem.Size = new System.Drawing.Size(249, 22);
+            this.run_withCurrentlySelectedProcessorToolStripMenuItem.Text = "With currently selected processor";
+            this.run_withCurrentlySelectedProcessorToolStripMenuItem.Click += new System.EventHandler(this.run_withCurrentlySelectedProcessorToolStripMenuItem_Click);
+            // 
+            // clearRunOverrideToolStripMenuItem
+            // 
+            this.clearRunOverrideToolStripMenuItem.Enabled = false;
+            this.clearRunOverrideToolStripMenuItem.Name = "clearRunOverrideToolStripMenuItem";
+            this.clearRunOverrideToolStripMenuItem.Size = new System.Drawing.Size(249, 22);
+            this.clearRunOverrideToolStripMenuItem.Text = "Clear run override";
+            this.clearRunOverrideToolStripMenuItem.Click += new System.EventHandler(this.clearRunOverrideToolStripMenuItem_Click);
             // 
             // imageList1
             // 
@@ -289,13 +410,6 @@ namespace seems
             this.imageList1.Images.SetKeyName(1, "Centroider.png");
             this.imageList1.Images.SetKeyName(2, "DataProcessing.png");
             this.imageList1.Images.SetKeyName(3, "Smoother.png");
-            // 
-            // lockmassRefinerToolStripMenuItem
-            // 
-            this.lockmassRefinerToolStripMenuItem.Name = "lockmassRefinerToolStripMenuItem";
-            this.lockmassRefinerToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
-            this.lockmassRefinerToolStripMenuItem.Text = "Lockmass Refiner";
-            this.lockmassRefinerToolStripMenuItem.Click += new System.EventHandler(this.lockmassRefinerToolStripMenuItem_Click);
             // 
             // SpectrumProcessingForm
             // 
@@ -324,8 +438,8 @@ namespace seems
 
         private System.Windows.Forms.SplitContainer splitContainer;
         private System.Windows.Forms.ToolStrip toolStrip;
-        private System.Windows.Forms.ToolStripButton runOverrideToolStripButton;
-        private System.Windows.Forms.ToolStripButton globalOverrideToolStripButton;
+        private System.Windows.Forms.ToolStripDropDownButton runOverrideToolStripButton;
+        private System.Windows.Forms.ToolStripDropDownButton globalOverrideToolStripButton;
         private System.Windows.Forms.ImageList imageList1;
         private System.Windows.Forms.ListView processingListView;
         private System.Windows.Forms.ColumnHeader ProcessingHeader;
@@ -343,6 +457,18 @@ namespace seems
         private System.Windows.Forms.ToolStripButton moveUpProcessingButton;
         private System.Windows.Forms.ToolStripButton moveDownProcessingButton;
         private System.Windows.Forms.ToolStripMenuItem lockmassRefinerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem global_withAllListedProcessorsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem global_withCurrentlySelectedProcessorToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem clearGlobalOverrideToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem run_withAllListedProcessorsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem run_withCurrentlySelectedProcessorToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem clearRunOverrideToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripMenuItem overrideModeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem beforeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem afterToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem replaceToolStripMenuItem;
 
 
     }

@@ -57,9 +57,17 @@ Reader_Bruker_Format format(const string& path)
             return Reader_Bruker_Format_YEP;
         else if(leaf == "analysis.baf")
             return Reader_Bruker_Format_BAF;
+        else if(leaf == "analysis.tdf" ||
+                leaf == "analysis.tdf_bin")
+            return Reader_Bruker_Format_TDF;
         else
             return Reader_Bruker_Format_Unknown;
     }
+
+    // Check for tdf-based data;
+    // The directory should have a file named "Analysis.tdf"
+    if (bfs::exists(sourcePath / "Analysis.tdf") || bfs::exists(sourcePath / "analysis.tdf"))
+        return Reader_Bruker_Format_TDF;
 
     // TODO: 1SRef is not the only possible substring below, get more examples!
 

@@ -222,11 +222,30 @@ namespace seems
                 scanInfo.Append( "unknown" );
             row.ScanInfo = scanInfo.ToString();
 
+            row.IonMobility = scan != null ? (double) scan.cvParam(CVID.MS_ion_mobility_drift_time).value : 0;
+            if (row.IonMobility == 0 && scan != null)
+                row.IonMobility = scan != null ? (double) scan.cvParam(CVID.MS_inverse_reduced_ion_mobility).value : 0;
+
             row.SpotId = s.spotID;
             row.SpectrumType = s.cvParamChild( CVID.MS_spectrum_type ).name;
             row.DataPoints = s.defaultArrayLength;
             row.IcId = ( ic == null || ic.id.Length == 0 ? "unknown" : ic.id );
             row.DpId = ( dp == null || dp.id.Length == 0 ? "unknown" : dp.id );
+        }
+
+        public void BeginBulkLoad()
+        {
+            spectrumDataSet.SpectrumTable.BeginLoadData();
+            spectraSource.SuspendBinding();
+            spectraSource.RaiseListChangedEvents = false;
+        }
+
+        public void EndBulkLoad()
+        {
+            spectrumDataSet.SpectrumTable.EndLoadData();
+            spectraSource.ResumeBinding();
+            spectraSource.RaiseListChangedEvents = true;
+            spectraSource.ResetBindings(true);
         }
 
 		public void Add( MassSpectrum spectrum )
@@ -272,11 +291,15 @@ namespace seems
 
             row.Index = spectrum.Index;
             updateRow( row, spectrum );
-            spectrumDataSet.SpectrumTable.AddSpectrumTableRow( row );
+            spectrumDataSet.SpectrumTable.LoadDataRow(row.ItemArray, true);
 
             //int rowIndex = gridView.Rows.Add();
 			//gridView.Rows[rowIndex].Tag = spectrum;
             spectrum.Tag = this;
+
+
+            if (row.IonMobility > 0)
+                gridView.Columns["IonMobility"].Visible = true;
 
             if( spectrum.Element.spotID.Length > 0 )
                 gridView.Columns["SpotId"].Visible = true;

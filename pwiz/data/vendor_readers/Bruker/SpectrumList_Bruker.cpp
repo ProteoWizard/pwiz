@@ -35,6 +35,7 @@
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include <boost/range/algorithm/find_if.hpp>
+#include <boost/spirit/include/karma.hpp>
 
 
 using namespace pwiz::util;
@@ -211,6 +212,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         double scanTime = spectrum->getRetentionTime();
         if (scanTime > 0)
             scan.set(MS_scan_start_time, scanTime, UO_second);
+
+        if (spectrum->isIonMobilitySpectrum())
+            scan.set(MS_inverse_reduced_ion_mobility, spectrum->oneOverK0(), MS_Vs_cm_2);
 
         IonPolarity polarity = spectrum->getPolarity();
         switch (polarity)
@@ -459,6 +463,28 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
             }
             break;
 
+        // a TDF's source path is the same as the source file
+        case Reader_Bruker_Format_TDF:
+            {
+                sourcePaths_.push_back(rootpath_ / "Analysis.tdf");
+                // strip parent path to get "bar.d/Analysis.tdf"
+                bfs::path relativePath = bfs::path(rootpath_.filename()) / "Analysis.tdf";
+                addSource(msd_, relativePath, rootpath_);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_TDF_nativeID_format);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_TDF_format);
+                msd_.run.defaultSourceFilePtr = msd_.fileDescription.sourceFilePtrs.back();
+            }
+
+            {
+                sourcePaths_.push_back(rootpath_ / "Analysis.tdf_bin");
+                // strip parent path to get "bar.d/Analysis.tdf_bin"
+                bfs::path relativePath = bfs::path(rootpath_.filename()) / "Analysis.tdf_bin";
+                addSource(msd_, relativePath, rootpath_);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_TDF_nativeID_format);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_TDF_format);
+            }
+            break;
+
         // a BAF/U2 combo has two sources, with different nativeID formats
         case Reader_Bruker_Format_BAF_and_U2:
             {
@@ -503,6 +529,7 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
 
 PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
 {
+    using namespace boost::spirit::karma;
     map<std::string, size_t> idToIndexTempMap;
 
     if (format_ == Reader_Bruker_Format_U2 ||
@@ -522,8 +549,8 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
                 si.collection = source->getCollectionId();
                 si.scan = scan;
                 si.index = index_.size()-1;
-                si.id = "collection=" + lexical_cast<string>(si.collection) +
-                        " scan=" + lexical_cast<string>(si.scan);
+                si.id = "collection=" + lexical_cast<std::string>(si.collection) +
+                        " scan=" + lexical_cast<std::string>(si.scan);
                 idToIndexTempMap[si.id] = si.index;
             }
         }
@@ -543,6 +570,23 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
             idToIndexTempMap[si.id] = si.index;
         }
     }
+    else if (format_ == Reader_Bruker_Format_TDF)
+    {
+        for (size_t scan = 1, end = compassDataPtr_->getMSSpectrumCount(); scan <= end; ++scan)
+        {
+            index_.push_back(IndexEntry());
+            IndexEntry& si = index_.back();
+            si.source = si.collection = -1;
+            si.index = index_.size() - 1;
+            si.scan = scan;
+            auto frameScanPair = compassDataPtr_->getFrameScanPair(scan);
+            std::back_insert_iterator<std::string> sink(si.id);
+            generate(sink,
+                     "frame=" << int_ << " scan=" << int_,
+                     frameScanPair.first, frameScanPair.second);
+            idToIndexTempMap[si.id] = si.index;
+        }
+    }
     else if (format_ != Reader_Bruker_Format_U2)
     {
         for (size_t scan=1, end=compassDataPtr_->getMSSpectrumCount(); scan <= end; ++scan)
@@ -552,7 +596,10 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
             si.source = si.collection = -1;
             si.index = index_.size()-1;
             si.scan = scan;
-            si.id = "scan=" + lexical_cast<string>(si.scan);
+            std::back_insert_iterator<std::string> sink(si.id);
+            generate(sink,
+                     "scan=" << int_,
+                     si.scan);
             idToIndexTempMap[si.id] = si.index;
         }
     }

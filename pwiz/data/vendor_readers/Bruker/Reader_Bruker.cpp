@@ -52,6 +52,7 @@ std::string pwiz::msdata::Reader_Bruker::identify(const std::string& filename,
         case Reader_Bruker_Format_BAF: return "Bruker BAF";
         case Reader_Bruker_Format_U2: return "Bruker U2";
         case Reader_Bruker_Format_BAF_and_U2: return "Bruker BAF/U2";
+        case Reader_Bruker_Format_TDF: return "Bruker TDF";
 
         case Reader_Bruker_Format_Unknown:
         default:

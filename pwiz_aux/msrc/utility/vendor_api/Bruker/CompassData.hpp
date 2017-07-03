@@ -202,6 +202,9 @@ struct PWIZ_API_DECL MSSpectrum
     virtual int getChargeState() const = 0;
     virtual double getIsolationWidth() const = 0;
 
+    virtual bool isIonMobilitySpectrum() const { return false; }
+    virtual double oneOverK0() const { return 0.0; }
+
     virtual MSSpectrumParameterListPtr parameters() const = 0;
 };
 
@@ -250,6 +253,9 @@ struct PWIZ_API_DECL CompassData
 
     /// returns the number of spectra available from the MS source
     virtual size_t getMSSpectrumCount() const = 0;
+
+    /// converts a one-dimensional, one-based scan number to a one-based frame number and one-based scan number within the frame (only for TDF data)
+    virtual std::pair<size_t, size_t> getFrameScanPair(int scan) const = 0;
 
     /// returns a spectrum from the MS source
     virtual MSSpectrumPtr getMSSpectrum(int scan, DetailLevel detailLevel = DetailLevel_FullMetadata) const = 0;

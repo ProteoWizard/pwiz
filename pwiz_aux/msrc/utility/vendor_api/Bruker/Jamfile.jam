@@ -115,6 +115,8 @@ rule vendor-api-requirements ( properties * )
         result += <assembly-dependency>$(PLATFORM_API_PATH)/baf2sql_c.dll ;
         result += <assembly-dependency>simplelogger.properties ;
         result += <assembly-dependency>bdal-logconf.xml ;
+        
+        result += <assembly-dependency>$(PLATFORM_API_PATH)/timsdata.dll ;
     }
     else
     {
@@ -141,12 +143,21 @@ searched-lib baf2sql
         <toolset-msvc:version>10.0express,<secure-scl>on:<build>no
     ;
 
+searched-lib timsdata
+    : # sources
+    : # requirements
+        <link>shared:<define>PWIZ_DYN_LINK
+        <name>timsdata
+        <conditional>@dll-arch-specific-path
+    ;
+
 if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
     lib pwiz_vendor_api_bruker
         : # sources
             CompassData.cpp
             Baf2Sql.cpp
+            TimsData.cpp
             $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Bruker//Reader_Bruker_Detail
         : # requirements
 
@@ -165,11 +176,13 @@ if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
             <toolset>msvc:<using-clr>true # requires hacked msvc.jam
             <link>static # <using-clr>true and <link>shared don't mix
             <library>baf2sql
+            <library>timsdata
             <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp
         : # default-build
         : # usage-requirements
             <conditional>@vendor-api-requirements
             <library>baf2sql
+            <library>timsdata
             <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp
         ;
 

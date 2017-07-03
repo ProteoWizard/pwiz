@@ -29,6 +29,7 @@ using pwiz.CLI.cv;
 using pwiz.CLI.msdata;
 using pwiz.CLI.proteome;
 using pwiz.CLI.chemistry;
+using pwiz.Common.Collections;
 using ZedGraph;
 
 namespace seems
@@ -57,7 +58,7 @@ namespace seems
         /// Gets the panel containing controls to configure the annotation,
         /// e.g. which ion series to annotate
         /// </summary>
-        Panel OptionsPanel { get; }
+        Panel GetOptionsPanel(bool updateControls = true);
 
         /// <summary>
         /// Occurs when the options stored in the panel are changed.
@@ -79,7 +80,7 @@ namespace seems
                     annotationArgs[0] == "pfr") // peptide fragmentation
                 {
                     if (annotationArgs.Length != 5)
-                        throw new ArgumentException("peptide fragmentation annotation requires 5 arguments");
+                        throw new ArgumentException("peptide fragmentation annotation requires 4 arguments: <sequence> <minCharge> <maxCharge> <comma-delimited set of ion series>");
 
                     string sequence = annotationArgs[1];
                     int minCharge = Math.Min(1, Convert.ToInt32(annotationArgs[2]));
@@ -117,7 +118,7 @@ namespace seems
         public bool Enabled { get { return enabled; } set { enabled = value; } }
 
         public event EventHandler OptionsChanged;
-        protected void OnOptionsChanged (object sender, EventArgs e)
+        protected virtual void OnOptionsChanged (object sender, EventArgs e)
         {
             if (OptionsChanged != null)
                 OptionsChanged(sender, e);
@@ -135,7 +136,7 @@ namespace seems
 
         public static AnnotationPanels annotationPanels = new AnnotationPanels();
 
-        public abstract Panel OptionsPanel { get; }
+        public abstract Panel GetOptionsPanel(bool updateControls = true);
     }
 
     public class PeptideFragmentationAnnotation : AnnotationBase
@@ -158,7 +159,7 @@ namespace seems
         Map<CVID, IonSeries> ionSeriesByDissociationMethod = new Map<CVID, IonSeries>
         {
             {CVID.MS_collision_induced_dissociation, IonSeries.b | IonSeries.y},
-            {CVID.MS_beam_type_collision_induced_dissociation, IonSeries.y | IonSeries.Immonium}, // HCD
+            {CVID.MS_beam_type_collision_induced_dissociation, IonSeries.b | IonSeries.y | IonSeries.Immonium}, // HCD
             {CVID.MS_trap_type_collision_induced_dissociation, IonSeries.b | IonSeries.y},
             {CVID.MS_higher_energy_beam_type_collision_induced_dissociation, IonSeries.b | IonSeries.y | IonSeries.Immonium}, // TOF-TOF
             {CVID.MS_electron_transfer_dissociation, IonSeries.c | IonSeries.zRadical},
@@ -198,6 +199,7 @@ namespace seems
         bool showLadders;
         bool showMisses;
         bool showLabels;
+        bool showTable;
         bool showFragmentationSummary;
 
         public PeptideFragmentationAnnotation ()
@@ -211,6 +213,7 @@ namespace seems
             showLadders = true;
             showMisses = false;
             showLabels = true;
+            showTable = false;
             showFragmentationSummary = false;
 
             annotationPanels.precursorMassTypeComboBox.SelectedIndex = precursorMassType;
@@ -280,6 +283,7 @@ namespace seems
             this.showLadders = showFragmentationLadders;
             this.showMisses = showMissedFragments;
             this.showLabels = showLabels;
+            this.showTable = false;
             this.showFragmentationSummary = showFragmentationSummary;
 
             annotationPanels.precursorMassTypeComboBox.SelectedIndex = 0;
@@ -322,6 +326,29 @@ namespace seems
             OnOptionsChanged(this, EventArgs.Empty);
         }
 
+        private readonly object[] controlsThatDoNotChangeFragments =  
+        {
+            annotationPanels.showMissesCheckBox,
+            annotationPanels.showFragmentationLaddersCheckBox,
+            annotationPanels.showFragmentationSummaryCheckBox
+        };
+
+        protected override void OnOptionsChanged(object sender, EventArgs e)
+        {
+            // any control which affects the columns displayed for fragments clears the column list;
+            // it gets repopulated on the next call to Update()
+            if (showTable && !controlsThatDoNotChangeFragments.Contains(sender, ReferenceEquals))
+            {
+                annotationPanels.fragmentInfoGridView.Tag = null;
+                annotationPanels.fragmentInfoGridView.Columns.Clear();
+                annotationPanels.fragmentInfoGridView.Visible = true;
+            }
+            else
+                annotationPanels.fragmentInfoGridView.Visible = showTable;
+
+            base.OnOptionsChanged(sender, e);
+        }
+
         void checkBox_CheckedChanged (object sender, EventArgs e)
         {
             if (panel.Tag != this)
@@ -334,12 +361,8 @@ namespace seems
             fragmentMassType = annotationPanels.fragmentMassTypeComboBox.SelectedIndex;
 
             showLadders = annotationPanels.showFragmentationLaddersCheckBox.Checked;
+            showTable = annotationPanels.showFragmentationTableCheckBox.Checked;
             showFragmentationSummary = annotationPanels.showFragmentationSummaryCheckBox.Checked;
-
-            // any control which affects the columns displayed for fragments clears the column list;
-            // it gets repopulated on the next call to Update()
-            if (!ReferenceEquals(sender, annotationPanels.showMissesCheckBox))
-                annotationPanels.fragmentInfoGridView.Columns.Clear();
 
             // when showLadders is checked, the ion series checkboxes act like radio buttons:
             // series from the same terminus are grouped together
@@ -725,7 +748,7 @@ namespace seems
                     case "a": rightPoint = fragmentation.a(i, ionSeriesChargeState); break;
                     case "b": rightPoint = fragmentation.b(i, ionSeriesChargeState); break;
                     case "c": if (i < sequence.Length) rightPoint = fragmentation.c(i, ionSeriesChargeState); break;
-                    default: continue;
+                    default: break;
                 }
 
                 // If the left mz and right mz are different
@@ -879,7 +902,7 @@ namespace seems
                     // assume the last analyzer of the instrument configuration is responsible for the resolution
                     if (scan.instrumentConfiguration.componentList.Count == 0)
                         continue;
-                    var analyzer = scan.instrumentConfiguration.componentList.Where(o => o.type == ComponentType.ComponentType_Analyzer).Last().cvParamChild(CVID.MS_mass_analyzer_type);
+                    var analyzer = scan.instrumentConfiguration.componentList.Last(o => o.type == ComponentType.ComponentType_Analyzer).cvParamChild(CVID.MS_mass_analyzer_type);
                     if (analyzer.cvid == CVID.CVID_Unknown)
                         continue;
 
@@ -984,19 +1007,20 @@ namespace seems
             foreach (DataGridViewRow row in annotationPanels.peptideInfoGridView.Rows)
                 row.Height = row.InheritedStyle.Font.Height + 2;
 
-            // show/hide/update fragment table
-            if (!annotationPanels.showFragmentationTableCheckBox.Checked || ionSeries <= IonSeries.Auto)
-            {
-                annotationPanels.fragmentInfoGridView.Visible = false;
-                annotationPanels.fragmentInfoGridView.Rows.Clear();
-                return;
-            }
+            // fragmentInfoGridView is shared between multiple PeptideFragmentationAnnotations, the Tag property keeps track of which annotation currently owns it;
+            // when Tag is null, no annotation owns it and it can be possessed by this annotation;
+            // when Tag is not null, we always return, because either the grid view already has the proper contents for this annotation, or some other annotation has possession
+            if (annotationPanels.fragmentInfoGridView.Tag != null)
+                return; // don't update
 
-            annotationPanels.fragmentInfoGridView.Visible = true;
+            if (!showTable)
+                return;
+
             annotationPanels.fragmentInfoGridView.SuspendLayout();
 
             if (annotationPanels.fragmentInfoGridView.Columns.Count == 0)
             {
+                annotationPanels.fragmentInfoGridView.Tag = this;
                 #region Add columns for fragment types
                 if (ionSeriesIsEnabled(IonSeries.a))
                     for (int charge = min; charge <= max; ++charge)
@@ -1115,40 +1139,51 @@ namespace seems
             annotationPanels.fragmentInfoGridView.ResumeLayout();
         }
 
-        public override Panel OptionsPanel
+        public override Panel GetOptionsPanel(bool updateControls = true)
         {
-            get
-            {
-                // disable update handlers
-                panel.Tag = null;
-
-                // toggle docking to fix docking glitches
-                annotationPanels.peptideFragmentationPanel.Dock = DockStyle.None;
-                annotationPanels.peptideFragmentationPanel.Dock = DockStyle.Fill;
-
-                // set form controls based on model values
-                annotationPanels.sequenceTextBox.Text = sequence;
-                annotationPanels.minChargeUpDown.Value = min;
-                annotationPanels.maxChargeUpDown.Value = max;
-                annotationPanels.precursorMassTypeComboBox.SelectedIndex = precursorMassType;
-                annotationPanels.fragmentMassTypeComboBox.SelectedIndex = fragmentMassType;
-                annotationPanels.aCheckBox.Checked = ionSeriesIsEnabled(IonSeries.a);
-                annotationPanels.bCheckBox.Checked = ionSeriesIsEnabled(IonSeries.b);
-                annotationPanels.cCheckBox.Checked = ionSeriesIsEnabled(IonSeries.c);
-                annotationPanels.xCheckBox.Checked = ionSeriesIsEnabled(IonSeries.x);
-                annotationPanels.yCheckBox.Checked = ionSeriesIsEnabled(IonSeries.y);
-                annotationPanels.zCheckBox.Checked = ionSeriesIsEnabled(IonSeries.z);
-                annotationPanels.zRadicalCheckBox.Checked = ionSeriesIsEnabled(IonSeries.zRadical);
-                annotationPanels.immoniumCheckBox.Checked = ionSeriesIsEnabled(IonSeries.Immonium);
-                annotationPanels.showFragmentationLaddersCheckBox.Checked = showLadders;
-                annotationPanels.showMissesCheckBox.Checked = showMisses;
-                annotationPanels.showFragmentationSummaryCheckBox.Checked = showFragmentationSummary;
-
-                // enable update handlers
-                panel.Tag = this;
-
+            if (!updateControls)
                 return panel;
+
+            // disable update handlers
+            panel.Tag = null;
+
+            // toggle docking to fix docking glitches
+            annotationPanels.peptideFragmentationPanel.Dock = DockStyle.None;
+            annotationPanels.peptideFragmentationPanel.Dock = DockStyle.Fill;
+
+            // set form controls based on model values
+            annotationPanels.sequenceTextBox.Text = sequence;
+            annotationPanels.minChargeUpDown.Value = min;
+            annotationPanels.maxChargeUpDown.Value = max;
+            annotationPanels.precursorMassTypeComboBox.SelectedIndex = precursorMassType;
+            annotationPanels.fragmentMassTypeComboBox.SelectedIndex = fragmentMassType;
+            annotationPanels.aCheckBox.Checked = ionSeriesIsEnabled(IonSeries.a);
+            annotationPanels.bCheckBox.Checked = ionSeriesIsEnabled(IonSeries.b);
+            annotationPanels.cCheckBox.Checked = ionSeriesIsEnabled(IonSeries.c);
+            annotationPanels.xCheckBox.Checked = ionSeriesIsEnabled(IonSeries.x);
+            annotationPanels.yCheckBox.Checked = ionSeriesIsEnabled(IonSeries.y);
+            annotationPanels.zCheckBox.Checked = ionSeriesIsEnabled(IonSeries.z);
+            annotationPanels.zRadicalCheckBox.Checked = ionSeriesIsEnabled(IonSeries.zRadical);
+            annotationPanels.immoniumCheckBox.Checked = ionSeriesIsEnabled(IonSeries.Immonium);
+            annotationPanels.showFragmentationLaddersCheckBox.Checked = showLadders;
+            annotationPanels.showMissesCheckBox.Checked = showMisses;
+            annotationPanels.showFragmentationTableCheckBox.Checked = showTable;
+            annotationPanels.showFragmentationSummaryCheckBox.Checked = showFragmentationSummary;
+
+            // show/hide/update fragment table
+            if (!showTable || ionSeries <= IonSeries.Auto)
+            {
+                annotationPanels.fragmentInfoGridView.Visible = false;
+                annotationPanels.fragmentInfoGridView.Rows.Clear();
+                annotationPanels.fragmentInfoGridView.Tag = null; // null Tag allows it to be updated
             }
+            else
+                annotationPanels.fragmentInfoGridView.Visible = true;
+
+            // enable update handlers
+            panel.Tag = this;
+
+            return panel;
         }
     }
 }

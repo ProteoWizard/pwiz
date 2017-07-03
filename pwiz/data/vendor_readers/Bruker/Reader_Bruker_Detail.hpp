@@ -54,7 +54,8 @@ PWIZ_API_DECL enum Reader_Bruker_Format
     Reader_Bruker_Format_YEP,
     Reader_Bruker_Format_BAF,
     Reader_Bruker_Format_U2,
-    Reader_Bruker_Format_BAF_and_U2
+    Reader_Bruker_Format_BAF_and_U2,
+    Reader_Bruker_Format_TDF
 };
 
 

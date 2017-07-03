@@ -1331,9 +1331,9 @@ namespace ZedGraph
 						}
 					}
 				}
-
-				Refresh();
 			}
+
+			Refresh();
 		}
 
 		private void HandleZoomCancel()

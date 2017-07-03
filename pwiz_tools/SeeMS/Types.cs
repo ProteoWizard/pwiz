@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Text;
 using System.Linq;
 using System.Drawing;
@@ -29,6 +30,7 @@ using System.Windows.Forms;
 using pwiz.CLI.cv;
 using pwiz.CLI.data;
 using pwiz.CLI.msdata;
+using pwiz.Common.Collections;
 
 public class Pair<T1, T2>
 {
@@ -145,15 +147,22 @@ namespace seems
 
 	public abstract class GraphItem : IComparable<GraphItem>, pwiz.MSGraph.IMSGraphItemInfo
 	{
-        public GraphItem()
+	    protected GraphItem()
         {
             dataProcessing = new DataProcessing();
             annotationList = new List<IAnnotation>();
             processingList = new List<IProcessing>();
+            //processingList = new ObservableCollection<IProcessing>();
+            //(processingList as ObservableCollection<IProcessing>).CollectionChanged += OnCollectionChanged;
+            AddSourceToId = false;
         }
 
-		protected string id;
-		public string Id { get { return id; } }
+        /*private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs)
+        {
+        }*/
+
+        protected string id;
+        public string Id { get { return id; } }
 
         protected int index;
         public int Index { get { return index; } }
@@ -164,21 +173,26 @@ namespace seems
         protected DataProcessing dataProcessing;
         public DataProcessing DataProcessing { get { return dataProcessing; } set { dataProcessing = value; } }
 
-        protected List<IProcessing> processingList;
-        public List<IProcessing> ProcessingList { get { return processingList; } set { processingList = value; } }
+        protected IList<IProcessing> processingList;
+        public IList<IProcessing> ProcessingList { get { return processingList; } set { processingList = value; } }
 
-        protected List<IAnnotation> annotationList;
-        public List<IAnnotation> AnnotationList { get { return annotationList; } set { annotationList = value; } }
+        protected IList<IAnnotation> annotationList;
+        public IList<IAnnotation> AnnotationList { get { return annotationList; } set { annotationList = value; } }
 
-		protected double totalIntegratedArea;
-		public double TotalIntegratedArea { get { return totalIntegratedArea; } set { totalIntegratedArea = value; } }
+        protected double totalIntegratedArea;
+        public double TotalIntegratedArea { get { return totalIntegratedArea; } set { totalIntegratedArea = value; } }
 
-		public bool IsChromatogram { get { return this is Chromatogram; } }
-		public bool IsMassSpectrum { get { return this is MassSpectrum; } }
+        public bool IsChromatogram { get { return this is Chromatogram; } }
+        public bool IsMassSpectrum { get { return this is MassSpectrum; } }
 
         public int CompareTo( GraphItem other )
         {
-            return id.CompareTo( other.id );
+            return String.Compare( id, other.id, StringComparison.Ordinal );
+        }
+
+        public override string ToString()
+        {
+            return String.Format("{0}/{1}", source.Source.Name, Id);
         }
 
         public object Tag;
@@ -194,11 +208,12 @@ namespace seems
             }
         }
 
-        public virtual string Title { get { return Id; } }
+        public virtual string Title { get { return AddSourceToId ? ToString() : Id; } }
         public virtual Color Color { get { return Color.Gray; } }
         public virtual float LineWidth { get { return ZedGraph.LineBase.Default.Width; } }
+	    public bool AddSourceToId { get; set; }
 
-        public virtual void CustomizeXAxis( ZedGraph.Axis axis )
+	    public virtual void CustomizeXAxis( ZedGraph.Axis axis )
         {
             axis.Title.FontSpec.Family = "Arial";
             axis.Title.FontSpec.Size = 14;
@@ -353,6 +368,7 @@ namespace seems
             //using( Spectrum element = Element )
             {
                 id = Element.id;
+                AbbreviatedId = pwiz.CLI.msdata.id.abbreviate(id);
             }
         }
 
@@ -365,7 +381,12 @@ namespace seems
             AnnotationSettings = metaSpectrum.AnnotationSettings;
             //element = spectrum;
             id = metaSpectrum.id;
+            AbbreviatedId = metaSpectrum.AbbreviatedId;
         }
+
+	    public string AbbreviatedId { get; private set; }
+        public override string Title { get { return AddSourceToId ? ToString() : AbbreviatedId; } }
+        public override string ToString() { return String.Format("{0}/{1}", source.Source.Name, AbbreviatedId); }
 
         private SpectrumList spectrumList;
         public SpectrumList SpectrumList
@@ -390,7 +411,7 @@ namespace seems
                     index != lastElementAccessed.index )
                 {
                     lastSpectrumListUsed = spectrumList;
-                    lastElementAccessed = spectrumList.spectrum( index );
+                    lastElementAccessed = spectrumList.spectrum( index, DetailLevel.FullMetadata );
                 }
                 return lastElementAccessed;
             }
@@ -460,12 +481,8 @@ namespace seems
 
                     // only sort centroid spectra; profile spectra are assumed to already be sorted
                     if (element.hasCVParam(CVID.MS_centroid_spectrum))
-                    {
-                        // TODO: use Zip extension method after .NET 4 upgrade
-                        var map = new SortedDictionary<double, double>(Enumerable.Range(0, mzArray.Count - 1).ToDictionary(i => mzArray[i], i => intensityArray[i]));
-                        mzArray = map.Keys.ToList();
-                        intensityArray = map.Values.ToList();
-                    }
+                        mzArray.Sort(intensityArray);
+
                     return new ZedGraph.PointPairList(mzArray, intensityArray);
                 }
             }

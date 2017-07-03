@@ -33,6 +33,7 @@ using pwiz.MSGraph;
 using ZedGraph;
 
 using System.Diagnostics;
+using System.Linq;
 using SpyTools;
 
 namespace seems
@@ -136,6 +137,13 @@ namespace seems
                     Refresh();
             }
         }
+
+        /// <summary>
+        /// If true, the legend will always be shown in all panes in this GraphForm.
+        /// If false, the legend will never be shown in any pane in this GraphForm.
+        /// If null, the legend will be shown if there is more than one but less than 10 items in a pane.
+        /// </summary>
+        public bool? ShowPaneLegends { get; set; }
 
 		public GraphForm(Manager manager)
 		{
@@ -307,10 +315,16 @@ namespace seems
                 pane.IsFontsScaled = false;
                 pane.Border.IsVisible = false;
 
-                foreach( GraphItem item in logicalPane )
+                bool needSourceNamePrefix = logicalPane.Select(o => o.Source).Distinct().Count() > 1;
+                int maxAutoLegendItems = needSourceNamePrefix ? 5 : 10;
+
+                foreach( GraphItem item in logicalPane.Take(logicalPane.Count-1) )
                 {
-                    msGraphControl.AddGraphItem( pane, item );
+                    //item.AddSourceToId = needSourceNamePrefix;
+                    msGraphControl.AddGraphItem( pane, item, false );
                 }
+                //logicalPane.Last().AddSourceToId = needSourceNamePrefix;
+                msGraphControl.AddGraphItem(pane, logicalPane.Last(), true);
 
                 if( mp.PaneList.Count > 1 )
                 {
@@ -342,7 +356,7 @@ namespace seems
                     pane.Legend.IsVisible = false;
                 } else
                 {
-                    pane.Legend.IsVisible = true;
+                    pane.Legend.IsVisible = ShowPaneLegends ?? (logicalPane.Count < maxAutoLegendItems);
                     pane.Legend.Position = ZedGraph.LegendPos.TopCenter;
 
                     ZedGraph.ColorSymbolRotator rotator = new ColorSymbolRotator();
@@ -356,13 +370,39 @@ namespace seems
                 {
                     this.Text = paneList[0][0].Id;
                     if (paneList[0][0].IsMassSpectrum)
-                        this.TabText = pwiz.CLI.msdata.id.abbreviate(paneList[0][0].Id);
+                        this.TabText = (paneList[0][0] as MassSpectrum).AbbreviatedId;
                     else
                         this.TabText = this.Text;
                 }
 
-                if( pane.XAxis.Scale.MaxAuto )
-                    msGraphControl.RestoreScale( pane );
+                if (pane.XAxis.Scale.MaxAuto)
+                {
+                    using (Graphics g = msGraphControl.CreateGraphics())
+                    {
+                        if (msGraphControl.IsSynchronizeXAxes || msGraphControl.IsSynchronizeYAxes)
+                        {
+                            foreach (GraphPane p in msGraphControl.MasterPane.PaneList)
+                            {
+                                p.XAxis.ResetAutoScale(p, g);
+                                p.X2Axis.ResetAutoScale(p, g);
+                                foreach (YAxis axis in p.YAxisList)
+                                    axis.ResetAutoScale(p, g);
+                                foreach (Y2Axis axis in p.Y2AxisList)
+                                    axis.ResetAutoScale(p, g);
+                            }
+                        }
+                        else
+                        {
+                            pane.XAxis.ResetAutoScale(pane, g);
+                            pane.X2Axis.ResetAutoScale(pane, g);
+                            foreach (YAxis axis in pane.YAxisList)
+                                axis.ResetAutoScale(pane, g);
+                            foreach (Y2Axis axis in pane.Y2AxisList)
+                                axis.ResetAutoScale(pane, g);
+                        }
+                    }
+                    //msGraphControl.RestoreScale(pane);
+                }
                 else
                     pane.AxisChange();
             }
@@ -404,7 +444,8 @@ namespace seems
             if( mp.PaneList.Count > 0 &&
                 mp.PaneList[0].CurveList.Count > 0 &&
                 ( focusedItem == null ||
-                  !focusedPane.CurveList.Contains( focusedItem ) ) )
+                  //!focusedPane.CurveList.Contains( focusedItem ) ) ) // somehow focusedItem.Tag can be the same as one of focusedPane.CurveList's Tags, but Contains returns false
+                  !focusedPane.CurveList.Any(o => o.Tag == focusedItem.Tag)))
                 setFocusedItem( mp.PaneList[0].CurveList[0] );
 
             msGraphControl.Refresh();
@@ -432,10 +473,16 @@ namespace seems
 		}
     }
 
+    /// <summary>
+    /// A list of GraphItems.
+    /// </summary>
     public class Pane : List<GraphItem>
     {
     }
 
+    /// <summary>
+    /// A list of GraphForm.Panes.
+    /// </summary>
     public class PaneList : List<Pane>
     {
     }
