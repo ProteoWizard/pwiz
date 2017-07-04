@@ -67,7 +67,7 @@ namespace SkylineNightly
 
                 switch (args[0])
                 {
-                    case "run":
+					case "run": // Not L10N
                     {
                         switch (args.Length)
                         {
@@ -80,24 +80,24 @@ namespace SkylineNightly
                             {
                                 PerformTests((Nightly.RunMode) Enum.Parse(typeof(Nightly.RunMode), args[1]),
                                     (Nightly.RunMode) Enum.Parse(typeof(Nightly.RunMode), args[2]),
-                                    args[1] + " then " + args[2]);
+									args[1] + " then " + args[2]); // Not L10N
                                 break;
                             }
-                            default: throw new Exception("Wrong number of run modes specified, has to be 1 or 2");
+							default: throw new Exception("Wrong number of run modes specified, has to be 1 or 2"); // Not L10N
                         }
 
                         break;
                     }
-                    case "/?": //HELP_ARG
+					case "/?": // Not L10N
                     {
                         nightly = new Nightly(Nightly.RunMode.trunk);
-                        string commands = string.Join(" | ",
+						string commands = string.Join(" | ", // Not L10N
                             SkylineNightly.RunModes.Select(r => r.ToString()).ToArray());
                         message = string.Format("Usage: SkylineNightly run [{0}] [{1}]", commands, commands); // Not L10N
                         nightly.Finish(message, errMessage);
                         break;
                     }
-                    case "parse": //PARSE_ARG
+					case "parse": // Not L10N
                     {
                         nightly = new Nightly(Nightly.RunMode.parse);
                         message = string.Format("Parse and post log {0}", nightly.GetLatestLog()); // Not L10N
@@ -108,7 +108,7 @@ namespace SkylineNightly
                         nightly.Finish(message, errMessage);
                         break;
                     }
-                    case "post": //POST_ARG
+					case "post": // Not L10N
                     {
                         nightly = new Nightly(Nightly.RunMode.post);
                         message = string.Format("Post existing XML for {0}", nightly.GetLatestLog()); // Not L10N
@@ -145,7 +145,7 @@ namespace SkylineNightly
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Exception Caught: " + ex.Message);
+				MessageBox.Show(@"Exception Caught: " + ex.Message); // Not L10N
             }
         }
     }

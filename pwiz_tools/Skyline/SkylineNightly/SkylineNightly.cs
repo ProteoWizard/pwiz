@@ -36,7 +36,7 @@ namespace SkylineNightly
             InitializeComponent();
 
             comboBoxOptions.SelectedIndex = Array.IndexOf(RunModes, Enum.Parse(typeof(Nightly.RunMode), Settings.Default.mode1, false));
-            comboBoxOptions2.SelectedIndex = Settings.Default.mode2 == "" ? 6 : Array.IndexOf(RunModes, Enum.Parse(typeof(Nightly.RunMode), Settings.Default.mode2, false)); //6 == None
+            comboBoxOptions2.SelectedIndex = Settings.Default.mode2 == "" ? 6 : Array.IndexOf(RunModes, Enum.Parse(typeof(Nightly.RunMode), Settings.Default.mode2, false)); //6 == None // Not L10N
 
             startTime.Value = DateTime.Parse(Settings.Default.StartTime);
             textBoxFolder.Text = Settings.Default.NightlyFolder;
@@ -84,7 +84,7 @@ namespace SkylineNightly
 
             Settings.Default.NightlyFolder = nightlyFolder;
             Settings.Default.mode1 = RunModes[comboBoxOptions.SelectedIndex].ToString();
-            Settings.Default.mode2 = comboBoxOptions2.SelectedIndex == 6 ? "" : RunModes[comboBoxOptions2.SelectedIndex].ToString(); //6 == None
+            Settings.Default.mode2 = comboBoxOptions2.SelectedIndex == 6 ? "" : RunModes[comboBoxOptions2.SelectedIndex].ToString(); //6 == None // Not L10N
 
             Settings.Default.Save();
 
@@ -142,7 +142,7 @@ namespace SkylineNightly
         public string RunType(out int durationHours)
         {
             durationHours = 0;
-            string result = "run ";
+			string result = "run "; // Not L10N
 
             int[] hours =
             {
@@ -155,7 +155,7 @@ namespace SkylineNightly
 
             if (comboBoxOptions2.SelectedIndex != 6 && comboBoxOptions2.SelectedIndex != -1) //!= none && != not selected
             {
-                result += " " + RunModes[comboBoxOptions2.SelectedIndex];
+				result += " " + RunModes[comboBoxOptions2.SelectedIndex]; // Not L10N
                 durationHours += hours[comboBoxOptions2.SelectedIndex];
             }
 
