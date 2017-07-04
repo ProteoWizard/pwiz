@@ -148,7 +148,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="dataGridViewScoreDetails.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -286,7 +286,7 @@
     <value>zedGraphRoc</value>
   </data>
   <data name="&gt;&gt;zedGraphRoc.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.6345.24317, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.6392.10286, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphRoc.Parent" xml:space="preserve">
     <value>tabROC</value>
@@ -364,7 +364,7 @@
     <value>zedGraphQq</value>
   </data>
   <data name="&gt;&gt;zedGraphQq.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.6345.24317, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.6392.10286, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphQq.Parent" xml:space="preserve">
     <value>tabQq</value>
@@ -541,7 +541,7 @@
     <value>dataGridViewScore</value>
   </data>
   <data name="&gt;&gt;dataGridViewScore.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridViewScore.Parent" xml:space="preserve">
     <value>tabDetails</value>
@@ -802,7 +802,7 @@
     <value>dataGridViewScoreComparison</value>
   </data>
   <data name="&gt;&gt;dataGridViewScoreComparison.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridViewScoreComparison.Parent" xml:space="preserve">
     <value>tabPage1</value>
@@ -1012,7 +1012,7 @@
     <value>zedGraphFiles</value>
   </data>
   <data name="&gt;&gt;zedGraphFiles.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.6345.24317, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.6392.10286, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphFiles.Parent" xml:space="preserve">
     <value>tabPage2</value>
@@ -1066,7 +1066,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;dataGridViewScoreDetails.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="buttonAdd.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -1096,7 +1096,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;buttonAdd.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="buttonEdit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -1126,7 +1126,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;buttonEdit.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="checkedListCompare.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left</value>
@@ -1150,7 +1150,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;checkedListCompare.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1180,6 +1180,36 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnRefresh.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="btnRefresh.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnRefresh.Location" type="System.Drawing.Point, System.Drawing">
+    <value>222, 600</value>
+  </data>
+  <data name="btnRefresh.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnRefresh.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="btnRefresh.Text" xml:space="preserve">
+    <value>&amp;Refresh</value>
+  </data>
+  <data name="&gt;&gt;btnRefresh.Name" xml:space="preserve">
+    <value>btnRefresh</value>
+  </data>
+  <data name="&gt;&gt;btnRefresh.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnRefresh.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnRefresh.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -1622,6 +1652,78 @@
   <data name="$this.Text" xml:space="preserve">
     <value>Compare Peak Picking</value>
   </data>
+  <data name="&gt;&gt;File.Name" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="&gt;&gt;File.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewLinkColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;Sequence.Name" xml:space="preserve">
+    <value>Sequence</value>
+  </data>
+  <data name="&gt;&gt;Sequence.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewLinkColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;Charge.Name" xml:space="preserve">
+    <value>Charge</value>
+  </data>
+  <data name="&gt;&gt;Charge.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;PeakMatch.Name" xml:space="preserve">
+    <value>PeakMatch</value>
+  </data>
+  <data name="&gt;&gt;PeakMatch.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;Score.Name" xml:space="preserve">
+    <value>Score</value>
+  </data>
+  <data name="&gt;&gt;Score.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;qValue.Name" xml:space="preserve">
+    <value>qValue</value>
+  </data>
+  <data name="&gt;&gt;qValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;PickedApex.Name" xml:space="preserve">
+    <value>PickedApex</value>
+  </data>
+  <data name="&gt;&gt;PickedApex.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;PickedStart.Name" xml:space="preserve">
+    <value>PickedStart</value>
+  </data>
+  <data name="&gt;&gt;PickedStart.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;PickedEnd.Name" xml:space="preserve">
+    <value>PickedEnd</value>
+  </data>
+  <data name="&gt;&gt;PickedEnd.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;TrueApex.Name" xml:space="preserve">
+    <value>TrueApex</value>
+  </data>
+  <data name="&gt;&gt;TrueApex.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;TrueStart.Name" xml:space="preserve">
+    <value>TrueStart</value>
+  </data>
+  <data name="&gt;&gt;TrueStart.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;TrueEnd.Name" xml:space="preserve">
+    <value>TrueEnd</value>
+  </data>
+  <data name="&gt;&gt;TrueEnd.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;bindingSourceScore.Name" xml:space="preserve">
     <value>bindingSourceScore</value>
   </data>
@@ -1712,82 +1814,10 @@
   <data name="&gt;&gt;bindingSourceScoreCompare.Type" xml:space="preserve">
     <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;File.Name" xml:space="preserve">
-    <value>File</value>
-  </data>
-  <data name="&gt;&gt;File.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;Sequence.Name" xml:space="preserve">
-    <value>Sequence</value>
-  </data>
-  <data name="&gt;&gt;Sequence.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewLinkColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;Charge.Name" xml:space="preserve">
-    <value>Charge</value>
-  </data>
-  <data name="&gt;&gt;Charge.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;PeakMatch.Name" xml:space="preserve">
-    <value>PeakMatch</value>
-  </data>
-  <data name="&gt;&gt;PeakMatch.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;Score.Name" xml:space="preserve">
-    <value>Score</value>
-  </data>
-  <data name="&gt;&gt;Score.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;qValue.Name" xml:space="preserve">
-    <value>qValue</value>
-  </data>
-  <data name="&gt;&gt;qValue.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;PickedApex.Name" xml:space="preserve">
-    <value>PickedApex</value>
-  </data>
-  <data name="&gt;&gt;PickedApex.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;PickedStart.Name" xml:space="preserve">
-    <value>PickedStart</value>
-  </data>
-  <data name="&gt;&gt;PickedStart.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;PickedEnd.Name" xml:space="preserve">
-    <value>PickedEnd</value>
-  </data>
-  <data name="&gt;&gt;PickedEnd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;TrueApex.Name" xml:space="preserve">
-    <value>TrueApex</value>
-  </data>
-  <data name="&gt;&gt;TrueApex.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;TrueStart.Name" xml:space="preserve">
-    <value>TrueStart</value>
-  </data>
-  <data name="&gt;&gt;TrueStart.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;TrueEnd.Name" xml:space="preserve">
-    <value>TrueEnd</value>
-  </data>
-  <data name="&gt;&gt;TrueEnd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ComparePeakPickingDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

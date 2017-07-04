@@ -9551,4 +9551,7 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_a_score_annotation_for_peptide__0__of_file__1_" xml:space="preserve">
     <value>Unable to read a score annotation for peptide {0} of file {1}</value>
   </data>
+  <data name="ComparePeakPickingDlg_RefreshDocument_Refresh__0_" xml:space="preserve">
+    <value>Refresh {0}</value>
+  </data>
 </root>

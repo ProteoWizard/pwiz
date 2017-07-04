@@ -6005,6 +6005,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Refresh {0}.
+        /// </summary>
+        public static string ComparePeakPickingDlg_RefreshDocument_Refresh__0_ {
+            get {
+                return ResourceManager.GetString("ComparePeakPickingDlg_RefreshDocument_Refresh__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Save Model Comparison Data.
         /// </summary>
         public static string ComparePeakPickingDlg_SaveData_Save_Model_Comparison_Data {

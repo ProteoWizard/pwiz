@@ -79,6 +79,7 @@ namespace pwiz.Skyline.EditUI
                     .First(s => s.Name == Resources.ColorSchemeList_GetDefaults_Distinct)
                     .TransitionColors;
 
+            DocumentUiContainer = Program.MainWindow;
             Document = document;
 
             _peakBoundaryList = new ComparePeakBoundariesList();
@@ -117,6 +118,25 @@ namespace pwiz.Skyline.EditUI
             _showFpCutoff = true;
             _showFpCutoffQ = true;
             UpdateTextBox();
+        }
+
+        public IDocumentUIContainer DocumentUiContainer { get; private set; }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            DocumentUiContainer.ListenUI(OnDocumentUIChanged);
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            DocumentUiContainer.UnlistenUI(OnDocumentUIChanged);
+        }
+
+        private void OnDocumentUIChanged(object sender, DocumentChangedEventArgs e)
+        {
+            btnRefresh.Enabled = !ReferenceEquals(Document, DocumentUiContainer.DocumentUI);
         }
 
         private void buttonEdit_Click(object sender, EventArgs e)
@@ -839,6 +859,38 @@ namespace pwiz.Skyline.EditUI
                 ? Resources.ComparePeakPickingDlg_checkObserved_CheckedChanged_Observed_FPR_
                 : Resources.ComparePeakPickingDlg_checkObserved_CheckedChanged_Q_value_cutoff_;
             UpdateGraph();
+        }
+
+        private void btnRefresh_Click(object sender, EventArgs e)
+        {
+            RefreshDocument();
+        }
+
+        private void RefreshDocument()
+        {
+            Document = Program.MainWindow.Document;
+            using (var longWaitDlg = new LongWaitDlg())
+            {
+                longWaitDlg.PerformWork(this, 200, pm =>
+                {
+                    foreach (var peakBoundaries in _peakBoundaryList)
+                    {
+                        string comparisonName = peakBoundaries.Name;
+                        BeginInvoke((Action) (() =>
+                        {
+                            longWaitDlg.Text = string.Format(Resources.ComparePeakPickingDlg_RefreshDocument_Refresh__0_, comparisonName);
+                            longWaitDlg.ProgressValue = 0;
+                        }));
+
+                        if (pm.IsCanceled)
+                            break;
+
+                        peakBoundaries.GenerateComparison(Document, pm);
+                    }
+                });
+            }
+            UpdateAll();
+            btnRefresh.Enabled = false;
         }
     }
 
