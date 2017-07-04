@@ -130,7 +130,7 @@ namespace pwiz.SkylineTestA
             int missingResults = 0;
             foreach (var nodeGroup in docRefined.PeptideTransitionGroups)
             {
-                if (!nodeGroup.HasResults || nodeGroup.Results[0] == null)
+                if (!nodeGroup.HasResults || nodeGroup.Results[0].IsEmpty)
                     missingResults++;
                 else
                     Assert.IsTrue(nodeGroup.Results[0][0].LibraryDotProduct >= dotProductThreshold);

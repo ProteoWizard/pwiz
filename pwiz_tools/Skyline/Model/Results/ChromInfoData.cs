@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.Results
                 var datas = new List<TransitionChromInfoData>();
                 var chromatograms = measuredResults.Chromatograms[replicateIndex];
                 var transitionChromInfos = transitionResults[replicateIndex];
-                if (transitionChromInfos == null)
+                if (transitionChromInfos.IsEmpty)
                     datas.Add(new TransitionChromInfoData(measuredResults, replicateIndex, null, null));
                 else
                 {
@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Model.Results
                 var datas = new List<TransitionGroupChromInfoData>();
                 var chromatograms = measuredResults.Chromatograms[replicateIndex];
                 var transitionGroupChromInfos = transitionGroupResults[replicateIndex];
-                if (transitionGroupChromInfos == null)
+                if (transitionGroupChromInfos.IsEmpty)
                     datas.Add(new TransitionGroupChromInfoData(measuredResults, replicateIndex, null, null));
                 else
                 {

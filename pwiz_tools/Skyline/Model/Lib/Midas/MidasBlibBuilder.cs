@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib.BlibData;
+using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Lib.Midas
 {
@@ -52,7 +53,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
                     var bestDistance = double.MaxValue;
                     foreach (var result in nodeTranGroup.Results)
                     {
-                        if (result == null)
+                        if (result.IsEmpty)
                             continue;
 
                         foreach (var resultsFile in result.Where(resultsFile => resultsFile.RetentionTime.HasValue))

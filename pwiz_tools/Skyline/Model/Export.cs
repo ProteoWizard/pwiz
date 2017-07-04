@@ -2075,7 +2075,7 @@ namespace pwiz.Skyline.Model
                     continue;
 
                 var result = nodeTran.Results[resultIdx];
-                if (result == null)
+                if (result.IsEmpty)
                     continue;
 
                 foreach (TransitionChromInfo chromInfo in result)

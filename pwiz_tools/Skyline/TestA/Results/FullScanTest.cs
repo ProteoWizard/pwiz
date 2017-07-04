@@ -206,7 +206,7 @@ namespace pwiz.SkylineTestA.Results
                         Assert.IsFalse(nodeTran.Results[indexResults][0].IsEmpty);
                     }
                     else if (nodeTran.Transition.IonType != IonType.precursor)
-                        Assert.IsNull(nodeTran.Results[indexResults]);
+                        Assert.IsTrue(nodeTran.Results[indexResults].IsEmpty);
                     else
                     {
                         // Random, bogus peaks chosen in both files
@@ -361,11 +361,11 @@ namespace pwiz.SkylineTestA.Results
                 var ms1AllTranstions = docMs1All.MoleculeTransitions.ToArray();
                 var tranM1 = ms1AllTranstions[0];
                 Assert.AreEqual(-1, tranM1.Transition.MassIndex);
-                Assert.IsTrue(tranM1.Results[0] != null && tranM1.Results[1] != null);
+                Assert.IsTrue(!tranM1.Results[0].IsEmpty && !tranM1.Results[1].IsEmpty);
                 Assert.IsTrue(tranM1.Results[0][0].IsEmpty && tranM1.Results[1][0].IsEmpty);
                 tranM1 = ms1AllTranstions[5];
                 Assert.AreEqual(-1, tranM1.Transition.MassIndex);
-                Assert.IsTrue(tranM1.Results[0] != null && tranM1.Results[1] != null);
+                Assert.IsTrue(!tranM1.Results[0].IsEmpty && !tranM1.Results[1].IsEmpty);
                 Assert.IsTrue(tranM1.Results[0][0].IsEmpty && tranM1.Results[1][0].IsEmpty);                
             }
         }

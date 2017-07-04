@@ -219,7 +219,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private void AddChromInfo(ChromInfoList<TransitionGroupChromInfo> chromGroupInfos, ChromInfoList<TransitionChromInfo> chromInfos,
                 double mz, int[,] counts2D)
             {
-                if (chromInfos == null)
+                if (chromInfos.IsEmpty)
                     return;
                 foreach (var chromInfo in chromInfos)
                 {

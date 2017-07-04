@@ -334,7 +334,7 @@ namespace pwiz.Skyline.Model.Find
             var list = new List<ChromInfo>();
             foreach (var chromInfoList in results)
             {
-                if (chromInfoList == null)
+                if (chromInfoList.IsEmpty)
                 {
                     continue;
                 }

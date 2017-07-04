@@ -176,7 +176,7 @@ namespace pwiz.Skyline.Model
                 {
                     foreach (var result in Results)
                     {
-                        if (result == null)
+                        if (result.IsEmpty)
                             continue;
                         foreach (var chromInfo in result)
                             yield return chromInfo;
@@ -196,21 +196,21 @@ namespace pwiz.Skyline.Model
             if (!i.HasValue)
                 return ChromInfos;
             var chromInfos = GetSafeChromInfo(i.Value);
-            if (chromInfos != null)
+            if (!chromInfos.IsEmpty)
                 return chromInfos;
             return new TransitionChromInfo[0];
         }
 
         public ChromInfoList<TransitionChromInfo> GetSafeChromInfo(int i)
         {
-            return (HasResults && Results.Count > i ? Results[i] : null);
+            return HasResults && Results.Count > i ? Results[i] : default(ChromInfoList<TransitionChromInfo>);
         }
 
         private TransitionChromInfo GetChromInfoEntry(int i)
         {
             var result = GetSafeChromInfo(i);
             // CONSIDER: Also specify the file index and/or optimization step?
-            if (result != null)
+            if (!result.IsEmpty)
             {
                 foreach (var chromInfo in result)
                 {
@@ -276,8 +276,7 @@ namespace pwiz.Skyline.Model
             {
                 if (!Annotations.IsEmpty)
                     return true;
-                return HasResults && Results.Where(l => l != null)
-                                         .SelectMany(l => l)
+                return HasResults && Results.SelectMany(l => l)
                                          .Contains(chromInfo => chromInfo.IsUserModified);
             }
         }
@@ -562,7 +561,7 @@ namespace pwiz.Skyline.Model
             for (int replicateIndex = 0; replicateIndex < Results.Count; replicateIndex++)
             {
                 var replicateResults = Results[replicateIndex];
-                if (replicateResults == null)
+                if (replicateResults.IsEmpty)
                 {
                     continue;
                 }
@@ -641,7 +640,7 @@ namespace pwiz.Skyline.Model
 
             var listChromInfo = Results[indexSet];
             var listChromInfoNew = new List<TransitionChromInfo>();
-            if (listChromInfo == null)
+            if (listChromInfo.IsEmpty)
                 listChromInfoNew.Add(CreateChromInfo(fileId, step, peak, ionMobility, ratioCount, userSet));
             else
             {
@@ -698,7 +697,7 @@ namespace pwiz.Skyline.Model
         {
             bool peakChanged = false;
             var listChromInfo = Results[indexSet];
-            if (listChromInfo == null)
+            if (listChromInfo.IsEmpty)
                 return this;
             var listChromInfoNew = new List<TransitionChromInfo>();
             foreach (var chromInfo in listChromInfo)
@@ -741,7 +740,7 @@ namespace pwiz.Skyline.Model
             if (!HasResults)
                 return Results;
 
-            var dictFileIdToChromInfo = results.Where(l => l != null).SelectMany(l => l)
+            var dictFileIdToChromInfo = results.SelectMany(l => l)
                                                // Merge everything that does not already exist (handled below),
                                                // as merging only user modified causes loss of information in
                                                // updates
@@ -761,9 +760,7 @@ namespace pwiz.Skyline.Model
                         continue;
                     if (listChromInfo == null)
                     {
-                        listChromInfo = new List<TransitionChromInfo>();
-                        if (chromInfoList != null)
-                            listChromInfo.AddRange(chromInfoList);
+                        listChromInfo = new List<TransitionChromInfo>(chromInfoList);
                     }
                     int iExist = listChromInfo.IndexOf(chromInfoExist =>
                                                        ReferenceEquals(chromInfoExist.FileId, chromInfo.FileId) &&
@@ -777,7 +774,7 @@ namespace pwiz.Skyline.Model
                     chromInfoList = new ChromInfoList<TransitionChromInfo>(listChromInfo);
                 listResults.Add(chromInfoList);
             }
-            if (ArrayUtil.ReferencesEqual(listResults, Results))
+            if (ArrayUtil.InnerReferencesEqual<TransitionChromInfo, ChromInfoList<TransitionChromInfo>>(listResults, Results))
                 return Results;
             return new Results<TransitionChromInfo>(listResults);
         }

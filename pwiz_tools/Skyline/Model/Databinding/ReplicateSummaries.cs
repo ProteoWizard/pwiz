@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Model.Databinding
             var dictTotalAreas = new Dictionary<IsotopeLabelType, double>();
             foreach (var nodeGroup in Document.MoleculeTransitionGroups)
             {
-                if (!nodeGroup.HasResults || nodeGroup.Results[replicateIndex] == null)
+                if (!nodeGroup.HasResults)
                     continue;
                 var labelType = nodeGroup.TransitionGroup.LabelType;
 

@@ -1282,7 +1282,7 @@ namespace pwiz.Skyline
                 if (nodeTran.IsMs1)
                     continue;
                 var chromInfos = nodeTran.GetSafeChromInfo(replicateIndex);
-                if (chromInfos == null)
+                if (chromInfos.IsEmpty)
                     continue;
                 var chromInfo = chromInfos.First(info => info.OptimizationStep == 0);
                 if (chromInfo.Area == 0)

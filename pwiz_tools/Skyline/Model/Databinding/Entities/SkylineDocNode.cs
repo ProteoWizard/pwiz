@@ -65,10 +65,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 var replicate = new Replicate(DataSchema, replicateIndex);
                 var files = results[replicateIndex];
-                if (null == files)
-                {
-                    continue;
-                }
                 for (int fileIndex = 0; fileIndex < files.Count; fileIndex++)
                 {
                     var chromInfo = files[fileIndex];

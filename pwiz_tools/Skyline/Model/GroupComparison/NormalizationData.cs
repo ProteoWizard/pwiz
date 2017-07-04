@@ -81,10 +81,6 @@ namespace pwiz.Skyline.Model.GroupComparison
                             for (int iResult = 0; iResult < transition.Results.Count && iResult < chromatogramSets.Count; iResult++)
                             {
                                 var results = transition.Results[iResult];
-                                if (null == results)
-                                {
-                                    continue;
-                                }
                                 foreach (var chromInfo in results)
                                 {
                                     if (chromInfo.OptimizationStep != 0)

@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -721,14 +723,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var transitionChromInfos = peaksByReplicate[replicateIndex]
                     .Select(transitionPeak => FromProtoTransitionPeak(stringPool, settings, transitionPeak)).ToArray();
-                if (transitionChromInfos.Length == 0)
-                {
-                    lists.Add(null);
-                }
-                else
-                {
-                    lists.Add(new ChromInfoList<TransitionChromInfo>(transitionChromInfos));
-                }
+                lists.Add(new ChromInfoList<TransitionChromInfo>(transitionChromInfos));
             }
             return new Results<TransitionChromInfo>(lists);
         }
@@ -818,9 +813,8 @@ namespace pwiz.Skyline.Model.Results
                         chromInfoSet[i] = resultsOld[i];
                 }
             }
-            var listInfo = chromInfoSet.ConvertAll(l => l as ChromInfoList<TItem> ??
-                                                        (l != null ? new ChromInfoList<TItem>(l) : null));
-            if (ArrayUtil.ReferencesEqual(listInfo, resultsOld))
+            var listInfo = chromInfoSet.ConvertAll(l => new ChromInfoList<TItem>(l));
+            if (ArrayUtil.InnerReferencesEqual<TItem, ChromInfoList<TItem>>(listInfo, resultsOld))
                 return resultsOld;
 
             return new Results<TItem>(listInfo);
@@ -833,9 +827,9 @@ namespace pwiz.Skyline.Model.Results
             foreach (var replicate in results)
             {
                 var chromInfoList = new List<TItem>();
-                if (replicate == null)
+                if (replicate.IsEmpty)
                 {
-                    elements.Add(null);
+                    elements.Add(default(ChromInfoList<TItem>));
                     continue;
                 }
                 foreach (var chromInfo in replicate)
@@ -894,7 +888,7 @@ namespace pwiz.Skyline.Model.Results
 
             foreach (var result in this)
             {
-                if (result == null)
+                if (result.IsEmpty)
                     continue;
                 foreach (var chromInfo in result)
                 {
@@ -922,7 +916,7 @@ namespace pwiz.Skyline.Model.Results
 
             foreach (var result in this)
             {
-                if (result == null)
+                if (result.IsEmpty)
                     continue;
                 foreach (var chromInfo in result)
                 {
@@ -953,7 +947,7 @@ namespace pwiz.Skyline.Model.Results
             for (int i = 0; i < chromatogramSets.Count; i++)
             {
                 var chromList = this[i];
-                if (chromList == null)
+                if (chromList.IsEmpty)
                     continue;
 
                 var chromatogramSet = chromatogramSets[i];
@@ -985,18 +979,29 @@ namespace pwiz.Skyline.Model.Results
     /// with an unlabeled internal standard will have measurements for that standard
     /// in every file.
     /// </summary>
-    public class ChromInfoList<TItem> : OneOrManyList<TItem>
-//        VS Issue: https://connect.microsoft.com/VisualStudio/feedback/ViewFeedback.aspx?FeedbackID=324473
-//        where T : ChromInfo
+    public struct ChromInfoList<TItem> : IList<TItem>
     {
-        public ChromInfoList(params TItem[] elements)
-            : base(elements)
+        private readonly object _oneOrManyItems;
+        public ChromInfoList(params TItem[] elements) : this((IEnumerable<TItem>) elements)
         {
         }
 
-        public ChromInfoList(IList<TItem> elements)
-            : base(elements)
+        public ChromInfoList(IEnumerable<TItem> elements)
         {
+            var list = ImmutableList.ValueOf(elements);
+            if (list == null || list.Count == 0)
+            {
+                _oneOrManyItems = null;
+            }
+            else if (list.Count == 1)
+            {
+                _oneOrManyItems = list[0];
+            }
+            else
+            {
+                _oneOrManyItems = list;
+            }
+
         }
 
         public float? GetAverageValue(Func<TItem, float?> getVal)
@@ -1020,6 +1025,116 @@ namespace pwiz.Skyline.Model.Results
                 return null;
 
             return (float)(valTotal / valCount);
+        }
+
+        public ChromInfoList<TItem> ChangeAt(int i, TItem item)
+        {
+            var list = AsList().ToArray();
+            list[i] = item;
+            return new ChromInfoList<TItem>(list);
+        }
+
+        public int Count 
+        {
+            get
+            {
+                if (_oneOrManyItems == null)
+                {
+                    return 0;
+                }
+                if (_oneOrManyItems is TItem)
+                {
+                    return 1;
+                }
+                return ((IList<TItem>) _oneOrManyItems).Count;
+            } 
+        }
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IEnumerator<TItem> GetEnumerator()
+        {
+            return AsList().GetEnumerator();
+        }
+
+        public TItem this[int index]
+        {
+            get { return AsList()[index]; }
+        }
+
+        public IList<TItem> AsList()
+        {
+            if (_oneOrManyItems == null)
+            {
+                return ImmutableList<TItem>.EMPTY;
+            }
+            if (_oneOrManyItems is TItem)
+            {
+                return ImmutableList.Singleton((TItem) _oneOrManyItems);
+            }
+            return (IList<TItem>) _oneOrManyItems;
+        }
+
+        public bool IsEmpty
+        {
+            get { return null == _oneOrManyItems; }
+        }
+
+        public bool Contains(TItem item)
+        {
+            return AsList().Contains(item);
+        }
+
+        public void CopyTo(TItem[] array, int arrayIndex)
+        {
+            AsList().CopyTo(array, arrayIndex);
+        }
+
+        public int IndexOf(TItem item)
+        {
+            return AsList().IndexOf(item);
+        }
+
+        bool ICollection<TItem>.IsReadOnly { get { return true; } }
+
+
+        void ICollection<TItem>.Add(TItem item)
+        {
+            throw new InvalidOperationException();
+        }
+
+        void ICollection<TItem>.Clear()
+        {
+            throw new InvalidOperationException();
+        }
+
+        void IList<TItem>.Insert(int index, TItem item)
+        {
+            throw new InvalidOperationException();
+        }
+
+        bool ICollection<TItem>.Remove(TItem item)
+        {
+            throw new InvalidOperationException();
+        }
+
+        void IList<TItem>.RemoveAt(int index)
+        {
+            throw new InvalidOperationException();
+        }
+
+        TItem IList<TItem>.this[int index]
+        {
+            get
+            {
+                return this[index];
+            }
+            set
+            {
+                throw new InvalidOperationException();
+            }
         }
     }
 

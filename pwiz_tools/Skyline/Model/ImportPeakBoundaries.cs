@@ -457,7 +457,7 @@ namespace pwiz.Skyline.Model
                     {
                         var groupPath = new IdentityPath(pepPath, groupNode.Id);
                         var chromInfos = groupNode.Results[i];
-                        if (chromInfos == null)
+                        if (chromInfos.IsEmpty)
                             continue;
 
                         foreach (var groupChromInfo in chromInfos)

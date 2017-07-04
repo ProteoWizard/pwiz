@@ -184,7 +184,7 @@ namespace pwiz.SkylineTestUtil
                 TextUtil.LineSeparate(document.Settings.MeasuredResults.Chromatograms.Select(c => c.Name))));
             int peptidesActual = 0;
 
-            foreach (var nodePep in document.Molecules.Where(nodePep => (nodePep.Results != null && nodePep.Results[index] != null)))
+            foreach (var nodePep in document.Molecules.Where(nodePep => (nodePep.Results != null && !nodePep.Results[index].IsEmpty)))
             {
                 peptidesActual += nodePep.Results[index].Sum(chromInfo => chromInfo.PeakCountRatio >= 0.5 ? 1 : 0);
             }
@@ -192,7 +192,7 @@ namespace pwiz.SkylineTestUtil
             int transitionsHeavyActual = 0;
             int tranGroupsActual = 0;
             int tranGroupsHeavyActual = 0;
-            foreach (var nodeGroup in document.MoleculeTransitionGroups.Where(nodeGroup => ( nodeGroup.Results != null && nodeGroup.Results[index] != null)))
+            foreach (var nodeGroup in document.MoleculeTransitionGroups.Where(nodeGroup => ( nodeGroup.Results != null && !nodeGroup.Results[index].IsEmpty)))
             {
                 foreach (var chromInfo in nodeGroup.Results[index])
                 {
@@ -205,7 +205,7 @@ namespace pwiz.SkylineTestUtil
                         tranGroupsHeavyActual++;
                 }
                 foreach (var nodeTran in nodeGroup.Children.Cast<TransitionDocNode>().Where(
-                            nodeTran => (nodeTran.Results != null && nodeTran.Results[index] != null)))
+                            nodeTran => (nodeTran.Results != null && !nodeTran.Results[index].IsEmpty)))
                 {
                     foreach (var chromInfo in nodeTran.Results[index])
                     {

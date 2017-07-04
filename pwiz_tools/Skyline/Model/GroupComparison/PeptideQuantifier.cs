@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return null;
             }
             var chromInfos = transition.Results[replicateIndex];
-            if (null == chromInfos)
+            if (chromInfos.IsEmpty)
             {
                 return null;
             }
@@ -231,7 +231,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return null;
             }
             var chromInfos = transitionDocNode.Results[replicateIndex];
-            if (null == chromInfos)
+            if (chromInfos.IsEmpty)
             {
                 return null;
             }
@@ -268,7 +268,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                         continue;
                     }
                     var chromInfoList = transition.Results[replicateIndex];
-                    if (null == chromInfoList)
+                    if (chromInfoList.IsEmpty)
                     {
                         continue;
                     }
@@ -351,7 +351,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return null;
             }
             var chromInfoList = transitionGroup.Results[replicateIndex];
-            if (chromInfoList == null)
+            if (chromInfoList.IsEmpty)
             {
                 return null;
             }

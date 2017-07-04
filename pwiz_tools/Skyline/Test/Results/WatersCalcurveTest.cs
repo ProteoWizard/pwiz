@@ -120,7 +120,7 @@ namespace pwiz.SkylineTest.Results
                     {
                         Assert.IsTrue(nodeTran.HasResults);
                         Assert.AreEqual(listChromatograms.Count, nodeTran.Results.Count);
-                        Assert.IsNull(nodeTran.Results[len - 1]);
+                        Assert.IsTrue(nodeTran.Results[len - 1].IsEmpty);
                     }
 
                     Assert.IsTrue(docContainer.SetDocument(docResults, doc, true),
@@ -235,7 +235,7 @@ namespace pwiz.SkylineTest.Results
                                 Assert.AreEqual(nodeTran1.Results.Count, nodeTran2.Results.Count);
                                 for (int m = 0; m < nodeTran1.Results.Count; m++)
                                 {
-                                    if (nodeTran1.Results[m] != null && nodeTran2.Results[m] != null)
+                                    if (!nodeTran1.Results[m].IsEmpty && !nodeTran2.Results[m].IsEmpty)
                                         Assert.AreEqual(nodeTran1.Results[m][0].IsEmpty, nodeTran2.Results[m][0].IsEmpty);
                                     else
                                         Assert.AreEqual(nodeTran1.Results[m], nodeTran2.Results[m]); // both null

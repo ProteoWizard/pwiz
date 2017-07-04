@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Model.Find
         {
             // The peptide node matches if its results are missing for all files
             return nodePep.HasResults &&
-                   nodePep.Results.All(chromInfoList => chromInfoList == null || chromInfoList.All(chromInfo => IsMatch(chromInfo, nodePep)));
+                   nodePep.Results.All(chromInfoList => chromInfoList.All(chromInfo => IsMatch(chromInfo, nodePep)));
         }
 
         private bool IsMatch(ChromInfo chromInfo, PeptideDocNode nodePep)

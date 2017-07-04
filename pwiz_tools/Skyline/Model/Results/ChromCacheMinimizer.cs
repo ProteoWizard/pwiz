@@ -204,7 +204,7 @@ namespace pwiz.Skyline.Model.Results
                     foreach (var fileIndex in fileIndexes)
                     {
                         var chromatogramSet = transitionDocNode.Results[fileIndex];
-                        if (chromatogramSet == null)
+                        if (chromatogramSet.IsEmpty)
                         {
                             continue;
                         }

@@ -356,7 +356,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 for (int i = 0, len = nodePeptide.Results.Count; i < len; i++)
                 {
                     var results = nodePeptide.Results[i];
-                    if (results == null)
+                    if (results.IsEmpty)
                         continue;
 
                     var replicateResultFileMap = docInfo.ReplicateResultFileMaps[i];
@@ -536,7 +536,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 for (int i = 0; i < nodeGroup.Results.Count; i++)
                 {
                     var results = nodeGroup.Results[i];
-                    if (results == null)
+                    if (results.IsEmpty)
                         continue;
 
                     var optFunction = docInfo.MeasuredResults.Chromatograms[i].OptimizationFunction;
@@ -718,7 +718,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 {
                     var results = nodeTran.Results[i];
 
-                    if (results == null)
+                    if (results.IsEmpty)
                         continue;
 
                     var replicateSummary = docInfo.ReplicateSummaries[i];
@@ -828,7 +828,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         {
                             // It should not be possible to not have results when
                             // the settings have results, but just to be safe
-                            if (!nodeGroup.HasResults || nodeGroup.Results[i] == null)
+                            if (!nodeGroup.HasResults || nodeGroup.Results[i].IsEmpty)
                                 continue;
 
                             var labelType = nodeGroup.TransitionGroup.LabelType;

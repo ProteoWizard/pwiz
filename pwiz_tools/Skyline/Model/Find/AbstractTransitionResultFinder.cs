@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model.Find
             for (int iReplicate = 0; iReplicate < transitionGroupDocNode.Results.Count; iReplicate++)
             {
                 var replicate = transitionGroupDocNode.Results[iReplicate];
-                if (replicate == null)
+                if (replicate.IsEmpty)
                 {
                     continue;
                 }
@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Model.Find
                         continue;
                     }
                     var transitionResults = transitionDocNode.Results[iReplicate];
-                    if (transitionResults == null)
+                    if (transitionResults.IsEmpty)
                     {
                         continue;
                     }

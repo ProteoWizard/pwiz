@@ -236,12 +236,12 @@ namespace pwiz.Skyline.Model.Results
         public ChromFileInfo GetChromFileInfo<TChromInfo>(Results<TChromInfo> results, int replicateIndex)
             where TChromInfo : ChromInfo
         {
-            OneOrManyList<TChromInfo> replicateChromInfos = null;
+            ChromInfoList<TChromInfo> replicateChromInfos = default(ChromInfoList<TChromInfo>);
             if (results != null && replicateIndex >= 0 && replicateIndex < results.Count)
             {
                 replicateChromInfos = results[replicateIndex];
             }
-            if (replicateChromInfos != null)
+            if (!replicateChromInfos.IsEmpty)
             {
                 var chromatograms = Chromatograms[replicateIndex];
                 foreach (var replicateChromInfo in replicateChromInfos)

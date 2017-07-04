@@ -264,7 +264,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                             continue;
                         }
                         var chromInfos = nodeGroup.GetSafeChromInfo(resultsIndex);
-                        if (chromInfos == null)
+                        if (chromInfos.IsEmpty)
                             continue;
                         foreach (var groupChromInfo in chromInfos)
                         {

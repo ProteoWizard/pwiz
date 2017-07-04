@@ -520,7 +520,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     if (nodePep.HasResults)
                     {
-                        PeptideResults += nodePep.Results.Where(result => result != null)
+                        PeptideResults += nodePep.Results.Where(result => !result.IsEmpty)
                                                          .SelectMany(info => info).Count();
                     }
 
@@ -529,7 +529,7 @@ namespace pwiz.SkylineTestFunctional
                         if (nodeGroup.HasResults)
                         {
 //                            int startSize = TransitionGroupResults;
-                            foreach (var chromInfo in nodeGroup.Results.Where(result => result != null)
+                            foreach (var chromInfo in nodeGroup.Results.Where(result => !result.IsEmpty)
                                                                        .SelectMany(info => info))
                             {
                                 TransitionGroupResults++;
@@ -553,7 +553,7 @@ namespace pwiz.SkylineTestFunctional
                         foreach (var nodeTran in
                             nodeGroup.Children.Cast<TransitionDocNode>().Where(nodeTran => nodeTran.HasResults))
                         {
-                            foreach (var chromInfo in nodeTran.Results.Where(result => result != null)
+                            foreach (var chromInfo in nodeTran.Results.Where(result => !result.IsEmpty)
                                                                       .SelectMany(info => info))
                             {
                                 TransitionResults++;

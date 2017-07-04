@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private double GetHeight(ChromInfoList<TransitionGroupChromInfo> transitionGroupChromInfos)
         {
-            return transitionGroupChromInfos != null ? transitionGroupChromInfos.Max(c => c.Height ?? 0) : 0;
+            return !transitionGroupChromInfos.IsEmpty ? transitionGroupChromInfos.Max(c => c.Height ?? 0) : 0;
         }
 
         /// <summary>

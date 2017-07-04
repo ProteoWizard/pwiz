@@ -207,8 +207,7 @@ namespace pwiz.Skyline.Model.Irt
                 double score = dictSeqToScore[seqToPeptide.Key];
                 listPepCorr.Add(new TimeScorePair(time.Value, score));
 
-                foreach (var fileId in nodePep.Results.Where(r => r != null)
-                                                      .SelectMany(r => r)
+                foreach (var fileId in nodePep.Results.SelectMany(r => r)
                                                       .Select(chromInfo => chromInfo.FileId))
                 {
                     IList<TimeScorePair> listTimeScores;

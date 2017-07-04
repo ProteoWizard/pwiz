@@ -767,7 +767,7 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     bool success = enumReplicates.MoveNext();
                     Assume.IsTrue(success);
-                    if (listChromInfo == null)
+                    if (listChromInfo.IsEmpty)
                         continue;
                     var chromatogramSet = enumReplicates.Current;
                     if (chromatogramSet == null)

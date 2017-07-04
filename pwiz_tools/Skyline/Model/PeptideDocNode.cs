@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Model
 
         public ChromInfoList<PeptideChromInfo> GetSafeChromInfo(int i)
         {
-            return (HasResults && Results.Count > i ? Results[i] : null);
+            return HasResults && Results.Count > i ? Results[i] : default(ChromInfoList<PeptideChromInfo>);
         }
 
         public float GetRankValue(PeptideRankId rankId)
@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Model
                 return AveragePeakCountRatio;
 
             var result = GetSafeChromInfo(i);
-            if (result == null)
+            if (result.IsEmpty)
                 return null;
             return result.GetAverageValue(chromInfo => chromInfo.PeakCountRatio);
         }
@@ -267,7 +267,7 @@ namespace pwiz.Skyline.Model
                 return AverageMeasuredRetentionTime;
 
             var result = GetSafeChromInfo(i);
-            if (result == null)
+            if (result.IsEmpty)
                 return null;
             return result.GetAverageValue(chromInfo => chromInfo.RetentionTime.HasValue
                                              ? chromInfo.RetentionTime.Value
@@ -289,7 +289,7 @@ namespace pwiz.Skyline.Model
             get
             {
                 var statTimes = new Statistics(
-                    from result in Results.Where(result => result != null)
+                    from result in Results
                     from chromInfo in result.Where(chromInfo => !Equals(chromInfo, default(PeptideChromInfo)))
                     where chromInfo.RetentionTime.HasValue
                     select (double)chromInfo.RetentionTime.Value);
@@ -331,7 +331,7 @@ namespace pwiz.Skyline.Model
                 if (!nodeGroup.HasResults)
                     continue;
                 var result = nodeGroup.Results[i];
-                if (result == null)
+                if (result.IsEmpty)
                     continue;
 
                 foreach (var chromInfo in result)
@@ -415,7 +415,7 @@ namespace pwiz.Skyline.Model
                         if (!nodeTran.HasResults)
                             continue;
                         var result = nodeTran.Results[i];
-                        if (result == null)
+                        if (result.IsEmpty)
                             continue;
                         // Use average area over all files in a replicate to avoid
                         // counting a replicate as best, simply because it has more
@@ -1089,7 +1089,7 @@ namespace pwiz.Skyline.Model
                 return false;
             }
             var chromInfos = Results[replicateIndex];
-            if (chromInfos == null)
+            if (chromInfos.IsEmpty)
             {
                 return false;
             }
@@ -1160,7 +1160,7 @@ namespace pwiz.Skyline.Model
                         calc => calc.UpdateTransitonGroupRatios(nodeGroupConvert,
                                                                 nodeGroupConvert.HasResults
                                                                     ? nodeGroupConvert.Results[calc.ResultsIndex]
-                                                                    : null,
+                                                                    : default(ChromInfoList<TransitionGroupChromInfo>),
                                                                 isMatching));
                     var resultsGroup = Results<TransitionGroupChromInfo>.Merge(nodeGroup.Results, listGroupInfoList);
                     var nodeGroupNew = nodeGroup;
@@ -1197,7 +1197,7 @@ namespace pwiz.Skyline.Model
                 Dictionary<int, bool> excludeFromCalibrations = null;   // Delay allocation
                 foreach (var chromInfos in peptideDocNode.Results)
                 {
-                    if (chromInfos == null)
+                    if (chromInfos.IsEmpty)
                     {
                         continue;
                     }
@@ -1273,7 +1273,7 @@ namespace pwiz.Skyline.Model
             public void AddChromInfoList(TransitionGroupDocNode nodeGroup)
             {
                 var listInfo = nodeGroup.Results[ResultsIndex];
-                if (listInfo == null)
+                if (listInfo.IsEmpty)
                     return;
 
                 foreach (var info in listInfo)
@@ -1327,7 +1327,7 @@ namespace pwiz.Skyline.Model
             public void AddChromInfoList(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
             {
                 var listInfo = nodeTran.Results[ResultsIndex];
-                if (listInfo == null)
+                if (listInfo.IsEmpty)
                     return;
 
                 foreach (var info in listInfo)

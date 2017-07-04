@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestUtil
 
             var selectedTreeNode = skylineWindow.SelectedNode as PeptideTreeNode;
             TransitionGroupDocNode nodeTranGroup = selectedTreeNode != null
-                ? selectedTreeNode.DocNode.TransitionGroups.First(g => g.Results[skylineWindow.SelectedResultsIndex] != null)
+                ? selectedTreeNode.DocNode.TransitionGroups.First(g => !g.Results[skylineWindow.SelectedResultsIndex].IsEmpty)
                 : skylineWindow.SequenceTree.GetNodeOfType<TransitionGroupTreeNode>().DocNode;
 
             var settings = skylineWindow.Document.Settings;

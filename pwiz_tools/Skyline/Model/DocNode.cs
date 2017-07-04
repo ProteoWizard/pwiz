@@ -260,9 +260,6 @@ namespace pwiz.Skyline.Model
 
         private static bool StripAnnotationValues<TItem>(ICollection<string> annotationNamesToKeep, ref ChromInfoList<TItem> chromInfoList)
         {
-            if (chromInfoList == null)
-                return false;
-
             bool fResult = false;
             var newList = new List<TItem>();
             foreach (var chromInfo in chromInfoList)

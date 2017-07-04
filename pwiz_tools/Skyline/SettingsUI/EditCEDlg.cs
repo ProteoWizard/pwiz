@@ -484,7 +484,7 @@ namespace pwiz.Skyline.SettingsUI
         public void Add(TReg regression, TransitionGroupDocNode nodeGroup, int iResult)
         {
             var result = nodeGroup.Results[iResult];
-            if (result == null)
+            if (result.IsEmpty)
                 return;
 
             Dictionary<TReg, Dictionary<int, double>> dictOptTotals;

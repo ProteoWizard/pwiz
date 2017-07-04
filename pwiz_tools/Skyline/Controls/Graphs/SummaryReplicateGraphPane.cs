@@ -603,7 +603,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return null;
             }
             var chromInfoList = results[iReplicate];
-            if (chromInfoList != null && chromInfoList.Count > 0 && chromInfoList[0] != null)
+            if (chromInfoList.Count > 0 && chromInfoList[0] != null)
             {
                 return chromInfoList[0].FileId;
             }

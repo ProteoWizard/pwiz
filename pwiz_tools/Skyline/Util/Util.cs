@@ -34,6 +34,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
@@ -680,9 +681,9 @@ namespace pwiz.Skyline.Util
                 _item = value;
             }
         }
-    } 
-    
-    
+    }
+
+
     /// <summary>
     /// Exposes a set of generic Array extension utility functions.
     /// </summary>
@@ -856,7 +857,7 @@ namespace pwiz.Skyline.Util
         /// <returns>The index in the Array of the last match, or -1 if not found</returns>
         public static int LastIndexOf<TItem>(this IList<TItem> values, Predicate<TItem> found)
         {
-            for (int i = values.Count -1; i >= 0; i--)
+            for (int i = values.Count - 1; i >= 0; i--)
             {
                 if (found(values[i]))
                     return i;
@@ -913,7 +914,8 @@ namespace pwiz.Skyline.Util
         /// <param name="values1">First array in the comparison</param>
         /// <param name="values2">Second array in the comparison</param>
         /// <returns>True if all items in both arrays in identical positions are Equal</returns>
-        public static bool EqualsDeep<TItemKey, TItemValue>(IDictionary<TItemKey, TItemValue> values1, IDictionary<TItemKey, TItemValue> values2)
+        public static bool EqualsDeep<TItemKey, TItemValue>(IDictionary<TItemKey, TItemValue> values1,
+            IDictionary<TItemKey, TItemValue> values2)
         {
             if (values1 == null && values2 == null)
                 return true;
@@ -921,7 +923,7 @@ namespace pwiz.Skyline.Util
                 return false;
             if (values1.Count != values2.Count)
                 return false;
-            foreach(var keyValuePair1 in values1)
+            foreach (var keyValuePair1 in values1)
             {
                 TItemValue value2;
                 if (!values2.TryGetValue(keyValuePair1.Key, out value2))
@@ -979,7 +981,25 @@ namespace pwiz.Skyline.Util
             return true;
         }
 
-        /// <summary>
+        public static bool InnerReferencesEqual<TItem, TItemList>(IList<TItemList> values1, IList<TItemList> values2)
+            where TItemList : IList<TItem>
+        {
+            if (values1 == null && values2 == null)
+                return true;
+            if (values1 == null || values2 == null)
+                return false;
+            if (values1.Count != values2.Count)
+                return false;
+            for (int i = 0; i < values1.Count; i++)
+            {
+                if (!ReferencesEqual(values1[i], values2[i]))
+                    return false;
+            }
+            return true;
+            
+        }
+
+    /// <summary>
         /// Enumerates two lists assigning references from the second list to
         /// entries in the first list, where they are equal.  Useful for maintaining
         /// reference equality when recalculating values. Similar to <see cref="Helpers.AssignIfEquals{T}"/>.

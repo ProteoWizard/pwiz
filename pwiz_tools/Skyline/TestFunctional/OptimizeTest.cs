@@ -299,7 +299,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         if (nodeGroup.TransitionGroup.LabelType.IsLight)
                         {
-                            Assert.IsNotNull(chromInfoList,
+                            Assert.IsFalse(chromInfoList.IsEmpty,
                                 string.Format("Peptide {0}{1}, fragment {2}{3} missing results",
                                     nodeTran.Transition.Group.Peptide.Sequence,
                                     Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorCharge),
@@ -308,7 +308,7 @@ namespace pwiz.SkylineTestFunctional
                             Assert.AreEqual(11, chromInfoList.Count);
                         }
                         else
-                            Assert.IsNull(chromInfoList);
+                            Assert.IsTrue(chromInfoList.IsEmpty);
                     }
                 }
             }

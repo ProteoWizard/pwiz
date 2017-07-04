@@ -674,8 +674,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 foreach (var nodeGroup in peptideStandards.SelectMany(nodePep => nodePep.TransitionGroups))
                 {
                     var chromInfos = nodeGroup.GetSafeChromInfo(resultsIndex);
-                    if (chromInfos == null)
-                        continue;
                     foreach (var groupChromInfo in chromInfos)
                     {
                         if (ReferenceEquals(fileInfo.FileId, groupChromInfo.FileId) &&

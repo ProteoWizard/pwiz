@@ -552,7 +552,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         var nodeTranCurrent = (TransitionDocNode) nodeGroupCurrent.Children[j];
                         if (nodeTran.Results.Count <= _chromIndex ||
                             nodeTranCurrent.Results.Count <= _chromIndex ||
-                            !ReferenceEquals(nodeTran.Results[_chromIndex], nodeTranCurrent.Results[_chromIndex]))
+                            !Equals(nodeTran.Results[_chromIndex], nodeTranCurrent.Results[_chromIndex]))
                             return false;
                     }
                 }
@@ -2234,7 +2234,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!nodeTran.HasResults || nodeTran.Results.Count <= indexChrom)
                 return null;
             var tranChromInfoList = nodeTran.Results[indexChrom];
-            if (tranChromInfoList == null)
+            if (tranChromInfoList.IsEmpty)
                 return null;
             foreach (var tranChromInfo in tranChromInfoList)
             {
@@ -2251,7 +2251,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!nodeGroup.HasResults)
                 return null;
             var tranGroupChromInfoList = nodeGroup.Results[indexChrom];
-            if (tranGroupChromInfoList == null)
+            if (tranGroupChromInfoList.IsEmpty)
                 return null;
             foreach (var tranGroupChromInfo in tranGroupChromInfoList)
             {

@@ -79,7 +79,7 @@ namespace pwiz.SkylineTest.Results
                 }
                 // now drill down for specific values
                 int nPeptides = 0;
-                foreach (var nodePep in document.Molecules.Where(nodePep => nodePep.Results[0] != null))
+                foreach (var nodePep in document.Molecules.Where(nodePep => !nodePep.Results[0].IsEmpty))
                 {
                     // expecting three peptide result in this small data set
                     if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)

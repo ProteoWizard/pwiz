@@ -652,15 +652,12 @@ namespace pwiz.Skyline.Model
             var listResultsNew = new List<ChromInfoList<TransitionGroupChromInfo>>();
             foreach (var info in transitionGroupDocNode.Results)
             {
-                if (info != null)
+                var infoNew = new List<TransitionGroupChromInfo>();
+                foreach (var result in info)
                 {
-                    var infoNew = new List<TransitionGroupChromInfo>();
-                    foreach (var result in info)
-                    {
-                        infoNew.Add(result.ChangeLibraryDotProduct(null));
-                    }
-                    listResultsNew.Add(new ChromInfoList<TransitionGroupChromInfo>(infoNew));
+                    infoNew.Add(result.ChangeLibraryDotProduct(null));
                 }
+                listResultsNew.Add(new ChromInfoList<TransitionGroupChromInfo>(infoNew));
             }
             var resultsNew = new Results<TransitionGroupChromInfo>(listResultsNew);
             return resultsNew;

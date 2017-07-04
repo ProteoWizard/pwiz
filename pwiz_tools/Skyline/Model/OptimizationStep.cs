@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model
 {
@@ -160,8 +161,8 @@ namespace pwiz.Skyline.Model
         private static void AddOptimizationStepAreas(TransitionGroupDocNode nodeGroup, int iResult, TReg regression,
             IDictionary<int, OptimizationStep<TReg>> optTotals)
         {
-            var results = (nodeGroup.HasResults ? nodeGroup.Results[iResult] : null);
-            if (results == null)
+            var results = nodeGroup.HasResults ? nodeGroup.Results[iResult] : default(ChromInfoList<TransitionGroupChromInfo>);
+            if (results.IsEmpty)
                 return;
             foreach (var chromInfo in results)
             {
@@ -178,11 +179,11 @@ namespace pwiz.Skyline.Model
         private static void AddOptimizationStepAreas(TransitionDocNode nodeTran, int iResult, TReg regression,
             IDictionary<int, OptimizationStep<TReg>> optTotals)
         {
-            var results = (nodeTran.HasResults ? nodeTran.Results[iResult] : null);
+            var results = (nodeTran.HasResults ? nodeTran.Results[iResult] : default(ChromInfoList<TransitionChromInfo>));
             // Skip the result set if it only has step 0, the predicted value. This happens
             // when someone mistakenly sets "Optimizing" on a data set that does not contain
             // optimization steps.
-            if (results == null || results.All(c => c.OptimizationStep == 0 || c.IsEmpty))
+            if (results.IsEmpty || results.All(c => c.OptimizationStep == 0 || c.IsEmpty))
                 return;
             foreach (var chromInfo in results)
             {

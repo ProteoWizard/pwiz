@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestA.Results
             foreach (var nodeTran in docContainer.Document.MoleculeTransitions)
             {
                 Assert.IsTrue(nodeTran.HasResults, "No results for transition Mz: {0}", nodeTran.Mz);
-                if (nodeTran.Results[0] == null)
+                if (nodeTran.Results[0].IsEmpty)
                     continue;
                 //Assert.IsNotNull(nodeTran.Results[0], "Null results for transition Mz: {0}", nodeTran.Mz);
                 if (minMz > nodeTran.Mz || nodeTran.Mz > maxMz)

@@ -1913,7 +1913,7 @@ namespace pwiz.Skyline
             if (iResults == -1 || !nodeGroup.HasResults || iResults >= nodeGroup.Results.Count)
                 return null;
             var listChromInfo = nodeGroup.Results[iResults];
-            if (listChromInfo == null)
+            if (listChromInfo.IsEmpty)
                 return null;
             return listChromInfo[0];
         }
@@ -1923,7 +1923,7 @@ namespace pwiz.Skyline
             if (iResults == -1 || !nodeTran.HasResults || iResults >= nodeTran.Results.Count)
                 return null;
             var listChromInfo = nodeTran.Results[iResults];
-            if (listChromInfo == null)
+            if (listChromInfo.IsEmpty)
                 return null;
             return listChromInfo[0];
         }
@@ -2409,7 +2409,7 @@ namespace pwiz.Skyline
                 return null;
             }
             var results = transitionGroupDocNode.Results[indexSet];
-            if (null == results)
+            if (results.IsEmpty)
             {
                 return null;
             }
