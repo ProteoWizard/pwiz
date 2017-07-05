@@ -399,7 +399,8 @@ namespace pwiz.Skyline.Model.Results
             lock (this)
             {
                 _dataFileScanHelperException = ex;
-                _msDataFileScanHelper.MsDataSpectra = null;
+                if (_msDataFileScanHelper != null)
+                    _msDataFileScanHelper.MsDataSpectra = null;
                 Monitor.PulseAll(this);
             }
         }
