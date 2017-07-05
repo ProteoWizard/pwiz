@@ -411,12 +411,12 @@
         <File Source="$(var.Skyline.TargetDir)/$(var.Skyline.TargetName).exe" Id="Skyline.exe_file" KeyPath="yes"/>
         <ProgId Id="Skyline.Document.0" Description="Skyline SRM Document" Icon="SkylineDoc.ico">
           <Extension Id="sky" ContentType="application/sky">
-            <Verb Id="open" Command="open" TargetFile="Skyline.exe_file" Argument="&quot;%1&quot;"/>
+            <Verb Id="open" Command="Open" TargetFile="Skyline.exe_file" Argument="--opendoc &quot;%1&quot;"/>
           </Extension>
         </ProgId>
         <ProgId Id="Skyline.Data.0" Description="Skyline SRM Data" Icon="SkylineData.ico">
           <Extension Id="skyd" ContentType="application/skyd">
-            <Verb Id="open" Command="open" TargetFile="Skyline.exe_file" Argument="&quot;%1&quot;"/>
+            <Verb Id="open" Command="Open" TargetFile="Skyline.exe_file" Argument="--opendoc &quot;%1&quot;"/>
           </Extension>
         </ProgId>
       </Component>

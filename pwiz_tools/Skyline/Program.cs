@@ -61,6 +61,7 @@ namespace pwiz.Skyline
         public const int EXIT_CODE_SUCCESS = 0;
         public const int EXIT_CODE_FAILURE_TO_START = 1;
         public const int EXIT_CODE_RAN_WITH_ERRORS = 2;
+        public const string OPEN_DOCUMENT_ARG = "--opendoc"; // Not L10N
 
         public static string MainToolServiceName { get; private set; }
         
@@ -115,7 +116,7 @@ namespace pwiz.Skyline
             CommonFormEx.ShowFormNames = FormEx.ShowFormNames = ShowFormNames;
 
             // For testing and debugging Skyline command-line interface
-            if (args != null && args.Length > 0) 
+            if (args != null && args.Length > 0 && args[0] != OPEN_DOCUMENT_ARG) 
             {
                 if (!CommandLineRunner.HasCommandPrefix(args[0]))
                 {
