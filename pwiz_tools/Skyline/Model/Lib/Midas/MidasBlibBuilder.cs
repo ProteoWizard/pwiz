@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib.BlibData;
-using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Lib.Midas
 {
