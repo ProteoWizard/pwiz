@@ -33,7 +33,7 @@
             this.colorPickerDlg = new System.Windows.Forms.ColorDialog();
             this.buttonSave = new System.Windows.Forms.Button();
             this.buttonCancel = new System.Windows.Forms.Button();
-            this.dataGridViewColors = new System.Windows.Forms.DataGridView();
+            this.dataGridViewColors = new pwiz.Common.Controls.CommonDataGridView();
             this.colorCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.rgbCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.hexCol = new System.Windows.Forms.DataGridViewTextBoxColumn();

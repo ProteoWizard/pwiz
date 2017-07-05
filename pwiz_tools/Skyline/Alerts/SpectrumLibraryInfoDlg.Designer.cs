@@ -30,7 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SpectrumLibraryInfoDlg));
             this.btnOk = new System.Windows.Forms.Button();
-            this.libraryGridView = new System.Windows.Forms.DataGridView();
+            this.libraryGridView = new pwiz.Common.Controls.CommonDataGridView();
             this.labelLibInfo = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.linkSpecLibLinks = new System.Windows.Forms.LinkLabel();
