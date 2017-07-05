@@ -151,11 +151,18 @@ namespace pwiz.Skyline
             {
                 using (DocContainer = new ResultsMemoryDocumentContainer(null, _skylineFile))
                 {
-                    DocContainer.ProgressMonitor = new CommandProgressMonitor(_out, new ProgressStatus());
+                    DocContainer.ProgressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(),
+                        commandArgs.ImportWarnOnFailure);
+                    // Make sure no joining happens on open, if joining is disabled
+                    if (commandArgs.ImportDisableJoining && _doc != null && _doc.Settings.HasResults)
+                    {
+                        _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeMeasuredResults(
+                            _doc.MeasuredResults.ChangeIsJoiningDisabled(true)));
+                    }
                     DocContainer.SetDocument(_doc, null);
 
-                    ProcessDocument(commandArgs);
-                    PerformExportOperations(commandArgs);
+                    if (ProcessDocument(commandArgs))
+                        PerformExportOperations(commandArgs);
 
                     // CONSIDER: Need to use new argument
                     // Save any settings list changes made by opening the document
@@ -169,12 +176,12 @@ namespace pwiz.Skyline
             return Program.EXIT_CODE_SUCCESS;
         }
 
-        private void ProcessDocument(CommandArgs commandArgs)
+        private bool ProcessDocument(CommandArgs commandArgs)
         {
             if (commandArgs.FullScanSetting)
             {
                 if (!SetFullScanSettings(commandArgs))
-                    return;
+                    return false;
             }
 
             if (commandArgs.SettingLibraryPath)
@@ -195,7 +202,7 @@ namespace pwiz.Skyline
                 {
                     _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, commandArgs.FastaPath,
                         x.Message);
-                    return;
+                    return false;
                 }
             }
 
@@ -204,26 +211,26 @@ namespace pwiz.Skyline
                 try
                 {
                     if (!ImportTransitionList(commandArgs))
-                        return;
+                        return false;
                 }
                 catch (Exception x)
                 {
                     _out.WriteLine(Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
                         commandArgs.TransitionListPath, x.Message);
-                    return;
+                    return false;
                 }
             }
 
             if (commandArgs.ImportingSearch)
             {
                 if (!ImportSearch(commandArgs))
-                    return;
+                    return false;
             }
 
             if (commandArgs.AddDecoys)
             {
                 if (!AddDecoys(commandArgs))
-                    return;
+                    return false;
             }
 
             if (commandArgs.RemovingResults && !commandArgs.RemoveBeforeDate.HasValue)
@@ -234,7 +241,7 @@ namespace pwiz.Skyline
             if (commandArgs.ImportingResults)
             {
                 if (!ImportResults(commandArgs))
-                    return;
+                    return false;
             }
 
             WaitForDocumentLoaded();
@@ -247,17 +254,18 @@ namespace pwiz.Skyline
             if (commandArgs.Reintegrating)
             {
                 if (!ReintegratePeaks(commandArgs))
-                    return;
+                    return false;
             }
 
             if (commandArgs.Saving)
             {
                 var saveFile = commandArgs.SaveFile ?? _skylineFile;
                 if (!SaveFile(saveFile))
-                    return;
+                    return false;
 
                 _skylineFile = saveFile;
             }
+            return true;
         }
 
         private void WaitForDocumentLoaded()
@@ -309,7 +317,9 @@ namespace pwiz.Skyline
                         commandArgs.ImportBeforeDate,
                         commandArgs.ImportOnOrAfterDate,
                         optimize,
-                        commandArgs.ImportDisableJoining, commandArgs.ImportAppend))
+                        commandArgs.ImportDisableJoining,
+                        commandArgs.ImportAppend,
+                        commandArgs.ImportWarnOnFailure))
                     return false;
             }
             else if (commandArgs.ImportingSourceDirectory)
@@ -321,7 +331,8 @@ namespace pwiz.Skyline
                         commandArgs.ImportBeforeDate,
                         commandArgs.ImportOnOrAfterDate,
                         optimize,
-                        commandArgs.ImportDisableJoining))
+                        commandArgs.ImportDisableJoining,
+                        commandArgs.ImportWarnOnFailure))
                     return false;
             }
             return true;
@@ -731,7 +742,7 @@ namespace pwiz.Skyline
         public bool ImportResultsInDir(string sourceDir, Regex namingPattern, 
             LockMassParameters lockMassParameters,
             DateTime? importBefore, DateTime? importOnOrAfter,
-            OptimizableRegression optimize, bool disableJoining)
+            OptimizableRegression optimize, bool disableJoining, bool warnOnFailure)
         {
             var listNamedPaths = GetDataSources(sourceDir, namingPattern, lockMassParameters);
             if (listNamedPaths == null)
@@ -739,11 +750,11 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            return ImportDataFiles(listNamedPaths, lockMassParameters, importBefore, importOnOrAfter, optimize, disableJoining);
+            return ImportDataFiles(listNamedPaths, lockMassParameters, importBefore, importOnOrAfter, optimize, disableJoining, warnOnFailure);
         }
 
         private bool ImportDataFiles(IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths, LockMassParameters lockMassParameters,
-            DateTime? importBefore, DateTime? importOnOrAfter, OptimizableRegression optimize, bool disableJoining)
+            DateTime? importBefore, DateTime? importOnOrAfter, OptimizableRegression optimize, bool disableJoining, bool warnOnFailure)
         {
             var namesAndFilePaths = GetNamesAndFilePaths(listNamedPaths).ToArray();
             bool hasMultiple = namesAndFilePaths.Length > 1;
@@ -768,8 +779,23 @@ namespace pwiz.Skyline
 
             DocContainer.WaitForComplete();
             // Remember if an error occurred, in case LastProgress is not an instance of MultiProgressStatus
-            var isError = DocContainer.LastProgress != null && DocContainer.LastProgress.IsError;
-            var multiStatus = DocContainer.LastProgress as MultiProgressStatus;
+            var lastProgress = DocContainer.LastProgress;
+            var isError = lastProgress != null && lastProgress.IsError;
+            var multiStatus = lastProgress as MultiProgressStatus;
+            // UGH. Because of the way imports remove failing files,
+            // we can actually return from WaitForComplete() above before
+            // the final status has been set. So, wait for a full second
+            // for it to become final.
+            for (int i = 0; i < 10; i++)
+            {
+                if (multiStatus == null || multiStatus.IsFinal)
+                    break;
+
+                Thread.Sleep(100);
+                lastProgress = DocContainer.LastProgress;
+                isError = lastProgress != null && lastProgress.IsError;
+                multiStatus = lastProgress as MultiProgressStatus;
+            }
             _doc = DocContainer.Document;
             DocContainer.ResetProgress();
 
@@ -792,6 +818,9 @@ namespace pwiz.Skyline
 
                     if (multiStatus.IsError)
                     {
+                        if (!warnOnFailure)
+                            return false;
+
                         var chromatograms = new List<ChromatogramSet>();
                         for (int i = 0; i < _doc.Settings.MeasuredResults.Chromatograms.Count; i++)
                         {
@@ -1041,7 +1070,7 @@ namespace pwiz.Skyline
         }
 
         private bool ImportDataFilesWithAppend(IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths, LockMassParameters lockMassParameters,
-            DateTime? importBefore, DateTime? importOnOrAfter, OptimizableRegression optimize, bool disableJoining, bool append)
+            DateTime? importBefore, DateTime? importOnOrAfter, OptimizableRegression optimize, bool disableJoining, bool append, bool warnOnFailure)
         {
             for (int i = 0; i < listNamedPaths.Count; i++)
             {
@@ -1085,7 +1114,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            return ImportDataFiles(listNamedPaths, lockMassParameters, importBefore, importOnOrAfter, optimize, disableJoining);
+            return ImportDataFiles(listNamedPaths, lockMassParameters, importBefore, importOnOrAfter, optimize, disableJoining, warnOnFailure);
         }
 
         public bool ImportResultsFile(MsDataFileUri replicateFile, string replicateName, DateTime? importBefore, DateTime? importOnOrAfter,
@@ -1332,7 +1361,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            ImportDataFiles(listNamedPaths, null, null, null, null, false);
+            ImportDataFiles(listNamedPaths, null, null, null, null, false, commandArgs.ImportWarnOnFailure);
         }
 
         private bool ReintegratePeaks(CommandArgs commandArgs)
@@ -1348,7 +1377,10 @@ namespace pwiz.Skyline
                 if (commandArgs.IsCreateScoringModel)
                 {
                     modelAndFeatures = CreateScoringModel(commandArgs.ReintegratModelName,
-                        commandArgs.IsDecoyModel, commandArgs.IsSecondBestModel, commandArgs.ReintegrateModelIterationCount);
+                        commandArgs.IsDecoyModel,
+                        commandArgs.IsSecondBestModel,
+                        commandArgs.IsLogTraining,
+                        commandArgs.ReintegrateModelIterationCount);
 
                     if (modelAndFeatures == null)
                         return false;
@@ -1364,7 +1396,7 @@ namespace pwiz.Skyline
                     modelAndFeatures = new ModelAndFeatures(scoringModel, null);
                 }
 
-                if (!Reintegrate(modelAndFeatures, commandArgs.IsOverwritePeaks))
+                if (!Reintegrate(modelAndFeatures, commandArgs.IsOverwritePeaks, commandArgs.IsLogTraining))
                     return false;
             }
             return true;
@@ -1388,7 +1420,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private ModelAndFeatures CreateScoringModel(string modelName, bool decoys, bool secondBest, int? modelIterationCount)
+        private ModelAndFeatures CreateScoringModel(string modelName, bool decoys, bool secondBest, bool log, int? modelIterationCount)
         {
             _out.WriteLine(Resources.CommandLine_CreateScoringModel_Creating_scoring_model__0_, modelName);
 
@@ -1425,8 +1457,9 @@ namespace pwiz.Skyline
                 var initialParams = new LinearModelParams(initialWeights);
 
                 // Train the model.
+                string documentPath = log ? DocContainer.DocumentFilePath : null;
                 scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups,
-                    decoyTransitionGroups, initialParams, modelIterationCount, secondBest, true, progressMonitor);
+                    decoyTransitionGroups, initialParams, modelIterationCount, secondBest, true, progressMonitor, documentPath);
 
                 Settings.Default.PeakScoringModelList.SetValue(scoringModel);
 
@@ -1446,12 +1479,12 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_CreateScoringModel_Error__Failed_to_create_scoring_model_);
-                _out.WriteLine(x.Message);
+                _out.WriteLine(x);
                 return null;
             }
         }
 
-        private bool Reintegrate(ModelAndFeatures modelAndFeatures, bool isOverwritePeaks)
+        private bool Reintegrate(ModelAndFeatures modelAndFeatures, bool isOverwritePeaks, bool logTraining)
         {
             try
             {
@@ -1460,11 +1493,16 @@ namespace pwiz.Skyline
                     OverrideManual = isOverwritePeaks,
                     FreeImmutableMemory = true
                 };
+                
+                // If logging training, give the modeling code a place to write
+                if (logTraining)
+                    resultsHandler.DocumentPath = DocContainer.DocumentFilePath;
+
                 modelAndFeatures.ReleaseMemory();   // Avoid holding memory through peak adjustment
 
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
 
-                resultsHandler.ScoreFeatures(progressMonitor);
+                resultsHandler.ScoreFeatures(progressMonitor, true, _out);
                 if (resultsHandler.IsMissingScores())
                 {
                     _out.WriteLine(Resources.CommandLine_Reintegrate_Error__The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document__Please_train_a_new_model_);
@@ -1477,7 +1515,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 _out.WriteLine(Resources.CommandLine_Reintegrate_Error__Failed_to_reintegrate_peaks_successfully_);
-                _out.WriteLine(x.Message);
+                _out.WriteLine(x);
                 return false;
             }
         }
@@ -1866,9 +1904,10 @@ namespace pwiz.Skyline
             {
                 SaveDocument(_doc, saveFile, _out);
             }
-            catch
+            catch (Exception e)
             {
                 _out.WriteLine(Resources.CommandLine_SaveFile_Error__The_file_could_not_be_saved_to__0____Check_that_the_directory_exists_and_is_not_read_only_, saveFile);
+                _out.WriteLine(e);
                 return false;
             }
             _out.WriteLine(Resources.CommandLine_SaveFile_File__0__saved_, Path.GetFileName(saveFile));
@@ -3066,6 +3105,7 @@ namespace pwiz.Skyline
     internal class CommandProgressMonitor : IProgressMonitor
     {
         private IProgressStatus _currentProgress;
+        private readonly bool _warnOnImportFailure;
         private readonly DateTime _waitStart;
         private DateTime _lastOutput;
         private string _lastMessage;
@@ -3074,10 +3114,11 @@ namespace pwiz.Skyline
         private Thread _waitingThread;
         private volatile bool _waiting;
 
-        public CommandProgressMonitor(TextWriter outWriter, IProgressStatus status)
+        public CommandProgressMonitor(TextWriter outWriter, IProgressStatus status, bool warnOnImportFailure = false)
         {
             _out = outWriter;
             _waitStart = _lastOutput = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
+            _warnOnImportFailure = warnOnImportFailure;
 
             UpdateProgress(status);
         }
@@ -3110,13 +3151,8 @@ namespace pwiz.Skyline
                 }  
             }
 
-            var currentTime = DateTime.UtcNow;
-            // Show progress at least every 2 seconds and at 100%, if any other percentage
-            // output has been shown.
-            if ((currentTime - _lastOutput).TotalSeconds < 2 && !status.IsError && (status.PercentComplete != 100 || _lastOutput == _waitStart))
-            {
+            if (IsLogStatusDeferred(status))
                 return;
-            }
 
             bool writeMessage = !string.IsNullOrEmpty(status.Message) && status.Message != _lastMessage;
 
@@ -3175,8 +3211,32 @@ namespace pwiz.Skyline
 
             if (writeMessage)
                 _lastMessage = status.Message;
-            _lastOutput = currentTime;
             _currentProgress = status;
+        }
+
+        private bool IsLogStatusDeferred(IProgressStatus status)
+        {
+            var currentTime = DateTime.UtcNow;
+            if (IsLogStatusDeferredAtTime(currentTime, status))
+            {
+                return true;
+            }
+            // Check again inside a lock before falling through, which will cause output
+            lock (_out)
+            {
+                if (IsLogStatusDeferredAtTime(currentTime, status))
+                    return true;
+                _lastOutput = currentTime;
+            }
+            return false;
+        }
+
+        private bool IsLogStatusDeferredAtTime(DateTime currentTime, IProgressStatus status)
+        {
+            // Show progress at least every 2 seconds and at 100%, if any other percentage
+            // output has been shown.
+            return (currentTime - _lastOutput).TotalSeconds < 2 && !status.IsError &&
+                   (status.PercentComplete != 100 || _lastOutput == _waitStart);
         }
 
         private void WriteMultiStatusErrors(MultiProgressStatus multiStatus)
@@ -3191,10 +3251,12 @@ namespace pwiz.Skyline
                     if (missingDataException != null)
                         rawPath = missingDataException.ImportPath.GetFilePath();
                     _out.WriteLine(
-                        Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___,
+                        _warnOnImportFailure
+                        ? Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___
+                        : Resources.CommandLine_ImportResultsFile_Error__Failed_importing_the_results_file__0__,
                         rawPath);
                     _out.WriteLine(Resources.CommandProgressMonitor_UpdateProgressInternal_Message__ +
-                                   progressStatus.ErrorException.Message);
+                                   progressStatus.ErrorException);
                     _out.WriteLine();
                 }
             }

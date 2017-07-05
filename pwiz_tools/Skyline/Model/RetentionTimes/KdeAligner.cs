@@ -2,7 +2,7 @@
  * Original author: Max Horowitz-Gelb <maxhg .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2017 University of Washington - Seattle, WA
+ * Copyright 2016 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public double Stdev { get { return _stdev;} }
     }
 
-    public class KdeAligner : PiecewiseLinearAligner
+    public class KdeAligner : Aligner
     {
         private readonly int _resolution;
         private double _minX;
@@ -63,15 +63,24 @@ namespace pwiz.Skyline.Model.RetentionTimes
         private int _minYi;
         private int[] _consolodatedXY;
         private int[] _consolodatedYX;
-        // private float maxIndIndex;
+        private double _rmsd;
+        private double[] _smoothedY;
+        private double[] _xArr;
 
-        public KdeAligner(double[] xArr, double[] yArr, int origXRun, int origYRun,int resolution = 1000) : base(xArr, yArr, origXRun, origYRun)
+        public KdeAligner(int origXFileIndex, int origYFileIndex, int resolution = 1000) : base(origXFileIndex, origYFileIndex)
         {
             _resolution = resolution;
         }
 
-        protected override double[] GetSmoothedValues(double[] xArr, double[] yArr)
+        public KdeAligner(int resolution = 1000) 
         {
+            _resolution = resolution;
+        }
+
+        public override void Train(double[] xArr, double[] yArr)
+        {
+            Array.Sort(xArr,yArr);
+            _xArr = xArr;
             double[] xNormal;
             double[] yNormal;
 
@@ -89,7 +98,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             float[,] histogram = new float[_resolution, _resolution];
 
-            StampOutHistogram(histogram,stamp,xNormal, yNormal);
+            StampOutHistogram(histogram, stamp, xNormal, yNormal);
 
             int bestXi = -1;
             int bestYi = -1;
@@ -113,19 +122,24 @@ namespace pwiz.Skyline.Model.RetentionTimes
             TraceNorthEast(histogram, bestXi, bestYi, points);
             TraceSouthWest(histogram,bestXi,bestYi,points);
             GetConsolodatedArrays(points,out _consolodatedXY, out _consolodatedYX);
-            double[] yPred = new double[xArr.Length];
-            for (int i = 0; i < yPred.Length; i++)
+            _rmsd = 0;
+            _smoothedY = new double[xArr.Length];
+            for (int i = 0; i < xArr.Length; i++)
             {
-                yPred[i] = GetValueForX(xArr[i]);
+                var x = xArr[i];
+                var y = yArr[i];
+                var pred = GetValue(x);
+                _smoothedY[i] = pred;
+                var diff = y - pred;
+                _rmsd += diff * diff / xArr.Length;
             }
-            return yPred;
+            _rmsd = Math.Sqrt(_rmsd);
         }
 
         private void GetConsolodatedArrays(LinkedList<Tuple<int, int>> points, out int[] consolodatedXY,
             out int[] consolodatedYX)
         {
             consolodatedXY = new int[_resolution];
-            consolodatedYX = new int[_resolution];
             using (var iterator = points.GetEnumerator())
             {
                 bool notFinished = iterator.MoveNext();
@@ -135,8 +149,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     var maxY = minY;
                     var x = iterator.Current.Item1;
                     var lastX = x;
-                    // ReSharper disable once AssignmentInConditionalExpression
-                    while (notFinished = iterator.MoveNext() && iterator.Current != null)
+                    while ((notFinished = iterator.MoveNext()) && iterator.Current != null)
                     {
                         if (iterator.Current.Item1 != lastX)
                             break;
@@ -145,24 +158,32 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     consolodatedXY[x] = (int)Math.Round((minY + maxY) / 2.0);
                 }
             }
-            using (var iterator = points.GetEnumerator())
+
+            if (CanCalculateReverseRegression)
             {
-                bool notFinished = iterator.MoveNext();
-                while (notFinished && iterator.Current != null)
+                consolodatedYX = new int[_resolution];
+                using (var iterator = points.GetEnumerator())
                 {
-                    var minX = iterator.Current.Item1;
-                    var maxX = minX;
-                    var y = iterator.Current.Item2;
-                    var lastY = y;
-                    // ReSharper disable once AssignmentInConditionalExpression
-                    while (notFinished = iterator.MoveNext() && iterator.Current != null)
+                    bool notFinished = iterator.MoveNext();
+                    while (notFinished && iterator.Current != null)
                     {
-                        if (iterator.Current.Item2 != lastY)
-                            break;
-                        maxX = iterator.Current.Item1;
+                        var minX = iterator.Current.Item1;
+                        var maxX = minX;
+                        var y = iterator.Current.Item2;
+                        var lastY = y;
+                        while ((notFinished = iterator.MoveNext()) && iterator.Current != null)
+                        {
+                            if (iterator.Current.Item2 != lastY)
+                                break;
+                            maxX = iterator.Current.Item1;
+                        }
+                        consolodatedYX[y] = (int) Math.Round((minX + maxX) / 2.0);
                     }
-                    consolodatedYX[y] = (int)Math.Round((minX + maxX) / 2.0);
                 }
+            }
+            else
+            {
+                consolodatedYX = null;
             }
         }
 
@@ -322,42 +343,43 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return minY + (val - minX)/(maxX - minX)*(maxY - minY);
         }
 
-        protected  double GetValueForX(double x)
+        public override double GetValue(double x)
         {
-            return _GetValueFor(x,_minX, _maxX, _minXi, _maxXi, _minY, _maxY, _minYi, _maxYi, _consolodatedXY);
+            return _GetValueFor(x, _minX, _maxX, _minXi, _maxXi, _minY, _maxY, _minYi, _maxYi, _consolodatedXY);
         }
 
-        protected double GetValueForY(double y)
+        public override double GetValueReversed(double y)
         {
+            if(!CanCalculateReverseRegression)
+                throw new Exception("KDE has not calculated reverse regression");   // Not L10N
             return _GetValueFor(y, _minY, _maxY, _minYi, _maxYi, _minX, _maxX, _minXi, _maxXi, _consolodatedYX);
         }
-
-        private const int SMOOTHING_AVERAGE_REACH = 0;
 
         private double _GetValueFor(double ind, double minInd, double maxInd, int minIndNormal, int maxIndNormal,
             double minDep, double maxDep, int minDepNormal, int maxDepNormal, int[] arr)
         {
-            int ind_i = -1;
+            int dep_i = -1;
             if (ind <= minInd)
-                ind_i = 0;
+                dep_i = minIndNormal;
             else if (ind >= maxInd)
-                ind_i = arr.Length - 1;
+                dep_i = maxIndNormal;
             else
-                ind_i = IntegerInterpolate(ind, minInd, maxInd, minIndNormal, maxIndNormal);
-
-            var dep_i = 0.0;
-            var sum_count = 0;
-
-            for (int i = Math.Max(0, ind_i - SMOOTHING_AVERAGE_REACH); 
-                i < Math.Min(arr.Length, ind_i +1+ SMOOTHING_AVERAGE_REACH); i ++)
             {
-                dep_i += arr[i];
-                sum_count++;
+                int ind_i = IntegerInterpolate(ind, minInd, maxInd, minIndNormal, maxIndNormal);
+                dep_i = arr[ind_i];
             }
-            
-            dep_i /= sum_count;
-
             return Interpolate(dep_i, minDepNormal, maxDepNormal, minDep, maxDep);
+        }
+
+        public override double GetRmsd()
+        {
+            return _rmsd;    
+        }
+
+        public override void GetSmoothedValues(out double[] xArr, out double[] yArr)
+        {
+            xArr = _xArr;
+            yArr = _smoothedY;
         }
     }
 }

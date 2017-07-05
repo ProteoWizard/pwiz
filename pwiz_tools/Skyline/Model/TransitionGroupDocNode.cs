@@ -1262,9 +1262,9 @@ namespace pwiz.Skyline.Model
                                     {
                                         if (listTranInfo == null)
                                             listTranInfo = new List<TransitionChromInfo>(countGroupInfos) {firstChromInfo};
-                                        listTranInfo.Add(chromInfo);
-                                    }
+                                    listTranInfo.Add(chromInfo);
                                 }
+                            }
                             }
                             if (firstChromInfo == null)
                                 resultsCalc.AddTransitionChromInfo(iTran, null);
@@ -1470,7 +1470,7 @@ namespace pwiz.Skyline.Model
                     var chromInfo = results[i];
                     if (ReferenceEquals(fileId, chromInfo.FileId) && step == chromInfo.OptimizationStep)
                         return chromInfo;
-                }
+            }
             }
             return null;
         }
@@ -1485,7 +1485,7 @@ namespace pwiz.Skyline.Model
                     var chromInfo = results[i];
                     if (ReferenceEquals(fileId, chromInfo.FileId) && step == chromInfo.OptimizationStep)
                         return chromInfo;
-                }
+            }
             }
             return null;
         }
@@ -1715,10 +1715,10 @@ namespace pwiz.Skyline.Model
                                 continue;
                             short rank = 0, rankByLevel = 0;
                             if (pair.Info.Area > 0)
-                            {
+                        {
                                 rank = (short) (iRank + 1);
                                 rankByLevel = pair.IsMs1 ? ++iRankMs : ++iRankMsMs;
-                            }
+                        }
                             if (pair.Info.Rank != rank || pair.Info.RankByLevel != rankByLevel)
                                 pair.Result = pair.Info.ChangeRank(false, rank, rankByLevel);
                         }
@@ -1802,14 +1802,14 @@ namespace pwiz.Skyline.Model
                     // Use the longer query in more complex cases, with ToArray allocation
                     // since the set could change during retrieval
                     foreach (var step in _arrayTransitionChromInfoSets
-                        .Where(s => s.ChromInfoLists[iChrom] != null)
-                        .SelectMany(s => s.ChromInfoLists[iChrom])
-                        .Select(info => new FileStep(info.FileId, info.OptimizationStep))
+                    .Where(s => s.ChromInfoLists[iChrom] != null)
+                    .SelectMany(s => s.ChromInfoLists[iChrom])
+                    .Select(info => new FileStep(info.FileId, info.OptimizationStep))
                         .Distinct()
                         .ToArray())
                     {
                         yield return step;
-                    }
+            }
                 }
             }
 
@@ -1825,7 +1825,7 @@ namespace pwiz.Skyline.Model
                             return chromInfo;
                     }
                 }
-                return null;
+                    return null;
             }
 
             private void SetTransitionChromInfo(int iTran, int iChrom, ChromFileInfoId fileId, int optStep,
@@ -2321,7 +2321,9 @@ namespace pwiz.Skyline.Model
                 var test = Peptide.CompareGroups(left, right);
                 if (test != 0)
                     return test;
+                // ReSharper disable PossibleNullReferenceException
                 return left.PrecursorMz.CompareTo(right.PrecursorMz);
+                // ReSharper restore PossibleNullReferenceException
             }
         }
         

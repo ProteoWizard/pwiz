@@ -652,22 +652,30 @@ namespace pwiz.Skyline.Model.DocSettings
                 Statistics statRT = new Statistics(listRTs[i]);
                 Statistics stat = aStatValues[i];
                 IRegressionFunction regressionFunction = null;
+                double[] xArr;
+                double[] ySmoothed;
                 switch (regressionMethod)
                 {
                     case RegressionMethodRT.linear:
-                        regressionFunction = new RegressionLineElement(statRT.Slope(stat) ,statRT.Intercept(stat));
+                        regressionFunction = new RegressionLineElement(statRT.Slope(stat), statRT.Intercept(stat));
                         break;
+
                     case RegressionMethodRT.kde:
-                        var kdeAligner = new KdeAligner(stat.CopyList(), statRT.CopyList(), 0, 1);
-                        kdeAligner.Train();
-                        regressionFunction = kdeAligner.RegressionFunction;
-                        stat = kdeAligner.getTransformedY();
+                        var kdeAligner = new KdeAligner();
+                        kdeAligner.Train(stat.CopyList(), statRT.CopyList());
+                        
+                        kdeAligner.GetSmoothedValues(out xArr, out ySmoothed);
+                        regressionFunction = 
+                            new PiecewiseLinearRegressionFunction(xArr, ySmoothed, kdeAligner.GetRmsd());
+                        stat = new Statistics(ySmoothed);
                         break;
                     case RegressionMethodRT.loess:
-                        var loessAligner = new LoessAligner(stat.CopyList(), statRT.CopyList(), 0, 1);
-                        loessAligner.Train();
-                        regressionFunction = loessAligner.RegressionFunction;
-                        stat = loessAligner.getTransformedY();
+                        var loessAligner = new LoessAligner();
+                        loessAligner.Train(stat.CopyList(), statRT.CopyList());
+                        loessAligner.GetSmoothedValues(out xArr, out ySmoothed);
+                        regressionFunction = 
+                            new PiecewiseLinearRegressionFunction(xArr, ySmoothed, loessAligner.GetRmsd());
+                        stat = new Statistics(ySmoothed);
                         break;
                 }
                 double rVal = statRT.R(stat);

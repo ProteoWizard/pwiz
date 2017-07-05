@@ -540,7 +540,7 @@ namespace pwiz.SkylineTestTutorial
             // Review regression and outliers, p. 24
             RunUI(() =>
                       {
-                          VerifyRTRegression(0.358, 25.946, 0.9162);
+                          VerifyRTRegression(0.358, 25.920, 0.9162);
                           Assert.AreEqual(0, SkylineWindow.RTGraphController.Outliers.Length);
                       });
 
@@ -556,7 +556,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => SkylineWindow.RTGraphController.Outliers.Length == 2);
             RunUI(() =>
                       {
-                          VerifyRTRegression(0.393, 24.87, 0.9989);
+                          VerifyRTRegression(0.393, 24.85, 0.9989);
 
                           SkylineWindow.RemoveRTOutliers();
                       });
@@ -567,7 +567,7 @@ namespace pwiz.SkylineTestTutorial
             // Check outlier removal, p. 25
             RunUI(() =>
                       {
-                          VerifyRTRegression(0.393, 24.874, 0.9989);
+                          VerifyRTRegression(0.393, 24.85, 0.9989);
                           Assert.AreEqual(0, SkylineWindow.RTGraphController.Outliers.Length);
                       });
 

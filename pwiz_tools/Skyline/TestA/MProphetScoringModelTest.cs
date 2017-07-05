@@ -69,22 +69,22 @@ namespace pwiz.SkylineTestA
                 _fileName = "testfile-no-yseries.csv",   // Not L10N 
                 _weights = new[]
                 {
-                    1.5839160,
-                    -0.1470850,
-                    -5.4123354,
-                    1.2256853,
-                    1.7409527,
-                    -1.5745945,
-                    -0.8718439,
-                    -10.6460580,
-                    -0.8648927,
-                    0.1257379,
-                    -0.0196414,
-                    -4.1212852,
-                    0.5084217,
-                    -0.4850913,
-                    2.6041720,
-                    7.5260728
+                    1.6575991,
+                    -0.1676007,
+                    -5.6435616,
+                    1.3223324,
+                    1.6492593,
+                    -1.5069361,
+                    -0.8654522,
+                    -10.2158081,
+                    -0.9047883,
+                    0.1172538,
+                    -0.0031332,
+                    -2.4309351,
+                    0.6089659,
+                    -0.7450676,
+                    2.9570599,
+                    7.3693481
                 }
             }
         };
@@ -110,7 +110,7 @@ namespace pwiz.SkylineTestA
                 // Calculate weights for peak features.
                 var scoringModel = new MProphetPeakScoringModel("mProphet", fileWeights._weights);    // Not L10N
                 scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups.ToList(), decoyTransitionGroups.ToList(),
-                    new LinearModelParams(fileWeights._weights), null, false, false);
+                    new LinearModelParams(fileWeights._weights), 10, false, false);
                 Assert.AreEqual(scoringModel.Parameters.Weights.Count, fileWeights._weights.Length);
                 for (int i = 0; i < scoringModel.Parameters.Weights.Count; i++)
                     Assert.AreEqual(fileWeights._weights[i], scoringModel.Parameters.Weights[i], 1e-6);

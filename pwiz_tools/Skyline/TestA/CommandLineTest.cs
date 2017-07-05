@@ -1141,6 +1141,7 @@ namespace pwiz.SkylineTestA
 
                 msg = RunCommand("--in=" + docPath,
                                  "--import-all=" + testFilesDir.FullPath,
+                                 "--import-warn-on-failure",
                                  "--save");
 
                 string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath);
@@ -1203,6 +1204,7 @@ namespace pwiz.SkylineTestA
             // Try to import FullScan.RAW|mzML
             var msg = RunCommand("--in=" + docPath,
                        "--import-file=" + rawPath,
+                       "--import-warn-on-failure",
                        "--out=" + outPath);
 
              CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, rawPath), msg);
@@ -1213,6 +1215,7 @@ namespace pwiz.SkylineTestA
             // Import all files in the directory. FullScan.RAW|mzML should not be imported
             msg = RunCommand("--in=" + outPath,
                              "--import-all=" + testFilesDir.FullPath,
+                             "--import-warn-on-failure",
                              "--save");
              CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, rawPath), msg);
 
@@ -1402,6 +1405,7 @@ namespace pwiz.SkylineTestA
             // There should be notes about ignoring the two files that are already in the document.
             msg = RunCommand("--in=" + outPath2,
                              "--import-all=" + testFilesDir.FullPath,
+                             "--import-warn-on-failure",
                              "--save");
             // ExtensionTestContext.ExtThermo raw uses different case from file on disk
             // which happens to make a good test case.

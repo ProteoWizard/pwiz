@@ -300,9 +300,9 @@ namespace pwiz.Skyline.FileUI
         public static MsDataFileUri[] GetDataSourcePaths(Control parent, string documentSavedPath)
         {
             using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.ChorusAccountList)
-            {
-                Text = Resources.ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files
-            })
+                {
+                    Text = Resources.ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files
+                })
             {
                 // The dialog expects null to mean no directory was supplied, so don't assign
                 // an empty string.
@@ -637,6 +637,12 @@ namespace pwiz.Skyline.FileUI
                     comboOptimizing.SelectedIndex = comboTuning.SelectedIndex = 0;
                 }
             }
+        }
+
+        public int ImportSimultaneousIndex
+        {
+            get { return comboSimultaneousFiles.SelectedIndex;}
+            set { comboSimultaneousFiles.SelectedIndex = value;}
         }
 
         public bool RadioAddNewChecked

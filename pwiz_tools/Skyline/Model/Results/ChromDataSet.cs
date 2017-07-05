@@ -342,8 +342,11 @@ namespace pwiz.Skyline.Model.Results
                     break;
                 if (time > startTime)
                 {
-                    if (inferZeros)
-                        i = Math.Max(0, i - 1);
+                    if (i > 0)
+                    {
+                        if (inferZeros || time - startTime > startTime - timesNew[i - 1])
+                            i--;
+                    }
                     break;
                 }
             }
@@ -368,8 +371,11 @@ namespace pwiz.Skyline.Model.Results
                     break;
                 if (time < endTime)
                 {
-                    if (inferZeros)
-                        i = Math.Min(lastTime, i + 1);
+                    if (i < lastTime)
+                    {
+                        if (inferZeros || endTime - time < timesNew[i + 1] - endTime)
+                            i++;
+                    }
                     break;
                 }
             }
@@ -382,6 +388,7 @@ namespace pwiz.Skyline.Model.Results
 
         private const double NOISE_CORRELATION_THRESHOLD = 0.95;
         private const int MINIMUM_PEAKS = 3;
+        private const int MAX_PEAKS_CHECKED = 20;
 
         public void SetExplicitPeakBounds(PeakBounds peakBounds)
         {
@@ -426,7 +433,7 @@ namespace pwiz.Skyline.Model.Results
             // Inspect 20 most intense peak regions
             var listRank = new List<double>();
             Assume.IsTrue(_listPeakSets.Count == 0);
-            for (int i = 0; i < 20 || retentionTimes.Length > 0; i++)
+            for (int i = 0; i < MAX_PEAKS_CHECKED || retentionTimes.Length > 0; i++)
             {
                 if (allPeaks.Count == 0)
                     break;
@@ -437,7 +444,7 @@ namespace pwiz.Skyline.Model.Results
                 // If peptide ID retention times are present, allow
                 // peaks greater than 20, but only if they contain
                 // an ID retention time.
-                if (i >= 20 && !peak.Peak.Identified)
+                if (i >= MAX_PEAKS_CHECKED && !peak.Peak.Identified)
                     continue;
 
                 ChromDataPeakList peakSet = FindCoelutingPeaks(peak, allPeaks);
@@ -1169,7 +1176,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return new RawTimeIntensities(_listChromData.Select(chromData => chromData.RawTimeIntensities),
                     InterpolationParams);
-            }
+    }
             return new InterpolatedTimeIntensities(_listChromData.Select(chromData=>chromData.TimeIntensities), 
                 _listChromData.Select(chromData=>chromData.PrimaryKey.Source));
         }

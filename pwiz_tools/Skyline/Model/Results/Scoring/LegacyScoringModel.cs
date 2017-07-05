@@ -120,7 +120,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             new MQuestRetentionTimePredictionCalc(),
         };
 
-        public override IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, LinearModelParams initParameters, int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null)
+        public override IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, LinearModelParams initParameters,
+            int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null, string documentPath = null)
         {
             return ChangeProp(ImClone(this), im =>
             {
@@ -131,8 +132,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         weights[i] = double.IsNaN(initParameters.Weights[i]) ? double.NaN : DEFAULT_WEIGHTS[i];
                     }
                     var parameters = new LinearModelParams(weights);
-                    ScoredGroupPeaksSet decoyTransitionGroups = new ScoredGroupPeaksSet(decoys);
-                    ScoredGroupPeaksSet targetTransitionGroups = new ScoredGroupPeaksSet(targets);
+                    ScoredGroupPeaksSet decoyTransitionGroups = new ScoredGroupPeaksSet(decoys, decoys.Count);
+                    ScoredGroupPeaksSet targetTransitionGroups = new ScoredGroupPeaksSet(targets, targets.Count);
                     targetTransitionGroups.ScorePeaks(parameters.Weights);
 
                     if (includeSecondBest)

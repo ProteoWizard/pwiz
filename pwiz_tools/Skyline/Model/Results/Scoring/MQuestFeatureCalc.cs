@@ -217,7 +217,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <returns></returns>
         public static IList<ITransitionPeakData<TData>> GetMs1IonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas)
         {
-            return GetIonTypes(tranGroupPeakDatas, tg => tg.Ms1TranstionPeakData);
+            // Copied because using a lambda/delegate causes allocation in this case (profiled)
+            if (tranGroupPeakDatas.Count == 1)
+                return tranGroupPeakDatas[0].Ms1TranstionPeakData;
+            var listTrans = new List<ITransitionPeakData<TData>>();
+            foreach (var transitionGroupPeakData in tranGroupPeakDatas)
+                listTrans.AddRange(transitionGroupPeakData.Ms1TranstionPeakData);
+            return listTrans;
         }
 
         /// <summary>
@@ -228,7 +234,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <returns></returns>
         public static IList<ITransitionPeakData<TData>> GetMs2IonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas)
         {
-            return GetIonTypes(tranGroupPeakDatas, tg => tg.Ms2TranstionPeakData);
+            // Copied because using a lambda/delegate causes allocation in this case (profiled)
+            if (tranGroupPeakDatas.Count == 1)
+                return tranGroupPeakDatas[0].Ms2TranstionPeakData;
+            var listTrans = new List<ITransitionPeakData<TData>>();
+            foreach (var transitionGroupPeakData in tranGroupPeakDatas)
+                listTrans.AddRange(transitionGroupPeakData.Ms2TranstionPeakData);
+            return listTrans;
         }
 
         /// <summary>
@@ -239,19 +251,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <returns></returns>
         public static IList<ITransitionPeakData<TData>> GetDefaultIonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas)
         {
-            return GetIonTypes(tranGroupPeakDatas, tg => tg.DefaultTranstionPeakData);
-        }
-
-        private static IList<ITransitionPeakData<TData>> GetIonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas,
-            Func<ITransitionGroupPeakData<TData>, IList<ITransitionPeakData<TData>>> getTrans)
-        {
+            // Copied because using a lambda/delegate causes allocation in this case (profiled)
             if (tranGroupPeakDatas.Count == 1)
-                return getTrans(tranGroupPeakDatas[0]);
+                return tranGroupPeakDatas[0].DefaultTranstionPeakData;
             var listTrans = new List<ITransitionPeakData<TData>>();
             foreach (var transitionGroupPeakData in tranGroupPeakDatas)
-            {
-                listTrans.AddRange(getTrans(transitionGroupPeakData));
-            }
+                listTrans.AddRange(transitionGroupPeakData.DefaultTranstionPeakData);
             return listTrans;
         }
 
@@ -311,7 +316,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            double lightArea = GetIonTypes(GetTransitionGroups(summaryPeakData)).Sum(p => p.PeakData.Area);
+            double lightArea = 0;
+            foreach (var pd in GetIonTypes(GetTransitionGroups(summaryPeakData)))
+                lightArea += pd.PeakData.Area;
             return (float)Math.Max(0, Math.Log10(lightArea));
         }
 
@@ -359,7 +366,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public override bool IsReferenceScore
         {
             get { return true; }
-        }
+    }
     }
 
     public class MQuestDefaultIntensityCalc : AbstractMQuestIntensityCalc
@@ -484,7 +491,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public override bool IsReferenceScore
         {
             get { return true; }
-        }
+    }
     }
 
     public class MQuestDefaultIntensityCorrelationCalc : AbstractMQuestIntensityCorrelationCalc
@@ -814,7 +821,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public override bool IsReferenceScore
         {
             get { return true; }
-        }
+    }
     }
 
     public class MQuestDefaultWeightedShapeCalc : AbstractMQuestWeightedShapeCalc<MQuestDefaultCrossCorrelations>
@@ -957,7 +964,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public override bool IsReferenceScore
         {
             get { return true; }
-        }
+    }
     }
 
     public class MQuestDefaultWeightedCoElutionCalc : AbstractMQuestWeightedCoElutionCalc<MQuestDefaultCrossCorrelations>

@@ -34,27 +34,30 @@ namespace pwiz.Skyline.Model.Results.Scoring
         protected override float Calculate(PeakScoringContext context,
                                            IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            var massErrors = new List<double>();
-            var weights = new List<double>();
             bool noTransitions = true;
             bool allZeroWeights = true;
-            foreach (var tranGroup in GetTransitionGroups(summaryPeakData))
+            // Use running mean calculation to avoid allocations which show up in a profiler
+            double weightedMeanMassError = 0;
+            double totalWeight = 0;
+            double unweightedMeanMassError = 0;
+            int totalSeen = 0;
+            foreach (var pdTran in GetIonTypes(GetTransitionGroups(summaryPeakData)))
             {
-                foreach (var pdTran in tranGroup.TransitionPeakData)
+                noTransitions = false;
+                var peakData = pdTran.PeakData;
+                double? massError = peakData.MassError;
+                if (massError.HasValue)
                 {
-                    if (!IsIonType(pdTran.NodeTran))
-                        continue;
-                    noTransitions = false;
-                    var peakData = pdTran.PeakData;
-                    double? massError = peakData.MassError;
-                    if (massError.HasValue)
+                    double error = MassErrorFunction(massError.Value);
+                    double weight = GetWeight(peakData);
+                    if (weight != 0)
                     {
-                        massErrors.Add(MassErrorFunction(massError.Value));
-                        double weight = GetWeight(peakData);
-                        weights.Add(weight);
-                        if (weight != 0)
-                            allZeroWeights = false;
+                        allZeroWeights = false;
+                        totalWeight += weight;
+                        weightedMeanMassError += (error - weightedMeanMassError) * weight / totalWeight;
                     }
+                    totalSeen++;
+                    unweightedMeanMassError += (error - unweightedMeanMassError) / totalSeen;
                 }
             }
 
@@ -63,13 +66,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 return float.NaN;
             // If there are qualifying tranistions but they all have null mass error,
             // then return maximum possible mass error
-            if (massErrors.Count == 0)
+            if (totalSeen == 0)
                 return (float) MaximumValue(context);
             if (allZeroWeights)
-                weights = weights.ConvertAll(weight => 1.0);
-            var massStats = new Statistics(massErrors);
-            var weightsStats = new Statistics(weights);
-            return (float) massStats.Mean(weightsStats);
+                return (float) unweightedMeanMassError;
+            return (float) weightedMeanMassError;
         }
 
         protected double GetWeight(ISummaryPeakData peakData)
@@ -79,12 +80,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public override bool IsReversedScore { get { return true; } }
 
-        protected abstract bool IsIonType(TransitionDocNode nodeTran);
-
         protected abstract double MassErrorFunction(double massError);
 
-        protected abstract IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+        protected abstract IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
             IPeptidePeakData<TData> summaryPeakData);
+
+        protected abstract IList<ITransitionPeakData<TData>> GetIonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas);
 
         protected abstract double MaximumValue(PeakScoringContext context);
     }
@@ -101,20 +102,20 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get { return Resources.NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error; }
         }
 
-        protected override bool IsIonType(TransitionDocNode nodeTran)
-        {
-            return nodeTran != null && !nodeTran.IsMs1;
-        }
-
         protected override double MassErrorFunction(double massError)
         {
             return Math.Abs(massError);
         }
 
-        protected override IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+        protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
             IPeptidePeakData<TData> summaryPeakData)
         {
             return MQuestHelpers.GetAnalyteGroups(summaryPeakData);
+        }
+
+        protected override IList<ITransitionPeakData<TData>> GetIonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas)
+        {
+            return MQuestHelpers.GetMs2IonTypes(tranGroupPeakDatas);
         }
 
         protected override double MaximumValue(PeakScoringContext context)
@@ -135,20 +136,20 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get { return Resources.NextGenStandardProductMassErrorCalc_Name_Standard_product_mass_error; }
         }
 
-        protected override bool IsIonType(TransitionDocNode nodeTran)
-        {
-            return nodeTran != null && !nodeTran.IsMs1;
-        }
-
         protected override double MassErrorFunction(double massError)
         {
             return Math.Abs(massError);
         }
 
-        protected override IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+        protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
             IPeptidePeakData<TData> summaryPeakData)
         {
             return MQuestHelpers.GetStandardGroups(summaryPeakData);
+        }
+
+        protected override IList<ITransitionPeakData<TData>> GetIonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas)
+        {
+            return MQuestHelpers.GetMs2IonTypes(tranGroupPeakDatas);
         }
 
         protected override double MaximumValue(PeakScoringContext context)
@@ -171,20 +172,20 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get { return Resources.NextGenProductMassErrorCalc_NextGenProductMassErrorCalc_Product_mass_error; }
         }
 
-        protected override bool IsIonType(TransitionDocNode nodeTran)
-        {
-            return nodeTran != null && !nodeTran.IsMs1;
-        }
-
         protected override double MassErrorFunction(double massError)
         {
             return massError * massError;
         }
 
-        protected override IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+        protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
             IPeptidePeakData<TData> summaryPeakData)
         {
             return MQuestHelpers.GetAnalyteGroups(summaryPeakData);
+        }
+
+        protected override IList<ITransitionPeakData<TData>> GetIonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas)
+        {
+            return MQuestHelpers.GetMs2IonTypes(tranGroupPeakDatas);
         }
 
         protected override double MaximumValue(PeakScoringContext context)
@@ -205,20 +206,20 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get { return Resources.NextGenPrecursorMassErrorCalc_NextGenPrecursorMassErrorCalc_Precursor_mass_error; }
         }
 
-        protected override bool IsIonType(TransitionDocNode nodeTran)
-        {
-            return nodeTran != null && nodeTran.IsMs1;
-        }
-
         protected override double MassErrorFunction(double massError)
         {
             return Math.Abs(massError);
         }
 
-        protected override IEnumerable<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+        protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
             IPeptidePeakData<TData> summaryPeakData)
         {
             return MQuestHelpers.GetAnalyteGroups(summaryPeakData);
+        }
+
+        protected override IList<ITransitionPeakData<TData>> GetIonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas)
+        {
+            return MQuestHelpers.GetMs1IonTypes(tranGroupPeakDatas);
         }
 
         protected override double MaximumValue(PeakScoringContext context)

@@ -63,11 +63,18 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public static int? ThreadsafeIncementPercent(ref int currentCount, int? totalCount)
         {
-            Interlocked.Increment(ref currentCount);
+            return ThreadsafeIncrementPercent(ref currentCount, 1, totalCount);
+        }
+
+        public static int? ThreadsafeIncrementPercent(ref int currentCount, int increment, int? totalCount)
+        {
+            if (increment < 0)
+                return null;
+            Interlocked.Add(ref currentCount, increment);
             if (totalCount.HasValue)
             {
                 int percentIncremented = currentCount*100/totalCount.Value;
-                int percentBefore = (currentCount - 1)*100/totalCount.Value;
+                int percentBefore = (currentCount - increment)*100/totalCount.Value;
                 if (percentIncremented != percentBefore)
                     return percentBefore;
             }

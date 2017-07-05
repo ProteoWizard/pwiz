@@ -17,15 +17,17 @@
  * limitations under the License.
  */
 
-using System;
+using System.Collections.Generic;
 
 namespace pwiz.Skyline.Model.Results.Scoring
 {
     /// <summary>
     /// The calculated features for a single peak and a composite score.
     /// </summary>
-    public class ScoredPeak
+    public struct ScoredPeak
     {
+        public static ScoredPeak Empty = new ScoredPeak(null);
+
         public float[] Features { get; private set; }
         public double Score { get; set; }
 
@@ -35,16 +37,24 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// the array.
         /// </summary>
         /// <param name="features">Array of feature values.</param>
-        public ScoredPeak(float[] features)
+        /// <param name="score">Explicit score value</param>
+        public ScoredPeak(float[] features, double? score = null) : this()
         {
             Features = features;
-            Score = Features[0];    // Use the first feature as the initial score.
+            if (features != null)
+                Score = score ?? Features[0];    // Use the first feature as the initial score.
         }
 
+        public bool IsEmpty { get { return Features == null; } }
         // for debugging...
         public override string ToString()
         {
-            return String.Format("{0:0.00}", Score); // Not L10N
+            return string.Format("{0:0.00}", Score); // Not L10N
+        }
+
+        public ScoredPeak CalcScore(IList<double> weights)
+        {
+            return new ScoredPeak(Features, LinearModelParams.Score(Features, weights, 0));
         }
     }
 }

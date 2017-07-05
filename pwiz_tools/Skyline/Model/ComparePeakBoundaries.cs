@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model
             if (IsModel)
             {
                 var handler = new MProphetResultsHandler(DocOriginal, PeakScoringModel);
-                handler.ScoreFeatures(progressMonitor);
+                handler.ScoreFeatures(progressMonitor, true);
                 _docCompare = handler.ChangePeaks(progressMonitor);
             }
             else

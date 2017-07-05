@@ -96,7 +96,9 @@ namespace pwiz.Skyline.Model.Results
             {
                 public int Compare(PeptidePrecursorMz p1, PeptidePrecursorMz p2)
                 {
+                    // ReSharper disable PossibleNullReferenceException
                     return Comparer.Default.Compare(p1.PrecursorMz, p2.PrecursorMz);
+                    // ReSharper restore PossibleNullReferenceException
                 }
             }
         }

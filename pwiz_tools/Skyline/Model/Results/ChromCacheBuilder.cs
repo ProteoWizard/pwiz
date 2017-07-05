@@ -77,8 +77,10 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
+                // Avoid storing reference dependent scores in large label-free documents
+                bool includeReference = document.Settings.PeptideSettings.Modifications.HasHeavyImplicitModifications;
                 calcEnum = PeakFeatureCalculator.Calculators
-                    .Where(c => c is DetailedPeakFeatureCalculator);
+                    .Where(c => c is DetailedPeakFeatureCalculator && (includeReference || !c.IsReferenceScore));
             }
             DetailedPeakFeatureCalculators = calcEnum.Cast<DetailedPeakFeatureCalculator>().ToArray();
             _listScoreTypes.AddRange(DetailedPeakFeatureCalculators.Select(c => c.GetType()));
@@ -1220,7 +1222,9 @@ namespace pwiz.Skyline.Model.Results
         {
             public int Compare(PeptidePrecursorMz p1, PeptidePrecursorMz p2)
             {
+                // ReSharper disable PossibleNullReferenceException
                 return Comparer.Default.Compare(p1.PrecursorMz, p2.PrecursorMz);
+                // ReSharper restore PossibleNullReferenceException
             }
         }
 
@@ -1295,125 +1299,125 @@ namespace pwiz.Skyline.Model.Results
 
         private void WriteChromDataSet(ChromDataSet chromDataSet, Dictionary<IList<float>, int> dictScoresToIndex, bool saveRawTimes, bool isProcessedScans)
         {
-            long location = _fs.Stream.Position;
+                long location = _fs.Stream.Position;
             var groupOfTimeIntensities = chromDataSet.ToGroupOfTimeIntensities(saveRawTimes);
-            // Write the raw chromatogram points
+                // Write the raw chromatogram points
             MemoryStream pointsMemoryStream = new MemoryStream();
             var scanIdsByChromSource = groupOfTimeIntensities is InterpolatedTimeIntensities
                 ? ((InterpolatedTimeIntensities) groupOfTimeIntensities).ScanIdsByChromSource()
                 : null;
             groupOfTimeIntensities.WriteToStream(pointsMemoryStream);
-            // Compress the data (can be huge for AB data with lots of zeros)
+                // Compress the data (can be huge for AB data with lots of zeros)
             byte[] pointsCompressed = pointsMemoryStream.ToArray().Compress(3);
-            int lenCompressed = pointsCompressed.Length;
+                int lenCompressed = pointsCompressed.Length;
             int lenUncompressed = (int) pointsMemoryStream.Length;
-            if (_fs.Stream == null)
-                throw new InvalidDataException(
-                    Resources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
-            _fs.Stream.Write(pointsCompressed, 0, lenCompressed);
+                if (_fs.Stream == null)
+                    throw new InvalidDataException(
+                        Resources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
+                _fs.Stream.Write(pointsCompressed, 0, lenCompressed);
 
-            // Use existing scores, if they have already been added
-            int scoresIndex;
-            var startPeak = chromDataSet.PeakSets.FirstOrDefault();
-            if (startPeak == null || startPeak.DetailScores == null)
-            {
-                // CONSIDER: Should unscored peak sets be kept?
-                scoresIndex = -1;
-            }
-            else if (!dictScoresToIndex.TryGetValue(startPeak.DetailScores, out scoresIndex))
-            {
-                scoresIndex = _scoreCount;
-                dictScoresToIndex.Add(startPeak.DetailScores, scoresIndex);
-
-                // Add scores to the scores list
-                foreach (var peakSet in chromDataSet.PeakSets)
+                // Use existing scores, if they have already been added
+                int scoresIndex;
+                var startPeak = chromDataSet.PeakSets.FirstOrDefault();
+                if (startPeak == null || startPeak.DetailScores == null)
                 {
-                    PrimitiveArrays.Write(_fsScores.Stream, peakSet.DetailScores);
-                    _scoreCount += peakSet.DetailScores.Length;
+                    // CONSIDER: Should unscored peak sets be kept?
+                    scoresIndex = -1;
                 }
-            }
+                else if (!dictScoresToIndex.TryGetValue(startPeak.DetailScores, out scoresIndex))
+                {
+                    scoresIndex = _scoreCount;
+                    dictScoresToIndex.Add(startPeak.DetailScores, scoresIndex);
 
-            // Add to header list
-            ChromGroupHeaderInfo.FlagValues flags = 0;
+                    // Add scores to the scores list
+                    foreach (var peakSet in chromDataSet.PeakSets)
+                    {
+                        PrimitiveArrays.Write(_fsScores.Stream, peakSet.DetailScores);
+                        _scoreCount += peakSet.DetailScores.Length;
+                    }
+                }
+
+                // Add to header list
+                ChromGroupHeaderInfo.FlagValues flags = 0;
             if (groupOfTimeIntensities.HasMassErrors)
-                flags |= ChromGroupHeaderInfo.FlagValues.has_mass_errors;
-            if (chromDataSet.HasCalculatedMzs)
-                flags |= ChromGroupHeaderInfo.FlagValues.has_calculated_mzs;
-            if (chromDataSet.Extractor == ChromExtractor.base_peak)
-                flags |= ChromGroupHeaderInfo.FlagValues.extracted_base_peak;
+                    flags |= ChromGroupHeaderInfo.FlagValues.has_mass_errors;
+                if (chromDataSet.HasCalculatedMzs)
+                    flags |= ChromGroupHeaderInfo.FlagValues.has_calculated_mzs;
+                if (chromDataSet.Extractor == ChromExtractor.base_peak)
+                    flags |= ChromGroupHeaderInfo.FlagValues.extracted_base_peak;
             if (scanIdsByChromSource != null && scanIdsByChromSource.ContainsKey(ChromSource.ms1))
-                flags |= ChromGroupHeaderInfo.FlagValues.has_ms1_scan_ids;
+                        flags |= ChromGroupHeaderInfo.FlagValues.has_ms1_scan_ids;
             if (scanIdsByChromSource != null && scanIdsByChromSource.ContainsKey(ChromSource.fragment))
-                flags |= ChromGroupHeaderInfo.FlagValues.has_frag_scan_ids;
+                        flags |= ChromGroupHeaderInfo.FlagValues.has_frag_scan_ids;
             if (scanIdsByChromSource != null && scanIdsByChromSource.ContainsKey(ChromSource.sim))
-                flags |= ChromGroupHeaderInfo.FlagValues.has_sim_scan_ids;
+                        flags |= ChromGroupHeaderInfo.FlagValues.has_sim_scan_ids;
             if (groupOfTimeIntensities is RawTimeIntensities)
                 flags |= ChromGroupHeaderInfo.FlagValues.raw_chromatograms;
 
-            var header = new ChromGroupHeaderInfo(chromDataSet.PrecursorMz,
-                0,
-                chromDataSet.Count,
-                _listTransitions.Count,
-                chromDataSet.CountPeaks,
-                _peakCount,
-                scoresIndex,
-                chromDataSet.MaxPeakIndex,
+                var header = new ChromGroupHeaderInfo(chromDataSet.PrecursorMz,
+                    0,
+                    chromDataSet.Count,
+                    _listTransitions.Count,
+                    chromDataSet.CountPeaks,
+                    _peakCount,
+                    scoresIndex,
+                    chromDataSet.MaxPeakIndex,
                 groupOfTimeIntensities.NumPoints,
-                lenCompressed,
-                lenUncompressed,
-                location,
-                flags,
-                chromDataSet.StatusId,
-                chromDataSet.StatusRank,
-                chromDataSet.MinRawTime,
+                    lenCompressed,
+                    lenUncompressed,
+                    location,
+                    flags,
+                    chromDataSet.StatusId,
+                    chromDataSet.StatusRank,
+                    chromDataSet.MinRawTime,
                 chromDataSet.MaxRawTime,
 				// TODO(version)
 				chromDataSet.CollisionalCrossSection
 );
-            header.CalcTextIdIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listTextIdBytes);
+                header.CalcTextIdIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listTextIdBytes);
 
-            int? transitionPeakCount = null;
-            foreach (var chromData in chromDataSet.Chromatograms)
-            {
-                var chromTran = new ChromTransition(chromData.Key.Product,
-                    chromData.Key.ExtractionWidth,
+                int? transitionPeakCount = null;
+                foreach (var chromData in chromDataSet.Chromatograms)
+                {
+                    var chromTran = new ChromTransition(chromData.Key.Product,
+                        chromData.Key.ExtractionWidth,
                     (float)(chromData.Key.DriftFilter.DriftTimeMsec ?? 0),
                     (float)(chromData.Key.DriftFilter.DriftTimeExtractionWindowWidthMsec ?? 0),
-                    chromData.Key.Source);
+                        chromData.Key.Source);
 					
                 if (groupOfTimeIntensities.HasMassErrors && chromData.TimeIntensities.MassErrors == null)
-                {
-                    chromTran.MissingMassErrors = true;
-                }
-                _listTransitions.Add(chromTran);
+                    {
+                        chromTran.MissingMassErrors = true;
+                    }
+                    _listTransitions.Add(chromTran);
 
-                // Make sure all transitions have the same number of peaks, as this is a cache requirement
-                if (!transitionPeakCount.HasValue)
-                    transitionPeakCount = chromData.Peaks.Count;
-                else if (transitionPeakCount.Value != chromData.Peaks.Count)
-                {
-                    throw new InvalidDataException(
-                        string.Format(
-                            Resources
-                                .ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__,
-                            transitionPeakCount, chromData.Peaks.Count));
-                }
+                    // Make sure all transitions have the same number of peaks, as this is a cache requirement
+                    if (!transitionPeakCount.HasValue)
+                        transitionPeakCount = chromData.Peaks.Count;
+                    else if (transitionPeakCount.Value != chromData.Peaks.Count)
+                    {
+                        throw new InvalidDataException(
+                            string.Format(
+                                Resources
+                                    .ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__,
+                                transitionPeakCount, chromData.Peaks.Count));
+                    }
 
-                // Add to peaks list
-                _peakCount += chromData.Peaks.Count;
-                if (ChromatogramCache.FORMAT_VERSION_CACHE <= ChromatogramCache.FORMAT_VERSION_CACHE_4)
-                {
-                    // Zero out the mass error bits in the peaks to make sure mass errors
-                    // do not show up until after they are officially released
-                    for (int i = 0; i < chromData.Peaks.Count; i++)
-                        chromData.Peaks[i] = chromData.Peaks[i].RemoveMassError();
-                }
+                    // Add to peaks list
+                    _peakCount += chromData.Peaks.Count;
+                    if (ChromatogramCache.FORMAT_VERSION_CACHE <= ChromatogramCache.FORMAT_VERSION_CACHE_4)
+                    {
+                        // Zero out the mass error bits in the peaks to make sure mass errors
+                        // do not show up until after they are officially released
+                        for (int i = 0; i < chromData.Peaks.Count; i++)
+                            chromData.Peaks[i] = chromData.Peaks[i].RemoveMassError();
+                    }
                 CacheFormat.ChromPeakSerializer().WriteItems(_fsPeaks.FileStream, chromData.Peaks);
-            }
+                }
 
-            _listGroups.Add(header);
+                _listGroups.Add(header);
+            }
         }
-    }
 
 
     internal sealed class FileBuildInfo

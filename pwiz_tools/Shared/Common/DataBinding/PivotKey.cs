@@ -239,6 +239,7 @@ namespace pwiz.Common.DataBinding
 
             public int Compare(PivotKey x, PivotKey y)
             {
+                // ReSharper disable PossibleNullReferenceException
                 if (x.Length == 0)
                 {
                     return y.Length == 0 ? 0 : -1;
@@ -279,6 +280,7 @@ namespace pwiz.Common.DataBinding
                     }
                     return _dataSchema.Compare(x.Value, y.Value);
                 }
+                // ReSharper restore PossibleNullReferenceException
             }
         }
     }

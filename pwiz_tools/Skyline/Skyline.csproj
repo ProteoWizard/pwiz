@@ -1117,6 +1117,9 @@
     <Compile Include="Model\Results\DriftTimeFinder.cs" />
     <Compile Include="Model\Results\FastOverlapDemultiplexer.cs" />
     <Compile Include="Model\Results\ProtoBuf\ChromatogramGroupData.cs" />
+    <Compile Include="Model\RetentionTimes\LinearAligner.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Model\Results\TimeIntensitiesGroup.cs" />
     <Compile Include="Model\Results\MsDataFileScanHelper.cs" />
     <Compile Include="Model\Results\MsDataFileScanIds.cs" />
@@ -1156,6 +1159,8 @@
     <Compile Include="Model\Results\RemoteChromDataProvider.cs" />
     <Compile Include="Model\Results\ResultNameMap.cs" />
     <Compile Include="Model\Results\ScanProvider.cs" />
+    <Compile Include="Model\RetentionTimes\Aligner.cs" />
+    <Compile Include="Model\RetentionTimes\KdeAligner.cs" />
     <Compile Include="Model\Results\Scoring\NextGenFeatureCalc.cs" />
     <Compile Include="Model\Results\Scoring\FeatureCalculator.cs" />
     <Compile Include="Model\Results\Scoring\IPeakScoringModel.cs" />
@@ -1164,6 +1169,7 @@
     <Compile Include="Model\Results\Scoring\MProphetScoringModel.cs" />
     <Compile Include="Model\Results\Scoring\MQuestFeatureCalc.cs" />
     <Compile Include="Model\Results\Scoring\PeakFeatureEnumerator.cs" />
+    <Compile Include="Model\RetentionTimes\LoessAligner.cs" />
     <Compile Include="Model\Results\Scoring\ScoredGroupPeaksSet.cs" />
     <Compile Include="Model\Results\Scoring\ScoredPeak.cs" />
     <Compile Include="Model\Results\Scoring\ScoredGroupPeaks.cs" />
@@ -1175,9 +1181,6 @@
     <Compile Include="Model\Results\VendorIssueHelper.cs" />
     <Compile Include="Model\RetentionTimes\DocumentRetentionTimes.cs" />
     <Compile Include="Model\RetentionTimes\FileRetentionTimeAlignments.cs" />
-    <Compile Include="Model\RetentionTimes\KdeAligner.cs" />
-    <Compile Include="Model\RetentionTimes\LoessAligner.cs" />
-    <Compile Include="Model\RetentionTimes\PiecewiseLinearAligner.cs" />
     <Compile Include="Model\RetentionTimes\RetentionTimeManager.cs" />
     <Compile Include="Model\RetentionTimes\RetentionTimeSource.cs" />
     <Compile Include="Model\RetentionTimes\RetentionTimeValues.cs" />

@@ -127,20 +127,17 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 foreach (var peakGroupFeatures in peakTransitionGroupFeatures.PeakGroupFeatures)
                 {
                     double score = invertSign * GetScore(scoringParams, peakGroupFeatures);
-                    if (nextScore < score)
+                    if (maxScore < score)
                     {
-                        if (maxScore < score)
-                        {
-                            nextScore = maxScore;
-                            maxScore = score;
-                            nextFeatures = maxFeatures;
-                            maxFeatures = peakGroupFeatures;
-                        }
-                        else
-                        {
-                            nextScore = score;
-                            nextFeatures = peakGroupFeatures;
-                        }
+                        nextScore = maxScore;
+                        maxScore = score;
+                        nextFeatures = maxFeatures;
+                        maxFeatures = peakGroupFeatures;
+                    }
+                    else if(nextScore < score)
+                    {
+                        nextScore = score;
+                        nextFeatures = peakGroupFeatures;
                     }
                 }
 

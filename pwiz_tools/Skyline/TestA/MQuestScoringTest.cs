@@ -44,8 +44,8 @@ namespace pwiz.SkylineTestA
         {
             if (double.IsNaN(v1) || double.IsNaN(v2))
             {
-                Assert.IsTrue(double.IsNaN(v1));
-                Assert.IsTrue(double.IsNaN(v2));
+                Assert.IsTrue(double.IsNaN(v1), string.Format("Expected NaN but v1 = {0}", v1));
+                Assert.IsTrue(double.IsNaN(v2), string.Format("Expected NaN but v2 = {0}", v2));
             }
             else
             {
@@ -132,6 +132,11 @@ namespace pwiz.SkylineTestA
                 10, 20, 50, 100, 150, 150, 100, 50, 20, 10, 5
             };
 
+        private static readonly double[] INTENS0 =
+            {
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            };
+
         /// <summary>
         /// A test for MQuest cross-correlation matrix
         /// </summary>
@@ -194,6 +199,11 @@ namespace pwiz.SkylineTestA
             MQuestScoreEquals(calcPrecursorMassError, 5.0, peptidePeakDataMs1);
             MQuestScoreEquals(calcIdotp, double.NaN, peptidePeakData);
             MQuestScoreEquals(calcIdotp, 0.795167, peptidePeakDataMs1);
+
+            var peakData1NoArea = new MockTranPeakData<ISummaryPeakData>(INTENS0, IonType.a, null, 2, 0.5);
+            var peakData2NoArea = new MockTranPeakData<ISummaryPeakData>(INTENS0, IonType.a, null, 2, -1.0);
+            MQuestScoreEquals(calcProductMassError, 0.75,
+                new MockPeptidePeakData<ISummaryPeakData>(new[] {peakData1NoArea, peakData2NoArea}));
 
             // TODO: Figure out OpenSWATH weights
             // var calcWeighted = new MQuestWeightedShapeCalc();

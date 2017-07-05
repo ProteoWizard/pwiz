@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Model.Results
                 Func<double, double> calcWindowsQ3 = _fullScan.GetProductFilterWindow;
                 _minTime = _instrument.MinTime;
                 _maxTime = _instrument.MaxTime;
-                bool canSchedule = CanSchedule(document, retentionTimePredictor);
+                bool canSchedule = !firstPass && CanSchedule(document, retentionTimePredictor);
                 // TODO: Figure out a way to turn off time sharing on first SIM scan so that
                 //       times can be shared for MS1 without SIM scans
                 _isSharedTime = !canSchedule;
@@ -179,19 +179,19 @@ namespace pwiz.Skyline.Model.Results
                             {
                                 double? centerTime = null;
                                 double windowRT = 0;
-                                if (retentionTimePredictor != null)
-                                {
-                                    centerTime = retentionTimePredictor.GetPredictedRetentionTime(nodePep);
-                                }
-                                else
-                                {
-                                    var prediction = document.Settings.PeptideSettings.Prediction;
-                                    if (prediction.RetentionTime == null || !prediction.RetentionTime.IsAutoCalculated)
+                                    if (retentionTimePredictor != null)
                                     {
-                                        centerTime = document.Settings.PeptideSettings.Prediction.PredictRetentionTimeForChromImport(
-                                            document, nodePep, nodeGroup, out windowRT);
+                                        centerTime = retentionTimePredictor.GetPredictedRetentionTime(nodePep);
                                     }
-                                }
+                                    else
+                                    {
+                                        var prediction = document.Settings.PeptideSettings.Prediction;
+                                        if (prediction.RetentionTime == null || !prediction.RetentionTime.IsAutoCalculated)
+                                        {
+                                            centerTime = document.Settings.PeptideSettings.Prediction.PredictRetentionTimeForChromImport(
+                                                document, nodePep, nodeGroup, out windowRT);
+                                        }
+                                    }
                                 // Force the center time to be at least zero
                                 if (centerTime.HasValue && centerTime.Value < 0)
                                     centerTime = 0;

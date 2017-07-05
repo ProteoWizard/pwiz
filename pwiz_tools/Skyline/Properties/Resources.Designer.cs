@@ -15852,6 +15852,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Insufficient decoys detectect to continue training..
+        /// </summary>
+        public static string MProphetPeakScoringModel_CalculateWeights_Insufficient_decoys_detectect_to_continue_training_ {
+            get {
+                return ResourceManager.GetString("MProphetPeakScoringModel_CalculateWeights_Insufficient_decoys_detectect_to_contin" +
+                        "ue_training_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insufficient targets detectect to continue training..
+        /// </summary>
+        public static string MProphetPeakScoringModel_CalculateWeights_Insufficient_targets_detectect_to_continue_training_ {
+            get {
+                return ResourceManager.GetString("MProphetPeakScoringModel_CalculateWeights_Insufficient_targets_detectect_to_conti" +
+                        "nue_training_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MProphetScoringModel was given a peak with {0} features, but it has {1} peak feature calculators.
         /// </summary>
         public static string MProphetPeakScoringModel_CreateTransitionGroups_MProphetScoringModel_was_given_a_peak_with__0__features__but_it_has__1__peak_feature_calculators {

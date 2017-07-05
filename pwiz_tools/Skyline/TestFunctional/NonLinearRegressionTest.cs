@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestFunctional
 
             var kdeFunction = (PiecewiseLinearRegressionFunction) graphPane.RegressionRefined.Conversion;
 
-            Assert.AreEqual(5.6791, kdeFunction.RMSD, 0.0001);
+            Assert.AreEqual(5.7326, kdeFunction.RMSD, 0.0001);
             Assert.AreEqual(22, kdeFunction.LinearFunctionsCount);
 
             //Check for Loess

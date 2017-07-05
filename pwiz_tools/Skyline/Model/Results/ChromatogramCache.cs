@@ -608,6 +608,8 @@ namespace pwiz.Skyline.Model.Results
                 throw new IOException(string.Format("Failure starting {0} command.", psi.FileName)); // Not L10N
 
             var reader = new ProcessStreamReader(proc);
+            string errorPrefix = Resources.CommandLine_GeneralException_Error___0_.Split('{')[0];
+            var errorMessage = new StringBuilder();
             string line;
             while ((line = reader.ReadLine()) != null)
             {
@@ -621,9 +623,16 @@ namespace pwiz.Skyline.Model.Results
                         loader.UpdateProgress(status);
                     }
                 }
+                else if (line.StartsWith(errorPrefix) || errorMessage.Length > 0)
+                {
+                    errorMessage.AppendLine(line);
+                }
             }
 
             proc.WaitForExit();
+
+            if (errorMessage.Length > 0)
+                throw new IOException(errorMessage.ToString());
         }
 
         public static long LoadStructs(Stream stream, out RawData raw, bool assumeNegativeChargesInPreV11Caches)

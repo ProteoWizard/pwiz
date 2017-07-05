@@ -389,6 +389,7 @@ namespace pwiz.Skyline.Model
         {
             public int Compare(TransitionDocNode left, TransitionDocNode right)
             {
+                // ReSharper disable PossibleNullReferenceException
                 if (left.Transition.IsPrecursor() != right.Transition.IsPrecursor())
                     return left.Transition.IsPrecursor() ? -1 : 1;  // Precursors come first
                 if (!string.IsNullOrEmpty(left.PrimaryCustomIonEquivalenceKey) && !string.IsNullOrEmpty(right.PrimaryCustomIonEquivalenceKey))
@@ -396,6 +397,7 @@ namespace pwiz.Skyline.Model
                 if (!string.IsNullOrEmpty(left.SecondaryCustomIonEquivalenceKey) && !string.IsNullOrEmpty(right.SecondaryCustomIonEquivalenceKey))
                     return string.CompareOrdinal(left.SecondaryCustomIonEquivalenceKey, right.SecondaryCustomIonEquivalenceKey);
                 return right.Mz.CompareTo(left.Mz); // Decreasing mz sort
+                // ReSharper restore PossibleNullReferenceException
             }
         }
 

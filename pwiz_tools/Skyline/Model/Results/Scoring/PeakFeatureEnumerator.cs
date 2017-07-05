@@ -189,9 +189,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         float retentionTime = 0, startTime = 0, endTime = 0;
                         if (verbose)
                         {
-                            retentionTime = summaryPeakData.RetentionTime;
-                            startTime = summaryPeakData.StartTime;
-                            endTime = summaryPeakData.EndTime;
+                            var peakTimes = summaryPeakData.RetentionTimeStatistics;
+                            retentionTime = peakTimes.RetentionTime;
+                            startTime = peakTimes.StartTime;
+                            endTime = peakTimes.EndTime;
                         }
                         int peakIndex = summaryPeakData.UsedBestPeakIndex
                             ? summaryPeakData.BestPeakIndex
@@ -204,7 +205,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
         }
 
-        private class SummaryPeptidePeakData : IPeptidePeakData<ISummaryPeakData>
+        public class SummaryPeptidePeakData : IPeptidePeakData<ISummaryPeakData>
         {
             private static readonly IList<ITransitionGroupPeakData<ISummaryPeakData>> EMPTY_DATA = new ITransitionGroupPeakData<ISummaryPeakData>[0];
 
@@ -285,7 +286,19 @@ namespace pwiz.Skyline.Model.Results.Scoring
             /// </summary>
             public bool HasArea
             {
-                get { return TransitionPeakData.FirstOrDefault(pd => pd.PeakData != null && pd.PeakData.Area != 0) != null; }
+                get
+                {
+                    // Using a Linq expression showed up in the profiler
+                    foreach (var tg in TransitionGroupPeakData)
+                    {
+                        foreach (var pd in tg.TransitionPeakData)
+                        {
+                            if (pd.PeakData != null && pd.PeakData.Area != 0)
+                                return true;
+                        }
+                    }
+                    return false;
+                }
             }
 
             public int BestPeakIndex
@@ -383,45 +396,45 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 return true;
             }
 
-            public float RetentionTime
+            public PeakTimes RetentionTimeStatistics
             {
                 get
                 {
-                    ISummaryPeakData maxPeakData = null;
-                    foreach (var tranPeakData in TransitionGroupPeakData.SelectMany(g => g.TransitionPeakData))
-                    {
-                        if (maxPeakData == null || tranPeakData.PeakData.Height > maxPeakData.Height)
-                            maxPeakData = tranPeakData.PeakData;
-                    }
-                    return maxPeakData != null ? maxPeakData.RetentionTime : 0;
-                }
-            }
+                    // Avoid extra allocations for deteriming the median time. Probably the median
+                    // of the 3 most intense peaks is better than the median of everything anyway.
+                    ITransitionPeakData<ISummaryPeakData> maxPeakData = null;
+                    ITransitionPeakData<ISummaryPeakData> max2PeakData = null;
+                    ITransitionPeakData<ISummaryPeakData> max3PeakData = null;
 
-            public float StartTime
-            {
-                get
-                {
-                    ISummaryPeakData maxPeakData = null;
-                    foreach (var tranPeakData in TransitionGroupPeakData.SelectMany(g => g.TransitionPeakData))
+                    foreach (var tg in TransitionGroupPeakData)
                     {
-                        if (maxPeakData == null || tranPeakData.PeakData.Height > maxPeakData.Height)
-                            maxPeakData = tranPeakData.PeakData;
+                        foreach (var pd in tg.TransitionPeakData)
+                        {
+                            var tranPeakDataCurrent = pd;
+                            if (maxPeakData == null || tranPeakDataCurrent.PeakData.Height > maxPeakData.PeakData.Height)
+                                Helpers.Swap(ref tranPeakDataCurrent, ref maxPeakData);
+                            if (tranPeakDataCurrent == null)
+                                continue;
+                            if (max2PeakData == null || tranPeakDataCurrent.PeakData.Height > max2PeakData.PeakData.Height)
+                                Helpers.Swap(ref tranPeakDataCurrent, ref max2PeakData);
+                            if (tranPeakDataCurrent == null)
+                                continue;
+                            if (max3PeakData == null || tranPeakDataCurrent.PeakData.Height > max3PeakData.PeakData.Height)
+                                Helpers.Swap(ref tranPeakDataCurrent, ref max3PeakData);
+                        }
                     }
-                    return maxPeakData != null ? maxPeakData.StartTime : 0;
-                }
-            }
 
-            public float EndTime
-            {
-                get
-                {
-                    ISummaryPeakData maxPeakData = null;
-                    foreach (var tranPeakData in TransitionGroupPeakData.SelectMany(g => g.TransitionPeakData))
-                    {
-                        if (maxPeakData == null || tranPeakData.PeakData.Height > maxPeakData.Height)
-                            maxPeakData = tranPeakData.PeakData;
-                    }
-                    return maxPeakData != null ? maxPeakData.EndTime : 0;
+                    float retentionTime = maxPeakData != null ? maxPeakData.PeakData.RetentionTime : 0;
+                    float startTime = maxPeakData != null ? maxPeakData.PeakData.StartTime : 0;
+                    float endTime = maxPeakData != null ? maxPeakData.PeakData.EndTime : 0;
+                    float medianTime = 0;
+                    if (max3PeakData != null)
+                        medianTime = max2PeakData.PeakData.RetentionTime;
+                    else if (max2PeakData != null)
+                        medianTime = (maxPeakData.PeakData.RetentionTime + max2PeakData.PeakData.RetentionTime) / 2;
+                    else if (maxPeakData != null)
+                        medianTime = maxPeakData.PeakData.RetentionTime;
+                    return new PeakTimes(retentionTime, startTime, endTime, medianTime);
                 }
             }
 
@@ -435,6 +448,22 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     return groupPeakData.GetScore(calc.GetType());
                 return float.NaN;
             }
+        }
+
+        public struct PeakTimes
+        {
+            public PeakTimes(float retentionTime, float startTime, float endTime, float medianTime) : this()
+            {
+                RetentionTime = retentionTime;
+                StartTime = startTime;
+                EndTime = endTime;
+                MedianTime = medianTime;
+            }
+
+            public float RetentionTime { get; private set; }
+            public float StartTime { get; private set; }
+            public float EndTime { get; private set; }
+            public float MedianTime { get; private set; }
         }
 
         private sealed class SummaryTransitionGroupPeakData : ITransitionGroupPeakData<ISummaryPeakData>
@@ -468,18 +497,26 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
                     if (_chromGroupInfo != null)
                     {
-                        int ms1Count = 0, ms2Count = 0;
-                        var listPeakData = new List<ITransitionPeakData<ISummaryPeakData>>();
+                        int ms1Count = 0, ms2Count = 0, totalCount = 0;
+                        // Assume there will be one per transtion
+                        var listPeakData = new ITransitionPeakData<ISummaryPeakData>[nodeGroup.TransitionCount];
                         foreach (var nodeTran in nodeGroup.Transitions)
                         {
                             var tranInfo = _chromGroupInfo.GetTransitionInfo(nodeTran.Mz, mzMatchTolerance);
                             if (tranInfo == null)
                                 continue;
-                            listPeakData.Add(new SummaryTransitionPeakData(document, nodeTran, chromatogramSet, tranInfo));
+                            listPeakData[totalCount++] = new SummaryTransitionPeakData(document, nodeTran, chromatogramSet, tranInfo);
                             if (nodeTran.IsMs1)
                                 ms1Count++;
                             else
                                 ms2Count++;
+                        }
+                        // If something was missing reallocate, which can't be slower than List.ToArray()
+                        if (totalCount < listPeakData.Length)
+                        {
+                            var peakDatasShort = new ITransitionPeakData<ISummaryPeakData>[totalCount];
+                            Array.Copy(listPeakData, peakDatasShort, totalCount);
+                            listPeakData = peakDatasShort;
                         }
                         TransitionPeakData = listPeakData.ToArray();
                         Ms1TranstionPeakData = GetTransitionTypePeakData(ms1Count, ms2Count, true);

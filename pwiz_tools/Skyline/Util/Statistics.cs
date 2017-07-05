@@ -636,9 +636,15 @@ namespace pwiz.Skyline.Util
         {
             int i = Array.BinarySearch(ordered, value);
             if (i < 0)
-                i = ~i;
+                i = ~i; // First element larger or length if no element is larger
+            else
+            {
+                // Find the first matching element
+                while (i > 0 && ordered[i - 1] >= value)
+                    i--;
+            }
             int n = ordered.Length;
-            return ((double) i)/n;
+            return ((double) n - i)/n;
         }
 
         /// <summary>

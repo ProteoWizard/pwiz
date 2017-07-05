@@ -55,10 +55,10 @@ namespace pwiz.SkylineTestFunctional
 
         private readonly string[] SCORES_AND_WEIGHTS =
         {
-            "-16.0207431181424",
-            "True|0.3796|12.9%;False||;False||;True|3.9077|5.4%;True|1.4851|7.3%;True|-0.3235|19.1%;True|0.3322|7.0%;False||;False||;True|4.4983|11.6%;True|10.5468|48.8%;True|0.2756|-20.5%;True|0.3645|7.1%;True|0.1209|3.7%;True|-1.4313|-2.4%;False||;False||;False||;False||;",
-            "True|0.9182|31.4%;False||;False||;False||;True|4.1969|17.9%;True|-0.2949|15.2%;False||;False||;False||;True|4.6487|11.6%;True|8.9371|39.7%;True|0.2519|-16.8%;True|0.2341|5.3%;True|-0.1761|-5.6%;True|0.9744|1.3%;False||;False||;False||;False||;",
-            "-16.6149811618695",
+            "-15.1397702665673",
+            "True|0.2450|8.5%;False||;False||;True|3.9834|5.5%;True|2.4351|11.4%;True|-0.3654|17.7%;True|0.2842|6.7%;False||;False||;True|4.0887|11.5%;True|10.1119|45.7%;True|0.2570|-16.6%;True|0.2915|6.3%;True|0.2071|6.6%;True|-1.7227|-3.2%;False||;False||;False||;False||;",
+            "True|1.2219|36.9%;False||;False||;False||;True|3.7739|16.1%;True|0.0254|-1.6%;False||;False||;False||;True|5.5237|10.8%;True|10.9832|40.5%;True|-0.0269|1.4%;True|0.1405|2.8%;True|-0.3405|-9.5%;True|1.9959|2.4%;False||;False||;False||;False||;",
+            "-18.6182315183255",
             "-9.37936230823946",
             "True|0.9834|74.8%;True|0.9834|15.7%;False||;True|2.9503|9.5%;False||;False||;False||;",
             "-11.6384433498956",

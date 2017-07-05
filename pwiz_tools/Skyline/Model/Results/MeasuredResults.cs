@@ -389,6 +389,10 @@ namespace pwiz.Skyline.Model.Results
 
         public MeasuredResults OptimizeCache(string documentPath, IStreamManager streamManager, ILongWaitBroker progress = null)
         {
+            // No optimizing until we have a joined final cache
+            if (IsJoiningDisabled)
+                return this;
+
             if (!IsLoaded)
                 throw new InvalidOperationException(Resources.MeasuredResults_OptimizeCache_The_chromatogram_cache_must_be_loaded_before_it_is_optimized);
 
@@ -1067,7 +1071,8 @@ namespace pwiz.Skyline.Model.Results
 
         private enum ATTR
         {
-            time_normal_area
+            time_normal_area,
+            joining_disabled
         }
 
         public static MeasuredResults Deserialize(XmlReader reader)
@@ -1084,6 +1089,7 @@ namespace pwiz.Skyline.Model.Results
         {
             // Consume tag
             IsTimeNormalArea = reader.GetBoolAttribute(ATTR.time_normal_area);
+            bool unjoinedResults = reader.GetBoolAttribute(ATTR.joining_disabled);
             reader.Read();
 
             // Read chromatogram sets
@@ -1094,12 +1100,13 @@ namespace pwiz.Skyline.Model.Results
             // Read end tag
             reader.ReadEndElement();
 
-            IsDeserialized = Chromatograms.Count > 0;
+            IsDeserialized = !unjoinedResults && Chromatograms.Count > 0;
         }
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteAttribute(ATTR.time_normal_area, IsTimeNormalArea);
+            writer.WriteAttribute(ATTR.joining_disabled, IsJoiningDisabled);
             writer.WriteElements(Chromatograms);
         }
 

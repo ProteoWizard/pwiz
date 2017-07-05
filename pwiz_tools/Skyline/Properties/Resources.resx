@@ -9554,4 +9554,10 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="ComparePeakPickingDlg_RefreshDocument_Refresh__0_" xml:space="preserve">
     <value>Refresh {0}</value>
   </data>
+  <data name="MProphetPeakScoringModel_CalculateWeights_Insufficient_targets_detectect_to_continue_training_" xml:space="preserve">
+    <value>Insufficient targets detectect to continue training.</value>
+  </data>
+  <data name="MProphetPeakScoringModel_CalculateWeights_Insufficient_decoys_detectect_to_continue_training_" xml:space="preserve">
+    <value>Insufficient decoys detectect to continue training.</value>
+  </data>
 </root>
