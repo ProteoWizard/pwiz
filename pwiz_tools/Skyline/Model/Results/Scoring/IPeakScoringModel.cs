@@ -62,6 +62,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="includeSecondBest"> Include the second best peaks in the targets as decoys?</param>
         /// <param name="preTrain">Use a pre-trained model to bootstrap the learning?</param>
         /// <param name="progressMonitor">Progress monitor for displaying progress to the user</param>
+        /// <param name="documentPath">Path on disk of the document for writing diagnostic files</param>
         IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, LinearModelParams initParameters,
             int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null, string documentPath = null);
 

@@ -68,16 +68,16 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
             if (!CanCalculateReverseRegression)
             {
-                throw new Exception("This method is not appropriate for this aligner. It does not contain knowledge on file indexes.");
+                throw new ArgumentException("This method is not appropriate for this aligner. It does not contain knowledge on file indexes."); // Not L10N
             }
-            //If x comes from the the same run as the original independent retention times
-            //Calculate complement in normal order of alignment
+            // If x comes from the the same run as the original independent retention times
+            // Calculate complement in normal order of alignment
             if (dependentFileIndex == _origXFileIndex)
             {
                 return GetValue(dependent);
             }
-            //If x comes from the same run as the x retention times
-            //Calculate in reverse order
+            // If x comes from the same run as the x retention times
+            // Calculate in reverse order
             else if (dependentFileIndex == _origYFileIndex)
             {
                 return GetValueReversed(dependent);

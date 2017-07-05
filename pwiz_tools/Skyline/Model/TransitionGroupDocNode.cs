@@ -2109,8 +2109,8 @@ namespace pwiz.Skyline.Model
 
                 if (reintegratePeak != null)
                 {
-                    QValue = (float?) reintegratePeak.QValue;
-                    ZScore = (float?) reintegratePeak.BestScore;
+                    QValue = reintegratePeak.QValue;
+                    ZScore = reintegratePeak.BestScore;
                 }
             }
 

@@ -430,7 +430,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     float medianTime = 0;
                     if (max3PeakData != null)
                         medianTime = max2PeakData.PeakData.RetentionTime;
-                    else if (max2PeakData != null)
+                    else if (max2PeakData != null && maxPeakData != null) // Keep ReSharper happy with second check
                         medianTime = (maxPeakData.PeakData.RetentionTime + max2PeakData.PeakData.RetentionTime) / 2;
                     else if (maxPeakData != null)
                         medianTime = maxPeakData.PeakData.RetentionTime;

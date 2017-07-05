@@ -1102,7 +1102,7 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (IsNameOnly(pair, "import-warn-on-failure"))
+                else if (IsNameOnly(pair, "import-warn-on-failure"))    // Not L10N
                 {
                     ImportWarnOnFailure = true;
                 }
