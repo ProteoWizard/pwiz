@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Open the model comparison from the EditListDlg, rename it, get same results
             var editListDlgRename = ShowDialog<EditListDlg<ComparePeakBoundariesList, ComparePeakBoundaries>>(comparePeakPickingDlg.EditList);
-            RunUI(() => editListDlgRename.SelectItem(string.Format(Resources.ComparePeakBoundaries_ComparePeakBoundaries__0___external_, "OpenSwath")));
+            RunUI(() => editListDlgRename.SelectItem("OpenSwath"));
             var addPeakCompareDlgRename = ShowDialog<AddPeakCompareDlg>(editListDlgRename.EditItem);
             RunUI(() =>
             {
@@ -114,7 +114,7 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(addPeakCompareDlgRename, addPeakCompareDlgRename.OkDialog);
             OkDialog(editListDlgRename, editListDlgRename.OkDialog);
-            RunUI(() => Assert.IsTrue(comparePeakPickingDlg.ComparePeakBoundariesList.Select(comp => comp.Name).Contains(string.Format(Resources.ComparePeakBoundaries_ComparePeakBoundaries__0___external_, "OpenSwathRename"))));
+            RunUI(() => Assert.IsTrue(comparePeakPickingDlg.ComparePeakBoundariesList.Select(comp => comp.Name).Contains("OpenSwathRename")));
             CheckNumberComparisons(comparePeakPickingDlg, 4, 4, 4, 4);
             CheckNumberResults(comparePeakPickingDlg, numberResults);
 
@@ -175,7 +175,7 @@ namespace pwiz.SkylineTestFunctional
             AddFile(comparePeakPickingDlg, "OpenSwathBadQ", peakBoundariesFileNoQ);
             CheckNumberComparisons(comparePeakPickingDlg, 3, 2, 3, 3);
             CheckNumberResults(comparePeakPickingDlg, numberResults);
-            RemoveComparer(comparePeakPickingDlg, string.Format(Resources.ComparePeakBoundaries_ComparePeakBoundaries__0___external_,"OpenSwathBadQ"));
+            RemoveComparer(comparePeakPickingDlg,"OpenSwathBadQ");
             CheckNumberComparisons(comparePeakPickingDlg, 2, 2, 2, 2);
             CheckNumberResults(comparePeakPickingDlg, numberResults);
             
@@ -184,7 +184,7 @@ namespace pwiz.SkylineTestFunctional
             AddFile(comparePeakPickingDlg, "OpenSwathBadScore", peakBoundariesFileNoScore);
             CheckNumberComparisons(comparePeakPickingDlg, 3, 3, 3, 3);
             CheckNumberResults(comparePeakPickingDlg, numberResults);
-            RemoveComparer(comparePeakPickingDlg, string.Format(Resources.ComparePeakBoundaries_ComparePeakBoundaries__0___external_, "OpenSwathBadScore"));
+            RemoveComparer(comparePeakPickingDlg, "OpenSwathBadScore");
             CheckNumberComparisons(comparePeakPickingDlg, 2, 2, 2, 2);
             CheckNumberResults(comparePeakPickingDlg, numberResults);
 
@@ -308,8 +308,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 comparePeakPickingDlg.CheckBoxConflicts = true;
-                comparePeakPickingDlg.ComboCompare1Selected = string.Format(Resources.ComparePeakBoundaries_ComparePeakBoundaries__0___external_, "OpenSwathApex");
-                comparePeakPickingDlg.ComboCompare2Selected = string.Format(Resources.ComparePeakBoundaries_ComparePeakBoundaries__0___external_, "OpenSwathRename");
+                comparePeakPickingDlg.ComboCompare1Selected =  "OpenSwathApex";
+                comparePeakPickingDlg.ComboCompare2Selected = "OpenSwathRename";
                 Assert.AreEqual(4, comparePeakPickingDlg.CountCompareGridEntries);
             });
 

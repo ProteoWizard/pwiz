@@ -989,7 +989,7 @@ namespace pwiz.Skyline.EditUI
         public string FileName { get { return Match1.FileName; } }
         public string ReplicateName { get { return Match1.ReplicateName; } }
         public int TargetIndex { get { return Match1.TargetIndex; } }
-        public string Sequence { get { return Match1.Sequence; } }
+        public string Sequence { get { return Match1.ModifiedSequence; } }
         public int Charge { get { return Match1.Charge; } }
         public double? Score1 { get { return Match1.Score; } }
         public double? Score2 { get { return Match2.Score; } }

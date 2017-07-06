@@ -5836,15 +5836,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} [external].
-        /// </summary>
-        public static string ComparePeakBoundaries_ComparePeakBoundaries__0___external_ {
-            get {
-                return ResourceManager.GetString("ComparePeakBoundaries_ComparePeakBoundaries__0___external_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Documents have different number of transition groups, {0} vs {1}..
         /// </summary>
         public static string ComparePeakBoundaries_ComputeMatches_Documents_have_different_number_of_transition_groups___0__vs__1__ {

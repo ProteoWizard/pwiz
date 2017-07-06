@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model
         }
 
         public ComparePeakBoundaries(string fileName, string filePath) :
-            this(string.Format(Resources.ComparePeakBoundaries_ComparePeakBoundaries__0___external_, fileName))
+            this(fileName)
         {
             FileName = fileName;
             FilePath = filePath;
@@ -180,7 +180,7 @@ namespace pwiz.Skyline.Model
                             var filePath = fileInfo.FilePath;
                             var key = new MatchKey(trueGroup.Id.GlobalIndex, trueInfo.FileId.GlobalIndex);
                             matches.Add(new PeakBoundsMatch(trueInfo, pickedInfo, key, chromSet, filePath,
-                                trueGroup, HasNoQValues, HasNoScores, ApexPresent));
+                                trueGroup, truePeptide,HasNoQValues, HasNoScores, ApexPresent));
                         }
                     }
                 }
@@ -252,6 +252,8 @@ namespace pwiz.Skyline.Model
         public MsDataFileUri FilePath { get; private set; }
         public TransitionGroupDocNode NodeGroup { get; private set; }
 
+        public PeptideDocNode NodePep { get; private set; }
+
         public double? QValue { get; private set; }
         public double? Score { get; private set; }
         public double? PickedApex { get; set; }
@@ -260,7 +262,8 @@ namespace pwiz.Skyline.Model
 
         public string FileName { get { return FilePath.GetFileNameWithoutExtension(); } }
         public string ReplicateName { get { return _chromatogramSet.Name; } }
-        public string Sequence { get { return NodeGroup.TransitionGroup.Peptide.Sequence; }}
+        public string ModifiedSequence { get { return NodePep.ModifiedSequence; }}
+        public string Sequence { get { return NodeGroup.Peptide.Sequence; } }
         public int Charge { get { return NodeGroup.TransitionGroup.PrecursorCharge; } }
         public int TargetIndex { get { return NodeGroup.TransitionGroup.GlobalIndex; } }
         public double? TrueApex { get { return ChromInfoTrue.RetentionTime; } }
@@ -336,6 +339,7 @@ namespace pwiz.Skyline.Model
                                ChromatogramSet chromSet,
                                MsDataFileUri filePath, 
                                TransitionGroupDocNode nodeGroup, 
+                               PeptideDocNode nodePep,
                                bool hasNoQValues, 
                                bool hasNoScores,
                                bool apexPresent)
@@ -347,6 +351,7 @@ namespace pwiz.Skyline.Model
             Key = key;
             FilePath = filePath;
             NodeGroup = nodeGroup;
+            NodePep = nodePep;
             // Read apex
             if (apexPresent)
             {
@@ -365,14 +370,14 @@ namespace pwiz.Skyline.Model
             {
                 throw new IOException(string.Format(
                     Resources.PeakBoundsMatch_QValue_Unable_to_read_q_value_annotation_for_peptide__0__of_file__1_,
-                    Sequence, FileName));
+                    ModifiedSequence, FileName));
             }
             Score = GetScoreValue(ChromInfoPicked, MProphetResultsHandler.MAnnotationName, ci => ci.ZScore);
             if (Score == null && !IsMissingPickedPeak && !hasNoScores)
             {
                 throw new IOException(string.Format(
-                    Resources.PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_a_score_annotation_for_peptide__0__of_file__1_,
-                    Sequence, FileName));
+                    Resources.PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_a_score_annotation_for_peptide__0__of_file__1_, 
+                    ModifiedSequence, FileName));
             }
         }
 
@@ -387,7 +392,7 @@ namespace pwiz.Skyline.Model
             if (timeText == null || timeText.Equals(TextUtil.EXCEL_NA))
                 return null;
 
-            throw new IOException(string.Format(Resources.PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_apex_retention_time_value_for_peptide__0__of_file__1__, Sequence, FileName));
+            throw new IOException(string.Format(Resources.PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_apex_retention_time_value_for_peptide__0__of_file__1__, ModifiedSequence, FileName));
         }
 
         public static double? GetScoreValue(TransitionGroupChromInfo groupChromInfo, string annotationName, Func<TransitionGroupChromInfo, double?> getNativeValue)

@@ -1344,9 +1344,6 @@
   <data name="FileEx_SafeDelete_Directory_could_not_be_found___0_" xml:space="preserve">
     <value>目录无法找到：{0}</value>
   </data>
-  <data name="ComparePeakBoundaries_ComparePeakBoundaries__0___external_" xml:space="preserve">
-    <value>{0} [外部]</value>
-  </data>
   <data name="CommandArgs_ParseArgsInternal_Warning__The_primary_transition_count__0__is_invalid__it_must_be_a_number_between__1__and__2__" xml:space="preserve">
     <value>警告： 主要离子对计数 {0} 无效，它必须是 {1} 和 {2} 之间的数字。</value>
   </data>

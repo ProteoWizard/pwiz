@@ -1344,9 +1344,6 @@
   <data name="FileEx_SafeDelete_Directory_could_not_be_found___0_" xml:space="preserve">
     <value>ディレクトリを見つけることができませんでした：{0}</value>
   </data>
-  <data name="ComparePeakBoundaries_ComparePeakBoundaries__0___external_" xml:space="preserve">
-    <value>{0} [外部]</value>
-  </data>
   <data name="CommandArgs_ParseArgsInternal_Warning__The_primary_transition_count__0__is_invalid__it_must_be_a_number_between__1__and__2__" xml:space="preserve">
     <value>警告： プライマリトランジション数{0}が無効です。{1}と{2}の間の数値でなければなりません。</value>
   </data>
