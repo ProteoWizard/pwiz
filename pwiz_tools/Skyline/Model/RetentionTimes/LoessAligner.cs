@@ -38,20 +38,28 @@ namespace pwiz.Skyline.Model.RetentionTimes
         private double[] _reverseXArr;
         private double[] _reverseYArr;
 
-        public LoessAligner(int origXFileIndex, int origYFileIndex)
+        private readonly double _bandwidth;
+        private readonly int _robustIters;
+
+        public LoessAligner(int origXFileIndex, int origYFileIndex, 
+            double bandwidth = LoessInterpolator.DEFAULT_BANDWIDTH, int robustIters = LoessInterpolator.DEFAULT_ROBUSTNESS_ITERS)
             : base(origXFileIndex, origYFileIndex)
         {
+            _bandwidth = bandwidth;
+            _robustIters = robustIters;
         }
 
-        public LoessAligner()
+        public LoessAligner(double bandwidth = LoessInterpolator.DEFAULT_BANDWIDTH, int robustIters = LoessInterpolator.DEFAULT_ROBUSTNESS_ITERS)
         {
+            _bandwidth = bandwidth;
+            _robustIters = robustIters;
         }
 
         public override void Train(double[] xArr, double[] yArr) 
         {
             //Calculate lowess
             Array.Sort(xArr, yArr);
-            LoessInterpolator interpolator = new LoessInterpolator();
+            LoessInterpolator interpolator = new LoessInterpolator(_bandwidth, _robustIters);
             var lowessArr = interpolator.Smooth(xArr, yArr);
 
             _minX = xArr[0];
