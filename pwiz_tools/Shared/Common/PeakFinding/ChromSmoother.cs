@@ -25,9 +25,6 @@ namespace pwiz.Common.PeakFinding
 {
     internal class ChromSmoother
     {
-        protected float _baseline;
-        protected int _spikeLength;
-
         protected List<float> weights;
 
         protected int half_window_size

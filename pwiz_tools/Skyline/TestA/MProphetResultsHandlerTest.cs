@@ -30,11 +30,9 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA
@@ -200,19 +198,7 @@ namespace pwiz.SkylineTestA
 
         public void ReportToCsv(ReportSpec reportSpec, SrmDocument doc, string fileName, CultureInfo cultureInfo)
         {
-            Report report = Report.Load(reportSpec);
-            using (var saver = new FileSaver(fileName))
-            using (var writer = new StreamWriter(saver.SafeName))
-            using (var database = new Database(doc.Settings))
-            {
-                database.AddSrmDocument(doc);
-                var resultSet = report.Execute(database);
-                char separator = TextUtil.GetCsvSeparator(cultureInfo);
-                ResultSet.WriteReportHelper(resultSet, separator, writer, cultureInfo);
-                writer.Flush();
-                writer.Close();
-                saver.Commit();
-            }
+            CheckReportCompatibility.ReportToCsv(reportSpec, doc, fileName, cultureInfo);
         }
 
         private static void SaveMProphetFeatures(MProphetResultsHandler resultsHandler, 

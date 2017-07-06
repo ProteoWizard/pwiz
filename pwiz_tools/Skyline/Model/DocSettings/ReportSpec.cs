@@ -28,7 +28,6 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Hibernate.Query;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -72,57 +71,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public IList<ReportColumn> CrossTabHeaders { get; private set; }
 
         public IList<ReportColumn> CrossTabValues { get; private set; }
-
-        /// <summary>
-        /// Returns a string representation of the report based on the document.         
-        /// </summary>       
-        public string ReportToCsvString(SrmDocument doc, IProgressMonitor progressMonitor)
-        {
-            return ReportToCsvString(doc, TextUtil.CsvSeparator, progressMonitor);
-        }
-
-        /// <summary>
-        /// Returns a string representation of the report based on the document.         
-        /// </summary>       
-        private string ReportToCsvString(SrmDocument doc, char separator, IProgressMonitor progressMonitor)
-        {
-            IProgressStatus status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report, Name));
-            progressMonitor.UpdateProgress(status);
-
-            Report report = Report.Load(this);
-            StringWriter writer = new StringWriter();
-            using (Database database = new Database(doc.Settings)
-                {
-                    ProgressMonitor = progressMonitor,
-                    Status = status,
-                    PercentOfWait = 80
-                })
-            {
-                database.AddSrmDocument(doc);
-                status = database.Status;
-
-                ResultSet resultSet;
-                try
-                {
-                    resultSet = report.Execute(database);
-                }
-                catch (Exception)
-                {
-                    progressMonitor.UpdateProgress(status.Cancel());
-                    throw;
-                }
-
-                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(95));
-
-                ResultSet.WriteReportHelper(resultSet, separator, writer, LocalizationHelper.CurrentCulture);
-            }
-            writer.Flush();
-            string csv = writer.ToString();
-            writer.Close();
-            progressMonitor.UpdateProgress(status.Complete());
-
-            return csv;
-        }
 
         private enum ATTR
         {

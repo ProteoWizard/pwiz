@@ -205,7 +205,6 @@
     <Compile Include="StringHelpersTest.cs" />
     <Compile Include="TestSerializeIsolationScheme.cs" />
     <Compile Include="TextUtilTest.cs" />
-    <Compile Include="ToolReportCacheTest.cs" />
     <Compile Include="TransitionSettings07Test.cs" />
     <Compile Include="TypeSafeEnumTest.cs" />
     <Compile Include="UniModTest.cs" />

@@ -29,7 +29,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -2786,11 +2785,6 @@ namespace pwiz.Skyline.Properties
         {
             return new SrmSettingsList();
         }
-    }
-
-    public interface IReportDatabaseProvider
-    {
-        Database GetDatabase(Control owner);
     }
 
     /// <summary>

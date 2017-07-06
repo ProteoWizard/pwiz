@@ -24,13 +24,11 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -512,19 +510,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             public static void ReportToCsv(ReportSpec reportSpec, SrmDocument doc, string fileName)
             {
-                Report report = Report.Load(reportSpec);
-                using (var saver = new FileSaver(fileName))
-                using (var writer = new StreamWriter(saver.SafeName))
-                using (var database = new Database(doc.Settings))
-                {
-                    database.AddSrmDocument(doc);
-                    var resultSet = report.Execute(database);
-                    char separator = TextUtil.CsvSeparator;
-                    ResultSet.WriteReportHelper(resultSet, separator, writer, LocalizationHelper.CurrentCulture);
-                    writer.Flush();
-                    writer.Close();
-                    saver.Commit();
-                }
+                CheckReportCompatibility.ReportToCsv(reportSpec, doc, fileName, CultureInfo.CurrentCulture);
             }
         }
     }

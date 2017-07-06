@@ -17,22 +17,10 @@
  * limitations under the License.
  */
 
-using System;
-using System.ComponentModel;
-using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NHibernate;
-using pwiz.Common.DataBinding;
-using pwiz.Common.DataBinding.Attributes;
-using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.Reporting
@@ -43,80 +31,6 @@ namespace pwiz.SkylineTest.Reporting
     [TestClass]
     public class ReportSpecConverterTest : AbstractUnitTest
     {
-        [TestMethod]
-        public void TestMapping()
-        {
-            var settings = SrmSettingsList.GetDefault();
-            var document = new SrmDocument(settings);
-            var documentContainer = new MemoryDocumentContainer();
-            documentContainer.SetDocument(document, null);
-            using (var database = new Database(settings))
-            {
-                var dataSchema = new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT);
-                var sessionFactory = database.SessionFactory;
-                foreach (var classMetaData in sessionFactory.GetAllClassMetadata().Values)
-                {
-                    var tableType = classMetaData.GetMappedClass(EntityMode.Poco);
-                    foreach (var propertyName in classMetaData.PropertyNames)
-                    {
-                        if (propertyName == "Protein" && tableType == typeof (DbProteinResult))
-                        {
-                            continue;
-                        }
-                        var queryDef = new QueryDef
-                            {
-                                Select = new[] {new ReportColumn(tableType, propertyName),}
-                            };
-                        var reportSpec = new ReportSpec("test", queryDef);
-                        var newTableType = ReportSpecConverter.GetNewTableType(reportSpec);
-                        Assert.IsNotNull(newTableType, "No table for type {0}", tableType);
-                        var converter = new ReportSpecConverter(dataSchema);
-                        var viewInfo = converter.Convert(reportSpec);
-                        Assert.IsNotNull(viewInfo, "Unable to convert property {0} in table {1}", propertyName, tableType);
-                        Assert.AreEqual(1, viewInfo.DisplayColumns.Count, "No conversion for property {0} in table {1}", propertyName, tableType);
-                        Assert.IsNotNull(viewInfo.DisplayColumns[0].ColumnDescriptor, "Column not found for property {0} in table {1}", propertyName, tableType);
-                        var report = Report.Load(reportSpec);
-                        var resultSet = report.Execute(database);
-                        var bindingListSource = new BindingListSource();
-                        bindingListSource.SetViewContext(new SkylineViewContext(viewInfo.ParentColumn, Array.CreateInstance(viewInfo.ParentColumn.PropertyType, 0)), viewInfo);
-                        var properties = bindingListSource.GetItemProperties(null);
-                        var oldCaptions = resultSet.ColumnInfos.Select(columnInfo => columnInfo.Caption).ToArray();
-                        var newCaptions = properties.Cast<PropertyDescriptor>().Select(pd=>pd.DisplayName).ToArray();
-                        if (oldCaptions.Length != newCaptions.Length)
-                        {
-                            Console.Out.WriteLine(oldCaptions);
-                        }
-                        CollectionAssert.AreEqual(oldCaptions, newCaptions, "Caption mismatch on {0} in {1}", propertyName, tableType);
-                        for (int i = 0; i < resultSet.ColumnInfos.Count; i++)
-                        {
-                            var columnInfo = resultSet.ColumnInfos[i];
-                            var formatAttribute = (FormatAttribute)properties[i].Attributes[typeof(FormatAttribute)];
-                            string message = string.Format("Format problem on column converted from {0} in {1}",
-                                columnInfo.ReportColumn.Column, columnInfo.ReportColumn.Table);
-                            if (null == columnInfo.Format)
-                            {
-                                Assert.IsTrue(null == formatAttribute || null == formatAttribute.Format, message);
-                            }
-                            else
-                            {
-                                Assert.IsNotNull(formatAttribute, message);
-                                Assert.AreEqual(columnInfo.Format, formatAttribute.Format, message);
-                            }
-                            if (columnInfo.IsNumeric)
-                            {
-                                Assert.IsNotNull(formatAttribute, message);
-                                Assert.AreEqual(TextUtil.EXCEL_NA, formatAttribute.NullValue, message);
-                            }
-                            else
-                            {
-                                Assert.IsTrue(null == formatAttribute || null == formatAttribute.NullValue, message);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         [TestMethod]
         public void TestBlankDocument()
         {

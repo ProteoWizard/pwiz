@@ -139,9 +139,7 @@
     <Compile Include="Reporting\LiveReportPivotTest.cs" />
     <Compile Include="Reporting\ColumnCaptionLocalizationTest.cs" />
     <Compile Include="Reporting\PersistedViewsTest.cs" />
-    <Compile Include="Reporting\PivotTypeTest.cs" />
     <Compile Include="Reporting\ReportSpecConverterTest.cs" />
-    <Compile Include="Reporting\ReportTest.cs" />
     <Compile Include="Results\AgilentMixTest.cs" />
     <Compile Include="Results\AgilentMseTest.cs" />
     <Compile Include="Results\BlibDriftTimeTest.cs" />

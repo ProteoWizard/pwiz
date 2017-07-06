@@ -166,8 +166,6 @@ namespace pwiz.Skyline
             // Begin ToolStore check for updates to currently installed tools
             ActionUtil.RunAsync(() => ToolStoreUtil.CheckForUpdates(Settings.Default.ToolList.ToArray()), "Check for tool updates");    // Not L10N
 
-            ToolReportCache.Instance.Register(this);
-
             // Get placement values before changing anything.
             bool maximize = Settings.Default.MainWindowMaximized || Program.DemoMode;
             Size size = Settings.Default.MainWindowSize;
@@ -875,8 +873,6 @@ namespace pwiz.Skyline
 
             _timerGraphs.Dispose();
             _timerProgress.Dispose();
-
-            ToolReportCache.Instance.Register(null);
 
             DatabaseResources.ReleaseAll(); // Let go of protDB SessionFactories
 

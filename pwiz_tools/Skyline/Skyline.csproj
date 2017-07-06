@@ -1062,16 +1062,8 @@
     <Compile Include="Model\Hibernate\DbPeptideResult.cs" />
     <Compile Include="Model\Hibernate\DbTransitionResult.cs" />
     <Compile Include="Model\Hibernate\Formats.cs" />
-    <Compile Include="Model\Hibernate\Query\ColumnSet.cs" />
-    <Compile Include="Model\Hibernate\Query\Database.cs" />
-    <Compile Include="Model\Hibernate\Query\PivotReport.cs" />
     <Compile Include="Model\Hibernate\Query\Identifier.cs" />
     <Compile Include="Model\Hibernate\QueryColumn.cs" />
-    <Compile Include="Model\Hibernate\Query\PivotType.cs" />
-    <Compile Include="Model\Hibernate\Query\Report.cs" />
-    <Compile Include="Model\Hibernate\Query\ResultSet.cs" />
-    <Compile Include="Model\Hibernate\Query\Schema.cs" />
-    <Compile Include="Model\Hibernate\SessionFactoryFactory.cs" />
     <Compile Include="Model\Identity.cs" />
     <Compile Include="Model\Import.cs" />
     <Compile Include="Model\Lib\BiblioSpecLite.cs" />
@@ -1202,7 +1194,6 @@
     <Compile Include="Model\Tools\ToolDescription.cs" />
     <Compile Include="Model\Tools\ToolInstaller.cs" />
     <Compile Include="Model\Tools\ToolMacros.cs" />
-    <Compile Include="Model\Tools\ToolReportCache.cs" />
     <Compile Include="Model\Transition.cs" />
     <Compile Include="Model\TransitionCalc.cs" />
     <Compile Include="Model\TransitionDocNode.cs" />
