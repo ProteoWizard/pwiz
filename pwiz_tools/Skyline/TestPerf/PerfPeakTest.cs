@@ -82,7 +82,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/Schilling_Mito.zip",
                 peakView, secondOnly, new[] { 1 }),
 //            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/ReiterSPRG.zip",
-//                spectronaut, decoysAndSecond),
+//                spectronaut, decoysAndSecond, new[] { 0 }),
 //            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/LudwigSPRG.zip",
 //                none, decoysAndSecond, new[] { 1 }),
             new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikSwathHeavy.zip",
@@ -121,10 +121,19 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 peakView, decoysAndSecond, new List<int> { 4 })
         };
 
+        private string REPORT_DIRECTORY
+        {
+            get
+            {
+                return null;     // To allow plots to be written with test files and deleted after test run
+                // return @"C:\proj\pwiz\pwiz_tools\Skyline\TestResults";
+            }
+        }
+
         [TestMethod, Timeout(7200000)]
         public void TestPeakPerf()
         {
-//            RunPerfTests = true;
+            RunPerfTests = true;
 
             TestFilesPersistent = new[] {"."};  // All persistent. No saving
             TestFilesZipPaths = DataSets.Select(p => p.Url).ToArray();
@@ -143,7 +152,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            string outDir = Path.Combine(TestContext.TestDir, "PerfPeakTest");
+            string outDir = Path.Combine(REPORT_DIRECTORY ?? TestContext.TestDir, "PerfPeakTest");
             string resultsTable = Path.Combine(outDir, "results.txt");
             Directory.CreateDirectory(outDir); // In case it doesn't already exists
             File.Delete(resultsTable); // In case it does already exist
