@@ -27873,6 +27873,79 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Rescoring peptides for retention time alignment.
+        /// </summary>
+        public static string Tric_InitializeTric_Rescoring_peptides_for_retention_time_alignment {
+            get {
+                return ResourceManager.GetString("Tric_InitializeTric_Rescoring_peptides_for_retention_time_alignment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not enough high scoring Decoys found in run to run alignment..
+        /// </summary>
+        public static string Tric_Rescore_Not_enough_high_scoring_Decoys_found_in_run_to_run_alignment_ {
+            get {
+                return ResourceManager.GetString("Tric_Rescore_Not_enough_high_scoring_Decoys_found_in_run_to_run_alignment_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Picking peaks.
+        /// </summary>
+        public static string Tric_RunTric_Picking_peaks {
+            get {
+                return ResourceManager.GetString("Tric_RunTric_Picking_peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insufficient high quality identifications to make a quality alignment.
+        /// </summary>
+        public static string TricMst_FindMst_Insufficient_high_quality_identifications_to_make_a_quality_alignment {
+            get {
+                return ResourceManager.GetString("TricMst_FindMst_Insufficient_high_quality_identifications_to_make_a_quality_align" +
+                        "ment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} -&gt; {1} RMSD {2}.
+        /// </summary>
+        public static string TricTree_TrainAligners__0______1__RMSD__2_ {
+            get {
+                return ResourceManager.GetString("TricTree_TrainAligners__0______1__RMSD__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculating retention time alignment functions.
+        /// </summary>
+        public static string TricTree_TrainAligners_Calculating_retention_time_alignment_functions {
+            get {
+                return ResourceManager.GetString("TricTree_TrainAligners_Calculating_retention_time_alignment_functions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} -&gt; {1} : RMSD {2}.
+        /// </summary>
+        public static string TricTree_Traverse__0______1____RMSD__2_ {
+            get {
+                return ResourceManager.GetString("TricTree_Traverse__0______1____RMSD__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculating retention time alignment edges.
+        /// </summary>
+        public static string TricTree_TricTree_Calculating_retention_time_alignment_edges {
+            get {
+                return ResourceManager.GetString("TricTree_TricTree_Calculating_retention_time_alignment_edges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Truncated peaks.
         /// </summary>
         public static string TruncatedPeakFinder_DisplayName_Truncated_peaks {

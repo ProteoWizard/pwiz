@@ -50,7 +50,8 @@ namespace pwiz.Skyline.EditUI
             Icon = Resources.Skyline;
             Document = document;
             _scoreAnnotation = false;
-            _driverPeakScoringModel = new SettingsListComboDriver<PeakScoringModelSpec>(comboBoxScoringModel, Settings.Default.PeakScoringModelList);
+            _driverPeakScoringModel = new SettingsListComboDriver<PeakScoringModelSpec>(comboBoxScoringModel,
+                Settings.Default.PeakScoringModelList);
             var peakScoringModel = document.Settings.PeptideSettings.Integration.PeakScoringModel;
             _driverPeakScoringModel.LoadList(peakScoringModel != null ? peakScoringModel.Name : null);
         }
@@ -91,10 +92,11 @@ namespace pwiz.Skyline.EditUI
                     {
                         QValueCutoff = qCutoff,
                         OverrideManual = checkBoxOverwrite.Checked,
+                        UseTric = checkBoxUseAlignment.Checked,
                     };
                     longWaitDlg.PerformWork(this, 1000, pm =>
                         {
-                            resultsHandler.ScoreFeatures(pm);
+                            resultsHandler.ScoreFeatures(pm, true);
                             if (resultsHandler.IsMissingScores())
                             {
                                 throw new InvalidDataException(Resources.ReintegrateDlg_OkDialog_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document___Please_train_a_new_model_);

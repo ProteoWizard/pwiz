@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Scoring.Tric;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -79,6 +80,7 @@ namespace pwiz.Skyline.Model
         public double QValueCutoff { get; set; }
         public bool OverrideManual { get; set; }
         public bool IncludeDecoys { get; set; }
+        public bool UseTric { get; set; }
 
         /// <summary>
         /// Forces the release of memory by breaking immutability to avoid doubling
@@ -107,6 +109,7 @@ namespace pwiz.Skyline.Model
                 return;
 
             var bestTargetPvalues = new List<double>(_features.TargetCount);
+            var bestTargetScores = new List<double>(_features.TargetCount);
             var targetIds = new List<PeakTransitionGroupIdKey>(_features.TargetCount);
             foreach (var transitionGroupFeatures in _features.Features)
             {
@@ -115,7 +118,7 @@ namespace pwiz.Skyline.Model
                 float bestPvalue = float.NaN;
                 var peakGroupFeatures = transitionGroupFeatures.PeakGroupFeatures;
                 IList<float> mProphetScoresGroup = null, pvalues = null;
-                if (!releaseRawFeatures)
+                if (!releaseRawFeatures || UseTric)//Tric needs scores for qValue interpolation
                     mProphetScoresGroup = new float[peakGroupFeatures.Count];
                 if (!releaseRawFeatures)
                     pvalues = new float[peakGroupFeatures.Count];
@@ -143,6 +146,7 @@ namespace pwiz.Skyline.Model
                 if (!transitionGroupFeatures.IsDecoy)
                 {
                     bestTargetPvalues.Add(bestPvalue);
+                    bestTargetScores.Add(bestScore);
                     targetIds.Add(transitionGroupFeatures.Key);
                 }
             }
@@ -150,6 +154,19 @@ namespace pwiz.Skyline.Model
             for (int i = 0; i < _qValues.Length; ++i)
             {
                 _featureDictionary[targetIds[i]].QValue = (float)_qValues[i];
+            }
+            if (UseTric)
+            {
+                Tric.Rescore(ScoringModel,
+                    _featureDictionary,
+                    _features,
+                    Document.MeasuredResults.MSDataFileInfos.Select(f => f.FilePath.GetFileName()).ToList(),
+                    Document.MeasuredResults.MSDataFileInfos.Select(f => f.FileIndex).ToList(),
+                    bestTargetScores,
+                    _qValues,
+                    progressMonitor,
+                    DocumentPath,
+                    output);
             }
             if (releaseRawFeatures)
                 _features = null;   // Done with this memory
@@ -188,11 +205,11 @@ namespace pwiz.Skyline.Model
         }
 
         public void WriteScores(TextWriter writer,
-            CultureInfo cultureInfo,
-            IList<IPeakFeatureCalculator> calcs = null,
-            bool bestOnly = true,
-            bool includeDecoys = true,
-            IProgressMonitor progressMonitor = null)
+                                CultureInfo cultureInfo,
+                                IList<IPeakFeatureCalculator> calcs = null,
+                                bool bestOnly = true,
+                                bool includeDecoys = true,
+                                IProgressMonitor progressMonitor = null)
         {
             PeakTransitionGroupFeatureSet features;
             if (calcs == null)
@@ -208,10 +225,10 @@ namespace pwiz.Skyline.Model
             foreach (var peakTransitionGroupFeatures in features.Features)
             {
                 WriteTransitionGroup(writer,
-                    peakTransitionGroupFeatures,
-                    cultureInfo,
-                    bestOnly,
-                    includeDecoys);
+                                     peakTransitionGroupFeatures,
+                                     cultureInfo,
+                                     bestOnly,
+                                     includeDecoys);
             }
         }
 
@@ -220,21 +237,21 @@ namespace pwiz.Skyline.Model
             char separator = TextUtil.GetCsvSeparator(cultureInfo);
             // ReSharper disable NonLocalizedString
             var namesArray = new List<string>
-            {
-                "transition_group_id",
-                "run_id",
-                "FileName",
-                "RT",
-                "MinStartTime",
-                "MaxEndTime",
-                "Sequence",
-                "PeptideModifiedSequence",
-                "ProteinName",
-                "PrecursorIsDecoy",
-                "mProphetScore",
-                "pValue",
-                "qValue"
-            };
+                {
+                    "transition_group_id",
+                    "run_id",
+                    "FileName",
+                    "RT",
+                    "MinStartTime",
+                    "MaxEndTime",
+                    "Sequence",
+                    "PeptideModifiedSequence",
+                    "ProteinName",
+                    "PrecursorIsDecoy",
+                    "mProphetScore",
+                    "pValue",
+                    "qValue"
+                };
             // ReSharper restore NonLocalizedString
 
             foreach (var name in namesArray)
@@ -254,10 +271,10 @@ namespace pwiz.Skyline.Model
         }
 
         private void WriteTransitionGroup(TextWriter writer,
-            PeakTransitionGroupFeatures features,
-            CultureInfo cultureInfo,
-            bool bestOnly,
-            bool includeDecoys)
+                                          PeakTransitionGroupFeatures features,
+                                          CultureInfo cultureInfo,
+                                          bool bestOnly,
+                                          bool includeDecoys)
         {
             var id = features.Key;
             int bestScoresIndex = -1;
@@ -282,39 +299,39 @@ namespace pwiz.Skyline.Model
                     double mProphetScore = mProphetScores != null ? mProphetScores[j] : double.NaN;
                     double pValue = pValues != null ? pValues[j] : double.NaN;
                     WriteRow(writer, features, peakGroupFeatures, cultureInfo, mProphetScore,
-                        pValue, qValue);
+                             pValue, qValue);
                 }
                 ++j;
             }
         }
 
         private static void WriteRow(TextWriter writer,
-            PeakTransitionGroupFeatures features,
-            PeakGroupFeatures peakGroupFeatures,
-            CultureInfo cultureInfo,
-            double mProphetScore,
-            double pValue,
-            double qValue)
+                                     PeakTransitionGroupFeatures features,
+                                     PeakGroupFeatures peakGroupFeatures,
+                                     CultureInfo cultureInfo,
+                                     double mProphetScore,
+                                     double pValue,
+                                     double qValue)
         {
             char separator = TextUtil.GetCsvSeparator(cultureInfo);
             string fileName = SampleHelp.GetFileName(features.Id.FilePath);
             var fieldsArray = new List<string>
-            {
-                Convert.ToString(features.Id, cultureInfo),
-                Convert.ToString(features.Id.Run, cultureInfo),
-                fileName,
-                // CONSIDER: This impacts memory consumption for large-scale DIA, and it is not clear anyone uses these
-                Convert.ToString(peakGroupFeatures.RetentionTime, cultureInfo),
-                Convert.ToString(peakGroupFeatures.StartTime, cultureInfo),
-                Convert.ToString(peakGroupFeatures.EndTime, cultureInfo),
-                features.Id.RawUnmodifiedTextId, // Unmodified sequence, or custom ion name
-                features.Id.RawTextId, // Modified sequence, or custom ion name
-                features.Id.NodePepGroup.Name,
-                Convert.ToString(features.IsDecoy ? 1 : 0, cultureInfo),
-                ToFieldString((float) mProphetScore, cultureInfo),
-                ToFieldString((float) pValue, cultureInfo),
-                ToFieldString((float) qValue, cultureInfo)
-            };
+                {
+                    Convert.ToString(features.Id, cultureInfo),
+                    Convert.ToString(features.Id.Run, cultureInfo),
+                    fileName,
+                    // CONSIDER: This impacts memory consumption for large-scale DIA, and it is not clear anyone uses these
+                    Convert.ToString(peakGroupFeatures.RetentionTime, cultureInfo),
+                    Convert.ToString(peakGroupFeatures.StartTime, cultureInfo),
+                    Convert.ToString(peakGroupFeatures.EndTime, cultureInfo),
+                    features.Id.RawUnmodifiedTextId, // Unmodified sequence, or custom ion name
+                    features.Id.RawTextId, // Modified sequence, or custom ion name
+                    features.Id.NodePepGroup.Name,
+                    Convert.ToString(features.IsDecoy ? 1 : 0, cultureInfo),
+                    ToFieldString((float) mProphetScore, cultureInfo),
+                    ToFieldString((float) pValue, cultureInfo),
+                    ToFieldString((float) qValue, cultureInfo)
+                };
 
             foreach (var name in fieldsArray)
             {
@@ -358,5 +375,35 @@ namespace pwiz.Skyline.Model
         public int BestScoreIndex { get; private set; }
         public float BestScore { get; private set; }
         public float? QValue { get; internal set; }
+
+        public void ResetBestScores(float score, double qValue)
+        {
+            QValue = (float) qValue;
+            BestScore = score;
+            MprophetScores[BestScoreIndex] = score;
+        }
+
+        public void ResetBestPeak(int bestIndex, PeakTransitionGroupFeatures features)
+        {
+            BestScoreIndex = bestIndex;
+            BestPeakIndex = features.PeakGroupFeatures[bestIndex].OriginalPeakIndex;
+            for (int i = 0; i < MprophetScores.Count; i ++)
+            {
+                if(i == bestIndex)
+                    continue;
+                MprophetScores[i] = 0;
+            }
+        }
+
+        public void SetNoBestPeak()
+        {
+            BestScoreIndex = -1;
+            BestPeakIndex = -1;
+            for (int i = 0; i < MprophetScores.Count; i++)
+            {
+                MprophetScores[i] = 0;
+            }
+            QValue = 1;
+        }
     }
 }

@@ -186,18 +186,33 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         // CONSIDER: Peak features can take up a lot of space in large scale DIA
                         //           It may be possible to save even more by using a smaller struct
                         //           when times are not required, which they are only for export
-                        float retentionTime = 0, startTime = 0, endTime = 0;
-                        if (verbose)
-                        {
-                            var peakTimes = summaryPeakData.RetentionTimeStatistics;
-                            retentionTime = peakTimes.RetentionTime;
-                            startTime = peakTimes.StartTime;
-                            endTime = peakTimes.EndTime;
-                        }
+                        var peakTimes = summaryPeakData.RetentionTimeStatistics;
+
+                        // Needed for LDA on peak groups aligned with TRIC
+                        // We should probably not store this when not using TRIC
                         int peakIndex = summaryPeakData.UsedBestPeakIndex
                             ? summaryPeakData.BestPeakIndex
                             : summaryPeakData.PeakIndex;
-                        listRunFeatures.Add(new PeakGroupFeatures(peakIndex, retentionTime, startTime, endTime, features));
+
+                        float[][] peakAreasList = null;
+                        // Avoid the extra allocation on storing peak areas if they will not be used
+                        if (Tric.Tric.USE_SEED_DOT_PRODUCT_CORRELATION_SCORE)
+                        {
+                            peakAreasList = new float[summaryPeakData.TransitionGroupPeakData.Count][];
+                            int groupIndex = 0;
+                            foreach (var tranGroupData in summaryPeakData.TransitionGroupPeakData)
+                            {
+                                var peakAreas = new float[tranGroupData.TransitionPeakData.Count];
+                                for (int i = 0; i < peakAreas.Length; i++)
+                                {
+                                    peakAreas[i] = tranGroupData.TransitionPeakData[i].PeakData.Area;
+                                }
+                                peakAreasList[groupIndex] = peakAreas;
+                                groupIndex++;
+                            }
+                        }
+                        listRunFeatures.Add(new PeakGroupFeatures(peakIndex, peakTimes.RetentionTime, peakTimes.MedianTime,
+                            peakTimes.StartTime, peakTimes.EndTime, peakAreasList, features));
                     }
 
                     yield return new PeakTransitionGroupFeatures(peakId, listRunFeatures.ToArray(), verbose);
@@ -753,10 +768,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public struct PeakGroupFeatures
     {
-        public PeakGroupFeatures(int peakIndex, float retentionTime, float startTime, float endTime,
-            float[] features) : this()
+        public PeakGroupFeatures(int peakIndex, float retentionTime,float medianRetentionTime, float startTime, float endTime,
+            IList<float[]> peakAreasList, float[] features) : this()
         {
             OriginalPeakIndex = peakIndex;
+            MedianRetentionTime = medianRetentionTime;  // Required for TRIC
+            PeakAreasList = peakAreasList;  // For use in TRIC dot-product trials (high cost in memory)
             // CONSIDER: This impacts memory consumption for large-scale DIA, and it is not clear anyone uses these
             RetentionTime = retentionTime;
             StartTime = startTime;
@@ -765,9 +782,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
 
         public int OriginalPeakIndex { get; private set; }
+        public float MedianRetentionTime { get; private set; }
         public float RetentionTime { get; private set; }
         public float StartTime { get; private set; }
         public float EndTime { get; private set; }
+        public IList<float[]> PeakAreasList { get; private set; }
         public float[] Features { get; private set; }
     }
 }

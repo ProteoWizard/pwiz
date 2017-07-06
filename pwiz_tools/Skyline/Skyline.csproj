@@ -1162,10 +1162,15 @@
     <Compile Include="Model\Results\Scoring\MQuestFeatureCalc.cs" />
     <Compile Include="Model\Results\Scoring\PeakFeatureEnumerator.cs" />
     <Compile Include="Model\RetentionTimes\LoessAligner.cs" />
+    <Compile Include="Model\Results\Scoring\Tric\ValueInterpolation.cs" />
     <Compile Include="Model\Results\Scoring\ScoredGroupPeaksSet.cs" />
     <Compile Include="Model\Results\Scoring\ScoredPeak.cs" />
     <Compile Include="Model\Results\Scoring\ScoredGroupPeaks.cs" />
     <Compile Include="Model\Results\Scoring\TargetDecoyGenerator.cs" />
+    <Compile Include="Model\Results\Scoring\Tric\Tric.cs" />
+    <Compile Include="Model\Results\Scoring\Tric\TricMst.cs" />
+    <Compile Include="Model\Results\Scoring\Tric\TricStarTree.cs" />
+    <Compile Include="Model\Results\Scoring\Tric\TricTree.cs" />
     <Compile Include="Model\Results\SpectraChromDataProvider.cs" />
     <Compile Include="Model\Results\SpectrumFilter.cs" />
     <Compile Include="Model\Results\SpectrumFilterPair.cs" />

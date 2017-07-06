@@ -38,6 +38,7 @@
             this.checkBoxOverwrite = new System.Windows.Forms.CheckBox();
             this.label36 = new System.Windows.Forms.Label();
             this.comboBoxScoringModel = new System.Windows.Forms.ComboBox();
+            this.checkBoxUseAlignment = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -99,12 +100,19 @@
             this.comboBoxScoringModel.Name = "comboBoxScoringModel";
             this.comboBoxScoringModel.SelectedIndexChanged += new System.EventHandler(this.comboBoxScoringModel_SelectedIndexChanged);
             // 
+            // checkBoxUseAlignment
+            // 
+            resources.ApplyResources(this.checkBoxUseAlignment, "checkBoxUseAlignment");
+            this.checkBoxUseAlignment.Name = "checkBoxUseAlignment";
+            this.checkBoxUseAlignment.UseVisualStyleBackColor = true;
+            // 
             // ReintegrateDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.checkBoxUseAlignment);
             this.Controls.Add(this.comboBoxScoringModel);
             this.Controls.Add(this.label36);
             this.Controls.Add(this.checkBoxOverwrite);
@@ -135,5 +143,6 @@
         private System.Windows.Forms.CheckBox checkBoxOverwrite;
         private System.Windows.Forms.Label label36;
         private System.Windows.Forms.ComboBox comboBoxScoringModel;
+        private System.Windows.Forms.CheckBox checkBoxUseAlignment;
     }
 }

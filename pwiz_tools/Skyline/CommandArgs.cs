@@ -142,6 +142,7 @@ namespace pwiz.Skyline
         private const string ARG_REINTEGRATE_MODEL_SECOND_BEST = "reintegrate-model-second-best"; // Not L10N
         private const string ARG_REINTEGRATE_MODEL_BOTH = "reintegrate-model-both"; // Not L10N
         private const string ARG_REINTEGRATE_OVERWRITE_PEAKS = "reintegrate-overwrite-peaks"; // Not L10N
+        private const string ARG_REINTEGRATE_USE_TRIC = "reintegrate-use-tric"; // Not L10N
         private const string ARG_REINTEGRATE_LOG_TRAINING = "reintegrate-log-training"; // Not L10N
 
         public string ReintegratModelName { get; private set; }
@@ -150,6 +151,7 @@ namespace pwiz.Skyline
         public bool IsCreateScoringModel { get; private set; }
         public bool IsSecondBestModel { get; private set; }
         public bool IsDecoyModel { get; private set; }
+        public bool UsesTRIC { get; private set;}
         public bool IsLogTraining { get; private set; }
 
         public bool Reintegrating { get { return !string.IsNullOrEmpty(ReintegratModelName); } }
@@ -1158,6 +1160,10 @@ namespace pwiz.Skyline
                 else if (IsNameOnly(pair, ARG_REINTEGRATE_MODEL_BOTH))
                 {
                     IsSecondBestModel = IsDecoyModel = true;
+                }
+                else if (IsNameOnly(pair, ARG_REINTEGRATE_USE_TRIC))
+                {
+                    UsesTRIC = true;
                 }
                 else if (IsNameOnly(pair, ARG_REINTEGRATE_LOG_TRAINING))
                 {

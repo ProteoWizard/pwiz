@@ -1396,7 +1396,7 @@ namespace pwiz.Skyline
                     modelAndFeatures = new ModelAndFeatures(scoringModel, null);
                 }
 
-                if (!Reintegrate(modelAndFeatures, commandArgs.IsOverwritePeaks, commandArgs.IsLogTraining))
+                if (!Reintegrate(modelAndFeatures, commandArgs.IsOverwritePeaks, commandArgs.UsesTRIC, commandArgs.IsLogTraining))
                     return false;
             }
             return true;
@@ -1484,14 +1484,15 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool Reintegrate(ModelAndFeatures modelAndFeatures, bool isOverwritePeaks, bool logTraining)
+        private bool Reintegrate(ModelAndFeatures modelAndFeatures, bool isOverwritePeaks, bool useTric, bool logTraining)
         {
             try
             {
                 var resultsHandler = new MProphetResultsHandler(_doc, modelAndFeatures.ScoringModel, modelAndFeatures.Features)
                 {
                     OverrideManual = isOverwritePeaks,
-                    FreeImmutableMemory = true
+                    FreeImmutableMemory = true,
+                    UseTric = useTric
                 };
                 
                 // If logging training, give the modeling code a place to write

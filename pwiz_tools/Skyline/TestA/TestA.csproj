@@ -206,6 +206,7 @@
     <Compile Include="TestSerializeIsolationScheme.cs" />
     <Compile Include="TextUtilTest.cs" />
     <Compile Include="TransitionSettings07Test.cs" />
+    <Compile Include="TricAlignersTest.cs" />
     <Compile Include="TypeSafeEnumTest.cs" />
     <Compile Include="UniModTest.cs" />
     <Compile Include="MProphetResultsHandlerTest.cs" />
@@ -301,6 +302,7 @@
     <EmbeddedResource Include="Results\MultiLabel.sky" />
     <EmbeddedResource Include="Study7.sky" />
     <None Include="ExportMethodShimadzuTest.zip" />
+    <None Include="TricAlignerTest.zip" />
     <None Include="XmlValidationTest.zip" />
   </ItemGroup>
   <ItemGroup>

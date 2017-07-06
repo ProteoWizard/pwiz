@@ -9143,6 +9143,9 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Adding_iRTs_to_Library" xml:space="preserve">
     <value>Adding iRTs to Library</value>
   </data>
+  <data name="TricMst_FindMst_Insufficient_high_quality_identifications_to_make_a_quality_alignment" xml:space="preserve">
+    <value>Insufficient high quality identifications to make a quality alignment</value>
+  </data>
   <data name="Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator" xml:space="preserve">
     <value>iRT standards can only be changed by modifying the iRT calculator</value>
   </data>
@@ -9518,6 +9521,18 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries" xml:space="preserve">
     <value>EncyclopeDIA Libraries</value>
   </data>
+  <data name="Tric_RunTric_Picking_peaks" xml:space="preserve">
+    <value>Picking peaks</value>
+  </data>
+  <data name="TricTree_TrainAligners_Calculating_retention_time_alignment_functions" xml:space="preserve">
+    <value>Calculating retention time alignment functions</value>
+  </data>
+  <data name="TricTree_TricTree_Calculating_retention_time_alignment_edges" xml:space="preserve">
+    <value>Calculating retention time alignment edges</value>
+  </data>
+  <data name="Tric_InitializeTric_Rescoring_peptides_for_retention_time_alignment" xml:space="preserve">
+    <value>Rescoring peptides for retention time alignment</value>
+  </data>
   <data name="PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_time_" xml:space="preserve">
     <value>The value '{0}' on line {1} is not a valid time.</value>
   </data>
@@ -9556,5 +9571,14 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="MProphetPeakScoringModel_CalculateWeights_Insufficient_decoys_detectect_to_continue_training_" xml:space="preserve">
     <value>Insufficient decoys detectect to continue training.</value>
+  </data>
+  <data name="Tric_Rescore_Not_enough_high_scoring_Decoys_found_in_run_to_run_alignment_" xml:space="preserve">
+    <value>Not enough high scoring Decoys found in run to run alignment.</value>
+  </data>
+  <data name="TricTree_TrainAligners__0______1__RMSD__2_" xml:space="preserve">
+    <value>{0} -&gt; {1} RMSD {2}</value>
+  </data>
+  <data name="TricTree_Traverse__0______1____RMSD__2_" xml:space="preserve">
+    <value>{0} -&gt; {1} : RMSD {2}</value>
   </data>
 </root>
