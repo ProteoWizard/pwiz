@@ -22212,6 +22212,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline 3.7.
+        /// </summary>
+        public static string SkylineVersion_V3_7_Skyline_3_7 {
+            get {
+                return ResourceManager.GetString("SkylineVersion_V3_7_Skyline_3_7", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change Document Reports.
         /// </summary>
         public static string SkylineViewContext_ChangeDocumentViewSpec_Change_Document_Reports {

@@ -9604,4 +9604,7 @@ If your transition list format combines formulas and adducts in a single column 
     <value>Are you sure you want to delete these {0} transitions?</value>
     <comment>Example: Are you sure you want to delete these 18 transitions?</comment>
   </data>
+  <data name="SkylineVersion_V3_7_Skyline_3_7" xml:space="preserve">
+    <value>Skyline 3.7</value>
+  </data>
 </root>
