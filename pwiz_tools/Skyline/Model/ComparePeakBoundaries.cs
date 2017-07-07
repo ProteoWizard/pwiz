@@ -189,6 +189,7 @@ namespace pwiz.Skyline.Model
             // Detect if the apex time is in seconds, and if so adjust it to minutes
             if (ApexPresent)
             {
+                // ReSharper disable PossibleMultipleEnumeration
                 var matchesWithApex = matches.Where(match => match.PickedApex.HasValue).ToArray();
                 double maxTime = 0;
                 if (matchesWithApex.Length > 0)
@@ -206,6 +207,7 @@ namespace pwiz.Skyline.Model
                             match.PickedStartBoundary = match.PickedStartBoundary / 60;
                     }
                 }
+                // ReSharper restore PossibleMultipleEnumeration
             }
         }
 
