@@ -38,5 +38,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public Proteins Proteins { get { return _proteins = _proteins ?? new Proteins(DataSchema); } }
         private ReplicateList _replicates;
         public ReplicateList Replicates { get { return _replicates = _replicates ?? new ReplicateList(DataSchema); } }
+
+        public override string GetDeleteConfirmation(int nodeCount)
+        {
+            return GetGenericDeleteConfirmation(nodeCount);
+        }
     }
 }

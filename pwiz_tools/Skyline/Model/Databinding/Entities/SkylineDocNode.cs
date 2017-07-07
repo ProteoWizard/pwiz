@@ -24,6 +24,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -99,6 +100,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             int result = DataSchema.GetHashCode();
             result = result * 397 ^ IdentityPath.GetHashCode();
             return result;
+        }
+
+        public abstract string GetDeleteConfirmation(int nodeCount);
+
+        public static string GetGenericDeleteConfirmation(int nodeCount)
+        {
+            return string.Format(Resources.SkylineDocNode_GetGenericDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__things_, nodeCount);
         }
     }
 

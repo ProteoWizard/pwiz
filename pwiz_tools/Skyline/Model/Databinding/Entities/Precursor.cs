@@ -26,6 +26,7 @@ using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -435,6 +436,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Obsolete]
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? LibraryRank { get { return null; } }
+
+        public override string GetDeleteConfirmation(int nodeCount)
+        {
+            if (nodeCount == 1)
+            {
+                return string.Format(Resources.Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_precursor___0___, this);
+            }
+            return string.Format(Resources.Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__precursors_, nodeCount);
+        }
     }
 
     public class PrecursorResultSummary : SkylineObject

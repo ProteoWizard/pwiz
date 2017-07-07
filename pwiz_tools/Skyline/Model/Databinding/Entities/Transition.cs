@@ -24,6 +24,7 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -233,6 +234,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override string ToString()
         {
             return DocNode.Transition.ToString();
+        }
+
+        public override string GetDeleteConfirmation(int nodeCount)
+        {
+            if (nodeCount == 1)
+            {
+                return string.Format(Resources.Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_transition___0___, this);
+            }
+            return string.Format(Resources.Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__transitions_, nodeCount);
         }
     }
 

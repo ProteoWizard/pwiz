@@ -796,5 +796,74 @@ namespace pwiz.Skyline.Model.Databinding
                 }
             }
         }
+
+        protected void DeleteSkylineDocNodes(Control owner, ICollection<SkylineDocNode> docNodes)
+        {
+            if (docNodes.Count == 0)
+            {
+                return;
+            }
+            var confirmationMessages = docNodes.Select(node => node.GetDeleteConfirmation(docNodes.Count)).Distinct()
+                .ToArray();
+            string message = confirmationMessages.Length == 1
+                ? confirmationMessages[0]
+                : SkylineDocNode.GetGenericDeleteConfirmation(docNodes.Count);
+            if (MultiButtonMsgDlg.Show(owner, message, MultiButtonMsgDlg.BUTTON_OK) != DialogResult.OK)
+            {
+                return;
+            }
+            DeleteDocNodes(new HashSet<IdentityPath>(docNodes.Select(node=>node.IdentityPath)));
+        }
+
+        protected void DeleteDocNodes(HashSet<IdentityPath> identityPaths)
+        {
+            var skylineWindow = ((SkylineDataSchema)DataSchema).SkylineWindow;
+            if (null != skylineWindow)
+            {
+                skylineWindow.ModifyDocument(Resources.SkylineViewContext_DeleteDocNodes_Delete_items, doc => DeleteNodes(doc, identityPaths));
+            }
+        }
+
+        protected SrmDocument DeleteNodes(SrmDocument document, HashSet<IdentityPath> identityPathsToDelete)
+        {
+            var newDocument = (SrmDocument) DeleteChildren(document, IdentityPath.ROOT, identityPathsToDelete);
+            if (newDocument != null)
+            {
+                return newDocument;
+            }
+            return (SrmDocument) document.ChangeChildren(new DocNode[0]);
+        }
+
+        protected DocNode DeleteChildren(DocNode parent, IdentityPath identityPath, HashSet<IdentityPath> pathsToDelete)
+        {
+            var docNodeParent = parent as DocNodeParent;
+            if (docNodeParent == null)
+            {
+                return parent;
+            }
+            if (docNodeParent.Children.Count == 0)
+            {
+                return parent;
+            }
+            var newChildren = new List<DocNode>();
+            foreach (var child in docNodeParent.Children)
+            {
+                var childPath = new IdentityPath(identityPath, child.Id);
+                if (pathsToDelete.Contains(childPath))
+                {
+                    continue;
+                }
+                var newChild = DeleteChildren(child, childPath, pathsToDelete);
+                if (newChild != null)
+                {
+                    newChildren.Add(newChild);
+                }
+            }
+            if (newChildren.Count == 0)
+            {
+                return null;
+            }
+            return docNodeParent.ChangeChildren(newChildren);
+        }
     }
 }
