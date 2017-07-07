@@ -464,7 +464,21 @@ namespace pwiz.Skyline.Model
 
         protected override IList<DocNode> OnChangingChildren(DocNodeParent clone)
         {
-            return GenerateColors(clone.Children);
+            var childrenNew = clone.Children;
+            if (IsColorComplete(childrenNew))
+                return childrenNew;
+            return GenerateColors(childrenNew);
+        }
+
+        private bool IsColorComplete(IList<DocNode> children)
+        {
+            // Because using LINQ shows up in a profiler
+            foreach (PeptideDocNode peptideDocNode in children)
+            {
+                if (peptideDocNode.Color.A == 0)
+                    return false;
+            }
+            return true;
         }
 
         private IList<DocNode> GenerateColors(IList<DocNode> children)

@@ -381,7 +381,7 @@ namespace pwiz.Skyline.Model
             private set
             {
                 var ordered = OrderedChildren(value);
-                _children = ordered as DocNodeChildren ?? new DocNodeChildren(ordered);
+                _children = ordered as DocNodeChildren ?? new DocNodeChildren(ordered, _children);
             }
         }
 
@@ -961,24 +961,17 @@ namespace pwiz.Skyline.Model
             if (Children == null)
                 throw new InvalidOperationException("Invalid operation ReplaceChild before children set."); // Not L10N
 
-            DocNode[] childrenNew = new DocNode[Children.Count];
-            List<int> nodeCountStack = new List<int>(_nodeCountStack);
-            int index = -1;
-            for (int i = 0; i < Children.Count; i++)
-            {
-                if (!childReplace.EqualsId(Children[i]))
-                    childrenNew[i] = Children[i];
-                else
-                {
-                    index = i;
-                    RemoveCounts(Children[i], nodeCountStack);
-                    childrenNew[i] = childReplace;
-                    AddCounts(childReplace, nodeCountStack);
-                }
-            }
+            int index = _children.IndexOf(childReplace.Id);
             // If nothing was replaced throw an exception to let the caller know.
             if (index == -1)
                 throw new IdentityNotFoundException(childReplace.Id);
+
+            var childrenNew = new DocNode[Children.Count];
+            Children.CopyTo(childrenNew, 0);
+            var nodeCountStack = new List<int>(_nodeCountStack);
+            RemoveCounts(Children[index], nodeCountStack);
+            childrenNew[index] = childReplace;
+            AddCounts(childReplace, nodeCountStack);
 
             return ChangeChildren(childrenNew, nodeCountStack);
         }
