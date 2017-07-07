@@ -48,8 +48,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void Update(SrmDocument document, int resultIndex, PointsTypeMassError pointsType)
         {
-            var bestResults = ShowReplicate == ReplicateDisplay.best;
-            Data = new GraphData(document, resultIndex, bestResults, pointsType);
+			var bestResults = ShowReplicate == ReplicateDisplay.best;
+	        if (Data == null || !Data.IsCurrent(document, resultIndex, bestResults, pointsType))
+		        Data = new GraphData(document, resultIndex, bestResults, pointsType);
         }
 
         public override void Draw(Graphics g)
@@ -64,7 +65,7 @@ namespace pwiz.Skyline.Controls.Graphs
             base.Draw(g);
         }
 
-        public override void UpdateGraph(bool checkData)
+        public override void UpdateGraph(bool selectionChanged)
         {
             GraphHelper.FormatGraphPane(this);
             var document = GraphSummary.DocumentUIContainer.DocumentUI;
@@ -79,12 +80,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     resultsAvailable = results.Chromatograms.Count > resultIndex &&
                                        results.IsChromatogramSetLoaded(resultIndex);
             }
-
-            if (checkData)
-            {                
-                PointsTypeMassError pointsType = MassErrorGraphController.PointsType;
-                Update(resultsAvailable ? document : null, resultIndex, pointsType);
-            }
+     
+            Update(resultsAvailable ? document : null, resultIndex, MassErrorGraphController.PointsType);
 
             Graph();
         }
@@ -101,6 +98,12 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         sealed class GraphData : Immutable
         {
+	        // Cache variables for this data. Data only valid for this state
+	        private readonly SrmDocument _document;	// Active document when data was created
+	        private readonly int _resultIndex;	// Index to active replicate or -1 for everything
+	        private readonly DisplayTypeMassError _displayType; // Display type when data was created
+	        private readonly ReplicateDisplay _replicateDisplay; // Replicate dsiaply when data was created
+
             private readonly PpmBinCount[] _bins;
             private readonly double _binSize;
             private readonly double _mean;
@@ -110,9 +113,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public GraphData(SrmDocument document, int resultIndex, bool bestResult, PointsTypeMassError pointsType)
             {
+	            _document = document;
+	            _resultIndex = resultIndex;
+	            _replicateDisplay = ShowReplicate;
+
                 var vals = new List<double>();
                 var dictPpmBin2ToCount = new Dictionary<int, int>();
-                var displayType = MassErrorGraphController.HistogramDisplayType;
+                _displayType = MassErrorGraphController.HistogramDisplayType;
                 _binSize = Settings.Default.MassErorrHistogramBinSize;
                 _transition = MassErrorGraphController.HistogramTransiton;
                 _pointsType = pointsType;
@@ -120,7 +127,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (document != null)
                 {
                     bool decoys = pointsType == PointsTypeMassError.decoys;
-                    bool precursors = displayType == DisplayTypeMassError.precursors;
+                    bool precursors = _displayType == DisplayTypeMassError.precursors;
 
                     foreach (var nodePep in document.Molecules)
                     {
@@ -186,6 +193,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
             }
+
+	        public bool IsCurrent(SrmDocument document, int resultIndex, bool bestResults, PointsTypeMassError pointsType)
+	        {
+		        return document != null && _document != null &&
+		               ReferenceEquals(document.Children, _document.Children) &&
+		               (bestResults || resultIndex == _resultIndex) &&
+		               pointsType == _pointsType &&
+					   Settings.Default.MassErorrHistogramBinSize == _binSize &&
+					   MassErrorGraphController.HistogramDisplayType == _displayType &&
+					   MassErrorGraphController.HistogramTransiton == _transition &&
+					   ShowReplicate == _replicateDisplay;
+	        }
 
             public void Graph(GraphPane graphPane)
             {

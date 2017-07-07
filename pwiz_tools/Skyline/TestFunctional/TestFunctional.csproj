@@ -248,6 +248,7 @@
     <Compile Include="StandardTypeTest.cs" />
     <Compile Include="StartPageTest.cs" />
     <Compile Include="SurrogateStandardTest.cs" />
+    <Compile Include="SynchronizeSummaryZoomingTest.cs" />
     <Compile Include="SynchSiblingsSmallMoleculesTest.cs" />
     <Compile Include="SynchSiblingsTest.cs" />
     <Compile Include="BackgroundProteomeTest.cs" />
@@ -384,6 +385,7 @@
     <None Include="StandardTypeTest.zip" />
     <None Include="StartPageTest.zip" />
     <None Include="SurrogateStandardTest.zip" />
+    <None Include="SynchronizeSummaryZoomingTest.zip" />
     <None Include="SynchSiblingsSmallMoleculesTest.zip" />
     <None Include="SynchSiblingsTest.zip" />
     <None Include="ToolServiceTest.zip" />

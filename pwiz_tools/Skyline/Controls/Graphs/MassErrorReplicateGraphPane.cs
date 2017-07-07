@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Controls.Graphs
             PaneKey = paneKey;
         }
 
-        public override void UpdateGraph(bool checkData)
+        public override void UpdateGraph(bool selectionChanged)
         {
             CurveList.Clear();
             GraphObjList.Clear();
@@ -206,7 +206,7 @@ namespace pwiz.Skyline.Controls.Graphs
                });
            }
 
-            XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = true;
+	        XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = selectionChanged;
             YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = true;
             if (Settings.Default.MinMassError != 0)
                 YAxis.Scale.Min = Settings.Default.MinMassError;

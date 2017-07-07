@@ -62,6 +62,16 @@ namespace ZedGraph
 		private string _format;
 		private int _mag;
 
+		public double Min
+		{
+			get { return _min; }
+		}
+
+		public double Max
+		{
+			get { return _max; }
+		}
+
 		/// <summary>
 		/// Construct a <see cref="ScaleState"/> from the specified <see cref="Axis"/>
 		/// </summary>

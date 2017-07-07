@@ -47,7 +47,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public void Update(SrmDocument document, int resultIndex, PointsTypeMassError pointsType)
         {
             var bestResults = ShowReplicate == ReplicateDisplay.best;
-            Data = new GraphData(document, Data, resultIndex, bestResults, pointsType);
+			if (Data == null || !Data.IsCurrent(document, resultIndex, bestResults, pointsType))
+				Data = new GraphData(document, Data, resultIndex, bestResults, pointsType);
         }
 
         public void Clear()
@@ -67,7 +68,7 @@ namespace pwiz.Skyline.Controls.Graphs
             base.Draw(g);
         }
 
-        public override void UpdateGraph(bool checkData)
+        public override void UpdateGraph(bool selectionChanged)
         {
             GraphHelper.FormatGraphPane(this);
             var document = GraphSummary.DocumentUIContainer.DocumentUI;
@@ -102,11 +103,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (nodePeptide != null)
                     nodeSelected = nodePeptide.DocNode;
 
-                if (checkData)
-                {
-                    PointsTypeMassError pointsType = MassErrorGraphController.PointsType;
-                    Update(document, resultIndex, pointsType);
-                }
+                Update(document, resultIndex, MassErrorGraphController.PointsType);
 
                 Graph(nodeSelected);
             }
@@ -124,6 +121,12 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         sealed class GraphData : Immutable
         {
+			// Cache variables for this data. Data only valid for this state
+	        private readonly SrmDocument _document;	// Active document when data was created
+	        private readonly int _resultIndex;	// Index to active replicate or -1 for everything
+	        private readonly ReplicateDisplay _replicateDisplay; // Replicate display when data was created
+	        private readonly DisplayTypeMassError _displayType; // Display type when data was created
+
             public readonly HeatMapData _heatMapData;
             private readonly int _maxCount;
             private double _maxMass = double.MinValue, _minMass = double.MaxValue, _maxX = double.MinValue, _minX = double.MaxValue;
@@ -141,8 +144,12 @@ namespace pwiz.Skyline.Controls.Graphs
             public GraphData(SrmDocument document, GraphData dataPrevious, int resultIndex,
                 bool bestResult, PointsTypeMassError pointsType)
             {
+	            _document = document;
+	            _resultIndex = resultIndex;
+	            _replicateDisplay = ShowReplicate;
+
                 int[,] counts2D = EMPTY_COUNTS;
-                var displayType = MassErrorGraphController.HistogramDisplayType;
+                _displayType = MassErrorGraphController.HistogramDisplayType;
                 _binSizePpm = Settings.Default.MassErorrHistogramBinSize;
                 _transition = MassErrorGraphController.HistogramTransiton;
                 _xAxis = MassErrorGraphController.Histogram2DXAxis;
@@ -151,7 +158,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     _pointsType = PointsTypeMassError.targets;
 
                 bool decoys = pointsType == PointsTypeMassError.decoys;
-                bool precursors = displayType == DisplayTypeMassError.precursors;
+                bool precursors = _displayType == DisplayTypeMassError.precursors;
 
                 while (ReferenceEquals(counts2D, EMPTY_COUNTS))
                 {
@@ -248,7 +255,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            public void Graph(MassErrorHistogram2DGraphPane graphPane, PeptideDocNode nodeSelected)
+	        public bool IsCurrent(SrmDocument document, int resultIndex, bool bestResults, PointsTypeMassError pointsType)
+	        {
+		        return document != null && _document != null &&
+		               ReferenceEquals(document.Children, _document.Children) &&
+		               (bestResults || resultIndex == _resultIndex) &&
+		               pointsType == _pointsType &&
+		               Settings.Default.MassErorrHistogramBinSize == _binSizePpm &&
+		               MassErrorGraphController.Histogram2DXAxis == _xAxis &&
+		               MassErrorGraphController.HistogramDisplayType == _displayType &&
+		               MassErrorGraphController.HistogramTransiton == _transition &&
+		               ShowReplicate == _replicateDisplay;
+	        }
+
+			public void Graph(MassErrorHistogram2DGraphPane graphPane, PeptideDocNode nodeSelected)
             {
                 graphPane.Title.Text = string.Empty;
                 graphPane.YAxis.Title.Text = Resources.MassErrorReplicateGraphPane_UpdateGraph_Mass_Error;
@@ -269,7 +289,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     _heatMapData, MAX_DOT_RADIUS, MIN_DOT_RADIUS, (float)_minMass, (float)_maxMass,
                     Settings.Default.MassErrorHistogram2DLogScale, 5);
             }
-       }
+        }
 
         public int GetPoints()
         {

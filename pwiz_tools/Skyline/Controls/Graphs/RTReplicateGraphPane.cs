@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public bool CanShowRTLegend { get; private set; }
-        public override void UpdateGraph(bool checkData)
+        public override void UpdateGraph(bool selectionChanged)
         {
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
             var results = document.Settings.MeasuredResults;

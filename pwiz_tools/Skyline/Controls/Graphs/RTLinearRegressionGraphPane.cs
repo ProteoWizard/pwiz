@@ -292,7 +292,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return true;
         }
 
-        public override void UpdateGraph(bool checkData)
+        public override void UpdateGraph(bool selectionChanged)
         {
             GraphHelper.FormatGraphPane(this);
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
@@ -328,34 +328,32 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 bool shouldDrawGraph = true;
 
-                if (checkData)
+                double threshold = RTGraphController.OutThreshold;
+                bool refine = Settings.Default.RTRefinePeptides && RTGraphController.CanDoRefinementForRegressionMethod;
+
+                bool bestResult = (ShowReplicate == ReplicateDisplay.best);
+                    
+                if ((RTGraphController.PointsType == PointsTypeRT.standards && !document.GetRetentionTimeStandards().Any()) ||
+                    (RTGraphController.PointsType == PointsTypeRT.decoys &&
+                        !document.PeptideGroups.Any(nodePepGroup => nodePepGroup.Children.Cast<PeptideDocNode>().Any(nodePep => nodePep.IsDecoy))))
                 {
-                    double threshold = RTGraphController.OutThreshold;
-                    bool refine = Settings.Default.RTRefinePeptides && RTGraphController.CanDoRefinementForRegressionMethod;
-
-                    bool bestResult = (ShowReplicate == ReplicateDisplay.best);
+                    RTGraphController.PointsType = PointsTypeRT.targets;
+                }
+                PointsTypeRT pointsType = RTGraphController.PointsType;
+                RegressionMethodRT regressionMethod = RTGraphController.RegressionMethod;
                     
-                    if ((RTGraphController.PointsType == PointsTypeRT.standards && !document.GetRetentionTimeStandards().Any()) ||
-                        (RTGraphController.PointsType == PointsTypeRT.decoys &&
-                         !document.PeptideGroups.Any(nodePepGroup => nodePepGroup.Children.Cast<PeptideDocNode>().Any(nodePep => nodePep.IsDecoy))))
-                    {
-                        RTGraphController.PointsType = PointsTypeRT.targets;
-                    }
-                    PointsTypeRT pointsType = RTGraphController.PointsType;
-                    RegressionMethodRT regressionMethod = RTGraphController.RegressionMethod;
-                    
-                    if (!IsValidFor(document, targetIndex, originalIndex, bestResult, threshold, refine, pointsType,regressionMethod))
-                    {
+                if (!IsValidFor(document, targetIndex, originalIndex, bestResult, threshold, refine, pointsType,regressionMethod))
+                {
 
-                        Update(document,targetIndex, threshold, refine, pointsType, regressionMethod, originalIndex);
-                        if (refine && !IsRefined)
-                        {
-                            // Do refinement on a background thread.
-                            ActionUtil.RunAsync(RefineData, "Refine data"); // Not L10N
-                            shouldDrawGraph = false;
-                        }
+                    Update(document,targetIndex, threshold, refine, pointsType, regressionMethod, originalIndex);
+                    if (refine && !IsRefined)
+                    {
+                        // Do refinement on a background thread.
+                        ActionUtil.RunAsync(RefineData, "Refine data"); // Not L10N
+                        shouldDrawGraph = false;
                     }
                 }
+
                 if(shouldDrawGraph)
                     Graph(nodeSelected);
             }

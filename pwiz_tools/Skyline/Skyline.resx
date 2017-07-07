@@ -3843,6 +3843,12 @@
   <data name="&gt;&gt;selectionContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;synchronizeSummaryZoomingContextMenuItem.Name" xml:space="preserve">
+    <value>synchronizeSummaryZoomingContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;synchronizeSummaryZoomingContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;refineRTContextMenuItem.Name" xml:space="preserve">
     <value>refineRTContextMenuItem</value>
   </data>
@@ -5768,5 +5774,8 @@
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="synchronizeSummaryZoomingContextMenuItem.Text" xml:space="preserve">
+    <value>Synchronize Zooming</value>
   </data>
 </root>

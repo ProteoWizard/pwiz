@@ -2629,6 +2629,8 @@ namespace pwiz.Skyline
                                       };
             _graphRetentionTime.FormClosed += graphRetentionTime_FormClosed;
             _graphRetentionTime.VisibleChanged += graphRetentionTime_VisibleChanged;
+            _graphRetentionTime.GraphControl.ZoomEvent += GraphControl_ZoomEvent;
+
             return _graphRetentionTime;
         }
 
@@ -2952,6 +2954,8 @@ namespace pwiz.Skyline
                 }
                 selectionContextMenuItem.Checked = set.ShowReplicateSelection;
                 menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
+                synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
+                menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator38);
                 menuStrip.Items.Insert(iInsert++, timePropsContextMenuItem);
             }
@@ -3126,6 +3130,7 @@ namespace pwiz.Skyline
             Settings.Default.RTGraphType = GraphTypeRT.peptide.ToString();
             ShowGraphRetentionTime(true);
             UpdateRetentionTimeGraph();
+            SynchronizeSummaryZooming();
         }
 
         private void showRTLegendContextMenuItem_Click(object sender, EventArgs e)
@@ -3144,6 +3149,7 @@ namespace pwiz.Skyline
             Settings.Default.RTGraphType = GraphTypeRT.replicate.ToString();
             ShowGraphRetentionTime(true);
             UpdateRetentionTimeGraph();
+            SynchronizeSummaryZooming();
         }
 
         private void schedulingMenuItem_Click(object sender, EventArgs e)
@@ -3482,7 +3488,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void UpdateRetentionTimeGraph()
+        public void UpdateRetentionTimeGraph()
         {
             if (_graphRetentionTime != null)
             {
@@ -3560,6 +3566,8 @@ namespace pwiz.Skyline
                                  };
             _graphPeakArea.FormClosed += graphPeakArea_FormClosed;
             _graphPeakArea.VisibleChanged += graphPeakArea_VisibleChanged;
+            _graphPeakArea.GraphControl.ZoomEvent += GraphControl_ZoomEvent;
+
             return _graphPeakArea;
         }
 
@@ -3685,7 +3693,8 @@ namespace pwiz.Skyline
             peptideLogScaleContextMenuItem.Checked = set.AreaLogScale;
             selectionContextMenuItem.Checked = set.ShowReplicateSelection;
             menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
-
+            synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
+            menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator24);
             menuStrip.Items.Insert(iInsert++, areaPropsContextMenuItem);
             menuStrip.Items.Insert(iInsert, toolStripSeparator28);
@@ -3697,6 +3706,74 @@ namespace pwiz.Skyline
                 if (tag == "set_default" || tag == "show_val") // Not L10N
                     menuStrip.Items.Remove(item);
             }
+        }
+
+        public void SynchronizeSummaryZooming(GraphSummary graphSummary = null, ZoomState zoomState = null)
+        {
+            var activeGraphSummary = graphSummary ?? dockPanel.ActiveContent as GraphSummary;
+
+            if (!Settings.Default.SynchronizeSummaryZooming || activeGraphSummary == null)
+            {
+                return;
+            }
+
+            var activePane = activeGraphSummary.GraphControl.GraphPane;
+                
+            string[] types = { Settings.Default.AreaGraphType, Settings.Default.MassErrorGraphType, Settings.Default.RTGraphType };
+            GraphSummary[] graphSummaries = { _graphPeakArea, _graphMassError, _graphRetentionTime };
+
+            //Find the correct GraphSummary
+            int index = graphSummaries.IndexOf(g => ReferenceEquals(g, activeGraphSummary));
+
+            //If zoomstate is null, we use the current state of the active pane
+            var xScaleState = zoomState == null ? new ScaleState(activePane.XAxis) : zoomState.XAxis;
+            var x2ScaleState = zoomState == null ? new ScaleState(activePane.X2Axis) : zoomState.X2Axis;
+
+            double add = 0.0;
+
+            //If the expected value (library) is visible the zoom has to be shifted
+            if (activePane is AreaReplicateGraphPane && (activePane as AreaReplicateGraphPane).IsExpectedVisible)
+            {
+                add = -1.0;
+            }
+       
+            for (int i = 0; i < graphSummaries.Length; ++i)
+            {
+                //Make sure we are not syncing the same graph or graphs of different types
+                if (i != index && graphSummaries[i] != null && types[i] == types[index] && graphSummaries[i].Visible)
+                {
+                    bool isExpectedVisible = graphSummaries[i].GraphControl.GraphPane is AreaReplicateGraphPane && (graphSummaries[i].GraphControl.GraphPane as AreaReplicateGraphPane).IsExpectedVisible;
+                    if (isExpectedVisible)
+                    {
+                        ++add;
+                    }
+
+                    graphSummaries[i].GraphControl.GraphPane.XAxis.Scale.Min = xScaleState.Min + add;
+                    graphSummaries[i].GraphControl.GraphPane.XAxis.Scale.Max = xScaleState.Max + add;
+                    graphSummaries[i].GraphControl.GraphPane.X2Axis.Scale.Min = x2ScaleState.Min + add;
+                    graphSummaries[i].GraphControl.GraphPane.X2Axis.Scale.Max = x2ScaleState.Max + add;
+
+                    if (isExpectedVisible)
+                    {
+                        --add;
+                    }
+
+	                graphSummaries[i].UpdateUI(false);
+                }
+            }
+        }
+
+        void synchronizeSummaryZoomingContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.SynchronizeSummaryZooming = synchronizeSummaryZoomingContextMenuItem.Checked;
+            SynchronizeSummaryZooming();
+        }
+
+        void GraphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
+        {
+            //We pass in a GraphSummary here because sometimes dockPanel.ActiveContent is not the graph you are zooming in on
+            GraphSummary[] graphSummaries = { _graphPeakArea, _graphMassError, _graphRetentionTime };
+            SynchronizeSummaryZooming(graphSummaries.FirstOrDefault(gs => gs != null && ReferenceEquals(gs.GraphControl, sender)), newState);
         }
 
         private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
@@ -3783,6 +3860,7 @@ namespace pwiz.Skyline
             Settings.Default.AreaGraphType = GraphTypeSummary.replicate.ToString();
             ShowGraphPeakArea(true);
             UpdatePeakAreaGraph();
+            SynchronizeSummaryZooming();
         }
 
         private void areaPeptideComparisonMenuItem_Click(object sender, EventArgs e)
@@ -3795,6 +3873,7 @@ namespace pwiz.Skyline
             Settings.Default.AreaGraphType = GraphTypeSummary.peptide.ToString();
             ShowGraphPeakArea(true);
             UpdatePeakAreaGraph();
+            SynchronizeSummaryZooming();
         }
 
         private void replicateOrderDocumentContextMenuItem_Click(object sender, EventArgs e)
@@ -4096,6 +4175,7 @@ namespace pwiz.Skyline
             };
             _graphMassError.FormClosed += graphMassError_FormClosed;
             _graphMassError.VisibleChanged += graphMassError_VisibleChanged;
+            _graphMassError.GraphControl.ZoomEvent += GraphControl_ZoomEvent;
             return _graphMassError;
         }
 
@@ -4134,6 +4214,7 @@ namespace pwiz.Skyline
             Settings.Default.MassErrorGraphType = GraphTypeMassError.replicate.ToString();
             ShowGraphMassError(true);
             UpdateMassErrorGraph();
+            SynchronizeSummaryZooming();
         }
 
         private void massErrorPeptideComparisonMenuItem_Click(object sender, EventArgs e)
@@ -4146,6 +4227,7 @@ namespace pwiz.Skyline
             Settings.Default.MassErrorGraphType = GraphTypeMassError.peptide.ToString();
             ShowGraphMassError(true);
             UpdateMassErrorGraph();
+            SynchronizeSummaryZooming();
         }
 
         private void massErrorHistogramMenuItem_Click(object sender, EventArgs e)
@@ -4284,6 +4366,9 @@ namespace pwiz.Skyline
                 selectionContextMenuItem.Checked = set.ShowReplicateSelection;
                 menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
             }
+
+            synchronizeSummaryZoomingContextMenuItem.Checked = set.SynchronizeSummaryZooming;
+            menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
 
             menuStrip.Items.Insert(iInsert++, toolStripSeparator24);
             menuStrip.Items.Insert(iInsert++, massErrorPropsContextMenuItem);

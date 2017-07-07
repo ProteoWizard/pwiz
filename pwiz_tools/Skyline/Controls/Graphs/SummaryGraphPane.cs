@@ -69,8 +69,8 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <summary>
         /// Update the graph pane.
         /// </summary>
-        /// <param name="checkData"></param>
-        public abstract void UpdateGraph(bool checkData);
+        /// <param name="selectionChanged">True when the selection has changed, otherwise false</param>
+        public abstract void UpdateGraph(bool selectionChanged);
 
         public virtual bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {

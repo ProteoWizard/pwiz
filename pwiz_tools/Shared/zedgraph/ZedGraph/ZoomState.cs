@@ -84,6 +84,16 @@ namespace ZedGraph
 			get { return _type; }
 		}
 
+		public ScaleState XAxis
+		{
+			get { return _xAxis; }
+		}
+
+		public ScaleState X2Axis
+		{
+			get { return _x2Axis; }
+		}
+
 		/// <summary>
 		/// Gets a string representing the type of adjustment that was made when this scale
 		/// state was saved.
