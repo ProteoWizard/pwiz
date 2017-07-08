@@ -701,6 +701,25 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        public double GetYAtCutoffRoc(ComparePeakBoundaries comparer)
+        {
+            PointPairList rocPoints;
+            MakeRocLists(comparer, Normalizer, out rocPoints);
+            return GetYAtCutoff(rocPoints,Q_VALUE_SIG);
+        }
+
+        public double GetYAtCutoffQQ(ComparePeakBoundaries comparer)
+        {
+            PointPairList qqPoints;
+            MakeQValueLists(comparer,out qqPoints);
+            return GetYAtCutoff(qqPoints,Q_VALUE_SIG);
+        }
+
+        private double GetYAtCutoff(IEnumerable<PointPair> graphPoints, double cutoff)
+        {
+            return graphPoints.First(point => point.X > cutoff).Y;
+        }
+
         private void zedGraph_ContextMenuBuilder(ZedGraphControl graphControl, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             ZedGraphHelper.BuildContextMenu(graphControl, menuStrip);

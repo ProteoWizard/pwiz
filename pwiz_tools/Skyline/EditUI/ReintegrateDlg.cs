@@ -134,6 +134,12 @@ namespace pwiz.Skyline.EditUI
             set { textBoxCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        public bool UseTric
+        {
+            get { return checkBoxUseAlignment.Checked; }
+            set { checkBoxUseAlignment.Checked = value; }
+        }
+
         public bool OverwriteManual
         {
             get { return checkBoxOverwrite.Checked; }
