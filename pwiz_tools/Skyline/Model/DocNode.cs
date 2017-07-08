@@ -347,7 +347,7 @@ namespace pwiz.Skyline.Model
         {
             Children = children;
             // ReSharper disable once VirtualMemberCallInConstructor : Has always worked before
-            Children = OnChangingChildren(this);
+            Children = OnChangingChildren(this, -1);
             _nodeCountStack = GetCounts(children);
             AutoManageChildren = autoManageChildren;
         }
@@ -966,14 +966,14 @@ namespace pwiz.Skyline.Model
             if (index == -1)
                 throw new IdentityNotFoundException(childReplace.Id);
 
-            var childrenNew = new DocNode[Children.Count];
-            Children.CopyTo(childrenNew, 0);
-            var nodeCountStack = new List<int>(_nodeCountStack);
+            var childrenNew = _children.ReplaceAt(index, childReplace);
+            IList<int> nodeCountStack = new List<int>(_nodeCountStack);
             RemoveCounts(Children[index], nodeCountStack);
-            childrenNew[index] = childReplace;
             AddCounts(childReplace, nodeCountStack);
+            if (ArrayUtil.EqualsDeep(nodeCountStack, _nodeCountStack))
+                nodeCountStack = _nodeCountStack;
 
-            return ChangeChildren(childrenNew, nodeCountStack);
+            return ChangeChildren(childrenNew, nodeCountStack, index);
         }
 
         public DocNodeParent ReplaceChild(IdentityPath path, DocNode childReplace)
@@ -1177,15 +1177,17 @@ namespace pwiz.Skyline.Model
         /// </summary>
         /// <param name="children">An altered list of children</param>
         /// <param name="counts">An altered child list stack that correctly counts the new children</param>
+        /// <param name="indexReplaced">Index to a single replaced node, if that is why the children are changing</param>
         /// <returns>A new parent node</returns>
-        private DocNodeParent ChangeChildren(IList<DocNode> children, IList<int> counts)
+        private DocNodeParent ChangeChildren(IList<DocNode> children, IList<int> counts, int indexReplaced = -1)
         {
             DocNodeParent clone = ChangeProp(ImClone(this), im => im.Children = children);
             clone._nodeCountStack = counts;
             if (!_ignoreChildrenChanging)
             {
-                var childrenNew = OnChangingChildren(clone);
-                if (!ArrayUtil.ReferencesEqual(childrenNew, clone.Children))
+                var childrenNew = OnChangingChildren(clone, indexReplaced);
+                // Checking reference equality of the entire list can be a lot quicker than enumerating all elements
+                if (!ReferenceEquals(childrenNew, clone.Children) && !ArrayUtil.ReferencesEqual(childrenNew, clone.Children))
                     clone.Children = childrenNew;
             }
             return clone;
@@ -1197,7 +1199,8 @@ namespace pwiz.Skyline.Model
         /// </summary>
         /// <param name="clone">A copy of this instance created with <see cref="object.MemberwiseClone"/>
         /// with its new children assigned</param>
-        protected virtual IList<DocNode> OnChangingChildren(DocNodeParent clone)
+        /// <param name="indexReplaced">Index to a single replaced node, if that is why the children are changing</param>
+        protected virtual IList<DocNode> OnChangingChildren(DocNodeParent clone, int indexReplaced)
         {            
             // Default does nothing.
             return clone.Children;

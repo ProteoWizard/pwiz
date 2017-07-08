@@ -9,7 +9,7 @@ namespace pwiz.Skyline.Model
     public class DocNodeChildren : IList<DocNode>
     {
         private readonly int _itemCount;    // Necessary for knowing the count after items have been freed
-        private IList<DocNode> _items;
+        private ImmutableList<DocNode> _items;
         private Dictionary<Identity, int> _indexes;
 
         public DocNodeChildren(IEnumerable<DocNode> items, IList<DocNode> previous)
@@ -29,6 +29,13 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        private DocNodeChildren(Dictionary<Identity, int> indexes, ImmutableList<DocNode> items)
+        {
+            _itemCount = items.Count;
+            _items = items;
+            _indexes = indexes;
+        }
+
         private bool IsOrderSame(DocNodeChildren previousChildren)
         {
             if (_itemCount != previousChildren._itemCount)
@@ -39,6 +46,16 @@ namespace pwiz.Skyline.Model
                     return false;
             }
             return true;
+        }
+
+        public DocNodeChildren ReplaceAt(int index, DocNode child)
+        {
+            var newItems = _items.ReplaceAt(index, child);
+            if (ReferenceEquals(child.Id, _items[index].Id))
+            {
+                return new DocNodeChildren(_indexes, newItems);
+            }
+            return new DocNodeChildren(newItems, null);
         }
 
         /// <summary>

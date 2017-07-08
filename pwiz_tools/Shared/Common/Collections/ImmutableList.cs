@@ -97,6 +97,39 @@ namespace pwiz.Common.Collections
             return new Impl(arrayValues);
         }
 
+        public static ImmutableList<T> ValueOf(T[] values, bool takeBuffer)
+        {
+            return new Impl(values);
+        }
+
+        public static ImmutableList<T> ValueOf(int expectedCount, IEnumerable<T> values)
+        {
+            if (expectedCount == 0)
+            {
+                if (values.Any())
+                {
+                    throw new ArgumentException();
+                }
+                return EMPTY;
+            }
+
+            var array = new T[expectedCount];
+            int index = 0;
+            foreach (var value in values)
+            {
+                array[index++] = value;
+            }
+            if (index != expectedCount)
+            {
+                throw new ArgumentException();
+            }
+            if (array.Length == 1)
+            {
+                return Singleton(array[0]);
+            }
+            return new Impl(array);
+        }
+
         public static ImmutableList<T> Singleton(T value)
         {
             return new SingletonImpl(value);
@@ -177,6 +210,21 @@ namespace pwiz.Common.Collections
         {
             get { return this[index]; }
             set { throw new InvalidOperationException(); }
+        }
+
+        public ImmutableList<T> ReplaceAt(int index, T value)
+        {
+            if (index < 0 || index >= Count)
+            {
+                throw new IndexOutOfRangeException();
+            }
+            if (Count == 1)
+            {
+                return Singleton(value);
+            }
+            var newArray = this.ToArray();
+            newArray[index] = value;
+            return new Impl(newArray);
         }
 
         private class Impl : ImmutableList<T>

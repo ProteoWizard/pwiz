@@ -613,7 +613,8 @@ namespace pwiz.Skyline.Model
         /// for <see cref="RevisionIndex"/>.
         /// </summary>
         /// <param name="clone">The new copy of the document</param>
-        protected override IList<DocNode> OnChangingChildren(DocNodeParent clone)
+        /// <param name="indexReplaced">Index to a single replaced node, if that is why the children are changing</param>
+        protected override IList<DocNode> OnChangingChildren(DocNodeParent clone, int indexReplaced)
         {
             if (ReferenceEquals(clone, this))
                 return Children;
