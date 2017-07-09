@@ -26,8 +26,10 @@ using System.Windows.Forms;
 using pwiz.Common.Controls;
 using ZedGraph;
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -122,7 +124,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return _peakScoringModel; }
         }
 
-        public bool SetScoringModel(Control owner, IPeakScoringModel scoringModel)
+        public bool SetScoringModel(Control owner, IPeakScoringModel scoringModel, IFeatureScoreProvider scoreProvider = null)
         {
             // Scoring model is null if we're creating a new model from scratch (default to mProphet).
             var document = Program.MainWindow.Document;
@@ -133,8 +135,8 @@ namespace pwiz.Skyline.SettingsUI
 
             using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditPeakScoringModelDlg_TrainModelClick_Scoring })
             {
-                longWaitDlg.PerformWork(owner, 800,
-                    progressMonitor => _targetDecoyGenerator = new TargetDecoyGenerator(document, scoringModel, progressMonitor));
+                longWaitDlg.PerformWork(owner, 800, progressMonitor =>
+                    _targetDecoyGenerator = CreateTargetDecoyGenerator(document, scoringModel, scoreProvider, progressMonitor));
                 if (longWaitDlg.IsCanceled)
                     return false;
             }
@@ -163,6 +165,17 @@ namespace pwiz.Skyline.SettingsUI
             UpdateCalculatorGraph(0);
             UpdateModelGraph();
             return true;
+        }
+
+        private TargetDecoyGenerator CreateTargetDecoyGenerator(SrmDocument document,
+                                                                IPeakScoringModel scoringModel,
+                                                                IFeatureScoreProvider scoreProvider,
+                                                                IProgressMonitor progressMonitor)
+        {
+            var featureScores = scoreProvider != null
+                ? scoreProvider.GetFeatureScores(document, scoringModel, progressMonitor)
+                : document.GetPeakFeatures(scoringModel.PeakFeatureCalculators, progressMonitor);
+            return new TargetDecoyGenerator(scoringModel, featureScores);
         }
 
         /// <summary>

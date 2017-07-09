@@ -53,6 +53,8 @@ namespace pwiz.Skyline.SettingsUI
         public ComboBox Combo { get; private set; }
         public SettingsListBase<TItem> List { get; private set; }
 
+        public event EventHandler<EditItemEventArgs> EditItemEvent;
+
         public void LoadList(string selectedItemLast)
         {
             try
@@ -156,7 +158,7 @@ namespace pwiz.Skyline.SettingsUI
             if (itemEditor == null)
                 return;
 
-            TItem itemNew = itemEditor.NewItem(Combo.TopLevelControl, null, null);
+            TItem itemNew = NewItem(itemEditor);
             if (!Equals(itemNew, default(TItem)))
             {
                 List.Add(itemNew);
@@ -169,6 +171,18 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        private TItem NewItem(IItemEditor<TItem> itemEditor)
+        {
+            object tag = null;
+            if (EditItemEvent != null)
+            {
+                var args = new EditItemEventArgs(default(TItem));
+                EditItemEvent(this, args);
+                tag = args.Tag;
+            }
+            return itemEditor.NewItem(Combo.TopLevelControl, null, tag);
+        }
+
         public void EditCurrent()
         {
             var itemEditor = List as IItemEditor<TItem>;
@@ -178,7 +192,9 @@ namespace pwiz.Skyline.SettingsUI
             int i = _selectedIndexLast;
             TItem itemNew = default(TItem);
             if ((i >= List.ExcludeDefaults) && (i < List.Count))
-                itemNew = itemEditor.EditItem(Combo.TopLevelControl, List[i], List, null);
+            {
+                itemNew = EditItem(List[i], itemEditor);
+            }
             if (!Equals(itemNew, default(TItem)) && !Equals(itemNew, List[i]))
             {
                 List[i] = itemNew;
@@ -190,6 +206,19 @@ namespace pwiz.Skyline.SettingsUI
                 // Reset the selected index before edit was chosen.
                 Combo.SelectedIndex = _selectedIndexLast;
             }
+        }
+
+        private TItem EditItem(TItem itemEdit, IItemEditor<TItem> itemEditor)
+        {
+            object tag = null;
+            if (EditItemEvent != null)
+            {
+                var args = new EditItemEventArgs(itemEdit);
+                EditItemEvent(this, args);
+                itemEdit = args.Item;
+                tag = args.Tag;
+            }
+            return itemEditor.EditItem(Combo.TopLevelControl, itemEdit, List, tag);
         }
 
         public void EditList()
@@ -223,6 +252,17 @@ namespace pwiz.Skyline.SettingsUI
                 // Reset the selected index before edit was chosen.
                 Combo.SelectedIndex = _selectedIndexLast;
             }
+        }
+
+        public class EditItemEventArgs
+        {
+            public EditItemEventArgs(TItem item)
+            {
+                Item = item;
+            }
+
+            public TItem Item { get; set; }
+            public object Tag { get; set; }
         }
     }
 }

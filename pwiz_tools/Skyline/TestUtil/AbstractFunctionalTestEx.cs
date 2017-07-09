@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using System.Windows.Forms;
@@ -68,7 +67,6 @@ namespace pwiz.SkylineTestUtil
             WaitForCondition(() => File.Exists(documentFile));
             RunUI(() => SkylineWindow.OpenFile(documentFile));
             WaitForDocumentLoaded();
-            Thread.Sleep(1000);
         }
 
         
@@ -141,7 +139,7 @@ namespace pwiz.SkylineTestUtil
             else
             {
                 // Expect a Waters lockmass dialog to appear on OK
-                WaitForConditionUI(() => importResultsDlg.NamedPathSets.Count() == dataFiles.Count());
+                WaitForConditionUI(() => importResultsDlg.NamedPathSets.Length == dataFiles.Length);
                 var lockmassDlg = ShowDialog<ImportResultsLockMassDlg>(importResultsDlg.OkDialog);
                 RunUI(() =>
                 {
@@ -173,8 +171,10 @@ namespace pwiz.SkylineTestUtil
 
         public static void AddLibrary(LibrarySpec libSpec, Library lib)
         {
+            // ReSharper disable once UseObjectOrCollectionInitializer
             var libspecList = new List<LibrarySpec>(SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs);
             libspecList.Add(libSpec);
+            // ReSharper disable once UseObjectOrCollectionInitializer
             var liblist = new List<Library>(SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries);
             liblist.Add(lib);
 

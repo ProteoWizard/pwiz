@@ -2071,7 +2071,7 @@ namespace pwiz.Skyline.Properties
         {
             using (var editModel = new EditPeakScoringModelDlg(existing ?? this))
             {
-                if (editModel.SetScoringModel(owner, item))
+                if (editModel.SetScoringModel(owner, item, tag as IFeatureScoreProvider))
                 {
                     if (editModel.ShowDialog(owner) == DialogResult.OK)
                         return (PeakScoringModelSpec)editModel.PeakScoringModel;

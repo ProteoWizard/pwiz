@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
@@ -39,7 +38,7 @@ using ZedGraph;
 
 namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the global RunPerfTests flag is set
 {
-    [TestClass]       // TODO(bspratt) This code was never intended by its author to be an actual test (it just uses the test framework for convenience).  It's very close to being ready for use as an actual test, but not quite, and so should be removed from our test regimen as it always fails.
+    [TestClass] 
     public class PerfPeakTest : AbstractFunctionalTest
     {
         private struct DataSetParams
@@ -152,7 +151,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            string outDir = Path.Combine(REPORT_DIRECTORY ?? TestContext.TestDir, "PerfPeakTest");
+            string outDir = Path.Combine(REPORT_DIRECTORY ?? TestContext.TestDir, GetType().Name);
             string resultsTable = Path.Combine(outDir, "results.txt");
             Directory.CreateDirectory(outDir); // In case it doesn't already exists
             File.Delete(resultsTable); // In case it does already exist
@@ -262,7 +261,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 {
                     var fileName = Path.GetFileNameWithoutExtension(filePath);
                     Assert.IsNotNull(fileName);
-                    AddFile(comparePeakPickingDlg, fileName, filePath, dialogSkips[i]);
+                    AddFile(comparePeakPickingDlg, fileName, filePath, outDir, dialogSkips[i]);
                     ++i;
                 }
                 RunUI(() => comparePeakPickingDlg.ComboYAxis = Resources.ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Manual_ID_s);
@@ -431,26 +430,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 OkDialog(addPeakCompareDlg, addPeakCompareDlg.OkDialog);
             }
 
-            private static void AddFile(ComparePeakPickingDlg dlg, string fileName, string filePath, int dialogSkip = 0)
+            private static void AddFile(ComparePeakPickingDlg dlg, string fileName, string filePath, string outDir, int dialogSkip = 0)
             {
-                if (TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV_INTL)
-                {
-                    var filePathIntl = Path.Combine(Path.GetDirectoryName(filePath) ?? string.Empty,
-                        Path.GetFileNameWithoutExtension(filePath) + "Intl" + Path.GetExtension(filePath));
-                    string[] fileLines = File.ReadAllLines(filePath);
-                    for (int i = 0; i < fileLines.Length; i++)
-                    {
-                        string line = fileLines[i];
-                        bool tsv = line.Contains(TextUtil.SEPARATOR_TSV);
-                        if (!tsv)
-                            line = line.Replace(TextUtil.SEPARATOR_CSV, TextUtil.SEPARATOR_CSV_INTL);
-                        if (i > 0)
-                            line = ReplaceDecimalPoint(line, tsv);
-                        fileLines[i] = line;
-                    }
-                    File.WriteAllLines(filePathIntl, fileLines);
-                    filePath = filePathIntl;
-                }
+                string intlPath = Path.Combine(outDir, fileName + "Intl" + Path.GetExtension(filePath));
+                if (TextUtil.WriteDsvToCsvLocal(filePath, intlPath, true))
+                    filePath = intlPath;
+
                 var addPeakCompareDlg = ShowDialog<AddPeakCompareDlg>(dlg.Add);
                 RunUI(() =>
                 {
@@ -482,23 +467,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     Assert.Fail("Unexpected message dialog after {0}: {1}", dialogSkip, message);
                 }
                 WaitForClosedForm<AddPeakCompareDlg>();
-            }
-
-            private static string ReplaceDecimalPoint(string line, bool tsv)
-            {
-                char separator = tsv ? TextUtil.SEPARATOR_TSV : TextUtil.SEPARATOR_CSV_INTL;
-                var fields = line.Split(separator);
-                for (int i = 0; i < fields.Length; i++)
-                {
-                    string field = fields[i];
-                    string fieldConverted = field
-                        .Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
-                    double fieldValue;
-                    // Convert if the field is numeric or contains modifications
-                    if (double.TryParse(fieldConverted, out fieldValue) || new Regex("\\[[+-]\\d+\\.\\d\\]").IsMatch(field))
-                        fields[i] = fieldConverted;
-                }
-                return string.Join(separator.ToString(), fields);
             }
 
             public static void TrainModel(string modelName)

@@ -40,11 +40,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public Dictionary<PeakTransitionGroupIdKey, List<PeakTransitionGroupFeatures>> PeakTransitionGroupDictionary { get; private set; }
 
-        public TargetDecoyGenerator(SrmDocument document, IPeakScoringModel scoringModel, IProgressMonitor progressMonitor = null)
+        public TargetDecoyGenerator(IPeakScoringModel scoringModel, PeakTransitionGroupFeatureSet featureScores)
         {
             // Determine which calculators will be used to score peaks in this document.
             FeatureCalculators = scoringModel.PeakFeatureCalculators.ToArray();
-            _peakTransitionGroupFeaturesList = document.GetPeakFeatures(FeatureCalculators, progressMonitor);
+            _peakTransitionGroupFeaturesList = featureScores;
             PopulateDictionary();
 
             EligibleScores = new bool[FeatureCalculators.Count];
