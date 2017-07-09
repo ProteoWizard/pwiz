@@ -212,24 +212,11 @@ namespace pwiz.Common.Collections
             set { throw new InvalidOperationException(); }
         }
 
-        public ImmutableList<T> ReplaceAt(int index, T value)
-        {
-            if (index < 0 || index >= Count)
-            {
-                throw new IndexOutOfRangeException();
-            }
-            if (Count == 1)
-            {
-                return Singleton(value);
-            }
-            var newArray = this.ToArray();
-            newArray[index] = value;
-            return new Impl(newArray);
-        }
+        public abstract ImmutableList<T> ReplaceAt(int index, T value);
 
         private class Impl : ImmutableList<T>
         {
-            private readonly IList<T> _items;
+            private readonly T[] _items;
             public Impl(T[] items)
             {
                 _items = items;
@@ -237,12 +224,12 @@ namespace pwiz.Common.Collections
 
             public override int Count
             {
-                get { return _items.Count; }
+                get { return _items.Length; }
             }
 
             public override IEnumerator<T> GetEnumerator()
             {
-                return _items.GetEnumerator();
+                return ((IList<T>)_items).GetEnumerator();
             }
 
             public override bool Contains(T item)
@@ -257,12 +244,23 @@ namespace pwiz.Common.Collections
 
             public override int IndexOf(T item)
             {
-                return _items.IndexOf(item);
+                return ((IList<T>)_items).IndexOf(item);
             }
 
             public override T this[int index]
             {
                 get { return _items[index]; }
+            }
+
+            public override ImmutableList<T> ReplaceAt(int index, T value)
+            {
+                if (index < 0 || index >= Count)
+                {
+                    throw new IndexOutOfRangeException();
+                }
+                var newArray = (T[])_items.Clone();
+                newArray[index] = value;
+                return new Impl(newArray);
             }
         }
 
@@ -309,6 +307,15 @@ namespace pwiz.Common.Collections
                     }
                     return _item;
                 }
+            }
+
+            public override ImmutableList<T> ReplaceAt(int index, T value)
+            {
+                if (index != 0)
+                {
+                    throw new IndexOutOfRangeException();
+                }
+                return new SingletonImpl(value);
             }
         }
     }
