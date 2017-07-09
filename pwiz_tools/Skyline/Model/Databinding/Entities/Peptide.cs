@@ -374,5 +374,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             return _calibrationCurveFitter.Value;
         }
+
+        public override string GetDeleteConfirmation(int nodeCount)
+        {
+            if (nodeCount == 1)
+            {
+                return string.Format(Resources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_peptide___0___, this);
+            }
+            return string.Format(Resources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__peptides_, nodeCount);
+        }
     }
 }

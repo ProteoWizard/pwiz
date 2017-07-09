@@ -9,18 +9,53 @@ namespace pwiz.Skyline.Model
     public class DocNodeChildren : IList<DocNode>
     {
         private readonly int _itemCount;    // Necessary for knowing the count after items have been freed
-        private IList<DocNode> _items;
+        private ImmutableList<DocNode> _items;
         private Dictionary<Identity, int> _indexes;
 
-        public DocNodeChildren(IEnumerable<DocNode> items)
+        public DocNodeChildren(IEnumerable<DocNode> items, IList<DocNode> previous)
         {
             _items = ImmutableList.ValueOf(items);
             _itemCount = _items.Count;
-            _indexes = new Dictionary<Identity, int>(_items.Count, IDENTITY_EQUALITY_COMPARER);
-            for (int i = 0; i < _items.Count; i++)
+            var previousChildren = previous as DocNodeChildren;
+            if (previousChildren != null && IsOrderSame(previousChildren))
+                _indexes = previousChildren._indexes;
+            else
             {
-                _indexes.Add(_items[i].Id, i);
+                _indexes = new Dictionary<Identity, int>(_items.Count, IDENTITY_EQUALITY_COMPARER);
+                for (int i = 0; i < _items.Count; i++)
+                {
+                    _indexes.Add(_items[i].Id, i);
+                }
             }
+        }
+
+        private DocNodeChildren(Dictionary<Identity, int> indexes, ImmutableList<DocNode> items)
+        {
+            _itemCount = items.Count;
+            _items = items;
+            _indexes = indexes;
+        }
+
+        private bool IsOrderSame(DocNodeChildren previousChildren)
+        {
+            if (_itemCount != previousChildren._itemCount)
+                return false;
+            for (int i = 0; i < _itemCount; i++)
+            {
+                if (!ReferenceEquals(_items[i].Id, previousChildren._items[i].Id))
+                    return false;
+            }
+            return true;
+        }
+
+        public DocNodeChildren ReplaceAt(int index, DocNode child)
+        {
+            var newItems = _items.ReplaceAt(index, child);
+            if (ReferenceEquals(child.Id, _items[index].Id))
+            {
+                return new DocNodeChildren(_indexes, newItems);
+            }
+            return new DocNodeChildren(newItems, null);
         }
 
         /// <summary>

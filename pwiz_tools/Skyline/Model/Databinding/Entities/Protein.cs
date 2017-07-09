@@ -22,6 +22,7 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -130,6 +131,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override string ToString()
         {
             return Name; // TODO nicksh this needs to agree with Targets view in Document Grid (By Name, By Accession etc)
+        }
+
+        public override string GetDeleteConfirmation(int nodeCount)
+        {
+            if (nodeCount == 1)
+            {
+                return string.Format(Resources.Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_protein___0___, this);
+            }
+            return string.Format(Resources.Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__proteins_, nodeCount);
         }
     }
 }

@@ -133,7 +133,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         [TestMethod, Timeout(7200000)]
         public void TestPeakPerf()
         {
-            RunPerfTests = true;
+            // RunPerfTests = true;
 
             TestFilesPersistent = new[] {"."};  // All persistent. No saving
             TestFilesZipPaths = DataSets.Select(p => p.Url).ToArray();

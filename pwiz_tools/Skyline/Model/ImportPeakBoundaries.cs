@@ -333,38 +333,32 @@ namespace pwiz.Skyline.Model
                 foreach (var pepPath in pepPaths)
                 {
                     var nodePep = (PeptideDocNode)docNew.FindNode(pepPath);
-                    for(int i = 0; i < nodePep.Children.Count; ++i)
+
+                    foreach (TransitionGroupDocNode groupNode in nodePep.Children)
                     {
-                        var groupRelPath = nodePep.GetPathTo(i);
-                        var groupNode = (TransitionGroupDocNode) nodePep.FindNode(groupRelPath);
-                        if (!chargeSpecified || charge == groupNode.TransitionGroup.PrecursorCharge)
+                        if (chargeSpecified && charge != groupNode.TransitionGroup.PrecursorCharge)
+                            continue;
+
+                        // Loop over the files in this groupNode to find the correct sample
+                        // Change peak boundaries for the transition group
+                        foreach (var fileId in GetApplicableFiles(fileIds, groupNode))
                         {
-                            var groupFileIndices =
-                                new HashSet<int>(groupNode.ChromInfos.Select(x => x.FileId.GlobalIndex));
-                            // Loop over the files in this groupNode to find the correct sample
-                            // Change peak boundaries for the transition group
-                            foreach (var fileId in fileIds)
+                            var groupPath = new IdentityPath(pepPath, groupNode.Id);
+                            // Attach annotations
+                            if (annotations.Any())
                             {
-                                if (groupFileIndices.Contains(fileId.GlobalIndex))
-                                {
-                                    var groupPath = new IdentityPath(pepPath, groupNode.Id);
-                                    // Attach annotations
-                                    if (annotations.Any())
-                                    {
-                                        docNew = docNew.AddPrecursorResultsAnnotations(groupPath, fileId, annotations);
-                                    }
-                                    // Change peak
-                                    var filePath = chromSet.GetFileInfo(fileId).FilePath;
-                                    if (changePeaks)
-                                    {
-                                        docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
-                                            null, startTime, endTime, UserSet.IMPORTED, null, false);
-                                    }
-                                    // For removing peaks that are not in the file, if removeMissing = true
-                                    trackAdjustedResults.Add(new ResultsKey(fileId.GlobalIndex, groupNode.Id));
-                                    foundSample = true;
-                                }
+                                docNew = docNew.AddPrecursorResultsAnnotations(groupPath, fileId, annotations);
                             }
+                            // Change peak
+                            var filePath = chromSet.GetFileInfo(fileId).FilePath;
+                            if (changePeaks)
+                            {
+                                docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
+                                    null, startTime, endTime, UserSet.IMPORTED, null, false);
+                            }
+                            // For removing peaks that are not in the file, if removeMissing = true
+                            trackAdjustedResults.Add(new ResultsKey(fileId.GlobalIndex, groupNode.Id));
+                            foundSample = true;
                         }
                     }
                 }
@@ -380,6 +374,28 @@ namespace pwiz.Skyline.Model
             if (!ReferenceEquals(docNew, docReference))
                 Document = (SrmDocument) Document.ChangeIgnoreChangingChildren(false).ChangeChildrenChecked(docNew.Children);
             return Document;
+        }
+
+        private IEnumerable<ChromFileInfoId> GetApplicableFiles(ChromFileInfoId[] fileIds, TransitionGroupDocNode groupNode)
+        {
+            if (fileIds.Length > 0)
+            {
+                if (fileIds.Length == 1)
+                {
+                    var fileId = fileIds[0];
+                    if (groupNode.ChromInfos.Any(x => x.FileId.GlobalIndex == fileId.GlobalIndex))
+                        yield return fileId;
+                }
+                else
+                {
+                    var groupFileIndices = new HashSet<int>(groupNode.ChromInfos.Select(x => x.FileId.GlobalIndex));
+                    foreach (var fileId in fileIds)
+                    {
+                        if (groupFileIndices.Contains(fileId.GlobalIndex))
+                            yield return fileId;
+                    }
+                }
+            }
         }
 
         /// <summary>

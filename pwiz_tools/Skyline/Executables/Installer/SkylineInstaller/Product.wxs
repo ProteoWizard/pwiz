@@ -54,11 +54,11 @@
     <Directory Id="TARGETDIR" Name="SourceDir">
       <?if $(sys.BUILDARCH) = x64 ?>
         <Directory Id="ProgramFiles64Folder" >
-          <Directory Id="INSTALLFOLDER" Name="Skyline"/>
+          <Directory Id="INSTALLFOLDER" Name="$(var.Skyline.TargetName)"/>
         </Directory>
       <?else?>
         <Directory Id="ProgramFilesFolder">
-          <Directory Id="INSTALLFOLDER" Name="Skyline"/>
+          <Directory Id="INSTALLFOLDER" Name="$(var.Skyline.TargetName)"/>
         </Directory>
       <?endif?>
       <Directory Id="ProgramMenuFolder">

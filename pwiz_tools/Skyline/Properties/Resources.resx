@@ -9572,6 +9572,56 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="MProphetPeakScoringModel_CalculateWeights_Insufficient_decoys_detectect_to_continue_training_" xml:space="preserve">
     <value>Insufficient decoys detectect to continue training.</value>
   </data>
+  <data name="SkylineViewContext_DeleteDocNodes_Delete_items" xml:space="preserve">
+    <value>Delete items</value>
+  </data>
+  <data name="DocumentGridViewContext_Delete_Are_you_sure_you_want_to_delete_these__0___1__" xml:space="preserve">
+    <value>Are you sure you want to delete these {0} {1}?</value>
+    <comment>Example: Are you sure you want to delete these 27 proteins?</comment>
+  </data>
+  <data name="DocumentGridViewContext_Delete_Are_you_sure_you_want_to_delete_the__0____1___" xml:space="preserve">
+    <value>Are you sure you want to delete the {0} '{1}'?</value>
+    <comment>Example: Are you sure you want to delete the protein 'ALDH'?</comment>
+  </data>
+  <data name="Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_peptide___0___" xml:space="preserve">
+    <value>Are you sure you want to delete the peptide '{0}'?</value>
+    <comment>Example: Are you sure you want to delete the peptide 'ELVIS'?</comment>
+  </data>
+  <data name="Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__peptides_" xml:space="preserve">
+    <value>Are you sure you want to delete these {0} peptides?</value>
+    <comment>Example: Are you sure you want to delete these 47 peptides?</comment>
+  </data>
+  <data name="Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_precursor___0___" xml:space="preserve">
+    <value>Are you sure you want to delete the precursor '{0}'?</value>
+    <comment>Example: Are you sure you want to delete the precursor '734++'?</comment>
+  </data>
+  <data name="Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__precursors_" xml:space="preserve">
+    <value>Are you sure you want to delete these {0} precursors?</value>
+    <comment>Example: Are you sure you want to delete these 17 precursors?</comment>
+  </data>
+  <data name="Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_protein___0___" xml:space="preserve">
+    <value>Are you sure you want to delete the protein '{0}'?</value>
+    <comment>Example: Are you sure you want to delete the protein 'ALDH'?</comment>
+  </data>
+  <data name="Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__proteins_" xml:space="preserve">
+    <value>Are you sure you want to delete these {0} proteins?</value>
+    <comment>Example: Are you sure you want to delete these 7 proteins?</comment>
+  </data>
+  <data name="SkylineDocNode_GetGenericDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__things_" xml:space="preserve">
+    <value>Are you sure you want to delete these {0} things?</value>
+    <comment>Example: Are you sure you want to delete these 21 things?</comment>
+  </data>
+  <data name="Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_transition___0___" xml:space="preserve">
+    <value>Are you sure you want to delete the transition '{0}'?</value>
+    <comment>Example: Are you sure you want to delete the transition 'y7++'?</comment>
+  </data>
+  <data name="Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__transitions_" xml:space="preserve">
+    <value>Are you sure you want to delete these {0} transitions?</value>
+    <comment>Example: Are you sure you want to delete these 18 transitions?</comment>
+  </data>
+  <data name="SkylineVersion_V3_7_Skyline_3_7" xml:space="preserve">
+    <value>Skyline 3.7</value>
+  </data>
   <data name="Tric_Rescore_Not_enough_high_scoring_Decoys_found_in_run_to_run_alignment_" xml:space="preserve">
     <value>Not enough high scoring Decoys found in run to run alignment.</value>
   </data>

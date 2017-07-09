@@ -2373,5 +2373,17 @@ namespace pwiz.Skyline.Properties {
                 this["CurrentColorScheme"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SynchronizeSummaryZooming {
+            get {
+                return ((bool)(this["SynchronizeSummaryZooming"]));
+            }
+            set {
+                this["SynchronizeSummaryZooming"] = value;
+            }
+        }
     }
 }

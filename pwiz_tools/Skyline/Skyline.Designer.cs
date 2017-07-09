@@ -159,6 +159,7 @@ namespace pwiz.Skyline
             this.fwbRTValueContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showRTLegendContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.synchronizeSummaryZoomingContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refineRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.predictionRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.replicatesRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1244,6 +1245,7 @@ namespace pwiz.Skyline
             this.rtValueMenuItem,
             this.showRTLegendContextMenuItem,
             this.selectionContextMenuItem,
+            this.synchronizeSummaryZoomingContextMenuItem,
             this.refineRTContextMenuItem,
             this.predictionRTContextMenuItem,
             this.replicatesRTContextMenuItem,
@@ -1407,6 +1409,13 @@ namespace pwiz.Skyline
             this.selectionContextMenuItem.Name = "selectionContextMenuItem";
             resources.ApplyResources(this.selectionContextMenuItem, "selectionContextMenuItem");
             this.selectionContextMenuItem.Click += new System.EventHandler(this.selectionContextMenuItem_Click);
+            // 
+            // synchronizeSummaryZoomingContextMenuItem
+            // 
+            this.synchronizeSummaryZoomingContextMenuItem.CheckOnClick = true;
+            this.synchronizeSummaryZoomingContextMenuItem.Name = "synchronizeSummaryZoomingContextMenuItem";
+            resources.ApplyResources(this.synchronizeSummaryZoomingContextMenuItem, "synchronizeSummaryZoomingContextMenuItem");
+            this.synchronizeSummaryZoomingContextMenuItem.Click += new System.EventHandler(this.synchronizeSummaryZoomingContextMenuItem_Click);
             // 
             // refineRTContextMenuItem
             // 
@@ -3968,6 +3977,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem refineToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem legendChromContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem selectionContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem synchronizeSummaryZoomingContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem shareDocumentMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator37;
         private System.Windows.Forms.ToolStripMenuItem removeDuplicatePeptidesMenuItem;

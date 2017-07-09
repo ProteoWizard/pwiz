@@ -44,6 +44,11 @@ namespace pwiz.Skyline.Controls.Databinding
             BindingListSource.SetViewContext(viewContext);
             BindingListSource.ListChanged += BindingListSourceOnListChanged;
             _skylineWindow = viewContext.SkylineDataSchema.SkylineWindow;
+            var documentGridViewContext = viewContext as DocumentGridViewContext;
+            if (documentGridViewContext != null)
+            {
+                documentGridViewContext.BoundDataGridView = DataGridView;
+            }
         }
 
         private void BindingListSourceOnListChanged(object sender, ListChangedEventArgs listChangedEventArgs)

@@ -134,7 +134,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return PeptidesAndTransitionGroups.Get(GraphSummary.StateProvider.SelectedNodes, GraphSummary.ResultsIndex, 100);
         }
 
-        public override void UpdateGraph(bool checkData)
+        public override void UpdateGraph(bool selectionChanged)
         {
             _dotpLabels = new GraphObjList();
 

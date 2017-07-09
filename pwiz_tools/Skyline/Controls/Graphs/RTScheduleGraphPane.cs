@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Controls.Graphs
             YAxis.Scale.Min = 0;
         }
 
-        public override void UpdateGraph(bool checkData)
+        public override void UpdateGraph(bool selectionChanged)
         {
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
             var windows = ScheduleWindows;

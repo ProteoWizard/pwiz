@@ -280,7 +280,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void UpdateUI(bool selectionChanged = true)
         {
             UpdateToolbar(_documentContainer.DocumentUI.Settings.MeasuredResults);
-            UpdateGraph(true);
+			UpdateGraph(selectionChanged);
         }
 
         private void UpdateToolbar(MeasuredResults results)

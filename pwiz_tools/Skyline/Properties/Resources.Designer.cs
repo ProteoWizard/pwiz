@@ -7541,6 +7541,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete the {0} &apos;{1}&apos;?.
+        /// </summary>
+        public static string DocumentGridViewContext_Delete_Are_you_sure_you_want_to_delete_the__0____1___ {
+            get {
+                return ResourceManager.GetString("DocumentGridViewContext_Delete_Are_you_sure_you_want_to_delete_the__0____1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete these {0} {1}?.
+        /// </summary>
+        public static string DocumentGridViewContext_Delete_Are_you_sure_you_want_to_delete_these__0___1__ {
+            get {
+                return ResourceManager.GetString("DocumentGridViewContext_Delete_Are_you_sure_you_want_to_delete_these__0___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Preview: {0}.
         /// </summary>
         public static string DocumentGridViewContext_Preview_Preview___0_ {
@@ -18217,6 +18235,25 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete the peptide &apos;{0}&apos;?.
+        /// </summary>
+        public static string Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_peptide___0___ {
+            get {
+                return ResourceManager.GetString("Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_peptide___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete these {0} peptides?.
+        /// </summary>
+        public static string Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__peptides_ {
+            get {
+                return ResourceManager.GetString("Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__peptides_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to iRT standards can only be changed by modifying the iRT calculator.
         /// </summary>
         public static string Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator {
@@ -19364,6 +19401,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete the precursor &apos;{0}&apos;?.
+        /// </summary>
+        public static string Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_precursor___0___ {
+            get {
+                return ResourceManager.GetString("Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_precursor___0" +
+                        "___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete these {0} precursors?.
+        /// </summary>
+        public static string Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__precursors_ {
+            get {
+                return ResourceManager.GetString("Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__precurs" +
+                        "ors_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Print {
@@ -19436,6 +19493,25 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("Protein", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete the protein &apos;{0}&apos;?.
+        /// </summary>
+        public static string Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_protein___0___ {
+            get {
+                return ResourceManager.GetString("Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_protein___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete these {0} proteins?.
+        /// </summary>
+        public static string Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__proteins_ {
+            get {
+                return ResourceManager.GetString("Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__proteins_" +
+                        "", resourceCulture);
             }
         }
         
@@ -21974,6 +22050,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete these {0} things?.
+        /// </summary>
+        public static string SkylineDocNode_GetGenericDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__things_ {
+            get {
+                return ResourceManager.GetString("SkylineDocNode_GetGenericDeleteConfirmation_Are_you_sure_you_want_to_delete_these" +
+                        "__0__things_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap SkylineImg {
@@ -22126,11 +22212,29 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline 3.7.
+        /// </summary>
+        public static string SkylineVersion_V3_7_Skyline_3_7 {
+            get {
+                return ResourceManager.GetString("SkylineVersion_V3_7_Skyline_3_7", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change Document Reports.
         /// </summary>
         public static string SkylineViewContext_ChangeDocumentViewSpec_Change_Document_Reports {
             get {
                 return ResourceManager.GetString("SkylineViewContext_ChangeDocumentViewSpec_Change_Document_Reports", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete items.
+        /// </summary>
+        public static string SkylineViewContext_DeleteDocNodes_Delete_items {
+            get {
+                return ResourceManager.GetString("SkylineViewContext_DeleteDocNodes_Delete_items", resourceCulture);
             }
         }
         
@@ -26602,6 +26706,26 @@ namespace pwiz.Skyline.Properties {
         public static string ToolUpdatesDlg_InstallUpdates_User_cancelled_installation {
             get {
                 return ResourceManager.GetString("ToolUpdatesDlg_InstallUpdates_User_cancelled_installation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete the transition &apos;{0}&apos;?.
+        /// </summary>
+        public static string Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_transition___0___ {
+            get {
+                return ResourceManager.GetString("Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_transition__" +
+                        "_0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete these {0} transitions?.
+        /// </summary>
+        public static string Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__transitions_ {
+            get {
+                return ResourceManager.GetString("Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__transi" +
+                        "tions_", resourceCulture);
             }
         }
         

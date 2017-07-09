@@ -462,9 +462,29 @@ namespace pwiz.Skyline.Model
             return base.Equals(obj) && Equals(obj._proteinMetadata, _proteinMetadata); 
         }
 
-        protected override IList<DocNode> OnChangingChildren(DocNodeParent clone)
+        protected override IList<DocNode> OnChangingChildren(DocNodeParent clone, int indexReplaced)
         {
-            return GenerateColors(clone.Children);
+            var childrenNew = clone.Children;
+            if (IsColorComplete(childrenNew, indexReplaced))
+                return childrenNew;
+            return GenerateColors(childrenNew);
+        }
+
+        private bool IsColorComplete(IList<DocNode> children, int indexReplaced)
+        {
+            // If only 1 node was replaced, check to see if it has a color
+            if (indexReplaced != -1)
+            {
+                return ((PeptideDocNode) children[indexReplaced]).Color.A != 0;
+            }
+
+            // Because using LINQ shows up in a profiler
+            foreach (PeptideDocNode peptideDocNode in children)
+            {
+                if (peptideDocNode.Color.A == 0)
+                    return false;
+            }
+            return true;
         }
 
         private IList<DocNode> GenerateColors(IList<DocNode> children)

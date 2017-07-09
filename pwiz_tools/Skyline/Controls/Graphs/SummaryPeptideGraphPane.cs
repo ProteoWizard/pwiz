@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 GraphSummary.StateProvider.SelectedPath = _graphData.XScalePaths[selectedIndex];
         }
 
-        public override void UpdateGraph(bool checkData)
+        public override void UpdateGraph(bool selectionChanged)
         {
             Clear();
 

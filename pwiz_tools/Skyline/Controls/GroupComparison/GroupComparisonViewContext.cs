@@ -26,8 +26,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Properties;
-using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
@@ -72,88 +70,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     docNodes[row.Protein.IdentityPath] = row.Protein;
                 }
             }
-            string message;
-            if (docNodes.Count == 1)
-            {
-                var peptide = docNodes.Values.First() as Peptide;
-                if (null != peptide)
-                {
-                    message = string.Format(GroupComparisonStrings.GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_the_peptide__0_, peptide);
-                }
-                else
-                {
-                    var protein = docNodes.Values.First() as Protein;
-                    message = string.Format(GroupComparisonStrings.GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_the_protein__0_, protein);
-                }
-            }
-            else
-            {
-                if (docNodes.Values.First() is Peptide)
-                {
-                    message = string.Format(GroupComparisonStrings.GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_these__0__peptides, docNodes.Count);
-                }
-                else
-                {
-                    message = string.Format(GroupComparisonStrings.GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_these__0__proteins, docNodes.Count);
-                }
-            }
-            if (MultiButtonMsgDlg.Show(BoundDataGridView, message, Resources.OK) != DialogResult.OK)
-            {
-                return;
-            }
-            var identityPathsToDelete = new HashSet<IdentityPath>(docNodes.Keys);
-            var skylineWindow = ((SkylineDataSchema) DataSchema).SkylineWindow;
-            if (null != skylineWindow)
-            {
-                skylineWindow.ModifyDocument(GroupComparisonStrings.GroupComparisonViewContext_Delete_Delete_items, doc=>DeleteProteins(doc, identityPathsToDelete));
-            }
-        }
-
-        private SrmDocument DeleteProteins(SrmDocument document, HashSet<IdentityPath> identityPathsToDelete)
-        {
-            var newProteins = new List<PeptideGroupDocNode>();
-            foreach (var protein in document.PeptideGroups)
-            {
-                if (identityPathsToDelete.Contains(new IdentityPath(protein.Id)))
-                {
-                    continue;
-                }
-
-                if (protein.Children.Count != 0)
-                {
-                    var newProtein = DeletePeptides(protein, identityPathsToDelete);
-                    if (newProtein.Children.Count == 0)
-                    {
-                        continue;
-                    }
-                    newProteins.Add(newProtein);
-                }
-                else
-                {
-                    newProteins.Add(protein);
-                }
-            }
-            return (SrmDocument) document.ChangeChildren(newProteins.Cast<DocNode>().ToArray());
-        }
-
-        private PeptideGroupDocNode DeletePeptides(
-            PeptideGroupDocNode peptideGroupDocNode,
-            HashSet<IdentityPath> identityPathsToDelete)
-        {
-            var newPeptides = new List<PeptideDocNode>();
-            foreach (var peptide in peptideGroupDocNode.Molecules)
-            {
-                var identityPath = new IdentityPath(peptideGroupDocNode.Id, peptide.Id);
-                if (!identityPathsToDelete.Contains(identityPath))
-                {
-                    newPeptides.Add(peptide);
-                }
-            }
-            if (newPeptides.Count == peptideGroupDocNode.MoleculeCount)
-            {
-                return peptideGroupDocNode;
-            }
-            return (PeptideGroupDocNode) peptideGroupDocNode.ChangeChildren(newPeptides.Cast<DocNode>().ToArray());
+            DeleteSkylineDocNodes(BoundDataGridView, docNodes.Values);
         }
 
         public static ViewSpec GetDefaultViewSpec(GroupComparisonDef groupComparisonDef, 
