@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
@@ -185,6 +186,51 @@ namespace pwiz.Skyline.Util.Extensions
             }
             listFields.Add(sbField.ToString());
             return listFields.ToArray();
+        }
+
+        /// <summary>
+        /// Converts an invariant format DSV file to a locale-specific DSV file
+        /// </summary>
+        /// <param name="filePath">Path to the original file</param>
+        /// <param name="outPath">Path to write the locale-specific file if necessary</param>
+        /// <param name="headerLine">True if the input file has a header line</param>
+        /// <returns>True if conversion was necessary and the output file was written</returns>
+        public static bool WriteDsvToCsvLocal(string filePath, string outPath, bool headerLine)
+        {
+            if (CsvSeparator == SEPARATOR_CSV)
+                return false;
+
+            string[] fileLines = File.ReadAllLines(filePath);
+            for (int i = 0; i < fileLines.Length; i++)
+            {
+                string line = fileLines[i];
+                bool tsv = line.Contains(SEPARATOR_TSV);
+                if (!tsv)
+                    line = line.Replace(SEPARATOR_CSV, SEPARATOR_CSV_INTL);
+                if (!headerLine || i > 0)
+                    line = ReplaceDecimalPoint(line, tsv);
+                fileLines[i] = line;
+            }
+            File.WriteAllLines(outPath, fileLines);
+            return true;
+        }
+
+        private static string ReplaceDecimalPoint(string line, bool tsv)
+        {
+            char separator = tsv ? SEPARATOR_TSV : SEPARATOR_CSV_INTL;
+            var fields = line.Split(separator);
+            for (int i = 0; i < fields.Length; i++)
+            {
+                string field = fields[i];
+                string fieldConverted = field
+                    .Replace(CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator,
+                             CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+                double fieldValue;
+                // Convert if the field is numeric or contains modifications
+                if (double.TryParse(fieldConverted, out fieldValue) || new Regex(@"\[[+-]\d+\.\d\]").IsMatch(field))
+                    fields[i] = fieldConverted;
+            }
+            return string.Join(separator.ToString(), fields);
         }
 
         /// <summary>
