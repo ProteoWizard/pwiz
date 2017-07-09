@@ -718,6 +718,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
     }
 
+    public interface IFeatureScoreProvider
+    {
+        PeakTransitionGroupFeatureSet GetFeatureScores(SrmDocument document, IPeakScoringModel scoringModel, IProgressMonitor progressMonitor);
+    }
+
     public sealed class PeakTransitionGroupFeatureSet
     {
         public PeakTransitionGroupFeatureSet(int decoyCount, PeakTransitionGroupFeatures[] features)

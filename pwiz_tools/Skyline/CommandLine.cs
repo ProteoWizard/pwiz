@@ -1430,7 +1430,7 @@ namespace pwiz.Skyline
                 var calcs = MProphetPeakScoringModel.GetDefaultCalculators(_doc);
                 var scoringModel = new MProphetPeakScoringModel(modelName, null as LinearModelParams, calcs, decoys, secondBest);
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
-                var targetDecoyGenerator = new TargetDecoyGenerator(_doc, scoringModel, progressMonitor);
+                var targetDecoyGenerator = new TargetDecoyGenerator(scoringModel, _doc.GetPeakFeatures(calcs, progressMonitor));
 
                 // Get scores for target and decoy groups.
                 List<IList<float[]>> targetTransitionGroups;
