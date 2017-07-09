@@ -252,6 +252,20 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+        public IEnumerable<string> ReportNames
+        {
+            get
+            {
+                foreach (TreeNode groupNode in treeView1.Nodes)
+                {
+                    foreach (TreeNode viewNode in groupNode.Nodes)
+                    {
+                        yield return viewNode.Name;
+                    }
+                }
+            }
+        }
+
         public ViewName? SelectedViewName
         {
             get { return GetViewName(treeView1.SelectedNode); }
