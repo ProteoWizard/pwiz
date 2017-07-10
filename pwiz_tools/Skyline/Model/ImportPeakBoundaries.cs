@@ -94,19 +94,27 @@ namespace pwiz.Skyline.Model
 
         // ReSharper disable NonLocalizedString
         // NOTE: The first name is what appears in error messages about missing required fields
-        public static readonly string[][] FIELD_NAMES =
+        public static string[][] FIELD_NAMES
         {
-            new[] {"PeptideModifiedSequence", "ModifiedSequence", "FullPeptideName", "EG.ModifiedSequence", ColumnCaptions.PeptideModifiedSequence, ColumnCaptions.ModifiedSequence},
-            new[] {"FileName", "filename", "align_origfilename", "R.FileName", ColumnCaptions.FileName},
-            new[] {"Apex", "RetentionTime", "BestRetentionTime", "RT", ColumnCaptions.RetentionTime, ColumnCaptions.BestRetentionTime},
-            new[] {"MinStartTime", "leftWidth", ColumnCaptions.MinStartTime},
-            new[] {"MaxEndTime", "rightWidth", ColumnCaptions.MaxEndTime},
-            new[] {"PrecursorCharge", "Charge", "FG.Charge", ColumnCaptions.PrecursorCharge},
-            new[] {"PrecursorIsDecoy", "Precursor Is Decoy", "IsDecoy", "decoy", ColumnCaptions.IsDecoy},
-            new[] {"SampleName", ColumnCaptions.SampleName},
-            new[] {"DetectionQValue", "m_score", ColumnCaptions.DetectionQValue},
-            new[] {"DetectionZScore", "d_score", ColumnCaptions.DetectionZScore},
-        };
+            get
+            {
+                // Since tests may change localized versions of column captions and reading
+                // a whole file dwarfs newing up this array.
+                return new[]
+                {
+                    new[] {"PeptideModifiedSequence", "ModifiedSequence", "FullPeptideName", "EG.ModifiedSequence", ColumnCaptions.PeptideModifiedSequence, ColumnCaptions.ModifiedSequence},
+                    new[] {"FileName", "filename", "align_origfilename", "R.FileName", ColumnCaptions.FileName},
+                    new[] {"Apex", "RetentionTime", "BestRetentionTime", "RT", ColumnCaptions.RetentionTime, ColumnCaptions.BestRetentionTime},
+                    new[] {"MinStartTime", "leftWidth", ColumnCaptions.MinStartTime},
+                    new[] {"MaxEndTime", "rightWidth", ColumnCaptions.MaxEndTime},
+                    new[] {"PrecursorCharge", "Charge", "FG.Charge", ColumnCaptions.PrecursorCharge},
+                    new[] {"PrecursorIsDecoy", "Precursor Is Decoy", "IsDecoy", "decoy", ColumnCaptions.IsDecoy},
+                    new[] {"SampleName", ColumnCaptions.SampleName},
+                    new[] {"DetectionQValue", "m_score", ColumnCaptions.DetectionQValue},
+                    new[] {"DetectionZScore", "d_score", ColumnCaptions.DetectionZScore},
+                };
+            }
+        }
         // ReSharper restore NonLocalizedString
 
         public static readonly string[] STANDARD_FIELD_NAMES = FIELD_NAMES.Select(fieldNames => fieldNames[0]).ToArray();
