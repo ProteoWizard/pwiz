@@ -161,7 +161,7 @@ namespace pwiz.Skyline.Util.Extensions
             {
                 if (inQuotes)
                 {
-                    if (ch == '"')
+                    if (ch == '"')  // Not L10N
                         inQuotes = false;
                     else
                         sbField.Append(ch);
@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Util.Extensions
                              CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
                 double fieldValue;
                 // Convert if the field is numeric or contains modifications
-                if (double.TryParse(fieldConverted, out fieldValue) || new Regex(@"\[[+-]\d+\.\d\]").IsMatch(field))
+                if (double.TryParse(fieldConverted, out fieldValue) || new Regex(@"\[[+-]\d+\.\d\]").IsMatch(field))    // Not L10N
                     fields[i] = fieldConverted;
             }
             return string.Join(separator.ToString(), fields);
@@ -306,8 +306,8 @@ namespace pwiz.Skyline.Util.Extensions
             foreach (var ext in exts)
             {
                 if (sb.Length > 0)
-                    sb.Append(';');
-                sb.Append('*').Append(ext);
+                    sb.Append(';'); // Not L10N
+                sb.Append('*').Append(ext); // Not L10N
             }
             return string.Format("{0} ({1})|{1}", description, sb); // Not L10N
         }
@@ -436,7 +436,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// Read a line of text, storing the fields by name for retrieval using GetFieldByName.
         /// Outputs a list of fields (not indexed by name)
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Array of fields for the next line</returns>
         public string[] ReadLine()
         {
             var line = _rereadTitleLine?_titleLine:_reader.ReadLine(); // re-use title line on first read if it wasn't actually header info
@@ -457,7 +457,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// there is no such field name.
         /// </summary>
         /// <param name="fieldName">Title of the column for which to get current line data</param>
-        /// <returns></returns>
+        /// <returns>Field value</returns>
         public string GetFieldByName(string fieldName)
         {
             int fieldIndex = GetFieldIndex(fieldName);
@@ -468,7 +468,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// For the current line, outputs the field numbered fieldIndex
         /// </summary>
         /// <param name="fieldIndex">Index of the field on the current line to be output</param>
-        /// <returns></returns>
+        /// <returns>Field value</returns>
         public string GetFieldByIndex(int fieldIndex)
         {
             return -1 < fieldIndex && fieldIndex < _currentFields.Length ?_currentFields[fieldIndex] : null;
@@ -478,7 +478,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// Get the index of the field corresponding to the column title fieldName
         /// </summary>
         /// <param name="fieldName">Column title.</param>
-        /// <returns></returns>
+        /// <returns>Field index</returns>
         public int GetFieldIndex(string fieldName)
         {
             if (!FieldDict.ContainsKey(fieldName))
