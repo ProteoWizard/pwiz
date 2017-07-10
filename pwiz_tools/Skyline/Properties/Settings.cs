@@ -2066,6 +2066,12 @@ namespace pwiz.Skyline.Properties
             LegacyScoringModel.DEFAULT_UNTRAINED_MODEL
         };
 
+        public override string GetDisplayName(PeakScoringModelSpec item)
+        {
+            // Use the localized text in the UI
+            return ReferenceEquals(item, DEFAULTS[0]) ? LegacyScoringModel.DEFAULT_NAME : base.GetDisplayName(item);
+        }
+
         public override PeakScoringModelSpec EditItem(Control owner, PeakScoringModelSpec item,
             IEnumerable<PeakScoringModelSpec> existing, object tag)
         {
