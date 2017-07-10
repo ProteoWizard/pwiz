@@ -24,19 +24,21 @@ using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf
 {
     [TestClass]
-    public class TricPeakPickingTest : AbstractFunctionalTestEx
+    public class PerfTricPeakPickingTest : AbstractFunctionalTestEx
     {
 
         [TestMethod, Timeout(7200000)]
-        public void TestTricPeakPicking()
+        public void TestTricPeakPickingPerf()
         {
-            RunPerfTests = true;
+            // RunPerfTests = true;
 
             TestFilesPersistent = new[] { "." };  // All persistent. No saving
             TestFilesZipPaths = new[] { @"http://proteome.gs.washington.edu/software/test/skyline-perf/TricPeakPickingTest.zip" };
@@ -50,6 +52,15 @@ namespace TestPerf
             if (!relative)
                 path = TestFilesDir.GetTestPath(path);
             return path;
+        }
+
+        public string GetIntlCsvPath(string path, string outDir)
+        {
+            string localPath = GetTestPath(path);
+            string basename = Path.GetFileNameWithoutExtension(path);
+            string extension = Path.GetExtension(path);
+            string intlPath = Path.Combine(outDir, basename + "Intl" + extension);
+            return TextUtil.WriteDsvToCsvLocal(localPath, intlPath, true) ? intlPath : localPath;
         }
 
         protected override void DoTest()
@@ -75,7 +86,8 @@ namespace TestPerf
                     dlg.UsesSecondBest = false;
                     dlg.PeakScoringModelName = "TestScoringModel";
                     //Disable squared retention time.
-                    dlg.PeakCalculatorsGrid.Items.First(p => p.Name.Contains("Retention time difference squared")).IsEnabled
+                    string rtSquaredCalc = Resources.MQuestRetentionTimeSquaredPredictionCalc_MQuestRetentionTimeSquaredPredictionCalc_Retention_time_difference_squared;
+                    dlg.PeakCalculatorsGrid.Items.First(p => p.Name.Contains(rtSquaredCalc)).IsEnabled
                         = false;
                     dlg.TrainModelClick();
                     dlg.OkDialog();
@@ -103,24 +115,23 @@ namespace TestPerf
                 OkDialog(reintegrateDlg, reintegrateDlg.OkDialog);
             }
 
-            //Export report            
+            // Export report            
             var noAlignBoundariesPath = Path.Combine(outDir, "noalignBoundaries.csv");
             
             ExportPeakBoundaries(noAlignBoundariesPath);
             
-            //Open gold document
+            // Open gold document
             OpenDocument(GetTestPath("SkylineResult500Peptides-corrected-12.sky", true));
 
-            //Compare peaks picked 
-
-            //Add open swath results as well
-            var openSwathTricPath = GetTestPath("result_all_target1pcnt_localMST_10pcnt_lld-Mods-Files-Apex.csv");
-            var openSwathNoAlignPath = GetTestPath("noalign_all_1pcnt-Mods-Files-Apex.csv");
-
+            // Compare peaks picked 
             var comparePeaksDlg = ShowDialog<ComparePeakPickingDlg>(SkylineWindow.ShowCompareModelsDlg);
             AddPeakBoundariesFile(comparePeaksDlg, tricBoundariesPath,"tric", 2);
             AddPeakBoundariesFile(comparePeaksDlg, noAlignBoundariesPath, "noalign", 2);
+
+            // Add OpenSWATH results also
+            var openSwathTricPath = GetIntlCsvPath("result_all_target1pcnt_localMST_10pcnt_lld-Mods-Files-Apex.csv", outDir);
             AddPeakBoundariesFile(comparePeaksDlg, openSwathTricPath, "open swath tric", 3);
+            var openSwathNoAlignPath = GetIntlCsvPath("noalign_all_1pcnt-Mods-Files-Apex.csv", outDir);
             AddPeakBoundariesFile(comparePeaksDlg, openSwathNoAlignPath, "open swath no align", 3);
 
             var noAlignCompare =
@@ -136,13 +147,13 @@ namespace TestPerf
                 comparePeaksDlg.ComparePeakBoundariesList.
                     First(comp => comp.FilePath.Equals(openSwathNoAlignPath));
 
-            //Look at total correct ids at 1% observed FDR
+            // Look at total correct ids at 1% observed FDR
             Assert.AreEqual(3932, comparePeaksDlg.GetYAtCutoffRoc(tricCompare));
             Assert.AreEqual(3735, comparePeaksDlg.GetYAtCutoffRoc(noAlignCompare));
             Assert.AreEqual(3983, comparePeaksDlg.GetYAtCutoffRoc(openSwathTricCompare));
             Assert.AreEqual(3719, comparePeaksDlg.GetYAtCutoffRoc(openSwathNoAlignCompare));
 
-            //Look at observerd fdr at expected 1% FDR
+            // Look at observerd fdr at expected 1% FDR
             Assert.AreEqual(comparePeaksDlg.GetYAtCutoffQQ(tricCompare),0.002,0.0001);
             Assert.AreEqual(comparePeaksDlg.GetYAtCutoffQQ(noAlignCompare),0.0049,0.0001);
             Assert.AreEqual(comparePeaksDlg.GetYAtCutoffQQ(openSwathTricCompare),0.0057,0.0001);
@@ -191,7 +202,7 @@ namespace TestPerf
             {
                 exportDlg.ReportName = reportName;
             });
-            OkDialog(exportDlg, () => exportDlg.OkDialog(path, ','));
+            OkDialog(exportDlg, () => exportDlg.OkDialog(path, TextUtil.CsvSeparator));
         }
     }
 }
