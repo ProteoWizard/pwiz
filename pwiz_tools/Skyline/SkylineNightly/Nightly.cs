@@ -56,7 +56,7 @@ namespace SkylineNightly
         private const string LABKEY_INTEGRATION_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Integration/post.view";
 
         // Current integration branch is TRIC
-        private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work/20170411_tric_commandline";
+        private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work/20170706_tric_round3";
 
         private DateTime _startTime;
         public string LogFileName { get; private set; }
