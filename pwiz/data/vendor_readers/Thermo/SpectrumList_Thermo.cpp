@@ -149,6 +149,7 @@ inline std::vector<double> getMultiFillTimes(const ScanInfo& scanInfo)
 			throw runtime_error("[SpectrumList_Thermo::getMultiFillTImes()] Unexpected fill time format: "
 			+ multiFill);
 		string fillDataString = attribute[1];
+		bal::trim_if(fillDataString, bal::is_any_of(" ,"));
 		boost::tokenizer<boost::char_separator<char> > fillTimeStrings(fillDataString, data_sep);
 		for (string s : fillTimeStrings)
 		{
