@@ -13,7 +13,7 @@
 ::
 
 set PWIZ_ROOT=%~dp0
-set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
+set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%\..
 set PWIZ_BOOST_BUILD_PATH=%PWIZ_ROOT%\libraries\boost-build
 set PWIZ_BJAM_PATH=%PWIZ_BOOST_BUILD_PATH%\engine\bin.nt
 

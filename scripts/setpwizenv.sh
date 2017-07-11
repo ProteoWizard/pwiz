@@ -22,9 +22,9 @@ then
     echo
 fi
 
-# we expect this script to be located in pwiz root dir
+# we expect this script to be located in (pwiz_root)/scripts subdir
 
-PWIZ_ROOT=$(dirname $(readlink -f $BASH_SOURCE))
+PWIZ_ROOT=$(dirname $(readlink -f $BASH_SOURCE))/..
 
 if [ ! -d $PWIZ_ROOT/libraries ]
 then
@@ -57,6 +57,9 @@ fi
 export BOOST_BUILD_PATH=$BOOST_BUILD_PATH_TEMP
 export PATH=$PWIZ_BJAM_PATH:$PATH
 
+echo PWIZ_ROOT:
+echo $PWIZ_ROOT
+echo
 echo BOOST_BUILD_PATH:
 echo $BOOST_BUILD_PATH
 echo
