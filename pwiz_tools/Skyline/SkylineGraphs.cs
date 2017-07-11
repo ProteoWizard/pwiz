@@ -845,6 +845,76 @@ namespace pwiz.Skyline
             charge4MenuItem.Checked = charge4ContextMenuItem.Checked = set.ShowCharge4;
         }
 
+        private void editToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            bool canApply, canRemove;
+            CanApplyOrRemovePeak(null, null, out canApply, out canRemove);
+            if (!canApply && !canRemove)
+            {
+                integrationToolStripMenuItem.Enabled = false;
+            }
+            else
+            {
+                applyPeakAllToolStripMenuItem.Enabled = applyPeakSubsequentToolStripMenuItem.Enabled = canApply;
+                removePeakToolStripMenuItem.Enabled = canRemove;
+                integrationToolStripMenuItem.Enabled = true;
+            }
+        }
+
+        private void CanApplyOrRemovePeak(ToolStripItemCollection removePeakItems, IsotopeLabelType labelType, out bool canApply, out bool canRemove)
+        {
+            canApply = canRemove = false;
+
+            if (!DocumentUI.Settings.HasResults)
+                return;
+
+            var selectedTreeNode = SelectedNode as SrmTreeNode;
+            var displayType = GraphChromatogram.GetDisplayType(DocumentUI, selectedTreeNode);
+            if (displayType == DisplayTypeChrom.base_peak || displayType == DisplayTypeChrom.tic)
+                return;
+
+            var node = selectedTreeNode as TransitionTreeNode;
+            if (node != null && GraphChromatogram.IsSingleTransitionDisplay)
+            {
+                if (HasPeak(SelectedResultsIndex, node.DocNode))
+                {
+                    if (removePeakItems != null)
+                        removePeakItems.Add(new ToolStripMenuItem());
+                    canApply = canRemove = true;
+                }
+            }
+            else if (selectedTreeNode is TransitionTreeNode && displayType == DisplayTypeChrom.all ||
+                     selectedTreeNode is TransitionGroupTreeNode ||
+                     selectedTreeNode is PeptideTreeNode && ((PeptideTreeNode)selectedTreeNode).DocNode.Children.Any())
+            {
+                canApply = true;
+
+                var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
+                var hasPeak = nodeGroupTree != null
+                    ? HasPeak(SelectedResultsIndex, nodeGroupTree.DocNode)
+                    : SequenceTree.GetNodeOfType<PeptideTreeNode>().DocNode.TransitionGroups.Any(tranGroup => HasPeak(SelectedResultsIndex, tranGroup));
+
+                if (hasPeak)
+                {
+                    if (removePeakItems != null)
+                        removePeakItems.Clear();
+                    canRemove = true;
+
+                    // Remove [IsotopeLabelType]
+                    if (removePeakItems != null && labelType != null)
+                    {
+                        var peptideTreeNode = selectedTreeNode as PeptideTreeNode;
+                        // only if multiple isotope label types
+                        if (peptideTreeNode != null &&
+                            peptideTreeNode.DocNode.TransitionGroups.Select(nodeTranGroup => nodeTranGroup.TransitionGroup.LabelType).Distinct().Count() > 1)
+                        {
+                            removePeakItems.Add(new ToolStripMenuItem {Tag = labelType});
+                        }
+                    }
+                }
+            }
+        }
+
         private void viewToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             ranksMenuItem.Checked = ranksContextMenuItem.Checked = Settings.Default.ShowRanks;
@@ -1309,59 +1379,25 @@ namespace pwiz.Skyline
             // Insert skyline specific menus
             var set = Settings.Default;
             int iInsert = 0;
-            var selectedTreeNode = SelectedNode as SrmTreeNode;
-            var displayType = GraphChromatogram.GetDisplayType(DocumentUI, selectedTreeNode);
 
             var settings = DocumentUI.Settings;
             bool retentionPredict = (settings.PeptideSettings.Prediction.RetentionTime != null);
             bool peptideIdTimes = (settings.PeptideSettings.Libraries.HasLibraries &&
                                    (settings.TransitionSettings.FullScan.IsEnabled || settings.PeptideSettings.Libraries.HasMidasLibrary));
-            if (displayType != DisplayTypeChrom.base_peak && displayType != DisplayTypeChrom.tic)
+            bool canApply, canRemove;
+            CanApplyOrRemovePeak(removePeakGraphMenuItem.DropDownItems, paneKey.IsotopeLabelType, out canApply, out canRemove);
+            if (canApply || canRemove)
             {
-                if (selectedTreeNode is TransitionTreeNode && GraphChromatogram.IsSingleTransitionDisplay)
-                {
-                    if (HasPeak(SelectedResultsIndex, ((TransitionTreeNode)selectedTreeNode).DocNode))
-                    {
-                        menuStrip.Items.Insert(iInsert++, applyPeakAllGraphMenuItem);
-                        menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
-                        removePeakGraphMenuItem.DropDownItems.Add(new ToolStripMenuItem());
-                        menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
-                        menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
-                    }
-                }
-                else if ((selectedTreeNode is TransitionTreeNode && displayType == DisplayTypeChrom.all) ||
-                        (selectedTreeNode is TransitionGroupTreeNode) ||
-                        (selectedTreeNode is PeptideTreeNode && ((PeptideTreeNode)selectedTreeNode).DocNode.Children.Any()))
+                if (canApply)
                 {
                     menuStrip.Items.Insert(iInsert++, applyPeakAllGraphMenuItem);
                     menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
-
-                    var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-                    bool hasPeak = nodeGroupTree != null
-                        ? HasPeak(SelectedResultsIndex, nodeGroupTree.DocNode)
-                        : SequenceTree.GetNodeOfType<PeptideTreeNode>().DocNode.TransitionGroups.Any(tranGroup => HasPeak(SelectedResultsIndex, tranGroup));
-
-                    if (hasPeak)
-                    {
-                        removePeakGraphMenuItem.DropDownItems.Clear();
-                        menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
-
-                        // Remove [IsotopeLabelType]
-                        var peptideTreeNode = selectedTreeNode as PeptideTreeNode;
-                        if (peptideTreeNode != null)
-                        {
-                            var nodePep = peptideTreeNode.DocNode;
-                            // only if multiple isotope label types
-                            if (paneKey.IsotopeLabelType != null &&
-                                nodePep.TransitionGroups.Select(nodeTranGroup => nodeTranGroup.TransitionGroup.LabelType).Distinct().Count() > 1)
-                            {
-                                var placeholder = new ToolStripMenuItem {Tag = paneKey.IsotopeLabelType};
-                                removePeakGraphMenuItem.DropDownItems.Add(placeholder);
-                            }
-                        }
-                    }
-                    menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
                 }
+                if (canRemove)
+                {
+                    menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
+                }
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
             }
             legendChromContextMenuItem.Checked = set.ShowChromatogramLegend;
             menuStrip.Items.Insert(iInsert++, legendChromContextMenuItem);
@@ -1707,18 +1743,23 @@ namespace pwiz.Skyline
             }
         }
 
-        private void removePeakGraphMenuItem_DropDownOpening(object sender, EventArgs e)
+        private void removePeakMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            ToolStripMenuItem menu = removePeakGraphMenuItem;
-            if (menu.DropDownItems.Count == 0)
+            bool canApply, canRemove;
+            CanApplyOrRemovePeak(null, null, out canApply, out canRemove);
+            if (!canRemove)
+                return;
+
+            var menu = sender as ToolStripMenuItem;
+            if (menu == null || !menu.DropDownItems.Any())
                 return;
 
             var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
             if (nodeGroupTree != null)
             {
-                TransitionGroupDocNode nodeGroup = nodeGroupTree.DocNode;
-                IdentityPath pathGroup = nodeGroupTree.Path;
-                var nodeTranTree = (TransitionTreeNode) SelectedNode;
+                var nodeGroup = nodeGroupTree.DocNode;
+                var pathGroup = nodeGroupTree.Path;
+                var nodeTranTree = (TransitionTreeNode)SelectedNode;
                 var nodeTran = nodeTranTree.DocNode;
 
                 menu.DropDownItems.Clear();
@@ -1753,14 +1794,11 @@ namespace pwiz.Skyline
 
                 menu.DropDownItems.Clear();
 
-                var transitionGroupDocNode = nodePepTree.DocNode.TransitionGroups
-                    .FirstOrDefault(transitionGroup => Equals(transitionGroup.TransitionGroup.LabelType,
-                        isotopeLabelType));
+                var transitionGroupDocNode = nodePepTree.DocNode.TransitionGroups.FirstOrDefault(transitionGroup => Equals(transitionGroup.TransitionGroup.LabelType, isotopeLabelType));
                 if (transitionGroupDocNode == null)
-                {
                     return;
-                }
-                var item = new ToolStripMenuItem(Resources.SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All, null, removePeakContextMenuItem_Click);
+
+                var item = new ToolStripMenuItem(Resources.SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All, null, removePeakMenuItem_Click);
                 menu.DropDownItems.Insert(0, item);
 
                 var handler = new RemovePeakHandler(this, new IdentityPath(nodePepTree.Path, transitionGroupDocNode.Id), transitionGroupDocNode, null);
@@ -1791,18 +1829,23 @@ namespace pwiz.Skyline
             }
         }
 
-        private void applyPeakAllContextMenuItem_Click(object sender, EventArgs e)
+        private void applyPeakAllMenuItem_Click(object sender, EventArgs e)
         {
             ApplyPeak(false);
         }
 
-        private void applyPeakSubsequentContextMenuItem_Click(object sender, EventArgs e)
+        private void applyPeakSubsequentMenuItem_Click(object sender, EventArgs e)
         {
             ApplyPeak(true);
         }
 
         public void ApplyPeak(bool subsequent)
         {
+            bool canApply, canRemove;
+            CanApplyOrRemovePeak(null, null, out canApply, out canRemove);
+            if (!canApply)
+                return;
+
             var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
             var nodeTranGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
             var nodeTranGroup = nodeTranGroupTree != null ? nodeTranGroupTree.DocNode : null;
@@ -1828,10 +1871,15 @@ namespace pwiz.Skyline
             }
         }
 
-        private void removePeakContextMenuItem_Click(object sender, EventArgs e)
+        private void removePeakMenuItem_Click(object sender, EventArgs e)
         {
+            bool canApply, canRemove;
+            CanApplyOrRemovePeak(null, null, out canApply, out canRemove);
+            if (!canRemove)
+                return;
+
             var menu = sender as ToolStripMenuItem;
-            if (menu == null || menu.DropDownItems.Count > 0)
+            if (menu == null || menu.DropDownItems.Any())
                 return;
 
             var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
@@ -1841,13 +1889,14 @@ namespace pwiz.Skyline
             {
                 nodeGroups.Add(new Tuple<TransitionGroupDocNode, IdentityPath>(nodeGroupTree.DocNode, nodeGroupTree.Path));
             }
-            else
+            else if (nodePepTree != null && nodePepTree.Nodes.Any())
             {
-                Assume.IsTrue(nodePepTree != null && nodePepTree.Nodes.Any());  // menu item incorrectly enabled
-                if (nodePepTree == null || !nodePepTree.Nodes.Any())
-                    return;
                 nodeGroups.AddRange(from TransitionGroupDocNode tranGroup in nodePepTree.DocNode.Children
                                     select new Tuple<TransitionGroupDocNode, IdentityPath>(tranGroup, new IdentityPath(nodePepTree.Path, tranGroup.Id)));
+            }
+            else
+            {
+                return;
             }
 
             TransitionDocNode nodeTran = null;
@@ -2667,7 +2716,7 @@ namespace pwiz.Skyline
             if (graphController != null)
                 BuildRTGraphMenu(menuStrip, mousePt, graphController);
             else if (controller is AreaGraphController)
-                BuildAreaGraphMenu(menuStrip);
+                BuildAreaGraphMenu(menuStrip, mousePt);
             else if (controller is MassErrorGraphController)
                 BuildMassErrorGraphMenu(menuStrip);
             CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
@@ -2958,6 +3007,23 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, synchronizeSummaryZoomingContextMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator38);
                 menuStrip.Items.Insert(iInsert++, timePropsContextMenuItem);
+
+                bool canApply, canRemove;
+                CanApplyOrRemovePeak(removePeakGraphMenuItem.DropDownItems, _graphRetentionTime.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType,
+                                     out canApply, out canRemove);
+                if (canApply || canRemove)
+                {
+                    menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
+                    if (canApply)
+                    {
+                        menuStrip.Items.Insert(iInsert++, applyPeakAllGraphMenuItem);
+                        menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
+                    }
+                    if (canRemove)
+                    {
+                        menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
+                    }
+                }
             }
 
             menuStrip.Items.Insert(iInsert, toolStripSeparator24);
@@ -3596,7 +3662,7 @@ namespace pwiz.Skyline
             _graphPeakArea = null;
         }
 
-        private void BuildAreaGraphMenu(ToolStrip menuStrip)
+        private void BuildAreaGraphMenu(ToolStrip menuStrip, Point mousePt)
         {
             // Store original menuitems in an array, and insert a separator
             ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
@@ -3698,6 +3764,23 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, toolStripSeparator24);
             menuStrip.Items.Insert(iInsert++, areaPropsContextMenuItem);
             menuStrip.Items.Insert(iInsert, toolStripSeparator28);
+
+            bool canApply, canRemove;
+            CanApplyOrRemovePeak(removePeakGraphMenuItem.DropDownItems, _graphPeakArea.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType,
+                                 out canApply, out canRemove);
+            if (canApply || canRemove)
+            {
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
+                if (canApply)
+                {
+                    menuStrip.Items.Insert(iInsert++, applyPeakAllGraphMenuItem);
+                    menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
+                }
+                if (canRemove)
+                {
+                    menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
+                }
+            }
 
             // Remove some ZedGraph menu items not of interest
             foreach (var item in items)

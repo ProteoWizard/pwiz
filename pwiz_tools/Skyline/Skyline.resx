@@ -714,7 +714,7 @@
     <value>209, 6</value>
   </data>
   <data name="contextMenuChromatogram.Size" type="System.Drawing.Size, System.Drawing">
-    <value>213, 392</value>
+    <value>213, 414</value>
   </data>
   <data name="&gt;&gt;contextMenuChromatogram.Name" xml:space="preserve">
     <value>contextMenuChromatogram</value>
@@ -1790,6 +1790,39 @@
   </data>
   <data name="toolStripSeparator42.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
+  </data>
+  <data name="applyPeakAllToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+Shift+A</value>
+  </data>
+  <data name="applyPeakAllToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>284, 22</value>
+  </data>
+  <data name="applyPeakAllToolStripMenuItem.Text" xml:space="preserve">
+    <value>Apply Peak to All</value>
+  </data>
+  <data name="applyPeakSubsequentToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+Shift+S</value>
+  </data>
+  <data name="applyPeakSubsequentToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>284, 22</value>
+  </data>
+  <data name="applyPeakSubsequentToolStripMenuItem.Text" xml:space="preserve">
+    <value>Apply Peak to Subsequent</value>
+  </data>
+  <data name="removePeakToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Ctrl+Shift+R</value>
+  </data>
+  <data name="removePeakToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>284, 22</value>
+  </data>
+  <data name="removePeakToolStripMenuItem.Text" xml:space="preserve">
+    <value>Remove Peak</value>
+  </data>
+  <data name="integrationToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>207, 22</value>
+  </data>
+  <data name="integrationToolStripMenuItem.Text" xml:space="preserve">
+    <value>Inte&amp;gration</value>
   </data>
   <data name="insertFASTAMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>156, 22</value>
@@ -4586,6 +4619,30 @@
   </data>
   <data name="&gt;&gt;toolStripSeparator42.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;integrationToolStripMenuItem.Name" xml:space="preserve">
+    <value>integrationToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;integrationToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;applyPeakAllToolStripMenuItem.Name" xml:space="preserve">
+    <value>applyPeakAllToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;applyPeakAllToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;applyPeakSubsequentToolStripMenuItem.Name" xml:space="preserve">
+    <value>applyPeakSubsequentToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;applyPeakSubsequentToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;removePeakToolStripMenuItem.Name" xml:space="preserve">
+    <value>removePeakToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;removePeakToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;insertToolStripMenuItem.Name" xml:space="preserve">
     <value>insertToolStripMenuItem</value>
