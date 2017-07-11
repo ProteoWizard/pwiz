@@ -312,7 +312,7 @@ namespace BiblioSpec
         // set result count and statement (PeptideID, SpectrumID, unmodified sequence, q-value[, WorkflowID, SpectrumFileName])
         if (!filtered_ && versionLess(2, 2)) {
             if (!hasQValues()) {
-                statement = getStmt("SELECT PeptideID, SpectrumID, Sequence, '0', FROM Peptides");
+                statement = getStmt("SELECT PeptideID, SpectrumID, Sequence, '0' FROM Peptides");
                 resultCount = getRowCount("Peptides");
             } else {
                 statement = getStmt(
