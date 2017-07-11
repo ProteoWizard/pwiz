@@ -752,8 +752,8 @@ int BlibMaker::getFileId(const string& file, double cutoffScore) {
     check_rc(returnCode, statement.c_str());
     if (iRow > 0) {
         sqlite3_int64 fileId = atol(result[1]);
-        sqlite3_free_table(result);
         fileIdCache_[file] = make_pair(fileId, atof(result[2]));
+        sqlite3_free_table(result);
         return fileId;
     }
     sqlite3_free_table(result);
