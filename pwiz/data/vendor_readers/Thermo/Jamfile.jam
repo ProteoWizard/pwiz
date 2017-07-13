@@ -120,6 +120,8 @@ lib pwiz_reader_thermo
         <conditional>@vendor-api-usage-requirements
     ;
 
+doctest SpectrumList_ThermoTest : SpectrumList_Thermo.cpp : <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata <conditional>@vendor-api-requirements ;
+
 
 rule warn-once ( message )
 {

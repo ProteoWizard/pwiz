@@ -35,6 +35,28 @@
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 
 
+// output operators for standard containers
+namespace std
+{
+    template<typename T1, typename T2>
+    ostream& operator<< (ostream& o, const pair<T1, T2>& p)
+    {
+        return (o << "( " << p.first << ", " << p.second << " )");
+    }
+
+    template<typename T>
+    ostream& operator<< (ostream& o, const vector<T>& v)
+    {
+        o << "(";
+        for (typename vector<T>::const_iterator itr = v.begin(); itr != v.end(); ++itr)
+            o << " " << *itr;
+        o << " )";
+
+        return o;
+    }
+}
+
+
 namespace pwiz {
 namespace util {
 
@@ -171,6 +193,7 @@ inline std::string escape_teamcity_string(const std::string& str)
     } \
     int testExitStatus = 0;
 
+
 #define TEST_PROLOG(argc, argv) TEST_PROLOG_EX(argc, argv, "")
 
 #define TEST_FAILED(x) \
@@ -188,6 +211,36 @@ inline std::string escape_teamcity_string(const std::string& str)
 
 } // namespace util
 } // namespace pwiz
+
+
+// without PWIZ_DOCTEST defined, disable doctest macros; when it is defined, doctest will be configured with main()
+#ifndef PWIZ_DOCTEST
+#define DOCTEST_CONFIG_DISABLE
+#include "libraries/doctest.h"
+#else
+#define DOCTEST_CONFIG_IMPLEMENT
+#include "libraries/doctest.h"
+int main(int argc, char* argv[])
+{
+    TEST_PROLOG(argc, argv)
+
+    try
+    {
+        doctest::Context context;
+        testExitStatus = context.run();
+    }
+    catch (exception& e)
+    {
+        TEST_FAILED(e.what())
+    }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
+}
+#endif
 
 
 #endif // _UNIT_HPP_

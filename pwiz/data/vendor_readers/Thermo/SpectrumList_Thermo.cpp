@@ -26,16 +26,50 @@
 
 #include "SpectrumList_Thermo.hpp"
 
-
 #ifdef PWIZ_READER_THERMO
 #include "Reader_Thermo_Detail.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include <boost/bind.hpp>
 #include <boost/spirit/include/karma.hpp>
 #include <boost/tokenizer.hpp>
 
 using namespace pwiz::cv;
+
+namespace {
+
+    std::vector<double> getMultiFillTimes(const string& multiFill)
+    {
+        std::vector<double> fillTimes;
+        if (multiFill.empty())
+        {
+            // This parameter is not specified, return an empty set of fill times
+            return fillTimes;
+        }
+
+        vector<string> attribute;
+        boost::split(attribute, multiFill, boost::is_any_of("="));
+        if (attribute.size() != 2 || attribute[0].compare("IT") != 0)
+            throw runtime_error("[SpectrumList_Thermo::getMultiFillTImes()] Unexpected fill time format: " + multiFill);
+
+        string fillDataString = attribute[1];
+        bal::trim_if(fillDataString, bal::is_any_of(" ,"));
+
+        vector<string> fillTimeStrings;
+        bal::split(fillTimeStrings, fillDataString, bal::is_any_of(","));
+        for (const string& s : fillTimeStrings)
+            fillTimes.push_back(boost::lexical_cast<double>(s));
+        return fillTimes;
+    }
+
+    TEST_CASE("getMultiFillTimes()") {
+        CHECK(getMultiFillTimes("") == vector<double>{});
+        CHECK(getMultiFillTimes("IT=12.3,12.3") == vector<double>{12.3, 12.3});
+        CHECK(getMultiFillTimes("IT=12.3,12.3,") == vector<double>{12.3, 12.3});
+        CHECK(getMultiFillTimes("IT=12.3,12.3,  ") == vector<double>{12.3, 12.3});
+    }
+} // namespace
 
 
 namespace pwiz {
@@ -129,37 +163,6 @@ inline boost::optional<double> getElectronvoltActivationEnergy(const ScanInfo& s
         return scanInfo.precursorActivationEnergy(0);
     else
         return boost::optional<double>();
-}
-
-inline std::vector<double> getMultiFillTimes(const ScanInfo& scanInfo)
-{
-	std::vector<double> fillTimes;
-	try
-	{
-		string multiFill = scanInfo.trailerExtraValue("Multi Inject Info:");
-		if (multiFill.empty())
-		{
-			// This parameter is not specified, return an empty set of fill times
-			return fillTimes;
-		}
-		boost::char_separator<char> data_sep(",");
-		vector<string> attribute;
-		boost::split(attribute, multiFill, boost::is_any_of("="));
-		if (attribute.size() != 2 || attribute[0].compare("IT") != 0)
-			throw runtime_error("[SpectrumList_Thermo::getMultiFillTImes()] Unexpected fill time format: "
-			+ multiFill);
-		string fillDataString = attribute[1];
-		bal::trim_if(fillDataString, bal::is_any_of(" ,"));
-		boost::tokenizer<boost::char_separator<char> > fillTimeStrings(fillDataString, data_sep);
-		for (string s : fillTimeStrings)
-		{
-			fillTimes.push_back(boost::lexical_cast<double>(s));
-		}
-	}
-	catch (RawEgg&)
-	{
-	}
-	return fillTimes;
 }
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData) const
@@ -419,7 +422,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             }
 
             // check if multiple fill data exists for this scan
-            vector<double> fillTimes = getMultiFillTimes(*scanInfo);
+            vector<double> fillTimes = getMultiFillTimes(scanInfo->trailerExtraValue("Multi Inject Info:"));
             bool addMultiFill = !fillTimes.empty() && fillTimes.size() == precursorCount;
 
             Precursor precursor;

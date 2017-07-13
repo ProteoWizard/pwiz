@@ -386,13 +386,19 @@ generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/msdata/Version.cpp : pwiz msdat
                 $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/ABI/T2D
                 $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent
                 $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Bruker
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters
+                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Shimadzu
                 $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Thermo
+                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/UIMF
+                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/UNIFI
+                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters
                 $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI
                 $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D
                 $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Agilent
                 $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker
+                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Shimadzu
                 $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/thermo
+                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UIMF
+                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UNIFI
                 $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters
        : *.?pp *.h Jamfile.jam *.manifest* : Version.cpp
     ] ;
@@ -510,6 +516,7 @@ if [ modules.peek : NT ]
             if ! --without-bruker in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Bruker.7z" ; }
             if ! --without-shimadzu in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Shimadzu.7z" ; }
             if ! --without-thermo in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Thermo.7z" ; }
+            #if ! --without-unifi in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_UNIFI.7z" ; }
             if ! --without-waters in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Waters.7z" ; }
             RESCAN ;
         }
@@ -589,6 +596,12 @@ rule unit-test-if-exists ( target : sources + : properties * )
 }
 
 
+rule doctest ( name : sources + : requirements * )
+{
+    unit-test-if-exists $(name) : $(sources) : $(requirements) <define>PWIZ_DOCTEST <location-prefix>doctest ;
+}
+
+
 # build/install
 
 build-project-if-exists pwiz ;
@@ -636,6 +649,7 @@ rule install-vendor-api-dependencies ( properties * )
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Shimadzu ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Shimadzu//install_pwiz_vendor_api_shimadzu/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/UIMF ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UIMF//install_pwiz_vendor_api_uimf/$(location) ; }
+        if [ path.exists pwiz_aux/msrc/utility/vendor_api/UNIFI ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UNIFI//install_pwiz_vendor_api_unifi/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Waters ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/$(location) ; }
         if <vendor-api-support>on in $(properties) { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/prototype//ThermoRawMetaDumpInstall/$(location) ; }
     }
@@ -860,6 +874,17 @@ rule wiff-dll-location ( api-path : properties * )
     local result = $(api-path) ;
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
        [ path.exists $(result)\\Clearcore2.Data.WiffReader.dll ]            
+    {
+        return $(result) ;
+    }
+}
+
+rule unifi-dll-location ( api-path : properties * )
+{
+    # .NET 4.5 DLLs should work for anything .NET 4 or greater (hopefully); there's no Boost.Build property for .NET version
+    local result = $(api-path) ;
+    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
+       [ path.exists $(result)\\IdentityModel.dll ]
     {
         return $(result) ;
     }
