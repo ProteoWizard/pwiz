@@ -1359,7 +1359,7 @@ This source tree is a subset of the full pwiz source tree.
     $(PWIZ_LIBRARIES_PATH)/SQLite
     $(PWIZ_LIBRARIES_PATH)/Eigen
     $(PWIZ_LIBRARIES_PATH)/CSpline
-    [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 ]
+    [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.h *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 ]
 
     # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
     path-anchor:$(BOOST_SUBSET_PATH)
