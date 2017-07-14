@@ -26,14 +26,8 @@
 
 #include "SpectrumList_Thermo.hpp"
 
-#ifdef PWIZ_READER_THERMO
-#include "Reader_Thermo_Detail.hpp"
-#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <boost/bind.hpp>
-#include <boost/spirit/include/karma.hpp>
-#include <boost/tokenizer.hpp>
 
 using namespace pwiz::cv;
 
@@ -70,6 +64,13 @@ namespace {
         CHECK(getMultiFillTimes("IT=12.3,12.3,  ") == vector<double>{12.3, 12.3});
     }
 } // namespace
+
+
+#ifdef PWIZ_READER_THERMO
+#include "Reader_Thermo_Detail.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include <boost/bind.hpp>
+#include <boost/spirit/include/karma.hpp>
 
 
 namespace pwiz {
