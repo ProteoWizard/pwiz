@@ -35,28 +35,6 @@
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 
 
-// output operators for standard containers
-namespace std
-{
-    template<typename T1, typename T2>
-    ostream& operator<< (ostream& o, const pair<T1, T2>& p)
-    {
-        return (o << "( " << p.first << ", " << p.second << " )");
-    }
-
-    template<typename T>
-    ostream& operator<< (ostream& o, const vector<T>& v)
-    {
-        o << "(";
-        for (typename vector<T>::const_iterator itr = v.begin(); itr != v.end(); ++itr)
-            o << " " << *itr;
-        o << " )";
-
-        return o;
-    }
-}
-
-
 namespace pwiz {
 namespace util {
 
