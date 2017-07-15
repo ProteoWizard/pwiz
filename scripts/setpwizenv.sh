@@ -37,6 +37,21 @@ BOOST_BUILD_PATH_TEMP=$PWIZ_ROOT/libraries/boost-build
 PWIZ_BJAM_PATH=$BOOST_BUILD_PATH_TEMP/engine/bin/$(uname -s)
 PWIZ_BJAM=$PWIZ_BJAM_PATH/bjam
 
+
+# build local copy of bjam
+
+if [ ! -f $PWIZ_BJAM ]; then
+    cd $BOOST_BUILD_PATH_TEMP/engine
+    echo "[setpwizenv.sh] Building bjam." 2>&1 | tee -a build_bjam.log
+    date 2>&1 | tee -a build_bjam.log
+    echo | tee -a build_bjam.log
+    LOCATE_TARGET=bin sh build.sh >> build_bjam.log 2>> build_bjam.log
+    echo "[setpwizenv.sh] Done building bjam." 2>&1 | tee -a build_bjam.log
+    echo | tee -a build_bjam.log
+    mkdir -p $PWIZ_BJAM_PATH
+    cp -f $BOOST_BUILD_PATH_TEMP/engine/bin/bjam $PWIZ_BJAM
+fi
+
 # sanity check: make sure the local pwiz bjam is where we think it is
 
 if [ -f $PWIZ_BJAM ]
