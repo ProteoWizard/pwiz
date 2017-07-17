@@ -331,13 +331,15 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                     ci.controllerNumber = n;
                                     ci.filter = filterString;
                                     ci.index = index_.size()-1;
+                                    ci.polarityType = translate(filterParser.polarityType_);
+                                    string polarity = polarityStringForFilter(ci.polarityType);
                                     ci.q1 = (filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0;
-                                    ci.id = (format("SIM SIC %.10g", std::locale::classic())
+                                    ci.id = (format("%sSIM SIC %.10g", std::locale::classic())
+                                             % polarity
                                              % ci.q1
                                             ).str();
                                     // this should be q1Offset
                                     ci.q3Offset = (filterParser.scanRangeMax_[j] - filterParser.scanRangeMin_[j]) / 2.0;
-                                    ci.polarityType = translate(filterParser.polarityType_);
                                     idMap_[ci.id] = ci.index;
                                 }
                             }
