@@ -153,7 +153,7 @@ namespace AutoQC
             {
                DateTime.Now.AddDays(-(ResultsWindow - 1));
             }
-            catch (ArgumentOutOfRangeException x)
+            catch (ArgumentOutOfRangeException)
             {
                 throw new ArgumentException("Results time window is too big.");
             }

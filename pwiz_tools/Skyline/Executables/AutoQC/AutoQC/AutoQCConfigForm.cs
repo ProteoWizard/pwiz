@@ -131,7 +131,7 @@ namespace AutoQC
             return true;
         }
 
-        private static bool ValidateConfig(AutoQcConfig newConfig)
+        private bool ValidateConfig(AutoQcConfig newConfig)
         {
             try
             {
@@ -146,9 +146,9 @@ namespace AutoQC
             return true;
         }
 
-        private static void ShowErrorDialog(string message)
+        private void ShowErrorDialog(string message)
         {
-            MainForm.ShowErrorDialog("Configuration Validation Error", message);
+            _mainControl.DisplayError("Configuration Validation Error", message);
         }
 
         private AutoQcConfig GetConfigFromUi()

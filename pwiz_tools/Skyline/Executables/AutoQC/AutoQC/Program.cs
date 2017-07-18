@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 using System;
-using System.Configuration;
 using System.Deployment.Application;
 using System.IO;
 using System.Windows.Forms;
@@ -28,6 +27,7 @@ namespace AutoQC
     class Program
     {
         private static readonly ILog LOG = LogManager.GetLogger("AutoQC");
+        private static string VERSION;
 
         [STAThread]
         public static void Main(string[] args)
@@ -38,10 +38,10 @@ namespace AutoQC
             XmlConfigurator.Configure();
 
             var form = new MainForm();
-            var version = ApplicationDeployment.IsNetworkDeployed
+            VERSION = ApplicationDeployment.IsNetworkDeployed
                 ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
                 : "";
-            form.Text = string.Format("AutoQC Loader {0}", version);
+            form.Text = string.Format("AutoQC Loader {0}", VERSION);
             // form.Text = string.Format("AutoQC Loader-daily {0}", version);
 
             //Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
@@ -57,7 +57,7 @@ namespace AutoQC
                 {
                     LOG.Error("AutoQC Loader encountered an unexpected error. ", (Exception)e.ExceptionObject);
                     MessageBox.Show("AutoQC Loader encountered an unexpected error. " +
-                                    "Error details may be found in the AutoQC.log file in this directory : "
+                                    "Error details may be found in the AutoQCProgram.log file in this directory : "
                                      + Path.GetDirectoryName(Application.ExecutablePath)
                                     );
                 }
@@ -76,10 +76,20 @@ namespace AutoQC
             LOG.Error(message);
         }
 
+        public static void LogError(string message, Exception e)
+        {
+            LOG.Error(message, e);
+        }
+
         public static void LogInfo(string message)
         {
             LOG.Info(message);
         }
-  
+
+        public static string version()
+        {
+            return VERSION;
+        }
+
     }
 }

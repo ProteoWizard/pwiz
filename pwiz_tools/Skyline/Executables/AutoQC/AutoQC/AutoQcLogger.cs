@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
+using System.Text;
 
 namespace AutoQC
 {
@@ -10,7 +10,7 @@ namespace AutoQC
         void Log(string message, params object[] args);
         void LogError(string message, params object[] args);
         void LogProgramError(string message, params object[] args);
-        void LogException(Exception exception);
+        void LogException(Exception exception, string message, params object[] args);
         string GetFile();
         void DisableUiLogging();
         void LogToUi(IMainUiControl mainUi);
@@ -26,7 +26,7 @@ namespace AutoQC
         private string _lastMessage = string.Empty; // To avoid logging duplicate messages.
 
         private readonly string _filePath;
-        private bool _readingLog;
+        private static readonly object LOCK = new object();
 
         private IMainUiControl _mainUi;
 
@@ -37,27 +37,48 @@ namespace AutoQC
             _filePath = filePath;
         }
 
+        public void Init()
+        {
+            // Initialize - create the log file if it does not exist
+            if (File.Exists(_filePath)) return;
+            using (File.Create(_filePath))
+            {
+            }
+        }
+
         private void WriteToFile(string message)
         {
-            while (_readingLog)
+            lock (LOCK)
             {
-                // Wait if the file is being read to display in the log tab. This should not take very long.
-                Thread.Sleep(1000);     
-            }
-
-            if (!File.Exists(_filePath))
-            {
-                // Maybe the log file is on a mapped network drive and we have lost connection
-                return;
-            }
-
-            BackupLog();
-
-            using (var fs = new FileStream(_filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
-            {
-                using (var writer = new StreamWriter(fs))
+                try
                 {
-                    writer.WriteLine(message);
+                    BackupLog();
+                }
+                catch (Exception e)
+                {
+                    var err = new StringBuilder("Error occurred while trying to backup log file: ").AppendLine(_filePath);
+                    err.AppendLine("Exception stack trace: ");
+                    Program.LogError(err.ToString(), e);
+                }
+
+                try
+                {
+                    var dateAndMessage = GetDate() + message;
+                    using (var fs = new FileStream(_filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                    {
+                        using (var writer = new StreamWriter(fs))
+                        {
+                            writer.WriteLine(dateAndMessage);
+                        }
+                    }
+                }
+                catch (IOException e)
+                {
+                    var err = new StringBuilder("Error occurred writing to log file ").AppendLine(_filePath);
+                    err.AppendLine("Attempting to write the following to the log file: ");
+                    err.AppendLine(message);
+                    err.AppendLine("Exception stack trace: ");
+                    Program.LogError(err.ToString(), e);
                 }
             }
         }
@@ -69,6 +90,12 @@ namespace AutoQC
 
         private void BackupLog()
         {
+            if (!File.Exists(_filePath))
+            {
+                // Maybe the log file is on a mapped network drive and we have lost connection
+                return;
+            }
+
             var size = new FileInfo(_filePath).Length;
             if (size >= MaxLogSize)
             {
@@ -98,7 +125,7 @@ namespace AutoQC
             return index == 0 ? filePath : filePath + "." + index;
         }
 
-        private void LogError(string message)
+        private void LogErrorToFile(string message)
         {
             message = "ERROR: " + message;
             WriteToFile(message);
@@ -120,23 +147,31 @@ namespace AutoQC
             }
             _lastMessage = line;
 
-            var dateAndLine = GetDate() + line;
             if (_mainUi != null)
             {
-                _mainUi.LogToUi(dateAndLine);
+                _mainUi.LogToUi(GetDate() + line);
             }
 
-            WriteToFile(dateAndLine);
+            WriteToFile(line);
         }
 
-        public void LogException(Exception ex)
+        public void LogException(Exception ex, string line, params object[] args)
         {
-            LogError(ex.Message);
+            if (args != null && args.Length > 0)
+            {
+                line = string.Format(line, args);
+            }
+
+            var exStr = ex != null ? ex.ToString() : "";
             if (_mainUi != null)
             {
-                _mainUi.LogErrorToUi(ex.StackTrace);
+                line = GetDate() + line;
+
+                _mainUi.LogErrorLinesToUi(
+                        new List<string> {line, exStr});
             }
-            WriteToFile(ex.StackTrace);
+
+            LogErrorToFile(string.Format("{0}\n{1}", line, exStr));
         }
 
         public void LogError(string line, params object[] args)
@@ -148,10 +183,10 @@ namespace AutoQC
 
             if (_mainUi != null)
             {
-                _mainUi.LogErrorToUi(line);
+                _mainUi.LogErrorToUi(GetDate() + line);
             }
 
-            LogError(line);
+            LogErrorToFile(line);
         }
 
         public void LogProgramError(string line, params object[] args)
@@ -163,10 +198,8 @@ namespace AutoQC
 
             if (_mainUi != null)
             {
-                _mainUi.LogErrorToUi(line);
+                _mainUi.LogErrorToUi(GetDate() + line);
             }
-
-            LogError(line);
 
             Program.LogError(line);
         }
@@ -188,10 +221,8 @@ namespace AutoQC
 
         public void DisplayLog()
         {
-            _readingLog = true;
-            
-            try
-            {       
+            lock (LOCK)
+            {
                 // Read the log contents and display in the log tab.
                 var lines = new List<string>();
                 var truncated = false;
@@ -225,26 +256,44 @@ namespace AutoQC
                     _mainUi.LogErrorToUi(string.Format(LogTruncatedMessage, GetFile()), false);  
                 }
 
+                var toLog = new List<string>();
+                var lastLineErr = false;
+
                 foreach (var line in lines)
                 {
                     var error = line.ToLower().Contains("error");
                     if (error)
                     {
-                        _mainUi.LogErrorToUi(line,
-                            false, // don't scroll to end
-                            false); // don't truncate
+                        if (!lastLineErr && toLog.Count > 0)
+                        {
+                            _mainUi.LogLinesToUi(toLog);
+                            toLog.Clear();
+                        }
+                        lastLineErr = true;
+                        toLog.Add(line);
                     }
                     else
                     {
-                        _mainUi.LogToUi(line,
-                            false, // don't scroll to end
-                            false); // don't truncate
+                        if (lastLineErr && toLog.Count > 0)
+                        {
+                            _mainUi.LogErrorLinesToUi(toLog);
+                            toLog.Clear();   
+                        }
+                        lastLineErr = false;
+                        toLog.Add(line);
                     }
                 }
-            }
-            finally
-            {
-                _readingLog = false;  
+                if (toLog.Count > 0)
+                {
+                    if (lastLineErr)
+                    {
+                        _mainUi.LogErrorLinesToUi(toLog);  
+                    }
+                    else
+                    {
+                        _mainUi.LogLinesToUi(toLog);   
+                    }
+                }
             }
         }
 

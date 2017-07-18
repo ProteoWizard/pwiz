@@ -17,7 +17,6 @@
  */
 using System;
 using System.IO;
-using MSFileReaderLib;
 
 namespace AutoQC
 {
@@ -27,55 +26,6 @@ namespace AutoQC
     {
         /// <exception cref="FileStatusException"></exception>
         FileStatus CheckStatus(string filePath) ;
-    }
-
-    class XRawFileStatus : IResultFileStatus
-    {
-        // Acquision time in minutes. This is how long we will wait till we consider the file ready for import.
-        private readonly int _acquisitionTime;
-
-        public XRawFileStatus(int acquisitionTime)
-        {
-            _acquisitionTime = acquisitionTime;
-        }
-
-        public FileStatus CheckStatus(string filePath)
-        {
-            IXRawfile rawFile = null;
-            // Get the time elapsed since the file was first created.
-            DateTime createTime;
-
-            var inAcq = 1;
-            try
-            {
-                createTime = File.GetCreationTime(filePath);
-
-                rawFile = new MSFileReader_XRawfileClass();
-                rawFile.Open(filePath);
-                rawFile.InAcquisition(ref inAcq);          
-            }
-            catch (Exception e)
-            {
-                throw new FileStatusException(string.Format("Error getting status of file {0}", filePath), e);
-            }
-            finally
-            {
-                if (rawFile != null)
-                {
-                    rawFile.Close();
-                }
-            }
-
-            if (inAcq == 1)
-            {
-                // Check whether we have exceeded the expected acquisition time
-                return createTime.AddMinutes(_acquisitionTime) < DateTime.Now
-                    ? FileStatus.ExceedMaximumAcquiTime
-                    : FileStatus.Waiting;
-            }
-
-            return FileStatus.Ready;
-        }
     }
 
     class AcquisitionTimeFileStatus : IResultFileStatus

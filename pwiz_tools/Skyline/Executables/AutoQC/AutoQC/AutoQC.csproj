@@ -13,18 +13,18 @@
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <TargetFrameworkProfile />
-    <PublishUrl>T:\webapps\ROOT\software\AutoQC\daily\</PublishUrl>
+    <PublishUrl>X:\labkey\static\software\AutoQC\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateEnabled>true</UpdateEnabled>
     <UpdateMode>Foreground</UpdateMode>
     <UpdateInterval>7</UpdateInterval>
     <UpdateIntervalUnits>Days</UpdateIntervalUnits>
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>http://skyline.gs.washington.edu/software/AutoQC/daily/</InstallUrl>
-    <ProductName>AutoQC-daily</ProductName>
+    <MapFileExtensions>false</MapFileExtensions>
+    <InstallUrl>http://skyline.gs.washington.edu/software/AutoQC/</InstallUrl>
+    <ProductName>AutoQC</ProductName>
     <PublisherName>University of Washington</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
@@ -57,7 +57,7 @@
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>5B66EC1291281681132D9C769FED5A1F42BD4A76</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>828D97D15AA50E99C25127B6A71E0A6DFC12027E</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestKeyFile>
@@ -76,16 +76,15 @@
   <PropertyGroup />
   <PropertyGroup />
   <ItemGroup>
-    <None Include="SkylineDailyRunner.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="SkylineRunner.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <Content Include="SkylineDailyRunner.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SkylineRunner.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="AutoQC_TemporaryKey.pfx" />
     <EmbeddedResource Include="AutoQC-daily.ico" />
     <Content Include="FileAcquisitionTime.skyr">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -94,9 +93,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="QCplotsRgui2.R">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <None Include="University of Washington %28MacCoss Lab%29.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoQcConfig.cs" />
@@ -212,23 +209,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.2.61.0, Type=win32">
-      <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
-      <HintPath>..\..\..\..\Shared\ProteowizardWrapper\obj\x86\MSFileReader.XRawfile2.SxS.manifest</HintPath>
-    </NativeReference>
-  </ItemGroup>
-  <ItemGroup>
-    <COMReference Include="MSFileReaderLib">
-      <Guid>{F0C5F3E3-4F2A-443E-A74D-0AABE3237494}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </COMReference>
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="Resources\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -239,7 +219,7 @@
   <Target Name="AfterBuild">
   </Target>
   <Target Name="AfterPublish">
-    <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; password &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
+    <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; password &quot;$(ProjectDir)bin\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
   -->
 </Project>

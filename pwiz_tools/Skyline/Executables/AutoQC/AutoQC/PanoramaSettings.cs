@@ -328,8 +328,7 @@ namespace AutoQC
             {
                 if (_status != 2)
                 {
-                    _logger.LogError("Error pinging Panorama server " + panoramaServerUri);
-                    _logger.LogException(ex);
+                    _logger.LogException(ex, "Error pinging Panorama server " + panoramaServerUri);
                     _status = 2;
                 }
             }

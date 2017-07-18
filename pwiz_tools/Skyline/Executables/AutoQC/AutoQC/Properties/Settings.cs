@@ -75,7 +75,7 @@ namespace AutoQC.Properties
                     config.WriteXml(writer);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // System.Xml will unfortunately swallow this exception when we rethrow it,
                 // in the context of saving a settings list to user.config.

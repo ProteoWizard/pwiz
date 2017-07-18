@@ -187,8 +187,7 @@ namespace AutoQC
 
         private void LogException(Exception e, string message, params object[] args)
         {
-            _logger.LogError(message, args);
-            _logger.LogException(e);
+            _logger.LogException(e, message, args);
         }
 
         protected ProcessInfo GetProcessInfo()
@@ -206,7 +205,7 @@ namespace AutoQC
                 }
                 catch (Exception e)
                 {
-                    LogException(e, "Exception killing process {0}", _procInfo.ExeName);
+                    LogException(e, "Error killing process {0}", _procInfo.ExeName);
                 }
             }
         }

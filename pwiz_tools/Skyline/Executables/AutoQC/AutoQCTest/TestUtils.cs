@@ -41,9 +41,9 @@ namespace AutoQCTest
             throw new NotImplementedException();
         }
 
-        public void LogException(Exception exception)
+        public void LogException(Exception exception, string message, params object[] args)
         {
-            AddToLog(exception.Message);
+            throw new NotImplementedException();
         }
 
         public string GetFile()
@@ -156,6 +156,21 @@ namespace AutoQCTest
         }
 
         public void LogErrorToUi(string text, bool scrollToEnd = true, bool trim = false)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void LogLinesToUi(List<string> lines)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void LogErrorLinesToUi(List<string> lines)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DisplayError(string title, string message)
         {
             throw new NotImplementedException();
         }

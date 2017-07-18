@@ -124,12 +124,11 @@ namespace AutoQC
 
             try
             {
-                Config.MainSettings.ValidateSettings();
+                InitLogger();
             }
-            catch (ArgumentException ex)
+            catch (ConfigRunnerException)
             {
                 ChangeStatus(RunnerStatus.Error);
-                _logger.LogException(ex);
                 throw;
             }
 
@@ -155,11 +154,23 @@ namespace AutoQC
 
         private void InitLogger()
         {
-            var sb = new StringBuilder("");
-            sb.AppendLine("Initializing logging...");
-            sb.AppendLine("");
-            sb.Append(Config);
-            _logger.Log(sb.ToString());
+            try
+            {
+                ((AutoQcLogger)_logger).Init();
+            }
+            catch (Exception e)
+            {
+                var sb = new StringBuilder(string.Format("Logger could not be initialized for confuguration \"{0}\"", GetConfigName()));
+                sb.AppendLine().AppendLine();
+                sb.AppendLine("Log file: " + _logger.GetFile());
+                sb.AppendLine().AppendLine();
+                sb.AppendLine(e.Message);
+                throw new ConfigRunnerException(sb.ToString(), e);
+            }
+
+            var msg = new StringBuilder("Logging initialized...");
+            msg.Append(Config).AppendLine();
+            _logger.Log(msg.ToString());
         }
 
         private void RunBackgroundWorker(DoWorkEventHandler doWork, RunWorkerCompletedEventHandler doOnComplete)
@@ -190,9 +201,11 @@ namespace AutoQC
             {
                 ChangeStatus(RunnerStatus.Starting);
 
-                // Thread.Sleep(2000);
+                Config.MainSettings.ValidateSettings();
 
-                InitLogger();
+                Config.PanoramaSettings.ValidateSettings();
+
+                // Thread.Sleep(2000);
 
                 _fileWatcher = new AutoQCFileSystemWatcher(_logger);
 
@@ -230,9 +243,32 @@ namespace AutoQC
                 e.Result = COMPLETED;
             }
 
+            catch (ArgumentException x)
+            {
+                var err = new StringBuilder(string.Format("There was an error validating configuration \"{0}\"",
+                    Config.Name));
+                
+                LogException(x, err.ToString());
+                ChangeStatus(RunnerStatus.Error);
+
+                err.AppendLine().AppendLine().Append(x.Message);
+                _uiControl.DisplayError("Configuration Validation Error", err.ToString());
+            }
+            catch (FileWatcherException x)
+            {
+                var err = new StringBuilder(string.Format("There was an error looking for files for configuration \"{0}\"",
+                    Config.Name));
+
+                LogException(x, err.ToString());
+                ChangeStatus(RunnerStatus.Error);
+
+                err.AppendLine().AppendLine().Append(x.Message);
+                _uiControl.DisplayError("File Watcher Error", err.ToString());   
+            }
             catch (Exception x)
             {
-                LogException(x);
+                LogException(x, string.Format("There was an error running configuration \"{0}\"",
+                    Config.Name));
                 ChangeStatus(RunnerStatus.Error);
             }
         }
@@ -260,12 +296,6 @@ namespace AutoQC
                     {
                         // If there was an error uploading to Panorama, we will stop here
                         break;
-                    }
-
-                    if (!_fileWatcher.IsFolderAvailable())
-                    {
-                        // We may have lost connection to a mapped network drive.
-                        continue;
                     }
 
                     if (success)
@@ -349,8 +379,7 @@ namespace AutoQC
         {
             if (e.Error != null)
             {
-                LogError("An exception occurred while importing the file.");
-                LogException(e.Error);  
+                LogException(e.Error, "An exception occurred while importing the file.");  
             }
             else if (e.Result == null)
             {
@@ -428,6 +457,7 @@ namespace AutoQC
         private bool ImportFile(DoWorkEventArgs e, ImportContext importContext, bool addToReimportQueueOnFailure = true)
         {
             var filePath = importContext.GetCurrentFile();
+            
             try
             {
                 _fileWatcher.WaitForFileReady(filePath);
@@ -440,7 +470,7 @@ namespace AutoQC
                 }
                 else
                 {
-                    _logger.LogException(fse);
+                    _logger.LogException(fse, "Error getting status of file {0}.", filePath);
                 }
                 // Put the file in the re-import queue
                 if (addToReimportQueueOnFailure)
@@ -503,7 +533,10 @@ namespace AutoQC
 
             Task.Run(() =>
             {
-                _fileWatcher.Stop();
+                if (_fileWatcher != null)
+                {
+                    _fileWatcher.Stop();
+                }
                 _totalImportCount = 0;
 
                 if (_worker != null && _worker.IsBusy)
@@ -571,8 +604,7 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                logger.LogError("Exception reading file {0}. Exception details are: ", mainSettings.SkylineFilePath);
-                logger.LogException(e);
+                logger.LogException(e, "Error reading file {0}.", mainSettings.SkylineFilePath);
                 return false;
             }
             logger.LogError("\"Integrate all\" is not checked for the Skyline document. This setting is under the \"Settings\" menu in Skyline, and should be checked for " +
@@ -627,8 +659,7 @@ namespace AutoQC
             }
             catch (IOException e)
             {
-                logger.LogError("Exception reading file {0}. Exception details are: ", reportFile);
-                logger.LogException(e);
+                logger.LogException(e, "Error reading file {0}.", reportFile);
                 return false;
             }
             return true;
@@ -661,8 +692,7 @@ namespace AutoQC
                         }
                         catch (Exception e)
                         {
-                            logger.LogError("Error parsing acquired time from Skyline report: {0}", reportFile);
-                            logger.LogException(e);
+                            logger.LogException(e, "Error parsing acquired time from Skyline report: {0}", reportFile);
                         }
                         if (acqDate.CompareTo(lastAcq) == 1)
                         {
@@ -685,9 +715,9 @@ namespace AutoQC
             _logger.LogError(message, args);
         }
 
-        private void LogException(Exception e)
+        private void LogException(Exception e, string message, params Object[] args)
         {
-            _logger.LogException(e);
+            _logger.LogException(e, message, args);
         }
 
         private void CancelAsync()
@@ -793,5 +823,12 @@ namespace AutoQC
         Error,
         DocImportError,
         PanoramaUploadError
+    }
+
+    public class ConfigRunnerException : SystemException
+    {
+        public ConfigRunnerException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
     }
 }

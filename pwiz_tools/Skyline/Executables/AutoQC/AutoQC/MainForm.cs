@@ -29,7 +29,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using AutoQC.Properties;
-using log4net;
 
 namespace AutoQC
 {
@@ -108,7 +107,7 @@ namespace AutoQC
             configForm.StartPosition = FormStartPosition.CenterParent;
             configForm.ShowDialog();
         }
-
+        // TODO: Do we need this? 
         private void RunEnabledConfigurations()
         {
             foreach (var configRunner in _configRunners.Values)
@@ -120,15 +119,17 @@ namespace AutoQC
             }
         }
 
-        private static void StartConfigRunner(ConfigRunner configRunner)
+        private void StartConfigRunner(ConfigRunner configRunner)
         {
             try
             {
                 configRunner.Start();
             }
-            catch (ArgumentException e)
+            catch (Exception e)
             {
-                ShowErrorDialog("Configuration Validation Error", e.Message);
+                var msg = string.Format("Error Starting Configuration \"{0}\"", configRunner.Config.Name);
+                ShowErrorDialog(msg, e.Message);
+                Program.LogError(msg, e);
             }
         }
 
@@ -152,9 +153,9 @@ namespace AutoQC
             }
         }
 
-        public static void ShowErrorDialog(string title, string message)
+        private void ShowErrorDialog(string title, string message)
         {
-            MessageBox.Show(message, title, MessageBoxButtons.OK);     
+            MessageBox.Show(this, message, title, MessageBoxButtons.OK);    
         }
 
         #region event handlers
@@ -291,7 +292,7 @@ namespace AutoQC
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 MessageBox.Show(string.Format("Could not import configurations from file {0}", filePath),
                     "Import Configurations Error",
@@ -490,10 +491,27 @@ namespace AutoQC
         {
             ConfigRunner runner;
             _configRunners.TryGetValue(configName, out runner);
+            var logger = runner != null ? runner.GetLogger() : null;
 
-            if (runner == null) return;
+            if (_currentAutoQcLogger != null && logger == _currentAutoQcLogger)
+            {
+                return;
+            }
 
-            var logger = runner.GetLogger();
+            foreach (var configRunner in _configRunners.Values)
+            {
+                configRunner.DisableUiLogging(); // Disable logging on all configurations first
+            }
+
+            textBoxLog.Clear(); // clear any existing log
+
+            if (runner == null) 
+            {
+                MessageBox.Show(string.Format("No configuration found for name \"{0}\"", configName), "",
+                    MessageBoxButtons.OK);
+                return;
+            }
+            
             if (logger == null)
             {
                 MessageBox.Show("Log for this configuration is not yet initialized.", "",
@@ -501,12 +519,8 @@ namespace AutoQC
                 return;
             }
 
-            if (logger == _currentAutoQcLogger)
-            {
-                return;
-            }
-
             _currentAutoQcLogger = logger;
+            runner.EnableUiLogging();
 
             var logFile = logger.GetFile();
             if (!File.Exists(logFile))
@@ -516,13 +530,6 @@ namespace AutoQC
                 return;
             }
 
-            foreach (var configRunner in _configRunners.Values)
-            {
-                configRunner.DisableUiLogging();
-            }
-
-            runner.EnableUiLogging();
-            textBoxLog.Clear(); // clear any existing log
             try
             {
                 await Task.Run(() =>
@@ -533,7 +540,7 @@ namespace AutoQC
             }
             catch (Exception ex)
             {
-                ShowErrorDialog("Error reading log", ex.Message);
+                ShowErrorDialog("Error Reading Log", ex.Message);
             }
 
             ScrollToLogEnd();
@@ -561,9 +568,14 @@ namespace AutoQC
                 var arg = "/select, \"" + runner.GetLogger().GetFile() + "\"";
                 Process.Start("explorer.exe", arg);
             }
-            else
+            else if(Directory.Exists(runner.GetLogDirectory()))
             {
                 Process.Start(runner.GetLogDirectory());
+            }
+            else
+            {
+                var err = string.Format("Directory does not exist: {0}", runner.GetLogDirectory());
+                ShowErrorDialog("Directory Not Found", err);
             }
 
         }
@@ -798,6 +810,41 @@ namespace AutoQC
             });      
         }
 
+        public void LogLinesToUi(List<string> lines)
+        {
+            RunUI(() =>
+            {
+                foreach (var line in lines)
+                {
+                    textBoxLog.AppendText(line);
+                    textBoxLog.AppendText(Environment.NewLine);
+                }
+            });   
+        }
+
+        public void LogErrorLinesToUi(List<string> lines)
+        {
+            RunUI(() =>
+            {
+                var selectionStart = textBoxLog.SelectionStart;
+                foreach (var line in lines)
+                {
+                    textBoxLog.AppendText(line);
+                    textBoxLog.AppendText(Environment.NewLine);
+                }
+                textBoxLog.Select(selectionStart, textBoxLog.TextLength);
+                textBoxLog.SelectionColor = Color.Red;
+            });      
+        }
+
+        public void DisplayError(string title, string message)
+        {
+            RunUI(() =>
+            {
+                ShowErrorDialog(title, message);
+            }); 
+        }
+
         #endregion
 
         private void RunUI(Action action)
@@ -945,5 +992,8 @@ namespace AutoQC
         AutoQcConfig GetConfig(string name);
         void LogToUi(string text, bool scrollToEnd = true, bool trim = true);
         void LogErrorToUi(string text, bool scrollToEnd = true, bool trim = true);
+        void LogLinesToUi(List<string> lines);
+        void LogErrorLinesToUi(List<string> lines);
+        void DisplayError(string title, string message);
     }
 }
