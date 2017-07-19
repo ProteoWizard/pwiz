@@ -3009,8 +3009,10 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, timePropsContextMenuItem);
 
                 bool canApply, canRemove;
-                CanApplyOrRemovePeak(removePeakGraphMenuItem.DropDownItems, _graphRetentionTime.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType,
-                                     out canApply, out canRemove);
+                var isotopeLabelType = _graphRetentionTime != null && _graphRetentionTime.GraphPaneFromPoint(mousePt) != null
+                    ? _graphPeakArea.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType
+                    : null;
+                CanApplyOrRemovePeak(removePeakGraphMenuItem.DropDownItems, isotopeLabelType, out canApply, out canRemove);
                 if (canApply || canRemove)
                 {
                     menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
@@ -3766,8 +3768,10 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert, toolStripSeparator28);
 
             bool canApply, canRemove;
-            CanApplyOrRemovePeak(removePeakGraphMenuItem.DropDownItems, _graphPeakArea.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType,
-                                 out canApply, out canRemove);
+            var isotopeLabelType = _graphPeakArea != null && _graphPeakArea.GraphPaneFromPoint(mousePt) != null
+                ? _graphPeakArea.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType
+                : null;
+            CanApplyOrRemovePeak(removePeakGraphMenuItem.DropDownItems, isotopeLabelType, out canApply, out canRemove);
             if (canApply || canRemove)
             {
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator33);
