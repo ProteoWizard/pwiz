@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>IDPicker</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192"  href="/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <!--<link rel="stylesheet" href="fonts/font-mfizz.css">-->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body id="idp_homepage">
+
+    <div class="header">
+      
+      <!-- Static navbar -->
+      <nav class="navbar navbar-default navbar-inverse navbar-static-top">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand visible-xs" href="#">IDPicker</a>
+          </div>
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav navbar-right">
+              <a href="https://teamcity.labkey.org/viewLog.html?buildId=lastSuccessful&tab=artifacts&buildTypeId=Bumbershoot_Windows_X86_64&guest=1" id="idp_link" class="navbar-text hidden-xs hidden-sm navbar-link">Current version: <span id="idp_version">3.0</span>
+</a>
+              <!--<li class="active"><a href="#">Home</a></li>
+              <li><a href="docs/">Docs</a></li>-->
+              <!--<li><a href="logos/">Logo</a></li>-->
+              <!--<li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Example Reports <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                  <li class="dropdown-header">Analysis Types</li>
+                  <li><a href="examples/">RNA-Seq</a></li>
+                </ul>
+              </li>-->
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+      
+      <div class="container">
+        <div class="row">
+          <div class="col-md-8">
+            <h1>
+              <object type="image/svg+xml" title="IDPicker" data="IDPicker_logo_white.svg">
+                <!--<img src="IDPicker_logo_white.png" alt="IDPicker logo">-->
+              </object>
+            </h1>
+            <p class="lead">Identify and quantify shotgun proteomics data with confidence</p>
+            <p>IDPicker is a tool for viewing and filtering peptide-spectrum-matches (PSMs).
+              It can read and combine results from many different proteomic identification tools, including database search engines and spectral library matchers.</p>
+        </div>
+          <div class="col-md-4" id="header-buttons">
+            
+            <!--<a class="btn btn-block btn-lg btn-primary" href="docs">
+              <i class="fa fa-book fa-lg"></i> Documentation
+            </a>-->
+            <button type="button" class="btn btn-block btn-lg btn-primary" data-toggle="modal" data-target="#supported-tools-modal">
+              <i class="fa fa-hand-o-right"></i> Supported tools
+            </button>
+            <button type="button" class="btn btn-block btn-lg btn-primary" data-toggle="modal" data-target="#publication-modal">
+              <i class="fa fa-file-text"></i> Publication / Citation
+            </button>
+            <button type="button" class="btn btn-block btn-lg btn-primary" id="gitter_btn">
+              <img height="18" src="http://san.rocks/fa/gitter1.svg" style="filter: invert(100%);"> Get help on Gitter
+            </button>
+            <!--<a class="visible-xs visible-sm btn btn-block btn-lg btn-primary" href="examples/rna-seq/multiqc_report.html">
+              <i class="glyphicon glyphicon-search"></i> Example Report
+            </a>-->
+            <a class="btn btn-block btn-lg btn-primary" href="https://sourceforge.net/p/proteowizard/code/HEAD/tree/trunk/pwiz/pwiz_tools/Bumbershoot/idpicker/">
+              <i class="fa fa-code-fork fa-lg"></i> Source code
+            </a>
+            <div class="panel panel-primary" id="quick_install">
+              <div class="panel-heading">
+                <i class="fa fa-cloud-download"></i> Download / Install <br>
+              </div>
+              <div class="panel-body">
+                <pre id="windows"><code><a href="http://proteowizard.sourceforge.net/downloads.shtml"> Download from ProteoWizard </a></code></pre>
+                <pre id="conda" style="display:none;"><code>conda install -c bioconda bumbershoot </code></pre>
+                <div class="btn-group btn-group-justified btn-group-xs install-switcher" role="group">
+                  <a href="#windows" class="btn active fa fa-windows"> Windows </a>
+                  <a href="#conda" class="btn fa fa-linux"> Linux (conda) </a>
+                </div>
+              </div>
+            </div>
+            <!--<p class="sub-panel"><small>Need a little more help? <a href="docs">See the full installation instructions</a>.</small></p>-->
+          </div>
+          </div>
+            <div class="row videos-row">
+              <div class="col-md-6">
+                <div class="embed-responsive embed-responsive-16by9 homepage-header-video hidden-xs hidden-sm">
+                  <iframe id="multiqc-video" class="embed-responsive-item" src="https://www.youtube.com/embed/vTmP6FrrMRs?rel=0&amp;showinfo=0" allowfullscreen></iframe>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <ul class="list-switch left video-chooser">
+                  <li><a href="https://youtu.be/vTmP6FrrMRs" data-src="https://www.youtube.com/embed/vTmP6FrrMRs?rel=0&amp;showinfo=0" class="active"><span class="hidden-lg hidden-md label label-default">Video</span> Importing results into IDPicker <em>(6:42)</em></a></li>
+                  <li><a href="https://youtu.be/QhPRzX7Nh5g" data-src="https://www.youtube.com/embed/QhPRzX7Nh5g?rel=0&amp;showinfo=0"><span class="hidden-lg hidden-md label label-default">Video</span> Glossary of Terms <em>(4:33)</em></a></li>
+                  <li><a href="https://youtu.be/kDCI5Iqljg8" data-src="https://www.youtube.com/embed/kDCI5Iqljg8?rel=0&amp;showinfo=0"><span class="hidden-lg hidden-md label label-default">Video</span> Protein View Tutorial <em>(5:08)</em></a></li>
+                  <li><a href="https://youtu.be/WSbHox8JBTU" data-src="https://www.youtube.com/embed/WSbHox8JBTU?rel=0&amp;showinfo=0"><span class="hidden-lg hidden-md label label-default">Video</span> Gene Features Tutorial <em>(2:44)</em></a></li>
+                  <li><a href="https://youtu.be/4963-mGc0iU" data-src="https://www.youtube.com/embed/4963-mGc0iU?rel=0&amp;showinfo=0"><span class="hidden-lg hidden-md label label-default">Video</span> NetGestalt Integration <em>(5:50)</em></a></li>
+                </ul>
+              </div>
+            </div>
+      </div>
+    </div> <!-- end of header -->
+
+    <div class="container"><div class="content_block">
+      <p class="content-lead">You might want to try IDPicker if you want to...</p>
+
+      <section>
+        <div class="row">
+          <div class="col-md-6">
+            <h3>Slice PSMs your way</h3>
+            <p>IDPicker lets you look at PSMs from different perspectives: it has protein-centric, peptide-centric, spectrum-centric, and modification-centric views.
+              The hierarchy shown in each view is further customizable by "tree grouping".
+              The data displayed can be further customized by "view filters". For example, if double-click a row in the protein view, the peptide, spectrum, and modification views will be filtered to only show rows that relate to that protein.</p>
+          </div>
+          <div class="col-md-6 text-center">
+            <div id="screenshot-carousel" class="carousel slide" data-ride="carousel">
+              <!-- Indicators -->
+              <ol class="carousel-indicators">
+                <li data-target="#screenshot-carousel" data-slide-to="0" class="active"></li>
+                <li data-target="#screenshot-carousel" data-slide-to="1"></li>
+                <li data-target="#screenshot-carousel" data-slide-to="2"></li>
+                <li data-target="#screenshot-carousel" data-slide-to="3"></li>
+                <li data-target="#screenshot-carousel" data-slide-to="4"></li>
+              </ol>
+            
+              <!-- Wrapper for slides -->
+              <div class="carousel-inner">
+                <div class="item active"><img src="ProteinView.PNG" alt="Protein View"><div class="carousel-caption"><h2>Protein View</h2></div></div>
+                <div class="item"><img src="PeptideView.PNG" alt="Peptide View"><div class="carousel-caption"><h2>Peptide View</h2></div></div>
+                <div class="item"><img src="SpectrumView.PNG" alt="Spectrum View"><div class="carousel-caption"><h2>Spectrum View</h2></div></div>
+                <div class="item"><img src="ModGridView.PNG" alt="Modification Grid View"><div class="carousel-caption"><h2>Modification Grid View</h2></div></div>
+                <div class="item"><img src="FilterHistory.PNG" alt="Filter History"><div class="carousel-caption"><h2>Filter History</h2></div></div>
+              </div>
+            
+              <!-- Left and right controls -->
+              <a class="left carousel-control" href="#screenshot-carousel" data-slide="prev">
+                <span class="glyphicon glyphicon-chevron-left"></span>
+                <span class="sr-only">Previous</span>
+              </a>
+              <a class="right carousel-control" href="#screenshot-carousel" data-slide="next">
+                <span class="glyphicon glyphicon-chevron-right"></span>
+                <span class="sr-only">Next</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+        
+      <section>
+        <div class="row">
+          <div class="col-md-8">
+            <h3>Aggregate 1000s of samples in one report</h3>
+            <p>Many proteomic tools either focus on presenting results for one sample at a time, or struggle with large numbers of samples. IDPicker was designed to be more scaleable.</p>
+          </div>
+            
+          <div class="col-md-4 text-center">
+            <img class="img-circle img-thumbnail" src="NetgetstaltCCT.PNG" alt="NetGestalt Composite Continuous Track">
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="row">
+          <div class="col-md-8">
+            <h3>Support most identification software and analytical techniques</h3>
+            <p>IDPicker has built-in support for most popular identification tools and analytical techniques. Even if your tool isn't supported, as long as the tool can create pepXML or mzIdentML files, you add a custom setting to support it.</p>
+          </div>
+          <div class="col-md-4 text-center">
+            <div class="img-circle img-thumbnail">
+              <div class="tool-list">
+                <ul class="list-inline">
+                  <li>Comet</li>
+                  <li>Mascot</li>
+                  <li>MS-GF+</li>
+                  <li>MyriMatch</li>
+                  <li>Pepitome</li>
+                  <li>pFind</li>
+                  <li>Sequest</li>
+                  <li>SpectraST</li>
+                  <li>TagRecon</li>
+                  <li>X! Tandem</li>
+                  <li>Label free</li>
+                  <li>iTRAQ 4/8plex</li>
+                  <li>TMT 2/6/10plex</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <section>
+        <div class="row">
+          <div class="col-md-8">
+            <h3>Share and merge reports easily</h3>
+            <p>IDPicker files (.idpDBs) are self-contained; they store all the relationships between proteins, peptides, and spectra.
+              Spectral peaks and quantitation data can be optionally embedded (if the raw data is available).
+              You can share a report on thousands of samples, with millions of spectra embedded, by just sending a single (large!) file; no need to fiddle with zipping and unzipping!</p>
+          </div>
+          <div class="col-md-4 text-center">
+            <div class="img-circle img-thumbnail">
+              <div class="tool-list">
+                <span class="fa fa-file-zip-o" style="font-size: 6em"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="focus-section">
+        <h2>Ready to install?</h2>
+        <p>To install the Windows GUI client, download the installer from <a href="http://proteowizard.sourceforge.net/downloads.shtml">ProteoWizard</a><br>
+           To install the command-line tools for Linux using conda, run <code>conda install -c bioconda bumbershoot</code>
+        </p>
+           <p>See the <a href="http://proteowizard.sourceforge.net/user_installation_simple.shtml">installation instructions</a> for more help.</p>
+        <p>
+          <a href="docs" class="btn btn-default btn-lg"><i class="fa fa-book fa-lg"></i> Documentation</a>
+          <a target="_blank" href="https://sourceforge.net/p/proteowizard/code/HEAD/tree/trunk/pwiz/pwiz_tools/Bumbershoot/idpicker/" class="btn btn-default btn-lg"><i class="fa fa-code-fork"></i> View on SourceForge</a>
+        </p>
+      </section>
+          
+    </div></div> <!-- /content /container -->
+    
+    <footer id="footer">
+      <div class="container">
+        <p>Created by Matt Chambers, based on Phil Ewels's multiqc.info
+          <!--<a target="_blank" href="https://github.com/"><i class="fa fa-github"></i> </a> |
+          <a target="_blank" href="https://twitter.com/"><i class="fa fa-twitter"></i> </a> |
+          <a target="_blank" href="https://se.linkedin.com">LinkedIn</a> |
+          <a target="_blank" href="https://www.researchgate.net">ResearchGate</a>-->
+        </p>
+      </div>
+    </footer>
+    
+    <!-- Supported tools modal -->
+    <div class="modal fade" id="supported-tools-modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">IDPicker: Supported Tools</h4>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-info">
+              IDPicker supports most proteomic search engines that produce pepXML or mzIdentML output files. There is built-in support for:
+            </div>
+            <ul class="mod-list-list">
+              <li class="mod-list">Comet</li>
+              <li class="mod-list">Mascot</li>
+              <li class="mod-list">MS-GF+</li>
+              <li class="mod-list">MyriMatch</li>
+              <li class="mod-list">Pepitome</li>
+              <li class="mod-list">pFind</li>
+              <li class="mod-list">Sequest</li>
+              <li class="mod-list">SpectraST</li>
+              <li class="mod-list">TagRecon</li>
+              <li class="mod-list">X! Tandem</li>
+            </ul>
+            <div>
+              Other software can be supported by customizing the score names that IDPicker looks for in the pepXML/mzIdentML files. If you would like another score preset to be added, just ask.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Publication / Citation modal -->
+    <div class="modal fade" id="publication-modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h3 class="modal-title">IDPicker: Publication Details</h3>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-info">
+              Please cite IDPicker if you use it in your analysis.
+            </div>
+            <h4>Citation</h4>
+            <blockquote>
+              <strong>IDPicker 2.0: Improved protein assembly with high discrimination peptide identification filtering</strong><br>
+              <em>Ma ZQ, Dasari S, Chambers MC, Litton MD, Sobecki SM, Zimmerman LJ, Halvey PJ, Schilling B, Drake PM, Gibson BW, Tabb DL.</em><br>
+              J Proteome Res. 2009<br>
+              doi: <a href="http://dx.doi.org/10.1021/pr900360j" target="_blank">10.1021/pr900360j</a><br>
+              PMID: <a href="http://www.ncbi.nlm.nih.gov/pubmed/19522537" target="_blank">19522537</a>
+            </blockquote>
+            <h4>Abstract</h4>
+            <div class="well">
+              <p>Tandem mass spectrometry-based shotgun proteomics has become a widespread technology for analyzing complex protein mixtures. 
+                A number of database searching algorithms have been developed to assign peptide sequences to tandem mass spectra. 
+                Assembling the peptide identifications to proteins, however, is a challenging issue because many peptides are shared among multiple proteins. 
+                IDPicker is an open-source protein assembly tool that derives a minimum protein list from peptide identifications filtered to a specified False Discovery Rate. 
+                Here, we update IDPicker to increase confident peptide identifications by combining multiple scores produced by database search tools. 
+                By segregating peptide identifications for thresholding using both the precursor charge state and the number of tryptic termini, 
+                IDPicker retrieves more peptides for protein assembly. The new version is more robust against false positive proteins, especially in searches using multispecies databases, 
+                by requiring additional novel peptides in the parsimony process. IDPicker has been designed for incorporation in many identification workflows by the addition of a graphical 
+                user interface and the ability to read identifications from the pepXML format. 
+                These advances position IDPicker for high peptide discrimination and reliable protein assembly in large-scale proteomics studies.</p>
+              <p><strong>Availability:</strong>
+                IDPicker is now part of the ProteoWizard project, licensed under Apache 2.0. Documentation and example reports are available at
+                <a href="http://idpicker.org">http://idpicker.org</a></p>
+            </div>
+            <!--<div style="width: 300px; margin: 20px auto 0;">
+              <div data-badge-details="right" data-badge-type="medium-donut" data-doi="10.1021/pr900360j" class="altmetric-embed"></div>
+            </div>-->
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <a href="http://dx.doi.org/10.1021/pr900360j" class="btn btn-primary">Go to publication</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="homepage.js"></script>
+    
+    <!-- Altmetric 
+    <script type='text/javascript' src='https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js'></script>-->
+    
+    <!-- Gitter -->
+    <script>
+      ((window.gitter = {}).chat = {}).options = {
+        room: 'bumbershoot-tools/idpicker',
+        activationElement: '#gitter_btn',
+      };
+    </script>
+    <script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
+    
+    <!-- Update version -->
+    <script>
+      $(document).ready(function(){
+        $.ajax({ url: "https://teamcity.labkey.org/guestAuth/repository/download/Bumbershoot_Windows_X86_64/lastSuccessful/IDPICKER_VERSION",
+          context: document.body,
+          success: function(data){
+           $("#idp_version").replaceWith(data)
+           $("#idp_link").attr("href", "https://teamcity.labkey.org/guestAuth/repository/download/Bumbershoot_Windows_X86_64/lastSuccessful/IDPicker-" + data + "-x86_64.msi")
+        }});
+});
+    </script>
+    <!-- Google Analytics 
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-68098153-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>-->
+  </body>
+</html>
