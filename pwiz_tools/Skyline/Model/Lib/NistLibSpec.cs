@@ -29,6 +29,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -1117,6 +1118,23 @@ namespace pwiz.Skyline.Model.Lib
                     RetentionTime = _libraryEntries[i].RT
                 };
             }
+        }
+
+        public override IList<RetentionTimeSource> ListRetentionTimeSources()
+        {
+            if (_libraryEntries == null)
+                return base.ListRetentionTimeSources();
+
+            return _libraryEntries.Any(entry => entry.RT.HasValue)
+                ? new List<RetentionTimeSource> {new RetentionTimeSource(FilePath, Name)}
+                : base.ListRetentionTimeSources();
+        }
+
+        public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<string> peptideSequences, ref int? fileIndex)
+        {
+            return Equals(FilePath, filePath)
+                ? LibraryEntriesWithSequences(peptideSequences).Where(spectrum => spectrum.RT.HasValue).Select(spectrum => spectrum.RT.Value)
+                : base.GetRetentionTimesWithSequences(filePath, peptideSequences, ref fileIndex);
         }
 
         public override bool TryGetIrts(out LibraryRetentionTimes retentionTimes)
