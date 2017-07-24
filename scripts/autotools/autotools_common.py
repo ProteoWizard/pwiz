@@ -18,7 +18,7 @@ def get_pwizroot() :
 # also avoid any non-apache code like RAMP (LGPL) and vendor-supplied headers
 forbidden=set(["bindings","mz5","Image.cpp","COM",".svn","automation_vector","MascotReaderTest","Reader_UIMF_Test","Reader_Shimadzu_Test","Pseudo2DGel","pwiz_tools\\commandline","pwiz_tools\\BiblioSpec","\\utility\\misc\\sha1calc.cpp","RegionAnalyzerTest","msbenchmark","data\\msdata\\ramp","hello_ramp","pwiz_aux","RAMPAdapter","MascotReader.cpp","Reader_Agilent_Detail","Reader_ABI_T2D_Detail"])
 excepted=set(["pwiz_tools\\commandline\\msconvert","pwiz_tools\\commandline\\idconvert","pwiz_tools\\commandline\\pepcat","\\Version.","ExtendedReaderList","Eigen"])
-welcomeIncludes=set(["pwiz\\pwiz","pwiz\\data","libraries\\zlib","libraries\\libsvm","libraries\\boost_aux","libraries\\Eigen","libraries\\CSpline","findmf"])
+welcomeIncludes=set(["pwiz\\pwiz","pwiz\\data","libraries\\zlib","libraries\\libsvm","libraries\\boost_aux","libraries\\Eigen","libraries\\CSpline","findmf","libraries\\doctest.h"])
 welcomeSrcDirs=set(["pwiz\\data","pwiz\\analysis","pwiz\\utility","pwiz_tools\\examples\\","pwiz_tools\\common\\","libraries\\libsvm","libraries\\Eigen","libraries\\CSpline"])
 
 # include the whole boost_aux tree, and others with depth but no -I reference

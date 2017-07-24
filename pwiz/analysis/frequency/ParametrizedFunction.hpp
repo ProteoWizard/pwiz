@@ -30,6 +30,9 @@
 
 
 #include "boost/numeric/ublas/vector.hpp"
+#if (BOOST_VERSION/100) >= 1064
+#include "boost/serialization/array_wrapper.hpp" // Workaround for https://stackoverflow.com/questions/44534516/error-make-array-is-not-a-member-of-boostserialization
+#endif
 #include "boost/numeric/ublas/matrix.hpp"
 #include "boost/numeric/ublas/io.hpp"
 #include "boost/numeric/ublas/matrix_proxy.hpp"
