@@ -163,7 +163,7 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                Program.LogError("Error encrypting password. " + e.Message);
+                Program.LogError("Error encrypting password. ", e);
   
             }
             return string.Empty;
@@ -183,8 +183,8 @@ namespace AutoQC
                 return Encoding.UTF8.GetString(decrypted);
             }
             catch (Exception e)
-            {
-                Program.LogError("Error decrypting password. " + e.Message);      
+            {              
+                Program.LogError("Error decrypting password. ", e);
             }
             return string.Empty;
         }
