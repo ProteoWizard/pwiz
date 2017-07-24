@@ -272,22 +272,14 @@ namespace AutoQC
                 {
                     using (var reader = XmlReader.Create(stream))
                     {
-                        reader.MoveToContent();
-
-                        var done = false;
-                        while (reader.Read() && !done)
-                        {
-                            switch (reader.NodeType)
+                        while (reader.IsStartElement())
+                        {  
+                            if (reader.Name == "autoqc_config")
                             {
-                                case XmlNodeType.Element:
-
-                                    if (reader.Name == "autoqc_config")
-                                    {
-                                        AutoQcConfig config = AutoQcConfig.Deserialize(reader);
-                                        readConfigs.Add(config);
-                                    }
-                                    break;
+                                AutoQcConfig config = AutoQcConfig.Deserialize(reader);
+                                readConfigs.Add(config);
                             }
+                            reader.Read();
                         }
                     }
                 }
@@ -335,7 +327,7 @@ namespace AutoQC
                 numAdded++;
             }
 
-            var message = new StringBuilder("Number of configurations imported:");
+            var message = new StringBuilder("Number of configurations imported: ");
             message.Append(numAdded).Append(Environment.NewLine);
             if (duplicateConfigs.Count > 0)
             {

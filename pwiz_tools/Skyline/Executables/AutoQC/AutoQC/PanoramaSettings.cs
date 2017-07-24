@@ -145,6 +145,8 @@ namespace AutoQC
             return null;
         }
 
+        // Changed DataProtectionScope from LocalMachine to CurrentUser
+        // https://stackoverflow.com/questions/19164926/data-protection-api-scope-localmachine-currentuser
         public static string EncryptPassword(string password)
         {
             if (string.IsNullOrEmpty(password))

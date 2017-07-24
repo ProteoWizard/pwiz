@@ -36,7 +36,11 @@ namespace AutoQCTest
             SetupTestFolder(folderToWatch, instrument, out dataFiles);
 
             var watcher = new AutoQCFileSystemWatcher(new TestLogger());
+            AutoQcConfig config = new AutoQcConfig();
+            
             var mainSettings = MainSettings.GetDefault();
+            config.MainSettings = mainSettings;
+
             Assert.AreEqual(mainSettings.QcFileFilter, FileFilter.GetFileFilter(AllFileFilter.NAME, string.Empty));
             mainSettings.SkylineFilePath = skyFile;
             mainSettings.IncludeSubfolders = false;
@@ -44,7 +48,7 @@ namespace AutoQCTest
             mainSettings.FolderToWatch = folderToWatch;
             mainSettings.ValidateSettings();
 
-            watcher.Init(mainSettings);
+            watcher.Init(config);
             var files = watcher.GetExistingFiles();
             Assert.AreEqual(1, files.Count);
             Assert.AreEqual(dataFiles[0], files[0]);
@@ -52,7 +56,7 @@ namespace AutoQCTest
             mainSettings.IncludeSubfolders = true;
             mainSettings.ValidateSettings();
 
-            watcher.Init(mainSettings);
+            watcher.Init(config);
             files = watcher.GetExistingFiles();
             Assert.AreEqual(5, files.Count);
             Assert.IsTrue(files.Contains(dataFiles[0]));
@@ -69,7 +73,7 @@ namespace AutoQCTest
               "two_qc_"
              */
             mainSettings.QcFileFilter = FileFilter.GetFileFilter(ContainsFilter.NAME, "QC");
-            watcher.Init(mainSettings);
+            watcher.Init(config);
             files = watcher.GetExistingFiles();
             Assert.AreEqual(4, files.Count);
             Assert.IsTrue(files.Contains(dataFiles[0]));
@@ -78,20 +82,20 @@ namespace AutoQCTest
             Assert.IsTrue(files.Contains(dataFiles[3]));
 
             mainSettings.QcFileFilter = FileFilter.GetFileFilter(StartsWithFilter.NAME, "QC_");
-            watcher.Init(mainSettings);
+            watcher.Init(config);
             files = watcher.GetExistingFiles();
             Assert.AreEqual(1, files.Count);
             Assert.IsTrue(files.Contains(dataFiles[1]));
 
             mainSettings.QcFileFilter = FileFilter.GetFileFilter(EndsWithFilter.NAME, "_QC_");
-            watcher.Init(mainSettings);
+            watcher.Init(config);
             files = watcher.GetExistingFiles();
             Assert.AreEqual(2, files.Count);
             Assert.IsTrue(files.Contains(dataFiles[0]));
             Assert.IsTrue(files.Contains(dataFiles[2]));
 
             mainSettings.QcFileFilter = FileFilter.GetFileFilter(RegexFilter.NAME, "[ab]_QC");
-            watcher.Init(mainSettings);
+            watcher.Init(config);
             files = watcher.GetExistingFiles();
             Assert.AreEqual(2, files.Count);
             Assert.IsTrue(files.Contains(dataFiles[2]));
@@ -163,17 +167,20 @@ namespace AutoQCTest
             // Create a .sky files
             var skyFile = CreateFile(folderToWatch, "test2_a.sky");
 
+            var config = new AutoQcConfig();
 
             // 1. Look for files in folderToWatchOnly
             var watcher = new AutoQCFileSystemWatcher(logger);
             var mainSettings = MainSettings.GetDefault();
+            config.MainSettings = mainSettings;
+
             mainSettings.SkylineFilePath = skyFile;
             mainSettings.IncludeSubfolders = false;
             mainSettings.InstrumentType = instrument;
             mainSettings.FolderToWatch = folderToWatch;
             mainSettings.ValidateSettings();
 
-            watcher.Init(mainSettings);
+            watcher.Init(config);
             watcher.StartWatching(); // Start watching
             Assert.AreEqual(0, watcher.GetExistingFiles().Count); // No existing files
 
@@ -198,7 +205,7 @@ namespace AutoQCTest
             mainSettings.FolderToWatch = folderToWatch;
             mainSettings.IncludeSubfolders = true; // watch sub-folders
             mainSettings.ValidateSettings();
-            watcher.Init(mainSettings);
+            watcher.Init(config);
 
             watcher.StartWatching(); // Start watching
             Assert.AreEqual(0, watcher.GetExistingFiles().Count); // No existing files
@@ -231,7 +238,7 @@ namespace AutoQCTest
             mainSettings.IncludeSubfolders = true; // watch sub-folders
             mainSettings.QcFileFilter = FileFilter.GetFileFilter(ContainsFilter.NAME, "_QC_"); // file name pattern
             mainSettings.ValidateSettings();
-            watcher.Init(mainSettings);
+            watcher.Init(config);
 
             watcher.StartWatching(); // Start watching
             Assert.AreEqual(0, watcher.GetExistingFiles().Count); // No existing files

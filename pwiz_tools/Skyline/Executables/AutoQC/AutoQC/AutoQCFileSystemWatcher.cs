@@ -20,6 +20,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading;
 
 namespace AutoQC
@@ -41,11 +42,13 @@ namespace AutoQC
         private bool _dataInDirectories;
 
         private bool _cancelled;
-        private bool _fileWatcherError;
+        private ErrorEventArgs _fileWatcherError;
         private DriveInfo _driveInfo;
 
         private int _acquisitionTimeSetting;
         private FileFilter _fileFilter;
+
+        private string _configName;
 
         private const int WAIT_60SEC = 60000;
 
@@ -73,8 +76,11 @@ namespace AutoQC
             return fileWatcher;
         }
 
-        public void Init(MainSettings mainSettings)
+        public void Init(AutoQcConfig config)
         {
+            _configName = config.Name;
+
+            var mainSettings = config.MainSettings;
             _dataFiles = new ConcurrentQueue<string>();
             _retryFiles = new Queue<RawFile>();
 
@@ -109,6 +115,10 @@ namespace AutoQC
             try
             {
                 _driveInfo.NetworkDrivePath = NetworkDriveUtil.ReadNetworkDrivePath(_driveInfo.DriveLetter);
+            }
+            catch (FileWatcherException)
+            {
+                throw;
             }
             catch (Exception e)
             {
@@ -188,9 +198,9 @@ namespace AutoQC
 
             var files = GetExistingFiles();
 
-            _fileWatcherError = false;
-            var timeDisconnected = _driveInfo.GetTimeDisconnected();
-            _driveInfo.SetTimeDisconnected(null);
+            _fileWatcherError = null;
+            var timeDisconnected = _driveInfo.GetErrorTime();
+            _driveInfo.SetErrorTime(null);
 
             _fileWatcher.EnableRaisingEvents = true;
 
@@ -235,8 +245,11 @@ namespace AutoQC
         {
             var folder = _fileWatcher != null ? _fileWatcher.Path : "UNKNOWN";
             _logger.LogException(e.GetException(), "There was an error watching the folder {0}.", folder);
-            _fileWatcherError = true;
-            _driveInfo.SetTimeDisconnected(DateTime.Now);
+            _fileWatcherError = e;
+            if (_driveInfo.IsNetworkDrive())
+            {
+                _driveInfo.SetErrorTime(DateTime.Now);   
+            }  
         }
 
         public bool RawDataExists(string filePath)
@@ -251,7 +264,7 @@ namespace AutoQC
             var counter = 0;
             while (true)
             {
-                RestartIfRequired();
+                CheckDrive();
 
                 if (!RawDataExists(filePath))
                 {
@@ -288,7 +301,7 @@ namespace AutoQC
 
         public string GetFile()
         {
-            RestartIfRequired();
+            CheckDrive();
 
             if (_dataFiles.IsEmpty)
             {
@@ -300,15 +313,30 @@ namespace AutoQC
             return filePath;
         }
 
-        public void RestartIfRequired()
-        {
+        public void CheckDrive()
+        {  
+            if (!_driveInfo.IsNetworkDrive())
+            {
+                if (_fileWatcherError != null)
+                {
+                    throw new FileWatcherException(string.Format("There was an error watching the folder {0}. Config {1}", _fileWatcher.Path, _configName),
+                        _fileWatcherError.GetException());
+                }
+                return;
+            }
+
             // If we are monitoring a network mapped drive, make sure that we can still connect to it.
             // If we lose connection to a networked drive, FileSystemWatcher does not fire any new events
             // even after the connection is re-established.
-            bool reconnected;
             try
             {
-                NetworkDriveUtil.EnsureDrive(_driveInfo, _logger, out reconnected);
+                bool reconnected;
+                NetworkDriveUtil.EnsureDrive(_driveInfo, _logger, out reconnected, _configName);
+                if (reconnected)
+                {
+                    RestartFileWatcher();
+                    return;
+                }
             }
             catch (FileWatcherException)
             {
@@ -318,18 +346,33 @@ namespace AutoQC
             {
                 throw new FileWatcherException("Error connecting to network drive.", e);  
             }
-            
-            if (reconnected || _fileWatcherError)
+
+            if (_fileWatcherError != null)
             {
-                try
+                // Error may have been caused by the network drive getting disconnected.  If we are here
+                // it means another config watching a folder on the same mapped drive re-mapped the drive.
+                if (Directory.Exists(_fileWatcher.Path))
                 {
-                    Restart();
+                    RestartFileWatcher();
                 }
-                catch (Exception e)
+                else
                 {
-                    throw new FileWatcherException("Error restarting file watcher.", e);
+                    // Some other error occurred.  Stop the configuration with an error message
+                    throw new FileWatcherException(string.Format("File watcher for configuration \"{0}\" threw an error", _configName), _fileWatcherError.GetException());
                 }
             }
+        }
+
+        private void RestartFileWatcher()
+        {
+            try
+            {
+                Restart();
+            }
+            catch (Exception e)
+            {
+                throw new FileWatcherException(string.Format("Error restarting file watcher for config {0}", _configName), e);
+            }   
         }
 
         public List<string> GetExistingFiles()
@@ -472,21 +515,33 @@ namespace AutoQC
     {
         public string DriveLetter { get; set; }
         public string NetworkDrivePath { get; set; }
-        private DateTime? _timeDisconnected;
+        private DateTime? _errorTime;
 
-        public DateTime? GetTimeDisconnected()
+        public DateTime? GetErrorTime()
         {
-            return _timeDisconnected;
+            return _errorTime;
         }
 
-        public void SetTimeDisconnected(DateTime? time)
+        public void SetErrorTime(DateTime? time)
         {
-            _timeDisconnected = time;
+            _errorTime = time;
         }
 
         public bool IsNetworkDrive()
         {
             return NetworkDrivePath != null;
+        }
+
+        public override string ToString()
+        {
+            if (NetworkDrivePath != null)
+            {
+                return string.Format("DriveLetter: {0}; Path: {1}", DriveLetter, NetworkDrivePath);
+            }
+            else
+            {
+                return string.Format("DriveLetter: {0}", DriveLetter);  
+            }
         }
     }
 }

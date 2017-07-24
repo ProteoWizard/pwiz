@@ -168,7 +168,7 @@ namespace AutoQC
                 throw new ConfigRunnerException(sb.ToString(), e);
             }
 
-            var msg = new StringBuilder("Logging initialized...");
+            var msg = new StringBuilder("Logging initialized...").AppendLine();
             msg.Append(Config).AppendLine();
             _logger.Log(msg.ToString());
         }
@@ -231,7 +231,7 @@ namespace AutoQC
                     _panoramaPinger.Init();
                 }
 
-                _fileWatcher.Init(Config.MainSettings);
+                _fileWatcher.Init(Config);
 
                 Log("Starting configuration...");
                 ChangeStatus(RunnerStatus.Running);
@@ -262,7 +262,7 @@ namespace AutoQC
                 LogException(x, err.ToString());
                 ChangeStatus(RunnerStatus.Error);
 
-                err.AppendLine().AppendLine().Append(x.Message);
+                err.AppendLine().AppendLine().Append(x);
                 _uiControl.DisplayError("File Watcher Error", err.ToString());   
             }
             catch (Exception x)
@@ -441,7 +441,7 @@ namespace AutoQC
                 {
                     Log(
                         "{0} was acquired ({1}) before the acquisition date ({2}) on the last imported file in the Skyline document. Skipping...",
-                        Path.GetFileName(filePath),
+                        GetFilePathForLog(filePath),
                         fileLastWriteTime,
                         lastAcquiredFileDate);
                     continue;
@@ -452,6 +452,15 @@ namespace AutoQC
 
             Log("Finished importing existing files...");
             return !_panoramaUploadError;
+        }
+
+        private string GetFilePathForLog(string filePath)
+        {
+            if (Config.MainSettings.IncludeSubfolders)
+            {
+                return filePath;
+            }
+            return Path.GetFileName(filePath);
         }
 
         private bool ImportFile(DoWorkEventArgs e, ImportContext importContext, bool addToReimportQueueOnFailure = true)
@@ -466,11 +475,11 @@ namespace AutoQC
             {
                 if (fse.Message.Contains(FileStatusException.DOES_NOT_EXIST))
                 {
-                    _logger.LogError("{0} does not exist.", filePath);
+                    _logger.LogError("{0} does not exist.", GetFilePathForLog(filePath));
                 }
                 else
                 {
-                    _logger.LogException(fse, "Error getting status of file {0}.", filePath);
+                    _logger.LogException(fse, "Error getting status of file {0}.", GetFilePathForLog(filePath));
                 }
                 // Put the file in the re-import queue
                 if (addToReimportQueueOnFailure)
@@ -501,7 +510,7 @@ namespace AutoQC
 
         private void AddToReimportQueue(string filePath)
         {
-            _logger.Log("Adding {0} to re-import queue.", filePath);
+            _logger.Log("Adding {0} to re-import queue.", GetFilePathForLog(filePath));
             _fileWatcher.AddToReimportQueue(filePath);
         }
 

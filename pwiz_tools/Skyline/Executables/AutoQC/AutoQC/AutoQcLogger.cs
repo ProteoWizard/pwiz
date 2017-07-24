@@ -26,7 +26,7 @@ namespace AutoQC
         private string _lastMessage = string.Empty; // To avoid logging duplicate messages.
 
         private readonly string _filePath;
-        private static readonly object LOCK = new object();
+        private readonly object _lock = new object();
 
         private IMainUiControl _mainUi;
 
@@ -48,7 +48,9 @@ namespace AutoQC
 
         private void WriteToFile(string message)
         {
-            lock (LOCK)
+            // This should be an uncontested lock unless there is a thread in DisplayLog (which displays the log contents in the UI)
+            // In this case we want to wait for that to finish before updating the log.
+            lock (_lock)
             {
                 try
                 {
@@ -72,7 +74,7 @@ namespace AutoQC
                         }
                     }
                 }
-                catch (IOException e)
+                catch (Exception e)
                 {
                     var err = new StringBuilder("Error occurred writing to log file ").AppendLine(_filePath);
                     err.AppendLine("Attempting to write the following to the log file: ");
@@ -221,7 +223,7 @@ namespace AutoQC
 
         public void DisplayLog()
         {
-            lock (LOCK)
+            lock (_lock)
             {
                 // Read the log contents and display in the log tab.
                 var lines = new List<string>();

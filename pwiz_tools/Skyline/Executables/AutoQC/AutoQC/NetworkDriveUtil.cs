@@ -1,61 +1,128 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Management;
+using System.Text;
+using System.Runtime.InteropServices;
 
 namespace AutoQC
 {
     class NetworkDriveUtil
     {
-        
-        public static void EnsureDrive(DriveInfo driveInfo, IAutoQcLogger logger, out bool reconnected)
+        private static readonly object LOCK = new object();
+
+        public static void EnsureDrive(DriveInfo driveInfo, IAutoQcLogger logger, out bool reconnected, string configName)
         {
-            if (Directory.Exists(driveInfo.DriveLetter + Path.DirectorySeparatorChar))
+            // Do we need a lock here? Don't want two configurations, on the same mapped (disconnected) drive, 
+            // to try to re-map the drive.
+            lock (LOCK)
             {
-                reconnected = false;
-                return; // Drive root already exists.
-            }
-
-            // TODO: Do we need to unmount first? 
-
-            if (driveInfo.IsNetworkDrive())
-            {
-                logger.LogProgramError(string.Format("Lost connection to network drive. Attempting to reconnect to {0}.", driveInfo.DriveLetter));
-                // Attempt to reconnect to a mapped network drive
-                var process = Process.Start("net.exe", @"USE " + driveInfo.DriveLetter + " " + driveInfo.NetworkDrivePath);
-                if (process != null)
+                if (Directory.Exists(driveInfo.DriveLetter + Path.DirectorySeparatorChar))
                 {
-                    process.WaitForExit();
+                    reconnected = false;
+                    return; // Drive root already exists.
                 }
-            }
-            if (Directory.Exists(driveInfo.DriveLetter + Path.DirectorySeparatorChar))
-            {
-                reconnected = true;
-                logger.Log(
-                    string.Format("Network drive was temporarily disconnected. Successfully remapped network drive {0}.", driveInfo.DriveLetter));
-                return;
-            }
 
-            throw new FileWatcherException(string.Format("Unable to re-connect to drive {0}", driveInfo.DriveLetter));
+                // TODO: Do we need to unmount first? 
+
+                if (driveInfo.IsNetworkDrive())
+                {
+                    logger.LogProgramError(string.Format(
+                        "Lost connection to network drive. Attempting to reconnect to {0}. Config: {1}", driveInfo,
+                        configName));
+                    // Attempt to reconnect to a mapped network drive
+                    var process = Process.Start("net.exe",
+                        @"USE " + driveInfo.DriveLetter + " " + driveInfo.NetworkDrivePath);
+                    if (process != null)
+                    {
+                        process.WaitForExit();
+                    }
+
+                    if (Directory.Exists(driveInfo.DriveLetter + Path.DirectorySeparatorChar))
+                    {
+                        reconnected = true;
+                        logger.Log(
+                            string.Format(
+                                "Network drive was temporarily disconnected. Successfully remapped network drive {0}. Config: {1}",
+                                driveInfo, configName));
+                        return;
+                    }
+                }
+
+                throw new FileWatcherException(
+                    string.Format("Unable to connect to drive {0}. Config: {1}", driveInfo, configName));
+            }
         }
 
         public static string ReadNetworkDrivePath(string driveLetter)
         {
-            if (driveLetter != null)
+            // First determine if this is a network drive
+            // https://stackoverflow.com/questions/4396634/how-can-i-determine-if-a-given-drive-letter-is-a-local-mapped-or-usb-drive
+            var drives = System.IO.DriveInfo.GetDrives();
+            if (drives.Any(drive => drive.Name.StartsWith(driveLetter) && drive.DriveType == DriveType.Network))
+            {
+                return GetUncPath(driveLetter);
+            }
+            return null;
+        }
+
+        
+
+        private static string GetUncPath(string driveLetter)
+        {
+            string uncPath = GetUncPath1(driveLetter);
+            if (uncPath == null)
+            {
+                uncPath = GetUncPath2(driveLetter);
+            }
+
+            return uncPath;
+        }
+
+        // https://stackoverflow.com/questions/2067075/how-do-i-determine-a-mapped-drives-actual-path (answer by Vermis)
+        private static string GetUncPath1(string driveLetter)
+        {
+            try
             {
                 // Query WMI if the drive letter is a network drive
                 using (ManagementObject mo = new ManagementObject())
                 {
                     mo.Path = new ManagementPath(string.Format("Win32_LogicalDisk='{0}'", driveLetter));
-                    var driveType = (DriveType)((uint)mo["DriveType"]);
-                    if (driveType == DriveType.Network)
-                    {
-                        return Convert.ToString(mo["ProviderName"]);
-                    }
+                    return Convert.ToString(mo["ProviderName"]);
                 }
             }
-            return null;
+            catch (Exception e)
+            {
+                return null;
+            }
         }
+
+        // https://stackoverflow.com/questions/2067075/how-do-i-determine-a-mapped-drives-actual-path 
+        // https://ehikioya.com/get-network-path-mapped-drive/
+        [DllImport("mpr.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern int WNetGetConnection(
+            [MarshalAs(UnmanagedType.LPTStr)] string localName,
+            [MarshalAs(UnmanagedType.LPTStr)] StringBuilder remoteName,
+            ref int length);
+        private static string GetUncPath2(string driveLetter)
+        {
+            var c = driveLetter[0];
+            if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z')
+            {
+                var sb = new StringBuilder(512);
+                var size = sb.Capacity;
+                var error = WNetGetConnection(driveLetter, sb, ref size);
+                if (error != 0)
+                {
+                    throw new FileWatcherException(string.Format("WNetGetConnection failed to get UNC path for {0}. Error {1}", driveLetter, error));  
+                }
+                return sb.ToString();
+            }
+            throw new FileWatcherException(string.Format("Failed to get UNC path for {0}.", driveLetter));
+        }
+
+
 
         public static string GetDriveLetter(string path)
         {

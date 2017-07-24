@@ -56,12 +56,18 @@ namespace AutoQC
             var mainSettings = new MainSettings();
             mainSettings.ReadXml(reader);
             MainSettings = mainSettings;
-            reader.Read();
+            do
+            {
+                reader.Read();
+            } while (reader.NodeType != XmlNodeType.Element);
 
             var panoramaSettings = new PanoramaSettings();
             panoramaSettings.ReadXml(reader);
             PanoramaSettings = panoramaSettings;
-            reader.Read();
+            do
+            {
+                reader.Read();
+            } while (reader.NodeType != XmlNodeType.EndElement);
         }
 
         public void WriteXml(XmlWriter writer)
