@@ -30,11 +30,39 @@
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/chemistry/Chemistry.hpp"
 #include "pwiz/utility/misc/SHA1.h"
+#include "pwiz/utility/misc/unit.hpp"
 #include "boost/crc.hpp"
+#include "boost/range/algorithm/sort.hpp"
 
 using namespace pwiz::util;
 namespace sqlite = sqlite3pp;
 
+namespace std
+{
+    template <typename T>
+    vector<doctest::Approx> operator~(const vector<T>& lhs)
+    {
+        vector<doctest::Approx> result(lhs.size(), doctest::Approx(0));
+        for (size_t i = 0; i < lhs.size(); ++i)
+            result[i] = doctest::Approx(lhs[i]);
+        return result;
+    }
+
+    inline ostream& operator<< (ostream& o, const doctest::Approx& rhs)
+    {
+        o << rhs.toString();
+        return o;
+    }
+
+    template <typename T>
+    bool operator==(const vector<T>& lhs, const vector<doctest::Approx>& rhs)
+    {
+        REQUIRE(lhs.size() == rhs.size());
+        for (size_t i = 0; i < lhs.size(); ++i)
+            if (lhs[i] != rhs[i]) return false;
+        return true;
+    }
+}
 
 BEGIN_IDPICKER_NAMESPACE
 
@@ -109,6 +137,194 @@ struct DistinctDoubleArraySum
         delete pThis;
     }
 };
+
+struct DistinctTukeyBiweightAverage
+{
+    typedef DistinctTukeyBiweightAverage MyType;
+    set<int> arrayIds;
+    vector<double> result;
+    vector<vector<double> > tukeyBuffer;
+    boost::crc_32_type crc32;
+
+    DistinctTukeyBiweightAverage(int arrayLength) : result((size_t)arrayLength, 0.0), tukeyBuffer(arrayLength) {}
+
+    static void Step(sqlite3_context* context, int numValues, sqlite3_value** values)
+    {
+        void* aggContext = sqlite3_aggregate_context(context, sizeof(MyType*));
+        if (aggContext == NULL)
+            throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
+
+        MyType** ppThis = static_cast<MyType**>(aggContext);
+        MyType*& pThis = *ppThis;
+
+        if (numValues > 1 || values[0] == NULL)
+            return;
+
+        int arrayByteCount = sqlite3_value_bytes(values[0]);
+        int arrayLength = arrayByteCount / 8;
+        const char* arrayBytes = static_cast<const char*>(sqlite3_value_blob(values[0]));
+        if (arrayBytes == NULL)
+            return;
+
+        if (arrayByteCount % 8 > 0)
+            throw runtime_error("distinct_double_array_sum only works with BLOBs of double precision floats");
+
+        if (pThis == NULL)
+            pThis = new DistinctTukeyBiweightAverage(arrayLength);
+        else
+            pThis->crc32.reset();
+
+        // if the arrayId was already in the set, ignore its values
+        pThis->crc32.process_bytes(arrayBytes, arrayByteCount);
+        int arrayId = pThis->crc32.checksum();
+        if (!pThis->arrayIds.insert(arrayId).second)
+            return;
+
+        const double* arrayValues = reinterpret_cast<const double*>(arrayBytes);
+
+        for (int i = 0; i < arrayLength; ++i)
+            pThis->tukeyBuffer[i].push_back(arrayValues[i]);
+    }
+
+    static inline double weight_bisquare(double x)
+    {
+        return fabs(x) <= 1.0 ? (1 - x*x) * (1 - x*x) : 0;
+    }
+
+    static inline double safe_log(double x)
+    {
+        return x > 1 ? std::log(x) : 0.0;
+    }
+
+    static void Final(sqlite3_context* context) { Final(context, false); }
+
+    static void FinalLog(sqlite3_context* context){ Final(context, true); }
+
+    static void Final(sqlite3_context* context, bool logValues)
+    {
+        void* aggContext = sqlite3_aggregate_context(context, 0);
+        if (aggContext == NULL)
+            throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
+
+        MyType** ppThis = static_cast<MyType**>(aggContext);
+        MyType*& pThis = *ppThis;
+
+        if (pThis == NULL)
+            pThis = new DistinctTukeyBiweightAverage(0);
+        else
+        {
+            double c = 5.0;
+            double epsilon = 0.0001;
+
+            vector<double> medians(pThis->tukeyBuffer[0].size());
+            auto length = pThis->tukeyBuffer[0].size();
+            for (int column = 0; column < pThis->tukeyBuffer.size(); ++column)
+            {
+                vector<double>& values = pThis->tukeyBuffer[column];
+                if (logValues)
+                    std::transform(values.begin(), values.end(), values.begin(), static_cast<double(*)(double)>(safe_log));
+
+                medians = values;
+                boost::range::sort(medians);
+
+                double median = (length % 2 == 0) ? (medians[length / 2 - 1] + medians[length / 2]) / 2.0 : medians[length / 2];
+
+                for (size_t i = 0; i < length; ++i)
+                    medians[i] = fabs(values[i] - median);
+                boost::range::sort(medians);
+
+                double S = (length % 2 == 0) ? (medians[length / 2 - 1] + medians[length / 2]) / 2.0 : medians[length / 2];
+
+                for (size_t i = 0; i < length; ++i)
+                    medians[i] = (values[i] - median) / (c*S + epsilon);
+
+                double sum = 0.0;
+                double sumw = 0.0;
+                for (size_t i = 0; i < length; ++i)
+                {
+                    sum += weight_bisquare(medians[i]) * values[i];
+                    sumw += weight_bisquare(medians[i]);
+                }
+
+                pThis->result[column] = sum / sumw;
+            }
+        }
+
+        sqlite3_result_blob(context, pThis->result.empty() ? NULL : &pThis->result[0], pThis->result.size() * sizeof(double), SQLITE_TRANSIENT);
+
+        delete pThis;
+    }
+};
+
+vector<double> blobToDoubleArray(const sqlite::query::rows& row, size_t elementCount, int index)
+{
+    REQUIRE(elementCount == row.column_bytes(index) / sizeof(double));
+    const void* blob = row.get<const void*>(index);
+    const double* valueArray = reinterpret_cast<const double*>(blob);
+    return vector<double>(valueArray, valueArray + elementCount);
+}
+
+TEST_CASE("DistinctDoubleArraySum and DistinctTukeyBiweightAverage tests") {
+    sqlite::database db(":memory:");
+    createUserSQLiteFunctions(db.connected());
+
+    db.execute("CREATE TABLE test (Group_ INT, Values_ BLOB)");
+
+    sqlite::command insertTestValues(db, "INSERT INTO test (Group_, Values_) VALUES (?, ?)");
+
+    vector<vector<double> > testValues {
+        vector<double> { 1.0, 2.0, 3.0, 4.0 },  // 2  4  6  8
+        vector<double> { 2.0, 4.0, 8.0, 16.0 }, // 4  8 16 32
+        vector<double> { 3.0, 6.0, 9.0, 14.0 }, // 6 12 18 28
+        vector<double> { 3.0, 6.0, 9.0, 14.0 } // duplicate values ignored
+    };
+    for (int group = 1; group <= 2; ++group)
+        for (int row = 0; row < testValues.size(); ++row)
+        {
+            vector<double> valueCopy(testValues[row]);
+            for(double& d : valueCopy) d *= group; // give each group unique values (base values * group id)
+
+            insertTestValues.bind(1, group);
+            insertTestValues.bind(2, static_cast<void*>(&valueCopy[0]), valueCopy.size() * sizeof(double));
+            insertTestValues.execute();
+            insertTestValues.reset();
+        }
+
+    SUBCASE("plain sum") {
+        auto values = blobToDoubleArray(*sqlite::query(db, "SELECT DISTINCT_DOUBLE_ARRAY_SUM(Values_) FROM test").begin(), 4, 0);
+        CHECK(values == vector<double> { 6.0+12, 12.0+24, 20.0+40, 34.0+68 });
+    }
+
+    SUBCASE("plain sum by group") {
+        sqlite::query q(db, "SELECT DISTINCT_DOUBLE_ARRAY_SUM(Values_) FROM test GROUP BY Group_ ORDER BY Group_");
+        auto itr = q.begin();
+        auto values = blobToDoubleArray(*itr, 4, 0); ++itr;
+        CHECK(values == vector<double> { 6.0, 12.0, 20.0, 34.0 });
+
+        values = blobToDoubleArray(*itr, 4, 0); ++itr;
+        CHECK(values == vector<double> { 12.0, 24.0, 40.0, 68.0 });
+    }
+
+    SUBCASE("Tukey Biweight average") {
+        auto values = blobToDoubleArray(*sqlite::query(db, "SELECT DISTINCT_DOUBLE_ARRAY_TUKEY_BIWEIGHT_AVERAGE(Values_) FROM test").begin(), 4, 0);
+        CHECK(values == ~(vector<double> { 2.586556, 5.173098, 9.297351, 16.29861 }));
+    }
+
+    SUBCASE("Tukey Biweight average by group") {
+        sqlite::query q(db, "SELECT DISTINCT_DOUBLE_ARRAY_TUKEY_BIWEIGHT_AVERAGE(Values_) FROM test GROUP BY Group_ ORDER BY Group_");
+        auto itr = q.begin();
+        auto values = blobToDoubleArray(*itr, 4, 0); ++itr;
+        CHECK(values == ~(vector<double> { 2.0, 4.0, 8.479601, 14.959201 }));
+
+        values = blobToDoubleArray(*itr, 4, 0); ++itr;
+        CHECK(values == ~(vector<double> { 4.0, 8.0, 16.9592, 29.9184 }));
+    }
+
+    SUBCASE("Tukey Biweight log average") {
+        auto values = blobToDoubleArray(*sqlite::query(db, "SELECT DISTINCT_DOUBLE_ARRAY_TUKEY_BIWEIGHT_LOG_AVERAGE(Values_) FROM test").begin(), 4, 0);
+        CHECK(values == ~(vector<double> { 0.9408912, 1.6340384, 2.1640926, 2.6651840 }));
+    }
+}
 
 
 /// Automatically choose monoisotopic or average mass error based on the following logic:
@@ -843,6 +1059,16 @@ void createUserSQLiteFunctions(sqlite3* idpDbConnection)
 {
     int result = sqlite3_create_function(idpDbConnection, "distinct_double_array_sum", -1, SQLITE_ANY,
                                          0, NULL, &DistinctDoubleArraySum::Step, &DistinctDoubleArraySum::Final);
+    if (result != 0)
+        throw runtime_error("unable to create user function: SQLite error " + lexical_cast<string>(result));
+    
+    result = sqlite3_create_function(idpDbConnection, "distinct_double_array_tukey_biweight_average", -1, SQLITE_ANY,
+                                     0, NULL, &DistinctTukeyBiweightAverage::Step, &DistinctTukeyBiweightAverage::Final);
+    if (result != 0)
+        throw runtime_error("unable to create user function: SQLite error " + lexical_cast<string>(result));
+
+    result = sqlite3_create_function(idpDbConnection, "distinct_double_array_tukey_biweight_log_average", -1, SQLITE_ANY,
+                                     0, NULL, &DistinctTukeyBiweightAverage::Step, &DistinctTukeyBiweightAverage::FinalLog);
     if (result != 0)
         throw runtime_error("unable to create user function: SQLite error " + lexical_cast<string>(result));
 

@@ -58,6 +58,7 @@ lib Qonverter
     : # requirements
         <library>$(PWIZ_ROOT_PATH)//svm
         <library>/ext/boost//thread
+        #<library>/ext/boost//iostreams
         <library>/ext/boost//log
         <library>waffles//waffles
         <library>crawdad//crawdad
@@ -71,6 +72,7 @@ lib Qonverter
     : # usage-requirements
         <library>$(PWIZ_ROOT_PATH)//svm
         <library>/ext/boost//thread
+        #<library>/ext/boost//iostreams
         <library>/ext/boost//log
         <library>waffles//waffles
         <library>crawdad//crawdad
@@ -98,11 +100,21 @@ exe idpQonvert : idpQonvert.cpp CoreVersion idpQonvertVersion.cpp Qonverter $(ID
 exe idpAssemble : idpAssemble.cpp CoreVersion idpAssembleVersion.cpp Qonverter ;
 exe idpQuery : idpQuery.cpp CoreVersion idpQueryVersion.cpp Qonverter /ext/boost//regex ;
 
+#exe ClusterReporter : ClusterReporter.cpp Qonverter $(IDPICKER_PATH)/../freicore : <toolset>msvc:<cxxflags>/bigobj ;
+#run CommandRunner.cpp : "d:/test/iprg_tmt.clustering" -OverwriteExistingFiles 1 -SourceSearchPath d:\\test\\iprg_tmt -QuantitationMethod TMT6plex -SourceExtensionPriorityList "mzML" -OutputSuffix "-no-ids" : ClusterReporter : : ClusterReporter-no-ids ;
+#run CommandRunner.cpp Qonverter $(IDPICKER_PATH)/../freicore : "d:/test/iprg_tmt.clustering" -OverwriteExistingFiles 1 -SourceSearchPath d:\\test\\iprg_tmt -QuantitationMethod TMT6plex -SourceExtensionPriorityList "mzML" -OutputSuffix "-with-ids"                -IdpDbFilepath "D:/test/iPRG_TMT/mm-subset.idpDB" : ClusterReporter : : ClusterReporter-ids ;
+#run CommandRunner.cpp Qonverter $(IDPICKER_PATH)/../freicore : "d:/test/iprg_tmt.clustering" -OverwriteExistingFiles 1 -SourceSearchPath d:\\test\\iprg_tmt -QuantitationMethod TMT6plex -SourceExtensionPriorityList "mzML" -OutputSuffix "-with-ids-groups"         -IdpDbFilepath "D:/test/iPRG_TMT/mm-subset.idpDB" -AssignSourceHierarchy "d:/test/iprg_tmt_assemble.tsv" : ClusterReporter : : ClusterReporter-ids-groups ;
+#run CommandRunner.cpp Qonverter $(IDPICKER_PATH)/../freicore : "d:/test/iprg_tmt.clustering" -OverwriteExistingFiles 1 -SourceSearchPath d:\\test\\iprg_tmt -QuantitationMethod TMT6plex -SourceExtensionPriorityList "mzML" -OutputSuffix "-with-ids-groups-mapping" -IdpDbFilepath "D:/test/iPRG_TMT/mm-subset.idpDB" -AssignSourceHierarchy "d:/test/iprg_tmt_assemble.tsv" -IsobaricSampleMapping "d:/test/iprg_tmt_sample_mapping.tsv" : ClusterReporter : : ClusterReporter-ids-groups-mapping ;
+#run CommandRunner.cpp Qonverter $(IDPICKER_PATH)/../freicore : "d:/test/iprg_tmt.clustering" -OverwriteExistingFiles 1 -SourceSearchPath d:\\test\\iprg_tmt -QuantitationMethod TMT6plex -SourceExtensionPriorityList "mzML" -OutputSuffix "-with-groups"             -AssignSourceHierarchy "d:/test/iprg_tmt_assemble.tsv" : ClusterReporter : : ClusterReporter-groups ;
+#run CommandRunner.cpp Qonverter $(IDPICKER_PATH)/../freicore : "d:/test/iprg_tmt.clustering" -OverwriteExistingFiles 1 -SourceSearchPath d:\\test\\iprg_tmt -QuantitationMethod TMT6plex -SourceExtensionPriorityList "mzML" -OutputSuffix "-with-groups-mapping"     -AssignSourceHierarchy "d:/test/iprg_tmt_assemble.tsv" -IsobaricSampleMapping "d:/test/iprg_tmt_sample_mapping.tsv" : ClusterReporter : : ClusterReporter-groups-mapping ;
+#alias ClusterReporterTests : ClusterReporter-no-ids ClusterReporter-ids ClusterReporter-ids-groups ClusterReporter-ids-groups-mapping ClusterReporter-groups-mapping ;
+
 import testing ;
 unit-test QonverterTest : QonverterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 unit-test EmbedderTest : EmbedderTest.cpp Qonverter $(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata_examples $(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata : $(TEAMCITY_TEST_DECORATION) <dependency>gene2protein.db3 ;
 unit-test FilterTest : FilterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 unit-test LoggerTest : LoggerTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
+doctest SchemaUpdaterDoctest : SchemaUpdater.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 
 path-constant TEST_DATA_PATH : ../TestData ;
 run CommandlineTest.cpp

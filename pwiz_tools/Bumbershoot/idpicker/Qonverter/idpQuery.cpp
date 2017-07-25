@@ -102,6 +102,13 @@ typedef pair<string, int> SqlColumn;
     (PivotTMTByGroup) \
     (PivotTMTBySource)
 
+BOOST_ENUM_VALUES(QuantitationRollupMethod, const char*, \
+        (Invalid)("") \
+        (Sum)("DISTINCT_DOUBLE_ARRAY_SUM") \
+        (Tukey)("DISTINCT_DOUBLE_ARRAY_TUKEY_BIWEIGHT_AVERAGE") \
+        (TukeyLog)("DISTINCT_DOUBLE_ARRAY_TUKEY_BIWEIGHT_LOG_AVERAGE") \
+    );
+
 #define SHARED_QUANTITATIVE_SQLCOLUMNS(ns) \
     case ns::DistinctPeptides: return make_pair("COUNT(DISTINCT pi.Peptide)", SQLITE_INTEGER); \
     case ns::DistinctMatches: return make_pair("COUNT(DISTINCT dm.DistinctMatchId)", SQLITE_INTEGER); \
@@ -388,13 +395,11 @@ void writeBlobArray(const void* blob, ostream& os, const vector<ReporterIon>& ar
     if (referenceValue == 0)
         referenceValue = 1; // don't divide by zero
 
-    streamsize oldPrecision = os.precision(referenceValue == 1 ? 0 : 4);
     ios::fmtflags oldFlags = os.flags(ios::fixed);
     for (size_t i = 0; i < arrayInfo.size(); ++i)
         if (!arrayInfo[i].empty && !arrayInfo[i].reference)
             os << blobArray[arrayInfo[i].index] / referenceValue << '\t';
     os.seekp(-1, ios::cur);
-    os.precision(oldPrecision);
     os.flags(oldFlags);
 }
 
@@ -426,7 +431,7 @@ string getGroupByString(GroupBy groupBy, double ModificationMassRoundToNearest)
 typedef boost::variant<int, double, const void*> PivotDataType;
 typedef map<boost::int64_t, map<boost::int64_t, PivotDataType> > PivotDataMap;
 typedef map<size_t, PivotDataMap> PivotDataByColumnMap;
-void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode, PivotDataMap& pivotDataMap, double ModificationMassRoundToNearest)
+void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode, PivotDataMap& pivotDataMap, double ModificationMassRoundToNearest, QuantitationRollupMethod rollupMethod)
 {
     string groupByString = getGroupByString(groupBy, ModificationMassRoundToNearest);
 
@@ -485,6 +490,7 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
                      "LEFT JOIN XICMetrics xic ON dm.DistinctMatchId=xic.DistinctMatch AND s.Source=xic.SpectrumSource " +
                      whereConstraint +
                      "GROUP BY " + groupByString + ", " + pivotColumn;
+        if (rollupMethod != QuantitationRollupMethod::Sum) bal::replace_all(sql, "DISTINCT_DOUBLE_ARRAY_SUM", rollupMethod.value());
         cout << sql << endl;
         sqlite::query q(idpDB, sql.c_str());
 
@@ -518,6 +524,7 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
                  "LEFT JOIN PeptideModification pm ON psm.Id = pm.PeptideSpectrumMatch "
                  "LEFT JOIN Modification mod ON pm.Modification = mod.Id "
                  "GROUP BY " + groupByString + ", " + pivotColumn;
+    if (rollupMethod != QuantitationRollupMethod::Sum) bal::replace_all(sql, "DISTINCT_DOUBLE_ARRAY_SUM", rollupMethod.value());
     cout << sql << endl;
     sqlite::query q(idpDB, sql.c_str());
     BOOST_FOREACH(sqlite::query::rows row, q)
@@ -549,7 +556,7 @@ int parseColumns(const vector<string>& tokens, vector<ColumnType>& enumColumns, 
             cerr << " \"" << invalidTokens[i] << "\"";
         cerr << "\nValid options are:" << endl;
         for (typename ColumnType::const_iterator itr = ColumnType::begin() + 1; itr < ColumnType::end(); ++itr)
-            cerr << "  " << itr->str() << "\n";
+            cerr << "  " << itr->str() << endl;
         return 1;
     }
 
@@ -597,7 +604,8 @@ template <typename ColumnType>
 int doQuery(GroupBy groupBy,
             const bfs::path& filepath,
             const vector<string>& tokens,
-            double ModificationMassRoundToNearest)
+            double ModificationMassRoundToNearest,
+            QuantitationRollupMethod rollupMethod)
 {
     vector<ColumnType> enumColumns;
     vector<SqlColumn> selectedColumns;
@@ -660,9 +668,9 @@ int doQuery(GroupBy groupBy,
     if (quantitationMethods.count(QuantitationMethod::TMT10plex) > 0)
         tmtMethodIons.assign(tmt10plexIons, tmt10plexIons + 10);
     else if (quantitationMethods.count(QuantitationMethod::TMT6plex) > 0)
-        tmtMethodIons.assign(tmt6plexIons, tmt10plexIons + 6);
+        tmtMethodIons.assign(tmt6plexIons, tmt6plexIons + 6);
     else if (quantitationMethods.count(QuantitationMethod::TMT2plex) > 0)
-        tmtMethodIons.assign(tmt2plexIons, tmt10plexIons + 2);
+        tmtMethodIons.assign(tmt2plexIons, tmt2plexIons + 2);
 
     bool hasITRAQ = false;
     bool hasTMT = false;
@@ -783,7 +791,7 @@ int doQuery(GroupBy groupBy,
             }
 
             if (!pivotColumnIds.empty())
-                pivotData(idpDB, groupBy, tokens[i], pivotDataByColumn[i], ModificationMassRoundToNearest);
+                pivotData(idpDB, groupBy, tokens[i], pivotDataByColumn[i], ModificationMassRoundToNearest, rollupMethod);
         }
         else
         {
@@ -814,6 +822,7 @@ int doQuery(GroupBy groupBy,
     bal::replace_all(sql, "{ModificationMassRoundToNearest}", lexical_cast<string>(ModificationMassRoundToNearest));
     bal::replace_all(sql, "{GroupBy}", groupByString);
     bal::replace_all(sql, "{SubGroupBy}", bal::replace_all_copy(groupByString, ".", "_.")); // subgroup table aliases end with '_'
+    if (rollupMethod != QuantitationRollupMethod::Sum) bal::replace_all(sql, "DISTINCT_DOUBLE_ARRAY_SUM", rollupMethod.value());
     cout << sql << endl;
     sqlite::query q(idpDB, sql.c_str());
 
@@ -1007,7 +1016,7 @@ int doQuery(GroupBy groupBy,
 }
 
 
-int query(GroupBy groupBy, const vector<string>& args, double ModificationMassRoundToNearest)
+int query(GroupBy groupBy, const vector<string>& args, double ModificationMassRoundToNearest, QuantitationRollupMethod rollupMethod)
 {
     vector<bfs::path> filepaths;
     for (size_t i = 3; i < args.size(); ++i)
@@ -1044,13 +1053,13 @@ int query(GroupBy groupBy, const vector<string>& args, double ModificationMassRo
             case GroupBy::Protein:
             case GroupBy::ProteinGroup:
             case GroupBy::Cluster:
-                result += doQuery<ProteinColumn>(groupBy, filepath, tokens, ModificationMassRoundToNearest);
+                result += doQuery<ProteinColumn>(groupBy, filepath, tokens, ModificationMassRoundToNearest, rollupMethod);
                 break;
 
             case GroupBy::DistinctMatch:
             case GroupBy::Peptide:
             case GroupBy::PeptideGroup:
-                result += doQuery<PeptideColumn>(groupBy, filepath, tokens, ModificationMassRoundToNearest);
+                result += doQuery<PeptideColumn>(groupBy, filepath, tokens, ModificationMassRoundToNearest, rollupMethod);
                 break;
 
             /*(PeptideSpectrumMatch)
@@ -1061,7 +1070,7 @@ int query(GroupBy groupBy, const vector<string>& args, double ModificationMassRo
             case GroupBy::DeltaMass:
             case GroupBy::ModifiedSite:
             case GroupBy::ProteinSite:
-                result += doQuery<ModificationColumn>(groupBy, filepath, tokens, ModificationMassRoundToNearest);
+                result += doQuery<ModificationColumn>(groupBy, filepath, tokens, ModificationMassRoundToNearest, rollupMethod);
                 break;
 
             default:
@@ -1080,7 +1089,7 @@ int main(int argc, const char* argv[])
     cout << "IDPickerQuery " << idpQuery::Version::str() << " (" << idpQuery::Version::LastModified() << ")\n" <<
             "IDPickerCore " << IDPicker::Version::str() << " (" << IDPicker::Version::LastModified() << ")\n"  << endl;
 
-    string usage = "Usage: idpQuery <group by field> <comma-delimited export column fields> <idpDB filepath> [-ModificationMassRoundToNearest <real (0.0001)]\n"
+    string usage = "Usage: idpQuery <group by field> <comma-delimited export column fields> <idpDB filepath> [-ModificationMassRoundToNearest <real (0.0001)] [-QuantitationRollupMethod <Sum|Tukey (Sum)>]\n"
                    "\nExample: idpQuery ProteinGroup Accession,FilteredSpectra,PercentCoverage,iTRAQ4plex data.idpDB\n";
     
     usage += string("\nValid \"group by\" fields: ") + (GroupBy::begin()+1)->str();
@@ -1091,6 +1100,7 @@ int main(int argc, const char* argv[])
     GroupBy groupBy;
     vector<string> args;
     double ModificationMassRoundToNearest = 0.0001;
+    QuantitationRollupMethod rollupMethod = QuantitationRollupMethod::Sum;
     
     if (argc > 1)
     {
@@ -1114,6 +1124,23 @@ int main(int argc, const char* argv[])
                     throw pwiz::util::user_error("invalid value \"" + args[i+1] + "\" for ModificationMassRoundToNearest");
                 }
             }
+            else if (args[i] == "-QuantitationRollupMethod")
+            {
+                if (i + 1 == args.size())
+                    throw pwiz::util::user_error("no value passed for QuantitationRollupMethod");
+                rollupMethod = QuantitationRollupMethod::get_by_name(args[i + 1].c_str()).get_value_or(QuantitationRollupMethod::Invalid);
+
+                if (rollupMethod == QuantitationRollupMethod::Invalid)
+                {
+                    cerr << "Invalid rollup method \"" << args[i+1] << "\". Valid options are:" << endl;
+                    for (QuantitationRollupMethod::const_iterator itr = QuantitationRollupMethod::begin()+1; itr < QuantitationRollupMethod::end(); ++itr)
+                        cerr << "  " << itr->str() << endl;
+                    return 1;
+                }
+                args.erase(args.begin() + i);
+                args.erase(args.begin() + i);
+                --i;
+            }
         }
 
         groupBy = GroupBy::get_by_name(args[1].c_str()).get_value_or(GroupBy::Invalid);
@@ -1121,7 +1148,7 @@ int main(int argc, const char* argv[])
         {
             cerr << "Invalid grouping choice \"" << args[1] << "\". Valid options are:" << endl;
             for (GroupBy::const_iterator itr = GroupBy::begin()+1; itr < GroupBy::end(); ++itr)
-                cerr << "  " << itr->str() << "\n";
+                cerr << "  " << itr->str() << endl;
             return 1;
         }
         
@@ -1165,7 +1192,7 @@ int main(int argc, const char* argv[])
 
     try
     {
-        return query(groupBy, args, ModificationMassRoundToNearest);
+        return query(groupBy, args, ModificationMassRoundToNearest, rollupMethod);
     }
     catch (exception& e)
     {
