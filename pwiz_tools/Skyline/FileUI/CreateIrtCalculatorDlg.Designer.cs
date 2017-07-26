@@ -109,9 +109,7 @@
             // radioUseExisting
             // 
             resources.ApplyResources(this.radioUseExisting, "radioUseExisting");
-            this.radioUseExisting.Checked = true;
             this.radioUseExisting.Name = "radioUseExisting";
-            this.radioUseExisting.TabStop = true;
             this.radioUseExisting.UseVisualStyleBackColor = true;
             this.radioUseExisting.CheckedChanged += new System.EventHandler(this.radioUseExisting_CheckedChanged);
             // 
@@ -152,6 +150,7 @@
             // radioUseProtein
             // 
             resources.ApplyResources(this.radioUseProtein, "radioUseProtein");
+            this.radioUseProtein.Checked = true;
             this.radioUseProtein.Name = "radioUseProtein";
             this.radioUseProtein.TabStop = true;
             this.radioUseProtein.UseVisualStyleBackColor = true;

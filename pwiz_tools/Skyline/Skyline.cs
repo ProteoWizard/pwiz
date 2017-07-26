@@ -1243,7 +1243,7 @@ namespace pwiz.Skyline
                 }
 
                 if (MassListImporter.HasNumericColumn(columnTypes))
-                    ImportMassList(new MassListInputs(text, formatProvider, separator), Resources.SkylineWindow_Paste_Paste_transition_list);
+                    ImportMassList(new MassListInputs(text, formatProvider, separator), Resources.SkylineWindow_Paste_Paste_transition_list, false);
                 // Handle unusual corner case where data is found to be columnar and contains numbers, 
                 // but first line is missing
                 else if (columnTypes.Length == 0)

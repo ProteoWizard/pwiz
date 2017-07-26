@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NHibernate.Util;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -31,6 +32,7 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -53,6 +55,8 @@ namespace pwiz.SkylineTestFunctional
             TestModificationMatcher();
             TestBlankDocScenario();
             TestEmbeddedIrts();
+
+            TestAssayImport2();
         }
 
         protected void TestAssayImportGeneral()
@@ -477,17 +481,6 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<MessageDlg>(createIrtError.OkDialog, messageDlg =>
             {
                 Assert.AreEqual(messageDlg.Message, Resources.CreateIrtCalculatorDlg_OkDialog_iRT_database_field_must_not_be_empty_);
-                messageDlg.OkDialog();
-            });
-
-            // 24.2 No protein selected shows error message for import from protein
-            RunUI(() =>
-            {
-                createIrtError.NewDatabaseNameProtein = newDatabase;
-            });
-            RunDlg<MessageDlg>(createIrtError.OkDialog, messageDlg =>
-            {
-                Assert.AreEqual(messageDlg.Message, Resources.CreateIrtCalculatorDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_);
                 messageDlg.OkDialog();
             });
 
@@ -1057,6 +1050,63 @@ namespace pwiz.SkylineTestFunctional
             SkipLibraryDlg();
             WaitForDocumentLoaded();
             ValidateDocAndIrt(SkylineWindow.Document, 294, 294, 10);
+            RunUI(() => SkylineWindow.SaveDocument());
+        }
+
+        private void TestAssayImport2()
+        {
+            RunUI(() => SkylineWindow.NewDocument());
+
+            var csvFile = TestFilesDir.GetTestPath("OpenSWATH_SM4_NoError.csv");
+            var saveDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(csvFile));
+            OkDialog(saveDlg, saveDlg.BtnCancelClick);
+            var skyFile = TestFilesDir.GetTestPath("assayimport.sky");
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var editMods = ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettings.EditHeavyMods);
+            RunUI(() =>
+            {
+                editMods.AddItem(new StaticMod("Label:13C(6)15N(2) (C-term K)", "K", ModTerminus.C, LabelAtoms.C13 | LabelAtoms.N15));
+                editMods.AddItem(new StaticMod("Label:13C(6)15N(4) (C-term R)", "R", ModTerminus.C, LabelAtoms.C13 | LabelAtoms.N15));
+            });
+            OkDialog(editMods, editMods.OkDialog);
+            RunUI(() =>
+            {
+                peptideSettings.SetIsotopeModifications(0, true);
+                peptideSettings.SetIsotopeModifications(1, true);
+            });
+            OkDialog(peptideSettings, peptideSettings.OkDialog);
+            RunUI(() => Assert.IsTrue(SkylineWindow.SaveDocument(skyFile)));
+
+            // Import assay library and choose a protein
+            var chooseIrt = ShowDialog<ChooseIrtStandardPeptidesDlg>(() => SkylineWindow.ImportAssayLibrary(csvFile));
+            const string irtProteinName = "AQUA4SWATH_HMLangeG";
+            RunUI(() =>
+            {
+                var proteinNames = chooseIrt.ProteinNames.ToArray();
+                AssertEx.AreEqualDeep(proteinNames, new List<string>{
+                    "AQUA4SWATH_HMLangeA", "AQUA4SWATH_HMLangeB", "AQUA4SWATH_HMLangeC", "AQUA4SWATH_HMLangeD", "AQUA4SWATH_HMLangeE", "AQUA4SWATH_HMLangeF", "AQUA4SWATH_HMLangeG",
+                    "AQUA4SWATH_HumanEbhardt", "AQUA4SWATH_Lepto", "AQUA4SWATH_MouseSabido", "AQUA4SWATH_MycoplasmaSchmidt", "AQUA4SWATH_PombeSchmidt", "AQUA4SWATH_Spyo"
+                });
+            });
+            OkDialog(chooseIrt, () => chooseIrt.OkDialogProtein(irtProteinName));
+            var doc = SkylineWindow.Document;
+            AssertEx.IsDocumentState(doc, null, 14, 284, 1119);
+            Assert.AreEqual(irtProteinName, doc.PeptideGroups.First().Name);
+            CheckAssayLibrarySettings();
+
+            // Undo import
+            RunUI(SkylineWindow.Undo);
+
+            // Import assay library and choose a file
+            var irtCsvFile = TestFilesDir.GetTestPath("OpenSWATH_SM4_iRT.csv");
+            var overwriteDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(csvFile));
+            var chooseIrt2 = ShowDialog<ChooseIrtStandardPeptidesDlg>(overwriteDlg.BtnYesClick);
+            OkDialog(chooseIrt2, () => chooseIrt2.OkDialogFile(irtCsvFile));
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 24, 294, 1170);
+            SkylineWindow.Document.PeptideGroups.Take(10).ForEach(protein => Assert.IsTrue(protein.Name.StartsWith("AQRT_")));
+            CheckAssayLibrarySettings();
+
+            RunUI(() => SkylineWindow.SaveDocument());
         }
 
         public static RCalcIrt ValidateDocAndIrt(SrmDocument doc, int peptides, int irtTotal, int irtStandards)
@@ -1080,6 +1130,28 @@ namespace pwiz.SkylineTestFunctional
         {
             var libraryDlg = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(libraryDlg, libraryDlg.Btn1Click);
+        }
+
+        private static void CheckAssayLibrarySettings()
+        {
+            var doc = SkylineWindow.Document;
+
+            var calc = (RCalcIrt) doc.Settings.PeptideSettings.Prediction.RetentionTime.Calculator;
+            Assert.AreEqual(SkylineWindow.AssayLibraryName, calc.Name);
+            Assert.AreEqual(SkylineWindow.AssayLibraryFileName, calc.DatabasePath);
+
+            var lib = doc.Settings.PeptideSettings.Libraries.LibrarySpecs.FirstOrDefault(libSpec => libSpec.Name.Equals(SkylineWindow.AssayLibraryName));
+            Assert.IsNotNull(lib);
+            Assert.AreEqual(SkylineWindow.AssayLibraryFileName, lib.FilePath);
+
+            foreach (var nodePepGroup in doc.PeptideGroups)
+            {
+                foreach (var nodePep in nodePepGroup.Peptides)
+                {
+                    Assert.IsNotNull(calc.ScoreSequence(nodePep.ModifiedSequence));
+                    Assert.IsTrue(nodePep.HasLibInfo);
+                }
+            }
         }
     }
 }

@@ -2769,6 +2769,44 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Import Transition List (iRT standards).
+        /// </summary>
+        public static string ChooseIrtStandardPeptides_ImportTextFile_Import_Transition_List__iRT_standards_ {
+            get {
+                return ResourceManager.GetString("ChooseIrtStandardPeptides_ImportTextFile_Import_Transition_List__iRT_standards_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transition List.
+        /// </summary>
+        public static string ChooseIrtStandardPeptides_ImportTextFile_Transition_List {
+            get {
+                return ResourceManager.GetString("ChooseIrtStandardPeptides_ImportTextFile_Transition_List", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transition list field must contain a path to a valid file..
+        /// </summary>
+        public static string ChooseIrtStandardPeptides_OkDialog_Transition_list_field_must_contain_a_path_to_a_valid_file_ {
+            get {
+                return ResourceManager.GetString("ChooseIrtStandardPeptides_OkDialog_Transition_list_field_must_contain_a_path_to_a" +
+                        "_valid_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please select a protein containing the list of standard peptides for the iRT calculator..
+        /// </summary>
+        public static string ChooseIrtStandardPeptidesDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_ {
+            get {
+                return ResourceManager.GetString("ChooseIrtStandardPeptidesDlg_OkDialog_Please_select_a_protein_containing_the_list" +
+                        "_of_standard_peptides_for_the_iRT_calculator_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Choose retention time filter replicates.
         /// </summary>
         public static string ChooseSchedulingReplicatesDlg_btnOk_Click_Choose_retention_time_filter_replicates {
@@ -22967,6 +23005,44 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to There is an existing library with the same name {0} as the document library to be created. Overwrite?.
+        /// </summary>
+        public static string SkylineWindow_ImportAssayLibrary_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created__Overwrite_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportAssayLibrary_There_is_an_existing_library_with_the_same_name_" +
+                        "_0__as_the_document_library_to_be_created__Overwrite_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must save the Skyline document in order to import an assay library..
+        /// </summary>
+        public static string SkylineWindow_ImportAssayLibrary_You_must_save_the_Skyline_document_in_order_to_import_an_assay_library_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportAssayLibrary_You_must_save_the_Skyline_document_in_order_to_i" +
+                        "mport_an_assay_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assay Library.
+        /// </summary>
+        public static string SkylineWindow_importAssayLibraryMenuItem_Click_Assay_Library {
+            get {
+                return ResourceManager.GetString("SkylineWindow_importAssayLibraryMenuItem_Click_Assay_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import Assay Library.
+        /// </summary>
+        public static string SkylineWindow_importAssayLibraryMenuItem_Click_Import_Assay_Library {
+            get {
+                return ResourceManager.GetString("SkylineWindow_importAssayLibraryMenuItem_Click_Import_Assay_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed importing file {0}. {1}.
         /// </summary>
         public static string SkylineWindow_importDocumentMenuItem_Click_Failed_importing_file__0__1__ {
@@ -23176,6 +23252,26 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportMassList_Keep_the_existing_iRT_values_or_overwrite_with_impor" +
                         "ted_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file does not contain intensities. Valid column names for intensities are:.
+        /// </summary>
+        public static string SkylineWindow_ImportMassList_The_file_does_not_contain_intensities__Valid_column_names_for_intensities_are_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList_The_file_does_not_contain_intensities__Valid_column_" +
+                        "names_for_intensities_are_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file does not contain iRTs. Valid column names for iRTs are:.
+        /// </summary>
+        public static string SkylineWindow_ImportMassList_The_file_does_not_contain_iRTs__Valid_column_names_for_iRTs_are_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList_The_file_does_not_contain_iRTs__Valid_column_names_f" +
+                        "or_iRTs_are_", resourceCulture);
             }
         }
         

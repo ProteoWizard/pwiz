@@ -501,6 +501,12 @@
     <Compile Include="FileUI\ImportResultsLockMassDlg.Designer.cs">
       <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\ChooseIrtStandardPeptidesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ChooseIrtStandardPeptidesDlg.Designer.cs">
+      <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Model\ColorGenerator.cs" />
     <Compile Include="Controls\SeqNode\PeptideGroupTreeNode.cs" />
     <Compile Include="Controls\SeqNode\PeptideTreeNode.cs" />
@@ -1899,6 +1905,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\TransitionSettingsControl.zh-CHS.resx">
       <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ChooseIrtStandardPeptidesDlg.resx">
+      <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.ja.resx">
       <DependentUpon>ColumnCaptions.resx</DependentUpon>

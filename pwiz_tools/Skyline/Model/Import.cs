@@ -374,6 +374,9 @@ namespace pwiz.Skyline.Model
             return Import(progressMonitor, sourceFile, indices, dictNameSeq, out irtPeptides, out librarySpectra, out errorList);
         }
 
+        public static IEnumerable<string> IrtColumnNames { get { return new[] { "tr_recalibrated", "irt" }; } } // Not L10N
+        public static IEnumerable<string> LibraryColumnNames { get { return new[] { "libraryintensity", "relativeintensity", "relative_intensity", "relativefragmentintensity", "library_intensity" }; } } // Not L10N
+
         public IEnumerable<PeptideGroupDocNode> Import(IProgressMonitor progressMonitor,
                                                        string sourceFile,
                                                        ColumnIndices indices,
@@ -418,16 +421,14 @@ namespace pwiz.Skyline.Model
                 int decoyColumn = -1;
                 int irtColumn = -1;
                 int libraryColumn = -1;
-                var irtNames = new[] { "tr_recalibrated", "irt" }; // Not L10N
-                var libraryNames = new[] { "libraryintensity", "relativeintensity", "relative_intensity", "relativefragmentintensity", "library_intensity" }; // Not L10N
                 var decoyNames = new[] { "decoy" }; // Not L10N
                 if (headers != null)
                 {
                     lines.RemoveAt(0);
                     linesSeen++;
                     decoyColumn = headers.IndexOf(col => decoyNames.Contains(col.ToLowerInvariant()));
-                    irtColumn = headers.IndexOf(col => irtNames.Contains(col.ToLowerInvariant()));
-                    libraryColumn = headers.IndexOf(col => libraryNames.Contains(col.ToLowerInvariant()));
+                    irtColumn = headers.IndexOf(col => IrtColumnNames.Contains(col.ToLowerInvariant()));
+                    libraryColumn = headers.IndexOf(col => LibraryColumnNames.Contains(col.ToLowerInvariant()));
                     line = lines.FirstOrDefault();
                     fields = line != null ? line.ParseDsvFields(Separator) : new string[0];
                 }

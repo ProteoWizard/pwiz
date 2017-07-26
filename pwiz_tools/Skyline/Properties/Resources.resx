@@ -9607,4 +9607,34 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="SkylineVersion_V3_7_Skyline_3_7" xml:space="preserve">
     <value>Skyline 3.7</value>
   </data>
+  <data name="SkylineWindow_importAssayLibraryMenuItem_Click_Import_Assay_Library" xml:space="preserve">
+    <value>Import Assay Library</value>
+  </data>
+  <data name="SkylineWindow_importAssayLibraryMenuItem_Click_Assay_Library" xml:space="preserve">
+    <value>Assay Library</value>
+  </data>
+  <data name="SkylineWindow_ImportAssayLibrary_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created__Overwrite_" xml:space="preserve">
+    <value>There is an existing library with the same name {0} as the document library to be created. Overwrite?</value>
+  </data>
+  <data name="SkylineWindow_ImportAssayLibrary_You_must_save_the_Skyline_document_in_order_to_import_an_assay_library_" xml:space="preserve">
+    <value>You must save the Skyline document in order to import an assay library.</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_The_file_does_not_contain_iRTs__Valid_column_names_for_iRTs_are_" xml:space="preserve">
+    <value>The file does not contain iRTs. Valid column names for iRTs are:</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_The_file_does_not_contain_intensities__Valid_column_names_for_intensities_are_" xml:space="preserve">
+    <value>The file does not contain intensities. Valid column names for intensities are:</value>
+  </data>
+  <data name="ChooseIrtStandardPeptides_ImportTextFile_Import_Transition_List__iRT_standards_" xml:space="preserve">
+    <value>Import Transition List (iRT standards)</value>
+  </data>
+  <data name="ChooseIrtStandardPeptides_ImportTextFile_Transition_List" xml:space="preserve">
+    <value>Transition List</value>
+  </data>
+  <data name="ChooseIrtStandardPeptides_OkDialog_Transition_list_field_must_contain_a_path_to_a_valid_file_" xml:space="preserve">
+    <value>Transition list field must contain a path to a valid file.</value>
+  </data>
+  <data name="ChooseIrtStandardPeptidesDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_" xml:space="preserve">
+    <value>Please select a protein containing the list of standard peptides for the iRT calculator.</value>
+  </data>
 </root>

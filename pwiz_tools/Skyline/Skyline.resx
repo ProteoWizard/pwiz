@@ -1548,6 +1548,12 @@
   <data name="importFASTAMenuItem.Text" xml:space="preserve">
     <value>&amp;FASTA...</value>
   </data>
+  <data name="importAssayLibraryMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>170, 22</value>
+  </data>
+  <data name="importAssayLibraryMenuItem.Text" xml:space="preserve">
+    <value>&amp;Assay Library...</value>
+  </data>
   <data name="importMassListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
   </data>
@@ -4426,6 +4432,12 @@
     <value>importFASTAMenuItem</value>
   </data>
   <data name="&gt;&gt;importFASTAMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;importAssayLibraryMenuItem.Name" xml:space="preserve">
+    <value>importAssayLibraryMenuItem</value>
+  </data>
+  <data name="&gt;&gt;importAssayLibraryMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;importMassListMenuItem.Name" xml:space="preserve">

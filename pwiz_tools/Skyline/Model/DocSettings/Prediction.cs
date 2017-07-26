@@ -58,6 +58,8 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("predict_retention_time")]
     public sealed class RetentionTimeRegression : XmlNamedElement
     {
+        public const double DEFAULT_WINDOW = 10;
+
         public static double? GetRetentionTimeDisplay(double? rt)
         {
             if (!rt.HasValue)

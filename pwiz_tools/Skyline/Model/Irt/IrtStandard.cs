@@ -341,12 +341,23 @@ namespace pwiz.Skyline.Model.Irt
         /// <returns>True if the collection of peptides matches the set of standard peptides; false otherwise.</returns>
         public bool IsMatch(IList<DbIrtPeptide> peptides, double? irtTolerance)
         {
-            return Peptides.Count == peptides.Count && IsSubset(peptides, irtTolerance);
+            return Peptides.Count == peptides.Count && ContainsAll(peptides, irtTolerance);
         }
 
-        private bool IsSubset(ICollection<DbIrtPeptide> peptides, double? irtTolerance)
+        /// <summary>
+        /// Determines whether this set of standard peptides contains all peptides in a collection.
+        /// </summary>
+        /// <param name="peptides">The collection of peptides to check.</param>
+        /// <param name="irtTolerance">Tolerance used to compare iRTs; if null, iRTs are not required to match.</param>
+        /// <returns>True if the set of standard peptides contains all peptides in the collection; false otherwise.</returns>
+        private bool ContainsAll(ICollection<DbIrtPeptide> peptides, double? irtTolerance)
         {
             return peptides.Count > 0 && peptides.All(peptide => MatchingStandard(peptide, irtTolerance) != null);
+        }
+
+        public bool IsSubset(ICollection<DbIrtPeptide> peptides, double? irtTolerance)
+        {
+            return Peptides.Count > 0 && Peptides.All(p => peptides.FirstOrDefault(peptide => Match(p, peptide, irtTolerance)) != null);
         }
 
         /// <summary>
@@ -377,18 +388,13 @@ namespace pwiz.Skyline.Model.Irt
 
         public static bool ContainsMatch(IEnumerable<DbIrtPeptide> peptides, string peptideModSeq)
         {
-            return peptides.Any(p => Match(p, peptideModSeq));
+            return peptides.Any(p => Equals(p.PeptideModSeq, peptideModSeq));
         }
 
         public static bool Match(DbIrtPeptide x, DbIrtPeptide y, double? irtTolerance)
         {
             return Equals(x.GetNormalizedModifiedSequence(), y.GetNormalizedModifiedSequence()) &&
                    (!irtTolerance.HasValue || Math.Abs(x.Irt - y.Irt) < irtTolerance.Value);
-        }
-
-        public static bool Match(DbIrtPeptide x, string peptideModSeq)
-        {
-            return Equals(x.PeptideModSeq, peptideModSeq);
         }
 
         /// <summary>
@@ -413,6 +419,11 @@ namespace pwiz.Skyline.Model.Irt
             return ALL.Any(standard => standard.Contains(peptide, irtTolerance));
         }
 
+        public static bool AnyContains(string peptideModSeq)
+        {
+            return ALL.Any(standard => standard.Contains(peptideModSeq));
+        }
+
         private static DbIrtPeptide MakePeptide(string sequence, double time)
         {
             return new DbIrtPeptide(sequence, time, true, TimeSource.peak);
@@ -420,7 +431,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public static IrtStandard WhichStandard(ICollection<string> peptides, out HashSet<string> missingPeptides)
         {
-            var standard = ALL.FirstOrDefault(s => s.IsSubset(peptides.Select(p => MakePeptide(p, 0)).ToList(), null)) ?? NULL;
+            var standard = ALL.FirstOrDefault(s => s.ContainsAll(peptides.Select(p => MakePeptide(p, 0)).ToList(), null)) ?? NULL;
             missingPeptides = new HashSet<string>(standard.Peptides.Where(s => !peptides.Any(p => p.Equals(s.Sequence))).Select(s => s.Sequence));
             return standard;
         }

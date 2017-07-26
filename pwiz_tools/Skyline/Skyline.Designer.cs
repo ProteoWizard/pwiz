@@ -257,6 +257,7 @@ namespace pwiz.Skyline
             this.importPeptideSearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator52 = new System.Windows.Forms.ToolStripSeparator();
             this.importFASTAMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importAssayLibraryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importMassListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importDocumentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2071,6 +2072,7 @@ namespace pwiz.Skyline
             this.importPeptideSearchMenuItem,
             this.toolStripSeparator52,
             this.importFASTAMenuItem,
+            this.importAssayLibraryMenuItem,
             this.importMassListMenuItem,
             this.importDocumentMenuItem});
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
@@ -2109,6 +2111,12 @@ namespace pwiz.Skyline
             this.importFASTAMenuItem.Name = "importFASTAMenuItem";
             resources.ApplyResources(this.importFASTAMenuItem, "importFASTAMenuItem");
             this.importFASTAMenuItem.Click += new System.EventHandler(this.importFASTAMenuItem_Click);
+            // 
+            // importAssayLibraryMenuItem
+            // 
+            this.importAssayLibraryMenuItem.Name = "importAssayLibraryMenuItem";
+            resources.ApplyResources(this.importAssayLibraryMenuItem, "importAssayLibraryMenuItem");
+            this.importAssayLibraryMenuItem.Click += new System.EventHandler(this.importAssayLibraryMenuItem_Click);
             // 
             // importMassListMenuItem
             // 
@@ -4241,6 +4249,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem applyPeakAllToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem applyPeakSubsequentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removePeakToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importAssayLibraryMenuItem;
     }
 }
 

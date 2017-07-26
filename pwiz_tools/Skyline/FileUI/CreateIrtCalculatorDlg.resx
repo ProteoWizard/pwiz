@@ -148,7 +148,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCreateDb.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 296</value>
+    <value>208, 328</value>
   </data>
   <data name="btnCreateDb.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -235,7 +235,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnBrowseDb.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 169</value>
+    <value>208, 420</value>
   </data>
   <data name="btnBrowseDb.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -259,7 +259,7 @@
     <value>16</value>
   </data>
   <data name="textOpenDatabase.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 171</value>
+    <value>26, 422</value>
   </data>
   <data name="textOpenDatabase.Size" type="System.Drawing.Size, System.Drawing">
     <value>176, 20</value>
@@ -286,7 +286,7 @@
     <value>NoControl</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>23, 155</value>
+    <value>23, 406</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
     <value>74, 13</value>
@@ -364,7 +364,7 @@
     <value>True</value>
   </data>
   <data name="radioUseExisting.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 124</value>
+    <value>12, 375</value>
   </data>
   <data name="radioUseExisting.Size" type="System.Drawing.Size, System.Drawing">
     <value>158, 17</value>
@@ -391,7 +391,7 @@
     <value>True</value>
   </data>
   <data name="radioUseList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 208</value>
+    <value>12, 240</value>
   </data>
   <data name="radioUseList.Size" type="System.Drawing.Size, System.Drawing">
     <value>278, 17</value>
@@ -415,7 +415,7 @@
     <value>11</value>
   </data>
   <data name="textNewDatabase.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 298</value>
+    <value>26, 330</value>
   </data>
   <data name="textNewDatabase.Size" type="System.Drawing.Size, System.Drawing">
     <value>176, 20</value>
@@ -442,7 +442,7 @@
     <value>NoControl</value>
   </data>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>23, 280</value>
+    <value>23, 312</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>74, 13</value>
@@ -472,7 +472,7 @@
     <value>NoControl</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>23, 232</value>
+    <value>23, 264</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>71, 13</value>
@@ -496,7 +496,7 @@
     <value>8</value>
   </data>
   <data name="textImportText.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 253</value>
+    <value>26, 285</value>
   </data>
   <data name="textImportText.Size" type="System.Drawing.Size, System.Drawing">
     <value>176, 20</value>
@@ -520,7 +520,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnBrowseText.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 251</value>
+    <value>208, 283</value>
   </data>
   <data name="btnBrowseText.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -547,7 +547,7 @@
     <value>True</value>
   </data>
   <data name="radioUseProtein.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 335</value>
+    <value>12, 108</value>
   </data>
   <data name="radioUseProtein.Size" type="System.Drawing.Size, System.Drawing">
     <value>323, 17</value>
@@ -577,7 +577,7 @@
     <value>NoControl</value>
   </data>
   <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>23, 404</value>
+    <value>23, 177</value>
   </data>
   <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
     <value>74, 13</value>
@@ -601,7 +601,7 @@
     <value>2</value>
   </data>
   <data name="textNewDatabaseProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 422</value>
+    <value>26, 195</value>
   </data>
   <data name="textNewDatabaseProteins.Size" type="System.Drawing.Size, System.Drawing">
     <value>176, 20</value>
@@ -625,7 +625,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCreateDbProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 420</value>
+    <value>208, 193</value>
   </data>
   <data name="btnCreateDbProteins.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -655,7 +655,7 @@
     <value>NoControl</value>
   </data>
   <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
-    <value>23, 358</value>
+    <value>23, 131</value>
   </data>
   <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
     <value>72, 13</value>
@@ -679,7 +679,7 @@
     <value>1</value>
   </data>
   <data name="comboBoxProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 377</value>
+    <value>26, 150</value>
   </data>
   <data name="comboBoxProteins.Size" type="System.Drawing.Size, System.Drawing">
     <value>179, 21</value>

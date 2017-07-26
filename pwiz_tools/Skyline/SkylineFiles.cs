@@ -1740,6 +1740,59 @@ namespace pwiz.Skyline
                 SequenceTree.SelectedPath = selectPath;
         }
 
+        private void importAssayLibraryMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new OpenFileDialog
+            {
+                Title = Resources.SkylineWindow_importAssayLibraryMenuItem_Click_Import_Assay_Library,
+                InitialDirectory = Settings.Default.ActiveDirectory,
+                CheckPathExists = true,
+                SupportMultiDottedExtensions = true,
+                DefaultExt = TextUtil.EXT_CSV,
+                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
+                    Resources.SkylineWindow_importAssayLibraryMenuItem_Click_Assay_Library, TextUtil.EXT_CSV, TextUtil.EXT_TSV))
+            })
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
+                    ImportAssayLibrary(dlg.FileName);
+                }
+            }
+        }
+
+        public void ImportAssayLibrary(string fileName)
+        {
+            try
+            {
+                ImportAssayLibrary(new MassListInputs(fileName), Resources.SkylineWindow_importAssayLibraryMenuItem_Click_Import_Assay_Library);
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(this, string.Format(Resources.SkylineWindow_ImportFastaFile_Failed_reading_the_file__0__1__, fileName, x.Message), x);
+            }
+        }
+
+        private void ImportAssayLibrary(MassListInputs inputs, string description)
+        {
+            if (DocumentFilePath == null &&
+                (MultiButtonMsgDlg.Show(this,
+                     Resources.SkylineWindow_ImportAssayLibrary_You_must_save_the_Skyline_document_in_order_to_import_an_assay_library_, MultiButtonMsgDlg.BUTTON_OK) == DialogResult.Cancel ||
+                 !SaveDocumentAs()))
+            {
+                return;
+            }
+
+            if (File.Exists(AssayLibraryFileName) &&
+                MultiButtonMsgDlg.Show(this,
+                    string.Format(Resources.SkylineWindow_ImportAssayLibrary_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created__Overwrite_, AssayLibraryName),
+                    MultiButtonMsgDlg.BUTTON_OK) == DialogResult.Cancel)
+            {
+                return;
+            }
+            ImportMassList(inputs, description, true);
+        }
+
         private void importMassListMenuItem_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog dlg = new OpenFileDialog
@@ -1765,7 +1818,7 @@ namespace pwiz.Skyline
         {
             try
             {
-                ImportMassList(new MassListInputs(fileName), Resources.SkylineWindow_importMassListMenuItem_Click_Import_transition_list);
+                ImportMassList(new MassListInputs(fileName), Resources.SkylineWindow_importMassListMenuItem_Click_Import_transition_list, false);
             }
             catch (Exception x)
             {
@@ -1773,7 +1826,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void ImportMassList(MassListInputs inputs, string description)
+        private void ImportMassList(MassListInputs inputs, string description, bool assayLibrary)
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath insertPath = nodePaste != null ? nodePaste.Path : null;
@@ -1782,11 +1835,8 @@ namespace pwiz.Skyline
             List<SpectrumMzInfo> librarySpectra = null;
             List<TransitionImportErrorInfo> errorList = null;
             List<PeptideGroupDocNode> peptideGroups = null;
-            RetentionTimeRegression retentionTimeRegressionStore = null;
             var docCurrent = DocumentUI;
             SrmDocument docNew = null;
-            var retentionTimeRegression = docCurrent.Settings.PeptideSettings.Prediction.RetentionTime;
-            RCalcIrt calcIrt = retentionTimeRegression != null ? (retentionTimeRegression.Calculator as RCalcIrt) : null;
             using (var longWaitDlg = new LongWaitDlg(this) {Text = description})
             {
                 longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
@@ -1794,6 +1844,21 @@ namespace pwiz.Skyline
                     docNew = docCurrent.ImportMassList(inputs, longWaitBroker,
                         insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList, out peptideGroups);
                 });
+            }
+            if (assayLibrary)
+            {
+                var missingMessage = new List<string>();
+                if (!irtPeptides.Any())
+                    missingMessage.Add(TextUtil.LineSeparate(Resources.SkylineWindow_ImportMassList_The_file_does_not_contain_iRTs__Valid_column_names_for_iRTs_are_,
+                                                             TextUtil.LineSeparate(MassListImporter.IrtColumnNames)));
+                if (!librarySpectra.Any())
+                    missingMessage.Add(TextUtil.LineSeparate(Resources.SkylineWindow_ImportMassList_The_file_does_not_contain_intensities__Valid_column_names_for_intensities_are_,
+                                                             TextUtil.LineSeparate(MassListImporter.LibraryColumnNames)));
+                if (missingMessage.Any())
+                {
+                    MessageDlg.Show(this, TextUtil.LineSeparate(missingMessage));
+                    return;
+                }
             }
             bool isDocumentSame = ReferenceEquals(docNew, docCurrent);
             // If nothing was imported (e.g. operation was canceled or zero error-free transitions) and also no errors, just return
@@ -1808,174 +1873,32 @@ namespace pwiz.Skyline
                     if (errorDlg.ShowDialog(this) == DialogResult.Cancel || isDocumentSame)
                     {
                         return;
-                    }   
+                    }
                 }
             }
 
-            var dbIrtPeptides = irtPeptides.Select(rt => new DbIrtPeptide(rt.PeptideSequence, rt.RetentionTime, false, TimeSource.scan)).ToList();
-            var dbIrtPeptidesFilter = ImportAssayLibraryHelper.GetUnscoredIrtPeptides(dbIrtPeptides, calcIrt);
-            bool overwriteExisting = false;
-            MassListInputs irtInputs = null;
-            // If there are no iRT peptides or none with different values than the database, don't import any iRT's
-            if (dbIrtPeptidesFilter.Any())
-            {
-                // Ask whether or not to include iRT peptides in the paste
-                string useIrtMessage = calcIrt == null
-                    ? Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_values__but_the_document_does_not_have_an_iRT_calculator___Create_a_new_calculator_and_add_these_iRT_values_
-                    : Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_library_values___Add_these_iRT_values_to_the_iRT_calculator_;
-                string yesButton = calcIrt == null
-                    ? Resources.SkylineWindow_ImportMassList__Create___ 
-                    : Resources.SkylineWindow_ImportMassList_Add;
-                var useIrtResult = MultiButtonMsgDlg.Show(this, useIrtMessage,
-                    yesButton, Resources.SkylineWindow_ImportMassList__Skip, true);
-                if (useIrtResult == DialogResult.Cancel)
-                {
-                    return;
-                }
-                if (useIrtResult == DialogResult.Yes)
-                {
-                    if (calcIrt == null)
-                    {
-                        // If there is no iRT calculator, ask the user to create one
-                        using (var dlg = new CreateIrtCalculatorDlg(docNew, DocumentFilePath, Settings.Default.RTScoreCalculatorList, peptideGroups))
-                        {
-                            if (dlg.ShowDialog(this) != DialogResult.OK)
-                            {
-                                return;
-                            }
+            RetentionTimeRegression retentionTimeRegressionStore;
+            MassListInputs irtInputs;
+            if (!ImportMassListIrts(ref docNew, irtPeptides, peptideGroups, librarySpectra, assayLibrary, out irtInputs, out retentionTimeRegressionStore))
+                return;
 
-                            docNew = dlg.Document;
-                            calcIrt = (RCalcIrt)docNew.Settings.PeptideSettings.Prediction.RetentionTime.Calculator;
-                            dlg.UpdateLists(librarySpectra, dbIrtPeptidesFilter);
-                            if (!string.IsNullOrEmpty(dlg.IrtFile))
-                                irtInputs = new MassListInputs(dlg.IrtFile);
-                        }
-                    }
-                    string dbPath = calcIrt.DatabasePath;
-                    IrtDb db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
-                    var oldPeptides = db.GetPeptides().ToList();
-                    IList<DbIrtPeptide.Conflict> conflicts;
-                    dbIrtPeptidesFilter = DbIrtPeptide.MakeUnique(dbIrtPeptidesFilter);
-                    DbIrtPeptide.FindNonConflicts(oldPeptides, dbIrtPeptidesFilter, null, out conflicts);
-                    // Ask whether to keep or overwrite peptides that are present in the import and already in the database
-                    if (conflicts.Any())
-                    {
-                        string messageOverwrite = string.Format(Resources.SkylineWindow_ImportMassList_The_iRT_calculator_already_contains__0__of_the_imported_peptides_,
-                                                                conflicts.Count);
-                        var overwriteResult = MultiButtonMsgDlg.Show(this,
-                            TextUtil.LineSeparate(messageOverwrite, conflicts.Count == 1
-                                ? Resources.SkylineWindow_ImportMassList_Keep_the_existing_iRT_value_or_overwrite_with_the_imported_value_
-                                : Resources.SkylineWindow_ImportMassList_Keep_the_existing_iRT_values_or_overwrite_with_imported_values_),
-                            Resources.SkylineWindow_ImportMassList__Keep, Resources.SkylineWindow_ImportMassList__Overwrite, true);
-                        if (overwriteResult == DialogResult.Cancel)
-                        {
-                            return;
-                        }
-                        overwriteExisting = overwriteResult == DialogResult.No;
-                    }
-                    using (var longWaitDlg = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ImportMassList_Adding_iRT_values_})
-                    {
-                        longWaitDlg.PerformWork(this, 100, progressMonitor => 
-                            docNew = docNew.AddIrtPeptides(dbIrtPeptidesFilter, overwriteExisting, progressMonitor));
-                    }
-                    if (docNew == null)
-                        return;
-                    retentionTimeRegressionStore = docNew.Settings.PeptideSettings.Prediction.RetentionTime;
-                }
-            }
             BiblioSpecLiteSpec docLibrarySpec = null;
             BiblioSpecLiteLibrary docLibrary = null;
-            int indexOldLibrary = -1;
+            var indexOldLibrary = -1;
             if (librarySpectra.Any())
             {
-                string addLibraryMessage = Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_spectral_library_intensities___Create_a_document_library_from_these_intensities_;
-                var addLibraryResult = MultiButtonMsgDlg.Show(this, addLibraryMessage,
-                    Resources.SkylineWindow_ImportMassList__Create___, Resources.SkylineWindow_ImportMassList__Skip,
-                    true);
-                if (addLibraryResult == DialogResult.Cancel)
+                var importIntensities = true;
+                if (!assayLibrary)
                 {
+                    var addLibraryMessage = Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_spectral_library_intensities___Create_a_document_library_from_these_intensities_;
+                    var addLibraryResult = MultiButtonMsgDlg.Show(this, addLibraryMessage,
+                        Resources.SkylineWindow_ImportMassList__Create___, Resources.SkylineWindow_ImportMassList__Skip, true);
+                    if (addLibraryResult == DialogResult.Cancel)
+                        return;
+                    importIntensities = addLibraryResult == DialogResult.Yes;
+                }
+                if (importIntensities && !ImportMassListIntensities(ref docNew, librarySpectra, assayLibrary, out docLibrarySpec, out docLibrary, out indexOldLibrary))
                     return;
-                }
-                if (addLibraryResult == DialogResult.Yes)
-                {
-                    // Can't name a library after the document if the document is unsaved
-                    // In this case, prompt to save
-                    if (DocumentFilePath == null)
-                    {
-                        string saveDocumentMessage = Resources.SkylineWindow_ImportMassList_You_must_save_the_Skyline_document_in_order_to_create_a_spectral_library_from_a_transition_list_;
-                        var saveDocumentResult = MultiButtonMsgDlg.Show(this, saveDocumentMessage, MultiButtonMsgDlg.BUTTON_OK);
-                        if (saveDocumentResult == DialogResult.Cancel)
-                        {
-                            return;
-                        }
-                        else if (!SaveDocumentAs())
-                        {
-                            return;
-                        }
-                    }
-
-                    librarySpectra = SpectrumMzInfo.RemoveDuplicateSpectra(librarySpectra);
-
-                    string documentLibrary = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
-// ReSharper disable once AssignNullToNotNullAttribute
-                    string outputPath = Path.Combine(Path.GetDirectoryName(documentLibrary), 
-                                                     Path.GetFileNameWithoutExtension(documentLibrary) + BiblioSpecLiteSpec.ASSAY_NAME + BiblioSpecLiteSpec.EXT);
-                    bool libraryExists = File.Exists(outputPath);
-                    string name = Path.GetFileNameWithoutExtension(DocumentFilePath) + BiblioSpecLiteSpec.ASSAY_NAME;
-                    indexOldLibrary = docNew.Settings.PeptideSettings.Libraries.LibrarySpecs.IndexOf(spec => spec != null && spec.FilePath == outputPath);
-                    bool libraryLinkedToDoc = indexOldLibrary != -1;
-                    if (libraryLinkedToDoc)
-                    {
-                        string oldName = docNew.Settings.PeptideSettings.Libraries.LibrarySpecs[indexOldLibrary].Name;
-                        var libraryOld = docNew.Settings.PeptideSettings.Libraries.GetLibrary(oldName);
-                        var additionalSpectra = SpectrumMzInfo.GetInfoFromLibrary(libraryOld);
-                        additionalSpectra = SpectrumMzInfo.RemoveDuplicateSpectra(additionalSpectra);
-                        librarySpectra = SpectrumMzInfo.MergeWithOverwrite(librarySpectra, additionalSpectra);
-                        foreach (var stream in libraryOld.ReadStreams)
-                            stream.CloseStream();
-                    }
-                    if (libraryExists && !libraryLinkedToDoc)
-                    {
-                        string replaceLibraryMessage = string.Format(Resources.SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of_library_intensities_,
-                                          name);
-                        // If the document does not have an assay library linked to it, then ask if user wants to delete the one that we have found
-                        var replaceLibraryResult = MultiButtonMsgDlg.Show(this, replaceLibraryMessage,
-                            Resources.SkylineWindow_ImportMassList__Overwrite, Resources.SkylineWindow_ImportMassList__Skip, true);
-                        if (replaceLibraryResult == DialogResult.Cancel)
-                            return;
-                        if (replaceLibraryResult == DialogResult.No)
-                            librarySpectra.Clear();
-                    }
-                    if (librarySpectra.Any())
-                    {
-                        // Delete the existing library; either it's not tied to the document or we've already extracted the spectra
-                        if (libraryExists)
-                        {
-                            FileEx.SafeDelete(outputPath);
-                            FileEx.SafeDelete(Path.ChangeExtension(outputPath, BiblioSpecLiteSpec.EXT_REDUNDANT));
-                        }
-                        using (var blibDb = BlibDb.CreateBlibDb(outputPath))
-                        {
-                            docLibrarySpec = new BiblioSpecLiteSpec(name, outputPath);
-                            using (var longWaitDlg = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ImportMassList_Creating_Spectral_Library })
-                            {
-                                longWaitDlg.PerformWork(this, 1000, progressMonitor =>
-                                {
-                                    docLibrary = blibDb.CreateLibraryFromSpectra(docLibrarySpec, librarySpectra, name, progressMonitor);
-                                    if (docLibrary == null)
-                                        return;
-                                    var newSettings = docNew.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrary(docLibrary, docLibrarySpec, indexOldLibrary));
-                                    var status = new ProgressStatus(Resources.SkylineWindow_ImportMassList_Finishing_up_import);
-                                    progressMonitor.UpdateProgress(status);
-                                    progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
-                                    docNew = docNew.ChangeSettings(newSettings);
-                                });
-                                if (docLibrary == null)
-                                    return;
-                            }
-                        }
-                    }
-                }
             }
 
             ModifyDocument(description, doc =>
@@ -2024,6 +1947,221 @@ namespace pwiz.Skyline
             {
                 Settings.Default.SpectralLibraryList.Insert(0, docLibrarySpec);
             }
+        }
+
+        public string AssayLibraryFileName
+        {
+            get
+            {
+                var docLib = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
+                // ReSharper disable once AssignNullToNotNullAttribute
+                return Path.Combine(Path.GetDirectoryName(docLib), Path.GetFileNameWithoutExtension(docLib) + BiblioSpecLiteSpec.ASSAY_NAME + BiblioSpecLiteSpec.EXT);
+            }
+        }
+
+        public string AssayLibraryName
+        {
+            get { return Path.GetFileNameWithoutExtension(DocumentFilePath) + BiblioSpecLiteSpec.ASSAY_NAME; }
+        }
+
+        private bool ImportMassListIrts(ref SrmDocument doc, IEnumerable<MeasuredRetentionTime> irtPeptides,
+            IEnumerable<PeptideGroupDocNode> peptideGroups, List<SpectrumMzInfo> librarySpectra, bool assayLibrary,
+            out MassListInputs irtInputs, out RetentionTimeRegression retentionTimeRegressionStore)
+        {
+            irtInputs = null;
+            retentionTimeRegressionStore = null;
+
+            var retentionTimeRegression = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
+            var calcIrt = retentionTimeRegression != null ? retentionTimeRegression.Calculator as RCalcIrt : null;
+            var dbIrtPeptides = irtPeptides.Select(rt => new DbIrtPeptide(rt.PeptideSequence, rt.RetentionTime, false, TimeSource.scan)).ToList();
+            if (!assayLibrary)
+            {
+                dbIrtPeptides = ImportAssayLibraryHelper.GetUnscoredIrtPeptides(dbIrtPeptides, calcIrt);
+                // If there are no iRT peptides or none with different values than the database, don't import any iRT's
+                if (!dbIrtPeptides.Any())
+                    return true;
+            }
+
+            IrtDb db;
+            if (!assayLibrary)
+            {
+                // Ask whether or not to include iRT peptides in the paste
+                var useIrtMessage = calcIrt == null
+                    ? Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_values__but_the_document_does_not_have_an_iRT_calculator___Create_a_new_calculator_and_add_these_iRT_values_
+                    : Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_library_values___Add_these_iRT_values_to_the_iRT_calculator_;
+                var yesButton = calcIrt == null
+                    ? Resources.SkylineWindow_ImportMassList__Create___
+                    : Resources.SkylineWindow_ImportMassList_Add;
+                switch (MultiButtonMsgDlg.Show(this, useIrtMessage, yesButton, Resources.SkylineWindow_ImportMassList__Skip, true))
+                {
+                    case DialogResult.No:
+                        return true;
+                    case DialogResult.Cancel:
+                        return false;
+                }
+                if (calcIrt == null)
+                {
+                    // If there is no iRT calculator, ask the user to create one
+                    using (var dlg = new CreateIrtCalculatorDlg(doc, DocumentFilePath, Settings.Default.RTScoreCalculatorList, peptideGroups))
+                    {
+                        if (dlg.ShowDialog(this) != DialogResult.OK)
+                            return false;
+
+                        doc = dlg.Document;
+                        calcIrt = (RCalcIrt) doc.Settings.PeptideSettings.Prediction.RetentionTime.Calculator;
+                        dlg.UpdateLists(librarySpectra, dbIrtPeptides);
+                        if (!string.IsNullOrEmpty(dlg.IrtFile))
+                            irtInputs = new MassListInputs(dlg.IrtFile);
+                    }
+                }
+                var dbPath = calcIrt.DatabasePath;
+                db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
+            }
+            else
+            {
+                db = IrtDb.CreateIrtDb(AssayLibraryFileName);
+
+                // Try to guess iRT standards
+                var matchingStandards = IrtStandard.ALL.Where(standard => standard.IsSubset(dbIrtPeptides, null)).ToArray();
+                if (matchingStandards.Length == 2 && matchingStandards.Contains(IrtStandard.BIOGNOSYS_10) && matchingStandards.Contains(IrtStandard.BIOGNOSYS_11))
+                    matchingStandards = new[] {IrtStandard.BIOGNOSYS_11};
+                if (matchingStandards.Length == 1)
+                {
+                    foreach (var peptide in dbIrtPeptides.Where(peptide => matchingStandards[0].Contains(peptide, null)))
+                        peptide.Standard = true;
+                }
+                else
+                {
+                    // Ask for standards
+                    using (var dlg = new ChooseIrtStandardPeptidesDlg(doc, DocumentFilePath, peptideGroups))
+                    {
+                        if (dlg.ShowDialog(this) != DialogResult.OK)
+                            return false;
+
+                        doc = dlg.Document;
+                        dlg.UpdateLists(librarySpectra, dbIrtPeptides);
+                        if (!string.IsNullOrEmpty(dlg.IrtFile))
+                            irtInputs = new MassListInputs(dlg.IrtFile);
+                    }
+                }
+
+                var calculator = new RCalcIrt(AssayLibraryName, AssayLibraryFileName);
+                // CONSIDER: Probably can't use just a static default like 10 below
+                retentionTimeRegression = new RetentionTimeRegression(calculator.Name, calculator, null, null, RetentionTimeRegression.DEFAULT_WINDOW, new List<MeasuredRetentionTime>());
+                doc = doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(prediction => prediction.ChangeRetentionTime(retentionTimeRegression)));
+            }
+            
+            var oldPeptides = db.GetPeptides().ToList();
+            IList<DbIrtPeptide.Conflict> conflicts;
+            dbIrtPeptides = DbIrtPeptide.MakeUnique(dbIrtPeptides);
+            DbIrtPeptide.FindNonConflicts(oldPeptides, dbIrtPeptides, null, out conflicts);
+            // Ask whether to keep or overwrite peptides that are present in the import and already in the database
+            var overwriteExisting = false;
+            if (conflicts.Any())
+            {
+                var messageOverwrite = string.Format(Resources.SkylineWindow_ImportMassList_The_iRT_calculator_already_contains__0__of_the_imported_peptides_, conflicts.Count);
+                var overwriteResult = MultiButtonMsgDlg.Show(this,
+                    TextUtil.LineSeparate(messageOverwrite, conflicts.Count == 1
+                        ? Resources.SkylineWindow_ImportMassList_Keep_the_existing_iRT_value_or_overwrite_with_the_imported_value_
+                        : Resources.SkylineWindow_ImportMassList_Keep_the_existing_iRT_values_or_overwrite_with_imported_values_),
+                        Resources.SkylineWindow_ImportMassList__Keep, Resources.SkylineWindow_ImportMassList__Overwrite, true);
+                if (overwriteResult == DialogResult.Cancel)
+                    return false;
+                overwriteExisting = overwriteResult == DialogResult.No;
+            }
+            using (var longWaitDlg = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ImportMassList_Adding_iRT_values_ })
+            {
+                var newDoc = doc;
+                longWaitDlg.PerformWork(this, 100, progressMonitor => newDoc = newDoc.AddIrtPeptides(dbIrtPeptides, overwriteExisting, progressMonitor));
+                doc = newDoc;
+            }
+            if (doc == null)
+                return false;
+            retentionTimeRegressionStore = doc.Settings.PeptideSettings.Prediction.RetentionTime;
+            return true;
+        }
+
+        private bool ImportMassListIntensities(ref SrmDocument doc, List<SpectrumMzInfo> librarySpectra, bool assayLibrary,
+            out BiblioSpecLiteSpec docLibrarySpec, out BiblioSpecLiteLibrary docLibrary, out int indexOldLibrary)
+        {
+            docLibrarySpec = null;
+            docLibrary = null;
+            indexOldLibrary = -1;
+
+            // Can't name a library after the document if the document is unsaved
+            // In this case, prompt to save
+            if (DocumentFilePath == null &&
+                (MultiButtonMsgDlg.Show(this,
+                     Resources.SkylineWindow_ImportMassList_You_must_save_the_Skyline_document_in_order_to_create_a_spectral_library_from_a_transition_list_,
+                     MultiButtonMsgDlg.BUTTON_OK) == DialogResult.Cancel ||
+                 !SaveDocumentAs()))
+            {
+                return false;
+            }
+
+            librarySpectra = SpectrumMzInfo.RemoveDuplicateSpectra(librarySpectra);
+
+            indexOldLibrary = doc.Settings.PeptideSettings.Libraries.LibrarySpecs.IndexOf(spec => spec != null && spec.FilePath == AssayLibraryFileName);
+            var libraryLinkedToDoc = indexOldLibrary != -1;
+            if (libraryLinkedToDoc)
+            {
+                var oldName = doc.Settings.PeptideSettings.Libraries.LibrarySpecs[indexOldLibrary].Name;
+                var libraryOld = doc.Settings.PeptideSettings.Libraries.GetLibrary(oldName);
+                var additionalSpectra = SpectrumMzInfo.GetInfoFromLibrary(libraryOld);
+                additionalSpectra = SpectrumMzInfo.RemoveDuplicateSpectra(additionalSpectra);
+                librarySpectra = SpectrumMzInfo.MergeWithOverwrite(librarySpectra, additionalSpectra);
+                foreach (var stream in libraryOld.ReadStreams)
+                    stream.CloseStream();
+            }
+
+            var libraryExists = File.Exists(AssayLibraryFileName);
+            if (!assayLibrary && libraryExists && !libraryLinkedToDoc)
+            {
+                var replaceLibraryMessage = string.Format(Resources.SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of_library_intensities_, AssayLibraryName);
+                // If the document does not have an assay library linked to it, then ask if user wants to delete the one that we have found
+                var replaceLibraryResult = MultiButtonMsgDlg.Show(this, replaceLibraryMessage,
+                    Resources.SkylineWindow_ImportMassList__Overwrite, Resources.SkylineWindow_ImportMassList__Skip, true);
+                if (replaceLibraryResult == DialogResult.Cancel)
+                    return false;
+                if (replaceLibraryResult == DialogResult.No)
+                    librarySpectra.Clear();
+            }
+            if (!librarySpectra.Any())
+                return true;
+
+            // Delete the existing library; either it's not tied to the document or we've already extracted the spectra
+            if (!assayLibrary && libraryExists)
+            {
+                FileEx.SafeDelete(AssayLibraryFileName);
+                FileEx.SafeDelete(Path.ChangeExtension(AssayLibraryFileName, BiblioSpecLiteSpec.EXT_REDUNDANT));
+            }
+            using (var blibDb = BlibDb.CreateBlibDb(AssayLibraryFileName))
+            {
+                docLibrarySpec = new BiblioSpecLiteSpec(AssayLibraryName, AssayLibraryFileName);
+                using (var longWaitDlg = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ImportMassList_Creating_Spectral_Library })
+                {
+                    var docNew = doc;
+                    BiblioSpecLiteLibrary docLibraryNew = null;
+                    var docLibrarySpec2 = docLibrarySpec;
+                    var indexOldLibrary2 = indexOldLibrary;
+                    longWaitDlg.PerformWork(this, 1000, progressMonitor =>
+                    {
+                        docLibraryNew = blibDb.CreateLibraryFromSpectra(docLibrarySpec2, librarySpectra, AssayLibraryName, progressMonitor);
+                        if (docLibraryNew == null)
+                            return;
+                        var newSettings = docNew.Settings.ChangePeptideLibraries(libs => libs.ChangeLibrary(docLibraryNew, docLibrarySpec2, indexOldLibrary2));
+                        var status = new ProgressStatus(Resources.SkylineWindow_ImportMassList_Finishing_up_import);
+                        progressMonitor.UpdateProgress(status);
+                        progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
+                        docNew = docNew.ChangeSettings(newSettings);
+                    });
+                    doc = docNew;
+                    docLibrary = docLibraryNew;
+                    if (docLibrary == null)
+                        return false;
+                }
+            }
+            return true;
         }
 
         private void importDocumentMenuItem_Click(object sender, EventArgs e)
