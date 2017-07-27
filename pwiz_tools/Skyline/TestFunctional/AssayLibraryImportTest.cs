@@ -1060,7 +1060,8 @@ namespace pwiz.SkylineTestFunctional
             var csvFile = TestFilesDir.GetTestPath("OpenSWATH_SM4_NoError.csv");
             var saveDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(csvFile));
             OkDialog(saveDlg, saveDlg.BtnCancelClick);
-            var skyFile = TestFilesDir.GetTestPath("assayimport.sky");
+            var doc = SkylineWindow.Document;
+
             var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var editMods = ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettings.EditHeavyMods);
             RunUI(() =>
@@ -1075,7 +1076,11 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettings.SetIsotopeModifications(1, true);
             });
             OkDialog(peptideSettings, peptideSettings.OkDialog);
+            doc = WaitForDocumentChange(doc);
+
+            var skyFile = TestFilesDir.GetTestPath("assayimport.sky");
             RunUI(() => Assert.IsTrue(SkylineWindow.SaveDocument(skyFile)));
+            doc = WaitForDocumentChange(doc);
 
             // Import assay library and choose a protein
             var chooseIrt = ShowDialog<ChooseIrtStandardPeptidesDlg>(() => SkylineWindow.ImportAssayLibrary(csvFile));
@@ -1089,20 +1094,22 @@ namespace pwiz.SkylineTestFunctional
                 });
             });
             OkDialog(chooseIrt, () => chooseIrt.OkDialogProtein(irtProteinName));
-            var doc = SkylineWindow.Document;
+            doc = WaitForDocumentChange(doc);
             AssertEx.IsDocumentState(doc, null, 14, 284, 1119);
             Assert.AreEqual(irtProteinName, doc.PeptideGroups.First().Name);
             CheckAssayLibrarySettings();
 
             // Undo import
             RunUI(SkylineWindow.Undo);
+            doc = WaitForDocumentChange(doc);
 
             // Import assay library and choose a file
             var irtCsvFile = TestFilesDir.GetTestPath("OpenSWATH_SM4_iRT.csv");
             var overwriteDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(csvFile));
             var chooseIrt2 = ShowDialog<ChooseIrtStandardPeptidesDlg>(overwriteDlg.BtnYesClick);
             OkDialog(chooseIrt2, () => chooseIrt2.OkDialogFile(irtCsvFile));
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 24, 294, 1170);
+            doc = WaitForDocumentChange(doc);
+            AssertEx.IsDocumentState(doc, null, 24, 294, 1170);
             SkylineWindow.Document.PeptideGroups.Take(10).ForEach(protein => Assert.IsTrue(protein.Name.StartsWith("AQRT_")));
             CheckAssayLibrarySettings();
 
