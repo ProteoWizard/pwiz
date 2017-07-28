@@ -684,35 +684,39 @@ namespace pwiz.Skyline.FileUI
                 Equals(InstrumentType, ExportInstrumentType.ABI_TOF))
             {
                 // Check that mass analyzer settings are set to TOF.
-                if (documentExport.Settings.TransitionSettings.FullScan.IsEnabledMs && 
-                    documentExport.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer != FullScanMassAnalyzerType.tof)
+                if (!CheckAnalyzer(documentExport.Settings.TransitionSettings.FullScan.IsEnabledMs, 
+                                   documentExport.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer,
+                                   FullScanMassAnalyzerType.tof))
                 {
                     MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_OkDialog_The_precursor_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, Resources.ExportMethodDlg_OkDialog_TOF));
                     return;
                 }
-                if (documentExport.Settings.TransitionSettings.FullScan.IsEnabledMsMs &&
-                    documentExport.Settings.TransitionSettings.FullScan.ProductMassAnalyzer != FullScanMassAnalyzerType.tof)
+                if (!CheckAnalyzer(documentExport.Settings.TransitionSettings.FullScan.IsEnabledMsMs,
+                                   documentExport.Settings.TransitionSettings.FullScan.ProductMassAnalyzer,
+                                   FullScanMassAnalyzerType.tof))
                 {
                     MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_OkDialog_The_product_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, Resources.ExportMethodDlg_OkDialog_TOF));
                     return;
-                }                    
+                }
             }
 
             if (Equals(InstrumentType, ExportInstrumentType.THERMO_Q_EXACTIVE))
             {
                 // Check that mass analyzer settings are set to Orbitrap.
-                if (documentExport.Settings.TransitionSettings.FullScan.IsEnabledMs &&
-                    documentExport.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer != FullScanMassAnalyzerType.orbitrap)
+                if (!CheckAnalyzer(documentExport.Settings.TransitionSettings.FullScan.IsEnabledMs,
+                                   documentExport.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer,
+                                   FullScanMassAnalyzerType.orbitrap))
                 {
                     MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_OkDialog_The_precursor_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, Resources.ExportMethodDlg_OkDialog_Orbitrap));
                     return;
                 }
-                if (documentExport.Settings.TransitionSettings.FullScan.IsEnabledMsMs &&
-                    documentExport.Settings.TransitionSettings.FullScan.ProductMassAnalyzer != FullScanMassAnalyzerType.orbitrap)
+                if (!CheckAnalyzer(documentExport.Settings.TransitionSettings.FullScan.IsEnabledMsMs,
+                                   documentExport.Settings.TransitionSettings.FullScan.ProductMassAnalyzer,
+                                   FullScanMassAnalyzerType.orbitrap))
                 {
                     MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_OkDialog_The_product_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, Resources.ExportMethodDlg_OkDialog_Orbitrap));
                     return;
-                }                    
+                }
             }
 
             if (IsDia && _document.Settings.TransitionSettings.FullScan.IsolationScheme.FromResults)
@@ -956,6 +960,10 @@ namespace pwiz.Skyline.FileUI
             Close();
         }
 
+        private static bool CheckAnalyzer(bool enabled, FullScanMassAnalyzerType analyzerType, params FullScanMassAnalyzerType[] analyzerTypesAccepted)
+        {
+            return !enabled || analyzerType == FullScanMassAnalyzerType.centroided || analyzerTypesAccepted.Contains(analyzerType);
+        }
 
         /// <summary>
         /// This function will validate all the settings required for exporting a method,
