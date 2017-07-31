@@ -442,7 +442,19 @@ namespace pwiz.Skyline.Model
                         return ExportThermoQuantivaMethod(doc, path, template, instrumentType);
                 case ExportInstrumentType.THERMO_FUSION:
                     if (type == ExportFileType.IsolationList)
+                    {
+                        if (doc.Settings.TransitionSettings.FullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA)
+                        {
+                            ExportThermoFusionDiaList(
+                                doc.Settings.TransitionSettings.FullScan.IsolationScheme,
+                                doc.Settings.TransitionSettings.Instrument.MaxInclusions,
+                                path,
+                                MultiplexIsolationListCalculationTime,
+                                DebugCycles);
+                            return null;
+                        }
                         return ExportThermoFusionIsolationList(doc, path, template);
+                    }
                     else
                         return ExportThermoFusionMethod(doc, path, template);
                 case ExportInstrumentType.SHIMADZU:
@@ -684,6 +696,17 @@ namespace pwiz.Skyline.Model
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
             return exporter;
+        }
+
+        public void ExportThermoFusionDiaList(IsolationScheme isolationScheme, int? maxInclusions, string fileName,
+            int calculationTime, bool debugCycles)
+        {
+            var exporter = new ThermoFusionDiaExporter(isolationScheme, maxInclusions)
+            {
+                CalculationTime = calculationTime,
+                DebugCycles = debugCycles
+            };
+            PerformLongExport(m => exporter.ExportIsolationList(fileName, m));
         }
 
         public AbstractMassListExporter ExportThermoQExactiveIsolationList(SrmDocument document, string fileName, string templateName)
@@ -1748,6 +1771,60 @@ namespace pwiz.Skyline.Model
                 return;
 
             Export(fileName, progressMonitor);
+        }
+    }
+
+    public class ThermoFusionDiaExporter : AbstractDiaExporter
+    {
+        private const char FIELD_SEPARATOR = ',';
+        
+        public ThermoFusionDiaExporter(IsolationScheme isolationScheme, int? maxInclusions)
+            : base(isolationScheme, maxInclusions)
+        {
+        }
+
+        public void ExportIsolationList(string fileName, IProgressMonitor progressMonitor)
+        {
+            if (!InitExport(fileName, progressMonitor))
+                return;
+
+            Export(fileName, progressMonitor);
+        }
+
+        public override bool HasHeaders { get { return true; } }
+
+        protected override void WriteHeaders(TextWriter writer)
+        {
+            writer.Write("m/z"); // Not L10N
+            writer.Write(FIELD_SEPARATOR);
+            writer.Write("z"); // Not L10N
+            writer.Write(FIELD_SEPARATOR);
+            writer.Write("t start (min)"); // Not L10N
+            writer.Write(FIELD_SEPARATOR);
+            writer.Write("t stop (min)"); // Not L10N
+            writer.Write(FIELD_SEPARATOR);
+            writer.Write("Name"); // Not L10N
+            writer.Write(FIELD_SEPARATOR);
+            writer.Write("Isolation Window (m/z)"); // Not L10N
+            writer.WriteLine();
+        }
+
+        protected override void WriteIsolationWindow(TextWriter writer, IsolationWindow isolationWindow)
+        {
+            // m/z
+            writer.Write(SequenceMassCalc.PersistentMZ(isolationWindow.Target ?? isolationWindow.MethodCenter).ToString(CultureInfo.InvariantCulture));
+            writer.Write(FIELD_SEPARATOR);
+            // z
+            writer.Write(FIELD_SEPARATOR);
+            // t start (min)
+            writer.Write(FIELD_SEPARATOR);
+            // t stop (min)
+            writer.Write(FIELD_SEPARATOR);
+            // Name
+            writer.Write(FIELD_SEPARATOR);
+            // Isolation Window (m/z)
+            writer.Write(SequenceMassCalc.PersistentMZ(isolationWindow.MethodEnd - isolationWindow.MethodStart).ToString(CultureInfo.InvariantCulture));
+            writer.WriteLine();
         }
     }
 
