@@ -25,6 +25,7 @@
 project
     : requirements 
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <toolset>gcc:<runtime-link>shared # cannot link shared objects (IdpSqlExtensions) with static runtime
         #<define>QONVERTER_HAS_NATIVEID
     ;
 
