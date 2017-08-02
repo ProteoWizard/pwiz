@@ -444,6 +444,8 @@ make IDPickerTest.passed
         <conditional>@build-location
         <dependency>.//IDPicker.exe
     ;
+explicit IDPickerTest.passed ;
+
 
 rule dotNET-dependencies ( properties * )
 {
