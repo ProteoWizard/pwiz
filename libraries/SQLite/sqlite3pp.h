@@ -94,6 +94,11 @@ namespace sqlite3pp
 
         sqlite3* connected() {return db_;}
 
+        /// The sqlite3_load_extension() interface attempts to load an SQLite extension library contained in the file zFile.
+        /// If the file cannot be loaded directly, attempts are made to load with various operating - system specific extensions added.
+        /// So for example, if "samplelib" cannot be loaded, then names like "samplelib.so" or "samplelib.dylib" or "samplelib.dll" might be tried also.
+        void load_extension(const std::string& name);
+
         int load_from_file(const std::string& dbname);
         int save_to_file(const std::string& dbname);
 

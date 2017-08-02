@@ -131,6 +131,10 @@ namespace IDPicker.DataModel
             MinimumAdditionalPeptides = Properties.Settings.Default.DefaultMinAdditionalPeptides;
             MinimumSpectraPerDistinctMatch = Properties.Settings.Default.DefaultMinSpectraPerDistinctMatch;
             MinimumSpectraPerDistinctPeptide = Properties.Settings.Default.DefaultMinSpectraPerDistinctPeptide;
+
+            if (Properties.Settings.Default.DefaultMaxPrecursorMzError.Length > 0)
+                PrecursorMzTolerance = new MZTolerance(Properties.Settings.Default.DefaultMaxPrecursorMzError);
+
             MaximumProteinGroupsPerPeptide = Properties.Settings.Default.DefaultMaxProteinGroupsPerPeptide;
 
             DistinctMatchFormat = new DistinctMatchFormat()
@@ -539,6 +543,9 @@ namespace IDPicker.DataModel
             try
             {
                 filter.Filter(session.Connection.GetDataSource(), ilr);
+
+                // reload extensions after 
+                session.GetSQLiteConnection().LoadExtension("idpsqlextensions");
 
                 // read log for non-fatal errors
                 //string log = Logger.Reader.ReadToEnd().Trim();

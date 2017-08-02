@@ -57,6 +57,19 @@ namespace IDPicker.Forms
 
             minSpectraPerMatchTextBox.Text = settings.DefaultMinSpectraPerDistinctMatch.ToString();
             minSpectraPerPeptideTextBox.Text = settings.DefaultMinSpectraPerDistinctPeptide.ToString();
+
+            if (settings.DefaultMaxPrecursorMzError.Length > 0)
+            {
+                var tmpMzError = new pwiz.CLI.chemistry.MZTolerance(settings.DefaultMaxPrecursorMzError);
+                maxPrecursorMzToleranceTextBox.Text = tmpMzError.value.ToString();
+                maxPrecursorMzToleranceUnitsComboBox.SelectedIndex = (int)tmpMzError.units;
+            }
+            else
+            {
+                maxPrecursorMzToleranceTextBox.Text = String.Empty;
+                maxPrecursorMzToleranceUnitsComboBox.SelectedIndex = 0;
+            }
+
             maxProteinGroupsTextBox.Text = settings.DefaultMaxProteinGroupsPerPeptide.ToString();
             minDistinctPeptidesTextBox.Text = settings.DefaultMinDistinctPeptides.ToString();
             minSpectraTextBox.Text = settings.DefaultMinSpectra.ToString();
@@ -75,6 +88,7 @@ namespace IDPicker.Forms
             lbSourcePaths.Items.AddRange(settings.SourcePaths.Cast<object>().ToArray());
 
             sourceExtensionsTextBox.Text = settings.SourceExtensions;
+            groupSeparatorTextBox.Text = settings.GroupConcatSeparator;
 
             nonFixedDriveWarningCheckBox.Checked = Properties.GUI.Settings.Default.WarnAboutNonFixedDrive;
             embedGeneMetadataWarningCheckBox.Checked = Properties.GUI.Settings.Default.WarnAboutNoGeneMetadata;
@@ -90,6 +104,7 @@ namespace IDPicker.Forms
             settings.DefaultMaxImportFDR = Convert.ToDouble(maxImportFdrComboBox.Text) / 100;
             settings.DefaultMinSpectraPerDistinctMatch = Convert.ToInt32(minSpectraPerMatchTextBox.Text);
             settings.DefaultMinSpectraPerDistinctPeptide = Convert.ToInt32(minSpectraPerPeptideTextBox.Text);
+            settings.DefaultMaxPrecursorMzError = maxPrecursorMzToleranceTextBox.Text.Length > 0 ? maxPrecursorMzToleranceTextBox.Text + " " + maxPrecursorMzToleranceUnitsComboBox.SelectedItem.ToString() : String.Empty;
             settings.DefaultMaxProteinGroupsPerPeptide = Convert.ToInt32(maxProteinGroupsTextBox.Text);
             settings.DefaultMinDistinctPeptides = Convert.ToInt32(minDistinctPeptidesTextBox.Text);
             settings.DefaultMinSpectra = Convert.ToInt32(minSpectraTextBox.Text);
@@ -108,6 +123,8 @@ namespace IDPicker.Forms
             settings.SourcePaths.Clear(); settings.SourcePaths.AddRange(lbSourcePaths.Items.OfType<string>().ToArray());
 
             settings.SourceExtensions = sourceExtensionsTextBox.Text;
+            settings.GroupConcatSeparator = groupSeparatorTextBox.Text;
+            SchemaUpdater.SetGroupConcatSeparator(settings.GroupConcatSeparator);
 
             Properties.GUI.Settings.Default.WarnAboutNonFixedDrive = nonFixedDriveWarningCheckBox.Checked;
             Properties.GUI.Settings.Default.WarnAboutNoGeneMetadata = embedGeneMetadataWarningCheckBox.Checked;

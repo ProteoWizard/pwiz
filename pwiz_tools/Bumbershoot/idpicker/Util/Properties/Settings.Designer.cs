@@ -399,5 +399,29 @@ namespace IDPicker.Properties {
                 this["DefaultModificationsAreDistinct"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DefaultMaxPrecursorMzError {
+            get {
+                return ((string)(this["DefaultMaxPrecursorMzError"]));
+            }
+            set {
+                this["DefaultMaxPrecursorMzError"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute(",")]
+        public string GroupConcatSeparator {
+            get {
+                return ((string)(this["GroupConcatSeparator"]));
+            }
+            set {
+                this["GroupConcatSeparator"] = value;
+            }
+        }
     }
 }

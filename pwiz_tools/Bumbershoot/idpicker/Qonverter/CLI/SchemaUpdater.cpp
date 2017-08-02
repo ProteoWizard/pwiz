@@ -27,6 +27,7 @@
 
 #pragma unmanaged
 #include "../SchemaUpdater.hpp"
+#include "../IdpSqlExtensions.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #pragma managed
@@ -41,6 +42,7 @@ namespace NativeSchemaUpdater = NativeIDPicker::SchemaUpdater;
 
 int SchemaUpdater::CurrentSchemaRevision::get() { return NativeIDPicker::CURRENT_SCHEMA_REVISION; }
 
+void SchemaUpdater::SetGroupConcatSeparator(String^ separator) { IDPicker::setGroupConcatSeparator(ToStdString(separator)); }
 
 bool SchemaUpdater::Update(String^ idpDbFilepath, pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {

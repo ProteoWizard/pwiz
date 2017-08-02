@@ -427,8 +427,9 @@ actions do_IDPicker_test
     set name="IDPicker unit test"
     $(TEST_PRECOMMAND)
     msbuild $(IDPICKER_PATH)/IDPicker.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
-    msbuild $(IDPICKER_PATH)/Test/Test.csproj /p:SolutionDir=$(IDPICKER_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=Test /nologo /verbosity:minimal
     set status=%ERRORLEVEL%
+    REM IF %status%==0 (msbuild $(IDPICKER_PATH)/Test/Test.csproj /p:SolutionDir=$(IDPICKER_PATH);Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=Test /nologo /verbosity:minimal && set status=%ERRORLEVEL%)
+    IF %status%==0 (mstest /testcontainer:$(OUTPUT_PATH)/Test.dll /noisolation /nologo /verbosity:minimal && set status=%ERRORLEVEL%)
     $(TEST_POSTCOMMAND)
 }
 
@@ -476,6 +477,7 @@ install install
         <conditional>@install-location
         <conditional>@install-vendor-api-dependencies
         <conditional>@install-identdata-dependencies
+        <install-dependencies>on <install-type>SHARED_LIB <install-type>EXE
     ;
 
 # TODO: figure out why this hangs on TeamCity 64-bit builds, but works fine with 32-bit builds

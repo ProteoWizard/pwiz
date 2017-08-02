@@ -29,11 +29,9 @@
 #include "MonteCarloQonverter.hpp"
 #include "SVMQonverter.hpp"
 #include <boost/foreach_field.hpp>
-#include <boost/assign/list_of.hpp> // for 'list_of()'
 
 
 using namespace pwiz::util;
-using namespace boost::assign;
 using namespace IDPicker;
 
 
@@ -668,8 +666,8 @@ void testMonteCarloQonverter()
         scoreWeights[1] = -1.0;
 
         MonteCarloQonverter::WeightsByChargeAndBestSpecificity expectedScoreWeights;
-        expectedScoreWeights[1][2] = list_of(0.8)(-0.2);
-        expectedScoreWeights[1][1] = list_of(0.8)(-0.2);
+        expectedScoreWeights[1][2] = {0.8, -0.2};
+        expectedScoreWeights[1][1] = {0.8, -0.2};
 
         testMonteCarloQonverter(testPSMs, sizeof(testPSMs) / sizeof(TestPSM), settings, scoreWeights, expectedScoreWeights, __LINE__);
     }
@@ -692,8 +690,8 @@ void testMonteCarloQonverter()
         scoreWeights[1] = -1.0;
 
         MonteCarloQonverter::WeightsByChargeAndBestSpecificity expectedScoreWeights;
-        expectedScoreWeights[1][2] = list_of(1.0)(-0.0);
-        expectedScoreWeights[1][1] = list_of(1.0)(-0.0);
+        expectedScoreWeights[1][2] = {1.0, -0.0};
+        expectedScoreWeights[1][1] = {1.0, -0.0};
 
         testMonteCarloQonverter(testPSMs, sizeof(testPSMs) / sizeof(TestPSM), settings, scoreWeights, expectedScoreWeights, __LINE__);
     }
@@ -716,8 +714,8 @@ void testMonteCarloQonverter()
         scoreWeights[1] = -1.0;
 
         MonteCarloQonverter::WeightsByChargeAndBestSpecificity expectedScoreWeights;
-        expectedScoreWeights[1][2] = list_of(0.0)(-1.0);
-        expectedScoreWeights[1][1] = list_of(0.0)(-1.0);
+        expectedScoreWeights[1][2] = {0.0, -1.0};
+        expectedScoreWeights[1][1] = {0.0, -1.0};
 
         testMonteCarloQonverter(testPSMs, sizeof(testPSMs) / sizeof(TestPSM), settings, scoreWeights, expectedScoreWeights, __LINE__);
     }
@@ -746,8 +744,8 @@ void testMonteCarloQonverter()
         scoreWeights[1] = -1.0;
 
         MonteCarloQonverter::WeightsByChargeAndBestSpecificity expectedScoreWeights;
-        expectedScoreWeights[1][2] = list_of(1.0)(-0.0);
-        expectedScoreWeights[1][1] = list_of(1.0)(-0.0);
+        expectedScoreWeights[1][2] = {1.0, -0.0};
+        expectedScoreWeights[1][1] = {1.0, -0.0};
 
         testMonteCarloQonverter(testPSMs, sizeof(testPSMs) / sizeof(TestPSM), settings, scoreWeights, expectedScoreWeights, __LINE__);
     }
@@ -820,12 +818,12 @@ void testMonteCarloQonverter()
         settings.chargeStateHandling = Qonverter::ChargeStateHandling::Partition;
 
         MonteCarloQonverter::WeightsByChargeAndBestSpecificity expectedScoreWeights;
-        expectedScoreWeights[1][2] = list_of(0.8)(-0.2);
-        expectedScoreWeights[1][1] = list_of(0.8)(-0.2);
-        expectedScoreWeights[2][2] = list_of(0.8)(-0.2);
-        expectedScoreWeights[2][1] = list_of(0.8)(-0.2);
-        expectedScoreWeights[3][2] = list_of(1.0)(-0.0);
-        expectedScoreWeights[3][1] = list_of(1.0)(-0.0);
+        expectedScoreWeights[1][2] = {0.8, -0.2};
+        expectedScoreWeights[1][1] = {0.8, -0.2};
+        expectedScoreWeights[2][2] = {0.8, -0.2};
+        expectedScoreWeights[2][1] = {0.8, -0.2};
+        expectedScoreWeights[3][2] = {1.0, -0.0};
+        expectedScoreWeights[3][1] = {1.0, -0.0};
 
         testMonteCarloQonverter(testPSMs, sizeof(testPSMs) / sizeof(TestPSM), settings, scoreWeights, expectedScoreWeights, __LINE__);
     }
@@ -886,12 +884,12 @@ void testMonteCarloQonverter()
         settings.terminalSpecificityHandling = Qonverter::TerminalSpecificityHandling::Partition;
 
         MonteCarloQonverter::WeightsByChargeAndBestSpecificity expectedScoreWeights;
-        expectedScoreWeights[1][2] = list_of(1.0)(-0.0);
-        expectedScoreWeights[1][1] = list_of(1.0)(-0.0);
-        expectedScoreWeights[2][2] = list_of(1.0)(-0.0);
-        expectedScoreWeights[2][1] = list_of(1.0)(-0.0);
-        expectedScoreWeights[3][2] = list_of(1.0)(-0.0);
-        expectedScoreWeights[3][1] = list_of(1.0)(-0.0);
+        expectedScoreWeights[1][2] = {1.0, -0.0};
+        expectedScoreWeights[1][1] = {1.0, -0.0};
+        expectedScoreWeights[2][2] = {1.0, -0.0};
+        expectedScoreWeights[2][1] = {1.0, -0.0};
+        expectedScoreWeights[3][2] = {1.0, -0.0};
+        expectedScoreWeights[3][1] = {1.0, -0.0};
 
         testMonteCarloQonverter(testPSMs, sizeof(testPSMs) / sizeof(TestPSM), settings, scoreWeights, expectedScoreWeights, __LINE__);
     }

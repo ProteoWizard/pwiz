@@ -87,10 +87,10 @@ void test()
     logStream->close();
 
     string log = read_file_header("test.log", 1024).c_str();
-    unit_assert_operator_equal("VerboseInfoTest"NEWLINE
-                               "BriefInfoTest"NEWLINE
-                               "Warning: WarningTest"NEWLINE
-                               "Error: ErrorTest"NEWLINE,
+    unit_assert_operator_equal("VerboseInfoTest" NEWLINE
+                               "BriefInfoTest" NEWLINE
+                               "Warning: WarningTest" NEWLINE
+                               "Error: ErrorTest" NEWLINE,
                                log);
 
     bfs::remove("test.log");
@@ -104,9 +104,9 @@ void test()
     logStream->close();
 
     log = read_file_header("test.log", 1024).c_str();
-    unit_assert_operator_equal("BriefInfoTest"NEWLINE
-                               "Warning: WarningTest"NEWLINE
-                               "Error: ErrorTest"NEWLINE,
+    unit_assert_operator_equal("BriefInfoTest" NEWLINE
+                               "Warning: WarningTest" NEWLINE
+                               "Error: ErrorTest" NEWLINE,
                                log);
 
     bfs::remove("test.log");
@@ -120,9 +120,9 @@ void test()
     logStream->close();
 
     log = read_file_header("test.log", 1024).c_str();
-    unit_assert_operator_equal("BriefInfoTest"NEWLINE
-                               "Warning: WarningTest"NEWLINE
-                               "Error: ErrorTest"NEWLINE,
+    unit_assert_operator_equal("BriefInfoTest" NEWLINE
+                               "Warning: WarningTest" NEWLINE
+                               "Error: ErrorTest" NEWLINE,
                                log);
 
     bfs::remove("test.log");
@@ -136,8 +136,8 @@ void test()
     logStream->close();
 
     log = read_file_header("test.log", 1024).c_str();
-    unit_assert_operator_equal("Warning: WarningTest"NEWLINE
-                               "Error: ErrorTest"NEWLINE,
+    unit_assert_operator_equal("Warning: WarningTest" NEWLINE
+                               "Error: ErrorTest" NEWLINE,
                                log);
 
     bfs::remove("test.log");
@@ -165,9 +165,9 @@ void test()
     logStream->close();
 
     log = read_file_header("test.log", 1024).c_str();
-    unit_assert_operator_equal("VerboseInfoTest"NEWLINE
-                               "BriefInfoTest"NEWLINE
-                               "Warning: WarningTest"NEWLINE,
+    unit_assert_operator_equal("VerboseInfoTest" NEWLINE
+                               "BriefInfoTest" NEWLINE
+                               "Warning: WarningTest" NEWLINE,
                                log);
 
     bfs::remove("test.log");

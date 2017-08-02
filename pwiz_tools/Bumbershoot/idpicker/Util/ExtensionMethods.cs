@@ -149,6 +149,11 @@ namespace IDPicker
             return conn.ConnectionString.Substring(dataSourceIndex, delimiterIndex - dataSourceIndex);
         }
 
+        public static System.Data.SQLite.SQLiteConnection GetSQLiteConnection(this NHibernate.ISession session)
+        {
+            return session.Connection as System.Data.SQLite.SQLiteConnection;
+        }
+
         public static DataTable ApplySort (this DataTable table, Comparison<DataRow> comparison)
         {
             DataTable clone = table.Clone();

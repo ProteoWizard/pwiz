@@ -138,5 +138,11 @@
     <Setting Name="DefaultModificationsAreDistinct" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="DefaultMaxPrecursorMzError" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="GroupConcatSeparator" Type="System.String" Scope="User">
+      <Value Profile="(Default)">,</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

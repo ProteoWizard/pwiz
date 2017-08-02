@@ -996,6 +996,8 @@ namespace IDPicker
                 ++i; // skip the next argument
             }
 
+            SchemaUpdater.SetGroupConcatSeparator(Properties.Settings.Default.GroupConcatSeparator);
+
             // if program is headless continue into OpenFiles even without any files; error will be issued there
             if (!Program.IsHeadless && filemasks.IsNullOrEmpty())
             {

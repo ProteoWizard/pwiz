@@ -31,6 +31,7 @@
 #include "boost/variant.hpp"
 
 #include "SchemaUpdater.hpp"
+#include "IdpSqlExtensions.hpp"
 #include "Parser.hpp"
 #include "Embedder.hpp"
 #include "sqlite3pp.h"
@@ -614,7 +615,7 @@ int doQuery(GroupBy groupBy,
 
     SchemaUpdater::update(filepath.string());
     sqlite::database idpDB(filepath.string());
-    SchemaUpdater::createUserSQLiteFunctions(idpDB.connected());
+    idpDB.load_extension("IdpSqlExtensions");
     //idpDB.execute("PRAGMA mmap_size=70368744177664; -- 2^46");
 
     try {sqlite::query q(idpDB, "SELECT Id FROM Protein LIMIT 1"); q.begin();}
@@ -1101,6 +1102,7 @@ int main(int argc, const char* argv[])
     vector<string> args;
     double ModificationMassRoundToNearest = 0.0001;
     QuantitationRollupMethod rollupMethod = QuantitationRollupMethod::Sum;
+    IDPicker::setGroupConcatSeparator(";");
     
     if (argc > 1)
     {
@@ -1137,6 +1139,17 @@ int main(int argc, const char* argv[])
                         cerr << "  " << itr->str() << endl;
                     return 1;
                 }
+                args.erase(args.begin() + i);
+                args.erase(args.begin() + i);
+                --i;
+            }
+            else if (args[i] == "-GroupSeparator")
+            {
+                if (i + 1 == args.size())
+                    throw pwiz::util::user_error("no value passed for GroupSeparator");
+
+                IDPicker::setGroupConcatSeparator(args[i + 1]);
+
                 args.erase(args.begin() + i);
                 args.erase(args.begin() + i);
                 --i;

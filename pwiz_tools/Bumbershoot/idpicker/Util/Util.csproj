@@ -36,6 +36,7 @@
     <BuildPath>$(BaseIntermediateOutputPath)\..</BuildPath>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -102,7 +103,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(BuildPath)\obj\$(Platform)\$(Configuration)\InteropQonverter.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Office.Interop.Excel">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
       <HintPath>..\packages\Excel-DNA.Interop.14.0.1\lib\Microsoft.Office.Interop.Excel.dll</HintPath>
       <Private>True</Private>
     </Reference>

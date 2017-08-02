@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using IDPicker;
 using IDPicker.DataModel;
 using NHibernate.Linq;
 

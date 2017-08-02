@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<RunSettings name="Local Test Run" id="ffa5d976-818a-4d7e-86c8-6cb49651f007">
+  <RunConfiguration>
+    <!-- Path relative to solution directory -->
+    <ResultsDirectory>.\TestResults</ResultsDirectory>
+  
+    <!-- [x86] | x64 -->
+    <TargetPlatform>x86</TargetPlatform>  
+  
+    <!-- Framework35 | [Framework40] | Framework45 -->
+    <TargetFrameworkVersion>Framework45</TargetFrameworkVersion>
+
+  </RunConfiguration>
+  
+  <MSTest>
+    <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
+    <CaptureTraceOutput>false</CaptureTraceOutput>
+    <DeleteDeploymentDirectoryAfterTestRunIsComplete>False</DeleteDeploymentDirectoryAfterTestRunIsComplete>
+    <DeploymentEnabled>False</DeploymentEnabled>
+  </MSTest>
+</RunSettings>

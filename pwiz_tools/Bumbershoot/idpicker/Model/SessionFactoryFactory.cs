@@ -56,12 +56,12 @@ namespace IDPicker.DataModel
         #region SQLite customizations
         public class DistinctGroupConcat : StandardSQLFunction
         {
-            public DistinctGroupConcat () : base("group_concat", NHibernateUtil.String) { }
+            public DistinctGroupConcat () : base("group_concat_ex", NHibernateUtil.String) { }
 
             public override SqlString Render (IList args, NHibernate.Engine.ISessionFactoryImplementor factory)
             {
                 var result = base.Render(args, factory);
-                return result.Replace("group_concat(", "group_concat(distinct ");
+                return result.Replace("group_concat_ex(", "group_concat_ex(distinct ");
             }
         }
 
@@ -97,152 +97,6 @@ namespace IDPicker.DataModel
                 return result.Replace("round_to_integer(", "cast(round(").Append(" as integer)");
             }
         }
-
-        /// <summary>
-        /// Takes two integers and returns the set of integers between them as a string delimited by commas.
-        /// Both ends of the set are inclusive.
-        /// </summary>
-        /// <example>RANGE_CONCAT(2,4) -> 2,3,4</example>
-        [SQLiteFunction(Name = "range_concat", Arguments = 2, FuncType = FunctionType.Scalar)]
-        public class RangeConcat : SQLiteFunction
-        {
-            public override object Invoke (object[] args)
-            {
-                int arg0 = Convert.ToInt32(args[0]);
-                int arg1 = Convert.ToInt32(args[1]);
-                int min = Math.Min(arg0, arg1);
-                int max = Math.Max(arg0, arg1);
-                string[] range_values = new string[max - min + 1];
-                for (int i = 0; i < range_values.Length; ++i)
-                    range_values[i] = (min + i).ToString();
-                return String.Join(",", range_values);
-            }
-        }
-
-        /// <summary>
-        /// Takes one or more binary vectors of doubles (as BLOBs) and returns the summed array.
-        /// </summary>
-        /// <example>DOUBLE_ARRAY_SUM([1,2,3] [4,5,6]) -> [5,7,9]</example>
-        [SQLiteFunction(Name = "double_array_sum", Arguments = -1, FuncType = FunctionType.Aggregate)]
-        public class DoubleArraySum : SQLiteFunction
-        {
-            public override void Step(object[] args, int stepNumber, ref object contextData)
-            {
-                if (args[0] == null || args[0] == DBNull.Value)
-                    return;
-
-                byte[] arrayBytes = args[0] as byte[];
-                if (arrayBytes == null || arrayBytes.Length % 8 > 0)
-                    throw new ArgumentException("double_array_sum only works with BLOBs of double precision floats");
-
-                int arrayLength = arrayBytes.Length / 8;
-
-                if (stepNumber == 1)
-                    contextData = Enumerable.Repeat(0.0, arrayLength).ToArray();
-
-                double[] arrayValues = contextData as double[];
-                var arrayStream = new BinaryReader(new MemoryStream(arrayBytes));
-                for (int i = 0; i < arrayLength; ++i)
-                    arrayValues[i] += arrayStream.ReadDouble();
-            }
-
-            public override object Final(object contextData)
-            {
-                double[] arrayValues = contextData as double[];
-                if (arrayValues == null)
-                    return DBNull.Value;
-
-                var bytes = new List<byte>(sizeof(double) * arrayValues.Length);
-                for (int i = 0; i < arrayValues.Length; ++i)
-                    bytes.AddRange(BitConverter.GetBytes(arrayValues[i]));
-                return bytes.ToArray();
-            }
-        }
-
-        /// <summary>
-        /// Takes one or more binary vectors of doubles (as BLOBs) and returns the summed array.
-        /// The bytes of the input arrays are hashed to create distinct ids:
-        /// arrays of doubles that are hashwise-equal are almost certainly duplicates.
-        /// </summary>
-        /// <example>DISTINCT_DOUBLE_ARRAY_SUM([9,1,2,3] [9,1,2,3] [8,4,5,6]) -> [5,7,9]</example>
-        [SQLiteFunction(Name = "distinct_double_array_sum", Arguments = -1, FuncType = FunctionType.Aggregate)]
-        public class DistinctDoubleArraySum : SQLiteFunction
-        {
-            public override void Step(object[] args, int stepNumber, ref object contextData)
-            {
-                if (args[0] == null || args[0] == DBNull.Value)
-                    return;
-
-                byte[] arrayBytes = args[0] as byte[];
-                if (arrayBytes == null || arrayBytes.Length % 8 > 0)
-                    throw new ArgumentException("distinct_double_array_sum only works with BLOBs of double precision floats");
-
-                int arrayLength = arrayBytes.Length / 8;
-
-                if (stepNumber == 1)
-                    contextData = new KeyValuePair<Set<int>, double[]>(new Set<int>(), Enumerable.Repeat(0.0, arrayLength).ToArray());
-
-                var arrayValues = (KeyValuePair<Set<int>, double[]>)contextData;
-                var arrayStream = new BinaryReader(new MemoryStream(arrayBytes));
-
-                // if the arrayId was already in the set, ignore its values
-                int arrayId = Util.Crc32.ComputeChecksum(arrayBytes);
-                if (!arrayValues.Key.Insert(arrayId).WasInserted)
-                    return;
-
-                for (int i = 0; i < arrayLength; ++i)
-                    arrayValues.Value[i] += arrayStream.ReadDouble();
-            }
-
-            public override object Final(object contextData)
-            {
-                if (contextData == null)
-                    return DBNull.Value;
-
-                var arrayValues = (KeyValuePair<Set<int>, double[]>)contextData;
-                var bytes = new List<byte>(sizeof(double) * arrayValues.Value.Length);
-                for (int i = 0; i < arrayValues.Value.Length; ++i)
-                    bytes.AddRange(BitConverter.GetBytes(arrayValues.Value[i]));
-                return bytes.ToArray();
-            }
-        }
-
-        [SQLiteFunction(Name = "double_array_sum2", Arguments = -1, FuncType = FunctionType.Aggregate)]
-        public class DoubleArraySum2 : SQLiteFunction
-        {
-            public override void Step(object[] args, int stepNumber, ref object contextData)
-            {
-                if (args[0] == null)
-                    return;
-
-                byte[] arrayBytes = args[0] as byte[];
-                if (arrayBytes == null || arrayBytes.Length % 8 > 0)
-                    throw new ArgumentException("double_array_sum only works with BLOBs of double precision floats");
-
-                int arrayLength = arrayBytes.Length / 8;
-
-                if (stepNumber == 1)
-                    contextData = Enumerable.Repeat(0.0, arrayLength).ToArray();
-
-                double[] arrayValues = contextData as double[];
-                ArrayCaster.AsFloatArray(arrayBytes, floats =>
-                {
-                    for (int i = 0; i < arrayLength; ++i)
-                        arrayValues[i] += floats[i];
-                });
-            }
-
-            public override object Final(object contextData)
-            {
-                double[] arrayValues = contextData as double[];
-                if (arrayValues == null)
-                    return DBNull.Value;
-
-                byte[] result = new byte[arrayValues.Length * sizeof(double)];
-                ArrayCaster.AsByteArray(arrayValues, bytes => bytes.CopyTo(result, 0));
-                return result;
-            }
-        }
         
         public class CustomSQLiteDialect : SQLiteDialect
         {
@@ -250,16 +104,30 @@ namespace IDPicker.DataModel
             {
                 RegisterFunction("round", new StandardSQLFunction("round"));
                 RegisterFunction("round_to_integer", new RoundToInteger());
-                RegisterFunction("group_concat", new StandardSQLFunction("group_concat", NHibernateUtil.String));
+                RegisterFunction("group_concat", new StandardSQLFunction("group_concat_ex", NHibernateUtil.String));
                 RegisterFunction("distinct_group_concat", new DistinctGroupConcat());
                 RegisterFunction("distinct_sum", new DistinctSum());
-                RegisterFunction("parens", new Parens());
-                RegisterFunction("range_concat", new StandardSQLFunction("range_concat", NHibernateUtil.String));
-                RegisterFunction("double_array_sum", new StandardSQLFunction("double_array_sum", NHibernateUtil.BinaryBlob));
                 RegisterFunction("distinct_double_array_sum", new StandardSQLFunction("distinct_double_array_sum", NHibernateUtil.BinaryBlob));
-                RegisterFunction("double_array_sum2", new StandardSQLFunction("double_array_sum2", NHibernateUtil.BinaryBlob));
+                RegisterFunction("parens", new Parens());
             }
         }
+
+        public class SQLiteExtensionLoader : NHibernate.EmptyInterceptor
+        {
+            public string ExtensionName { get; private set; }
+
+            public SQLiteExtensionLoader(string extensionName)
+            {
+                ExtensionName = extensionName;
+            }
+
+            public override void SetSession(ISession session)
+            {
+                session.GetSQLiteConnection().LoadExtension(ExtensionName);
+                base.SetSession(session);
+            }
+        }
+
         #endregion
 
         public static ISessionFactory CreateSessionFactory (string path) { return SessionFactoryFactory.CreateSessionFactory(path, new SessionFactoryConfig()); }
@@ -301,6 +169,7 @@ namespace IDPicker.DataModel
                 .SetProperty("connection.driver_class", typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName)
                 .SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName)
                 .SetProperty("connection.release_mode", "on_close")
+                .SetInterceptor(new SQLiteExtensionLoader("idpsqlextensions"))
                 ;
 
             ConfigureMappings(configuration);

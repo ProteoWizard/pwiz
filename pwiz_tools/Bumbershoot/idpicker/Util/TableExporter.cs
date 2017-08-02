@@ -144,7 +144,7 @@ namespace IDPicker
         public static void ShowInExcel(IDictionary<string, ITable> tables, bool freezeFirstColumn)
         {
             var firstSheet = true;
-            var newExcel = new Microsoft.Office.Interop.Excel.ApplicationClass();
+            var newExcel = new Microsoft.Office.Interop.Excel.Application();
             var newWorkbook = newExcel.Workbooks.Add(Microsoft.Office.Interop.Excel.XlWBATemplate.xlWBATWorksheet);
             var sheetNames = new List<string>();
             foreach (var kvp in tables)

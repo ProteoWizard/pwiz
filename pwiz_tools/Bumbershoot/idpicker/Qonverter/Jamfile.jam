@@ -22,7 +22,11 @@
 # Contributor(s): Surendra Dasaris
 #
 
-#project Qonverter : requirements <define>QONVERTER_HAS_NATIVEID ;
+project
+    : requirements 
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        #<define>QONVERTER_HAS_NATIVEID
+    ;
 
 
 if --teamcity-test-decoration in [ modules.peek : ARGV ]
@@ -41,6 +45,23 @@ obj SchemaUpdater : SchemaUpdater.cpp
                       <address-model>64:<define>IDPICKER_SQLITE_64
                   ;
 using ext-png : 1.5.6 : $(PNG_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
+
+lib IdpSqlExtensions
+    : # sources
+        IdpSqlExtensions.cpp
+    : # requirements
+        <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp/<link>static
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>static
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry/<link>static
+        <link>shared
+    : # default-build
+    : # usage-requirements
+        <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp/<link>static
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>static
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry/<link>static
+    ;
+
+doctest IdpSqlExtensionsDoctest : SchemaUpdater.cpp : <link>shared <library>IdpSqlExtensions/<location-prefix>doctest  $(TEAMCITY_TEST_DECORATION) ;
 
 lib Qonverter
     : # sources
@@ -66,6 +87,7 @@ lib Qonverter
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
         <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+        <library>IdpSqlExtensions
         <toolset>msvc:<cxxflags>/bigobj
         <use>$(IDPICKER_PATH)/../freicore//freicore
     : # default-build
@@ -80,6 +102,7 @@ lib Qonverter
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
         <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+        <library>IdpSqlExtensions
         <use>$(IDPICKER_PATH)/../freicore//freicore
     ;
 
@@ -114,7 +137,6 @@ unit-test QonverterTest : QonverterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATI
 unit-test EmbedderTest : EmbedderTest.cpp Qonverter $(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata_examples $(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata : $(TEAMCITY_TEST_DECORATION) <dependency>gene2protein.db3 ;
 unit-test FilterTest : FilterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 unit-test LoggerTest : LoggerTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
-doctest SchemaUpdaterDoctest : SchemaUpdater.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 
 path-constant TEST_DATA_PATH : ../TestData ;
 run CommandlineTest.cpp

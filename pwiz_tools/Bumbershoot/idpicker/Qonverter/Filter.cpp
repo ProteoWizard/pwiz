@@ -515,7 +515,7 @@ struct Filter::Impl
         else
             idpDb.reset(new sqlite3pp::database(idpDbConnection, false));
 
-        SchemaUpdater::createUserSQLiteFunctions(idpDb->connected());
+        idpDb->load_extension("IdpSqlExtensions");
 
         hasGeneMetadata = Embedder::hasGeneMetadata(idpDb->connected());
     }

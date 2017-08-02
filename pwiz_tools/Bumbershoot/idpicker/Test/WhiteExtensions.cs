@@ -390,6 +390,7 @@ namespace Test
 
             settings.GeneralSettings.DefaultMinSpectraPerDistinctMatch = Convert.ToInt32(options.Get<TextBox>("minSpectraPerMatchTextBox").Text);
             settings.GeneralSettings.DefaultMinSpectraPerDistinctPeptide = Convert.ToInt32(options.Get<TextBox>("minSpectraPerPeptideTextBox").Text);
+            settings.GeneralSettings.DefaultMaxPrecursorMzError = options.Get<TextBox>("maxPrecursorMzToleranceTextBox").Text;
             settings.GeneralSettings.DefaultMaxProteinGroupsPerPeptide = Convert.ToInt32(options.Get<TextBox>("maxProteinGroupsTextBox").Text);
             settings.GeneralSettings.DefaultMinSpectra = Convert.ToInt32(options.Get<TextBox>("minSpectraTextBox").Text);
             settings.GeneralSettings.DefaultMinDistinctPeptides = Convert.ToInt32(options.Get<TextBox>("minDistinctPeptidesTextBox").Text);
@@ -412,6 +413,7 @@ namespace Test
             //settings.GeneralSettings.SourcePaths.Clear(); settings.GeneralSettings.SourcePaths.AddRange(lbSourcePaths.Items.OfType<string>().ToArray());
 
             settings.GeneralSettings.SourceExtensions = options.Get<TextBox>("sourceExtensionsTextBox").Text;
+            settings.GeneralSettings.GroupConcatSeparator = options.Get<TextBox>("groupSeparatorTextBox").Text;
 
             settings.GUISettings.WarnAboutNonFixedDrive = options.Get<CheckBox>("nonFixedDriveWarningCheckBox").Checked;
             settings.GUISettings.WarnAboutNoGeneMetadata = options.Get<CheckBox>("embedGeneMetadataWarningCheckBox").Checked;
@@ -436,6 +438,7 @@ namespace Test
 
             options.Get<TextBox>("minSpectraPerMatchTextBox").Text = settings.GeneralSettings.DefaultMinSpectraPerDistinctMatch.ToString();
             options.Get<TextBox>("minSpectraPerPeptideTextBox").Text = settings.GeneralSettings.DefaultMinSpectraPerDistinctPeptide.ToString();
+            options.Get<TextBox>("maxPrecursorMzToleranceTextBox").Text = settings.GeneralSettings.DefaultMaxPrecursorMzError;
             options.Get<TextBox>("maxProteinGroupsTextBox").Text = settings.GeneralSettings.DefaultMaxProteinGroupsPerPeptide.ToString();
             options.Get<TextBox>("minSpectraTextBox").Text = settings.GeneralSettings.DefaultMinSpectra.ToString();
             options.Get<TextBox>("minDistinctPeptidesTextBox").Text = settings.GeneralSettings.DefaultMinDistinctPeptides.ToString();
@@ -458,6 +461,7 @@ namespace Test
             //settings.GeneralSettings.SourcePaths.Clear(); settings.GeneralSettings.SourcePaths.AddRange(lbSourcePaths.Items.OfType<string>().ToArray());
 
             options.Get<TextBox>("sourceExtensionsTextBox").Text = settings.GeneralSettings.SourceExtensions;
+            options.Get<TextBox>("groupSeparatorTextBox").Text = settings.GeneralSettings.GroupConcatSeparator;
 
             options.Get<CheckBox>("nonFixedDriveWarningCheckBox").Checked = settings.GUISettings.WarnAboutNonFixedDrive;
             options.Get<CheckBox>("embedGeneMetadataWarningCheckBox").Checked = settings.GUISettings.WarnAboutNoGeneMetadata;

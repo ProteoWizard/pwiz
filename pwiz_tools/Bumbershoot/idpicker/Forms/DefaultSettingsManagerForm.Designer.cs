@@ -72,6 +72,7 @@ namespace IDPicker.Forms
             this.btnOk = new System.Windows.Forms.Button();
             this.psmLevelFilterGroupBox = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
+            this.maxPrecursorMzToleranceTextBox = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.maxProteinGroupsTextBox = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
@@ -80,6 +81,8 @@ namespace IDPicker.Forms
             this.minSpectraPerPeptideTextBox = new System.Windows.Forms.TextBox();
             this.lblMaxFdr = new System.Windows.Forms.Label();
             this.label21 = new System.Windows.Forms.Label();
+            this.label17 = new System.Windows.Forms.Label();
+            this.maxPrecursorMzToleranceUnitsComboBox = new System.Windows.Forms.ComboBox();
             this.proteinLevelFilterGroupBox = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.minSpectraTextBox = new System.Windows.Forms.TextBox();
@@ -113,6 +116,8 @@ namespace IDPicker.Forms
             this.label14 = new System.Windows.Forms.Label();
             this.nonFixedDriveWarningCheckBox = new System.Windows.Forms.CheckBox();
             this.embedGeneMetadataWarningCheckBox = new System.Windows.Forms.CheckBox();
+            this.groupSeparatorTextBox = new System.Windows.Forms.TextBox();
+            this.label18 = new System.Windows.Forms.Label();
             label5 = new System.Windows.Forms.Label();
             lblMinDistinctPeptides = new System.Windows.Forms.Label();
             label8 = new System.Windows.Forms.Label();
@@ -136,7 +141,7 @@ namespace IDPicker.Forms
             label5.Anchor = System.Windows.Forms.AnchorStyles.Left;
             label5.AutoSize = true;
             label5.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            label5.Location = new System.Drawing.Point(3, 32);
+            label5.Location = new System.Drawing.Point(3, 31);
             label5.Name = "label5";
             label5.Size = new System.Drawing.Size(148, 13);
             label5.TabIndex = 127;
@@ -184,9 +189,9 @@ namespace IDPicker.Forms
             this.gbSearchPaths.Controls.Add(this.btnClear);
             this.gbSearchPaths.Controls.Add(this.btnBrowse);
             this.gbSearchPaths.Controls.Add(this.searchPathsTabControl);
-            this.gbSearchPaths.Location = new System.Drawing.Point(265, 12);
+            this.gbSearchPaths.Location = new System.Drawing.Point(292, 12);
             this.gbSearchPaths.Name = "gbSearchPaths";
-            this.gbSearchPaths.Size = new System.Drawing.Size(507, 509);
+            this.gbSearchPaths.Size = new System.Drawing.Size(490, 627);
             this.gbSearchPaths.TabIndex = 112;
             this.gbSearchPaths.TabStop = false;
             this.gbSearchPaths.Text = "Search Paths";
@@ -195,7 +200,7 @@ namespace IDPicker.Forms
             // 
             this.btnRemove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnRemove.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnRemove.Location = new System.Drawing.Point(417, 100);
+            this.btnRemove.Location = new System.Drawing.Point(400, 100);
             this.btnRemove.Name = "btnRemove";
             this.btnRemove.Size = new System.Drawing.Size(79, 23);
             this.btnRemove.TabIndex = 52;
@@ -207,7 +212,7 @@ namespace IDPicker.Forms
             // 
             this.btnAddRelative.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnAddRelative.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnAddRelative.Location = new System.Drawing.Point(417, 71);
+            this.btnAddRelative.Location = new System.Drawing.Point(400, 71);
             this.btnAddRelative.Name = "btnAddRelative";
             this.btnAddRelative.Size = new System.Drawing.Size(79, 23);
             this.btnAddRelative.TabIndex = 110;
@@ -219,7 +224,7 @@ namespace IDPicker.Forms
             // 
             this.btnClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnClear.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnClear.Location = new System.Drawing.Point(417, 129);
+            this.btnClear.Location = new System.Drawing.Point(400, 129);
             this.btnClear.Name = "btnClear";
             this.btnClear.Size = new System.Drawing.Size(79, 23);
             this.btnClear.TabIndex = 53;
@@ -231,7 +236,7 @@ namespace IDPicker.Forms
             // 
             this.btnBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnBrowse.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnBrowse.Location = new System.Drawing.Point(417, 42);
+            this.btnBrowse.Location = new System.Drawing.Point(400, 42);
             this.btnBrowse.Name = "btnBrowse";
             this.btnBrowse.Size = new System.Drawing.Size(79, 23);
             this.btnBrowse.TabIndex = 51;
@@ -250,7 +255,7 @@ namespace IDPicker.Forms
             this.searchPathsTabControl.Location = new System.Drawing.Point(17, 20);
             this.searchPathsTabControl.Name = "searchPathsTabControl";
             this.searchPathsTabControl.SelectedIndex = 0;
-            this.searchPathsTabControl.Size = new System.Drawing.Size(394, 477);
+            this.searchPathsTabControl.Size = new System.Drawing.Size(377, 595);
             this.searchPathsTabControl.TabIndex = 107;
             this.searchPathsTabControl.SelectedIndexChanged += new System.EventHandler(this.lbSearchPaths_SelectedIndexChanged);
             // 
@@ -263,7 +268,7 @@ namespace IDPicker.Forms
             this.tabFastaFilepaths.Location = new System.Drawing.Point(4, 22);
             this.tabFastaFilepaths.Name = "tabFastaFilepaths";
             this.tabFastaFilepaths.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFastaFilepaths.Size = new System.Drawing.Size(386, 451);
+            this.tabFastaFilepaths.Size = new System.Drawing.Size(369, 569);
             this.tabFastaFilepaths.TabIndex = 2;
             this.tabFastaFilepaths.Text = "FASTA";
             this.tabFastaFilepaths.UseVisualStyleBackColor = true;
@@ -290,7 +295,7 @@ namespace IDPicker.Forms
             this.lbFastaPaths.Location = new System.Drawing.Point(10, 22);
             this.lbFastaPaths.Name = "lbFastaPaths";
             this.lbFastaPaths.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.lbFastaPaths.Size = new System.Drawing.Size(380, 423);
+            this.lbFastaPaths.Size = new System.Drawing.Size(363, 541);
             this.lbFastaPaths.TabIndex = 49;
             // 
             // tabSourceSearchPaths
@@ -302,7 +307,7 @@ namespace IDPicker.Forms
             this.tabSourceSearchPaths.Location = new System.Drawing.Point(4, 22);
             this.tabSourceSearchPaths.Name = "tabSourceSearchPaths";
             this.tabSourceSearchPaths.Padding = new System.Windows.Forms.Padding(3);
-            this.tabSourceSearchPaths.Size = new System.Drawing.Size(386, 474);
+            this.tabSourceSearchPaths.Size = new System.Drawing.Size(369, 569);
             this.tabSourceSearchPaths.TabIndex = 1;
             this.tabSourceSearchPaths.Text = "Source";
             this.tabSourceSearchPaths.UseVisualStyleBackColor = true;
@@ -338,7 +343,7 @@ namespace IDPicker.Forms
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnCancel.Location = new System.Drawing.Point(697, 550);
+            this.btnCancel.Location = new System.Drawing.Point(707, 645);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 114;
@@ -350,7 +355,7 @@ namespace IDPicker.Forms
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOk.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnOk.Location = new System.Drawing.Point(616, 550);
+            this.btnOk.Location = new System.Drawing.Point(626, 645);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 113;
@@ -364,7 +369,7 @@ namespace IDPicker.Forms
             this.psmLevelFilterGroupBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.psmLevelFilterGroupBox.Location = new System.Drawing.Point(12, 12);
             this.psmLevelFilterGroupBox.Name = "psmLevelFilterGroupBox";
-            this.psmLevelFilterGroupBox.Size = new System.Drawing.Size(247, 133);
+            this.psmLevelFilterGroupBox.Size = new System.Drawing.Size(274, 152);
             this.psmLevelFilterGroupBox.TabIndex = 128;
             this.psmLevelFilterGroupBox.TabStop = false;
             this.psmLevelFilterGroupBox.Text = "Default Peptide-Spectrum-Match Filters";
@@ -377,7 +382,8 @@ namespace IDPicker.Forms
             this.tableLayoutPanel4.ColumnCount = 3;
             this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 55F));
+            this.tableLayoutPanel4.Controls.Add(this.maxPrecursorMzToleranceTextBox, 0, 4);
             this.tableLayoutPanel4.Controls.Add(this.label3, 0, 3);
             this.tableLayoutPanel4.Controls.Add(this.maxProteinGroupsTextBox, 1, 3);
             this.tableLayoutPanel4.Controls.Add(this.label4, 0, 2);
@@ -387,22 +393,35 @@ namespace IDPicker.Forms
             this.tableLayoutPanel4.Controls.Add(this.minSpectraPerPeptideTextBox, 1, 1);
             this.tableLayoutPanel4.Controls.Add(this.lblMaxFdr, 0, 0);
             this.tableLayoutPanel4.Controls.Add(this.label21, 2, 0);
+            this.tableLayoutPanel4.Controls.Add(this.label17, 0, 4);
+            this.tableLayoutPanel4.Controls.Add(this.maxPrecursorMzToleranceUnitsComboBox, 2, 4);
             this.tableLayoutPanel4.Location = new System.Drawing.Point(6, 20);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
-            this.tableLayoutPanel4.RowCount = 4;
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutPanel4.Size = new System.Drawing.Size(241, 107);
+            this.tableLayoutPanel4.RowCount = 5;
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel4.Size = new System.Drawing.Size(268, 126);
             this.tableLayoutPanel4.TabIndex = 142;
+            // 
+            // maxPrecursorMzToleranceTextBox
+            // 
+            this.maxPrecursorMzToleranceTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.maxPrecursorMzToleranceTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.maxPrecursorMzToleranceTextBox.Location = new System.Drawing.Point(165, 103);
+            this.maxPrecursorMzToleranceTextBox.Name = "maxPrecursorMzToleranceTextBox";
+            this.maxPrecursorMzToleranceTextBox.Size = new System.Drawing.Size(45, 21);
+            this.maxPrecursorMzToleranceTextBox.TabIndex = 147;
+            this.maxPrecursorMzToleranceTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.doubleTextBox_KeyDown);
             // 
             // label3
             // 
             this.label3.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(3, 86);
+            this.label3.Location = new System.Drawing.Point(3, 81);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(128, 13);
             this.label3.TabIndex = 134;
@@ -412,7 +431,7 @@ namespace IDPicker.Forms
             // 
             this.maxProteinGroupsTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.maxProteinGroupsTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.maxProteinGroupsTextBox.Location = new System.Drawing.Point(173, 82);
+            this.maxProteinGroupsTextBox.Location = new System.Drawing.Point(165, 78);
             this.maxProteinGroupsTextBox.Name = "maxProteinGroupsTextBox";
             this.maxProteinGroupsTextBox.Size = new System.Drawing.Size(45, 21);
             this.maxProteinGroupsTextBox.TabIndex = 133;
@@ -423,7 +442,7 @@ namespace IDPicker.Forms
             this.label4.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(3, 58);
+            this.label4.Location = new System.Drawing.Point(3, 56);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(141, 13);
             this.label4.TabIndex = 132;
@@ -446,7 +465,7 @@ namespace IDPicker.Forms
             "8",
             "9",
             "10"});
-            this.maxQValueComboBox.Location = new System.Drawing.Point(173, 3);
+            this.maxQValueComboBox.Location = new System.Drawing.Point(165, 3);
             this.maxQValueComboBox.Name = "maxQValueComboBox";
             this.maxQValueComboBox.Size = new System.Drawing.Size(45, 21);
             this.maxQValueComboBox.TabIndex = 4;
@@ -457,7 +476,7 @@ namespace IDPicker.Forms
             // 
             this.minSpectraPerMatchTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.minSpectraPerMatchTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.minSpectraPerMatchTextBox.Location = new System.Drawing.Point(173, 55);
+            this.minSpectraPerMatchTextBox.Location = new System.Drawing.Point(165, 53);
             this.minSpectraPerMatchTextBox.Name = "minSpectraPerMatchTextBox";
             this.minSpectraPerMatchTextBox.Size = new System.Drawing.Size(45, 21);
             this.minSpectraPerMatchTextBox.TabIndex = 9;
@@ -467,7 +486,7 @@ namespace IDPicker.Forms
             // 
             this.minSpectraPerPeptideTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.minSpectraPerPeptideTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.minSpectraPerPeptideTextBox.Location = new System.Drawing.Point(173, 29);
+            this.minSpectraPerPeptideTextBox.Location = new System.Drawing.Point(165, 28);
             this.minSpectraPerPeptideTextBox.Name = "minSpectraPerPeptideTextBox";
             this.minSpectraPerPeptideTextBox.Size = new System.Drawing.Size(45, 21);
             this.minSpectraPerPeptideTextBox.TabIndex = 7;
@@ -490,20 +509,44 @@ namespace IDPicker.Forms
             this.label21.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label21.AutoSize = true;
             this.label21.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label21.Location = new System.Drawing.Point(221, 6);
+            this.label21.Location = new System.Drawing.Point(213, 6);
             this.label21.Margin = new System.Windows.Forms.Padding(0);
             this.label21.Name = "label21";
             this.label21.Size = new System.Drawing.Size(18, 13);
             this.label21.TabIndex = 142;
             this.label21.Text = "%";
             // 
+            // label17
+            // 
+            this.label17.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.label17.AutoSize = true;
+            this.label17.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label17.Location = new System.Drawing.Point(3, 106);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(131, 13);
+            this.label17.TabIndex = 143;
+            this.label17.Text = "Maximum precursor error:";
+            // 
+            // maxPrecursorMzToleranceUnitsComboBox
+            // 
+            this.maxPrecursorMzToleranceUnitsComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.maxPrecursorMzToleranceUnitsComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.maxPrecursorMzToleranceUnitsComboBox.FormattingEnabled = true;
+            this.maxPrecursorMzToleranceUnitsComboBox.Items.AddRange(new object[] {
+            "m/z",
+            "ppm"});
+            this.maxPrecursorMzToleranceUnitsComboBox.Location = new System.Drawing.Point(218, 103);
+            this.maxPrecursorMzToleranceUnitsComboBox.Name = "maxPrecursorMzToleranceUnitsComboBox";
+            this.maxPrecursorMzToleranceUnitsComboBox.Size = new System.Drawing.Size(47, 21);
+            this.maxPrecursorMzToleranceUnitsComboBox.TabIndex = 146;
+            // 
             // proteinLevelFilterGroupBox
             // 
             this.proteinLevelFilterGroupBox.Controls.Add(this.tableLayoutPanel2);
             this.proteinLevelFilterGroupBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.proteinLevelFilterGroupBox.Location = new System.Drawing.Point(12, 284);
+            this.proteinLevelFilterGroupBox.Location = new System.Drawing.Point(12, 303);
             this.proteinLevelFilterGroupBox.Name = "proteinLevelFilterGroupBox";
-            this.proteinLevelFilterGroupBox.Size = new System.Drawing.Size(247, 126);
+            this.proteinLevelFilterGroupBox.Size = new System.Drawing.Size(274, 126);
             this.proteinLevelFilterGroupBox.TabIndex = 127;
             this.proteinLevelFilterGroupBox.TabStop = false;
             this.proteinLevelFilterGroupBox.Text = "Default Protein/Gene Level Filters";
@@ -532,13 +575,13 @@ namespace IDPicker.Forms
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(222, 100);
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(265, 100);
             this.tableLayoutPanel2.TabIndex = 140;
             // 
             // minSpectraTextBox
             // 
             this.minSpectraTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.minSpectraTextBox.Location = new System.Drawing.Point(173, 53);
+            this.minSpectraTextBox.Location = new System.Drawing.Point(216, 53);
             this.minSpectraTextBox.Name = "minSpectraTextBox";
             this.minSpectraTextBox.Size = new System.Drawing.Size(46, 21);
             this.minSpectraTextBox.TabIndex = 11;
@@ -549,7 +592,7 @@ namespace IDPicker.Forms
             this.filterByGeneCheckBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.filterByGeneCheckBox.AutoSize = true;
             this.filterByGeneCheckBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.filterByGeneCheckBox.Location = new System.Drawing.Point(173, 80);
+            this.filterByGeneCheckBox.Location = new System.Drawing.Point(216, 80);
             this.filterByGeneCheckBox.Name = "filterByGeneCheckBox";
             this.filterByGeneCheckBox.Size = new System.Drawing.Size(15, 14);
             this.filterByGeneCheckBox.TabIndex = 141;
@@ -559,7 +602,7 @@ namespace IDPicker.Forms
             // 
             this.minAdditionalPeptidesTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.minAdditionalPeptidesTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.minAdditionalPeptidesTextBox.Location = new System.Drawing.Point(173, 28);
+            this.minAdditionalPeptidesTextBox.Location = new System.Drawing.Point(216, 28);
             this.minAdditionalPeptidesTextBox.Name = "minAdditionalPeptidesTextBox";
             this.minAdditionalPeptidesTextBox.Size = new System.Drawing.Size(46, 21);
             this.minAdditionalPeptidesTextBox.TabIndex = 9;
@@ -569,7 +612,7 @@ namespace IDPicker.Forms
             // 
             this.minDistinctPeptidesTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.minDistinctPeptidesTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.minDistinctPeptidesTextBox.Location = new System.Drawing.Point(173, 3);
+            this.minDistinctPeptidesTextBox.Location = new System.Drawing.Point(216, 3);
             this.minDistinctPeptidesTextBox.Name = "minDistinctPeptidesTextBox";
             this.minDistinctPeptidesTextBox.Size = new System.Drawing.Size(46, 21);
             this.minDistinctPeptidesTextBox.TabIndex = 7;
@@ -610,7 +653,7 @@ namespace IDPicker.Forms
             // 
             this.defaultDecoyPrefixTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.tableLayoutPanel3.SetColumnSpan(this.defaultDecoyPrefixTextBox, 2);
-            this.defaultDecoyPrefixTextBox.Location = new System.Drawing.Point(173, 3);
+            this.defaultDecoyPrefixTextBox.Location = new System.Drawing.Point(165, 3);
             this.defaultDecoyPrefixTextBox.Name = "defaultDecoyPrefixTextBox";
             this.defaultDecoyPrefixTextBox.Size = new System.Drawing.Size(45, 20);
             this.defaultDecoyPrefixTextBox.TabIndex = 129;
@@ -628,7 +671,7 @@ namespace IDPicker.Forms
             // qonverterSettingsButton
             // 
             this.qonverterSettingsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.qonverterSettingsButton.Location = new System.Drawing.Point(12, 550);
+            this.qonverterSettingsButton.Location = new System.Drawing.Point(12, 645);
             this.qonverterSettingsButton.Name = "qonverterSettingsButton";
             this.qonverterSettingsButton.Size = new System.Drawing.Size(115, 23);
             this.qonverterSettingsButton.TabIndex = 135;
@@ -639,9 +682,9 @@ namespace IDPicker.Forms
             // importSettingsGroupBox
             // 
             this.importSettingsGroupBox.Controls.Add(this.tableLayoutPanel3);
-            this.importSettingsGroupBox.Location = new System.Drawing.Point(12, 420);
+            this.importSettingsGroupBox.Location = new System.Drawing.Point(12, 439);
             this.importSettingsGroupBox.Name = "importSettingsGroupBox";
-            this.importSettingsGroupBox.Size = new System.Drawing.Size(247, 124);
+            this.importSettingsGroupBox.Size = new System.Drawing.Size(274, 124);
             this.importSettingsGroupBox.TabIndex = 136;
             this.importSettingsGroupBox.TabStop = false;
             this.importSettingsGroupBox.Text = "Default Import Settings";
@@ -654,7 +697,7 @@ namespace IDPicker.Forms
             this.tableLayoutPanel3.ColumnCount = 3;
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 55F));
             this.tableLayoutPanel3.Controls.Add(this.maxImportRankTextBox, 1, 2);
             this.tableLayoutPanel3.Controls.Add(this.ignoreUnmappedPeptidesCheckBox, 1, 3);
             this.tableLayoutPanel3.Controls.Add(this.label16, 0, 3);
@@ -671,7 +714,7 @@ namespace IDPicker.Forms
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(241, 99);
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(268, 99);
             this.tableLayoutPanel3.TabIndex = 141;
             // 
             // maxImportRankTextBox
@@ -679,7 +722,7 @@ namespace IDPicker.Forms
             this.maxImportRankTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.tableLayoutPanel3.SetColumnSpan(this.maxImportRankTextBox, 2);
             this.maxImportRankTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.maxImportRankTextBox.Location = new System.Drawing.Point(173, 51);
+            this.maxImportRankTextBox.Location = new System.Drawing.Point(165, 51);
             this.maxImportRankTextBox.Name = "maxImportRankTextBox";
             this.maxImportRankTextBox.Size = new System.Drawing.Size(45, 21);
             this.maxImportRankTextBox.TabIndex = 136;
@@ -690,7 +733,7 @@ namespace IDPicker.Forms
             this.ignoreUnmappedPeptidesCheckBox.AutoSize = true;
             this.ignoreUnmappedPeptidesCheckBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.tableLayoutPanel3.SetColumnSpan(this.ignoreUnmappedPeptidesCheckBox, 2);
-            this.ignoreUnmappedPeptidesCheckBox.Location = new System.Drawing.Point(173, 78);
+            this.ignoreUnmappedPeptidesCheckBox.Location = new System.Drawing.Point(165, 78);
             this.ignoreUnmappedPeptidesCheckBox.Name = "ignoreUnmappedPeptidesCheckBox";
             this.ignoreUnmappedPeptidesCheckBox.Size = new System.Drawing.Size(15, 14);
             this.ignoreUnmappedPeptidesCheckBox.TabIndex = 140;
@@ -732,7 +775,7 @@ namespace IDPicker.Forms
             "50",
             "75",
             "100"});
-            this.maxImportFdrComboBox.Location = new System.Drawing.Point(173, 27);
+            this.maxImportFdrComboBox.Location = new System.Drawing.Point(165, 27);
             this.maxImportFdrComboBox.Name = "maxImportFdrComboBox";
             this.maxImportFdrComboBox.Size = new System.Drawing.Size(45, 21);
             this.maxImportFdrComboBox.TabIndex = 135;
@@ -743,7 +786,7 @@ namespace IDPicker.Forms
             this.label7.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label7.AutoSize = true;
             this.label7.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label7.Location = new System.Drawing.Point(221, 29);
+            this.label7.Location = new System.Drawing.Point(213, 29);
             this.label7.Margin = new System.Windows.Forms.Padding(0);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(18, 13);
@@ -754,16 +797,16 @@ namespace IDPicker.Forms
             // 
             this.sourceExtensionsTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.sourceExtensionsTextBox.Location = new System.Drawing.Point(229, 552);
+            this.sourceExtensionsTextBox.Location = new System.Drawing.Point(229, 647);
             this.sourceExtensionsTextBox.Name = "sourceExtensionsTextBox";
-            this.sourceExtensionsTextBox.Size = new System.Drawing.Size(370, 20);
+            this.sourceExtensionsTextBox.Size = new System.Drawing.Size(380, 20);
             this.sourceExtensionsTextBox.TabIndex = 137;
             // 
             // label10
             // 
             this.label10.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(133, 555);
+            this.label10.Location = new System.Drawing.Point(133, 650);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(97, 13);
             this.label10.TabIndex = 138;
@@ -774,7 +817,7 @@ namespace IDPicker.Forms
             this.chargeIsDistinctCheckBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.chargeIsDistinctCheckBox.AutoSize = true;
             this.chargeIsDistinctCheckBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.chargeIsDistinctCheckBox.Location = new System.Drawing.Point(173, 5);
+            this.chargeIsDistinctCheckBox.Location = new System.Drawing.Point(213, 5);
             this.chargeIsDistinctCheckBox.Name = "chargeIsDistinctCheckBox";
             this.chargeIsDistinctCheckBox.Size = new System.Drawing.Size(15, 14);
             this.chargeIsDistinctCheckBox.TabIndex = 142;
@@ -783,9 +826,9 @@ namespace IDPicker.Forms
             // distinctMatchFormatGroupBox
             // 
             this.distinctMatchFormatGroupBox.Controls.Add(this.tableLayoutPanel1);
-            this.distinctMatchFormatGroupBox.Location = new System.Drawing.Point(12, 151);
+            this.distinctMatchFormatGroupBox.Location = new System.Drawing.Point(12, 170);
             this.distinctMatchFormatGroupBox.Name = "distinctMatchFormatGroupBox";
-            this.distinctMatchFormatGroupBox.Size = new System.Drawing.Size(247, 127);
+            this.distinctMatchFormatGroupBox.Size = new System.Drawing.Size(274, 127);
             this.distinctMatchFormatGroupBox.TabIndex = 139;
             this.distinctMatchFormatGroupBox.TabStop = false;
             this.distinctMatchFormatGroupBox.Text = "Default Distinct Match Format";
@@ -813,14 +856,14 @@ namespace IDPicker.Forms
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(222, 102);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(262, 102);
             this.tableLayoutPanel1.TabIndex = 140;
             // 
             // modificationRoundToMassTextBox
             // 
             this.modificationRoundToMassTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.modificationRoundToMassTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.modificationRoundToMassTextBox.Location = new System.Drawing.Point(173, 78);
+            this.modificationRoundToMassTextBox.Location = new System.Drawing.Point(213, 78);
             this.modificationRoundToMassTextBox.Name = "modificationRoundToMassTextBox";
             this.modificationRoundToMassTextBox.Size = new System.Drawing.Size(46, 21);
             this.modificationRoundToMassTextBox.TabIndex = 142;
@@ -830,7 +873,7 @@ namespace IDPicker.Forms
             this.modificationsAreDistinctCheckbox.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.modificationsAreDistinctCheckbox.AutoSize = true;
             this.modificationsAreDistinctCheckbox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.modificationsAreDistinctCheckbox.Location = new System.Drawing.Point(173, 55);
+            this.modificationsAreDistinctCheckbox.Location = new System.Drawing.Point(213, 55);
             this.modificationsAreDistinctCheckbox.Name = "modificationsAreDistinctCheckbox";
             this.modificationsAreDistinctCheckbox.Size = new System.Drawing.Size(15, 14);
             this.modificationsAreDistinctCheckbox.TabIndex = 144;
@@ -841,7 +884,7 @@ namespace IDPicker.Forms
             this.analysisIsDistinctCheckBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.analysisIsDistinctCheckBox.AutoSize = true;
             this.analysisIsDistinctCheckBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.analysisIsDistinctCheckBox.Location = new System.Drawing.Point(173, 30);
+            this.analysisIsDistinctCheckBox.Location = new System.Drawing.Point(213, 30);
             this.analysisIsDistinctCheckBox.Name = "analysisIsDistinctCheckBox";
             this.analysisIsDistinctCheckBox.Size = new System.Drawing.Size(15, 14);
             this.analysisIsDistinctCheckBox.TabIndex = 143;
@@ -882,7 +925,7 @@ namespace IDPicker.Forms
             // nonFixedDriveWarningCheckBox
             // 
             this.nonFixedDriveWarningCheckBox.AutoSize = true;
-            this.nonFixedDriveWarningCheckBox.Location = new System.Drawing.Point(292, 527);
+            this.nonFixedDriveWarningCheckBox.Location = new System.Drawing.Point(18, 569);
             this.nonFixedDriveWarningCheckBox.Name = "nonFixedDriveWarningCheckBox";
             this.nonFixedDriveWarningCheckBox.Size = new System.Drawing.Size(216, 17);
             this.nonFixedDriveWarningCheckBox.TabIndex = 140;
@@ -892,18 +935,36 @@ namespace IDPicker.Forms
             // embedGeneMetadataWarningCheckBox
             // 
             this.embedGeneMetadataWarningCheckBox.AutoSize = true;
-            this.embedGeneMetadataWarningCheckBox.Location = new System.Drawing.Point(525, 527);
+            this.embedGeneMetadataWarningCheckBox.Location = new System.Drawing.Point(18, 592);
             this.embedGeneMetadataWarningCheckBox.Name = "embedGeneMetadataWarningCheckBox";
             this.embedGeneMetadataWarningCheckBox.Size = new System.Drawing.Size(211, 17);
             this.embedGeneMetadataWarningCheckBox.TabIndex = 141;
             this.embedGeneMetadataWarningCheckBox.Text = "Warn about embedding gene metadata";
             this.embedGeneMetadataWarningCheckBox.UseVisualStyleBackColor = true;
             // 
+            // groupSeparatorTextBox
+            // 
+            this.groupSeparatorTextBox.Location = new System.Drawing.Point(107, 614);
+            this.groupSeparatorTextBox.Name = "groupSeparatorTextBox";
+            this.groupSeparatorTextBox.Size = new System.Drawing.Size(45, 20);
+            this.groupSeparatorTextBox.TabIndex = 142;
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(15, 617);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(86, 13);
+            this.label18.TabIndex = 143;
+            this.label18.Text = "Group separator:";
+            // 
             // DefaultSettingsManagerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(784, 577);
+            this.ClientSize = new System.Drawing.Size(794, 672);
+            this.Controls.Add(this.groupSeparatorTextBox);
+            this.Controls.Add(this.label18);
             this.Controls.Add(this.embedGeneMetadataWarningCheckBox);
             this.Controls.Add(this.nonFixedDriveWarningCheckBox);
             this.Controls.Add(this.distinctMatchFormatGroupBox);
@@ -916,9 +977,9 @@ namespace IDPicker.Forms
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.gbSearchPaths);
-            this.MaximumSize = new System.Drawing.Size(2000, 615);
+            this.MaximumSize = new System.Drawing.Size(2000, 1000);
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(800, 615);
+            this.MinimumSize = new System.Drawing.Size(800, 38);
             this.Name = "DefaultSettingsManagerForm";
             this.Text = "Default Settings Manager";
             this.gbSearchPaths.ResumeLayout(false);
@@ -1003,5 +1064,10 @@ namespace IDPicker.Forms
         private System.Windows.Forms.Label label21;
         private System.Windows.Forms.CheckBox nonFixedDriveWarningCheckBox;
         private System.Windows.Forms.CheckBox embedGeneMetadataWarningCheckBox;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.TextBox maxPrecursorMzToleranceTextBox;
+        public System.Windows.Forms.ComboBox maxPrecursorMzToleranceUnitsComboBox;
+        private System.Windows.Forms.TextBox groupSeparatorTextBox;
+        private System.Windows.Forms.Label label18;
     }
 }

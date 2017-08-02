@@ -1016,13 +1016,13 @@ public:
         return approx;
     }
 
-    template <typename T>
+    /*template <typename T>
     explicit Approx(const T& value,
                     typename detail::traits::enable_if<
                             detail::traits::is_constructible<double, T>::value>::type* =
                             static_cast<T*>(detail::getNull())) {
         *this = Approx(static_cast<double>(value));
-    }
+    }*/
 
     // clang-format off
     // overloads for double - the first one is necessary as it is in the implementation part of doctest
@@ -5094,7 +5094,7 @@ namespace detail
         if(!parseOption(argc, argv, pattern, parsedValue))
             return false;
 
-        if(type == 0) {
+        if(type == option_bool) {
             // boolean
             const char positive[][5] = {"1", "true", "on", "yes"};  // 5 - strlen("true") + 1
             const char negative[][6] = {"0", "false", "off", "no"}; // 6 - strlen("false") + 1

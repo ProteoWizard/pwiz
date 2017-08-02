@@ -42,6 +42,10 @@ public ref struct SchemaUpdater abstract
 /// the default source extensions to search for, ordered by descending priority
 static property int CurrentSchemaRevision { int get(); }
 
+/// sets the separator used to separate groups in the GROUP_CONCAT_EX user function;
+/// this allows changing the separator with the DISTINCT keyword, e.g. GROUP_CONCAT_EX(DISTINCT <...>)
+static void SetGroupConcatSeparator(String^ separator);
+
 /// update IDPicker database to the current schema version, or throw an exception if updating is impossible;
 /// returns true if the database schema was updated
 static bool Update(String^ idpDbFilepath, pwiz::CLI::util::IterationListenerRegistry^ ilr);
