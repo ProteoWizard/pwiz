@@ -111,8 +111,12 @@ namespace pwiz.SkylineTestFunctional
             DeleteLastPeptide();
             string shareMinPath2 = TestFilesDirs[1].GetTestPath(zipFileMin2);
             Share(shareMinPath2, false, origFileSet, newFileSet, docName);
-            Assert.IsTrue(origFileSet[blibName].UncompressedSize >
-                          newFileSet[blibName].UncompressedSize);
+            String originalLibPath = TestFilesDirs[1].GetTestPath(blibName);
+            String minimalLibPath2 = GetPathToBlibFile(shareMinPath2, blibName);
+            Assert.IsTrue(GetCount(originalLibPath, "RefSpectra") > GetCount(minimalLibPath2, "RefSpectra"));
+            Assert.IsTrue(GetCount(originalLibPath, "RefSpectraPeaks") > GetCount(minimalLibPath2, "RefSpectraPeaks"));
+            //Assert.IsTrue(origFileSet[blibName].UncompressedSize >
+            //              newFileSet[blibName].UncompressedSize);
             Assert.IsTrue(newSize >
                           newFileSet[redundantBlibName].UncompressedSize);
             WaitForDocumentLoaded();
@@ -246,8 +250,9 @@ namespace pwiz.SkylineTestFunctional
 
             string shareMin2Path = TestFilesDirs[0].GetTestPath("ShareMin2.zip");
             Share(shareMin2Path, false, origFileSet, newFileSet, DOCUMENT_NAME);
-            Assert.IsTrue(origFileSet[blibLibName].UncompressedSize >
-                newFileSet[blibLibName].UncompressedSize);
+            String minimalLibPath2 = GetPathToBlibFile(shareMin2Path, blibLibName);
+            Assert.IsTrue(GetCount(originalLibPath, "RefSpectra") > GetCount(minimalLibPath2, "RefSpectra"));
+            Assert.IsTrue(GetCount(originalLibPath, "RefSpectraPeaks") > GetCount(minimalLibPath2, "RefSpectraPeaks"));
             WaitForLibraries();
 
             SelectNode(SrmDocument.Level.Transitions, 0);
