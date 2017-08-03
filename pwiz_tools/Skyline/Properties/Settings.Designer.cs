@@ -2385,5 +2385,161 @@ namespace pwiz.Skyline.Properties {
                 this["SynchronizeSummaryZooming"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public double AreaCVHistogramBinWidth {
+            get {
+                return ((double)(this["AreaCVHistogramBinWidth"]));
+            }
+            set {
+                this["AreaCVHistogramBinWidth"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("NaN")]
+        public double AreaCVQValueCutoff {
+            get {
+                return ((double)(this["AreaCVQValueCutoff"]));
+            }
+            set {
+                this["AreaCVQValueCutoff"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AreaCVShowCVCutoff {
+            get {
+                return ((bool)(this["AreaCVShowCVCutoff"]));
+            }
+            set {
+                this["AreaCVShowCVCutoff"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AreaCVShowMedianCV {
+            get {
+                return ((bool)(this["AreaCVShowMedianCV"]));
+            }
+            set {
+                this["AreaCVShowMedianCV"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("NaN")]
+        public double AreaCVMaxFrequency {
+            get {
+                return ((double)(this["AreaCVMaxFrequency"]));
+            }
+            set {
+                this["AreaCVMaxFrequency"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("NaN")]
+        public double AreaCVMaxCV {
+            get {
+                return ((double)(this["AreaCVMaxCV"]));
+            }
+            set {
+                this["AreaCVMaxCV"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("targets")]
+        public string AreaCVPointsType {
+            get {
+                return ((string)(this["AreaCVPointsType"]));
+            }
+            set {
+                this["AreaCVPointsType"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AreaCVShowDecimals {
+            get {
+                return ((bool)(this["AreaCVShowDecimals"]));
+            }
+            set {
+                this["AreaCVShowDecimals"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("20")]
+        public double AreaCVCVCutoff {
+            get {
+                return ((double)(this["AreaCVCVCutoff"]));
+            }
+            set {
+                this["AreaCVCVCutoff"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("none")]
+        public string AreaCVNormalizationMethod {
+            get {
+                return ((string)(this["AreaCVNormalizationMethod"]));
+            }
+            set {
+                this["AreaCVNormalizationMethod"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AreaCVLogScale {
+            get {
+                return ((bool)(this["AreaCVLogScale"]));
+            }
+            set {
+                this["AreaCVLogScale"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("NaN")]
+        public double AreaCVMinLog10Area {
+            get {
+                return ((double)(this["AreaCVMinLog10Area"]));
+            }
+            set {
+                this["AreaCVMinLog10Area"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("NaN")]
+        public double AreaCVMaxLog10Area {
+            get {
+                return ((double)(this["AreaCVMaxLog10Area"]));
+            }
+            set {
+                this["AreaCVMaxLog10Area"] = value;
+            }
+        }
     }
 }

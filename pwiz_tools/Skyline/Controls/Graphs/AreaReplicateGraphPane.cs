@@ -527,7 +527,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                 {
                     GraphObjList.Add(new BoxObj(selectedReplicateIndex + .5, yValue, 0.99,
-                        yValue, Color.Black, Color.Empty)
+                        -yValue, Color.Black, Color.Empty) // Just passing in yValue here doesn't work when log scale is enabled, -yValue works with and without log scale enabled
                     {
                         IsClippedToChartRect = true,
                     });

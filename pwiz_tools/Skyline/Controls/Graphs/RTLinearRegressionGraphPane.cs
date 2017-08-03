@@ -70,6 +70,8 @@ namespace pwiz.Skyline.Controls.Graphs
             Settings.Default.RTScoreCalculatorList.ListChanged -= RTScoreCalculatorList_ListChanged;
         }
 
+        public override bool HasToolbar { get { return RunToRun; } }
+
         public bool UpdateUIOnIndexChanged()
         {
             return true;

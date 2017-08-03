@@ -4950,7 +4950,7 @@ If you prefer you can choose to report anonymously.</value>
   <data name="NewDocument" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\newdocument.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-    <data name="SequenceTreeForm_UpdateTitle_Targets_by_Accession" xml:space="preserve">
+  <data name="SequenceTreeForm_UpdateTitle_Targets_by_Accession" xml:space="preserve">
     <value>Targets by Accession</value>
   </data>
   <data name="SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library" xml:space="preserve">
@@ -7715,7 +7715,7 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="TransitionTreeNode_Titles" xml:space="preserve">
     <value>Transitions</value>
   </data>
-    <data name="SkylineStartup_SkylineStartup_Import_Transition_List" xml:space="preserve">
+  <data name="SkylineStartup_SkylineStartup_Import_Transition_List" xml:space="preserve">
     <value>Import Transition List</value>
   </data>
   <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty" xml:space="preserve">
@@ -9164,49 +9164,49 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="PeptideChromInfoCalculator_AddChromInfo_Conflict_with_transition__0__in__1__for_peak_area_calculation__Did_you_mean_to_use_a_different_precursor_charge_state_or_label_" xml:space="preserve">
     <value>Conflict with transition {0} in {1} for peak area calculation. Did you mean to use a different precursor charge state or label?</value>
   </data>
-    <data name="IsolationSchemeList_GetDefaults_Results_only" xml:space="preserve">
+  <data name="IsolationSchemeList_GetDefaults_Results_only" xml:space="preserve">
     <value>Results only</value>
   </data>
-    <data name="IsolationSchemeList_GetDefaults_Results__0_5_margin_" xml:space="preserve">
+  <data name="IsolationSchemeList_GetDefaults_Results__0_5_margin_" xml:space="preserve">
     <value>Results (0.5 margin)</value>
   </data>
-    <data name="IsolationWidthType_RESULTS_Results" xml:space="preserve">
+  <data name="IsolationWidthType_RESULTS_Results" xml:space="preserve">
     <value>Results</value>
   </data>
-    <data name="IsolationWidthType_RESULTS_WITH_MARGIN_Results_with_margin" xml:space="preserve">
+  <data name="IsolationWidthType_RESULTS_WITH_MARGIN_Results_with_margin" xml:space="preserve">
     <value>Results with margin</value>
   </data>
-    <data name="IsolationWidthType_FIXED_Fixed" xml:space="preserve">
+  <data name="IsolationWidthType_FIXED_Fixed" xml:space="preserve">
     <value>Fixed</value>
   </data>
-    <data name="SpectrumFilter_CalcDiaIsolationValues_Unable_to_determine_isolation_width_for_the_scan_targeted_at__0_" xml:space="preserve">
+  <data name="SpectrumFilter_CalcDiaIsolationValues_Unable_to_determine_isolation_width_for_the_scan_targeted_at__0_" xml:space="preserve">
     <value>Unable to determine isolation width for the scan targeted at {0}</value>
   </data>
-    <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_" xml:space="preserve">
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_" xml:space="preserve">
     <value>Changing full scan precursor mass accuracy to {0} ppm.</value>
   </data>
-    <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_" xml:space="preserve">
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_" xml:space="preserve">
     <value>Changing full scan product mass accuracy to {0} ppm.</value>
   </data>
   <data name="SpectrumLibraryInfoDlg_SetDetailsText_Unique_Precursors___0_" xml:space="preserve">
     <value>Unique precursors: {0}</value>
   </data>
-    <data name="UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__" xml:space="preserve">
+  <data name="UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__" xml:space="preserve">
     <value>Upgrading to {0} (downloading {1} of {2})</value>
   </data>
-    <data name="UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_" xml:space="preserve">
+  <data name="UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_" xml:space="preserve">
     <value>Failed attempting to upgrade.</value>
   </data>
-    <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
+  <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
     <value>Upgrading {0}</value>
   </data>
-    <data name="UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_" xml:space="preserve">
+  <data name="UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_" xml:space="preserve">
     <value>Failed attempting to check for an upgrade.</value>
   </data>
-    <data name="UpgradeDlg_UpgradeDlg_No_update_was_found_" xml:space="preserve">
+  <data name="UpgradeDlg_UpgradeDlg_No_update_was_found_" xml:space="preserve">
     <value>No update was found.</value>
   </data>
-    <data name="UpgradeDlg_cbAtStartup_CheckedChanged_Maybe__Later" xml:space="preserve">
+  <data name="UpgradeDlg_cbAtStartup_CheckedChanged_Maybe__Later" xml:space="preserve">
     <value>Maybe &amp;Later</value>
   </data>
   <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library" xml:space="preserve">
@@ -9227,7 +9227,7 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_" xml:space="preserve">
     <value>Check your settings to make sure you are using a library and restrictive enough transition selection.</value>
   </data>
-    <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_" xml:space="preserve">
+  <data name="FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_" xml:space="preserve">
     <value>Check your settings to make sure you are using a library.</value>
   </data>
   <data name="FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__transitions_in__1_n0__peptides_at_line__2_n0__" xml:space="preserve">
@@ -9636,5 +9636,80 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="ChooseIrtStandardPeptidesDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_" xml:space="preserve">
     <value>Please select a protein containing the list of standard peptides for the iRT calculator.</value>
+  </data>
+  <data name="AreaCVHistogramGraphPane_AddLabels_Not_enough_data" xml:space="preserve">
+    <value>Not enough data</value>
+  </data>
+  <data name="AreaCVHistogramGraphPane_UpdateGraph_Frequency" xml:space="preserve">
+    <value>Frequency</value>
+  </data>
+  <data name="AreaCVHistogramGraphPane_UpdateGraph_CV" xml:space="preserve">
+    <value>CV</value>
+  </data>
+  <data name="AreaCVHistogram2DGraphPane_UpdateGraph_Median___0_" xml:space="preserve">
+    <value>Median: {0}</value>
+  </data>
+  <data name="AreaCVHistogram2DGraphPane_UpdateGraph_CV" xml:space="preserve">
+    <value>CV</value>
+  </data>
+  <data name="GraphSummary_UpdateToolbar_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="SkylineWindow_AddGroupByMenuItems_All_Replicates" xml:space="preserve">
+    <value>All Replicates</value>
+  </data>
+  <data name="AnnotationHelper_GetReplicateIndicices_False" xml:space="preserve">
+    <value>False</value>
+  </data>
+  <data name="AnnotationHelper_GetReplicateIndicices_True" xml:space="preserve">
+    <value>True</value>
+  </data>
+  <data name="AreaCVHistogram2DGraphPane_Draw_Not_enough_data" xml:space="preserve">
+    <value>Not enough data</value>
+  </data>
+  <data name="AreaCvToolbarProperties_btnOk_Click_Invalid_Q_value_entered" xml:space="preserve">
+    <value>Invalid Q value entered</value>
+  </data>
+  <data name="AreaCvToolbarProperties_btnOk_Click_Invalid_CV_cutoff_entered" xml:space="preserve">
+    <value>Invalid CV cutoff entered</value>
+  </data>
+  <data name="AreaCvToolbarProperties_btnOk_Click_Invalid_maximum_frequency_entered" xml:space="preserve">
+    <value>Invalid maximum frequency entered</value>
+  </data>
+  <data name="AreaCVToolbarProperties_btnOk_Click_Invalid_minimum_log_10_area_entered" xml:space="preserve">
+    <value>Invalid minimum log10 area entered</value>
+  </data>
+  <data name="AreaCVToolbarProperties_btnOk_Click_Invalid_maximum_log_10_area_entered" xml:space="preserve">
+    <value>Invalid maximum log10 area entered</value>
+  </data>
+  <data name="AreaCVToolbarProperties_btnOk_Click_The_maximum_log10_area_has_to_be_greater_than_the_minimum_log10_area" xml:space="preserve">
+    <value>The maximum log10 area has to be greater than the minimum log10 area</value>
+  </data>
+  <data name="SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="AreaCvHistogram2DGraphPane_UpdateGraph_Log10_Mean_Area" xml:space="preserve">
+    <value>Log10 Mean Area</value>
+  </data>
+  <data name="AreaCVToolbarProperties_btnOk_Click_Invalid_maximum_CV_entered" xml:space="preserve">
+    <value>Invalid maximum CV entered</value>
+  </data>
+  <data name="SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets_at__0___FDR" xml:space="preserve">
+    <value>Targets at {0}% FDR</value>
+  </data>
+  <data name="AreaCVToolbar_UpdateUI_Global_standards" xml:space="preserve">
+    <value>Global standards</value>
+  </data>
+  <data name="AreaCVToolbar_UpdateUI_Medians" xml:space="preserve">
+    <value>Medians</value>
+  </data>
+  <data name="AreaCVToolbar_UpdateUI_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="AreaCVHistogramGraphPane_AddLabels_Median___0_" xml:space="preserve">
+    <value>Median: {0}</value>
+  </data>
+  <data name="AreaCVHistogramGraphPane_UpdateGraph_Below__0____1_" xml:space="preserve">
+    <value>Below {0}: {1}</value>
   </data>
 </root>

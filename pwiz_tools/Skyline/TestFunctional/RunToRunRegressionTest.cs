@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
@@ -108,10 +109,10 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForGraphs();
 
-            Assert.IsTrue(graphSummary.IsRunToRun);
             RTLinearRegressionGraphPane regressionPane;
             if (!graphSummary.TryGetGraphPane(out regressionPane))
                 Assert.Fail("First graph pane was not RTLinearRegressionGraphPane");
+            Assert.IsTrue(regressionPane.HasToolbar);
 
             //Assert all values in regression match
             for (var i = 0; i < REPLICATES; i++)
@@ -123,8 +124,8 @@ namespace pwiz.SkylineTestFunctional
                     int targetIndex = i, originalIndex = j;
                     RunUI(() =>
                     {
-                        graphSummary.RunToRunTargetReplicate.SelectedIndex = targetIndex;
-                        graphSummary.RunToRunOriginalReplicate.SelectedIndex = originalIndex;
+                        RunToRunTargetReplicate(graphSummary).SelectedIndex = targetIndex;
+                        RunToRunOriginalReplicate(graphSummary).SelectedIndex = originalIndex;
 
                         Assert.AreEqual(targetIndex, graphSummary.StateProvider.SelectedResultsIndex);
                     });
@@ -168,8 +169,8 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                 {
                     SkylineWindow.ShowPlotType(PlotTypeRT.correlation);
-                    graphSummary.RunToRunTargetReplicate.SelectedIndex = selfIndex;
-                    graphSummary.RunToRunOriginalReplicate.SelectedIndex = selfIndex;
+                    RunToRunTargetReplicate(graphSummary).SelectedIndex = selfIndex;
+                    RunToRunOriginalReplicate(graphSummary).SelectedIndex = selfIndex;
                 });
                 WaitForGraphs();
                 var regression = regressionPane.RegressionRefined;
@@ -196,13 +197,14 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowPlotType(PlotTypeRT.correlation);
                 SkylineWindow.ShowRTRegressionGraphScoreToRun();
             });
-            if (!graphSummary.TryGetGraphPane(out regressionPane))
+            RTLinearRegressionGraphPane regressionPaneScore;
+            if (!graphSummary.TryGetGraphPane(out regressionPaneScore))
                 Assert.Fail("First graph pane was not RTLinearRegressionGraphPane");
-            WaitForCondition(() => regressionPane.IsRefined);
+            WaitForCondition(() => regressionPaneScore.IsRefined);
 
-            Assert.IsFalse(graphSummary.IsRunToRun);
-            var regressionScoreToRun = regressionPane.RegressionRefined;
-            var statisticsScoreToRun = regressionPane.StatisticsRefined;
+            Assert.IsFalse(regressionPaneScore.HasToolbar);
+            var regressionScoreToRun = regressionPaneScore.RegressionRefined;
+            var statisticsScoreToRun = regressionPaneScore.StatisticsRefined;
             var regressionScoreToRunLine = (RegressionLineElement) regressionScoreToRun.Conversion;
             Assert.AreEqual(1.01, regressionScoreToRunLine.Slope, 10e-3);
             Assert.AreEqual(0.32, regressionScoreToRunLine.Intercept, 10e-3);
@@ -210,7 +212,25 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(0.9483, statisticsScoreToRun.R, 10e-3);
 
             RunUI(SkylineWindow.ShowRTRegressionGraphRunToRun);
-            Assert.IsTrue(graphSummary.IsRunToRun);
+            WaitForGraphs();
+            if (!graphSummary.TryGetGraphPane(out regressionPane))
+                Assert.Fail("First graph pane was not RTLinearRegressionGraphPane");
+            Assert.IsTrue(regressionPane.HasToolbar);
+        }
+
+        public RunToRunRegressionToolbar RegressionToolbar(GraphSummary graphSummary)
+        {
+            return graphSummary.Toolbar as RunToRunRegressionToolbar;
+        }
+
+        public ToolStripComboBox RunToRunTargetReplicate(GraphSummary graphSummary)
+        {
+            return RegressionToolbar(graphSummary).RunToRunTargetReplicate;
+        }
+
+        public ToolStripComboBox RunToRunOriginalReplicate(GraphSummary graphSummary)
+        {
+            return RegressionToolbar(graphSummary).RunToRunOriginalReplicate;
         }
 
         private double TestRegressionStatisitcs(RTLinearRegressionGraphPane regressionPane, int i, int j)

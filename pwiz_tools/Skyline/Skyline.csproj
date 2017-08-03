@@ -284,6 +284,13 @@
     <Compile Include="AlgLib\solvers.cs" />
     <Compile Include="AlgLib\specialfunctions.cs" />
     <Compile Include="AlgLib\statistics.cs" />
+    <Compile Include="AnnotationHelper.cs" />
+    <Compile Include="Controls\Graphs\AreaCVToolbar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\AreaCVToolbar.Designer.cs">
+      <DependentUpon>AreaCVToolbar.cs</DependentUpon>
+    </Compile>
     <Compile Include="CommandArgs.cs" />
     <Compile Include="CommandLine.cs" />
     <Compile Include="CommandLineUI.cs" />
@@ -332,6 +339,15 @@
     <Compile Include="Controls\FindResultsForm.Designer.cs">
       <DependentUpon>FindResultsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
+    <Compile Include="Controls\Graphs\AreaCVHistogram2DGraphPane.cs" />
+    <Compile Include="Controls\Graphs\AreaCVHistogramGraphPane.cs" />
+    <Compile Include="Controls\Graphs\AreaCVToolbarProperties.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\AreaCVToolbarProperties.Designer.cs">
+      <DependentUpon>AreaCVToolbarProperties.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\AsyncChromatogramsGraph2.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -351,6 +367,9 @@
       <DependentUpon>FileProgressControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\GraphFontSize.cs" />
+    <Compile Include="Controls\Graphs\GraphSummaryToolbar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Controls\Graphs\ImportResultsRetryCountdownDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -360,6 +379,12 @@
     <Compile Include="Controls\Graphs\MassErrorHistogram2DGraphPane.cs" />
     <Compile Include="Controls\Graphs\MassErrorHistogramGraphPane.cs" />
     <Compile Include="Controls\Graphs\PeptidesAndTransitionGroups.cs" />
+    <Compile Include="Controls\Graphs\RunToRunRegressionToolbar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\Graphs\RunToRunRegressionToolbar.Designer.cs">
+      <DependentUpon>RunToRunRegressionToolbar.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\GroupComparison\EditGroupComparisonDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1649,6 +1674,9 @@
       <DependentUpon>UpgradeLicenseDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AreaCVToolbar.resx">
+      <DependentUpon>AreaCVToolbar.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\ColumnChooser.ja.resx">
       <DependentUpon>ColumnChooser.cs</DependentUpon>
     </EmbeddedResource>
@@ -1680,6 +1708,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AllChromatogramsGraph.zh-CHS.resx">
       <DependentUpon>AllChromatogramsGraph.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AreaCVToolbarProperties.resx">
+      <DependentUpon>AreaCVToolbarProperties.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AsyncChromatogramsGraph2.ja.resx">
       <DependentUpon>AsyncChromatogramsGraph2.cs</DependentUpon>
@@ -1716,6 +1747,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\ImportResultsRetryCountdownDlg.zh-CHS.resx">
       <DependentUpon>ImportResultsRetryCountdownDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\RunToRunRegressionToolbar.resx">
+      <DependentUpon>RunToRunRegressionToolbar.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.ja.resx">
       <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
@@ -3106,6 +3141,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Model\ToolService.cs" />
+    <Compile Include="Controls\ToolStripNumericUpDown.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ToolsUI\ConfigureToolsDlg.cs">
       <SubType>Form</SubType>
     </Compile>

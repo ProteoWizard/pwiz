@@ -190,6 +190,8 @@ namespace pwiz.Skyline
             this.areaGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaReplicateComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPeptideComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVHistogramContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVHistogram2DContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideOrderContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideOrderDocumentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideOrderRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -216,6 +218,20 @@ namespace pwiz.Skyline
             this.areaPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupReplicatesByContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupByReplicateContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVbinWidthToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCV05binWidthToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCV10binWidthToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCV15binWidthToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCV20binWidthToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pointsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVtargetsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVdecoysToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVNormalizedToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVGlobalStandardsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVMediansToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator54 = new System.Windows.Forms.ToolStripSeparator();
+            this.areaCVNoneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVLogScaleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
@@ -418,6 +434,8 @@ namespace pwiz.Skyline
             this.peakAreasMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaReplicateComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPeptideComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVHistogramMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCVHistogram2DMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorReplicateComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorPeptideComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1599,7 +1617,11 @@ namespace pwiz.Skyline
             this.peptideCvsContextMenuItem,
             this.toolStripSeparator28,
             this.areaPropsContextMenuItem,
-            this.groupReplicatesByContextMenuItem});
+            this.groupReplicatesByContextMenuItem,
+            this.areaCVbinWidthToolStripMenuItem,
+            this.pointsToolStripMenuItem,
+            this.areaCVNormalizedToToolStripMenuItem,
+            this.areaCVLogScaleToolStripMenuItem});
             this.contextMenuPeakAreas.Name = "contextMenuStrip1";
             resources.ApplyResources(this.contextMenuPeakAreas, "contextMenuPeakAreas");
             // 
@@ -1607,7 +1629,9 @@ namespace pwiz.Skyline
             // 
             this.areaGraphContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.areaReplicateComparisonContextMenuItem,
-            this.areaPeptideComparisonContextMenuItem});
+            this.areaPeptideComparisonContextMenuItem,
+            this.areaCVHistogramContextMenuItem,
+            this.areaCVHistogram2DContextMenuItem});
             this.areaGraphContextMenuItem.Name = "areaGraphContextMenuItem";
             resources.ApplyResources(this.areaGraphContextMenuItem, "areaGraphContextMenuItem");
             this.areaGraphContextMenuItem.DropDownOpening += new System.EventHandler(this.areaGraphMenuItem_DropDownOpening);
@@ -1623,6 +1647,30 @@ namespace pwiz.Skyline
             this.areaPeptideComparisonContextMenuItem.Name = "areaPeptideComparisonContextMenuItem";
             resources.ApplyResources(this.areaPeptideComparisonContextMenuItem, "areaPeptideComparisonContextMenuItem");
             this.areaPeptideComparisonContextMenuItem.Click += new System.EventHandler(this.areaPeptideComparisonMenuItem_Click);
+            // 
+            // areaCVHistogramContextMenuItem
+            // 
+            this.areaCVHistogramContextMenuItem.Name = "areaCVHistogramContextMenuItem";
+            resources.ApplyResources(this.areaCVHistogramContextMenuItem, "areaCVHistogramContextMenuItem");
+            this.areaCVHistogramContextMenuItem.Click += new System.EventHandler(this.areaCVHistogramToolStripMenuItem1_Click);
+            // 
+            // areaCVHistogram2DContextMenuItem
+            // 
+            this.areaCVHistogram2DContextMenuItem.Name = "areaCVHistogram2DContextMenuItem";
+            resources.ApplyResources(this.areaCVHistogram2DContextMenuItem, "areaCVHistogram2DContextMenuItem");
+            this.areaCVHistogram2DContextMenuItem.Click += new System.EventHandler(this.areaCVHistogram2DToolStripMenuItem1_Click);
+            // 
+            // areaCVHistogramContextMenuItem
+            // 
+            this.areaCVHistogramContextMenuItem.Name = "areaCVHistogramContextMenuItem";
+            resources.ApplyResources(this.areaCVHistogramContextMenuItem, "areaCVHistogramContextMenuItem");
+            this.areaCVHistogramContextMenuItem.Click += new System.EventHandler(this.areaCVHistogramToolStripMenuItem1_Click);
+            // 
+            // areaCVHistogram2DContextMenuItem
+            // 
+            this.areaCVHistogram2DContextMenuItem.Name = "areaCVHistogram2DContextMenuItem";
+            resources.ApplyResources(this.areaCVHistogram2DContextMenuItem, "areaCVHistogram2DContextMenuItem");
+            this.areaCVHistogram2DContextMenuItem.Click += new System.EventHandler(this.areaCVHistogram2DToolStripMenuItem1_Click);
             // 
             // peptideOrderContextMenuItem
             // 
@@ -1797,6 +1845,192 @@ namespace pwiz.Skyline
             this.groupByReplicateContextMenuItem.Name = "groupByReplicateContextMenuItem";
             resources.ApplyResources(this.groupByReplicateContextMenuItem, "groupByReplicateContextMenuItem");
             this.groupByReplicateContextMenuItem.Click += new System.EventHandler(this.groupByReplicateContextMenuItem_Click);
+            // 
+            // areaCVbinWidthToolStripMenuItem
+            // 
+            this.areaCVbinWidthToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.areaCV05binWidthToolStripMenuItem,
+            this.areaCV10binWidthToolStripMenuItem,
+            this.areaCV15binWidthToolStripMenuItem,
+            this.areaCV20binWidthToolStripMenuItem});
+            this.areaCVbinWidthToolStripMenuItem.Name = "areaCVbinWidthToolStripMenuItem";
+            resources.ApplyResources(this.areaCVbinWidthToolStripMenuItem, "areaCVbinWidthToolStripMenuItem");
+            // 
+            // areaCV05binWidthToolStripMenuItem
+            // 
+            this.areaCV05binWidthToolStripMenuItem.Name = "areaCV05binWidthToolStripMenuItem";
+            resources.ApplyResources(this.areaCV05binWidthToolStripMenuItem, "areaCV05binWidthToolStripMenuItem");
+            this.areaCV05binWidthToolStripMenuItem.Click += new System.EventHandler(this.areaCV05binWidthToolStripMenuItem_Click);
+            // 
+            // areaCV10binWidthToolStripMenuItem
+            // 
+            this.areaCV10binWidthToolStripMenuItem.Name = "areaCV10binWidthToolStripMenuItem";
+            resources.ApplyResources(this.areaCV10binWidthToolStripMenuItem, "areaCV10binWidthToolStripMenuItem");
+            this.areaCV10binWidthToolStripMenuItem.Click += new System.EventHandler(this.areaCV10binWidthToolStripMenuItem_Click);
+            // 
+            // areaCV15binWidthToolStripMenuItem
+            // 
+            this.areaCV15binWidthToolStripMenuItem.Name = "areaCV15binWidthToolStripMenuItem";
+            resources.ApplyResources(this.areaCV15binWidthToolStripMenuItem, "areaCV15binWidthToolStripMenuItem");
+            this.areaCV15binWidthToolStripMenuItem.Click += new System.EventHandler(this.areaCV15binWidthToolStripMenuItem_Click);
+            // 
+            // areaCV20binWidthToolStripMenuItem
+            // 
+            this.areaCV20binWidthToolStripMenuItem.Name = "areaCV20binWidthToolStripMenuItem";
+            resources.ApplyResources(this.areaCV20binWidthToolStripMenuItem, "areaCV20binWidthToolStripMenuItem");
+            this.areaCV20binWidthToolStripMenuItem.Click += new System.EventHandler(this.areaCV20binWidthToolStripMenuItem_Click);
+            // 
+            // pointsToolStripMenuItem
+            // 
+            this.pointsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.areaCVtargetsToolStripMenuItem,
+            this.areaCVdecoysToolStripMenuItem});
+            this.pointsToolStripMenuItem.Name = "pointsToolStripMenuItem";
+            resources.ApplyResources(this.pointsToolStripMenuItem, "pointsToolStripMenuItem");
+            // 
+            // areaCVtargetsToolStripMenuItem
+            // 
+            this.areaCVtargetsToolStripMenuItem.Name = "areaCVtargetsToolStripMenuItem";
+            resources.ApplyResources(this.areaCVtargetsToolStripMenuItem, "areaCVtargetsToolStripMenuItem");
+            this.areaCVtargetsToolStripMenuItem.Click += new System.EventHandler(this.areaCVtargetsToolStripMenuItem_Click);
+            // 
+            // areaCVdecoysToolStripMenuItem
+            // 
+            this.areaCVdecoysToolStripMenuItem.Name = "areaCVdecoysToolStripMenuItem";
+            resources.ApplyResources(this.areaCVdecoysToolStripMenuItem, "areaCVdecoysToolStripMenuItem");
+            this.areaCVdecoysToolStripMenuItem.Click += new System.EventHandler(this.areaCVdecoysToolStripMenuItem_Click);
+            // 
+            // areaCVNormalizedToToolStripMenuItem
+            // 
+            this.areaCVNormalizedToToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.areaCVGlobalStandardsToolStripMenuItem,
+            this.areaCVMediansToolStripMenuItem,
+            this.toolStripSeparator54,
+            this.areaCVNoneToolStripMenuItem});
+            this.areaCVNormalizedToToolStripMenuItem.Name = "areaCVNormalizedToToolStripMenuItem";
+            resources.ApplyResources(this.areaCVNormalizedToToolStripMenuItem, "areaCVNormalizedToToolStripMenuItem");
+            // 
+            // areaCVGlobalStandardsToolStripMenuItem
+            // 
+            this.areaCVGlobalStandardsToolStripMenuItem.Name = "areaCVGlobalStandardsToolStripMenuItem";
+            resources.ApplyResources(this.areaCVGlobalStandardsToolStripMenuItem, "areaCVGlobalStandardsToolStripMenuItem");
+            this.areaCVGlobalStandardsToolStripMenuItem.Click += new System.EventHandler(this.areaCVGlobalStandardsToolStripMenuItem_Click);
+            // 
+            // areaCVMediansToolStripMenuItem
+            // 
+            this.areaCVMediansToolStripMenuItem.Name = "areaCVMediansToolStripMenuItem";
+            resources.ApplyResources(this.areaCVMediansToolStripMenuItem, "areaCVMediansToolStripMenuItem");
+            this.areaCVMediansToolStripMenuItem.Click += new System.EventHandler(this.areaCVMediansToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator54
+            // 
+            this.toolStripSeparator54.Name = "toolStripSeparator54";
+            resources.ApplyResources(this.toolStripSeparator54, "toolStripSeparator54");
+            // 
+            // areaCVNoneToolStripMenuItem
+            // 
+            this.areaCVNoneToolStripMenuItem.Name = "areaCVNoneToolStripMenuItem";
+            resources.ApplyResources(this.areaCVNoneToolStripMenuItem, "areaCVNoneToolStripMenuItem");
+            this.areaCVNoneToolStripMenuItem.Click += new System.EventHandler(this.areaCVNoneToolStripMenuItem_Click);
+            // 
+            // areaCVLogScaleToolStripMenuItem
+            // 
+            this.areaCVLogScaleToolStripMenuItem.Name = "areaCVLogScaleToolStripMenuItem";
+            resources.ApplyResources(this.areaCVLogScaleToolStripMenuItem, "areaCVLogScaleToolStripMenuItem");
+            this.areaCVLogScaleToolStripMenuItem.Click += new System.EventHandler(this.areaCVLogScaleToolStripMenuItem_Click);
+            // 
+            // areaCVbinWidthToolStripMenuItem
+            // 
+            this.areaCVbinWidthToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.areaCV05binWidthToolStripMenuItem,
+            this.areaCV10binWidthToolStripMenuItem,
+            this.areaCV15binWidthToolStripMenuItem,
+            this.areaCV20binWidthToolStripMenuItem});
+            this.areaCVbinWidthToolStripMenuItem.Name = "areaCVbinWidthToolStripMenuItem";
+            resources.ApplyResources(this.areaCVbinWidthToolStripMenuItem, "areaCVbinWidthToolStripMenuItem");
+            // 
+            // areaCV05binWidthToolStripMenuItem
+            // 
+            this.areaCV05binWidthToolStripMenuItem.Name = "areaCV05binWidthToolStripMenuItem";
+            resources.ApplyResources(this.areaCV05binWidthToolStripMenuItem, "areaCV05binWidthToolStripMenuItem");
+            this.areaCV05binWidthToolStripMenuItem.Click += new System.EventHandler(this.areaCV05binWidthToolStripMenuItem_Click);
+            // 
+            // areaCV10binWidthToolStripMenuItem
+            // 
+            this.areaCV10binWidthToolStripMenuItem.Name = "areaCV10binWidthToolStripMenuItem";
+            resources.ApplyResources(this.areaCV10binWidthToolStripMenuItem, "areaCV10binWidthToolStripMenuItem");
+            this.areaCV10binWidthToolStripMenuItem.Click += new System.EventHandler(this.areaCV10binWidthToolStripMenuItem_Click);
+            // 
+            // areaCV15binWidthToolStripMenuItem
+            // 
+            this.areaCV15binWidthToolStripMenuItem.Name = "areaCV15binWidthToolStripMenuItem";
+            resources.ApplyResources(this.areaCV15binWidthToolStripMenuItem, "areaCV15binWidthToolStripMenuItem");
+            this.areaCV15binWidthToolStripMenuItem.Click += new System.EventHandler(this.areaCV15binWidthToolStripMenuItem_Click);
+            // 
+            // areaCV20binWidthToolStripMenuItem
+            // 
+            this.areaCV20binWidthToolStripMenuItem.Name = "areaCV20binWidthToolStripMenuItem";
+            resources.ApplyResources(this.areaCV20binWidthToolStripMenuItem, "areaCV20binWidthToolStripMenuItem");
+            this.areaCV20binWidthToolStripMenuItem.Click += new System.EventHandler(this.areaCV20binWidthToolStripMenuItem_Click);
+            // 
+            // pointsToolStripMenuItem
+            // 
+            this.pointsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.areaCVtargetsToolStripMenuItem,
+            this.areaCVdecoysToolStripMenuItem});
+            this.pointsToolStripMenuItem.Name = "pointsToolStripMenuItem";
+            resources.ApplyResources(this.pointsToolStripMenuItem, "pointsToolStripMenuItem");
+            // 
+            // areaCVtargetsToolStripMenuItem
+            // 
+            this.areaCVtargetsToolStripMenuItem.Name = "areaCVtargetsToolStripMenuItem";
+            resources.ApplyResources(this.areaCVtargetsToolStripMenuItem, "areaCVtargetsToolStripMenuItem");
+            this.areaCVtargetsToolStripMenuItem.Click += new System.EventHandler(this.areaCVtargetsToolStripMenuItem_Click);
+            // 
+            // areaCVdecoysToolStripMenuItem
+            // 
+            this.areaCVdecoysToolStripMenuItem.Name = "areaCVdecoysToolStripMenuItem";
+            resources.ApplyResources(this.areaCVdecoysToolStripMenuItem, "areaCVdecoysToolStripMenuItem");
+            this.areaCVdecoysToolStripMenuItem.Click += new System.EventHandler(this.areaCVdecoysToolStripMenuItem_Click);
+            // 
+            // areaCVNormalizedToToolStripMenuItem
+            // 
+            this.areaCVNormalizedToToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.areaCVGlobalStandardsToolStripMenuItem,
+            this.areaCVMediansToolStripMenuItem,
+            this.toolStripSeparator54,
+            this.areaCVNoneToolStripMenuItem});
+            this.areaCVNormalizedToToolStripMenuItem.Name = "areaCVNormalizedToToolStripMenuItem";
+            resources.ApplyResources(this.areaCVNormalizedToToolStripMenuItem, "areaCVNormalizedToToolStripMenuItem");
+            // 
+            // areaCVGlobalStandardsToolStripMenuItem
+            // 
+            this.areaCVGlobalStandardsToolStripMenuItem.Name = "areaCVGlobalStandardsToolStripMenuItem";
+            resources.ApplyResources(this.areaCVGlobalStandardsToolStripMenuItem, "areaCVGlobalStandardsToolStripMenuItem");
+            this.areaCVGlobalStandardsToolStripMenuItem.Click += new System.EventHandler(this.areaCVGlobalStandardsToolStripMenuItem_Click);
+            // 
+            // areaCVMediansToolStripMenuItem
+            // 
+            this.areaCVMediansToolStripMenuItem.Name = "areaCVMediansToolStripMenuItem";
+            resources.ApplyResources(this.areaCVMediansToolStripMenuItem, "areaCVMediansToolStripMenuItem");
+            this.areaCVMediansToolStripMenuItem.Click += new System.EventHandler(this.areaCVMediansToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator54
+            // 
+            this.toolStripSeparator54.Name = "toolStripSeparator54";
+            resources.ApplyResources(this.toolStripSeparator54, "toolStripSeparator54");
+            // 
+            // areaCVNoneToolStripMenuItem
+            // 
+            this.areaCVNoneToolStripMenuItem.Name = "areaCVNoneToolStripMenuItem";
+            resources.ApplyResources(this.areaCVNoneToolStripMenuItem, "areaCVNoneToolStripMenuItem");
+            this.areaCVNoneToolStripMenuItem.Click += new System.EventHandler(this.areaCVNoneToolStripMenuItem_Click);
+            // 
+            // areaCVLogScaleToolStripMenuItem
+            // 
+            this.areaCVLogScaleToolStripMenuItem.Name = "areaCVLogScaleToolStripMenuItem";
+            resources.ApplyResources(this.areaCVLogScaleToolStripMenuItem, "areaCVLogScaleToolStripMenuItem");
+            this.areaCVLogScaleToolStripMenuItem.Click += new System.EventHandler(this.areaCVLogScaleToolStripMenuItem_Click);
             // 
             // panel1
             // 
@@ -3232,7 +3466,9 @@ namespace pwiz.Skyline
             // 
             this.peakAreasMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.areaReplicateComparisonMenuItem,
-            this.areaPeptideComparisonMenuItem});
+            this.areaPeptideComparisonMenuItem,
+            this.areaCVHistogramMenuItem,
+            this.areaCVHistogram2DMenuItem});
             resources.ApplyResources(this.peakAreasMenuItem, "peakAreasMenuItem");
             this.peakAreasMenuItem.Name = "peakAreasMenuItem";
             this.peakAreasMenuItem.DropDownOpening += new System.EventHandler(this.areaGraphMenuItem_DropDownOpening);
@@ -3248,6 +3484,30 @@ namespace pwiz.Skyline
             this.areaPeptideComparisonMenuItem.Name = "areaPeptideComparisonMenuItem";
             resources.ApplyResources(this.areaPeptideComparisonMenuItem, "areaPeptideComparisonMenuItem");
             this.areaPeptideComparisonMenuItem.Click += new System.EventHandler(this.areaPeptideComparisonMenuItem_Click);
+            // 
+            // areaCVHistogramMenuItem
+            // 
+            this.areaCVHistogramMenuItem.Name = "areaCVHistogramMenuItem";
+            resources.ApplyResources(this.areaCVHistogramMenuItem, "areaCVHistogramMenuItem");
+            this.areaCVHistogramMenuItem.Click += new System.EventHandler(this.areaCVHistogramToolStripMenuItem1_Click);
+            // 
+            // areaCVHistogram2DMenuItem
+            // 
+            this.areaCVHistogram2DMenuItem.Name = "areaCVHistogram2DMenuItem";
+            resources.ApplyResources(this.areaCVHistogram2DMenuItem, "areaCVHistogram2DMenuItem");
+            this.areaCVHistogram2DMenuItem.Click += new System.EventHandler(this.areaCVHistogram2DToolStripMenuItem1_Click);
+            // 
+            // areaCVHistogramMenuItem
+            // 
+            this.areaCVHistogramMenuItem.Name = "areaCVHistogramMenuItem";
+            resources.ApplyResources(this.areaCVHistogramMenuItem, "areaCVHistogramMenuItem");
+            this.areaCVHistogramMenuItem.Click += new System.EventHandler(this.areaCVHistogramToolStripMenuItem1_Click);
+            // 
+            // areaCVHistogram2DMenuItem
+            // 
+            this.areaCVHistogram2DMenuItem.Name = "areaCVHistogram2DMenuItem";
+            resources.ApplyResources(this.areaCVHistogram2DMenuItem, "areaCVHistogram2DMenuItem");
+            this.areaCVHistogram2DMenuItem.Click += new System.EventHandler(this.areaCVHistogram2DToolStripMenuItem1_Click);
             // 
             // massErrorsMenuItem
             // 
@@ -4250,6 +4510,24 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem applyPeakSubsequentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removePeakToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importAssayLibraryMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVHistogramMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVHistogram2DMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVHistogramContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVHistogram2DContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVbinWidthToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCV05binWidthToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCV10binWidthToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCV15binWidthToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCV20binWidthToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem pointsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVtargetsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVdecoysToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVNormalizedToToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVGlobalStandardsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVMediansToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator54;
+        private System.Windows.Forms.ToolStripMenuItem areaCVNoneToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaCVLogScaleToolStripMenuItem;
     }
 }
 

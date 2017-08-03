@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -851,6 +851,12 @@
   <data name="selectionContextMenuItem.Text" xml:space="preserve">
     <value>Selection</value>
   </data>
+  <data name="synchronizeSummaryZoomingContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>256, 30</value>
+  </data>
+  <data name="synchronizeSummaryZoomingContextMenuItem.Text" xml:space="preserve">
+    <value>Synchronize Zooming</value>
+  </data>
   <data name="refineRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>177, 22</value>
   </data>
@@ -1013,6 +1019,30 @@
   <data name="areaPeptideComparisonContextMenuItem.Text" xml:space="preserve">
     <value>Peptide Comparison</value>
   </data>
+  <data name="areaCVHistogramContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>268, 30</value>
+  </data>
+  <data name="areaCVHistogramContextMenuItem.Text" xml:space="preserve">
+    <value>CV Histogram</value>
+  </data>
+  <data name="areaCVHistogram2DContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>268, 30</value>
+  </data>
+  <data name="areaCVHistogram2DContextMenuItem.Text" xml:space="preserve">
+    <value>CV Histogram 2D</value>
+  </data>
+  <data name="areaCVHistogramContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>268, 30</value>
+  </data>
+  <data name="areaCVHistogramContextMenuItem.Text" xml:space="preserve">
+    <value>CV Histogram</value>
+  </data>
+  <data name="areaCVHistogram2DContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>268, 30</value>
+  </data>
+  <data name="areaCVHistogram2DContextMenuItem.Text" xml:space="preserve">
+    <value>CV Histogram 2D</value>
+  </data>
   <data name="areaGraphContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
   </data>
@@ -1168,6 +1198,138 @@
   </data>
   <data name="groupReplicatesByContextMenuItem.Text" xml:space="preserve">
     <value>Group By</value>
+  </data>
+  <data name="areaCV05binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 30</value>
+  </data>
+  <data name="areaCV10binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 30</value>
+  </data>
+  <data name="areaCV15binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 30</value>
+  </data>
+  <data name="areaCV20binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 30</value>
+  </data>
+  <data name="areaCVbinWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>230, 30</value>
+  </data>
+  <data name="areaCVbinWidthToolStripMenuItem.Text" xml:space="preserve">
+    <value>Bin Width</value>
+  </data>
+  <data name="areaCVtargetsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 30</value>
+  </data>
+  <data name="areaCVdecoysToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 30</value>
+  </data>
+  <data name="areaCVdecoysToolStripMenuItem.Text" xml:space="preserve">
+    <value>Decoys</value>
+  </data>
+  <data name="pointsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>230, 30</value>
+  </data>
+  <data name="pointsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Points</value>
+  </data>
+  <data name="areaCVGlobalStandardsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>231, 30</value>
+  </data>
+  <data name="areaCVGlobalStandardsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Global Standards</value>
+  </data>
+  <data name="areaCVMediansToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>231, 30</value>
+  </data>
+  <data name="areaCVMediansToolStripMenuItem.Text" xml:space="preserve">
+    <value>Medians</value>
+  </data>
+  <data name="toolStripSeparator54.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 6</value>
+  </data>
+  <data name="areaCVNoneToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>231, 30</value>
+  </data>
+  <data name="areaCVNoneToolStripMenuItem.Text" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="areaCVNormalizedToToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>230, 30</value>
+  </data>
+  <data name="areaCVNormalizedToToolStripMenuItem.Text" xml:space="preserve">
+    <value>Normalized To</value>
+  </data>
+  <data name="areaCVLogScaleToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>230, 30</value>
+  </data>
+  <data name="areaCVLogScaleToolStripMenuItem.Text" xml:space="preserve">
+    <value>Log Scale</value>
+  </data>
+  <data name="areaCV05binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 30</value>
+  </data>
+  <data name="areaCV10binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 30</value>
+  </data>
+  <data name="areaCV15binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 30</value>
+  </data>
+  <data name="areaCV20binWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 30</value>
+  </data>
+  <data name="areaCVbinWidthToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>230, 30</value>
+  </data>
+  <data name="areaCVbinWidthToolStripMenuItem.Text" xml:space="preserve">
+    <value>Bin Width</value>
+  </data>
+  <data name="areaCVtargetsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 30</value>
+  </data>
+  <data name="areaCVdecoysToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 30</value>
+  </data>
+  <data name="areaCVdecoysToolStripMenuItem.Text" xml:space="preserve">
+    <value>Decoys</value>
+  </data>
+  <data name="pointsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>230, 30</value>
+  </data>
+  <data name="pointsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Points</value>
+  </data>
+  <data name="areaCVGlobalStandardsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>231, 30</value>
+  </data>
+  <data name="areaCVGlobalStandardsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Global Standards</value>
+  </data>
+  <data name="areaCVMediansToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>231, 30</value>
+  </data>
+  <data name="areaCVMediansToolStripMenuItem.Text" xml:space="preserve">
+    <value>Medians</value>
+  </data>
+  <data name="toolStripSeparator54.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 6</value>
+  </data>
+  <data name="areaCVNoneToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>231, 30</value>
+  </data>
+  <data name="areaCVNoneToolStripMenuItem.Text" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="areaCVNormalizedToToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>230, 30</value>
+  </data>
+  <data name="areaCVNormalizedToToolStripMenuItem.Text" xml:space="preserve">
+    <value>Normalized To</value>
+  </data>
+  <data name="areaCVLogScaleToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>230, 30</value>
+  </data>
+  <data name="areaCVLogScaleToolStripMenuItem.Text" xml:space="preserve">
+    <value>Log Scale</value>
   </data>
   <data name="contextMenuPeakAreas.Size" type="System.Drawing.Size, System.Drawing">
     <value>171, 274</value>
@@ -2661,6 +2823,30 @@
   <data name="areaPeptideComparisonMenuItem.Text" xml:space="preserve">
     <value>&amp;Peptide Comparison</value>
   </data>
+  <data name="areaCVHistogramMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>327, 30</value>
+  </data>
+  <data name="areaCVHistogramMenuItem.Text" xml:space="preserve">
+    <value>CV Histogram</value>
+  </data>
+  <data name="areaCVHistogram2DMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>327, 30</value>
+  </data>
+  <data name="areaCVHistogram2DMenuItem.Text" xml:space="preserve">
+    <value>CV Histogram 2D</value>
+  </data>
+  <data name="areaCVHistogramMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>327, 30</value>
+  </data>
+  <data name="areaCVHistogramMenuItem.Text" xml:space="preserve">
+    <value>CV Histogram</value>
+  </data>
+  <data name="areaCVHistogram2DMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>327, 30</value>
+  </data>
+  <data name="areaCVHistogram2DMenuItem.Text" xml:space="preserve">
+    <value>CV Histogram 2D</value>
+  </data>
   <data name="peakAreasMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -3726,6 +3912,9 @@
   <data name="&gt;&gt;synchronizeZoomingContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="synchronizeSummaryZoomingContextMenuItem.Text" xml:space="preserve">
+    <value>Synchronize Zooming</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparator18.Name" xml:space="preserve">
     <value>toolStripSeparator18</value>
   </data>
@@ -4062,6 +4251,30 @@
   <data name="&gt;&gt;areaPeptideComparisonContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;areaCVHistogramContextMenuItem.Name" xml:space="preserve">
+    <value>areaCVHistogramContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVHistogramContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVHistogram2DContextMenuItem.Name" xml:space="preserve">
+    <value>areaCVHistogram2DContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVHistogram2DContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVHistogramContextMenuItem.Name" xml:space="preserve">
+    <value>areaCVHistogramContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVHistogramContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVHistogram2DContextMenuItem.Name" xml:space="preserve">
+    <value>areaCVHistogram2DContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVHistogram2DContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;peptideOrderContextMenuItem.Name" xml:space="preserve">
     <value>peptideOrderContextMenuItem</value>
   </data>
@@ -4216,6 +4429,174 @@
     <value>groupByReplicateContextMenuItem</value>
   </data>
   <data name="&gt;&gt;groupByReplicateContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVbinWidthToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVbinWidthToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVbinWidthToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCV05binWidthToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCV05binWidthToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCV05binWidthToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCV10binWidthToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCV10binWidthToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCV10binWidthToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCV15binWidthToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCV15binWidthToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCV15binWidthToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCV20binWidthToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCV20binWidthToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCV20binWidthToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;pointsToolStripMenuItem.Name" xml:space="preserve">
+    <value>pointsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;pointsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVtargetsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVtargetsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVtargetsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVdecoysToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVdecoysToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVdecoysToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVNormalizedToToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVNormalizedToToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVNormalizedToToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVGlobalStandardsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVGlobalStandardsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVGlobalStandardsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVMediansToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVMediansToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVMediansToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator54.Name" xml:space="preserve">
+    <value>toolStripSeparator54</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator54.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVNoneToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVNoneToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVNoneToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVLogScaleToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVLogScaleToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVLogScaleToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVbinWidthToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVbinWidthToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVbinWidthToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCV05binWidthToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCV05binWidthToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCV05binWidthToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCV10binWidthToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCV10binWidthToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCV10binWidthToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCV15binWidthToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCV15binWidthToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCV15binWidthToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCV20binWidthToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCV20binWidthToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCV20binWidthToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;pointsToolStripMenuItem.Name" xml:space="preserve">
+    <value>pointsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;pointsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVtargetsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVtargetsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVtargetsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVdecoysToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVdecoysToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVdecoysToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVNormalizedToToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVNormalizedToToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVNormalizedToToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVGlobalStandardsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVGlobalStandardsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVGlobalStandardsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVMediansToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVMediansToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVMediansToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator54.Name" xml:space="preserve">
+    <value>toolStripSeparator54</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator54.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVNoneToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVNoneToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVNoneToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVLogScaleToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVLogScaleToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVLogScaleToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;statusGeneral.Name" xml:space="preserve">
@@ -5400,6 +5781,30 @@
   <data name="&gt;&gt;areaPeptideComparisonMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;areaCVHistogramMenuItem.Name" xml:space="preserve">
+    <value>areaCVHistogramMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVHistogramMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVHistogram2DMenuItem.Name" xml:space="preserve">
+    <value>areaCVHistogram2DMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVHistogram2DMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVHistogramMenuItem.Name" xml:space="preserve">
+    <value>areaCVHistogramMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVHistogramMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVHistogram2DMenuItem.Name" xml:space="preserve">
+    <value>areaCVHistogram2DMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVHistogram2DMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;massErrorsMenuItem.Name" xml:space="preserve">
     <value>massErrorsMenuItem</value>
   </data>
@@ -5843,8 +6248,5 @@
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="synchronizeSummaryZoomingContextMenuItem.Text" xml:space="preserve">
-    <value>Synchronize Zooming</value>
   </data>
 </root>

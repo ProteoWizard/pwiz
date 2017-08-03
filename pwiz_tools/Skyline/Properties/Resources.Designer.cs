@@ -1426,12 +1426,202 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to False.
+        /// </summary>
+        public static string AnnotationHelper_GetReplicateIndicices_False {
+            get {
+                return ResourceManager.GetString("AnnotationHelper_GetReplicateIndicices_False", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to True.
+        /// </summary>
+        public static string AnnotationHelper_GetReplicateIndicices_True {
+            get {
+                return ResourceManager.GetString("AnnotationHelper_GetReplicateIndicices_True", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Annotation conflict for &apos;{0}&apos; found attempting to merge annotations..
         /// </summary>
         public static string Annotations_Merge_Annotation_conflict_for__0__found_attempting_to_merge_annotations {
             get {
                 return ResourceManager.GetString("Annotations_Merge_Annotation_conflict_for__0__found_attempting_to_merge_annotatio" +
                         "ns", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not enough data.
+        /// </summary>
+        public static string AreaCVHistogram2DGraphPane_Draw_Not_enough_data {
+            get {
+                return ResourceManager.GetString("AreaCVHistogram2DGraphPane_Draw_Not_enough_data", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CV.
+        /// </summary>
+        public static string AreaCVHistogram2DGraphPane_UpdateGraph_CV {
+            get {
+                return ResourceManager.GetString("AreaCVHistogram2DGraphPane_UpdateGraph_CV", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Log10 Mean Area.
+        /// </summary>
+        public static string AreaCvHistogram2DGraphPane_UpdateGraph_Log10_Mean_Area {
+            get {
+                return ResourceManager.GetString("AreaCvHistogram2DGraphPane_UpdateGraph_Log10_Mean_Area", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Median: {0}.
+        /// </summary>
+        public static string AreaCVHistogram2DGraphPane_UpdateGraph_Median___0_ {
+            get {
+                return ResourceManager.GetString("AreaCVHistogram2DGraphPane_UpdateGraph_Median___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Median: {0}.
+        /// </summary>
+        public static string AreaCVHistogramGraphPane_AddLabels_Median___0_ {
+            get {
+                return ResourceManager.GetString("AreaCVHistogramGraphPane_AddLabels_Median___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not enough data.
+        /// </summary>
+        public static string AreaCVHistogramGraphPane_AddLabels_Not_enough_data {
+            get {
+                return ResourceManager.GetString("AreaCVHistogramGraphPane_AddLabels_Not_enough_data", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Below {0}: {1}.
+        /// </summary>
+        public static string AreaCVHistogramGraphPane_UpdateGraph_Below__0____1_ {
+            get {
+                return ResourceManager.GetString("AreaCVHistogramGraphPane_UpdateGraph_Below__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CV.
+        /// </summary>
+        public static string AreaCVHistogramGraphPane_UpdateGraph_CV {
+            get {
+                return ResourceManager.GetString("AreaCVHistogramGraphPane_UpdateGraph_CV", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Frequency.
+        /// </summary>
+        public static string AreaCVHistogramGraphPane_UpdateGraph_Frequency {
+            get {
+                return ResourceManager.GetString("AreaCVHistogramGraphPane_UpdateGraph_Frequency", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Global standards.
+        /// </summary>
+        public static string AreaCVToolbar_UpdateUI_Global_standards {
+            get {
+                return ResourceManager.GetString("AreaCVToolbar_UpdateUI_Global_standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Medians.
+        /// </summary>
+        public static string AreaCVToolbar_UpdateUI_Medians {
+            get {
+                return ResourceManager.GetString("AreaCVToolbar_UpdateUI_Medians", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string AreaCVToolbar_UpdateUI_None {
+            get {
+                return ResourceManager.GetString("AreaCVToolbar_UpdateUI_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid CV cutoff entered.
+        /// </summary>
+        public static string AreaCvToolbarProperties_btnOk_Click_Invalid_CV_cutoff_entered {
+            get {
+                return ResourceManager.GetString("AreaCvToolbarProperties_btnOk_Click_Invalid_CV_cutoff_entered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid maximum CV entered.
+        /// </summary>
+        public static string AreaCVToolbarProperties_btnOk_Click_Invalid_maximum_CV_entered {
+            get {
+                return ResourceManager.GetString("AreaCVToolbarProperties_btnOk_Click_Invalid_maximum_CV_entered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid maximum frequency entered.
+        /// </summary>
+        public static string AreaCvToolbarProperties_btnOk_Click_Invalid_maximum_frequency_entered {
+            get {
+                return ResourceManager.GetString("AreaCvToolbarProperties_btnOk_Click_Invalid_maximum_frequency_entered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid maximum log10 area entered.
+        /// </summary>
+        public static string AreaCVToolbarProperties_btnOk_Click_Invalid_maximum_log_10_area_entered {
+            get {
+                return ResourceManager.GetString("AreaCVToolbarProperties_btnOk_Click_Invalid_maximum_log_10_area_entered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid minimum log10 area entered.
+        /// </summary>
+        public static string AreaCVToolbarProperties_btnOk_Click_Invalid_minimum_log_10_area_entered {
+            get {
+                return ResourceManager.GetString("AreaCVToolbarProperties_btnOk_Click_Invalid_minimum_log_10_area_entered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid Q value entered.
+        /// </summary>
+        public static string AreaCvToolbarProperties_btnOk_Click_Invalid_Q_value_entered {
+            get {
+                return ResourceManager.GetString("AreaCvToolbarProperties_btnOk_Click_Invalid_Q_value_entered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum log10 area has to be greater than the minimum log10 area.
+        /// </summary>
+        public static string AreaCVToolbarProperties_btnOk_Click_The_maximum_log10_area_has_to_be_greater_than_the_minimum_log10_area {
+            get {
+                return ResourceManager.GetString("AreaCVToolbarProperties_btnOk_Click_The_maximum_log10_area_has_to_be_greater_than" +
+                        "_the_minimum_log10_area", resourceCulture);
             }
         }
         
@@ -12406,6 +12596,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string GraphSummary_UpdateToolbar_All {
+            get {
+                return ResourceManager.GetString("GraphSummary_UpdateToolbar_All", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Log {0}.
         /// </summary>
         public static string GraphValues_Log_AxisTitle {
@@ -22385,6 +22584,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All Replicates.
+        /// </summary>
+        public static string SkylineWindow_AddGroupByMenuItems_All_Replicates {
+            get {
+                return ResourceManager.GetString("SkylineWindow_AddGroupByMenuItems_All_Replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add Fold Change.
         /// </summary>
         public static string SkylineWindow_AddGroupComparison_Add_Fold_Change {
@@ -24733,6 +24941,24 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_Unexpected_character__0__found_on_line__1__ {
             get {
                 return ResourceManager.GetString("SkylineWindow_Unexpected_character__0__found_on_line__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Targets.
+        /// </summary>
+        public static string SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets {
+            get {
+                return ResourceManager.GetString("SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Targets at {0}% FDR.
+        /// </summary>
+        public static string SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets_at__0___FDR {
+            get {
+                return ResourceManager.GetString("SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets_at__0___FDR", resourceCulture);
             }
         }
         

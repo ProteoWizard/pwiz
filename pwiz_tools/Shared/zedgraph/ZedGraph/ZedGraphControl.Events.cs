@@ -1017,6 +1017,7 @@ namespace ZedGraph
 				double maxLin = axis._scale._maxLinearized;
 				double f1 = 1 / zoomFraction - 1;
 
+				centerVal = axis.Scale.Linearize(centerVal);
 				if ( !isZoomOnCenter )
 					centerVal = ( maxLin + minLin ) / 2.0;
 

@@ -15,6 +15,7 @@ AlertLinkDlg,TestMiscForms
 AlignmentForm,TestRetentionTimeAlignment
 AllChromatogramsGraph,*
 AreaChartPropertyDlg,TestEditDialogs
+AreaCVToolbarProperties,TestAreaCVHistograms
 AreaGraphController,TestEditDialogs
 ArrangeGraphsGroupedDlg,TestManageResults
 AssociateProteinsDlg,TestAssociateProteins

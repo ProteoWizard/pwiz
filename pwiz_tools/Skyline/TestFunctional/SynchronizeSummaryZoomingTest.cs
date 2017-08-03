@@ -2,7 +2,7 @@
  * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2009 University of Washington - Seattle, WA
+ * Copyright 2017 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="pwiz.Skyline.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
@@ -595,6 +595,45 @@
     </Setting>
     <Setting Name="SynchronizeSummaryZooming" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AreaCVHistogramBinWidth" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="AreaCVQValueCutoff" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">NaN</Value>
+    </Setting>
+    <Setting Name="AreaCVShowCVCutoff" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="AreaCVShowMedianCV" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="AreaCVMaxFrequency" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">NaN</Value>
+    </Setting>
+    <Setting Name="AreaCVMaxCV" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">NaN</Value>
+    </Setting>
+    <Setting Name="AreaCVPointsType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">targets</Value>
+    </Setting>
+    <Setting Name="AreaCVShowDecimals" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AreaCVCVCutoff" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">20</Value>
+    </Setting>
+    <Setting Name="AreaCVNormalizationMethod" Type="System.String" Scope="User">
+      <Value Profile="(Default)">none</Value>
+    </Setting>
+    <Setting Name="AreaCVLogScale" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AreaCVMinLog10Area" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">NaN</Value>
+    </Setting>
+    <Setting Name="AreaCVMaxLog10Area" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">NaN</Value>
     </Setting>
   </Settings>
 </SettingsFile>

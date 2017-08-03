@@ -87,8 +87,8 @@ namespace pwiz.MSGraph
             var points = heatMapData.GetPoints(
                 graphPane.XAxis.Scale.Min,
                 graphPane.XAxis.Scale.Max,
-                Math.Max(graphPane.YAxis.Scale.Min, yMin),
-                Math.Min(graphPane.YAxis.Scale.Max, yMax),
+                Math.Min(graphPane.YAxis.Scale.Min, yMin),
+                Math.Max(graphPane.YAxis.Scale.Max, yMax),
                 cellWidth,
                 cellHeight);
 

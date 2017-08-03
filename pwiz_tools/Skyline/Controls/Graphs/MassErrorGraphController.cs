@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 
+using System;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -71,6 +73,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public IFormView FormView { get { return new GraphSummary.AreaGraphView(); } }
 
+        public void OnDocumentChanged(SrmDocument oldDocument, SrmDocument newDocument)
+        {
+            
+        }
+
         public void OnActiveLibraryChanged()
         {
             if (GraphSummary.GraphPanes.OfType<MassErrorReplicateGraphPane>().Any())
@@ -96,12 +103,8 @@ namespace pwiz.Skyline.Controls.Graphs
             switch (GraphType)
             {
                 case GraphTypeMassError.replicate:
-                    if (!(GraphSummary.GraphPanes.FirstOrDefault() is MassErrorReplicateGraphPane))
-                        GraphSummary.GraphPanes = new[] { new MassErrorReplicateGraphPane(GraphSummary, PaneKey.DEFAULT) };
-                    break;
                 case GraphTypeMassError.peptide:
-                    if (!(GraphSummary.GraphPanes.FirstOrDefault() is MassErrorPeptideGraphPane))
-                        GraphSummary.GraphPanes = new[] { new MassErrorPeptideGraphPane(GraphSummary, PaneKey.DEFAULT) };
+                    GraphSummary.DoUpdateGraph(this, (GraphTypeSummary)Enum.Parse(typeof(GraphTypeSummary), GraphType.ToString()));
                     break;
                 case GraphTypeMassError.histogram:
                     if (!(GraphSummary.GraphPanes.FirstOrDefault() is MassErrorHistogramGraphPane))
@@ -138,7 +141,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             switch (e.KeyCode)
             {
-                case Keys.F7:
+                case Keys.F6:
                     if (!e.Alt && !(e.Shift && e.Control))
                     {
                         if (e.Control)
@@ -149,11 +152,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     break;
             }
-            return false;
-        }
-
-        public bool IsRunToRun()
-        {
             return false;
         }
     }

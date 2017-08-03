@@ -142,6 +142,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public void OnDocumentChanged(SrmDocument oldDocument, SrmDocument newDocument)
+        {
+
+        }
+
         public void OnActiveLibraryChanged()
         {
             var fod = GraphSummary.GraphPanes.FirstOrDefault() as IUpdateGraphPaneController;
@@ -227,11 +232,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     break;
             }
             return false;
-        }
-
-        public bool IsRunToRun()
-        {
-            return GraphType == GraphTypeRT.run_to_run_regression;
         }
     }
 }

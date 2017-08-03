@@ -72,6 +72,8 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <param name="selectionChanged">True when the selection has changed, otherwise false</param>
         public abstract void UpdateGraph(bool selectionChanged);
 
+        public virtual bool HasToolbar { get { return false; } }
+
         public virtual bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             return false;

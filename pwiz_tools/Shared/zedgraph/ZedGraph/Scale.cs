@@ -1695,7 +1695,15 @@ namespace ZedGraph
 		/// <param name="val">The value to be converted</param>
 		virtual public double Linearize( double val )
 		{
-			return val;
+			switch (Type)
+			{
+				case AxisType.Exponent:
+					return Math.Pow(10, val);
+				case AxisType.Log:
+					return Math.Log10(val);
+				default:
+					return val;
+			}
 		}
 
 		/// <summary>
@@ -1710,7 +1718,15 @@ namespace ZedGraph
 		/// <param name="val">The value to be converted</param>
 		virtual public double DeLinearize( double val )
 		{
-			return val;
+			switch (Type)
+			{
+				case AxisType.Exponent:
+					return Math.Log10(val);
+				case AxisType.Log:
+					return Math.Pow(10, val);
+				default:
+					return val;
+			}
 		}
 /*
 		/// <summary>
