@@ -259,6 +259,8 @@ namespace TestRunner
             var results = commandLineArgs.ArgAsString("results");
             var maxSecondsPerTest = commandLineArgs.ArgAsDouble("maxsecondspertest");
 
+            bool asNightly = offscreen && qualityMode;  // While it is possible to run quality off screen from the Quality tab, this is what we use to distinguish for treatment of perf tests
+
             // If we haven't been told to run perf tests, remove any from the list
             // which may have shown up by default
             if (!perftests)
@@ -480,10 +482,10 @@ namespace TestRunner
                 runTests.Log("# Pass 2+: Run tests in each selected language.\r\n");
             }
 
-            int perfPass = pass; // We'll run perf tests just once per language, and only in one language (french) if english and french (along with any others) are both enabled
-            bool needsPerfTestPass2Warning = testList.Any(t => t.IsPerfTest); // No perf tests, no warning
-            bool flip=true;
-            var perfTestsFrenchOnly = perftests && languages.Any(l => l.StartsWith("en")) && languages.Any(l => l.StartsWith("fr"));
+            int perfPass = pass; // For nightly tests, we'll run perf tests just once per language, and only in one language (french) if english and french (along with any others) are both enabled
+            bool needsPerfTestPass2Warning = asNightly && testList.Any(t => t.IsPerfTest); // No perf tests, no warning
+            var perfTestsFrenchOnly = asNightly && perftests && languages.Any(l => l.StartsWith("en")) && languages.Any(l => l.StartsWith("fr"));
+            bool flip = true;
 
             for (; pass < passEnd; pass++)
             {
@@ -513,7 +515,7 @@ namespace TestRunner
                         stopWatch.Start(); // Limit the repeats in case of very long tests
                         for (int repeatCounter = 1; repeatCounter <= repeat; repeatCounter++)
                         {
-                            if (test.IsPerfTest && ((pass > perfPass) || (repeatCounter > 1)))
+                            if (asNightly && test.IsPerfTest && ((pass > perfPass) || (repeatCounter > 1)))
                             {
                                 // Perf Tests are generally too lengthy to run multiple times (but per-language check is useful)
                                 if (needsPerfTestPass2Warning)
