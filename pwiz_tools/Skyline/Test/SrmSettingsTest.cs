@@ -837,7 +837,7 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
                 " formula=\"H2\" charges=\"1\"/>");
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
-                " formula=\"HP230O15\" charges=\"1\"/>");
+                " formula=\"HP230O200\" charges=\"1\"/>");
             // Reporter without formula and without both masses
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
                 " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS.ToString(CultureInfo.InvariantCulture) + "\" charges=\"1\"/>");
