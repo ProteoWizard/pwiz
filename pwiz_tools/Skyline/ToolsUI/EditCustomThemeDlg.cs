@@ -33,7 +33,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.ToolsUI
 {
-    public partial class EditCustomThemeDlg : Form
+    public partial class EditCustomThemeDlg : FormEx
     {
         private ColorScheme _newScheme;
         private readonly ColorScheme _oldScheme;
