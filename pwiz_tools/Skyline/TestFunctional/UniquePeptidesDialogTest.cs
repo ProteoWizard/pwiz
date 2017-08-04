@@ -88,8 +88,10 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Add FASTA sequence that's not in the library
-            RunUI(() => SkylineWindow.Paste(bogus ? TEXT_FASTA_NONSENSE : TEXT_FASTA_SPROT));
-
+            using (new WaitDocumentChange())
+            {
+                RunUI(() => SkylineWindow.Paste(bogus ? TEXT_FASTA_NONSENSE : TEXT_FASTA_SPROT));
+            }
         }
 
         private void scenario(int nodeNum, int expectedMatches, int expectedMoleculeFilteredCount, UniquePeptidesDlg.UniquenessType testType, bool bogus = false)
