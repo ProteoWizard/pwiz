@@ -175,6 +175,7 @@ namespace pwiz.SkylineTestTutorial
             CheckPointsTypeRT(PointsTypeRT.standards, SkylineWindow.Document.GetRetentionTimeStandards().Count);
             CheckPointsTypeRT(PointsTypeRT.decoys, numDecoys);
             RunUI(() => SkylineWindow.ShowGraphRetentionTime(false));
+            WaitForDocumentLoaded();
 
             // Train the peak scoring model
             var reintegrateDlg = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
@@ -390,6 +391,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForClosedForm(rescoreResultsDlg);
             WaitForClosedForm(manageResults);
             WaitForConditionUI(() => FindOpenForm<AllChromatogramsGraph>() == null);
+            WaitForDocumentLoaded();
 
             // Train the peak scoring model for the DIA dataset
             var reintegrateDlgDia = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
