@@ -521,6 +521,21 @@
   <data name="noneRTContextMenuItem.Text" xml:space="preserve">
     <value>None</value>
   </data>
+  <data name="rawTimesMenuItemSplitter.Size" type="System.Drawing.Size, System.Drawing">
+    <value>170, 6</value>
+  </data>
+  <data name="rawTimesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="rawTimesContextMenuItem.Text" xml:space="preserve">
+    <value>Show Raw Times</value>
+  </data>
+  <data name="retentionTimesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="retentionTimesContextMenuItem.Text" xml:space="preserve">
+    <value>Retention Times</value>
+  </data>
   <data name="retentionTimePredContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
   </data>
@@ -6050,6 +6065,12 @@
   </data>
   <data name="&gt;&gt;massErrorlogScaleContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rawTimesMenuItemSplitter.Name" xml:space="preserve">
+    <value>rawTimesMenuItemSplitter</value>
+  </data>
+  <data name="&gt;&gt;rawTimesMenuItemSplitter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SkylineWindow</value>

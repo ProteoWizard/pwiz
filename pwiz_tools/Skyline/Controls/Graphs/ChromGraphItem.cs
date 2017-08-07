@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private static readonly Color COLOR_ALIGNED_MSMSID_TIME = Color.LightBlue;
         private static readonly Color COLOR_UNALIGNED_MSMSID_TIME = Color.Cyan;
         private static readonly Color COLOR_RETENTION_WINDOW = Color.LightGoldenrodYellow;
-        private static readonly Color COLOR_BOUNDARIES = Color.Gray;
+        private static readonly Color COLOR_BOUNDARIES = Color.LightGray;
         private static readonly Color COLOR_BOUNDARIES_BEST = Color.Black;
 
         private const int MIN_BOUNDARY_DISPLAY_WIDTH = 7;
@@ -70,6 +70,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly double _bestProduct;
         private readonly bool _isFullScanMs;
         private readonly bool _isSummary;
+        private readonly RawTimesInfoItem? _displayRawTimes;
         private readonly int _step;
 
         private int _bestPeakTimeIndex = -1;
@@ -85,6 +86,7 @@ namespace pwiz.Skyline.Controls.Graphs
                               double bestProduct,
                               bool isFullScanMs,
                               bool isSummary,
+                              RawTimesInfoItem? displayRawTimes,
                               int step,
                               Color color,
                               float fontSize,
@@ -107,6 +109,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _bestProduct = bestProduct;
             _isFullScanMs = isFullScanMs;
             _isSummary = isSummary;
+            _displayRawTimes = displayRawTimes;
 
             _arrayLabelIndexes = new int[annotatePeaks.Length];
 
@@ -403,6 +406,11 @@ namespace pwiz.Skyline.Controls.Graphs
                         ScaleRetentionTime(startTime), ScaleRetentionTime(endTime), intensityBest);
                 }
             }
+            if (_displayRawTimes.HasValue)
+            {
+                AddPeakRawTimes(graphPane, annotations,
+                    ScaleRetentionTime(_displayRawTimes.Value.StartBound), ScaleRetentionTime(_displayRawTimes.Value.EndBound), Chromatogram);
+            }
         }
 
         public override void AddAnnotations(MSGraphPane graphPane, Graphics g,
@@ -596,6 +604,56 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             return maxIndex;
+        }
+
+        private void AddPeakRawTimes(GraphPane graphPane, ICollection<GraphObj> annotations,
+            ScaledRetentionTime startTime, ScaledRetentionTime endTime, ChromatogramInfo info)
+        {
+            if (info.RawTimes == null || !info.RawTimes.Any()) 
+                return; // No measured points
+            double end = endTime.DisplayTime;
+            double start = startTime.DisplayTime;
+            var times = info.RawTimes.ToArray();
+
+            var rawtimes = new List<double>();
+            for (int j = 0; j < times.Length; j++)
+            {
+                if (start > times[j])
+                    continue;
+                if (end < times[j])
+                    break;
+                rawtimes.Add(times[j]);
+            }
+            if (rawtimes.Count == 0)
+                return;
+            var scaledHeight = graphPane.YAxis.Scale.Max / 20; // 5% of graph pane height
+            foreach (var time in rawtimes)
+            {
+                LineObj stick = new LineObj(time, scaledHeight, time, 0)
+                {
+                    IsClippedToChartRect = true,
+                    Location = { CoordinateFrame = CoordType.AxisXYScale },
+                    ZOrder = ZOrder.A_InFront,
+                    Line = { Width = 1, Style = DashStyle.Dash, Color = ColorSelected},
+                    Tag = new GraphObjTag(this, GraphObjType.raw_time, new ScaledRetentionTime(time)),
+                };
+                annotations.Add(stick);
+            }
+            TextObj pointCount = new TextObj(" " + rawtimes.Count, endTime.DisplayTime, scaledHeight) // Not L10N
+            {
+                FontSpec = new FontSpec("Arial", 12, ColorSelected, false, false, false)    // Not L10N
+                {
+                    Border = new Border { IsVisible = false },
+                    Fill = new Fill()
+                },
+                Location =
+                {
+                    AlignH = AlignH.Left,
+                    AlignV = AlignV.Bottom
+                }
+
+            };
+            annotations.Add(pointCount);
         }
 
         private void AddPeakBoundaries(GraphPane graphPane, ICollection<GraphObj> annotations,
@@ -808,8 +866,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             return index;
         }
-        
-        enum GraphObjType
+
+        public enum GraphObjType
         {
 // ReSharper disable UnusedMember.Local
             invalid,
@@ -820,10 +878,11 @@ namespace pwiz.Skyline.Controls.Graphs
             aligned_ms_id,
             unaligned_ms_id,
             best_peak,
+            raw_time,
             peak,
         }
 
-        class GraphObjTag
+        public class GraphObjTag
         {
             public GraphObjTag(ChromGraphItem chromGraphItem, GraphObjType graphObjType, ScaledRetentionTime retentionTime)
             {

@@ -2541,5 +2541,17 @@ namespace pwiz.Skyline.Properties {
                 this["AreaCVMaxLog10Area"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ChromShowRawTimes {
+            get {
+                return ((bool)(this["ChromShowRawTimes"]));
+            }
+            set {
+                this["ChromShowRawTimes"] = value;
+            }
+        }
     }
 }

@@ -100,6 +100,7 @@ namespace pwiz.Skyline
             this.bestRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.thresholdRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.noneRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rawTimesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.retentionTimePredContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideIDTimesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.idTimesNoneContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -510,6 +511,7 @@ namespace pwiz.Skyline
             this.massErorrRetentionTimeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorMassToChargContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorlogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rawTimesMenuItemSplitter = new System.Windows.Forms.ToolStripSeparator();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -983,7 +985,9 @@ namespace pwiz.Skyline
             this.allRTContextMenuItem,
             this.bestRTContextMenuItem,
             this.thresholdRTContextMenuItem,
-            this.noneRTContextMenuItem});
+            this.noneRTContextMenuItem,
+            this.rawTimesMenuItemSplitter,
+            this.rawTimesContextMenuItem});
             this.retentionTimesContextMenuItem.Name = "retentionTimesContextMenuItem";
             resources.ApplyResources(this.retentionTimesContextMenuItem, "retentionTimesContextMenuItem");
             this.retentionTimesContextMenuItem.DropDownOpening += new System.EventHandler(this.retentionTimesContextMenuItem_DropDownOpening);
@@ -1011,6 +1015,12 @@ namespace pwiz.Skyline
             this.noneRTContextMenuItem.Name = "noneRTContextMenuItem";
             resources.ApplyResources(this.noneRTContextMenuItem, "noneRTContextMenuItem");
             this.noneRTContextMenuItem.Click += new System.EventHandler(this.noneRTContextMenuItem_Click);
+            // 
+            // rawTimesContextMenuItem
+            // 
+            this.rawTimesContextMenuItem.Name = "rawTimesContextMenuItem";
+            resources.ApplyResources(this.rawTimesContextMenuItem, "rawTimesContextMenuItem");
+            this.rawTimesContextMenuItem.Click += new System.EventHandler(this.rawTimesContextMenuItem_Click);
             // 
             // retentionTimePredContextMenuItem
             // 
@@ -3901,6 +3911,11 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.massErrorlogScaleContextMenuItem, "massErrorlogScaleContextMenuItem");
             this.massErrorlogScaleContextMenuItem.Click += new System.EventHandler(this.massErrorlogScaleContextMenuItem_Click);
             // 
+            // rawTimesMenuItemSplitter
+            // 
+            this.rawTimesMenuItemSplitter.Name = "rawTimesMenuItemSplitter";
+            resources.ApplyResources(this.rawTimesMenuItemSplitter, "rawTimesMenuItemSplitter");
+            // 
             // SkylineWindow
             // 
             resources.ApplyResources(this, "$this");
@@ -4392,6 +4407,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem applyPeakAllToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem applyPeakSubsequentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removePeakToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rawTimesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importAssayLibraryMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVHistogramMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVHistogram2DMenuItem;
@@ -4411,6 +4427,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator54;
         private System.Windows.Forms.ToolStripMenuItem areaCVNoneToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVLogScaleToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator rawTimesMenuItemSplitter;
     }
 }
 

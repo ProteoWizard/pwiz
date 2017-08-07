@@ -535,7 +535,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     ChromatogramInfo chromatogramInfo;
                                     MakeChromatogramInfo(nodeGroup.PrecursorMz, chromatogramData, chromData, out chromatogramInfo, out tranPeakInfo);
                                     var graphItem = new ChromGraphItem(nodeGroup, matchingTransition, chromatogramInfo, iChromData == iChromDataPrimary ? tranPeakInfo : null, null,
-                                                                       new[] {iChromData == iChromDataPrimary}, null, 0, false, false, 0,
+                                                                       new[] {iChromData == iChromDataPrimary}, null, 0, false, false, null,0,
                                                                        color, Settings.Default.ChromatogramFontSize, 1);
                                     LineItem curve = (LineItem) _graphHelper.AddChromatogram(PaneKey.DEFAULT, graphItem);
                                     if (matchingTransition == null)

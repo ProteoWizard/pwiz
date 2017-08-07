@@ -954,7 +954,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 int rtIndex = graphItem.GetNearestMeasuredIndex(_stateProvider.SelectedScanRetentionTime);
                                 if (rtIndex == -1)
                                     continue;
-
+                                // for each curve add the measured points
                                 var lineItem = (LineItem) graphPane.CurveList[FULLSCAN_SELECTED_INDEX];
                                 lineItem[0].X = transitionCurve.Points[rtIndex].X;
                                 lineItem[0].Y = transitionCurve.Points[rtIndex].Y;
@@ -1163,6 +1163,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                0,
                                                true,
                                                true,
+                                               null,
                                                0,
                                                COLORS_GROUPS[(int)extractor],
                                                FontSize,
@@ -1396,13 +1397,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 int step = numSteps != 0 ? i - numSteps : 0;
 
                 Color color;
-                bool shade = false;
+                bool isSelected = false;
                 int width = lineWidth;
                 if ((numSteps == 0 && ReferenceEquals(nodeTran, nodeTranSelected) ||
                      (numSteps > 0 && step == 0)))
                 {
                     color = ChromGraphItem.ColorSelected;
-                    shade = true;
+                    isSelected = true;
                     width++;
                 }
                 else
@@ -1426,6 +1427,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 };
                 if (fullScanInfo.ChromInfo != null && fullScanInfo.ChromInfo.ExtractionWidth > 0)
                     _enableTrackingDot = true;
+                // In order to display raw times within the defined peak bound we need to pass the
+                // ChromGraphItem the bounds as it does not have access to that information
+                RawTimesInfoItem? rawTimeInfo = null;
+                if (isSelected && Settings.Default.ChromShowRawTimes)
+                {
+                    rawTimeInfo = new RawTimesInfoItem() {
+                        StartBound = bestStartTime,
+                        EndBound = bestEndTime
+                    };
+                }
+
                 var graphItem = new ChromGraphItem(nodeGroup,
                     nodeTran,
                     info,
@@ -1436,13 +1448,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     bestProduct,
                     isFullScanMs,
                     false,
+                    rawTimeInfo,
                     step,
                     color,
                     fontSize,
                     width,
                     fullScanInfo);
                 _graphHelper.AddChromatogram(graphPaneKey, graphItem);
-                if (shade)
+                if (isSelected)
                 {
                     ShadeGraph(tranPeakInfo,info,timeRegressionFunction,dotProducts,bestProduct,isFullScanMs,step,fontSize,width,fullScanInfo,graphPaneKey);
                 }
@@ -1498,6 +1511,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 bestProduct,
                 isFullScanMs,
                 false,
+                null,
                 step,
                 ChromGraphItem.ColorSelected,
                 fontSize,
@@ -1526,6 +1540,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 bestProduct,
                 isFullScanMs,
                 false,
+                null,
                 step,
                 Color.DarkGray,
                 fontSize,
@@ -1745,6 +1760,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                        0,
                                                        false,
                                                        false,
+                                                       null,
                                                        step,
                                                        color,
                                                        fontSize,
@@ -1919,6 +1935,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                        0,
                                                        false,
                                                        false,
+                                                       null,
                                                        0,
                                                        color,
                                                        fontSize,
@@ -2076,6 +2093,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     0,
                     false,
                     false,
+                    null,
                     0,
                     color,
                     fontSize,
@@ -3651,5 +3669,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             return string.Format("{0} ({1})", MeasuredTime, DisplayTime); // Not L10N
         }
+    }
+
+    public struct RawTimesInfoItem
+    {
+        public double StartBound { get; set; }
+        public double EndBound { get; set; }
     }
 }

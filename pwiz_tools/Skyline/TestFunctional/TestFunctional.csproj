@@ -154,6 +154,7 @@
     <Compile Include="CalibrationTest.cs" />
     <Compile Include="ChorusFunctionalTest.cs" />
     <Compile Include="ChromGraphTransformTest.cs" />
+    <Compile Include="ChromUITest.cs" />
     <Compile Include="DocumentGridClipboardOperationsTest.cs" />
     <Compile Include="DocumentReportTest.cs" />
     <Compile Include="DocumentSizeErrorTest.cs" />

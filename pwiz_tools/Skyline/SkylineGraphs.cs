@@ -1421,7 +1421,9 @@ namespace pwiz.Skyline
                         allRTContextMenuItem,
                         bestRTContextMenuItem,
                         thresholdRTContextMenuItem,
-                        noneRTContextMenuItem     
+                        noneRTContextMenuItem,
+                        rawTimesMenuItemSplitter,
+                        rawTimesContextMenuItem
                     });
             }
             if (retentionPredict)
@@ -1429,6 +1431,7 @@ namespace pwiz.Skyline
                 retentionTimePredContextMenuItem.Checked = set.ShowRetentionTimePred;
                 menuStrip.Items.Insert(iInsert++, retentionTimePredContextMenuItem);
             }
+            rawTimesContextMenuItem.Checked = set.ChromShowRawTimes;
             bool alignedTimes = settings.HasAlignedTimes();
             bool unalignedTimes = settings.HasUnalignedTimes();
             if (peptideIdTimes || alignedTimes || unalignedTimes)
@@ -1619,6 +1622,17 @@ namespace pwiz.Skyline
                     UpdateChromGraphs();
                 }
             }
+        }
+
+        private void rawTimesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ToggleRawTimesMenuItem();
+        }
+
+        public void ToggleRawTimesMenuItem()
+        {
+            Settings.Default.ChromShowRawTimes = !Settings.Default.ChromShowRawTimes;
+            UpdateChromGraphs();
         }
 
         private void noneRTContextMenuItem_Click(object sender, EventArgs e)
