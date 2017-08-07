@@ -348,7 +348,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(graph.TryGetGraphPane(out pane2));
             Assert.IsTrue(pane2.HasToolbar);
             Assert.IsNotNull(graph.Toolbar);
-            AssertBarsAreEqual(123, pane2);
+            AssertBarsAreEqual(122, pane2);
             Assert.IsTrue(AreaCVGraphDataStatisticsEqual(pane2.CurrentData, STATS7));
 
             // Test if the data is correct after changing the bin width and disabling the show cv cutoff option (which affects the number of GetTotalBars)

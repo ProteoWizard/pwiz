@@ -308,7 +308,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public float? GetPeakArea(int i)
+        public float? GetPeakArea(int i, double? qvalueCutoff = null)
         {
             if (i == -1)
                 return AveragePeakArea;
@@ -317,6 +317,11 @@ namespace pwiz.Skyline.Model
             var chromInfo = GetChromInfoEntry(i);
             if (chromInfo == null)
                 return null;
+            if (qvalueCutoff.HasValue)
+            {
+                if (!(chromInfo.QValue.HasValue && chromInfo.QValue.Value < qvalueCutoff.Value))
+                    return null;
+            }
             return chromInfo.Area;
         }
 

@@ -126,16 +126,16 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="toolStripLabel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>66, 38</value>
+    <value>43, 28</value>
   </data>
   <data name="toolStripLabel1.Text" xml:space="preserve">
     <value>Group:</value>
   </data>
   <data name="toolStripComboGroup.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 33</value>
+    <value>82, 23</value>
   </data>
   <data name="toolStripLabel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 38</value>
+    <value>66, 28</value>
   </data>
   <data name="toolStripLabel2.Text" xml:space="preserve">
     <value>Detections:</value>
@@ -145,40 +145,40 @@
     <value>False</value>
   </data>
   <data name="toolStripNumericDetections.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 31</value>
+    <value>53, 23</value>
   </data>
   <data name="toolStripNumericDetections.Text" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="toolStripLabel3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>86, 38</value>
+    <value>57, 28</value>
   </data>
   <data name="toolStripLabel3.Text" xml:space="preserve">
     <value>replicates</value>
   </data>
   <data name="toolStripProperties.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 38</value>
+    <value>64, 28</value>
   </data>
   <data name="toolStripProperties.Text" xml:space="preserve">
     <value>Properties</value>
   </data>
   <data name="toolStripLabel4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 38</value>
+    <value>85, 28</value>
   </data>
   <data name="toolStripLabel4.Text" xml:space="preserve">
-    <value>Normalized To:</value>
+    <value>Normalized to:</value>
   </data>
   <data name="toolStripComboNormalizedTo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 33</value>
+    <value>82, 23</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
   <data name="toolStrip1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 4, 0, 4</value>
+    <value>0, 3, 0, 3</value>
   </data>
   <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>930, 41</value>
+    <value>620, 31</value>
   </data>
   <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -202,13 +202,16 @@
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>9, 20</value>
+    <value>6, 13</value>
   </data>
   <data name="$this.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>930, 41</value>
+    <value>620, 31</value>
   </data>
   <data name="&gt;&gt;toolStripLabel1.Name" xml:space="preserve">
     <value>toolStripLabel1</value>

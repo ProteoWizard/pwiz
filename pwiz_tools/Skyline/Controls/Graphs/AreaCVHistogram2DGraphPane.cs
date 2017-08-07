@@ -95,9 +95,9 @@ namespace pwiz.Skyline.Controls.Graphs
             _document = GraphSummary.DocumentUIContainer.DocumentUI;
 
             _percentage = !Settings.Default.AreaCVShowDecimals;
-            _decimals = _percentage ? 1 : 3;
 
-            var factor = AreaGraphController.GetAreaCVFactorToPercentage();
+            var factor = AreaGraphController.GetAreaCVFactorToDecimal();
+            _decimals = _percentage ? 1 : 3;
 
             _areaCVGraphData = _cache.Get(AreaGraphController.GroupByGroup, AreaGraphController.GroupByAnnotation,
                 AreaGraphController.MinimumDetections, AreaGraphController.NormalizationMethod, AreaGraphController.AreaCVRatioIndex);

@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                 AreaGraphController.AreaCVRatioIndex);
             if (_areaCVGraphData == null)
             {
-                _areaCVGraphData = new AreaCVGraphData(GraphSummary.DocumentUIContainer.DocumentUI, new AreaCVGraphData.AreaCVGraphSettings());
+                _areaCVGraphData = new AreaCVGraphData(GraphSummary.DocumentUIContainer.DocumentUI, settings);
 
                 _cache.Add(_areaCVGraphData);
                 _cache.CacheRemaining(GraphSummary.DocumentUIContainer.DocumentUI);
