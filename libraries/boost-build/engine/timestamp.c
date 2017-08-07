@@ -255,8 +255,8 @@ void time_free_all()
     {
         hashenumerate( bindhash, free_timestamps, 0 );
     }
-    //timestamp_done();
-    //bindhash = hashinit( sizeof( BINDING ), "bindings" );
+    /*timestamp_done();
+    bindhash = hashinit( sizeof( BINDING ), "bindings" );*/
 }
 
 

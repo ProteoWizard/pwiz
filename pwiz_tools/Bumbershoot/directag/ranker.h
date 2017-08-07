@@ -1,3 +1,6 @@
+//
+// $Id$
+//
 // Code for ScanRanker, compute the ranks of the elements of a numeric array or vector
 // Original code is written by Ken Wilder (http://sites.google.com/site/jivsoft/)
 // Used under the terms of the BSD license
