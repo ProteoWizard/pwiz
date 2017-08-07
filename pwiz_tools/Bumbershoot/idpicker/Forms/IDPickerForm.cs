@@ -121,6 +121,16 @@ namespace IDPicker
 
             this.args = args;
 
+            if (Properties.GUI.Settings.Default.UpgradeRequired)
+            {
+                Properties.Settings.Default.Upgrade();
+                Properties.Settings.Default.Save();
+
+                Properties.GUI.Settings.Default.Upgrade();
+                Properties.GUI.Settings.Default.UpgradeRequired = false;
+                Properties.GUI.Settings.Default.Save();
+            }
+
             defaultDataFilter = new DataFilter();
 
             manager = new Manager(dockPanel)
@@ -1943,20 +1953,25 @@ namespace IDPicker
         private void checkForUpdatesToolStripMenuItem_Click (object sender, EventArgs e)
         {
             Cursor = Cursors.WaitCursor;
-            //if (!Program.CheckForUpdates())
-            //    MessageBox.Show("You are running the latest version.", "No Update Available");
-            Process.Start("http://proteowizard.sourceforge.net/downloads.shtml");
+            if (!Program.CheckForUpdates())
+                MessageBox.Show("You are running the latest version.", "No Update Available");
             Cursor = Cursors.Default;
         }
 
         private void aboutToolStripMenuItem_Click (object sender, EventArgs e)
         {
             MessageBox.Show(String.Format("IDPicker {0} {1}\r\n" +
-                                          "Copyright 2012 Vanderbilt University\r\n" +
+                                          "Copyright {2} Matt Chambers\r\n" +
+                                          "Copyright 2008-2016 Vanderbilt University\r\n" +
                                           "Developers: Matt Chambers, Jay Holman, Surendra Dasari, Zeqiang Ma\r\n" +
                                           "Thanks to: David Tabb",
-                                          Util.Version, Environment.Is64BitProcess ? "64-bit" : "32-bit"),
+                                          Util.Version, Environment.Is64BitProcess ? "64-bit" : "32-bit", DateTime.Now.Year),
                             "About IDPicker");
+        }
+
+        private void visitWebsiteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("http://j.mp/idpicker-website");
         }
 
         private void embedSpectraToolStripMenuItem_Click (object sender, EventArgs e)

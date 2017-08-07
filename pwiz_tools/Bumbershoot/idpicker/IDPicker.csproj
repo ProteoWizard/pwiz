@@ -27,6 +27,8 @@
     <BuildPath>$(BaseIntermediateOutputPath)\..</BuildPath>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">.\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <NuGetPackageImportStamp>d9f09611</NuGetPackageImportStamp>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -41,11 +43,10 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>build-nt-x86\msvc-debug\</OutputPath>
+    <OutputPath>..\..\..\build-nt-x86\msvc-debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
@@ -55,7 +56,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>build-nt-x86\msvc-release\</OutputPath>
+    <OutputPath>..\..\..\build-nt-x86\msvc-release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -172,6 +173,10 @@
     <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(BuildPath)\obj\$(Platform)\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpSvn, Version=1.9005.3957.231, Culture=neutral, PublicKeyToken=d729672594885a28, processorArchitecture=$(Platform)">
+      <HintPath>packages\SharpSvn.1.9-$(Platform).1.9005.3957.231\lib\net40\SharpSvn.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
@@ -494,6 +499,10 @@
     <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
+    </ProjectReference>
+    <ProjectReference Include="DefaultAppDomainManager\DefaultAppDomainManager.csproj">
+      <Project>{fb041431-b3bf-4e5e-bbbf-0e436b9aa3a8}</Project>
+      <Name>DefaultAppDomainManager</Name>
     </ProjectReference>
     <ProjectReference Include="Model\Model.csproj">
       <Project>{723405E1-1EE4-4978-9470-0B1F28B1A215}</Project>

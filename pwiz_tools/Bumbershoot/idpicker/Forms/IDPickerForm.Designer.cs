@@ -96,6 +96,7 @@ namespace IDPicker
             this.checkForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.visitWebsiteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.developerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.garbageCollectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -363,7 +364,8 @@ namespace IDPicker
             this.checkForUpdatesAutomaticallyToolStripMenuItem,
             this.checkForUpdatesToolStripMenuItem,
             this.toolStripSeparator3,
-            this.aboutToolStripMenuItem});
+            this.aboutToolStripMenuItem,
+            this.visitWebsiteToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "Help";
@@ -453,6 +455,13 @@ namespace IDPicker
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(248, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            // 
+            // visitWebsiteToolStripMenuItem
+            // 
+            this.visitWebsiteToolStripMenuItem.Name = "visitWebsiteToolStripMenuItem";
+            this.visitWebsiteToolStripMenuItem.Size = new System.Drawing.Size(248, 22);
+            this.visitWebsiteToolStripMenuItem.Text = "Visit Website";
+            this.visitWebsiteToolStripMenuItem.Click += new System.EventHandler(this.visitWebsiteToolStripMenuItem_Click);
             // 
             // developerToolStripMenuItem
             // 
@@ -576,6 +585,7 @@ namespace IDPicker
         private System.Windows.Forms.ToolStripMenuItem geneMetadataToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadGeneMetadataToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem dropGeneMetadataToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem visitWebsiteToolStripMenuItem;
 
     }
 }

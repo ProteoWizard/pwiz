@@ -35,8 +35,11 @@ using System.Threading;
 using System.Net;
 using System.Text.RegularExpressions;
 using IDPicker.Forms;
-//using SharpSvn;
-//using SharpSvn.Security;
+using SharpSvn;
+using SharpSvn.Security;
+using pwiz.Common.Collections;
+using System.Security.Policy;
+
 
 namespace IDPicker
 {
@@ -83,9 +86,9 @@ namespace IDPicker
                     singleInstanceArgs.RemoveAll(o => o == "--headless");
 
                 // initialize webClient asynchronously
-                //initializeWebClient();
+                initializeWebClient();
 
-                //automaticCheckForUpdates();
+                automaticCheckForUpdates();
 
                 //HibernatingRhinos.Profiler.Appender.NHibernate.NHibernateProfiler.Initialize();
 
@@ -196,7 +199,7 @@ namespace IDPicker
         #endregion
 
         #region Update checking and error reporting
-        /*private static CookieAwareWebClient webClient = new CookieAwareWebClient();
+        private static CookieAwareWebClient webClient = new CookieAwareWebClient();
         public static CookieAwareWebClient WebClient { get { return webClient; } }
 
         private const string loginAddress = "http://forge.fenchurch.mc.vanderbilt.edu/account/login.php";
@@ -204,7 +207,7 @@ namespace IDPicker
         
         private static void initializeWebClient ()
         {
-            new Thread(() =>
+            /*new Thread(() =>
             {
                 try
                 {
@@ -234,7 +237,7 @@ namespace IDPicker
                     }
                 }
                 catch {}
-            }).Start();
+            }).Start();*/
         }
 
         private static void automaticCheckForUpdates ()
@@ -267,8 +270,8 @@ namespace IDPicker
             Properties.GUI.Settings.Default.LastCheckForUpdates = DateTime.UtcNow;
             Properties.GUI.Settings.Default.Save();
 
-            string teamcityURL = "http://teamcity.fenchurch.mc.vanderbilt.edu";
-            string buildType = Environment.Is64BitProcess ? "bt123" : "bt31";
+            string teamcityURL = "http://teamcity.labkey.org";
+            string buildType = Environment.Is64BitProcess ? "Bumbershoot_Windows_X86_64" : "ProteoWizard_Bumbershoot_Windows_X86";
             string buildsURL = String.Format("{0}/httpAuth/app/rest/buildTypes/id:{1}/builds?status=SUCCESS&count=1&guest=1", teamcityURL, buildType);
             string latestArtifactURL;
             Version latestVersion;
@@ -284,7 +287,7 @@ namespace IDPicker
                 string buildId = xml.Substring(startIndex, endIndex - startIndex);
 
                 latestArtifactURL = String.Format("{0}/repository/download/{1}/{2}:id", teamcityURL, buildType, buildId);
-                latestVersion = new Version(webClient.DownloadString(latestArtifactURL + "/VERSION?guest=1"));
+                latestVersion = new Version(webClient.DownloadString(latestArtifactURL + "/IDPICKER_VERSION?guest=1"));
             }
 
             Version currentVersion = new Version(Util.Version);
@@ -300,7 +303,7 @@ namespace IDPicker
 
                     try
                     {
-                        client.GetLog(new Uri("http://forge.fenchurch.mc.vanderbilt.edu/svn/idpicker/branches/IDPicker-3/"),
+                        client.GetLog(new Uri("svn://svn.code.sf.net/p/proteowizard/code/trunk/pwiz/pwiz_tools/Bumbershoot/idpicker/"),
                                       new SvnLogArgs(new SvnRevisionRange(currentVersion.Build, latestVersion.Build)),
                                       out logItems);
                     }
@@ -319,13 +322,15 @@ namespace IDPicker
                 {
                     // return if no important revisions have happened
                     filteredLogItems = logItems.Where(o => !filterRevisionLog(o.LogMessage).Trim().IsNullOrEmpty());
-                    if (filteredLogItems.IsNullOrEmpty())
-                        return false;
-
-                    var logEntries = filteredLogItems.Select(o => String.Format("Revision {0}:\r\n{1}",
-                                                                                o.Revision,
-                                                                                filterRevisionLog(o.LogMessage)));
-                    changeLog = String.Join("\r\n\r\n", logEntries.ToArray());
+                    if (!filteredLogItems.IsNullOrEmpty())
+                    {
+                        var logEntries = filteredLogItems.Select(o => String.Format("Revision {0}:\r\n{1}",
+                                                                                    o.Revision,
+                                                                                    filterRevisionLog(o.LogMessage)));
+                        changeLog = String.Join("\r\n\r\n", logEntries.ToArray());
+                    }
+                    else
+                        changeLog = "Technical changes and bug fixes.";
                 }
 
                 MainWindow.Invoke(new MethodInvoker(() =>
@@ -354,7 +359,7 @@ namespace IDPicker
 
         private static void SendErrorReport (string messageBody, string exceptionType, string email, string username)
         {
-            lock (webClient)
+            /*lock (webClient)
             {
                 string html = webClient.DownloadString(errorReportAddress);
                 Match m = Regex.Match(html, "name=\"form_key\" value=\"(?<key>\\S+)\"");
@@ -380,8 +385,8 @@ namespace IDPicker
                                                };
 
                 webClient.UploadValues(errorReportAddress, form);
-            }
-        }*/
+            }*/
+        }
         #endregion
     }
 }
