@@ -79,9 +79,12 @@ void testModelAndManufacturer()
 void testIonisation()
 {
     InstrumentConfiguration instrumentConfiguration;
-    instrumentConfiguration.componentList.push_back(Component(ComponentType_Source, 2));
     CVTranslator cvTranslator;
+    LegacyAdapter_Instrument adapterEmpty(instrumentConfiguration, cvTranslator);
+    unit_assert(adapterEmpty.ionisation() == "Unknown"); // Empty component list is legal
+    instrumentConfiguration.componentList.push_back(Component(ComponentType_Source, 2));
     LegacyAdapter_Instrument adapter(instrumentConfiguration, cvTranslator);
+    unit_assert(adapter.ionisation() == "Unknown"); // Empty component list is legal
 
     adapter.ionisation(" esi\t");
     if (os_) *os_ << "ionisation: " << adapter.ionisation() << endl;
@@ -106,9 +109,12 @@ void testIonisation()
 void testAnalyzer()
 {
     InstrumentConfiguration instrumentConfiguration;
-    instrumentConfiguration.componentList.push_back(Component(ComponentType_Analyzer, 2));
     CVTranslator cvTranslator;
+    LegacyAdapter_Instrument adapterEmpty(instrumentConfiguration, cvTranslator);
+    unit_assert(adapterEmpty.analyzer() == "Unknown"); // Empty component list is legal
+    instrumentConfiguration.componentList.push_back(Component(ComponentType_Analyzer, 2));
     LegacyAdapter_Instrument adapter(instrumentConfiguration, cvTranslator);
+    unit_assert(adapter.analyzer() == "Unknown"); // Empty component list is legal
 
     adapter.analyzer("IT");
     if (os_) *os_ << "analyzer: " << adapter.analyzer() << endl;
@@ -133,9 +139,12 @@ void testAnalyzer()
 void testDetector()
 {
     InstrumentConfiguration instrumentConfiguration;
-    instrumentConfiguration.componentList.push_back(Component(ComponentType_Detector, 3));
     CVTranslator cvTranslator;
+    LegacyAdapter_Instrument adapterEmpty(instrumentConfiguration, cvTranslator);
+    unit_assert(adapterEmpty.analyzer() == "Unknown"); // Empty component list is legal
+    instrumentConfiguration.componentList.push_back(Component(ComponentType_Detector, 3));
     LegacyAdapter_Instrument adapter(instrumentConfiguration, cvTranslator);
+    unit_assert(adapter.analyzer() == "Unknown"); // Empty component list is legal
 
     adapter.detector("emt");
     if (os_) *os_ << "detector: " << adapter.detector() << endl;
