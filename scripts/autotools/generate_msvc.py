@@ -350,7 +350,8 @@ for line in buildlog_lines:
 for boostauxsrc in ac.boostAuxSources:
 	addFile(ac.get_pwizroot()+"\\"+boostauxsrc)
 
-for (inc in ac.explicitIncludes) : # make sure doctest.h etc get shipped
+# make sure doctest.h etc get shipped
+for inc in ac.explicitIncludes: 
 	AddFile(ac.get_pwizroot()+"\\"+inc)
 
 # set project GUIDs

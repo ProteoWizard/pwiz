@@ -278,7 +278,8 @@ if (not dryrun) :
 				addShipDir(shipdir,addTree=True)
 				break
 			
-	for (inc in ac.explicitIncludes) : # make sure doctest.h etc get shipped
+	# make sure doctest.h etc get shipped
+	for inc in ac.explicitIncludes: 
 		addShipDir(ac.get_pwizroot()+"/"+inc)
 			
 	for d in ac.subtleIncludes : # any others not mentioned?
