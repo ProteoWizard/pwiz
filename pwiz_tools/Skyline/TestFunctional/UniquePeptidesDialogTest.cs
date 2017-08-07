@@ -92,6 +92,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 RunUI(() => SkylineWindow.Paste(bogus ? TEXT_FASTA_NONSENSE : TEXT_FASTA_SPROT));
             }
+            WaitForProteinMetadataBackgroundLoaderCompletedUI();
         }
 
         private void scenario(int nodeNum, int expectedMatches, int expectedMoleculeFilteredCount, UniquePeptidesDlg.UniquenessType testType, bool bogus = false)
