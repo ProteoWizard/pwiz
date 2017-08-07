@@ -26,7 +26,8 @@ complicatedTrees = ["boost_aux","Eigen","CSpline"]
 subtleIncludes = ["pwiz_aux","pwiz/utility/findmf"]
 
 # boost aux source files we need to compile, and any other odd bits
-boostAuxSources = ["libraries/boost_aux/libs/nowide/src/iostream.cpp", "libraries/doctest.h"]
+boostAuxSources = ["libraries/boost_aux/libs/nowide/src/iostream.cpp"]
+explicitIncludes = ["libraries/doctest.h"]
 
 
 def contains_none(line,badwords) :
@@ -44,14 +45,14 @@ def contains_any(line,goodwords) :
 
 def isWelcomeSrcDir(str) :
     s = str.replace("/","\\")
-    return contains_any(s,welcomeSrcDirs) or contains_any(s,welcomeIncludes) or contains_any(s,excepted)
+    return contains_any(s,welcomeSrcDirs) or contains_any(s,welcomeIncludes) or contains_any(s,excepted) or contains_any(s, explicitIncludes)
 
 def isWelcomeInclude(str) :
-    return contains_any(str.replace("/","\\"),welcomeIncludes) 
+    return contains_any(str.replace("/","\\"),welcomeIncludes)  or contains_any(str.replace("/","\\"), explicitIncludes)
 
 def isNotForbidden(str) :
     s = str.replace("/","\\")
-    return contains_none(s,forbidden) or contains_any(s,excepted)
+    return contains_none(s,forbidden) or contains_any(s,excepted) or contains_any(s, explicitIncludes)
 
 def isSrcFile(filestr) :
     file = filestr.replace("/","\\")
@@ -63,7 +64,7 @@ def isSrcFile(filestr) :
                 return True
         if ("\\common\\" in file) :
             return True
-        if contains_any(file,welcomeSrcDirs) or contains_any(file,excepted) :
+        if contains_any(file,welcomeSrcDirs) or contains_any(file,excepted) or contains_any(file, explicitIncludes):
             return True
     return False
 

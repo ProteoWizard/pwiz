@@ -278,6 +278,9 @@ if (not dryrun) :
 				addShipDir(shipdir,addTree=True)
 				break
 			
+	for (inc in ac.explicitIncludes) : # make sure doctest.h etc get shipped
+		addShipDir(ac.get_pwizroot()+"/"+inc)
+			
 	for d in ac.subtleIncludes : # any others not mentioned?
 		addShipDir(ac.get_pwizroot()+"/"+d,addTree=True)
 
