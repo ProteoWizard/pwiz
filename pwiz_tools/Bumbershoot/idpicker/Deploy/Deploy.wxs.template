@@ -107,6 +107,7 @@
 <Component Feature="MainFeature"><File Id="_IDPicker.DataModel.dll" Name="IDPicker.DataModel.dll" Source="msvc-release\IDPicker.DataModel.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_IDPicker.Util.dll" Name="IDPicker.Util.dll" Source="msvc-release\IDPicker.Util.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_IDPicker.Util.dll.config" Name="IDPicker.Util.dll.config" Source="msvc-release\IDPicker.Util.dll.config" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_DefaultAppDomainManager.dll" Name="DefaultAppDomainManager.dll" Source="msvc-release\DefaultAppDomainManager.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Iesi.Collections.dll" Name="Iesi.Collections.dll" Source="msvc-release\Iesi.Collections.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_InteropQonverter.dll" Name="InteropQonverter.dll" Source="msvc-release\InteropQonverter.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_idpQonvert.exe" Name="idpQonvert.exe" Source="msvc-release\idpQonvert.exe" KeyPath="yes"/></Component>
@@ -123,18 +124,12 @@
 <Component Feature="MainFeature"><File Id="_System.Data.SQLite.dll" Name="System.Data.SQLite.dll" Source="msvc-release\System.Data.SQLite.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_IdpSqlExtensions.dll" Name="IdpSqlExtensions.dll" Source="msvc-release\IdpSqlExtensions.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_gene2protein.db3" Name="gene2protein.db3" Source="msvc-release\gene2protein.db3" KeyPath="yes"/></Component>
-<!--
 <Component Feature="MainFeature"><File Id="_SharpSvn.dll" Name="SharpSvn.dll" Source="msvc-release\SharpSvn.dll" KeyPath="yes"/></Component>
 <?if $(var.AddressModel)=32 ?>
     <Component Feature="MainFeature"><File Id="_SharpPlink_Win32.svnExe" Name="SharpPlink-Win32.svnExe" Source="msvc-release\SharpPlink-Win32.svnExe" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_SharpSvn_DB44_20_Win32.dll" Name="SharpSvn-DB44-20-Win32.dll" Source="msvc-release\SharpSvn-DB44-20-Win32.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_SharpSvn_SASL21_23_Win32.dll" Name="SharpSvn-SASL21-23-Win32.dll" Source="msvc-release\SharpSvn-SASL21-23-Win32.dll" KeyPath="yes"/></Component>
 <?else?>
     <Component Feature="MainFeature"><File Id="_SharpPlink_x64.svnExe" Name="SharpPlink-x64.svnExe" Source="msvc-release\SharpPlink-x64.svnExe" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_SharpSvn_DB44_20_x64.dll" Name="SharpSvn-DB44-20-x64.dll" Source="msvc-release\SharpSvn-DB44-20-x64.dll" KeyPath="yes"/></Component>
-    <Component Feature="MainFeature"><File Id="_SharpSvn_SASL21_23_x64.dll" Name="SharpSvn-SASL21-23-x64.dll" Source="msvc-release\SharpSvn-SASL21-23-x64.dll" KeyPath="yes"/></Component>
 <?endif?>
--->
 
 <!-- Components shared by IDPicker and ProteoWizard -->
 <Component Feature="MainFeature"><File Id="_CustomDataSourceDialog.dll" Name="CustomDataSourceDialog.dll" Source="msvc-release\CustomDataSourceDialog.dll" KeyPath="yes"/></Component>
