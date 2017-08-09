@@ -3027,7 +3027,7 @@ namespace pwiz.Skyline
 
                 bool canApply, canRemove;
                 var isotopeLabelType = _graphRetentionTime != null && _graphRetentionTime.GraphPaneFromPoint(mousePt) != null
-                    ? _graphPeakArea.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType
+                    ? _graphRetentionTime.GraphPaneFromPoint(mousePt).PaneKey.IsotopeLabelType
                     : null;
                 CanApplyOrRemovePeak(removePeakGraphMenuItem.DropDownItems, isotopeLabelType, out canApply, out canRemove);
                 if (canApply || canRemove)
