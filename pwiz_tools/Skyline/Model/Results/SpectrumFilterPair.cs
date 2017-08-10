@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Model.Results
             double? minDriftTimeMsec, double? maxDriftTimeMsec, DriftTimeInfo driftTimeInfo, bool highAccQ1, bool highAccQ3)
         {
             Id = id;
-            ModifiedSequence = precursorTextId.TextId;
+            ModifiedSequence = precursorTextId.Target;
             PeptideColor = peptideColor;
             Q1 = precursorTextId.PrecursorMz;
             Extractor = precursorTextId.Extractor;
@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Model.Results
         public SpectrumFilterPair(ChromatogramRequestDocumentChromatogramGroup requestGroup)
         {
             Q1 = new SignedMz(requestGroup.PrecursorMz);
-            ModifiedSequence = requestGroup.ModifiedSequence;
+            ModifiedSequence = new Target(requestGroup.ModifiedSequence);
             switch (requestGroup.Extractor)
             {
                 case RemoteApi.GeneratedCode.ChromExtractor.BasePeak:
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromExtractor Extractor { get; private set; }
         public bool HighAccQ1 { get; private set; }
         public bool HighAccQ3 { get; private set; }
-        public string ModifiedSequence { get; private set; }
+        public Target ModifiedSequence { get; private set; }
         public Color PeptideColor { get; private set; }
         public SignedMz Q1 { get; private set; }
         public double? MinTime { get; private set; }
@@ -413,7 +413,7 @@ namespace pwiz.Skyline.Model.Results
         {
             ChromatogramRequestDocumentChromatogramGroup docFilterPair = new ChromatogramRequestDocumentChromatogramGroup
             {
-                ModifiedSequence = ModifiedSequence,
+                ModifiedSequence = ModifiedSequence.ToString(),
                 PrecursorMz = Q1.RawValue,  // A negative ion mode precursor will be serialized as a negative mz value
                 MassErrors = calculateMassErrors,
             };

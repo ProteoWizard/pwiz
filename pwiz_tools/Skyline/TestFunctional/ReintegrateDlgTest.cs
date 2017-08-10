@@ -19,6 +19,7 @@
 
 using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -132,7 +133,8 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(reintegrateDlgManual, reintegrateDlgManual.OkDialog);
             // No annotations
             Assert.IsFalse(SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Any());
-            CheckRoundTrip(); // Verify that this all serializes properly
+            var pass = 0;
+            CheckRoundTrip(pass++); // Verify that this all serializes properly
 
             // Peak Boundaries stay where they are when manual override is off
             double? startTime, endTime;
@@ -149,7 +151,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(reintegrateDlgOverride, reintegrateDlgOverride.OkDialog);
             // No annotations
             Assert.IsFalse(SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Any());
-            CheckRoundTrip(); // Verify that this all serializes properly
+            CheckRoundTrip(pass++); // Verify that this all serializes properly
             
             // Peak Boundaries move back when manual override is turned on
             CheckTimes(groupPath, 0, 0, out startTime, out endTime);
@@ -177,7 +179,7 @@ namespace pwiz.SkylineTestFunctional
             });
             // No annotations
             Assert.IsFalse(SkylineWindow.Document.Settings.DataSettings.AnnotationDefs.Any());
-            CheckRoundTrip(); // Verify that this all serializes properly
+            CheckRoundTrip(pass++); // Verify that this all serializes properly
             var reintegrateDlgCutoff = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
             RunUI(() =>
             {
@@ -192,7 +194,7 @@ namespace pwiz.SkylineTestFunctional
                 ReportToCsv(reportSpec, SkylineWindow.DocumentUI, docNewActual, CultureInfo.CurrentCulture);
                 AssertEx.FileEquals(docNewActual, docNewExpectedAll);
             });
-            CheckRoundTrip(); // Verify that this all serializes properly
+            CheckRoundTrip(pass++); // Verify that this all serializes properly
 
             // This time annotations are added
             var reintegrateDlgAnnotations = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
@@ -201,7 +203,8 @@ namespace pwiz.SkylineTestFunctional
                 reintegrateDlgAnnotations.ReintegrateAll = true;
             });
             OkDialog(reintegrateDlgAnnotations, reintegrateDlgAnnotations.OkDialog);
-            CheckRoundTrip(); // Verify that this all serializes properly
+            CheckRoundTrip(pass++); // Verify that this all serializes properly
+            WaitForDocumentLoaded();
             // Check annotations are added
             foreach (var nodeGroup in SkylineWindow.Document.MoleculeTransitionGroups)
             {
@@ -217,19 +220,22 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsNotNull(chromInfo.QValue);
                         Assert.IsNotNull(chromInfo.ZScore);
                     }
-
                 }
             }
         }
 
-        private void CheckRoundTrip()
+        private void CheckRoundTrip(int pass)
         {
-            // Verify that document roundtrips properly as small molecule
-            var refine = new RefinementSettings();
-            var doc = refine.ConvertToSmallMolecules(SkylineWindow.Document, ignoreDecoys: true); 
-            AssertEx.RoundTrip(doc);
             // Verify that document roundtrips properly
             AssertEx.RoundTrip(SkylineWindow.Document);
+
+            // Verify that document roundtrips properly as small molecule
+            var refine = new RefinementSettings();
+            string pathForSmallMoleculeLibs = 
+                Path.Combine(TestFilesDirs[0].FullPath,
+                string.Format("AsSmallMolecules{0}", pass));
+            var doc = refine.ConvertToSmallMolecules(SkylineWindow.Document, pathForSmallMoleculeLibs, ignoreDecoys: true);
+            AssertEx.RoundTrip(doc);
         }
 
         private static void CheckTimes(IdentityPath groupPath, int file, int replicate, out double? startTime, out double? endTime)

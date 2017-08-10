@@ -161,13 +161,13 @@ namespace pwiz.Skyline.Model.Irt
                                                                    RetentionTimeRegression rtRegression)
         {
             var document = container.Document;
-            var dictSeqToPeptide = new Dictionary<string, PeptideDocNode>();
+            var dictSeqToPeptide = new Dictionary<Target, PeptideDocNode>();
             foreach (var nodePep in document.Peptides)
             {
                 if (nodePep.IsDecoy)
                     continue;
 
-                string seqMod = document.Settings.GetSourceTextId(nodePep);
+                var seqMod = document.Settings.GetSourceTarget(nodePep);
                 if (!dictSeqToPeptide.ContainsKey(seqMod))
                     dictSeqToPeptide.Add(seqMod, nodePep);
             }
@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Model.Irt
             try
             {
                 var regressionPeps = rtRegression.Calculator.ChooseRegressionPeptides(dictSeqToPeptide.Keys, out minCount);
-                var setRegression = new HashSet<string>(regressionPeps);
+                var setRegression = new HashSet<Target>(regressionPeps);
                 dictSeqToPeptide = dictSeqToPeptide.Where(p => setRegression.Contains(p.Key))
                                                    .ToDictionary(p => p.Key, p => p.Value);
             }

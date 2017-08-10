@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model.Results
 
         // Accessed only on the write thread
         private readonly RetentionTimePredictor _retentionTimePredictor;
-        private readonly Dictionary<string, int> _dictSequenceToByteIndex = new Dictionary<string, int>();
+        private readonly Dictionary<Target, int> _dictSequenceToByteIndex = new Dictionary<Target, int>();
 
         private readonly int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
@@ -689,9 +689,8 @@ namespace pwiz.Skyline.Model.Results
                 peptideChromDataSets.RetentionTimes = new[] { nodePep.ExplicitRetentionTime.RetentionTime }; // Feed this information to the peak picker
                 return;
             }
-            if (!nodePep.IsProteomic)  // No retention time prediction for small molecules
-                return;
-            string lookupSequence = nodePep.SourceUnmodifiedTextId;
+            // N.B. No retention time prediction for small molecules (yet?), but may be able to pull from libraries
+            var lookupSequence = nodePep.SourceUnmodifiedTarget;
             var lookupMods = nodePep.SourceExplicitMods;
             double[] retentionTimes = _document.Settings.GetRetentionTimes(MSDataFilePath, lookupSequence, lookupMods);
             bool isAlignedTimes = (retentionTimes.Length == 0);
@@ -780,7 +779,7 @@ namespace pwiz.Skyline.Model.Results
             private readonly RetentionScoreCalculatorSpec _calculator;
             private readonly double _timeWindow;
             private RegressionLineElement _conversion;
-            private readonly Dictionary<string, double> _dictSeqToTime;
+            private readonly Dictionary<Target, double> _dictSeqToTime;
 
             public RetentionTimePredictor(RetentionTimeRegression rtSettings)
             {
@@ -791,7 +790,7 @@ namespace pwiz.Skyline.Model.Results
                     if (!rtSettings.IsAutoCalculated)
                         _conversion = rtSettings.Conversion as RegressionLineElement;
                     else
-                        _dictSeqToTime = new Dictionary<string, double>();
+                        _dictSeqToTime = new Dictionary<Target, double>();
                 }
             }
 
@@ -817,7 +816,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     lock (_dictSeqToTime)
                     {
-                        _dictSeqToTime.Add(nodePep.ModifiedSequence, time);
+                        _dictSeqToTime.Add(nodePep.ModifiedTarget, time);
                     }
                 }
             }
@@ -830,7 +829,7 @@ namespace pwiz.Skyline.Model.Results
                 if (_calculator == null || _conversion == null)
                     return null;
 
-                double? score = _calculator.ScoreSequence(nodePep.SourceTextId);
+                double? score = _calculator.ScoreSequence(nodePep.SourceModifiedTarget);
                 if (!score.HasValue)
                     return null;
                 return _conversion.GetY(score.Value);
@@ -846,7 +845,7 @@ namespace pwiz.Skyline.Model.Results
                     var listTimes = new List<double>();
                     var listIrts = new List<double>();
                     int minCount;
-                    foreach (string sequence in _calculator.ChooseRegressionPeptides(_dictSeqToTime.Keys, out minCount))
+                    foreach (var sequence in _calculator.ChooseRegressionPeptides(_dictSeqToTime.Keys, out minCount))
                     {
                         listTimes.Add(_dictSeqToTime[sequence]);
                         listIrts.Add(_calculator.ScoreSequence(sequence).Value);
@@ -874,12 +873,12 @@ namespace pwiz.Skyline.Model.Results
 
             // Enumerate all possible matching precursor values, collecting the ones
             // with potentially matching product ions
-            string modSeq = chromDataSet.ModifiedSequence;
+            var modSeq = chromDataSet.ModifiedSequence;
             var listMatchingGroups = new List<Tuple<PeptidePrecursorMz, ChromDataSet, IList<ChromData>>>();
             for (; i < listMzPrecursors.Count && listMzPrecursors[i].PrecursorMz <= maxMzMatch && listMzPrecursors[i].PrecursorMz.IsNegative == maxMzMatch.IsNegative; i++)
             {
                 var peptidePrecursorMz = listMzPrecursors[i];
-                if (modSeq != null && !string.Equals(modSeq, peptidePrecursorMz.NodePeptide.RawTextId)) // ModifiedSequence for peptides, other id for customIons
+                if (modSeq != null && !string.Equals(modSeq, peptidePrecursorMz.NodePeptide.ModifiedTarget)) // ModifiedSequence for peptides, other id for customIons
                     continue;
 
                 var nodeGroup = peptidePrecursorMz.NodeGroup;

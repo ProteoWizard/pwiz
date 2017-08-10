@@ -312,7 +312,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return base.Equals(other) &&
+            bool result = base.Equals(other) &&
                    other.PeakCountRatio == PeakCountRatio &&
                    other.RetentionTime.Equals(RetentionTime) &&
                    other.StartRetentionTime.Equals(StartRetentionTime) &&
@@ -337,6 +337,7 @@ namespace pwiz.Skyline.Model.Results
                    other.OptimizationStep.Equals(OptimizationStep) &&
                    other.Annotations.Equals(Annotations) &&
                    other.UserSet.Equals(UserSet);
+            return result;
         }
 
         public override bool Equals(object obj)

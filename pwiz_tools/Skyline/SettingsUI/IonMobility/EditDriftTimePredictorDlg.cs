@@ -111,25 +111,25 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             // List any measured drift times
             gridMeasuredDriftTimes.Rows.Clear();
-            if (predictor.MeasuredDriftTimePeptides != null)
+            if (predictor.MeasuredDriftTimeIons != null)
             {
                 bool hasHighEnergyOffsets =
-                    predictor.MeasuredDriftTimePeptides.Any(p => p.Value.HighEnergyDriftTimeOffsetMsec != 0);
+                    predictor.MeasuredDriftTimeIons.Any(p => p.Value.HighEnergyDriftTimeOffsetMsec != 0);
                 cbOffsetHighEnergySpectra.Checked = hasHighEnergyOffsets;
-                foreach (var p in predictor.MeasuredDriftTimePeptides)
+                foreach (var p in predictor.MeasuredDriftTimeIons)
                 {
                     var ccs = p.Value.CollisionalCrossSectionSqA.HasValue
                         ? string.Format("{0:F04}",p.Value.CollisionalCrossSectionSqA.Value) // Not L10N
                         : string.Empty;
                     if (hasHighEnergyOffsets)
-                        gridMeasuredDriftTimes.Rows.Add(p.Key.Sequence,
+                        gridMeasuredDriftTimes.Rows.Add(p.Key.Target,
                             p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
                             (p.Value.DriftTimeMsec ?? 0).ToString(LocalizationHelper.CurrentCulture),
                             ccs,
                             p.Value.HighEnergyDriftTimeOffsetMsec.ToString(LocalizationHelper.CurrentCulture)
                             );
                     else
-                        gridMeasuredDriftTimes.Rows.Add(p.Key.Sequence,
+                        gridMeasuredDriftTimes.Rows.Add(p.Key.Target,
                             p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
                             (p.Value.DriftTimeMsec ?? 0).ToString(LocalizationHelper.CurrentCulture),
                             ccs
@@ -491,7 +491,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 if (!ValidateSequence(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_SEQUENCE], out seq))
                     return null;
 
-                int charge;
+                Adduct charge;
                 if (!ValidateCharge(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_CHARGE], out charge))
                     return null;
 
@@ -509,7 +509,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
                 try
                 {
-                    dict.Add(new LibKey(seq,charge), new DriftTimeInfo(driftTime, ccs, highEnergyDriftTimeOffset));
+                    dict.Add(new LibKey(seq, charge.AdductCharge), new DriftTimeInfo(driftTime, ccs, highEnergyDriftTimeOffset));
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch
@@ -520,9 +520,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             return dict;
         }
 
-        private bool ValidateCharge(CancelEventArgs e, DataGridViewCell cell, out int charge)
+        private bool ValidateCharge(CancelEventArgs e, DataGridViewCell cell, out Adduct charge)
         {
-            if (!ValidateCell(e, cell, Convert.ToInt32, out charge, true))
+            if (!ValidateCell(e, cell, Adduct.FromStringAssumeProtonated, out charge, true))
                 return false;
 
             var errmsg = ValidateCharge(charge);
@@ -535,10 +535,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             return true;
         }
 
-        public static string ValidateCharge(int charge)
+        public static string ValidateCharge(Adduct adduct)
         {
-            if (charge == 0 || Math.Abs(charge) > TransitionGroup.MAX_PRECURSOR_CHARGE)
-                return String.Format(Resources.EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__, charge, TransitionGroup.MAX_PRECURSOR_CHARGE);
+            if (adduct.AdductCharge == 0 || Math.Abs(adduct.AdductCharge) > TransitionGroup.MAX_PRECURSOR_CHARGE)
+                return String.Format(Resources.EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__, adduct, TransitionGroup.MAX_PRECURSOR_CHARGE);
             return null;
         }
 
@@ -626,7 +626,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public static string ValidateMeasuredDriftTimeCellValues(string[] values)
         {
-            int tempInt;
+            Adduct tempAdduct;
             double tempDouble;
 
             if (values.Count() < 3)
@@ -650,7 +650,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
 
             // Parse charge
-            if ((!int.TryParse(values[EditDriftTimePredictorDlg.COLUMN_CHARGE].Trim(), out tempInt)) || ValidateCharge(tempInt) != null)
+            if ((!Adduct.TryParse(values[EditDriftTimePredictorDlg.COLUMN_CHARGE].Trim(), out tempAdduct)) || ValidateCharge(tempAdduct) != null)
                 return string.Format(Resources.EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__,
                     values[EditDriftTimePredictorDlg.COLUMN_CHARGE].Trim(), TransitionGroup.MAX_PRECURSOR_CHARGE);
 

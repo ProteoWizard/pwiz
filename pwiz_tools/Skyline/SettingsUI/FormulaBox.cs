@@ -18,8 +18,10 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Controls;
@@ -31,23 +33,44 @@ namespace pwiz.Skyline.SettingsUI
 {
     public partial class FormulaBox : UserControl
     {
-        private int? _charge;        // If non-null, mono and average values are displayed as m/z instead of mass
+        public enum EditMode
+        {
+            formula_only,
+            adduct_only,
+            formula_and_adduct
+        };
+        private Adduct _adduct;       // If non-empty, mono and average values are displayed as m/z instead of mass
+        private readonly EditMode _editMode;
+        private string _neutralFormula;
+        private Dictionary<string, string> _isotopeLabelsForMassCalc;
+        private TypedMass _neutralMonoMass;
+        private TypedMass _neutralAverageMass;
         private double? _averageMass; // Our internal value for mass, regardless of whether displaying mass or mz
         private double? _monoMass;    // Our internal value for mass, regardless of whether displaying mass or mz
 
         /// <summary>
         /// Reusable control for dealing with chemical formulas and their masses
         /// </summary>
+        /// <param name="isProteomic">if true, don't offer Cl and Br in elements popup</param>
         /// <param name="labelFormulaText">Label text for the formula textedit control</param>
         /// <param name="labelAverageText">Label text for the average mass or m/z textedit control</param>
         /// <param name="labelMonoText">Label text for the monoisotopic mass or m/z textedit control</param>
-        /// <param name="charge">If non-null, treat the average and monoisotopic textedits as describing m/z instead of mass</param>
-        public FormulaBox(string labelFormulaText, string labelAverageText, string labelMonoText, int? charge = null)
+        /// <param name="adduct">If non-null, treat the average and monoisotopic textedits as describing m/z instead of mass</param>
+        /// <param name="mode">controls, editing of the formula and/or adduct edit</param>
+        public FormulaBox(bool isProteomic, string labelFormulaText, string labelAverageText, string labelMonoText, Adduct adduct, EditMode mode = EditMode.formula_only)
         {
             InitializeComponent();
-            _charge = charge;
+            if (isProteomic)
+            {
+                clToolStripMenuItem.Visible =
+                    cl37ToolStripMenuItem.Visible =
+                        brToolStripMenuItem.Visible =
+                            br81ToolStripMenuItem.Visible = false;
+            }
+            _adduct = adduct;
+            _editMode = mode;
 
-            toolTip1.SetToolTip(textFormula, FormulaHelpText);  // Explain how formulas work, and ion formula adducts if charge.HasValue
+            toolTip1.SetToolTip(textFormula, _editMode==EditMode.adduct_only ? AdductHelpText : FormulaHelpText);  // Explain how formulas work, and ion formula adducts if charge.HasValue
 
             labelFormula.Text = labelFormulaText;
             labelAverage.Text = labelAverageText;
@@ -58,45 +81,154 @@ namespace pwiz.Skyline.SettingsUI
             btnFormula.Image = bm;
         }
 
+        public FormulaBox(string labelFormulaText, string labelAverageText, string labelMonoText) :
+            this(true, labelFormulaText, labelAverageText, labelMonoText, Adduct.EMPTY)
+        {
+        }
+
         public event EventHandler ChargeChange;
+
+        public string DisplayFormula
+        {
+            get
+            {
+                switch (_editMode)
+                {
+                    case EditMode.adduct_only:
+                        return _adduct.IsEmpty ? string.Empty : _adduct.AdductFormula;
+                    case EditMode.formula_and_adduct:
+                        return Formula;
+                    case EditMode.formula_only:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+                return NeutralFormula;
+            }
+        }
 
         public string Formula
         {
-            get { return textFormula.Text; }
+            get { return (NeutralFormula ?? string.Empty) + (_adduct.AdductFormula ?? string.Empty); }
             set
             {
-                textFormula.Text = value;
+                if (string.IsNullOrEmpty(value) && string.IsNullOrEmpty(NeutralFormula))
+                {
+                    return; // Do nothing - just initializing
+                }
+                Molecule ion;
+                Adduct newAdduct;
+                string newNeutralFormula;
+                string newTextFormulaText = null;
+                var editAdductOnly = _editMode == EditMode.adduct_only;
+                if (Adduct.TryParse(value, out newAdduct))
+                {
+                    // Text describes adduct only
+                    if (!editAdductOnly)
+                    {
+                        NeutralFormula = string.Empty;
+                    }
+                    Adduct = newAdduct;
+                    newTextFormulaText = value;
+                }
+                else if (IonInfo.IsFormulaWithAdduct(value, out ion, out newAdduct, out newNeutralFormula))
+                {
+                    // If we're allowing edit of adduct only, set aside the formula portion
+                    var displayText = editAdductOnly ? newAdduct.AdductFormula : value;
+                    if (!editAdductOnly)
+                    {
+                        NeutralFormula = newNeutralFormula;
+                    }
+                    Adduct = newAdduct;
+                    if (!Equals(displayText, textFormula.Text))
+                    {
+                        newTextFormulaText = displayText;
+                    }
+                }
+                else if (!editAdductOnly)
+                {
+                    NeutralFormula = value;
+                    Adduct = Adduct.EMPTY;
+                    newTextFormulaText = value;
+                }
+                if (newTextFormulaText != null && textFormula.Text != newTextFormulaText)
+                {
+                    textFormula.Text = newTextFormulaText;
+                }
+                else
+                {
+                    // No text change, but make sure all displays are consistent
+                    UpdateAverageAndMonoTextsForFormula();
+                }
+            }
+        }
+
+        // Isotopes for mass calc - any isotopic description in adduct overrides
+        public Dictionary<string, string> IsotopeLabelsForMassCalc
+        {
+            get { return _isotopeLabelsForMassCalc; }
+            set
+            {
+                _isotopeLabelsForMassCalc = value;
                 UpdateAverageAndMonoTextsForFormula();
             }
         }
 
-        public int? Charge
+        public string NeutralFormula
         {
-            get
-            {
-                return _charge;
-            }
+            get { return _neutralFormula; }
             set
             {
-                var previous = _charge;
-                _charge = value;
-                if (_charge.HasValue)
+                _neutralFormula = value;
+                if (string.IsNullOrEmpty(value)) // If formula gets emptied out, leave masses alone
                 {
-                    if (string.IsNullOrEmpty(textFormula.Text))
+                    MassEnabled = _editMode != EditMode.adduct_only; // Allow editing of masses if formula was editable, but there's no formula to edit
+                }
+                else
+                {
+                    MassEnabled = false; // No direct editing of masses when there's a formula
+                    // Update masses for this new formula value
+                    try
+                    {
+                        _neutralMonoMass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(value);
+                        _neutralAverageMass = BioMassCalc.AVERAGE.CalculateMassFromFormula(value);
+                    }
+                    catch
+                    {
+                        // Ignored - syntax error highlighting happens elsewhere
+                    }
+                }
+            }
+        }
+
+        public Adduct Adduct
+        {
+            get { return _adduct; }
+            set
+            {
+                var previous = _adduct;
+                _adduct = value;
+                if (!_adduct.IsEmpty)
+                {
+                    if (string.IsNullOrEmpty(NeutralFormula))
                     {
                         // If we have no formula, then mass is defined by charge and declared mz
-                        _monoMass = GetMassFromText(textMono.Text);
-                        _averageMass = GetMassFromText(textAverage.Text);
+                        _monoMass = GetMassFromText(textMono.Text, MassType.Monoisotopic);
+                        _averageMass = GetMassFromText(textAverage.Text, MassType.Average);
                     }
                     else
                     {
-                        // If we have a formula, display m/z values are defined by formula and charge
+                        // If we have a formula, display m/z values are defined by formula and charge, and any isotopic labels we are given
                         UpdateMonoTextForMass();
                         UpdateAverageTextForMass();
                     }
-                    if (previous != _charge && ChargeChange != null)
+                    if (!Equals(previous, _adduct) && ChargeChange != null)
                     {
                         ChargeChange(this, EventArgs.Empty);
+                    }
+                    if (!Equals(textFormula.Text, DisplayFormula))
+                    {
+                        textFormula.Text = DisplayFormula;
                     }
                 }
             }
@@ -104,14 +236,11 @@ namespace pwiz.Skyline.SettingsUI
 
         public double? MonoMass
         {
-            get
-            {
-                return _monoMass;
-            }
+            get { return _monoMass; }
             set
             {
-                if (textMono.Enabled && !String.IsNullOrEmpty(Formula)) // Avoid side effects of repeated setting
-                    Formula = string.Empty;  // Direct edit of mass means formula is obsolete
+                if (textMono.Enabled && !Equals(value ?? 0, _neutralMonoMass.Value)) // Avoid side effects of repeated setting
+                    NeutralFormula = null; // Direct edit of mass means formula is obsolete
                 _monoMass = value;
                 UpdateMonoTextForMass();
             }
@@ -119,19 +248,16 @@ namespace pwiz.Skyline.SettingsUI
 
         public string MonoText
         {
-            get { return textMono.Text;  }
+            get { return textMono.Text; }
         }
 
         public double? AverageMass
         {
-            get
-            {
-                return _averageMass;
-            }
+            get { return _averageMass; }
             set
             {
-                if (textAverage.Enabled && !String.IsNullOrEmpty(Formula)) // Avoid side effects of repeated setting
-                    Formula = string.Empty;   // Direct edit of mass means formula is obsolete
+                if (textAverage.Enabled && !Equals(value ?? 0, _neutralAverageMass.Value)) // Avoid side effects of repeated setting
+                    NeutralFormula = null; // Direct edit of mass means formula is obsolete
                 _averageMass = value;
                 UpdateAverageTextForMass();
             }
@@ -189,12 +315,14 @@ namespace pwiz.Skyline.SettingsUI
 
         public void ShowTextBoxErrorAverageMass(MessageBoxHelper helper, string message)
         {
-            helper.ShowTextBoxError(textAverage,message);
+            helper.ShowTextBoxError(textAverage, message);
         }
+
         public void ShowTextBoxErrorMonoMass(MessageBoxHelper helper, string message)
         {
             helper.ShowTextBoxError(textMono, message);
         }
+
         public void ShowTextBoxErrorFormula(MessageBoxHelper helper, string message)
         {
             helper.ShowTextBoxError(textFormula, message);
@@ -203,7 +331,7 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Get a mass value from the text string, treating the string as m/z info if we have a charge state
         /// </summary>
-        private double? GetMassFromText(string text)
+        private double? GetMassFromText(string text, MassType massType)
         {
             try
             {
@@ -214,14 +342,13 @@ namespace pwiz.Skyline.SettingsUI
                 else
                 {
                     double parsed = double.Parse(text);
-                    if (Charge.HasValue)
+                    if (!Adduct.IsEmpty)
                     {
                         // Convert from m/z to mass
-                        return BioMassCalc.CalculateIonMassFromMz(parsed, Charge.Value);
+                        return Adduct.MassFromMz(parsed, massType);
                     }
                     return parsed;
                 }
-
             }
             catch (Exception)
             {
@@ -229,31 +356,32 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private string GetTextFromMass(double? mass)
+        private string GetTextFromMass(double? mass, MassType massType)
         {
             if (!mass.HasValue)
                 return string.Empty;
-            double result = mass.Value;
-            if (Charge.HasValue)
+            var result = mass.Value;
+            if (!Adduct.IsEmpty)
             {
                 // We want to show this as an m/z value, rounded to a reasonable length
-                result = SequenceMassCalc.PersistentMZ(BioMassCalc.CalculateIonMz(result, Charge.Value));
+                result = Math.Abs(SequenceMassCalc.PersistentMZ(Adduct.MzFromNeutralMass(result, massType)));
             }
             return result.ToString(CultureInfo.CurrentCulture);
         }
 
         private void btnFormula_Click(object sender, EventArgs e)
         {
-            contextFormula.Show(this, btnFormula.Right + 1,
-                btnFormula.Top);
+            contextFormula.Show(this, btnFormula.Right + 1, btnFormula.Top);
         }
 
         private void AddFormulaSymbol(string symbol)
         {
-            textFormula.Text += symbol;
+            // Insert at cursor
+            var insertAt = textFormula.SelectionStart;
+            textFormula.Text = textFormula.Text.Substring(0, insertAt) + symbol + textFormula.Text.Substring(insertAt);
             textFormula.Focus();
             textFormula.SelectionLength = 0;
-            textFormula.SelectionStart = textFormula.Text.Length;
+            textFormula.SelectionStart = insertAt + symbol.Length;
         }
 
         private void hToolStripMenuItem_Click(object sender, EventArgs e)
@@ -286,9 +414,19 @@ namespace pwiz.Skyline.SettingsUI
             AddFormulaSymbol(BioMassCalc.N15);
         }
 
+        private void clToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AddFormulaSymbol(BioMassCalc.Cl);
+        }
+
         private void cl37ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AddFormulaSymbol(BioMassCalc.Cl37);
+        }
+
+        private void brToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AddFormulaSymbol(BioMassCalc.Br);
         }
 
         private void br81ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -299,7 +437,7 @@ namespace pwiz.Skyline.SettingsUI
         private void helpToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var helpText = FormulaHelpText;
-            MessageBox.Show(this,helpText,Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help);
+            MessageBox.Show(this, helpText, Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help);
         }
 
         private string FormulaHelpText
@@ -307,12 +445,17 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 var helpText = Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__;
-                if (_charge.HasValue)
+                if (_editMode != EditMode.formula_only)
                 {
-                    helpText += "\r\n\r\n" + IonInfo.AdductTips; // Charge implies ion formula, so help with adduct descriptions as well // Not L10N
+                    helpText += "\r\n\r\n" + Adduct.Tips; // Charge implies ion formula, so help with adduct descriptions as well // Not L10N
                 }
                 return helpText;
             }
+        }
+
+        private string AdductHelpText
+        {
+            get { return Adduct.Tips; }
         }
 
         private void oToolStripMenuItem_Click(object sender, EventArgs e)
@@ -343,11 +486,11 @@ namespace pwiz.Skyline.SettingsUI
         private void textMono_TextChanged(object sender, EventArgs e)
         {
             // Did text change because user edited, or because we set it on mass change?
-            var text = GetTextFromMass(MonoMass);
-            if (string.IsNullOrEmpty(Formula) && // Can't be a user edit if formula box is populated
+            var text = GetTextFromMass(MonoMass, MassType.Monoisotopic);
+            if (string.IsNullOrEmpty(NeutralFormula) && // Can't be a user edit if formula box is populated
                 !Equals(text, textMono.Text))
             {
-                var value = GetMassFromText(textMono.Text);
+                var value = GetMassFromText(textMono.Text, MassType.Monoisotopic);
                 if (!value.Equals(MonoMass)) // This check lets the user type the "." on the way to "123.4"
                     MonoMass = value;
             }
@@ -356,11 +499,11 @@ namespace pwiz.Skyline.SettingsUI
         private void textAverage_TextChanged(object sender, EventArgs e)
         {
             // Did text change because user edited, or because we set it on mass change?
-            var text = GetTextFromMass(AverageMass);
-            if (string.IsNullOrEmpty(Formula) &&  // Can't be a user edit if formula box is populated
+            var text = GetTextFromMass(AverageMass, MassType.Average);
+            if (string.IsNullOrEmpty(NeutralFormula) && // Can't be a user edit if formula box is populated
                 !Equals(text, textAverage.Text))
             {
-               var value = GetMassFromText(textAverage.Text);
+                var value = GetMassFromText(textAverage.Text, MassType.Average);
                 if (!value.Equals(AverageMass)) // This check lets the user type the "." on the way to "123.4"
                     AverageMass = value;
             }
@@ -369,64 +512,127 @@ namespace pwiz.Skyline.SettingsUI
         private void UpdateMonoTextForMass()
         {
             // Avoid a casecade of text-changed events
-            var text = GetTextFromMass(_monoMass);
-            if (!Equals(GetMassFromText(text), GetMassFromText(textMono.Text)))
+            var text = GetTextFromMass(_monoMass, MassType.Monoisotopic);
+            if (!Equals(GetMassFromText(text, MassType.Monoisotopic), GetMassFromText(textMono.Text, MassType.Monoisotopic)))
                 textMono.Text = text;
         }
 
         private void UpdateAverageTextForMass()
         {
             // Avoid a casecade of text-changed events
-            var text = GetTextFromMass(_averageMass);
-            if (!Equals(GetMassFromText(text), GetMassFromText(textAverage.Text)))
+            var text = GetTextFromMass(_averageMass, MassType.Average);
+            if (!Equals(GetMassFromText(text, MassType.Average), GetMassFromText(textAverage.Text, MassType.Average)))
                 textAverage.Text = text;
         }
 
         private void UpdateAverageAndMonoTextsForFormula()
         {
-            string formula = textFormula.Text;
-            if (string.IsNullOrEmpty(formula))
+            bool valid;
+            try
             {
-                // Leave any precalculated masses in place for user convenience
-                textMono.Enabled = textAverage.Enabled = true;
+                var formula = Formula; // Get current formula and adduct
+
+                var userinput = textFormula.Text.Trim();
+                if (_editMode == EditMode.adduct_only)
+                {
+                    if (!string.IsNullOrEmpty(userinput) && !userinput.StartsWith("[")) // Not L10N
+                    {
+                        // Assume they're trying to type an adduct
+                        userinput = "[" + userinput + "]"; // Not L10N
+                    }
+                    if (string.IsNullOrEmpty(NeutralFormula))
+                    {
+                        formula = null; // Parent molecule was described as mass only
+                    }
+                    else
+                    {
+                        formula = NeutralFormula + userinput; // Try to apply this new adduct to parent molecule
+                    }
+                }
+                else
+                {
+                    formula = userinput;
+                }
+                string neutralFormula;
+                Molecule ion;
+                Adduct adduct;
+                if (!IonInfo.IsFormulaWithAdduct(formula, out ion, out adduct, out neutralFormula))
+                {
+                    neutralFormula = formula;
+                    if (!Adduct.TryParse(userinput, out adduct))
+                    {
+                        adduct = Adduct.EMPTY;
+                    }
+                }
+                if (_editMode != EditMode.adduct_only)
+                {
+                    NeutralFormula = neutralFormula;
+                }
+                if (_editMode != EditMode.formula_only)
+                {
+                    Adduct = adduct;
+                }
+                // Update mass/mz displays
+                if (string.IsNullOrEmpty(neutralFormula))
+                {
+                    if (!adduct.IsEmpty)
+                    {
+                        // No formula, but adduct changed
+                        Adduct = adduct;
+                        // ReSharper disable once PossibleNullReferenceException
+                        GetTextFromMass(_neutralMonoMass, MassType.Monoisotopic); // Just to see if it throws or not
+                        GetTextFromMass(_neutralAverageMass, MassType.Average); // Just to see if it throws or not
+                    }
+                }
+                else
+                {
+                    // Is there an isotopic label we should apply to get the mass?
+                    if (IsotopeLabelsForMassCalc != null && (Adduct.IsEmpty || !Adduct.HasIsotopeLabels)) // If adduct declares an isotope, that takes precedence
+                    {
+                        neutralFormula = IsotopeLabelsForMassCalc.Aggregate(neutralFormula, (current, kvp) => current.Replace(kvp.Key, kvp.Value));
+                    }
+                    var monoMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, neutralFormula, SequenceMassCalc.MassPrecision);
+                    var averageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, neutralFormula, SequenceMassCalc.MassPrecision);
+                    GetTextFromMass(monoMass, MassType.Monoisotopic); // Just to see if it throws or not
+                    GetTextFromMass(averageMass, MassType.Average); // Just to see if it throws or not
+                    MonoMass = monoMass;
+                    AverageMass = averageMass;
+                }
+                valid = true; // If we got here, formula parsed OK, or adduct did
+                textFormula.ForeColor = Color.Black;
+                if (_editMode == EditMode.adduct_only)
+                {
+                    textFormula.Text = userinput; // Enforce proper adduct formatting
+                    if (adduct.IsEmpty)
+                    {
+                        valid = false; // Adduct did not parse
+                    }
+                }
+                else if (_editMode == EditMode.formula_only)
+                {
+                    valid &= adduct.IsEmpty; // Should not have anything going on with adduct here
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                valid = false;
+            }
+            catch (ArgumentException)
+            {
+                valid = false;
+            }
+            if (valid)
+            {
+                textFormula.ForeColor = Color.Black;
             }
             else
             {
-                // Formula drives mass, no direct edit allowed
-                textMono.Enabled = textAverage.Enabled = false;
-                bool valid;
-                try
-                {
-                    int z;
-                    Molecule mol;
-                    string neutralFormula;
-                    if (IonInfo.IsFormulaWithAdduct(formula, out mol, out z, out neutralFormula))
-                    {
-                        Charge = z;
-                    }
-                    var monoMass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formula);
-                    var averageMass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formula);
-                    GetTextFromMass(monoMass); // Just to see if it throws or not
-                    GetTextFromMass(averageMass); // Just to see if it throws or not
-                    MonoMass = monoMass;
-                    AverageMass = averageMass;
-                    textFormula.ForeColor = Color.Black;
-                    valid = true;
-                }
-                catch (InvalidOperationException)
-                {
-                    valid = false;
-                }
-                catch (ArgumentException)
-                {
-                    valid = false;
-                }
-                if (!valid)
-                {
-                    textFormula.ForeColor = Color.Red;
-                    textMono.Text = textAverage.Text = string.Empty;
-                }
+                textFormula.ForeColor = Color.Red;
+                textMono.Text = textAverage.Text = string.Empty;
             }
+
+            // Allow direct editing of masses if direct editing of formula is allowed, but formula is empty
+            MassEnabled = _editMode != EditMode.adduct_only && string.IsNullOrEmpty(_neutralFormula);
         }
     }
 }

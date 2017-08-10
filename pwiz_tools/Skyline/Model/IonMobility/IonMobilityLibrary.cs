@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 
@@ -76,12 +77,20 @@ namespace pwiz.Skyline.Model.IonMobility
         /// </summary>
         /// <param name="pathDestDir">The directory to save to</param>
         /// <param name="document">The document for which charged peptides are to be kept</param>
+        /// <param name="smallMoleculeConversionMap">Used for changing charge,modifedSeq to adduct,molecule in small molecule conversion</param>
         /// <returns>The full path to the file saved</returns>
-        public override string PersistMinimized(string pathDestDir, SrmDocument document)
+        public override string PersistMinimized(string pathDestDir,
+            SrmDocument document, IDictionary<LibKey, LibKey> smallMoleculeConversionMap)
         {
             RequireUsable();
 
-            string persistPath = Path.Combine(pathDestDir, Path.GetFileName(PersistencePath) ?? String.Empty); 
+            var fname = Path.GetFileName(PersistencePath);
+            if (smallMoleculeConversionMap != null && fname != null && 
+                !fname.Contains(BiblioSpecLiteSpec.DotConvertedToSmallMolecules))
+            {
+                fname = fname.Replace(IonMobilityDb.EXT, BiblioSpecLiteSpec.DotConvertedToSmallMolecules + IonMobilityDb.EXT);
+            }
+            string persistPath = Path.Combine(pathDestDir, fname ?? String.Empty); 
             using (var fs = new FileSaver(persistPath))
             {
                 var ionMobilityDbMinimal = IonMobilityDb.CreateIonMobilityDb(fs.SafeName);
@@ -89,16 +98,36 @@ namespace pwiz.Skyline.Model.IonMobility
                 // Calculate the minimal set of peptides needed for this document
                 var dbPeptides = _database.GetPeptides().ToList();
                 var persistPeptides = new List<ValidatingIonMobilityPeptide>();
-                var dictPeptides = dbPeptides.ToDictionary(pep => pep.PeptideModSeq);
-                foreach (var peptide in document.Molecules)
+
+                var dictPeptides = dbPeptides.ToDictionary(pep => pep.GetLibKey());
+                foreach (var pair in document.MoleculePrecursorPairs)
                 {
-                    string modifiedSeq = document.Settings.GetSourceTextId(peptide);
+                    var test = 
+                        new ValidatingIonMobilityPeptide(pair.NodePep.ModifiedTarget, pair.NodeGroup.PrecursorAdduct, 0, 0);
+                    var key = test.GetLibKey();
                     DbIonMobilityPeptide dbPeptide;
-                    if (dictPeptides.TryGetValue(modifiedSeq, out dbPeptide))
+                    if (dictPeptides.TryGetValue(key, out dbPeptide))
                     {
-                        persistPeptides.Add(new ValidatingIonMobilityPeptide(dbPeptide.Sequence,dbPeptide.CollisionalCrossSection,dbPeptide.HighEnergyDriftTimeOffsetMsec));
+                        if (smallMoleculeConversionMap != null)
+                        {
+                            // We are in the midst of converting a document to small molecules for test purposes
+                            LibKey smallMolInfo;
+                            if (smallMoleculeConversionMap.TryGetValue(new LibKey(pair.NodePep.ModifiedSequence, pair.NodeGroup.PrecursorCharge), out smallMolInfo))
+                            {
+                                var precursorAdduct = smallMolInfo.Adduct;
+                                var smallMoleculeAttributes = smallMolInfo.SmallMoleculeLibraryAttributes;
+                                dbPeptide = new DbIonMobilityPeptide(smallMoleculeAttributes, precursorAdduct, dbPeptide.CollisionalCrossSection, dbPeptide.HighEnergyDriftTimeOffsetMsec);
+                            }
+                            else
+                            {
+                                // Not being converted
+                                Assume.IsTrue(pair.NodeGroup.Peptide.IsDecoy);
+                                continue;
+                            }
+                        }
+                        persistPeptides.Add(new ValidatingIonMobilityPeptide(dbPeptide));
                         // Only add once
-                        dictPeptides.Remove(modifiedSeq);
+                        dictPeptides.Remove(key);
                     }
                 }
 
@@ -109,10 +138,10 @@ namespace pwiz.Skyline.Model.IonMobility
             return persistPath;
         }
 
-        public override DriftTimeInfo GetDriftTimeInfo(String seq, ChargeRegressionLine regressionLine)
+        public override DriftTimeInfo GetDriftTimeInfo(LibKey key, ChargeRegressionLine regressionLine)
         {
             if (_database != null)
-                return _database.GetDriftTimeInfo(seq, regressionLine);
+                return _database.GetDriftTimeInfo(key, regressionLine);
             return null;
         }
 

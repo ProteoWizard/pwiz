@@ -69,9 +69,9 @@ message SkylineDocumentProto {
 	}
 	message Transition {
 		OptionalString formula = 1;
-		OptionalDouble averageMass = 2;
-		OptionalDouble monoMass = 3;
-		OptionalString custom_ion_name = 6;
+		OptionalDouble averageMassH = 2; // See also: averageMass = 27;
+		OptionalDouble monoMassH = 3; // See also:  monoMass = 28;
+		OptionalString custom_ion_name = 6; // See also: custom_ion_id = 30;
 		OptionalString measured_ion_name = 7;
 		OptionalInt decoyMassShift = 8;
 		sint32 massIndex = 9;
@@ -79,7 +79,7 @@ message SkylineDocumentProto {
 		OptionalFloat isotopeDistProportion = 12; 
 		sint32 fragmentOrdinal = 13;
 		double calc_neutral_mass = 14;
-		sint32 charge = 15;
+		sint32 charge = 15; // See also: adduct = 29;
 		int32 cleavageAa = 16;
 		double lostMass = 17;
 		Annotations annotations = 18;
@@ -91,6 +91,10 @@ message SkylineDocumentProto {
 		IonType fragmentType = 24;
 		TransitionLibInfo libInfo = 25;
 		TransitionResults results = 26;
+		OptionalDouble averageMass = 27;
+		OptionalDouble monoMass = 28;
+		OptionalString adduct = 29;
+		OptionalString molecule_id = 30;
 	}
 
 	message OptionalFloat {

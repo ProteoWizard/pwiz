@@ -43,11 +43,11 @@ void MzXMLParser::startElement(const XML_Char *el, const XML_Char **attr) {
 
             string dt(getAttrValue("DT", attr));
             if (!dt.empty()) {
-                currentSpectrum_->driftTime = atof(dt.c_str());
+                currentSpectrum_->driftTime = static_cast<float>(atof(dt.c_str()));
             }
             string ccs(getAttrValue("CCS", attr));
             if (!ccs.empty()) {
-                currentSpectrum_->ccs = atof(ccs.c_str());
+                currentSpectrum_->ccs = static_cast<float>(atof(ccs.c_str()));
             }
         } else if (isIElement("peaks", el)) {
             state_.push(PEAKS_STATE);

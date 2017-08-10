@@ -20,9 +20,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             InitializeComponent();
 
-            PrecursorCharges = settings.Filter.PrecursorCharges.ToArray();
-            IonCharges = settings.Filter.ProductCharges.ToArray();
-            IonTypes = settings.Filter.IonTypes.Union(new[] {IonType.precursor, IonType.y}).ToArray(); // Add p, y if not already set
+            PeptidePrecursorCharges = settings.Filter.PeptidePrecursorCharges.ToArray();
+            PeptideIonCharges = settings.Filter.PeptideProductCharges.ToArray();
+            PeptideIonTypes = settings.Filter.PeptideIonTypes.Union(new[] { IonType.precursor, IonType.y }).ToArray(); // Add p, y if not already set
             ExclusionUseDIAWindow = settings.Filter.ExclusionUseDIAWindow;
             IonMatchTolerance = settings.Libraries.IonMatchTolerance;
             IonCount = settings.Libraries.IonCount;
@@ -30,19 +30,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private SkylineWindow SkylineWindow { get; set; }
 
-        public int[] PrecursorCharges
+        public Adduct[] PeptidePrecursorCharges
         {
-            get { return ArrayUtil.Parse(txtPrecursorCharges.Text, Convert.ToInt32, TextUtil.SEPARATOR_CSV, new int[0]); }
-            set { txtPrecursorCharges.Text = value.ToArray().ToString(", "); } // Not L10N
+            set { txtPeptidePrecursorCharges.Text = value.ToArray().ToString(", "); } // Not L10N
         }
 
-        public int[] IonCharges
+        public Adduct[] PeptideIonCharges
         {
-            get { return ArrayUtil.Parse(txtPrecursorCharges.Text, Convert.ToInt32, TextUtil.SEPARATOR_CSV, new int[0]); }
-            set { txtIonCharges.Text = value.ToArray().ToString(", "); } // Not L10N
+            set { txtPrecursorIonCharges.Text = value.ToArray().ToString(", "); } // Not L10N
         }
 
-        public IonType[] IonTypes
+        public IonType[] PeptideIonTypes
         {
             get { return TransitionFilter.ParseTypes(txtIonTypes.Text, new IonType[0]); }
             set { txtIonTypes.Text = TransitionFilter.ToStringIonTypes(value, true); }
@@ -67,32 +65,61 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        public static bool ValidateAdductListTextBox(MessageBoxHelper helper, TextBox control, bool proteomic,
+            int minCharge, int maxCharge, out Adduct[] val)
+        {
+            val = proteomic ?
+                ArrayUtil.Parse(control.Text, Adduct.FromStringAssumeProtonated, TextUtil.SEPARATOR_CSV, new Adduct[0]) : // Treat "1" as protonated, proteomic [M+H]
+                ArrayUtil.Parse(control.Text, Adduct.FromStringAssumeChargeOnly, TextUtil.SEPARATOR_CSV, new Adduct[0]);  // Treat "1" as [M+]
+            if (val.Length > 0 && !val.Contains(i => minCharge > Math.Abs(i.AdductCharge) || Math.Abs(i.AdductCharge) > maxCharge))
+            {
+                return true;
+            }
+            helper.ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_adducts_or_integers_describing_charge_states_with_absolute_values_from__1__to__2__,
+                null, minCharge, maxCharge);
+            val = new Adduct[0];
+            return false;
+        }
+        public static bool ValidateAdductListTextBox(MessageBoxHelper helper, TabControl tabControl, int tabIndex,
+            TextBox control, bool proteomic, int min, int max, out Adduct[] val)
+        {
+            bool valid = ValidateAdductListTextBox(helper, control, proteomic, min, max, out val);
+            if (!valid && tabControl.SelectedIndex != tabIndex)
+            {
+                tabControl.SelectedIndex = tabIndex;
+                control.Focus();
+            }
+            return valid;
+        }
+
         public TransitionSettings GetTransitionSettings(Form parent)
         {
             var helper = new MessageBoxHelper(parent);
             TransitionSettings settings = SkylineWindow.DocumentUI.Settings.TransitionSettings;
 
             // Validate and store filter settings
-            int[] precursorCharges;
-            if (!helper.ValidateNumberListTextBox(txtPrecursorCharges, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, out precursorCharges))
+            Adduct[] peptidePrecursorCharges;
+            if (!ValidateAdductListTextBox(helper, txtPeptidePrecursorCharges, true, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, out peptidePrecursorCharges))
                 return null;
-            precursorCharges = precursorCharges.Distinct().ToArray();
+            peptidePrecursorCharges = peptidePrecursorCharges.Distinct().ToArray();
 
-            int[] productCharges;
-            if (!helper.ValidateNumberListTextBox(txtIonCharges, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE, out productCharges))
+            Adduct[] peptideProductCharges;
+            if (!ValidateAdductListTextBox(helper, txtPrecursorIonCharges, true, Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE, out peptideProductCharges))
                 return null;
-            productCharges = productCharges.Distinct().ToArray();
+            peptideProductCharges = peptideProductCharges.Distinct().ToArray();
 
-            IonType[] types = IonTypes;
-            if (types.Length == 0)
+            IonType[] peptideIonTypes = PeptideIonTypes;
+            if (peptideIonTypes.Length == 0)
             {
                 helper.ShowTextBoxError(txtIonTypes, Resources.TransitionSettingsUI_OkDialog_Ion_types_must_contain_a_comma_separated_list_of_ion_types_a_b_c_x_y_z_and_p_for_precursor);
                 return null;
             }
-            types = types.Distinct().ToArray();
+            peptideIonTypes = peptideIonTypes.Distinct().ToArray();
 
             bool exclusionUseDIAWindow = cbExclusionUseDIAWindow.Visible && cbExclusionUseDIAWindow.Checked;
-            var filter = new TransitionFilter(precursorCharges, productCharges, types, settings.Filter.FragmentRangeFirstName, settings.Filter.FragmentRangeLastName,
+            var filter = new TransitionFilter(peptidePrecursorCharges, peptideProductCharges, peptideIonTypes,
+                settings.Filter.SmallMoleculePrecursorAdducts, settings.Filter.SmallMoleculeFragmentAdducts, settings.Filter.SmallMoleculeIonTypes, 
+                settings.Filter.FragmentRangeFirstName, settings.Filter.FragmentRangeLastName,
                                               settings.Filter.MeasuredIons, settings.Filter.PrecursorMzWindow, exclusionUseDIAWindow, settings.Filter.AutoSelect);
             Helpers.AssignIfEquals(ref filter, settings.Filter);
 

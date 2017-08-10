@@ -733,6 +733,9 @@
   <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_not_matching_the_current_filter_settings" xml:space="preserve">
     <value>1 peptide not matching the current filter settings.</value>
   </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_molecule_not_matching_the_current_filter_settings" xml:space="preserve">
+    <value>1 molecule not matching the current filter settings.</value>
+  </data>
   <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_" xml:space="preserve">
     <value>{0}
 (gene: {1})</value>
@@ -778,6 +781,9 @@
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__peptides__2__precursors_and__3__transitions_to_the_document" xml:space="preserve">
     <value>This operation will add {0} {1} peptides, {2} precursors and {3} transitions to the document.</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__molecules__2__precursors_and__3__transitions_to_the_document" xml:space="preserve">
+    <value>This operation will add {0} {1} molecules, {2} precursors and {3} transitions to the document.</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Error__triggered_acquistion_requires_a_spectral_library_or_imported_results_in_order_to_rank_transitions_" xml:space="preserve">
     <value>Error: triggered acquistion requires a spectral library or imported results in order to rank transitions.</value>
@@ -1652,6 +1658,9 @@
   <data name="ViewLibraryDlg_AddAllPeptides_Matching_Peptides" xml:space="preserve">
     <value>Matching Peptides</value>
   </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Matching_Molecules" xml:space="preserve">
+    <value>Matching Molecules</value>
+  </data>
   <data name="ImportSkyrHelper_ResolveImportConflicts_Resolving_conflicts_by_skipping_" xml:space="preserve">
     <value>Resolving conflicts by skipping.</value>
   </data>
@@ -2268,8 +2277,8 @@
   <data name="ExportMethodDlg_OkDialog_You_have_only_rough_tune_optimized_compensation_voltages_" xml:space="preserve">
     <value>You have only rough tune optimized compensation voltages.</value>
   </data>
-  <data name="PasteDlg_UpdateMoleculeType_Precursor_Ion_Formula" xml:space="preserve">
-    <value>Precursor Ion Formula</value>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_Formula" xml:space="preserve">
+    <value>Precursor Formula</value>
   </data>
   <data name="Peptide" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\peptide.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -2321,6 +2330,9 @@
   </data>
   <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_peptide_does_not_match_the_current_filter_settings" xml:space="preserve">
     <value>This peptide does not match the current filter settings.</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_molecule_does_not_match_the_current_filter_settings" xml:space="preserve">
+    <value>This molecule does not match the current filter settings.</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist" xml:space="preserve">
     <value>The template file {0} does not exist.</value>
@@ -3303,6 +3315,9 @@ Are you sure you want to continue?</value>
   <data name="PeptideLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\peptidelib.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="MoleculeLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\moleculelib.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="ChorusSession_TOP_LEVEL_ITEMS_Public_Projects" xml:space="preserve">
     <value>Public Projects</value>
   </data>
@@ -3673,9 +3688,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="RInstaller_InstallPackages_Download_Canceled" xml:space="preserve">
     <value>Download Canceled</value>
-  </data>
-  <data name="CustomIon_Validate_The_mass_of_the_custom_ion_is_less_than_the_minimum_of__0__" xml:space="preserve">
-    <value>The mass of the custom ion is less than the minimum of {0}.</value>
   </data>
   <data name="AlertDlg_GetDefaultButtonText_OK" xml:space="preserve">
     <value>OK</value>
@@ -4137,6 +4149,9 @@ Are you sure you want to continue?</value>
   <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_not_matching_the_current_filter_settings" xml:space="preserve">
     <value>{0} peptides not matching the current filter settings.</value>
   </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__molecules_not_matching_the_current_filter_settings" xml:space="preserve">
+    <value>{0} molecules not matching the current filter settings.</value>
+  </data>
   <data name="AnnotationDef_AnnotationTarget_Replicates" xml:space="preserve">
     <value>Replicates</value>
   </data>
@@ -4220,6 +4235,9 @@ Are you sure you want to continue?</value>
   </data>
   <data name="ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides" xml:space="preserve">
     <value>Library Peptides</value>
+  </data>
+  <data name="ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules" xml:space="preserve">
+    <value>Library Molecules</value>
   </data>
   <data name="PeptideModifications_DoValidate_Maximum_neutral_losses__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>Maximum neutral losses {0} must be between {1} and {2}</value>
@@ -6595,14 +6613,14 @@ If you prefer you can choose to report anonymously.</value>
   <data name="EditIrtCalcDlg_OkDialog_Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_open_an_existing_database_file" xml:space="preserve">
     <value>Click the Create button to create a new database or the Open button to open an existing database file.</value>
   </data>
-  <data name="CustomIon_Validate_Custom_ions_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_" xml:space="preserve">
-    <value>Custom ions must specify a formula or valid monoisotopic and average masses.</value>
-  </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Overwrite" xml:space="preserve">
     <value>Overwrite</value>
   </data>
   <data name="MessageBoxHelper_ValidateDecimalListTextBox__0__must_contain_a_comma_separated_list_of_decimal_values_from__1__to__2__" xml:space="preserve">
     <value>{0} must contain a comma separated list of decimal values from {1} to {2}.</value>
+  </data>
+  <data name="MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_adducts_or_integers_describing_charge_states_with_absolute_values_from__1__to__2__" xml:space="preserve">
+    <value>{0} must contain a comma separated list of adducts or integers describing charge states with absolute values from {1} to {2}.</value>
   </data>
   <data name="ChorusSession_TOP_LEVEL_ITEMS_Shared_Experiments" xml:space="preserve">
     <value>Shared Experiments</value>
@@ -7402,9 +7420,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="UnintegratedTransitionFinder_DisplayName_Unintegrated_transitions" xml:space="preserve">
     <value>Unintegrated transitions</value>
   </data>
-  <data name="CustomIon_Validate_The_mass_of_the_custom_ion_exceeeds_the_maximum_of__0_" xml:space="preserve">
-    <value>The mass of the custom ion exceeeds the maximum of {0}.</value>
-  </data>
   <data name="Copy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\copy.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -7720,9 +7735,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty" xml:space="preserve">
     <value>A protein sequence may not be empty.</value>
-  </data>
-  <data name="SkylineWindow_AddSmallMolecule_Add_Small_Molecule" xml:space="preserve">
-    <value>Add Small Molecule</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_OkDialog_Please_specify_a_full_path_to_the_proteome_file" xml:space="preserve">
     <value>Please specify a full path to the proteome file.</value>
@@ -8529,8 +8541,8 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="PasteDlg_Description_Insert_protein_list" xml:space="preserve">
     <value>Insert protein list</value>
   </data>
-  <data name="PasteDlg_UpdateMoleculeType_Product_Ion_Formula" xml:space="preserve">
-    <value>Product Ion Formula</value>
+  <data name="PasteDlg_UpdateMoleculeType_Product_Formula" xml:space="preserve">
+    <value>Product Formula</value>
   </data>
   <data name="TransitionLibraries_DoValidate_Library_ion_count_value__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>Library ion count value {0} must be between {1} and {2}.</value>
@@ -8661,6 +8673,9 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings" xml:space="preserve">
     <value>Matching peptides to the current document settings</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings" xml:space="preserve">
+    <value>Matching molecules to the current document settings</value>
   </data>
   <data name="SkylineWindow_CheckRetentionTimeFilter_NoPredictionAlgorithm" xml:space="preserve">
     <value>The Transition Settings Full-Scan retention time filter is set to use the predicted retention time, but no prediction algorithm has been specified.
@@ -8807,8 +8822,8 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="SequenceMassCalc_NormalizeModifiedSequence_The_modification__0__is_not_valid___Expected_a_numeric_delta_mass_" xml:space="preserve">
     <value>The modification {0} is not valid. Expected a numeric delta mass.</value>
   </data>
-  <data name="EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_charge_and_label_type_already_exists_" xml:space="preserve">
-    <value>A precursor with that charge and label type already exists.</value>
+  <data name="EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_adduct_and_label_type_already_exists_" xml:space="preserve">
+    <value>A precursor with that adduct and label type already exists.</value>
   </data>
   <data name="SkylineWindow_FindIonMobilityLibrary_Find_Ion_Mobility_Library" xml:space="preserve">
     <value>Find Ion Mobility Library</value>
@@ -9104,6 +9119,8 @@ Here are the last 3 errors:
     
 Ion formulas may contain an adduct description using the defacto standard notation as seen at http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator (e.g. "C47H51NO14[M+IsoProp+H]").
 
+When only the ion charge is known (often the case with fragments) charge-only adducts such as "[M+]" (z=1), "[M-]" (z=-1), "[M+3]" (z=3), etc., may be used.
+
 Multipliers (e.g. the "2" in "[2M+K]") and isotope labels (e.g. the "2Cl37" in "[M2Cl37+H]") are supported.
 
 Recognized adduct components include normal chemical symbols and:{0}
@@ -9318,7 +9335,13 @@ If your transition list format combines formulas and adducts in a single column 
     <value>The added file included {0} repeated protein sequences. Their names were added as aliases to ensure the protein list contains only one copy of each sequence.</value>
   </data>
   <data name="ViewLibraryDlg_EnsureDigested_The_background_proteome___0___is_in_an_older_format___In_order_to_be_able_to_efficiently_find_peptide_sequences__the_background_proteome_should_be_upgraded_to_the_latest_version___Do_you_want_to_upgrade_the_background_proteome_now_" xml:space="preserve">
-    <value>The background proteome '{0}' is in an older format.  In order to be able to efficiently find peptide sequences, the background proteome should be upgraded to the latest version.  Do you want to upgrade the background proteome now?</value>
+      <value>The background proteome '{0}' is in an older format.  In order to be able to efficiently find peptide sequences, the background proteome should be upgraded to the latest version.  Do you want to upgrade the background proteome now?</value>
+  </data>
+  <data name="MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_adducts_or_integers_describing_charge_states_with_absolute_value_from__1__to__2__" xml:space="preserve">
+    <value>{0} must contain a comma separated list of adducts or integers describing charge states with absolute value from {1} to {2}.</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg_Addu_ct_for__0__" xml:space="preserve">
+    <value>Addu&amp;ct for {0}:</value>
   </data>
   <data name="ViewLibraryDlg_EnsureDigested_Copying_database" xml:space="preserve">
     <value>Copying database</value>
@@ -9711,5 +9734,80 @@ If your transition list format combines formulas and adducts in a single column 
   </data>
   <data name="AreaCVHistogramGraphPane_UpdateGraph_Below__0____1_" xml:space="preserve">
     <value>Below {0}: {1}</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg_Chemi_cal_formula_" xml:space="preserve">
+    <value>Chemi&amp;cal formula:</value>
+  </data>
+  <data name="TransitionFilter_SmallMoleculePrecursorAdducts_Small_molecule_precursor_adducts" xml:space="preserve">
+    <value>Small molecule precursor adducts</value>
+  </data>
+  <data name="CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_" xml:space="preserve">
+    <value>Custom molecules must specify a formula or valid monoisotopic and average masses.</value>
+  </data>
+  <data name="CustomMolecule_DisplayName_Molecule" xml:space="preserve">
+    <value>Molecule</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_InChiKey_" xml:space="preserve">
+    <value>{0} is not a valid InChiKey.</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_HMDB_identifier_" xml:space="preserve">
+    <value>{0} is not a valid HMDB identifier.</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_InChI_identifier_" xml:space="preserve">
+    <value>{0} is not a valid InChI identifier.</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_CAS_registry_number_" xml:space="preserve">
+    <value>{0} is not a valid CAS registry number.</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor" xml:space="preserve">
+    <value>Add Small Molecule and Precursor</value>
+  </data>
+  <data name="RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules" xml:space="preserve">
+    <value>Converted To Small Molecules</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_" xml:space="preserve">
+    <value>A small molecule is defined by a chemical formula and at least one of Name, InChiKey, or other keys (HMDB etc)</value>
+  </data>
+  <data name="ValidatingIonMobilityPeptide_ValidateAdduct_A_valid_adduct_description__e_g____M_H____must_be_provided_" xml:space="preserve">
+    <value>A valid adduct description (e.g. "[M+H]") must be provided.</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_" xml:space="preserve">
+    <value>Small molecule ion types must contain a comma separated list of ion types. Valid types are "f" (for fragment) and/or "p" (for precursor)</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateStatusArea_Molecules__0__through__1__of__2__total_" xml:space="preserve">
+    <value>Molecules {0} through {1} of {2} total.</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_Filter_Molecules" xml:space="preserve">
+    <value>Filter Molecules</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_Include_all_molecules" xml:space="preserve">
+    <value>Include all molecules</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_molecule_adduct" xml:space="preserve">
+    <value>molecule+adduct</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_peptide_charge" xml:space="preserve">
+    <value>peptide+charge</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_" xml:space="preserve">
+    <value>Imported library contains multiple entries for one or more {0} pairs.
+    
+This is probably due to the library containing entries for multiple parameters
+such as instrument type or collision energy, but Skyline keys only on
+{0} so these entries are ambiguous. 
+
+You should filter the library as needed before importing to Skyline.
+    
+Here are the {0} pairs with multiple entries:
+{1}</value>
+  </data>
+  <data name="CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_of__1__" xml:space="preserve">
+    <value>The mass {0} of the custom molecule exceeeds the maximum of {1}.</value>
+  </data>
+  <data name="CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_is_less_than_the_minimum_of__1__" xml:space="preserve">
+    <value>The mass {0} of the custom molecule is less than the minimum of {1}.</value>
+  </data>
+  <data name="Ions_fragments" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Ions_fragments.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

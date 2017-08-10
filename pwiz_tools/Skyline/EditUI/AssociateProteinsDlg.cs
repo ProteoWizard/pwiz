@@ -87,7 +87,7 @@ namespace pwiz.Skyline.EditUI
                     using (var proteomeDb = proteome.OpenProteomeDb(longWaitBroker.CancellationToken))
                     {
                         proteinsWithSequences = proteomeDb.GetDigestion()
-                            .GetProteinsWithSequences(peptidesForMatching.Select(pep => pep.Peptide.Sequence));
+                            .GetProteinsWithSequences(peptidesForMatching.Select(pep => pep.Peptide.Target.Sequence));
                     }
                 });
             }
@@ -104,7 +104,7 @@ namespace pwiz.Skyline.EditUI
                     {
                         continue;
                     }
-                    var matches = peptidesForMatching.Where(pep => protein.Sequence.Contains(pep.Peptide.Sequence)).ToList();
+                    var matches = peptidesForMatching.Where(pep => protein.Sequence.Contains(pep.Peptide.Target.Sequence)).ToList();
                     if (matches.Count == 0)
                     {
                         continue;
@@ -177,7 +177,7 @@ namespace pwiz.Skyline.EditUI
                     foreach (var peptide in peptidesForMatching)
                     {
                         // TODO(yuval): does digest matter?
-                        if (fasta.Sequence.IndexOf(peptide.Peptide.Sequence, StringComparison.Ordinal) < 0)
+                        if (fasta.Sequence.IndexOf(peptide.Peptide.Target.Sequence, StringComparison.Ordinal) < 0)
                         {
                             continue;
                         }
@@ -273,9 +273,9 @@ namespace pwiz.Skyline.EditUI
 
         public PeptideDocNode ChangeFastaSequence(SrmSettings srmSettings, PeptideDocNode peptideDocNode, FastaSequence newSequence)
         {
-            int begin = newSequence.Sequence.IndexOf(peptideDocNode.Peptide.Sequence, StringComparison.Ordinal);
-            int end = begin + peptideDocNode.Peptide.Sequence.Length;
-            var newPeptide = new Peptide(newSequence, peptideDocNode.Peptide.Sequence, 
+            int begin = newSequence.Sequence.IndexOf(peptideDocNode.Peptide.Target.Sequence, StringComparison.Ordinal);
+            int end = begin + peptideDocNode.Peptide.Target.Sequence.Length;
+            var newPeptide = new Peptide(newSequence, peptideDocNode.Peptide.Target.Sequence, 
                 begin, end, peptideDocNode.Peptide.MissedCleavages);
             var newPeptideDocNode = new PeptideDocNode(newPeptide, srmSettings, peptideDocNode.ExplicitMods, peptideDocNode.SourceKey,
                 peptideDocNode.GlobalStandardType, peptideDocNode.Rank, peptideDocNode.ExplicitRetentionTime,

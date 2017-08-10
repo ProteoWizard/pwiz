@@ -29,77 +29,9 @@
 
 #include "Verbosity.h"
 #include "PSM.h"
+#include "SpecData.h"
 
 namespace BiblioSpec {
-
-struct SpecData{
-    int id;
-    float driftTime; // precursor ion mobility
-    float ccs; // collisional cross section
-    double retentionTime;
-    double mz;
-    int numPeaks;
-    double* mzs;
-    float* intensities;
-    float* productDriftTimes; // In Waters machines, product ions have kinetic energy added after the drift tube and thus slightly faster time than the precursor from there to the detector.
-    
-    SpecData():
-    id(0), driftTime(0), ccs(0), retentionTime(0), mz(0), numPeaks(-1){
-        mzs = NULL;
-        intensities = NULL;
-        productDriftTimes = NULL;
-    };
-
-    ~SpecData(){
-        delete [] mzs;
-        delete [] intensities;
-        delete [] productDriftTimes;
-    };
-
-    SpecData& operator=(SpecData& rhs){
-        id = rhs.id;
-        driftTime = rhs.driftTime;
-        ccs = rhs.ccs;
-        retentionTime = rhs.retentionTime;
-        mz = rhs.mz;
-        numPeaks = rhs.numPeaks;
-
-        // clear any existing peaks
-        delete [] mzs;
-        delete [] intensities;
-        delete [] productDriftTimes;
-        mzs = NULL;
-        intensities = NULL;
-        productDriftTimes = NULL;
-
-        if( numPeaks){
-            mzs = new double[numPeaks];
-            intensities = new float[numPeaks];
-            productDriftTimes = ( (rhs.productDriftTimes == NULL) ? NULL : new float[numPeaks] );
-            for(int i=0; i<numPeaks; i++){
-                mzs[i] = rhs.mzs[i];
-                intensities[i] = rhs.intensities[i];
-                if (rhs.productDriftTimes != NULL)
-                    productDriftTimes[i] = rhs.productDriftTimes[i];
-            }   
-        }
-        return *this;
-    }
-
-    // In Waters machines, product ions have kinetic energy added after the drift tube and thus fly slightly faster than the precursor from there to the detector.
-    double getDriftTimeHighEnergyOffsetMsec()
-    {
-        if (productDriftTimes != NULL)
-        {
-            double sum = 0;
-            for (int i=0; i<numPeaks; i++)
-                sum += productDriftTimes[i];
-            if (sum > 0)
-                return (sum/numPeaks)-driftTime;
-        }
-        return 0;
-    }
-};
 
 class SpecFileReader {
  public:

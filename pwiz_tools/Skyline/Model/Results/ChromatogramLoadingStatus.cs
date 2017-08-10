@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Model.Results
             /// <summary>
             /// Add transition points (partial data for multiple transitions) to AllChromatogramsGraph.
             /// </summary>
-            public void Add(string modifiedSequence, Color color, int filterIndex, float time, float[] intensities)
+            public void Add(Target modifiedSequence, Color color, int filterIndex, float time, float[] intensities)
             {
                 MaxRetentionTime = Math.Max(MaxRetentionTime, time);
                 float intensity = 0;
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Results
             /// <summary>
             /// Add a complete transition to AllChromatogramsGraph.
             /// </summary>
-            public void AddTransition(string modifiedSequence, Color color, int index, int rank, IList<float> times, IList<float> intensities)
+            public void AddTransition(Target modifiedSequence, Color color, int index, int rank, IList<float> times, IList<float> intensities)
             {
                 if (rank == 0 || times.Count == 0)
                     return;
@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Model.Results
                     AddIntensity(modifiedSequence, color, index, times[i], intensities[i]);
             }
 
-            private void AddIntensity(string modifiedSequence, Color color, int filterIndex, float time, float intensity)
+            private void AddIntensity(Target modifiedSequence, Color color, int filterIndex, float time, float intensity)
             {
                 // Filter out small intensities quickly.
                 if (intensity < _maxImportedIntensity*DISPLAY_FILTER_PERCENT)
@@ -194,7 +194,7 @@ namespace pwiz.Skyline.Model.Results
 
             public class Peak
             {
-                public Peak(float intensity, string modifiedSequence, Color color, int filterIndex, int binIndex)
+                public Peak(float intensity, Target modifiedSequence, Color color, int filterIndex, int binIndex)
                 {
                     Intensity = intensity;
                     ModifiedSequence = modifiedSequence;
@@ -203,7 +203,7 @@ namespace pwiz.Skyline.Model.Results
                     BinIndex = binIndex;
                 }
 
-                public string ModifiedSequence;
+                public Target ModifiedSequence;
                 public Color Color;
                 public int FilterIndex;
                 public int BinIndex;

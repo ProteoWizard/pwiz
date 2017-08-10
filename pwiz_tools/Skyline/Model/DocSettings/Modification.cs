@@ -39,7 +39,10 @@ namespace pwiz.Skyline.Model.DocSettings
         C13 = 0x1,
         N15 = 0x2,
         O18 = 0x4,
-        H2 = 0x8
+        H2 = 0x8,
+        LabelsAA = C13 | N15 | O18 | H2, // Labels that affect amino acids
+        Cl37 = 0x10,
+        Br81 = 0x20
     }
 
     public enum RelativeRT { Matching, Overlapping, Preceding, Unknown }
@@ -159,6 +162,51 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool Label15N { get { return (LabelAtoms & LabelAtoms.N15) != 0; } }
         public bool Label18O { get { return (LabelAtoms & LabelAtoms.O18) != 0; } }
         public bool Label2H { get { return (LabelAtoms & LabelAtoms.H2) != 0; } }
+        public bool Label37Cl { get { return (LabelAtoms & LabelAtoms.Cl37) != 0; } }
+        public bool Label81Br { get { return (LabelAtoms & LabelAtoms.Br81) != 0; } }
+
+        public double IonLabelMassDiff
+        {
+            get
+            {
+                var massdiff = 0.0;
+                if (Label13C)
+                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C13) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
+                if (Label15N)
+                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N15) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N);
+                if (Label18O)
+                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.O18) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.O);
+                if (Label2H)
+                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H2) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H);
+                if (Label37Cl)
+                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Cl37) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Cl);
+                if (Label81Br)
+                    massdiff += BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Br81) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Br);
+                return massdiff;
+            }
+        }
+
+        public List<string> LabelNames
+        {
+            get
+            {
+                var names = new List<string>();
+                if (Label13C)
+                    names.Add(BioMassCalc.C13);
+                if (Label15N)
+                    names.Add(BioMassCalc.N15);
+                if (Label18O)
+                    names.Add(BioMassCalc.O18);
+                if (Label2H)
+                    names.Add(BioMassCalc.H2);
+                if (Label37Cl)
+                    names.Add(BioMassCalc.Cl37);
+                if (Label81Br)
+                    names.Add(BioMassCalc.Br81);
+                return names;
+            }
+        }
+
         public RelativeRT RelativeRT { get; private set; }
 
         public IList<FragmentLoss> Losses
@@ -340,7 +388,12 @@ namespace pwiz.Skyline.Model.DocSettings
             massdiff_average,
             explicit_decl, 
             unimod_id,
-            short_name
+            short_name,
+// ReSharper disable InconsistentNaming
+// NOT YET  -- Brendan wants to wait and see if there is actual user demand for whole-organism Cl or Br labeling 7/21/17
+//            label_37Cl,
+//            label_81Br,
+// ReSharper restore InconsistentNaming
         }
 
         private void Validate()
@@ -390,8 +443,8 @@ namespace pwiz.Skyline.Model.DocSettings
                         throw new InvalidDataException(Resources.StaticMod_Validate_Formula_not_allowed_with_labeled_atoms);
                     // Cache mass values to improve performance of variable modifications
                     // Throws an exception, if given an invalid formula.
-                    MonoisotopicMass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, Formula);
-                    AverageMass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, Formula);
+                    MonoisotopicMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, Formula, SequenceMassCalc.MassPrecision);
+                    AverageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, Formula, SequenceMassCalc.MassPrecision);
                 }
             }
 
@@ -443,6 +496,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 LabelAtoms |= LabelAtoms.O18;
             if (reader.GetBoolAttribute(ATTR.label_2H))
                 LabelAtoms |= LabelAtoms.H2;
+// NOT YET - Brendan wants to wait and see if there is actual user demand for whole-organism Cl or Br labeling 7/21/17
+//            if (reader.GetBoolAttribute(ATTR.label_37Cl))
+//                LabelAtoms |= LabelAtoms.Cl37;
+//            if (reader.GetBoolAttribute(ATTR.label_81Br))
+//                LabelAtoms |= LabelAtoms.Br81;
             RelativeRT = reader.GetEnumAttribute(ATTR.relative_rt, RelativeRT.Matching);
 
             // Allow specific masses always, but they will generate an error,
@@ -486,6 +544,9 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.label_15N, Label15N);
             writer.WriteAttribute(ATTR.label_18O, Label18O);
             writer.WriteAttribute(ATTR.label_2H, Label2H);
+// NOT YET - Brendan wants to wait and see if there is actual user demand for whole-organism Cl or Br labeling 7/21/17
+//            writer.WriteAttribute(ATTR.label_37Cl, Label37Cl);
+//            writer.WriteAttribute(ATTR.label_81Br, Label81Br);
             writer.WriteAttribute(ATTR.relative_rt, RelativeRT, RelativeRT.Matching);
             if (string.IsNullOrEmpty(Formula))
             {
@@ -829,7 +890,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             List<ExplicitMod> listImplicitMods = new List<ExplicitMod>();
 
-            if (!Peptide.IsCustomIon)
+            if (!Peptide.IsCustomMolecule)
             {
                 string seq = Peptide.Sequence;
                 for (int i = 0; i < seq.Length; i++)
@@ -857,6 +918,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool IsVariableStaticMods { get; private set; }
 
         public bool HasNeutralLosses { get { return StaticModifications.Contains(mod => mod.Modification.HasLoss); } }
+        public bool HasIsotopeLabels { get { return StaticModifications != null && StaticModifications.Any(mod => mod.Modification.LabelAtoms != 0); } }
 
         public IEnumerable<ExplicitMod> NeutralLossModifications
         {
@@ -990,7 +1052,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public IList<ExplicitMod> ChangeGlobalMods(IList<StaticMod> staticMods, IList<ExplicitMod> explicitMods)
         {
             var modsNew = new List<ExplicitMod>();
-            if (!Peptide.IsCustomIon)
+            if (!Peptide.IsCustomMolecule)
             {
                 foreach (var mod in explicitMods)
                 {
@@ -1062,7 +1124,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return ArrayUtil.EqualsDeep(obj._modifications, _modifications) &&
-                Equals(obj.Peptide.Sequence, Peptide.Sequence);
+                Equals(obj.Peptide.Target, Peptide.Target);
         }
 
         public override bool Equals(object obj)
@@ -1078,7 +1140,7 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 int result = _modifications.GetHashCodeDeep();
-                result = (result*397) ^ Peptide.Sequence.GetHashCode();
+                result = (result*397) ^ Peptide.Target.GetHashCode();
                 return result;
             }
         }
@@ -1178,13 +1240,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IList<double> GetModMasses(MassType massType)
         {
-            return (massType == MassType.Monoisotopic ? _modMassesMono : _modMassesAvg);
+            return (massType.IsMonoisotopic() ? _modMassesMono : _modMassesAvg);
         }
 
         private static double[] CalcModMasses(Peptide peptide, IEnumerable<ExplicitMod> mods,
             SequenceMassCalc massCalc)
         {
             double[] masses = new double[peptide.Length];
+            if (peptide.IsCustomMolecule)
+                return masses;
             string seq = peptide.Sequence;
             foreach (ExplicitMod mod in mods)
                 masses[mod.IndexAA] += massCalc.GetModMass(seq[mod.IndexAA], mod.Modification);

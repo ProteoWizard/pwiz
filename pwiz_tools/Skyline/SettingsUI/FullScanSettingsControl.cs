@@ -938,7 +938,7 @@ namespace pwiz.Skyline.SettingsUI
             if (workflow == ImportPeptideSearchDlg.Workflow.dda)
             {
                 // Set up precursor charges input
-                textPrecursorCharges.Text = SkylineWindow.Document.Settings.TransitionSettings.Filter.PrecursorCharges.ToArray().ToString(", "); // Not L10N
+                textPrecursorCharges.Text = SkylineWindow.Document.Settings.TransitionSettings.Filter.PeptidePrecursorCharges.ToArray().ToString(", "); // Not L10N
                 int precursorChargesTopDifference = lblPrecursorCharges.Top - groupBoxMS1.Top;
                 lblPrecursorCharges.Top = groupBoxMS1.Top;
                 textPrecursorCharges.Top -= precursorChargesTopDifference;
@@ -1034,14 +1034,14 @@ namespace pwiz.Skyline.SettingsUI
                 tbxTimeAroundMs2Ids.Enabled = true;
 
                 var document = SkylineWindow.DocumentUI;
-                if (document.PeptideCount > 0)
+                if (document.MoleculeCount > 0)
                 {
                     if (!document.Settings.HasLibraries)
                     {
                         strWarning = Resources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_This_document_does_not_contain_any_spectral_libraries_;
                     }
-                    else if (document.Peptides.All(
-                        peptide => document.Settings.GetUnalignedRetentionTimes(peptide.SourceUnmodifiedTextId, peptide.SourceExplicitMods).Length == 0))
+                    else if (document.Molecules.All(
+                        peptide => document.Settings.GetUnalignedRetentionTimes(peptide.SourceUnmodifiedTarget, peptide.SourceExplicitMods).Length == 0))
                     {
                         strWarning = Resources.FullScanSettingsControl_UpdateRetentionTimeFilterUi_None_of_the_spectral_libraries_in_this_document_contain_any_retention_times_for_any_of_the_peptides_in_this_document_;
                     }

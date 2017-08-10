@@ -141,7 +141,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 355, 355, 10);
                 var scores = calculator.PeptideScores.ToList();
-                var peptides = scores.Select(item => item.Key).ToList();
+                var peptides = scores.Select(item => item.Key.Sequence).ToList();
                 int conflictIndex = peptides.IndexOf("YVPIHTIDDGYSVIK");
                 Assert.AreNotEqual(-1, conflictIndex);
                 double conflictIrt = scores[conflictIndex].Value;
@@ -331,7 +331,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 355, 361, 10);
                 var scores = calculator.PeptideScores.ToList();
-                var peptides = scores.Select(item => item.Key).ToList();
+                var peptides = scores.Select(item => item.Key.Sequence).ToList();
                 int conflictIndex = peptides.IndexOf("YVPIHTIDDGYSVIK");
                 Assert.AreNotEqual(-1, conflictIndex);
                 double conflictIrt = scores[conflictIndex].Value;
@@ -347,7 +347,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 355, 361, 10);
                 var scores = calculator.PeptideScores.ToList();
-                var peptides = scores.Select(item => item.Key).ToList();
+                var peptides = scores.Select(item => item.Key.Sequence).ToList();
                 int conflictIndex = peptides.IndexOf("YVPIHTIDDGYSVIK");
                 Assert.AreNotEqual(-1, conflictIndex);
                 double conflictIrt = scores[conflictIndex].Value;
@@ -508,7 +508,7 @@ namespace pwiz.SkylineTestFunctional
             // Make small change to document to test robustness to concurrent document change
             RunUI(() => SkylineWindow.ModifyDocument("test change", doc =>
             {
-                var settingsNew = doc.Settings.ChangeTransitionFilter(filter => filter.ChangeProductCharges(new List<int> { 1, 2, 3 }));
+                var settingsNew = doc.Settings.ChangeTransitionFilter(filter => filter.ChangePeptideProductCharges(Adduct.ProtonatedFromCharges(1, 2, 3)));
                 doc = doc.ChangeSettings(settingsNew);
                 return doc;
             }));
@@ -551,7 +551,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(Settings.Default.RetentionTimeList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime));
             Assert.IsTrue(Settings.Default.RTScoreCalculatorList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator));
             // Check iRT peptides are the same as the ones in the document tree
-            var documentPeptides = SkylineWindow.Document.Peptides.Select(pep => pep.ModifiedSequence).ToList();
+            var documentPeptides = SkylineWindow.Document.Peptides.Select(pep => pep.ModifiedTarget).ToList();
             var calc = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;
             Assert.IsNotNull(calc);
             var irtPeptides = calc.PeptideScores.Select(kvp => kvp.Key).ToList();
@@ -588,7 +588,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 345, 355, 10);
                 var scores = calculator.PeptideScores.ToList();
-                var peptides = scores.Select(item => item.Key).ToList();
+                var peptides = scores.Select(item => item.Key.Sequence).ToList();
                 int conflictIndex = peptides.IndexOf("YVPIHTIDDGYSVIK");
                 Assert.AreNotEqual(-1, conflictIndex);
                 double conflictIrt = scores[conflictIndex].Value;
@@ -608,12 +608,12 @@ namespace pwiz.SkylineTestFunctional
             string dbPath = calcTemp.DatabasePath;
             IrtDb db = IrtDb.GetIrtDb(dbPath, null);
             var oldPeptides = db.GetPeptides().ToList();
-            var standardSeq = from peptide in oldPeptides where peptide.Standard select peptide.Sequence;
+            var standardSeq = from peptide in oldPeptides where peptide.Standard select peptide.Target;
             standardSeq = standardSeq.ToList();
             foreach (var groupNode in SkylineWindow.Document.PeptideTransitionGroups)
             {
                 // Every node other than iRT standards now has library info
-                if (standardSeq.Contains(groupNode.TransitionGroup.Peptide.Sequence))
+                if (standardSeq.Contains(groupNode.TransitionGroup.Peptide.Target))
                     continue;
                 Assert.IsTrue(groupNode.HasLibInfo);
                 Assert.IsTrue(groupNode.HasLibRanks);
@@ -668,7 +668,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 345, 355, 10);
                 var scores = calculator.PeptideScores.ToList();
-                var peptides = scores.Select(item => item.Key).ToList();
+                var peptides = scores.Select(item => item.Key.Sequence).ToList();
                 int conflictIndex = peptides.IndexOf("YVPIHTIDDGYSVIK");
                 Assert.AreNotEqual(-1, conflictIndex);
                 double conflictIrt = scores[conflictIndex].Value;
@@ -685,7 +685,7 @@ namespace pwiz.SkylineTestFunctional
             foreach (var groupNode in SkylineWindow.Document.PeptideTransitionGroups)
             {
                 // Every node other than iRT standards now has library info
-                if (standardSeq.Contains(groupNode.TransitionGroup.Peptide.Sequence))
+                if (standardSeq.Contains(groupNode.TransitionGroup.Peptide.Target))
                     continue;
                 Assert.IsTrue(groupNode.HasLibInfo);
                 Assert.IsTrue(groupNode.HasLibRanks);
@@ -797,7 +797,7 @@ namespace pwiz.SkylineTestFunctional
             // Change to document to test handling of concurrent change during mass list import
             RunUI(() => SkylineWindow.ModifyDocument("test change", doc =>
             {
-                var settingsNew = doc.Settings.ChangeTransitionFilter(filter => filter.ChangeProductCharges(new List<int> { 1, 2, 3 }));
+                var settingsNew = doc.Settings.ChangeTransitionFilter(filter => filter.ChangePeptideProductCharges(Adduct.ProtonatedFromCharges(1, 2, 3 )));
                 doc = doc.ChangeSettings(settingsNew);
                 return doc;
             }));
@@ -842,7 +842,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(libraryDlgOverwriteIrt.Btn0Click);
             TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 6);
             Assert.AreEqual(6, SkylineWindow.Document.PeptideCount);
-            var irtValue = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.ScoreSequence("AAAAAAAAAAAAAAAGAAGK");
+            var irtValue = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.ScoreSequence(new Target("AAAAAAAAAAAAAAAGAAGK"));
             Assert.IsNotNull(irtValue);
             Assert.AreEqual(irtValue.Value, 52.407, 1e-3);
 
@@ -855,7 +855,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(irtOverwriteNoLib, irtOverwriteNoLib.Btn1Click);
             TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 6);
             Assert.AreEqual(6, SkylineWindow.Document.PeptideCount);
-            var irtValueNoLib = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.ScoreSequence("AAAAAAAAAAAAAAAGAAGK");
+            var irtValueNoLib = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.ScoreSequence(new Target("AAAAAAAAAAAAAAAGAAGK"));
             Assert.IsNotNull(irtValueNoLib);
             Assert.AreEqual(irtValueNoLib.Value, 52.407, 1e-3);
 
@@ -946,8 +946,8 @@ namespace pwiz.SkylineTestFunctional
                 if (i == 1)
                 {
                     // Works even when none of these transitions are allowed by the settings
-                    SkylineWindow.Document.Settings.TransitionSettings.Filter.ChangeIonTypes(new [] {IonType.z});
-                    SkylineWindow.Document.Settings.TransitionSettings.Filter.ChangePrecursorCharges(new[] { 5 });
+                    SkylineWindow.Document.Settings.TransitionSettings.Filter.ChangePeptideIonTypes(new [] {IonType.z});
+                    SkylineWindow.Document.Settings.TransitionSettings.Filter.ChangePeptidePrecursorCharges(Adduct.ProtonatedFromCharges( 5 ));
                 }
                 using (new WaitDocumentChange())
                 {
@@ -1155,7 +1155,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 foreach (var nodePep in nodePepGroup.Peptides)
                 {
-                    Assert.IsNotNull(calc.ScoreSequence(nodePep.ModifiedSequence));
+                    Assert.IsNotNull(calc.ScoreSequence(nodePep.ModifiedTarget));
                     Assert.IsTrue(nodePep.HasLibInfo);
                 }
             }

@@ -338,6 +338,12 @@
   <data name="zionsContextMenuItem.Text" xml:space="preserve">
     <value>Z-ions</value>
   </data>
+  <data name="fragmentionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="fragmentionsContextMenuItem.Text" xml:space="preserve">
+    <value>Fragment ions</value>
+  </data>
   <data name="precursorIonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
   </data>
@@ -2444,6 +2450,12 @@
   </data>
   <data name="zMenuItem.Text" xml:space="preserve">
     <value>&amp;Z</value>
+  </data>
+  <data name="fragmentsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>124, 22</value>
+  </data>
+  <data name="fragmentsMenuItem.Text" xml:space="preserve">
+    <value>&amp;Fragments</value>
   </data>
   <data name="precursorIonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>124, 22</value>

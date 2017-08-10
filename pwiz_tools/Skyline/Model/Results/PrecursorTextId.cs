@@ -23,15 +23,15 @@ namespace pwiz.Skyline.Model.Results
 {
     public struct PrecursorTextId
     {
-        public PrecursorTextId(SignedMz precursorMz, string textId, ChromExtractor extractor) : this()
+        public PrecursorTextId(SignedMz precursorMz, Target target, ChromExtractor extractor) : this()
         {
             PrecursorMz = precursorMz;
-            TextId = textId;
+            Target = target;
             Extractor = extractor;
         }
 
         public SignedMz PrecursorMz { get; private set; }
-        public string TextId { get; private set; }  // Peptide Modifed Sequence or custom ion ID
+        public Target Target { get; private set; }  // Peptide Modifed Sequence or custom ion ID
         public ChromExtractor Extractor { get; private set; }
 
         #region object overrides
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Results
         public bool Equals(PrecursorTextId other)
         {
             return PrecursorMz.Equals(other.PrecursorMz) &&
-                string.Equals(TextId, other.TextId) &&
+                string.Equals(Target, other.Target) &&
                 Extractor == other.Extractor;
         }
 
@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int hashCode = PrecursorMz.GetHashCode();
-                hashCode = (hashCode*397) ^ (TextId != null ? TextId.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (Target != null ? Target.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (int) Extractor;
                 return hashCode;
             }
@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return string.Format("{0} - {1} ({2})", TextId, PrecursorMz, Extractor);    // Not L10N - debugging
+            return string.Format("{0} - {1} ({2})", Target, PrecursorMz, Extractor);    // Not L10N - debugging
         }
 
         private sealed class PrecursorMzTextIdComparer : IComparer<PrecursorTextId>
@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.Results
                 int c = x.PrecursorMz.CompareTo(y.PrecursorMz);
                 if (c != 0)
                     return c;
-                c = string.CompareOrdinal(x.TextId, y.TextId);
+                c = Target.CompareOrdinal(x.Target, y.Target);
                 if (c != 0)
                     return c;
                 return x.Extractor - y.Extractor;

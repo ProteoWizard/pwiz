@@ -86,15 +86,15 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        public IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides, out int minCount)
+        public IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount)
         {
             minCount = 0;
             return peptides;
         }
 
-        public IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides)
+        public IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides)
         {
-            return new string[] {};
+            return new Target[] { };
         }
 
         public RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
@@ -596,9 +596,12 @@ namespace pwiz.Skyline.Util
             get { return 0; }
         }
 
-        public double? ScoreSequence(string seq)
+        public double? ScoreSequence(Target item)
         {
-            seq = FastaSequence.StripModifications(seq);
+            if (!item.IsProteomic)
+                return 0;
+
+            var seq = FastaSequence.StripModifications(item.Sequence);
             double tsum3 = 0.0;
             int i;
 

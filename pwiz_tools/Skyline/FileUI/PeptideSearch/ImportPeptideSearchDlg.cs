@@ -420,14 +420,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             TransitionFilter filter = TransitionSettings.Filter;
             if (FullScanSettingsControl.PrecursorChargesTextBox.Visible)
             {
-                int[] precursorCharges;
-                if (!helper.ValidateNumberListTextBox(FullScanSettingsControl.PrecursorChargesTextBox, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, out precursorCharges))
+                Adduct[] precursorCharges;
+                if (!TransitionSettingsControl.ValidateAdductListTextBox(helper, FullScanSettingsControl.PrecursorChargesTextBox, true, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, out precursorCharges))
                     return false;
                 precursorCharges = precursorCharges.Distinct().ToArray();
-                filter = TransitionSettings.Filter.ChangePrecursorCharges(precursorCharges);
+                filter = TransitionSettings.Filter.ChangePeptidePrecursorCharges(precursorCharges);
             }
-            if (WorkflowType == Workflow.dda && !filter.IonTypes.Contains(IonType.precursor))
-                filter = filter.ChangeIonTypes(new[] {IonType.precursor});
+            if (WorkflowType == Workflow.dda && !filter.PeptideIonTypes.Contains(IonType.precursor))
+                filter = filter.ChangePeptideIonTypes(new[] {IonType.precursor});
             if (!filter.AutoSelect)
                 filter = filter.ChangeAutoSelect(true);
             Helpers.AssignIfEquals(ref filter, TransitionSettings.Filter);

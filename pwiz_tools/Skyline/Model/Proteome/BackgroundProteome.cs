@@ -43,14 +43,14 @@ namespace pwiz.Skyline.Model.Proteome
         {
             private readonly BackgroundProteome _parent;
             private bool? _needsProteinMetadataSearch;
-            private Dictionary<string, DigestionPeptideStats> _peptideUniquenessDict;
+            private Dictionary<Target, DigestionPeptideStats> _peptideUniquenessDict;
             private string _enzymeNameForPeptideUniquenessDictDigest;
 
 
             public BackgroundProteomeMetadataCache(BackgroundProteome b)
             {
                 _parent = b;
-                _peptideUniquenessDict = new Dictionary<string, DigestionPeptideStats>(); // Prepare to cache any peptide uniqueness checks we may do
+                _peptideUniquenessDict = new Dictionary<Target, DigestionPeptideStats>(); // Prepare to cache any peptide uniqueness checks we may do
             }
 
             public bool GetNeedsProteinMetadataSearch()
@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model.Proteome
             /// <param name="peptidesOfInterest">this is a dictionary instead of a list only because we need an efficient lookup, and caller will already have created this which can be large and expensive to construct.</param>
             /// <param name="progressMonitor">cancellation checker</param>
             /// <returns>updated peptide settings with uniqueness information for peptides of interest</returns>
-            public Dictionary<string, DigestionPeptideStats> GetUniquenessDict(PeptideSettings peptideSettings, Dictionary<string, bool> peptidesOfInterest, SrmSettingsChangeMonitor progressMonitor)
+            public Dictionary<Target, DigestionPeptideStats> GetUniquenessDict(PeptideSettings peptideSettings, Dictionary<Target, bool> peptidesOfInterest, SrmSettingsChangeMonitor progressMonitor)
             {
                 // Do we have a cached dictionary suitable to the task?
                 var enzyme = peptideSettings.Enzyme;
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Proteome
                 }
                 if (!Equals(enzyme.Name, _enzymeNameForPeptideUniquenessDictDigest))
                 {
-                    _peptideUniquenessDict = new Dictionary<string, DigestionPeptideStats>();
+                    _peptideUniquenessDict = new Dictionary<Target, DigestionPeptideStats>();
                 }
                 else
                 {
@@ -211,14 +211,14 @@ namespace pwiz.Skyline.Model.Proteome
             }
         }
 
-        public Dictionary<string, DigestionPeptideStats> GetPeptidesAppearanceCounts(Dictionary<string, bool> peptidesOfInterest, Enzyme enzyme, PeptideSettings settings, SrmSettingsChangeMonitor progressMonitor)
+        public Dictionary<Target, DigestionPeptideStats> GetPeptidesAppearanceCounts(Dictionary<Target, bool> peptidesOfInterest, Enzyme enzyme, PeptideSettings settings, SrmSettingsChangeMonitor progressMonitor)
         {
             var appearances = GetPeptidesAppearances(peptidesOfInterest, enzyme, settings, progressMonitor);
             if (appearances == null)
             {
                 return null; // Cancelled
             }
-            return appearances.ToDictionary(pep => pep.Key,
+            return appearances.ToDictionary(pep => new Target(pep.Key),
                 pep => new DigestionPeptideStats(pep.Value.Proteins.Count, pep.Value.Genes.Count, pep.Value.Species.Count));
         }
 
@@ -232,19 +232,19 @@ namespace pwiz.Skyline.Model.Proteome
         /// <param name="progressMonitor">cancellation checker</param>
         /// <returns></returns>
         public Dictionary<string, DigestionPeptideStatsDetailed> GetPeptidesAppearances(
-            Dictionary<string, bool> peptidesOfInterest, Enzyme enzyme, PeptideSettings settings, SrmSettingsChangeMonitor progressMonitor)
+            Dictionary<Target, bool> peptidesOfInterest, Enzyme enzyme, PeptideSettings settings, SrmSettingsChangeMonitor progressMonitor)
         {
             if (string.IsNullOrEmpty(DatabasePath))
             {
                 return null;
             }
-            var results = peptidesOfInterest.ToDictionary(pep => pep.Key, pep =>  new DigestionPeptideStatsDetailed());
+            var results = peptidesOfInterest.ToDictionary(pep => pep.Key.Sequence, pep =>  new DigestionPeptideStatsDetailed());
             if (results.Count == 0)
             {
                 return results;
             }
             var protease = new ProteaseImpl(enzyme);
-            var maxPeptideLength = peptidesOfInterest.Max(p => p.Key.Length); // No interest in any peptide longer than the longest one of interest
+            var maxPeptideLength = peptidesOfInterest.Max(p => p.Key.Sequence.Length); // No interest in any peptide longer than the longest one of interest
             const int DIGEST_CHUNKSIZE = 1000; // Check for cancel every N proteins
             var proteinCount = 0;
             using (var proteomeDb = OpenProteomeDb())
@@ -287,7 +287,7 @@ namespace pwiz.Skyline.Model.Proteome
             return results;
         }
 
-        public Dictionary<string, bool> PeptidesUniquenessFilter(Dictionary<string, bool> sequences, PeptideSettings peptideSettings, SrmSettingsChangeMonitor progressMonitor)
+        public Dictionary<Target, bool> PeptidesUniquenessFilter(Dictionary<Target, bool> sequences, PeptideSettings peptideSettings, SrmSettingsChangeMonitor progressMonitor)
         {
             var peptideUniquenessConstraint = peptideSettings.Filter.PeptideUniqueness;
             Assume.IsTrue(sequences.All(s => s.Value));  // Caller should seed this with all true
@@ -301,7 +301,7 @@ namespace pwiz.Skyline.Model.Proteome
                 var peptideUniquenessDict = _cache.GetUniquenessDict(peptideSettings, sequences, progressMonitor);
                 if (peptideUniquenessDict == null)
                 {
-                    return new Dictionary<string, bool>();  // Cancelled
+                    return new Dictionary<Target, bool>();  // Cancelled
                 }
                 foreach (var seq in sequences.Keys.ToArray())
                 {

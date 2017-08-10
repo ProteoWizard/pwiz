@@ -128,8 +128,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var groupComparisonDef = groupComparisonModel.GroupComparisonDef;
             var document = groupComparisonModel.Document;
             var sequences = new List<Tuple<string, bool>>();
+
             foreach (var nodePep in document.Molecules)
-                sequences.Add(new Tuple<string, bool>(nodePep.RawTextId, nodePep.IsProteomic));
+                sequences.Add(new Tuple<string, bool>(nodePep.ModifiedTarget.DisplayName, nodePep.IsProteomic));
             var uniquePrefixGenerator = new UniquePrefixGenerator(sequences, 3);
             var textLabels = new List<string>();
             var rows = _bindingListSource.OfType<RowItem>()
@@ -148,7 +149,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 string label;
                 if (null != row.Peptide)
                 {
-                    label = uniquePrefixGenerator.GetUniquePrefix(row.Peptide.GetDocNode().RawTextId, row.Peptide.GetDocNode().IsProteomic);
+                    label = uniquePrefixGenerator.GetUniquePrefix(row.Peptide.GetDocNode().ModifiedTarget.DisplayName, row.Peptide.GetDocNode().IsProteomic);
                 }
                 else
                 {

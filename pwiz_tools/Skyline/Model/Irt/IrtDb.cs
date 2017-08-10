@@ -60,8 +60,8 @@ namespace pwiz.Skyline.Model.Irt
         private readonly ReaderWriterLock _databaseLock;
 
         private DateTime _modifiedTime;
-        private ImmutableDictionary<string, double> _dictStandards;
-        private ImmutableDictionary<string, double> _dictLibrary;
+        private ImmutableDictionary<Target, double> _dictStandards;
+        private ImmutableDictionary<Target, double> _dictLibrary;
 
         private IrtDb(String path, ISessionFactory sessionFactory)
         {
@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public double UnknownScore { get; private set; }
 
-        public IEnumerable<KeyValuePair<string, double>> PeptideScores
+        public IEnumerable<KeyValuePair<Target, double>> PeptideScores
         {
             get { return new[] {DictStandards, DictLibrary}.SelectMany(dict => dict); }
         }
@@ -115,16 +115,16 @@ namespace pwiz.Skyline.Model.Irt
             get { return new[] {DictStandards, DictLibrary}.SelectMany(dict => dict.Values); }
         }
 
-        private IDictionary<string, double> DictStandards
+        private IDictionary<Target, double> DictStandards
         {
             get { return _dictStandards; }
-            set { _dictStandards = new ImmutableDictionary<string, double>(value); }
+            set { _dictStandards = new ImmutableDictionary<Target, double>(value); }
         }
 
-        private IDictionary<string, double> DictLibrary
+        private IDictionary<Target, double> DictLibrary
         {
             get { return _dictLibrary; }
-            set { _dictLibrary = new ImmutableDictionary<string, double>(value);}
+            set { _dictLibrary = new ImmutableDictionary<Target, double>(value); }
         }
 
         private ISession OpenWriteSession()
@@ -132,12 +132,12 @@ namespace pwiz.Skyline.Model.Irt
             return new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, true);
         }
 
-        public IEnumerable<string> StandardPeptides
+        public IEnumerable<Target> StandardPeptides
         {
             get { return DictStandards.Keys; }
         }
 
-        public bool IsStandard(string seq)
+        public bool IsStandard(Target seq)
         {
             return DictStandards.ContainsKey(seq);
         }
@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Model.Irt
             get { return DictStandards.Count; }
         }
 
-        public IEnumerable<string> LibraryPeptides
+        public IEnumerable<Target> LibraryPeptides
         {
             get { return DictLibrary.Keys; }
         }
@@ -157,7 +157,7 @@ namespace pwiz.Skyline.Model.Irt
             get { return DictLibrary.Count; }
         }
 
-        public double? ScoreSequence(string seq)
+        public double? ScoreSequence(Target seq)
         {
             double irt;
             if (seq != null && (DictStandards.TryGetValue(seq, out irt) || DictLibrary.TryGetValue(seq, out irt)))
@@ -220,7 +220,7 @@ namespace pwiz.Skyline.Model.Irt
         public IrtDb UpdatePeptides(IList<DbIrtPeptide> newPeptides, IList<DbIrtPeptide> oldPeptides)
         {
             var setNew = new HashSet<long>(newPeptides.Select(pep => pep.Id.HasValue ? pep.Id.Value : 0));
-            var dictOld = oldPeptides.ToDictionary(pep => pep.PeptideModSeq);
+            var dictOld = oldPeptides.ToDictionary(pep => pep.ModifiedTarget);
 
             using (var session = OpenWriteSession())
             using (var transaction = session.BeginTransaction())
@@ -239,7 +239,7 @@ namespace pwiz.Skyline.Model.Irt
                 foreach (var peptideNew in newPeptides)
                 {
                     DbIrtPeptide peptideOld;
-                    if (dictOld.TryGetValue(peptideNew.PeptideModSeq, out peptideOld) &&
+                    if (dictOld.TryGetValue(peptideNew.ModifiedTarget, out peptideOld) &&
                             Equals(peptideNew, peptideOld))
                         continue;
 
@@ -256,8 +256,8 @@ namespace pwiz.Skyline.Model.Irt
 
         private void LoadPeptides(IEnumerable<DbIrtPeptide> peptides)
         {
-            var dictStandards = new Dictionary<string, double>();
-            var dictLibrary = new Dictionary<string, double>();
+            var dictStandards = new Dictionary<Target, double>();
+            var dictLibrary = new Dictionary<Target, double>();
 
             foreach (var pep in peptides)
             {

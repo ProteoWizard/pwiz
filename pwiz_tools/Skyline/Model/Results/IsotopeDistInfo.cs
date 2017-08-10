@@ -32,27 +32,24 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class IsotopeDistInfo : Immutable
     {
-        private readonly double _monoisotopicMass;
-        private readonly int _charge;
-        private readonly bool _isMassH;
+        private readonly TypedMass _monoisotopicMass;
+        private readonly Adduct _adduct;
         private ImmutableList<MzRankProportion> _expectedDistribution;
 
         public IsotopeDistInfo(MassDistribution massDistribution,
-                               double monoisotopicMass,
-                               bool isMassH, // Is monoisotopicMass M+H, or just M as in small molecule use?
-                               int charge,
+                               TypedMass monoisotopicMass,
+                               Adduct adduct,
                                Func<double, double> calcFilterWindow,
                                double massResolution,
                                double minimumAbundance)
         {
             _monoisotopicMass = monoisotopicMass;
-            _charge = charge;
-            _isMassH = isMassH;
+            _adduct = adduct.Unlabeled; // Don't reapply explicit isotope labels
 
             // Get peak center of mass values for the given resolution
             var q1FilterValues = MassDistribution.NewInstance(massDistribution, massResolution, 0).Keys.ToList();
             // Find the monoisotopic m/z and make sure it is exactly the expected number
-            double monoMz = isMassH ? SequenceMassCalc.GetMZ(_monoisotopicMass, _charge) : BioMassCalc.CalculateIonMz(_monoisotopicMass, _charge);
+            double monoMz = _adduct.MzFromNeutralMass(_monoisotopicMass);
             double monoMzDist = monoMz;
             int monoMassIndex = 0;
             for (int i = 0; i < q1FilterValues.Count; i++)
@@ -85,7 +82,7 @@ namespace pwiz.Skyline.Model.Results
                 return;
             }
 
-            var signedQ1FilterValues = q1FilterValues.Select(q => new SignedMz(q, charge < 0)).ToList();
+            var signedQ1FilterValues = q1FilterValues.Select(q => new SignedMz(q, adduct.AdductCharge < 0)).ToList();
 
             // Use the filtering algorithm that will be used on real data to determine the
             // expected proportions of the mass distribution that will end up filtered into
@@ -96,7 +93,7 @@ namespace pwiz.Skyline.Model.Results
             filter.AddQ1FilterValues(signedQ1FilterValues, calcFilterWindow);
 
             var expectedSpectrum = filter.FilterQ1SpectrumList(new[] { new MsDataSpectrum
-            { Mzs = massDistribution.Keys.ToArray(), Intensities = massDistribution.Values.ToArray(), NegativeCharge = (charge < 0) } });
+            { Mzs = massDistribution.Keys.ToArray(), Intensities = massDistribution.Values.ToArray(), NegativeCharge = (adduct.AdductCharge < 0) } });
 
             int startIndex = expectedSpectrum.Intensities.IndexOf(inten => inten >= minimumAbundance);
             if (startIndex == -1)
@@ -191,14 +188,16 @@ namespace pwiz.Skyline.Model.Results
             return ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz;
         }
 
-        public double GetMassI(int massIndex, int? decoyMassShift = null)
+        public TypedMass GetMassI(int massIndex, int? decoyMassShift = null)
         {
             // Return the original monoisotopic mass + H, if requested to maintain an exact match.
             if (massIndex == 0 && !decoyMassShift.HasValue)
                 return _monoisotopicMass;
             // Otherwize use the charge to convert from the peak center m/z values
             double shift = SequenceMassCalc.GetPeptideInterval(decoyMassShift);    // Correct for shift applied to the distribution
-            return _isMassH ? SequenceMassCalc.GetMH(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _charge) : BioMassCalc.CalculateIonMassFromMz(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _charge);
+            return _monoisotopicMass.IsMassH() ? 
+                new TypedMass(SequenceMassCalc.GetMH(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _adduct.AdductCharge), _monoisotopicMass.MassType) :
+                _adduct.MassFromMz(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _monoisotopicMass.MassType);
         }
 
         #region object overrides
@@ -208,10 +207,22 @@ namespace pwiz.Skyline.Model.Results
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return other._monoisotopicMass.Equals(_monoisotopicMass) &&
-                other._charge == _charge &&
-                ArrayUtil.EqualsDeep(other._expectedDistribution, _expectedDistribution) &&
-                other.MonoMassIndex == MonoMassIndex &&
-                other.BaseMassIndex == BaseMassIndex;
+                   other._adduct == _adduct &&
+                   ArrayUtil.EqualsDeep(other._expectedDistribution, _expectedDistribution) &&
+                   other.MonoMassIndex == MonoMassIndex &&
+                   other.BaseMassIndex == BaseMassIndex;
+        }
+
+        // For test purposes
+        public bool IsSimilar(IsotopeDistInfo other) 
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return  _monoisotopicMass.Equivalent(other._monoisotopicMass) && // Allows comparison of massH and straight mass
+                   other._adduct.AdductFormula == _adduct.AdductFormula &&
+                   ArrayUtil.EqualsDeep(other._expectedDistribution, _expectedDistribution) &&
+                   other.MonoMassIndex == MonoMassIndex &&
+                   other.BaseMassIndex == BaseMassIndex;
         }
 
         public override bool Equals(object obj)
@@ -227,7 +238,7 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int result = _monoisotopicMass.GetHashCode();
-                result = (result*397) ^ _charge;
+                result = (result*397) ^ _adduct.GetHashCode();
                 result = (result*397) ^ (_expectedDistribution != null ? _expectedDistribution.GetHashCodeDeep() : 0);
                 result = (result*397) ^ MonoMassIndex;
                 result = (result*397) ^ BaseMassIndex;

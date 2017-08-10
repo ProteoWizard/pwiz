@@ -146,25 +146,25 @@
   <data name="&gt;&gt;lblPrecursorCharges.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
-  <data name="txtPrecursorCharges.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="txtPeptidePrecursorCharges.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 19</value>
   </data>
-  <data name="txtPrecursorCharges.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="txtPeptidePrecursorCharges.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 20</value>
   </data>
-  <data name="txtPrecursorCharges.TabIndex" type="System.Int32, mscorlib">
+  <data name="txtPeptidePrecursorCharges.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;txtPrecursorCharges.Name" xml:space="preserve">
-    <value>txtPrecursorCharges</value>
+  <data name="&gt;&gt;txtPeptidePrecursorCharges.Name" xml:space="preserve">
+    <value>txtPeptidePrecursorCharges</value>
   </data>
-  <data name="&gt;&gt;txtPrecursorCharges.Type" xml:space="preserve">
+  <data name="&gt;&gt;txtPeptidePrecursorCharges.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;txtPrecursorCharges.Parent" xml:space="preserve">
+  <data name="&gt;&gt;txtPeptidePrecursorCharges.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;txtPrecursorCharges.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;txtPeptidePrecursorCharges.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
   <data name="lblIonCharges.AutoSize" type="System.Boolean, mscorlib">
@@ -194,25 +194,25 @@
   <data name="&gt;&gt;lblIonCharges.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
-  <data name="txtIonCharges.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="txtPrecursorIonCharges.Location" type="System.Drawing.Point, System.Drawing">
     <value>144, 19</value>
   </data>
-  <data name="txtIonCharges.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="txtPrecursorIonCharges.Size" type="System.Drawing.Size, System.Drawing">
     <value>76, 20</value>
   </data>
-  <data name="txtIonCharges.TabIndex" type="System.Int32, mscorlib">
+  <data name="txtPrecursorIonCharges.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="&gt;&gt;txtIonCharges.Name" xml:space="preserve">
-    <value>txtIonCharges</value>
+  <data name="&gt;&gt;txtPrecursorIonCharges.Name" xml:space="preserve">
+    <value>txtPrecursorIonCharges</value>
   </data>
-  <data name="&gt;&gt;txtIonCharges.Type" xml:space="preserve">
+  <data name="&gt;&gt;txtPrecursorIonCharges.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;txtIonCharges.Parent" xml:space="preserve">
+  <data name="&gt;&gt;txtPrecursorIonCharges.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;txtIonCharges.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;txtPrecursorIonCharges.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
   <data name="lblIonTypes.AutoSize" type="System.Boolean, mscorlib">

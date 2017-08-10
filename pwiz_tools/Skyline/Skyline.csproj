@@ -790,6 +790,7 @@
     <Compile Include="Model\AbstractMassListExporter.cs" />
     <Compile Include="Model\ComparePeakBoundaries.cs" />
     <Compile Include="Model\CustomIon.cs" />
+    <Compile Include="Model\CustomMolecule.cs" />
     <Compile Include="Model\Databinding\AnnotationPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\AnnotationTargetAttribute.cs" />
     <Compile Include="Model\Databinding\AnnotationValueListDataGridViewColumn.cs" />
@@ -2408,7 +2409,9 @@
     <EmbeddedResource Include="Resources\PeptideList.bmp" />
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchDIA.png" />
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
+    <EmbeddedResource Include="Resources\Ions_fragments.bmp" />
     <Content Include="Resources\Locked.bmp" />
+    <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <Content Include="Resources\MoleculeStandard.bmp" />
     <Content Include="Resources\Pindownlight.bmp" />
     <Content Include="Resources\Pinleftlight.bmp" />
@@ -3200,6 +3203,7 @@
       <DependentUpon>ToolUpdatesDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="UpgradeManager.cs" />
+    <Compile Include="Util\Adduct.cs" />
     <Compile Include="Util\AxisLabelScaler.cs" />
     <Compile Include="Util\BackgroundEventThreads.cs" />
     <Compile Include="Util\BioMassCalc.cs" />

@@ -188,7 +188,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 return string.Format("{0}{1}{2}{3}", // Not L10N
                                      labelPrefix,
                                      GetMzLabel(nodeTran),
-                                     Transition.GetChargeIndicator(tran.Charge),
+                                     Transition.GetChargeIndicator(tran.Adduct),
                                      resultsText);
             }
             
@@ -199,7 +199,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             return string.Format("{0}{1}{2} ({3}){4}", // Not L10N
                                  labelPrefix,
                                  GetMzLabel(nodeTran),
-                                 Transition.GetChargeIndicator(tran.Charge),
+                                 Transition.GetChargeIndicator(tran.Adduct),
                                  rank,
                                  resultsText);
         }
@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             using (RenderTools rt = new RenderTools())
             {
                 table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Ion, nodeTran.Transition.FragmentIonName, rt);
-                table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Charge, nodeTran.Transition.Charge.ToString(LocalizationHelper.CurrentCulture), rt);
+                table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Charge, nodeTran.Transition.Adduct.AdductCharge.ToString(LocalizationHelper.CurrentCulture), rt);
                 table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Product_m_z, string.Format("{0:F04}", nodeTran.Mz), rt); // Not L10N
                 int? decoyMassShift = nodeTran.Transition.DecoyMassShift;
                 if (decoyMassShift.HasValue)
@@ -263,7 +263,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 }
                 if (nodeTran.Transition.IsCustom() && !string.IsNullOrEmpty(nodeTran.Transition.CustomIon.Formula))
                 {
-                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, nodeTran.Transition.CustomIon.Formula, rt);
+                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, nodeTran.Transition.CustomIon.Formula + nodeTran.Transition.Adduct.AdductFormula.ToString(LocalizationHelper.CurrentCulture), rt);
                 }
 
                 SizeF size = table.CalcDimensions(g);

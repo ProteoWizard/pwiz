@@ -26,6 +26,7 @@ namespace pwiz.Common.Chemistry
     public class AminoAcidFormulas
     {
 // ReSharper disable InconsistentNaming
+        // public const double ProtonMass = 1.007276466879;  // per http://physics.nist.gov/cgi-bin/cuu/Value?mpu|search_for=proton+mass 12/18/2016
         public const double ProtonMass = 1.00727649;
 
         // ReSharper disable NonLocalizedString

@@ -31,11 +31,11 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public class AlignedRetentionTimes
     {
-        public IDictionary<string, double> TargetTimes { get; private set; }
+        public IDictionary<Target, double> TargetTimes { get; private set; }
         /// <summary>
         /// The original times that were read out of the spectral library.
         /// </summary>
-        public IDictionary<string, double> OriginalTimes { get; private set; }
+        public IDictionary<Target, double> OriginalTimes { get; private set; }
 
         public RetentionTimeRegression Regression { get; private set; }
         public RetentionTimeStatistics RegressionStatistics { get; private set; }
@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.Lib
         /// In cases where there is more than one MS2 id in either file, only the earliest MS2 id from
         /// each file is used.
         /// </summary>
-        public static AlignedRetentionTimes AlignLibraryRetentionTimes(IDictionary<string, double> target, IDictionary<string, double> originalTimes, double refinementThreshhold, RegressionMethodRT regressionMethod,
+        public static AlignedRetentionTimes AlignLibraryRetentionTimes(IDictionary<Target, double> target, IDictionary<Target, double> originalTimes, double refinementThreshhold, RegressionMethodRT regressionMethod,
             Func<bool> isCanceled)
         {
             var calculator = new DictionaryRetentionScoreCalculator("alignment", originalTimes); // Not L10N
@@ -130,14 +130,14 @@ namespace pwiz.Skyline.Model.Lib
 
     internal class DictionaryRetentionScoreCalculator : RetentionScoreCalculatorSpec
     {
-        public DictionaryRetentionScoreCalculator(string name, IDictionary<string, double> retentionTimes)
+        public DictionaryRetentionScoreCalculator(string name, IDictionary<Target, double> retentionTimes)
             : base(name)
         {
             RetentionTimes = retentionTimes;
         }
 
-        public IDictionary<string, double> RetentionTimes { get; private set; }
-        public override double? ScoreSequence(string modifiedSequence)
+        public IDictionary<Target, double> RetentionTimes { get; private set; }
+        public override double? ScoreSequence(Target modifiedSequence)
         {
             double result;
             if (RetentionTimes.TryGetValue(modifiedSequence, out result))
@@ -152,13 +152,13 @@ namespace pwiz.Skyline.Model.Lib
             get { return double.NaN; }
         }
 
-        public override IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides, out int minCount)
+        public override IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount)
         {
             minCount = 0;
             return peptides.Where(peptide => null != ScoreSequence(peptide));
         }
 
-        public override IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides)
+        public override IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides)
         {
             int minCount;
             return ChooseRegressionPeptides(peptides, out minCount);

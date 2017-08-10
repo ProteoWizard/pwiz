@@ -499,7 +499,7 @@ namespace pwiz.SkylineTestA
             bool precursorsOnly, bool isMethod)
         {
             var refine = new RefinementSettings();
-            var docMixed = refine.ConvertToSmallMolecules(doc, RefinementSettings.ConvertToSmallMoleculesMode.formulas,
+            var docMixed = refine.ConvertToSmallMolecules(doc, testFilesDir.FullPath, RefinementSettings.ConvertToSmallMoleculesMode.formulas,
                 RefinementSettings.ConvertToSmallMoleculesChargesMode.invert_some); // Convert every other transition group to negative charge
             var xml = string.Empty;
             AssertEx.RoundTrip(docMixed, ref xml);

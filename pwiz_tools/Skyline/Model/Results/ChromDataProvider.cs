@@ -81,8 +81,7 @@ namespace pwiz.Skyline.Model.Results
 
         public virtual void SetRequestOrder(IList<IList<int>> orderedSets) { }
 
-        public abstract bool GetChromatogram(int id, string modifiedSequence, Color color, out ChromExtra extra,
-            out TimeIntensities timeIntensities);
+        public abstract bool GetChromatogram(int id, Target modifiedSequence, Color color, out ChromExtra extra, out TimeIntensities timeIntensities);
 
         public abstract double? MaxRetentionTime { get; }
 
@@ -269,7 +268,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromIds; }
         }
 
-        public override bool GetChromatogram(int id, string modifiedSequence, Color color, out ChromExtra extra, out TimeIntensities timeIntensities)
+        public override bool GetChromatogram(int id, Target modifiedSequence, Color color, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
             // No mass errors in SRM
             if (_readChromatograms == 0)

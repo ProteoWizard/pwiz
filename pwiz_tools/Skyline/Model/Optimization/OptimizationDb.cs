@@ -300,7 +300,7 @@ namespace pwiz.Skyline.Model.Optimization
         public static OptimizationDb ConvertFromOldFormat(string path, IProgressMonitor loadMonitor, ProgressStatus status, SrmDocument document)
         {
             // Try to open assuming old format (Id, PeptideModSeq, Charge, Mz, Value, Type)
-            var precursors = new Dictionary<string, HashSet<int>>(); // PeptideModSeq -> charges
+            var precursors = new Dictionary<Target, HashSet<int>>(); // PeptideModSeq -> charges
             var optimizations = new List<Tuple<DbOptimization, double>>(); // DbOptimization, product m/z
             int maxCharge = 1;
             using (SQLiteConnection connection = new SQLiteConnection("Data Source = " + path)) // Not L10N
@@ -313,11 +313,11 @@ namespace pwiz.Skyline.Model.Optimization
                     while (reader.Read())
                     {
                         var type = (OptimizationType)reader["Type"]; // Not L10N
-                        var modifiedSequence = reader["PeptideModSeq"].ToString(); // Not L10N
+                        var modifiedSequence = new Target(reader["PeptideModSeq"].ToString()); // Not L10N
                         var charge = (int)reader["Charge"]; // Not L10N
                         var productMz = (double)reader["Mz"]; // Not L10N
                         var value = (double)reader["Value"]; // Not L10N
-                        optimizations.Add(new Tuple<DbOptimization, double>(new DbOptimization(type, modifiedSequence, charge, string.Empty, -1, value), productMz));
+                        optimizations.Add(new Tuple<DbOptimization, double>(new DbOptimization(type, modifiedSequence, Adduct.FromChargeProtonated(charge), string.Empty, Adduct.EMPTY, value), productMz));
 
                         if (!precursors.ContainsKey(modifiedSequence))
                         {
@@ -334,7 +334,7 @@ namespace pwiz.Skyline.Model.Optimization
 
             var peptideList = (from precursor in precursors
                                from charge in precursor.Value
-                               select string.Format("{0}{1}", precursor.Key, Transition.GetChargeIndicator(charge)) // Not L10N
+                               select string.Format("{0}{1}", precursor.Key, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(charge))) // Not L10N
                                ).ToList();
 
             var newDoc = new SrmDocument(document != null ? document.Settings : SrmSettingsList.GetDefault());
@@ -343,8 +343,8 @@ namespace pwiz.Skyline.Model.Optimization
                 .ChangeTransitionFilter(filter =>
                     filter.ChangeFragmentRangeFirstName("ion 1") // Not L10N
                           .ChangeFragmentRangeLastName("last ion") // Not L10N
-                          .ChangeProductCharges(Enumerable.Range(1, maxCharge).ToList())
-                          .ChangeIonTypes(new []{ IonType.y, IonType.b }))
+                          .ChangePeptideProductCharges(Enumerable.Range(1, maxCharge).Select(Adduct.FromChargeProtonated).ToList()) // TODO(bspratt) negative charge peptides
+                          .ChangePeptideIonTypes(new []{ IonType.y, IonType.b })) // TODO(bspratt) generalize to molecules?
                 .ChangeTransitionLibraries(libs => libs.ChangePick(TransitionLibraryPick.none))
                 );
             var matcher = new ModificationMatcher { FormatProvider = NumberFormatInfo.InvariantInfo };
@@ -356,22 +356,22 @@ namespace pwiz.Skyline.Model.Optimization
             int optimizationsUpdated = 0;
             foreach (PeptideDocNode nodePep in imported.Children)
             {
-                string sequence = newDoc.Settings.GetSourceTextId(nodePep);
+                var sequence = newDoc.Settings.GetSourceTarget(nodePep);
                 foreach (var nodeGroup in nodePep.TransitionGroups)
                 {
-                    int charge = nodeGroup.PrecursorCharge;
+                    var charge = nodeGroup.PrecursorAdduct;
                     foreach (var nodeTran in nodeGroup.Transitions)
                     {
                         double productMz = nodeTran.Mz;
                         foreach (var optimization in optimizations.Where(opt =>
                             string.IsNullOrEmpty(opt.Item1.FragmentIon) &&
-                            opt.Item1.ProductCharge == -1 &&
-                            opt.Item1.PeptideModSeq == sequence &&
-                            opt.Item1.Charge == charge &&
+                            opt.Item1.ProductAdduct.IsEmpty &&  
+                            Equals(opt.Item1.Target,sequence) &&
+                            Equals(opt.Item1.Adduct,charge) &&
                             Math.Abs(opt.Item2 - productMz) < 0.00001))
                         {
                             optimization.Item1.FragmentIon = nodeTran.FragmentIonName;
-                            optimization.Item1.ProductCharge = nodeTran.Transition.Charge;
+                            optimization.Item1.ProductAdduct = nodeTran.Transition.Adduct;
                             ++optimizationsUpdated;
                         }
                     }

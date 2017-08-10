@@ -264,9 +264,9 @@ namespace pwiz.Skyline.Model
 
         public string FileName { get { return FilePath.GetFileNameWithoutExtension(); } }
         public string ReplicateName { get { return _chromatogramSet.Name; } }
-        public string ModifiedSequence { get { return NodePep.ModifiedSequence; }}
-        public string Sequence { get { return NodeGroup.Peptide.Sequence; } }
-        public int Charge { get { return NodeGroup.TransitionGroup.PrecursorCharge; } }
+        public Target ModifiedSequence { get { return NodePep.ModifiedTarget; }}
+        public Target Sequence { get { return NodeGroup.Peptide.Target; } }
+        public Adduct Charge { get { return NodeGroup.TransitionGroup.PrecursorAdduct; } }
         public int TargetIndex { get { return NodeGroup.TransitionGroup.GlobalIndex; } }
         public double? TrueApex { get { return ChromInfoTrue.RetentionTime; } }
         public double? TrueStartBoundary { get { return ChromInfoTrue.StartRetentionTime; } }

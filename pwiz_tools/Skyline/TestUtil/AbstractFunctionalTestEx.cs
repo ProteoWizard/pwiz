@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using System.Windows.Forms;
@@ -69,17 +70,41 @@ namespace pwiz.SkylineTestUtil
             WaitForDocumentLoaded();
         }
 
-        
+        public static void CheckConsistentLibraryInfo(SrmDocument doc = null)
+        {
+            foreach (var nodeGroup in (doc ?? SkylineWindow.Document).MoleculeTransitionGroups)
+            {
+                if (nodeGroup.HasLibInfo && nodeGroup.Transitions.Any() && nodeGroup.Transitions.All(nodeTran => !nodeTran.HasLibInfo))
+                    Assert.Fail("Inconsistent library information");
+            }
+        }
+
         public void ConvertDocumentToSmallMolecules(RefinementSettings.ConvertToSmallMoleculesMode mode = RefinementSettings.ConvertToSmallMoleculesMode.formulas,
             RefinementSettings.ConvertToSmallMoleculesChargesMode invertCharges =  RefinementSettings.ConvertToSmallMoleculesChargesMode.none, 
             bool ignoreDecoys = false)
         {
-            WaitForDocumentLoaded();
+            var doc = WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.ModifyDocument("Convert to small molecules", document =>
             {
                 var refine = new RefinementSettings();
-                return refine.ConvertToSmallMolecules(document, mode, invertCharges, ignoreDecoys);
+                var path = Path.GetDirectoryName(SkylineWindow.DocumentFilePath);
+                var smallMolDoc = refine.ConvertToSmallMolecules(document, path, mode, invertCharges, ignoreDecoys);
+                CheckConsistentLibraryInfo(smallMolDoc);
+                return smallMolDoc;
             }));
+            WaitForDocumentChange(doc);
+
+            var newDocFileName =
+                SkylineWindow.DocumentFilePath.Contains(BiblioSpecLiteSpec.DotConvertedToSmallMolecules) ?
+                SkylineWindow.DocumentFilePath :
+                SkylineWindow.DocumentFilePath.Replace(".sky", BiblioSpecLiteSpec.DotConvertedToSmallMolecules + ".sky");
+            RunUI(() => SkylineWindow.SaveDocument(newDocFileName));
+            WaitForCondition(() => File.Exists(newDocFileName));
+            RunUI(() => SkylineWindow.OpenFile(newDocFileName));
+            WaitForDocumentLoaded();
+            CheckConsistentLibraryInfo();
+
+            Thread.Sleep(1000);
         }
 
         /// <summary>

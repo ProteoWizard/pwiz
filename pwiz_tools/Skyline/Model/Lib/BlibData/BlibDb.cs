@@ -142,7 +142,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         {
             const string libAuthority = BiblioSpecLiteLibrary.DEFAULT_AUTHORITY;
             const int majorVer = 1;
-            const int minorVer = 4;
+            const int minorVer = DbLibInfo.SCHEMA_VERSION_CURRENT;
             string libId = libraryName;
             // Use a very specific LSID, since it really only matches this document.
             string libLsid = string.Format("urn:lsid:{0}:spectral_libary:bibliospec:nr:minimal:{1}:{2}:{3}.{4}", // Not L10N
@@ -161,7 +161,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     ++i;
                     var dbRefSpectrum = RefSpectrumFromPeaks(session, spectrum, sourceFiles);
                     session.Save(dbRefSpectrum);
-                    listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key, dbRefSpectrum.Copies,
+                    listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key, 
+                                                                dbRefSpectrum.Copies,
                                                                 dbRefSpectrum.NumPeaks,
                                                                 (int) (dbRefSpectrum.Id ?? 0)));
                     if (progressMonitor != null)
@@ -206,12 +207,19 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 throw new InvalidDataException("Spectrum must have a source file"); // Not L10N
 
             var peaksInfo = spectrum.SpectrumPeaks;
+            var smallMoleculeAttributes = spectrum.SmallMoleculeLibraryAttributes ?? SmallMoleculeLibraryAttributes.EMPTY;
+            var isProteomic = smallMoleculeAttributes.IsEmpty;
             var refSpectra = new DbRefSpectra
             {
-                PeptideSeq = FastaSequence.StripModifications(spectrum.Key.Sequence),
+                PeptideSeq = isProteomic ? FastaSequence.StripModifications(spectrum.Key.Target).Sequence : string.Empty,
                 PrecursorMZ = spectrum.PrecursorMz,
                 PrecursorCharge = spectrum.Key.Charge,
-                PeptideModSeq = spectrum.Key.Sequence,
+                PrecursorAdduct = spectrum.Key.Adduct.AsFormula(), // [M+...] format, even for proteomic charges
+                MoleculeName = smallMoleculeAttributes.MoleculeName ?? string.Empty,
+                ChemicalFormula = smallMoleculeAttributes.ChemicalFormula ?? string.Empty,
+                InChiKey = smallMoleculeAttributes.InChiKey ?? string.Empty,
+                OtherKeys = smallMoleculeAttributes.OtherKeys ?? string.Empty,
+                PeptideModSeq = isProteomic ? spectrum.Key.Target.Sequence : string.Empty,
                 Copies = 1,
                 NumPeaks = (ushort)peaksInfo.Peaks.Length,
                 RetentionTime = spectrum.RetentionTime.GetValueOrDefault(),
@@ -266,9 +274,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         /// <param name="librarySpec">Library spec for which the new library is created</param>
         /// <param name="library">Existing library to minimize</param>
         /// <param name="document">Document for which only used spectra are included in the new library</param>
+        /// <param name="smallMoleculeConversionMap">For converting to small molecules - a map from charge,modifiedSeq to adduct,molecule</param>
         /// <returns>A new minimized <see cref="BiblioSpecLiteLibrary"/></returns>
-        public BiblioSpecLiteLibrary MinimizeLibrary(BiblioSpecLiteSpec librarySpec,
-            Library library, SrmDocument document)
+        private BiblioSpecLiteLibrary MinimizeLibrary(BiblioSpecLiteSpec librarySpec,
+            Library library, SrmDocument document,
+            IDictionary<LibKey, LibKey> smallMoleculeConversionMap)
         {
             if (!UpdateProgressMessage(string.Format(Resources.BlibDb_MinimizeLibrary_Minimizing_library__0__, library.Name)))
                 return null;
@@ -281,6 +291,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
             bool saveRetentionTimes = false;
             bool saveRedundantLib = false;
+            bool convertingToSmallMolecules = smallMoleculeConversionMap != null;
 
             var blibLib = library as BiblioSpecLiteLibrary;
             if (blibLib != null)
@@ -300,7 +311,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 // We will have a RetentionTimes table if schemaVersion if 1 or greater.
                 saveRetentionTimes = blibLib.SchemaVersion >= 1;
                 libraryRevision = blibLib.Revision;
-                schemaVersion = Math.Min(blibLib.SchemaVersion, DbLibInfo.SCHEMA_VERSION_CURRENT);
+                schemaVersion = saveRetentionTimes ? DbLibInfo.SCHEMA_VERSION_CURRENT : blibLib.SchemaVersion;
 
                 // If the document has MS1 filtering enabled we will save a minimized version
                 // of the redundant library, if available.
@@ -348,10 +359,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 using (ISession session = OpenWriteSession())
                 using (ITransaction transaction = session.BeginTransaction())
                 {
-                    int peptideCount = document.PeptideCount;
+                    int peptideCount = document.MoleculeCount;
                     int savedCount = 0;
 
-                    foreach (var nodePep in document.Peptides)
+                    foreach (var nodePep in document.Molecules)
                     {
                         foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                         {
@@ -360,16 +371,33 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                 continue;
 
                             TransitionGroup group = nodeGroup.TransitionGroup;
-                            string peptideSeq = nodePep.SourceUnmodifiedTextId;
-                            string peptideModSeq = nodePep.SourceTextId;
-                            int precursorCharge = group.PrecursorCharge;
+                            var peptideSeq = nodePep.SourceUnmodifiedTarget;
+                            var peptideModSeq = nodePep.SourceModifiedTarget;
+                            var precursorAdduct = group.PrecursorAdduct;
                             IsotopeLabelType labelType = nodeGroup.TransitionGroup.LabelType;
 
-                            var libKey = new LibKey(peptideModSeq, precursorCharge);
+                            var smallMoleculeAttributes = nodePep.Peptide.GetSmallMoleculeLibraryAttributes();
+                            var libKey = nodeGroup.GetLibKey(nodePep);
 
-                            if (dictLibrary.ContainsKey(libKey))
+                            var newLibKey = libKey;
+
+                            if (convertingToSmallMolecules)
+                            {
+                                if (smallMoleculeConversionMap.TryGetValue(peptideModSeq.GetLibKey(group.PrecursorAdduct), out newLibKey))
+                                {
+                                    precursorAdduct = newLibKey.Adduct;
+                                    smallMoleculeAttributes = newLibKey.SmallMoleculeLibraryAttributes;
+                                }
+                                else
+                                {
+                                    // Not being converted
+                                    Assume.IsTrue(group.Peptide.IsDecoy);
+                                    continue; // Not wanted in library
+                                }
+                            }
+
+                            if (dictLibrary.ContainsKey(newLibKey))
                                 continue;
-
 
                             // saveRetentionTimes will be false unless this is a BiblioSpec(schemaVersion >=1) library.
                             if (!saveRetentionTimes)
@@ -378,17 +406,19 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                 foreach (var spectrumInfo in library.GetSpectra(libKey, labelType, LibraryRedundancy.best))
                                 {
                                     DbRefSpectra refSpectra = MakeRefSpectrum(session,
+                                                                              convertingToSmallMolecules,
                                                                               spectrumInfo,
                                                                               peptideSeq,
                                                                               peptideModSeq,
                                                                               nodeGroup.PrecursorMz,
-                                                                              precursorCharge,
+                                                                              precursorAdduct,
+                                                                              smallMoleculeAttributes,
                                                                               dictFiles);
 
                                     session.Save(refSpectra);
 
-                                    dictLibrary.Add(libKey,
-                                                    new BiblioLiteSpectrumInfo(libKey, refSpectra.Copies,
+                                    dictLibrary.Add(newLibKey,
+                                                    new BiblioLiteSpectrumInfo(newLibKey, refSpectra.Copies,
                                                                                refSpectra.NumPeaks,
                                                                                (int) (refSpectra.Id ?? 0)));
                                 }
@@ -407,10 +437,15 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                                 DbRefSpectra refSpectra = new DbRefSpectra
                                                               {
-                                                                  PeptideSeq = peptideSeq,
+                                                                  PeptideSeq = peptideSeq.IsProteomic ? peptideSeq.Sequence : string.Empty,
                                                                   PrecursorMZ = nodeGroup.PrecursorMz,
-                                                                  PrecursorCharge = precursorCharge,
-                                                                  PeptideModSeq = peptideModSeq
+                                                                  PrecursorCharge = precursorAdduct.AdductCharge,
+                                                                  PrecursorAdduct = precursorAdduct.AsFormula(), // [M+...] format, even for proteomic charges
+                                                                  MoleculeName = smallMoleculeAttributes.MoleculeName ?? string.Empty,
+                                                                  ChemicalFormula = smallMoleculeAttributes.ChemicalFormula ?? string.Empty,
+                                                                  InChiKey = smallMoleculeAttributes.InChiKey ?? string.Empty,
+                                                                  OtherKeys = smallMoleculeAttributes.OtherKeys ?? string.Empty,
+                                                                  PeptideModSeq = peptideModSeq.IsProteomic ? peptideModSeq.Sequence : string.Empty
                                                               };
 
                                 // Get all the information for this reference spectrum.
@@ -418,14 +453,14 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                 // for this spectrum as well as any redundant spectra for the peptide.
                                 // Ids of spectra in the redundant library, where available, are also returned.
                                 var redundantSpectraKeys = new List<SpectrumKeyTime>();
-                                BuildRefSpectra(document, session, refSpectra, spectra, dictFiles, redundantSpectraKeys);
+                                BuildRefSpectra(document, session, convertingToSmallMolecules, refSpectra, spectra, dictFiles, redundantSpectraKeys);
 
                                 session.Save(refSpectra);
                                 session.Flush();
                                 session.Clear();
 
-                                dictLibrary.Add(libKey,
-                                                new BiblioLiteSpectrumInfo(libKey,
+                                dictLibrary.Add(newLibKey,
+                                                new BiblioLiteSpectrumInfo(newLibKey,
                                                                            refSpectra.Copies,
                                                                            refSpectra.NumPeaks,
                                                                            (int) (refSpectra.Id ?? 0)));
@@ -571,17 +606,19 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                                PeptideSeq = refSpectra.PeptideSeq,
                                                PrecursorMZ = refSpectra.PrecursorMZ,
                                                PrecursorCharge = refSpectra.PrecursorCharge,
+                                               PrecursorAdduct = refSpectra.PrecursorAdduct,
+                                               MoleculeName = refSpectra.MoleculeName,
+                                               ChemicalFormula = refSpectra.ChemicalFormula,
+                                               InChiKey = refSpectra.InChiKey,
+                                               OtherKeys = refSpectra.OtherKeys,
                                                PeptideModSeq = refSpectra.PeptideModSeq,
-                                               NumPeaks = (ushort) peaksInfo.Peaks.Length,
+                                               NumPeaks = (ushort) peaksInfo.Peaks.Count(),
                                                Copies = refSpectra.Copies,
                                                RetentionTime = specLiteKey.Time.RetentionTime,
                                                DriftTimeMsec = driftTimeMsec.GetValueOrDefault(),
                                                CollisionalCrossSectionSqA = collisionalCrossSectionSqA.GetValueOrDefault(),
-                                               HighEnergyDriftTimeOffsetMsec = highEnergyDriftTimeOffsetMsec,
-                                               FileId = spectrumSourceId,
-                                               SpecIdInFile = null,
-                                               Score = 0.0,
-                                               ScoreType = 0
+                                               DriftTimeHighEnergyOffsetMsec = highEnergyDriftTimeOffsetMsec,
+                                               FileId = spectrumSourceId
                                            };
 
                 var peaks = new DbRefSpectraRedundantPeaks
@@ -601,6 +638,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
         private void BuildRefSpectra(SrmDocument document,
                                      ISession session,
+                                     bool convertingToSmallMolecules,
                                      DbRefSpectra refSpectra,
                                      SpectrumInfo[] spectra, // Yes, this could be IEnumerable, but then Resharper throws bogus warnings about possible multiple enumeration
                                      IDictionary<string, long> dictFiles,
@@ -621,7 +659,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     
                     foundBestSpectrum = true;
 
-                    MakeRefSpectrum(session, spectrum, refSpectra, dictFiles);
+                    MakeRefSpectrum(session, convertingToSmallMolecules, spectrum, refSpectra, dictFiles);
                 }
 
                 
@@ -688,22 +726,27 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             public string FilePath { get; private set; }
         }
 
-        private static DbRefSpectra MakeRefSpectrum(ISession session, SpectrumInfo spectrum, string peptideSeq, string modifiedPeptideSeq, double precMz, int precChg, IDictionary<string, long> dictFiles)
+        private static DbRefSpectra MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfo spectrum, Target peptideSeq, Target modifiedPeptideSeq, double precMz, Adduct precChg, SmallMoleculeLibraryAttributes smallMoleculeAttributes, IDictionary<string, long> dictFiles)
         {
             var refSpectra = new DbRefSpectra
                                 {
-                                    PeptideSeq = peptideSeq,
+                                    PeptideSeq = peptideSeq.IsProteomic ? peptideSeq.Sequence : string.Empty,
                                     PrecursorMZ = precMz,
-                                    PrecursorCharge = precChg,
-                                    PeptideModSeq = modifiedPeptideSeq
+                                    PrecursorCharge = precChg.AdductCharge,
+                                    PrecursorAdduct = precChg.AsFormula(), // [M+...] format, even for proteomic charges
+                                    PeptideModSeq = modifiedPeptideSeq.IsProteomic ? modifiedPeptideSeq.Sequence : string.Empty,
+                                    ChemicalFormula = smallMoleculeAttributes.ChemicalFormula ?? string.Empty,
+                                    MoleculeName = smallMoleculeAttributes.MoleculeName ?? string.Empty,
+                                    InChiKey = smallMoleculeAttributes.InChiKey ?? string.Empty,
+                                    OtherKeys = smallMoleculeAttributes.OtherKeys ?? string.Empty
                                 };
 
-            MakeRefSpectrum(session, spectrum, refSpectra, dictFiles);
+            MakeRefSpectrum(session, convertingToSmallMolecules, spectrum, refSpectra, dictFiles);
             
             return refSpectra;
         }
 
-        private static void MakeRefSpectrum(ISession session, SpectrumInfo spectrum, DbRefSpectra refSpectra, IDictionary<string, long> dictFiles)
+        private static void MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfo spectrum, DbRefSpectra refSpectra, IDictionary<string, long> dictFiles)
         {
             short copies = (short)spectrum.SpectrumHeaderInfo.GetRankValue(LibrarySpec.PEP_RANK_COPIES);
             var peaksInfo = spectrum.SpectrumPeaksInfo;
@@ -730,6 +773,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             refSpectra.SpecIdInFile = null;
             refSpectra.Score = 0.0;
             refSpectra.ScoreType = 0;
+            if (convertingToSmallMolecules || !string.IsNullOrEmpty(refSpectra.MoleculeName))
+            {
+                refSpectra.PeptideSeq = string.Empty;
+                refSpectra.PeptideModSeq = string.Empty;
+                Assume.IsTrue(!string.IsNullOrEmpty(refSpectra.MoleculeName));
+            }
 
             ModsFromModifiedSequence(refSpectra);
         }
@@ -831,10 +880,46 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         /// <param name="pathDirectory">Directory into which new minimized libraries are built</param>
         /// <param name="nameModifier">A name modifier to append to existing names for
         ///     full libraries to create new library names</param>
+        /// <param name="dictOldNameToNew">Optional dictionary for mapping old library names to new (should be null, or empty, on entry)</param>
         /// <param name="progressMonitor">Broker to communicate status and progress</param>
         /// <returns>A new document instance with minimized libraries</returns>
         public static SrmDocument MinimizeLibraries(SrmDocument document,
-            string pathDirectory, string nameModifier, IProgressMonitor progressMonitor)
+            string pathDirectory, string nameModifier,
+            Dictionary<string, string> dictOldNameToNew,
+            IProgressMonitor progressMonitor)
+        {
+            return MinimizeLibrariesHelper(document, pathDirectory, nameModifier,
+                null, dictOldNameToNew, progressMonitor);
+        }
+
+        /// <summary>
+        /// Minimizes all libraries in a document to produce a new document with
+        /// just the library information necessary for the spectra referenced by
+        /// the nodes in the document, converting to small molecules along the way.
+        /// </summary>
+        /// <param name="document">Document for which to minimize library information</param>
+        /// <param name="pathDirectory">Directory into which new minimized libraries are built</param>
+        /// <param name="nameModifier">A name modifier to append to existing names for
+        ///     full libraries to create new library names</param>
+        /// <param name="smallMoleculeConversionInfo">Used for changing charge,modifedSeq to adduct,molecule in small molecule conversion</param>
+        /// <param name="dictOldNameToNew">Optional dictionary for mapping old library names to new (should be null, or empty, on entry)</param>
+        /// <param name="progressMonitor">Broker to communicate status and progress</param>
+        /// <returns>A new document instance with minimized libraries</returns>
+        public static SrmDocument MinimizeLibrariesAndConvertToSmallMolecules(SrmDocument document,
+            string pathDirectory, string nameModifier,
+            IDictionary<LibKey, LibKey> smallMoleculeConversionInfo,
+            Dictionary<string, string> dictOldNameToNew,
+            IProgressMonitor progressMonitor)
+        {
+            return MinimizeLibrariesHelper(document, pathDirectory, nameModifier,
+                smallMoleculeConversionInfo, dictOldNameToNew, progressMonitor);
+        }
+
+        private static SrmDocument MinimizeLibrariesHelper(SrmDocument document,
+            string pathDirectory, string nameModifier, 
+            IDictionary<LibKey, LibKey> smallMoleculeConversionInfo,
+            Dictionary<string, string> dictOldNameToNew,
+            IProgressMonitor progressMonitor)
         {
             var settings = document.Settings;
             var pepLibraries = settings.PeptideSettings.Libraries;
@@ -860,7 +945,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
             var listLibraries = new List<Library>();
             var listLibrarySpecs = new List<LibrarySpec>();
-            var dictOldNameToNew = new Dictionary<string, string>();
+            dictOldNameToNew = dictOldNameToNew ?? new Dictionary<string, string>();
+            Assume.IsFalse(dictOldNameToNew.Any());
             if (setUsedLibrarySpecs.Count > 0)
             {
                 Directory.CreateDirectory(pathDirectory);
@@ -874,6 +960,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                     string baseName = Path.GetFileNameWithoutExtension(librarySpec.FilePath);
                     string fileName = GetUniqueName(baseName, usedNames);
+
+                    if (smallMoleculeConversionInfo != null &&
+                        !fileName.Contains(BiblioSpecLiteSpec.DotConvertedToSmallMolecules))
+                    {
+                        fileName += BiblioSpecLiteSpec.DotConvertedToSmallMolecules; 
+                    }
 
                     if (librarySpec is MidasLibSpec)
                     {
@@ -900,15 +992,22 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                 nameMin = string.Format("{0} ({1})", librarySpec.Name, nameModifier); // Not L10N
                             librarySpecMin = new BiblioSpecLiteSpec(nameMin, blibDb.FilePath);
                         }
+                        else if (smallMoleculeConversionInfo != null &&
+                                 !librarySpecMin.Name.Contains(BiblioSpecLiteSpec.DotConvertedToSmallMolecules))
+                        {
+                            librarySpecMin =
+                                librarySpecMin.ChangeName(librarySpecMin.Name + BiblioSpecLiteSpec.DotConvertedToSmallMolecules) as BiblioSpecLiteSpec;
+                        }
 
                         listLibraries.Add(blibDb.MinimizeLibrary(librarySpecMin,
-                            pepLibraries.Libraries[i], document));
+                            pepLibraries.Libraries[i], document, smallMoleculeConversionInfo));
                         
                         // Terminate if user canceled
                         if (progressMonitor != null && progressMonitor.IsCanceled)
                             return document;
 
                         listLibrarySpecs.Add(librarySpecMin);
+                        // ReSharper disable once PossibleNullReferenceException
                         dictOldNameToNew.Add(librarySpec.Name, librarySpecMin.Name);
                     }
                 }

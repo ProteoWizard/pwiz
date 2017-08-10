@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Model.Serialization
         private void WritePeptideXml(XmlWriter writer, PeptideDocNode node)
         {
             var peptide = node.Peptide;
-            var isCustomIon = peptide.IsCustomIon;
+            var isCustomIon = peptide.IsCustomMolecule;
 
             writer.WriteStartElement(isCustomIon ? EL.molecule : EL.peptide);
             if (node.ExplicitRetentionTime != null)
@@ -217,14 +217,14 @@ namespace pwiz.Skyline.Model.Serialization
 
             if (isCustomIon)
             {
-                peptide.CustomIon.WriteXml(writer);
+                peptide.CustomMolecule.WriteXml(writer, Adduct.EMPTY);
             }
             else
             {
-                string sequence = peptide.Sequence;
+                string sequence = peptide.Target.Sequence;
                 writer.WriteAttributeString(ATTR.sequence, sequence);
-                string modSeq = Settings.GetModifiedSequence(node);
-                writer.WriteAttributeString(ATTR.modified_sequence, modSeq);
+                var modSeq = Settings.GetModifiedSequence(node);
+                writer.WriteAttributeString(ATTR.modified_sequence, modSeq.Sequence);
                 if (node.SourceKey != null)
                     writer.WriteAttributeString(ATTR.lookup_sequence, node.SourceKey.ModifiedSequence);
                 if (peptide.Begin.HasValue && peptide.End.HasValue)
@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Model.Serialization
                     writer.WriteAttribute(ATTR.prev_aa, peptide.PrevAA);
                     writer.WriteAttribute(ATTR.next_aa, peptide.NextAA);
                 }
-                double massH = Settings.GetPrecursorCalc(IsotopeLabelType.light, node.ExplicitMods).GetPrecursorMass(sequence);
+                var massH = Settings.GetPrecursorCalc(IsotopeLabelType.light, node.ExplicitMods).GetPrecursorMass(peptide.Target);
                 writer.WriteAttribute(ATTR.calc_neutral_pep_mass,
                     SequenceMassCalc.PersistentNeutral(massH));
 
@@ -259,7 +259,9 @@ namespace pwiz.Skyline.Model.Serialization
             WriteAnnotations(writer, node.Annotations);
             if (!isCustomIon)
             {
-                WriteExplicitMods(writer, node.Peptide.Sequence, node.ExplicitMods);
+                // CONSIDER(bspratt) the code as written actually can use static isotope
+                // label modifications, and this if clause could be removed - but Brendan wants proof of demand for this first
+                WriteExplicitMods(writer, node.Peptide.Target.Sequence, node.ExplicitMods);
                 WriteImplicitMods(writer, node);
                 WriteLookupMods(writer, node);
             }
@@ -289,7 +291,8 @@ namespace pwiz.Skyline.Model.Serialization
 
         private void WriteExplicitMods(XmlWriter writer, string sequence, ExplicitMods mods)
         {
-            if (mods == null)
+            if (mods == null ||
+                string.IsNullOrEmpty(sequence) && !mods.HasIsotopeLabels)
                 return;
             if (mods.IsVariableStaticMods)
             {
@@ -345,7 +348,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 WriteExplicitMods(writer, EL.implicit_static_modifications,
                         EL.implicit_modification, null, implicitMods.StaticModifications,
-                        node.Peptide.Sequence);
+                        node.Peptide.Target.Sequence);
             }
 
             // implicit heavy modifications
@@ -361,7 +364,7 @@ namespace pwiz.Skyline.Model.Serialization
 
                 WriteExplicitMods(writer, EL.implicit_heavy_modifications,
                                   EL.implicit_modification, labelType, heavyMods.Modifications,
-                                  node.Peptide.Sequence);
+                                  node.Peptide.Target.Sequence);
             }
             writer.WriteEndElement();
         }
@@ -371,27 +374,30 @@ namespace pwiz.Skyline.Model.Serialization
             string nameElMod, IsotopeLabelType labelType, IEnumerable<ExplicitMod> mods,
             string sequence)
         {
-            if (mods == null)
+            if (mods == null || (labelType == null && string.IsNullOrEmpty(sequence)))
                 return;
             writer.WriteStartElement(name);
             if (labelType != null)
                 writer.WriteAttribute(ATTR.isotope_label, labelType);
 
-            SequenceMassCalc massCalc = Settings.TransitionSettings.Prediction.PrecursorMassType == MassType.Monoisotopic ?
-                SrmSettings.MonoisotopicMassCalc : SrmSettings.AverageMassCalc;
-            foreach (ExplicitMod mod in mods)
+            if (!string.IsNullOrEmpty(sequence))
             {
-                writer.WriteStartElement(nameElMod);
-                writer.WriteAttribute(ATTR.index_aa, mod.IndexAA);
-                writer.WriteAttribute(ATTR.modification_name, mod.Modification.Name);
+                SequenceMassCalc massCalc = Settings.TransitionSettings.Prediction.PrecursorMassType == MassType.Monoisotopic ?
+                    SrmSettings.MonoisotopicMassCalc : SrmSettings.AverageMassCalc;
+                foreach (ExplicitMod mod in mods)
+                {
+                    writer.WriteStartElement(nameElMod);
+                    writer.WriteAttribute(ATTR.index_aa, mod.IndexAA);
+                    writer.WriteAttribute(ATTR.modification_name, mod.Modification.Name);
 
-                double massDiff = massCalc.GetModMass(sequence[mod.IndexAA], mod.Modification);
+                    double massDiff = massCalc.GetModMass(sequence[mod.IndexAA], mod.Modification);
 
-                writer.WriteAttribute(ATTR.mass_diff,
-                    string.Format(CultureInfo.InvariantCulture, "{0}{1}", (massDiff < 0 ? string.Empty : "+"),  // Not L10N
-                        Math.Round(massDiff, 1)));
+                    writer.WriteAttribute(ATTR.mass_diff,
+                        string.Format(CultureInfo.InvariantCulture, "{0}{1}", (massDiff < 0 ? string.Empty : "+"),  // Not L10N
+                            Math.Round(massDiff, 1)));
 
-                writer.WriteEndElement();
+                    writer.WriteEndElement();
+                }
             }
             writer.WriteEndElement();
         }
@@ -419,8 +425,8 @@ namespace pwiz.Skyline.Model.Serialization
         private void WriteTransitionGroupXml(XmlWriter writer, PeptideDocNode nodePep, TransitionGroupDocNode node)
         {
             TransitionGroup group = node.TransitionGroup;
-            var isCustomIon = nodePep.Peptide.IsCustomIon;
-            writer.WriteAttribute(ATTR.charge, group.PrecursorCharge);
+            var isCustomIon = nodePep.Peptide.IsCustomMolecule;
+            writer.WriteAttribute(ATTR.charge, group.PrecursorAdduct.AdductCharge);
             if (!group.LabelType.IsLight)
                 writer.WriteAttribute(ATTR.isotope_label, group.LabelType);
             if (!isCustomIon)
@@ -436,7 +442,7 @@ namespace pwiz.Skyline.Model.Serialization
 
             TransitionPrediction predict = Settings.TransitionSettings.Prediction;
             double regressionMz = Settings.GetRegressionMz(nodePep, node);
-            var ce = predict.CollisionEnergy.GetCollisionEnergy(node.TransitionGroup.PrecursorCharge, regressionMz);
+            var ce = predict.CollisionEnergy.GetCollisionEnergy(node.TransitionGroup.PrecursorAdduct, regressionMz);
             writer.WriteAttribute(ATTR.collision_energy, ce);
 
             var dpRegression = predict.DeclusteringPotential;
@@ -450,14 +456,15 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 // modified sequence
                 var calcPre = Settings.GetPrecursorCalc(node.TransitionGroup.LabelType, nodePep.ExplicitMods);
-                string seq = node.TransitionGroup.Peptide.Sequence;
+                var seq = node.TransitionGroup.Peptide.Target;
                 writer.WriteAttribute(ATTR.modified_sequence, calcPre.GetModifiedSequence(seq,
                     false)); // formatNarrow = false; We want InvariantCulture, not the local format
+                Assume.IsTrue(group.PrecursorAdduct.IsProteomic);
             }
             else
             {
                 // Custom ion
-                node.CustomIon.WriteXml(writer);
+                node.CustomMolecule.WriteXml(writer, group.PrecursorAdduct);
             }
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
@@ -537,9 +544,9 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
             if (transition.IsCustom())
             {
-                if (transition.CustomIon is DocNodeCustomIon)
+                if (!(transition.CustomIon is SettingsCustomIon))
                 {
-                    transition.CustomIon.WriteXml(writer);
+                    transition.CustomIon.WriteXml(writer, transition.Adduct);
                 }
                 else
                 {
@@ -561,7 +568,7 @@ namespace pwiz.Skyline.Model.Serialization
                 if (!transition.IsCustom())
                 {
                     writer.WriteAttribute(ATTR.fragment_ordinal, transition.Ordinal);
-                    writer.WriteAttribute(ATTR.calc_neutral_mass, nodeTransition.GetIonPersistentNeutralMass());
+                    writer.WriteAttribute(ATTR.calc_neutral_mass, nodeTransition.GetMoleculePersistentNeutralMass());
                 }
                 writer.WriteAttribute(ATTR.product_charge, transition.Charge);
                 if (!transition.IsCustom())
@@ -584,8 +591,8 @@ namespace pwiz.Skyline.Model.Serialization
             if (lib != null && !lib.IsNone)
             {
                 var optimization = lib.GetOptimization(OptimizationType.collision_energy,
-                    Settings.GetSourceTextId(nodePep), nodeGroup.PrecursorCharge,
-                    nodeTransition.FragmentIonName, nodeTransition.Transition.Charge);
+                    Settings.GetSourceTarget(nodePep), nodeGroup.PrecursorAdduct,
+                    nodeTransition.FragmentIonName, nodeTransition.Transition.Adduct);
                 if (optimization != null)
                 {
                     ce = optimization.Value;
@@ -599,7 +606,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 if (ceRegression != null && !ce.HasValue)
                 {
-                    ce = ceRegression.GetCollisionEnergy(nodeGroup.PrecursorCharge, regressionMz);
+                    ce = ceRegression.GetCollisionEnergy(nodeGroup.PrecursorAdduct, regressionMz);
                 }
                 if (dpRegression != null)
                 {
@@ -766,7 +773,7 @@ namespace pwiz.Skyline.Model.Serialization
                 foreach (var listChromInfo in results)
                 {
                     bool success = enumReplicates.MoveNext();
-                    Assume.IsTrue(success);
+                    Assume.IsTrue(success || settings.MeasuredResults.Chromatograms.Count == 0);
                     if (listChromInfo.IsEmpty)
                         continue;
                     var chromatogramSet = enumReplicates.Current;

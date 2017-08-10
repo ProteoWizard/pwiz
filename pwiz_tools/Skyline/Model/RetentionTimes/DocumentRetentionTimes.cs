@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
 
         private static FileRetentionTimeAlignments CalculateFileRetentionTimeAlignments(
-            string dataFileName, ResultNameMap<IDictionary<string, double>> libraryRetentionTimes, IProgressMonitor progressMonitor)
+            string dataFileName, ResultNameMap<IDictionary<Target, double>> libraryRetentionTimes, IProgressMonitor progressMonitor)
         {
             var targetTimes = libraryRetentionTimes.Find(dataFileName);
             if (targetTimes == null)
@@ -256,9 +256,9 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             return ResultNameMap.FromNamedElements(sources);
         }
-        public static ResultNameMap<IDictionary<string, double>> ReadAllRetentionTimes(SrmDocument document, ResultNameMap<RetentionTimeSource> sources)
+        public static ResultNameMap<IDictionary<Target, double>> ReadAllRetentionTimes(SrmDocument document, ResultNameMap<RetentionTimeSource> sources)
         {
-            var allRetentionTimes = new Dictionary<string, IDictionary<string, double>>();
+            var allRetentionTimes = new Dictionary<string, IDictionary<Target, double>>();
             foreach (var source in sources)
             {
                 var library = document.Settings.PeptideSettings.Libraries.GetLibrary(source.Value.Library);

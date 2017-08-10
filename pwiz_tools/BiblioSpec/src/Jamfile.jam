@@ -138,6 +138,7 @@ lib blibbuild
     MSFSpecReader.cpp
     ProteinPilotReader.cpp
     saxhandler.cpp
+    ShimadzuMLBReader.cpp
     SQTreader.cpp
     SQTversion.cpp
     SslReader.cpp

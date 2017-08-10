@@ -3677,9 +3677,6 @@
   <data name="RInstaller_InstallPackages_Download_Canceled" xml:space="preserve">
     <value>下载取消</value>
   </data>
-  <data name="CustomIon_Validate_The_mass_of_the_custom_ion_is_less_than_the_minimum_of__0__" xml:space="preserve">
-    <value>自定义离子质量小于{0}的最小值。</value>
-  </data>
   <data name="AlertDlg_GetDefaultButtonText_OK" xml:space="preserve">
     <value>确定</value>
   </data>
@@ -6598,9 +6595,6 @@
   <data name="EditIrtCalcDlg_OkDialog_Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_open_an_existing_database_file" xml:space="preserve">
     <value>单击“创建”按钮来创建一个新数据库或单击“打开”按钮来打开现有的数据库文件。</value>
   </data>
-  <data name="CustomIon_Validate_Custom_ions_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_" xml:space="preserve">
-    <value>自定义离子必须指定公式或有效的单一同位素和平均质量。</value>
-  </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Overwrite" xml:space="preserve">
     <value>覆盖</value>
   </data>
@@ -7405,9 +7399,6 @@
   <data name="UnintegratedTransitionFinder_DisplayName_Unintegrated_transitions" xml:space="preserve">
     <value>未整合的离子对</value>
   </data>
-  <data name="CustomIon_Validate_The_mass_of_the_custom_ion_exceeeds_the_maximum_of__0_" xml:space="preserve">
-    <value>自定义离子质量超过了{0}的最大值。</value>
-  </data>
   <data name="Copy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\copy.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -7723,9 +7714,6 @@
   </data>
   <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty" xml:space="preserve">
     <value>蛋白质序列可能不为空。</value>
-  </data>
-  <data name="SkylineWindow_AddSmallMolecule_Add_Small_Molecule" xml:space="preserve">
-    <value>添加小分子</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_OkDialog_Please_specify_a_full_path_to_the_proteome_file" xml:space="preserve">
     <value>请指定一个通向蛋白质组文件的完整路径。</value>

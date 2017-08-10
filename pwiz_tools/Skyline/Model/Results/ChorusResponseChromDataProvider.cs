@@ -54,9 +54,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _cachedChromatogramDataProvider.ChromIds; }
         }
 
-        public override bool GetChromatogram(
-            int id, string modifiedSequence, Color peptideColor,
-            out ChromExtra extra, out TimeIntensities timeIntensities)
+        public override bool GetChromatogram(int id, Target modifiedSequence, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
             return _cachedChromatogramDataProvider.GetChromatogram(
                 id, modifiedSequence, peptideColor,

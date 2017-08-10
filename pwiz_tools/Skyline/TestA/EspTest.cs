@@ -21,6 +21,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Esp;
 using pwiz.SkylineTestUtil;
 
@@ -41,11 +42,11 @@ namespace pwiz.SkylineTestA
                 EspFeatureCalc.WriteFeatures(writer,
                                              new[]
                                                  {
-                                                     "TLALAR",
-                                                     "QSGYGR",
-                                                     "VPFGGVK",
-                                                     "ILTGGEK",
-                                                     "VGNPFDK"
+                                                     new Target("TLALAR"),
+                                                     new Target("QSGYGR"),
+                                                     new Target("VPFGGVK"),
+                                                     new Target("ILTGGEK"),
+                                                     new Target("VGNPFDK")
                                                  },
                                              CultureInfo.InvariantCulture);
                 string features = sb.ToString();

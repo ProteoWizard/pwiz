@@ -131,11 +131,11 @@ namespace pwiz.SkylineTestFunctional
 
                 // Make sure the spectrum graph contains some -98 ions
                 RunUI(() => Assert.IsTrue(SkylineWindow.GraphSpectrum.IonLabels.Contains(label => label.Contains(lossLabel)),
-                    string.Format("Missing loss labels in spectrum graph for {0}", nodeGroup.TransitionGroup.Peptide.Sequence)));
+                    string.Format("Missing loss labels in spectrum graph for {0}", nodeGroup.TransitionGroup.Peptide.Target)));
 
                 // Make sure the transition tree nodes contain -98 ions
                 RunUI(() => Assert.IsTrue(GetChildLabels(SkylineWindow.SelectedNode).Contains(label => label.Contains(lossLabel)),
-                    string.Format("Missing loss labels in transition tree nodes for {0}", nodeGroup.TransitionGroup.Peptide.Sequence)));
+                    string.Format("Missing loss labels in transition tree nodes for {0}", nodeGroup.TransitionGroup.Peptide.Target)));
             }
 
             // Make the settings significantly more complex
@@ -154,7 +154,7 @@ namespace pwiz.SkylineTestFunctional
                     .ChangeTransitionFilter(filter =>
                         filter.ChangeFragmentRangeFirstName("m/z > precursor")
                             .ChangeFragmentRangeLastName("last ion")
-                            .ChangeIonTypes(new[] { IonType.y, IonType.b })
+                            .ChangePeptideIonTypes(new[] { IonType.y, IonType.b })
                             .ChangeMeasuredIons(new MeasuredIon[0]))
                     .ChangeTransitionLibraries(lib =>
                         lib.ChangePick(TransitionLibraryPick.filter)))));

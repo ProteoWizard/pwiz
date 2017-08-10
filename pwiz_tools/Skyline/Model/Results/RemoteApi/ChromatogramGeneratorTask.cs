@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         /// </summary>
         private bool EqualsTolerant(ChromKey key1, ChromKey key2, float tolerance)
         {
-            return Equals(key1.Source, key2.Source) && Equals(key1.TextId, key2.TextId) &&
+            return Equals(key1.Source, key2.Source) && Equals(key1.Target, key2.Target) &&
                    Equals(key1.Extractor, key2.Extractor)
                    && 0 == key1.Precursor.CompareTolerant(key2.Precursor, tolerance)
                    && 0 == key2.Product.CompareTolerant(key2.Product, tolerance);

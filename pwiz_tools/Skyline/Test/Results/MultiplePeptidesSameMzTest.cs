@@ -55,7 +55,7 @@ namespace pwiz.SkylineTest.Results
 
             string docPath;
             SrmDocument document = InitMultiplePeptidesSameMzDocument(testFilesDir, out docPath);
-            document = (new RefinementSettings()).ConvertToSmallMolecules(document, asSmallMolecules);
+            document = new RefinementSettings().ConvertToSmallMolecules(document, testFilesDir.FullPath, asSmallMolecules);
             using (var docContainer = new ResultsTestDocumentContainer(document, docPath))
             {
                 var doc = docContainer.Document;

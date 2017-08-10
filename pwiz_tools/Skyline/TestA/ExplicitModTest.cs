@@ -118,7 +118,7 @@ namespace pwiz.SkylineTestA
             var settings = docStudy7.Settings;
             foreach (var tranGroup in nodePep.GetTransitionGroups(settings, mods, false))
             {
-                if (tranGroup.PrecursorCharge == nodeGroupLight.TransitionGroup.PrecursorCharge &&
+                if (tranGroup.PrecursorAdduct.Equals(nodeGroupLight.TransitionGroup.PrecursorAdduct) &&
                         !tranGroup.LabelType.IsLight)
                 {
                     TransitionDocNode[] transitions = nodePep.GetMatchingTransitions(tranGroup, settings, mods);

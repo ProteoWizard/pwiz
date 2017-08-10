@@ -59,13 +59,18 @@ namespace pwiz.SkylineTestFunctional
         private const string ANL_COMBINED = "ANL Combined";
         private const string PHOSPHO_LIB = "PhosphoLib";
         private const string YEAST = "Yeast";
+        private const string SHIMADZU_MLB = "Shimadzu MLB";
+        private const string NIST_SMALL_MOL = "NIST Small Molecules";
 
         private readonly TestLibInfo[] _testLibs = {
                                                        new TestLibInfo("HumanB2MGLib", "human_b2mg-5-06-2009-it.sptxt", "EVDLLK+"),
                                                        new TestLibInfo("HumanCRPLib", "human_crp-5-06-2009-it.sptxt", "TDMSR++"), 
                                                        new TestLibInfo(ANL_COMBINED, "ANL_combined.blib", ""),
                                                        new TestLibInfo(PHOSPHO_LIB, "phospho_30882_v2.blib", ""),
-                                                       new TestLibInfo(YEAST, "Yeast_atlas.blib", "")
+                                                       new TestLibInfo(YEAST, "Yeast_atlas.blib", ""),
+                                                       new TestLibInfo(SHIMADZU_MLB, "Small_Library-Positive-ions_CE-Merged.blib", "LSD[M+H]"), // Can be found in BiblioSpec test/output directory if update is needed
+                                                       new TestLibInfo(NIST_SMALL_MOL+" Redundant", "SmallMolRedundant.msp", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]"),
+                                                       new TestLibInfo(NIST_SMALL_MOL, "SmallMol.msp", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]") 
                                                    };
 
         private PeptideSettingsUI PeptideSettingsUI { get; set; }
@@ -81,6 +86,9 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             SetUpTestLibraries();
+            TestSmallMoleculeFunctionality(2, true); // NIST with redundant entries
+            TestSmallMoleculeFunctionality(1, false); // NIST
+            TestSmallMoleculeFunctionality(3, false); // .blib
             TestBasicFunctionality();
             RunDlg<MultiButtonMsgDlg>(SkylineWindow.NewDocument, msgDlg => msgDlg.Btn1Click());
             TestModificationMatching();
@@ -145,7 +153,7 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsNotNull(previousPeptide);
             Assert.AreEqual(0, peptideIndex);
-            Assert.AreEqual(3, previousPeptide.Charge, "Expected charge 3 on " + previousPeptide.DisplayString);
+            Assert.AreEqual(3, previousPeptide.Adduct.AdductCharge, "Expected charge 3 on " + previousPeptide.DisplayString);
 
             // Now try to select a different peptide and check to see if the
             // selection changes
@@ -165,7 +173,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(selPeptide);
             if (Equals(previousPeptide, selPeptide))
                 Assert.AreNotEqual(previousPeptide.DisplayString, selPeptide.DisplayString);
-            Assert.AreEqual(2, selPeptide.Charge, "Expected charge 2 on " + selPeptide.DisplayString);
+            Assert.AreEqual(2, selPeptide.Adduct.AdductCharge, "Expected charge 2 on " + selPeptide.DisplayString);
 
             // Click the "Next" link
             RunUI(() =>
@@ -351,7 +359,7 @@ namespace pwiz.SkylineTestFunctional
                 var key = nodePep.Key;
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
-                    var charge = nodeGroup.TransitionGroup.PrecursorCharge;
+                    var charge = nodeGroup.TransitionGroup.PrecursorAdduct;
                     Assert.IsTrue(docAddBackGroups.Peptides.Contains(nodePepDoc => Equals(key, nodePepDoc.Key)
                         && nodePepDoc.HasChildCharge(charge)));
                 }
@@ -587,6 +595,92 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
         }
 
+        private void TestSmallMoleculeFunctionality(int index, bool expectError)
+        {
+
+            // Launch the Library Explorer dialog
+            _viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+
+            // Ensure the appropriate default library is selected
+            ComboBox libComboBox = null;
+            ListBox pepList = null;
+            string libSelected = null;
+            var libIndex = _testLibs.Length - index;
+            bool isNIST = (index < 3);
+            if (expectError)
+            {
+                var errWin = ShowDialog<MessageDlg>(() =>
+                {
+                    libComboBox = (ComboBox) _viewLibUI.Controls.Find("comboLibrary", true)[0];
+                    Assert.IsNotNull(libComboBox);
+                    libComboBox.SelectedIndex = libIndex;
+                });
+                AssertEx.AreComparableStrings(Resources.NistLibraryBase_CreateCache_, errWin.Message);
+                errWin.OkDialog();
+                RunUI(() => _viewLibUI.CancelDialog());
+                WaitForClosedForm(_viewLibUI);
+                return;
+            }
+            RunUI(() =>
+            {
+                libComboBox = (ComboBox)_viewLibUI.Controls.Find("comboLibrary", true)[0];
+                Assert.IsNotNull(libComboBox);
+                libComboBox.SelectedIndex = libIndex;
+                libSelected = libComboBox.SelectedItem.ToString();
+
+                // Find the peptides list control
+                pepList = (ListBox)_viewLibUI.Controls.Find("listPeptide", true)[0];
+                Assert.IsNotNull(pepList);
+            });
+            Assert.AreEqual(_testLibs[libIndex].Name, libSelected);
+
+            // Test valid peptide search
+            TextBox pepTextBox = null;
+            RunUI(() =>
+            {
+                pepTextBox = (TextBox)_viewLibUI.Controls.Find("textPeptide", true)[0];
+                Assert.IsNotNull(pepTextBox);
+
+                pepTextBox.Focus();
+                pepTextBox.Text = _testLibs[libIndex].UniquePeptide;
+            });
+            int pepsCount = 0;
+            ViewLibraryPepInfo selPeptide = new ViewLibraryPepInfo();
+            RunUI(() =>
+            {
+                selPeptide = (ViewLibraryPepInfo)pepList.SelectedItem;
+                pepsCount = pepList.Items.Count;
+            });
+            Assert.AreEqual(_testLibs[libIndex].UniquePeptide, selPeptide.DisplayString);
+            Assert.AreEqual(1, pepsCount);
+
+            // Add all to document, expect to be asked if we want to add library to doc as well
+            RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides, msgDlg => msgDlg.Btn1Click());
+            if (index==1)
+            {
+                // Expect to be asked if we want to add peptides that don't match filter
+                var confirmMismatch = WaitForOpenForm<FilterMatchedPeptidesDlg>(); // Confirm adding peptides that don't match settings
+                OkDialog(confirmMismatch, confirmMismatch.OkDialog);
+            } 
+            var confirmAdd = WaitForOpenForm<MultiButtonMsgDlg>(); // Confirm adding n peptides
+            OkDialog(confirmAdd, confirmAdd.BtnYesClick);
+            WaitForDocumentLoaded();
+
+            RunUI(() => _viewLibUI.CancelDialog());
+            WaitForClosedForm(_viewLibUI);
+            if (isNIST)
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 74, 222, 666);
+            else
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 6, 18);
+
+            RunUI(() =>
+            {
+                SkylineWindow.SelectAll();
+                SkylineWindow.EditDelete();
+            });
+
+           
+        }
         private ComboBox _libComboBox;
         private ListBox _pepList;
 

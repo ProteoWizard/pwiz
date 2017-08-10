@@ -104,6 +104,8 @@ namespace pwiz.Skyline.Model
 
         public override IEnumerable<AAModInfo> GetCurrentSequenceInfos()
         {
+            if (_libKeys.Current.IsSmallMoleculeKey)
+                return new AAModInfo[0];
             var sequence = _libKeys.Current.Key;
             return EnumerateSequenceInfos(sequence, false);
         }
@@ -295,19 +297,21 @@ namespace pwiz.Skyline.Model
                        : i;
         }
 
-        public PeptideDocNode GetModifiedNode(LibKey key, string seqUnmod, SrmSettings settings, SrmSettingsDiff diff)
+        public PeptideDocNode GetModifiedNode(LibKey key, SmallMoleculeLibraryAttributes smallMolAttributes, string seqUnmod, SrmSettings settings, SrmSettingsDiff diff)
         {
             if (string.IsNullOrEmpty(seqUnmod))
                 return null;
 
-            var peptide = new Peptide(null, seqUnmod, null, null,
+            var peptide = key.IsSmallMoleculeKey ?
+                new Peptide(new CustomMolecule(smallMolAttributes)) : 
+                new Peptide(null, seqUnmod, null, null,
                                   settings.PeptideSettings.Enzyme.CountCleavagePoints(seqUnmod));
             // First try and create the match from the settings created to match the library explorer.
             Settings = HasMatches
                 ? settings.ChangePeptideModifications(mods => MatcherPepMods)
                 : settings;
             TransitionGroupDocNode nodeGroup;
-            var nodePep = CreateDocNodeFromSettings(key.Sequence, peptide, diff, out nodeGroup);
+            var nodePep = CreateDocNodeFromSettings(key, peptide, diff, out nodeGroup);
             if (nodePep != null)
             {
                 if (diff == null)
@@ -353,7 +357,7 @@ namespace pwiz.Skyline.Model
             return nodePep;
         }
 
-        protected override bool IsMatch(string seqMod, PeptideDocNode nodePepMod, out TransitionGroupDocNode nodeGroup)
+        protected override bool IsMatch(Target seqMod, PeptideDocNode nodePepMod, out TransitionGroupDocNode nodeGroup)
         {
             foreach(TransitionGroupDocNode nodeGroupChild in nodePepMod.Children)
             {
@@ -361,7 +365,7 @@ namespace pwiz.Skyline.Model
                 var calc = Settings.TryGetPrecursorCalc(nodeGroupChild.TransitionGroup.LabelType, nodePepMod.ExplicitMods);
                 if (calc == null)
                     return false;
-                string modSequence = calc.GetModifiedSequence(nodePepMod.Peptide.Sequence, false);
+                var modSequence = calc.GetModifiedSequence(nodePepMod.Peptide.Target, false);
                 // If this sequence matches the sequence of the library peptide, a match has been found.
                 if (Equals(seqMod, modSequence))
                     return true;

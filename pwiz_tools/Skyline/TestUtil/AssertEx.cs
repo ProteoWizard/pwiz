@@ -232,6 +232,18 @@ namespace pwiz.SkylineTestUtil
                 ValidatesAgainstSchema(target, expectedTypeInSkylineSchema);
         }
 
+        public static SrmDocument Serializable(SrmDocument target, string testPath, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null, bool forceFullLoad = false)
+        {
+            string expected = null;
+            var actual = RoundTrip(target, ref expected);
+            DocumentClonedLoadable(ref target, ref actual, testPath, forceFullLoad);
+
+            // Validate documents or document fragments against current schema
+            if (checkAgainstSkylineSchema)
+                ValidatesAgainstSchema(target, expectedTypeInSkylineSchema);
+            return target;
+        }
+
         /// <summary>
         /// Checks validity of a document or document fragment against the current schema
         /// </summary>
@@ -483,7 +495,7 @@ namespace pwiz.SkylineTestUtil
             return sb.ToString();
         }
 
-        public static void NoDiff(string target, string actual, string helpMsg=null)
+        public static void NoDiff(string target, string actual, string helpMsg=null, Dictionary<int, double> columnTolerances = null)
         {
             if (helpMsg == null)
                 helpMsg = String.Empty;
@@ -504,23 +516,61 @@ namespace pwiz.SkylineTestUtil
                     if (lineActual == null)
                         Assert.Fail(helpMsg + "Actual stops at line {0}.", count);
                     if (lineTarget != lineActual)
-                        Assert.Fail(helpMsg + "Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
+                    {
+                        bool failed = true;
+                        if (columnTolerances != null)
+                        {
+                            var colsActual = lineActual.Split('\t');
+                            var colsTarget = lineTarget.Split('\t');
+                            if (colsTarget.Length == colsActual.Length)
+                            {
+                                failed = false; // May yet be saved by tolerance check
+                                for (var c = 0; c < colsActual.Length; c++)
+                                {
+                                    if (colsActual[c] != colsTarget[c])
+                                    {
+                                        double valActual, valTarget;
+                                        if (!columnTolerances.ContainsKey(c) ||
+                                            !(double.TryParse(colsActual[c], out valActual) && 
+                                              double.TryParse(colsTarget[c], out valTarget)) ||
+                                            (Math.Abs(valActual - valTarget) > columnTolerances[c] + columnTolerances[c]/1000)) // Allow for rounding cruft
+                                        {
+                                            failed = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (failed)
+                            Assert.Fail(helpMsg + "Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
+                    }
                     count++;
                 }
 
             }
         }
 
-        public static void FileEquals(string path1, string path2)
+        public static void FileEquals(string path1, string path2, Dictionary<int, double> columnTolerances = null )
         {
             string file1 = File.ReadAllText(path1);
             string file2 = File.ReadAllText(path2);
-            NoDiff(file1, file2);
+            NoDiff(file1, file2, null, columnTolerances);
         }
 
         public static void FieldsEqual(string target, string actual, int countFields, bool allowForNumericPrecisionDifferences = false)
         {
             FieldsEqual(target, actual, countFields, null, allowForNumericPrecisionDifferences);
+        }
+
+        public static void FieldsEqual(string target, string actual, double tolerance, int? countFields=null)
+        {
+            using (StringReader readerTarget = new StringReader(target))
+            using (StringReader readerActual = new StringReader(actual))
+            {
+                FieldsEqual(readerTarget, readerActual, countFields, null, false, 0, tolerance);
+            }
         }
 
         public static void FieldsEqual(string target, string actual, int countFields, int? exceptIndex, bool allowForTinyNumericDifferences = false)
@@ -532,7 +582,7 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static void FieldsEqual(TextReader readerTarget, TextReader readerActual, int countFields, int? exceptIndex, bool allowForTinyNumericDifferences = false, int allowedExtraLinesInActual = 0)
+        public static void FieldsEqual(TextReader readerTarget, TextReader readerActual, int? countFields, int? exceptIndex, bool allowForTinyNumericDifferences = false, int allowedExtraLinesInActual = 0, double? tolerance=null)
         {
 
             int count = 1;
@@ -562,6 +612,10 @@ namespace pwiz.SkylineTestUtil
                         // for the moment at least, we are hardcoded for commas in CSV
                     string[] fieldsTarget = lineTarget.Split(new[] {','});
                     string[] fieldsActual = lineActual.Split(new[] {','});
+                    if (!countFields.HasValue)
+                    {
+                        countFields = Math.Max(fieldsTarget.Length, fieldsActual.Length);
+                    }
                     if (fieldsTarget.Length < countFields || fieldsActual.Length < countFields)
                         Assert.Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
                     for (int i = 0; i < countFields; i++)
@@ -573,7 +627,7 @@ namespace pwiz.SkylineTestUtil
                         {
                             // test numerics with the precision presented in the output text
                             double dTarget, dActual;
-                            if (allowForTinyNumericDifferences &&
+                            if ((allowForTinyNumericDifferences || tolerance.HasValue) &&
                                 Double.TryParse(fieldsTarget[i], NumberStyles.Float, culture, out dTarget) &&
                                 Double.TryParse(fieldsActual[i], NumberStyles.Float, culture, out dActual))
                             {
@@ -581,7 +635,7 @@ namespace pwiz.SkylineTestUtil
                                 var precTarget = fieldsTarget[i].Length - String.Format("{0}.", (int) dTarget).Length;
                                 var precActual = fieldsActual[i].Length - String.Format("{0}.", (int) dActual).Length;
                                 var prec = Math.Max(Math.Min(precTarget, precActual), 0);
-                                double toler = .5*((prec == 0) ? 0 : Math.Pow(10, -prec));
+                                double toler = tolerance ?? .5*((prec == 0) ? 0 : Math.Pow(10, -prec));
                                     // so .001 is seen as close enough to .0009
                                 if (Math.Abs(dTarget - dActual) <= toler)
                                     continue;
@@ -758,8 +812,60 @@ namespace pwiz.SkylineTestUtil
             return null;
         }
 
+        private static SrmDocument ForceDocumentLoad(SrmDocument target, string testDir)
+        {
+            string xmlSaved = null;
+            RoundTrip(target, ref xmlSaved);
+            // Not threadsafe! This is for tests only.
+            string tmpSky;
+            int attempt = 0;
+            do
+            {
+                tmpSky = Path.Combine(testDir, string.Format("tmp{0}.sky", attempt++)); // Not L10N
+            } 
+            while (File.Exists(tmpSky));
+            File.WriteAllText(tmpSky, xmlSaved);
+            using (var cmd = new Skyline.CommandLine())
+            {
+                Assert.IsTrue(cmd.OpenSkyFile(tmpSky)); // Handles any path shifts in database files, like our .imdb file
+                var docLoad = cmd.Document;
+                using (var docContainer = new ResultsTestDocumentContainer(null, tmpSky))
+                {
+                    docContainer.SetDocument(docLoad, null, true);
+                    docContainer.AssertComplete();
+                    return docContainer.Document;
+                }
+            }
+        }
+
         public static void DocumentCloned(SrmDocument target, SrmDocument actual)
         {
+            DocumentClonedLoadable(ref target, ref actual, null, false);
+        }
+        public static void DocumentClonedLoadable(ref SrmDocument target, ref SrmDocument actual, string testDir, bool forceFullLoad)
+            {
+            for (var retry = 0; retry < 2;)
+            {
+                try
+                {
+                    // When libraries are involved, comparison only succeeds if both sets of libs (or neither) are fully loaded -
+                    // that is, if the libraryspecs agree. When we're just testing serialization, though, we may not have
+                    // that degree of loadedness. So, try saving to disk then doing a full reload
+                    if ((forceFullLoad || retry > 0) && !string.IsNullOrEmpty(testDir))
+                    {
+                        target = ForceDocumentLoad(target, testDir);
+                        actual = ForceDocumentLoad(actual, testDir);
+                    }
+                    SettingsCloned(target.Settings, actual.Settings);
+                    Cloned(target, actual);
+                    return;
+                }
+                catch
+                {
+                    retry++;
+                }
+            }
+            // Do it once more and allow throw
             SettingsCloned(target.Settings, actual.Settings);
             Cloned(target, actual);
         }
@@ -836,25 +942,25 @@ namespace pwiz.SkylineTestUtil
         /// Compares a peptide document with a small molecule document which is presumed to be
         /// derived from the peptide document via RefinementSettings.ConvertToSmallMolecules()
         /// </summary>
-        public static void ConvertedSmallMoleculeDocumentIsSimilar(SrmDocument document, SrmDocument converted)
+        public static void ConvertedSmallMoleculeDocumentIsSimilar(SrmDocument document, SrmDocument converted, string testDir, RefinementSettings.ConvertToSmallMoleculesMode conversionMode)
         {
             // Are both versions valid?
-            Serializable(converted);
-            Serializable(document);
+            converted = Serializable(converted, testDir, true, null, true); // Force a full load to verify library correctness
+            document = Serializable(document, testDir, true, null, true); // Force a full load to verify library correctness
 
             using (var convertedMoleculeGroupsIterator = converted.MoleculeGroups.GetEnumerator())
             {
                 foreach (var peptideGroupDocNode in document.MoleculeGroups)
                 {
                     convertedMoleculeGroupsIterator.MoveNext();
-                    ConvertedSmallMoleculePeptideGroupIsSimilar(convertedMoleculeGroupsIterator.Current, peptideGroupDocNode);
+                    ConvertedSmallMoleculePeptideGroupIsSimilar(convertedMoleculeGroupsIterator.Current, peptideGroupDocNode, conversionMode);
                 }
                 Assert.IsFalse(convertedMoleculeGroupsIterator.MoveNext());
             }
         }
 
         private static void ConvertedSmallMoleculePeptideGroupIsSimilar(PeptideGroupDocNode convertedMoleculeGroupDocNode,
-            PeptideGroupDocNode peptideGroupDocNode)
+            PeptideGroupDocNode peptideGroupDocNode, RefinementSettings.ConvertToSmallMoleculesMode conversionMode)
         {
             using (var convertedMoleculesIterator = convertedMoleculeGroupDocNode.Molecules.GetEnumerator())
             {
@@ -866,20 +972,46 @@ namespace pwiz.SkylineTestUtil
                         Assert.AreEqual(mol.Note ?? string.Empty,
                             convertedMol.Note.Replace(RefinementSettings.TestingConvertedFromProteomic, string.Empty));
                     else
-                        Assert.AreEqual(mol.CustomIon.InvariantName, SrmDocument.TestingNonProteomicMoleculeName);
-                            // This was the magic test molecule
+                        Assert.AreEqual(mol.CustomMolecule.InvariantName, SrmDocument.TestingNonProteomicMoleculeName); // This was the magic test molecule
                     Assert.AreEqual(mol.SourceKey, convertedMol.SourceKey);
                     Assert.AreEqual(mol.Rank, convertedMol.Rank);
                     Assert.AreEqual(mol.Results, convertedMol.Results);
                     Assert.AreEqual(mol.ExplicitRetentionTime, convertedMol.ExplicitRetentionTime);
                     Assert.AreEqual(mol.BestResult, convertedMol.BestResult);
-                    ConvertedSmallMoleculeIsSimilar(convertedMol, mol);
+                    ConvertedSmallMoleculeIsSimilar(convertedMol, mol, conversionMode);
                 }
                 Assert.IsFalse(convertedMoleculesIterator.MoveNext());
             }
         }
 
-        private static void ConvertedSmallMoleculeIsSimilar(PeptideDocNode convertedMol, PeptideDocNode mol)
+        private static void ConvertedSmallMoleculeTransitionGroupResultIsSimilar(TransitionGroupDocNode convertedGroup,
+            TransitionGroupDocNode group, RefinementSettings.ConvertToSmallMoleculesMode conversionMode)
+        {
+
+            if (convertedGroup.IsotopeDist == null)
+                Assume.IsNull(group.IsotopeDist);
+            else if (conversionMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
+                Assume.IsTrue(convertedGroup.IsotopeDist.IsSimilar(group.IsotopeDist));
+
+            if (conversionMode == RefinementSettings.ConvertToSmallMoleculesMode.masses_only && group.Results != null)
+            {
+                // All we can really expect is that retention times agree - but nothing beyond that, not even the peak width
+                Assume.AreEqual(group.Results.Count, convertedGroup.Results.Count);
+                for (var i = 0; i < group.Results.Count; i++)
+                {
+                    Assume.AreEqual(group.Results[i].Count, convertedGroup.Results[i].Count);
+                    for (var j = 0; j < group.Results[i].Count; j++)
+                    {
+                        Assume.AreEqual(group.Results[i][j].RetentionTime, convertedGroup.Results[i][j].RetentionTime, group + " vs " + convertedGroup);
+                    }
+                }
+                return;
+            }
+            if (!Equals(group.Results, convertedGroup.Results))
+                Assert.AreEqual(group.Results, convertedGroup.Results, group + " vs " + convertedGroup);
+        }
+
+        private static void ConvertedSmallMoleculeIsSimilar(PeptideDocNode convertedMol, PeptideDocNode mol, RefinementSettings.ConvertToSmallMoleculesMode conversionMode)
         {
             using (var convertedTransitionGroupIterator = convertedMol.TransitionGroups.GetEnumerator())
             {
@@ -887,31 +1019,25 @@ namespace pwiz.SkylineTestUtil
                 {
                     convertedTransitionGroupIterator.MoveNext();
                     var convertedTransitionGroupDocNode = convertedTransitionGroupIterator.Current;
+                    ConvertedSmallMoleculePrecursorIsSimilar(convertedTransitionGroupDocNode, transitionGroupDocNode, conversionMode);
                     Assert.AreEqual(transitionGroupDocNode.TransitionGroup.PrecursorCharge,
                         convertedTransitionGroupDocNode.TransitionGroup.PrecursorCharge);
                     Assert.AreEqual(transitionGroupDocNode.TransitionGroup.LabelType,
                         convertedTransitionGroupDocNode.TransitionGroup.LabelType);
                     Assert.AreEqual(transitionGroupDocNode.PrecursorMz, convertedTransitionGroupDocNode.PrecursorMz,
                         SequenceMassCalc.MassTolerance, "transitiongroup as small molecule");
-                    Assert.AreEqual(transitionGroupDocNode.IsotopeDist, convertedTransitionGroupDocNode.IsotopeDist);
-                    // Remove any library info, since for the moment at least small molecules don't support this and it won't roundtrip
-                    var resultsNew = RefinementSettings.RemoveTransitionGroupChromInfoLibraryInfo(transitionGroupDocNode);
-                    Assert.AreEqual(resultsNew, convertedTransitionGroupDocNode.Results,
-                        transitionGroupDocNode + " vs " + convertedTransitionGroupDocNode);
-
+                    ConvertedSmallMoleculeTransitionGroupResultIsSimilar(convertedTransitionGroupDocNode, transitionGroupDocNode, conversionMode);
                     Assert.AreEqual(transitionGroupDocNode.TransitionGroup.PrecursorCharge,
                         convertedTransitionGroupDocNode.TransitionGroup.PrecursorCharge);
                     Assert.AreEqual(transitionGroupDocNode.TransitionGroup.LabelType,
                         convertedTransitionGroupDocNode.TransitionGroup.LabelType);
 
-                    ConvertedSmallMoleculePrecursorIsSimilar(convertedTransitionGroupDocNode, transitionGroupDocNode);
                 }
                 Assert.IsFalse(convertedTransitionGroupIterator == null || convertedTransitionGroupIterator.MoveNext());
             }
         }
 
-        private static void ConvertedSmallMoleculePrecursorIsSimilar(TransitionGroupDocNode convertedTransitionGroupDocNode,
-            TransitionGroupDocNode transitionGroupDocNode)
+        private static void ConvertedSmallMoleculePrecursorIsSimilar(TransitionGroupDocNode convertedTransitionGroupDocNode, TransitionGroupDocNode transitionGroupDocNode, RefinementSettings.ConvertToSmallMoleculesMode conversionMode)
         {
             using (var convertedTransitionIterator = convertedTransitionGroupDocNode.Transitions.GetEnumerator())
             {
@@ -919,10 +1045,12 @@ namespace pwiz.SkylineTestUtil
                 {
                     convertedTransitionIterator.MoveNext();
                     var convertedTransition = convertedTransitionIterator.Current;
-                    Assert.AreEqual(transition.Mz, convertedTransition.Mz, SequenceMassCalc.MassTolerance,
-                        "transition as small molecule");
+                    if (Math.Abs(transition.Mz - convertedTransition.Mz) > SequenceMassCalc.MassTolerance)
+                        Assert.AreEqual(transition.Mz, convertedTransition.Mz, "mz mismatch transition as small molecule");
                     Assert.AreEqual(transition.IsotopeDistInfo, convertedTransition.IsotopeDistInfo);
-                    Assert.AreEqual(transition.Results, convertedTransition.Results);
+                    if (conversionMode == RefinementSettings.ConvertToSmallMoleculesMode.formulas && 
+                        !Equals(transition.Results, convertedTransition.Results))
+                        Assert.AreEqual(transition.Results, convertedTransition.Results, "results mismatch transition as small molecule");
                 }
                 Assert.IsFalse(convertedTransitionIterator.MoveNext());
             }

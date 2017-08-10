@@ -256,14 +256,14 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             // Calculate text sequence values for the peptide display string
             var listTextSequences = new List<TextSequence>();
-            if (nodePep.Peptide.IsCustomIon)
-                listTextSequences.Add(CreatePlainTextSequence(nodePep.CustomIon.DisplayName, fonts));
+            if (nodePep.Peptide.IsCustomMolecule)
+                listTextSequences.Add(CreatePlainTextSequence(label, fonts));
             // If no modifications, use a single plain text sequence
             else if (!heavyMods && !listTypeSequences[0].Text.Contains("[")) // Not L10N: For identifying modifications
                 listTextSequences.Add(CreatePlainTextSequence(label, fonts));
             else
             {
-                string pepSequence = nodePep.Peptide.Sequence;
+                string pepSequence = nodePep.Peptide.Target.Sequence;
                 int startPep = label.IndexOf(pepSequence, StringComparison.Ordinal);
                 int endPep = startPep + pepSequence.Length;
 
@@ -407,8 +407,8 @@ namespace pwiz.Skyline.Controls.SeqNode
             return new TextSequence
                        {
                            Text = nodePep.IsProteomic
-                               ? calc.GetModifiedSequence(nodePep.Peptide.Sequence, true)
-                               : nodePep.CustomIon.DisplayName,
+                               ? calc.GetModifiedSequence(nodePep.Peptide.Target, true).Sequence
+                               : nodePep.CustomMolecule.DisplayName,
                            Font = fonts.GetModFont(labelType),
                            Color = ModFontHolder.GetModColor(labelType)
                        };
@@ -573,10 +573,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             var listChildrenNew = new List<DocNode>();
             foreach (TransitionGroup group in DocNode.GetTransitionGroups(DocSettings, mods, useFilter))
             {
-                // The maximum allowable precursor charge may be larger than it makes sense to show
-                // For custom ions we just show what's already there, so don't worry about charge
-                if (group.IsCustomIon || Math.Abs(group.PrecursorCharge) <= TransitionGroup.MAX_PRECURSOR_CHARGE_PICK ||
-                        DocSettings.TransitionSettings.Filter.PrecursorCharges.Contains(group.PrecursorCharge))
+                // The maximum allowable precursor charge may be larger than it makes sense to show.
+                var charges = group.IsProteomic
+                    ? DocSettings.TransitionSettings.Filter.PeptidePrecursorCharges
+                    : DocSettings.TransitionSettings.Filter.SmallMoleculePrecursorAdducts;
+                if (Math.Abs(group.PrecursorAdduct.AdductCharge) <= TransitionGroup.MAX_PRECURSOR_CHARGE_PICK || charges.Contains(group.PrecursorAdduct))
                     listChildrenNew.Add(CreateChoice(group, mods));
             }
             var nodePep = (PeptideDocNode)DocNode.ChangeChildren(listChildrenNew);
@@ -653,12 +654,12 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 Peptide peptide = nodePep.Peptide;
                 SizeF size;
-                if (peptide.IsCustomIon)
+                if (peptide.IsCustomMolecule)
                 {
-                    table.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Molecule, nodePep.CustomIon.Name, rt);
-                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, nodePep.CustomIon.Formula, rt);
+                    table.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Molecule, nodePep.CustomMolecule.Name, rt);
+                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, nodePep.CustomMolecule.Formula, rt);
                     table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Neutral_Mass,
-                        nodePep.CustomIon.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType).ToString(LocalizationHelper.CurrentCulture), rt);
+                        nodePep.CustomMolecule.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType).ToString(LocalizationHelper.CurrentCulture), rt);
                     size = table.CalcDimensions(g);
                     table.Draw(g);
                     return new Size((int)Math.Round(size.Width + 2), (int)Math.Round(size.Height + 2));
@@ -721,7 +722,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             foreach (var labelType in settings.PeptideSettings.Modifications.GetModificationTypes())
             {
-                if (nodePep.Peptide.IsCustomIon)
+                if (nodePep.Peptide.IsCustomMolecule)
                     continue;
                 // Only return the modified sequence, if the peptide actually as a child
                 // of this type.
@@ -731,7 +732,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (calc == null)
                     continue;
 
-                string modSequence = calc.GetModifiedSequence(nodePep.Peptide.Sequence, true); // Never have to worry about this being a custom ion, we already checked
+                string modSequence = calc.GetModifiedSequence(nodePep.Peptide.Target, true).Sequence; // Never have to worry about this being a custom molecule, we already checked
 
                 // Only return if the modified sequence contains modifications
                 if (modSequence.Contains('[')) // Not L10N

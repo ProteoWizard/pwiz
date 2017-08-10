@@ -649,8 +649,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
             // Avoid hanging onto the peptide, since it can end up being the primary memory root
             // for large-scale command-line processing
-            RawTextId = nodePep.RawTextId;
-            RawUnmodifiedTextId = nodePep.RawUnmodifiedTextId;
+            RawTextId = nodePep.ModifiedTarget.ToString();
+            RawUnmodifiedTextId = nodePep.Target.ToString();
             IsDecoy = nodePep.IsDecoy;
             Key = new PeakTransitionGroupIdKey(nodePep.Id.GlobalIndex, FileId.GlobalIndex);
         }

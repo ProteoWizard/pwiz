@@ -22,7 +22,7 @@ namespace pwiz.Skyline.Model.Serialization {
     static SkylineDocumentReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "ChVTa3lsaW5lRG9jdW1lbnQucHJvdG8ijxgKFFNreWxpbmVEb2N1bWVudFBy",
+            "ChVTa3lsaW5lRG9jdW1lbnQucHJvdG8i9RkKFFNreWxpbmVEb2N1bWVudFBy",
             "b3RvGmEKC0Fubm90YXRpb25zEgwKBG5vdGUYASABKAkSDQoFY29sb3IYAiAB",
             "KAUSNQoGdmFsdWVzGAMgAygLMiUuU2t5bGluZURvY3VtZW50UHJvdG8uQW5u",
             "b3RhdGlvblZhbHVlGjIKD0Fubm90YXRpb25WYWx1ZRIMCgRuYW1lGAEgASgJ",
@@ -45,54 +45,59 @@ namespace pwiz.Skyline.Model.Serialization {
             "GBcgASgREjYKC2Fubm90YXRpb25zGBggASgLMiEuU2t5bGluZURvY3VtZW50",
             "UHJvdG8uQW5ub3RhdGlvbnMaSAoRVHJhbnNpdGlvblJlc3VsdHMSMwoFcGVh",
             "a3MYASADKAsyJC5Ta3lsaW5lRG9jdW1lbnRQcm90by5UcmFuc2l0aW9uUGVh",
-            "axqxCAoKVHJhbnNpdGlvbhI1Cgdmb3JtdWxhGAEgASgLMiQuU2t5bGluZURv",
-            "Y3VtZW50UHJvdG8uT3B0aW9uYWxTdHJpbmcSOQoLYXZlcmFnZU1hc3MYAiAB",
-            "KAsyJC5Ta3lsaW5lRG9jdW1lbnRQcm90by5PcHRpb25hbERvdWJsZRI2Cght",
-            "b25vTWFzcxgDIAEoCzIkLlNreWxpbmVEb2N1bWVudFByb3RvLk9wdGlvbmFs",
-            "RG91YmxlEj0KD2N1c3RvbV9pb25fbmFtZRgGIAEoCzIkLlNreWxpbmVEb2N1",
-            "bWVudFByb3RvLk9wdGlvbmFsU3RyaW5nEj8KEW1lYXN1cmVkX2lvbl9uYW1l",
-            "GAcgASgLMiQuU2t5bGluZURvY3VtZW50UHJvdG8uT3B0aW9uYWxTdHJpbmcS",
-            "OQoOZGVjb3lNYXNzU2hpZnQYCCABKAsyIS5Ta3lsaW5lRG9jdW1lbnRQcm90",
-            "by5PcHRpb25hbEludBIRCgltYXNzSW5kZXgYCSABKBESOgoPaXNvdG9wZURp",
-            "c3RSYW5rGAsgASgLMiEuU2t5bGluZURvY3VtZW50UHJvdG8uT3B0aW9uYWxJ",
-            "bnQSQgoVaXNvdG9wZURpc3RQcm9wb3J0aW9uGAwgASgLMiMuU2t5bGluZURv",
-            "Y3VtZW50UHJvdG8uT3B0aW9uYWxGbG9hdBIXCg9mcmFnbWVudE9yZGluYWwY",
-            "DSABKBESGQoRY2FsY19uZXV0cmFsX21hc3MYDiABKAESDgoGY2hhcmdlGA8g",
-            "ASgREhIKCmNsZWF2YWdlQWEYECABKAUSEAoIbG9zdE1hc3MYESABKAESNgoL",
-            "YW5ub3RhdGlvbnMYEiABKAsyIS5Ta3lsaW5lRG9jdW1lbnRQcm90by5Bbm5v",
-            "dGF0aW9ucxITCgtwcmVjdXJzb3JNehgTIAEoARIRCglwcm9kdWN0TXoYFCAB",
-            "KAESPQoPY29sbGlzaW9uRW5lcmd5GBUgASgLMiQuU2t5bGluZURvY3VtZW50",
-            "UHJvdG8uT3B0aW9uYWxEb3VibGUSQwoVZGVjbHVzdGVyaW5nUG90ZW50aWFs",
-            "GBYgASgLMiQuU2t5bGluZURvY3VtZW50UHJvdG8uT3B0aW9uYWxEb3VibGUS",
-            "NAoGbG9zc2VzGBcgAygLMiQuU2t5bGluZURvY3VtZW50UHJvdG8uVHJhbnNp",
-            "dGlvbkxvc3MSMwoMZnJhZ21lbnRUeXBlGBggASgOMh0uU2t5bGluZURvY3Vt",
-            "ZW50UHJvdG8uSW9uVHlwZRI4CgdsaWJJbmZvGBkgASgLMicuU2t5bGluZURv",
-            "Y3VtZW50UHJvdG8uVHJhbnNpdGlvbkxpYkluZm8SOAoHcmVzdWx0cxgaIAEo",
-            "CzInLlNreWxpbmVEb2N1bWVudFByb3RvLlRyYW5zaXRpb25SZXN1bHRzGh4K",
-            "DU9wdGlvbmFsRmxvYXQSDQoFdmFsdWUYASABKAIaHwoOT3B0aW9uYWxEb3Vi",
-            "bGUSDQoFdmFsdWUYASABKAEaHAoLT3B0aW9uYWxJbnQSDQoFdmFsdWUYASAB",
-            "KBEaHwoOT3B0aW9uYWxTdHJpbmcSDQoFdmFsdWUYASABKAkauQEKDlRyYW5z",
-            "aXRpb25Mb3NzEg8KB2Zvcm11bGEYASABKAkSGAoQbW9ub2lzb3RvcGljTWFz",
-            "cxgCIAEoARITCgthdmVyYWdlTWFzcxgDIAEoARI6Cg1sb3NzSW5jbHVzaW9u",
-            "GAQgASgOMiMuU2t5bGluZURvY3VtZW50UHJvdG8uTG9zc0luY2x1c2lvbhIY",
-            "ChBtb2RpZmljYXRpb25OYW1lGAUgASgJEhEKCWxvc3NJbmRleBgGIAEoBRo0",
-            "ChFUcmFuc2l0aW9uTGliSW5mbxIMCgRyYW5rGAEgASgFEhEKCWludGVuc2l0",
-            "eRgCIAEoAhpHCg5UcmFuc2l0aW9uRGF0YRI1Cgt0cmFuc2l0aW9ucxgBIAMo",
-            "CzIgLlNreWxpbmVEb2N1bWVudFByb3RvLlRyYW5zaXRpb24ieAoHVXNlclNl",
-            "dBISCg5VU0VSX1NFVF9GQUxTRRAAEhEKDVVTRVJfU0VUX1RSVUUQARIVChFV",
-            "U0VSX1NFVF9JTVBPUlRFRBACEhkKFVVTRVJfU0VUX1JFSU5URUdSQVRFRBAD",
-            "EhQKEFVTRVJfU0VUX01BVENIRUQQBCJaCgxPcHRpb25hbEJvb2wSGQoVT1BU",
-            "SU9OQUxfQk9PTF9NSVNTSU5HEAASFgoST1BUSU9OQUxfQk9PTF9UUlVFEAES",
-            "FwoTT1BUSU9OQUxfQk9PTF9GQUxTRRACInIKElBlYWtJZGVudGlmaWNhdGlv",
-            "bhIdChlQRUFLX0lERU5USUZJQ0FUSU9OX0ZBTFNFEAASHAoYUEVBS19JREVO",
-            "VElGSUNBVElPTl9UUlVFEAESHwobUEVBS19JREVOVElGSUNBVElPTl9BTElH",
-            "TkVEEAIirAEKB0lvblR5cGUSFAoQSU9OX1RZUEVfdW5rbm93bhAAEg4KCklP",
-            "Tl9UWVBFX2EQARIOCgpJT05fVFlQRV9iEAISDgoKSU9OX1RZUEVfYxADEg4K",
-            "CklPTl9UWVBFX3gQBBIOCgpJT05fVFlQRV95EAUSDgoKSU9OX1RZUEVfehAG",
-            "EhYKEklPTl9UWVBFX3ByZWN1cnNvchAHEhMKD0lPTl9UWVBFX2N1c3RvbRAI",
-            "IjMKDUxvc3NJbmNsdXNpb24SCwoHTGlicmFyeRAAEgkKBU5ldmVyEAESCgoG",
-            "QWx3YXlzEAJCI6oCIHB3aXouU2t5bGluZS5Nb2RlbC5TZXJpYWxpemF0aW9u",
-            "YgZwcm90bzM="));
+            "axqXCgoKVHJhbnNpdGlvbhI1Cgdmb3JtdWxhGAEgASgLMiQuU2t5bGluZURv",
+            "Y3VtZW50UHJvdG8uT3B0aW9uYWxTdHJpbmcSOgoMYXZlcmFnZU1hc3NIGAIg",
+            "ASgLMiQuU2t5bGluZURvY3VtZW50UHJvdG8uT3B0aW9uYWxEb3VibGUSNwoJ",
+            "bW9ub01hc3NIGAMgASgLMiQuU2t5bGluZURvY3VtZW50UHJvdG8uT3B0aW9u",
+            "YWxEb3VibGUSPQoPY3VzdG9tX2lvbl9uYW1lGAYgASgLMiQuU2t5bGluZURv",
+            "Y3VtZW50UHJvdG8uT3B0aW9uYWxTdHJpbmcSPwoRbWVhc3VyZWRfaW9uX25h",
+            "bWUYByABKAsyJC5Ta3lsaW5lRG9jdW1lbnRQcm90by5PcHRpb25hbFN0cmlu",
+            "ZxI5Cg5kZWNveU1hc3NTaGlmdBgIIAEoCzIhLlNreWxpbmVEb2N1bWVudFBy",
+            "b3RvLk9wdGlvbmFsSW50EhEKCW1hc3NJbmRleBgJIAEoERI6Cg9pc290b3Bl",
+            "RGlzdFJhbmsYCyABKAsyIS5Ta3lsaW5lRG9jdW1lbnRQcm90by5PcHRpb25h",
+            "bEludBJCChVpc290b3BlRGlzdFByb3BvcnRpb24YDCABKAsyIy5Ta3lsaW5l",
+            "RG9jdW1lbnRQcm90by5PcHRpb25hbEZsb2F0EhcKD2ZyYWdtZW50T3JkaW5h",
+            "bBgNIAEoERIZChFjYWxjX25ldXRyYWxfbWFzcxgOIAEoARIOCgZjaGFyZ2UY",
+            "DyABKBESEgoKY2xlYXZhZ2VBYRgQIAEoBRIQCghsb3N0TWFzcxgRIAEoARI2",
+            "Cgthbm5vdGF0aW9ucxgSIAEoCzIhLlNreWxpbmVEb2N1bWVudFByb3RvLkFu",
+            "bm90YXRpb25zEhMKC3ByZWN1cnNvck16GBMgASgBEhEKCXByb2R1Y3RNehgU",
+            "IAEoARI9Cg9jb2xsaXNpb25FbmVyZ3kYFSABKAsyJC5Ta3lsaW5lRG9jdW1l",
+            "bnRQcm90by5PcHRpb25hbERvdWJsZRJDChVkZWNsdXN0ZXJpbmdQb3RlbnRp",
+            "YWwYFiABKAsyJC5Ta3lsaW5lRG9jdW1lbnRQcm90by5PcHRpb25hbERvdWJs",
+            "ZRI0CgZsb3NzZXMYFyADKAsyJC5Ta3lsaW5lRG9jdW1lbnRQcm90by5UcmFu",
+            "c2l0aW9uTG9zcxIzCgxmcmFnbWVudFR5cGUYGCABKA4yHS5Ta3lsaW5lRG9j",
+            "dW1lbnRQcm90by5Jb25UeXBlEjgKB2xpYkluZm8YGSABKAsyJy5Ta3lsaW5l",
+            "RG9jdW1lbnRQcm90by5UcmFuc2l0aW9uTGliSW5mbxI4CgdyZXN1bHRzGBog",
+            "ASgLMicuU2t5bGluZURvY3VtZW50UHJvdG8uVHJhbnNpdGlvblJlc3VsdHMS",
+            "OQoLYXZlcmFnZU1hc3MYGyABKAsyJC5Ta3lsaW5lRG9jdW1lbnRQcm90by5P",
+            "cHRpb25hbERvdWJsZRI2Cghtb25vTWFzcxgcIAEoCzIkLlNreWxpbmVEb2N1",
+            "bWVudFByb3RvLk9wdGlvbmFsRG91YmxlEjQKBmFkZHVjdBgdIAEoCzIkLlNr",
+            "eWxpbmVEb2N1bWVudFByb3RvLk9wdGlvbmFsU3RyaW5nEjkKC21vbGVjdWxl",
+            "X2lkGB4gASgLMiQuU2t5bGluZURvY3VtZW50UHJvdG8uT3B0aW9uYWxTdHJp",
+            "bmcaHgoNT3B0aW9uYWxGbG9hdBINCgV2YWx1ZRgBIAEoAhofCg5PcHRpb25h",
+            "bERvdWJsZRINCgV2YWx1ZRgBIAEoARocCgtPcHRpb25hbEludBINCgV2YWx1",
+            "ZRgBIAEoERofCg5PcHRpb25hbFN0cmluZxINCgV2YWx1ZRgBIAEoCRq5AQoO",
+            "VHJhbnNpdGlvbkxvc3MSDwoHZm9ybXVsYRgBIAEoCRIYChBtb25vaXNvdG9w",
+            "aWNNYXNzGAIgASgBEhMKC2F2ZXJhZ2VNYXNzGAMgASgBEjoKDWxvc3NJbmNs",
+            "dXNpb24YBCABKA4yIy5Ta3lsaW5lRG9jdW1lbnRQcm90by5Mb3NzSW5jbHVz",
+            "aW9uEhgKEG1vZGlmaWNhdGlvbk5hbWUYBSABKAkSEQoJbG9zc0luZGV4GAYg",
+            "ASgFGjQKEVRyYW5zaXRpb25MaWJJbmZvEgwKBHJhbmsYASABKAUSEQoJaW50",
+            "ZW5zaXR5GAIgASgCGkcKDlRyYW5zaXRpb25EYXRhEjUKC3RyYW5zaXRpb25z",
+            "GAEgAygLMiAuU2t5bGluZURvY3VtZW50UHJvdG8uVHJhbnNpdGlvbiJ4CgdV",
+            "c2VyU2V0EhIKDlVTRVJfU0VUX0ZBTFNFEAASEQoNVVNFUl9TRVRfVFJVRRAB",
+            "EhUKEVVTRVJfU0VUX0lNUE9SVEVEEAISGQoVVVNFUl9TRVRfUkVJTlRFR1JB",
+            "VEVEEAMSFAoQVVNFUl9TRVRfTUFUQ0hFRBAEIloKDE9wdGlvbmFsQm9vbBIZ",
+            "ChVPUFRJT05BTF9CT09MX01JU1NJTkcQABIWChJPUFRJT05BTF9CT09MX1RS",
+            "VUUQARIXChNPUFRJT05BTF9CT09MX0ZBTFNFEAIicgoSUGVha0lkZW50aWZp",
+            "Y2F0aW9uEh0KGVBFQUtfSURFTlRJRklDQVRJT05fRkFMU0UQABIcChhQRUFL",
+            "X0lERU5USUZJQ0FUSU9OX1RSVUUQARIfChtQRUFLX0lERU5USUZJQ0FUSU9O",
+            "X0FMSUdORUQQAiKsAQoHSW9uVHlwZRIUChBJT05fVFlQRV91bmtub3duEAAS",
+            "DgoKSU9OX1RZUEVfYRABEg4KCklPTl9UWVBFX2IQAhIOCgpJT05fVFlQRV9j",
+            "EAMSDgoKSU9OX1RZUEVfeBAEEg4KCklPTl9UWVBFX3kQBRIOCgpJT05fVFlQ",
+            "RV96EAYSFgoSSU9OX1RZUEVfcHJlY3Vyc29yEAcSEwoPSU9OX1RZUEVfY3Vz",
+            "dG9tEAgiMwoNTG9zc0luY2x1c2lvbhILCgdMaWJyYXJ5EAASCQoFTmV2ZXIQ",
+            "ARIKCgZBbHdheXMQAkIjqgIgcHdpei5Ta3lsaW5lLk1vZGVsLlNlcmlhbGl6",
+            "YXRpb25iBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
@@ -100,7 +105,7 @@ namespace pwiz.Skyline.Model.Serialization {
             new pbr::GeneratedClrTypeInfo(typeof(global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.AnnotationValue), global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.AnnotationValue.Parser, new[]{ "Name", "TextValue" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.TransitionPeak), global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.TransitionPeak.Parser, new[]{ "ReplicateIndex", "FileIndexInReplicate", "MassError", "RetentionTime", "StartRetentionTime", "EndRetentionTime", "DriftTime", "DriftTimeWindow", "Area", "BackgroundArea", "Height", "Fwhm", "IsFwhmDegenerate", "Truncated", "Identified", "Rank", "RankByLevel", "PointsAcrossPeak", "UserSet", "OptimizationStep", "Annotations" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.TransitionResults), global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.TransitionResults.Parser, new[]{ "Peaks" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.Transition), global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.Transition.Parser, new[]{ "Formula", "AverageMass", "MonoMass", "CustomIonName", "MeasuredIonName", "DecoyMassShift", "MassIndex", "IsotopeDistRank", "IsotopeDistProportion", "FragmentOrdinal", "CalcNeutralMass", "Charge", "CleavageAa", "LostMass", "Annotations", "PrecursorMz", "ProductMz", "CollisionEnergy", "DeclusteringPotential", "Losses", "FragmentType", "LibInfo", "Results" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.Transition), global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.Transition.Parser, new[]{ "Formula", "AverageMassH", "MonoMassH", "CustomIonName", "MeasuredIonName", "DecoyMassShift", "MassIndex", "IsotopeDistRank", "IsotopeDistProportion", "FragmentOrdinal", "CalcNeutralMass", "Charge", "CleavageAa", "LostMass", "Annotations", "PrecursorMz", "ProductMz", "CollisionEnergy", "DeclusteringPotential", "Losses", "FragmentType", "LibInfo", "Results", "AverageMass", "MonoMass", "Adduct", "MoleculeId" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalFloat), global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalFloat.Parser, new[]{ "Value" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble), global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble.Parser, new[]{ "Value" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalInt), global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalInt.Parser, new[]{ "Value" }, null, null, null),
@@ -1394,8 +1399,8 @@ namespace pwiz.Skyline.Model.Serialization {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public Transition(Transition other) : this() {
           Formula = other.formula_ != null ? other.Formula.Clone() : null;
-          AverageMass = other.averageMass_ != null ? other.AverageMass.Clone() : null;
-          MonoMass = other.monoMass_ != null ? other.MonoMass.Clone() : null;
+          AverageMassH = other.averageMassH_ != null ? other.AverageMassH.Clone() : null;
+          MonoMassH = other.monoMassH_ != null ? other.MonoMassH.Clone() : null;
           CustomIonName = other.customIonName_ != null ? other.CustomIonName.Clone() : null;
           MeasuredIonName = other.measuredIonName_ != null ? other.MeasuredIonName.Clone() : null;
           DecoyMassShift = other.decoyMassShift_ != null ? other.DecoyMassShift.Clone() : null;
@@ -1416,6 +1421,10 @@ namespace pwiz.Skyline.Model.Serialization {
           fragmentType_ = other.fragmentType_;
           LibInfo = other.libInfo_ != null ? other.LibInfo.Clone() : null;
           Results = other.results_ != null ? other.Results.Clone() : null;
+          AverageMass = other.averageMass_ != null ? other.AverageMass.Clone() : null;
+          MonoMass = other.monoMass_ != null ? other.MonoMass.Clone() : null;
+          Adduct = other.adduct_ != null ? other.Adduct.Clone() : null;
+          MoleculeId = other.moleculeId_ != null ? other.MoleculeId.Clone() : null;
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1434,31 +1443,40 @@ namespace pwiz.Skyline.Model.Serialization {
           }
         }
 
-        /// <summary>Field number for the "averageMass" field.</summary>
-        public const int AverageMassFieldNumber = 2;
-        private global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble averageMass_;
+        /// <summary>Field number for the "averageMassH" field.</summary>
+        public const int AverageMassHFieldNumber = 2;
+        private global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble averageMassH_;
+        /// <summary>
+        ///  See also: averageMass = 27;
+        /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble AverageMass {
-          get { return averageMass_; }
+        public global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble AverageMassH {
+          get { return averageMassH_; }
           set {
-            averageMass_ = value;
+            averageMassH_ = value;
           }
         }
 
-        /// <summary>Field number for the "monoMass" field.</summary>
-        public const int MonoMassFieldNumber = 3;
-        private global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble monoMass_;
+        /// <summary>Field number for the "monoMassH" field.</summary>
+        public const int MonoMassHFieldNumber = 3;
+        private global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble monoMassH_;
+        /// <summary>
+        ///  See also:  monoMass = 28;
+        /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble MonoMass {
-          get { return monoMass_; }
+        public global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble MonoMassH {
+          get { return monoMassH_; }
           set {
-            monoMass_ = value;
+            monoMassH_ = value;
           }
         }
 
         /// <summary>Field number for the "custom_ion_name" field.</summary>
         public const int CustomIonNameFieldNumber = 6;
         private global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalString customIonName_;
+        /// <summary>
+        ///  See also: custom_ion_id = 30;
+        /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalString CustomIonName {
           get { return customIonName_; }
@@ -1547,6 +1565,9 @@ namespace pwiz.Skyline.Model.Serialization {
         /// <summary>Field number for the "charge" field.</summary>
         public const int ChargeFieldNumber = 15;
         private int charge_;
+        /// <summary>
+        ///  See also: adduct = 29;
+        /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public int Charge {
           get { return charge_; }
@@ -1675,6 +1696,50 @@ namespace pwiz.Skyline.Model.Serialization {
           }
         }
 
+        /// <summary>Field number for the "averageMass" field.</summary>
+        public const int AverageMassFieldNumber = 27;
+        private global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble averageMass_;
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble AverageMass {
+          get { return averageMass_; }
+          set {
+            averageMass_ = value;
+          }
+        }
+
+        /// <summary>Field number for the "monoMass" field.</summary>
+        public const int MonoMassFieldNumber = 28;
+        private global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble monoMass_;
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble MonoMass {
+          get { return monoMass_; }
+          set {
+            monoMass_ = value;
+          }
+        }
+
+        /// <summary>Field number for the "adduct" field.</summary>
+        public const int AdductFieldNumber = 29;
+        private global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalString adduct_;
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalString Adduct {
+          get { return adduct_; }
+          set {
+            adduct_ = value;
+          }
+        }
+
+        /// <summary>Field number for the "molecule_id" field.</summary>
+        public const int MoleculeIdFieldNumber = 30;
+        private global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalString moleculeId_;
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalString MoleculeId {
+          get { return moleculeId_; }
+          set {
+            moleculeId_ = value;
+          }
+        }
+
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public override bool Equals(object other) {
           return Equals(other as Transition);
@@ -1689,8 +1754,8 @@ namespace pwiz.Skyline.Model.Serialization {
             return true;
           }
           if (!object.Equals(Formula, other.Formula)) return false;
-          if (!object.Equals(AverageMass, other.AverageMass)) return false;
-          if (!object.Equals(MonoMass, other.MonoMass)) return false;
+          if (!object.Equals(AverageMassH, other.AverageMassH)) return false;
+          if (!object.Equals(MonoMassH, other.MonoMassH)) return false;
           if (!object.Equals(CustomIonName, other.CustomIonName)) return false;
           if (!object.Equals(MeasuredIonName, other.MeasuredIonName)) return false;
           if (!object.Equals(DecoyMassShift, other.DecoyMassShift)) return false;
@@ -1711,6 +1776,10 @@ namespace pwiz.Skyline.Model.Serialization {
           if (FragmentType != other.FragmentType) return false;
           if (!object.Equals(LibInfo, other.LibInfo)) return false;
           if (!object.Equals(Results, other.Results)) return false;
+          if (!object.Equals(AverageMass, other.AverageMass)) return false;
+          if (!object.Equals(MonoMass, other.MonoMass)) return false;
+          if (!object.Equals(Adduct, other.Adduct)) return false;
+          if (!object.Equals(MoleculeId, other.MoleculeId)) return false;
           return true;
         }
 
@@ -1718,8 +1787,8 @@ namespace pwiz.Skyline.Model.Serialization {
         public override int GetHashCode() {
           int hash = 1;
           if (formula_ != null) hash ^= Formula.GetHashCode();
-          if (averageMass_ != null) hash ^= AverageMass.GetHashCode();
-          if (monoMass_ != null) hash ^= MonoMass.GetHashCode();
+          if (averageMassH_ != null) hash ^= AverageMassH.GetHashCode();
+          if (monoMassH_ != null) hash ^= MonoMassH.GetHashCode();
           if (customIonName_ != null) hash ^= CustomIonName.GetHashCode();
           if (measuredIonName_ != null) hash ^= MeasuredIonName.GetHashCode();
           if (decoyMassShift_ != null) hash ^= DecoyMassShift.GetHashCode();
@@ -1740,6 +1809,10 @@ namespace pwiz.Skyline.Model.Serialization {
           if (FragmentType != 0) hash ^= FragmentType.GetHashCode();
           if (libInfo_ != null) hash ^= LibInfo.GetHashCode();
           if (results_ != null) hash ^= Results.GetHashCode();
+          if (averageMass_ != null) hash ^= AverageMass.GetHashCode();
+          if (monoMass_ != null) hash ^= MonoMass.GetHashCode();
+          if (adduct_ != null) hash ^= Adduct.GetHashCode();
+          if (moleculeId_ != null) hash ^= MoleculeId.GetHashCode();
           return hash;
         }
 
@@ -1754,13 +1827,13 @@ namespace pwiz.Skyline.Model.Serialization {
             output.WriteRawTag(10);
             output.WriteMessage(Formula);
           }
-          if (averageMass_ != null) {
+          if (averageMassH_ != null) {
             output.WriteRawTag(18);
-            output.WriteMessage(AverageMass);
+            output.WriteMessage(AverageMassH);
           }
-          if (monoMass_ != null) {
+          if (monoMassH_ != null) {
             output.WriteRawTag(26);
-            output.WriteMessage(MonoMass);
+            output.WriteMessage(MonoMassH);
           }
           if (customIonName_ != null) {
             output.WriteRawTag(50);
@@ -1839,6 +1912,22 @@ namespace pwiz.Skyline.Model.Serialization {
             output.WriteRawTag(210, 1);
             output.WriteMessage(Results);
           }
+          if (averageMass_ != null) {
+            output.WriteRawTag(218, 1);
+            output.WriteMessage(AverageMass);
+          }
+          if (monoMass_ != null) {
+            output.WriteRawTag(226, 1);
+            output.WriteMessage(MonoMass);
+          }
+          if (adduct_ != null) {
+            output.WriteRawTag(234, 1);
+            output.WriteMessage(Adduct);
+          }
+          if (moleculeId_ != null) {
+            output.WriteRawTag(242, 1);
+            output.WriteMessage(MoleculeId);
+          }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1847,11 +1936,11 @@ namespace pwiz.Skyline.Model.Serialization {
           if (formula_ != null) {
             size += 1 + pb::CodedOutputStream.ComputeMessageSize(Formula);
           }
-          if (averageMass_ != null) {
-            size += 1 + pb::CodedOutputStream.ComputeMessageSize(AverageMass);
+          if (averageMassH_ != null) {
+            size += 1 + pb::CodedOutputStream.ComputeMessageSize(AverageMassH);
           }
-          if (monoMass_ != null) {
-            size += 1 + pb::CodedOutputStream.ComputeMessageSize(MonoMass);
+          if (monoMassH_ != null) {
+            size += 1 + pb::CodedOutputStream.ComputeMessageSize(MonoMassH);
           }
           if (customIonName_ != null) {
             size += 1 + pb::CodedOutputStream.ComputeMessageSize(CustomIonName);
@@ -1911,6 +2000,18 @@ namespace pwiz.Skyline.Model.Serialization {
           if (results_ != null) {
             size += 2 + pb::CodedOutputStream.ComputeMessageSize(Results);
           }
+          if (averageMass_ != null) {
+            size += 2 + pb::CodedOutputStream.ComputeMessageSize(AverageMass);
+          }
+          if (monoMass_ != null) {
+            size += 2 + pb::CodedOutputStream.ComputeMessageSize(MonoMass);
+          }
+          if (adduct_ != null) {
+            size += 2 + pb::CodedOutputStream.ComputeMessageSize(Adduct);
+          }
+          if (moleculeId_ != null) {
+            size += 2 + pb::CodedOutputStream.ComputeMessageSize(MoleculeId);
+          }
           return size;
         }
 
@@ -1925,17 +2026,17 @@ namespace pwiz.Skyline.Model.Serialization {
             }
             Formula.MergeFrom(other.Formula);
           }
-          if (other.averageMass_ != null) {
-            if (averageMass_ == null) {
-              averageMass_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble();
+          if (other.averageMassH_ != null) {
+            if (averageMassH_ == null) {
+              averageMassH_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble();
             }
-            AverageMass.MergeFrom(other.AverageMass);
+            AverageMassH.MergeFrom(other.AverageMassH);
           }
-          if (other.monoMass_ != null) {
-            if (monoMass_ == null) {
-              monoMass_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble();
+          if (other.monoMassH_ != null) {
+            if (monoMassH_ == null) {
+              monoMassH_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble();
             }
-            MonoMass.MergeFrom(other.MonoMass);
+            MonoMassH.MergeFrom(other.MonoMassH);
           }
           if (other.customIonName_ != null) {
             if (customIonName_ == null) {
@@ -2025,6 +2126,30 @@ namespace pwiz.Skyline.Model.Serialization {
             }
             Results.MergeFrom(other.Results);
           }
+          if (other.averageMass_ != null) {
+            if (averageMass_ == null) {
+              averageMass_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble();
+            }
+            AverageMass.MergeFrom(other.AverageMass);
+          }
+          if (other.monoMass_ != null) {
+            if (monoMass_ == null) {
+              monoMass_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble();
+            }
+            MonoMass.MergeFrom(other.MonoMass);
+          }
+          if (other.adduct_ != null) {
+            if (adduct_ == null) {
+              adduct_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalString();
+            }
+            Adduct.MergeFrom(other.Adduct);
+          }
+          if (other.moleculeId_ != null) {
+            if (moleculeId_ == null) {
+              moleculeId_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalString();
+            }
+            MoleculeId.MergeFrom(other.MoleculeId);
+          }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2043,17 +2168,17 @@ namespace pwiz.Skyline.Model.Serialization {
                 break;
               }
               case 18: {
-                if (averageMass_ == null) {
-                  averageMass_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble();
+                if (averageMassH_ == null) {
+                  averageMassH_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble();
                 }
-                input.ReadMessage(averageMass_);
+                input.ReadMessage(averageMassH_);
                 break;
               }
               case 26: {
-                if (monoMass_ == null) {
-                  monoMass_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble();
+                if (monoMassH_ == null) {
+                  monoMassH_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble();
                 }
-                input.ReadMessage(monoMass_);
+                input.ReadMessage(monoMassH_);
                 break;
               }
               case 50: {
@@ -2164,6 +2289,34 @@ namespace pwiz.Skyline.Model.Serialization {
                   results_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.TransitionResults();
                 }
                 input.ReadMessage(results_);
+                break;
+              }
+              case 218: {
+                if (averageMass_ == null) {
+                  averageMass_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble();
+                }
+                input.ReadMessage(averageMass_);
+                break;
+              }
+              case 226: {
+                if (monoMass_ == null) {
+                  monoMass_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalDouble();
+                }
+                input.ReadMessage(monoMass_);
+                break;
+              }
+              case 234: {
+                if (adduct_ == null) {
+                  adduct_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalString();
+                }
+                input.ReadMessage(adduct_);
+                break;
+              }
+              case 242: {
+                if (moleculeId_ == null) {
+                  moleculeId_ = new global::pwiz.Skyline.Model.Serialization.SkylineDocumentProto.Types.OptionalString();
+                }
+                input.ReadMessage(moleculeId_);
                 break;
               }
             }

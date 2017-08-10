@@ -10,8 +10,9 @@
     <id name="Id">
       <generator class="native" />
     </id>
-    <property name="PeptideModSeq" index="idxPeptide" not-null="true"/>
+    <property name="PeptideModSeq" index="idxPeptide"/>
     <property name="CollisionalCrossSection"/>
     <property name="HighEnergyDriftTimeOffsetMsec"/>
+    <property name="PrecursorAdduct"/>
   </class>
 </hibernate-mapping>

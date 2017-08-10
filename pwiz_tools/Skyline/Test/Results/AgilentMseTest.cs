@@ -89,7 +89,7 @@ namespace pwiz.SkylineTest.Results
             if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none)
             {
                 var refine = new RefinementSettings();
-                document = refine.ConvertToSmallMolecules(document, asSmallMolecules, smallMolMode == small_mol_mode.simple ? RefinementSettings.ConvertToSmallMoleculesChargesMode.none : RefinementSettings.ConvertToSmallMoleculesChargesMode.invert);
+                document = refine.ConvertToSmallMolecules(document, testFilesDir.FullPath, asSmallMolecules, smallMolMode == small_mol_mode.simple ? RefinementSettings.ConvertToSmallMoleculesChargesMode.none : RefinementSettings.ConvertToSmallMoleculesChargesMode.invert);
             }
             using (var docContainer = new ResultsTestDocumentContainer(document, docPath))
             {
@@ -126,7 +126,8 @@ namespace pwiz.SkylineTest.Results
                         // expecting just one peptide result in this small data set
                         if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)
                         {
-                            Assert.AreEqual(0.2462, (double)nodePep.GetMeasuredRetentionTime(0), .0001, "averaged retention time differs in node " + nodePep.RawTextId);
+                            Assert.AreEqual(0.2462, 
+                                (double)nodePep.GetMeasuredRetentionTime(0), .0001, "averaged retention time differs in node " + nodePep.ModifiedTarget);
                             Assert.AreEqual(0.3333, (double)nodePep.GetPeakCountRatio(0), 0.0001);
                             nPeptides++;
                         }

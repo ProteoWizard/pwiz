@@ -99,13 +99,13 @@ namespace pwiz.Skyline.Model.Optimization
                     {
                         foreach (TransitionGroupDocNode group in peptide.Children)
                         {
-                            string modSeq = document.Settings.GetSourceTextId(peptide); 
-                            int charge = group.PrecursorCharge;
+                            var modSeq = document.Settings.GetSourceTarget(peptide); 
+                            var charge = group.PrecursorAdduct;
                             foreach (TransitionDocNode transition in group.Children)
                             {
                                 foreach (var optType in Enum.GetValues(typeof(OptimizationType)).Cast<OptimizationType>())
                                 {
-                                    var optimizationKey = new OptimizationKey(optType, modSeq, charge, transition.FragmentIonName, transition.Transition.Charge);
+                                    var optimizationKey = new OptimizationKey(optType, modSeq, charge, transition.FragmentIonName, transition.Transition.Adduct);
                                     DbOptimization dbOptimization;
                                     if (dictOptimizations.TryGetValue(optimizationKey, out dbOptimization))
                                     {
@@ -132,7 +132,7 @@ namespace pwiz.Skyline.Model.Optimization
             return _database.GetOptimizations();
         }
 
-        public DbOptimization GetOptimization(OptimizationType type, string seq, int charge, string fragment, int productCharge)
+        public DbOptimization GetOptimization(OptimizationType type, Target seq, Adduct charge, string fragment, Adduct productCharge)
         {
             RequireUsable();
             var key = new OptimizationKey(type, seq, charge, fragment, productCharge);
@@ -142,9 +142,9 @@ namespace pwiz.Skyline.Model.Optimization
                 : null;
         }
 
-        public DbOptimization GetOptimization(OptimizationType type, string seq, int charge)
+        public DbOptimization GetOptimization(OptimizationType type, Target seq, Adduct charge)
         {
-            return GetOptimization(type, seq, charge, null, 0);
+            return GetOptimization(type, seq, charge, null, Adduct.EMPTY);
         }
 
         public bool HasType(OptimizationType type)

@@ -31,6 +31,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -221,9 +222,9 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
-                    importPeptideSearchDlg.TransitionSettingsControl.PrecursorCharges = new[] {1, 2, 3, 4};
-                    importPeptideSearchDlg.TransitionSettingsControl.IonCharges = new[] {1, 2};
-                    importPeptideSearchDlg.TransitionSettingsControl.IonTypes = new[] { IonType.y, IonType.b, IonType.precursor };
+                    importPeptideSearchDlg.TransitionSettingsControl.PeptidePrecursorCharges = Adduct.ProtonatedFromCharges(1, 2, 3, 4);
+                    importPeptideSearchDlg.TransitionSettingsControl.PeptideIonCharges = Adduct.ProtonatedFromCharges(1, 2);
+                    importPeptideSearchDlg.TransitionSettingsControl.PeptideIonTypes = new[] { IonType.y, IonType.b, IonType.precursor };
                     importPeptideSearchDlg.TransitionSettingsControl.ExclusionUseDIAWindow = true;
                     importPeptideSearchDlg.TransitionSettingsControl.IonCount = 5;
                     importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance = 0.05;

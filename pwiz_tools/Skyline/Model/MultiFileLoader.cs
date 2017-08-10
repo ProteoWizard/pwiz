@@ -85,6 +85,11 @@ namespace pwiz.Skyline.Model
 
         public void InitializeThreadCount(int? loadingThreads)
         {
+            if (ParallelEx.SINGLE_THREADED)
+            {
+                loadingThreads = 1; // Makes debugging easier.
+            }
+
             if (loadingThreads.HasValue)
                 _threadCount = loadingThreads.Value;
             else

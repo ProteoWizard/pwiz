@@ -715,7 +715,9 @@ namespace pwiz.Skyline.Model.Lib
                     ReadComplete(stream, specSequence, seqLength);
 
                     // Add new entry
-                    LibKey key = new LibKey(specSequence, 0, seqLength, charge);
+                    LibKey key = seqLength > 0 && LibKey.HasAdduct(specSequence) ?
+                        new LibKey(specSequence, seqLength) : 
+                        new LibKey(specSequence, 0, seqLength, charge);
 
                     libraryEntries[i] = new NistSpectrumInfo(key, tfRatio, rt, irt, totalIntensity,
                                                               (ushort)copies, (ushort)numPeaks, compressedSize, location);
@@ -773,7 +775,7 @@ namespace pwiz.Skyline.Model.Lib
 
         // Not L10N
 // ReSharper disable NonLocalizedString
-        private static readonly Regex REGEX_NAME = new Regex(@"^Name: ([A-Z()\[\]0-9]+)/(\d)"); // NIST libraries can contain M(O) and SpectraST M[16]
+        private static readonly Regex REGEX_NAME = new Regex(@"^Name: ([A-Z()\[\]0-9]+)/(\d)"); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
         private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^Num ?[pP]eaks: (\d+)");  // NIST uses "Num peaks" and SpectraST "NumPeaks"
         private static readonly Regex REGEX_COMMENT = new Regex(@"^Comment: ");
         private static readonly Regex REGEX_MODS = new Regex(@" Mods=([^ ]+) ");
@@ -783,6 +785,14 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_SAMPLE = new Regex(@" Nreps=\d+/(\d+)");  // Observer spectrum count
         private static readonly char[] MAJOR_SEP = {'/'};
         private static readonly char[] MINOR_SEP = {','};
+        // Small molecule items
+        private static readonly Regex REGEX_NAME_SMALLMOL = new Regex(@"^Name: (.*)"); // small molecule names can be anything
+        private static readonly Regex REGEX_SYNON = new Regex(@"^Synon: ");
+        private static readonly Regex REGEX_INCHIKEY = new Regex(@"^InChIKey: (.*)");
+        private static readonly Regex REGEX_FORMULA = new Regex(@"^Formula: (.*)");
+        private static readonly Regex REGEX_CAS = new Regex(@"^CAS#: (\d+-\d+-\d)"); // CONSIDER(bspratt): capture NIST# as well?
+        private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type: (.*)");
+
 // ReSharper restore NonLocalizedString
         private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent)
         {
@@ -790,6 +800,7 @@ namespace pwiz.Skyline.Model.Lib
             long size = sm.GetLength(FilePath);
             
             long readChars = 0;
+            var ambiguousKeys = new HashSet<LibKey>();
 
             using (TextReader reader = sm.CreateReader(FilePath))
             using (FileSaver fs = new FileSaver(CachePath, sm))
@@ -823,11 +834,21 @@ namespace pwiz.Skyline.Model.Lib
 
                     // Read until name line
                     Match match = REGEX_NAME.Match(line);
+                    var isPeptide = true;
+                    if (!match.Success)
+                    {
+                        isPeptide = false;
+                        match = REGEX_NAME_SMALLMOL.Match(line);
+                    }
                     if (!match.Success)
                         continue;
 
-                    string sequence = match.Groups[1].Value;
-                    int charge = int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
+                    string sequence = match.Groups[1].Value; // Peptide sequence or molecule name
+                    var charge = isPeptide ? int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture) : 0;
+                    var adduct = Adduct.EMPTY;
+                    string formula = null;
+                    string CAS = null;
+                    string inChiKey = null;
 
                     int numPeaks = 0;
                     float tfRatio = 1000;
@@ -848,6 +869,44 @@ namespace pwiz.Skyline.Model.Lib
                             break;
                         }
 
+                        match = REGEX_SYNON.Match(line);
+                        if (match.Success)
+                        {
+                            isPeptide = false;
+                            continue;
+                        }
+
+                        if (!isPeptide)
+                        {
+                            match = REGEX_FORMULA.Match(line);
+                            if (match.Success)
+                            {
+                                formula = match.Groups[1].Value;
+                                continue;
+                            }
+                            match = REGEX_INCHIKEY.Match(line);
+                            if (match.Success)
+                            {
+                                inChiKey = match.Groups[1].Value;
+                                continue;
+                            }
+                            match = REGEX_CAS.Match(line);
+                            if (match.Success)
+                            {
+                                CAS = MoleculeAccessionNumbers.TagCAS+":"+match.Groups[1].Value; // Not L10N
+                                continue;
+                            }
+                            match = REGEX_ADDUCT.Match(line);
+                            if (match.Success)
+                            {
+                                // We've seen strange adducts for MS3 data like "[109.1]+" - just pass over these
+                                if (!Adduct.TryParse(match.Groups[1].Value, out adduct))
+                                    adduct = Adduct.EMPTY;
+                                continue;
+                            }
+                        }
+
+                        // For peptides, a lot of useful info is jammed into the COMMENT line and must be further picked apart
                         match = REGEX_COMMENT.Match(line);
                         if (match.Success)
                         {
@@ -878,6 +937,9 @@ namespace pwiz.Skyline.Model.Lib
                             break;
                     }
 
+                    if (charge == 0 && adduct.IsEmpty)
+                        continue; // In the end, couldn't understand this as a peptide nor as a small molecule - ignore. CONSIDER(bspratt): throw an error? Historical behavior is to be silent.
+
                     if (numPeaks == 0)
                         ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_No_peaks_found_for_peptide__0__, sequence));
                     if (numPeaks > ushort.MaxValue)
@@ -900,11 +962,25 @@ namespace pwiz.Skyline.Model.Lib
 
                         // Parse out mass and intensity as quickly as possible, since
                         // this will be the most repeated parsing code.
+                        var sep = '\t'; // Not L10N
                         int iTab1 = line.IndexOf('\t'); // Not L10N
-                        int iTab2 = (iTab1 == -1 ? -1 : line.IndexOf('\t', iTab1 + 1)); // Not L10N
-                        if (iTab1 == -1 || iTab2 == -1)
-                            ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__, i + 1, sequence));
-
+                        if (iTab1 == -1) // Using space instead of tab, maybe?
+                        {
+                            sep = ' '; // Not L10N
+                            iTab1 = line.IndexOf(sep); 
+                        }
+                        int iTab2 = (iTab1 == -1 ? -1 : line.IndexOf(sep, iTab1 + 1)); // Not L10N
+                        if (iTab2 == -1)
+                        {
+                            if (iTab1 != -1)
+                            {
+                                iTab2 = line.Length; // Some entries don't have annotation columns
+                            }
+                            else
+                            {
+                                ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__, i + 1, sequence));
+                            }
+                        }
                         string mzField = line.Substring(0, iTab1++);
                         string intensityField = line.Substring(iTab1, iTab2 - iTab1);
 
@@ -924,9 +1000,13 @@ namespace pwiz.Skyline.Model.Lib
                     long location = outStream.Position;
                     outStream.Write(peaksCompressed, 0, lenCompressed);
                     
-                    var key = new LibKey(sequence, charge);
+                    var key = isPeptide ? new LibKey(sequence, charge) : new LibKey(SmallMoleculeLibraryAttributes.Create(sequence, formula, inChiKey, CAS), adduct);
                     var info = new NistSpectrumInfo(key, tfRatio, rt, irt, Convert.ToSingle(totalIntensity),
                                                     (ushort) copies, (ushort) numPeaks, lenCompressed, location);
+                    if (libraryEntries.Any(e => key.Equals(e.Key)))
+                    {
+                        ambiguousKeys.Add(key);
+                    }
                     
                     libraryEntries.Add(info);
                 }
@@ -976,7 +1056,10 @@ namespace pwiz.Skyline.Model.Lib
                     outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof (int));
                     outStream.Write(BitConverter.GetBytes(info.CompressedSize), 0, sizeof (int));
                     outStream.Write(BitConverter.GetBytes(info.Location), 0, sizeof (long));
-                    info.Key.WriteSequence(outStream);
+                    if (info.Key.IsSmallMoleculeKey)
+                        info.Key.Write(outStream); // Write the entire key, which includes the adduct description CONSIDER:(bspratt) should we bump FORMAT_VERSION_CACHE?
+                    else
+                        info.Key.WriteSequence(outStream);
                 }
 
                 outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
@@ -990,6 +1073,21 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             loader.UpdateProgress(status.Complete());
+
+            //
+            // Especially for small molecules, make user aware if imported library contains multiple entries for the same key.
+            // This is probably because the library contains entries for different instruments, CE values etc but we don't track that.
+            // N.B. we've tolerated this ambiguity for peptides since the beginning, don't change that behavior now
+            //
+            if (ambiguousKeys.Any() && ambiguousKeys.All(k => k.IsSmallMoleculeKey))
+            {
+                var pairType = ambiguousKeys.Any(k => k.IsSmallMoleculeKey)
+                    ? Resources.NistLibraryBase_CreateCache_molecule_adduct
+                    : Resources.NistLibraryBase_CreateCache_peptide_charge;
+                var warning = string.Format(Resources.NistLibraryBase_CreateCache_,
+                    pairType, TextUtil.LineSeparate(ambiguousKeys.Select(k => k.ToString())));
+                throw new InvalidDataException(warning);
+            }
 
             return true;
         }
@@ -1130,7 +1228,7 @@ namespace pwiz.Skyline.Model.Lib
                 : base.ListRetentionTimeSources();
         }
 
-        public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<string> peptideSequences, ref int? fileIndex)
+        public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<Target> peptideSequences, ref int? fileIndex)
         {
             return Equals(FilePath, filePath)
                 ? LibraryEntriesWithSequences(peptideSequences).Where(spectrum => spectrum.RT.HasValue).Select(spectrum => spectrum.RT.Value)
@@ -1139,7 +1237,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override bool TryGetIrts(out LibraryRetentionTimes retentionTimes)
         {
-            var dictionary = new Dictionary<string, Tuple<TimeSource, double[]>>();
+            var dictionary = new Dictionary<Target, Tuple<TimeSource, double[]>>();
             foreach (var entry in _libraryEntries)
             {
                 if (!entry.iRT.HasValue)
@@ -1148,7 +1246,7 @@ namespace pwiz.Skyline.Model.Lib
                 var iRT = entry.iRT.Value;
 
                 Tuple<TimeSource, double[]> tuple;
-                if (!dictionary.TryGetValue(entry.Key.Sequence, out tuple))
+                if (!dictionary.TryGetValue(entry.Key.Target, out tuple))
                 {
                     tuple = Tuple.Create(TimeSource.peak, new[] {iRT});
                 }
@@ -1159,7 +1257,7 @@ namespace pwiz.Skyline.Model.Lib
                     newIrt[newIrt.Length - 1] = iRT;
                     tuple = Tuple.Create(tuple.Item1, newIrt);
                 }
-                dictionary[entry.Key.Sequence] = tuple;
+                dictionary[entry.Key.Target] = tuple;
             }
             
             retentionTimes = new LibraryRetentionTimes(null, dictionary);

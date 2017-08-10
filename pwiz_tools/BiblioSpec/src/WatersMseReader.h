@@ -83,35 +83,29 @@ struct MsePSM : PSM {
 };
 
 /**
- * For set::insert, compare seq, charge, mz, RT. If all equal, return
- * false.
+ * For set::insert, implements the Less<> predicate.
  */
 struct compMsePsm{
-  bool operator() (const MsePSM* left, const MsePSM* right) const
-  {
-    if( left->unmodSeq == right->unmodSeq ){
-        if( left->charge == right->charge ){
-            if( left->mz == right->mz ){
-                if( left->retentionTime == right->retentionTime ){
-                    if( left->precursorIonMobility == right->precursorIonMobility) {
-                        return false;
-                    } else {
-                        return (left->precursorIonMobility < right->precursorIonMobility);
-                    }
-                } else {
-                    return (left->retentionTime < right->retentionTime);
-                }
-                
-            } else {
-                return (left->mz < right->mz);
-            }
-        } else {
+    bool operator() (const MsePSM* left, const MsePSM* right) const
+    {
+        if (left->unmodSeq != right->unmodSeq) 
+            return (left->unmodSeq < right->unmodSeq);
+        if (left->charge != right->charge) 
             return (left->charge < right->charge);
-        }
-    } else {
-        return (left->unmodSeq < right->unmodSeq);
+        if (left->mz != right->mz) 
+            return (left->mz < right->mz);
+        if (left->retentionTime != right->retentionTime) 
+            return (left->retentionTime < right->retentionTime);
+        if (left->precursorIonMobility != right->precursorIonMobility) 
+            return (left->precursorIonMobility < right->precursorIonMobility);
+        if (left->smallMolMetadata.chemicalFormula != right->smallMolMetadata.chemicalFormula) 
+            return (left->smallMolMetadata.chemicalFormula < right->smallMolMetadata.chemicalFormula);
+        if (left->smallMolMetadata.inchiKey != right->smallMolMetadata.inchiKey) 
+            return (left->smallMolMetadata.inchiKey < right->smallMolMetadata.inchiKey);
+        if (left->smallMolMetadata.precursorAdduct != right->smallMolMetadata.precursorAdduct) 
+            return (left->smallMolMetadata.precursorAdduct < right->smallMolMetadata.precursorAdduct);
+        return false;
     }
-  }
 };
 
 /**
@@ -175,10 +169,10 @@ public:
       le.minMass = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
   }
   static void insertPrecursorIonMobility(LineEntry& le, const string& value){
-      le.precursorIonMobility = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
+      le.precursorIonMobility = (value.empty()) ? 0 : boost::lexical_cast<float>(value);
   }
   static void insertProductIonMobility(LineEntry& le, const string& value){
-      le.productIonMobility = (value.empty()) ? 0 : boost::lexical_cast<double>(value);
+      le.productIonMobility = (value.empty()) ? 0 : boost::lexical_cast<float>(value);
   }
   static void insertPass(LineEntry& le, const string& value){
       le.pass = value;

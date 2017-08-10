@@ -61,6 +61,11 @@ namespace pwiz.Skyline.Model.Results
             IsTimeNormalArea = true;
         }
 
+        public bool IsEmpty
+        {
+            get { return _chromatograms == null || _chromatograms.Count == 0; }
+        }
+
         public IList<ChromatogramSet> Chromatograms
         {
             get { return _chromatograms; }

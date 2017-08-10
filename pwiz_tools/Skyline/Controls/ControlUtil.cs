@@ -239,7 +239,7 @@ namespace pwiz.Skyline.Controls
             if (val.Length > 0 && !val.Contains(i => min > i || i > max))
                 return true;
 
-            ShowTextBoxError(control, Resources. MessageBoxHelper_ValidateNumberListTextBox__0__must_contain_a_comma_separated_list_of_integers_from__1__to__2__,
+            ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateNumberListTextBox__0__must_contain_a_comma_separated_list_of_integers_from__1__to__2__,
                              null, min, max);
 
             return false;

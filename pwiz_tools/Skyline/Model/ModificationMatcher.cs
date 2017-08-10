@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Model
                 return false;
             // Skip sequences that can be created from the current settings.
             TransitionGroupDocNode nodeGroup;
-            while (CreateDocNodeFromSettings(_sequences.Current, null, DIFF_GROUPS, out nodeGroup) != null)
+            while (CreateDocNodeFromSettings(new Target(_sequences.Current), null, DIFF_GROUPS, out nodeGroup) != null)
             {
                 if (!_sequences.MoveNext())
                     return false;
@@ -360,25 +360,25 @@ namespace pwiz.Skyline.Model
         {
             var seqUnmod = FastaSequence.StripModifications(seq);
             var peptide = fastaSequence != null
-              ? fastaSequence.CreateFullPeptideDocNode(Settings, seqUnmod).Peptide
+              ? fastaSequence.CreateFullPeptideDocNode(Settings, new Target(seqUnmod)).Peptide
               : new Peptide(null, seqUnmod, null, null,
                             Settings.PeptideSettings.Enzyme.CountCleavagePoints(seqUnmod));
             // First, try to create the peptide using the current settings.
             TransitionGroupDocNode nodeGroup;
             PeptideDocNode nodePep = 
-                CreateDocNodeFromSettings(seq, peptide, SrmSettingsDiff.ALL, out nodeGroup);
+                CreateDocNodeFromSettings(new Target(seq), peptide, SrmSettingsDiff.ALL, out nodeGroup);
             if (nodePep != null)
                 return nodePep;
             // Create the peptideDocNode.
             nodePep = fastaSequence == null
               ? new PeptideDocNode(peptide)
-              : fastaSequence.CreateFullPeptideDocNode(Settings, seqUnmod);
+              : fastaSequence.CreateFullPeptideDocNode(Settings, new Target(seqUnmod));
             return CreateDocNodeFromMatches(nodePep, EnumerateSequenceInfos(seq, false));
         }
 
-        protected override bool IsMatch(string seq, PeptideDocNode nodePep, out TransitionGroupDocNode nodeGroup)
+        protected override bool IsMatch(Target target, PeptideDocNode nodePep, out TransitionGroupDocNode nodeGroup)
         {
-            string seqSimplified = SimplifyUnimodSequence(seq);
+            string seqSimplified = SimplifyUnimodSequence(target.Sequence);
             var seqLight = FastaSequence.StripModifications(seqSimplified, FastaSequence.RGX_HEAVY);
             var seqHeavy = FastaSequence.StripModifications(seqSimplified, FastaSequence.RGX_LIGHT);
             var calcLight = Settings.TryGetPrecursorCalc(IsotopeLabelType.light, nodePep.ExplicitMods);

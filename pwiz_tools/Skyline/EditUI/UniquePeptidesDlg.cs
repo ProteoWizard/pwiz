@@ -104,7 +104,7 @@ namespace pwiz.Skyline.EditUI
             }
             // Expecting to find this peptide
             var peptideGroupDocNode = PeptideGroupDocNodes.First(g => g.Peptides.Contains(peptideDocNode));
-            String peptideSequence = peptideDocNode.Peptide.Sequence;
+            String peptideSequence = peptideDocNode.Peptide.Target.Sequence;
             String proteinSequence;
             var proteinColumn = dataGridView1.Columns[dataGridView1.CurrentCell.ColumnIndex].Tag as ProteinColumn;
             ProteinMetadata metadata;
@@ -242,7 +242,7 @@ namespace pwiz.Skyline.EditUI
                 var row = dataGridView1.Rows[dataGridView1.Rows.Add()];
                 row.Tag = peptide;
                 row.Cells[PeptideIncludedColumn.Name].Value = true;
-                row.Cells[PeptideColumn.Name].Value = peptide.Peptide.Sequence;
+                row.Cells[PeptideColumn.Name].Value = peptide.Peptide.Target;
                 foreach (var proteinColumn in _proteinColumns)
                 {
                     row.Cells[proteinColumn.Name].Value = proteins.Contains(proteinColumn.Protein);
@@ -287,7 +287,7 @@ namespace pwiz.Skyline.EditUI
                     Digestion digestion = proteomeDb.GetDigestion();
                     if (digestion != null)
                     {
-                        var peptidesOfInterest = _peptideDocNodes.Select(node => node.Peptide.Sequence);
+                        var peptidesOfInterest = _peptideDocNodes.Select(node => node.Peptide.Target.Sequence);
                         var sequenceProteinsDict = digestion.GetProteinsWithSequences(peptidesOfInterest);
                         if (longWaitBroker.IsCanceled)
                         {
@@ -298,7 +298,7 @@ namespace pwiz.Skyline.EditUI
                             HashSet<Protein> proteins = new HashSet<Protein>();
                             var peptideGroupDocNode = PeptideGroupDocNodes.First(g => g.Peptides.Contains(peptideDocNode));
                             List<Protein> proteinsForSequence;
-                            if (sequenceProteinsDict.TryGetValue(peptideDocNode.Peptide.Sequence, out proteinsForSequence))
+                            if (sequenceProteinsDict.TryGetValue(peptideDocNode.Peptide.Target.Sequence, out proteinsForSequence))
                             {
                                 if (peptideGroupDocNode != null)
                                 {

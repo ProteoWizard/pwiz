@@ -101,17 +101,58 @@ class sslPSM : public PSM {
             }
         }
     }
+    static void setPrecursorAdduct(sslPSM& psm, const std::string& value) {
+        if (value.empty()){
+            throw BlibException(false, "Missing precursor adduct.");
+        }
+        else {
+            psm.smallMolMetadata.precursorAdduct = value;
+        }
+    }
+    static void setChemicalFormula(sslPSM& psm, const std::string& value) {
+        if (value.empty()){
+            throw BlibException(false, "Missing chemical formula.");
+        }
+        else {
+            psm.smallMolMetadata.chemicalFormula = value;
+        }
+    }
+    static void setInchiKey(sslPSM& psm, const std::string& value) {
+        if (value.empty()){
+            throw BlibException(false, "Missing InChiKey.");
+        }
+        else {
+            psm.smallMolMetadata.inchiKey = value;
+        }
+    }
+    static void setMoleculeName(sslPSM& psm, const std::string& value) {
+        if (value.empty()){
+            throw BlibException(false, "Missing molecule name.");
+        }
+        else {
+            psm.smallMolMetadata.moleculeName = value;
+        }
+    }
+    static void setotherKeys(sslPSM& psm, const std::string& value) {
+        if (value.empty()){
+            throw BlibException(false, "Missing otherKeys.");
+        }
+        else {
+            psm.smallMolMetadata.otherKeys = value;
+        }
+    }
 
   private:
-    static std::string trimLeadingZeros(std::string s) {
-        if (s.empty()) {
+     static std::string trimLeadingZeros(std::string s) {
+         if (s.empty()) {
             return s;
-        }
-        size_t nonZero = s.find_first_not_of('0');
-        return nonZero != string::npos
+         }
+         size_t nonZero = s.find_first_not_of('0');
+         return nonZero != string::npos
             ? s.substr(nonZero)
             : "0"; // just return a single zero if the string consists of only zeros
-    }
+     }
+
 };
 
 /**

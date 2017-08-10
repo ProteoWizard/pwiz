@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _assumeNegativeChargeInPreV11Caches;
 
         private readonly byte[] _buffer = new byte[0x40000];  // 256K
-        private readonly Dictionary<string, int> _dictTextIdToByteIndex = new Dictionary<string, int>();
+        private readonly Dictionary<Target, int> _dictTextIdToByteIndex = new Dictionary<Target, int>();
 
         public ChromCacheJoiner(string cachePath, IPooledStream streamDest,
                                 IList<string> cacheFilePaths, ILoadMonitor loader, ProgressStatus status,

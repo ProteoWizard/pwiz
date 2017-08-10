@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return string.Format("{0}{1} - {2:F04}{3}{4}", transition.FragmentIonName, // Not L10N
                                  Transition.GetMassIndexText(transition.Transition.MassIndex),
                                  transition.Mz,
-                                 Transition.GetChargeIndicator(transition.Transition.Charge),
+                                 Transition.GetChargeIndicator(transition.Transition.Adduct),
                                  transitionGroup.TransitionGroup.LabelTypeText);
         }
         
@@ -243,7 +243,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return string.Format("{0}{1} - {2:F04}{3}", nodeTran.FragmentIonName, // Not L10N
                                  Transition.GetMassIndexText(tran.MassIndex),
                                  nodeTran.Mz,
-                                 Transition.GetChargeIndicator(tran.Charge));
+                                 Transition.GetChargeIndicator(tran.Adduct));
         }
 
         public static string GetTitle(TransitionGroupDocNode nodeGroup)
@@ -251,11 +251,11 @@ namespace pwiz.Skyline.Controls.Graphs
             if (nodeGroup == null)
                 return string.Empty;
 
-            var seq = nodeGroup.TransitionGroup.Peptide.Sequence; // Not using Peptide.RawTextId, see comment below
+            var seq = nodeGroup.TransitionGroup.Peptide.Target.Sequence; // Not using Peptide.RawTextId, see comment below
             if (nodeGroup.TransitionGroup.IsCustomIon)
             {
                 // Showing precursor m/z, so avoid showing ion masses as in DisplayName
-                var customIon = nodeGroup.CustomIon;
+                var customIon = nodeGroup.CustomMolecule;
                 seq = customIon.Name ?? customIon.Formula;
             }
             string prefix = string.Empty;
@@ -263,7 +263,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 prefix = seq + " - ";   // Not L10N
             
             return string.Format("{0}{1:F04}{2}{3}", prefix, nodeGroup.PrecursorMz, // Not L10N
-                                 Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorCharge),
+                                 Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorAdduct),
                                  nodeGroup.TransitionGroup.LabelTypeText);            
         }
 

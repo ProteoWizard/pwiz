@@ -379,7 +379,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             
             int iColor = 0, iCharge = -1;
-            int? charge = null;
+            var charge = Adduct.EMPTY;
             int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
             for (int i = 0; i < countNodes; i++)
             {

@@ -22,6 +22,7 @@
 #include "BuildParser.h"
 #include <boost/algorithm/string.hpp>
 #include <iostream>
+#include "SpecData.h"
 
 namespace BiblioSpec {
 
@@ -48,13 +49,15 @@ BuildParser::BuildParser(BlibBuilder& maker,
     this->curPSM_ = NULL;
     this->specReader_ = new PwizReader();
 
-    sqlite3_prepare(maker.getDb(),
-      "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
-      "peptideModSeq, prevAA, nextAA, copies, numPeaks, driftTimeMsec, collisionalCrossSectionSqA, "
-      "driftTimeHighEnergyOffsetMsec, retentionTime, fileID, specIDinFile, "
-      "score, scoreType) "
-      "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ",
-      -1, &insertSpectrumStmt_, NULL);
+    string stmt = "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
+        "peptideModSeq, prevAA, nextAA, copies, numPeaks, driftTimeMsec, collisionalCrossSectionSqA, "
+        "driftTimeHighEnergyOffsetMsec, retentionTime, fileID, specIDinFile, "
+        "score, scoreType, " + 
+        SmallMolMetadata::sql_cols() + 
+        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
+    sqlite3_prepare(maker.getDb(), stmt.c_str(),
+     -1, &insertSpectrumStmt_, NULL);
+
 }
 
 BuildParser::~BuildParser() {
@@ -373,7 +376,7 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
  * library.
  */
 void BuildParser::insertSpectrum(PSM* psm, 
-                                 SpecData& curSpectrum, 
+                                 const SpecData& curSpectrum, 
                                  sqlite3_int64 fileId,
                                  PSM_SCORE_TYPE scoreType){
     char sql_statement_buf[LARGE_BUFFER_SIZE];
@@ -423,6 +426,13 @@ void BuildParser::insertSpectrum(PSM* psm,
     sqlite3_bind_text(insertSpectrumStmt_, 14, specIdStr.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_double(insertSpectrumStmt_, 15, psm->score);
     sqlite3_bind_int(insertSpectrumStmt_, 16, scoreType);
+    // Small molecule: moleculeName VARCHAR(128), chemicalFormula VARCHAR(128), precursorAdduct VARCHAR(128), inchiKey VARCHAR(128), otherKeys VARCHAR(128)
+    sqlite3_bind_text(insertSpectrumStmt_, 17, psm->smallMolMetadata.moleculeName.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(insertSpectrumStmt_, 18, psm->smallMolMetadata.chemicalFormula.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(insertSpectrumStmt_, 19, psm->smallMolMetadata.precursorAdduct.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(insertSpectrumStmt_, 20, psm->smallMolMetadata.inchiKey.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(insertSpectrumStmt_, 21, psm->smallMolMetadata.otherKeys.c_str(), -1, SQLITE_STATIC);
+
     
     // submit
     sqlite3_step(insertSpectrumStmt_);

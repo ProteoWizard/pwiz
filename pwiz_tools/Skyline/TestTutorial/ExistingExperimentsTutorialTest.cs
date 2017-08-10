@@ -399,7 +399,7 @@ namespace pwiz.SkylineTestTutorial
                     else // Custom Ion
                     {
                         Assert.AreEqual((int)SequenceTree.StateImageId.peak_blank, imageIndex,
-                            string.Format("Expected peak_blank icon for the custom ion {0}, found {1}", nodePep.RawTextId, imageIndex));
+                            string.Format("Expected peak_blank icon for the custom ion {0}, found {1}", nodePep.ModifiedTarget, imageIndex));
                     }
                 }
             });

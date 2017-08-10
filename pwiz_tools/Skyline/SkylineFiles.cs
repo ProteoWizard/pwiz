@@ -979,12 +979,13 @@ namespace pwiz.Skyline
             string oldDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
             string oldRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(oldDocLibFile);
             // If the document has a document-specific library, and the files for it
-            // exist on disk
+            // exist on disk, and it's not stale due to conversion of document to small molecule representation
             var document = Document;
+            string newDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(newDocFilePath);
             if (document.Settings.PeptideSettings.Libraries.HasDocumentLibrary
-                && File.Exists(oldDocLibFile))
+                && File.Exists(oldDocLibFile)
+                && !Equals(newDocLibFile.Replace(BiblioSpecLiteSpec.DotConvertedToSmallMolecules, string.Empty), oldDocLibFile))
             {
-                string newDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(newDocFilePath);
                 using (var saverLib = new FileSaver(newDocLibFile))
                 {
                     FileSaver saverRedundant = null;
@@ -1185,7 +1186,7 @@ namespace pwiz.Skyline
 
         public void ShowExportSpectralLibraryDialog()
         {
-            if (Document.PeptideTransitionGroupCount == 0)
+            if (Document.MoleculeTransitionGroupCount == 0)
             {
                 MessageDlg.Show(this, Resources.SkylineWindow_ShowExportSpectralLibraryDialog_The_document_must_contain_at_least_one_peptide_precursor_to_export_a_spectral_library_);
                 return;
@@ -1234,13 +1235,13 @@ namespace pwiz.Skyline
             var spectra = new Dictionary<LibKey, SpectrumMzInfo>();
             foreach (var nodePepGroup in document.MoleculeGroups)
             {
-                foreach (var nodePep in nodePepGroup.Peptides)
+                foreach (var nodePep in nodePepGroup.Molecules)
                 {
                     foreach (var nodeTranGroup in nodePep.TransitionGroups)
                     {
                         for (var i = 0; i < document.Settings.MeasuredResults.Chromatograms.Count; i++)
                         {
-                            processTransitionGroup(sourceFile, spectra, document, nodePep, nodeTranGroup, i);
+                            ProcessTransitionGroup(sourceFile, spectra, document, nodePep, nodeTranGroup, i);
                         }
                     }
                 }
@@ -1267,12 +1268,20 @@ namespace pwiz.Skyline
             }
         }
 
-        private static void processTransitionGroup(string sourceFile, IDictionary<LibKey, SpectrumMzInfo> spectra,
+        private static void ProcessTransitionGroup(string sourceFile, IDictionary<LibKey, SpectrumMzInfo> spectra,
             SrmDocument document, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, int replicateIndex)
         {
-            var sequence = document.Settings.GetPrecursorCalc(nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods).GetModifiedSequence(nodePep.Peptide.Sequence, false);
-            var key = new LibKey(sequence, nodeTranGroup.PrecursorCharge);
-
+            LibKey key;
+            if (nodePep.IsProteomic)
+            {
+                var sequence = document.Settings.GetPrecursorCalc(nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods).GetModifiedSequence(nodePep.Peptide.Target, false);
+                key = new LibKey(sequence, nodeTranGroup.PrecursorAdduct.AdductCharge);
+            }
+            else
+            {
+                // For small molecules, the "modification" is expressed in the adduct
+                key = new LibKey(nodeTranGroup.CustomMolecule.GetSmallMoleculeLibraryAttributes(), nodeTranGroup.PrecursorAdduct);
+            }
             var mi = new List<SpectrumPeaksInfo.MI>();
             var rt = 0.0;
             var maxApex = float.MinValue;
@@ -1363,7 +1372,7 @@ namespace pwiz.Skyline
                 try
                 {
                     EspFeatureCalc.WriteFeatures(dlg.FileName,
-                        DocumentUI.Molecules.Select(nodePep => nodePep.Peptide.Sequence), LocalizationHelper.CurrentCulture);
+                        DocumentUI.Molecules.Select(nodePep => nodePep.Peptide.Target), LocalizationHelper.CurrentCulture);
                 }
                 catch (IOException x)
                 {
@@ -2385,7 +2394,7 @@ namespace pwiz.Skyline
                 var message = TextUtil.LineSeparate(
                     Resources.SkylineWindow_ImportResults_The_following_iRT_standard_peptides_are_missing_from_the_document_,
                     string.Empty,
-                    TextUtil.LineSeparate(missingIrtPeptides),
+                    TextUtil.LineSeparate(missingIrtPeptides.Select(t=>t.ToString())),
                     string.Empty,
                     string.Format(Resources.SkylineWindow_ImportResults_With__0__standard_peptides___1__are_required_with_a_correlation_of__2__,
                                   numStandards, numRequired, RCalcIrt.MIN_IRT_TO_TIME_CORRELATION));
@@ -2512,9 +2521,9 @@ namespace pwiz.Skyline
             }
         }
 
-        private static IEnumerable<string> CheckMissingIrtPeptides(SrmDocument document)
+        private static IEnumerable<Target> CheckMissingIrtPeptides(SrmDocument document)
         {
-            return RCalcIrtPeptides(document).Except(document.Peptides.Select(nodePep => nodePep.ModifiedSequence));
+            return RCalcIrtPeptides(document).Except(document.Peptides.Select(nodePep => nodePep.ModifiedTarget));
         }
 
         public SrmDocument ImportResults(SrmDocument doc, List<KeyValuePair<string, MsDataFileUri[]>> namedResults, string optimize)

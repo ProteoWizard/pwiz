@@ -47,7 +47,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double MIN_REPORTER_MASS = 5;
         public const double MAX_REPORTER_MASS = 10*1000;
 
-        private SettingsCustomIon SettingsCustomIon { get; set; }
 
         /// <summary>
         /// Constructor for a special fragment
@@ -68,7 +67,6 @@ namespace pwiz.Skyline.Model.DocSettings
             Restrict = restrict;
             Terminus = terminus;
             MinFragmentLength = minFragmentLength;
-            Charge = 1;
             Validate();
         }
 
@@ -79,18 +77,17 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="formula">Chemical formula of the ion</param>
         /// <param name="monoisotopicMass">Constant monoisotopic mass of the ion, if formula is not given</param>
         /// <param name="averageMass">Constant average mass of the ion, if formula is not given</param>
-        /// <param name="charge">The charge for this custom ion</param>
+        /// <param name="adduct">The charge for this custom ion</param>
         /// <param name="isOptional">Whether or not the reporter ion will automatically be added to all proteins</param>
         public MeasuredIon(string name,
             string formula,
             double? monoisotopicMass,
             double? averageMass,
-            int charge,
+            Adduct adduct,
             bool isOptional = false)
             : base(name)
         {
-            SettingsCustomIon = new SettingsCustomIon(formula, monoisotopicMass, averageMass, name); // Like a custom ion, but returns false for IsEditableInstance
-            Charge = charge;
+            SettingsCustomIon = new SettingsCustomIon(formula, adduct, monoisotopicMass, averageMass, name);
             IsOptional = isOptional;
             Validate();
         }
@@ -122,10 +119,13 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool IsNTerm() { return Terminus.HasValue && Terminus.Value == SequenceTerminus.N; }
         public bool IsCTerm() { return Terminus.HasValue && Terminus.Value == SequenceTerminus.C; }
 
-        public bool IsMatch(string sequence, IonType ionType, int cleavageOffset)
+        public bool IsMatch(Target target, IonType ionType, int cleavageOffset)
         {
             if (!IsFragment)
                 return false;
+            if (!target.IsProteomic)
+                return false; // TODO(bspratt) small molecule equivalent?
+            var sequence = target.Sequence;
             int ordinal = Transition.OffsetToOrdinal(ionType, cleavageOffset, sequence.Length);
             if (ordinal < MinFragmentLength)
                 return false;
@@ -142,7 +142,9 @@ namespace pwiz.Skyline.Model.DocSettings
             return true;
         }
 
-        public int Charge { get; private set; }
+        public Adduct Adduct { get { return IsFragment ? Adduct.SINGLY_PROTONATED : SettingsCustomIon.Adduct; } }
+
+        public int Charge { get { return Adduct.AdductCharge; } }
 
         public bool IsFragment { get { return Fragment != null; } }
         public bool IsCustom { get { return !IsFragment; } }
@@ -154,7 +156,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool IsOptional { get; private set; }
 
-        public CustomIon CustomIon { get { return SettingsCustomIon;  } }
+        public SettingsCustomIon SettingsCustomIon { get; private set; }
 
         #region Property change methods
 
@@ -173,7 +175,6 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         private MeasuredIon()
         {
-            Charge = 1;
         }
 
         private enum ATTR
@@ -195,7 +196,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void Validate()
         {
-            TransitionFilter.ValidateCharges(Resources.TransitionFilter_ProductCharges_Product_ion_charges, new[] { Charge },
+            TransitionFilter.ValidateCharges(Resources.TransitionFilter_ProductCharges_Product_ion_charges, new[] { Adduct },
                 Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
 
             if (IsFragment)
@@ -251,21 +252,29 @@ namespace pwiz.Skyline.Model.DocSettings
                 var charges = TextUtil.ParseInts(reader.GetAttribute(ATTR.charges)); // Old version?
                 if (charges.Count() > 1)
                     throw new InvalidDataException(Resources.MeasuredIon_ReadXml_Multiple_charge_states_for_custom_ions_are_no_longer_supported_);
-                SettingsCustomIon = SettingsCustomIon.Deserialize(reader);
+                var parsedIon = CustomIon.Deserialize(reader);
+                Adduct adduct;
                 if (charges.Any())  // Old style - fix it up a little for our revised ideas about custom ion ionization
                 {
-                    Charge = charges[0];
-                    if (string.IsNullOrEmpty(SettingsCustomIon.Formula)) // Adjust the user-supplied masses
+                    adduct = Adduct.FromChargeProtonated(charges[0]);
+                    if (string.IsNullOrEmpty(parsedIon.NeutralFormula)) // Adjust the user-supplied masses
                     {
-                        SettingsCustomIon = new SettingsCustomIon(SettingsCustomIon.Formula,
-                            Math.Round(SettingsCustomIon.MonoisotopicMass + BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
-                            Math.Round(SettingsCustomIon.AverageMass + BioMassCalc.AVERAGE.GetMass(BioMassCalc.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
-                            SettingsCustomIon.Name);
+                        SettingsCustomIon = new SettingsCustomIon(parsedIon.NeutralFormula, adduct,
+                            Math.Round(parsedIon.MonoisotopicMass + BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
+                            Math.Round(parsedIon.AverageMass + BioMassCalc.AVERAGE.GetMass(BioMassCalc.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
+                            parsedIon.Name);
                     }
                 }
                 else
                 {
-                    Charge = reader.GetIntAttribute(ATTR.charge);
+                    adduct = Adduct.FromStringAssumeProtonated(reader.GetAttribute(ATTR.charge));
+                }
+                if (SettingsCustomIon == null)
+                {
+                    SettingsCustomIon = new SettingsCustomIon(parsedIon.NeutralFormula, adduct,
+                        parsedIon.MonoisotopicMass,
+                        parsedIon.AverageMass,
+                        parsedIon.Name);
                 }
                 IsOptional = reader.GetBoolAttribute(ATTR.optional);
             }
@@ -288,10 +297,10 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             else
             {
-                writer.WriteAttributeIfString(ATTR.ion_formula, SettingsCustomIon.Formula);
-                // Masses are information only, if their is a formula, but Panorama may need these
-                writer.WriteAttribute(ATTR.mass_monoisotopic, SettingsCustomIon.MonoisotopicMass);
-                writer.WriteAttribute(ATTR.mass_average, SettingsCustomIon.AverageMass);
+                writer.WriteAttributeIfString(ATTR.ion_formula, SettingsCustomIon.NeutralFormula);
+                // Masses are information only, if there is a formula, but Panorama may need these
+                writer.WriteAttribute(ATTR.mass_monoisotopic, SettingsCustomIon.MonoisotopicMass.Value);
+                writer.WriteAttribute(ATTR.mass_average, SettingsCustomIon.AverageMass.Value);
                 writer.WriteAttributeString(ATTR.charge, Charge.ToString(CultureInfo.InvariantCulture));
                 writer.WriteAttribute(ATTR.optional, IsOptional);
             }

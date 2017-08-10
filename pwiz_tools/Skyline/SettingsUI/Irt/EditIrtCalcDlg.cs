@@ -428,12 +428,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
         /// </summary>
         private bool ValidatePeptideList(IEnumerable<DbIrtPeptide> peptideList, string tableName)
         {
-            var sequenceSet = new HashSet<string>();
+            var sequenceSet = new HashSet<Target>();
             foreach(DbIrtPeptide peptide in peptideList)
             {
-                string seqModified = peptide.PeptideModSeq;
+                var seqModified = peptide.ModifiedTarget;
                 // CONSIDER: Select the peptide row
-                if (!FastaSequence.IsExSequence(seqModified))
+                if (seqModified.IsProteomic && !FastaSequence.IsExSequence(seqModified.Sequence))
                 {
                     MessageDlg.Show(this, string.Format(Resources.EditIrtCalcDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modified_peptide_sequence,
                                                         seqModified));
@@ -607,7 +607,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 var standardPeptidesNew = new List<DbIrtPeptide>();
                 GridView.DoPaste(MessageParent, ValidateRowWithIrt, values =>
-                    standardPeptidesNew.Add(new DbIrtPeptide(values[0], double.Parse(values[1]), true, TimeSource.peak)));
+                    standardPeptidesNew.Add(new DbIrtPeptide(new Target(values[0]), double.Parse(values[1]), true, TimeSource.peak)));
 
                 Reset(standardPeptidesNew);
             }
@@ -625,16 +625,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 for (int i = 0; i < standardPeptidesNew.Count; i++)
                 {
                     var peptide = standardPeptidesNew[i];
-                    string sequence = peptide.PeptideModSeq;
+                    var sequence = peptide.ModifiedTarget;
                     DbIrtPeptide peptideExist;
                     int iPep;
-                    if ((iPep = LibraryPeptideList.IndexOf(p => Equals(p.PeptideModSeq, sequence))) != -1)
+                    if ((iPep = LibraryPeptideList.IndexOf(p => Equals(p.ModifiedTarget, sequence))) != -1)
                     {
                         peptideExist = new DbIrtPeptide(LibraryPeptideList[iPep]);
                         // Remove from the library list, so that it is in only one list
                         LibraryPeptideList.RemoveAt(iPep);
                     }
-                    else if ((iPep = Items.IndexOf(p => Equals(p.PeptideModSeq, sequence))) != -1)
+                    else if ((iPep = Items.IndexOf(p => Equals(p.ModifiedTarget, sequence))) != -1)
                     {
                         peptideExist = new DbIrtPeptide(Items[iPep]);
                     }
@@ -652,9 +652,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 // Add all standard peptides not included in the new list to the general library list
                 foreach (var peptide in from standardPeptide in Items
-                                        let sequence = standardPeptide.PeptideModSeq
+                                        let sequence = standardPeptide.ModifiedTarget
                                         where sequence != null &&
-                                            !standardPeptidesNew.Any(p => Equals(p.PeptideModSeq, sequence))
+                                            !standardPeptidesNew.Any(p => Equals(p.ModifiedTarget, sequence))
                                         select standardPeptide)
                 {
                     peptide.Standard = false;
@@ -684,13 +684,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
             protected override void DoPaste()
             {
                 var libraryPeptidesNew = new List<DbIrtPeptide>();
-                if (!GridView.DoPaste(MessageParent, ValidateRowWithIrt, values => libraryPeptidesNew.Add(new DbIrtPeptide(values[0], double.Parse(values[1]), false, TimeSource.peak))))
+                if (!GridView.DoPaste(MessageParent, ValidateRowWithIrt, values => libraryPeptidesNew.Add(new DbIrtPeptide(new Target(values[0]), double.Parse(values[1]), false, TimeSource.peak))))
                     return;
 
                 foreach (var peptide in libraryPeptidesNew)
                 {
-                    string sequence = peptide.PeptideModSeq;
-                    if (StandardPeptideList.Any(p => Equals(p.PeptideModSeq, sequence)))
+                    var sequence = peptide.ModifiedTarget;
+                    if (StandardPeptideList.Any(p => Equals(p.ModifiedTarget, sequence)))
                     {
                         MessageDlg.Show(MessageParent,
                                         string.Format(Resources.LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table,
@@ -702,7 +702,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
 
                 AddToLibrary(new ProcessedIrtAverages(
-                    libraryPeptidesNew.ToDictionary(pep => pep.PeptideModSeq, pep => new IrtPeptideAverages(pep.PeptideModSeq, pep.Irt, TimeSource.peak)),
+                    libraryPeptidesNew.ToDictionary(pep => pep.ModifiedTarget, pep => new IrtPeptideAverages(pep.ModifiedTarget, pep.Irt, TimeSource.peak)),
                     new KeyValuePair<string, RetentionTimeProviderData>[0]));
             }
 
@@ -756,16 +756,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             private sealed class DocumentRetentionTimeProvider : IRetentionTimeProvider
             {
-                private readonly Dictionary<string, double> _dictPeptideRetentionTime;
+                private readonly Dictionary<Target, double> _dictPeptideRetentionTime;
 
                 public DocumentRetentionTimeProvider(SrmDocument document, ChromFileInfo fileInfo)
                 {
                     Name = fileInfo.FilePath.ToString();
 
-                    _dictPeptideRetentionTime = new Dictionary<string, double>();
+                    _dictPeptideRetentionTime = new Dictionary<Target, double>();
                     foreach (var nodePep in document.Peptides)
                     {
-                        string modSeq = document.Settings.GetModifiedSequence(nodePep);
+                        var modSeq = document.Settings.GetModifiedSequence(nodePep);
                         if (_dictPeptideRetentionTime.ContainsKey(modSeq))
                             continue;
                         float? centerTime = nodePep.GetSchedulingTime(fileInfo.FileId);
@@ -778,7 +778,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 public string Name { get; private set; }
 
-                public double? GetRetentionTime(string sequence)
+                public double? GetRetentionTime(Target sequence)
                 {
                     double time;
                     if (_dictPeptideRetentionTime.TryGetValue(sequence, out time))
@@ -786,7 +786,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     return null;
                 }
 
-                public TimeSource? GetTimeSource(string sequence)
+                public TimeSource? GetTimeSource(Target sequence)
                 {
                     return TimeSource.peak;
                 }
@@ -934,12 +934,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             private sealed class IrtRetentionTimeProvider : IRetentionTimeProvider
             {
                 private readonly string _name;
-                private readonly Dictionary<string, DbIrtPeptide> _dictSequenceToPeptide;
+                private readonly Dictionary<Target, DbIrtPeptide> _dictSequenceToPeptide;
 
                 public IrtRetentionTimeProvider(string name, IrtDb irtDb)
                 {
                     _name = name;
-                    _dictSequenceToPeptide = irtDb.GetPeptides().ToDictionary(peptide => peptide.PeptideModSeq);
+                    _dictSequenceToPeptide = irtDb.GetPeptides().ToDictionary(peptide => peptide.ModifiedTarget);
                 }
 
                 public string Name
@@ -947,7 +947,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     get { return _name; }
                 }
 
-                public double? GetRetentionTime(string sequence)
+                public double? GetRetentionTime(Target sequence)
                 {
                     DbIrtPeptide peptide;
                     if (_dictSequenceToPeptide.TryGetValue(sequence, out peptide))
@@ -955,7 +955,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     return null;
                 }
 
-                public TimeSource? GetTimeSource(string sequence)
+                public TimeSource? GetTimeSource(Target sequence)
                 {
                     DbIrtPeptide peptide;
                     if (_dictSequenceToPeptide.TryGetValue(sequence, out peptide))
@@ -979,8 +979,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             private void AddToLibrary(ProcessedIrtAverages irtAverages)
             {
                 var listPeptidesNew = irtAverages.DbIrtPeptides.ToList();
-                Dictionary<string, int> dictLibraryIndices;
-                List<string> listChangedPeptides, listOverwritePeptides, listKeepPeptides;
+                Dictionary<Target, int> dictLibraryIndices;
+                List<Target> listChangedPeptides, listOverwritePeptides, listKeepPeptides;
                 GetPeptideLists(listPeptidesNew, out dictLibraryIndices, out listChangedPeptides, out listOverwritePeptides, out listKeepPeptides);
 
                 // If there were any matches, get user feedback
@@ -1056,11 +1056,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 try
                 {
                     // Add the new peptides to the library list
-                    var setOverwritePeptides = new HashSet<string>(listOverwritePeptides);
-                    var setKeepPeptides = new HashSet<string>(listKeepPeptides);
+                    var setOverwritePeptides = new HashSet<Target>(listOverwritePeptides);
+                    var setKeepPeptides = new HashSet<Target>(listKeepPeptides);
                     foreach (var peptide in listPeptidesNew)
                     {
-                        string seq = peptide.PeptideModSeq;
+                        var seq = peptide.ModifiedTarget;
                         int peptideIndex;
                         // Add any peptides not yet in the library
                         if (!dictLibraryIndices.TryGetValue(seq, out peptideIndex))
@@ -1103,26 +1103,26 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
 
             private void GetPeptideLists(IEnumerable<DbIrtPeptide> peptidesNew,
-                out Dictionary<string, int> libraryIndices,
-                out List<string> changed, out List<string> overwrite, out List<string> keep)
+                out Dictionary<Target, int> libraryIndices,
+                out List<Target> changed, out List<Target> overwrite, out List<Target> keep)
             {
-                libraryIndices = new Dictionary<string, int>();
+                libraryIndices = new Dictionary<Target, int>();
                 for (var i = 0; i < Items.Count; i++)
                 {
                     // Sometimes the last item can be empty with no sequence.
-                    if (Items[i].PeptideModSeq != null)
-                        libraryIndices.Add(Items[i].PeptideModSeq, i);
+                    if (Items[i].ModifiedTarget != null)
+                        libraryIndices.Add(Items[i].ModifiedTarget, i);
                 }
 
-                changed = new List<string>();
-                overwrite = new List<string>();
-                keep = new List<string>();
+                changed = new List<Target>();
+                overwrite = new List<Target>();
+                keep = new List<Target>();
 
                 // Check for existing matching peptides
                 foreach (var peptide in peptidesNew)
                 {
                     int peptideIndex;
-                    if (!libraryIndices.TryGetValue(peptide.PeptideModSeq, out peptideIndex))
+                    if (!libraryIndices.TryGetValue(peptide.ModifiedTarget, out peptideIndex))
                         continue;
                     var peptideExist = Items[peptideIndex];
                     if (Equals(peptide, peptideExist))
@@ -1134,15 +1134,15 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         switch (peptideExist.TimeSource.Value)
                         {
                             case (int)TimeSource.scan:
-                                overwrite.Add(peptide.PeptideModSeq);
+                                overwrite.Add(peptide.ModifiedTarget);
                                 continue;
                             case (int)TimeSource.peak:
-                                keep.Add(peptide.PeptideModSeq);
+                                keep.Add(peptide.ModifiedTarget);
                                 continue;
                         }
                     }
 
-                    changed.Add(peptide.PeptideModSeq);
+                    changed.Add(peptide.ModifiedTarget);
                 }
 
                 changed.Sort();

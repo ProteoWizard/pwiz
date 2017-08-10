@@ -90,7 +90,7 @@ namespace pwiz.SkylineTestFunctional
 
             foreach (var transitionGroup in peptide.TransitionGroups)
             {
-                string message = peptide.ModifiedSequence + ' ' + transitionGroup.PrecursorMz + ' ' + Settings.Default.TransformTypeChromatogram;
+                string message = peptide.ModifiedTarget.ToString() + ' ' + transitionGroup.PrecursorMz + ' ' + Settings.Default.TransformTypeChromatogram;
                 var transitionGroupPath = new IdentityPath(peptideGroup.Id, peptide.Id, transitionGroup.Id);
                 RunUI(() => SkylineWindow.SelectedPath = transitionGroupPath);
 

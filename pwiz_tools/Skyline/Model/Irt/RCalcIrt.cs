@@ -61,9 +61,9 @@ namespace pwiz.Skyline.Model.Irt
 
         public string DatabasePath { get; private set; }
 
-        public IEnumerable<KeyValuePair<string, double>> PeptideScores
+        public IEnumerable<KeyValuePair<Target, double>> PeptideScores
         {
-            get { return _database != null ? _database.PeptideScores : new KeyValuePair<string, double>[0]; }
+            get { return _database != null ? _database.PeptideScores : new KeyValuePair<Target, double>[0]; }
         }
 
         public bool IsNone
@@ -112,10 +112,10 @@ namespace pwiz.Skyline.Model.Irt
                 // Calculate the minimal set of peptides needed for this document
                 var dbPeptides = _database.GetPeptides().ToList();
                 var persistPeptides = dbPeptides.Where(pep => pep.Standard).Select(NewPeptide).ToList();
-                var dictPeptides = dbPeptides.Where(pep => !pep.Standard).ToDictionary(pep => pep.PeptideModSeq);
+                var dictPeptides = dbPeptides.Where(pep => !pep.Standard).ToDictionary(pep => pep.ModifiedTarget);
                 foreach (var nodePep in document.Peptides)
                 {
-                    string modifiedSeq = document.Settings.GetSourceTextId(nodePep);
+                    var modifiedSeq = document.Settings.GetSourceTarget(nodePep);
                     DbIrtPeptide dbPeptide;
                     if (dictPeptides.TryGetValue(modifiedSeq, out dbPeptide))
                     {
@@ -134,7 +134,7 @@ namespace pwiz.Skyline.Model.Irt
 
         private DbIrtPeptide NewPeptide(DbIrtPeptide dbPeptide)
         {
-            return new DbIrtPeptide(dbPeptide.PeptideModSeq,
+            return new DbIrtPeptide(dbPeptide.ModifiedTarget,
                                     dbPeptide.Irt,
                                     dbPeptide.Standard,
                                     dbPeptide.TimeSource);
@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Model.Irt
             return correlation >= MIN_IRT_TO_TIME_CORRELATION;
         }
 
-        public override IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides, out int minCount)
+        public override IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount)
         {
             RequireUsable();
 
@@ -198,13 +198,13 @@ namespace pwiz.Skyline.Model.Irt
             return returnStandard;
         }
 
-        public override IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides)
+        public override IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides)
         {
             int minCount;
             return ChooseRegressionPeptides(peptides, out minCount);
         }
 
-        public override double? ScoreSequence(string seq)
+        public override double? ScoreSequence(Target seq)
         {
             if (_database != null)
                 return _database.ScoreSequence(seq);
@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Model.Irt
                 throw new InvalidOperationException(Resources.RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_);
         }
 
-        public IEnumerable<string> GetStandardPeptides()
+        public IEnumerable<Target> GetStandardPeptides()
         {
             return _database.StandardPeptides;
         }
@@ -243,7 +243,7 @@ namespace pwiz.Skyline.Model.Irt
         {
             IProgressStatus status = new ProgressStatus(Resources.LibraryGridViewDriver_ProcessRetentionTimes_Adding_retention_times);
             var dictProviderData = new List<KeyValuePair<string, RetentionTimeProviderData>>();
-            var dictPeptideAverages = new Dictionary<string, IrtPeptideAverages>();
+            var dictPeptideAverages = new Dictionary<Target, IrtPeptideAverages>();
             var runCount = 0;
             foreach (var retentionTimeProvider in providers)
             {
@@ -273,10 +273,10 @@ namespace pwiz.Skyline.Model.Irt
 
         private static void AddRetentionTimesToDict(IRetentionTimeProvider retentionTimes,
                                                     IRegressionFunction regressionLine,
-                                                    IDictionary<string, IrtPeptideAverages> dictPeptideAverages,
+                                                    IDictionary<Target, IrtPeptideAverages> dictPeptideAverages,
                                                     IEnumerable<DbIrtPeptide> standardPeptideList)
         {
-            var setStandards = new HashSet<string>(standardPeptideList.Select(peptide => peptide.PeptideModSeq));
+            var setStandards = new HashSet<Target>(standardPeptideList.Select(peptide => peptide.ModifiedTarget));
             foreach (var pepTime in retentionTimes.PeptideRetentionTimes.Where(p => !setStandards.Contains(p.PeptideSequence)))
             {
                 var peptideModSeq = pepTime.PeptideSequence;
@@ -371,7 +371,7 @@ namespace pwiz.Skyline.Model.Irt
 
     public sealed class ProcessedIrtAverages
     {
-        public ProcessedIrtAverages(Dictionary<string, IrtPeptideAverages> dictPeptideIrtAverages,
+        public ProcessedIrtAverages(Dictionary<Target, IrtPeptideAverages> dictPeptideIrtAverages,
                                     IList<KeyValuePair<string, RetentionTimeProviderData>> providerData)
         {
             DictPeptideIrtAverages = dictPeptideIrtAverages;
@@ -387,7 +387,7 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
-        private Dictionary<string, IrtPeptideAverages> DictPeptideIrtAverages { get; set; }
+        private Dictionary<Target, IrtPeptideAverages> DictPeptideIrtAverages { get; set; }
         public IList<KeyValuePair<string, RetentionTimeProviderData>> ProviderData { get; private set; }
         public int RunCount { get { return ProviderData.Count; } }
         public int RegressionLineCount { get; private set; }
@@ -408,7 +408,7 @@ namespace pwiz.Skyline.Model.Irt
             if (!standardPeptideList.Any())
                 return false;
 
-            var standards = new HashSet<string>(standardPeptideList.Select(standard => standard.PeptideModSeq));
+            var standards = new HashSet<Target>(standardPeptideList.Select(standard => standard.ModifiedTarget));
             foreach (var data in ProviderData)
             {
                 var dataCurrent = data;
@@ -425,7 +425,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public List<DbIrtPeptide> RecalibrateStandards(IList<DbIrtPeptide> standardPeptideList)
         {
-            var peptideAllIrtTimes = new Dictionary<string, List<Tuple<double, double>>>(); // peptide -> list of (irt, time)
+            var peptideAllIrtTimes = new Dictionary<Target, List<Tuple<double, double>>>(); // peptide -> list of (irt, time)
             foreach (var data in ProviderData)
             {
                 for (var i = 0; i < data.Value.Peptides.Length; i++)
@@ -443,7 +443,7 @@ namespace pwiz.Skyline.Model.Irt
                     pepTimes.Add(Tuple.Create(data.Value.Irts[i], data.Value.Times[i]));
                 }
             }
-            var peptideBestIrtTimes = new Dictionary<string, Tuple<double, double>>(); // peptide -> (percentile irt, percentile time)
+            var peptideBestIrtTimes = new Dictionary<Target, Tuple<double, double>>(); // peptide -> (percentile irt, percentile time)
             foreach (var peptide in peptideAllIrtTimes)
             {
                 var statIrts = new Statistics(peptide.Value.Select(p => p.Item1));
@@ -454,22 +454,22 @@ namespace pwiz.Skyline.Model.Irt
             DbIrtPeptide min = null, max = null;
             foreach (var standard in standardPeptideList) // loop over list of standard peptides to find min/max that we have values for
             {
-                if ((min == null || standard.Irt < min.Irt) && peptideBestIrtTimes.ContainsKey(standard.PeptideModSeq))
+                if ((min == null || standard.Irt < min.Irt) && peptideBestIrtTimes.ContainsKey(standard.ModifiedTarget))
                     min = standard;
-                if ((max == null || standard.Irt > max.Irt) && peptideBestIrtTimes.ContainsKey(standard.PeptideModSeq))
+                if ((max == null || standard.Irt > max.Irt) && peptideBestIrtTimes.ContainsKey(standard.ModifiedTarget))
                     max = standard;
             }
             if (min == null || max == null)
                 throw new Exception(Resources.EditIrtCalcDlg_RecalibrateStandards_Could_not_get_a_minimum_or_maximum_standard_peptide_);
 
-            var statX = new Statistics(peptideBestIrtTimes[min.PeptideModSeq].Item2, peptideBestIrtTimes[max.PeptideModSeq].Item2);
-            var statY = new Statistics(peptideBestIrtTimes[min.PeptideModSeq].Item1, peptideBestIrtTimes[max.PeptideModSeq].Item1);
+            var statX = new Statistics(peptideBestIrtTimes[min.ModifiedTarget].Item2, peptideBestIrtTimes[max.ModifiedTarget].Item2);
+            var statY = new Statistics(peptideBestIrtTimes[min.ModifiedTarget].Item1, peptideBestIrtTimes[max.ModifiedTarget].Item1);
             var line = new RegressionLine(statY.Slope(statX), statY.Intercept(statX));
             var newStandardPeptideList = new List<DbIrtPeptide>();
             foreach (var peptide in standardPeptideList)
             {
                 Tuple<double, double> times;
-                if (!peptideBestIrtTimes.TryGetValue(peptide.PeptideModSeq, out times))
+                if (!peptideBestIrtTimes.TryGetValue(peptide.ModifiedTarget, out times))
                     throw new Exception(Resources.ProcessedIrtAverages_RecalibrateStandards_A_standard_peptide_was_missing_when_trying_to_recalibrate_);
                 newStandardPeptideList.Add(new DbIrtPeptide(peptide) { Irt = line.GetY(times.Item2) });
             }
@@ -481,14 +481,14 @@ namespace pwiz.Skyline.Model.Irt
     {
         private readonly List<double> _irtValues;
 
-        public IrtPeptideAverages(string peptideModSeq, double irtAverage, TimeSource? timeSource)
+        public IrtPeptideAverages(Target peptideModSeq, double irtAverage, TimeSource? timeSource)
         {
             PeptideModSeq = peptideModSeq;
             _irtValues = new List<double> { irtAverage };
             TimeSource = timeSource;
         }
 
-        public string PeptideModSeq { get; private set; }
+        public Target PeptideModSeq { get; private set; }
 
         public double IrtAverage
         {
@@ -514,13 +514,13 @@ namespace pwiz.Skyline.Model.Irt
             RetentionTimeProvider = retentionTimes;
 
             // Attempt to get regression based on standards
-            var listPeptides = new List<string>();
+            var listPeptides = new List<Target>();
             var listTimes = new List<double>();
             var listIrts = new List<double>();
             foreach (var standardPeptide in standardPeptides)
             {
-                listPeptides.Add(standardPeptide.PeptideModSeq);
-                listTimes.Add(retentionTimes.GetRetentionTime(standardPeptide.PeptideModSeq) ?? double.MaxValue);
+                listPeptides.Add(standardPeptide.ModifiedTarget);
+                listTimes.Add(retentionTimes.GetRetentionTime(standardPeptide.ModifiedTarget) ?? double.MaxValue);
                 listIrts.Add(standardPeptide.Irt);
             }
 
@@ -604,7 +604,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public IRetentionTimeProvider RetentionTimeProvider { get; private set; }
 
-        public string[] Peptides { get; private set; }
+        public Target[] Peptides { get; private set; }
         public double[] Times { get; private set; }
         public double[] Irts { get; private set; }
         private double[] TimesFiltered { get; set; }
@@ -630,16 +630,16 @@ namespace pwiz.Skyline.Model.Irt
 
     public sealed class CurrentCalculator : RetentionScoreCalculatorSpec
     {
-        private readonly Dictionary<string, double> _dictStandards;
-        private readonly Dictionary<string, double> _dictLibrary;
+        private readonly Dictionary<Target, double> _dictStandards;
+        private readonly Dictionary<Target, double> _dictLibrary;
 
         private readonly double _unknownScore;
 
         public CurrentCalculator(IEnumerable<DbIrtPeptide> standardPeptides, IEnumerable<DbIrtPeptide> libraryPeptides)
             : base(NAME_INTERNAL)
         {
-            _dictStandards = standardPeptides.ToDictionary(p => p.PeptideModSeq, p => p.Irt);
-            _dictLibrary = libraryPeptides.ToDictionary(p => p.PeptideModSeq, p => p.Irt);
+            _dictStandards = standardPeptides.ToDictionary(p => p.ModifiedTarget, p => p.Irt);
+            _dictLibrary = libraryPeptides.ToDictionary(p => p.ModifiedTarget, p => p.Irt);
             var minStandard = _dictStandards.Values.Min();
             var minLibrary = _dictLibrary.Values.Min();
 
@@ -650,7 +650,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public override double UnknownScore { get { return _unknownScore; } }
 
-        public override double? ScoreSequence(string sequence)
+        public override double? ScoreSequence(Target sequence)
         {
             double irt;
             if (_dictStandards.TryGetValue(sequence, out irt) || _dictLibrary.TryGetValue(sequence, out irt))
@@ -658,7 +658,7 @@ namespace pwiz.Skyline.Model.Irt
             return null;
         }
 
-        public override IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides, out int minCount)
+        public override IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount)
         {
             var returnStandard = peptides.Where(_dictStandards.ContainsKey).ToArray();
             var returnCount = returnStandard.Length;
@@ -671,7 +671,7 @@ namespace pwiz.Skyline.Model.Irt
             return returnStandard;
         }
 
-        public override IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides)
+        public override IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides)
         {
             return _dictStandards.Keys;
         }

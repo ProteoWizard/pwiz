@@ -55,7 +55,7 @@ namespace pwiz.SkylineTestFunctional
             document = document.ChangeSettings(document.Settings
                 .ChangePeptideModifications(mods => mods.ChangeStaticModifications(staticMods)
                     .ChangeModifications(IsotopeLabelType.heavy, heavyMods))
-                .ChangeTransitionFilter(filt => filt.ChangePrecursorCharges(new [] {2, 3, 4, 5})));
+                .ChangeTransitionFilter(filt => filt.ChangePeptidePrecursorCharges(Adduct.ProtonatedFromCharges(2, 3, 4, 5))));
             Assert.IsTrue(SkylineWindow.SetDocument(document, SkylineWindow.Document));
 
             RunUI(() => SkylineWindow.Paste(TextUtil.LineSeparate(PEPTIDE_MODIFIED, PEPTIDE_UNMODIFIED)));
@@ -152,9 +152,9 @@ namespace pwiz.SkylineTestFunctional
             1, 1, 8, 22);
             // Remove all but specific charge states
             string peptideCharges = TextUtil.LineSeparate(
-                PEPTIDE_MODIFIED + Transition.GetChargeIndicator(2),
-                PEPTIDE_MODIFIED + Transition.GetChargeIndicator(3),
-                PEPTIDE_UNMODIFIED + Transition.GetChargeIndicator(5));
+                PEPTIDE_MODIFIED + Transition.GetChargeIndicator(Adduct.FromChargeProtonated(2)),
+                PEPTIDE_MODIFIED + Transition.GetChargeIndicator(Adduct.FromChargeProtonated(3)),
+                PEPTIDE_UNMODIFIED + Transition.GetChargeIndicator(Adduct.FromChargeProtonated(5)));
             TestRefineListDlg(dlg => dlg.PeptidesText = peptideCharges,
                 document =>
                 {
@@ -162,11 +162,11 @@ namespace pwiz.SkylineTestFunctional
                     for (int i = 0; i < 4; i++)
                     {
                         Assert.IsTrue(peptides[i].TransitionGroups.All(nodeGroup =>
-                            nodeGroup.TransitionGroup.PrecursorCharge == 2 ||
-                            nodeGroup.TransitionGroup.PrecursorCharge == 3));
+                            nodeGroup.TransitionGroup.PrecursorAdduct.AdductCharge == 2 ||
+                            nodeGroup.TransitionGroup.PrecursorAdduct.AdductCharge == 3));
                     }
                     Assert.IsTrue(peptides[4].TransitionGroups.All(nodeGroup =>
-                        nodeGroup.TransitionGroup.PrecursorCharge == 5));
+                        nodeGroup.TransitionGroup.PrecursorAdduct.AdductCharge == 5));
                 },
                 2, 5, 18, 54);
             // Modification specific acceptance

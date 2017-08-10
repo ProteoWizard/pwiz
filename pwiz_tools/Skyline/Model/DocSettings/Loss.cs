@@ -97,8 +97,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 _formula = value;
                 if (_formula != null)
                 {
-                    MonoisotopicMass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, Formula);
-                    AverageMass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, Formula);
+                    MonoisotopicMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, Formula, SequenceMassCalc.MassPrecision);
+                    AverageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, Formula, SequenceMassCalc.MassPrecision);
                 }
             }
         }
@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double GetMass(MassType massType)
         {
-            return massType == MassType.Monoisotopic ? MonoisotopicMass : AverageMass;
+            return massType.IsMonoisotopic() ? MonoisotopicMass : AverageMass;
         }
 
         public LossInclusion Inclusion { get; private set; }

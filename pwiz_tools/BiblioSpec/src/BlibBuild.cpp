@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
     //    _crtBreakAlloc = 624219;
 #endif
 #endif
-
+    // Verbosity::set_verbosity(V_ALL); // useful for debugging
     BlibBuilder builder;
     builder.parseCommandArgs(argc, argv);
 
@@ -146,7 +146,12 @@ int main(int argc, char* argv[])
             } else if (has_extension(result_file, ".proxl.xml")) {
                 ProxlXmlReader proxlReader(builder, result_file, progress_cptr);
                 success = proxlReader.parseFile();
-            } else { 
+            }
+            else if (has_extension(result_file, ".mlb")) {
+                ShimadzuMLBReader mlbReader(builder, result_file, progress_cptr);
+                success = mlbReader.parseFile();
+            }
+            else {
                 // shouldn't get to here b/c cmd line parsing checks, but...
                 Verbosity::error("Unknown input file type '%s'.", result_file);
             }
@@ -169,8 +174,14 @@ int main(int argc, char* argv[])
         } catch(string s){ // in case a throwParseError is not caught
             cerr << "ERROR: " << s << endl;
             success = false;
-        } catch(...){
+        }
+        catch (const char *str){
+            cerr << str << endl;
             cerr << "ERROR: reading file '" << inFiles.at(i) << "'" << endl;
+            success = false;
+        }
+        catch (...){
+            cerr << "Unknown ERROR: reading file '" << inFiles.at(i) << "'" << endl;
             success = false;
         }
     }

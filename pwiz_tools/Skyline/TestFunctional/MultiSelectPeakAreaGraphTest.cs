@@ -21,13 +21,16 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class MultiSelectPeakAreaGraphTest : AbstractFunctionalTest
+    public class MultiSelectPeakAreaGraphTest : AbstractFunctionalTestEx
     {
+        private bool _asSmallMolecules;
+
         [TestMethod]
         public void TestMultiSelectPeakAreaGraph()
         {
@@ -35,9 +38,27 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        [TestMethod]
+        public void TestMultiSelectPeakAreaGraphAsSmallMolecules()
+        {
+            if (!RunSmallMoleculeTestVersions)
+            {
+                System.Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
+                return;
+            } 
+            TestFilesZip = @"TestFunctional\MultiSelectPeakAreaGraphTest.zip";
+            _asSmallMolecules = true;
+            RunFunctionalTest();
+        }
+
         protected override void DoTest()
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ABSciex4000_Study9-1_Site19_CalCurves only.sky")));
+            if (_asSmallMolecules)
+            {
+                ConvertDocumentToSmallMolecules(RefinementSettings.ConvertToSmallMoleculesMode.formulas,
+                    RefinementSettings.ConvertToSmallMoleculesChargesMode.none, true);
+            }
             // Test select all
             RunUI(() =>
             {

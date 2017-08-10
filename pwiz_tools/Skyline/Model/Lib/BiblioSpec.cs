@@ -486,7 +486,7 @@ namespace pwiz.Skyline.Model.Lib
             return sequence;
         }
 
-        private new int GetInt32(byte[] bytes, int index)
+        private int GetInt32(byte[] bytes, int index)
         {
             int ibyte = index*4;
             return _bigEndian ?
@@ -686,10 +686,10 @@ namespace pwiz.Skyline.Model.Lib
                     if (!library.TryLoadSpectrum(key, out peaksInfo))
                         continue;
 
-                    string sequence = key.Sequence;
+                    var sequence = key.Target.Sequence;
                     // Only works for unmodified sequence
                     Debug.Assert(!key.IsModified);
-                    double precursorMH = calc.GetPrecursorMass(sequence);
+                    var precursorMH = calc.GetPrecursorMass(sequence);
                     int charge = key.Charge;
                     float precursorMz = (float) SequenceMassCalc.GetMZ(precursorMH, charge);
 

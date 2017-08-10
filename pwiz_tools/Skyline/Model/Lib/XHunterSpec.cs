@@ -825,7 +825,7 @@ namespace pwiz.Skyline.Model.Lib
                         Array.Copy(BitConverter.GetBytes((float) mi.Mz), 0, peakBytes, peaksFiltered.Length + i*4, sizeof(float));
                     }
                         
-                    string sequence = key.Sequence;
+                    var sequence = key.Target.ToString();
                     // Only works for unmodified sequence
                     Debug.Assert(!key.IsModified);
                     double precursorMH = calc.GetPrecursorMass(sequence);

@@ -40,10 +40,11 @@ namespace pwiz.Skyline.Model.Esp
     {
         public const string EXT = ".csv"; // Not L10N
 
-        private static readonly SequenceMassCalc MASS_CALC = new SequenceMassCalc(MassType.Monoisotopic);
+        private static readonly SequenceMassCalc MASS_CALC = new SequenceMassCalc(MassType.MonoisotopicMassH);
 
-        public static double CalculateFeature(EspFeatureDb.FeatureDef feature, string seq)
+        public static double CalculateFeature(EspFeatureDb.FeatureDef feature, Target target)
         {
+            var seq = target.Sequence ?? string.Empty;
             switch (feature)
             {
                 case EspFeatureDb.FeatureDef.length:
@@ -63,17 +64,17 @@ namespace pwiz.Skyline.Model.Esp
             }
         }
 
-        public static IEnumerable<double> CalculateFeatures(IEnumerable<EspFeatureDb.FeatureDef> features, string seq)
+        public static IEnumerable<double> CalculateFeatures(IEnumerable<EspFeatureDb.FeatureDef> features, Target seq)
         {
             return features.Select(f => CalculateFeature(f, seq));
         }
 
-        public static IEnumerable<double> CalculateAllFeatures(string seq)
+        public static IEnumerable<double> CalculateAllFeatures(Target seq)
         {
             return CalculateFeatures(EspFeatureDb.AllFeatures, seq);
         }
 
-        public static void WriteFeatures(string filePath, IEnumerable<string> seqs, CultureInfo cultureInfo)
+        public static void WriteFeatures(string filePath, IEnumerable<Target> seqs, CultureInfo cultureInfo)
         {
             using (var writer = new StreamWriter(filePath))
             {
@@ -81,12 +82,12 @@ namespace pwiz.Skyline.Model.Esp
             }
         }
 
-        public static void WriteFeatures(TextWriter writer, IEnumerable<string> seqs, CultureInfo cultureInfo)
+        public static void WriteFeatures(TextWriter writer, IEnumerable<Target> seqs, CultureInfo cultureInfo)
         {
             WriteRow(writer, "sequence", EspFeatureDb.AllFeatures.Cast<object>(), // Not L10N
                      cultureInfo);
             foreach (var seq in seqs)
-                WriteRow(writer, seq, CalculateAllFeatures(seq).Cast<object>(), cultureInfo);
+                WriteRow(writer, seq.ToString(), CalculateAllFeatures(seq).Cast<object>(), cultureInfo);
         }
 
         private static void WriteRow(TextWriter writer,
@@ -109,3 +110,4 @@ namespace pwiz.Skyline.Model.Esp
         }
     }
 }
+

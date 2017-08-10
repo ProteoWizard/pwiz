@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         protected override TransitionGroupDocNode CreateEmptyNode()
         {
-            return new TransitionGroupDocNode(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), null, 1, IsotopeLabelType.light), null); // Not L10N
+            return new TransitionGroupDocNode(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), Util.Adduct.SINGLY_PROTONATED, IsotopeLabelType.light), null); // Not L10N
         }
 
         [InvariantDisplayName("PrecursorResultsSummary")]
@@ -123,12 +123,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (IsSmallMolecule())
                 {
-                    return (DocNode.CustomIon.Name ?? string.Empty);
+                    return (DocNode.CustomMolecule.Name ?? string.Empty);
                 }
                 else
                 {
                     var parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
-                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, DocNode.TransitionGroup.PrecursorCharge, DocNode.TransitionGroup.LabelType);
+                    Adduct adduct;
+                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, out adduct, DocNode.TransitionGroup.PrecursorAdduct.AdductCharge, DocNode.TransitionGroup.LabelType);
                     return molecule.InvariantName ?? string.Empty;
                 }
             }
@@ -141,12 +142,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (IsSmallMolecule())
                 {
-                    return (DocNode.CustomIon.Formula ?? string.Empty);
+                    return (DocNode.CustomMolecule.Formula ?? string.Empty);
                 }
                 else
                 {
                     PeptideDocNode parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
-                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, DocNode.TransitionGroup.PrecursorCharge, DocNode.TransitionGroup.LabelType);
+                    Adduct adduct;
+                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, out adduct, DocNode.TransitionGroup.PrecursorAdduct.AdductCharge, DocNode.TransitionGroup.LabelType);
                     return molecule.Formula ?? string.Empty;
                 }
             }
@@ -159,13 +161,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (IsSmallMolecule())
                 {
-                    return DocNode.CustomIon.NeutralFormula ?? string.Empty;
+                    return DocNode.CustomMolecule.Formula ?? string.Empty;
                 }
                 else
                 {
                     var parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
-                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, DocNode.TransitionGroup.PrecursorCharge, DocNode.TransitionGroup.LabelType);
-                    return molecule.NeutralFormula ?? string.Empty;
+                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent);
+                    return molecule.Formula ?? string.Empty;
                 }
             }
         }
@@ -175,16 +177,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                if (IsSmallMolecule())
-                {
-                    return DocNode.CustomIon.Adduct ?? string.Empty;
-                }
-                else
-                {
-                    var parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
-                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, DocNode.TransitionGroup.PrecursorCharge, DocNode.TransitionGroup.LabelType);
-                    return molecule.Adduct ?? string.Empty;
-                }
+                return DocNode.PrecursorAdduct.AsFormula();
             }
         }
 
@@ -202,7 +195,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 // Note this is the predicited CE, explicit CE has its own display column
                 return SrmDocument.Settings.TransitionSettings.Prediction.CollisionEnergy
-                                  .GetCollisionEnergy(Charge, GetRegressionMz());
+                                  .GetCollisionEnergy(DocNode.PrecursorAdduct, GetRegressionMz());
             }
         }
 
@@ -230,7 +223,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     return TextUtil.EXCEL_NA;
                 return SrmDocument.Settings.GetPrecursorCalc(
                     DocNode.TransitionGroup.LabelType, peptideDocNode.ExplicitMods)
-                                  .GetModifiedSequence(peptideDocNode.Peptide.Sequence, true);
+                                  .GetModifiedSequence(peptideDocNode.Peptide.Target, true).ToString();
             }
         }
 

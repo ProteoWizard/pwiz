@@ -225,14 +225,14 @@ namespace pwiz.SkylineTestA
         {
             countProteinTerm = 0;
             countProteinTermTran = 0;
-            var dictPeptides = new Dictionary<string, PeptideDocNode>();
+            var dictPeptides = new Dictionary<Target, PeptideDocNode>();
             foreach (var nodePep in docFasta.Peptides)
-                dictPeptides.Add(nodePep.Peptide.Sequence, nodePep);
+                dictPeptides.Add(nodePep.Peptide.Target, nodePep);
 
             foreach (var nodePep in docMulti.Peptides)
             {
                 PeptideDocNode nodePepOld;
-                Assert.IsTrue(dictPeptides.TryGetValue(nodePep.Peptide.Sequence, out nodePepOld));
+                Assert.IsTrue(dictPeptides.TryGetValue(nodePep.Peptide.Target, out nodePepOld));
 
                 // Make sure precursor m/z values are changing in the right direction
                 TransitionGroupDocNode nodeGroupPrev = null;

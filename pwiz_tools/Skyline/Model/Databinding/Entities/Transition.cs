@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         protected override TransitionDocNode CreateEmptyNode()
         {
-            return new TransitionDocNode(new Model.Transition(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), null, 1, IsotopeLabelType.light), 0), Annotations.EMPTY, null, 0, null, null, null); // Not L10N
+            return new TransitionDocNode(new Model.Transition(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), Adduct.SINGLY_PROTONATED, IsotopeLabelType.light), 0), Annotations.EMPTY, null, TypedMass.ZERO_MONO_MASSH, null, null, null); // Not L10N
         }
 
         [InvariantDisplayName("TransitionResultsSummary")]
@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public double ProductNeutralMass
         {
-            get { return DocNode.GetIonPersistentNeutralMass(); }
+            get { return DocNode.GetMoleculePersistentNeutralMass(); }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public double ProductMz
@@ -129,9 +129,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return IsCustomTransition()
-                ? DocNode.Transition.CustomIon.Adduct ?? string.Empty
-                : string.Empty;
+                return DocNode.Transition.Adduct.ToString();
             }
         }
         public IonType FragmentIonType

@@ -510,7 +510,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
 
-            ExportWithExplicitCollisionEnergyValues(thermoActual);
+            ExportWithExplicitCollisionEnergyValues(TestFilesDirs[0].FullPath, thermoActual);
 
             // Agilent method
             {
@@ -724,11 +724,11 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(exportMethodDlg);
         }
 
-        private void ExportWithExplicitCollisionEnergyValues(string pathList)
+        private void ExportWithExplicitCollisionEnergyValues(string pathForSmallMoleculeLibs, string pathList)
         {
             var original = SkylineWindow.Document;
             var refine = new RefinementSettings();
-            var document = refine.ConvertToSmallMolecules(original);
+            var document = refine.ConvertToSmallMolecules(original, pathForSmallMoleculeLibs);
             for (var loop = 0; loop < 2; loop++)
             {
                 SkylineWindow.SetDocument(document, SkylineWindow.Document);

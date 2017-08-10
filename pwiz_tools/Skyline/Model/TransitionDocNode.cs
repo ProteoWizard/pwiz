@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model
     {
         public TransitionDocNode(Transition id,
                                  TransitionLosses losses,
-                                 double massH,
+                                 TypedMass massH,
                                  TransitionIsotopeDistInfo isotopeDistInfo,
                                  TransitionLibInfo libInfo)
             : this(id, Annotations.EMPTY, losses, massH, isotopeDistInfo, libInfo, null)
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model
         public TransitionDocNode(Transition id,
                                  Annotations annotations,
                                  TransitionLosses losses,
-                                 double massH,
+                                 TypedMass mass,
                                  TransitionIsotopeDistInfo isotopeDistInfo,
                                  TransitionLibInfo libInfo,
                                  Results<TransitionChromInfo> results)
@@ -56,11 +56,11 @@ namespace pwiz.Skyline.Model
         {
             Losses = losses;
             if (losses != null)
-                massH -= losses.Mass;
-            if (id.IsCustom())
-                Mz = new SignedMz(BioMassCalc.CalculateIonMz(massH, id.Charge), id.IsNegative());
-            else
-                Mz = new SignedMz(SequenceMassCalc.GetMZ(massH, id.Charge) + SequenceMassCalc.GetPeptideInterval(id.DecoyMassShift), id.IsNegative());
+                mass -= losses.Mass;
+            Mz = id.IsCustom() ?
+                  new SignedMz(id.Adduct.MzFromNeutralMass(mass), id.IsNegative()) : 
+                  new SignedMz(SequenceMassCalc.GetMZ(mass, id.Adduct) + SequenceMassCalc.GetPeptideInterval(id.DecoyMassShift), id.IsNegative());
+            MzMassType = mass.MassType;
             IsotopeDistInfo = isotopeDistInfo;
             LibInfo = libInfo;
             Results = results;
@@ -80,13 +80,16 @@ namespace pwiz.Skyline.Model
             return new TransitionLossEquivalentKey(parent, this, Losses); 
         }
 
+        public MassType MzMassType { get; private set; }  // The massType used to calculate Mz
         public SignedMz Mz { get; private set; }
 
-        public double GetIonMass()
+        // Returns molecule mass (or massH, for peptides)
+        public TypedMass GetMoleculeMass()
         {
+            Assume.IsTrue(Transition.IsCustom() || MzMassType.IsMassH());
             return Transition.IsCustom()
-                ? BioMassCalc.CalculateIonMassFromMz(Mz, Transition.Charge)
-                : SequenceMassCalc.GetMH(Mz, Transition.Charge);            
+                ? Transition.Adduct.MassFromMz(Mz, MzMassType)
+                : new TypedMass(SequenceMassCalc.GetMH(Mz, Transition.Charge), MzMassType);            
         }
 
         public bool IsDecoy { get { return Transition.DecoyMassShift.HasValue; } }
@@ -121,9 +124,9 @@ namespace pwiz.Skyline.Model
             get { return GetFragmentIonName(LocalizationHelper.CurrentCulture); }
         }
 
-        public string GetFragmentIonName(CultureInfo cultureInfo)
+        public string GetFragmentIonName(CultureInfo cultureInfo, double? tolerance = null)
         {
-            string ionName = Transition.GetFragmentIonName(cultureInfo);
+            string ionName = Transition.GetFragmentIonName(cultureInfo, tolerance);
             return (HasLoss ? string.Format("{0} -{1}", ionName, Math.Round(Losses.Mass, 1)) : ionName); // Not L10N
         }
 
@@ -159,11 +162,11 @@ namespace pwiz.Skyline.Model
 
         public bool HasLibInfo { get { return LibInfo != null; } }
 
-        public static TransitionLibInfo GetLibInfo(Transition transition, double massH,
+        public static TransitionLibInfo GetLibInfo(Transition transition, TypedMass massH,
                                                    IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> ranks)
         {
             LibraryRankedSpectrumInfo.RankedMI rmi;
-            if (ranks == null || !ranks.TryGetValue(SequenceMassCalc.GetMZ(massH, transition.Charge), out rmi))
+            if (ranks == null || !ranks.TryGetValue(SequenceMassCalc.GetMZ(massH, transition.Adduct), out rmi))
                 return null;
             return new TransitionLibInfo(rmi.Rank, rmi.Intensity);
         }
@@ -335,10 +338,10 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Return product's neutral mass rounded for XML I/O
         /// </summary>
-        public double GetIonPersistentNeutralMass()
+        public double GetMoleculePersistentNeutralMass()
         {
-            double ionMass = GetIonMass();
-            return Transition.IsCustom() ? Math.Round(ionMass, SequenceMassCalc.MassPrecision) : SequenceMassCalc.PersistentNeutral(ionMass);
+            var moleculeMass = GetMoleculeMass();
+            return Transition.IsCustom() ? Math.Round(moleculeMass, SequenceMassCalc.MassPrecision) : SequenceMassCalc.PersistentNeutral(moleculeMass);
         }
 
 
@@ -351,7 +354,7 @@ namespace pwiz.Skyline.Model
 
             var transition = Transition.IsCustom()
                 ? new Transition(parent.TransitionGroup,
-                    Transition.Charge,
+                    Transition.Adduct,
                     Transition.MassIndex,
                     Transition.CustomIon,
                     Transition.IonType)
@@ -359,15 +362,15 @@ namespace pwiz.Skyline.Model
                                 Transition.IonType,
                                 Transition.CleavageOffset,
                                 Transition.MassIndex,
-                                Transition.Charge);
+                                Transition.Adduct);
 
             return new TransitionDocNode(transition,
                                          Annotations,
                                          Losses,
-                                         0.0,
+                                         TypedMass.ZERO_MONO_MASSH, 
                                          IsotopeDistInfo,
                                          LibInfo,
-                                         null) {Mz = Mz};
+                                         null) {Mz = Mz, MzMassType = MzMassType};
         }
 
         public override string GetDisplayText(DisplaySettings settings)
@@ -408,19 +411,9 @@ namespace pwiz.Skyline.Model
                 FragmentType = DataValues.ToIonType(Transition.IonType),
 
             };
-            if (Transition.IsCustom())
+            if (Transition.IsCustom() && !Transition.IsPrecursor())
             {
-                if (Transition.CustomIon is DocNodeCustomIon)
-                {
-                    transitionProto.Formula = DataValues.ToOptional(Transition.CustomIon.Formula);
-                    transitionProto.AverageMass = DataValues.ToOptional(Transition.CustomIon.AverageMass);
-                    transitionProto.MonoMass = DataValues.ToOptional(Transition.CustomIon.MonoisotopicMass);
-                    transitionProto.CustomIonName = DataValues.ToOptional(Transition.CustomIon.Name);
-                }
-                else
-                {
-                    transitionProto.MeasuredIonName = DataValues.ToOptional(Transition.CustomIon.Name);
-                }
+                SetCustomIonFragmentInfo(transitionProto);
             }
             transitionProto.DecoyMassShift = DataValues.ToOptional(Transition.DecoyMassShift);
             transitionProto.MassIndex = Transition.MassIndex;
@@ -434,9 +427,13 @@ namespace pwiz.Skyline.Model
                 if (!Transition.IsCustom())
                 {
                     transitionProto.FragmentOrdinal = Transition.Ordinal;
-                    transitionProto.CalcNeutralMass = GetIonPersistentNeutralMass();
+                    transitionProto.CalcNeutralMass = GetMoleculePersistentNeutralMass();
                 }
                 transitionProto.Charge = Transition.Charge;
+                if (!Transition.Adduct.IsProteomic)
+                {
+                    transitionProto.Adduct = DataValues.ToOptional(Transition.Adduct.AsFormulaOrSignedInt());
+                }
                 if (!Transition.IsCustom())
                 {
                     transitionProto.CleavageAa = Transition.AA;
@@ -484,6 +481,28 @@ namespace pwiz.Skyline.Model
             return transitionProto;
         }
 
+        private void SetCustomIonFragmentInfo(SkylineDocumentProto.Types.Transition transitionProto)
+        {
+            if (Transition.IsNonReporterCustomIon())
+            {
+                transitionProto.Formula = DataValues.ToOptional(Transition.CustomIon.Formula);
+                if (Transition.CustomIon.AverageMass.IsMassH())
+                    transitionProto.AverageMassH = DataValues.ToOptional(Transition.CustomIon.AverageMass);
+                else
+                    transitionProto.AverageMass = DataValues.ToOptional(Transition.CustomIon.AverageMass);
+                if (Transition.CustomIon.MonoisotopicMass.IsMassH())
+                    transitionProto.MonoMassH = DataValues.ToOptional(Transition.CustomIon.MonoisotopicMass);
+                else
+                    transitionProto.MonoMass = DataValues.ToOptional(Transition.CustomIon.MonoisotopicMass);
+                transitionProto.CustomIonName = DataValues.ToOptional(Transition.CustomIon.Name);
+                transitionProto.MoleculeId = DataValues.ToOptional(Transition.CustomIon.AccessionNumbers.ToString());
+            }
+            else
+            {
+                transitionProto.MeasuredIonName = DataValues.ToOptional(Transition.CustomIon.Name);
+            }
+        }
+
         public static TransitionDocNode FromTransitionProto(StringPool stringPool, SrmSettings settings,
             TransitionGroup group, ExplicitMods mods, IsotopeDistInfo isotopeDist,
             SkylineDocumentProto.Types.Transition transitionProto)
@@ -500,43 +519,53 @@ namespace pwiz.Skyline.Model
             }
             bool isCustom = Transition.IsCustom(ionType, group);
             bool isPrecursor = Transition.IsPrecursor(ionType);
-            CustomIon customIon = null;
+            CustomMolecule customIon = null;
             if (isCustom)
             {
                 if (measuredIon != null)
                 {
-                    customIon = measuredIon.CustomIon;
+                    customIon = measuredIon.SettingsCustomIon;
                 }
                 else if (isPrecursor)
                 {
-                    customIon = group.CustomIon;
+                    customIon = group.CustomMolecule;
                 }
                 else
                 {
-                    customIon = new DocNodeCustomIon(DataValues.FromOptional(transitionProto.Formula),
-                        DataValues.FromOptional(transitionProto.MonoMass),
-                        DataValues.FromOptional(transitionProto.AverageMass), 
-                        DataValues.FromOptional(transitionProto.CustomIonName));
+                    var formula = DataValues.FromOptional(transitionProto.Formula);
+                    var moleculeID = MoleculeAccessionNumbers.FromString(DataValues.FromOptional(transitionProto.MoleculeId)); // Tab separated list of InChiKey, CAS etc
+                    var monoMassH = DataValues.FromOptional(transitionProto.MonoMassH);
+                    var averageMassH = DataValues.FromOptional(transitionProto.AverageMassH);
+                    var monoMass = DataValues.FromOptional(transitionProto.MonoMass) ?? monoMassH;
+                    var averageMass = DataValues.FromOptional(transitionProto.AverageMass) ?? averageMassH;
+                    customIon = new CustomMolecule(formula,
+                        new TypedMass(monoMass.Value, monoMassH.HasValue ? MassType.MonoisotopicMassH : MassType.Monoisotopic),
+                        new TypedMass(averageMass.Value, averageMassH.HasValue ? MassType.AverageMassH : MassType.Average),
+                        DataValues.FromOptional(transitionProto.CustomIonName), moleculeID);
                 }
             }
             Transition transition;
+            var adductString = DataValues.FromOptional(transitionProto.Adduct);
+            var adduct = string.IsNullOrEmpty(adductString)
+                ? Adduct.FromChargeProtonated(transitionProto.Charge)
+                : Adduct.FromStringAssumeChargeOnly(adductString);
             if (isCustom)
             {
-                transition = new Transition(group, isPrecursor ? group.PrecursorCharge : transitionProto.Charge, transitionProto.MassIndex, customIon, ionType);
+                transition = new Transition(group, isPrecursor ? group.PrecursorAdduct :adduct, transitionProto.MassIndex, customIon, ionType);
             }
             else if (isPrecursor)
             {
                 transition = new Transition(group, ionType, group.Peptide.Length - 1, transitionProto.MassIndex,
-                    group.PrecursorCharge, DataValues.FromOptional(transitionProto.DecoyMassShift));
+                    group.PrecursorAdduct, DataValues.FromOptional(transitionProto.DecoyMassShift));
             }
             else
             {
                 int offset = Transition.OrdinalToOffset(ionType, transitionProto.FragmentOrdinal,
                     group.Peptide.Length);
-                transition = new Transition(group, ionType, offset, transitionProto.MassIndex, transitionProto.Charge, DataValues.FromOptional(transitionProto.DecoyMassShift));
+                transition = new Transition(group, ionType, offset, transitionProto.MassIndex, adduct, DataValues.FromOptional(transitionProto.DecoyMassShift));
             }
             var losses = TransitionLosses.FromLossProtos(settings, transitionProto.Losses);
-            double massH = settings.GetFragmentMass(group.LabelType, mods, transition, isotopeDist);
+            var mass = settings.GetFragmentMass(group, mods, transition, isotopeDist);
             var isotopeDistInfo = GetIsotopeDistInfo(transition, losses, isotopeDist);
             if (group.DecoyMassShift.HasValue && transitionProto.DecoyMassShift == null)
             {
@@ -550,7 +579,7 @@ namespace pwiz.Skyline.Model
             }
             var annotations = Annotations.FromProtoAnnotations(stringPool, transitionProto.Annotations);
             var results = TransitionChromInfo.FromProtoTransitionResults(stringPool, settings, transitionProto.Results);
-            return new TransitionDocNode(transition, annotations, losses, massH, isotopeDistInfo, libInfo, results);
+            return new TransitionDocNode(transition, annotations, losses, mass, isotopeDistInfo, libInfo, results);
         }
 
 

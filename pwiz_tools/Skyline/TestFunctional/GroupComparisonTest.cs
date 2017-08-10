@@ -34,11 +34,27 @@ using ZedGraph;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class GroupComparisonTest : AbstractFunctionalTest
+    public class GroupComparisonTest : AbstractFunctionalTestEx
     {
+        private bool _asSmallMolecules;
+
         [TestMethod]
         public void TestGroupComparison()
         {
+            TestFilesZip = @"TestFunctional\GroupComparisonTest.zip";
+            RunFunctionalTest();
+        }
+
+      [TestMethod]
+        public void TestGroupComparisonAsSmallMolecules()
+        {
+            if (!RunSmallMoleculeTestVersions)
+            {
+                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
+                return;
+            }
+
+            _asSmallMolecules = true;
             TestFilesZip = @"TestFunctional\GroupComparisonTest.zip";
             RunFunctionalTest();
         }
@@ -47,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(() =>
             {
-                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("msstatstest.sky"));
+                SkylineWindow.OpenFile(TestFilesDir.GetTestPath(_asSmallMolecules ? "msstatstest.converted_to_small_molecules.sky" : "msstatstest.sky"));
             });
             WaitForDocumentLoaded();
             DefineOneTwoGroupComparison();

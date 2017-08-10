@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             var peptidesBySequence = new Dictionary<string, PeptideDocNode>();
             foreach (var peptide in _srmDocument.Molecules)
             {
-                peptidesBySequence[peptide.RawTextId] = peptide;
+                peptidesBySequence[peptide.ModifiedTarget.Sequence] = peptide;
             }
             var chromatogramGroups = new List<ChromatogramRequestDocumentChromatogramGroup>();
             foreach (var chromatogramGroup in chromatogramRequestDocument.ChromatogramGroup)
@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 }
                 foreach (var chromatogram in chromatogramGroup.Chromatogram)
                 {
-                    yield return new ChromKey(chromatogramGroup.ModifiedSequence, new SignedMz(chromatogramGroup.PrecursorMz), 
+                    yield return new ChromKey(new Target(chromatogramGroup.ModifiedSequence), new SignedMz(chromatogramGroup.PrecursorMz), 
                         null,
                         new SignedMz(chromatogram.ProductMz), 0, chromatogram.MzWindow, chromSource, chromExtractor, false, false,
                         null, null);    // Optional retention and drift times not used in this provider

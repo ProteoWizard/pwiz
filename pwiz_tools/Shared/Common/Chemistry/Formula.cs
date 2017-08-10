@@ -275,9 +275,51 @@ namespace pwiz.Common.Chemistry
             return result;
         }
 
+        // Subtract other's atom counts from ours
+        public T Difference(T other)
+        {
+            var resultDict = new Dictionary<string, int>(this);
+            foreach (var kvp in other)
+            {
+                int count;
+                if (TryGetValue(kvp.Key, out count))
+                {
+                    resultDict[kvp.Key] = count - kvp.Value;
+                }
+                else
+                {
+                    resultDict.Add(kvp.Key, -kvp.Value);
+                }
+            }
+            return new T { Dictionary = new ImmutableSortedList<string, int>(resultDict) };
+        }
+
         public static T FromDict(ImmutableSortedList<string, int> dict)
         {
             return new T {Dictionary = dict};
+        }
+
+        public static T FromDict(IDictionary<string, int> dict)
+        {
+            return new T {Dictionary = ImmutableSortedList.FromValues(dict)};
+        }
+
+        public static string AdjustElementCount(string formula, string element, int delta)
+        {
+            var dict = Molecule.ParseToDictionary(formula);
+            int count;
+            if (!dict.TryGetValue(element, out count))
+                count = 0;
+            if ((count > 0) || (delta > 0)) // There are some to take away, or we're planning to add some
+            {
+                count += delta;
+                if (count >= 0)
+                {
+                    dict[element] = count;
+                    return Molecule.FromDict(dict).ToString();
+                }
+            }
+            return formula;
         }
 
         public override string ToString()
@@ -285,10 +327,13 @@ namespace pwiz.Common.Chemistry
             var result = new StringBuilder();
             foreach (var entry in this)
             {
-                result.Append(entry.Key);
-                if (entry.Value != 1)
+                if (entry.Value > 0)
                 {
-                    result.Append(entry.Value);
+                    result.Append(entry.Key);
+                    if (entry.Value != 1)
+                    {
+                        result.Append(entry.Value);
+                    }
                 }
             }
             return result.ToString();

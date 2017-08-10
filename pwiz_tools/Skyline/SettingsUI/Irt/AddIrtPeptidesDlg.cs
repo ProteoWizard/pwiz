@@ -25,6 +25,7 @@ using System.Linq;
 using System.Windows.Forms;
 using NHibernate.Util;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -39,16 +40,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private readonly Dictionary<DataGridViewRow, RegressionGraphData[]> _regressionGraphData;
 
         public AddIrtPeptidesDlg(AddIrtPeptidesLocation location, ProcessedIrtAverages processed)
-            : this(location, processed, new string[] { }, new string[] { }, new string[] { })
+            : this(location, processed, new Target[] { }, new Target[] { }, new Target[] { })
         {
         }
 
         public AddIrtPeptidesDlg(
             AddIrtPeptidesLocation location,
             ProcessedIrtAverages processed,
-            IReadOnlyCollection<string> existingPeptides,
-            IReadOnlyCollection<string> overwritePeptides,
-            IReadOnlyCollection<string> keepPeptides)
+            IReadOnlyCollection<Target> existingPeptides,
+            IReadOnlyCollection<Target> overwritePeptides,
+            IReadOnlyCollection<Target> keepPeptides)
         {
             InitializeComponent();
 
@@ -71,7 +72,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     LabelY = Resources.AddIrtPeptidesDlg_dataGridView_CellContentClick_iRT,
                     XValues = data.Times,
                     YValues = data.Irts,
-                    Tooltips = Enumerable.Range(0, data.Peptides.Length).ToDictionary(i => i, i => data.Peptides[i]),
+                    Tooltips = Enumerable.Range(0, data.Peptides.Length).ToDictionary(i => i, i => data.Peptides[i].ToString()),
                     MissingIndices = data.MissingIndices,
                     OutlierIndices = data.OutlierIndices,
                     RegressionLine = data.RegressionRefined,

@@ -56,12 +56,15 @@ namespace pwiz.Skyline.Model.Lib
 
         private ReadOnlyCollection<string> _inputFiles;
 
-        public BiblioSpecLiteBuilder(string name, string outputPath, IList<string> inputFiles, IList<string> targetSequences = null)
+        public BiblioSpecLiteBuilder(string name, string outputPath, IList<string> inputFiles, IList<Target> targetSequences = null)
         {
             LibrarySpec = new BiblioSpecLiteSpec(name, outputPath);
 
             InputFiles = inputFiles;
-            TargetSequences = targetSequences;
+
+            // FUTURE(bspratt) small molecule workflows
+            if (targetSequences != null)
+                TargetSequences = targetSequences.Where(t => t.IsProteomic).Select(t => t.Sequence).ToList();
         }
 
         public LibrarySpec LibrarySpec { get; private set; }

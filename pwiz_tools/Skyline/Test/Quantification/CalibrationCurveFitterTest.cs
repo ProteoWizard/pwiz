@@ -335,6 +335,7 @@ namespace pwiz.SkylineTest.Quantification
         {
             const double internalStandardConcentration = 80.0;
             var srmDocument = LoadTestDocument();
+            AssertEx.IsDocumentState(srmDocument, null, 1, 1, 2, 10);
             srmDocument = ChangeStandardConcentrationCount(srmDocument, 0);
             srmDocument = ChangeQuantificationSettings(srmDocument,
                 QuantificationSettings.DEFAULT

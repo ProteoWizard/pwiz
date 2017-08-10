@@ -47,6 +47,10 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZip = @"TestFunctional\IrtTest.zip";
             RunFunctionalTest();
         }
+        private MeasuredPeptide BuildMeasuredPeptide(string seq, double rt)
+        {
+            return new MeasuredPeptide(new Target(seq), rt);
+        }
 
         protected override void DoTest()
         {
@@ -148,17 +152,17 @@ namespace pwiz.SkylineTestFunctional
             //Now paste in iRT with each peptide truncated by one amino acid
             var standard = new[]
                                {
-                                   new MeasuredPeptide("LGGNEQVTR", -24.92),
-                                   new MeasuredPeptide("GAGSSEPVTGLDAK", 0.00),
-                                   new MeasuredPeptide("VEATFGVDESNAK", 12.39),
-                                   new MeasuredPeptide("YILAGVENSK", 19.79),
-                                   new MeasuredPeptide("TPVISGGPYEYR", 28.71),
-                                   new MeasuredPeptide("TPVITGAPYEYR", 33.38),
-                                   new MeasuredPeptide("DGLDAASYYAPVR", 42.26),
-                                   new MeasuredPeptide("ADVTPADFSEWSK", 54.62),
-                                   new MeasuredPeptide("GTFIIDPGGVIR", 70.52),
-                                   new MeasuredPeptide("GTFIIDPAAVIR", 87.23),
-                                   new MeasuredPeptide("LFLQFGAQGSPFLK", 100.00),
+                                   BuildMeasuredPeptide("LGGNEQVTR", -24.92),
+                                   BuildMeasuredPeptide("GAGSSEPVTGLDAK", 0.00),
+                                   BuildMeasuredPeptide("VEATFGVDESNAK", 12.39),
+                                   BuildMeasuredPeptide("YILAGVENSK", 19.79),
+                                   BuildMeasuredPeptide("TPVISGGPYEYR", 28.71),
+                                   BuildMeasuredPeptide("TPVITGAPYEYR", 33.38),
+                                   BuildMeasuredPeptide("DGLDAASYYAPVR", 42.26),
+                                   BuildMeasuredPeptide("ADVTPADFSEWSK", 54.62),
+                                   BuildMeasuredPeptide("GTFIIDPGGVIR", 70.52),
+                                   BuildMeasuredPeptide("GTFIIDPAAVIR", 87.23),
+                                   BuildMeasuredPeptide("LFLQFGAQGSPFLK", 100.00),
                                };
 
             RunUI(() =>
@@ -226,8 +230,8 @@ namespace pwiz.SkylineTestFunctional
                 changeDlg.Peptides = changePeptides;
                 changeDlg.OkDialog();
             });
-            Assert.IsTrue(ArrayUtil.EqualsDeep(changePeptides.Select(p => p.Sequence).ToArray(),
-                irtDlg1.StandardPeptides.Select(p => p.Sequence).ToArray()));
+            Assert.IsTrue(ArrayUtil.EqualsDeep(changePeptides.Select(p => p.Target).ToArray(),
+                irtDlg1.StandardPeptides.Select(p => p.Target).ToArray()));
             Assert.IsTrue(ArrayUtil.EqualsDeep(changePeptides.Select(p => p.Irt).ToArray(),
                 irtDlg1.StandardPeptides.Select(p => p.Irt).ToArray()));
             RunDlg<ChangeIrtPeptidesDlg>(irtDlg1.ChangeStandardPeptides, changeDlg =>
@@ -308,9 +312,7 @@ namespace pwiz.SkylineTestFunctional
                           foreach (var docPepNode in document.Peptides)
                           {
                               docPeptides.Add(new MeasuredRetentionTime(document.Settings.GetModifiedSequence(docPepNode),
-                                                                        docPepNode.AverageMeasuredRetentionTime.HasValue
-                                                                        ? docPepNode.AverageMeasuredRetentionTime.Value
-                                                                        : 0));
+                                                                        docPepNode.AverageMeasuredRetentionTime ?? 0));
                           }
                       });
 
@@ -709,12 +711,12 @@ namespace pwiz.SkylineTestFunctional
                 if (expectStandards)
                 {
                     Assert.IsTrue(nodePep.GlobalStandardType == StandardType.IRT,
-                        string.Format("{0} expected marked as iRT standard", nodePep.Peptide.Sequence));
+                        string.Format("{0} expected marked as iRT standard", nodePep.Peptide.Target));
                 }
                 else
                 {
                     Assert.IsFalse(nodePep.GlobalStandardType == StandardType.IRT,
-                        string.Format("{0} expected cleared of iRT standard", nodePep.Peptide.Sequence));
+                        string.Format("{0} expected cleared of iRT standard", nodePep.Peptide.Target));
                 }
             }
 
@@ -820,12 +822,12 @@ namespace pwiz.SkylineTestFunctional
 
         private static void removePeptidesAndImport(IrtStandard standard, int numPeptides)
         {
-            string[] standardPeptides = null;
-            List<string> removedPeptides = null;
+            Target[] standardPeptides = null;
+            List<Target> removedPeptides = null;
             RunUI(() =>
             {
-                standardPeptides = standard.Peptides.Select(pep => pep.Sequence).ToArray();
-                removedPeptides = standardPeptides.Except(SkylineWindow.DocumentUI.Peptides.Select(nodePep => nodePep.ModifiedSequence)).ToList();
+                standardPeptides = standard.Peptides.Select(pep => pep.Target).ToArray();
+                removedPeptides = standardPeptides.Except(SkylineWindow.DocumentUI.Peptides.Select(nodePep => nodePep.ModifiedTarget)).ToList();
             }); 
             var toRemove = standardPeptides.Except(removedPeptides).ToArray();
             if (numPeptides > toRemove.Length)
@@ -853,7 +855,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     foreach (var pep in removedPeptides)
                     {
-                        Assert.IsTrue(warningDlg.Message.Contains(pep));
+                        Assert.IsTrue(warningDlg.Message.Contains(pep.ToString()));
                     }
                     Assert.IsTrue(warningDlg.Message.Contains(
                         string.Format(Resources.SkylineWindow_ImportResults_The_document_contains__0__of_these_iRT_standard_peptides_, docCount)));
@@ -871,7 +873,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     foreach (var pep in removedPeptides)
                     {
-                        Assert.IsTrue(errorDlg.Message.Contains(pep));
+                        Assert.IsTrue(errorDlg.Message.Contains(pep.ToString()));
                     }
                     Assert.IsTrue(errorDlg.Message.Contains(
                         docCount > 0

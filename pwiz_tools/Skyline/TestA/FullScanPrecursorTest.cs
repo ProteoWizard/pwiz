@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestA
 
                 // Switch to only precursor ions
                 var docPrecOnly = doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(filter =>
-                    filter.ChangeIonTypes(new[] { IonType.precursor })));
+                    filter.ChangePeptideIonTypes(new[] { IonType.precursor })));
                 // All precursors should have 3 precursor transitions (M, M+1 and M+2)
                 AssertEx.IsDocumentState(docPrecOnly, 3, 1, 4, 5, 15);
                 Assert.IsFalse(docPrecOnly.PeptideTransitions.Any(nodeTran => nodeTran.Transition.IonType != IonType.precursor));
@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestA
 
                 // Add y-ions to low resolution filtering
                 var docLowMs1Y = docLowMs1.ChangeSettings(docLowMs1.Settings.ChangeTransitionFilter(filter =>
-                    filter.ChangeIonTypes(new[] { IonType.precursor, IonType.y })));
+                    filter.ChangePeptideIonTypes(new[] { IonType.precursor, IonType.y })));
                 AssertEx.IsDocumentState(docLowMs1Y, 5, 1, 4, 5, 33);
 
                 // Turn off MS1 filtering

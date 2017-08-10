@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     var settings = context.Document.Settings;
                     var predictor = settings.PeptideSettings.Prediction.RetentionTime;
                     var fullScan = settings.TransitionSettings.FullScan;
-                    string seqModified = settings.GetSourceTextId(summaryPeakData.NodePep);
+                    var seqModified = settings.GetSourceTarget(summaryPeakData.NodePep); 
                     if (predictor != null)
                     {
                         double window = predictor.TimeWindow;
@@ -545,8 +545,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 foreach (var referenceGroup in referenceGroups)
                 {
-                    if (analyteGroup.NodeGroup.TransitionGroup.PrecursorCharge !=
-                            referenceGroup.NodeGroup.TransitionGroup.PrecursorCharge)
+                    if (analyteGroup.NodeGroup.TransitionGroup.PrecursorAdduct !=
+                            referenceGroup.NodeGroup.TransitionGroup.PrecursorAdduct)
                         continue;
 
                     foreach (var tranPeakDataPair in TransitionPeakDataPair<ISummaryPeakData>
@@ -1296,8 +1296,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 foreach (var referenceGroup in referenceGroups)
                 {
-                    if (analyteGroup.NodeGroup.TransitionGroup.PrecursorCharge !=
-                            referenceGroup.NodeGroup.TransitionGroup.PrecursorCharge)
+                    if (analyteGroup.NodeGroup.TransitionGroup.PrecursorAdduct !=
+                            referenceGroup.NodeGroup.TransitionGroup.PrecursorAdduct)
                         continue;
 
                     foreach (var tranPeakDataPair in TransitionPeakDataPair<IDetailedPeakData>
@@ -1419,7 +1419,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                      ITransitionGroupPeakData<TData> standardGroup)
         {
             // Enumerate as many elements as match by position
-            Assume.IsTrue(lightGroup.NodeGroup.TransitionGroup.PrecursorCharge == standardGroup.NodeGroup.TransitionGroup.PrecursorCharge);
+            Assume.IsTrue(lightGroup.NodeGroup.TransitionGroup.PrecursorAdduct == standardGroup.NodeGroup.TransitionGroup.PrecursorAdduct);
             int i = 0;
             while (i < lightGroup.TransitionPeakData.Count && i < standardGroup.TransitionPeakData.Count)
             {

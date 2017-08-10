@@ -142,8 +142,9 @@ void statementToLines(sqlite3* dbConnection,
                        sqlite3_column_text(sqlStatement,0));
         for(int i = 1; i < returnedColumns; i++){
             result += "	";
-            result += reinterpret_cast<const char*>(
-                          sqlite3_column_text(sqlStatement, i));
+            const char* val = reinterpret_cast<const char*>(
+                sqlite3_column_text(sqlStatement, i));
+            result += ((val == NULL || strlen(val) == 0) ? "N/A" : val);
         }
 
         if( swapSlash ){
@@ -327,6 +328,12 @@ int main(int argc, char* argv[])
     catch (exception& e)
     {
         TEST_FAILED(e.what())
+    }
+    catch (const char* msg) {
+      TEST_FAILED(msg);
+    }
+    catch (string msg) {
+      TEST_FAILED(msg.c_str());
     }
     catch (...)
     {

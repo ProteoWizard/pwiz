@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.AreEqual(ionCount + 1, SkylineWindow.GraphSpectrum.PeaksMatchedCount));
 
             string precursorPrefix = IonType.precursor.GetLocalizedString();
-            string precursorLabel = precursorPrefix + Transition.GetChargeIndicator(2);
+            string precursorLabel = precursorPrefix + Transition.GetChargeIndicator(Adduct.FromChargeProtonated(2));
 
             SrmDocument docCurrent = SkylineWindow.Document;
             var pickList0 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);

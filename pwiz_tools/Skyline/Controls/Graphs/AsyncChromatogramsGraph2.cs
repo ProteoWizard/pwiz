@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using ZedGraph;
@@ -514,10 +515,10 @@ namespace pwiz.Skyline.Controls.Graphs
         private class CurveInfo
         {
             public LineItem Curve { get; private set; }
-            public string ModifiedSequence { get; private set; }
+            public Target ModifiedSequence { get; private set; }
             public bool IsActive { get; set; }
 
-            public CurveInfo(string modifiedSequence, Color peptideColor, double retentionTime, float intensity)
+            public CurveInfo(Target modifiedSequence, Color peptideColor, double retentionTime, float intensity)
             {
                 var fillColor = Color.FromArgb(
                     175 + 80 * peptideColor.R / 255,

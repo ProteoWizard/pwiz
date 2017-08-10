@@ -282,6 +282,7 @@
     <EmbeddedResource Include="MSstats\Normalization\BrudererSubsetNoNormalization_TestingResult.csv" />
     <EmbeddedResource Include="MSstats\Normalization\BrudererSubsetEqualizeMedians_dataProcessedData.csv" />
     <EmbeddedResource Include="MSstats\Normalization\BrudererSubsetEqualizeMedians_TestingResult.csv" />
+    <EmbeddedResource Include="MSstats\Normalization\BrudererSubsetAsSmallMolecules.sky" />
     <None Include="PeakBoundaryTest.zip" />
     <None Include="PwizFileInfoTest.zip" />
     <None Include="modmatch.sky" />

@@ -21,11 +21,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI.IonMobility;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA
@@ -39,23 +41,41 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void TestLibIonMobilityInfo()
         {
+            const string caffeineFormula = "C8H10N4O2";
+            const string caffeineInChiKey = "RYYVLZVUVIJVGH-UHFFFAOYSA-N";
+            const string caffeineHMDB = "HMDB01847";
             const double HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC = -.01;
-            var dbIon1 = new DbIonMobilityPeptide("JKLMN", 1.2, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC) { Id = 12345 };
-            var dbIon2 = new DbIonMobilityPeptide(dbIon1);
-            DbIonMobilityPeptide dbIon3 = null;
-            Assert.AreEqual(dbIon1.GetHashCode(), dbIon2.GetHashCode());
-            Assert.IsFalse(dbIon1.Equals(null));
-            Assert.IsTrue(dbIon1.Equals(dbIon2 as object));
-            // ReSharper disable once ExpressionIsAlwaysNull
-            Assert.IsFalse(dbIon1.Equals(dbIon3 as object));
-            Assert.IsTrue(dbIon1.Equals(dbIon1));
-            Assert.IsTrue(dbIon1.Equals(dbIon1 as object));
-            Assert.IsTrue(dbIon1.Equals(dbIon2));
-            dbIon1.CollisionalCrossSection = 1.3;
-            dbIon1.PeptideModSeq = "foo";
-            Assert.AreNotEqual(dbIon1.CollisionalCrossSection, dbIon2.CollisionalCrossSection);
-            Assert.AreNotEqual(dbIon1.Sequence, dbIon2.Sequence);
-            Assert.AreNotEqual(dbIon1.PeptideModSeq, dbIon2.PeptideModSeq);
+            var dbIon1 = new DbIonMobilityPeptide(new Target("JKLMN"), Adduct.SINGLY_PROTONATED, 1.2, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC) { Id = 12345 };
+            for (var loop = 0; loop < 2; loop++)
+            {
+                var dbIon2 = new DbIonMobilityPeptide(dbIon1);
+                DbIonMobilityPeptide dbIon3 = null;
+                Assert.AreEqual(dbIon1.GetHashCode(), dbIon2.GetHashCode());
+                Assert.IsFalse(dbIon1.Equals(null));
+                Assert.IsTrue(dbIon1.Equals(dbIon2 as object));
+                // ReSharper disable once ExpressionIsAlwaysNull
+                Assert.IsFalse(dbIon1.Equals(dbIon3 as object));
+                Assert.IsTrue(dbIon1.Equals(dbIon1));
+                Assert.IsTrue(dbIon1.Equals(dbIon1 as object));
+                Assert.IsTrue(dbIon1.Equals(dbIon2));
+                dbIon1.CollisionalCrossSection = 1.3;
+                Assert.AreNotEqual(dbIon1.CollisionalCrossSection, dbIon2.CollisionalCrossSection);
+                if (loop==1)
+                {
+                    dbIon1.ModifiedTarget = new Target("foo");
+                    Assert.AreNotEqual(dbIon1.Target, dbIon2.Target);
+                    Assert.AreNotEqual(dbIon1.ModifiedTarget, dbIon2.ModifiedTarget);
+                }
+                else
+                {
+                    Assert.AreEqual(dbIon1.ModifiedTarget, dbIon2.ModifiedTarget);
+                    Assert.AreEqual(dbIon1.ModifiedTarget.Molecule, dbIon2.ModifiedTarget.Molecule);
+                }
+                dbIon1 = new DbIonMobilityPeptide( 
+                    SmallMoleculeLibraryAttributes.Create("caffeine", caffeineFormula, caffeineInChiKey, caffeineHMDB),
+                    Adduct.FromStringAssumeProtonated("M+Na"), 
+                    1.2, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC) { Id = 12345 };
+            }
 
             var dictCCS1 = new Dictionary<LibKey, DriftTimeInfo[]>();
             var ccs1 = new List<DriftTimeInfo> { new DriftTimeInfo(null, 1, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), new DriftTimeInfo(null, 2, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC) }; // Collisional cross sections
@@ -74,11 +94,15 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(3.5, validatingIonMobilityPeptides[1].CollisionalCrossSection);
             Assert.AreEqual(HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, validatingIonMobilityPeptides[1].HighEnergyDriftTimeOffsetMsec);
 
+            // Test serialization of molecule with '$' in it, which we use as a tab replacement against XML parser variability
+            var molser = new CustomMolecule(SmallMoleculeLibraryAttributes.Create("caffeine$", caffeineFormula, caffeineInChiKey, caffeineHMDB));
+            var text = molser.ToSerializableString();
+            Assert.AreEqual(molser, CustomMolecule.FromSerializableString(text));
 
             var dictCCS2 = new Dictionary<LibKey, DriftTimeInfo[]>();
             var ccs3 = new List<DriftTimeInfo> { new DriftTimeInfo(4, null, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), new DriftTimeInfo(5, null, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC) }; // Drift times
             const string seq3 = "KLMNJ";
-            dictCCS2.Add(new LibKey(seq3, 1), ccs3.ToArray());
+            dictCCS2.Add(new LibKey(seq3, Adduct.SINGLY_PROTONATED), ccs3.ToArray());
             lib.Add(new LibraryDriftTimeInfo("test2", dictCCS2));
             List<LibraryDriftTimeInfo> lib1 = lib;
             AssertEx.ThrowsException<Exception>(() => CollisionalCrossSectionGridViewDriver.ConvertDriftTimesToCollisionalCrossSections(null,

@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Model.Results
             foreach (var set in _dataSets.ToArray())
             {
                 Color peptideColor = NodePep != null ? NodePep.Color : PeptideDocNode.UNKNOWN_COLOR;
-                if (!set.Load(provider, NodePep != null ? NodePep.RawTextId : null, peptideColor))
+                if (!set.Load(provider, NodePep != null ? NodePep.ModifiedTarget : null, peptideColor))
                     _dataSets.Remove(set);
             }
             //Console.Out.WriteLine("Ending {0} {1} {2}", NodePep, _dataSets.Count, RuntimeHelpers.GetHashCode(this));
@@ -922,7 +922,7 @@ namespace pwiz.Skyline.Model.Results
                 return true;
             if (nodeGroup1 == null || nodeGroup2 == null)
                 return false;
-            return nodeGroup1.TransitionGroup.PrecursorCharge == nodeGroup2.TransitionGroup.PrecursorCharge &&
+            return Equals(nodeGroup1.TransitionGroup.PrecursorAdduct, nodeGroup2.TransitionGroup.PrecursorAdduct) &&
                    ReferenceEquals(nodeGroup1.TransitionGroup.LabelType, nodeGroup2.TransitionGroup.LabelType);
         }
     }

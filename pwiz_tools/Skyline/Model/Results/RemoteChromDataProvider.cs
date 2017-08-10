@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override bool GetChromatogram(
             int id, 
-            string modifiedSequence,
+            Target modifiedSequence,
             Color peptideColor,
             out ChromExtra extra,
             out TimeIntensities timeIntensities)

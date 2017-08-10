@@ -29,9 +29,9 @@
  * information.
  */
 
-#include <string>
 #include <vector>
 #include "boost/lexical_cast.hpp"
+#include "SmallMolMetadata.h"
 
 /**
  * \struct SeqMod
@@ -58,6 +58,8 @@ struct SeqMod{
  * information for what will become a reference spectrum in the library. 
  * There are three ways if identifying a spectrum: by name, by scan
  * number or by index.  Most filetypes will use only one of the three.
+ * N.B. as we extend Skyline to generalized small molecules, "PSM" is
+ * a misnomer, like a lot of things in Skyline
  */
 struct PSM{
   int charge;      ///< charge of the spectrum precursor
@@ -69,8 +71,18 @@ struct PSM{
   double score;    ///< score associated with this paring of spec and seq
   std::string specName; ///< the parentFileName attribute from the scanOrigin element
 
+  // Small molecule stuff
+  SmallMolMetadata smallMolMetadata;
+
   PSM()
   : charge(0), specKey(-1), specIndex(-1), score(0) {};
+
+  PSM(const PSM &rhs)
+  {
+      *this = rhs;
+  }
+
+
 
   virtual ~PSM(){ };
 
@@ -84,6 +96,7 @@ struct PSM{
     specIndex = rhs.specIndex;
     score = rhs.score;
     specName = rhs.specName;
+    smallMolMetadata = rhs.smallMolMetadata;
     return *this;
   }
 
@@ -96,9 +109,17 @@ struct PSM{
     specIndex = -1;
     score = 0;
     specName.clear();
+    smallMolMetadata.clear();
   };
 
-  std::string idAsString(){
+  bool IsCompleteEnough() const
+  {
+      return (specKey >= 0 || !specName.empty()) && 
+		  (smallMolMetadata.IsCompleteEnough() ||
+		   (charge != 0 && !unmodSeq.empty()));
+  }
+
+  std::string idAsString() const {
     std::string result;
         if( ! specName.empty() ){
             result = specName;

@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Model
                                      CultureInfo cultureInfo)
         {
             string peptideModifiedSequence = _settings.GetDisplayName(peptideNode);
-            int precursorCharge = groupNode.TransitionGroup.PrecursorCharge;
+            var precursorCharge = groupNode.TransitionGroup.PrecursorAdduct;
             string labelType = groupNode.TransitionGroup.LabelType.Name;
             var filesInChrom = chromatograms.MSDataFilePaths.Select(path=>path.GetFileName()).ToList();
             // Don't load the chromatogram group if none of its files are being exported

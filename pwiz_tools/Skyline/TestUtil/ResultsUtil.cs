@@ -279,8 +279,8 @@ namespace pwiz.SkylineTestUtil
             foreach (var pair in document.MoleculePrecursorPairs)
             {
                 ChromatogramGroupInfo[] chromGroupInfo1;
-                if (Settings.Default.TestSmallMolecules && pair.NodePep.Peptide.IsCustomIon &&
-                    pair.NodePep.CustomIon.ToString().Equals(SrmDocument.TestingNonProteomicMoleculeName))
+                if (Settings.Default.TestSmallMolecules && pair.NodePep.Peptide.IsCustomMolecule &&
+                    pair.NodePep.CustomMolecule.ToString().Equals(SrmDocument.TestingNonProteomicMoleculeName))
                 {
                     Assert.IsFalse(results.TryLoadChromatogram(iChrom1, pair.NodePep, pair.NodeGroup,
                     tolerance, true, out chromGroupInfo1));

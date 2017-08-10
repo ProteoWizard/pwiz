@@ -42,6 +42,8 @@
             this.cb18O = new System.Windows.Forms.CheckBox();
             this.cb15N = new System.Windows.Forms.CheckBox();
             this.cb13C = new System.Windows.Forms.CheckBox();
+            this.cb37Cl = new System.Windows.Forms.CheckBox();
+            this.cb81Br = new System.Windows.Forms.CheckBox();
             this.cbChemicalFormula = new System.Windows.Forms.CheckBox();
             this.btnLoss = new System.Windows.Forms.Button();
             this.comboRelativeRT = new System.Windows.Forms.ComboBox();
@@ -116,6 +118,8 @@
             this.panelAtoms.Controls.Add(this.cb18O);
             this.panelAtoms.Controls.Add(this.cb15N);
             this.panelAtoms.Controls.Add(this.cb13C);
+            this.panelAtoms.Controls.Add(this.cb37Cl);
+            this.panelAtoms.Controls.Add(this.cb81Br);
             resources.ApplyResources(this.panelAtoms, "panelAtoms");
             this.panelAtoms.Name = "panelAtoms";
             // 
@@ -146,6 +150,20 @@
             this.cb13C.Name = "cb13C";
             this.cb13C.UseVisualStyleBackColor = true;
             this.cb13C.CheckedChanged += new System.EventHandler(this.cb13C_CheckedChanged);
+            // 
+            // cb37Cl
+            // 
+            resources.ApplyResources(this.cb37Cl, "cb37Cl");
+            this.cb37Cl.Name = "cb37Cl";
+            this.cb37Cl.UseVisualStyleBackColor = true;
+            this.cb37Cl.CheckedChanged += new System.EventHandler(this.cb37Cl_CheckedChanged);
+            // 
+            // cb81Br
+            // 
+            resources.ApplyResources(this.cb81Br, "cb81Br");
+            this.cb81Br.Name = "cb81Br";
+            this.cb81Br.UseVisualStyleBackColor = true;
+            this.cb81Br.CheckedChanged += new System.EventHandler(this.cb81Br_CheckedChanged);
             // 
             // cbChemicalFormula
             // 
@@ -202,6 +220,7 @@
             // 
             resources.ApplyResources(this.toolBarLosses, "toolBarLosses");
             this.toolBarLosses.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolBarLosses.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.toolBarLosses.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tbbAddLoss,
             this.tbbEditLoss,
@@ -294,6 +313,8 @@
         private System.Windows.Forms.CheckBox cb2H;
         private System.Windows.Forms.CheckBox cb18O;
         private System.Windows.Forms.CheckBox cb15N;
+        private System.Windows.Forms.CheckBox cb37Cl;
+        private System.Windows.Forms.CheckBox cb81Br;
         private System.Windows.Forms.CheckBox cbChemicalFormula;
         private System.Windows.Forms.Button btnLoss;
         private System.Windows.Forms.ComboBox comboRelativeRT;

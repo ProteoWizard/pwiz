@@ -2553,5 +2553,17 @@ namespace pwiz.Skyline.Properties {
                 this["ChromShowRawTimes"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowFragmentIons {
+            get {
+                return ((bool)(this["ShowFragmentIons"]));
+            }
+            set {
+                this["ShowFragmentIons"] = value;
+            }
+        }
     }
 }

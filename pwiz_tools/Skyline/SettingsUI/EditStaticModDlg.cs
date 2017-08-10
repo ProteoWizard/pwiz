@@ -131,6 +131,9 @@ namespace pwiz.Skyline.SettingsUI
                     cb15N.Checked = false;
                     cb18O.Checked = false;
                     cb2H.Checked = false;
+                    cb37Cl.Checked = false;
+                    cb81Br.Checked = false;
+                    cb37Cl.Visible = cb81Br.Visible = false;  // No demonstrated need for this yet
                     listNeutralLosses.Items.Clear();
                     if (comboRelativeRT.Items.Count > 0)
                         comboRelativeRT.SelectedIndex = 0;
@@ -169,6 +172,12 @@ namespace pwiz.Skyline.SettingsUI
                     cb15N.Checked = modification.Label15N;
                     cb18O.Checked = modification.Label18O;
                     cb2H.Checked = modification.Label2H;
+                    cb37Cl.Checked = modification.Label37Cl;
+                    cb81Br.Checked = modification.Label81Br;
+
+                    // No demonstrated need for these yet, so keep hidden unless somehow selected elsewhere
+                    cb37Cl.Visible = cb37Cl.Checked;
+                    cb81Br.Visible = cb81Br.Checked;
 
                     if (comboRelativeRT.Items.Count > 0)
                         comboRelativeRT.SelectedItem = modification.RelativeRT.ToString();
@@ -221,6 +230,10 @@ namespace pwiz.Skyline.SettingsUI
                     labelAtoms |= LabelAtoms.O18;
                 if (cb2H.Checked)
                     labelAtoms |= LabelAtoms.H2;
+                if (cb37Cl.Checked)
+                    labelAtoms |= LabelAtoms.Cl37;
+                if (cb81Br.Checked)
+                    labelAtoms |= LabelAtoms.Br81;
                 return labelAtoms;
             }
         }
@@ -329,7 +342,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formula);
+                    SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, formula, SequenceMassCalc.MassPrecision);
                 }
                 catch (ArgumentException x)
                 {
@@ -503,6 +516,16 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         private void cb2H_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateMasses();
+        }
+
+        private void cb37Cl_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateMasses();
+        }
+
+        private void cb81Br_CheckedChanged(object sender, EventArgs e)
         {
             UpdateMasses();
         }

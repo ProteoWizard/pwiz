@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 var peptidePrediction = SrmDocument.Settings.PeptideSettings.Prediction;
                 if (peptidePrediction.RetentionTime != null)
                 {
-                    string textId = SrmDocument.Settings.GetSourceTextId(Peptide.DocNode);
+                    var textId = SrmDocument.Settings.GetSourceTarget(Peptide.DocNode);
                     double? scoreCalc = peptidePrediction.RetentionTime.Calculator.ScoreSequence(textId);
                     if (scoreCalc.HasValue)
                     {

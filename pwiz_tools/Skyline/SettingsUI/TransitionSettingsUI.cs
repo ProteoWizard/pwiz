@@ -26,6 +26,7 @@ using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Optimization;
@@ -76,6 +77,14 @@ namespace pwiz.Skyline.SettingsUI
             _parent = parent;
             _transitionSettings = _parent.DocumentUI.Settings.TransitionSettings;
 
+            // Populate the small mol adduct filter helper menu
+            PopulateAdductMenu(contextMenuStripPrecursorAdduct);
+            PopulateAdductMenu(contextMenuStripFragmentAdduct);
+            Bitmap bm = Resources.PopupBtn;
+            bm.MakeTransparent(Color.Fuchsia);
+            btnPrecursorAdduct.Image = bm;
+            btnFragmentAdduct.Image = bm;
+
             // Initialize prediction settings
             comboPrecursorMass.SelectedItem = Prediction.PrecursorMassType.GetLocalizedString();
             comboIonMass.SelectedItem = Prediction.FragmentMassType.GetLocalizedString();
@@ -107,9 +116,12 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             // Initialize filter settings
-            textPrecursorCharges.Text = Filter.PrecursorCharges.ToArray().ToString(", "); // Not L10N? Internationalization of comma?
-            textIonCharges.Text = Filter.ProductCharges.ToArray().ToString(", "); // Not L10N? Internationalization of comma?
-            textIonTypes.Text = TransitionFilter.ToStringIonTypes(Filter.IonTypes, true);
+            textPeptidePrecursorCharges.Text = Filter.PeptidePrecursorCharges.ToArray().ToString(", "); // Not L10N? Internationalization of comma?
+            textPeptideIonCharges.Text = Filter.PeptideProductCharges.ToArray().ToString(", "); // Not L10N? Internationalization of comma?
+            textPeptideIonTypes.Text = TransitionFilter.ToStringIonTypes(Filter.PeptideIonTypes, true);
+            textSmallMoleculeIonTypes.Text = TransitionFilter.ToStringSmallMoleculeIonTypes(Filter.SmallMoleculeIonTypes, true);
+            textSmallMoleculePrecursorAdducts.Text = Filter.SmallMoleculePrecursorAdducts.ToArray().ToString(", "); // Not L10N? Internationalization of comma?
+            textSmallMoleculeFragmentAdducts.Text = Filter.SmallMoleculeFragmentAdducts.ToArray().ToString(", "); // Not L10N? Internationalization of comma?
             comboRangeFrom.SelectedItem = Filter.FragmentRangeFirst.Label;
             comboRangeTo.SelectedItem = Filter.FragmentRangeLast.Label;
             textExclusionWindow.Text = Filter.PrecursorMzWindow != 0
@@ -286,7 +298,9 @@ namespace pwiz.Skyline.SettingsUI
         protected override void OnShown(EventArgs e)
         {
             if (TabControlSel != null)
+            {
                 tabControl1.SelectedIndex = (int)TabControlSel;
+            }
             tabControl1.FocusFirstTabStop();
         }
 
@@ -325,30 +339,52 @@ namespace pwiz.Skyline.SettingsUI
             Helpers.AssignIfEquals(ref prediction, Prediction);
 
             // Validate and store filter settings
-            int[] precursorCharges;
+            Adduct[] peptidePrecursorCharges;
             int min = TransitionGroup.MIN_PRECURSOR_CHARGE;
             int max = TransitionGroup.MAX_PRECURSOR_CHARGE;
-            if (!helper.ValidateNumberListTextBox(tabControl1, (int) TABS.Filter, textPrecursorCharges,
-                    min, max, out precursorCharges))
+            if (!TransitionSettingsControl.ValidateAdductListTextBox(helper, tabControl1, (int)TABS.Filter, textPeptidePrecursorCharges, true,
+                    min, max, out peptidePrecursorCharges))
                 return;
-            precursorCharges = precursorCharges.Distinct().ToArray();
+            peptidePrecursorCharges = peptidePrecursorCharges.Distinct().ToArray();
 
-            int[] productCharges;
+            Adduct[] peptideProductCharges;
             min = Transition.MIN_PRODUCT_CHARGE;
             max = Transition.MAX_PRODUCT_CHARGE;
-            if (!helper.ValidateNumberListTextBox(tabControl1, (int) TABS.Filter, textIonCharges,
-                    min, max, out productCharges))
+            if (!TransitionSettingsControl.ValidateAdductListTextBox(helper, tabControl1, (int)TABS.Filter, textPeptideIonCharges, true,
+                    min, max, out peptideProductCharges))
                 return;
-            productCharges = productCharges.Distinct().ToArray();
+            peptideProductCharges = peptideProductCharges.Distinct().ToArray();
 
-            IonType[] types = TransitionFilter.ParseTypes(textIonTypes.Text, new IonType[0]);
-            if (types.Length == 0)
+            Adduct[] smallMoleculeProductCharges;
+            min = Transition.MIN_PRODUCT_CHARGE;
+            max = Transition.MAX_PRODUCT_CHARGE;
+            if (!TransitionSettingsControl.ValidateAdductListTextBox(helper, tabControl1, (int)TABS.Filter, textSmallMoleculeFragmentAdducts, false,
+                min, max, out smallMoleculeProductCharges))
+                return;
+            smallMoleculeProductCharges = smallMoleculeProductCharges.Distinct().ToArray();
+
+            IonType[] peptideIonTypes = TransitionFilter.ParseTypes(textPeptideIonTypes.Text, new IonType[0]);
+            if (peptideIonTypes.Length == 0)
             {
-                helper.ShowTextBoxError(tabControl1, (int) TABS.Filter, textIonTypes,
+                helper.ShowTextBoxError(tabControl1, (int) TABS.Filter, textPeptideIonTypes,
                                         Resources.TransitionSettingsUI_OkDialog_Ion_types_must_contain_a_comma_separated_list_of_ion_types_a_b_c_x_y_z_and_p_for_precursor);
                 return;
             }
-            types = types.Distinct().ToArray();
+            peptideIonTypes = peptideIonTypes.Distinct().ToArray();
+
+            Adduct[] smallMoleculePrecursorAdducts;
+            if (!TransitionSettingsControl.ValidateAdductListTextBox(helper, tabControl1, (int)TABS.Filter, textSmallMoleculePrecursorAdducts, false,
+                    min, max, out smallMoleculePrecursorAdducts))
+                return;
+            smallMoleculePrecursorAdducts = smallMoleculePrecursorAdducts.Distinct().ToArray();
+            IonType[] smallMoleculeIonTypes = TransitionFilter.ParseSmallMoleculeTypes(textSmallMoleculeIonTypes.Text, new IonType[0]);
+            if (smallMoleculeIonTypes.Length == 0)
+            {
+                helper.ShowTextBoxError(tabControl1, (int)TABS.Filter, textSmallMoleculeIonTypes,
+                    Resources.TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_);
+                return;
+            }
+            smallMoleculeIonTypes = smallMoleculeIonTypes.Distinct().ToArray();
 
             double exclusionWindow = 0;
             if (!string.IsNullOrEmpty(textExclusionWindow.Text) &&
@@ -367,7 +403,8 @@ namespace pwiz.Skyline.SettingsUI
             var measuredIons = _driverIons.Chosen;
             bool autoSelect = cbAutoSelect.Checked;
             bool exclusionUseDIAWindow = FullScanSettingsControl.IsDIA() && cbExclusionUseDIAWindow.Checked;
-            var filter = new TransitionFilter(precursorCharges, productCharges, types,
+            var filter = new TransitionFilter(peptidePrecursorCharges, peptideProductCharges, peptideIonTypes,
+                smallMoleculePrecursorAdducts, smallMoleculeProductCharges,smallMoleculeIonTypes,
                                               fragmentRangeFirst, fragmentRangeLast, measuredIons,
                                               exclusionWindow, exclusionUseDIAWindow, autoSelect);
             Helpers.AssignIfEquals(ref filter, Filter);
@@ -489,7 +526,7 @@ namespace pwiz.Skyline.SettingsUI
             if (precursorIsotopes != FullScanPrecursorIsotopes.None &&
                     precursorAnalyzerType != FullScanMassAnalyzerType.qit)
             {
-                if (precursorMassType != MassType.Monoisotopic)
+                if (!precursorMassType.IsMonoisotopic())
                 {
                     MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses);
                     tabControl1.SelectedIndex = (int)TABS.Prediction;
@@ -696,20 +733,32 @@ namespace pwiz.Skyline.SettingsUI
 
         public string PrecursorCharges
         {
-            get { return textPrecursorCharges.Text; }
-            set { textPrecursorCharges.Text = value; }
+            get { return textPeptidePrecursorCharges.Text; }
+            set { textPeptidePrecursorCharges.Text = value; }
         }
 
         public string ProductCharges
         {
-            get { return textIonCharges.Text; }
-            set { textIonCharges.Text = value; }
+            get { return textPeptideIonCharges.Text; }
+            set { textPeptideIonCharges.Text = value; }
         }
 
         public string FragmentTypes
         {
-            get { return textIonTypes.Text; }
-            set { textIonTypes.Text = value; }
+            get { return textPeptideIonTypes.Text; }
+            set { textPeptideIonTypes.Text = value; }
+        }
+
+        public string SmallMoleculePrecursorAdducts
+        {
+            get { return textSmallMoleculePrecursorAdducts.Text; }
+            set { textSmallMoleculePrecursorAdducts.Text = value; }
+        }
+
+        public string SmallMoleculeFragmentTypes
+        {
+            get { return textSmallMoleculeIonTypes.Text; }
+            set { textSmallMoleculeIonTypes.Text = value; }
         }
 
         public string RangeFrom
@@ -978,6 +1027,76 @@ namespace pwiz.Skyline.SettingsUI
                     e.NewValue = CheckState.Indeterminate;
                     break;
             }
+        }
+
+        private void PopulateAdductMenu(ContextMenuStrip menu)
+        {
+            bool isPrecursor = ReferenceEquals(menu, contextMenuStripPrecursorAdduct);
+            var adductsInMenu = new HashSet<string>();
+            if (!isPrecursor)
+            {
+                // Charge-only adducts first
+                foreach (var adduct in Adduct.COMMON_CHARGEONLY_ADDUCTS)
+                {
+                    AddAdductMenuItem(menu, adduct, false);
+                    adductsInMenu.Add(adduct);
+                }
+            }
+            // All the adducts from Fiehn lab list
+            foreach (var adduct in Adduct.DEFACTO_STANDARD_ADDUCTS)
+            {
+                if (!adductsInMenu.Contains(adduct))
+                {
+                    AddAdductMenuItem(menu, adduct, isPrecursor);
+                    adductsInMenu.Add(adduct);
+                }
+            }
+        }
+
+        private void AddAdductMenuItem(ContextMenuStrip menu, string adduct, bool isPrecursor)
+        {
+            var menuItem = new ToolStripMenuItem()
+            {
+                Text = adduct
+            };
+            if (isPrecursor)
+                menuItem.Click += precursorAdductStripMenuItem_Click;
+            else
+                menuItem.Click += fragmentAdductStripMenuItem_Click;
+            menu.Items.Add(menuItem);
+        }
+
+
+        private void AddAdduct(TextBox textBox, string adduct)
+        {
+            if (!string.IsNullOrEmpty(textBox.Text))
+            {
+                textBox.Text += ", "; // Not L10N
+            }
+            textBox.Text += adduct;
+        }
+
+        private void precursorAdductStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var mi = sender as ToolStripMenuItem;
+            if (mi != null)
+                AddAdduct(textSmallMoleculePrecursorAdducts, mi.Text);
+        }
+
+        private void fragmentAdductStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var mi = sender as ToolStripMenuItem;
+            if (mi != null)
+                AddAdduct(textSmallMoleculeFragmentAdducts, mi.Text);
+        }
+
+        private void btnPrecursorAdductClick(object sender, EventArgs e)
+        {
+            contextMenuStripPrecursorAdduct.Show(this, btnPrecursorAdduct.Right + 1, btnPrecursorAdduct.Top);
+        }
+        private void btnFragmentAdductClick(object sender, EventArgs e)
+        {
+            contextMenuStripFragmentAdduct.Show(this, btnFragmentAdduct.Right + 1, btnFragmentAdduct.Top);
         }
     }
 }

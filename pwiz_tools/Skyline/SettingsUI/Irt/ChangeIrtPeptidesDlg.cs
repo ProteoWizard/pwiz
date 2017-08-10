@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -31,16 +32,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
 {
     public partial class ChangeIrtPeptidesDlg : FormEx
     {
-        private readonly IDictionary<string, DbIrtPeptide> _dictSequenceToPeptide;
+        private readonly IDictionary<Target, DbIrtPeptide> _dictSequenceToPeptide;
         private IList<DbIrtPeptide> _standardPeptides;
 
         public ChangeIrtPeptidesDlg(IList<DbIrtPeptide> irtPeptides)
         {
-            _dictSequenceToPeptide = new Dictionary<string, DbIrtPeptide>();
+            _dictSequenceToPeptide = new Dictionary<Target, DbIrtPeptide>();
             foreach (var peptide in irtPeptides)
             {
-                if (!_dictSequenceToPeptide.ContainsKey(peptide.PeptideModSeq))
-                    _dictSequenceToPeptide.Add(peptide.PeptideModSeq, peptide);
+                if (!_dictSequenceToPeptide.ContainsKey(peptide.ModifiedTarget))
+                    _dictSequenceToPeptide.Add(peptide.ModifiedTarget, peptide);
             }
 
             InitializeComponent();
@@ -55,7 +56,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 _standardPeptides = value;
                 textPeptides.Text = string.Join(Environment.NewLine,
-                    _standardPeptides.Select(peptide => peptide.PeptideModSeq).ToArray());
+                    _standardPeptides.Select(peptide => peptide.ModifiedTarget.Sequence).ToArray());
             }
         }
 
@@ -73,7 +74,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 if (string.IsNullOrEmpty(line))
                     continue;
                 DbIrtPeptide peptide;
-                if (!_dictSequenceToPeptide.TryGetValue(line, out peptide))
+                if (!_dictSequenceToPeptide.TryGetValue(new Target(line), out peptide))  // CONSIDER(bspratt) - small molecule equivalent?
                     invalidLines.Add(line);
                 standardPeptides.Add(peptide);
             }

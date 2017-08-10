@@ -50,8 +50,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            const string seqWithOneId = "TFAEALR";
-            const string seqWithTwoIds = "AADALLLK";
+            var seqWithOneId = new Target("TFAEALR");
+            var seqWithTwoIds = new Target("AADALLLK");
             SetPeptideSettings();
             SetTransitionSettings();
             InsertPeptides();
@@ -66,11 +66,11 @@ namespace pwiz.SkylineTestFunctional
                 "expected two chromatograms, named S_1 and S_10 - got " + string.Join(", ", chromNames));
             var peptideWithOneId =
                 document.Peptides.First(
-                    peptideDocNode => seqWithOneId.Equals(peptideDocNode.Peptide.Sequence));
+                    peptideDocNode => seqWithOneId.Equals(peptideDocNode.Peptide.Target));
             var precursorWithOneId = peptideWithOneId.TransitionGroups.First();
             var peptideWithTwoIds =
                 document.Peptides.First(
-                    peptideDocNode => seqWithTwoIds.Equals(peptideDocNode.Peptide.Sequence));
+                    peptideDocNode => seqWithTwoIds.Equals(peptideDocNode.Peptide.Target));
             var precursorWithTwoIds = peptideWithTwoIds.TransitionGroups.First();
             Assert.IsTrue(precursorWithOneId.Results[0][0].IsIdentified);
             Assert.IsFalse(precursorWithOneId.Results[1][0].Identified == PeakIdentification.TRUE);

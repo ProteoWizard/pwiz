@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestA.Results
             if (asSmallMolecules)
             {
                 var refine = new RefinementSettings();
-                doc = refine.ConvertToSmallMolecules(pepdoc);
+                doc = refine.ConvertToSmallMolecules(pepdoc, TestContext.ResultsDirectory);
             }
 
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))

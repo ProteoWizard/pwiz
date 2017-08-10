@@ -46,7 +46,7 @@ namespace pwiz.Skyline.SettingsUI
             _formulaBox =
                 new FormulaBox(Resources.EditMeasuredIonDlg_EditMeasuredIonDlg_Ion__chemical_formula_,
                     Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_,
-                    Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_)
+                    Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_) // CONSIDER(bspratt) an "ion" that doesn't use adducts?
                 {
                     Location = new Point(textFragment.Left, radioReporter.Top + 30),
                     Anchor = AnchorStyles.Left | AnchorStyles.Bottom,
@@ -100,18 +100,18 @@ namespace pwiz.Skyline.SettingsUI
                                       ? _measuredIon.MinFragmentLength.Value.ToString(LocalizationHelper.CurrentCulture)
                                       : string.Empty;
             }
-            else if (!string.IsNullOrEmpty(_measuredIon.CustomIon.Formula))
+            else if (!string.IsNullOrEmpty(_measuredIon.SettingsCustomIon.NeutralFormula))
             {
-                _formulaBox.Formula = _measuredIon.CustomIon.Formula;
+                _formulaBox.Formula = _measuredIon.SettingsCustomIon.NeutralFormula;
                 textCharge.Text = _measuredIon.Charge.ToString(LocalizationHelper.CurrentCulture);
-                _formulaBox.Charge = _measuredIon.Charge;
+                _formulaBox.Adduct = _measuredIon.Adduct;
             }
             else
             {
                 _formulaBox.Formula = string.Empty;
-                _formulaBox.Charge = _measuredIon.Charge;
-                _formulaBox.MonoMass = _measuredIon.CustomIon.MonoisotopicMass;
-                _formulaBox.AverageMass = _measuredIon.CustomIon.AverageMass;
+                _formulaBox.Adduct = _measuredIon.Adduct;
+                _formulaBox.MonoMass = _measuredIon.SettingsCustomIon.MonoisotopicMass;
+                _formulaBox.AverageMass = _measuredIon.SettingsCustomIon.AverageMass;
                 textCharge.Text = _measuredIon.Charge.ToString(LocalizationHelper.CurrentCulture);
             }
         }
@@ -170,14 +170,14 @@ namespace pwiz.Skyline.SettingsUI
             {
                 return null;
             }
-            _formulaBox.Charge = charge;
+            _formulaBox.Adduct = Adduct.FromChargeProtonated(charge);
             return charge;
         }
 
         private MeasuredIon ValidateCustomIon(string name)
         {
             var helper = new MessageBoxHelper(this);
-            string formula = _formulaBox.Formula.ToString(LocalizationHelper.CurrentCulture);
+            string formula = (_formulaBox.NeutralFormula??string.Empty).ToString(LocalizationHelper.CurrentCulture);
             var charge = ValidateCharge();
             if (!charge.HasValue)
             {
@@ -190,8 +190,8 @@ namespace pwiz.Skyline.SettingsUI
                 // Mass is specified by chemical formula
                 try
                 {
-                    monoMass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formula);
-                    avgMass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formula);
+                    monoMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, formula, SequenceMassCalc.MassPrecision);
+                    avgMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, formula, SequenceMassCalc.MassPrecision);
                 }
                 catch (ArgumentException x)
                 {
@@ -208,7 +208,7 @@ namespace pwiz.Skyline.SettingsUI
                     return null;
                 if (!_formulaBox.ValidateAverageText(helper))
                     return null;
-                _formulaBox.Charge = charge; // This provokes calculation of mass from displayed mz values
+                _formulaBox.Adduct = Adduct.FromChargeProtonated(charge); // This provokes calculation of mass from displayed mz values
                 monoMass = _formulaBox.MonoMass.Value; 
                 avgMass = _formulaBox.AverageMass.Value;
             }
@@ -232,7 +232,7 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
             }
 
-            return new MeasuredIon(name, formula, monoMass, avgMass, charge.Value);
+            return new MeasuredIon(name, formula, monoMass, avgMass,Adduct.FromChargeProtonated(charge));
         }
 
         private static bool ValidateAATextBox(MessageBoxHelper helper, TextBox control, bool allowEmpty, out string aaText)

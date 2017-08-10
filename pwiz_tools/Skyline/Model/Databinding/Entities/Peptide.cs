@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private bool IsSmallMolecule()
         {
-            return DocNode.Peptide.IsCustomIon;
+            return DocNode.Peptide.IsCustomMolecule;
         }
 
         protected override PeptideDocNode CreateEmptyNode()
@@ -131,7 +131,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (IsSmallMolecule())
                 {
-                    return DocNode.CustomIon.Name ?? string.Empty;
+                    return DocNode.CustomMolecule.Name ?? string.Empty;
                 }
                 else
                 {
@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (IsSmallMolecule())
                 {
-                    return DocNode.CustomIon.Formula ?? string.Empty;
+                    return DocNode.CustomMolecule.Formula ?? string.Empty;
                 }
                 else
                 {
@@ -217,7 +217,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return null;
                 }
-                return retentionTimeRegression.Calculator.ScoreSequence(SrmDocument.Settings.GetSourceTextId(DocNode));
+                return retentionTimeRegression.Calculator.ScoreSequence(SrmDocument.Settings.GetSourceTarget(DocNode));
             }
         }
 
@@ -231,7 +231,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return null;
                 }
-                return retentionTimeRegression.GetRetentionTime(SrmDocument.Settings.GetSourceTextId(DocNode));
+                return retentionTimeRegression.GetRetentionTime(SrmDocument.Settings.GetSourceTarget(DocNode));
             }
         }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
@@ -312,9 +312,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override string ToString()
         {
             var peptide = DocNode.Peptide;
-            return peptide.IsCustomIon
-                ? DocNode.CustomIon.ToString()
-                : peptide.Sequence;
+            return peptide.IsCustomMolecule
+                ? DocNode.CustomMolecule.ToString()
+                : peptide.Target.Sequence;
         }
 
         [InvariantDisplayName("PeptideDocumentLocation")]

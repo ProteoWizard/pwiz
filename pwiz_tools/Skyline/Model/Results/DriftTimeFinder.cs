@@ -77,9 +77,9 @@ namespace pwiz.Skyline.Model.Results
         {
             // Overwrite any existing measurements with newly derived ones
             var measured = new Dictionary<LibKey, DriftTimeInfo>();
-            if (_existing != null && _existing.MeasuredDriftTimePeptides != null)
+            if (_existing != null && _existing.MeasuredDriftTimeIons != null)
             {
-                foreach (var existingPair in _existing.MeasuredDriftTimePeptides)
+                foreach (var existingPair in _existing.MeasuredDriftTimeIons)
                     measured.Add(existingPair.Key, existingPair.Value);
             }
             if (_document.Settings.MeasuredResults == null)
@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var nodePep = pair.NodePep;
                 var nodeGroup = pair.NodeGroup;
-                var libKey = new LibKey(nodePep.RawTextId, nodeGroup.PrecursorCharge);
+                var libKey = nodeGroup.GetLibKey(nodePep);
                 // Across all replicates for this precursor, note the drift time at max intensity for this mz
                 for (var i = 0; i < results.Chromatograms.Count; i++)
                 {

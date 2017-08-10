@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
@@ -59,9 +60,9 @@ namespace pwiz.Skyline.Model
         {
             public string Peptide;
             public string File;
-            public int Charge;
+            public Adduct Charge;
 
-            public UnrecognizedChargeState(int charge, string file, string peptide)
+            public UnrecognizedChargeState(Adduct charge, string file, string peptide)
             {
                 Charge = charge;
                 File = file;
@@ -255,7 +256,7 @@ namespace pwiz.Skyline.Model
                             nodeForModPep = nodeForModPep.ChangeSettings(Document.Settings, SrmSettingsDiff.ALL);
                             // Convert the modified peptide string into a standardized form that 
                             // converts unimod, names, etc, into masses, eg [+57.0]
-                            canonicalSequence = nodeForModPep.RawTextId;
+                            canonicalSequence = nodeForModPep.ModifiedTarget.Sequence;
                             canonicalSequenceDict.Add(modifiedPeptideString, canonicalSequence);
                         }
                     }
@@ -269,7 +270,7 @@ namespace pwiz.Skyline.Model
                     UnrecognizedPeptides.Add(modifiedPeptideString);
                     continue;
                 }
-                int charge;
+                Adduct charge;
                 bool chargeSpecified = dataFields.TryGetCharge(linesRead, out charge);
                 string sampleName = dataFields.GetField(Field.sample_name);
 
@@ -344,7 +345,7 @@ namespace pwiz.Skyline.Model
 
                     foreach (TransitionGroupDocNode groupNode in nodePep.Children)
                     {
-                        if (chargeSpecified && charge != groupNode.TransitionGroup.PrecursorCharge)
+                        if (chargeSpecified && charge != groupNode.TransitionGroup.PrecursorAdduct)
                             continue;
 
                         // Loop over the files in this groupNode to find the correct sample
@@ -446,9 +447,9 @@ namespace pwiz.Skyline.Model
         /// </summary>
         private IEnumerable<string> ListSequenceKeys(PeptideDocNode peptideDocNode)
         {
-            yield return peptideDocNode.RawTextId;
+            yield return peptideDocNode.ModifiedTarget.Sequence;
             if (!string.IsNullOrEmpty(peptideDocNode.ModifiedSequenceDisplay) &&
-                peptideDocNode.ModifiedSequenceDisplay != peptideDocNode.RawTextId)
+                peptideDocNode.ModifiedSequenceDisplay != peptideDocNode.ModifiedTarget.Sequence)
             {
                 yield return peptideDocNode.ModifiedSequenceDisplay;
             }
@@ -828,16 +829,16 @@ namespace pwiz.Skyline.Model
                 return isDecoy;
             }
 
-            public bool TryGetCharge(long linesRead, out int charge)
+            public bool TryGetCharge(long linesRead, out Adduct charge)
             {
                 string chargeString = GetField(Field.charge);
                 if (chargeString == null)
                 {
-                    charge = -1;
+                    charge = Adduct.EMPTY;
                     return false;
                 }
 
-                if (!int.TryParse(chargeString, out charge))
+                if (!Adduct.TryParse(chargeString, out charge, Adduct.ADDUCT_TYPE.proteomic)) // Read, for example, "2" as Adduct.DOUBLY_PROTONATED
                 {
                     throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_charge_state_, chargeString, linesRead));
                 }

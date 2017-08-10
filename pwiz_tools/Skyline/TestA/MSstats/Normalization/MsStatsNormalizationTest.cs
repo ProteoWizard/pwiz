@@ -61,9 +61,20 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
         [TestMethod]
         public void TestAbundancesWithNoNormalization()
         {
-            SrmDocument testDocument = OpenTestDocument();
+            RunTestAbundancesWithNoNormalization(false);
+            RunTestAbundancesWithNoNormalization(true);
+        }
+
+        private void RunTestAbundancesWithNoNormalization(bool asSmallMolecules)
+        {
+            SrmDocument testDocument = OpenTestDocument(asSmallMolecules);
+            if (testDocument == null)
+            {
+                Assume.IsTrue(asSmallMolecules);
+                return;
+            } 
             var expected = ReadDataProcessedRows(new StreamReader(OpenTestFile("BrudererSubsetNoNormalization_dataProcessedData.csv")));
-            VerifyAbundances(testDocument, expected,
+            VerifyAbundances(testDocument, asSmallMolecules, expected,
                 transitionChromInfo =>
                 {
                     if (transitionChromInfo.IsEmpty || transitionChromInfo.IsTruncated.GetValueOrDefault())
@@ -78,10 +89,23 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
                 });
         }
 
+
+
         [TestMethod]
         public void TestFoldChangeWithNoNormalization()
         {
-            SrmDocument testDocument = OpenTestDocument();
+            RunTestFoldChangeWithNoNormalization(false);
+            RunTestFoldChangeWithNoNormalization(true);
+        }
+
+        private void RunTestFoldChangeWithNoNormalization(bool asSmallMolecules)
+        {
+            SrmDocument testDocument = OpenTestDocument(asSmallMolecules);
+            if (testDocument == null)
+            {
+                Assume.IsTrue(asSmallMolecules);
+                return;
+            }
             var expectedResults = MsStatsTestUtil.ReadExpectedResults(typeof(MsStatsNormalizationTest),
                 "BrudererSubsetNoNormalization_TestingResult.csv");
             GroupComparisonDef groupComparisonDef = new GroupComparisonDef("test")
@@ -97,14 +121,25 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
         [TestMethod]
         public void TestAbundancesEqualizeMedians()
         {
-            SrmDocument testDocument = OpenTestDocument();
+            RunTestAbundancesEqualizeMedians(false);
+            RunTestAbundancesEqualizeMedians(true);
+        }
+
+        private void RunTestAbundancesEqualizeMedians(bool asSmallMolecules)
+        {
+            SrmDocument testDocument = OpenTestDocument(asSmallMolecules);
+            if (testDocument == null)
+            {
+                Assume.IsTrue(asSmallMolecules);
+                return;
+            }
             var chromatograms = testDocument.Settings.MeasuredResults.Chromatograms;
             var expected = ReadDataProcessedRows(new StreamReader(OpenTestFile("BrudererSubsetEqualizeMedians_dataProcessedData.csv")));
             NormalizationData normalizationData = NormalizationData.GetNormalizationData(testDocument, false, null);
-            var mediansByReplicateFileIndex = chromatograms.ToDictionary(chrom=>chrom.MSDataFileInfos.First().FileIndex,
-                chrom=>normalizationData.GetMedian(chrom.MSDataFileInfos.First().FileId, IsotopeLabelType.light).Value);
+            var mediansByReplicateFileIndex = chromatograms.ToDictionary(chrom => chrom.MSDataFileInfos.First().FileIndex,
+                chrom => normalizationData.GetMedian(chrom.MSDataFileInfos.First().FileId, IsotopeLabelType.light).Value);
             double medianMedian = new Statistics(mediansByReplicateFileIndex.Values).Median();
-            VerifyAbundances(testDocument, expected, transitionChromInfo =>
+            VerifyAbundances(testDocument, asSmallMolecules, expected, transitionChromInfo =>
             {
                 if (transitionChromInfo.IsEmpty || transitionChromInfo.IsTruncated.GetValueOrDefault())
                 {
@@ -128,7 +163,18 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
         [TestMethod]
         public void TestFoldChangeEqualizeMedians()
         {
+            RunTestFoldChangeEqualizeMedians(false);
+            RunTestFoldChangeEqualizeMedians(true);
+        }
+
+        public void RunTestFoldChangeEqualizeMedians(bool asSmallMolecules)
+        {
             SrmDocument testDocument = OpenTestDocument();
+            if (testDocument == null)
+            {
+                Assume.IsTrue(asSmallMolecules);
+                return;
+            }
             var expectedResults = MsStatsTestUtil.ReadExpectedResults(typeof(MsStatsNormalizationTest),
                 "BrudererSubsetEqualizeMedians_TestingResult.csv");
             GroupComparisonDef groupComparisonDef = new GroupComparisonDef("test")
@@ -141,7 +187,7 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
             VerifyFoldChanges(testDocument, groupComparisonDef, expectedResults);
         }
 
-        private void VerifyAbundances(SrmDocument testDocument, Dictionary<DataProcessedRowKey, double?> expected, Func<TransitionChromInfo, double?> calcAbundance)
+        private void VerifyAbundances(SrmDocument testDocument, bool asSmallMolecules, Dictionary<DataProcessedRowKey, double?> expected, Func<TransitionChromInfo, double?> calcAbundance)
         {
             var chromatograms = testDocument.Settings.MeasuredResults.Chromatograms;
             foreach (var protein in testDocument.MoleculeGroups)
@@ -156,10 +202,18 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
                     {
                         string seqCharge = testDocument.Settings.GetPrecursorCalc(
                                 precursor.TransitionGroup.LabelType, peptide.ExplicitMods)
-                                  .GetModifiedSequence(peptide.Peptide.Sequence, true) + "_" + precursor.PrecursorCharge;
+                                  .GetModifiedSequence(peptide.Peptide.Target, true) + "_" + precursor.PrecursorAdduct.AsFormulaOrInt();
+                        // If we're running as small molecules, transform the result to match the known-good peptide results
+                        var expectedSeqCharge = asSmallMolecules ?
+                            seqCharge.Replace(RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator, string.Empty).
+                            Replace(".0]", "]").Replace("_[M+H]", "_1").Replace("_[M+", "_").Replace("H]", string.Empty) : // pep_PEPT[+57.0]IDER_[M+3H] -> PEPT[+57]IDER_3
+                            seqCharge;
                         foreach (var transition in precursor.Transitions)
                         {
                             string transitionCharge = transition.FragmentIonName + "_" + transition.Transition.Charge;
+                            var expectedTransitionCharge = asSmallMolecules
+                                ? transitionCharge.Replace("[-", " -").Replace("]_", "_") // "y3[-18]_1" -? "y3 -18_1"
+                                : transitionCharge;
                             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
                             {
                                 var transitionChromInfo = transition.Results[iReplicate].First();
@@ -167,8 +221,8 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
                                 var expectedAbundance = expected[new DataProcessedRowKey()
                                 {
                                     Protein = protein.Name,
-                                    Peptide = seqCharge,
-                                    Transition = transitionCharge,
+                                    Peptide = expectedSeqCharge,
+                                    Transition = expectedTransitionCharge,
                                     Run = iReplicate + 1
                                 }];
                                 const double epsilon = 1E-8;
@@ -217,9 +271,18 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
             }
         }
 
-        private SrmDocument OpenTestDocument()
+        private SrmDocument OpenTestDocument(bool asSmallMolecules = false)
         {
-            using (var stream = OpenTestFile("BrudererSubset.sky"))
+            if (asSmallMolecules)
+            {
+                if (!RunSmallMoleculeTestVersions)
+                {
+                    Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
+                    return null;
+                }
+                TestSmallMolecules = false;  // We test small molecules explicitly
+            }
+            using (var stream = OpenTestFile(asSmallMolecules ? "BrudererSubsetAsSmallMolecules.sky" : "BrudererSubset.sky"))
             {
                 return (SrmDocument) new XmlSerializer(typeof (SrmDocument)).Deserialize(stream);
             }

@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.V01
@@ -270,9 +271,9 @@ namespace pwiz.Skyline.Model.V01
 
         private static string GetTransitionName(XmlTransition transition)
         {
-            return AbiMassListExporter.GetTransitionName(transition.PrecursorCharge,
+            return AbiMassListExporter.GetTransitionName(Adduct.FromChargeProtonated(transition.PrecursorCharge),
                                                         transition.FragmentType.ToString().ToLower() + transition.FragmentOrdinal,
-                                                        transition.ProductCharge);
+                                                        Adduct.FromChargeProtonated(transition.ProductCharge));
         }
     }
 }

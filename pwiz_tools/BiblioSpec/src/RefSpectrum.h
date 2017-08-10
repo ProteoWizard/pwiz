@@ -49,6 +49,7 @@
 #include <assert.h>
 #include "Verbosity.h"
 #include "Spectrum.h"
+#include "SmallMolMetadata.h"
 
 using namespace std;
 
@@ -66,6 +67,7 @@ class RefSpectrum : public Spectrum
   string modsPepSeq;
   string prevAA;
   string nextAA;
+  SmallMolMetadata smallMolMetadata_; // Small molecule stuff
   double circShift_; // amount by which peaks have been circularly shifted
                      // 0 if observed spectrum
   double score_;
@@ -88,15 +90,20 @@ class RefSpectrum : public Spectrum
   // setters
   void setCharge(int charge);
   void addCharge(int charge); // override Spectrum to force 1 charge state
-  void setSeq(string newSeq);  
-  void setMods(string newMods);
+  void setSeq(const char * newSeq);  
+  void setMods(const char * newMods);
   void setLibID(int id);
   void setLibSpecID( int specID);
   void setCopies(int dups);
-  void setPrevAA(string pAA);
-  void setNextAA(string nAA);
+  void setPrevAA(const char * pAA);
+  void setNextAA(const char * nAA);
   void setScore(double score);
   void setScoreType(int scoreType);
+  void setMoleculeName(const char * name);
+  void setChemicalFormula(const char * formula);
+  void setPrecursorAdduct(const char * precursorAdduct);
+  void setInchiKey(const char * inchikey);
+  void setotherKeys(const char * ids);
 
   //getters
   int getCharge() const;
@@ -110,7 +117,11 @@ class RefSpectrum : public Spectrum
   double getCircShift() const;
   double getScore() const;
   int getScoreType() const;
-  
+  string getMoleculeName() const;
+  string getChemicalFormula() const;
+  string getAdduct() const;
+  string getInchiKey() const;
+  string getotherKeys() const;
   // make this private and only allow decoys as copy of refs?
   // create null spectrum by doing a circular shift of peaks
   void circularShift(double deltaMz, bool shiftRawPeaks);

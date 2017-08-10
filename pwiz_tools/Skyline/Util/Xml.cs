@@ -392,6 +392,11 @@ namespace pwiz.Skyline.Util
             writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture));
         }
 
+        public static void WriteAttribute(this XmlWriter writer, string name, TypedMass value)
+        {
+            writer.WriteAttributeString(name, value.Value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));
+        }
+
         public static void WriteAttribute(this XmlWriter writer, string name, double value)
         {
             writer.WriteAttributeString(name, value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture));

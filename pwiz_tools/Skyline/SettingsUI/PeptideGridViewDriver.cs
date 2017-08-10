@@ -46,7 +46,7 @@ namespace pwiz.Skyline.SettingsUI
 
         protected bool AllowNegativeTime { get; set; }
 
-        public static string ValidateUniquePeptides(IEnumerable<string> peptides, IEnumerable<string> existing, string existingName)
+        public static string ValidateUniquePeptides(IEnumerable<Target> peptides, IEnumerable<Target> existing, string existingName)
         {
             var peptidesArray = peptides.ToArray();
             var multiplePeptides = (from p in peptidesArray
@@ -66,7 +66,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     return TextUtil.LineSeparate(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_list,
                                                  string.Empty,
-                                                 TextUtil.LineSeparate(multiplePeptides));
+                                                 TextUtil.LineSeparate(multiplePeptides.Select(mp => mp.ToString())));
                 }
                 return string.Format(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_appear_multiple_times,
                                      countDuplicates);
@@ -85,7 +85,7 @@ namespace pwiz.Skyline.SettingsUI
                     return TextUtil.LineSeparate(string.Format(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_already_appear_in_the__0__list,
                                                                existingName),
                                                  string.Empty,
-                                                 TextUtil.LineSeparate(multiplePeptides));
+                                                 TextUtil.LineSeparate(multiplePeptides.Select(mp => mp.ToString())));
                 }
                 return string.Format(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_already_appear_in_the__1__list,
                                      countDuplicates, existingName);
@@ -170,11 +170,11 @@ namespace pwiz.Skyline.SettingsUI
             string errorText = null;
             if (columnIndex == COLUMN_SEQUENCE && GridView.IsCurrentCellInEditMode)
             {
-                string sequence = value;
+                var sequence = new Target(value);
                 errorText = MeasuredPeptide.ValidateSequence(sequence);
                 if (errorText == null)
                 {
-                    int iExist = Items.ToArray().IndexOf(pep => Equals(pep.Sequence, sequence));
+                    int iExist = Items.ToArray().IndexOf(pep => Equals(pep.Target, sequence));
                     if (iExist != -1 && iExist != rowIndex)
                         errorText = string.Format(Resources.PeptideGridViewDriver_DoCellValidating_The_sequence__0__is_already_present_in_the_list, sequence);
                 }
@@ -204,9 +204,9 @@ namespace pwiz.Skyline.SettingsUI
             if (row.IsNewRow)
                 return true;
             var cell = row.Cells[COLUMN_SEQUENCE];
-            string errorText = MeasuredPeptide.ValidateSequence(cell.FormattedValue != null
+            string errorText = MeasuredPeptide.ValidateSequence(new Target(cell.FormattedValue != null
                                                                     ? cell.FormattedValue.ToString()
-                                                                    : null);
+                                                                    : null));
             if (errorText == null)
             {
                 cell = row.Cells[COLUMN_TIME];

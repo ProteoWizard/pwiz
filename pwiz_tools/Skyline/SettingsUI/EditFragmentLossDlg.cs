@@ -98,8 +98,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    double massMono = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formulaLoss);
-                    double massAverage = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formulaLoss);
+                    double massMono = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, formulaLoss, SequenceMassCalc.MassPrecision);
+                    double massAverage = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, formulaLoss, SequenceMassCalc.MassPrecision);
                     if (FragmentLoss.MIN_LOSS_MASS > massMono || FragmentLoss.MIN_LOSS_MASS > massAverage)
                     {
                         _formulaBox.ShowTextBoxErrorFormula(helper, string.Format(Resources.EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_greater_than_or_equal_to__0__,

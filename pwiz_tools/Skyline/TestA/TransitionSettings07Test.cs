@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -58,7 +57,7 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(5, docLegacyProline.PeptideTransitionCount);
             // Allow b-ions
             var docLegacyProlineB = docLegacyProline.ChangeSettings(docLegacyProline.Settings.ChangeTransitionFilter(filter =>
-                filter.ChangeIonTypes(new[] { IonType.b, IonType.y })));
+                filter.ChangePeptideIonTypes(new[] { IonType.b, IonType.y })));
             Assert.AreEqual(9, docLegacyProlineB.PeptideTransitionCount);
 
             // Add C-terminal Glu and Asp to the original peptide document
@@ -110,21 +109,20 @@ namespace pwiz.SkylineTestA
 
             const string formula = "H2O2";  // This was H2O, but that falls below mz=10 at z > 1
             const string hydrogenPeroxide = "Hydrogen Perxoide";
-            var reporterIons = new[] { new MeasuredIon(hydrogenPeroxide, formula, null, null, 1), new MeasuredIon(hydrogenPeroxide, formula, null, null, 2), new MeasuredIon(hydrogenPeroxide, formula, null, null, 3), MeasuredIonList.NTERM_PROLINE };
+            var reporterIons = new[] { new MeasuredIon(hydrogenPeroxide, formula, null, null, Adduct.SINGLY_PROTONATED), new MeasuredIon(hydrogenPeroxide, formula, null, null, Adduct.DOUBLY_PROTONATED), new MeasuredIon(hydrogenPeroxide, formula, null, null, Adduct.TRIPLY_PROTONATED), MeasuredIonList.NTERM_PROLINE };
             SrmDocument docReporterIon = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
                 filter.ChangeMeasuredIons(reporterIons)));
             AssertEx.IsDocumentTransitionCount(docReporterIon, 7);
 
             //Check With Monoisotopic
-            double mass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(formula);
+            var mass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(formula);
             for (int i = 0; i < 3; i ++)
             {
                 TransitionDocNode tranNode = docReporterIon.MoleculeTransitions.ElementAt(i);
                 Transition tran = tranNode.Transition;
-                Assert.AreEqual(reporterIons[i].CustomIon, tran.CustomIon);
+                Assert.AreEqual(reporterIons[i].SettingsCustomIon, tran.CustomIon);
                 Assert.AreEqual(tran.Charge, i + 1);
-                Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateIonMz(formula, i + 1), tranNode.Mz, BioMassCalc.MassElectron/100);
-                Assert.AreEqual(BioMassCalc.CalculateIonMz(mass, i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
+                Assert.AreEqual(BioMassCalc.CalculateIonMz(mass, tran.Adduct), tranNode.Mz, BioMassCalc.MassElectron / 100);
             }
 
             //Check with Average
@@ -138,10 +136,9 @@ namespace pwiz.SkylineTestA
             {
                 TransitionDocNode tranNode = averageDocument.MoleculeTransitions.ElementAt(i);
                 Transition tran = tranNode.Transition;
-                Assert.AreEqual(reporterIons[i].CustomIon, tran.CustomIon);
+                Assert.AreEqual(reporterIons[i].SettingsCustomIon, tran.CustomIon);
                 Assert.AreEqual(tran.Charge, i + 1);
-                Assert.AreEqual(BioMassCalc.AVERAGE.CalculateIonMz(formula, i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
-                Assert.AreEqual(BioMassCalc.CalculateIonMz(mass, i + 1), tranNode.Mz, BioMassCalc.MassElectron / 100);
+                Assert.AreEqual(BioMassCalc.CalculateIonMz(mass, tran.Adduct), tranNode.Mz, BioMassCalc.MassElectron / 100);
             }
 
             //Make sure the rest of the transitions aren't reporter ions
@@ -150,14 +147,14 @@ namespace pwiz.SkylineTestA
                 Transition tran = docReporterIon.MoleculeTransitions.ElementAt(i).Transition;
                 Assert.AreNotEqual(tran.CustomIon, reporterIons);
             }
-            var optionalIon = new MeasuredIon(hydrogenPeroxide, formula, null, null,1, true);
+            var optionalIon = new MeasuredIon(hydrogenPeroxide, formula, null, null, Adduct.SINGLY_PROTONATED, true);
             SrmDocument optionalDoc = docPeptide.ChangeSettings(docPeptide.Settings.ChangeTransitionFilter(filter =>
                 filter.ChangeMeasuredIons(new[] {optionalIon})));
             Assert.AreEqual(3, optionalDoc.PeptideTransitionCount);
             optionalDoc = optionalDoc.ChangeSettings(optionalDoc.Settings.ChangeTransitionFilter(filter =>
                 filter.ChangeMeasuredIons(new[] {optionalIon.ChangeIsOptional(false)})));
             AssertEx.IsDocumentTransitionCount(optionalDoc, 4);
-            Assert.AreEqual(optionalIon.ChangeIsOptional(false).CustomIon,
+            Assert.AreEqual(optionalIon.ChangeIsOptional(false).SettingsCustomIon,
                 optionalDoc.MoleculeTransitions.ElementAt(0).Transition.CustomIon);
             optionalDoc =
                 optionalDoc.ChangeSettings(
@@ -167,16 +164,16 @@ namespace pwiz.SkylineTestA
 
             TransitionGroupDocNode nodeGroup = optionalDoc.MoleculeTransitionGroups.ElementAt(0);
             var filteredNodes =
-                TransitionGroupTreeNode.GetChoices(nodeGroup, optionalDoc.Settings,
+                nodeGroup.GetPrecursorChoices(optionalDoc.Settings,
                     optionalDoc.Molecules.ElementAt(0).ExplicitMods, true)
                     .Cast<TransitionDocNode>()
-                    .Where(node => Equals(node.Transition.CustomIon, optionalIon.CustomIon));
+                    .Where(node => Equals(node.Transition.CustomIon, optionalIon.SettingsCustomIon));
 
             var unfilteredNodes =
-                TransitionGroupTreeNode.GetChoices(nodeGroup, optionalDoc.Settings,
+                nodeGroup.GetPrecursorChoices(optionalDoc.Settings,
                     optionalDoc.Molecules.ElementAt(0).ExplicitMods, false)
                     .Cast<TransitionDocNode>()
-                    .Where(node => Equals(node.Transition.CustomIon, optionalIon.CustomIon));
+                    .Where(node => Equals(node.Transition.CustomIon, optionalIon.SettingsCustomIon));
 
             Assert.AreEqual(0,filteredNodes.Count());
             Assert.AreEqual(1,unfilteredNodes.Count());
@@ -190,7 +187,7 @@ namespace pwiz.SkylineTestA
         {
             var revisionIndex = 1;
             var settings = SrmSettingsList.GetDefault().ChangeTransitionFilter(filter =>
-                filter.ChangeIonTypes(new[] { IonType.y, IonType.b })
+                filter.ChangePeptideIonTypes(new[] { IonType.y, IonType.b })
                       .ChangeFragmentRangeFirstName("ion 1")
                       .ChangeFragmentRangeLastName("last ion"));
             var docOriginal = new SrmDocument(settings);
@@ -260,7 +257,7 @@ namespace pwiz.SkylineTestA
                                            library.ChangePick(TransitionLibraryPick.all).
                                                ChangeIonCount(10))
                 .ChangeTransitionFilter(filter =>
-                                        filter.ChangeIonTypes(new[] {IonType.y, IonType.b})
+                                        filter.ChangePeptideIonTypes(new[] {IonType.y, IonType.b})
                                             .ChangeFragmentRangeFirstName("ion 4")
                                             .ChangeFragmentRangeLastName("last ion - 3"));
             var docLibUnfiltered = document.ChangeSettings(settings);
@@ -307,7 +304,7 @@ namespace pwiz.SkylineTestA
 
             // Restrict ion count chosen from the library
             settings = settings.ChangeTransitionLibraries(library => library.ChangeIonCount(3))
-                               .ChangeTransitionFilter(filter => filter.ChangeIonTypes(new[] {IonType.y}));
+                               .ChangeTransitionFilter(filter => filter.ChangePeptideIonTypes(new[] {IonType.y}));
             var docThreeTran = docReset.ChangeSettings(settings);
             Assert.AreEqual(3, docThreeTran.PeptideTransitionCount);
             // Make sure ions below precursor m/z are present
@@ -357,7 +354,7 @@ namespace pwiz.SkylineTestA
                                            library.ChangePick(TransitionLibraryPick.all).
                                                ChangeIonCount(10))
                 .ChangeTransitionFilter(filter =>
-                                        filter.ChangeIonTypes(new[] { IonType.y, IonType.b })
+                                        filter.ChangePeptideIonTypes(new[] { IonType.y, IonType.b })
                                             .ChangeFragmentRangeFirstName("ion 1")
                                             .ChangeFragmentRangeLastName("last ion")
                                             .ChangeExclusionUseDIAWindow(true))

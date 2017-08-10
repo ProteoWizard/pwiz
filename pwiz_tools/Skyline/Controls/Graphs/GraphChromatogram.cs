@@ -719,7 +719,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 nodeGroupTree = nodeTranTree.Parent as TransitionGroupTreeNode;
 
             PeptideDocNode[] nodePeps = null;
-            string lookupSequence = null;
+            Target lookupSequence = null;
             ExplicitMods lookupMods = null;
             TransitionGroupDocNode[] nodeGroups = null;
             IdentityPath[] groupPaths = null;
@@ -738,7 +738,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (nodePepTree != null)
                 {
                     nodePeps = new[] {nodePepTree.DocNode};
-                    lookupSequence = nodePepTree.DocNode.IsProteomic ? nodePepTree.DocNode.SourceUnmodifiedTextId : null;
+                    lookupSequence = nodePepTree.DocNode.SourceUnmodifiedTarget;
                     lookupMods = nodePepTree.DocNode.SourceExplicitMods;
                 }
                 nodeGroups = new[] {nodeGroupTree.DocNode};
@@ -761,8 +761,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         nodeGroups[i] = nodeGroup;
                         groupPaths[i] = new IdentityPath(pathParent, nodeGroup.Id);
                     }
-                    // TODO(nicksh): handle looking up non proteomic molecules for retention times.
-                    lookupSequence = nodePepTree.DocNode.IsProteomic ? nodePepTree.DocNode.SourceUnmodifiedTextId : null;
+                    lookupSequence = nodePepTree.DocNode.SourceUnmodifiedTarget;
                     lookupMods = nodePepTree.DocNode.SourceExplicitMods;
                 }
             }
@@ -1416,8 +1415,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     tranPeakInfoGraph = tranPeakInfo;
 
                 var scanName = nodeTran.FragmentIonName;
-                if (nodeTran.Transition.Charge != 1)  // Positive singly charged is uninteresting
-                    scanName += Transition.GetChargeIndicator(nodeTran.Transition.Charge);
+                if (nodeTran.Transition.Adduct != Adduct.SINGLY_PROTONATED)  // Positive singly charged is uninteresting
+                    scanName += Transition.GetChargeIndicator(nodeTran.Transition.Adduct);
                 if (nodeTran.Transition.MassIndex != 0)
                     scanName += Environment.NewLine + Transition.GetMassIndexText(nodeTran.Transition.MassIndex);
                 var fullScanInfo = new FullScanInfo
@@ -1853,7 +1852,7 @@ namespace pwiz.Skyline.Controls.Graphs
             float fontSize = FontSize;
             int lineWidth = LineWidth;
             int iCharge = -1;
-            int? charge = null;
+            var charge = Adduct.EMPTY;
             var chromGroupInfos = ChromGroupInfos;
             for (int i = 0; i < _nodeGroups.Length; i++)
             {
@@ -1980,7 +1979,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Generate a unique short identifier for each peptide.
             var peptideNames = new Tuple<string,bool>[peptideDocNodes.Count];
             for (int i = 0; i < peptideDocNodes.Count; i++)
-                peptideNames[i] = new Tuple<string,bool>(peptideDocNodes[i].RawTextId, peptideDocNodes[i].IsProteomic);
+                peptideNames[i] = new Tuple<string,bool>(peptideDocNodes[i].ModifiedTarget.DisplayName, peptideDocNodes[i].IsProteomic);
             var uniqueNames = new UniquePrefixGenerator(peptideNames, 3);
 
             var displayPeptides = new List<DisplayPeptide>();
@@ -2099,7 +2098,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     fontSize,
                     lineWidth)
                 {
-                    CurveAnnotation = uniqueNames.GetUniquePrefix(peptideDocNode.RawTextId, peptideDocNode.IsProteomic),
+                    CurveAnnotation = uniqueNames.GetUniquePrefix(peptideDocNode.ModifiedTarget.DisplayName, peptideDocNode.IsProteomic),
                     IdPath = _groupPaths[displayPeptides[i].PeptideIndex],
                     GraphInfo = peptideGraphInfo
                 };
@@ -2125,11 +2124,11 @@ namespace pwiz.Skyline.Controls.Graphs
                                                 ChromatogramSet chromatograms,
                                                 PeptideDocNode[] nodePeps,
                                                 TransitionGroupDocNode[] nodeGroups,
-                                                string lookupSequence,
+                                                Target lookupSequence,
                                                 ExplicitMods lookupMods)
         {
             // FUTURE: Fix this when we can predict retention time for small molecules
-            if (lookupSequence == null)
+            if (lookupSequence == null || !lookupSequence.IsProteomic)
             {
                 return;
             }
@@ -2143,7 +2142,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                SrmSettings settings,
                                                                ChromatogramSet chromatograms,
                                                                PeptideDocNode[] nodePeps,
-                                                               string lookupSequence,
+                                                               Target lookupSequence,
                                                                ExplicitMods lookupMods)
         {
             // Set predicted retention time on the first graph item to make
@@ -2151,7 +2150,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var regression = settings.PeptideSettings.Prediction.RetentionTime;
             if (regression != null && Settings.Default.ShowRetentionTimePred)
             {
-                string modSeq = settings.GetModifiedSequence(lookupSequence, IsotopeLabelType.light, lookupMods);
+                var modSeq = settings.GetModifiedSequence(lookupSequence, IsotopeLabelType.light, lookupMods);
                 var fileId = chromatograms.FindFile(chromGraphPrimary.Chromatogram.GroupInfo);
                 double? predictedRT = regression.GetRetentionTime(modSeq, fileId);
                 double window = regression.TimeWindow;
@@ -2173,7 +2172,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void SetRetentionTimeIdIndicators(ChromGraphItem chromGraphPrimary,
                                                   SrmSettings settings,
                                                   IEnumerable<TransitionGroupDocNode> nodeGroups,
-                                                  string lookupSequence,
+                                                  Target lookupSequence,
                                                   ExplicitMods lookupMods)
         {
             // Set any MS/MS IDs on the first graph item also
@@ -2189,7 +2188,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         IsotopeLabelType labelType;
                         double[] retentionTimes;
-                        if (settings.TryGetRetentionTimes(lookupSequence, group.PrecursorCharge,
+                        if (settings.TryGetRetentionTimes(lookupSequence, group.PrecursorAdduct,
                                                           lookupMods, FilePath, out labelType, out retentionTimes))
                         {
                             listTimes.AddRange(retentionTimes);
@@ -3324,16 +3323,16 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static IList<Color> COLORS_LIBRARY { get { return ColorScheme.CurrentColorScheme.TransitionColors; }}
 
-        public static int GetColorIndex(TransitionGroupDocNode nodeGroup, int countLabelTypes, ref int? charge,
+        public static int GetColorIndex(TransitionGroupDocNode nodeGroup, int countLabelTypes, ref Adduct charge,
                                         ref int iCharge)
         {
             // Make sure colors stay somewhat consistent among charge states.
             // The same label type should always have the same color, with the
             // first charge state in the peptide matching the peptide label type
             // modification font colors.
-            if (!charge.HasValue || charge != nodeGroup.TransitionGroup.PrecursorCharge)
+            if (!Equals(charge, nodeGroup.TransitionGroup.PrecursorAdduct))
             {
-                charge = nodeGroup.TransitionGroup.PrecursorCharge;
+                charge = nodeGroup.TransitionGroup.PrecursorAdduct;
                 iCharge++;
             }
             return iCharge * countLabelTypes + nodeGroup.TransitionGroup.LabelType.SortOrder;

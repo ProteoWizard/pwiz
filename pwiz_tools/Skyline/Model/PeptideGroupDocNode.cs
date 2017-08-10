@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Model
         public bool IsProteomic
         {
             // Default assumption for an empty PeptideGroupDocNode is that it's proteomic (probably undergoing population from a protein)
-            get { return IsEmpty || !((PeptideDocNode)Children[0]).Peptide.IsCustomIon; }
+            get { return IsEmpty || !((PeptideDocNode)Children[0]).Peptide.IsCustomMolecule; }
         }
 
         public bool IsNonProteomic
@@ -116,8 +116,8 @@ namespace pwiz.Skyline.Model
         }
 
         public IEnumerable<PeptideDocNode> Molecules { get { return Children.Cast<PeptideDocNode>(); } }
-        public IEnumerable<PeptideDocNode> SmallMolecules { get { return Molecules.Where(p => p.Peptide.IsCustomIon); } }
-        public IEnumerable<PeptideDocNode> Peptides { get { return Molecules.Where(p => !p.Peptide.IsCustomIon); } }
+        public IEnumerable<PeptideDocNode> SmallMolecules { get { return Molecules.Where(p => p.Peptide.IsCustomMolecule); } }
+        public IEnumerable<PeptideDocNode> Peptides { get { return Molecules.Where(p => !p.Peptide.IsCustomMolecule); } }
 
         public PeptideGroupDocNode ChangeName(string name)
         {
@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Model
                         var settingsNoUniquenessFilter =
                             settingsNew.ChangePeptideFilter(f => f.ChangePeptideUniqueness(PeptideFilter.PeptideUniquenessConstraint.none));
                         var nodes = GetPeptideNodes(settingsNoUniquenessFilter, true).ToList();
-                        var sequences = new List<string>(from p in nodes select p.Peptide.Sequence);
+                        var sequences = new List<Target>(from p in nodes select p.Peptide.Target);
                         peptideDocNodesUnique = nodes;  // Avoid ReSharper multiple enumeration warning
                         uniquenessDict = settingsNew.PeptideSettings.Filter.CheckPeptideUniqueness(settingsNew, sequences, diff.Monitor);
                     }
@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Model
                         // It's possible during document load for uniqueness dict to get out of synch, so be 
                         // cautious with lookup and just return false of not found. Final document change will clean that up.
                         bool isUnique;
-                        return IsNonProteomic || (uniquenessDict.TryGetValue(p.Peptide.Sequence, out isUnique) && isUnique);
+                        return IsNonProteomic || (uniquenessDict.TryGetValue(p.Peptide.Target, out isUnique) && isUnique);
                     });
                 }
                 
@@ -382,7 +382,7 @@ namespace pwiz.Skyline.Model
                 IPeptideFilter filter = (useFilter ? settings : PeptideFilter.UNFILTERED);
                 foreach (PeptideDocNode nodePep in Children)
                 {
-                    if (nodePep.Peptide.IsCustomIon) // Modifications mean nothing to custom ions
+                    if (nodePep.Peptide.IsCustomMolecule) // Modifications mean nothing to custom ions // TODO(bspratt) but static isotope labels do?
                         yield return nodePep;
                     else if (nodePep.HasExplicitMods && !nodePep.HasVariableMods)
                         yield return nodePep;
@@ -508,7 +508,7 @@ namespace pwiz.Skyline.Model
                     newChildren.Add(peptideDocNode);
                 else
                 {
-                    var color = ColorGenerator.GetColor(peptideDocNode.RawTextId, colorList);
+                    var color = ColorGenerator.GetColor(peptideDocNode.ModifiedTarget.ToString(), colorList);
                     newChildren.Add(peptideDocNode.ChangeColor(color));
                     colorList.Add(color);
                 }

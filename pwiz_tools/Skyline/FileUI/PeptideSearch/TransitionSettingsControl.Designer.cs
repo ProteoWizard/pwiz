@@ -30,9 +30,9 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TransitionSettingsControl));
             this.lblPrecursorCharges = new System.Windows.Forms.Label();
-            this.txtPrecursorCharges = new System.Windows.Forms.TextBox();
+            this.txtPeptidePrecursorCharges = new System.Windows.Forms.TextBox();
             this.lblIonCharges = new System.Windows.Forms.Label();
-            this.txtIonCharges = new System.Windows.Forms.TextBox();
+            this.txtPrecursorIonCharges = new System.Windows.Forms.TextBox();
             this.lblIonTypes = new System.Windows.Forms.Label();
             this.txtIonTypes = new System.Windows.Forms.TextBox();
             this.lblTolerance = new System.Windows.Forms.Label();
@@ -49,20 +49,20 @@
             resources.ApplyResources(this.lblPrecursorCharges, "lblPrecursorCharges");
             this.lblPrecursorCharges.Name = "lblPrecursorCharges";
             // 
-            // txtPrecursorCharges
+            // txtPeptidePrecursorCharges
             // 
-            resources.ApplyResources(this.txtPrecursorCharges, "txtPrecursorCharges");
-            this.txtPrecursorCharges.Name = "txtPrecursorCharges";
+            resources.ApplyResources(this.txtPeptidePrecursorCharges, "txtPeptidePrecursorCharges");
+            this.txtPeptidePrecursorCharges.Name = "txtPeptidePrecursorCharges";
             // 
             // lblIonCharges
             // 
             resources.ApplyResources(this.lblIonCharges, "lblIonCharges");
             this.lblIonCharges.Name = "lblIonCharges";
             // 
-            // txtIonCharges
+            // txtPrecursorIonCharges
             // 
-            resources.ApplyResources(this.txtIonCharges, "txtIonCharges");
-            this.txtIonCharges.Name = "txtIonCharges";
+            resources.ApplyResources(this.txtPrecursorIonCharges, "txtPrecursorIonCharges");
+            this.txtPrecursorIonCharges.Name = "txtPrecursorIonCharges";
             // 
             // lblIonTypes
             // 
@@ -124,9 +124,9 @@
             this.Controls.Add(this.txtIonCount);
             this.Controls.Add(this.txtIonTypes);
             this.Controls.Add(this.lblIonTypes);
-            this.Controls.Add(this.txtIonCharges);
+            this.Controls.Add(this.txtPrecursorIonCharges);
             this.Controls.Add(this.lblIonCharges);
-            this.Controls.Add(this.txtPrecursorCharges);
+            this.Controls.Add(this.txtPeptidePrecursorCharges);
             this.Controls.Add(this.lblPrecursorCharges);
             this.Name = "TransitionSettingsControl";
             this.ResumeLayout(false);
@@ -136,10 +136,10 @@
 
         #endregion
 
-        private System.Windows.Forms.TextBox txtPrecursorCharges;
+        private System.Windows.Forms.TextBox txtPeptidePrecursorCharges;
         private System.Windows.Forms.Label lblPrecursorCharges;
         private System.Windows.Forms.Label lblIonCharges;
-        private System.Windows.Forms.TextBox txtIonCharges;
+        private System.Windows.Forms.TextBox txtPrecursorIonCharges;
         private System.Windows.Forms.Label lblIonTypes;
         private System.Windows.Forms.TextBox txtIonTypes;
         private System.Windows.Forms.Label lblTolerance;

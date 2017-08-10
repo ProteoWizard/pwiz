@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -36,17 +37,17 @@ namespace pwiz.Skyline.Model.Find
             get { return Resources.MismatchedIsotopeTransitionsFinder_DisplayName_Mismatched_transitions; }
         }
 
-        private Dictionary<int, TransitionMatchInfo> _dictChargeToMatchInfo;
+        private Dictionary<Adduct, TransitionMatchInfo> _dictChargeToMatchInfo;
 
         protected override bool IsMatch(PeptideDocNode nodePep)
         {
             // Populate look-ups for later to be able to determine if transitions
             // are fully matched or not.
-            _dictChargeToMatchInfo = new Dictionary<int, TransitionMatchInfo>();
+            _dictChargeToMatchInfo = new Dictionary<Adduct, TransitionMatchInfo>();
             foreach (var nodeGroup in nodePep.TransitionGroups)
             {
                 TransitionMatchInfo matchInfo;
-                int charge = nodeGroup.TransitionGroup.PrecursorCharge;
+                var charge = nodeGroup.TransitionGroup.PrecursorAdduct.Unlabeled; // Ignore any isotope labels embedded in adduct (e.g. read M5C13+2H as M+2H)
                 if (!_dictChargeToMatchInfo.TryGetValue(charge, out matchInfo))
                 {
                     matchInfo = new TransitionMatchInfo();
@@ -66,7 +67,7 @@ namespace pwiz.Skyline.Model.Find
         protected override bool IsMatch(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
             TransitionMatchInfo matchInfo;
-            if (!_dictChargeToMatchInfo.TryGetValue(nodeGroup.TransitionGroup.PrecursorCharge, out matchInfo))
+            if (!_dictChargeToMatchInfo.TryGetValue(nodeGroup.TransitionGroup.PrecursorAdduct.Unlabeled, out matchInfo))  // Ignore any isotope labels embedded in adduct (e.g. read M5C13+2H as M+2H)
                 return true;    // Unexpected missing charge state
             return !matchInfo.IsFullyMatched(nodeTran, nodeGroup);
         }

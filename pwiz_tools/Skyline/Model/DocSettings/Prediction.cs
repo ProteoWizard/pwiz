@@ -216,17 +216,17 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
-        public double? GetRetentionTime(string seq)
+        public double? GetRetentionTime(Target seq)
         {
             return GetRetentionTime(seq, Conversion);
         }
 
-        public double? GetRetentionTime(string seq, ChromFileInfoId fileId)
+        public double? GetRetentionTime(Target seq, ChromFileInfoId fileId)
         {
             return GetRetentionTime(seq, GetConversion(fileId));
         }
 
-        public double? GetRetentionTime(string seq, IRegressionFunction conversion)
+        public double? GetRetentionTime(Target seq, IRegressionFunction conversion)
         {
             double? score = Calculator.ScoreSequence(seq);
             if (score.HasValue)
@@ -366,9 +366,9 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="fileId">The file id (optional) with which an iRT regression may be associated</param>
         /// <returns>Calculated values for the peptides using this regression</returns>
         public RetentionTimeStatistics CalcStatistics(List<MeasuredRetentionTime> peptidesTimes,
-            IDictionary<string, double> scoreCache, ChromFileInfoId fileId = null)
+            IDictionary<Target, double> scoreCache, ChromFileInfoId fileId = null)
         {
-            var listPeptides = new List<string>();
+            var listPeptides = new List<Target>();
             var listHydroScores = new List<double>();
             var listPredictions = new List<double>();
             var listRetentionTimes = new List<double>();
@@ -376,7 +376,7 @@ namespace pwiz.Skyline.Model.DocSettings
             bool usableCalc = Calculator.IsUsable;
             foreach (var peptideTime in peptidesTimes)
             {
-                string seq = peptideTime.PeptideSequence;
+                var seq = peptideTime.PeptideSequence;
                 double score = usableCalc ? ScoreSequence(Calculator, scoreCache, seq) : 0;
                 listPeptides.Add(seq);
                 listHydroScores.Add(score);
@@ -571,7 +571,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                                              out RetentionScoreCalculatorSpec calculatorSpec)
         {
             // Get a list of peptide names for use by the calculators to choose their regression peptides
-            List<string> listPeptides = measuredPeptides.Select(pep => pep.PeptideSequence).ToList();
+            var listPeptides = measuredPeptides.Select(pep => pep.PeptideSequence).ToList();
 
             // Set these now so that we can return null on some conditions
             calculatorSpec = calculators.ElementAt(0);
@@ -587,11 +587,11 @@ namespace pwiz.Skyline.Model.DocSettings
             // An array, indexed by calculator, of scores of peptides by each calculator
             List<double>[] peptideScoresByCalc = new List<double>[calcs];
             // An array, indexed by calculator, of the peptides each calculator will use
-            List<string>[] calcPeptides = new List<string>[calcs];
+            var calcPeptides = new List<Target>[calcs];
             // An array, indexed by calculator, of actual retention times for the peptides in peptideScoresByCalc 
             List<double>[] listRTs = new List<double>[calcs];
 
-            var dictMeasuredPeptides = new Dictionary<string, double>();
+            var dictMeasuredPeptides = new Dictionary<Target, double>();
             foreach (var measured in measuredPeptides)
             {
                 if (!dictMeasuredPeptides.ContainsKey(measured.PeptideSequence))
@@ -721,15 +721,15 @@ namespace pwiz.Skyline.Model.DocSettings
             statistics = new RetentionTimeStatistics(r, calcPeptides[bestCalcIndex], listBest, listPredicted, listRTs[bestCalcIndex]);
 
             // Get MeasuredRetentionTimes for only those peptides chosen by the calculator
-            var setBestPeptides = new HashSet<string>();
-            foreach (string pep in calcPeptides[bestCalcIndex])
+            var setBestPeptides = new HashSet<Target>();
+            foreach (var pep in calcPeptides[bestCalcIndex])
                 setBestPeptides.Add(pep);
             var calcMeasuredRts = measuredPeptides.Where(pep => setBestPeptides.Contains(pep.PeptideSequence)).ToArray();
             return new RetentionTimeRegression(name, calcBest, bestRegressionFunction, window, calcMeasuredRts);
         }
 
         private static double ScoreSequence(IRetentionScoreCalculator calculator,
-            IDictionary<string, double> scoreCache, string sequence)
+            IDictionary<Target, double> scoreCache, Target sequence)
         {
             double score;
             if (scoreCache == null || !scoreCache.TryGetValue(sequence, out score))
@@ -997,23 +997,23 @@ namespace pwiz.Skyline.Model.DocSettings
 
     public sealed class RetentionTimeScoreCache
     {
-        private readonly Dictionary<string, Dictionary<string, double>> _cache =
-            new Dictionary<string, Dictionary<string, double>>();
+        private readonly Dictionary<string, Dictionary<Target, double>> _cache =
+            new Dictionary<string, Dictionary<Target, double>>();
 
         public RetentionTimeScoreCache(IEnumerable<IRetentionScoreCalculator> calculators,
             IList<MeasuredRetentionTime> peptidesTimes, RetentionTimeScoreCache cachePrevious)
         {
             foreach (var calculator in calculators)
             {
-                var cacheCalc = new Dictionary<string, double>();
+                var cacheCalc = new Dictionary<Target, double>();
                 _cache.Add(calculator.Name, cacheCalc);
-                Dictionary<string, double> cacheCalcPrevious;
+                Dictionary<Target, double> cacheCalcPrevious;
                 if (cachePrevious == null || !cachePrevious._cache.TryGetValue(calculator.Name, out cacheCalcPrevious))
                     cacheCalcPrevious = null;
 
                 foreach (var peptideTime in peptidesTimes)
                 {
-                    string seq = peptideTime.PeptideSequence;
+                    var seq = peptideTime.PeptideSequence;
                     if (!cacheCalc.ContainsKey(seq))
                         cacheCalc.Add(seq, CalcScore(calculator, seq, cacheCalcPrevious));
                 }
@@ -1025,7 +1025,7 @@ namespace pwiz.Skyline.Model.DocSettings
             var calcCache = _cache[calculator.Name];
             if(calcCache != null)
             {
-                var newCalcCache = new Dictionary<string, double>();
+                var newCalcCache = new Dictionary<Target, double>();
                 foreach (var key in calcCache.Keys)
                 {
                     //force recalculation
@@ -1036,24 +1036,24 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public double CalcScore(IRetentionScoreCalculator calculator, string peptide)
+        public double CalcScore(IRetentionScoreCalculator calculator, Target peptide)
         {
-            Dictionary<string, double> cacheCalc;
+            Dictionary<Target, double> cacheCalc;
             _cache.TryGetValue(calculator.Name, out cacheCalc);
             return CalcScore(calculator, peptide, cacheCalc);
         }
 
-        public static List<double> CalcScores(IRetentionScoreCalculator calculator, List<string> peptides,
+        public static List<double> CalcScores(IRetentionScoreCalculator calculator, List<Target> peptides,
             RetentionTimeScoreCache scoreCache)
         {
-            Dictionary<string, double> cacheCalc;
+            Dictionary<Target, double> cacheCalc;
             if (scoreCache == null || !scoreCache._cache.TryGetValue(calculator.Name, out cacheCalc))
                 cacheCalc = null;
             return peptides.ConvertAll(pep => CalcScore(calculator, pep, cacheCalc));
         }
 
-        private static double CalcScore(IRetentionScoreCalculator calculator, string peptide,
-            IDictionary<string, double> cacheCalc)
+        private static double CalcScore(IRetentionScoreCalculator calculator, Target peptide,
+            IDictionary<Target, double> cacheCalc)
         {
             double score;
             if (cacheCalc == null || !cacheCalc.TryGetValue(peptide, out score))
@@ -1077,13 +1077,13 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         string Name { get; }
 
-        double? ScoreSequence(string modifiedSequence);
+        double? ScoreSequence(Target modifiedSequence);
 
         double UnknownScore { get; }
 
-        IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides, out int minCount);
+        IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount);
 
-        IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides);
+        IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides);
     }
 
     public abstract class RetentionScoreCalculatorSpec : XmlNamedElement, IRetentionScoreCalculator
@@ -1093,13 +1093,13 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        public abstract double? ScoreSequence(string sequence);
+        public abstract double? ScoreSequence(Target sequence);
 
         public abstract double UnknownScore { get; }
 
-        public abstract IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides, out int minCount);
+        public abstract IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount);
 
-        public abstract IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides);
+        public abstract IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides);
 
         public virtual bool IsUsable { get { return true; } }
 
@@ -1138,7 +1138,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        public override double? ScoreSequence(string sequence)
+        public override double? ScoreSequence(Target sequence)
         {
             return _impl.ScoreSequence(sequence);
         }
@@ -1148,7 +1148,7 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return _impl.UnknownScore; }
         }
 
-        public override IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides)
+        public override IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides)
         {
             return _impl.GetStandardPeptides(peptides);
         }
@@ -1157,7 +1157,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        public override IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides, out int minCount)
+        public override IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount)
         {
             return _impl.ChooseRegressionPeptides(peptides, out minCount);
         }
@@ -1187,7 +1187,7 @@ namespace pwiz.Skyline.Model.DocSettings
     public sealed class RetentionTimeStatistics
     {
         public RetentionTimeStatistics(double r,
-                                        List<string> peptides,
+                                        List<Target> peptides,
                                         List<double> listHydroScores,
                                         List<double> listPredictions,
                                         List<double> listRetentionTimes)
@@ -1200,19 +1200,19 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public double R { get; private set; }
-        public List<string> Peptides { get; private set; }
+        public List<Target> Peptides { get; private set; }
         public List<double> ListHydroScores { get; private set; }
         public List<double> ListPredictions { get; private set; }
         public List<double> ListRetentionTimes { get; private set; }
 
-        public IDictionary<string, double> ScoreCache
+        public IDictionary<Target, double> ScoreCache
         {
             get
             {
-                var scoreCache = new Dictionary<string, double>();
+                var scoreCache = new Dictionary<Target, double>();
                 for (int i = 0; i < Peptides.Count; i++)
                 {
-                    string sequence = Peptides[i];
+                    var sequence = Peptides[i];
                     if (!scoreCache.ContainsKey(sequence))
                         scoreCache.Add(sequence, ListHydroScores[i]);                    
                 }
@@ -1229,9 +1229,9 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         private readonly bool _allowNegative;
 
-        public MeasuredRetentionTime(string peptideSequence, double retentionTime, bool allowNegative = false, bool isStandard = false)
+        public MeasuredRetentionTime(Target peptideSequence, double retentionTime, bool allowNegative = false, bool isStandard = false)
         {
-            Assume.IsFalse(String.IsNullOrEmpty(peptideSequence));
+            Assume.IsFalse(peptideSequence.IsEmpty);
             PeptideSequence = peptideSequence;
             RetentionTime = retentionTime;
             IsStandard = isStandard;
@@ -1240,7 +1240,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        public string PeptideSequence { get; private set; }
+        public Target PeptideSequence { get; private set; }
         public double RetentionTime { get; private set; }
         public bool IsStandard { get; private set; }
 
@@ -1261,8 +1261,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void Validate()
         {
-            // FUTURE: May need to add support for small molecules
-            if (!FastaSequence.IsExSequence(PeptideSequence))
+            if (PeptideSequence.IsProteomic && !FastaSequence.IsExSequence(PeptideSequence.Sequence))
             {
                 throw new InvalidDataException(string.Format(Resources.MeasuredRetentionTime_Validate_The_sequence__0__is_not_a_valid_peptide,
                                                              PeptideSequence));
@@ -1284,7 +1283,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public void ReadXml(XmlReader reader)
         {
             // Read tag attributes
-            PeptideSequence = reader.GetAttribute(ATTR.peptide);
+            var val = reader.GetAttribute(ATTR.peptide);
+            PeptideSequence = Target.FromSerializableString(val);
             RetentionTime = reader.GetDoubleAttribute(ATTR.time);
 
             // Consume tag
@@ -1296,7 +1296,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public void WriteXml(XmlWriter writer)
         {
             // Write tag attributes
-            writer.WriteAttribute(ATTR.peptide, PeptideSequence);
+            writer.WriteAttribute(ATTR.peptide, PeptideSequence.ToSerializableString());
             writer.WriteAttribute(ATTR.time, RetentionTime);
         }
 
@@ -1342,9 +1342,9 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         string Name { get; }
 
-        double? GetRetentionTime(string sequence);
+        double? GetRetentionTime(Target sequence);
 
-        TimeSource? GetTimeSource(string sequence);
+        TimeSource? GetTimeSource(Target sequence);
 
         IEnumerable<MeasuredRetentionTime> PeptideRetentionTimes { get; }
     }
@@ -1406,21 +1406,23 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return DEFAULT_STEP_COUNT; }
         }
 
-        public double GetCollisionEnergy(int charge, double mz, int step)
+        public double GetCollisionEnergy(Adduct charge, double mz, int step)
         {
             return GetCollisionEnergy(charge, mz) + (step*StepSize);
         }
 
-        public double GetCollisionEnergy(int charge, double mz)
+        public double GetCollisionEnergy(Adduct charge, double mz)
         {
             ChargeRegressionLine rl = GetRegressionLine(charge);
             return (rl == null ? 0 : Math.Round(rl.GetY(mz), 6));
         }
 
-        public ChargeRegressionLine GetRegressionLine(int charge)
+        public ChargeRegressionLine GetRegressionLine(Adduct adduct)
         {
             ChargeRegressionLine rl = null;
             int delta = int.MaxValue;
+
+            var charge = Math.Abs(adduct.AdductCharge);  // CONSIDER(bspratt) is this really how we want to handle neg charges? Or is it more complex?
 
             // These should be very short lists (maximum 5 elements).
             // An array with linear-time look-up is used over a map
@@ -1563,17 +1565,17 @@ namespace pwiz.Skyline.Model.DocSettings
 
     /// <summary>
     /// Represents an observed drift time in msec for
-    /// a peptide at a given charge state.
+    /// a molecule at a given charge state.
     /// </summary>
-    public sealed class MeasuredDriftTimePeptide : IXmlSerializable, IComparable<MeasuredDriftTimePeptide>
+    public sealed class MeasuredDriftTimeIon : IXmlSerializable, IComparable<MeasuredDriftTimeIon>
     {
-        public string ModifiedSequence { get; private set; }
-        public int Charge { get; private set; }
+        public Target TextId { get; private set; } // ModifiedSequence for peptides, PrimaryEquivalenceKey for small molecules
+        public Adduct Charge { get; private set; }
         public DriftTimeInfo DriftTimeInfo { get; private set; }
 
-        public MeasuredDriftTimePeptide(string seq, int charge, DriftTimeInfo driftTimeInfo)
+        public MeasuredDriftTimeIon(Target seq, Adduct charge, DriftTimeInfo driftTimeInfo)
         {
-            ModifiedSequence = seq;
+            TextId = seq;
             Charge = charge;
             DriftTimeInfo = driftTimeInfo;
         }
@@ -1583,7 +1585,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// For serialization
         /// </summary>
-        private MeasuredDriftTimePeptide()
+        private MeasuredDriftTimeIon()
         {
         }
 
@@ -1596,9 +1598,9 @@ namespace pwiz.Skyline.Model.DocSettings
             high_energy_drift_time_offset
         }
 
-        public static MeasuredDriftTimePeptide Deserialize(XmlReader reader)
+        public static MeasuredDriftTimeIon Deserialize(XmlReader reader)
         {
-            return reader.Deserialize(new MeasuredDriftTimePeptide());
+            return reader.Deserialize(new MeasuredDriftTimeIon());
         }
 
         public XmlSchema GetSchema()
@@ -1609,8 +1611,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public void ReadXml(XmlReader reader)
         {
             // Read tag attributes
-            ModifiedSequence = reader.GetAttribute(ATTR.modified_sequence);
-            Charge = reader.GetIntAttribute(ATTR.charge);
+            TextId = Target.FromSerializableString(reader.GetAttribute(ATTR.modified_sequence)); // CONSIDER(bspratt): different attribute for small molecule?
+            Charge = Adduct.FromStringAssumeProtonated(reader.GetAttribute(ATTR.charge));
             DriftTimeInfo = new DriftTimeInfo(reader.GetNullableDoubleAttribute(ATTR.drift_time),
                 reader.GetNullableDoubleAttribute(ATTR.ccs),
                 reader.GetDoubleAttribute(ATTR.high_energy_drift_time_offset, 0));
@@ -1621,7 +1623,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public void WriteXml(XmlWriter writer)
         {
             // Write tag attributes
-            writer.WriteAttribute(ATTR.modified_sequence, ModifiedSequence);
+            writer.WriteAttribute(ATTR.modified_sequence, TextId.ToSerializableString()); // CONSIDER(bspratt): different attribute for small molecule?
             writer.WriteAttribute(ATTR.charge, Charge);
             writer.WriteAttributeNullable(ATTR.drift_time, DriftTimeInfo.DriftTimeMsec);
             writer.WriteAttribute(ATTR.high_energy_drift_time_offset, DriftTimeInfo.HighEnergyDriftTimeOffsetMsec);
@@ -1632,21 +1634,21 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region object overrides
 
-        public bool Equals(MeasuredDriftTimePeptide obj)
+        public bool Equals(MeasuredDriftTimeIon obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj.ModifiedSequence, ModifiedSequence) && obj.Charge == Charge &&
+            return Equals(obj.TextId, TextId) && Equals(obj.Charge, Charge) &&
                    Equals(obj.DriftTimeInfo, DriftTimeInfo);
         }
 
-        public int CompareTo(MeasuredDriftTimePeptide other)
+        public int CompareTo(MeasuredDriftTimeIon other)
         {
-            int result = String.Compare(ModifiedSequence, other.ModifiedSequence, StringComparison.Ordinal);
+            int result = TextId.CompareTo(other.TextId);
             if (result != 0)
                 return result;
 
-            result = Charge - other.Charge;
+            result = Adduct.Compare(Charge, other.Charge);
             if (result != 0)
                 return result;
 
@@ -1657,16 +1659,17 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof(MeasuredDriftTimePeptide)) return false;
-            return Equals((MeasuredDriftTimePeptide)obj);
+            if (obj.GetType() != typeof(MeasuredDriftTimeIon)) return false;
+            return Equals((MeasuredDriftTimeIon)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                int result = (ModifiedSequence != null ? ModifiedSequence.GetHashCode() : 0);
-                result = (result * 397) ^ (DriftTimeInfo.GetHashCode() * 397) ^ Charge;
+                int result = (TextId != null ? TextId.GetHashCode() : 0);
+                result = (result*397) ^ DriftTimeInfo.GetHashCode();
+                result = (result*397) ^ Charge.GetHashCode();
                 return result;
             }
         }
@@ -2876,7 +2879,7 @@ namespace pwiz.Skyline.Model.DocSettings
     public interface IIonMobilityLibrary
     {
         string Name { get; }
-        DriftTimeInfo GetDriftTimeInfo(String peptide, ChargeRegressionLine regressionLine);
+        DriftTimeInfo GetDriftTimeInfo(LibKey chargedPeptide, ChargeRegressionLine regressionLine);
     }
 
     public abstract class IonMobilityLibrarySpec : XmlNamedElement, IIonMobilityLibrary
@@ -2889,10 +2892,10 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Get the drift time for the charged peptide.
         /// </summary>
-        /// <param name="peptide"></param>
+        /// <param name="chargedPeptide"></param>
         /// <param name="regressionLine"></param>
         /// <returns>drift time, or null</returns>
-        public abstract DriftTimeInfo GetDriftTimeInfo(String peptide, ChargeRegressionLine regressionLine);
+        public abstract DriftTimeInfo GetDriftTimeInfo(LibKey chargedPeptide, ChargeRegressionLine regressionLine);
 
         public virtual bool IsUsable { get { return true; } }
 
@@ -2905,7 +2908,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public virtual string PersistencePath { get { return null; } }
 
-        public virtual string PersistMinimized(string pathDestDir, SrmDocument document)
+        public virtual string PersistMinimized(string pathDestDir, SrmDocument document, IDictionary<LibKey, LibKey> smallMoleculeConversionInfo)
         {
             return null;
         }
@@ -3042,11 +3045,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return Math.Round(dtMsec.Value, 4);
         }
 
-        private ImmutableDictionary<LibKey, DriftTimeInfo> _measuredDriftTimePeptides;
+        private ImmutableDictionary<LibKey, DriftTimeInfo> _measuredDriftTimeIons;
         private ImmutableList<ChargeRegressionLine> _chargeRegressionLines;
 
         public DriftTimePredictor(string name,
-                                    Dictionary<LibKey, DriftTimeInfo> measuredDriftTimePeptides,
+                                    Dictionary<LibKey, DriftTimeInfo> measuredDriftTimeIons,
                                     IonMobilityLibrarySpec ionMobilityLibrary,
                                     IList<ChargeRegressionLine> chargeSlopeIntercepts,
                                     DriftTimeWindowWidthCalculator.DriftTimePeakWidthType peakWidthMode,
@@ -3056,7 +3059,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             WindowWidthCalculator = new DriftTimeWindowWidthCalculator(peakWidthMode,
                resolvingPower, widthAtDtZero, widthAtDtMax);
-            MeasuredDriftTimePeptides = measuredDriftTimePeptides;
+            MeasuredDriftTimeIons = measuredDriftTimeIons;
             ChargeRegressionLines = (chargeSlopeIntercepts == null) ? null : chargeSlopeIntercepts.ToArray();
             IonMobilityLibrary = ionMobilityLibrary; // Actual loading, if any, happens in background
             Validate();
@@ -3070,21 +3073,21 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public DriftTimeInfo GetMeasuredDriftTimeMsec(LibKey chargedPeptide)
         {
-            if (MeasuredDriftTimePeptides != null)
+            if (MeasuredDriftTimeIons != null)
             {
                 DriftTimeInfo dt;
-                if (MeasuredDriftTimePeptides.TryGetValue(chargedPeptide, out dt))
+                if (MeasuredDriftTimeIons.TryGetValue(chargedPeptide, out dt))
                     return dt;
             }
             return DriftTimeInfo.EMPTY;
         }
 
-        public IDictionary<LibKey, DriftTimeInfo> MeasuredDriftTimePeptides
+        public IDictionary<LibKey, DriftTimeInfo> MeasuredDriftTimeIons
         {
-            get { return _measuredDriftTimePeptides; }
+            get { return _measuredDriftTimeIons; }
             private set 
             {
-                _measuredDriftTimePeptides = (value == null) ? null : new ImmutableDictionary<LibKey, DriftTimeInfo>(value);
+                _measuredDriftTimeIons = (value == null) ? null : new ImmutableDictionary<LibKey, DriftTimeInfo>(value);
             }
         }
 
@@ -3122,7 +3125,7 @@ namespace pwiz.Skyline.Model.DocSettings
             get
             {
                 // We're usable if we have measured drift times, or a CCS library
-                bool usable = (_measuredDriftTimePeptides != null) && _measuredDriftTimePeptides.Any();
+                bool usable = (_measuredDriftTimeIons != null) && _measuredDriftTimeIons.Any();
                 if (IonMobilityLibrary != null && !IonMobilityLibrary.IsNone)
                 {
                     // If we have a CCS library, we need regressions, and the library itself needs to be ready
@@ -3139,15 +3142,20 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.IonMobilityLibrary = prop);
         }
 
-        public DriftTimePredictor ChangeMeasuredDriftTimesFromResults(SrmDocument document, string documentFilePath,  IProgressMonitor progressMonitor = null)
+        public DriftTimePredictor ChangeMeasuredDriftTimesFromResults(SrmDocument document, string documentFilePath, IProgressMonitor progressMonitor = null)
         {
             // Overwrite any existing measurements with newly derived ones
             Dictionary<LibKey, DriftTimeInfo> measured;
-            using( var finder = new DriftTimeFinder(document, documentFilePath, this, progressMonitor))
+            using (var finder = new DriftTimeFinder(document, documentFilePath, this, progressMonitor))
             {
                 measured = finder.FindDriftTimePeaks(); // Returns null on cancel
             }
-            return measured == null ? this : ChangeProp(ImClone(this), im => im.MeasuredDriftTimePeptides = measured);
+            return measured == null ? this : ChangeProp(ImClone(this), im => im.MeasuredDriftTimeIons = measured);
+        }
+
+        public DriftTimePredictor ChangeMeasuredDriftTimes(Dictionary<LibKey, DriftTimeInfo> measured)
+        {
+            return measured == null ? this : ChangeProp(ImClone(this), im => im.MeasuredDriftTimeIons = measured);
         }
 
         public DriftTimePredictor ChangeDriftTimeWindowWidthCalculator(DriftTimeWindowWidthCalculator prop)
@@ -3186,9 +3194,9 @@ namespace pwiz.Skyline.Model.DocSettings
             // Do we see this in our list of observed drift times?
             DriftTimeInfo driftTime = null;
             var found = false;
-            if (MeasuredDriftTimePeptides != null)
+            if (MeasuredDriftTimeIons != null)
             {
-                if (MeasuredDriftTimePeptides.TryGetValue(peptide, out driftTime))
+                if (MeasuredDriftTimeIons.TryGetValue(peptide, out driftTime))
                     found = true;
             }
             if (!found && IonMobilityLibrary != null && !IonMobilityLibrary.IsNone)
@@ -3201,7 +3209,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         // First access?  Load the library.
                         IonMobilityLibrary = IonMobilityLibrary.Initialize(null);
                     }
-                    driftTime = IonMobilityLibrary.GetDriftTimeInfo(peptide.Sequence, regressionLine); //  regressionLine.GetY(peptideInfo.CollisionalCrossSection) or null;
+                    driftTime = IonMobilityLibrary.GetDriftTimeInfo(peptide, regressionLine); //  regressionLine.GetY(peptideInfo.CollisionalCrossSection) or null;
                 }
             }
             return driftTime;
@@ -3246,7 +3254,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Measured drift times are provided, or
             // Ion mobility library is provided
             bool hasLib = ((IonMobilityLibrary != null) && !IonMobilityLibrary.IsNone);
-            bool hasMeasured = ((MeasuredDriftTimePeptides != null) && MeasuredDriftTimePeptides.Any());
+            bool hasMeasured = ((MeasuredDriftTimeIons != null) && MeasuredDriftTimeIons.Any());
             if (hasLib || hasMeasured)
             {
                 var messages = new List<string>();
@@ -3293,15 +3301,15 @@ namespace pwiz.Skyline.Model.DocSettings
             var dict = new Dictionary<LibKey, DriftTimeInfo>();
             while (reader.IsStartElement(EL.measured_dt))
             {
-                var dt = MeasuredDriftTimePeptide.Deserialize(reader);
-                var key = new LibKey(dt.ModifiedSequence, dt.Charge);
+                var dt = MeasuredDriftTimeIon.Deserialize(reader);
+                var key = new LibKey(dt.TextId, dt.Charge);
                 if (!dict.ContainsKey(key))
                 {
                     dict.Add(key, dt.DriftTimeInfo);
                 }
             }
             if (dict.Any())
-                MeasuredDriftTimePeptides = dict;
+                MeasuredDriftTimeIons = dict;
 
             reader.Read();             // Consume end tag
 
@@ -3333,12 +3341,12 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
             // Write all measured drift times
-            if (MeasuredDriftTimePeptides != null)
+            if (MeasuredDriftTimeIons != null)
             {
-                foreach (var dt in MeasuredDriftTimePeptides)
+                foreach (var dt in MeasuredDriftTimeIons)
                 {
                     writer.WriteStartElement(EL.measured_dt);
-                    var mdt = new MeasuredDriftTimePeptide(dt.Key.Sequence, dt.Key.Charge, dt.Value);
+                    var mdt = new MeasuredDriftTimeIon(dt.Key.Target, dt.Key.Adduct, dt.Value);
                     mdt.WriteXml(writer);
                     writer.WriteEndElement();
                 }
@@ -3356,7 +3364,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return base.Equals(obj) &&
                    Equals(obj.IonMobilityLibrary, IonMobilityLibrary) &&
                    ArrayUtil.EqualsDeep(obj.ChargeRegressionLines, ChargeRegressionLines) &&
-                   ArrayUtil.EqualsDeep(obj.MeasuredDriftTimePeptides, MeasuredDriftTimePeptides) &&
+                   ArrayUtil.EqualsDeep(obj.MeasuredDriftTimeIons, MeasuredDriftTimeIons) &&
                    Equals(obj.WindowWidthCalculator, WindowWidthCalculator);
         }
 
@@ -3374,7 +3382,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 int result = base.GetHashCode();
                 result = (result * 397) ^ IonMobilityLibrary.GetHashCode();
                 result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(ChargeRegressionLines);
-                result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(MeasuredDriftTimePeptides);
+                result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(MeasuredDriftTimeIons);
                 result = (result * 397) ^ WindowWidthCalculator.GetHashCode();
                 return result;
             }

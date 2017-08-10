@@ -229,7 +229,7 @@ namespace pwiz.SkylineTestFunctional
                     string value = values[j];
 
                     if (columnName.Equals("PeptideSequence"))
-                        Assert.IsTrue(FastaSequence.IsSequence(value) || (TestSmallMolecules && value.StartsWith("zzz")));
+                        Assert.IsTrue(FastaSequence.IsExSequence(value) || (TestSmallMolecules && value.StartsWith("zzz")));
                     else if (columnName.StartsWith("Cv"))
                     {
                         Assert.IsTrue(TestSmallMolecules || invariantFormat || value.EndsWith("%"));

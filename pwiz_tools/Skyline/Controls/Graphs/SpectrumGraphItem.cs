@@ -27,6 +27,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using ZedGraph;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -59,11 +60,17 @@ namespace pwiz.Skyline.Controls.Graphs
                     libraryNamePrefix += " - "; // Not L10N
 
                 TransitionGroup transitionGroup = TransitionGroupNode.TransitionGroup;
-                string sequence = transitionGroup.Peptide.IsCustomIon
-                    ? TransitionGroupNode.CustomIon.DisplayName
-                    : transitionGroup.Peptide.Sequence;
-                int charge = transitionGroup.PrecursorCharge;
+                string sequence = transitionGroup.Peptide.IsCustomMolecule
+                    ? TransitionGroupNode.CustomMolecule.DisplayName
+                    : transitionGroup.Peptide.Target.Sequence;
+                var charge = transitionGroup.PrecursorAdduct.ToString(); // Something like "2" or "-3" for protonation, or "[M+Na]" for small molecules
                 var labelType = SpectrumInfo.LabelType;
+                if (transitionGroup.Peptide.IsCustomMolecule)
+                {
+                    return labelType.IsLight
+                        ? string.Format("{0}{1}{2}", libraryNamePrefix, transitionGroup.Peptide.CustomMolecule.DisplayName, charge) // Not L10N
+                        : string.Format("{0}{1}{2} ({3})", libraryNamePrefix, sequence, charge, labelType); // Not L10N
+                }
                 return labelType.IsLight
                     ? string.Format(Resources.SpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, sequence, charge)
                     : string.Format(Resources.SpectrumGraphItem_Title__0__1__Charge__2__3__, libraryNamePrefix, sequence, charge, labelType);
@@ -80,6 +87,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private static readonly Color COLOR_Y = Color.Blue;
         private static readonly Color COLOR_C = Color.Orange;
         private static readonly Color COLOR_Z = Color.OrangeRed;
+        private static readonly Color COLOR_OTHER_IONS = Color.DodgerBlue; // Other ion types, as in small molecule
         private static readonly Color COLOR_PRECURSOR = Color.DarkCyan;
         private static readonly Color COLOR_NONE = Color.Gray;
         public static readonly Color COLOR_SELECTED = Color.Red;
@@ -90,7 +98,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public int PeaksMatchedCount { get { return SpectrumInfo.PeaksMatched.Count(); } }
         public int PeaksRankedCount { get { return SpectrumInfo.PeaksRanked.Count(); } }
         public ICollection<IonType> ShowTypes { get; set; }
-        public ICollection<int> ShowCharges { get; set; }
+        public ICollection<Adduct> ShowCharges { get; set; }
         public bool ShowRanks { get; set; }
         public bool ShowMz { get; set; }
         public bool ShowObservedMz { get; set; }
@@ -112,6 +120,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private FontSpec FONT_SPEC_PRECURSOR { get { return GetFontSpec(COLOR_PRECURSOR, ref _fontSpecPrecursor); } }
         private FontSpec _fontSpecPrecursor;
         private FontSpec FONT_SPEC_Z { get { return GetFontSpec(COLOR_Z, ref _fontSpecZ); } }
+        private FontSpec _fontSpecOtherIons;
+        private FontSpec FONT_SPEC_OTHER_IONS { get { return GetFontSpec(COLOR_OTHER_IONS, ref _fontSpecOtherIons); } } // Small molecule fragments etc
         private FontSpec _fontSpecNone;
         private FontSpec FONT_SPEC_NONE { get { return GetFontSpec(COLOR_NONE, ref _fontSpecNone); } }
         private FontSpec _fontSpecSelected;
@@ -183,7 +193,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     case IonType.y: color = COLOR_Y; break;
                     case IonType.c: color = COLOR_C; break;
                     case IonType.z: color = COLOR_Z; break;
-                    // FUTURE: Add custom ions when LibraryRankedSpectrumInfo can support them
+                    case IonType.custom: color = (rmi.Rank > 0) ? COLOR_OTHER_IONS : COLOR_NONE; break; // Small molecule fragments - only color if ranked
                     case IonType.precursor: color = COLOR_PRECURSOR; break;
                 }
 
@@ -220,7 +230,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 case IonType.y: fontSpec = FONT_SPEC_Y; break;
                 case IonType.c: fontSpec = FONT_SPEC_C; break;
                 case IonType.z: fontSpec = FONT_SPEC_Z; break;
-                // FUTURE: Add custom ions when LibraryRankedSpectrumInfo can support them
+                case IonType.custom:
+                    {
+                    if (rmi.Rank == 0)
+                        return null; // Small molecule fragments - only annotate if ranked
+                    fontSpec = FONT_SPEC_OTHER_IONS;
+                    }
+                    break;
                 case IonType.precursor: fontSpec = FONT_SPEC_PRECURSOR; break;
             }
             if (rmi.MatchedIons.Any(mfi => IsMatch(mfi.PredictedMz)))
@@ -270,15 +286,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private string GetLabel(MatchedFragmentIon mfi, int rank, bool showMz)
         {
-            var label = new StringBuilder(mfi.IonType.GetLocalizedString());
-            if (!Transition.IsPrecursor(mfi.IonType))
+            var label = new StringBuilder(string.IsNullOrEmpty(mfi.FragmentName) ? mfi.IonType.GetLocalizedString() : mfi.FragmentName);
+            if (string.IsNullOrEmpty(mfi.FragmentName) && !Transition.IsPrecursor(mfi.IonType))
                 label.Append(mfi.Ordinal.ToString(LocalizationHelper.CurrentCulture));
             if (mfi.Losses != null)
             {
                 label.Append(" -"); // Not L10N
                 label.Append(Math.Round(mfi.Losses.Mass, 1));
             }
-            string chargeIndicator = (mfi.Charge == 1 ? string.Empty : Transition.GetChargeIndicator(mfi.Charge));
+            var chargeIndicator = mfi.Charge.Equals(Adduct.SINGLY_PROTONATED) ? string.Empty : Transition.GetChargeIndicator(mfi.Charge);
             label.Append(chargeIndicator);
             if (showMz)
                 label.Append(string.Format(" = {0:F01}", mfi.PredictedMz)); // Not L10N

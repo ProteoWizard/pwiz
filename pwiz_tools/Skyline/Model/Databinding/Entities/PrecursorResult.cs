@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return null;
                 }
-                return ceRegression.GetCollisionEnergy(Precursor.Charge, Precursor.GetRegressionMz(), ChromInfo.OptimizationStep);
+                return ceRegression.GetCollisionEnergy(Precursor.DocNode.PrecursorAdduct, Precursor.GetRegressionMz(), ChromInfo.OptimizationStep);
             }
         }
         [Format(Formats.OPT_PARAMETER, NullValue = TextUtil.EXCEL_NA)]

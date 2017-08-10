@@ -284,7 +284,7 @@ namespace pwiz.Skyline.SettingsUI
                                           values =>
                                           measuredPeptidesNew.Add(new MeasuredPeptide
                                           {
-                                              Sequence = values[0],
+                                              Target = new Target(values[0]),  // CONSIDER(bspratt) small molecule equivalent?
                                               RetentionTime = double.Parse(values[1])
                                           }));
 
@@ -298,7 +298,7 @@ namespace pwiz.Skyline.SettingsUI
 
             private void SetTablePeptides(IList<MeasuredPeptide> tablePeps)
             {
-                string message = ValidateUniquePeptides(tablePeps.Select(p => p.Sequence), null, null);
+                string message = ValidateUniquePeptides(tablePeps.Select(p => p.Target), null, null);
                 if (message != null)
                 {
                     MessageDlg.Show(MessageParent, message);
@@ -317,7 +317,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             return (from p in Peptides
                     where p.Sequence != null
-                    select new MeasuredRetentionTime(p.Sequence, p.RetentionTime)).ToArray();
+                    select new MeasuredRetentionTime(p.Target, p.RetentionTime)).ToArray();
         }
 
         private void btnUseCurrent_Click(object sender, EventArgs e)
@@ -399,7 +399,7 @@ namespace pwiz.Skyline.SettingsUI
             foreach (var measuredPeptide in Peptides)
             {
                 times.Add(measuredPeptide.RetentionTime);
-                double? score = calc.ScoreSequence(measuredPeptide.Sequence);
+                double? score = calc.ScoreSequence(measuredPeptide.Target);
                 scores.Add(score ?? calc.UnknownScore);
             }
 
@@ -433,10 +433,10 @@ namespace pwiz.Skyline.SettingsUI
             if (!document.Settings.MeasuredResults.IsLoaded)
                 yield break;
 
-            var setPeps = new HashSet<string>();
-            foreach(var nodePep in document.Peptides)
+            var setPeps = new HashSet<Target>();
+            foreach(var nodePep in document.Molecules)
             {
-                string modSeq = document.Settings.GetModifiedSequence(nodePep);
+                var modSeq = document.Settings.GetModifiedSequence(nodePep);
                 // If a document contains the same peptide twice, make sure it
                 // only gets added once.
                 if (setPeps.Contains(modSeq))
@@ -496,7 +496,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             int minCount;
-            var usePeptides = new HashSet<string>(calculator.ChooseRegressionPeptides(
+            var usePeptides = new HashSet<Target>(calculator.ChooseRegressionPeptides(
                 activePeptides.Select(pep => pep.PeptideSequence), out minCount));
             //now go back and get the MeasuredPeptides corresponding to the strings chosen by the calculator
             var tablePeptides = activePeptides.Where(measuredRT =>
@@ -724,20 +724,21 @@ namespace pwiz.Skyline.SettingsUI
         {
         }
 
-        public MeasuredPeptide(string seq, double rt)
+        public MeasuredPeptide(Target seq, double rt)
         {
-            Sequence = seq;
+            Target = seq;
             RetentionTime = rt;
         }
 
-        public string Sequence { get; set; }
+        public Target Target { get; set; }
         public double RetentionTime { get; set; }
+        public string Sequence { get { return Target.ToString(); } }
 
-        public static string ValidateSequence(string sequence)
+        public static string ValidateSequence(Target sequence)
         {
-            if (sequence == null)
+            if (sequence.IsEmpty || !sequence.IsProteomic)
                 return Resources.MeasuredPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry;
-            if (!FastaSequence.IsExSequence(sequence))
+            if (!FastaSequence.IsExSequence(sequence.Sequence))
                 return string.Format(Resources.MeasuredPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence, sequence);
             return null;
         }

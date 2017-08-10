@@ -420,11 +420,11 @@ namespace pwiz.Skyline.Model.Results
             _startScoreIndex = -1;
         }
 
-        public void CalcTextIdIndex(string textId,
-            Dictionary<string, int> dictTextIdToByteIndex,
+        public void CalcTextIdIndex(Target target,
+            Dictionary<Target, int> dictTextIdToByteIndex,
             List<byte> listTextIdBytes)
         {
-            if (textId == null)
+            if (target == null)
             {
                 _textIdIndex = -1;
                 _textIdLen = 0;
@@ -432,12 +432,12 @@ namespace pwiz.Skyline.Model.Results
             else
             {
                 int textIdIndex;
-                var textIdBytes = Encoding.UTF8.GetBytes(textId);
-                if (!dictTextIdToByteIndex.TryGetValue(textId, out textIdIndex))
+                var textIdBytes = Encoding.UTF8.GetBytes(target.ToSerializableString());
+                if (!dictTextIdToByteIndex.TryGetValue(target, out textIdIndex))
                 {
                     textIdIndex = listTextIdBytes.Count;
                     listTextIdBytes.AddRange(textIdBytes);
-                    dictTextIdToByteIndex.Add(textId, textIdIndex);
+                    dictTextIdToByteIndex.Add(target, textIdIndex);
                 }
                 _textIdIndex = textIdIndex;
                 _textIdLen = (ushort)textIdBytes.Length;
@@ -1579,7 +1579,7 @@ namespace pwiz.Skyline.Model.Results
                         double? optionalMinTime,
                         double? optionalMaxTime,
                         double? optionalCenterOfGravityTime = null)
-            : this(textIdIndex != -1 ? Encoding.UTF8.GetString(textIdBytes, textIdIndex, textIdLen) : null,
+            : this(textIdIndex != -1 ? Target.FromSerializableString(Encoding.UTF8.GetString(textIdBytes, textIdIndex, textIdLen)) : null,
                    precursor,
                    ionMobility,
                    product,
@@ -1595,7 +1595,7 @@ namespace pwiz.Skyline.Model.Results
         {
         }
 
-        public ChromKey(string textId,
+        public ChromKey(Target target,
                         SignedMz precursor,
                         DriftTimeFilter driftTimeFilter,
                         SignedMz product,
@@ -1609,7 +1609,7 @@ namespace pwiz.Skyline.Model.Results
                         double? optionalMaxTime,
                         double? optionalCenterOfGravityTime = null)
         {
-            TextId = textId;
+            Target = target;
             Precursor = precursor;
             DriftFilter = driftTimeFilter ?? DriftTimeFilter.EMPTY;
             Product = product;
@@ -1629,7 +1629,7 @@ namespace pwiz.Skyline.Model.Results
                 OptionalMidTime = (OptionalMaxTime.Value + OptionalMinTime.Value) / 2;
         }
 
-        public string TextId { get; private set; }  // Modified sequence or custom ion id
+        public Target Target { get; private set; }  // Modified sequence or custom ion id
         public SignedMz Precursor { get; private set; }
         public double? CollisionalCrossSection { get { return DriftFilter == null ? null : DriftFilter.CollisionalCrossSectionSqA; } }
         public DriftTimeFilter DriftFilter { get; private set; }
@@ -1654,7 +1654,7 @@ namespace pwiz.Skyline.Model.Results
         /// <returns>A new ChromKey with adjusted product m/z and cleared CE value</returns>
         public ChromKey ChangeOptimizationStep(int step)
         {
-            return new ChromKey(TextId,
+            return new ChromKey(Target,
                                 Precursor,
                                 DriftFilter,
                                 Product + step*ChromatogramInfo.OPTIMIZE_SHIFT_SIZE,
@@ -1671,7 +1671,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromKey ChangeOptionalTimes(double? start, double? end, double? centerOfGravity)
         {
-            return new ChromKey(TextId,
+            return new ChromKey(Target,
                                 Precursor,
                                 DriftFilter,
                                 Product,
@@ -1691,8 +1691,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public override string ToString()
         {
-            if (TextId != null)
-                return string.Format("{0:F04}, {1:F04} {4} - {2} - {3}", Precursor.RawValue, Product.RawValue, Source, TextId, DriftFilter); // Not L10N
+            if (Target != null)
+                return string.Format("{0:F04}, {1:F04} {4} - {2} - {3}", Precursor.RawValue, Product.RawValue, Source, Target, DriftFilter); // Not L10N
             return string.Format("{0:F04}, {1:F04} {3} - {2}", Precursor.RawValue, Product.RawValue, Source, DriftFilter); // Not L10N
         }
 
@@ -1733,23 +1733,23 @@ namespace pwiz.Skyline.Model.Results
             int c = Precursor.CompareTo(key.Precursor);
             if (c != 0)
                 return c;
-            c = CompareTextId(key);
+            c = CompareTarget(key);
             if (c != 0)
                 return c;
             return Extractor.CompareTo(key.Extractor);
         }
 
-        private int CompareTextId(ChromKey key)
+        private int CompareTarget(ChromKey key)
         {
-            if (TextId != null && key.TextId != null)
+            if (Target != null && key.Target != null)
             {
-                int c = string.CompareOrdinal(TextId, key.TextId);
+                int c = Target.CompareTo(key.Target);
                 if (c != 0)
                     return c;
             }
-            else if (TextId != null)
+            else if (Target != null)
                 return 1;
-            else if (key.TextId != null)
+            else if (key.Target != null)
                 return -1;
             return 0;   // both null
         }
@@ -1848,7 +1848,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool Equals(ChromKey other)
         {
-            return string.Equals(TextId, other.TextId) &&
+            return string.Equals(Target, other.Target) &&
                 Precursor.Equals(other.Precursor) &&
                 DriftFilter.Equals(other.DriftFilter) &&
                 Product.Equals(other.Product) &&
@@ -1872,7 +1872,7 @@ namespace pwiz.Skyline.Model.Results
         {
             unchecked
             {
-                var hashCode = (TextId != null ? TextId.GetHashCode() : 0);
+                var hashCode = (Target != null ? Target.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ Precursor.GetHashCode();
                 hashCode = (hashCode*397) ^ DriftFilter.GetHashCode();
                 hashCode = (hashCode*397) ^ Product.GetHashCode();

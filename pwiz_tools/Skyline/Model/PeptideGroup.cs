@@ -141,24 +141,15 @@ namespace pwiz.Skyline.Model
         public static readonly Regex RGX_HEAVY = new Regex(@"\{.*?\}"); // Not L10N
         public static readonly Regex RGX_DASH = new Regex(@"^-"); // Not L10N
 
-        public static bool IsSequence(string seq)
-        {
-            return IsSequence(StripModifications(seq), AminoAcid.IsAA);
-        }
-
         public static bool IsExSequence(string seq)
         {
-            return IsSequence(StripModifications(seq), AminoAcid.IsExAA);
-        }
-
-        private static bool IsSequence(string seq, Func<char, bool> check)
-        {
+            seq = StripModifications(seq);
             if (seq.Length == 0)
                 return false;
 
             foreach (char c in seq)
             {
-                if (!check(c))
+                if (!AminoAcid.IsExAA(c))
                     return false;
             }
             return true;
@@ -218,7 +209,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public IEnumerable<PeptideDocNode> CreatePeptideDocNodes(SrmSettings settings, bool useFilter, string peptideSequence)
+        public IEnumerable<PeptideDocNode> CreatePeptideDocNodes(SrmSettings settings, bool useFilter, Target peptideSequence)
         {
             PeptideSettings pepSettings = settings.PeptideSettings;
             DigestSettings digest = pepSettings.DigestSettings;
@@ -233,7 +224,7 @@ namespace pwiz.Skyline.Model
             }
             foreach (var peptide in pepSettings.Enzyme.Digest(this, digest, maxLen, minLen))
             {
-                if (null != peptideSequence && peptideSequence != peptide.Sequence)
+                if (null != peptideSequence && !Equals(peptideSequence, peptide.Target))
                 {
                     continue;
                 }
@@ -242,7 +233,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public IEnumerable<PeptideDocNode> CreateFullPeptideDocNodes(SrmSettings settings, bool useFilter, string peptideSequence)
+        public IEnumerable<PeptideDocNode> CreateFullPeptideDocNodes(SrmSettings settings, bool useFilter, Target peptideSequence)
         {
             if (settings.PeptideSettings.Libraries.RankId == null)
             {
@@ -261,21 +252,25 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public PeptideDocNode CreateFullPeptideDocNode(SrmSettings settings, String peptideSequence)
+        public PeptideDocNode CreateFullPeptideDocNode(SrmSettings settings, Target peptideSequence)
         {
             peptideSequence = StripModifications(peptideSequence);
             foreach (var peptideDocNode in CreateFullPeptideDocNodes(settings, false, peptideSequence))
             {
-                if (peptideSequence == peptideDocNode.Peptide.Sequence)
+                if (peptideSequence == peptideDocNode.Peptide.Target)
                     return peptideDocNode;
             }
 
-            int begin = Sequence.IndexOf(peptideSequence, StringComparison.Ordinal);
+            if (!peptideSequence.IsProteomic) // Can't (yet?) predict small mol fragments
+                return null;
+
+            var sequence = peptideSequence.Sequence;
+            int begin = Sequence.IndexOf(sequence, StringComparison.Ordinal);
             if (begin < 0)
                 return null;
 
-            var peptide = new Peptide(this, peptideSequence, begin, begin + peptideSequence.Length,
-                settings.PeptideSettings.Enzyme.CountCleavagePoints(peptideSequence));
+            var peptide = new Peptide(this, peptideSequence.Sequence, begin, begin + sequence.Length,
+                settings.PeptideSettings.Enzyme.CountCleavagePoints(sequence));
 
             return new PeptideDocNode(peptide)
                 .ChangeSettings(settings, SrmSettingsDiff.ALL);
@@ -354,9 +349,22 @@ namespace pwiz.Skyline.Model
             return Comparer<int>.Default.Compare(pep1.Order, pep2.Order);
         }
 
+        public static Target StripModifications(Target seq)
+        {
+            return StripModifications(seq, RGX_ALL);
+        }
+
         public static string StripModifications(string seq)
         {
             return StripModifications(seq, RGX_ALL);
+        }
+
+        public static Target StripModifications(Target target, Regex rgx)
+        {
+            if (!target.IsProteomic)
+                return target;
+            var result = StripModifications(target.Sequence, rgx);
+            return target.ChangeSequence(result);
         }
 
         public static string StripModifications(string seq, Regex rgx)

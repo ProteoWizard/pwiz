@@ -267,7 +267,7 @@ namespace pwiz.Skyline.Model.Results
                     var peptideNode = peptideFinder != null ? peptideFinder.FindPeptide(precursorMz) : null;
                     ProcessSrmSpectrum(
                         (float) dataSpectrum.RetentionTime.Value,
-                        peptideNode != null ? peptideNode.ModifiedSequence : string.Empty,
+                        peptideNode != null ? peptideNode.ModifiedTarget : null,
                         peptideNode != null ? peptideNode.Color : PeptideDocNode.UNKNOWN_COLOR,
                         precursorMz,
                         filterIndex,
@@ -482,7 +482,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private void ProcessSrmSpectrum(float time,
-                                               string modifiedSequence,
+                                               Target modifiedSequence,
                                                Color peptideColor,
                                                SignedMz precursorMz,
                                                int filterIndex,
@@ -548,9 +548,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public override bool GetChromatogram(
-            int id, string modifiedSequence, Color peptideColor,
-            out ChromExtra extra, out TimeIntensities timeIntensities)
+        public override bool GetChromatogram(int id, Target modifiedSequence, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
             var statusId = _collectors.ReleaseChromatogram(id, _chromGroups,
                 out timeIntensities);
@@ -1374,11 +1372,11 @@ namespace pwiz.Skyline.Model.Results
         {
             var precursorMz = spectrum.PrecursorMz;
             var ionMobility = spectrum.IonMobility;
-            string textId = spectrum.TextId;
+            var target = spectrum.Target;
             ChromExtractor extractor = spectrum.Extractor;
             int ionScanCount = spectrum.ProductFilters.Length;
             ChromDataCollector collector;
-            var key = new PrecursorTextId(precursorMz, textId, extractor);
+            var key = new PrecursorTextId(precursorMz, target, extractor);
             int index = spectrum.FilterIndex;
             while (PrecursorCollectorMap.Count <= index)
                 PrecursorCollectorMap.Add(null);
@@ -1386,7 +1384,7 @@ namespace pwiz.Skyline.Model.Results
                 collector = PrecursorCollectorMap[index].Item2;
             else
             {
-                collector = new ChromDataCollector(textId, precursorMz, ionMobility, index, IsGroupedTime);
+                collector = new ChromDataCollector(target, precursorMz, ionMobility, index, IsGroupedTime);
                 PrecursorCollectorMap[index] = new Tuple<PrecursorTextId, ChromDataCollector>(key, collector);
             }
 
@@ -1437,7 +1435,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Add data for chromatogram graph.
             if (_allChromData != null && spectrum.PrecursorMz != 0) // Exclude TIC and BPC
-                _allChromData.Add(spectrum.TextId, spectrum.PeptideColor, spectrum.FilterIndex, time, spectrum.Intensities);
+                _allChromData.Add(spectrum.Target, spectrum.PeptideColor, spectrum.FilterIndex, time, spectrum.Intensities);
 
             // If this was a multiple ion scan and not all ions had measurements,
             // make sure missing ions have zero intensities in the chromatogram.
@@ -1461,7 +1459,7 @@ namespace pwiz.Skyline.Model.Results
 
     internal sealed class ChromDataCollector
     {
-        public ChromDataCollector(string modifiedSequence, SignedMz precursorMz, DriftTimeFilter ionMobility, int statusId, bool isGroupedTime)
+        public ChromDataCollector(Target modifiedSequence, SignedMz precursorMz, DriftTimeFilter ionMobility, int statusId, bool isGroupedTime)
         {
             ModifiedSequence = modifiedSequence;
             PrecursorMz = precursorMz;
@@ -1475,7 +1473,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public string ModifiedSequence { get; private set; }
+        public Target ModifiedSequence { get; private set; }
         public SignedMz PrecursorMz { get; private set; }
         public DriftTimeFilter IonMobility { get; private set; }
         public int StatusId { get; private set; }

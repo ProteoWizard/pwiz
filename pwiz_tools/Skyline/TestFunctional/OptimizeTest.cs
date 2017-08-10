@@ -172,7 +172,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, addOptDlgAskSkip.ExistingOptimizationsCount);
             RunUI(() => addOptDlgAskSkip.Action = AddOptimizationsAction.skip);
             OkDialog(addOptDlgAskSkip, addOptDlgAskSkip.OkDialog);
-            Assert.AreEqual(5.0, editOptLib.GetCEOptimization("AAB", 5, "y2", 2).Value);
+            Assert.AreEqual(5.0, editOptLib.GetCEOptimization(new Target("AAB"), Adduct.QUINTUPLY_PROTONATED, "y2", Adduct.DOUBLY_PROTONATED).Value);
             // Add duplicates and average existing
             var addOptDbDlgAvg = ShowDialog<AddOptimizationLibraryDlg>(editOptLib.AddOptimizationDatabase);
             RunUI(() =>
@@ -185,7 +185,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, addOptDlgAskAvg.ExistingOptimizationsCount);
             RunUI(() => addOptDlgAskAvg.Action = AddOptimizationsAction.average);
             OkDialog(addOptDlgAskAvg, addOptDlgAskAvg.OkDialog);
-             Assert.AreEqual(7.5, editOptLib.GetCEOptimization("AAB", 5, "y2", 2).Value);
+             Assert.AreEqual(7.5, editOptLib.GetCEOptimization(new Target("AAB"), Adduct.QUINTUPLY_PROTONATED, "y2", Adduct.DOUBLY_PROTONATED).Value);
             // Add duplicates and replace existing
             var addOptDbDlgReplace = ShowDialog<AddOptimizationLibraryDlg>(editOptLib.AddOptimizationDatabase);
             RunUI(() =>
@@ -198,7 +198,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, addOptDlgAskReplace.ExistingOptimizationsCount);
             RunUI(() => addOptDlgAskReplace.Action = AddOptimizationsAction.replace);
             OkDialog(addOptDlgAskReplace, addOptDlgAskReplace.OkDialog);
-            Assert.AreEqual(10.0, editOptLib.GetCEOptimization("AAB", 5, "y2", 2).Value);
+            Assert.AreEqual(10.0, editOptLib.GetCEOptimization(new Target("AAB"), Adduct.QUINTUPLY_PROTONATED, "y2", Adduct.DOUBLY_PROTONATED).Value);
 
             // Try to add unconvertible old format optimization library
             var addOptDbUnconvertible = ShowDialog<AddOptimizationLibraryDlg>(editOptLib.AddOptimizationDatabase);
@@ -301,10 +301,10 @@ namespace pwiz.SkylineTestFunctional
                         {
                             Assert.IsFalse(chromInfoList.IsEmpty,
                                 string.Format("Peptide {0}{1}, fragment {2}{3} missing results",
-                                    nodeTran.Transition.Group.Peptide.Sequence,
-                                    Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorCharge),
+                                    nodeTran.Transition.Group.Peptide.Target,
+                                    nodeGroup.TransitionGroup.PrecursorAdduct,
                                     nodeTran.Transition.FragmentIonName,
-                                    Transition.GetChargeIndicator(nodeTran.Transition.Charge)));
+                                    Transition.GetChargeIndicator(nodeTran.Transition.Adduct)));
                             Assert.AreEqual(11, chromInfoList.Count);
                         }
                         else
@@ -680,11 +680,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 var libOptimizations = dlgEditOptLib.LibraryOptimizations;
                 Assert.AreEqual(5, libOptimizations.Count);
-                Assert.IsTrue(libOptimizations.Contains(new DbOptimization(OptimizationType.compensation_voltage_fine, "FNDDFSR", 2, null, 0, 17.00)));
-                Assert.IsTrue(libOptimizations.Contains(new DbOptimization(OptimizationType.compensation_voltage_fine, "GDFQFNISR", 2, null, 0, 12.75)));
-                Assert.IsTrue(libOptimizations.Contains(new DbOptimization(OptimizationType.compensation_voltage_fine, "IDPNAWVER", 2, null, 0, 12.50)));
-                Assert.IsTrue(libOptimizations.Contains(new DbOptimization(OptimizationType.compensation_voltage_fine, "TDRPSQQLR", 2, null, 0, 14.00)));
-                Assert.IsTrue(libOptimizations.Contains(new DbOptimization(OptimizationType.compensation_voltage_fine, "DVSLLHKPTTQISDFHVATR", 4, null, 0, 18.25)));
+                Assert.IsTrue(libOptimizations.Contains(new DbOptimization(OptimizationType.compensation_voltage_fine, new Target("FNDDFSR"), Adduct.DOUBLY_PROTONATED, null, Adduct.EMPTY, 17.00)));
+                Assert.IsTrue(libOptimizations.Contains(new DbOptimization(OptimizationType.compensation_voltage_fine, new Target("GDFQFNISR"), Adduct.DOUBLY_PROTONATED, null, Adduct.EMPTY, 12.75)));
+                Assert.IsTrue(libOptimizations.Contains(new DbOptimization(OptimizationType.compensation_voltage_fine, new Target("IDPNAWVER"), Adduct.DOUBLY_PROTONATED, null, Adduct.EMPTY, 12.50)));
+                Assert.IsTrue(libOptimizations.Contains(new DbOptimization(OptimizationType.compensation_voltage_fine, new Target("TDRPSQQLR"), Adduct.DOUBLY_PROTONATED, null, Adduct.EMPTY, 14.00)));
+                Assert.IsTrue(libOptimizations.Contains(new DbOptimization(OptimizationType.compensation_voltage_fine, new Target("DVSLLHKPTTQISDFHVATR"), Adduct.QUADRUPLY_PROTONATED, null, Adduct.EMPTY, 18.25)));
                 dlgEditOptLib.SetOptimizations(new DbOptimization[0]);
                 Assert.AreEqual(0, libOptimizations.Count);
                 SetClipboardText(pasteText);
@@ -721,7 +721,7 @@ namespace pwiz.SkylineTestFunctional
                 var errorDlgMissingFineCovs = ShowDialog<MultiButtonMsgDlg>(() => dlgExportFinal3.OkDialog(lib2));
                 RunUI(() => Assert.IsTrue(errorDlgMissingFineCovs.Message.Contains(Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_for_the_following_)));
                 OkDialog(errorDlgMissingFineCovs, errorDlgMissingFineCovs.BtnYesClick);
-                AssertEx.FileEquals(outTransitionsFinalWithOptLib2, TestFilesDir.GetTestPath(covdataCovFinalExpected3Csv));
+                AssertEx.FileEquals(TestFilesDir.GetTestPath(covdataCovFinalExpected3Csv), outTransitionsFinalWithOptLib2);
 
                 RunUI(() => SkylineWindow.SaveDocument());
 
@@ -756,8 +756,8 @@ namespace pwiz.SkylineTestFunctional
         {
             var fields = new[]
             {
-                string.Format(CultureInfo.CurrentCulture, "{0}{1}", seq, Transition.GetChargeIndicator(charge)),
-                string.Format(CultureInfo.CurrentCulture, "{0}{1}", product, Transition.GetChargeIndicator(productCharge)),
+                string.Format(CultureInfo.CurrentCulture, "{0}{1}", seq, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(charge))),
+                string.Format(CultureInfo.CurrentCulture, "{0}{1}", product, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(productCharge))),
                 ce.ToString(CultureInfo.CurrentCulture)
             };
             return fields.ToDsvLine(TextUtil.SEPARATOR_TSV);
@@ -767,7 +767,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var fields = new[]
             {
-                string.Format(CultureInfo.CurrentCulture, "{0}{1}", seq, Transition.GetChargeIndicator(charge)),
+                string.Format(CultureInfo.CurrentCulture, "{0}{1}", seq, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(charge))),
                 cov.ToString(CultureInfo.CurrentCulture)
             };
             return fields.ToDsvLine(TextUtil.SEPARATOR_TSV);
@@ -946,9 +946,9 @@ namespace pwiz.SkylineTestFunctional
                                 // If there is an optimized value, CE should be equal to it
                                 DbOptimization optimization =
                                     optLib.GetOptimization(OptimizationType.collision_energy,
-                                        document.Settings.GetSourceTextId(nodePep), nodeGroup.TransitionGroup.PrecursorCharge,
-                                        //nodeGroup.TransitionGroup.Peptide.Sequence, nodeGroup.TransitionGroup.PrecursorCharge,
-                                        nodeTran.FragmentIonName, nodeTran.Transition.Charge);
+                                        document.Settings.GetSourceTarget(nodePep), nodeGroup.TransitionGroup.PrecursorAdduct,
+                                        //nodeGroup.TransitionGroup.Peptide.Sequence, nodeGroup.TransitionGroup.PrecursorAdduct,
+                                        nodeTran.FragmentIonName, nodeTran.Transition.Adduct);
                                 if (optimization != null)
                                     Assert.AreEqual(optimization.Value, tranCE, 0.05);
                             }

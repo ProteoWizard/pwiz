@@ -73,23 +73,22 @@ namespace pwiz.Skyline.EditUI
                 line = line.Trim();
                 if (string.IsNullOrEmpty(line))
                     continue;
-                int? charge = null;
-                int chargeIndex = line.IndexOf('+');
-                if (chargeIndex != -1)
-                {
-                    charge = Transition.GetChargeFromIndicator(line,
-                        TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
-                    if (charge.HasValue)
-                        line = line.Substring(0, line.Length - Transition.GetChargeIndicator(charge.Value).Length);
-                }
-                if (!FastaSequence.IsExSequence(line))
-                {
-                    invalidLines.Add(line);
-                    continue;
-                }
+                int foundAt;
+                var charge = Transition.GetChargeFromIndicator(line,
+                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, out foundAt);
+                if (!charge.IsEmpty)
+                    line = line.Substring(0, foundAt);
+                Target target;
                 try
                 {
+                    // CONSIDER(bspratt) small molecule equivalent?
+                    if (!FastaSequence.IsExSequence(line))
+                    {
+                        invalidLines.Add(line);
+                        continue;
+                    }
                     line = SequenceMassCalc.NormalizeModifiedSequence(line);
+                    target = new Target(line); 
                 }
                 catch (Exception)
                 {
@@ -97,10 +96,10 @@ namespace pwiz.Skyline.EditUI
                     continue;
                 }
 
-                if (!peptideSequences.Contains(line))
+                if (!peptideSequences.Contains(target))
                     notFoundLines.Add(line);
                 else
-                    acceptedPeptides.Add(new RefinementSettings.PeptideCharge(line, charge));
+                    acceptedPeptides.Add(new RefinementSettings.PeptideCharge(target, charge)); 
             }
 
             if (invalidLines.Count > 0)
@@ -147,12 +146,12 @@ namespace pwiz.Skyline.EditUI
             OkDialog();
         }
 
-        private HashSet<string> GetPeptideSequences()
+        private HashSet<Target> GetPeptideSequences()
         {
-            var peptideSequences = new HashSet<string>();
+            var peptideSequences = new HashSet<Target>();
             foreach (var nodePep in _document.Peptides)
             {
-                peptideSequences.Add(MatchModified ? nodePep.ModifiedSequence : nodePep.Peptide.Sequence);
+                peptideSequences.Add(MatchModified ? nodePep.ModifiedTarget : nodePep.Peptide.Target);
             }
             return peptideSequences;
         }

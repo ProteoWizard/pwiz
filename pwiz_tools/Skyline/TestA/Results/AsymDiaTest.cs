@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestA.Results
             FileEx.SafeDelete(cachePath);
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             var refine = new RefinementSettings();
-            doc = refine.ConvertToSmallMolecules(doc, asSmallMolecules);
+            doc = refine.ConvertToSmallMolecules(doc, testFilesDir.FullPath, asSmallMolecules);
             const int expectedMoleculeCount = 1;   // At first small molecules did not support multiple charge states, and this was 2 for that test mode
             AssertEx.IsDocumentState(doc, null, 1, expectedMoleculeCount, 2, 4);
             var fullScanInitial = doc.Settings.TransitionSettings.FullScan;

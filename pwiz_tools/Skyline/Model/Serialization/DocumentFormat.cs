@@ -51,8 +51,9 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_3_62 = new DocumentFormat(3.62); // Adds binary results 
         public static readonly DocumentFormat BINARY_RESULTS = VERSION_3_62; // First version that had binary results
         public static readonly DocumentFormat VERSION_3_7 = new DocumentFormat(3.7); // Release format
-        public static readonly DocumentFormat VERSION_3_71 = new DocumentFormat(3.71);
-        public static readonly DocumentFormat CURRENT = VERSION_3_71; 
+        public static readonly DocumentFormat VERSION_3_71 = new DocumentFormat(3.71); // Adds EncyclopeDIA lib support
+        public static readonly DocumentFormat VERSION_3_72 = new DocumentFormat(3.72); // Adds small molecule library support
+        public static readonly DocumentFormat CURRENT = VERSION_3_72; 
 
 
         private readonly double _versionNumber;
@@ -70,6 +71,23 @@ namespace pwiz.Skyline.Model.Serialization
         public int CompareTo(DocumentFormat other)
         {
             return _versionNumber.CompareTo(other._versionNumber);
+        }
+
+        public static bool operator <(DocumentFormat left, DocumentFormat right)
+        {
+            return left.CompareTo(right) < 0;
+        }
+        public static bool operator <=(DocumentFormat left, DocumentFormat right)
+        {
+            return left.CompareTo(right) <= 0;
+        }
+        public static bool operator >(DocumentFormat left, DocumentFormat right)
+        {
+            return left.CompareTo(right) > 0;
+        }
+        public static bool operator >=(DocumentFormat left, DocumentFormat right)
+        {
+            return left.CompareTo(right) >= 0;
         }
 
         public override string ToString()

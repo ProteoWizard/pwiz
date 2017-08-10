@@ -172,7 +172,7 @@ namespace pwiz.SkylineTestFunctional
                 });
 
             // Paste peptides
-            const int precursorCharge = 2;
+            var precursorAdduct = Adduct.DOUBLY_PROTONATED;
             List<Tuple<string, int>> peptidePaste = new List<Tuple<string, int>>
             {
                 new Tuple<string, int>("FVEGLPINDFSR", 3),
@@ -185,13 +185,13 @@ namespace pwiz.SkylineTestFunctional
             };
             var peptidePasteSb = new StringBuilder();
             foreach (var pep in peptidePaste)
-                peptidePasteSb.AppendLine(pep.Item1 + Transition.GetChargeIndicator(pep.Item2));
+                peptidePasteSb.AppendLine(pep.Item1 + Transition.GetChargeIndicator(Adduct.FromChargeProtonated(pep.Item2)));
 
             RunUI(() =>
             {
                 SkylineWindow.NewDocument(true);
                 document = SkylineWindow.Document;
-                document = document.ChangeSettings(document.Settings.ChangeTransitionFilter(f => f.ChangePrecursorCharges(new[] {precursorCharge})));
+                document = document.ChangeSettings(document.Settings.ChangeTransitionFilter(f => f.ChangePeptidePrecursorCharges(new[] {precursorAdduct})));
                 SetClipboardText(peptidePasteSb.ToString());
                 SkylineWindow.Paste();
             });
@@ -201,18 +201,18 @@ namespace pwiz.SkylineTestFunctional
             {
                 TransitionGroupDocNode transition = document.PeptideTransitionGroups.ElementAt(i);
                 string seq = transition.TransitionGroup.Peptide.Sequence;
-                int charge = transition.PrecursorCharge;
+                var charge = transition.PrecursorAdduct.AdductCharge;
                 Assert.AreEqual(FastaSequence.StripModifications(peptidePaste[i].Item1), seq);
                 var pastedCharge = peptidePaste[i].Item2;
-                Assert.AreEqual(pastedCharge != 0 ? pastedCharge : precursorCharge, charge);
+                Assert.AreEqual(pastedCharge != 0 ? pastedCharge : precursorAdduct.AdductCharge, charge);
             }
 
             // Undo paste
             RunUI(() => SkylineWindow.Undo());
             document = WaitForDocumentChange(document);
             // Change precursor charges
-            int[] precursorCharges = {2, 3, 4};
-            RunUI(() => SkylineWindow.ModifyDocument("Change precursor charges", doc => doc.ChangeSettings((document.Settings.ChangeTransitionFilter(f => f.ChangePrecursorCharges(precursorCharges))))));
+            Adduct[] precursorCharges = { Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED, Adduct.QUADRUPLY_PROTONATED };
+            RunUI(() => SkylineWindow.ModifyDocument("Change precursor charges", doc => doc.ChangeSettings((document.Settings.ChangeTransitionFilter(f => f.ChangePeptidePrecursorCharges(precursorCharges))))));
             document = WaitForDocumentChange(document);
             // Re-paste in peptides
             RunUI(() => SkylineWindow.Paste());
@@ -225,7 +225,7 @@ namespace pwiz.SkylineTestFunctional
                     // Pasted peptides with a charge indicator should have a single precursor with the specified charge state
                     TransitionGroupDocNode group = document.PeptideTransitionGroups.ElementAt(curTransitionGroup++);
                     string seq = group.TransitionGroup.Peptide.Sequence;
-                    int charge = group.PrecursorCharge;
+                    var charge = group.PrecursorAdduct.AdductCharge;
                     Assert.AreEqual(FastaSequence.StripModifications(peptide.Item1), seq);
                     var pastedCharge = peptide.Item2;
                     Assert.AreEqual(pastedCharge, charge);
@@ -237,7 +237,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         TransitionGroupDocNode group = document.PeptideTransitionGroups.ElementAt(curTransitionGroup++);
                         string seq = group.TransitionGroup.Peptide.Sequence;
-                        int charge = group.PrecursorCharge;
+                        var charge = group.PrecursorAdduct;
                         Assert.AreEqual(FastaSequence.StripModifications(peptide.Item1), seq);
                         Assert.AreEqual(precursorCharges[j], charge);
                     }

@@ -56,10 +56,10 @@ namespace pwiz.Skyline.Controls.Graphs
         public interface IStateProvider
         {
             TreeNodeMS SelectedNode { get; }
-            IList<IonType> ShowIonTypes { get; }
-            IList<int> ShowIonCharges { get; }
+            IList<IonType> ShowIonTypes(bool isProteomic);
+            IList<Adduct> ShowIonCharges(IEnumerable<Adduct> chargePriority);
 
-            void BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip);
+            void BuildSpectrumMenu(bool isProteomic, ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip);
         }
 
         private class DefaultStateProvider : IStateProvider
@@ -69,17 +69,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 get { return null; }
             }
 
-            public IList<IonType> ShowIonTypes
+            public IList<IonType> ShowIonTypes(bool isProteomic)
             {
-                get { return new[] {IonType.y}; }
+                return isProteomic ? new[] { IonType.y } :  new[] { IonType.custom }; 
             }
 
-            public IList<int> ShowIonCharges
+            public IList<Adduct> ShowIonCharges(IEnumerable<Adduct> chargePriority)
             {
-                get { return new[] {1}; }
+                return chargePriority.ToList();
             }
 
-            public void BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
+            public void BuildSpectrumMenu(bool isProteomic, ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
             {
             }
         }
@@ -178,8 +178,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public void OnDocumentUIChanged(object sender, DocumentChangedEventArgs e)
         {
             // If document changed, update spectrum x scale to instrument
+            // Or if library settings changed, show new ranks etc
             if (e.DocumentPrevious == null ||
                 !ReferenceEquals(DocumentUI.Id, e.DocumentPrevious.Id) ||
+                !ReferenceEquals(DocumentUI.Settings.TransitionSettings.Libraries, 
+                                 e.DocumentPrevious.Settings.TransitionSettings.Libraries) ||
                 !ReferenceEquals(DocumentUI.Settings.PeptideSettings.Libraries.Libraries,
                                  e.DocumentPrevious.Settings.PeptideSettings.Libraries.Libraries))
             {
@@ -374,11 +377,11 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 TransitionGroup group = nodeGroup.TransitionGroup;
                 TransitionDocNode transition = (nodeTranTree == null ? null : nodeTranTree.DocNode);
-                string lookupSequence = group.Peptide.TextId; // Sequence or custom ion id
+                var lookupSequence = group.Peptide.Target; // Sequence or custom ion id
                 ExplicitMods lookupMods = null;
                 if (nodePepTree != null)
                 {
-                    lookupSequence = nodePepTree.DocNode.SourceUnmodifiedTextId;
+                    lookupSequence = nodePepTree.DocNode.SourceUnmodifiedTarget;
                     lookupMods = nodePepTree.DocNode.SourceExplicitMods;
                 }
                 try
@@ -410,10 +413,13 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (spectrum != null)
                         {
                             IsotopeLabelType typeInfo = spectrum.LabelType;
-                            var types = _stateProvider.ShowIonTypes;
-                            var charges = _stateProvider.ShowIonCharges;
-                            var rankTypes = settings.TransitionSettings.Filter.IonTypes;
-                            var rankCharges = settings.TransitionSettings.Filter.ProductCharges;
+                            var types = _stateProvider.ShowIonTypes(group.IsProteomic);
+                            var adducts = group.IsProteomic ?
+                                Transition.DEFAULT_PEPTIDE_LIBRARY_CHARGES :
+                                nodeGroup.InUseAdducts;
+                            var charges = _stateProvider.ShowIonCharges(adducts);
+                            var rankTypes = group.IsProteomic ? settings.TransitionSettings.Filter.PeptideIonTypes : settings.TransitionSettings.Filter.SmallMoleculeIonTypes;
+                            var rankCharges =  group.IsProteomic ? settings.TransitionSettings.Filter.PeptideProductCharges : settings.TransitionSettings.Filter.SmallMoleculeFragmentAdducts;
                             // Make sure the types and charges in the settings are at the head
                             // of these lists to give them top priority, and get rankings correct.
                             int i = 0;
@@ -423,7 +429,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     types.Insert(i++, type);
                             }
                             i = 0;
-                            foreach (int charge in rankCharges)
+                            foreach (var charge in rankCharges)
                             {
                                 if (charges.Remove(charge))
                                     charges.Insert(i++, charge);
@@ -431,14 +437,15 @@ namespace pwiz.Skyline.Controls.Graphs
                             SpectrumPeaksInfo spectrumInfo = spectrum.SpectrumPeaksInfo;
                             var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrumInfo,
                                                                               typeInfo,
-                                                                              group,
+                                                                              nodeGroup,
                                                                               settings,
                                                                               lookupSequence,
                                                                               lookupMods,
                                                                               charges,
                                                                               types,
                                                                               rankCharges,
-                                                                              rankTypes);
+                                                                              rankTypes,
+                                                                              false);
                             GraphItem = new SpectrumGraphItem(nodeGroup, transition, spectrumInfoR, spectrum.LibName)
                                 {
                                     ShowTypes = types,
@@ -627,17 +634,17 @@ namespace pwiz.Skyline.Controls.Graphs
             return index;
         }
 
-        private void UpdateSpectra(TransitionGroupDocNode nodeGroup, string lookupSequence, ExplicitMods lookupMods)
+        private void UpdateSpectra(TransitionGroupDocNode nodeGroup, Target lookupSequence, ExplicitMods lookupMods)
         {
             _spectra = GetSpectra(nodeGroup, lookupSequence, lookupMods);
             if (!_spectra.Any())
                 _spectra = null;
         }
 
-        private IList<SpectrumDisplayInfo> GetSpectra(TransitionGroupDocNode nodeGroup, string lookupSequence, ExplicitMods lookupMods)
+        private IList<SpectrumDisplayInfo> GetSpectra(TransitionGroupDocNode nodeGroup, Target lookupSequence, ExplicitMods lookupMods)
         {
             var settings = DocumentUI.Settings;
-            var charge = nodeGroup.PrecursorCharge;
+            var charge = nodeGroup.PrecursorAdduct;
             var spectra = settings.GetBestSpectra(lookupSequence, charge, lookupMods).Select(s => new SpectrumDisplayInfo(s)).ToList();
             // Showing redundant spectra is only supported for full-scan filtering when
             // the document has results files imported.
@@ -648,7 +655,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var spectraRedundant = new List<SpectrumDisplayInfo>();
                 var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
-                foreach (var spectrumInfo in settings.GetRedundantSpectra(lookupSequence, charge, nodeGroup.TransitionGroup.LabelType, lookupMods))
+                foreach (var spectrumInfo in settings.GetRedundantSpectra(nodeGroup.Peptide, lookupSequence, charge, nodeGroup.TransitionGroup.LabelType, lookupMods))
                 {
                     var matchingFile = settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrumInfo.FilePath));
                     if (matchingFile == null)
@@ -726,8 +733,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!nodeGroup.HasLibInfo)
                     continue;
 
-                int precursorCharge = nodeGroup.TransitionGroup.PrecursorCharge;
-                if (!listGroups.Contains(g => g.TransitionGroup.PrecursorCharge == precursorCharge))
+                var precursorCharge = nodeGroup.TransitionGroup.PrecursorAdduct;
+                if (!listGroups.Contains(g => g.TransitionGroup.PrecursorAdduct == precursorCharge))
                     listGroups.Add(nodeGroup);
             }
             return listGroups.ToArray();
@@ -736,7 +743,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender,
             ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
-            _stateProvider.BuildSpectrumMenu(sender, menuStrip);
+            var isProteomic = _nodeGroup == null || !_nodeGroup.IsCustomIon;
+            _stateProvider.BuildSpectrumMenu(isProteomic, sender, menuStrip);
         }
 
         protected override void OnClosed(EventArgs e)
@@ -860,6 +868,12 @@ namespace pwiz.Skyline.Controls.Graphs
             set { ActAndUpdate(() => Set.ShowZIons = value); }
         }
 
+        public bool ShowFragmentIons
+        {
+            get { return Set.ShowFragmentIons; }
+            set { ActAndUpdate(() => Set.ShowFragmentIons = value); }
+        }
+
         public bool ShowPrecursorIon
         {
             get { return Set.ShowPrecursorIon; }
@@ -890,12 +904,12 @@ namespace pwiz.Skyline.Controls.Graphs
             set { ActAndUpdate(() => Set.ShowCharge4 = value); }
         }
 
-        public IList<IonType> ShowIonTypes
+        public IList<IonType> ShowIonTypes(bool isProteomic)
         {
-            get
+            var types = new List<IonType>();
+            if (isProteomic)
             {
                 // Priority ordered
-                var types = new List<IonType>();
                 AddItem(types, IonType.y, Set.ShowYIons);
                 AddItem(types, IonType.b, Set.ShowBIons);
                 AddItem(types, IonType.z, Set.ShowZIons);
@@ -904,22 +918,36 @@ namespace pwiz.Skyline.Controls.Graphs
                 AddItem(types, IonType.a, Set.ShowAIons);
                 // FUTURE: Add custom ions when LibraryRankedSpectrumInfo can support them
                 AddItem(types, IonType.precursor, Set.ShowPrecursorIon);
-                return types;
             }
+            else
+            {
+                AddItem(types, IonType.custom, Set.ShowFragmentIons); // CONSIDER(bspratt) eventually, user-defined fragment types?
+                AddItem(types, IonType.precursor, Set.ShowPrecursorIon);
+            }
+            return types;
         }
 
-        public IList<int> ShowIonCharges
+        // TODO(bspratt) how does this work with negative mode data?
+        public IList<Adduct> ShowIonCharges(IEnumerable<Adduct> chargePriority)
         {
-            get
+            var charges = new List<Adduct>();
+            int i = 0;
+            foreach (var charge in chargePriority)
             {
                 // Priority ordered
-                var charges = new List<int>();
-                AddItem(charges, 1, ShowCharge1);
-                AddItem(charges, 2, ShowCharge2);
-                AddItem(charges, 3, ShowCharge3);
-                AddItem(charges, 4, ShowCharge4);
-                return charges;
+                if (i == 0)
+                    AddItem(charges, charge, ShowCharge1);
+                else if (i == 1)
+                    AddItem(charges, charge, ShowCharge2);
+                else if (i == 2)
+                    AddItem(charges, charge, ShowCharge3);
+                else if (i == 3)
+                    AddItem(charges, charge, ShowCharge4);
+                else
+                    break;
+                i++;
             }
+            return charges;
         }
 
         private static void AddItem<TItem>(ICollection<TItem> items, TItem item, bool add)

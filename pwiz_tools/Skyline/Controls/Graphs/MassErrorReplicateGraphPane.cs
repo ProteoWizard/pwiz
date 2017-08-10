@@ -25,6 +25,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -129,7 +130,7 @@ namespace pwiz.Skyline.Controls.Graphs
            double maxRetentionTime = double.MinValue;
            
            int iColor = 0, iCharge = -1;
-           int? charge = null;
+           var charge = Adduct.EMPTY;
            int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
            int colorOffset = 0;
            var transitionGroupDocNode = parentNode as TransitionGroupDocNode;

@@ -18,6 +18,7 @@
  */
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -593,7 +594,7 @@ namespace pwiz.SkylineTest
 
             for (int i = 0; i < _peptides300A.GetLength(0); i++ )
             {
-                string peptide = (string) _peptides300A[i, 0];
+                var peptide = new Target((string) _peptides300A[i, 0]);
                 double expected = (double) _peptides300A[i, 1];
                 double actual = calc.ScoreSequence(peptide) ?? 0;
 
@@ -622,7 +623,7 @@ namespace pwiz.SkylineTest
 
             for (int i = 0; i < _peptides100A.GetLength(0); i++)
             {
-                string peptide = (string)_peptides100A[i, 0];
+                var peptide = new Target((string)_peptides100A[i, 0]);
                 double expected = (double)_peptides100A[i, 1];
                 double actual = calc.ScoreSequence(peptide) ?? 0;
 

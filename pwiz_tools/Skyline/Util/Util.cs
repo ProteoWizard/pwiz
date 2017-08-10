@@ -49,6 +49,11 @@ namespace pwiz.Skyline.Util
         TKey GetKey();
     }
 
+    public interface IEquivalenceTestable<T>
+    {
+        bool IsEquivalent(T other);
+    }
+
     /// <summary>
     /// Base class for use with elements to be stored in
     /// <see cref="MappedList{TKey,TValue}"/>.
@@ -1998,6 +2003,24 @@ namespace pwiz.Skyline.Util
         {
             if (o != null)
                 Fail(string.IsNullOrEmpty(parameterName) ? "non-null object" : parameterName + " is not null"); // Not L10N
+        }
+
+        public static void AreEqual(object left, object right, string error = "") // Not L10N
+        {
+            if (!Equals(left, right))
+                Fail(error);
+        }
+
+        public static void AreNotEqual(object left, object right, string error = "") // Not L10N
+        {
+            if (Equals(left, right))
+                Fail(error);
+        }
+
+        public static void AreEqual(double expected, double actual, double delta, string error = "")
+        {
+            if (Math.Abs(expected-actual) > delta)
+                Fail(error);
         }
 
         public static void Fail(string error = "") // Not L10N

@@ -45,6 +45,7 @@ namespace pwiz.Skyline.Model.Lib
     public sealed class BiblioSpecLiteSpec : LibrarySpec
     {
         public const string EXT = ".blib"; // Not L10N
+        public static string DotConvertedToSmallMolecules = ".converted_to_small_molecules"; // Not L10N
 
         public static string FILTER_BLIB
         {
@@ -112,7 +113,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 11;  // v11 startTime and endTime in RetentionTimes table
+        private const int FORMAT_VERSION_CACHE = 12;  // v10 changes ion mobility encoding, v11 startTime and endTime in RetentionTimes table, v12 adds small molecule support
 
         public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu"; // Not L10N
 
@@ -247,7 +248,7 @@ namespace pwiz.Skyline.Model.Lib
             get
             {
                 var dataFiles = GetDataFileDetails();
-                var uniquePeptideCount = Keys.Select(entry => entry.Sequence).Distinct().Count();
+                var uniquePeptideCount = Keys.Select(entry => entry.Target).Distinct().Count();
 
                 LibraryDetails details = new LibraryDetails
                                              {
@@ -433,9 +434,10 @@ namespace pwiz.Skyline.Model.Lib
             peptideSeq,
             precursorMZ,
             precursorCharge,
-            ionMobilityValue,     // See ionMobilityType value for interpretation
+            moleculeName, chemicalFormula, precursorAdduct, inchiKey, otherKeys, // Small molecule columns
+            ionMobilityValue,     // See ionMobilityType value for interpretation - obsolete as of v4
             ionMobilityHighEnergyDriftTimeOffsetMsec, // in Waters Mse IMS, product ions travel slightly faster after the drift tube due to added kinetic energy in the fragmentation cell
-            ionMobilityType, // See enum IonMobilityType
+            ionMobilityType, // See enum IonMobilityType - obsolete as of v4
             peptideModSeq,
             copies,
             numPeaks
@@ -499,6 +501,8 @@ namespace pwiz.Skyline.Model.Lib
             copies,
             num_peaks,
             id,
+            adduct_len,
+            small_mol_info_len,
             seq_len,
 
             count
@@ -552,20 +556,28 @@ namespace pwiz.Skyline.Model.Lib
 
                 if (schemaVer >= 1)
                 {
-                    using (var cmd = _sqliteConnection.Connection.CreateCommand())
+                    try
                     {
-                        cmd.CommandText = "SELECT * FROM RetentionTimes"; // Not L10N
-                        using (var dataReader = cmd.ExecuteReader())
+                        using (var cmd = _sqliteConnection.Connection.CreateCommand())
                         {
-                            var retentionTimeReader = new RetentionTimeReader(dataReader, schemaVer);
-                            retentionTimeReader.ReadAllRows();
-                            retentionTimesBySpectraIdAndFileId =
-                                retentionTimeReader.SpectaIdFileIdTimes.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
-                            driftTimesBySpectraIdAndFileId =
-                                retentionTimeReader.SpectraIdFileIdIonMobilities.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
-                            peakBoundsBySpectraIdAndFileId = retentionTimeReader.PeakBoundaries.ToLookup(kvp => kvp.Key,
-                                kvp => kvp.Value);
+                            cmd.CommandText = "SELECT * FROM RetentionTimes"; // Not L10N
+                            using (var dataReader = cmd.ExecuteReader())
+                            {
+                                var retentionTimeReader = new RetentionTimeReader(dataReader, schemaVer);
+                                retentionTimeReader.ReadAllRows();
+                                retentionTimesBySpectraIdAndFileId =
+                                    retentionTimeReader.SpectaIdFileIdTimes.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
+                                driftTimesBySpectraIdAndFileId =
+                                    retentionTimeReader.SpectraIdFileIdIonMobilities.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
+                                peakBoundsBySpectraIdAndFileId = retentionTimeReader.PeakBoundaries.ToLookup(kvp => kvp.Key,
+                                    kvp => kvp.Value);
+                            }
                         }
+                    }
+                    // In case there is no RetentionTimes table
+                    // CONSIDER: Could also be a failure to read the SQLite file
+                    catch (SQLiteException)
+                    {
                     }
                 }
                 var setLibKeys = new Dictionary<LibKey, bool>(rows);
@@ -581,6 +593,11 @@ namespace pwiz.Skyline.Model.Lib
                     int iCharge = reader.GetOrdinal(RefSpectra.precursorCharge);
                     int iCopies = reader.GetOrdinal(RefSpectra.copies);
                     int iPeaks = reader.GetOrdinal(RefSpectra.numPeaks);
+                    int iAdduct = reader.GetOrdinal(RefSpectra.precursorAdduct);
+                    int iMoleculeName = reader.GetOrdinal(RefSpectra.moleculeName);
+                    int iChemicalFormula = reader.GetOrdinal(RefSpectra.chemicalFormula);
+                    int iInChiKey = reader.GetOrdinal(RefSpectra.inchiKey);
+                    int iOtherKeys = reader.GetOrdinal(RefSpectra.otherKeys);
 
                     int rowsRead = 0;
                     while (reader.Read())
@@ -601,13 +618,33 @@ namespace pwiz.Skyline.Model.Lib
 
                         string sequence = reader.GetString(iSeq);
                         int charge = reader.GetInt16(iCharge);
+                        string adduct = iAdduct >= 0 && !reader.IsDBNull(iAdduct) ? reader.GetString(iAdduct) : null;
                         int copies = reader.GetInt32(iCopies);
                         int numPeaks = reader.GetInt32(iPeaks);
                         int id = reader.GetInt32(iId);
+                        var chemicalFormula = iChemicalFormula >= 0 && !reader.IsDBNull(iChemicalFormula) ? reader.GetString(iChemicalFormula) : null;
+                        bool isProteomic = (string.IsNullOrEmpty(adduct) || Adduct.FromStringAssumeProtonated(adduct).IsProtonated) && 
+                            string.IsNullOrEmpty(chemicalFormula); // We may write an adduct like [M+H] for peptides
+                        SmallMoleculeLibraryAttributes smallMoleculeLibraryAttributes;
+                        if (isProteomic)
+                        {
+                            smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.EMPTY;
+                        }
+                        else
+                        {
+                            var moleculeName = iMoleculeName >= 0 && !reader.IsDBNull(iMoleculeName) ? reader.GetString(iMoleculeName) : null;
+                            var inChiKey = iInChiKey >= 0 && !reader.IsDBNull(iInChiKey) ? reader.GetString(iInChiKey) : null;
+                            var otherKeys = iOtherKeys >= 0 && !reader.IsDBNull(iOtherKeys) ? reader.GetString(iOtherKeys) : null;
+                            smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName, chemicalFormula, inChiKey, otherKeys);
+                            // Construct a custom molecule so we can be sure we're using the same keys
+                            var mol = new CustomMolecule(smallMoleculeLibraryAttributes);
+                            sequence = mol.PrimaryEquivalenceKey;
+                        }
 
                         // Avoid creating a cache which will just report it is corrupted.
                         // Older versions of BlibBuild used to create matches with charge 0.
-                        if (charge <= 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
+                        // Newer versions that handle small molecules may reasonably use negtive charges.
+                        if (charge == 0 || Math.Abs(charge) > TransitionGroup.MAX_PRECURSOR_CHARGE)
                             continue;
                         var retentionTimesByFileId = default(IndexedRetentionTimes);
                         if (retentionTimesBySpectraIdAndFileId != null)
@@ -626,7 +663,9 @@ namespace pwiz.Skyline.Model.Lib
                         }
                         // These libraries should not have duplicates, but just in case.
                         // CONSIDER: Emit error about redundancy?
-                        LibKey key = new LibKey(sequence, charge);
+                        var key = isProteomic ?
+                            new LibKey(sequence, charge) :
+                            new LibKey(smallMoleculeLibraryAttributes, Adduct.FromStringAssumeChargeOnly(adduct));
                         if (!setLibKeys.ContainsKey(key))
                         {
                             setLibKeys.Add(key, true);
@@ -660,6 +699,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     foreach (var info in libraryEntries)
                     {
+                        // Write the spectrum header - order must match enum SpectrumCacheHeader
                         LibSeqKey seqKey = new LibSeqKey(info.Key);
                         if (setSequences.ContainsKey(seqKey))
                         {
@@ -677,7 +717,15 @@ namespace pwiz.Skyline.Model.Lib
                         outStream.Write(BitConverter.GetBytes(info.Copies), 0, sizeof (int));
                         outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof (int));
                         outStream.Write(BitConverter.GetBytes(info.Id), 0, sizeof (int));
+                        var adduct = info.Key.Adduct;
+                        var adductFormulaBytes = Encoding.UTF8.GetBytes(adduct.IsProteomic ? string.Empty : adduct.AdductFormula);
+                        outStream.Write(BitConverter.GetBytes(adductFormulaBytes.Length), 0, sizeof(int));
+                        var smallmolinfoBytes = SmallMoleculeLibraryAttributes.ToBytes(info.SmallMoleculeLibraryAttributes);
+                        outStream.Write(BitConverter.GetBytes(smallmolinfoBytes.Length), 0, sizeof(int));
                         info.Key.WriteSequence(outStream);
+                        LibKey.EncodeAdduct(adductFormulaBytes, 0, adductFormulaBytes, adductFormulaBytes.Length); // Change [M+Na] to {M+Na}
+                        outStream.Write(adductFormulaBytes, 0, adductFormulaBytes.Length);
+                        outStream.Write(smallmolinfoBytes, 0, smallmolinfoBytes.Length);
                         info.RetentionTimesByFileId.Write(outStream);
                         info.IonMobilitiesByFileId.Write(outStream);
                         WritePeakBoundaries(outStream, info.PeakBoundariesByFileId);
@@ -826,6 +874,8 @@ namespace pwiz.Skyline.Model.Lib
 
                     byte[] specSequence = new byte[1024];
                     byte[] specHeader = new byte[1024];
+                    byte[] specAdduct = new byte[1024];
+                    byte[] specSmallMolInfo = new byte[1024];
 
                     countHeader = (int) SpectrumCacheHeader.count*sizeof (int);
 
@@ -849,22 +899,33 @@ namespace pwiz.Skyline.Model.Lib
 
                         int seqKeyHash = GetInt32(specHeader, ((int) SpectrumCacheHeader.seq_key_hash));
                         int seqKeyLength = GetInt32(specHeader, ((int) SpectrumCacheHeader.seq_key_length));
+                        int adductLength = GetInt32(specHeader, (int)SpectrumCacheHeader.adduct_len);
+                        int smallMolInfoLength = GetInt32(specHeader, (int)SpectrumCacheHeader.small_mol_info_len);
+                        bool isProteomic = adductLength == 0;
                         int charge = GetInt32(specHeader, ((int) SpectrumCacheHeader.charge));
-                        if (charge <= 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
+                        if (charge == 0 || (isProteomic && charge < 0) || Math.Abs(charge) > TransitionGroup.MAX_PRECURSOR_CHARGE)
                             throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_Load_Invalid_precursor_charge__0__found__File_may_be_corrupted, charge));
                         int copies = GetInt32(specHeader, ((int) SpectrumCacheHeader.copies));
                         int numPeaks = GetInt32(specHeader, ((int) SpectrumCacheHeader.num_peaks));
                         int id = GetInt32(specHeader, ((int) SpectrumCacheHeader.id));
                         int seqLength = GetInt32(specHeader, (int) SpectrumCacheHeader.seq_len);
-                    
+
                         // Read sequence information
-                        ReadComplete(stream, specSequence, seqLength);
+                        SafeReadComplete(stream, ref specSequence, seqLength);
+
+                        // Read adduct information
+                        SafeReadComplete(stream, ref specAdduct, adductLength);
+
+                        // Read small molecule information
+                        SafeReadComplete(stream, ref specSmallMolInfo, smallMolInfoLength);
 
                         var retentionTimesByFileId = IndexedRetentionTimes.Read(stream);
                         var driftTimesByFileId = IndexedIonMobilities.Read(stream);
+                        var key = isProteomic ?
+                            new LibKey(specSequence, 0, seqLength, charge) :
+                            new LibKey(specAdduct, adductLength, specSequence, seqLength, specSmallMolInfo, smallMolInfoLength, charge);
                         ImmutableSortedList<int, PeakBounds> peakBoundaries =
                             ReadPeakBoundaries(stream);
-                        LibKey key = new LibKey(specSequence, 0, seqLength, charge);
                         libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, retentionTimesByFileId, driftTimesByFileId, peakBoundaries);
                         if (seqKeyLength > 0)
                         {
@@ -1058,7 +1119,7 @@ namespace pwiz.Skyline.Model.Lib
             return base.TryGetRetentionTimes(key, filePath, out retentionTimes);
         }
 
-        public override PeakBounds GetExplicitPeakBounds(MsDataFileUri filePath, IEnumerable<string> peptideSequences)
+        public override PeakBounds GetExplicitPeakBounds(MsDataFileUri filePath, IEnumerable<Target> peptideSequences)
         {
             int iFile = FindSource(filePath);
             if (iFile < 0)
@@ -1107,8 +1168,8 @@ namespace pwiz.Skyline.Model.Lib
             if (j != -1)
             {
                 var source = _librarySourceFiles[j];
-                ILookup<string, double[]> timesLookup = _libraryEntries.ToLookup(
-                    entry => entry.Key.Sequence, 
+                ILookup<Target, double[]> timesLookup = _libraryEntries.ToLookup(
+                    entry => entry.Key.Target, 
                     entry=>entry.RetentionTimesByFileId.GetTimes(source.Id));
                 var timesDict = timesLookup.ToDictionary(
                     grouping => grouping.Key,
@@ -1128,7 +1189,7 @@ namespace pwiz.Skyline.Model.Lib
             return base.TryGetRetentionTimes(filePath, out retentionTimes);
         }
 
-        public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<string> peptideSequences, ref int? iFile)
+        public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<Target> peptideSequences, ref int? iFile)
         {
             if (!iFile.HasValue)
                 iFile = FindSource(MsDataFileUri.Parse(filePath));
@@ -1139,7 +1200,7 @@ namespace pwiz.Skyline.Model.Lib
             var times = new List<double[]>();
             foreach (var sequence in peptideSequences)
             {
-                LibKey libKey = new LibKey(sequence, 0);
+                LibKey libKey = new LibKey(sequence, Adduct.EMPTY);
                 int iFirstEntry = CollectionUtil.BinarySearch(_libraryEntries, item => item.Key.CompareSequence(libKey), true);
                 if (iFirstEntry < 0)
                 {
@@ -1182,9 +1243,9 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        public ResultNameMap<IDictionary<string, double>> ReadAllRetentionTimes(ResultNameMap<RetentionTimeSource> sources)
+        public ResultNameMap<IDictionary<Target, double>> ReadAllRetentionTimes(ResultNameMap<RetentionTimeSource> sources)
         {
-            var allRetentionTimes = new Dictionary<string, IDictionary<string, double>>();
+            var allRetentionTimes = new Dictionary<string, IDictionary<Target, double>>();
             foreach (var source in sources)
             {
                 LibraryRetentionTimes libraryRetentionTimes;
@@ -1195,7 +1256,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public static IList<AlignedRetentionTimes> CalculateFileRetentionTimeAlignments(
-            string dataFileName, ResultNameMap<IDictionary<string, double>> libraryRetentionTimes)
+            string dataFileName, ResultNameMap<IDictionary<Target, double>> libraryRetentionTimes)
         {
             var targetTimes = libraryRetentionTimes.Find(dataFileName);
             var alignments = new List<AlignedRetentionTimes>();
@@ -1213,10 +1274,10 @@ namespace pwiz.Skyline.Model.Lib
             return alignments;
         }
 
-        private IDictionary<string, Tuple<TimeSource, double[]>> AlignAndAverageAllRetentionTimes(
+        private IDictionary<Target, Tuple<TimeSource, double[]>> AlignAndAverageAllRetentionTimes(
             ResultNameMap<RetentionTimeSource> sources, IList<AlignedRetentionTimes> fileAlignments)
         {
-            var allRetentionTimes = new Dictionary<string, List<double>>();
+            var allRetentionTimes = new Dictionary<Target, List<double>>();
             int i = 0;
             foreach (var source in sources)
             {
@@ -1230,7 +1291,7 @@ namespace pwiz.Skyline.Model.Lib
                     new[] { new Statistics(t.Value).Percentile(IrtStandard.GetSpectrumTimePercentile(t.Key)) }));
         }
 
-        private void AddAlignedRetentionTimes(LibraryRetentionTimes libraryTimes, IDictionary<string, List<double>> allRetentionTimes, AlignedRetentionTimes fileAlignment)
+        private void AddAlignedRetentionTimes(LibraryRetentionTimes libraryTimes, IDictionary<Target, List<double>> allRetentionTimes, AlignedRetentionTimes fileAlignment)
         {
             foreach (var measuredTime in libraryTimes.PeptideRetentionTimes)
             {
@@ -2061,7 +2122,8 @@ namespace pwiz.Skyline.Model.Lib
         private readonly IndexedIonMobilities _ionMobilitiesByFileId;
         private readonly ImmutableSortedList<int, PeakBounds> _peakBoundaries;
 
-        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id) : this(key, copies, numPeaks, id, default(IndexedRetentionTimes), default(IndexedIonMobilities), ImmutableSortedList<int, PeakBounds>.EMPTY)
+        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id)
+            : this(key, copies, numPeaks, id, default(IndexedRetentionTimes), default(IndexedIonMobilities), ImmutableSortedList<int, PeakBounds>.EMPTY)
         {
         }
 
@@ -2077,6 +2139,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public LibKey Key { get { return _key;  } }
+        public SmallMoleculeLibraryAttributes SmallMoleculeLibraryAttributes { get { return Key.SmallMoleculeLibraryAttributes; } }
         public int Copies { get { return _copies; } }
         public int NumPeaks { get { return _numPeaks; } }
         public int Id { get { return _id; } }

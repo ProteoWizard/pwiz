@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -45,7 +46,7 @@ namespace pwiz.Skyline.Model
         {
             _fastaSequence = fastaSequence;
 
-            Sequence = sequence;
+            Target = new Target(sequence);
             Begin = begin;
             End = end;
             MissedCleavages = missedCleavages;
@@ -54,26 +55,39 @@ namespace pwiz.Skyline.Model
             Validate();
         }
 
-        public Peptide(DocNodeCustomIon customIon)
+        public Peptide(CustomMolecule customMolecule)
         {
-            CustomIon = customIon;
+            Target = new Target(customMolecule);
+
+            Validate();
+        }
+
+        public Peptide(Target pepOrMol)
+        {
+            Target = pepOrMol;
 
             Validate();
         }
 
         public FastaSequence FastaSequence { get { return _fastaSequence; } }
 
-        public string Sequence { get; private set; } // If this is null, expect CustomIon not null
+        public Target Target { get; private set; } // Peptide sequence or custom molecule
         public int? Begin { get; private set; }
         public int? End { get; private set; } // non-inclusive
         public int MissedCleavages { get; private set; }
         public bool IsDecoy { get; private set; }
-        public DocNodeCustomIon CustomIon { get; private set;} // If this is null, expect Sequence not null
-        public bool IsCustomIon { get { return (CustomIon != null); }}
-        public int Length { get { return Sequence != null ? Sequence.Length : 0; }}
 
-        // CONSIDER: Polymorphism?
-        public string TextId { get { return IsCustomIon ? CustomIon.InvariantName : Sequence; } }
+        public CustomMolecule CustomMolecule { get { return Target.Molecule; } }
+
+        public string Sequence { get { return Target.Sequence; } }
+        public bool IsCustomMolecule { get { return !Target.IsProteomic; }}
+        public int Length { get { return Target.IsProteomic ? Target.Sequence.Length : 0; }}
+        public string TextId { get { return IsCustomMolecule ? Target.Molecule.InvariantName : Target.Sequence; } }
+
+        public SmallMoleculeLibraryAttributes GetSmallMoleculeLibraryAttributes()
+        {
+            return IsCustomMolecule ? CustomMolecule.GetSmallMoleculeLibraryAttributes() : SmallMoleculeLibraryAttributes.EMPTY;
+        }
 
         public int Order { get { return Begin ?? 0; } }
 
@@ -111,7 +125,7 @@ namespace pwiz.Skyline.Model
 
         public static int CompareGroups(TransitionGroup group1, TransitionGroup group2)
         {
-            int chargeDiff = group1.PrecursorCharge - group2.PrecursorCharge;
+            int chargeDiff = group1.PrecursorAdduct.CompareTo(group2.PrecursorAdduct);
             if (chargeDiff != 0)
                 return chargeDiff;
             return group1.LabelType.CompareTo(group2.LabelType);
@@ -119,9 +133,13 @@ namespace pwiz.Skyline.Model
 
         public IEnumerable<TransitionGroup> GetTransitionGroups(SrmSettings settings, PeptideDocNode nodePep, ExplicitMods mods, bool useFilter)
         {
-            if (IsCustomIon)
+            if (IsCustomMolecule)
             {
-                // We can't generate nodes as we do with peptides, so just filter what we do have on instrument mz range
+                // TODO(bspratt) WHY NOT USING TRANSITION SETTINGS FILTER PRECURSOR ADDUCTS?
+                // We can't generate precursors as we do with peptides, so just filter what we do have on instrument mz range
+                //var precursorAdducts = settings.TransitionSettings.Filter.SmallMoleculePrecursorAdducts; 
+                // TODO(bspratt) generate precursor transitions if doc has no fragments
+                // CONSIDER(bspratt) could we reasonably reuse fragments with proposed precursors of suitable charge and polarity (say, add an M+Na node that mimics an existing M+H node and children)
                 foreach (var group in nodePep.TransitionGroups.Where(tranGroup => tranGroup.TransitionGroup.IsCustomIon))
                 {
                     if (!useFilter || settings.TransitionSettings.IsMeasurablePrecursor(group.PrecursorMz))
@@ -130,46 +148,46 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                IList<int> precursorCharges = settings.TransitionSettings.Filter.PrecursorCharges;
+                var precursorCharges = settings.TransitionSettings.Filter.PeptidePrecursorCharges;
                 if (!useFilter)
                 {
-                    precursorCharges = new List<int>();
+                    precursorCharges = new List<Adduct>();
                     for (int i = TransitionGroup.MIN_PRECURSOR_CHARGE; i < TransitionGroup.MAX_PRECURSOR_CHARGE; i++)
-                        precursorCharges.Add(i);
+                        precursorCharges.Add(Adduct.FromChargeProtonated(i));
                 }
 
                 var modSettings = settings.PeptideSettings.Modifications;
 
-                double precursorMassLight = settings.GetPrecursorMass(IsotopeLabelType.light, Sequence, mods);
-                var listPrecursorMasses = new List<KeyValuePair<IsotopeLabelType, double>>
-                {new KeyValuePair<IsotopeLabelType, double>(IsotopeLabelType.light, precursorMassLight)};
+                var precursorMassLight = settings.GetPrecursorMass(IsotopeLabelType.light, Target, mods);
+                var listPrecursorMasses = new List<KeyValuePair<IsotopeLabelType, TypedMass>>
+                {new KeyValuePair<IsotopeLabelType, TypedMass>(IsotopeLabelType.light, precursorMassLight)};
 
                 foreach (var typeMods in modSettings.GetHeavyModifications())
                 {
                     IsotopeLabelType labelType = typeMods.LabelType;
-                    double precursorMass = precursorMassLight;
+                    var precursorMass = precursorMassLight;
                     if (settings.HasPrecursorCalc(labelType, mods))
-                        precursorMass = settings.GetPrecursorMass(labelType, Sequence, mods);
+                        precursorMass = settings.GetPrecursorMass(labelType, Target, mods);
 
-                    listPrecursorMasses.Add(new KeyValuePair<IsotopeLabelType, double>(labelType, precursorMass));
+                    listPrecursorMasses.Add(new KeyValuePair<IsotopeLabelType, TypedMass>(labelType, precursorMass));
                 }
 
-                foreach (int charge in precursorCharges)
+                foreach (var adduct in precursorCharges)
                 {
-                    if (useFilter && !settings.Accept(settings, this, mods, charge))
+                    if (useFilter && !settings.Accept(settings, this, mods, adduct))
                         continue;
 
                     for (int i = 0; i < listPrecursorMasses.Count; i++)
                     {
                         var pair = listPrecursorMasses[i];
                         IsotopeLabelType labelType = pair.Key;
-                        double precursorMass = pair.Value;
+                        var precursorMass = pair.Value;
                         // Only return a heavy group, if the precursor masses differ
                         // between the light and heavy calculators
                         if (i == 0 || precursorMass != precursorMassLight)
                         {
-                            if (settings.TransitionSettings.IsMeasurablePrecursor(SequenceMassCalc.GetMZ(precursorMass,charge)))
-                                yield return new TransitionGroup(this, null, charge, labelType);
+                            if (settings.TransitionSettings.IsMeasurablePrecursor(SequenceMassCalc.GetMZ(precursorMass, adduct)))
+                                yield return new TransitionGroup(this, adduct, labelType);
                         }
                     }
                 }
@@ -313,11 +331,11 @@ namespace pwiz.Skyline.Model
 
         private void Validate()
         {
-            if (IsCustomIon)
+            if (IsCustomMolecule)
             {
                 Assume.IsNull(_fastaSequence);
                 Assume.IsNull(Sequence);
-                CustomIon.Validate();
+                CustomMolecule.Validate();
             }
             else if (_fastaSequence == null)
             {
@@ -325,7 +343,7 @@ namespace pwiz.Skyline.Model
                     throw new InvalidDataException(Resources.Peptide_Validate_Peptides_without_a_protein_sequence_do_not_support_the_start_and_end_properties);
 
                 // No FastaSequence checked the sequence, so check it here.
-                FastaSequence.ValidateSequence(Sequence);
+                FastaSequence.ValidateSequence(Target.Sequence);
             }
             else
             {
@@ -338,12 +356,12 @@ namespace pwiz.Skyline.Model
                 var j = 0;
                 for (var i = Begin.Value; i < End.Value;)
                 {
-                    if (!Equals(Sequence[j++],_fastaSequence.Sequence[i++]))
+                    if (!Equals(Target.Sequence[j++], _fastaSequence.Sequence[i++]))
                     {
                         string sequenceCheck = _fastaSequence.Sequence.Substring(Begin.Value, End.Value - Begin.Value);
                         throw new InvalidDataException(
                             string.Format(Resources.Peptide_Validate_The_peptide_sequence__0__does_not_agree_with_the_protein_sequence__1__at__2__3__,
-                                Sequence, sequenceCheck, Begin.Value, End.Value));
+                                Target, sequenceCheck, Begin.Value, End.Value));
                     }
                 }
             }
@@ -357,11 +375,10 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             var equal = Equals(obj._fastaSequence, _fastaSequence) &&
-                Equals(obj.Sequence, Sequence) &&
+                Equals(obj.Target, Target) &&
                 obj.Begin.Equals(Begin) &&
                 obj.End.Equals(End) &&
                 obj.MissedCleavages == MissedCleavages &&
-                Equals(obj.CustomIon, CustomIon) &&
                 obj.IsDecoy == IsDecoy;
             return equal; // For debugging convenience
         }
@@ -379,34 +396,33 @@ namespace pwiz.Skyline.Model
             unchecked
             {
                 int result = (_fastaSequence != null ? _fastaSequence.GetHashCode() : 0);
-                result = (result*397) ^ (Sequence != null ? Sequence.GetHashCode() : 0);
+                result = (result*397) ^ (Target != null ? Target.GetHashCode() : 0);
                 result = (result*397) ^ (Begin.HasValue ? Begin.Value : 0);
                 result = (result*397) ^ (End.HasValue ? End.Value : 0);
                 result = (result*397) ^ MissedCleavages;
                 result = (result*397) ^ IsDecoy.GetHashCode();
-                result = (result*397) ^ (CustomIon != null ? CustomIon.GetHashCode() : 0);
                 return result;
             }
         }
 
         public override string ToString()
         {
-            if (IsCustomIon)
-                return CustomIon.DisplayName;
+            if (IsCustomMolecule)
+                return CustomMolecule.DisplayName;
 
             if (!Begin.HasValue || !End.HasValue)
             {
                 if (MissedCleavages == 0)
-                    return Sequence;
+                    return Target.Sequence;
                 else
-                    return string.Format(TextUtil.SpaceSeparate(Sequence, Resources.Peptide_ToString_missed__0__), MissedCleavages);
+                    return string.Format(TextUtil.SpaceSeparate(Target.Sequence, Resources.Peptide_ToString_missed__0__), MissedCleavages);
             }
             else
             {
                 string format = "{0}.{1}.{2} [{3}, {4}]"; // Not L10N
                 if (MissedCleavages > 0)
                     format = TextUtil.SpaceSeparate(format, Resources.Peptide_ToString__missed__5__);
-                return string.Format(format, PrevAA, Sequence, NextAA, Begin.Value, End.Value - 1, MissedCleavages);
+                return string.Format(format, PrevAA, Target, NextAA, Begin.Value, End.Value - 1, MissedCleavages);
             }
         }
 
@@ -575,19 +591,19 @@ namespace pwiz.Skyline.Model
     {
         public PeptideSequenceModKey(Peptide peptide, ExplicitMods modifications)
         {
-            Sequence = peptide.Sequence;
+            Sequence = peptide.Target;
             // For consistent keys in peptide matching, clear the variable flag, if it is present.
             Modifications = modifications != null && modifications.IsVariableStaticMods
                 ? modifications.ChangeIsVariableStaticMods(false)
                 : modifications;
             IsDecoy = peptide.IsDecoy;
-            CustomIon = peptide.CustomIon;
         }
 
-        private string Sequence { get; set; }
+        private Target Sequence { get; set; }
         private ExplicitMods Modifications { get; set; }
         private bool IsDecoy { get; set; }
-        private CustomIon CustomIon { get; set; }
+
+        public bool IsProteomic { get { return Sequence.IsProteomic; } }
 
         #region object overrides
 
@@ -595,8 +611,7 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(CustomIon, other.CustomIon) &&
-                Equals(other.Sequence, Sequence) &&
+            return Equals(other.Sequence, Sequence) &&
                 Equals(other.Modifications, Modifications) &&
                 Equals(other.IsDecoy, IsDecoy);
         }
@@ -616,7 +631,6 @@ namespace pwiz.Skyline.Model
                 int hashCode = (Sequence != null ? Sequence.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Modifications != null ? Modifications.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ IsDecoy.GetHashCode();
-                hashCode = (hashCode * 397) ^ (CustomIon != null ? CustomIon.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -628,13 +642,13 @@ namespace pwiz.Skyline.Model
 
         public override string ToString()
         {
-            if (CustomIon != null)
-                return CustomIon.ToString();
+            if (!Sequence.IsProteomic)
+                return Sequence.Molecule.ToString();
             if (Modifications == null)
-                return Sequence;
+                return Sequence.Sequence;
 
             var calc = new ExplicitSequenceMassCalc(Modifications, SrmSettings.MonoisotopicMassCalc, IsotopeLabelType.light);
-            return calc.GetModifiedSequence(Sequence, true);
+            return calc.GetModifiedSequence(Sequence, true).ToString();
         }
 
         #endregion
@@ -647,7 +661,7 @@ namespace pwiz.Skyline.Model
             ModifiedSequence = modifiedSequence;
             // Strip explicit mods of protein identification information
             ExplicitMods = explicitMods != null
-                ? explicitMods.ChangePeptide(new Peptide(explicitMods.Peptide.Sequence))
+                ? explicitMods.ChangePeptide(new Peptide(explicitMods.Peptide.Target))
                 :null;
         }
 
@@ -680,5 +694,129 @@ namespace pwiz.Skyline.Model
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Use this where we would formerly have just passed a string with a peptide sequence,
+    /// but now may be interested in generalized small molecules.
+    /// </summary>
+    public class Target : IComparable<Target>, IEquatable<Target>
+    {
+        public Target(string sequence)
+        {
+            Sequence = sequence;
+        }
+        public Target(CustomMolecule molecule)
+        {
+            Molecule = molecule;
+        }
+
+        public Target(SmallMoleculeLibraryAttributes molecule) 
+        {
+            Molecule = new CustomMolecule(molecule);
+        }
+
+        public string Sequence { get; private set; }
+
+        public CustomMolecule Molecule { get; private set; }
+        public bool IsProteomic { get { return Molecule == null; } }
+        
+        public Target ChangeSequence(string sequence)
+        {
+            if (Equals(sequence, Sequence))
+                return this;
+            Assume.IsNull(Molecule);
+            return new Target(sequence);
+        }
+        public LibKey GetLibKey(Adduct adduct)
+        {
+            if (IsProteomic)
+                return new LibKey(Sequence, adduct.AdductCharge);
+            return new LibKey(Molecule.GetSmallMoleculeLibraryAttributes(), adduct);
+        }
+
+        public static int CompareOrdinal(Target left, Target right)
+        {
+            return left == null ?
+                   (right == null ? 0 : -1) :
+                   left.CompareTo(right);
+        }
+        public int CompareTo(Target other)
+        {
+            if (other == null)
+                return 1;
+            if (IsProteomic)
+                return other.IsProteomic ? string.CompareOrdinal(Sequence, other.Sequence) : 1;
+            return other.IsProteomic ? -1 : Molecule.CompareTo(other.Molecule);
+        }
+
+        public bool IsEmpty
+        {
+            get { return string.IsNullOrEmpty(Sequence) && (Molecule == null || Molecule.IsEmpty); }
+        }
+        public bool Equals(Target other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return string.Equals(Sequence, other.Sequence) && Equals(Molecule, other.Molecule);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((Target)obj);
+        }
+
+        public static bool operator ==(Target left, Target right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(Target left, Target right)
+        {
+            return !Equals(left, right);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((Sequence != null ? Sequence.GetHashCode() : 0) * 397) ^ (Molecule != null ? Molecule.GetHashCode() : 0);
+            }
+        }
+
+        public string DisplayName
+        {
+            get { return Sequence ?? Molecule.DisplayName; }
+        }
+
+        public string InvariantName
+        {
+            get { return Sequence ?? Molecule.InvariantName; }
+        }
+
+        public override string ToString()
+        {
+            return Sequence ?? Molecule.PrimaryEquivalenceKey;
+        }
+
+        // Serialization helpers
+        // XML parsers may or may not leave tabs alone, so replace
+        // with something else
+        public string ToSerializableString()
+        {
+            if (IsProteomic)
+                return Sequence;
+            return Molecule.ToSerializableString();
+        }
+
+        public static Target FromSerializableString(string val)
+        {
+            if (!val.StartsWith("#")) // Not L10N
+                return new Target(val);
+            return new Target(CustomMolecule.FromSerializableString(val));
+        }
     }
 }

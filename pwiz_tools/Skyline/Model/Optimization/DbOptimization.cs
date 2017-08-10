@@ -20,6 +20,8 @@ using System;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+
 // ReSharper disable VirtualMemberCallInConstructor
 
 namespace pwiz.Skyline.Model.Optimization
@@ -37,35 +39,35 @@ namespace pwiz.Skyline.Model.Optimization
     public class OptimizationKey : IComparable
     {
         public OptimizationType OptType { get; set; }
-        public string PeptideModSeq { get; set; }
-        public int Charge { get; set; }
+        public Target PeptideModSeq { get; set; }
+        public Adduct PrecursorAdduct { get; set; }
         public string FragmentIon { get; set; }
-        public int ProductCharge { get; set; }
+        public Adduct ProductAdduct { get; set; }
 
         public OptimizationKey()
         {
             OptType = OptimizationType.unknown;
         }
 
-        public OptimizationKey(OptimizationType optType, string peptideModSeq, int charge, string fragmentIon, int productCharge)
+        public OptimizationKey(OptimizationType optType, Target peptideModSeq, Adduct precursorAdduct, string fragmentIon, Adduct productAdduct)
         {
             OptType = optType;
             PeptideModSeq = peptideModSeq;
-            Charge = charge;
+            PrecursorAdduct = precursorAdduct;
             FragmentIon = fragmentIon;
-            ProductCharge = productCharge;
+            ProductAdduct = productAdduct;
         }
 
         public OptimizationKey(OptimizationKey other)
-            : this(other.OptType, other.PeptideModSeq, other.Charge, other.FragmentIon, other.ProductCharge)
+            : this(other.OptType, other.PeptideModSeq, other.PrecursorAdduct, other.FragmentIon, other.ProductAdduct)
         {
         }
 
         public override string ToString()
         {
             return !string.IsNullOrEmpty(FragmentIon)
-                ? string.Format("{0} (charge {1}); {2} (charge {3})", PeptideModSeq, Charge, FragmentIon, ProductCharge)    // Not L10N: for debugging
-                : string.Format("{0} (charge {1})", PeptideModSeq, Charge);    // Not L10N: for debugging
+                ? string.Format("{0} (charge {1}); {2} (charge {3})", PeptideModSeq, PrecursorAdduct, FragmentIon, ProductAdduct)    // Not L10N: for debugging
+                : string.Format("{0} (charge {1})", PeptideModSeq, PrecursorAdduct);    // Not L10N: for debugging
         }
 
         public int CompareTo(object obj)
@@ -85,11 +87,11 @@ namespace pwiz.Skyline.Model.Optimization
             }
             else if (!Equals(PeptideModSeq, other.PeptideModSeq))
             {
-                return String.Compare(PeptideModSeq, other.PeptideModSeq, StringComparison.InvariantCulture);
+                return PeptideModSeq.CompareTo(other.PeptideModSeq);
             }
-            else if (Charge != other.Charge)
+            else if (!PrecursorAdduct.Equals(other.PrecursorAdduct))
             {
-                return Charge.CompareTo(other.Charge);
+                return PrecursorAdduct.CompareTo(other.PrecursorAdduct);
             }
             else if (FragmentIon != other.FragmentIon)
             {
@@ -97,7 +99,7 @@ namespace pwiz.Skyline.Model.Optimization
             }
             else
             {
-                return ProductCharge.CompareTo(other.ProductCharge);
+                return ProductAdduct.CompareTo(other.ProductAdduct);
             }
         }
 
@@ -114,9 +116,9 @@ namespace pwiz.Skyline.Model.Optimization
             }
             return OptType.Equals(other.OptType) &&
                 Equals(PeptideModSeq, other.PeptideModSeq) &&
-                Charge == other.Charge &&
+                Equals(PrecursorAdduct, other.PrecursorAdduct) &&
                 FragmentIon == other.FragmentIon &&
-                ProductCharge == other.ProductCharge;
+                Equals(ProductAdduct, other.ProductAdduct);
         }
 
         public override int GetHashCode()
@@ -125,10 +127,10 @@ namespace pwiz.Skyline.Model.Optimization
             {
                 int result = (PeptideModSeq != null ? PeptideModSeq.GetHashCode() : 0);
                 result = (result*397) ^ OptType.GetHashCode();
-                result = (result*397) ^ Charge.GetHashCode();
+                result = (result*397) ^ PrecursorAdduct.GetHashCode();
                 if (FragmentIon != null)
                     result = (result*397) ^ FragmentIon.GetHashCode();
-                result = (result*397) ^ ProductCharge.GetHashCode();
+                result = (result*397) ^ ProductAdduct.GetHashCode();
                 return result;
             }
         }
@@ -148,10 +150,34 @@ namespace pwiz.Skyline.Model.Optimization
         public virtual OptimizationKey Key { get; set; }
         public virtual double Value { get; set; }
 
-        public virtual string PeptideModSeq { get { return Key.PeptideModSeq; } set { Key.PeptideModSeq = value; } }
-        public virtual int Charge { get { return Key.Charge; } set { Key.Charge = value; } }
+        public virtual string PeptideModSeq
+        {
+            get { return Key.PeptideModSeq.ToSerializableString(); }
+            set { Key.PeptideModSeq = Target.FromSerializableString(value); }
+        }
+        public virtual Adduct Adduct { get { return Key.PrecursorAdduct; } set { Key.PrecursorAdduct = value; } }
+        public virtual int Charge
+        {
+            get
+            {
+                // TODO(bspratt) generalize this to all molecules and adducts - currently we save an int to the db
+                Assume.IsTrue(Key.PrecursorAdduct.IsProtonated);
+                return Key.PrecursorAdduct.AdductCharge;
+            }
+            set { Key.PrecursorAdduct = Adduct.FromChargeProtonated(value); }
+        }
         public virtual string FragmentIon { get { return Key.FragmentIon; } set { Key.FragmentIon = value; } }
-        public virtual int ProductCharge { get { return Key.ProductCharge; } set { Key.ProductCharge = value; } }
+        public virtual Adduct ProductAdduct { get { return Key.ProductAdduct; } set { Key.ProductAdduct = value; } }
+        public virtual int ProductCharge
+        {
+            get
+            {
+                // TODO(bspratt) generalize this to all molecules and adducts - currently we save an int to the db
+                Assume.IsTrue(Key.ProductAdduct.IsEmpty || Key.ProductAdduct.IsProtonated); 
+                return Key.ProductAdduct.AdductCharge;
+            }
+            set { Key.ProductAdduct = Adduct.FromChargeProtonated(value); }
+        }
         public virtual int Type
         {
             get
@@ -165,10 +191,10 @@ namespace pwiz.Skyline.Model.Optimization
             }
         }
 
-        public virtual string Sequence { get { return PeptideModSeq; } }
+        public virtual Target Target { get { return Key.PeptideModSeq; } }
 
         public DbOptimization(OptimizationKey key, double value)
-            : this(key.OptType, key.PeptideModSeq, key.Charge, key.FragmentIon, key.ProductCharge, value)
+            : this(key.OptType, key.PeptideModSeq, key.PrecursorAdduct, key.FragmentIon, key.ProductAdduct, value)
         {
         }
 
@@ -178,7 +204,7 @@ namespace pwiz.Skyline.Model.Optimization
             Id = other.Id;
         }
 
-        public DbOptimization(OptimizationType type, string seq, int charge, string fragmentIon, int productCharge, double value)
+        public DbOptimization(OptimizationType type, Target seq, Adduct charge, string fragmentIon, Adduct productCharge, double value)
         {
             Key = new OptimizationKey(type, seq, charge, fragmentIon, productCharge);
             Value = value;

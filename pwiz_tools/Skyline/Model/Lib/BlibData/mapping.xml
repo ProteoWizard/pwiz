@@ -19,7 +19,12 @@
     <property name="PeptideSeq" column="peptideSeq" index="idxPeptide" not-null="true"/>
     <property name="PeptideModSeq" column="peptideModSeq" index="idxPeptideMod" not-null="true"/>
     <property name="PrecursorCharge" column="precursorCharge" index="idxPeptideMod" not-null="true"/>
+    <property name="PrecursorAdduct" column="precursorAdduct" index="idxMoleculeName"/>
     <property name="PrecursorMZ" column="precursorMZ" not-null="true"/>
+    <property name="MoleculeName" column="moleculeName" index="idxMoleculeName" not-null="true"/>
+    <property name="ChemicalFormula" column="chemicalFormula" not-null="true"/>
+    <property name="InChiKey" column="inchiKey" index="idxInChiKey" not-null="true"/>
+    <property name="OtherKeys" column="otherKeys" not-null="true"/>
     <property name="PrevAA" column="prevAA"/>
     <property name="NextAA" column="nextAA"/>
     <property name="Copies" column="copies" not-null="true"/>

@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestA
 
             // Check for the existence of the Decoys peptide group and that everything under it is marked as a decoy. 
             var nodePeptideGroupDecoy = decoysDoc.PeptideGroups.Single(nodePeptideGroup => nodePeptideGroup.IsDecoy);
-            var dictModsToPep = document.Peptides.ToDictionary(nodePep => nodePep.ModifiedSequence);
+            var dictModsToPep = document.Peptides.ToDictionary(nodePep => nodePep.ModifiedTarget);
             foreach (var nodePep in nodePeptideGroupDecoy.Peptides)
             {
                 Assert.AreEqual(true, nodePep.IsDecoy);
@@ -104,7 +104,7 @@ namespace pwiz.SkylineTestA
                         SequenceMassCalc.NormalizeModifiedSequence(nodePep.SourceKey.ModifiedSequence));
                     if (nodePep.HasExplicitMods)
                         Assert.IsNotNull(nodePep.SourceKey.ExplicitMods);
-                    Assert.IsTrue(dictModsToPep.TryGetValue(nodePep.SourceTextId, out nodePepSource));
+                    Assert.IsTrue(dictModsToPep.TryGetValue(nodePep.SourceModifiedTarget, out nodePepSource));
                     var sourceKey = new ModifiedSequenceMods(nodePepSource.Peptide.Sequence, nodePepSource.ExplicitMods);
                     Assert.AreEqual(sourceKey.ExplicitMods, nodePep.SourceExplicitMods);
                 }

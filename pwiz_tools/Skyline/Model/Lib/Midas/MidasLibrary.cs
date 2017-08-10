@@ -256,9 +256,9 @@ namespace pwiz.Skyline.Model.Lib.Midas
             var precursors = (from nodePepGroup in doc.PeptideGroups
                               from nodePep in nodePepGroup.Peptides
                               from nodeTranGroup in nodePep.TransitionGroups
-                              select new Tuple<double, string, int>(
+                              select new Tuple<double, Target, int>(
                                   nodeTranGroup.PrecursorMz,
-                                  doc.Settings.GetPrecursorCalc(nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods).GetModifiedSequence(nodePep.Peptide.Sequence, false),
+                                  doc.Settings.GetPrecursorCalc(nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods).GetModifiedSequence(nodePep.Peptide.Target, false),
                                   nodeTranGroup.PrecursorCharge
                               )).ToList();
             if (!precursors.Any())
@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
                 var closest = precursors[j];
                 if (Math.Abs(precursor - closest.Item1) < PRECURSOR_TOLERANCE)
                 {
-                    spectrum.DocumentPeptide = closest.Item2;
+                    spectrum.DocumentPeptide = closest.Item2.Sequence;
                     spectrum.DocumentPrecursorCharge = closest.Item3;
                 }
             }

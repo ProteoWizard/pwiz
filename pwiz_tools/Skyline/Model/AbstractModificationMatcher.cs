@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -44,7 +45,7 @@ namespace pwiz.Skyline.Model
 
         public List<string> UnmatchedSequences { get; private set; }
 
-        private static readonly SequenceMassCalc CALC_DEFAULT = new SequenceMassCalc(MassType.Monoisotopic);
+        private static readonly SequenceMassCalc CALC_DEFAULT = new SequenceMassCalc(MassType.MonoisotopicMassH);
         public static double GetDefaultModMass(char aa, StaticMod mod)
         {
             return CALC_DEFAULT.GetModMass(aa, mod);
@@ -442,9 +443,77 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public PeptideDocNode CreateDocNodeFromSettings(string seq, Peptide peptide, SrmSettingsDiff diff,
-             out TransitionGroupDocNode nodeGroupMatched)
+        public PeptideDocNode CreateDocNodeFromSettings(LibKey key, Peptide peptide, SrmSettingsDiff diff, out TransitionGroupDocNode nodeGroupMatched)
         {
+            if (!key.Target.IsProteomic)
+            {
+                // Scan the spectral lib entry for top N ranked (for now, that's just by intensity with high mz as tie breaker) fragments, add those as mass-only fragments.
+                foreach (var nodePep in peptide.CreateDocNodes(Settings, new MaxModFilter(0)))
+                {
+                    SpectrumHeaderInfo libInfo;
+                    if (nodePep != null && Settings.PeptideSettings.Libraries.TryGetLibInfo(key, out libInfo))
+                    {
+                        var isotopeLabelType = key.Adduct.HasIsotopeLabels ? IsotopeLabelType.heavy : IsotopeLabelType.light;
+                        var group = new TransitionGroup(peptide, key.Adduct, isotopeLabelType);
+                        nodeGroupMatched = new TransitionGroupDocNode(group, Annotations.EMPTY, Settings, null, libInfo, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+                        SpectrumPeaksInfo spectrum;
+                        if (Settings.PeptideSettings.Libraries.TryLoadSpectrum(key, out spectrum))
+                        {
+                            // Add fragment and precursor transitions as needed
+                            var transitions =
+                                Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.precursor)
+                                    ? nodeGroupMatched.GetPrecursorChoices(Settings, null, true) // Gives list of precursors
+                                    : new List<DocNode>();
+
+                            if (Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom))
+                            {
+                                // We don't know actual charge of fragments in the library, so just note + or -
+                                var fragmentCharge = key.Adduct.AdductCharge < 0 ? Adduct.M_MINUS : Adduct.M_PLUS;
+                                // Get list of possible transitions based on library spectrum
+                                var transitionsUnranked = new List<DocNode>();
+                                foreach (var peak in spectrum.Peaks)
+                                {
+                                    var monoisotopicMass = new TypedMass(peak.Mz, MassType.Monoisotopic);
+                                    var averageMass = new TypedMass(peak.Mz, MassType.Average);
+                                    var transition = new Transition(nodeGroupMatched.TransitionGroup, fragmentCharge, 0,
+                                        new CustomMolecule(monoisotopicMass, averageMass));
+                                    transitionsUnranked.Add(new TransitionDocNode(transition, Annotations.EMPTY, null, monoisotopicMass, null, null, null));
+                                }
+                                var nodeGroupUnranked = (TransitionGroupDocNode)nodeGroupMatched.ChangeChildren(transitionsUnranked);
+                                // Filter again, retain only those with rank info
+                                SpectrumHeaderInfo groupLibInfo = null;
+                                var transitionRanks = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
+                                nodeGroupUnranked.GetLibraryInfo(Settings, null, true, ref groupLibInfo, transitionRanks);
+                                foreach (var ranked in transitionRanks)
+                                {
+                                    var monoisotopicMass = new TypedMass(ranked.Value.ObservedMz, MassType.Monoisotopic);
+                                    var averageMass = new TypedMass(ranked.Value.ObservedMz, MassType.Average);
+                                    var transition = new Transition(nodeGroupMatched.TransitionGroup, fragmentCharge, 0,
+                                        new CustomMolecule(monoisotopicMass, averageMass));
+                                    transitions.Add(new TransitionDocNode(transition, Annotations.EMPTY, null, monoisotopicMass, null, new TransitionLibInfo(ranked.Value.Rank, ranked.Value.Intensity), null));
+                                }
+                            }
+                            nodeGroupMatched = (TransitionGroupDocNode)nodeGroupMatched.ChangeChildren(transitions);
+                            return (PeptideDocNode)nodePep.ChangeChildren(new List<DocNode>() { nodeGroupMatched });
+                        }
+                    }
+                }
+                nodeGroupMatched = null;
+                return null;
+            }
+            return CreateDocNodeFromSettings(key.Target, peptide, diff, out nodeGroupMatched);
+        }
+
+        public PeptideDocNode CreateDocNodeFromSettings(Target target, Peptide peptide, SrmSettingsDiff diff,
+                out TransitionGroupDocNode nodeGroupMatched)
+        {
+            if (!target.IsProteomic)
+            {
+                nodeGroupMatched = null; 
+                return null;
+            }
+
+            var seq = target.Sequence;
             seq = Transition.StripChargeIndicators(seq, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
             if (peptide == null)
             {
@@ -467,9 +536,10 @@ namespace pwiz.Skyline.Model
             var filterMaxMod = new MaxModFilter(Math.Min(seqModCount,
                 Settings.PeptideSettings.Modifications.MaxVariableMods));
             var filterMod = new VariableModLocationFilter(seq);
+            var newTarget = new Target(seq);
             foreach (var nodePep in peptide.CreateDocNodes(Settings, filterMaxMod, filterMod))
             {
-                var nodePepMod = CreateDocNodeFromSettings(seq, nodePep, diff, out nodeGroupMatched);
+                var nodePepMod = CreateDocNodeFromSettings(newTarget, nodePep, diff, out nodeGroupMatched);
                 if (nodePepMod != null)
                     return nodePepMod;
             }
@@ -627,7 +697,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private PeptideDocNode CreateDocNodeFromSettings(string seq, PeptideDocNode nodePep, SrmSettingsDiff diff,
+        private PeptideDocNode CreateDocNodeFromSettings(Target seq, PeptideDocNode nodePep, SrmSettingsDiff diff,
             out TransitionGroupDocNode nodeGroupMatched)
         {
             PeptideDocNode nodePepMod = nodePep.ChangeSettings(Settings, diff ?? SrmSettingsDiff.ALL, false);
@@ -641,7 +711,7 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
-        protected abstract bool IsMatch(string seq, PeptideDocNode nodePep, out TransitionGroupDocNode nodeGroup);
+        protected abstract bool IsMatch(Target seq, PeptideDocNode nodePep, out TransitionGroupDocNode nodeGroup);
 
         public PeptideDocNode CreateDocNodeFromMatches(PeptideDocNode nodePep, IEnumerable<AAModInfo> infos)
         {

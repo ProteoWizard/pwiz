@@ -139,13 +139,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public string FixedPoint1
         {
-            get { return ((DbIrtPeptide) comboFixedPoint1.SelectedItem).Sequence; }
+            get { return ((DbIrtPeptide) comboFixedPoint1.SelectedItem).Target.Sequence; }
             set { comboFixedPoint1.SelectedIndex = GetPeptideIndex(comboFixedPoint1, value); }
         }
 
         public string FixedPoint2
         {
-            get { return ((DbIrtPeptide)comboFixedPoint2.SelectedItem).Sequence; }
+            get { return ((DbIrtPeptide)comboFixedPoint2.SelectedItem).Target.Sequence; }
             set { comboFixedPoint2.SelectedIndex = GetPeptideIndex(comboFixedPoint2, value); }
         }
 
@@ -153,7 +153,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             for (int i = 0; i < comboBox.Items.Count; i++)
             {
-                if (Equals(sequence, ((DbIrtPeptide) comboBox.Items[i]).Sequence))
+                if (Equals(sequence, ((DbIrtPeptide) comboBox.Items[i]).Target.Sequence))
                     return i;
             }
             return -1;

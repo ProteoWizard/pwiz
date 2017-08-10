@@ -1647,8 +1647,8 @@ namespace pwiz.Skyline
                                 commandArgs.IrtGroupName, CommandArgs.ArgText(CommandArgs.ARG_IRT_STANDARDS_GROUP_NAME));
                             return false;
                         }
-                        var irtPeptideSequences = new HashSet<string>(nodeGroupIrt.Peptides.Select(pep => pep.ModifiedSequence));
-                        dbIrtPeptidesFilter.ForEach(pep => pep.Standard = irtPeptideSequences.Contains(pep.PeptideModSeq));
+                        var irtPeptideSequences = new HashSet<Target>(nodeGroupIrt.Peptides.Select(pep => pep.ModifiedTarget));
+                        dbIrtPeptidesFilter.ForEach(pep => pep.Standard = irtPeptideSequences.Contains(pep.ModifiedTarget));
                         if (!CreateIrtDatabase(irtDatabasePath, commandArgs))
                             return false;
                     }
@@ -1673,11 +1673,11 @@ namespace pwiz.Skyline
                 IrtDb db = IrtDb.GetIrtDb(dbPath, null);
                 if (checkPeptides)
                 {
-                    var standards = docNew.Molecules.Where(m => db.IsStandard(m.RawTextId)).ToArray();
+                    var standards = docNew.Molecules.Where(m => db.IsStandard(m.ModifiedTarget)).ToArray();
                     if (standards.Length != db.StandardPeptideCount)
                     {
                         _out.WriteLine(Resources.CommandLine_ImportTransitionList_Warning__The_document_is_missing_iRT_standards);
-                        foreach (var rawTextId in db.StandardPeptides.Where(s => !standards.Contains(nodePep => s == nodePep.RawTextId)))
+                        foreach (var rawTextId in db.StandardPeptides.Where(s => !standards.Contains(nodePep => s == nodePep.ModifiedTarget)))
                         {
                             _out.WriteLine("    " + rawTextId); // Not L10N
                         }
@@ -1691,7 +1691,7 @@ namespace pwiz.Skyline
                 foreach (var conflict in conflicts)
                 {
                     _out.WriteLine(Resources.CommandLine_ImportTransitionList_Warning__The_iRT_calculator_already_contains__0__with_the_value__1___Ignoring__2_,
-                        conflict.ExistingPeptide.PeptideModSeq, conflict.ExistingPeptide.Irt, conflict.NewPeptide.Irt);
+                        conflict.ExistingPeptide.ModifiedTarget, conflict.ExistingPeptide.Irt, conflict.NewPeptide.Irt);
                 }
 
                 _out.WriteLine(Resources.CommandLine_ImportTransitionList_Importing__0__iRT_values_into_the_iRT_calculator__1_, dbIrtPeptidesFilter.Count, calcIrt.Name);

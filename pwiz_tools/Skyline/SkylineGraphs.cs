@@ -189,22 +189,47 @@ namespace pwiz.Skyline
                 // If ion types or charges changed, make sure the new
                 // ones are on and the old ones are off by default.
                 bool refresh = false;
-                if (!ArrayUtil.EqualsDeep(filterNew.IonTypes, filterOld.IonTypes))
+                if (!ArrayUtil.EqualsDeep(filterNew.PeptideIonTypes, filterOld.PeptideIonTypes) ||
+                    !ArrayUtil.EqualsDeep(filterNew.SmallMoleculeIonTypes, filterOld.SmallMoleculeIonTypes))
                 {
                     // Only turn off old ion types, if new settings are not MS1-only full-scan
                     var fullScan = settingsNew.TransitionSettings.FullScan;
+                    var enablePeptides = DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules;
+                    var enableSmallMolecules = DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.proteomic;
                     if (!fullScan.IsEnabled || fullScan.IsEnabledMsMs)
-                        CheckIonTypes(filterOld.IonTypes, false);
+                    {
+                        CheckIonTypes(filterOld.PeptideIonTypes, false, enablePeptides);
+                        CheckIonTypes(filterOld.SmallMoleculeIonTypes, false, enableSmallMolecules);
+                    }
+                    CheckIonTypes(filterNew.PeptideIonTypes, true, enablePeptides);
+                    CheckIonTypes(filterNew.SmallMoleculeIonTypes, true, enableSmallMolecules);
+                    refresh = true;
+                }
 
-                    CheckIonTypes(filterNew.IonTypes, true);
-                    refresh = true;
-                }
-                if (!ArrayUtil.EqualsDeep(filterNew.ProductCharges, filterOld.ProductCharges))
+                // Charge selection
+                if (!ArrayUtil.EqualsDeep(filterNew.PeptideProductCharges, filterOld.PeptideProductCharges) ||
+                    !ArrayUtil.EqualsDeep(filterNew.SmallMoleculeFragmentAdducts, filterOld.SmallMoleculeFragmentAdducts))
                 {
-                    CheckIonCharges(filterOld.ProductCharges, false);
-                    CheckIonCharges(filterNew.ProductCharges, true);
+                    // First clear any old charge enabling
+                    CheckIonCharges(filterOld.PeptideProductCharges, false);
+                    CheckIonCharges(filterOld.SmallMoleculeFragmentAdducts, false);
+                    // Then enable based on settings and document contents
+                    switch (DocumentUI.DocumentType)
+                    {
+                        case SrmDocument.DOCUMENT_TYPE.proteomic:
+                            CheckIonCharges(filterNew.PeptideProductCharges, true);
+                            break;
+                        case SrmDocument.DOCUMENT_TYPE.small_molecules:
+                            CheckIonCharges(filterNew.SmallMoleculeFragmentAdducts, true);
+                            break;
+                        case SrmDocument.DOCUMENT_TYPE.mixed:
+                            CheckIonCharges(filterNew.PeptideProductCharges, true);
+                            CheckIonCharges(filterNew.PeptideProductCharges, true);
+                            break;
+                    }
                     refresh = true;
                 }
+
                 if (refresh && _graphSpectrum != null)
                     listUpdateGraphs.Add(_graphSpectrum);
             }
@@ -234,6 +259,10 @@ namespace pwiz.Skyline
                 }
 
                 bool enable = DocumentUI.Settings.PeptideSettings.Libraries.HasLibraries;
+                if (enable)
+                {
+                    UpdateIonTypesMenuItemsVisibility();
+                }
                 if (graphsToolStripMenuItem.Enabled != enable)
                 {
                     graphsToolStripMenuItem.Enabled = enable;
@@ -801,6 +830,11 @@ namespace pwiz.Skyline
             _graphSpectrumSettings.ShowZIons = !_graphSpectrumSettings.ShowZIons;
         }
 
+        private void fragmentsMenuItem_Click(object sender, EventArgs e)
+        {
+            _graphSpectrumSettings.ShowFragmentIons = !_graphSpectrumSettings.ShowFragmentIons;
+        }
+
         private void precursorIonMenuItem_Click(object sender, EventArgs e)
         {
             _graphSpectrumSettings.ShowPrecursorIon = !_graphSpectrumSettings.ShowPrecursorIon;
@@ -815,7 +849,19 @@ namespace pwiz.Skyline
             xMenuItem.Checked = xionsContextMenuItem.Checked = set.ShowXIons;
             yMenuItem.Checked = yionsContextMenuItem.Checked = set.ShowYIons;
             zMenuItem.Checked = zionsContextMenuItem.Checked = set.ShowZIons;
+            fragmentsMenuItem.Checked = fragmentionsContextMenuItem.Checked = set.ShowFragmentIons;
             precursorIonMenuItem.Checked = precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
+            UpdateIonTypesMenuItemsVisibility();
+        }
+
+        // Update the Ion Types menu for document contents
+        private void UpdateIonTypesMenuItemsVisibility()
+        {
+            aMenuItem.Visible = bMenuItem.Visible = cMenuItem.Visible = 
+               xMenuItem.Visible = yMenuItem.Visible = zMenuItem.Visible = 
+                  DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules;
+
+            fragmentsMenuItem.Visible = DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.proteomic;
         }
 
         private void charge1MenuItem_Click(object sender, EventArgs e)
@@ -945,7 +991,7 @@ namespace pwiz.Skyline
             UpdateSpectrumGraph(false);
         }
 
-        void GraphSpectrum.IStateProvider.BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
+        void GraphSpectrum.IStateProvider.BuildSpectrumMenu(bool isProteomic, ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
         {
             // Store original menuitems in an array, and insert a separator
             ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
@@ -964,18 +1010,26 @@ namespace pwiz.Skyline
             // Insert skyline specific menus
             var set = Settings.Default;
             int iInsert = 0;
-            aionsContextMenuItem.Checked = set.ShowAIons;
-            menuStrip.Items.Insert(iInsert++, aionsContextMenuItem);
-            bionsContextMenuItem.Checked = set.ShowBIons;
-            menuStrip.Items.Insert(iInsert++, bionsContextMenuItem);
-            cionsContextMenuItem.Checked = set.ShowCIons;
-            menuStrip.Items.Insert(iInsert++, cionsContextMenuItem);
-            xionsContextMenuItem.Checked = set.ShowXIons;
-            menuStrip.Items.Insert(iInsert++, xionsContextMenuItem);
-            yionsContextMenuItem.Checked = set.ShowYIons;
-            menuStrip.Items.Insert(iInsert++, yionsContextMenuItem);
-            zionsContextMenuItem.Checked = set.ShowZIons;
-            menuStrip.Items.Insert(iInsert++, zionsContextMenuItem);
+            if (isProteomic)
+            {
+                aionsContextMenuItem.Checked = set.ShowAIons;
+                menuStrip.Items.Insert(iInsert++, aionsContextMenuItem);
+                bionsContextMenuItem.Checked = set.ShowBIons;
+                menuStrip.Items.Insert(iInsert++, bionsContextMenuItem);
+                cionsContextMenuItem.Checked = set.ShowCIons;
+                menuStrip.Items.Insert(iInsert++, cionsContextMenuItem);
+                xionsContextMenuItem.Checked = set.ShowXIons;
+                menuStrip.Items.Insert(iInsert++, xionsContextMenuItem);
+                yionsContextMenuItem.Checked = set.ShowYIons;
+                menuStrip.Items.Insert(iInsert++, yionsContextMenuItem);
+                zionsContextMenuItem.Checked = set.ShowZIons;
+                menuStrip.Items.Insert(iInsert++, zionsContextMenuItem);
+            }
+            else
+            {
+                fragmentionsContextMenuItem.Checked = set.ShowFragmentIons;
+                menuStrip.Items.Insert(iInsert++, fragmentionsContextMenuItem);
+            }
             precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
             menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
@@ -1176,47 +1230,49 @@ namespace pwiz.Skyline
 //            return (charge != 0);
 //        }
 
-        IList<IonType> GraphSpectrum.IStateProvider.ShowIonTypes
+        IList<IonType> GraphSpectrum.IStateProvider.ShowIonTypes(bool isProteomic)
         {
-            get { return _graphSpectrumSettings.ShowIonTypes; }
+            return _graphSpectrumSettings.ShowIonTypes(isProteomic); 
         }
 
-        private void CheckIonTypes(IEnumerable<IonType> types, bool check)
+        private void CheckIonTypes(IEnumerable<IonType> types, bool check, bool visible)
         {
             foreach (var type in types)
-                CheckIonType(type, check);
+                CheckIonType(type, check, visible);
         }
 
-        private void CheckIonType(IonType type, bool check)
+        private void CheckIonType(IonType type, bool check, bool visible)
         {
             var set = Settings.Default;
             switch (type)
             {
-                case IonType.a: set.ShowAIons = aMenuItem.Checked = check; break;
-                case IonType.b: set.ShowBIons = bMenuItem.Checked = check; break;
-                case IonType.c: set.ShowCIons = cMenuItem.Checked = check; break;
-                case IonType.x: set.ShowXIons = xMenuItem.Checked = check; break;
-                case IonType.y: set.ShowYIons = yMenuItem.Checked = check; break;
-                case IonType.z: set.ShowZIons = zMenuItem.Checked = check; break;
+                case IonType.a: set.ShowAIons = aMenuItem.Checked = check; aMenuItem.Visible = visible; break;
+                case IonType.b: set.ShowBIons = bMenuItem.Checked = check; bMenuItem.Visible = visible; break;
+                case IonType.c: set.ShowCIons = cMenuItem.Checked = check; cMenuItem.Visible = visible; break;
+                case IonType.x: set.ShowXIons = xMenuItem.Checked = check; xMenuItem.Visible = visible; break;
+                case IonType.y: set.ShowYIons = yMenuItem.Checked = check; yMenuItem.Visible = visible; break;
+                case IonType.z: set.ShowZIons = zMenuItem.Checked = check; zMenuItem.Visible = visible; break;
+                case IonType.custom: set.ShowFragmentIons = fragmentsMenuItem.Checked = check; fragmentsMenuItem.Visible = visible; break;
             }
         }
 
-        IList<int> GraphSpectrum.IStateProvider.ShowIonCharges
+
+        IList<Adduct> GraphSpectrum.IStateProvider.ShowIonCharges(IEnumerable<Adduct> chargePriority)
         {
-            get { return _graphSpectrumSettings.ShowIonCharges; }
+            return _graphSpectrumSettings.ShowIonCharges(chargePriority);
         }
 
-        private void CheckIonCharges(IEnumerable<int> charges, bool check)
+        private void CheckIonCharges(IEnumerable<Adduct> charges, bool check)
         {
-            foreach (int charge in charges)
+            foreach (var charge in charges)
                 CheckIonCharge(charge, check);
         }
 
-        private void CheckIonCharge(int charge, bool check)
+        private void CheckIonCharge(Adduct adduct, bool check)
         {
             // Set charge settings without causing UI to update
             var set = Settings.Default;
-            switch (charge)
+            switch (Math.Abs(adduct.AdductCharge))  // TODO(bspratt) - need a lot more flexibility here, neg charges, M+Na etc
             {
                 case 1: set.ShowCharge1 = charge1MenuItem.Checked = check; break;
                 case 2: set.ShowCharge2 = charge2MenuItem.Checked = check; break;

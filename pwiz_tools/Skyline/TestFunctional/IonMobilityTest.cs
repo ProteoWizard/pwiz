@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -43,6 +44,13 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = @"TestFunctional\IonMobilityTest.zip";
             RunFunctionalTest();
+        }
+
+        private ValidatingIonMobilityPeptide BuildValidatingIonMobilityPeptide(string seq, Adduct precursorAdduct,
+            double ccs, double highEnergyDriftTimeOffsetMsec)
+        {
+            return new ValidatingIonMobilityPeptide(new Target(seq), precursorAdduct, ccs,
+                highEnergyDriftTimeOffsetMsec);
         }
 
         protected override void DoTest()
@@ -60,44 +68,45 @@ namespace pwiz.SkylineTestFunctional
 
                 // Now exercise the UI
 
-                var goodPeptide = new ValidatingIonMobilityPeptide("SISIVGSYVGNR", 133.3210342, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC);
+                var goodPeptide = BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 133.3210342, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC);
                 Assert.IsNull(goodPeptide.Validate());
                 var badPeptides = new[]
                 {
-                    new ValidatingIonMobilityPeptide("@#$!", 133.3210342, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("SISIVGSYVGNR", 0, 0),
-                    new ValidatingIonMobilityPeptide("SISIVGSYVGNR", -133.3210342, -HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("@#$!", Adduct.SINGLY_PROTONATED, 133.3210342, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 0, 0),
+                    BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, -133.3210342, -HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
                 };
                 foreach (var badPeptide in badPeptides)
                 {
                     Assert.IsNotNull(badPeptide.Validate());
                 }
 
+                var CCS_ANELLINVK = 119.2825783;
                 var ionMobilityPeptides = new[]
                 {
-                    new ValidatingIonMobilityPeptide("SISIVGSYVGNR",133.3210342, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),  // These are made-up values
-                    new ValidatingIonMobilityPeptide("SISIVGSYVGNR",133.3210342, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("CCSDVFNQVVK",131.2405487, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("CCSDVFNQVVK",131.2405487, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("ANELLINVK",119.2825783, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("ANELLINVK",119.2825783, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("EALDFFAR",110.6867676, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("EALDFFAR",110.6867676, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("GVIFYESHGK",123.7844632, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("GVIFYESHGK",123.7844632, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("EKDIVGAVLK",124.3414249, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("EKDIVGAVLK",124.3414249, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("VVGLSTLPEIYEK",149.857687, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("VVGLSTLPEIYEK",149.857687, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("VVGLSTLPEIYEK",149.857687, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("ANGTTVLVGMPAGAK",144.7461979, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("ANGTTVLVGMPAGAK",144.7461979, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("IGDYAGIK", 102.2694763, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("IGDYAGIK", 102.2694763, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("GDYAGIK", 91.09155861, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("GDYAGIK", 91.09155861, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("IFYESHGK",111.2756406, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    new ValidatingIonMobilityPeptide("EALDFFAR",110.6867676, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 133.3210342, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),  // These are made-up values
+                    BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 133.3210342, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("CCSDVFNQVVK", Adduct.SINGLY_PROTONATED, 131.2405487, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("CCSDVFNQVVK", Adduct.SINGLY_PROTONATED, 131.2405487, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("ANELLINVK", Adduct.SINGLY_PROTONATED, CCS_ANELLINVK, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("ANELLINVK", Adduct.SINGLY_PROTONATED, CCS_ANELLINVK, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("EALDFFAR", Adduct.SINGLY_PROTONATED, 110.6867676, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("EALDFFAR", Adduct.SINGLY_PROTONATED, 110.6867676, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("GVIFYESHGK", Adduct.SINGLY_PROTONATED, 123.7844632, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("GVIFYESHGK", Adduct.SINGLY_PROTONATED, 123.7844632, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("EKDIVGAVLK", Adduct.SINGLY_PROTONATED, 124.3414249, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("EKDIVGAVLK", Adduct.SINGLY_PROTONATED, 124.3414249, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("VVGLSTLPEIYEK", Adduct.SINGLY_PROTONATED, 149.857687, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("VVGLSTLPEIYEK", Adduct.SINGLY_PROTONATED, 149.857687, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("VVGLSTLPEIYEK", Adduct.SINGLY_PROTONATED, 149.857687, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("ANGTTVLVGMPAGAK", Adduct.SINGLY_PROTONATED, 144.7461979, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("ANGTTVLVGMPAGAK", Adduct.SINGLY_PROTONATED, 144.7461979, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("IGDYAGIK", Adduct.SINGLY_PROTONATED,  102.2694763, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("IGDYAGIK", Adduct.SINGLY_PROTONATED,  102.2694763, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("GDYAGIK", Adduct.SINGLY_PROTONATED,  91.09155861, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("GDYAGIK", Adduct.SINGLY_PROTONATED,  91.09155861, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("IFYESHGK", Adduct.SINGLY_PROTONATED, 111.2756406, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                    BuildValidatingIonMobilityPeptide("EALDFFAR", Adduct.SINGLY_PROTONATED, 110.6867676, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
                 };
                 List<ValidatingIonMobilityPeptide> minimalSet;
                 var message = EditIonMobilityLibraryDlg.ValidateUniqueChargedPeptides(ionMobilityPeptides, out minimalSet); // Check for conflicts, strip out dupes
@@ -200,11 +209,14 @@ namespace pwiz.SkylineTestFunctional
                 // Do some DT calculations
                 double windowDT;
                 double driftTimeMax = 1000.0;
+                int z = 1;
                 DriftTimeInfo centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
-                    new LibKey("ANELLINV", 2), 0, null, null, driftTimeMax, out windowDT);
-                Assert.AreEqual((4 * (119.2825783)) + 5, centerDriftTime.DriftTimeMsec);
-                Assert.AreEqual(2 * ((4 * (119.2825783)) + 5)/resolvingPower, windowDT);
-                Assert.AreEqual((4 * (119.2825783)) + 5 + HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, centerDriftTime.GetHighEnergyDriftTimeMsec());
+                    new LibKey("ANELLINV", z), 0, null, null, driftTimeMax, out windowDT);
+                var slope = 2;
+                var intercept = 3;
+                Assert.AreEqual((slope * CCS_ANELLINVK) + intercept, centerDriftTime.DriftTimeMsec);
+                Assert.AreEqual(2 * ((slope * CCS_ANELLINVK) + intercept) / resolvingPower, windowDT);
+                Assert.AreEqual((slope * CCS_ANELLINVK) + intercept + HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, centerDriftTime.GetHighEnergyDriftTimeMsec());
 
                 //
                 // Test importing collisional cross sections from a spectral lib that has drift times but no high energy offset info
@@ -336,24 +348,24 @@ namespace pwiz.SkylineTestFunctional
 
                 // Do some DT calculations with this new library
                 centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
-                    new LibKey("ANELLINVK", 2), 0, null, null, driftTimeMax, out windowDT);
+                    new LibKey("ANELLINVK", Adduct.DOUBLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
                 double ccs = 3.8612432898618; // should have imported CCS without any transformation
                 Assert.AreEqual((4 * (ccs)) + 5, centerDriftTime.DriftTimeMsec ?? ccs, .000001);
                 Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
                 centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
-                    new LibKey("ANGTTVLVGMPAGAK", 2), 0, null, null, driftTimeMax, out windowDT);
+                    new LibKey("ANGTTVLVGMPAGAK", Adduct.DOUBLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
                 ccs = (4.99820623749102 - 2)/2; // should have imported CCS as a converted drift time
                 Assert.AreEqual((4 * (ccs)) + 5, centerDriftTime.DriftTimeMsec ?? ccs, .000001);
                 Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
 
                 // Do some DT calculations with the measured drift time
                 centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
-                    new LibKey("DEADEELS", 3), 0, null, null, driftTimeMax, out windowDT); // Should fail
+                    new LibKey("DEADEELS", Adduct.TRIPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT); // Should fail
                 Assert.AreEqual(windowDT, 0);
                 Assert.IsFalse(centerDriftTime.DriftTimeMsec.HasValue);
 
                 centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
-                    new LibKey("DEADEELS", 5), 0, null, null, driftTimeMax, out windowDT);
+                    new LibKey("DEADEELS", Adduct.QUINTUPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
                 Assert.AreEqual(deadeelsDT, centerDriftTime.DriftTimeMsec ?? -1, .000001);
                 Assert.AreEqual(deadeelsDT+deadeelsDTHighEnergyOffset, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? -1, .000001);
                 Assert.AreEqual(2 * (deadeelsDT / resolvingPower), windowDT, .0001); // Directly measured, should match
@@ -375,7 +387,7 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(peptideSettingsDlg4);
                 doc = WaitForDocumentChangeLoaded(doc); 
                 centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
-                    new LibKey("DEADEELS", 5), 0, null, null, driftTimeMax, out windowDT);
+                    new LibKey("DEADEELS", Adduct.QUINTUPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
                 Assert.AreEqual(deadeelsDT, centerDriftTime.DriftTimeMsec ?? -1, .000001);
                 Assert.AreEqual(deadeelsDT, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? -1, .000001); // High energy value should now be same as low energy value
                 Assert.AreEqual(2 * (deadeelsDT / resolvingPower), windowDT, .0001); // Directly measured, should match
@@ -405,7 +417,7 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(peptideSettingsDlg6, () => peptideSettingsDlg6.OkDialog());
                 doc = WaitForDocumentChangeLoaded(doc);
                 centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
-                    new LibKey("DEADEELS", 5), 0, null, null, driftTimeMax, out windowDT);
+                    new LibKey("DEADEELS", Adduct.QUINTUPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
                 Assert.AreEqual(deadeelsDT, centerDriftTime.DriftTimeMsec ?? -1, .000001);
                 Assert.AreEqual(deadeelsDT, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? -1, .000001); // High energy value should now be same as low energy value
                 Assert.AreEqual(widthAtDtZero + deadeelsDT * (widthAtDtMax - widthAtDtZero) / driftTimeMax, windowDT, .0001); 
@@ -424,7 +436,7 @@ namespace pwiz.SkylineTestFunctional
             var pasteBuilder = new StringBuilder();
             foreach (var peptide in peptides)
             {
-                pasteBuilder.Append(adjustSeq(peptide.Sequence))
+                pasteBuilder.Append(adjustSeq(peptide.Target.ToString()))
                     .Append('\t')
                     .Append(peptide.CollisionalCrossSection)
                     .Append('\t')
@@ -502,8 +514,8 @@ namespace pwiz.SkylineTestFunctional
 
             const string seq = "JKLMN";
             const double HIGH_ENERGY_DRIFT_OFFSET_MSEC = -0.5;
-            peptides.Add(new ValidatingIonMobilityPeptide(seq, 1, HIGH_ENERGY_DRIFT_OFFSET_MSEC));
-            peptides.Add(new ValidatingIonMobilityPeptide(seq, 1, HIGH_ENERGY_DRIFT_OFFSET_MSEC));
+            peptides.Add(BuildValidatingIonMobilityPeptide(seq, Adduct.SINGLY_PROTONATED, 1, HIGH_ENERGY_DRIFT_OFFSET_MSEC));
+            peptides.Add(BuildValidatingIonMobilityPeptide(seq, Adduct.SINGLY_PROTONATED, 1, HIGH_ENERGY_DRIFT_OFFSET_MSEC));
             var message = EditIonMobilityLibraryDlg.ValidateUniqueChargedPeptides(peptides, out peptideSet);
             Assert.IsNull(message);
             Assert.AreEqual(1, peptideSet.Count);
@@ -514,11 +526,11 @@ namespace pwiz.SkylineTestFunctional
                 string.Format(
                     Resources
                         .EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_peptide__0__has_inconsistent_ion_mobility_values_in_the_added_list_,
-                    peptides[1].PeptideModSeq));
+                    peptides[1].GetLibKey()));
 
             string seqB = seq + "L";
-            peptides.Add(new ValidatingIonMobilityPeptide(seqB, 1.1, HIGH_ENERGY_DRIFT_OFFSET_MSEC));
-            peptides.Add(new ValidatingIonMobilityPeptide(seqB, 1.2, HIGH_ENERGY_DRIFT_OFFSET_MSEC));
+            peptides.Add(BuildValidatingIonMobilityPeptide(seqB, Adduct.SINGLY_PROTONATED, 1.1, HIGH_ENERGY_DRIFT_OFFSET_MSEC));
+            peptides.Add(BuildValidatingIonMobilityPeptide(seqB, Adduct.SINGLY_PROTONATED, 1.2, HIGH_ENERGY_DRIFT_OFFSET_MSEC));
             message = EditIonMobilityLibraryDlg.ValidateUniqueChargedPeptides(peptides, out peptideSet);
             AssertEx.Contains(message,
                 Resources
@@ -527,8 +539,8 @@ namespace pwiz.SkylineTestFunctional
             for (int n = 0; n < 20; n++)
             {
                 seqB = seqB + "M";
-                peptides.Add(new ValidatingIonMobilityPeptide(seqB, n, HIGH_ENERGY_DRIFT_OFFSET_MSEC));
-                peptides.Add(new ValidatingIonMobilityPeptide(seqB, n + 1, HIGH_ENERGY_DRIFT_OFFSET_MSEC));
+                peptides.Add(BuildValidatingIonMobilityPeptide(seqB, Adduct.SINGLY_PROTONATED, n, HIGH_ENERGY_DRIFT_OFFSET_MSEC));
+                peptides.Add(BuildValidatingIonMobilityPeptide(seqB, Adduct.SINGLY_PROTONATED, n + 1, HIGH_ENERGY_DRIFT_OFFSET_MSEC));
             }
             message = EditIonMobilityLibraryDlg.ValidateUniqueChargedPeptides(peptides, out peptideSet);
             AssertEx.Contains(message,
@@ -545,11 +557,11 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.Contains(EditDriftTimePredictorDlg.ValidateResolvingPower(-1), Resources.EditDriftTimePredictorDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_);
             Assert.IsNull(EditDriftTimePredictorDlg.ValidateResolvingPower(1));
 
-            AssertEx.Contains(MeasuredDriftTimeTable.ValidateCharge(0),
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateCharge(Adduct.FromChargeProtonated(0)),
                 String.Format(
                 Resources.EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__,
                 0, TransitionGroup.MAX_PRECURSOR_CHARGE));
-            AssertEx.Contains(MeasuredDriftTimeTable.ValidateCharge(99),
+            AssertEx.Contains(MeasuredDriftTimeTable.ValidateCharge(Adduct.FromChargeProtonated(99)),
                 String.Format(
                 Resources.EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__,
                 99, TransitionGroup.MAX_PRECURSOR_CHARGE));
@@ -656,19 +668,23 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNull(CollisionalCrossSectionGridViewDriverBase<ValidatingIonMobilityPeptide>.ValidateRow(columns, lineNumber));
 
 
-            var pep = new ValidatingIonMobilityPeptide(null, 0, 0);
+            var pep = BuildValidatingIonMobilityPeptide(string.Empty, Adduct.EMPTY, 0, 0);
             AssertEx.Contains(pep.Validate(), Resources.ValidatingIonMobilityPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry_);
 
             const string seq = "@#%!";
-            pep = new ValidatingIonMobilityPeptide(seq, 0, 0);
+            pep = BuildValidatingIonMobilityPeptide(seq, Adduct.EMPTY, 0, 0);
             AssertEx.Contains(pep.Validate(), string.Format(
                 Resources.ValidatingIonMobilityPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence_, seq));
 
-            pep = new ValidatingIonMobilityPeptide("JLKM", 0, 0);
+            pep = BuildValidatingIonMobilityPeptide("JLKM", Adduct.EMPTY, 0, 0);
             AssertEx.Contains(pep.Validate(),
                 Resources.ValidatingIonMobilityPeptide_ValidateCollisionalCrossSection_Measured_collisional_cross_section_values_must_be_valid_decimal_numbers_greater_than_zero_);
 
-            pep = new ValidatingIonMobilityPeptide("JLKM", 1, 0);
+            pep = BuildValidatingIonMobilityPeptide("JLKM", Adduct.EMPTY, 1, 0);
+            AssertEx.Contains(pep.Validate(),
+                Resources.ValidatingIonMobilityPeptide_ValidateAdduct_A_valid_adduct_description__e_g____M_H____must_be_provided_);
+
+            pep = BuildValidatingIonMobilityPeptide("JLKM", Adduct.SINGLY_PROTONATED, 1, 0);
             Assert.IsNull(pep.Validate());
 
         }
@@ -712,10 +728,10 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(peptideSettingsDlg);
             doc = WaitForDocumentChange(doc);
             
-            var result = doc.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimePeptides;
+            var result = doc.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimeIons;
             Assert.AreEqual(2, result.Count);
-            var key3 = new LibKey("GLAGVENVTELKK", 3);
-            var key2 = new LibKey("GLAGVENVTELKK", 2);
+            var key3 = new LibKey("GLAGVENVTELKK", Adduct.TRIPLY_PROTONATED);
+            var key2 = new LibKey("GLAGVENVTELKK", Adduct.DOUBLY_PROTONATED);
             const double expectedDT3= 4.0709;
             const double expectedOffset3 = 0.8969;
             Assert.AreEqual(expectedDT3, result[key3].DriftTimeMsec.Value, .001);

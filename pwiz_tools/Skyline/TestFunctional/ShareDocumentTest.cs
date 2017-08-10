@@ -115,6 +115,7 @@ namespace pwiz.SkylineTestFunctional
             String minimalLibPath2 = GetPathToBlibFile(shareMinPath2, blibName);
             Assert.IsTrue(GetCount(originalLibPath, "RefSpectra") > GetCount(minimalLibPath2, "RefSpectra"));
             Assert.IsTrue(GetCount(originalLibPath, "RefSpectraPeaks") > GetCount(minimalLibPath2, "RefSpectraPeaks"));
+            // The blib schema changes over time, stuff gets added, this isn't a reliable check
             //Assert.IsTrue(origFileSet[blibName].UncompressedSize >
             //              newFileSet[blibName].UncompressedSize);
             Assert.IsTrue(newSize >
@@ -227,6 +228,7 @@ namespace pwiz.SkylineTestFunctional
             SelectNode(SrmDocument.Level.Molecules, 0);
             WaitForGraphs();
             string prefix = Path.GetFileNameWithoutExtension(DOCUMENT_NAME);
+
             RunUI(() =>
             {
                 Assert.AreEqual("Michrom_QTRAP_v4 (" + prefix + ")", SkylineWindow.GraphSpectrum.LibraryName);

@@ -41,6 +41,7 @@
 #include "PercolatorXmlReader.h"
 #include "WatersMseReader.h"
 #include "ProxlXmlReader.h"
+#include "ShimadzuMLBReader.h"
 /*
  * Local Variables:
  * mode: c

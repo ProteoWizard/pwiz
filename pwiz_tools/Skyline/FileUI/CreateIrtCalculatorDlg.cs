@@ -42,7 +42,7 @@ namespace pwiz.Skyline.FileUI
         /// <summary>
         /// In the case where we specify one of the imported proteins as the iRT protein, make a list of its peptides
         /// </summary>
-        private HashSet<string> _irtPeptideSequences;
+        private HashSet<Target> _irtPeptideSequences;
 
         private List<SpectrumMzInfo> _librarySpectra;
         private List<DbIrtPeptide> _dbIrtPeptides;
@@ -59,7 +59,7 @@ namespace pwiz.Skyline.FileUI
             var nonStandardProteinsList = new List<PeptideGroupDocNode>();
             foreach (var protein in proteins.Where(protein => protein.PeptideCount >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES))
             {
-                if (protein.Peptides.Select(pep => pep.ModifiedSequence).Count(IrtStandard.AnyContains) >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
+                if (protein.Peptides.Select(pep => pep.ModifiedTarget).Count(IrtStandard.AnyContains) >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
                     standardProteinsList.Add(protein);
                 else
                     nonStandardProteinsList.Add(protein);
@@ -204,7 +204,7 @@ namespace pwiz.Skyline.FileUI
             {
                 PeptideGroupDocNode selectedGroup = comboBoxProteins.SelectedItem as PeptideGroupDocNode;
 // ReSharper disable PossibleNullReferenceException
-                _irtPeptideSequences = new HashSet<string>(selectedGroup.Peptides.Select(pep => pep.ModifiedSequence));
+                _irtPeptideSequences = new HashSet<Target>(selectedGroup.Peptides.Select(pep => pep.ModifiedTarget));
 // ReSharper restore PossibleNullReferenceException
             }
             Document = docNew;
@@ -216,7 +216,7 @@ namespace pwiz.Skyline.FileUI
             librarySpectra.AddRange(_librarySpectra);
             dbIrtPeptidesFilter.AddRange(_dbIrtPeptides);
             if (_irtPeptideSequences != null)
-                dbIrtPeptidesFilter.ForEach(pep => pep.Standard = _irtPeptideSequences.Contains(pep.PeptideModSeq));
+                dbIrtPeptidesFilter.ForEach(pep => pep.Standard = _irtPeptideSequences.Contains(pep.ModifiedTarget));
         }
 
         public bool CreateIrtDatabase(string path)

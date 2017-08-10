@@ -242,7 +242,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     {
                         var irtQuery = session.CreateQuery("SELECT PeptideModSeq, Irt, TimeSource FROM IrtLibrary"); // Not L10N
                         _libraryIrts = irtQuery.List<object[]>().Select(
-                            irt => new ChromatogramLibraryIrt((string) irt[0], (TimeSource) irt[2], Convert.ToDouble(irt[1]))
+                            irt => new ChromatogramLibraryIrt(new Target((string) irt[0]), (TimeSource) irt[2], Convert.ToDouble(irt[1]))
                             ).ToArray();
                     }
                     catch (GenericADOException)
@@ -276,8 +276,8 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                         {
                             continue; // Throw an error?
                         }
-                        var modifiedSequence = (string) row[1];
-                        int charge = (int) row[2];
+                        var modifiedSequence = new Target((string) row[1]);
+                        var charge = (int) row[2];  // TODO(bspratt) generalize chromatogram libs to small mol
                         double totalArea = Convert.ToDouble(row[3]);
                         List<KeyValuePair<int, double>> retentionTimes;
                         var indexedRetentionTimes = new IndexedRetentionTimes();
@@ -285,7 +285,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                         {
                             indexedRetentionTimes = new IndexedRetentionTimes(retentionTimes);
                         }
-                        string modSeqNormal;
+                        Target modSeqNormal;
                         try
                         {
                             modSeqNormal = SequenceMassCalc.NormalizeModifiedSequence(modifiedSequence);
@@ -295,7 +295,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                             continue;
                         }
 
-                        var libKey = new LibKey(modSeqNormal, charge);
+                        var libKey = new LibKey(modSeqNormal.Sequence, charge);
                         IList<SpectrumPeaksInfo.MI> transitionAreas;
                         allTransitionAreas.TryGetValue(id, out transitionAreas);
                         spectrumInfos.Add(new ChromLibSpectrumInfo(libKey, id, totalArea, indexedRetentionTimes, transitionAreas));
@@ -355,8 +355,8 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             if (j != -1)
             {
                 var source = _librarySourceFiles[j];
-                ILookup<string, double[]> timesLookup = _libraryEntries.ToLookup(
-                    entry => entry.Key.Sequence,
+                ILookup<Target, double[]> timesLookup = _libraryEntries.ToLookup(
+                    entry => entry.Key.Target,
                     entry => entry.RetentionTimesByFileId.GetTimes(source.Id));
                 var timesDict = timesLookup.ToDictionary(
                     grouping => grouping.Key,
@@ -390,7 +390,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 return false;
             }
 
-            var irtDictionary = new Dictionary<string, Tuple<TimeSource, double[]>>();
+            var irtDictionary = new Dictionary<Target, Tuple<TimeSource, double[]>>();
             foreach (var irt in _libraryIrts)
             {
                 if (!irtDictionary.ContainsKey(irt.Sequence))
@@ -586,7 +586,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         private struct ChromatogramLibraryIrt
         {
-            public ChromatogramLibraryIrt(string seq, TimeSource timeSource, double irt)
+            public ChromatogramLibraryIrt(Target seq, TimeSource timeSource, double irt)
                 : this()
             {
                 Sequence = seq;
@@ -594,20 +594,20 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 Irt = irt;
             }
 
-            public string Sequence { get; private set; }
+            public Target Sequence { get; private set; }
             public TimeSource TimeSource { get; private set; }
             public double Irt { get; private set; }
 
             public void Write(Stream stream)
             {
-                WriteString(stream, Sequence);
+                WriteString(stream, Sequence.ToSerializableString());
                 PrimitiveArrays.WriteOneValue(stream, (int)TimeSource);
                 PrimitiveArrays.WriteOneValue(stream, Irt);
             }
 
             public static ChromatogramLibraryIrt Read(Stream stream)
             {
-                var seq = ReadString(stream);
+                var seq = Target.FromSerializableString(ReadString(stream));
                 var timeSource = (TimeSource)PrimitiveArrays.ReadOneValue<int>(stream);
                 var irt = PrimitiveArrays.ReadOneValue<double>(stream);
                 return new ChromatogramLibraryIrt(seq, timeSource, irt);

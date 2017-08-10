@@ -2265,7 +2265,7 @@ namespace pwiz.Skyline.Properties
 
         private static MeasuredIon CreateMeasuredIon(string name, string formula)
         {
-            return new MeasuredIon(name, formula, null, null, 1);
+            return new MeasuredIon(name, formula, null, null, Adduct.SINGLY_PROTONATED);
         }
 
         public override int RevisionIndexCurrent { get { return 1; } }
@@ -2721,9 +2721,12 @@ namespace pwiz.Skyline.Properties
                     ),
                     new TransitionFilter
                     (
-                        new[] { 2 }, // PrecursorCharges
-                        new[] { 1 }, // ProductCharges
-                        new[] { IonType.y }, // FragmentTypes
+                        new[] { Adduct.DOUBLY_PROTONATED,  }, // PeptidePrecursorCharges
+                        new[] { Adduct.SINGLY_PROTONATED,  }, // PeptideProductCharges
+                        new[] { IonType.y }, // PeptideFragmentTypes
+                        new[] { Adduct.M_PLUS_H, }, // SmallMoleculePrecursorCharges
+                        new[] { Adduct.M_PLUS, }, // SmallMoleculeProductCharges
+                        Transition.MOLECULE_ION_TYPES, // SmallMoleculeFragmentTypes
                         TransitionFilter.DEFAULT_START_FINDER,  // FragmentRangeFirst
                         TransitionFilter.DEFAULT_END_FINDER,    // FragmentRangeLast
                         new[] {MeasuredIonList.NTERM_PROLINE},  // MeasuredIon

@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Model
             var listCandidates = new List<TransitionGroupDocNode> { nodeGroup };
             foreach (TransitionGroupDocNode nodeGroupCandidate in nodePep.Children)
             {
-                if (nodeGroup.TransitionGroup.PrecursorCharge == nodeGroupCandidate.TransitionGroup.PrecursorCharge &&
+                if (nodeGroup.TransitionGroup.PrecursorAdduct == nodeGroupCandidate.TransitionGroup.PrecursorAdduct &&
                         !ReferenceEquals(nodeGroup, nodeGroupCandidate))
                     listCandidates.Add(nodeGroupCandidate);
             }
@@ -146,7 +146,7 @@ namespace pwiz.Skyline.Model
                 foreach (TransitionDocNode nodeTranCandidate in candidateGroups[i].Children)
                 {
                     var transitionCandidate = nodeTranCandidate.Transition;
-                    if (transition.Charge == transitionCandidate.Charge &&
+                    if (transition.Charge == transitionCandidate.Charge &&  // CONSIDER(bspratt) is this about charge per se, or about adduct?
                         transition.Ordinal == transitionCandidate.Ordinal &&
                         transition.IonType == transitionCandidate.IonType)
                     {

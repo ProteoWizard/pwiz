@@ -290,15 +290,15 @@ namespace pwiz.Skyline.Model.Irt
         /// Corrections in percentile of spectral library scan times for peptides with trailing elution profiles that remain
         /// detectable in DDA.
         /// </summary>
-        private static readonly Dictionary<string, double> _peptideSpectrumTimeSkewCorrections = new Dictionary<string, double>
+        private static readonly Dictionary<Target, double> _peptideSpectrumTimeSkewCorrections = new Dictionary<Target, double>
         {
             // Biognosys
-            {"YILAGVENSK", 0.3}, // Not L10N
-            {"DGLDAASYYAPVR", 0.3}, // Not L10N
-            {"LFLQFGAQGSPFLK", 0.3} // Not L10N
+            {new Target("YILAGVENSK"), 0.3}, // Not L10N
+            {new Target("DGLDAASYYAPVR"), 0.3}, // Not L10N
+            {new Target("LFLQFGAQGSPFLK"), 0.3} // Not L10N
         };
 
-        public static double GetSpectrumTimePercentile(string modifiedSequence)
+        public static double GetSpectrumTimePercentile(Target modifiedSequence)
         {
             double percentile;
             if (!_peptideSpectrumTimeSkewCorrections.TryGetValue(modifiedSequence, out percentile))
@@ -371,7 +371,7 @@ namespace pwiz.Skyline.Model.Irt
             return ContainsMatch(Peptides, peptide, irtTolerance);
         }
 
-        public bool Contains(string peptideModSeq)
+        public bool Contains(Target peptideModSeq)
         {
             return ContainsMatch(Peptides, peptideModSeq);
         }
@@ -386,9 +386,9 @@ namespace pwiz.Skyline.Model.Irt
             return peptides.Any(p => Match(p, peptide, irtTolerance));
         }
 
-        public static bool ContainsMatch(IEnumerable<DbIrtPeptide> peptides, string peptideModSeq)
+        public static bool ContainsMatch(IEnumerable<DbIrtPeptide> peptides, Target peptideModSeq)
         {
-            return peptides.Any(p => Equals(p.PeptideModSeq, peptideModSeq));
+            return peptides.Any(p => Equals(p.ModifiedTarget, peptideModSeq));
         }
 
         public static bool Match(DbIrtPeptide x, DbIrtPeptide y, double? irtTolerance)
@@ -419,20 +419,20 @@ namespace pwiz.Skyline.Model.Irt
             return ALL.Any(standard => standard.Contains(peptide, irtTolerance));
         }
 
-        public static bool AnyContains(string peptideModSeq)
+        public static bool AnyContains(Target peptideModSeq)
         {
             return ALL.Any(standard => standard.Contains(peptideModSeq));
         }
 
         private static DbIrtPeptide MakePeptide(string sequence, double time)
         {
-            return new DbIrtPeptide(sequence, time, true, TimeSource.peak);
+            return new DbIrtPeptide(new Target(sequence), time, true, TimeSource.peak);
         }
 
-        public static IrtStandard WhichStandard(ICollection<string> peptides, out HashSet<string> missingPeptides)
+        public static IrtStandard WhichStandard(ICollection<Target> peptides, out HashSet<Target> missingPeptides)
         {
-            var standard = ALL.FirstOrDefault(s => s.ContainsAll(peptides.Select(p => MakePeptide(p, 0)).ToList(), null)) ?? NULL;
-            missingPeptides = new HashSet<string>(standard.Peptides.Where(s => !peptides.Any(p => p.Equals(s.Sequence))).Select(s => s.Sequence));
+            var standard = ALL.FirstOrDefault(s => s.ContainsAll(peptides.Select(p => MakePeptide(p.Sequence, 0)).ToList(), null)) ?? NULL;
+            missingPeptides = new HashSet<Target>(standard.Peptides.Where(s => !peptides.Any(p => p.Equals(s.Target))).Select(s => s.Target));
             return standard;
         }
 

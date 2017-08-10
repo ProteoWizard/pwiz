@@ -96,18 +96,18 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     return true;
 
                 // put the list into a dict for performance reasons
-                var pepdict = new Dictionary<String, ValidatingIonMobilityPeptide>();
+                var pepdict = new Dictionary<Target, ValidatingIonMobilityPeptide>();
                 foreach (var peptide in LibraryPeptides)
                 {
                     ValidatingIonMobilityPeptide ignored;
-                    if (!pepdict.TryGetValue(peptide.Sequence, out ignored))
-                        pepdict.Add(peptide.Sequence, peptide);
+                    if (!pepdict.TryGetValue(peptide.Target, out ignored))
+                        pepdict.Add(peptide.Target, peptide);
 
                 }
                 foreach (var peptide in _originalPeptides)
                 {
                     ValidatingIonMobilityPeptide value;
-                    if (pepdict.TryGetValue(peptide.Sequence, out value))
+                    if (pepdict.TryGetValue(peptide.Target, out value))
                     {
                         if (value.CollisionalCrossSection != peptide.CollisionalCrossSection)
                             return true;
@@ -248,7 +248,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 LoadLibrary(dbPeptides);
 
                 // Clone all of the peptides to use for comparison in OkDialog
-                _originalPeptides = dbPeptides.Select(p => new ValidatingIonMobilityPeptide(p.Sequence,p.CollisionalCrossSection,p.HighEnergyDriftTimeOffsetMsec)).ToArray();
+                _originalPeptides = dbPeptides.Select(p => new ValidatingIonMobilityPeptide(p)).ToArray();
 
                 textDatabase.Text = path;
             }
@@ -346,9 +346,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
             foreach(ValidatingIonMobilityPeptide peptide in peptideList)
             {
-                string seqModified = peptide.PeptideModSeq;
+                var seqModified = peptide.ModifiedTarget;
                 // CONSIDER: Select the peptide row
-                if (!FastaSequence.IsExSequence(seqModified))
+                if (seqModified.IsProteomic && !FastaSequence.IsExSequence(seqModified.Sequence))
                 {
                     MessageDlg.Show(this, string.Format(Resources.EditIonMobilityLibraryDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modified_peptide_sequence_,
                                                         seqModified));
@@ -368,8 +368,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             LibraryPeptideList.Clear();
             foreach (var peptide in library)
             {
-                var val = new ValidatingIonMobilityPeptide(peptide.Sequence, 
-                    peptide.CollisionalCrossSection, peptide.HighEnergyDriftTimeOffsetMsec);
+                var val = new ValidatingIonMobilityPeptide(peptide);
                 if (!LibraryPeptideList.Any(p => p.Equals(val)))
                     LibraryPeptideList.Add(val);
             }
@@ -458,24 +457,25 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public static string ValidateUniqueChargedPeptides(IEnumerable<ValidatingIonMobilityPeptide> peptides, out List<ValidatingIonMobilityPeptide> minimalSet)
         {
-            var dict = new Dictionary<String, Tuple<double,double>>();
-            var conflicts = new HashSet<String>();
+            var dict = new Dictionary<LibKey, ValidatingIonMobilityPeptide>();
+            var conflicts = new HashSet<LibKey>();
             minimalSet = null;
             foreach (var peptide in peptides)
             {
-                Tuple<double,double> collisionalCrossSectionAndHighEnergyDriftTimeOffset;
-                if (dict.TryGetValue(peptide.Sequence, out collisionalCrossSectionAndHighEnergyDriftTimeOffset))
+                var key = peptide.GetLibKey();
+                ValidatingIonMobilityPeptide value;
+                if (dict.TryGetValue(key, out value))
                 {
-                    if ((collisionalCrossSectionAndHighEnergyDriftTimeOffset.Item1 != peptide.CollisionalCrossSection || collisionalCrossSectionAndHighEnergyDriftTimeOffset.Item2 != peptide.HighEnergyDriftTimeOffsetMsec) && !conflicts.Contains(peptide.Sequence))
-                        conflicts.Add(peptide.Sequence);
+                    if ((value.CollisionalCrossSection != peptide.CollisionalCrossSection || value.HighEnergyDriftTimeOffsetMsec != peptide.HighEnergyDriftTimeOffsetMsec) && !conflicts.Contains(key))
+                        conflicts.Add(key);
                 }
                 else
                 {
-                    dict.Add(peptide.Sequence, new Tuple<double, double>(peptide.CollisionalCrossSection,peptide.HighEnergyDriftTimeOffsetMsec));
+                    dict.Add(key, peptide);
                 }
             }
 
-            int countDuplicates = conflicts.Count();
+            int countDuplicates = conflicts.Count;
 
             if (countDuplicates > 0)
             {
@@ -488,7 +488,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 {
                     return TextUtil.LineSeparate(Resources.EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_following_peptides_appear_in_the_added_list_with_inconsistent_ion_mobility_values_,
                                                     string.Empty,
-                                                    TextUtil.LineSeparate(conflicts));
+                                                    TextUtil.LineSeparate(conflicts.Select(c => c.ToString())));
                 }
                 return string.Format(Resources.EditIonMobilityLibraryDlg_ValidateUniqueChargedPeptides_The_added_list_contains__0__charged_peptides_with_inconsistent_ion_mobility_values_,
                                         countDuplicates);
@@ -496,7 +496,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             minimalSet = new List<ValidatingIonMobilityPeptide>();
             foreach (var pep in dict)
             {
-                minimalSet.Add(new ValidatingIonMobilityPeptide(pep.Key, pep.Value.Item1, pep.Value.Item2));
+                minimalSet.Add(pep.Value);
             }
             return null;
         }
@@ -546,7 +546,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             GridView.DoPaste(MessageParent, ValidateRow,
                 values =>
                     mMeasuredCollisionalCrossSectionsNew.Add(new ValidatingIonMobilityPeptide(
-                        values[0], double.Parse(values[1]), double.Parse(values[2]))));
+                       new Target(values[0]), Adduct.SINGLY_PROTONATED , double.Parse(values[1]), double.Parse(values[2])))); // TODO(bspratt) add adduct and small mol columns when this UI is reenabled
             SetTablePeptides(mMeasuredCollisionalCrossSectionsNew);
         }
 
@@ -689,13 +689,18 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                                 totalCCS += regression.GetX(ionMobilityInfo.DriftTimeMsec.Value); // x = (y-intercept)/slope
                             else
                                 throw new Exception(String.Format(Resources.CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__,
-                                    ionMobilityList.Key.Sequence,
+                                    ionMobilityList.Key.Target,
                                     ionMobilityList.Key.Charge));
                         }
                         count++;
                     }
                     if (count > 0)
-                        peptideIonMobilities.Add(new ValidatingIonMobilityPeptide(ionMobilityList.Key.Sequence, totalCCS / count, totalHighEnergyOffset / count));
+                    {
+                        if (ionMobilityList.Key.IsSmallMoleculeKey)
+                            peptideIonMobilities.Add(new ValidatingIonMobilityPeptide(ionMobilityList.Key.SmallMoleculeLibraryAttributes, ionMobilityList.Key.Adduct, totalCCS / count, totalHighEnergyOffset / count));
+                        else
+                            peptideIonMobilities.Add(new ValidatingIonMobilityPeptide(ionMobilityList.Key.Target, ionMobilityList.Key.Adduct, totalCCS / count, totalHighEnergyOffset / count));
+                    }
                 }
                 if (monitor != null)
                     monitor.UpdateProgress(status = status.ChangePercentComplete(runCount * 100 / countProviders));
@@ -726,6 +731,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             {
                 return Resources.CollisionalCrossSectionGridViewDriverBase_ValidateRow_The_pasted_text_must_have_at_least_two_columns_;
             }
+
+            // TODO(bspratt) small molecule handling
             string seq = columns[EditIonMobilityLibraryDlg.COLUMN_SEQUENCE] as string;
             string collisionalcrosssection = columns[EditIonMobilityLibraryDlg.COLUMN_COLLISIONAL_CROSS_SECTION] as string;
             string highenergydrifttimeoffset = (columns.Length > 2) ? columns[EditIonMobilityLibraryDlg.COLUMN_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC] as string : string.Empty;
@@ -805,7 +812,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             if (row.IsNewRow)
                 return true;
             var cell = row.Cells[EditIonMobilityLibraryDlg.COLUMN_SEQUENCE];
-            string errorText = ValidatingIonMobilityPeptide.ValidateSequence(cell.FormattedValue != null ? cell.FormattedValue.ToString() : null);
+            string errorText = ValidatingIonMobilityPeptide.ValidateSequence(new Target(cell.FormattedValue != null ? cell.FormattedValue.ToString() : null));
             if (errorText == null)
             {
                 cell = row.Cells[EditIonMobilityLibraryDlg.COLUMN_COLLISIONAL_CROSS_SECTION];
@@ -820,7 +827,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             {
                 // ReSharper disable once PossibleNullReferenceException
                 var sequence = row.Cells[EditIonMobilityLibraryDlg.COLUMN_SEQUENCE].FormattedValue.ToString();
-                int iExist = Items.ToArray().IndexOf(pep => Equals(pep.Sequence, sequence));
+                int iExist = Items.ToArray().IndexOf(pep => Equals(pep.Target.Sequence, sequence));
                 if (iExist != -1 && iExist != rowIndex)
                     errorText = string.Format(Resources.CollisionalCrossSectionGridViewDriverBase_DoRowValidating_The_sequence__0__is_already_present_in_the_list_, sequence);
 
@@ -849,21 +856,35 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
     public class ValidatingIonMobilityPeptide : DbIonMobilityPeptide
     {
-        public ValidatingIonMobilityPeptide(string seq, double ccs, double highEnergyDriftTimeOffsetMsec)
-            : base(seq, ccs, highEnergyDriftTimeOffsetMsec) 
+        public ValidatingIonMobilityPeptide(Target seq, Adduct precursorAdduct, double ccs, double highEnergyDriftTimeOffsetMsec)
+            : base(seq, precursorAdduct, ccs, highEnergyDriftTimeOffsetMsec) 
+        {
+        }
+
+        public ValidatingIonMobilityPeptide(SmallMoleculeLibraryAttributes smallMoleculeLibraryAttributes,
+            Adduct precursorAdduct,
+            double collisionalCrossSection,
+            double highEnergyDriftTimeOffsetMsec)
+            : base(smallMoleculeLibraryAttributes, precursorAdduct, 
+            collisionalCrossSection, highEnergyDriftTimeOffsetMsec)
+        {
+        }
+        
+        public ValidatingIonMobilityPeptide(DbIonMobilityPeptide other)
+            : base(other)
         {
         }
 
         public string Validate()
         {
-            return ValidateSequence(Sequence) ?? ValidateCollisionalCrossSection(CollisionalCrossSection);
+            return ValidateSequence(Target) ?? ValidateCollisionalCrossSection(CollisionalCrossSection) ?? ValidateAdduct(PrecursorAdduct);
         }
 
-        public static string ValidateSequence(string sequence)
+        public static string ValidateSequence(Target sequence)
         {
-            if (sequence == null)
+            if (sequence.IsEmpty)
                 return Resources.ValidatingIonMobilityPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry_;
-            if (!FastaSequence.IsExSequence(sequence))
+            if (sequence.IsProteomic && !FastaSequence.IsExSequence(sequence.Sequence))
                 return string.Format(Resources.ValidatingIonMobilityPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence_, sequence);
             return null;
         }
@@ -878,8 +899,16 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public static string ValidateCollisionalCrossSection(double ccsValue)
         {
-             if (ccsValue <= 0)
+            if (ccsValue <= 0)
                 return Resources.ValidatingIonMobilityPeptide_ValidateCollisionalCrossSection_Measured_collisional_cross_section_values_must_be_valid_decimal_numbers_greater_than_zero_;
+            return null;
+        }
+
+        public static string ValidateAdduct(string adductText)
+        {
+            Adduct adduct;
+            if (!Adduct.TryParse(adductText, out adduct))
+                return Resources.ValidatingIonMobilityPeptide_ValidateAdduct_A_valid_adduct_description__e_g____M_H____must_be_provided_;
             return null;
         }
 

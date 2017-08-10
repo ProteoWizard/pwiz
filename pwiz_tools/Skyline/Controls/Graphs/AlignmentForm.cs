@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var peptideTime = peptideTimes[i];
                 var point = new PointPair(alignedFile.OriginalTimes[peptideTime.PeptideSequence],
                                             peptideTime.RetentionTime,
-                                            peptideTime.PeptideSequence);
+                                            peptideTime.PeptideSequence.Sequence);
                 if (alignedFile.OutlierIndexes.Contains(i))
                 {
                     outliers.Add(point);
@@ -317,8 +317,8 @@ namespace pwiz.Skyline.Controls.Graphs
             internal RetentionTimeSource Target { get; private set; }
             internal RetentionTimeSource Source { get; private set; }
             internal RetentionTimeAlignment Alignment { get; private set; }
-            internal IDictionary<string, double> TargetTimes { get; private set; }
-            internal IDictionary<string, double> SourceTimes { get; private set; }
+            internal IDictionary<Target, double> TargetTimes { get; private set; }
+            internal IDictionary<Target, double> SourceTimes { get; private set; }
             public AlignedRetentionTimes AlignedRetentionTimes { get; set; }
 
             public String DataFile { get { return Source.Name; } }
@@ -437,13 +437,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            private static IDictionary<string, double> GetFirstRetentionTimes(
+            private static IDictionary<Target, double> GetFirstRetentionTimes(
                 SrmSettings settings, RetentionTimeSource retentionTimeSource)
             {
                 var libraryRetentionTimes = settings.GetRetentionTimes(MsDataFileUri.Parse(retentionTimeSource.Name));
                 if (null == libraryRetentionTimes)
                 {
-                    return new Dictionary<string, double>();
+                    return new Dictionary<Target, double>();
                 }
                 return libraryRetentionTimes.GetFirstRetentionTimes();
             }

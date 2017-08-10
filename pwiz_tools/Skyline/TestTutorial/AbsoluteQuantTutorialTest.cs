@@ -232,7 +232,6 @@ namespace pwiz.SkylineTestTutorial
             // Heavy normalization
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_ratio_view));
             WaitForGraphs();
-
             RunUI(() =>
             {
                 int transitionGroupCount = SkylineWindow.DocumentUI.Peptides.First().TransitionGroupCount;

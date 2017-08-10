@@ -200,7 +200,7 @@ namespace pwiz.SkylineTestA
             MQuestScoreEquals(calcIdotp, double.NaN, peptidePeakData);
             MQuestScoreEquals(calcIdotp, 0.795167, peptidePeakDataMs1);
 
-            var peakData1NoArea = new MockTranPeakData<ISummaryPeakData>(INTENS0, IonType.a, null, 2, 0.5);
+            var peakData1NoArea = new MockTranPeakData<ISummaryPeakData>(INTENS0, IonType.a, null,2, 0.5);
             var peakData2NoArea = new MockTranPeakData<ISummaryPeakData>(INTENS0, IonType.a, null, 2, -1.0);
             MQuestScoreEquals(calcProductMassError, 0.75,
                 new MockPeptidePeakData<ISummaryPeakData>(new[] {peakData1NoArea, peakData2NoArea}));
@@ -351,7 +351,7 @@ namespace pwiz.SkylineTestA
         {
             public MockTranGroupPeakData(IList<ITransitionPeakData<TPeak>> transitionPeakData,
                                          bool isStandard = false,
-                                         int charge = 2,
+                                         int? charge = null,
                                          IsotopeLabelType labelType = null)
             {
                 TransitionPeakData = transitionPeakData;
@@ -361,7 +361,7 @@ namespace pwiz.SkylineTestA
                 IsStandard = isStandard;
                 var libInfo = new ChromLibSpectrumHeaderInfo("", 0);
                 var peptide = new Peptide(null, "AVVAVVA", null, null, 0);
-                NodeGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, null, charge, labelType), null, null,
+                NodeGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, Adduct.FromChargeProtonated(charge ?? 2), labelType), null, null,
                    null, libInfo, ExplicitTransitionGroupValues.EMPTY, null, new TransitionDocNode[0], true);
             }
 
@@ -381,7 +381,7 @@ namespace pwiz.SkylineTestA
             public MockTranPeakData(double[] data, 
                                     IonType ionType = IonType.a,
                                     IsotopeLabelType labelType = null,
-                                    int charge = 2,
+                                    int? charge = null,
                                     double? massError = null,
                                     double libIntensity = 0,
                                     double? isotopeProportion = null)
@@ -390,11 +390,12 @@ namespace pwiz.SkylineTestA
                     labelType = IsotopeLabelType.light;
                 PeakData = new MockPeakData(data, massError) as TPeak;
                 var peptide = new Peptide(null, "AVVAVVA", null, null, 0);
-                var tranGroup =  new TransitionGroup(peptide, null, charge, labelType);
+                charge = charge ?? 2;
+                var tranGroup = new TransitionGroup(peptide, Adduct.FromChargeProtonated(charge), labelType);
                 int offset = ionType == IonType.precursor ? 6 : 0;
                 var isotopeInfo = isotopeProportion == null ? null : new TransitionIsotopeDistInfo(1, (float)isotopeProportion);
-                NodeTran = new TransitionDocNode(new Transition(tranGroup, ionType, offset, 0, charge, null),
-                                                 null, 0, isotopeInfo, new TransitionLibInfo(1, (float)libIntensity));
+                NodeTran = new TransitionDocNode(new Transition(tranGroup, ionType, offset, 0, Adduct.FromChargeProtonated(charge), null),
+                                                 null, TypedMass.ZERO_MONO_MASSH, isotopeInfo, new TransitionLibInfo(1, (float)libIntensity));
             }
 
             public TransitionDocNode NodeTran { get; private set; }

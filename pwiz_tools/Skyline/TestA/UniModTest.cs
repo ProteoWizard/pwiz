@@ -60,9 +60,9 @@ namespace pwiz.SkylineTestA
                 else
                 {
                     Assert.AreEqual(mod.MonoisotopicMass,
-                                    SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, mod.Formula));
+                                    SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, mod.Formula, SequenceMassCalc.MassPrecision));
                     Assert.AreEqual(mod.AverageMass,
-                                    SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, mod.Formula));
+                                    SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, mod.Formula, SequenceMassCalc.MassPrecision));
                 }
                 // Everything amino acid/terminus that is part of the modification should be present in   
                 // the name of the modification.

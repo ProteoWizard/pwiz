@@ -1214,7 +1214,7 @@ namespace pwiz.Skyline.FileUI
                         string targetName = nodeGroup.TransitionGroup.Peptide.TextId;
 
                         MessageDlg.Show(this, string.Format(messageFormat,
-                            SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz) + Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorCharge),
+                            SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz) + Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorAdduct),
                             targetName,
                             tranRequired,
                             maxTransitions));

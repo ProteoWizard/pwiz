@@ -96,7 +96,7 @@ namespace pwiz.SkylineTestFunctional
             var peptideVarMod = (PeptideDocNode)docVarMod.FindNode(pathPeptide);
             Assert.AreEqual(2, peptideVarMod.Children.Count);
             Assert.IsTrue(peptideVarMod.HasVariableMods,
-                string.Format("No variable modifications found on the peptide {0}", peptideVarMod.Peptide.Sequence));
+                string.Format("No variable modifications found on the peptide {0}", peptideVarMod.Peptide.Target));
             Assert.IsFalse(peptideVarMod.ExplicitMods.IsModified(IsotopeLabelType.heavy));
             AssertPrecursorMzIsModified(peptideVarMod, 0, peptideVarMod, 1, -5, 0.2);
 

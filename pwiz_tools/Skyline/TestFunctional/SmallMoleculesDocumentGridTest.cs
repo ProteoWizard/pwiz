@@ -20,7 +20,9 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -51,15 +53,15 @@ namespace pwiz.SkylineTestFunctional
             const string mixedSky = "mixed.sky";
             CheckDocumentGridAndColumns(mixedSky,
                 Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List,
-                49, 32, "C19H33", "custom");
+                49, 32, SrmDocument.DOCUMENT_TYPE.mixed, "C19H34[M-H]", "custom");
 
             CheckDocumentGridAndColumns(mixedSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors,
-                4, 17);
+                4, 17, SrmDocument.DOCUMENT_TYPE.mixed);
 
             CheckDocumentGridAndColumns(mixedSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
-                2, 14);
+                2, 14, SrmDocument.DOCUMENT_TYPE.mixed);
 
         }
 
@@ -69,15 +71,15 @@ namespace pwiz.SkylineTestFunctional
             const string smallMoleculeSky = "small_molecule.sky";
             CheckDocumentGridAndColumns(smallMoleculeSky, 
                 Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List,
-                1, 17, "C19H34[M-H]");
+                1, 17, SrmDocument.DOCUMENT_TYPE.small_molecules, "C19H34[M-H]");
 
             CheckDocumentGridAndColumns(smallMoleculeSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors,
-                1, 16);
+                1, 16, SrmDocument.DOCUMENT_TYPE.small_molecules);
 
             CheckDocumentGridAndColumns(smallMoleculeSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
-                1, 10);
+                1, 10, SrmDocument.DOCUMENT_TYPE.small_molecules);
 
         }
 
@@ -87,27 +89,29 @@ namespace pwiz.SkylineTestFunctional
             const string peptideSky = "peptide.sky";
             CheckDocumentGridAndColumns(peptideSky,
                 Resources.SkylineViewContext_GetTransitionListReportSpec_Peptide_Transition_List,
-                48, 21, null, "y");
+                48, 21, SrmDocument.DOCUMENT_TYPE.proteomic, null, "y");
 
             CheckDocumentGridAndColumns(peptideSky,
                             Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors,
-                            3, 12);
+                            3, 12, SrmDocument.DOCUMENT_TYPE.proteomic);
 
             CheckDocumentGridAndColumns(peptideSky,
                             Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
-                            1, 10);
+                            1, 10, SrmDocument.DOCUMENT_TYPE.proteomic);
 
         }
 
         private void CheckDocumentGridAndColumns(string docName,
             string viewName,
             int rowCount, int colCount,  // Expected row and column count for document grid
+            SrmDocument.DOCUMENT_TYPE expectedDocumentType,
             string expectedProductIonFormula = null,
             string expectedFragmentIon = null)
         {
             var oldDoc = SkylineWindow.Document;
             OpenDocument(docName);
             WaitForDocumentChangeLoaded(oldDoc);
+            Assume.AreEqual(expectedDocumentType, SkylineWindow.Document.DocumentType);
             WaitForClosedForm<DocumentGridForm>();
             var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
             RunUI(() => documentGrid.ChooseView(viewName));
@@ -134,12 +138,15 @@ namespace pwiz.SkylineTestFunctional
             else RunUI(() =>
             {
                 var formula = documentGrid.DataGridView.Rows[0].Cells[colProductIonFormula.Index].Value.ToString();
-                Assert.AreEqual(expectedProductIonFormula, formula);
                 if (expectedProductIonFormula.Contains("["))
                 {
                     var formulaNeutral = documentGrid.DataGridView.Rows[0].Cells[colProductNeutralFormula.Index].Value.ToString();
                     var adduct = documentGrid.DataGridView.Rows[0].Cells[colProductAdduct.Index].Value.ToString();
                     Assert.AreEqual(expectedProductIonFormula, formulaNeutral+adduct);
+                }
+                else
+                {
+                    Assert.AreEqual(expectedProductIonFormula, formula);
                 }
             });
             if (expectedFragmentIon == null)

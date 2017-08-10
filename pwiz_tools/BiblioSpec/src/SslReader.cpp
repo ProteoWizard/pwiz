@@ -57,17 +57,20 @@ SslReader::SslReader(BlibBuilder& maker,
                          "Adding new psm (scan %d) from delim file reader.",
                          newPSM.specKey);
       // create a new mod to store
-      PSM* curPSM = new PSM();
-      curPSM->charge = newPSM.charge;
-      curPSM->unmodSeq = newPSM.unmodSeq;
-      curPSM->specKey = newPSM.specKey;
-      curPSM->score = newPSM.score;
-      curPSM->specName = newPSM.specName;
+      PSM* curPSM = new PSM(static_cast<PSM &>(newPSM));
+      curPSM->modifiedSeq.clear();
+      curPSM->mods.clear();
+      curPSM->specIndex = -1;
 
       // parse the modified sequence
       parseModSeq(curPSM->mods, curPSM->unmodSeq);
       unmodifySequence(curPSM->unmodSeq);
 
+      if (!curPSM->IsCompleteEnough())
+      {
+          std::string err = std::string("Incomplete description: ") + curPSM->idAsString();
+          throw BlibException(false, err.c_str());
+      }
 
       // look for this file in the map
       map<string, vector<PSM*> >::iterator mapAccess 
@@ -96,12 +99,19 @@ SslReader::SslReader(BlibBuilder& maker,
     fileReader.addRequiredColumn("file", sslPSM::setFile);
     fileReader.addRequiredColumn("scan", sslPSM::setScanNumber);
     fileReader.addRequiredColumn("charge", sslPSM::setCharge);
-    fileReader.addRequiredColumn("sequence", sslPSM::setModifiedSequence);
+    fileReader.addOptionalColumn("sequence", sslPSM::setModifiedSequence); // Formerly required, now optional (but if it's missing, this had better be small molecule data)
 
     // add the optional columns
     fileReader.addOptionalColumn("score-type", sslPSM::setScoreType);
     fileReader.addOptionalColumn("score", sslPSM::setScore);
     fileReader.addOptionalColumn("retention-time", sslPSM::setRetentionTime);
+
+    // add the optional small molecule columns
+    fileReader.addOptionalColumn("inchikey", sslPSM::setInchiKey);
+    fileReader.addOptionalColumn("adduct", sslPSM::setPrecursorAdduct);
+    fileReader.addOptionalColumn("chemicalformula", sslPSM::setChemicalFormula);
+    fileReader.addOptionalColumn("moleculename", sslPSM::setMoleculeName);
+    fileReader.addOptionalColumn("otherkeys", sslPSM::setotherKeys);
 
     // use tab-delimited
     fileReader.defineSeparators('\t');

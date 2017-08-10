@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using Google.Protobuf;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
@@ -210,8 +211,8 @@ namespace pwiz.Skyline.Model.Serialization
             public IonType IonType { get; private set; }
             public int Ordinal { get; private set; }
             public int MassIndex { get; private set; }
-            public int PrecursorCharge { get; private set; }
-            public int Charge { get; private set; }
+            public Adduct PrecursorAdduct { get; private set; }
+            public Adduct ProductAdduct { get; private set; }
             public int? DecoyMassShift { get; private set; }
             public TransitionLosses Losses { get; private set; }
             public Annotations Annotations { get; private set; }
@@ -222,7 +223,8 @@ namespace pwiz.Skyline.Model.Serialization
             public void ReadXml(XmlReader reader)
             {
                 ReadXmlAttributes(reader);
-                ReadXmlElements(reader);
+                double? ignoredDeclaredMz;
+                ReadXmlElements(reader, out ignoredDeclaredMz);
             }
 
             public void ReadXmlAttributes(XmlReader reader)
@@ -233,8 +235,8 @@ namespace pwiz.Skyline.Model.Serialization
                 MassIndex = reader.GetIntAttribute(ATTR.mass_index);
                 // NOTE: PrecursorCharge is used only in TransitionInfo.ReadUngroupedTransitionListXml()
                 //       to support v0.1 document format
-                PrecursorCharge = reader.GetIntAttribute(ATTR.precursor_charge);
-                Charge = reader.GetIntAttribute(ATTR.product_charge);
+                PrecursorAdduct = Adduct.FromStringAssumeProtonated(reader.GetAttribute(ATTR.precursor_charge));
+                ProductAdduct = Adduct.FromStringAssumeProtonated(reader.GetAttribute(ATTR.product_charge));
                 DecoyMassShift = reader.GetNullableIntAttribute(ATTR.decoy_mass_shift);
                 string measuredIonName = reader.GetAttribute(ATTR.measured_ion_name);
                 if (measuredIonName != null)
@@ -247,8 +249,9 @@ namespace pwiz.Skyline.Model.Serialization
                 }
             }
 
-            public void ReadXmlElements(XmlReader reader)
+            public void ReadXmlElements(XmlReader reader, out double? declaredProductMz)
             {
+                declaredProductMz = null;
                 if (reader.IsEmptyElement)
                 {
                     reader.Read();
@@ -267,10 +270,11 @@ namespace pwiz.Skyline.Model.Serialization
                             Results = ReadTransitionResults(reader);
                         // Read and discard informational elements.  These values are always
                         // calculated from the settings to ensure consistency.
+                        // Note that we do use product_mz to disambiguate some older mass-only small molecule documents.
                         else if (reader.IsStartElement(EL.precursor_mz))
                             reader.ReadElementContentAsDoubleInvariant();
                         else if (reader.IsStartElement(EL.product_mz))
-                            reader.ReadElementContentAsDoubleInvariant();
+                            declaredProductMz = reader.ReadElementContentAsDoubleInvariant();
                         else if (reader.IsStartElement(EL.collision_energy))
                             reader.ReadElementContentAsDoubleInvariant();
                         else if (reader.IsStartElement(EL.declustering_potential))
@@ -785,9 +789,21 @@ namespace pwiz.Skyline.Model.Serialization
             ExplicitMods mods = null, lookupMods = null;
             Results<PeptideChromInfo> results = null;
             TransitionGroupDocNode[] children = null;
-            var customIon = isCustomMolecule ? DocNodeCustomIon.Deserialize(reader) : null; // This Deserialize only reads attribures, doesn't advance the reader
+            Adduct adduct = Adduct.EMPTY;
+            var customMolecule = isCustomMolecule ? CustomMolecule.Deserialize(reader, out adduct) : null; // This Deserialize only reads attribures, doesn't advance the reader
+            if (customMolecule != null)
+            {
+                if (FormatVersion <= DocumentFormat.VERSION_3_61 && string.IsNullOrEmpty(customMolecule.Formula) && customMolecule.MonoisotopicMass.IsMassH())
+                {
+                    // Defined by mass only, assume it's not massH despite how it may have been written
+                    customMolecule = new CustomMolecule(customMolecule.MonoisotopicMass.ChangeIsMassH(false),
+                        customMolecule.AverageMass.ChangeIsMassH(false),
+                        customMolecule.Name);
+                }
+            }
+            Assume.IsTrue(FormatVersion <= DocumentFormat.VERSION_3_61 || adduct.IsEmpty); // Shouldn't be any charge info at the peptide/molecule level
             var peptide = isCustomMolecule ?
-                new Peptide(customIon) :
+                new Peptide(customMolecule) :
                 new Peptide(group as FastaSequence, sequence, start, end, missedCleavages, isDecoy);
 
             if (reader.IsEmptyElement)
@@ -799,6 +815,8 @@ namespace pwiz.Skyline.Model.Serialization
                     annotations = ReadAnnotations(reader, _stringPool);
                 if (!isCustomMolecule)
                 {
+                    // CONSIDER(bspratt) the code as written actually can use static isotope labels
+                    // label modifications, and this if clause could be removed - but Brendan wants proof of demand for this first
                     mods = ReadExplicitMods(reader, peptide);
                     SkipImplicitModsElement(reader);
                     lookupMods = ReadLookupMods(reader, lookupSequence);
@@ -807,7 +825,13 @@ namespace pwiz.Skyline.Model.Serialization
 
                 if (reader.IsStartElement(EL.precursor))
                 {
-                    children = ReadTransitionGroupListXml(reader, peptide, mods, customIon);
+                    // If this is an older small molecule file, clean up any problems with former data model
+                    // where the "peptide" had the same formula as the precursor - and thus was not neutral
+                    if (isCustomMolecule && FormatVersion <= DocumentFormat.VERSION_3_61)
+                    {
+                        peptide = HandlePre362CustomIonTransitionGroups(reader, peptide);
+                    }
+                    children = ReadTransitionGroupListXml(reader, peptide, mods);
                 }
                 else if (reader.IsStartElement(EL.selected_transitions))
                 {
@@ -968,56 +992,175 @@ namespace pwiz.Skyline.Model.Serialization
         /// <param name="reader">The reader positioned at the first element</param>
         /// <param name="peptide">A previously read parent <see cref="Identity"/></param>
         /// <param name="mods">Explicit modifications for the peptide</param>
-        /// <param name="customIon">Custom ion to use for reading older formats</param>
         /// <returns>A new array of <see cref="TransitionGroupDocNode"/></returns>
-        private TransitionGroupDocNode[] ReadTransitionGroupListXml(XmlReader reader, Peptide peptide, ExplicitMods mods, DocNodeCustomIon customIon)
+        private TransitionGroupDocNode[] ReadTransitionGroupListXml(XmlReader reader, Peptide peptide, ExplicitMods mods)
         {
             var list = new List<TransitionGroupDocNode>();
             while (reader.IsStartElement(EL.precursor))
-                list.Add(ReadTransitionGroupXml(reader, peptide, mods, customIon));
+                list.Add(ReadTransitionGroupXml(reader, peptide, mods));
             return list.ToArray();
         }
 
-        private TransitionGroupDocNode ReadTransitionGroupXml(XmlReader reader, Peptide peptide, ExplicitMods mods, DocNodeCustomIon customIon)
+        // Read the first-seen transition group and try to discern the actual neutral formula of the molecule
+        // Needed since we actually stored the precursor description rather than the molecule description in v3.61 and earlier
+        private Peptide HandlePre362CustomIonTransitionGroups(XmlReader reader, Peptide peptide)
         {
-            int precursorCharge = reader.GetIntAttribute(ATTR.charge);
+            if (peptide.IsCustomMolecule)
+            {
+                var precursorCharge = reader.GetIntAttribute(ATTR.charge);
+                var ionFormula = reader.GetAttribute(ATTR.ion_formula);
+                if (ionFormula != null)
+                {
+                    ionFormula = ionFormula.Trim(); // We've seen tailing spaces in the wild
+                }
+                if (!string.IsNullOrEmpty(ionFormula))
+                {
+                    // Check to see if "peptide" formula is actually protonated - we used to treat base peptide
+                    // molecule and first precursor as the same thing
+                    string precursorFormula;
+                    Adduct precursorAdduct;
+                    Molecule precursorMol;
+                    var ionFormulaHasAdduct = IonInfo.IsFormulaWithAdduct(ionFormula, out precursorMol,
+                        out precursorAdduct, out precursorFormula);
+                    if (ionFormulaHasAdduct &&
+                        Equals(peptide.CustomMolecule.Formula, precursorAdduct.ApplyToFormula(precursorFormula)))
+                    {
+                        peptide = new Peptide(new CustomMolecule(precursorFormula, peptide.CustomMolecule.Name));
+                    }
+                    else if (Equals(peptide.CustomMolecule.Formula, ionFormula))
+                    {
+                        var declaredMz = reader.GetDoubleAttribute(ATTR.precursor_mz);
+                        if (Math.Abs(peptide.CustomMolecule.MonoisotopicMass - Math.Abs(precursorCharge) * declaredMz) < .01)
+                        {
+                            // The "peptide" formula is actually the protonated precursor ion formula
+                            var newFormula = Molecule.AdjustElementCount(ionFormula, "H", -precursorCharge); // Not L10N
+                            peptide = new Peptide(new CustomMolecule(newFormula, peptide.CustomMolecule.Name));
+                        }
+                    }
+                }
+                if (string.IsNullOrEmpty(ionFormula))
+                {
+                    ionFormula = peptide.CustomMolecule.Formula;
+                }
+                if (string.IsNullOrEmpty(ionFormula))
+                {
+                    // Declared as masses only - disambiguate mass vs massH if possible
+                    var declaredMz = reader.GetDoubleAttribute(ATTR.precursor_mz);
+                    var adduct = Adduct.FromChargeProtonated(precursorCharge);
+                    var mass = adduct.MassFromMz(declaredMz, peptide.CustomMolecule.MonoisotopicMass.MassType);
+                    if (Math.Abs(peptide.CustomMolecule.MonoisotopicMass - mass - precursorCharge * BioMassCalc.MassProton) < 0.01)
+                    {
+                        var mono = new TypedMass(peptide.CustomMolecule.MonoisotopicMass - precursorCharge * BioMassCalc.MassProton, MassType.Monoisotopic);
+                        var avg = new TypedMass(peptide.CustomMolecule.AverageMass - precursorCharge * BioMassCalc.MassProton, MassType.Average);
+                        peptide = new Peptide(new CustomMolecule(mono, avg, peptide.CustomMolecule.Name));
+                    }
+                }
+            }
+            return peptide;
+        }
+
+        private TransitionGroupDocNode ReadTransitionGroupXml(XmlReader reader, Peptide peptide, ExplicitMods mods)
+        {
+            var precursorCharge = reader.GetIntAttribute(ATTR.charge);
+            var precursorAdduct = Adduct.FromChargeProtonated(precursorCharge);  // Read integer charge
             var typedMods = ReadLabelType(reader, IsotopeLabelType.light);
 
             int? decoyMassShift = reader.GetNullableIntAttribute(ATTR.decoy_mass_shift);
             var explicitTransitionGroupValues = ReadExplicitTransitionValuesAttributes(reader);
-            if (peptide.IsCustomIon)
+            if (peptide.IsCustomMolecule)
             {
-                // In small molecules, different labels and charges mean different ion formulas
                 var ionFormula = reader.GetAttribute(ATTR.ion_formula);
-                if (!string.IsNullOrEmpty(ionFormula))
+                if (ionFormula != null)
                 {
-                    var ionName = reader.GetAttribute(ATTR.custom_ion_name);
-                    customIon = new DocNodeCustomIon(ionFormula, ionName);
+                    ionFormula = ionFormula.Trim(); // We've seen trailing spaces in the wild
+                }
+                Molecule mol;
+                string neutralFormula;
+                Adduct adduct;
+                var isFormulaWithAdduct = IonInfo.IsFormulaWithAdduct(ionFormula, out mol, out adduct, out neutralFormula);
+                if (isFormulaWithAdduct)
+                {
+                    precursorAdduct = adduct;
                 }
                 else
                 {
-                    var mz = reader.GetDoubleAttribute(ATTR.precursor_mz); // Normally ignored, but needed for molecules that are declared by mz and charge only
-                    var mass = BioMassCalc.CalculateIonMassFromMz(mz, precursorCharge); // We can't actually tell mono from average in this case
-                    double massMono = reader.GetNullableDoubleAttribute(ATTR.mass_monoisotopic) ?? mass;
-                    double massAverage = reader.GetNullableDoubleAttribute(ATTR.mass_average) ?? mass;
-                    if (FormatVersion.CompareTo(DocumentFormat.VERSION_3_12) < 0)
+                    // No adduct given - try to figure it out from charge and mass
+                    precursorAdduct = Adduct.NonProteomicProtonatedFromCharge(precursorCharge); // Assume (de)protonation
+                    if (string.IsNullOrEmpty(ionFormula))
                     {
-                        // In Skyline 3.1 we didn't suppport more than one transition group per molecule
-                        // Passed-in customIon is the primary precursor
+                        // Mass-only declarations sometimes don't distinguish mz from mass, so just declare charge
+                        var declaredMz = reader.GetDoubleAttribute(ATTR.precursor_mz);
+                        if (Math.Abs(declaredMz - peptide.CustomMolecule.MonoisotopicMass) < .001)
+                        {
+                            precursorAdduct = Adduct.FromChargeNoMass(precursorCharge);  // [M+], [M--] etc
+                        }
                     }
-                    // We need to determine if this is the primary precursor transition - but all we have to go on is mass
-                    else if (Math.Round(massMono, SequenceMassCalc.MassPrecision) == Math.Round(customIon.MonoisotopicMass, SequenceMassCalc.MassPrecision) &&
-                        Math.Round(massAverage, SequenceMassCalc.MassPrecision) == Math.Round(customIon.AverageMass, SequenceMassCalc.MassPrecision))
+                }
+                if (FormatVersion <= DocumentFormat.VERSION_3_61 && !string.IsNullOrEmpty(ionFormula))
+                {
+                    // Old model - we may have encoded isotopes into the precursor's ion formula, and included the adduct's atoms in the molecule count
+                    precursorAdduct = precursorAdduct.ChangeIsotopeLabels(BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula(ionFormula));
+                    if (!Equals(precursorAdduct.ApplyToFormula(peptide.CustomMolecule.Formula),
+                        adduct.IsEmpty ? ionFormula : adduct.ApplyToFormula(neutralFormula)))
                     {
-                        // Passed-in customIon is the primary precursor
+                        // Take precursor adduct as the difference between the precursor ion formula and the molecule ion formula
+                        precursorAdduct =
+                            Adduct.FromFormulaDiff(ionFormula, peptide.CustomMolecule.Formula, precursorCharge)
+                                .ChangeIsotopeLabels(BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula(ionFormula));
                     }
-                    else
+                    neutralFormula = peptide.CustomMolecule.Formula;
+                }
+                if (!string.IsNullOrEmpty(neutralFormula))
+                {
+                    var ionString = precursorAdduct.ApplyToFormula(neutralFormula);
+                    var moleculeWithAdduct = precursorAdduct.ApplyToFormula(peptide.CustomMolecule.Formula);
+                    Assume.IsTrue(Equals(ionString, moleculeWithAdduct), "Expected precursor ion formula to match parent molecule with adduct applied");  // Not L10N
+                    if (FormatVersion <= DocumentFormat.VERSION_3_61 && !typedMods.LabelType.IsLight)
                     {
-                        customIon = new DocNodeCustomIon(massMono, massAverage, reader.GetAttribute(ATTR.custom_ion_name));
+                        // Do we actually need to embed isotope info in the adduct, or is it handled by typedMods.LabelType?
+                        try
+                        {
+                            string isotopicFormula;
+                            Settings.GetPrecursorMass(typedMods.LabelType, peptide.CustomMolecule, typedMods, precursorAdduct.Unlabeled, out isotopicFormula);
+                            if (Equals(moleculeWithAdduct, precursorAdduct.Unlabeled.ApplyToFormula(isotopicFormula)))
+                            {
+                                precursorAdduct = precursorAdduct.Unlabeled; // No need to be explicit about labels in the adduct
+                            }
+                        }
+                        catch (InvalidDataException)
+                        {
+                            // Didn't find a precursor calculator for that isotope label type, so keep any isotopes in adduct
+                        }
+                    }
+                }
+                else if (FormatVersion <= DocumentFormat.VERSION_3_61 && !typedMods.LabelType.IsLight && string.IsNullOrEmpty(peptide.CustomMolecule.Formula))
+                {
+                    // Labeled, but described by mass only - express label effect in the adduct, preferably as a count of the declared ion label
+                    var massDiff = peptide.CustomMolecule.ReadMonoisotopicMass(reader) - peptide.CustomMolecule.MonoisotopicMass; // ReadMonoisotopicMass makes no assignments, it just alters read behavior based on type
+                    precursorAdduct = precursorAdduct.ChangeIsotopeLabels(massDiff); // Declare as mass if we can't deduce a tidy label
+                    if ((massDiff != 0) && typedMods.Modifications.Any())
+                    {
+                        var labelMassDiff = typedMods.Modifications.First().IonLabelMassDiff;
+                        if (labelMassDiff != 0)
+                        {
+                            var n = Math.Round(massDiff / labelMassDiff);
+                            if (Math.Abs(n * labelMassDiff - massDiff) < .001)
+                            {
+                                // Close enough to represent as "2N15" instead if the mass of two 15N's less two N's
+                                var label = new Dictionary<string, int>();
+                                foreach (var labelName in typedMods.Modifications.First().LabelNames)
+                                {
+                                    var nn = (int)n;
+                                    var adductLabelName = Adduct.DICT_ADDUCT_ISOTOPE_NICKNAMES.FirstOrDefault(x => x.Value == labelName).Key;
+                                    label[adductLabelName] = nn;
+                                }
+                                precursorAdduct = precursorAdduct.ChangeIsotopeLabels(label);
+                            }
+                        }
                     }
                 }
             }
-            var group = new TransitionGroup(peptide, customIon, precursorCharge, typedMods.LabelType, false, decoyMassShift);
+            var group = new TransitionGroup(peptide, precursorAdduct, typedMods.LabelType, false, decoyMassShift);
             var children = new TransitionDocNode[0];    // Empty until proven otherwise
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
 
@@ -1104,13 +1247,13 @@ namespace pwiz.Skyline.Model.Serialization
                 info.ReadXml(reader);
 
                 // If the transition is not in the current group
-                if (curGroup == null || curGroup.PrecursorCharge != info.PrecursorCharge)
+                if (curGroup == null || curGroup.PrecursorAdduct != info.PrecursorAdduct)
                 {
                     // Look for an existing group that matches
                     curGroup = null;
                     foreach (TransitionGroup group in listGroups)
                     {
-                        if (group.PrecursorCharge == info.PrecursorCharge)
+                        if (group.PrecursorAdduct == info.PrecursorAdduct)
                         {
                             curGroup = group;
                             break;
@@ -1121,7 +1264,7 @@ namespace pwiz.Skyline.Model.Serialization
                     else
                     {
                         // No existing group matches, so create a new one
-                        curGroup = new TransitionGroup(peptide, null, info.PrecursorCharge, IsotopeLabelType.light);
+                        curGroup = new TransitionGroup(peptide, info.PrecursorAdduct, IsotopeLabelType.light);
                         curList = new List<TransitionDocNode>();
                         listGroups.Add(curGroup);
                         mapGroupToList.Add(curGroup, curList);
@@ -1130,10 +1273,10 @@ namespace pwiz.Skyline.Model.Serialization
                 int offset = Transition.OrdinalToOffset(info.IonType,
                     info.Ordinal, peptide.Length);
                 Transition transition = new Transition(curGroup, info.IonType,
-                    offset, info.MassIndex, info.Charge);
+                    offset, info.MassIndex, info.ProductAdduct);
 
                 // No heavy transition support in v0.1, and no full-scan filtering
-                double massH = Settings.GetFragmentMass(IsotopeLabelType.light, mods, transition, null);
+                var massH = Settings.GetFragmentMass(null, mods, transition, null);
 
                 curList.Add(new TransitionDocNode(transition, info.Losses, massH, null, null));
             }
@@ -1198,38 +1341,86 @@ namespace pwiz.Skyline.Model.Serialization
             info.ReadXmlAttributes(reader);
             var isPrecursor = Transition.IsPrecursor(info.IonType);
             var isCustom = Transition.IsCustom(info.IonType, group);
-            CustomIon customIon = null;
+            CustomMolecule customMolecule = null;
+            Adduct adduct = Adduct.EMPTY;
             if (isCustom)
             {
                 if (info.MeasuredIon != null)
-                    customIon = info.MeasuredIon.CustomIon;
+                    customMolecule = info.MeasuredIon.SettingsCustomIon;
                 else if (isPrecursor)
-                    customIon = group.CustomIon;
+                    customMolecule = group.CustomMolecule;
                 else
-                    customIon = DocNodeCustomIon.Deserialize(reader);
+                {
+                    customMolecule = CustomMolecule.Deserialize(reader, out adduct);
+                    if (FormatVersion <= DocumentFormat.VERSION_3_61 && string.IsNullOrEmpty(customMolecule.Formula) && customMolecule.MonoisotopicMass.IsMassH())
+                    {
+                        // Defined by mass only, assume it's not massH despite how it may have been written
+                        customMolecule = new CustomMolecule(customMolecule.MonoisotopicMass.ChangeIsMassH(false), customMolecule.AverageMass.ChangeIsMassH(false),
+                            customMolecule.Name);
+                    }
+                }
             }
-            info.ReadXmlElements(reader);
+            double? declaredProductMz;
+            info.ReadXmlElements(reader, out declaredProductMz);
+
+            if (adduct.IsEmpty)
+            {
+                adduct = info.ProductAdduct;
+                var isPre362NonReporterCustom = FormatVersion <= DocumentFormat.VERSION_3_61 && customMolecule != null &&
+                                                 !(customMolecule is SettingsCustomIon); // Leave reporter ions alone
+                if (isPre362NonReporterCustom && adduct.IsProteomic)
+                {
+                    adduct = Adduct.NonProteomicProtonatedFromCharge(adduct.AdductCharge);
+                }
+                // Watch all-mass declaration with mz same as mass with a charge-only adduct, which older versions don't describe succinctly
+                if (!isPrecursor && isPre362NonReporterCustom &&
+                    Math.Abs(declaredProductMz.Value - customMolecule.MonoisotopicMass) < .001)
+                {
+                    string newFormula = null;
+                    if (!string.IsNullOrEmpty(customMolecule.Formula) &&
+                        Math.Abs(customMolecule.MonoisotopicMass - Math.Abs(adduct.AdductCharge) * declaredProductMz.Value) < .01)
+                    {
+                        // Adjust hydrogen count to get a molecular mass that makes sense for charge and mz
+                        newFormula = Molecule.AdjustElementCount(customMolecule.Formula, "H", -adduct.AdductCharge); // Not L10N
+                    }
+                    if (!string.IsNullOrEmpty(newFormula))
+                    {
+                        customMolecule = new CustomMolecule(newFormula, customMolecule.Name);
+                    }
+                    else
+                    {
+                        // All we can really say about the adduct is that it has a charge
+                        adduct = Adduct.FromChargeNoMass(adduct.AdductCharge);
+                    }
+                }
+            }
+            else
+            {
+                // We parsed an adduct out of the molecule description, as in older versions - make sure it agrees with parsed charge
+                // ReSharper disable once PossibleNullReferenceException
+                Assume.IsTrue(adduct.AdductCharge == info.ProductAdduct.AdductCharge);
+            }
 
             Transition transition;
             if (isCustom)
             {
-                transition = new Transition(group, isPrecursor ? group.PrecursorCharge : info.Charge, info.MassIndex,
-                    customIon, info.IonType);
+                transition = new Transition(group, isPrecursor ? group.PrecursorAdduct : adduct, info.MassIndex,
+                    customMolecule, info.IonType);
             }
             else if (isPrecursor)
             {
                 transition = new Transition(group, info.IonType, group.Peptide.Length - 1, info.MassIndex,
-                    group.PrecursorCharge, info.DecoyMassShift);
+                    group.PrecursorAdduct, info.DecoyMassShift);
             }
             else
             {
                 int offset = Transition.OrdinalToOffset(info.IonType,
                     info.Ordinal, group.Peptide.Length);
-                transition = new Transition(group, info.IonType, offset, info.MassIndex, info.Charge, info.DecoyMassShift);
+                transition = new Transition(group, info.IonType, offset, info.MassIndex, adduct, info.DecoyMassShift);
             }
 
             var losses = info.Losses;
-            double massH = Settings.GetFragmentMass(group.LabelType, mods, transition, isotopeDist);
+            var mass = Settings.GetFragmentMass(group, mods, transition, isotopeDist);
 
             var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(transition, losses, isotopeDist);
 
@@ -1237,7 +1428,7 @@ namespace pwiz.Skyline.Model.Serialization
                 throw new InvalidDataException(Resources.SrmDocument_ReadTransitionXml_All_transitions_of_decoy_precursors_must_have_a_decoy_mass_shift);
 
             return new TransitionDocNode(transition, info.Annotations, losses,
-                massH, isotopeDistInfo, info.LibInfo, info.Results);
+                mass, isotopeDistInfo, info.LibInfo, info.Results);
         }
     }
 }

@@ -62,9 +62,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 document = SkylineWindow.DocumentUI;
             });
 
-            var curatedDTs = document.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimePeptides;
+            var curatedDTs = document.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimeIons;
             var measuredDTs = new List<IDictionary<LibKey, DriftTimeInfo>>();
-            var precursors = document.MoleculePrecursorPairs.Select(p => new LibKey(p.NodePep.RawTextId, p.NodeGroup.PrecursorCharge)).ToArray();
+            var precursors = document.MoleculePrecursorPairs.Select(p => p.NodePep.ModifiedTarget.GetLibKey(p.NodeGroup.PrecursorAdduct)).ToArray();
             for (var pass = 0; pass < 2; pass++)
             {
                 // Verify ability to extract predictions from raw data
@@ -86,7 +86,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 WaitForClosedForm(peptideSettingsDlg);
                 
                 document = SkylineWindow.Document;
-                measuredDTs.Add(document.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimePeptides);
+                measuredDTs.Add(document.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimeIons);
                 var count = 0;
                 foreach (var key in curatedDTs.Keys)
                 {

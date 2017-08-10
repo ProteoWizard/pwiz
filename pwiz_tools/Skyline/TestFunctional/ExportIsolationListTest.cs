@@ -168,11 +168,11 @@ namespace pwiz.SkylineTestFunctional
 
             // Conversion to negative charge states shifts the masses
             var mzFirst = AsSmallMoleculesNegative ? 580.304419 : 582.318971;
-            var mzLast = AsSmallMoleculesNegative ? 442.535467 : 444.55002;
+            var mzLast = AsSmallMoleculesNegative ? 442.535468 : 444.55002;
             var zFirst = AsSmallMoleculesNegative ? -2 : 2;
             var zLast = AsSmallMoleculesNegative ? -3 : 3;
             var ceFirst = AsSmallMoleculesNegative ? 20.3 : 20.4;
-            var ceLast = AsSmallMoleculesNegative ? 16.2 : 19.2;
+            var ceLast = AsSmallMoleculesNegative ? 19.1 : 19.2;
             double? slensA = null; 
             double? slensB = null;
             if (WithSLens)
@@ -190,7 +190,8 @@ namespace pwiz.SkylineTestFunctional
                 FieldSeparate("True", mzLast, 20, zLast, "Preferred", 0, string.Empty, isolationWidth, ceLast));
 
             // Export Agilent scheduled DDA list.
-            ExportIsolationList(
+            if (!AsSmallMoleculesNegative) // .skyd file chromatograms are not useful in this conversion due to mass shift
+              ExportIsolationList(
                 "AgilentScheduledDda.csv", 
                 ExportInstrumentType.AGILENT_TOF, FullScanAcquisitionMethod.None, ExportMethodType.Scheduled,
                 AgilentIsolationListExporter.GetDdaHeader(_fieldSeparator),
@@ -199,14 +200,16 @@ namespace pwiz.SkylineTestFunctional
 
             // Export Thermo unscheduled DDA list.
             const double nce = ThermoQExactiveIsolationListExporter.NARROW_NCE;
-            bool AsSmallMolecules = (SmallMoleculeTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none);
+            var conversionDecorator = SmallMoleculeTestMode == RefinementSettings.ConvertToSmallMoleculesMode.none ?
+                string.Empty :
+                RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator;
             bool AsSmallMoleculeMasses = (SmallMoleculeTestMode == RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
-            var peptideA = AsSmallMolecules
-                ? (AsSmallMoleculeMasses ? "Ion [1164.639040/1165.343970] (light)" : (AsSmallMoleculesNegative ? "LVNELTEFAK(-H2) (light)" : "LVNELTEFAK(+H2) (light)"))
-                : "LVNELTEFAK (light)";
-            var peptideB = AsSmallMolecules
-                ? (AsSmallMoleculeMasses ? "Ion [1333.651707/1334.400621] (light)" : (AsSmallMoleculesNegative ? "IKNLQSLDPSH(-H3) (light)" : "IKNLQSLDPSH(+H3) (light)"))
-                : "IKNLQS[+80.0]LDPSH (light)";
+            var peptideA = AsSmallMoleculeMasses ?
+                CustomMolecule.INVARIANT_NAME_DETAIL + " [1162.623390/1163.328090] (light)" :
+                conversionDecorator+"LVNELTEFAK (light)";
+            var peptideB = AsSmallMoleculeMasses ? 
+                CustomMolecule.INVARIANT_NAME_DETAIL + " [1330.628231/1331.376801] (light)" : 
+                conversionDecorator+"IKNLQS[+80.0]LDPSH (light)";
             var polarity = AsSmallMoleculesNegative ? "Negative" : "Positive";
             var thermoQExactiveIsolationListExporter = new ThermoQExactiveIsolationListExporter(SkylineWindow.Document)
             {

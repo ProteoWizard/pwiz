@@ -30,6 +30,7 @@
 #include "BlibBuilder.h"
 #include "SqliteRoutine.h"
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/join.hpp>
 
 using namespace std;
 
@@ -78,10 +79,32 @@ BlibBuilder::~BlibBuilder()
     }
 }
 
+static vector<string> supportedTypes = {
+    ".blib",
+    ".pep.xml",
+    ".pep.XML",
+    ".pepXML",
+    ".sqt",
+    ".perc.xml",
+    ".dat",
+    ".xtan.xml",
+    ".idpXML",
+    ".group.xml",
+    ".pride.xml",
+    ".msf",
+    ".pdResult",
+    ".mzid",
+    "msms.txt",
+    "final_fragment.csv",
+    ".proxl.xml",
+    ".ssl",
+    ".mlb"
+};
+
 void BlibBuilder::usage()
 {
-    const char* usage =
-        "Usage: BlibBuild [options] <*.sqt|*.pep.xml|*.pepXML|*.blib|*.idpXML|*.dat|*.ssl|*.pride.xml|*.msms.txt|*.msf|*.mzid|*.perc.xml|*final_fragment.csv|*.proxl.xml>+ <library_name>\n"
+    std::string usage =
+        "Usage: BlibBuild [options] <*" + boost::algorithm::join(supportedTypes, "|*") + ">+ <library_name>\n"
         "   -o                Overwrite existing library. Default append.\n"
         "   -S  <filename>    Read from file as though it were stdin.\n"
         "   -s                Result file names from stdin. e.g. ls *sqt | BlibBuild -s new.blib.\n"
@@ -95,7 +118,7 @@ void BlibBuilder::usage()
         "   -l <level>        ZLib compression level (0-?). Default 3.\n"
         "   -i <library_id>   LSID library ID. Default uses file name.\n"
         "   -a <authority>    LSID authority. Default proteome.gs.washington.edu.\n"
-        "   -x <filename>     Specify the path of XML modifications file for parsing MaxQuant files.\n";
+        "   -x <filename>     Specify the path of XML modifications file for parsing MaxQuant files.\n"
         "   -P <float>        Specify pusher interval for Waters final_fragment.csv files.\n";
 
     cerr << usage << endl;
@@ -196,7 +219,7 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
         if (nInputs < 1)
         {
             Verbosity::comment(V_ERROR,
-                               "Not enough arguments. Missing input files (.sqt, .pep.xml/.pep.XML/.pepXML, .idpXML, .dat, .xtan.xml, .pride.xml, .mzid, .perc.xml, final_fragment.csv.), or no output file specified.");
+                "Not enough arguments. Missing input files (%s.), or no output file specified.", boost::algorithm::join(supportedTypes, ", ").c_str());
             usage();          // Nothing to add
         }
         else
@@ -205,33 +228,16 @@ int BlibBuilder::parseCommandArgs(int argc, char* argv[])
                 char* file_name = argv[j];
                 //if (has_extension(file_name, ".blib"))
                 //merge_libs[merge_count++] = file_name;
-                if(has_extension(file_name,".blib") ||
-                   has_extension(file_name, ".pep.xml") ||
-                   has_extension(file_name, ".pep.XML") ||
-                   has_extension(file_name, ".pepXML") ||
-                   has_extension(file_name, ".sqt") ||
-                   has_extension(file_name, ".perc.xml") ||
-                   has_extension(file_name, ".dat") ||
-                   has_extension(file_name, ".xtan.xml") ||
-                   has_extension(file_name, ".idpXML") ||
-                   has_extension(file_name, ".group.xml") ||
-                   has_extension(file_name, ".pride.xml") ||
-                   has_extension(file_name, ".msf") ||
-                   has_extension(file_name, ".pdResult") ||
-                   has_extension(file_name, ".mzid") ||
-                   has_extension(file_name, "msms.txt") ||
-                   has_extension(file_name, "final_fragment.csv") ||
-                   has_extension(file_name, ".proxl.xml") ||
-                   has_extension(file_name, ".ssl") ) {
-
+                bool supported = false;
+                for (vector<string>::const_iterator ext = supportedTypes.begin(); !supported && ext != supportedTypes.end(); ++ext)
+                {
+                    supported = has_extension(file_name, ext->c_str());
+                }
+                if (supported) {
                     input_files.push_back(file_name);
                 } else {
-                    Verbosity::error("Unsupported file type '%s'.  Must be .sqt, "
-                                     ".pep.xml/.pep.XML/.pepXML, .idpXML, .dat, "
-                                     ".xtan.xml, .ssl, .group.xml, .pride.xml, .msms.txt, "
-                                     ".msf, .pdResult, .mzid, perc.xml, final_fragment.csv, "
-                                     ".proxl.xml, or .blib.",
-                                     file_name);
+                    Verbosity::error("Unsupported file type '%s'.  Must be one of %s.",
+                        file_name, boost::algorithm::join(supportedTypes, ", ").c_str());
                 }
             }
         }

@@ -126,7 +126,8 @@ protected:
     void setRedundant(bool value) { redundant = value; }
 
 protected:
-    char zSql[8192];
+#define ZSQLBUFLEN 8192
+    char zSql[ZSQLBUFLEN];
     bool verbose;
     bool ambiguityMessages_;
     bool keepAmbiguous_;

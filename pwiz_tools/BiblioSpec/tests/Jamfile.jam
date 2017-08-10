@@ -168,12 +168,16 @@ blib-test-build sqt-ms2 : -o : output/demo.blib : sqt-ms2.check : inputs/demo.sq
 blib-test-build sqt-cms2 : -o : output/demo-copy.blib : sqt-cms2.check : inputs/demo-copy.sqt ;
 blib-test-build sqt-ez : -o : output/sqt-ez.blib : sqt-ez.check : inputs/wormy4raw-1.select.sqt ;
 
+# Test Shimadzu .MLB small molecule library import
+blib-test-build shimadzu-mlb : -o : output/Small_Library-Positive-ions_CE-Merged.blib : Small_Library-Positive-ions_CE-Merged.check : inputs/Small_Library-Positive-ions_CE-Merged.mlb ;
+
 # Test with the tab-delimited input format
 
 blib-test-build ssl : -o : output/ssl.blib : ssl.check : inputs/demo.ssl ;
 blib-test-build ssl-ex : -o : output/ssl-ex.blib : ssl-ex.check : inputs/extra-cols.ssl ;
 blib-test-build duplicates : -o : output/duplicates.blib : duplicates.check : inputs/three-duplicates.ssl ;
 blib-test-build ssl-rt : -o : output/ssl-rt.blib : ssl-rt.check : inputs/ssl-with-rt.ssl ;
+blib-test-build ssl-small-mol : -o : output/ssl-small-mol.blib : ssl-small-mol.check : inputs/ssl-small-mol.ssl ;
 
 # Test building with percolator XML files
 

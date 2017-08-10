@@ -79,14 +79,19 @@ namespace pwiz.Skyline.Model
             if (settings != null)
             {
                 var calcPre = settings.GetPrecursorCalc(IsotopeLabelType.light, ExplicitMods);
-                ModifiedSequence = calcPre.GetModifiedSequence(Peptide.Sequence, false);
-                ModifiedSequenceDisplay = calcPre.GetModifiedSequence(Peptide.Sequence, true);
+                ModifiedTarget = calcPre.GetModifiedSequence(Peptide.Target, false);
+                ModifiedSequenceDisplay = calcPre.GetModifiedSequence(Peptide.Target, true).DisplayName;
+            }
+            else
+            {
+                ModifiedTarget = Peptide.Target;
+                ModifiedSequenceDisplay = Peptide.Target.DisplayName;
             }
         }
 
         protected override IList<DocNode> OrderedChildren(IList<DocNode> children)
         {
-            if (Peptide.IsCustomIon && children.Any() && !SrmDocument.IsSpecialNonProteomicTestDocNode(this))
+            if (Peptide.IsCustomMolecule && children.Any() && !SrmDocument.IsSpecialNonProteomicTestDocNode(this))
             {
                 // Enforce order for small molecules, except those that are fictions of the test system
                 return children.OrderBy(t => (TransitionGroupDocNode)t, new TransitionGroupDocNode.CustomIonPrecursorComparer()).ToArray();
@@ -99,7 +104,7 @@ namespace pwiz.Skyline.Model
 
         public Peptide Peptide { get { return (Peptide)Id; } }
 
-        public DocNodeCustomIon CustomIon { get { return Peptide.CustomIon; } }
+        public CustomMolecule CustomMolecule { get { return Peptide.CustomMolecule; } }
 
         public PeptideModKey Key { get { return new PeptideModKey(Peptide, ExplicitMods); } }
 
@@ -115,14 +120,17 @@ namespace pwiz.Skyline.Model
 
         public StandardType GlobalStandardType { get; private set; }
 
-        public string ModifiedSequence { get; private set; }
+        public Target ModifiedTarget { get; private set; }
+        public string ModifiedSequence { get { return ModifiedTarget.Sequence; } }
 
         public string ModifiedSequenceDisplay { get; private set; }
 
         public Color Color { get; private set; }
         public static readonly Color UNKNOWN_COLOR = Color.FromArgb(170, 170, 170);
 
-        public string RawTextId { get { return CustomInvariantNameOrText(ModifiedSequence); } }
+        public Target Target { get { return Peptide.Target; }}
+        public string TextId { get { return CustomInvariantNameOrText(Peptide.Sequence); } }
+        public string RawTextId { get { return CustomInvariantNameOrText(ModifiedTarget.Sequence); } }
 
         public string RawUnmodifiedTextId { get { return CustomInvariantNameOrText(Peptide.Sequence); }}
 
@@ -130,12 +138,12 @@ namespace pwiz.Skyline.Model
 
         private string CustomDisplayNameOrText(string text)
         {
-            return Peptide.IsCustomIon ? Peptide.CustomIon.DisplayName : text;
+            return Peptide.IsCustomMolecule ? Peptide.CustomMolecule.DisplayName : text;
         }
 
         private string CustomInvariantNameOrText(string text)
         {
-            return Peptide.IsCustomIon ? Peptide.CustomIon.InvariantName : text;
+            return Peptide.IsCustomMolecule ? Peptide.CustomMolecule.InvariantName : text;
         }
 
         /// <summary>
@@ -144,6 +152,7 @@ namespace pwiz.Skyline.Model
         /// For non-peptides, returns the display name (Name or Formula or masses)
         /// </summary>
         public string SourceTextId { get { return SourceKey != null ? SourceKey.ModifiedSequence : RawTextId; } }
+        public Target SourceModifiedTarget { get { return SourceKey != null ? new Target(SourceKey.ModifiedSequence) : ModifiedTarget; } }
 
         /// <summary>
         /// For decoy peptides, returns unmodified sequence of the source peptide
@@ -151,6 +160,8 @@ namespace pwiz.Skyline.Model
         /// For non-peptides, returns the display name (Name or Formula or masses)
         /// </summary>
         public string SourceUnmodifiedTextId { get { return SourceKey != null ? SourceKey.Sequence : RawUnmodifiedTextId; } }
+
+        public Target SourceUnmodifiedTarget { get { return SourceKey != null ? new Target(SourceKey.Sequence) : Target; } }
 
         /// <summary>
         /// Explicit modifications for this peptide or a source peptide for a decoy
@@ -162,7 +173,7 @@ namespace pwiz.Skyline.Model
 
         public bool HasVariableMods { get { return HasExplicitMods && ExplicitMods.IsVariableStaticMods; } }
 
-        public bool IsProteomic { get { return !Peptide.IsCustomIon; } }
+        public bool IsProteomic { get { return !Peptide.IsCustomMolecule; } }
 
         public bool AreVariableModsPossible(int maxVariableMods, IList<StaticMod> modsVarAvailable)
         {
@@ -201,10 +212,10 @@ namespace pwiz.Skyline.Model
                                                                   ((TransitionGroupDocNode)nodeGroup).TransitionGroup.LabelType));
         }
 
-        public bool HasChildCharge(int charge)
+        public bool HasChildCharge(Adduct charge)
         {
             return Children.Contains(nodeGroup => Equals(charge,
-                                                         ((TransitionGroupDocNode) nodeGroup).TransitionGroup.PrecursorCharge));
+                                                         ((TransitionGroupDocNode) nodeGroup).TransitionGroup.PrecursorAdduct));
         }
 
         public int? Rank { get; private set; }
@@ -294,7 +305,7 @@ namespace pwiz.Skyline.Model
                     where chromInfo.RetentionTime.HasValue
                     select (double)chromInfo.RetentionTime.Value);
                 return statTimes.Length > 0
-                    ? (float?)statTimes.Percentile(IrtStandard.GetSpectrumTimePercentile(ModifiedSequence))
+                    ? (float?)statTimes.Percentile(IrtStandard.GetSpectrumTimePercentile(ModifiedTarget))
                     : null;
             }
         }
@@ -462,16 +473,16 @@ namespace pwiz.Skyline.Model
                 return this; // Settings have no effect on custom ions
 
             var calcPre = settingsNew.GetPrecursorCalc(IsotopeLabelType.light, ExplicitMods);
-            string modifiedSequence = calcPre.GetModifiedSequence(Peptide.Sequence, false);
-            string modifiedSequenceDisplay = calcPre.GetModifiedSequence(Peptide.Sequence, true);
-            if (String.Equals(modifiedSequence, ModifiedSequence) &&
+            var modifiedTarget = calcPre.GetModifiedSequence(Peptide.Target, false);
+            string modifiedSequenceDisplay = calcPre.GetModifiedSequence(Peptide.Target, true).Sequence;
+            if (Equals(modifiedTarget, ModifiedTarget) &&
                 String.Equals(modifiedSequenceDisplay, ModifiedSequenceDisplay))
             {
                 return this;
             }
             return ChangeProp(ImClone(this), im =>
                 {
-                    im.ModifiedSequence = modifiedSequence;
+                    im.ModifiedTarget = modifiedTarget;
                     im.ModifiedSequenceDisplay = modifiedSequenceDisplay;
                 });
         }
@@ -524,9 +535,9 @@ namespace pwiz.Skyline.Model
         }
 
         // Note: this potentially returns a node with a different ID, which has to be Inserted rather than Replaced
-        public PeptideDocNode ChangeCustomIonValues(SrmSettings settings, DocNodeCustomIon customIon, ExplicitRetentionTimeInfo explicitRetentionTime)
+        public PeptideDocNode ChangeCustomIonValues(SrmSettings settings, CustomMolecule customMolecule, ExplicitRetentionTimeInfo explicitRetentionTime)
         {
-            var newPeptide = new Peptide(customIon);
+            var newPeptide = new Peptide(customMolecule);
             Helpers.AssignIfEquals(ref newPeptide, Peptide);
             if (Equals(Peptide, newPeptide))
             {
@@ -621,9 +632,9 @@ namespace pwiz.Skyline.Model
             if (TransitionGroupCount > 1)
             {
                 double maxArea = nodeGroup.AveragePeakArea ?? 0;
-                int precursorCharge = nodeGroup.TransitionGroup.PrecursorCharge;
+                var precursorCharge = nodeGroup.TransitionGroup.PrecursorAdduct;
                 foreach (var nodeGroupChild in TransitionGroups.Where(g =>
-                        g.TransitionGroup.PrecursorCharge == precursorCharge &&
+                        g.TransitionGroup.PrecursorAdduct.Equals(precursorCharge) &&
                         !ReferenceEquals(g, nodeGroup)))
                 {
                     // Only when children match can one precursor provide primary values for another
@@ -843,10 +854,10 @@ namespace pwiz.Skyline.Model
                         // Skip this node, if it is heavy and the update caused it to have the
                         // same m/z value as the light value.
                         if (!nodeChanged.TransitionGroup.LabelType.IsLight &&
-                            !Peptide.IsCustomIon) // No mods on customs
+                            !Peptide.IsCustomMolecule) // No mods on customs (TODO bspratt - not sure this holds true any longer)
                         {
-                            double precursorMassLight = settingsNew.GetPrecursorMass(
-                                IsotopeLabelType.light, Peptide.Sequence, explicitMods);
+                            var precursorMassLight = settingsNew.GetPrecursorMass(
+                                IsotopeLabelType.light, Peptide.Target, explicitMods);
                             double precursorMzLight = SequenceMassCalc.GetMZ(precursorMassLight,
                                                                              nodeChanged.TransitionGroup.PrecursorCharge);
                             if (nodeChanged.PrecursorMz == precursorMzLight)
@@ -910,7 +921,7 @@ namespace pwiz.Skyline.Model
             // make sure the Peptide ID no longer points to the old FASTA sequence.
             if (peptideList && Peptide.FastaSequence != null)
             {
-                result = new PeptideDocNode(new Peptide(null, Peptide.Sequence, null, null, Peptide.MissedCleavages), settings,
+                result = new PeptideDocNode(new Peptide(null, Peptide.Target.Sequence, null, null, Peptide.MissedCleavages), settings,
                                             result.ExplicitMods, result.SourceKey, result.ExplicitRetentionTime, new TransitionGroupDocNode[0], result.AutoManageChildren); 
             }
             // Create a new child list, using existing children where GlobalIndexes match.
@@ -998,21 +1009,21 @@ namespace pwiz.Skyline.Model
         {
             if (childrenNew.Count < 2)
                 return childrenNew;
-            int maxCharge = 0;
+            var maxCharge = Adduct.EMPTY;
             float maxValue = Single.MinValue;
             foreach (TransitionGroupDocNode nodeGroup in childrenNew)
             {
                 float rankValue = nodeGroup.GetRankValue(rankId);
                 if (rankValue > maxValue)
                 {
-                    maxCharge = nodeGroup.TransitionGroup.PrecursorCharge;
+                    maxCharge = nodeGroup.TransitionGroup.PrecursorAdduct;
                     maxValue = rankValue;
                 }
             }
             var listHighestRankChildren = new List<DocNode>();
             foreach (TransitionGroupDocNode nodeGroup in childrenNew)
             {
-                if (nodeGroup.TransitionGroup.PrecursorCharge == maxCharge)
+                if (nodeGroup.TransitionGroup.PrecursorAdduct.Equals(maxCharge))
                     listHighestRankChildren.Add(nodeGroup);
             }
             return listHighestRankChildren;
@@ -1021,7 +1032,7 @@ namespace pwiz.Skyline.Model
         public TransitionDocNode[] GetMatchingTransitions(TransitionGroup tranGroup, SrmSettings settings, ExplicitMods explicitMods)
         {
             int iMatch = Children.IndexOf(nodeGroup =>
-                                          ((TransitionGroupDocNode)nodeGroup).TransitionGroup.PrecursorCharge == tranGroup.PrecursorCharge);
+                                          ((TransitionGroupDocNode)nodeGroup).TransitionGroup.PrecursorAdduct == tranGroup.PrecursorAdduct);
             if (iMatch == -1)
                 return null;
             TransitionGroupDocNode nodeGroupMatching = (TransitionGroupDocNode) Children[iMatch];
@@ -1601,8 +1612,8 @@ namespace pwiz.Skyline.Model
                 if (RetentionTimesMeasured > 0)
                     retentionTime = (float) (RetentionTimeTotal/RetentionTimesMeasured);
                 var mods = Settings.PeptideSettings.Modifications;
-                var listRatios = mods.CalcPeptideRatios((l, h) => CalcTransitionGroupRatio(-1, l, h),
-                    l => CalcTransitionGroupGlobalRatio(-1, l));
+                var listRatios = mods.CalcPeptideRatios((l, h) => CalcTransitionGroupRatio(Adduct.EMPTY, l, h),
+                    l => CalcTransitionGroupGlobalRatio(Adduct.EMPTY, l));
                 return new PeptideChromInfo(FileId, peakCountRatio, retentionTime, listRatios);
             }
 
@@ -1637,11 +1648,11 @@ namespace pwiz.Skyline.Model
             public RatioValue CalcTransitionGroupGlobalRatio(TransitionGroupDocNode nodeGroup,
                                                              IsotopeLabelType labelTypeNum)
             {
-                return CalcTransitionGroupGlobalRatio(nodeGroup.TransitionGroup.PrecursorCharge,
+                return CalcTransitionGroupGlobalRatio(nodeGroup.TransitionGroup.PrecursorAdduct,
                                                       labelTypeNum);
             }
 
-            private RatioValue CalcTransitionGroupGlobalRatio(int precursorCharge, IsotopeLabelType labelType)
+            private RatioValue CalcTransitionGroupGlobalRatio(Adduct precursorAdduct, IsotopeLabelType labelType)
             {
                 if (GlobalStandardArea == 0)
                     return null;
@@ -1650,7 +1661,7 @@ namespace pwiz.Skyline.Model
                 foreach (var pair in GetAreaPairs(labelType))
                 {
                     var key = pair.Key;
-                    if (precursorCharge != -1 && key.PrecursorCharge != precursorCharge)
+                    if (!key.IsMatchForRatioPurposes(precursorAdduct))
                         continue;
                     num += pair.Value;
                 }
@@ -1662,11 +1673,11 @@ namespace pwiz.Skyline.Model
                                                        IsotopeLabelType labelTypeNum,
                                                        IsotopeLabelType labelTypeDenom)
             {
-                return CalcTransitionGroupRatio(nodeGroup.TransitionGroup.PrecursorCharge,
+                return CalcTransitionGroupRatio(nodeGroup.TransitionGroup.PrecursorAdduct,
                                                 labelTypeNum, labelTypeDenom);
             }
 
-            private RatioValue CalcTransitionGroupRatio(int precursorCharge,
+            private RatioValue CalcTransitionGroupRatio(Adduct precursorAdduct,
                                                         IsotopeLabelType labelTypeNum,
                                                         IsotopeLabelType labelTypeDenom)
             {
@@ -1683,8 +1694,8 @@ namespace pwiz.Skyline.Model
                 foreach (var pair in GetAreaPairs(labelTypeNum))
                 {
                     var key = pair.Key;
-                    if (precursorCharge != -1 && key.PrecursorCharge != precursorCharge)
-                        continue;
+                    if (!key.IsMatchForRatioPurposes(precursorAdduct))
+                        continue; // Match charge states if any specified (adduct may also contain isotope info, so look at charge specifically)
 
                     float areaNum = pair.Value;
                     float areaDenom;
@@ -1721,8 +1732,8 @@ namespace pwiz.Skyline.Model
             private readonly int _ionOrdinal;
             private readonly int _massIndex;
             private readonly int? _decoyMassShift;
-            private readonly int _charge;
-            private readonly int _precursorCharge;
+            private readonly Adduct _adduct; // We only care about charge and formula, other adduct details such as labels are intentionally not part of the comparison
+            private readonly Adduct _precursorAdduct; // We only care about charge and formula, other adduct details such as labels are intentionally not part of the comparison
             private readonly TransitionLosses _losses;
             private readonly IsotopeLabelType _labelType;
 
@@ -1734,8 +1745,8 @@ namespace pwiz.Skyline.Model
                 _ionOrdinal = transition.Ordinal;
                 _massIndex = transition.MassIndex;
                 _decoyMassShift = transition.DecoyMassShift;
-                _charge = transition.Charge;
-                _precursorCharge = nodeGroup.TransitionGroup.PrecursorCharge;
+                _adduct = transition.Adduct.Unlabeled; // Only interested in charge and formula, ignore any labels
+                _precursorAdduct = nodeGroup.TransitionGroup.PrecursorAdduct.Unlabeled; // Only interested in charge and formula, ignore any labels
                 _losses = tranLossKey.Losses;
                 _labelType = labelType;
             }
@@ -1747,14 +1758,20 @@ namespace pwiz.Skyline.Model
                 _ionOrdinal = key._ionOrdinal;
                 _massIndex = key._massIndex;
                 _decoyMassShift = key._decoyMassShift;
-                _charge = key._charge;
-                _precursorCharge = key._precursorCharge;
+                _adduct = key._adduct;
+                _precursorAdduct = key._precursorAdduct;
                 _losses = key._losses;
                 _labelType = labelType;
             }
 
-            public int PrecursorCharge { get { return _precursorCharge; } }
+            public Adduct PrecursorAdduct { get { return _precursorAdduct; } }
             public IsotopeLabelType LabelType { get { return _labelType; } }
+
+            // Match charge states if any specified (adduct may also contain isotope info, so look at charge specifically)
+            internal bool IsMatchForRatioPurposes(Adduct other)
+            {
+                return other.IsEmpty || Equals(PrecursorAdduct, other.Unlabeled);
+            }
 
             #region object overrides
 
@@ -1765,8 +1782,8 @@ namespace pwiz.Skyline.Model
                        other._ionOrdinal == _ionOrdinal &&
                        other._massIndex == _massIndex &&
                        Equals(other._decoyMassShift, _decoyMassShift) &&
-                       other._charge == _charge &&
-                       other._precursorCharge == _precursorCharge &&
+                       Equals(other._adduct, _adduct) &&
+                       Equals(other._precursorAdduct, _precursorAdduct) &&
                        Equals(other._losses, _losses) &&
                        Equals(other._labelType, _labelType);
             }
@@ -1787,8 +1804,8 @@ namespace pwiz.Skyline.Model
                     result = (result*397) ^ _ionOrdinal;
                     result = (result*397) ^ _massIndex;
                     result = (result*397) ^ (_decoyMassShift.HasValue ? _decoyMassShift.Value : 0);
-                    result = (result*397) ^ _charge;
-                    result = (result*397) ^ _precursorCharge;
+                    result = (result*397) ^ _adduct.GetHashCode();
+                    result = (result*397) ^ _precursorAdduct.GetHashCode();
                     result = (result*397) ^ (_losses != null ? _losses.GetHashCode() : 0);
                     result = (result*397) ^ _labelType.GetHashCode();
                     return result;

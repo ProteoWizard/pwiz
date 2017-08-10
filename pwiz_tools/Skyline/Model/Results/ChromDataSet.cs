@@ -124,9 +124,9 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsStandard { get; set; }
 
-        public string ModifiedSequence
+        public Target ModifiedSequence
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Key.TextId : null; }
+            get { return _listChromData.Count > 0 ? BestChromatogram.Key.Target : null; }
         }
 
         public SignedMz PrecursorMz
@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Model.Results
             _listChromData.Sort();
         }
 
-        public bool Load(ChromDataProvider provider, string modifiedSequence, Color peptideColor)
+        public bool Load(ChromDataProvider provider, Target modifiedSequence, Color peptideColor)
         {
             foreach (var chromData in _listChromData.ToArray())
             {

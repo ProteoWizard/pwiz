@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestA.Results
             if (asSmallMolecules)
             {
                 var refine = new RefinementSettings();
-                docMsx = refine.ConvertToSmallMolecules(docMsx);
+                docMsx = refine.ConvertToSmallMolecules(docMsx, testFilesDir.FullPath);
             }
             var fullScanInitialMsx = docMsx.Settings.TransitionSettings.FullScan;
             Assert.IsTrue(fullScanInitialMsx.IsEnabledMsMs);
@@ -82,7 +82,7 @@ namespace pwiz.SkylineTestA.Results
             if (asSmallMolecules)
             {
                 var refine = new RefinementSettings();
-                docOverlap = refine.ConvertToSmallMolecules(docOverlap);
+                docOverlap = refine.ConvertToSmallMolecules(docOverlap, testFilesDir.FullPath);
             }
             var fullScanInitialOverlap = docMsx.Settings.TransitionSettings.FullScan;
             Assert.IsTrue(fullScanInitialOverlap.IsEnabledMsMs);

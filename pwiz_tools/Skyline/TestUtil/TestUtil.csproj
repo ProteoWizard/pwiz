@@ -131,6 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AbstractFunctionalTestEx.cs" />
+    <Compile Include="AbstractUnitTestEx.cs" />
     <Compile Include="AssertEx.cs" />
     <Compile Include="CheckDocumentState.cs" />
     <Compile Include="CheckReportCompatibility.cs" />
@@ -303,6 +304,11 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Schemas\Skyline_3.71.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\Skyline_3.72.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>

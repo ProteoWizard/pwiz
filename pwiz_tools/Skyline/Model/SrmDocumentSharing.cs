@@ -226,7 +226,7 @@ namespace pwiz.Skyline.Model
                 // ReSharper restore ExpressionIsAlwaysNull
                 if (null == ShareType.SkylineVersion)
                 {
-                    zip.AddFile(DocumentPath);
+                    zip.AddFile(DocumentPath); // CONSIDER(bpratt) there's no check to see if this is a current representation of the document - a dirty check would be good
                 }
                 else
                 {
@@ -276,7 +276,7 @@ namespace pwiz.Skyline.Model
                     if (tempDir == null)
                         tempDir = new TemporaryDirectory();
                     string tempDbPath = Document.Settings.PeptideSettings.Prediction.DriftTimePredictor
-                        .IonMobilityLibrary.PersistMinimized(tempDir.DirPath, Document);
+                        .IonMobilityLibrary.PersistMinimized(tempDir.DirPath, Document, null);
                     if (tempDbPath != null)
                         zip.AddFile(tempDbPath);
                 }
@@ -287,6 +287,7 @@ namespace pwiz.Skyline.Model
                         tempDir = new TemporaryDirectory();
                     Document = BlibDb.MinimizeLibraries(Document, tempDir.DirPath, 
                                                         Path.GetFileNameWithoutExtension(DocumentPath),
+                                                        null,
                                                         ProgressMonitor);
                     if (ProgressMonitor != null && ProgressMonitor.IsCanceled)
                         return;

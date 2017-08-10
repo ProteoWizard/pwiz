@@ -223,10 +223,10 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public static IEnumerable<RatioToSurrogate> ListSurrogateNormalizationMethods(SrmDocument srmDocument)
             {
-                var surrogatesByName = srmDocument.Settings.GetPeptideStandards(StandardType.SURROGATE_STANDARD).ToLookup(mol => mol.RawTextId);
+                var surrogatesByName = srmDocument.Settings.GetPeptideStandards(StandardType.SURROGATE_STANDARD).ToLookup(mol => mol.ModifiedTarget);
                 foreach (var grouping in surrogatesByName)
                 {
-                    yield return new RatioToSurrogate(grouping.Key);
+                    yield return new RatioToSurrogate(grouping.Key.InvariantName);
                     var labelTypes = grouping.SelectMany(
                         mol => mol.TransitionGroups.Select(transitionGroup => transitionGroup.TransitionGroup.LabelType))
                             .Distinct()
@@ -236,7 +236,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                         Array.Sort(labelTypes);
                         foreach (var label in labelTypes)
                         {
-                            yield return new RatioToSurrogate(grouping.Key, label);
+                            yield return new RatioToSurrogate(grouping.Key.InvariantName, label);
                         }
                     }
                 }
@@ -252,7 +252,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 foreach (var peptideDocNode in peptideStandards)
                 {
-                    if (peptideDocNode.RawTextId != SurrogateName)
+                    if (peptideDocNode.ModifiedTarget.InvariantName != SurrogateName)
                     {
                         continue;
                     }

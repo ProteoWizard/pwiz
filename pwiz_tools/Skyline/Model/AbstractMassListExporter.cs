@@ -220,7 +220,12 @@ namespace pwiz.Skyline.Model
 
         public string GetCompound(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
         {
-            return nodePep.Peptide.IsCustomIon ? nodeGroup.CustomIon.InvariantName : Document.Settings.GetModifiedSequence(nodePep);
+            return nodePep.Peptide.IsCustomMolecule ? nodeGroup.CustomMolecule.InvariantName : Document.Settings.GetModifiedSequence(nodePep).Sequence;
+        }
+
+        public string GetCAS(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
+        {
+            return  nodePep.IsProteomic ? string.Empty : nodePep.CustomMolecule.AccessionNumbers.GetCAS() ?? string.Empty;
         }
 
         private RequiredPeptideSet GetRequiredPeptides()

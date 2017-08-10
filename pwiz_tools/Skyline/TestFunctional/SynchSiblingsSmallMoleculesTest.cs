@@ -17,12 +17,14 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -46,18 +48,18 @@ namespace pwiz.SkylineTestFunctional
             var doc = SkylineWindow.Document; 
             for (var loop=0; loop < 3; loop++)
             {
-                // Should be able to synchronize of both sibs have formula, or neither, but not one of each
+                // Should be able to synchronize if both sibs have formula, or neither, but not one of each
                 string testname;
                 switch (loop)
                 {
                     case 0:
-                        testname = "ions_testing_mixed.sky";
+                        testname = "ions_testing_masses.sky"; // Masses only
                         break;
                     case 1:
-                        testname = "ions_testing.sky";
+                        testname = "ions_testing_mixed.sky"; // Starts out as two precursors, with no transitions, one is labeled 15N
                         break;
                     default:
-                        testname = "ions_testing_masses.sky";
+                        testname = "ions_testing.sky"; // Starts out as two precursors, first has a precursor transition, other has label 15N and serialized ion formula
                         break;
                 }
                 string testPath = TestFilesDir.GetTestPath(testname);
@@ -73,31 +75,45 @@ namespace pwiz.SkylineTestFunctional
 
                 // Select the first transition group
                 SelectNode(SrmDocument.Level.TransitionGroups, 0);
-
                 // Add precursor transition to it
                 var pickList = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
+                var lloop = loop;
                 RunUI(() =>
                 {
                     pickList.ApplyFilter(false);
-                    pickList.SetItemChecked(0, true);
+                    switch (lloop)
+                    {
+                        default:
+                            pickList.SetItemChecked(0, true); // 0th item is M transition
+                            break;
+                        case 1:
+                            pickList.SetItemChecked(0, true); // 0th item is the M-1 transition
+                            pickList.SetItemChecked(1, true); // 1th item is the M transition
+                            break;
+                    }
                     pickList.AutoManageChildren = false;
                     pickList.IsSynchSiblings = true; // Cause a precursor transition to be added to heavy group
                 });
                 OkDialog(pickList, pickList.OnOk);
                 WaitForClosedForm(pickList);
                 doc = WaitForDocumentChange(doc);
-                if (loop == 0)
+                switch (loop)
                 {
-                    // No synch is possible - one ion is formula based, the other mass only
-                    Assert.AreEqual(1, doc.MoleculeTransitions.Count());
+                    default:
+                        // There should now be a precursor transition for the second, heavy labeled transition group, and it
+                        // should match the mz of the transition group
+                        Assert.AreEqual(2, doc.MoleculeTransitions.Count());
+                        Assert.AreNotEqual(doc.MoleculeTransitionGroups.ToArray()[0].PrecursorMz, doc.MoleculeTransitions.ToArray()[1].Mz);
+                        Assert.AreEqual(doc.MoleculeTransitionGroups.ToArray()[1].PrecursorMz, doc.MoleculeTransitions.ToArray()[1].Mz);
+                        break;
+                    case 1:
+                        // There should now be two precursor transitions M-1 and M for the second, heavy labeled transition group, and the
+                        // second precursor transition should match the mz of the transition group
+                        Assert.AreEqual(4, doc.MoleculeTransitions.Count());
+                        Assert.AreNotEqual(doc.MoleculeTransitionGroups.ToArray()[0].PrecursorMz, doc.MoleculeTransitions.ToArray()[3].Mz);
+                        Assert.AreEqual(doc.MoleculeTransitionGroups.ToArray()[1].PrecursorMz, doc.MoleculeTransitions.ToArray()[3].Mz);
+                        break;
                 }
-                else
-                {
-                    // There should now be a precursor transition for the second, heavy labeled transition group, and it
-                    // should match the mz of the transition group
-                    Assert.AreNotEqual(doc.MoleculeTransitionGroups.ToArray()[0].PrecursorMz, doc.MoleculeTransitions.ToArray()[1].Mz);
-                    Assert.AreEqual(doc.MoleculeTransitionGroups.ToArray()[1].PrecursorMz, doc.MoleculeTransitions.ToArray()[1].Mz);
-                }                
             }
 
             //
@@ -105,7 +121,17 @@ namespace pwiz.SkylineTestFunctional
             //
             var documentPath = TestFilesDir.GetTestPath("ions_testing_isotopes.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath));
-            WaitForDocumentLoaded();
+            var newDoc = WaitForDocumentLoaded();
+
+            var transitionSettingsFilter = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() =>
+            {
+                transitionSettingsFilter.SelectedTab = TransitionSettingsUI.TABS.Filter;
+                transitionSettingsFilter.SmallMoleculeFragmentTypes = "p"; // Allow precursors
+                transitionSettingsFilter.SmallMoleculePrecursorAdducts = "[M+H]"; // Allow precursors
+            });
+            OkDialog(transitionSettingsFilter, transitionSettingsFilter.OkDialog);
+            newDoc = WaitForDocumentChange(newDoc);
  
             SelectNode(SrmDocument.Level.Molecules, 0);
 
@@ -133,7 +159,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(pickList0);
             Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroups.ToArray()[1].PrecursorMz,
                 SkylineWindow.Document.MoleculeTransitions.ToArray()[4].Mz);
-            Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroups.ToArray()[1].PrecursorMz + 1.00349556477,
+            Assert.AreEqual(SkylineWindow.Document.MoleculeTransitionGroups.ToArray()[1].PrecursorMz + 1.003492,
                 SkylineWindow.Document.MoleculeTransitions.ToArray()[5].Mz, 1e-6);
 
             // Verify that adding a custom transition prevents the synch siblings checkbox from appearing
@@ -143,6 +169,7 @@ namespace pwiz.SkylineTestFunctional
                 var node = SkylineWindow.SequenceTree.Nodes[0].FirstNode.FirstNode;
                 SkylineWindow.SequenceTree.SelectedNode = node;
             });
+            newDoc = WaitForDocumentChange(newDoc);
             var moleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule);
             var C12H12 = "C12H12";
             var testNametextA = "y1";
@@ -150,11 +177,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 moleculeDlg.FormulaBox.Formula = C12H12;
                 moleculeDlg.NameText = testNametextA;
-                moleculeDlg.Charge = 1;
+                moleculeDlg.Adduct = Adduct.SINGLY_PROTONATED;
             });
             OkDialog(moleculeDlg, moleculeDlg.OkDialog);
-            var newDoc = SkylineWindow.Document;
-            var compareIon = new DocNodeCustomIon(C12H12, testNametextA);
+            newDoc = WaitForDocumentChange(newDoc);
+            var compareIon = new CustomIon(C12H12, Adduct.SINGLY_PROTONATED, null, null, testNametextA);
             const int transY1Index = 3;
             Assert.AreEqual(compareIon, newDoc.MoleculeTransitions.ElementAt(transY1Index).Transition.CustomIon);
             Assert.AreEqual(1, newDoc.MoleculeTransitions.ElementAt(transY1Index).Transition.Charge);
@@ -166,7 +193,6 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(pickList1, pickList1.OnOk);
             Assert.AreEqual(7, newDoc.MoleculeTransitions.Count());
-
             // Long as we're here, check mz filtering
             var transitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>
@@ -210,6 +236,37 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(pickList3.CanSynchSiblings); 
             });
             OkDialog(pickList3, pickList3.OnOk);
+
+            // Add another precursor, with explicit isotope declaration in the adduct [M4C13+H]
+            // Open its picklist, clear filter so all isotopes appear
+            // Select them all, and check synch siblings
+            // Should be 3*3 transitions in doc
+            SelectNode(SrmDocument.Level.Molecules, 0);
+            var moleculeDlg2 = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.AddSmallMolecule);
+            var adduct = moleculeDlg.FormulaBox.Adduct.ChangeIsotopeLabels(new Dictionary<string, int> { { "C'", 4 } }); // Not L10N
+            RunUI(() =>
+            {
+                moleculeDlg2.Adduct = adduct;
+            });
+            OkDialog(moleculeDlg2, moleculeDlg2.OkDialog);
+            newDoc = WaitForDocumentChange(newDoc);
+            // Select the new transition group
+            SelectNode(SrmDocument.Level.TransitionGroups, 2);
+            // Add precursor transition to it
+            var pickList4 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
+            RunUI(() =>
+            {
+                pickList4.ApplyFilter(false);
+                pickList4.SetItemChecked(0, true);
+                pickList4.SetItemChecked(1, true);
+                pickList4.SetItemChecked(2, true);
+                pickList4.AutoManageChildren = false;
+                pickList4.IsSynchSiblings = true; // Cause a precursor transition to be added to heavy group
+            });
+            OkDialog(pickList4, pickList4.OnOk);
+            WaitForClosedForm(pickList4);
+            newDoc = WaitForDocumentChange(newDoc);
+            Assert.AreEqual(9, newDoc.MoleculeTransitionCount);
 
         }
     }

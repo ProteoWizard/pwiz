@@ -161,7 +161,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(standards.Length, peptides.Length);
             foreach (var peptide in peptides)
             {
-                Assert.IsTrue(standards.Contains(peptide.ModifiedSequence));
+                Assert.IsTrue(standards.Contains(peptide.ModifiedTarget));
                 foreach (var transitionGroup in peptide.TransitionGroups)
                 {
                     var transitions = transitionGroup.Transitions.ToList();

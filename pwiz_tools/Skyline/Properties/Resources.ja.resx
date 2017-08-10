@@ -3674,9 +3674,6 @@
   <data name="RInstaller_InstallPackages_Download_Canceled" xml:space="preserve">
     <value>ダウンロードがキャンセルされました</value>
   </data>
-  <data name="CustomIon_Validate_The_mass_of_the_custom_ion_is_less_than_the_minimum_of__0__" xml:space="preserve">
-    <value>カスタムイオンの質量が{0}の最小より少ないです。</value>
-  </data>
   <data name="AlertDlg_GetDefaultButtonText_OK" xml:space="preserve">
     <value>OK</value>
   </data>
@@ -6595,9 +6592,6 @@
   <data name="EditIrtCalcDlg_OkDialog_Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_open_an_existing_database_file" xml:space="preserve">
     <value>作成ボタンをクリックして新しいデータベースを作成するか、開くボタンをクリックして既存のデータベースファイルを開きます。</value>
   </data>
-  <data name="CustomIon_Validate_Custom_ions_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_" xml:space="preserve">
-    <value>カスタムイオンでは、公式または有効なモノアイソトピックと平均質量を指定する必要があります。</value>
-  </data>
   <data name="ConfigureToolsDlg_UnpackZipTool_Overwrite" xml:space="preserve">
     <value>上書き</value>
   </data>
@@ -7402,9 +7396,6 @@
   <data name="UnintegratedTransitionFinder_DisplayName_Unintegrated_transitions" xml:space="preserve">
     <value>統合されていないトランジション</value>
   </data>
-  <data name="CustomIon_Validate_The_mass_of_the_custom_ion_exceeeds_the_maximum_of__0_" xml:space="preserve">
-    <value>カスタムイオンの質量が{0}の最大を超過しています。</value>
-  </data>
   <data name="Copy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\copy.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -7720,9 +7711,6 @@
   </data>
   <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty" xml:space="preserve">
     <value>タンパク質シークエンスは空にできません。</value>
-  </data>
-  <data name="SkylineWindow_AddSmallMolecule_Add_Small_Molecule" xml:space="preserve">
-    <value>小分子を追加</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_OkDialog_Please_specify_a_full_path_to_the_proteome_file" xml:space="preserve">
     <value>プロテオームファイルに対しフルパスを指定してください。</value>

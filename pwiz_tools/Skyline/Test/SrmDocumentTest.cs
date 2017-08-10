@@ -68,14 +68,14 @@ namespace pwiz.SkylineTest
                 AssertEx.ValidatesAgainstSchema(xmlText);
                 SrmDocument document = AssertEx.Deserialize<SrmDocument>(xmlText);
                 AssertEx.IsDocumentState(document, null, null, 1, null, 5);
-                MeasuredIon customIon1 = new MeasuredIon("Water", "H3O3", null, null, 1);
-                MeasuredIon customIon2 = new MeasuredIon("Water2", "H3O3", null, null, 2);
+                MeasuredIon customIon1 = new MeasuredIon("Water", "H3O3", null, null, Adduct.SINGLY_PROTONATED);
+                MeasuredIon customIon2 = new MeasuredIon("Water2", "H3O3", null, null, Adduct.DOUBLY_PROTONATED);
                 Assert.AreEqual(customIon1,
                     document.Settings.TransitionSettings.Filter.MeasuredIons.Where(ion => ion.Name.Equals("Water"))
                         .ElementAt(0));
                 for (int i = 0; i < 2; i ++)
                 {
-                    Assert.AreEqual(document.MoleculeTransitions.ElementAt(i).Transition.CustomIon, (i==0) ? customIon1.CustomIon : customIon2.CustomIon);
+                    Assert.AreEqual(document.MoleculeTransitions.ElementAt(i).Transition.CustomIon, (i==0) ? customIon1.SettingsCustomIon : customIon2.SettingsCustomIon);
                 }
                 AssertEx.Serializable(document);
             }
@@ -90,7 +90,7 @@ namespace pwiz.SkylineTest
             AssertEx.ValidatesAgainstSchema(DOC_MOLECULE_MASSES_31);
             var doc = AssertEx.Deserialize<SrmDocument>(DOC_MOLECULE_MASSES_31);
             AssertEx.IsDocumentState(doc, null, 1, 2, 2, 2);
-            Assert.AreEqual(doc.Molecules.First().CustomIon, doc.MoleculeTransitionGroups.First().CustomIon);
+            Assert.AreEqual(doc.Molecules.First().CustomMolecule, doc.MoleculeTransitionGroups.First().CustomMolecule);
         }
 
         [TestMethod]
@@ -100,8 +100,8 @@ namespace pwiz.SkylineTest
             AssertEx.ValidatesAgainstSchema(DOC_MOLECULES_31);
             var doc = AssertEx.Deserialize<SrmDocument>(DOC_MOLECULES_31);
             AssertEx.IsDocumentState(doc, null, 1, 1, 1, 1);
-            Assert.AreEqual("C12H99", doc.MoleculeTransitionGroups.First().CustomIon.Formula);
-            Assert.AreEqual(doc.Molecules.First().CustomIon , doc.MoleculeTransitionGroups.First().CustomIon);
+            Assert.AreEqual("C12H99", doc.MoleculeTransitionGroups.First().CustomMolecule.Formula);
+            Assert.AreEqual(doc.Molecules.First().CustomMolecule , doc.MoleculeTransitionGroups.First().CustomMolecule);
         }
 
         [TestMethod]
@@ -135,13 +135,15 @@ namespace pwiz.SkylineTest
             AssertEx.ValidatesAgainstSchema(docText);
             var doc = AssertEx.Deserialize<SrmDocument>(docText);
             AssertEx.IsDocumentState(doc, null, 1, 1, 1, 2);
-            var transition = new DocNodeCustomIon(60, 60, "molecule");
-            var transition2 = new DocNodeCustomIon(55, 55, "molecule fragment");
-            var precursor = new DocNodeCustomIon(60, 60, "molecule");
-            Assert.AreEqual(BioMassCalc.CalculateIonMz(precursor.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz, SequenceMassCalc.MassTolerance);
-            Assert.AreEqual(BioMassCalc.CalculateIonMz(transition.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitions.ElementAt(0).Mz, SequenceMassCalc.MassTolerance);
-            Assert.AreEqual(BioMassCalc.CalculateIonMz(transition2.GetMass(MassType.Monoisotopic), 1), doc.MoleculeTransitions.ElementAt(1).Mz, SequenceMassCalc.MassTolerance);
-            Assert.IsTrue(doc.Molecules.ElementAt(0).Peptide.IsCustomIon);
+            var neutralMassMolecule = 58.992724; 
+            var neutralMassTransition = 55.0;
+            var transition = new CustomIon(null, Adduct.M_PLUS_H, new TypedMass(neutralMassMolecule, MassType.Monoisotopic), new TypedMass(neutralMassMolecule, MassType.Average), "molecule");
+            var transition2 = new CustomIon(null, Adduct.M_PLUS_H, new TypedMass(neutralMassTransition, MassType.Monoisotopic), new TypedMass(neutralMassTransition, MassType.Average), "molecule fragment");
+            var precursor = new CustomMolecule(new TypedMass(neutralMassMolecule, MassType.Monoisotopic), new TypedMass(neutralMassMolecule, MassType.Average), "molecule");
+            Assert.AreEqual(BioMassCalc.CalculateIonMz(precursor.GetMass(MassType.Monoisotopic), Adduct.M_PLUS_H), doc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz, 1E-5);
+            Assert.AreEqual(BioMassCalc.CalculateIonMz(transition.GetMass(MassType.Monoisotopic), Adduct.M_PLUS_H), doc.MoleculeTransitions.ElementAt(0).Mz, 1E-5);
+            Assert.AreEqual(BioMassCalc.CalculateIonMz(transition2.GetMass(MassType.Monoisotopic), Adduct.M_PLUS), doc.MoleculeTransitions.ElementAt(1).Mz, 1E-5);
+            Assert.IsTrue(doc.Molecules.ElementAt(0).Peptide.IsCustomMolecule);
             Assert.AreEqual(4.704984, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy);
             Assert.AreEqual(4.8, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CompensationVoltage);
             Assert.AreEqual(4.9, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.DeclusteringPotential);
@@ -156,9 +158,11 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(doc.MoleculeTransitions.ElementAt(0).Transition.IsCustom());
             Assert.AreEqual(transition, doc.MoleculeTransitions.ElementAt(0).Transition.CustomIon);
             Assert.AreEqual(transition2, doc.MoleculeTransitions.ElementAt(1).Transition.CustomIon);
-            Assert.AreEqual(precursor, doc.Molecules.ElementAt(0).CustomIon);
-            Assert.AreEqual(1, doc.MoleculeTransitionGroups.ElementAt(0).TransitionGroup.PrecursorCharge);
-            Assert.AreEqual(1,doc.MoleculeTransitions.ElementAt(0).Transition.Charge);
+            Assert.AreEqual(precursor, doc.Molecules.ElementAt(0).CustomMolecule);
+            Assert.AreEqual(1, doc.MoleculeTransitionGroups.ElementAt(0).TransitionGroup.PrecursorAdduct.AdductCharge);
+            Assert.AreEqual("[M+H]", doc.MoleculeTransitionGroups.ElementAt(0).TransitionGroup.PrecursorAdduct.AdductFormula);
+            Assert.AreEqual("[M+H]", doc.MoleculeTransitionGroups.ElementAt(0).TransitionGroup.PrecursorAdduct.AsFormulaOrSignedInt());
+            Assert.AreEqual(1, doc.MoleculeTransitions.ElementAt(0).Transition.Charge);
             AssertEx.ValidatesAgainstSchema(doc);
             AssertEx.Serializable(doc); // Round trip
         }
@@ -264,7 +268,7 @@ namespace pwiz.SkylineTest
                                   ExportMethodType.Standard);
             Assert.AreEqual(1, count);
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 4, CreateWatersExporter, ExportStrategy.Single, 2, null,
-                                  ExportMethodType.Standard, RefinementSettings.ConvertToSmallMoleculesMode.none);
+                                  ExportMethodType.Standard, null, RefinementSettings.ConvertToSmallMoleculesMode.none);
             Assert.AreEqual(1, count);
             count = EqualCsvs(DOC_0_1_PEPTIDES_NO_EMPTY, 0, CreateAbiExporters, ExportStrategy.Buckets, 1, 6,
                               ExportMethodType.Standard);
@@ -296,42 +300,43 @@ namespace pwiz.SkylineTest
             }
 
             TestSmallMolecules = false; // We wouldn't expect a mixed peptide and non-peptide mass list to work.
+            var pathForLibraries = TestContext.ResultsDirectory;
 
             int count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 4, CreateWatersExporter, ExportStrategy.Single, 2, null,
-                                  ExportMethodType.Standard, asSmallMolecules);
+                                  ExportMethodType.Standard, pathForLibraries, asSmallMolecules);
             Assert.AreEqual(1, count);
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 4, CreateAgilentExporter, ExportStrategy.Single, 2, null,
-                                  ExportMethodType.Standard, asSmallMolecules);
+                                  ExportMethodType.Standard, pathForLibraries, asSmallMolecules);
             Assert.AreEqual(1, count);
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 7, CreateThermoQuantivaExporter, ExportStrategy.Single, 2, null,
-                              ExportMethodType.Standard, asSmallMolecules);
+                              ExportMethodType.Standard, pathForLibraries, asSmallMolecules);
             Assert.AreEqual(1, count);
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 7, CreateThermoQuantivaExporter, ExportStrategy.Single, 2, null,
-                              ExportMethodType.Scheduled, asSmallMolecules);
+                              ExportMethodType.Scheduled, pathForLibraries, asSmallMolecules);
             Assert.AreEqual(1, count);
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
-                              ExportMethodType.Standard, asSmallMolecules);
+                              ExportMethodType.Standard, pathForLibraries, asSmallMolecules);
             Assert.AreEqual(1, count);
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
-                              ExportMethodType.Scheduled, asSmallMolecules);
+                              ExportMethodType.Scheduled, pathForLibraries, asSmallMolecules);
             Assert.AreEqual(1, count);
             if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none)
             {
                 count = ExportAll(DOC_MOLECULES, 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
-                   ExportMethodType.Scheduled, RefinementSettings.ConvertToSmallMoleculesMode.none,
-                   "Peptide,ID,Type,Precursor,Product,RT,RT Window,CE,Polarity\r\nmolecule_light,1,,59.999451,59.999451,3.45,4.56,-4.7,0\r\nmolecule_light,1,,59.999451,54.999451,3.45,4.56,-4.7,0\r\n");
+                   ExportMethodType.Scheduled, pathForLibraries, RefinementSettings.ConvertToSmallMoleculesMode.none,
+                   "Peptide,ID,Type,Precursor,Product,RT,RT Window,CE,Polarity\r\nmolecule_light,1,,60,60,3.45,4.56,-4.7,0\r\nmolecule_light,1,,60,54.999451,3.45,4.56,-4.7,0\r\n");
                 Assert.AreEqual(1, count);
                 // Try negative charges
                 count = ExportAll(DOC_MOLECULES.Replace("charge=\"", "charge=\"-"), 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
-                   ExportMethodType.Scheduled, RefinementSettings.ConvertToSmallMoleculesMode.none,
-                   "Peptide,ID,Type,Precursor,Product,RT,RT Window,CE,Polarity\r\nmolecule_light,1,,60.000549,60.000549,3.45,4.56,4.7,1\r\nmolecule_light,1,,60.000549,55.000549,3.45,4.56,4.7,1\r\n");
+                   ExportMethodType.Scheduled, pathForLibraries, RefinementSettings.ConvertToSmallMoleculesMode.none,
+                   "Peptide,ID,Type,Precursor,Product,RT,RT Window,CE,Polarity\r\nmolecule_light,1,,60,60,3.45,4.56,4.7,1\r\nmolecule_light,1,,60,55.000549,3.45,4.56,4.7,1\r\n");
                 Assert.AreEqual(1, count);
             }
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 37, CreateBrukerExporter, ExportStrategy.Single, 2, null,
-                              ExportMethodType.Standard, asSmallMolecules);
+                              ExportMethodType.Standard, pathForLibraries, asSmallMolecules);
             Assert.AreEqual(1, count);
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 37, CreateBrukerExporter, ExportStrategy.Single, 2, null,
-                              ExportMethodType.Scheduled, asSmallMolecules);
+                              ExportMethodType.Scheduled, pathForLibraries, asSmallMolecules);
             Assert.AreEqual(1, count);
         }
 
@@ -393,13 +398,22 @@ namespace pwiz.SkylineTest
 
         private static int ExportAll(string xml, int countFields, CreateExporter exporters,
                                      ExportStrategy strategy, int minTransition, int? maxTransition,
-                                     ExportMethodType methodType, RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules,
+                                     ExportMethodType methodType, 
+                                     string pathForSmallMoleculeLibraries,
+                                     RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules,
                                      string expectedOutput = null)
         {
             SrmDocument actual = AssertEx.Deserialize<SrmDocument>(xml);
             var refine = new RefinementSettings();
-            actual = refine.ConvertToSmallMolecules(actual, asSmallMolecules);
-            return ExportAll(actual, countFields, exporters, strategy, minTransition, maxTransition, methodType, expectedOutput);
+            actual = refine.ConvertToSmallMolecules(actual, pathForSmallMoleculeLibraries, asSmallMolecules);
+            try
+            {
+                return ExportAll(actual, countFields, exporters, strategy, minTransition, maxTransition, methodType, expectedOutput);
+            }
+            catch
+            {
+                return ExportAll(actual, countFields, exporters, strategy, minTransition, maxTransition, methodType, expectedOutput);
+            }
         }
 
         private static int ExportAll(SrmDocument actual, int countFields, CreateExporter exporter,
@@ -426,8 +440,24 @@ namespace pwiz.SkylineTest
 
                 // Import the exported list
                 IdentityPath pathAdded;
-                var inputs = new MassListInputs(actualList, CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
-                docImport = docImport.ImportMassList(inputs, IdentityPath.ROOT, out pathAdded);
+                try
+                {
+                    var inputs = new MassListInputs(actualList, CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
+                    docImport = docImport.ImportMassList(inputs, IdentityPath.ROOT, out pathAdded);
+                }
+                catch
+                {
+                    // Is it just that we aren't really sure how to roundtrip a small molecule list yet? Try making it look like peptides again.
+                    // CONSIDER(bspratt) keep an eye out for small mol native list formats in the field
+                    if (actual.MoleculeTransitionGroups.Any(
+                        g => g.Annotations.Note.Contains(RefinementSettings.TestingConvertedFromProteomic)))
+                    {
+                        actualList = actualList.Replace(
+                            RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator, string.Empty);
+                    }
+                    var inputs = new MassListInputs(actualList, CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
+                    docImport = docImport.ImportMassList(inputs, IdentityPath.ROOT, out pathAdded);
+                }
             }
             return exportedActual.Count;
         }
@@ -513,7 +543,7 @@ namespace pwiz.SkylineTest
             CheckImportSimilarity(document.MoleculeGroups, docImport.MoleculeGroups,
                 (g1, g2) => Assert.AreEqual(g1.Name, g2.Name));
             CheckImportSimilarity(document.Molecules, docImport.Molecules,
-                (p1, p2) => Assert.AreEqual(p1.Peptide.Sequence, p2.Peptide.Sequence));
+                (p1, p2) => Assert.AreEqual(p1.Peptide.Target, p2.Peptide.Target));
             CheckImportSimilarity(document.MoleculeTransitionGroups, docImport.MoleculeTransitionGroups,
                 (g1, g2) => Assert.AreEqual(g1.PrecursorMz, g2.PrecursorMz));
             CheckImportSimilarity(document.MoleculeTransitions, docImport.MoleculeTransitions,

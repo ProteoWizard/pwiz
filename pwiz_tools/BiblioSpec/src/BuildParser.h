@@ -83,7 +83,7 @@ class BuildParser : protected SAXHandler{
                               // of number of spec files
   map<int, int> inputToSpec_; ///< map of input file index to spectrum file count for that input file
 
-  void insertSpectrum(PSM* psm, SpecData& curSpectrum, 
+  void insertSpectrum(PSM* psm, const SpecData& curSpectrum, 
                       sqlite3_int64 fileId, PSM_SCORE_TYPE scoreType);
   void sortPsmMods(PSM* psm);
   double calculatePeptideMass(PSM* psm);

@@ -66,6 +66,65 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
                             doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
 
+            // Check using libkey with small molecules
+            var adduct = Adduct.FromStringAssumeProtonated("M+3Na");
+            var z = adduct.AdductCharge;
+            const string caffeineFormula = "C8H10N4O2";
+            const string caffeineInChiKey = "RYYVLZVUVIJVGH-UHFFFAOYSA-N";
+            const string caffeineHMDB = "HMDB01847";
+            const string caffeineInChi = "InChI=1S/C8H10N4O2/c1-10-4-9-6-5(10)7(13)12(3)8(14)11(6)2/h4H,1-3H3";
+            const string caffeineCAS = "58-08-2";
+
+            var mId = new MoleculeAccessionNumbers(string.Join("\t", MoleculeAccessionNumbers.TagHMDB + ":" + caffeineHMDB, 
+                MoleculeAccessionNumbers.TagInChI + ":" + caffeineInChi, MoleculeAccessionNumbers.TagCAS + ":" + caffeineCAS, MoleculeAccessionNumbers.TagInChiKey + ":" + caffeineInChiKey));
+            Assert.AreEqual(caffeineInChiKey, mId.GetInChiKey());
+            Assert.AreEqual(caffeineCAS, mId.GetCAS());
+
+            var moleculeName = "caffeine";
+            var smallMolAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName, caffeineFormula, caffeineInChiKey,
+                string.Join("\t", MoleculeAccessionNumbers.TagHMDB + ":" + caffeineHMDB, 
+                MoleculeAccessionNumbers.TagInChI + ":" + caffeineInChi, MoleculeAccessionNumbers.TagCAS + ":" + caffeineCAS));
+            LibKey key;
+            for (var loop = 0; loop++ < 2;)
+            {
+                key = new LibKey(smallMolAttributes, adduct);
+                Assert.IsFalse(key.IsPrecursorKey);
+                Assert.IsFalse(key.IsProteomicKey);
+                Assert.IsTrue(key.IsSmallMoleculeKey);
+                Assert.IsFalse(key.IsModified);
+                Assert.AreEqual(0, key.ModificationCount);
+                Assert.AreEqual(z, key.Charge);
+                Assert.AreEqual(adduct, key.Adduct);
+                Assert.AreEqual(caffeineInChiKey, key.Target.ToString());
+                var bytes = new List<byte>();
+                var viewLibPepInfo = new ViewLibraryPepInfo(key, bytes);
+                Assert.AreEqual(key, viewLibPepInfo.Key);
+                var smallMolInfo = viewLibPepInfo.GetSmallMoleculeLibraryAttributes(bytes.ToArray());
+                Assert.AreEqual(moleculeName, smallMolInfo.MoleculeName);
+                Assert.AreEqual(caffeineInChiKey, smallMolInfo.InChiKey);
+                Assert.AreEqual(caffeineFormula, smallMolInfo.ChemicalFormula);
+                Assert.IsTrue(smallMolInfo.OtherKeys.Contains(caffeineCAS));
+                Assert.IsTrue(smallMolInfo.OtherKeys.Contains(caffeineInChi));
+                Assert.IsTrue(smallMolInfo.OtherKeys.Contains(caffeineHMDB));
+                adduct = Adduct.FromString("M+3Si", Adduct.ADDUCT_TYPE.non_proteomic, z = -17); // Not realistic, but let's see if it's handled consistently
+            }
+
+            // Check general libkey operation
+            var seq = "YTQSNSVC[+57.0]YAK";
+            key = new LibKey(seq, Adduct.DOUBLY_PROTONATED);
+            Assert.IsFalse(key.IsPrecursorKey);
+            Assert.IsTrue(key.IsProteomicKey);
+            Assert.IsFalse(key.IsSmallMoleculeKey);
+            Assert.IsTrue(key.IsModified);
+            Assert.AreEqual(2, key.Charge);
+            Assert.AreEqual(1, key.ModificationCount);
+            Assert.AreEqual(Adduct.DOUBLY_PROTONATED, key.Adduct);
+            Assert.AreEqual(seq, key.Target.ToString());
+            var key2 = new LibKey(seq.Replace("[+57.0]",""), Adduct.DOUBLY_PROTONATED);
+            var seqKey = new LibSeqKey(key);
+            var seqKey2 = new LibSeqKey(key2);
+            Assert.IsTrue(seqKey.Equals(seqKey2));
+
             // Test error conditions
             BuildLibraryError("missing_charge.pep.XML", TestFilesDir.FullPath);
             BuildLibraryError("non_int_charge.pep.XML", null);
@@ -287,15 +346,15 @@ namespace pwiz.SkylineTestFunctional
 
             // Get the set of peptides to paste from the library, since there
             // are a lot.
-            HashSet<string> setPeptides = new HashSet<string>();
+            var setPeptides = new HashSet<Target>();
             var library = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0];
             foreach (var libKey in library.Keys)
             {
                 if (!libKey.IsModified)
-                    setPeptides.Add(libKey.Sequence);                
+                    setPeptides.Add(libKey.Target);                
             }
 
-            string cpasPeptides = string.Join("\n", setPeptides.ToArray());
+            string cpasPeptides = string.Join("\n", setPeptides.Select(p => p.ToString()).ToArray());
             
             var pasteFilteredPeptideDlg = ShowDialog<PasteFilteredPeptidesDlg>(
                 () => SkylineWindow.Paste(cpasPeptides));

@@ -104,7 +104,7 @@ namespace pwiz.SkylineTestFunctional
                             continue;
                         var transitionGroup = tuple.Item2;
                         var predictedRetentionTime = ssrCalcRegression.GetRetentionTime(
-                            document.Settings.GetModifiedSequence(peptide.Peptide.Sequence,
+                            document.Settings.GetModifiedSequence(peptide.Peptide.Target,
                                 transitionGroup.TransitionGroup.LabelType, peptide.ExplicitMods)).Value;
                         AssertChromatogramWindow(document, chromatogramSet, 
                             predictedRetentionTime - FILTER_LENGTH, 
@@ -214,7 +214,7 @@ namespace pwiz.SkylineTestFunctional
                     if (tuple.Item1.GlobalStandardType != PeptideDocNode.STANDARD_TYPE_IRT)
                     {
                         double? score =
-                            calculator.ScoreSequence(document.Settings.GetModifiedSequence(tuple.Item1.Peptide.Sequence,
+                            calculator.ScoreSequence(document.Settings.GetModifiedSequence(tuple.Item1.Peptide.Target,
                                 tuple.Item2.TransitionGroup.LabelType, tuple.Item1.ExplicitMods));
                         if (score.HasValue)
                         {

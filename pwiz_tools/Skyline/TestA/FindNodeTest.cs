@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestA
             RunTestFindNode(RefinementSettings.ConvertToSmallMoleculesMode.none);
             RunTestFindNode(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
             RunTestFindNode(RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names);
-            // RunTestFindNode(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);   Without names or formulas there's no way to associate labeled/unlabeled
+            RunTestFindNode(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
         }
 
         public void RunTestFindNode(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules)
@@ -50,7 +50,7 @@ namespace pwiz.SkylineTestA
             TestSmallMolecules = false;  // Don't need the magic test node, we have an explicit test
 
             SrmDocument doc = CreateStudy7Doc();
-            doc = (new RefinementSettings()).ConvertToSmallMolecules(doc, asSmallMolecules);
+            doc = new RefinementSettings().ConvertToSmallMolecules(doc, TestDirectoryName, asSmallMolecules);
             var displaySettings = new DisplaySettings(null, false, 0, 0); //, ProteinDisplayMode.ByName);
             // Find every other transition, searching down.
             List<TransitionDocNode> listTransitions = doc.MoleculeTransitions.ToList();
@@ -118,7 +118,7 @@ namespace pwiz.SkylineTestA
             var docHeavy = refineRemoveLight.Refine(doc);
             Assert.AreEqual(0, CountOccurrances(docHeavy, missmatchFinder, displaySettings));
             var docMulti = ResultsUtil.DeserializeDocument("MultiLabel.sky", typeof(MultiLabelRatioTest));
-            docMulti = (new RefinementSettings()).ConvertToSmallMolecules(docMulti, asSmallMolecules);
+            docMulti = (new RefinementSettings()).ConvertToSmallMolecules(docMulti, TestContext.TestDir, asSmallMolecules);
             Assert.AreEqual(0, CountOccurrances(docMulti, missmatchFinder, displaySettings));
             var pathTranMultiRemove = docMulti.GetPathTo((int) SrmDocument.Level.Transitions, 7);
             var tranMultiRemove = docMulti.FindNode(pathTranMultiRemove);

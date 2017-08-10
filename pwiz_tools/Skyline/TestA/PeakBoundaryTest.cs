@@ -384,7 +384,7 @@ namespace pwiz.SkylineTestA
             {
                 var groupChromInfo = groupNode.ChromInfos.ToList()[fileId];
                 // Make sure charge on each transition group is correct
-                Assert.AreEqual(groupNode.TransitionGroup.PrecursorCharge, chargeList[j]);
+                Assert.AreEqual(groupNode.TransitionGroup.PrecursorAdduct.AdductCharge, chargeList[j]);
                 // Make sure imported retention time boundaries, including nulls, are correct
                 Assert.IsTrue(ApproxEqualNullable(groupChromInfo.StartRetentionTime, minTime[j], RT_TOLERANCE));
                 Assert.IsTrue(ApproxEqualNullable(groupChromInfo.EndRetentionTime, maxTime[j], RT_TOLERANCE));

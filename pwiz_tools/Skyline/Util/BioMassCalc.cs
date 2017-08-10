@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -31,10 +32,18 @@ namespace pwiz.Skyline.Util
     /// Enum used to specify the use of monoisotopic or average
     /// masses when calculating molecular masses.
     /// </summary>
+    [Flags]
     public enum MassType
     {
 // ReSharper disable InconsistentNaming
-        Monoisotopic, Average
+        Monoisotopic = 0, 
+        Average = 1,
+        bMassH = 2, // As with peptides, where masses are traditionally given as massH
+        bHeavy = 4, // As with small molecules described by mass only, which have already been processed by isotope-declaring adducts
+        MonoisotopicMassH = Monoisotopic | bMassH, 
+        AverageMassH = Average | bMassH,
+        MonoisotopicHeavy = Monoisotopic | bHeavy, 
+        AverageHeavy = Average | bHeavy
 // ReSharper restore InconsistentNaming
     }
     public static class MassTypeExtension
@@ -52,7 +61,7 @@ namespace pwiz.Skyline.Util
         }
         public static string GetLocalizedString(this MassType val)
         {
-            return LOCALIZED_VALUES[(int)val];
+            return LOCALIZED_VALUES[(int)val & (int)MassType.Average]; // Strip off bMassH, bHeavy
         }
 
         public static MassType GetEnum(string enumValue)
@@ -63,7 +72,131 @@ namespace pwiz.Skyline.Util
         public static MassType GetEnum(string enumValue, MassType defaultValue)
         {
             return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultValue);
-        } 
+        }
+        [Pure]
+        public static bool IsMonoisotopic(this MassType val)
+        {
+            return !val.IsAverage();
+        }
+
+        [Pure]
+        public static bool IsAverage(this MassType val)
+        {
+            return (val & MassType.Average) != 0;
+        }
+
+        [Pure]
+        public static bool IsMassH(this MassType val)
+        {
+            return (val & MassType.bMassH) != 0;
+        }
+        
+        // For small molecule use: distinguishes a mass calculated from an isotope-specifying adduct
+        [Pure]
+        public static bool IsHeavy(this MassType val)
+        {
+            return (val & MassType.bHeavy) != 0;  
+        }
+    }
+
+    /// <summary>
+    /// There are many places where we carry a mass or massH and also need to track how it was derived
+    /// </summary>
+    public struct TypedMass :  IComparable<TypedMass>, IEquatable<TypedMass>, IFormattable
+    {
+        public static TypedMass ZERO_AVERAGE_MASSNEUTRAL = new TypedMass(0.0, MassType.Average);
+        public static TypedMass ZERO_MONO_MASSNEUTRAL = new TypedMass(0.0, MassType.Monoisotopic);
+
+        public static TypedMass ZERO_AVERAGE_MASSH = new TypedMass(0.0, MassType.AverageMassH);
+        public static TypedMass ZERO_MONO_MASSH = new TypedMass(0.0, MassType.MonoisotopicMassH);
+
+        private readonly double _value;
+        private readonly MassType _massType;
+
+        public double Value { get { return _value; } }
+        public MassType MassType { get { return _massType; } }
+        [Pure]
+        public bool IsMassH() { return _massType.IsMassH();  }
+        [Pure]
+        public bool IsMonoIsotopic() { return _massType.IsMonoisotopic(); }
+        [Pure]
+        public bool IsAverage() { return _massType.IsAverage(); }
+        [Pure]
+        public bool IsHeavy() { return _massType.IsHeavy(); }
+
+        public TypedMass(double value, MassType t)
+        {
+            _value = value;
+            _massType = t;
+        }
+
+        [Pure]
+        public bool Equivalent(TypedMass other)
+        {
+            if (IsMassH() != other.IsMassH())
+            {
+                var adjust = IsMassH() ? -BioMassCalc.MassProton : BioMassCalc.MassProton;
+                return Math.Abs(_value + adjust - other.Value) < BioMassCalc.MassElectron;
+            }
+            return Equals(other); // Can't lead with this, as it will throw if IsMassH doesn't agree
+        }
+
+        public TypedMass ChangeIsMassH(bool newIsMassH)
+        {
+            if (Equals(newIsMassH, IsMassH()))
+            {
+                return this;
+            }
+            return new TypedMass(_value, newIsMassH ? _massType | MassType.bMassH : _massType & ~MassType.bMassH);
+        }
+
+        public static implicit operator double(TypedMass d)
+        {
+            return d.Value;
+        }
+
+        public static TypedMass operator +(TypedMass tm, double step)
+        {
+            return new TypedMass(tm.Value + step, tm._massType);
+        }
+
+        public static TypedMass operator -(TypedMass tm, double step)
+        {
+            return new TypedMass(tm.Value - step, tm._massType);
+        }
+
+        public int CompareTo(TypedMass other)
+        {
+            Assume.IsTrue(_massType == other._massType);  // It's a mistake to mix these types
+            return Value.CompareTo(other.Value);
+        }
+
+        public bool Equals(TypedMass other)
+        {
+            return CompareTo(other) == 0;
+        }
+
+        public override int GetHashCode()
+        {
+            var result = Value.GetHashCode();
+            result = (result * 397) ^ _massType.GetHashCode();
+            return result;
+        }
+
+        public override string ToString()
+        {
+            return Value.ToString(CultureInfo.CurrentCulture);
+        }
+
+        public string ToString(CultureInfo ci)
+        {
+            return Value.ToString(ci);
+        }
+
+        public string ToString(string format, IFormatProvider formatProvider)
+        {
+            return Value.ToString(format, formatProvider);
+        }
     }
 
     /// <summary>
@@ -189,13 +322,17 @@ namespace pwiz.Skyline.Util
 
         public static double MassProton
         {
+            //get { return AminoAcidFormulas.ProtonMass; } // was "1.007276" here, let's be consistent and use the higher precision value
             get { return 1.007276; }
         }
 
         public static double MassElectron
         {
+          //get { return 0.000548579909070; }  // per http://physics.nist.gov/cgi-bin/cuu/Value?meu|search_for=electron+mass 12/18/2016
             get { return 0.00054857990946; } // per http://physics.nist.gov/cgi-bin/cuu/Value?meu|search_for=electron+mass
         }
+
+        public readonly double MassH; // For dealing with non-protonated ionization in peptides
 
         /// <summary>
         /// Regular expression for possible characters that end an atomic
@@ -230,6 +367,7 @@ namespace pwiz.Skyline.Util
         {
             MassType = type;
             AddMass(H, 1.007825035, 1.00794); //Unimod
+            MassH = _atomicMasses[H]; // For dealing with non-prononated ioninzation in peptides
             AddMass(H2, 2.014101779, 2.014101779); //Unimod
             AddMass(O, 15.99491463, 15.9994); //Unimod
             AddMass(O17, 16.9991315, 16.9991315); //NIST
@@ -289,32 +427,42 @@ namespace pwiz.Skyline.Util
             throw new ArgumentException(FormatArgumentExceptionMessage(desc));
         }
 
+        public static bool ContainsIsotopicElement(string desc)
+        {
+            return desc.Contains('\'') || desc.Contains('"');
+        }
+
         /// <summary>
         /// Calculate the mass of a molecule specified as a character
         /// string like "C6H11ON", or "[{atom}[count][spaces]]*", where the
-        /// atoms are H, O, N, C, S or P.
+        /// atoms are chemical symbols like H, or C, or C' etc.
         /// </summary>
         /// <param name="desc">The molecule description string</param>
         /// <returns>The mass of the specified molecule</returns>
-        public double CalculateMassFromFormula(string desc)
+        public TypedMass CalculateMassFromFormula(string desc)
         {
             string parse = desc;
             double totalMass = ParseMassExpression(ref parse);
 
             if (totalMass == 0.0 || parse.Length > 0)
                 ThrowArgumentException(desc);
+            var massType = ContainsIsotopicElement(desc) ?
+                MassType.IsAverage() ? MassType.AverageHeavy : MassType.MonoisotopicHeavy : // Formula contained isotope declaration
+                MassType.IsAverage() ? MassType.Average : MassType.Monoisotopic;
 
-            return totalMass;
+            return new TypedMass(totalMass, massType);
         }
 
-        public double CalculateMassFromFormula(IDictionary<string, int> desc)
+        public TypedMass CalculateMassFromFormula(IDictionary<string, int> desc)
         {
             double totalMass = ParseMass(desc);
 
-            if (totalMass == 0.0)
+            if (desc.Count > 0 && totalMass == 0.0) // Non-empty description should produce a mass
+            {
                 ThrowArgumentException(desc.ToString());
+            }
 
-            return totalMass;
+            return new TypedMass(totalMass, MassType);
         }
 
         /// <summary>
@@ -327,47 +475,41 @@ namespace pwiz.Skyline.Util
             string parse = desc.Replace("'",string.Empty).Replace("\"",string.Empty); // Not L10N
             var dictAtomCounts = new Dictionary<string, int>();
             ParseCounts(ref parse, dictAtomCounts, false);
+            if (!string.IsNullOrEmpty(parse))
+            {
+                return desc; // That wasn't understood as a formula
+            }
             return dictAtomCounts.Aggregate(string.Empty, (current, pair) => current + string.Format(CultureInfo.InvariantCulture, "{0}{1}", pair.Key, (pair.Value>1) ? pair.Value.ToString() : string.Empty)); // Not L10N
         }
 
         /// <summary>
-        /// Calculate effect of charge on mass due to electon loss or gain
-        /// This is intended for use with non-peptide molecules where we assume
-        /// the formula is that of the ion and don't do protonation./// 
+        /// Find the C'3H'3 in  C'3C2H9H'3NO2S
         /// </summary>
-        /// <param name="mass">mass without charge</param>
-        /// <param name="charge">charge state</param>
-        /// <returns></returns>
-        static public double CalculateMassWithElectronLossOrGain(double mass, int charge)
+        public IDictionary<string, int> FindIsotopeLabelsInFormula(string desc)
         {
-            return mass - charge * MassElectron;
+            if (string.IsNullOrEmpty(desc))
+                return null;
+            var parse = desc;
+            var dictAtomCounts = new Dictionary<string, int>();
+            ParseCounts(ref parse, dictAtomCounts, false);
+            return dictAtomCounts.Where(pair => pair.Key.Contains("'") || pair.Key.Contains('"')).ToDictionary(p => p.Key, p => p.Value); // Not L10N
         }
 
         /// <summary>
-        /// Work back from mz to mass, accounting for electron loss or gain
-        /// This is intended for use with non-peptide molecules where we assume
-        /// the formula is that of the ion and don't do protonation.
+        /// For test purposes
         /// </summary>
-        /// <returns></returns>
-        static public double CalculateIonMassFromMz(double mz, int charge)
-        {
-            return (mz * Math.Abs(charge)) + (MassElectron * charge);
-        }
-
-        /// <summary>
-        /// This is intended for use with non-peptide molecules where we assume
-        /// the formula is that of the ion and don't add a hydrogen mass.
-        /// </summary>
-        /// <returns></returns>
-        public double CalculateIonMz(string desc, int charge)
+        public double CalculateIonMz(string desc, Adduct adduct)
         {
             var mass = CalculateMassFromFormula(desc);
-            return  CalculateIonMz(mass, charge);
+            return adduct.MzFromNeutralMass(mass);
         }
 
-        static public double CalculateIonMz(double mass, int charge)
+        /// <summary>
+        /// For test purposes
+        /// </summary>
+        public static double CalculateIonMz(TypedMass mass, Adduct adduct)
         {
-            return CalculateMassWithElectronLossOrGain(mass, charge) / Math.Abs(charge);
+            return adduct.MzFromNeutralMass(mass);
         }
 
         /// <summary>
@@ -440,9 +582,9 @@ namespace pwiz.Skyline.Util
             double totalMass = 0.0;
             desc = desc.Trim();
             Molecule mol;
-            int charge;
+            Adduct adduct;
             string neutralFormula;
-            if (IonInfo.IsFormulaWithAdduct(desc, out mol, out charge, out neutralFormula))
+            if (IonInfo.IsFormulaWithAdduct(desc, out mol, out adduct, out neutralFormula))
             {
                 totalMass += mol.Sum(p => p.Value*GetMass(p.Key));
                 desc = string.Empty; // Signal that we parsed the whole thing
@@ -590,7 +732,7 @@ namespace pwiz.Skyline.Util
         /// <param name="ave">Average mass</param>
         private void AddMass(string sym, double mono, double ave)
         {
-            _atomicMasses[sym] = (MassType == MassType.Monoisotopic ? mono : ave);
+            _atomicMasses[sym] = MassType.IsMonoisotopic() ? mono : ave;
         }
 
         /// <summary>
@@ -612,7 +754,7 @@ namespace pwiz.Skyline.Util
         /// <returns>An <see cref="IsotopeAbundances"/> object synchronized with this <see cref="BioMassCalc"/></returns>
         public IsotopeAbundances SynchMasses(IsotopeAbundances abundances)
         {
-            if (MassType != MassType.Monoisotopic)
+            if (!MassType.IsMonoisotopic())
                 throw new InvalidOperationException(
                     Resources.
                         BioMassCalc_SynchMasses_Fixing_isotope_abundance_masses_requires_a_monoisotopic_mass_calculator);

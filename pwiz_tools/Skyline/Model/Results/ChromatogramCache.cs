@@ -361,8 +361,8 @@ namespace pwiz.Skyline.Model.Results
             if (textIdIndex == -1)
                 return true;
             int textIdLen = entry.TextIdLen;
-            string compareText = nodePep.RawTextId;
-            if (nodePep.Peptide.IsCustomIon)
+            string compareText = nodePep.ModifiedTarget.ToSerializableString();
+            if (nodePep.Peptide.IsCustomMolecule)
             {
                 var compareBytes = Encoding.UTF8.GetBytes(compareText);
                 if (textIdLen != compareBytes.Length)
@@ -477,7 +477,7 @@ namespace pwiz.Skyline.Model.Results
                 int offsetPeaks,
                 int offsetScores,
                 long offsetPoints,
-                Dictionary<string, int> dictTextIdToByteIndex,
+                Dictionary<Target, int> dictTextIdToByteIndex,
                 List<byte> listTextIdBytes)
             {
                 var entry = ChromatogramEntries[entryIndex];
@@ -492,13 +492,13 @@ namespace pwiz.Skyline.Model.Results
                 return entry;
             }
             
-            private string GetTextId(int entryIndex)
+            private Target GetTextId(int entryIndex)
             {
                 int textIdIndex = ChromatogramEntries[entryIndex].TextIdIndex;
                 if (textIdIndex == -1)
                     return null;
                 int textIdLen = ChromatogramEntries[entryIndex].TextIdLen;
-                return Encoding.UTF8.GetString(TextIdBytes, textIdIndex, textIdLen);
+                return Target.FromSerializableString(Encoding.UTF8.GetString(TextIdBytes, textIdIndex, textIdLen));
             }
         }
 

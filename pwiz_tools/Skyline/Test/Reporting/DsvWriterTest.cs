@@ -108,8 +108,8 @@ namespace pwiz.SkylineTest.Reporting
         private const string ExpectedInvariantReport = @"ProteinName,Peptide,Precursor,Transition,Numeric Annotation
 Protein,ELVIS,280.6681++,L - y4+,1.5
 Protein,ELVIS,280.6681++,V - y3+,1.5
-Molecules,Caffeine,194.0798+,Part of Caffeine,2.5
-Custom Ion,Ion [100.000549/100.000549],100.0000+,Ion [80.000549/80.000549] 80.0000+,#N/A
+Molecules,Caffeine,194.0798[M+H],Part of Caffeine,2.5
+Custom Ion,"+CustomMolecule.INVARIANT_NAME_DETAIL+@" [98.993273/98.993273],100.0005[M+H],Ion [80.000549/80.000549] 80.0000+,#N/A
 ";
         private const string TestReport = @"<views>
     <view name='TestReport' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*'>

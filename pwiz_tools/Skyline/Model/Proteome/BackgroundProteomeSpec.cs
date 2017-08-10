@@ -192,7 +192,7 @@ namespace pwiz.Skyline.Model.Proteome
                 var digestedPeptide = new DigestedPeptide
                 {
                     Index = digest.Begin ?? 0,
-                    Sequence = digest.Sequence
+                    Sequence = digest.Target.Sequence
                 };
                 yield return digestedPeptide;
             }

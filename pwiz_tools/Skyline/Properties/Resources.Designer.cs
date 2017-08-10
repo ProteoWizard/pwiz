@@ -7216,30 +7216,41 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Custom ions must specify a formula or valid monoisotopic and average masses..
+        ///   Looks up a localized string similar to Molecule.
         /// </summary>
-        public static string CustomIon_Validate_Custom_ions_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_ {
+        public static string CustomMolecule_DisplayName_Molecule {
             get {
-                return ResourceManager.GetString("CustomIon_Validate_Custom_ions_must_specify_a_formula_or_valid_monoisotopic_and_a" +
-                        "verage_masses_", resourceCulture);
+                return ResourceManager.GetString("CustomMolecule_DisplayName_Molecule", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The mass of the custom ion exceeeds the maximum of {0}..
+        ///   Looks up a localized string similar to Custom molecules must specify a formula or valid monoisotopic and average masses..
         /// </summary>
-        public static string CustomIon_Validate_The_mass_of_the_custom_ion_exceeeds_the_maximum_of__0_ {
+        public static string CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_ {
             get {
-                return ResourceManager.GetString("CustomIon_Validate_The_mass_of_the_custom_ion_exceeeds_the_maximum_of__0_", resourceCulture);
+                return ResourceManager.GetString("CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisot" +
+                        "opic_and_average_masses_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The mass of the custom ion is less than the minimum of {0}..
+        ///   Looks up a localized string similar to The mass {0} of the custom molecule exceeeds the maximum of {1}..
         /// </summary>
-        public static string CustomIon_Validate_The_mass_of_the_custom_ion_is_less_than_the_minimum_of__0__ {
+        public static string CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_of__1__ {
             get {
-                return ResourceManager.GetString("CustomIon_Validate_The_mass_of_the_custom_ion_is_less_than_the_minimum_of__0__", resourceCulture);
+                return ResourceManager.GetString("CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_" +
+                        "of__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The mass {0} of the custom molecule is less than the minimum of {1}..
+        /// </summary>
+        public static string CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_is_less_than_the_minimum_of__1__ {
+            get {
+                return ResourceManager.GetString("CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_is_less_than_the_mini" +
+                        "mum_of__1__", resourceCulture);
             }
         }
         
@@ -8170,11 +8181,29 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A precursor with that charge and label type already exists..
+        ///   Looks up a localized string similar to Addu&amp;ct for {0}:.
         /// </summary>
-        public static string EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_charge_and_label_type_already_exists_ {
+        public static string EditCustomMoleculeDlg_EditCustomMoleculeDlg_Addu_ct_for__0__ {
             get {
-                return ResourceManager.GetString("EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_charge_and_label_type_alread" +
+                return ResourceManager.GetString("EditCustomMoleculeDlg_EditCustomMoleculeDlg_Addu_ct_for__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chemi&amp;cal formula:.
+        /// </summary>
+        public static string EditCustomMoleculeDlg_EditCustomMoleculeDlg_Chemi_cal_formula_ {
+            get {
+                return ResourceManager.GetString("EditCustomMoleculeDlg_EditCustomMoleculeDlg_Chemi_cal_formula_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A precursor with that adduct and label type already exists..
+        /// </summary>
+        public static string EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_adduct_and_label_type_already_exists_ {
+            get {
+                return ResourceManager.GetString("EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_adduct_and_label_type_alread" +
                         "y_exists_", resourceCulture);
             }
         }
@@ -11821,6 +11850,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} molecules not matching the current filter settings..
+        /// </summary>
+        public static string FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__molecules_not_matching_the_current_filter_settings {
+            get {
+                return ResourceManager.GetString("FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__molecules_not_matching_the_" +
+                        "current_filter_settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} peptides matching multiple proteins..
         /// </summary>
         public static string FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_matching_multiple_proteins {
@@ -11851,6 +11890,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 1 molecule not matching the current filter settings..
+        /// </summary>
+        public static string FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_molecule_not_matching_the_current_filter_settings {
+            get {
+                return ResourceManager.GetString("FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_molecule_not_matching_the_cur" +
+                        "rent_filter_settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to 1 peptide matching multiple proteins..
         /// </summary>
         public static string FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_matching_multiple_proteins {
@@ -11877,6 +11926,34 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_without_a_matching_pr" +
                         "otein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter Molecules.
+        /// </summary>
+        public static string FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_Filter_Molecules {
+            get {
+                return ResourceManager.GetString("FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_Filter_Molecules", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include all molecules.
+        /// </summary>
+        public static string FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_Include_all_molecules {
+            get {
+                return ResourceManager.GetString("FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_Include_all_molecules", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This molecule does not match the current filter settings..
+        /// </summary>
+        public static string FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_molecule_does_not_match_the_current_filter_settings {
+            get {
+                return ResourceManager.GetString("FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_molecule_does_not_match_th" +
+                        "e_current_filter_settings", resourceCulture);
             }
         }
         
@@ -13586,11 +13663,11 @@ namespace pwiz.Skyline.Properties {
         ///    
         ///Ion formulas may contain an adduct description using the defacto standard notation as seen at http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator (e.g. &quot;C47H51NO14[M+IsoProp+H]&quot;).
         ///
+        ///When only the ion charge is known (often the case with fragments) charge-only adducts such as &quot;[M+]&quot; (z=1), &quot;[M-]&quot; (z=-1), &quot;[M+3]&quot; (z=3), etc., may be used.
+        ///
         ///Multipliers (e.g. the &quot;2&quot; in &quot;[2M+K]&quot;) and isotope labels (e.g. the &quot;2Cl37&quot; in &quot;[M2Cl37+H]&quot;) are supported.
         ///
-        ///Recognized adduct components include normal chemical symbols and:{0}
-        ///
-        ///Charge states are inferred from the presence of these adduct components:{1}.
+        ///Recognized adduct com [rest of string was truncated]&quot;;.
         /// </summary>
         public static string IonInfo_AdductTips_ {
             get {
@@ -13760,6 +13837,16 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap Ions_C {
             get {
                 object obj = ResourceManager.GetObject("Ions_C", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Ions_fragments {
+            get {
+                object obj = ResourceManager.GetObject("Ions_fragments", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -15683,6 +15770,28 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} must contain a comma separated list of adducts or integers describing charge states with absolute value from {1} to {2}..
+        /// </summary>
+        public static string MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_adducts_or_integers_describing_charge_states_with_absolute_value_from__1__to__2__ {
+            get {
+                return ResourceManager.GetString("MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_lis" +
+                        "t_of_adducts_or_integers_describing_charge_states_with_absolute_value_from__1__t" +
+                        "o__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} must contain a comma separated list of adducts or integers describing charge states with absolute values from {1} to {2}..
+        /// </summary>
+        public static string MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_adducts_or_integers_describing_charge_states_with_absolute_values_from__1__to__2__ {
+            get {
+                return ResourceManager.GetString("MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_lis" +
+                        "t_of_adducts_or_integers_describing_charge_states_with_absolute_values_from__1__" +
+                        "to__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} must contain a comma separated list of decimal values from {1} to {2}..
         /// </summary>
         public static string MessageBoxHelper_ValidateDecimalListTextBox__0__must_contain_a_comma_separated_list_of_decimal_values_from__1__to__2__ {
@@ -16026,6 +16135,16 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap Molecule {
             get {
                 object obj = ResourceManager.GetObject("Molecule", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap MoleculeLib {
+            get {
+                object obj = ResourceManager.GetObject("MoleculeLib", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -16538,11 +16657,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Imported library contains multiple entries for one or more {0} pairs.
+        ///    
+        ///This is probably due to the library containing entries for multiple parameters
+        ///such as instrument type or collision energy, but Skyline keys only on
+        ///{0} so these entries are ambiguous. 
+        ///
+        ///You should filter the library as needed before importing to Skyline.
+        ///    
+        ///Here are the {0} pairs with multiple entries:
+        ///{1}.
+        /// </summary>
+        public static string NistLibraryBase_CreateCache_ {
+            get {
+                return ResourceManager.GetString("NistLibraryBase_CreateCache_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid format at peak {0} for {1}..
         /// </summary>
         public static string NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__ {
             get {
                 return ResourceManager.GetString("NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to molecule+adduct.
+        /// </summary>
+        public static string NistLibraryBase_CreateCache_molecule_adduct {
+            get {
+                return ResourceManager.GetString("NistLibraryBase_CreateCache_molecule_adduct", resourceCulture);
             }
         }
         
@@ -16561,6 +16707,15 @@ namespace pwiz.Skyline.Properties {
         public static string NistLibraryBase_CreateCache_Peak_count_for_MS_MS_spectrum_excedes_maximum__0__ {
             get {
                 return ResourceManager.GetString("NistLibraryBase_CreateCache_Peak_count_for_MS_MS_spectrum_excedes_maximum__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to peptide+charge.
+        /// </summary>
+        public static string NistLibraryBase_CreateCache_peptide_charge {
+            get {
+                return ResourceManager.GetString("NistLibraryBase_CreateCache_peptide_charge", resourceCulture);
             }
         }
         
@@ -17945,11 +18100,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Precursor Ion Formula.
+        ///   Looks up a localized string similar to Precursor Formula.
         /// </summary>
-        public static string PasteDlg_UpdateMoleculeType_Precursor_Ion_Formula {
+        public static string PasteDlg_UpdateMoleculeType_Precursor_Formula {
             get {
-                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Precursor_Ion_Formula", resourceCulture);
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Precursor_Formula", resourceCulture);
             }
         }
         
@@ -17990,11 +18145,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Product Ion Formula.
+        ///   Looks up a localized string similar to Product Formula.
         /// </summary>
-        public static string PasteDlg_UpdateMoleculeType_Product_Ion_Formula {
+        public static string PasteDlg_UpdateMoleculeType_Product_Formula {
             get {
-                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Product_Ion_Formula", resourceCulture);
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Product_Formula", resourceCulture);
             }
         }
         
@@ -20432,6 +20587,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Converted To Small Molecules.
+        /// </summary>
+        public static string RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules {
+            get {
+                return ResourceManager.GetString("RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to intercept.
         /// </summary>
         public static string Regression_intercept {
@@ -22667,20 +22831,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add Small Molecule.
-        /// </summary>
-        public static string SkylineWindow_AddSmallMolecule_Add_Small_Molecule {
-            get {
-                return ResourceManager.GetString("SkylineWindow_AddSmallMolecule_Add_Small_Molecule", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Add small molecule {0}.
         /// </summary>
         public static string SkylineWindow_AddSmallMolecule_Add_small_molecule__0_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_AddSmallMolecule_Add_small_molecule__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add Small Molecule and Precursor.
+        /// </summary>
+        public static string SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor {
+            get {
+                return ResourceManager.GetString("SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor", resourceCulture);
             }
         }
         
@@ -25017,6 +25181,56 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("SmallMolecule_thumb", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A small molecule is defined by a chemical formula and at least one of Name, InChiKey, or other keys (HMDB etc).
+        /// </summary>
+        public static string SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical" +
+                        "_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is not a valid CAS registry number..
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_CAS_registry_number_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_CAS_re" +
+                        "gistry_number_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is not a valid HMDB identifier..
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_HMDB_identifier_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_HMDB_i" +
+                        "dentifier_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is not a valid InChI identifier..
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_InChI_identifier_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_InChI_" +
+                        "identifier_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is not a valid InChiKey..
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_InChiKey_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_InChiK" +
+                        "ey_", resourceCulture);
             }
         }
         
@@ -27427,6 +27641,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Small molecule precursor adducts.
+        /// </summary>
+        public static string TransitionFilter_SmallMoleculePrecursorAdducts_Small_molecule_precursor_adducts {
+            get {
+                return ResourceManager.GetString("TransitionFilter_SmallMoleculePrecursorAdducts_Small_molecule_precursor_adducts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A precursor exclusion window must be between {0} and {1}..
         /// </summary>
         public static string TransitionFilter_Validate_A_precursor_exclusion_window_must_be_between__0__and__1__ {
@@ -28138,6 +28361,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Small molecule ion types must contain a comma separated list of ion types. Valid types are &quot;f&quot; (for fragment) and/or &quot;p&quot; (for precursor).
+        /// </summary>
+        public static string TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_ {
+            get {
+                return ResourceManager.GetString("TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separ" +
+                        "ated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precu" +
+                        "rsor_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The allowable retention time range {0} to {1} must be at least {2} minutes apart..
         /// </summary>
         public static string TransitionSettingsUI_OkDialog_The_allowable_retention_time_range__0__to__1__must_be_at_least__2__minutes_apart {
@@ -28658,6 +28892,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A valid adduct description (e.g. &quot;[M+H]&quot;) must be provided..
+        /// </summary>
+        public static string ValidatingIonMobilityPeptide_ValidateAdduct_A_valid_adduct_description__e_g____M_H____must_be_provided_ {
+            get {
+                return ResourceManager.GetString("ValidatingIonMobilityPeptide_ValidateAdduct_A_valid_adduct_description__e_g____M_" +
+                        "H____must_be_provided_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Measured collisional cross section values must be valid decimal numbers greater than zero..
         /// </summary>
         public static string ValidatingIonMobilityPeptide_ValidateCollisionalCrossSection_Measured_collisional_cross_section_values_must_be_valid_decimal_numbers_greater_than_zero_ {
@@ -28936,6 +29180,25 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Matching Molecules.
+        /// </summary>
+        public static string ViewLibraryDlg_AddAllPeptides_Matching_Molecules {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides_Matching_Molecules", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Matching molecules to the current document settings.
+        /// </summary>
+        public static string ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Matching Peptides.
         /// </summary>
         public static string ViewLibraryDlg_AddAllPeptides_Matching_Peptides {
@@ -28977,6 +29240,16 @@ namespace pwiz.Skyline.Properties {
         public static string ViewLibraryDlg_AddAllPeptides_The_document_changed_during_processing {
             get {
                 return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides_The_document_changed_during_processing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This operation will add {0} {1} molecules, {2} precursors and {3} transitions to the document..
+        /// </summary>
+        public static string ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__molecules__2__precursors_and__3__transitions_to_the_document {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__molecules__2__precur" +
+                        "sors_and__3__transitions_to_the_document", resourceCulture);
             }
         }
         
@@ -29200,6 +29473,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Molecules {0} through {1} of {2} total..
+        /// </summary>
+        public static string ViewLibraryDlg_UpdateStatusArea_Molecules__0__through__1__of__2__total_ {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_UpdateStatusArea_Molecules__0__through__1__of__2__total_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Page {0} of {1}.
         /// </summary>
         public static string ViewLibraryDlg_UpdateStatusArea_Page__0__of__1__ {
@@ -29270,6 +29552,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ViewLibraryDlg_ViewLibraryDlg_Activated_There_are_no_libraries_in_the_current_set" +
                         "tings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library Molecules.
+        /// </summary>
+        public static string ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules {
+            get {
+                return ResourceManager.GetString("ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules", resourceCulture);
             }
         }
         

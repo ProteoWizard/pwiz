@@ -158,14 +158,14 @@ void RefSpectrum::addCharge(int newCharge)
     possibleCharges_.assign(1, charge);
 }
 
-void RefSpectrum::setSeq(string newSeq)
+void RefSpectrum::setSeq(const char *newSeq)
 {
-    pepSeq = newSeq;
+    pepSeq = newSeq == NULL ? "" : newSeq;
 }
 
-void RefSpectrum::setMods(string newMods)
+void RefSpectrum::setMods(const char * newMods)
 {
-    modsPepSeq = newMods;
+    modsPepSeq = newMods == NULL ? "" : newMods;
 }
 
 void RefSpectrum::setLibID(int newid)
@@ -181,14 +181,14 @@ void RefSpectrum::setCopies(int duplicates) {
     copies = duplicates;
 }
 
-void RefSpectrum::setPrevAA(string pAA)
+void RefSpectrum::setPrevAA(const char* pAA)
 {
-    prevAA = pAA;
+    prevAA = pAA == NULL ? "" : pAA;
 }
 
-void RefSpectrum::setNextAA(string nAA)
+void RefSpectrum::setNextAA(const char* nAA)
 {
-    nextAA = nAA;
+    nextAA = nAA == NULL ? "" : nAA;
 }
 
 void RefSpectrum::setScore(double score)
@@ -201,6 +201,30 @@ void RefSpectrum::setScoreType(int scoreType)
     scoreType_ = scoreType;
 }
 
+void RefSpectrum::setMoleculeName(const char* name)
+{
+    smallMolMetadata_.moleculeName = name == NULL ? "" : name;
+}
+
+void RefSpectrum::setChemicalFormula(const char* formula)
+{
+    smallMolMetadata_.chemicalFormula = formula == NULL ? "" : formula;
+}
+
+void RefSpectrum::setPrecursorAdduct(const char* precursorAdduct)
+{
+	smallMolMetadata_.precursorAdduct = precursorAdduct == NULL ? "" : precursorAdduct;
+}
+
+void RefSpectrum::setInchiKey(const char* inchikey)
+{
+    smallMolMetadata_.inchiKey = inchikey == NULL ? "" : inchikey;
+}
+
+void RefSpectrum::setotherKeys(const char* ids)
+{
+    smallMolMetadata_.otherKeys = ids == NULL ? "" : ids;
+}
 
 //getters
 int RefSpectrum::getCharge() const
@@ -257,6 +281,32 @@ int RefSpectrum::getScoreType() const
 {
     return scoreType_;
 }
+
+string RefSpectrum::getMoleculeName() const
+{
+    return smallMolMetadata_.moleculeName;
+}
+
+string RefSpectrum::getChemicalFormula() const
+{
+    return smallMolMetadata_.chemicalFormula;
+}
+
+string RefSpectrum::getAdduct() const
+{
+	return smallMolMetadata_.precursorAdduct;
+}
+
+string RefSpectrum::getInchiKey() const
+{
+    return smallMolMetadata_.inchiKey;
+}
+
+string RefSpectrum::getotherKeys() const
+{
+    return smallMolMetadata_.otherKeys;
+}
+
 
 void printFirstLastPeaks(vector<PEAK_T>* peaks, int num){
     cerr << "First " << num << " peaks are" << endl;

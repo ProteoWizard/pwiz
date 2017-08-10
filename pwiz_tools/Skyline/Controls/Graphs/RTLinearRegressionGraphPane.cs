@@ -464,13 +464,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 var originalTimes = IsRunToRun ? new List<MeasuredRetentionTime>() : null; 
                 int index = -1;
 
-                var standards = new HashSet<string>();
+                var standards = new HashSet<Target>();
                 if (RTGraphController.PointsType == PointsTypeRT.standards)
                     standards = document.GetRetentionTimeStandards();
                 
                 // Only used if we are comparing two runs
-                Dictionary<string, double> origTimesDict = IsRunToRun ? new Dictionary<string, double>() : null;
-                Dictionary<string, double> targetTimesDict = IsRunToRun ?  new Dictionary<string, double>() : null;
+                var origTimesDict = IsRunToRun ? new Dictionary<Target, double>() : null;
+                var targetTimesDict = IsRunToRun ? new Dictionary<Target, double>() : null;
 
                 // CONSIDER: Retention time prediction for small molecules?
                 foreach (var nodePeptide in document.Peptides)
@@ -511,7 +511,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             rtTarget = nodePeptide.GetSchedulingTime(iBest);
                     }
 
-                    string modSeq = _document.Settings.GetSourceTextId(nodePeptide);
+                    var modSeq = _document.Settings.GetSourceTarget(nodePeptide);
                     if (!rtTarget.HasValue)
                         rtTarget = 0;
                     if (!rtOrig.HasValue)
@@ -623,7 +623,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         _regressionPredict = null;
                     else
                     {
-                        IDictionary<string, double> scoreCache = null;
+                        IDictionary<Target, double> scoreCache = null;
                         if (_regressionAll != null && Equals(_regressionAll.Calculator, _regressionPredict.Calculator))
                             scoreCache = _statisticsAll.ScoreCache;
                         // This is a bit of a HACK to better support the very common case of replicate graphing
@@ -721,15 +721,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 if(!_calculator.IsUsable)
                     return null;
 
-                HashSet<string> standardNames;
+                HashSet<Target> standardNames;
                 try
                 {
                     var names = _calculator.GetStandardPeptides(_targetTimes.Select(pep => pep.PeptideSequence));
-                    standardNames = new HashSet<string>(names);
+                    standardNames = new HashSet<Target>(names);
                 }
                 catch (CalculatorException)
                 {
-                    standardNames = new HashSet<string>();
+                    standardNames = new HashSet<Target>();
                 }
 
                 //For run to run all peptides are variables. There are no standards.

@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestFunctional
                     IonType.b, IonType.y, IonType.precursor
                 };
             RunUI(() => SkylineWindow.Document.Settings.TransitionSettings.Libraries.ChangeIonCount(6));
-            RunUI(() => SkylineWindow.Document.Settings.TransitionSettings.Filter.ChangeIonTypes(ionList));
+            RunUI(() => SkylineWindow.Document.Settings.TransitionSettings.Filter.ChangePeptideIonTypes(ionList));
             RunDlg<SaveSettingsDlg>(() => SkylineWindow.SaveSettings(),
                 saveSettingsDlg =>
                     {

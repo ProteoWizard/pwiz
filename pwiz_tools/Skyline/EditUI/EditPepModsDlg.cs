@@ -85,7 +85,7 @@ namespace pwiz.Skyline.EditUI
             List<ComboBox> listComboHeavyLast = null;
             List<Label> listLabelHeavyLast = null;
             Label labelAALast = null;
-            string seq = nodePeptide.Peptide.Sequence;
+            var seq = nodePeptide.Peptide.Target.Sequence;
             var modsDoc = DocSettings.PeptideSettings.Modifications;
 
             _listLabelTypeHeavy.AddRange(from typedMods in modsDoc.GetHeavyModifications()
@@ -301,7 +301,7 @@ namespace pwiz.Skyline.EditUI
             IList<ExplicitMod> listExplicitMods, IList<StaticMod> listDocMods, int indexAA,
             bool selectEither, bool select)
         {
-            string seq = NodePeptide.Peptide.Sequence;
+            string seq = NodePeptide.Peptide.Target.Sequence;
             char aa = seq[indexAA];
             int iSelected = -1;
             string explicitName = null;

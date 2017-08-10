@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Properties;
@@ -102,6 +103,7 @@ namespace pwiz.SkylineTestFunctional
             using (var select = new SQLiteCommand(connection) { CommandText = "SELECT * FROM RefSpectra" })
             using (var reader = select.ExecuteReader())
             {
+                var iAdduct = reader.GetOrdinal("precursorAdduct");
                 while (reader.Read())
                 {
                     list.Add(new DbRefSpectra
@@ -109,6 +111,7 @@ namespace pwiz.SkylineTestFunctional
                         PeptideSeq = reader["peptideSeq"].ToString(),
                         PeptideModSeq = reader["peptideModSeq"].ToString(),
                         PrecursorCharge = int.Parse(reader["precursorCharge"].ToString()),
+                        PrecursorAdduct = iAdduct < 0 ? string.Empty : reader[iAdduct].ToString(),
                         PrecursorMZ = double.Parse(reader["precursorMZ"].ToString()),
                         NumPeaks = ushort.Parse(reader["numPeaks"].ToString())
                     });
@@ -196,7 +199,7 @@ namespace pwiz.SkylineTestFunctional
                 while (reader.Read())
                 {
                     list.Add(new DbIrtPeptide(
-                        reader["PeptideModSeq"].ToString(),
+                        new Target(reader["PeptideModSeq"].ToString()),
                         double.Parse(reader["Irt"].ToString()),
                         bool.Parse(reader["Standard"].ToString()),
                         int.Parse(reader["TimeSource"].ToString())));

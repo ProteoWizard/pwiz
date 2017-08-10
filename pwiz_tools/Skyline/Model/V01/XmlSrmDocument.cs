@@ -206,7 +206,7 @@ namespace pwiz.Skyline.Model.V01
         {
             Begin = peptide.Begin;
             End = peptide.End;
-            Sequence = peptide.Sequence;
+            Sequence = peptide.Target.Sequence;
             PrevAA = peptide.PrevAA;
             NextAA = peptide.NextAA;
             NeutralMass = SequenceMassCalc.PersistentNeutral(peptide.MassH);
@@ -284,8 +284,8 @@ namespace pwiz.Skyline.Model.V01
             FragmentType = transition.Fragment.IType;
             FragmentOrdinal = transition.Fragment.Ordinal;
             NeutralMass = SequenceMassCalc.PersistentNeutral(transition.Fragment.MassH);
-            PrecursorCharge = transition.PrecursorCharge;
-            ProductCharge = transition.Charge;
+            PrecursorCharge = transition.PrecursorCharge.AdductCharge;
+            ProductCharge = transition.Charge.AdductCharge;
             PrecursorMz = SequenceMassCalc.PersistentMZ(transition.PrecursorMZ);
             ProductMz = SequenceMassCalc.PersistentMZ(transition.MZ);
             CollisionEnergy = Math.Round(transition.CollisionEnergy, 6);
@@ -311,7 +311,7 @@ namespace pwiz.Skyline.Model.V01
             double stop = StopRT ?? 0;
             return new SrmTransition(fragment, CollisionEnergy,
                                      DeclusteringPotential, start - stop,
-                                     PrecursorCharge, ProductCharge);
+                                     Adduct.FromChargeProtonated(PrecursorCharge), Adduct.FromChargeProtonated(ProductCharge));
         }
 
         [XmlAttribute(AttributeName = "fragment_type")]

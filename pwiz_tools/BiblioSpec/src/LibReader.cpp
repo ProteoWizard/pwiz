@@ -465,7 +465,7 @@ bool LibReader::getRefSpec(int libID, RefSpectrum& spec)
             sprintf(modBuf, "[%s%.*f]", j->second >= 0 ? "+" : "", modPrecision_, j->second);
             seq.insert(j->first, modBuf);
         }
-        spec.setMods(seq);
+        spec.setMods(seq.c_str());
     }
 
     return true;

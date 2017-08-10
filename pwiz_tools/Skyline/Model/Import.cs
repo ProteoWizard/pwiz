@@ -652,8 +652,8 @@ namespace pwiz.Skyline.Model
                 // final transition groups
                 var settingsMatcher = settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(true))
                                            .ChangeTransitionFullScan(fullscan => fullscan.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.None, null, null))
-                                           .ChangeTransitionFilter(filter => filter.ChangePrecursorCharges(Enumerable.Range(TransitionGroup.MIN_PRECURSOR_CHARGE,
-                                                                                                                            TransitionGroup.MAX_PRECURSOR_CHARGE).ToArray()));
+                                           .ChangeTransitionFilter(filter => filter.ChangePeptidePrecursorCharges(Enumerable.Range(TransitionGroup.MIN_PRECURSOR_CHARGE,
+                                                                                                                            TransitionGroup.MAX_PRECURSOR_CHARGE).Select(Adduct.FromChargeProtonated).ToArray()));
                 try
                 {
                     modMatcher.CreateMatches(settingsMatcher,
@@ -775,14 +775,14 @@ namespace pwiz.Skyline.Model
                 {
                     var variableMods = nodePep.ExplicitMods;
                     var defaultLabelType = info.DefaultLabelType;
-                    double precursorMassH = Settings.GetPrecursorMass(defaultLabelType, info.PeptideSequence, variableMods);
+                    var precursorMassH = Settings.GetPrecursorMass(defaultLabelType, info.PeptideTarget, variableMods);
                     int precursorMassShift;
                     int nearestCharge;
-                    int? precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance, !nodePep.IsProteomic,
+                    Adduct precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance, !nodePep.IsProteomic,
                                                               info.IsDecoy, out precursorMassShift, out nearestCharge);
-                    if (precursorCharge.HasValue)
+                    if (!precursorCharge.IsEmpty)
                     {
-                        info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge.Value, defaultLabelType,
+                        info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge, defaultLabelType,
                                                                   precursorMassShift));
                     }
                     else
@@ -799,12 +799,12 @@ namespace pwiz.Skyline.Model
                         {
                             continue;
                         }
-                        precursorMassH = Settings.GetPrecursorMass(labelType, info.PeptideSequence, variableMods);
+                        precursorMassH = Settings.GetPrecursorMass(labelType, info.PeptideTarget, variableMods);
                         precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance, !nodePep.IsProteomic,
                                                               info.IsDecoy, out precursorMassShift, out nearestCharge);
-                        if (precursorCharge.HasValue)
+                        if (!precursorCharge.IsEmpty)
                         {
-                            info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge.Value, labelType,
+                            info.TransitionExps.Add(new TransitionExp(variableMods, precursorCharge, labelType,
                                                                       precursorMassShift));
                         }
                         else
@@ -851,15 +851,15 @@ namespace pwiz.Skyline.Model
                 return info;
             }
 
-            private static double NearestMz(double precursorMz, double nearestMz, double precursorMassH, int precursorCharge)
+            private static double NearestMz(double precursorMz, double nearestMz, TypedMass precursorMassH, int precursorCharge)
             {
-                double newMz = SequenceMassCalc.GetMZ(precursorMassH, precursorCharge);
+                var newMz = SequenceMassCalc.GetMZ(precursorMassH, precursorCharge);
                 return Math.Abs(precursorMz - newMz) < Math.Abs(precursorMz - nearestMz)
                             ? newMz
                             : nearestMz;
             }
 
-            private static int? CalcPrecursorCharge(double precursorMassH,
+            private static Adduct CalcPrecursorCharge(TypedMass precursorMassH,
                                                    double precursorMz,
                                                    double tolerance,
                                                    bool isCustomIon,
@@ -873,25 +873,25 @@ namespace pwiz.Skyline.Model
             private ExTransitionInfo CalcTransitionExplanations(ExTransitionInfo info, string lineText, long lineNum, out TransitionImportErrorInfo errorInfo)
             {
                 errorInfo = null;
-                string sequence = info.PeptideSequence;
+                var sequence = info.PeptideTarget;
                 double productMz = ProductMz;
 
                 foreach (var transitionExp in info.TransitionExps.ToArray())
                 {
                     var mods = transitionExp.Precursor.VariableMods;
                     var calc = Settings.GetFragmentCalc(transitionExp.Precursor.LabelType, mods);
-                    double productPrecursorMass = calc.GetPrecursorFragmentMass(sequence);
-                    double[,] productMasses = calc.GetFragmentIonMasses(sequence);
+                    var productPrecursorMass = calc.GetPrecursorFragmentMass(sequence);
+                    var productMasses = calc.GetFragmentIonMasses(sequence);
                     var potentialLosses = TransitionGroup.CalcPotentialLosses(sequence,
                         Settings.PeptideSettings.Modifications, mods, calc.MassType);
-                    var types = Settings.TransitionSettings.Filter.IonTypes;
+                    var types = Settings.TransitionSettings.Filter.PeptideIonTypes;
 
                     IonType? ionType;
                     int? ordinal;
                     TransitionLosses losses;
                     int massShift;
-                    int productCharge = TransitionCalc.CalcProductCharge(productPrecursorMass,
-                                                                         transitionExp.Precursor.PrecursorCharge,
+                    var productCharge = TransitionCalc.CalcProductCharge(productPrecursorMass,
+                                                                         transitionExp.Precursor.PrecursorAdduct,
                                                                          types,
                                                                          productMasses,
                                                                          potentialLosses,
@@ -904,7 +904,7 @@ namespace pwiz.Skyline.Model
                                                                          out losses,
                                                                          out massShift);
 
-                    if (productCharge > 0 && ionType.HasValue && ordinal.HasValue)
+                    if (!productCharge.IsEmpty && ionType.HasValue && ordinal.HasValue)
                     {
                         transitionExp.Product = new ProductExp(productCharge, ionType.Value, ordinal.Value, losses, massShift);
                     }
@@ -989,7 +989,7 @@ namespace pwiz.Skyline.Model
                     if (calc == null)
                         continue;
 
-                    double precursorMassH = calc.GetPrecursorMass(nodePep.Peptide.Sequence);
+                    var precursorMassH = calc.GetPrecursorMass(nodePep.Peptide.Target);
                     bool isDecoy = iDecoy != -1 && Equals(fields[iDecoy].ToLowerInvariant(), "true");   // Not L10N
                     for (int i = 0; i < fields.Length; i++)
                     {
@@ -1005,29 +1005,30 @@ namespace pwiz.Skyline.Model
 
                         int massShift;
                         int nearestCharge;
-                        int? charge = CalcPrecursorCharge(precursorMassH, precursorMz, tolerance, !nodePep.IsProteomic, isDecoy, out massShift, out nearestCharge);
-                        if (charge.HasValue)
+                        var charge = CalcPrecursorCharge(precursorMassH, precursorMz, tolerance, !nodePep.IsProteomic, isDecoy, out massShift, out nearestCharge);
+                        if (!charge.IsEmpty)
                         {
                             indexPrec = i;
-                            transitionExps.Add(new TransitionExp(mods, charge.Value, labelType, massShift));
+                            transitionExps.Add(new TransitionExp(mods, charge, labelType, massShift));
                         }
                     }
                 }
                 return indexPrec;
             }
 
-            protected static int FindProduct(string[] fields, string sequence, IEnumerable<TransitionExp> transitionExps,
+            protected static int FindProduct(string[] fields, string seq, IEnumerable<TransitionExp> transitionExps,
                 int iSequence, int iPrecursor, double tolerance, IFormatProvider provider, SrmSettings settings)
             {
                 double maxProductMz = 0;
                 int maxIndex = -1;
-                var types = settings.TransitionSettings.Filter.IonTypes;
+                var sequence = new Target(seq);
+                var types = settings.TransitionSettings.Filter.PeptideIonTypes;
                 foreach (var transitionExp in transitionExps)
                 {
                     var mods = transitionExp.Precursor.VariableMods;
                     var calc = settings.GetFragmentCalc(transitionExp.Precursor.LabelType, mods);
-                    double productPrecursorMass = calc.GetPrecursorFragmentMass(sequence);
-                    double[,] productMasses = calc.GetFragmentIonMasses(sequence);
+                    var productPrecursorMass = calc.GetPrecursorFragmentMass(sequence);
+                    var productMasses = calc.GetFragmentIonMasses(sequence);
                     var potentialLosses = TransitionGroup.CalcPotentialLosses(sequence,
                         settings.PeptideSettings.Modifications, mods, calc.MassType);
 
@@ -1044,8 +1045,8 @@ namespace pwiz.Skyline.Model
                         int? ordinal;
                         TransitionLosses losses;
                         int massShift;
-                        int charge = TransitionCalc.CalcProductCharge(productPrecursorMass,
-                                                                      transitionExp.Precursor.PrecursorCharge,
+                        var charge = TransitionCalc.CalcProductCharge(productPrecursorMass,
+                                                                      transitionExp.Precursor.PrecursorAdduct,
                                                                       types,
                                                                       productMasses,
                                                                       potentialLosses,
@@ -1060,7 +1061,7 @@ namespace pwiz.Skyline.Model
 
                         // Look for the maximum product m/z, or this function may settle for a
                         // collision energy or retention time that matches a single amino acid
-                        if (charge > 0 && productMz > maxProductMz)
+                        if (!charge.IsEmpty && productMz > maxProductMz)
                         {
                             maxProductMz = productMz;
                             maxIndex = i;
@@ -1695,7 +1696,7 @@ namespace pwiz.Skyline.Model
         public ExTransitionInfo(string proteinName, string peptideSequence, string modifiedSequence, double precursorMz, bool isDecoy)
         {
             ProteinName = proteinName;
-            PeptideSequence = peptideSequence;
+            PeptideTarget = new Target(peptideSequence);
             ModifiedSequence = modifiedSequence;
             PrecursorMz = precursorMz;
             IsDecoy = isDecoy;
@@ -1704,7 +1705,8 @@ namespace pwiz.Skyline.Model
         }
 
         public string ProteinName { get; private set; }
-        public string PeptideSequence { get; private set; }
+        public Target PeptideTarget { get; private set; }
+        public string PeptideSequence { get { return PeptideTarget.Sequence; } }
         public string ModifiedSequence { get; set; }
         public double PrecursorMz { get; private set; }
 
@@ -1736,7 +1738,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class TransitionExp
     {
-        public TransitionExp(ExplicitMods mods, int precursorCharge, IsotopeLabelType labelType, int precursorMassShift)
+        public TransitionExp(ExplicitMods mods, Adduct precursorCharge, IsotopeLabelType labelType, int precursorMassShift)
         {
             Precursor = new PrecursorExp(mods, precursorCharge, labelType, precursorMassShift);
         }
@@ -1758,10 +1760,10 @@ namespace pwiz.Skyline.Model
 
     public sealed class PrecursorExp
     {
-        public PrecursorExp(ExplicitMods mods, int precursorCharge, IsotopeLabelType labelType, int massShift)
+        public PrecursorExp(ExplicitMods mods, Adduct precursorAdduct, IsotopeLabelType labelType, int massShift)
         {
             VariableMods = mods;
-            PrecursorCharge = precursorCharge;
+            PrecursorAdduct = precursorAdduct;
             LabelType = labelType;
             MassShift = null;
             if (massShift != 0)
@@ -1769,7 +1771,7 @@ namespace pwiz.Skyline.Model
         }
 
         public ExplicitMods VariableMods { get; private set; }
-        public int PrecursorCharge { get; private set; }
+        public Adduct PrecursorAdduct { get; private set; }
         public IsotopeLabelType LabelType { get; private set; }
         public int? MassShift { get; private set; }
 
@@ -1780,7 +1782,7 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return Equals(other.VariableMods, VariableMods) &&
-                other.PrecursorCharge == PrecursorCharge &&
+                Equals(other.PrecursorAdduct, PrecursorAdduct) &&
                 Equals(other.LabelType, LabelType);
         }
 
@@ -1797,7 +1799,7 @@ namespace pwiz.Skyline.Model
             unchecked
             {
                 int result = (VariableMods != null ? VariableMods.GetHashCode() : 0);
-                result = (result*397) ^ PrecursorCharge;
+                result = (result*397) ^ PrecursorAdduct.GetHashCode();
                 result = (result*397) ^ (LabelType != null ? LabelType.GetHashCode() : 0);
                 return result;
             }
@@ -1808,9 +1810,9 @@ namespace pwiz.Skyline.Model
 
     public sealed class ProductExp
     {
-        public ProductExp(int productCharge, IonType ionType, int fragmentOrdinal, TransitionLosses losses, int massShift)
+        public ProductExp(Adduct productAdduct, IonType ionType, int fragmentOrdinal, TransitionLosses losses, int massShift)
         {
-            Charge = productCharge;
+            Adduct = productAdduct;
             IonType = ionType;
             FragmentOrdinal = fragmentOrdinal;
             Losses = losses;
@@ -1819,7 +1821,7 @@ namespace pwiz.Skyline.Model
                 MassShift = massShift;
         }
 
-        public int Charge { get; private set; }
+        public Adduct Adduct { get; private set; }
         public IonType IonType { get; private set; }
         public int FragmentOrdinal { get; private set; }
         public TransitionLosses Losses { get; private set; }
@@ -1876,7 +1878,7 @@ namespace pwiz.Skyline.Model
     {
         private readonly StringBuilder _sequence = new StringBuilder();
         private readonly List<PeptideDocNode> _peptides;
-        private readonly Dictionary<int, int> _charges;
+        private readonly Dictionary<int, Adduct> _charges;
         private readonly SrmSettings _settings;
         private readonly Enzyme _enzyme;
         private readonly bool _customName;
@@ -1915,7 +1917,7 @@ namespace pwiz.Skyline.Model
             _settings = settings;
             _enzyme = _settings.PeptideSettings.Enzyme;
             _peptides = new List<PeptideDocNode>();
-            _charges = new Dictionary<int, int>();
+            _charges = new Dictionary<int, Adduct>();
             _groupLibTriples = new List<TransitionGroupLibraryIrtTriple>();
             _activeTransitionInfos = new List<ExTransitionInfo>();
             _irtPeptides = new List<MeasuredRetentionTime>();
@@ -2008,7 +2010,7 @@ namespace pwiz.Skyline.Model
 
         public void AppendSequence(string seqMod)
         {
-            int? charge = Transition.GetChargeFromIndicator(seqMod, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+            var charge = Transition.GetChargeFromIndicator(seqMod, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
             seqMod = Transition.StripChargeIndicators(seqMod, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
             var seq = FastaSequence.StripModifications(seqMod);
             // Auto manage the children unless there is at least one modified sequence in the fasta
@@ -2033,8 +2035,8 @@ namespace pwiz.Skyline.Model
                     nodePep = new PeptideDocNode(peptide);
                 }
                 _peptides.Add(nodePep);
-                if (charge.HasValue)
-                    _charges.Add(nodePep.Id.GlobalIndex, charge.Value);
+                if (!charge.IsEmpty)
+                    _charges.Add(nodePep.Id.GlobalIndex, charge);
             }
         }
 
@@ -2192,15 +2194,15 @@ namespace pwiz.Skyline.Model
             {
                 if (groupLibTriple.SpectrumInfo == null)
                     continue;
-                var sequence = groupLibTriple.NodeGroup.TransitionGroup.Peptide.Sequence;
+                var sequence = groupLibTriple.NodeGroup.TransitionGroup.Peptide.Target;
                 var mods = docNode.ExplicitMods;
                 var calcPre = _settings.GetPrecursorCalc(groupLibTriple.SpectrumInfo.Label, mods);
-                string modifiedSequenceWithIsotopes = calcPre.GetModifiedSequence(sequence, false);
+                var modifiedSequenceWithIsotopes = calcPre.GetModifiedSequence(sequence, false);
 
                 finalLibrarySpectra.Add(new SpectrumMzInfo
                 {
                     SourceFile = _sourceFile,
-                    Key = new LibKey(modifiedSequenceWithIsotopes, groupLibTriple.NodeGroup.TransitionGroup.PrecursorCharge),
+                    Key = new LibKey(modifiedSequenceWithIsotopes, groupLibTriple.NodeGroup.TransitionGroup.PrecursorAdduct),
                     Label = groupLibTriple.SpectrumInfo.Label,
                     PrecursorMz = groupLibTriple.SpectrumInfo.PrecursorMz,
                     SpectrumPeaks = groupLibTriple.SpectrumInfo.SpectrumPeaks
@@ -2210,7 +2212,7 @@ namespace pwiz.Skyline.Model
             _peptides.Add(docNode);
             if (peptideIrt.HasValue)
             {
-                _irtPeptides.Add(new MeasuredRetentionTime(docNode.ModifiedSequence, peptideIrt.Value, true));
+                _irtPeptides.Add(new MeasuredRetentionTime(docNode.ModifiedTarget, peptideIrt.Value, true));
             }
             _groupLibTriples.Clear();
 
@@ -2317,7 +2319,7 @@ namespace pwiz.Skyline.Model
         {
             var precursorExp = GetBestPrecursorExp();
             var transitionGroup = new TransitionGroup(_activePeptide,
-                                                      precursorExp.PrecursorCharge,
+                                                      precursorExp.PrecursorAdduct,
                                                       precursorExp.LabelType,
                                                       false,
                                                       precursorExp.MassShift);
@@ -2330,16 +2332,16 @@ namespace pwiz.Skyline.Model
                     int? massShift = productExp.MassShift;
                     if (massShift == null && precursorExp.MassShift.HasValue)
                         massShift = 0;
-                    var tran = new Transition(transitionGroup, ionType, offset, 0, productExp.Charge, massShift);
+                    var tran = new Transition(transitionGroup, ionType, offset, 0, productExp.Adduct, massShift);
                     // m/z and library info calculated later
-                    return new TransitionDocNode(tran, productExp.Losses, 0, null, null);
+                    return new TransitionDocNode(tran, productExp.Losses, TypedMass.ZERO_MONO_MASSH, null, null);
                 });
             // m/z calculated later
             var newTransitionGroup = new TransitionGroupDocNode(transitionGroup, CompleteTransitions(transitions));
             var currentLibrarySpectrum = !_activeLibraryIntensities.Any() ? null : 
                 new SpectrumMzInfo
                 {
-                    Key = new LibKey(_activePeptide.Sequence, precursorExp.PrecursorCharge),
+                    Key = new LibKey(_activePeptide.Sequence, precursorExp.PrecursorAdduct),
                     PrecursorMz = _activePrecursorMz,
                     Label = precursorExp.LabelType,
                     SpectrumPeaks = new SpectrumPeaksInfo(_activeLibraryIntensities.ToArray())
@@ -2360,7 +2362,7 @@ namespace pwiz.Skyline.Model
             // Unless the explanation comes from just one transition, then look for most reasonable given settings
             int[] fragmentTypeCounts = new int[_activePrecursorExps.Count];
             var preferredFragments = new List<IonType>();
-            foreach (var ionType in _settings.TransitionSettings.Filter.IonTypes)
+            foreach (var ionType in _settings.TransitionSettings.Filter.PeptideIonTypes)
             {
                 if (preferredFragments.Contains(ionType))
                     continue;
@@ -2440,10 +2442,10 @@ namespace pwiz.Skyline.Model
             foreach (PeptideDocNode nodePep in nodePepGroup.Children)
             {
                 var nodePepAdd = nodePep;
-                int charge;
+                Adduct charge;
                 if (_charges.TryGetValue(nodePep.Id.GlobalIndex, out charge))
                 {
-                    var settingsCharge = _settings.ChangeTransitionFilter(f => f.ChangePrecursorCharges(new[] {charge}));
+                    var settingsCharge = _settings.ChangeTransitionFilter(f => f.ChangePeptidePrecursorCharges(new[] {charge}));
                     nodePepAdd = (PeptideDocNode) nodePep.ChangeSettings(settingsCharge, diff)
                                                          .ChangeAutoManageChildren(false);
                 }

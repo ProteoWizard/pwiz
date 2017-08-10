@@ -430,7 +430,7 @@ namespace pwiz.SkylineTest
             var fastaSeq = new FastaSequence("p", "d", new ProteinMetadata[0], sequence);
             var digestSettings = new DigestSettings(0, excludeRaggedEnds);
             var peptides = "Missed " + enzyme.CountCleavagePoints(sequence) + " " +
-                string.Join(" ", enzyme.Digest(fastaSeq, digestSettings, maxPepLen, minPepLen).Select(p => p.Sequence));
+                string.Join(" ", enzyme.Digest(fastaSeq, digestSettings, maxPepLen, minPepLen).Select(p => p.Target));
             var expected = "Missed " + expectedCleavagePoints + " " + string.Join(" ", pepSeqs);
             Assert.AreEqual(expected, peptides);
         }
@@ -1140,10 +1140,10 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(0, pred1.WindowWidthCalculator.PeakWidthAtDriftTimeZero);
             Assert.AreEqual(0, pred1.WindowWidthCalculator.PeakWidthAtDriftTimeMax);
             Assert.AreEqual(100, pred1.WindowWidthCalculator.ResolvingPower);
-            Assert.AreEqual(17.0, pred1.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 1)).DriftTimeMsec ?? 0);
-            Assert.AreEqual(17.0, pred1.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 1)).GetHighEnergyDriftTimeMsec() ?? 0); // Apply the high energy offset
-            Assert.IsNull(pred1.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 5)).DriftTimeMsec); // Should not find a value for that charge state
-            Assert.IsNull(pred1.GetMeasuredDriftTimeMsec(new LibKey("LMNJK", 5)).DriftTimeMsec); // Should not find a value for that peptide
+            Assert.AreEqual(17.0, pred1.GetMeasuredDriftTimeMsec(new LibKey("JLMN", Adduct.SINGLY_PROTONATED)).DriftTimeMsec ?? 0);
+            Assert.AreEqual(17.0, pred1.GetMeasuredDriftTimeMsec(new LibKey("JLMN", Adduct.SINGLY_PROTONATED)).GetHighEnergyDriftTimeMsec() ?? 0); // Apply the high energy offset
+            Assert.IsNull(pred1.GetMeasuredDriftTimeMsec(new LibKey("JLMN", Adduct.QUINTUPLY_PROTONATED)).DriftTimeMsec); // Should not find a value for that charge state
+            Assert.IsNull(pred1.GetMeasuredDriftTimeMsec(new LibKey("LMNJK", Adduct.QUINTUPLY_PROTONATED)).DriftTimeMsec); // Should not find a value for that peptide
 
             // Check using drift time predictor with only measured drift times, and a high energy scan drift time offset
             const string predictor2 = "<predict_drift_time name=\"test2\" resolving_power=\"100\"><measured_dt modified_sequence=\"JLMN\" charge=\"1\" drift_time=\"17.0\" collisional_cross_section=\"0\" high_energy_drift_time_offset=\"-1.0\"/> </predict_drift_time>";
@@ -1153,10 +1153,10 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(0, pred2.WindowWidthCalculator.PeakWidthAtDriftTimeZero);
             Assert.AreEqual(0, pred2.WindowWidthCalculator.PeakWidthAtDriftTimeMax);
             Assert.AreEqual(100, pred2.WindowWidthCalculator.ResolvingPower);
-            Assert.AreEqual(17.0, pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 1)).DriftTimeMsec ?? 0);
-            Assert.AreEqual(16.0, pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 1)).GetHighEnergyDriftTimeMsec() ?? 0); // Apply the high energy offset
-            Assert.IsNull(pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", 5)).DriftTimeMsec); // Should not find a value for that charge state
-            Assert.IsNull(pred2.GetMeasuredDriftTimeMsec(new LibKey("LMNJK", 5)).DriftTimeMsec); // Should not find a value for that peptide
+            Assert.AreEqual(17.0, pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", Adduct.SINGLY_PROTONATED)).DriftTimeMsec ?? 0);
+            Assert.AreEqual(16.0, pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", Adduct.SINGLY_PROTONATED)).GetHighEnergyDriftTimeMsec() ?? 0); // Apply the high energy offset
+            Assert.IsNull(pred2.GetMeasuredDriftTimeMsec(new LibKey("JLMN", Adduct.QUINTUPLY_PROTONATED)).DriftTimeMsec); // Should not find a value for that charge state
+            Assert.IsNull(pred2.GetMeasuredDriftTimeMsec(new LibKey("LMNJK", Adduct.QUINTUPLY_PROTONATED)).DriftTimeMsec); // Should not find a value for that peptide
 
             // Check using drift time predictor with only measured drift times, and a high energy scan drift time offset, and linear width
             string predictor3 = "<predict_drift_time name=\"test\" peak_width_calc_type=\"resolving_power\" resolving_power=\"100\" width_at_dt_zero=\"20\" width_at_dt_max=\"500\"> <ion_mobility_library name=\"scaled\" database_path=\"db.imdb\"/>" +

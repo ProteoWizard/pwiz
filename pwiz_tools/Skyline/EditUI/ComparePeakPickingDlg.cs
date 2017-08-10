@@ -390,7 +390,7 @@ namespace pwiz.Skyline.EditUI
 
         private class SelectionInfo
         {
-            public SelectionInfo(int targetIndex, string sequence, int charge, MsDataFileUri filePath)
+            public SelectionInfo(int targetIndex, Target sequence, Adduct charge, MsDataFileUri filePath)
             {
                 TargetIndex = targetIndex;
                 Sequence = sequence;
@@ -399,8 +399,8 @@ namespace pwiz.Skyline.EditUI
             }
 
             public int TargetIndex { get; private set; }
-            public string Sequence { get; private set; }
-            public int Charge { get; private set; }
+            public Target Sequence { get; private set; }
+            public Adduct Charge { get; private set; }
             public MsDataFileUri FilePath {get; private set; }
         }
 
@@ -989,8 +989,8 @@ namespace pwiz.Skyline.EditUI
         public string FileName { get { return Match1.FileName; } }
         public string ReplicateName { get { return Match1.ReplicateName; } }
         public int TargetIndex { get { return Match1.TargetIndex; } }
-        public string Sequence { get { return Match1.ModifiedSequence; } }
-        public int Charge { get { return Match1.Charge; } }
+        public Target Sequence { get { return Match1.ModifiedSequence; } }
+        public Adduct Charge { get { return Match1.Charge; } }
         public double? Score1 { get { return Match1.Score; } }
         public double? Score2 { get { return Match2.Score; } }
         public double? QValue1 { get { return Match1.QValue; } }

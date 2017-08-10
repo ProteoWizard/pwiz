@@ -385,7 +385,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     // Attempt to create node for error checking.
                     nodePepNew = fastaSequence.CreateFullPeptideDocNode(document.Settings,
-                                                                        FastaSequence.StripModifications(pepModSequence));
+                                                                        new Target(FastaSequence.StripModifications(pepModSequence)));
                     if (nodePepNew == null)
                     {
                         ShowPeptideError(new PasteError
@@ -860,7 +860,7 @@ namespace pwiz.Skyline.EditUI
                 "\r\n\r\n" + // Not L10N
                 Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__ +
                 "\r\n\r\n" + // Not L10N
-                IonInfo.AdductTips;
+                Adduct.Tips;
             MessageBox.Show(this, helpText, Resources.PasteDlg_btnTransitionListHelp_Click_Transition_List_Help);
         }
 
@@ -1354,7 +1354,7 @@ namespace pwiz.Skyline.EditUI
                 return;
             using (var filterPeptidesDlg =
                 new FilterMatchedPeptidesDlg(numMultipleMatches, numUnmatched, numFiltered,
-                                             dataGridView.RowCount - prevRowCount == 1))
+                                             dataGridView.RowCount - prevRowCount == 1, false))
             {
                 var result = filterPeptidesDlg.ShowDialog(this);
                 // If the user is keeping all peptide matches, we don't need to redo the paste.
@@ -1614,6 +1614,10 @@ namespace pwiz.Skyline.EditUI
             public const string labelType = "LabelType"; // Not L10N
             public const string adductPrecursor = "PrecursorAdduct"; // Not L10N
             public const string adductProduct = "ProductAdduct"; // Not L10N
+            public const string idCAS = "CAS"; // Not L10N
+            public const string idInChiKey = "InChiKey"; // Not L10N
+            public const string idInChi = "InChi"; // Not L10N
+            public const string idHMDB = "HMDB"; // Not L10N
 
             public static List<string> KnownHeaders()
             {
@@ -1642,6 +1646,10 @@ namespace pwiz.Skyline.EditUI
                     declusteringPotential,
                     note,
                     labelType,
+                    idInChiKey,
+                    idCAS,
+                    idHMDB,
+                    idInChi,
                 });
             }
         }
@@ -1701,12 +1709,12 @@ namespace pwiz.Skyline.EditUI
             {
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name);
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Ion_Formula);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.adductPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
-                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Ion_Formula);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.adductProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.chargeProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
@@ -1715,9 +1723,13 @@ namespace pwiz.Skyline.EditUI
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.cePrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.note, Resources.PasteDlg_UpdateMoleculeType_Note);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idInChiKey, SmallMoleculeTransitionListColumnHeaders.idInChiKey); // No need to localize
                 var defaultColumns = new List<string>();
                 for (var col = 0; col < gridViewTransitionList.Columns.Count; col++)  // As the default, get the list without relatively exotic items like drift time, SLens, ConeVoltage etc settings
                     defaultColumns.Add(gridViewTransitionList.Columns[col].Name);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idCAS, SmallMoleculeTransitionListColumnHeaders.idCAS); // No need to localize
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idHMDB, SmallMoleculeTransitionListColumnHeaders.idHMDB); // No need to localize
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idInChi, SmallMoleculeTransitionListColumnHeaders.idInChi); // No need to localize
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.slens, Resources.PasteDlg_UpdateMoleculeType_S_Lens);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.coneVoltage, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_);

@@ -219,7 +219,7 @@ namespace pwiz.Skyline.Model.Results
                         }
 
                         SpectrumFilterPair filter;
-                        string textId = nodePep.RawTextId; // Modified Sequence for peptides, or some other string for custom ions
+                        var textId = nodePep.ModifiedTarget; // Modified Sequence for peptides, or some other string for custom ions
                         var mz = new SignedMz(nodeGroup.PrecursorMz, nodeGroup.PrecursorCharge < 0);
                         var key = new PrecursorTextId(mz, textId, ChromExtractor.summed);
                         if (!dictPrecursorMzToFilter.TryGetValue(key, out filter))

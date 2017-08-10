@@ -229,7 +229,7 @@ namespace pwiz.Common.Collections
 
         public KeyValuePair<TKey, TValue> this[int index]
         {
-            get { return new KeyValuePair<TKey, TValue>(Keys[index],Values[index]); }
+            get { return new KeyValuePair<TKey, TValue>(Keys[index], Values[index]); }
             set { throw new NotSupportedException(); }
         }
 

@@ -88,19 +88,19 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             return TestFilesDirs[0].GetTestPath(relativePath);
         }
 
-        private string CheckDelta(double a, double b, double delta, string what, string key)
+        private string CheckDelta(double expected, double actual, double delta, string what, string key)
         {
-            return (Math.Abs(a - b) > delta)
-                ? what + " " + string.Format("{0:F02}", a) + " differs from expected " + string.Format("{0:F02}", b) + " by " + string.Format("{0:F02}", Math.Abs(a - b)) + " for " + key + "\n"
+            return (Math.Abs(actual - expected) > delta)
+                ? what + " " + string.Format("{0:F02}", actual) + " differs from expected " + string.Format("{0:F02}", expected) + " by " + string.Format("{0:F02}", Math.Abs(actual - expected)) + " for " + key + "\n"
                 : string.Empty;
 
         }
 
-        private string CheckDeltaPct(double a, double b, double delta, string what, string key)
+        private string CheckDeltaPct(double expected, double actual, double delta, string what, string key)
         {
-            double pctDiff = (a == 0) ? ((b == 0) ? 0 : 100) : (100*Math.Abs(a - b)/a);
+            double pctDiff = (actual == 0) ? ((expected == 0) ? 0 : 100) : (100*Math.Abs(actual - expected)/actual);
             return (pctDiff > delta)
-                ? what + " " + string.Format("{0:F02}", a) + " differs from expected " + string.Format("{0:F02}", b) + " by " + string.Format("{0:F02}", pctDiff) + "% for " + key + "\n"
+                ? what + " " + string.Format("{0:F02}", actual) + " differs from expected " + string.Format("{0:F02}", expected) + " by " + string.Format("{0:F02}", pctDiff) + "% for " + key + "\n"
                 : string.Empty;
 
         }
@@ -258,7 +258,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 WaitForClosedForm(peptideSettingsDlg);
 
                 var document = SkylineWindow.Document;
-                var measuredDTs = document.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimePeptides;
+                var measuredDTs = document.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimeIons;
                 Assert.IsNotNull(driftInfoExplicitDT, "driftInfoExplicitDT != null");
                 var explicitDTs = driftInfoExplicitDT.GetIonMobilityDict();
 
@@ -272,7 +272,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 foreach (var pair in doc1.PeptidePrecursorPairs)
                 {
                     string errMsg = string.Empty;
-                    var key = new LibKey(pair.NodePep.ModifiedSequence, pair.NodeGroup.PrecursorCharge);
+                    var key = new LibKey(pair.NodePep.ModifiedSequence, pair.NodeGroup.PrecursorAdduct);
                     double tolerCCS = 5;
                     if (expectedDiffs.ContainsKey(key.ToString()))
                     {
@@ -319,7 +319,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                         double windowDT;
                         var calculatedDriftTime = doc1.Settings.PeptideSettings.Prediction.GetDriftTime(
                             pep, nodeGroup, libraryDriftTimeInfo, instrumentInfo, 0, out windowDT);
-                        var libKey = new LibKey(pep.ModifiedSequence, nodeGroup.PrecursorCharge);
+                        var libKey = new LibKey(pep.ModifiedSequence, nodeGroup.PrecursorAdduct);
                         DriftTimeInfo[] infoValueExplicitDT;
                         if (!dictExplicitDT.TryGetValue(libKey, out infoValueExplicitDT))
                         {

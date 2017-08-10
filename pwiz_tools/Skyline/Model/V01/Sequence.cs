@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Text;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.V01
@@ -203,7 +204,7 @@ namespace pwiz.Skyline.Model.V01
     public class PepV01
     {
         private readonly FastaSeqV01 _fastaSequence;
-        private double _massH;
+        private TypedMass _massH;
 
         public PepV01(FastaSeqV01 fastaSequence, int begin, int end, int missedCleavages)
         {
@@ -214,14 +215,14 @@ namespace pwiz.Skyline.Model.V01
             MissedCleavages = missedCleavages;
 
             // Derived value
-            Sequence = _fastaSequence.AA.Substring(Begin, End - Begin);
+            Target = new Target(_fastaSequence.AA.Substring(Begin, End - Begin));
         }
 
         public PepV01(FastaSeqV01 fastaSequence, int begin, int end, int missedCleavages,
                        double mh, double? rt)
             : this(fastaSequence, begin, end, missedCleavages)
         {
-            MassH = mh;
+            MassH = new TypedMass(mh, MassType.MonoisotopicMassH);
             PredictedRetentionTime = rt;
         }
 
@@ -230,12 +231,12 @@ namespace pwiz.Skyline.Model.V01
             get { return _fastaSequence; }
         }
 
-        public string Sequence { get; private set; }
+        public Target Target { get; private set; }
         public int Begin { get; private set; }
         public int End { get; private set; } // non-inclusive
         public int MissedCleavages { get; private set; }
         public double? PredictedRetentionTime { get; private set; }
-        public double MassH
+        public TypedMass MassH
         {
             get { return _massH; }
 
@@ -247,7 +248,7 @@ namespace pwiz.Skyline.Model.V01
 
         public void CalcMass(SequenceMassCalc massCalc)
         {
-            MassH = massCalc.GetPrecursorMass(Sequence);
+            MassH = massCalc.GetPrecursorMass(Target.Sequence);
         }
 
         public void CalcRetentionTime(RetentionTimeRegression rtRegression)
@@ -255,7 +256,7 @@ namespace pwiz.Skyline.Model.V01
             double? rt = null;
             if (rtRegression != null)
             {
-                double? score = rtRegression.Calculator.ScoreSequence(Sequence);
+                double? score = rtRegression.Calculator.ScoreSequence(Target);
                 if (score.HasValue)
                     rt = rtRegression.Conversion.GetY(score.Value);
             }
@@ -288,13 +289,13 @@ namespace pwiz.Skyline.Model.V01
 
         public IEnumerable<FragmentIon> GetFragmentIons(IEnumerable<IonType> ionTypes, SequenceMassCalc calc)
         {
-            double[,] masses = calc.GetFragmentIonMasses(Sequence);
+            var masses = calc.GetFragmentIonMasses(Target);
             int len = masses.GetLength(1);
             foreach (IonType ionType in ionTypes)
             {
                 for (int i = 0; i < len; i++)
                 {
-                    yield return new FragmentIon(this, ionType, i, masses[(int)ionType, i]);
+                    yield return new FragmentIon(this, ionType, i, masses[(Model.IonType)ionType, i]);
                 }
             }
         }
@@ -311,7 +312,7 @@ namespace pwiz.Skyline.Model.V01
             TransitionFilter filter = tranSettings.Filter;
             IEnumerable<int> precursorCharges = filter.PrecursorCharges;
             IEnumerable<int> charges = filter.ProductCharges;
-            IEnumerable<IonType> types = filter.IonTypes;
+            IEnumerable<IonType> types = filter.peptideIonTypes;
 
             FragmentIon[] fragments = GetFragmentIons(types, calc).ToArray();
 
@@ -387,7 +388,7 @@ namespace pwiz.Skyline.Model.V01
             string format = "{0}.{1}.{2} [{3}, {4}]"; // Not L10N
             if (MissedCleavages > 0)
                 format = TextUtil.SpaceSeparate(format, Resources.Peptide_ToString__missed__5__);
-            return string.Format(format, PrevAA, Sequence, NextAA, Begin, End - 1, MissedCleavages);
+            return string.Format(format, PrevAA, Target, NextAA, Begin, End - 1, MissedCleavages);
         }
 
         public override bool Equals(object obj)
@@ -438,7 +439,7 @@ namespace pwiz.Skyline.Model.V01
         }
 
         private readonly PepV01 _peptide;
-        private double _massH;
+        private TypedMass _massH;
 
         public FragmentIon(PepV01 peptide, IonType type, int offset, double mh)
         {
@@ -446,18 +447,18 @@ namespace pwiz.Skyline.Model.V01
 
             IType = type;
             CleavageOffset = offset;
-            MassH = mh;
+            MassH = new TypedMass(mh, MassType.MonoisotopicMassH);
 
             // Derived values
             if (IsNTerminal())
             {
                 Ordinal = offset + 1;
-                AA = peptide.Sequence[offset];
+                AA = peptide.Target.Sequence[offset];
             }
             else
             {
                 Ordinal = _peptide.Length - offset - 1;
-                AA = peptide.Sequence[offset + 1];
+                AA = peptide.Target.Sequence[offset + 1];
             }
         }
 
@@ -471,7 +472,7 @@ namespace pwiz.Skyline.Model.V01
         public int Ordinal { get; private set; }
         public char AA { get; private set; }
 
-        public double MassH
+        public TypedMass MassH
         {
             get { return _massH; }
 
@@ -498,12 +499,12 @@ namespace pwiz.Skyline.Model.V01
 
         public char FragmentNTermAA
         {
-            get { return _peptide.Sequence[CleavageOffset + 1]; }
+            get { return _peptide.Target.Sequence[CleavageOffset + 1]; }
         }
 
         public char FragmentCTermAA
         {
-            get { return _peptide.Sequence[CleavageOffset]; }
+            get { return _peptide.Target.Sequence[CleavageOffset]; }
         }
 
         #region object overrides
@@ -541,7 +542,7 @@ namespace pwiz.Skyline.Model.V01
     {
         private readonly FragmentIon _fragment;
 
-        public SrmTransition(FragmentIon fragment, double ce, double? dp, double rtWindow, int precursorCharge, int charge)
+        public SrmTransition(FragmentIon fragment, double ce, double? dp, double rtWindow, Adduct precursorCharge, Adduct charge)
         {
             _fragment = fragment;
             CollisionEnergy = ce;
@@ -556,8 +557,8 @@ namespace pwiz.Skyline.Model.V01
             get { return _fragment; }
         }
 
-        public int PrecursorCharge { get; private set; }
-        public int Charge { get; private set; }
+        public Adduct PrecursorCharge { get; private set; }
+        public Adduct Charge { get; private set; }
         public double CollisionEnergy { get; private set; }
         public double? DeclusteringPotential { get; private set; }
         public double RetentionTimeWindow { get; set; }
@@ -591,9 +592,9 @@ namespace pwiz.Skyline.Model.V01
                 DeclusteringPotential = regression.GetY(MZ);
         }
 
-        public string GetChargeIndicator(int charge)
+        public string GetChargeIndicator(Adduct charge)
         {
-            return "++++++++++".Substring(0, charge); // Not L10N
+            return charge.AsFormulaOrSigns(); // +++ or -- or M[+Na] depending
         }
 
         #region object overrides

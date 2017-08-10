@@ -1,0 +1,37 @@
+libLSID	numSpecs	majorVersion	minorVersion
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:Small_Library-Positive-ions_CE-Merged.blib	6	1	5
+id	RefSpectraID	position	mass
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	driftTimeMsec	collisionalCrossSectionSqA	driftTimeHighEnergyOffsetMsec	retentionTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	N/A	285.0	1	N/A	-	-	1	52	0.0	0.0	0.0	9.013	Diazepam	C16H13ClN2O	[M+H]	N/A	cas:439-14-5	1	9	0.0	0
+2	N/A	326.0	1	N/A	-	-	1	60	0.0	0.0	0.0	9.007	Midazolam	C18H13ClFN3	[M+H]	N/A	cas:59467-70-8	2	739	0.0	0
+3	N/A	252.0	1	N/A	-	-	1	35	0.0	0.0	0.0	5.328	7-aminonitrazepam	C15H13N3O	[M+H]	N/A	cas:4928-2-3	3	791	0.0	0
+4	N/A	271.0	1	N/A	-	-	1	46	0.0	0.0	0.0	8.047	Nordiazepam	C15H11ClN2O	[M+H]	N/A	cas:1088-11-5	4	836	0.0	0
+5	N/A	318.0	1	N/A	-	-	1	9	0.0	0.0	0.0	8.828	Phosmet	C11H12NO4PS2	[M+H]	N/A	cas:732-11-6	5	837	0.0	0
+6	N/A	324.0	1	N/A	-	-	1	27	0.0	0.0	0.0	6.808	LSD	C20H25N3O	[M+H]	N/A	cas:50-37-3	6	856	0.0	0
+id	fileName	cutoffScore
+1	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/1-1_Diazepam_CE_Select.lcd	-1.0
+2	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/45-1_Midazolam_CE_Select.lcd	-1.0
+3	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/49-1_7-aminonitrazepam _CE_Select.lcd	-1.0
+4	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/50-1_Nordiazepam_CE_Select.lcd	-1.0
+5	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/50-1_Phosmet_CE_Select.lcd	-1.0
+6	C:/LabSolutions/Data/GUS-Project/Library_data_files/Positive-ions/52-1_LSD_CE_Select.lcd	-1.0
+id	scoreType
+0	UNKNOWN
+1	PERCOLATOR QVALUE
+2	PEPTIDE PROPHET SOMETHING
+3	SPECTRUM MILL
+4	IDPICKER FDR
+5	MASCOT IONS SCORE
+6	TANDEM EXPECTATION VALUE
+7	PROTEIN PILOT CONFIDENCE
+8	SCAFFOLD SOMETHING
+9	WATERS MSE PEPTIDE SCORE
+10	OMSSA EXPECTATION SCORE
+11	PROTEIN PROSPECTOR EXPECTATION SCORE
+12	SEQUEST XCORR
+13	MAXQUANT SCORE
+14	MORPHEUS SCORE
+15	MSGF+ SCORE
+16	PEAKS CONFIDENCE SCORE
+17	BYONIC SCORE
+18	PEPTIDE SHAKER CONFIDENCE

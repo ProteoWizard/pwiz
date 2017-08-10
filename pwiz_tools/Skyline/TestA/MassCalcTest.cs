@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestA
             SequenceMassCalc.ParseModCounts(BioMassCalc.MONOISOTOPIC, "OO-HNHN", new Dictionary<string, int>());            
             
             // Test normal function
-            var sequence = "VEDELK";
+            var sequence = new Target("VEDELK");
             var calc = new SequenceMassCalc(MassType.Monoisotopic);
             var expected = new List<KeyValuePair<double, double>>
             {
@@ -108,14 +108,13 @@ namespace pwiz.SkylineTestA
                 new KeyValuePair<double, double>(368.69272933213, 1.08986656450318E-05),
                 new KeyValuePair<double, double>(367.69860325, 1.06303400612337E-05),
             };
-            var actual = calc.GetMzDistribution(sequence, 2, IsotopeAbundances.Default).MassesSortedByAbundance();
+            var actual = calc.GetMzDistribution(sequence, Adduct.DOUBLY_PROTONATED, IsotopeAbundances.Default).MassesSortedByAbundance();
             for (var i = 0; i < expected.Count; i++)
             {
                 Assert.AreEqual(expected[i].Key, actual[i].Key, .0001);
                 Assert.AreEqual(expected[i].Value, actual[i].Value, .0001);
             } 
         }
-
         [TestMethod]
         public void TestSequenceMassCalcNormalizeModifiedSequence()
         {
@@ -174,17 +173,17 @@ namespace pwiz.SkylineTestA
         {
             SequenceMassCalc sequenceMassCalc = new SequenceMassCalc(MassType.Monoisotopic);
             Assert.AreEqual(147.11, sequenceMassCalc.GetPrecursorMass("K"), .1);
-            Assert.AreEqual("C6H14N2O2", sequenceMassCalc.GetIonFormula("K", 0));
+            Assert.AreEqual("C6H14N2O2", sequenceMassCalc.GetMolecularFormula("K"));
 
             var label13C6K = new StaticMod("label13C6K", "K", null, LabelAtoms.C13);
             sequenceMassCalc.AddStaticModifications(new []{label13C6K});
             Assert.AreEqual(153.11, sequenceMassCalc.GetPrecursorMass("K"), .1);
-            Assert.AreEqual("C'6H14N2O2", sequenceMassCalc.GetIonFormula("K", 0));
+            Assert.AreEqual("C'6H14N2O2", sequenceMassCalc.GetMolecularFormula("K"));
 
             var label15N2K = new StaticMod("label15N2K", "K", null, LabelAtoms.N15);
             sequenceMassCalc.AddStaticModifications(new[]{label15N2K});
             Assert.AreEqual(155.11, sequenceMassCalc.GetPrecursorMass("K"), .1);
-            Assert.AreEqual("C'6H14N'2O2", sequenceMassCalc.GetIonFormula("K", 0));
+            Assert.AreEqual("C'6H14N'2O2", sequenceMassCalc.GetMolecularFormula("K"));
 
             // Check our ability to handle strangely constructed chemical formulas
             Assert.AreEqual(Molecule.Parse("C12H9S2P0").ToString(), Molecule.Parse("C12H9S2").ToString()); // P0 is weird

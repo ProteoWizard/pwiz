@@ -67,6 +67,7 @@ namespace pwiz.Skyline
             this.xionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.yionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.zionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fragmentionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.precursorIonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator11 = new System.Windows.Forms.ToolStripSeparator();
             this.chargesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -386,6 +387,7 @@ namespace pwiz.Skyline
             this.xMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.yMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.zMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fragmentsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.precursorIonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chargesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.charge1MenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -720,6 +722,7 @@ namespace pwiz.Skyline
             this.xionsContextMenuItem,
             this.yionsContextMenuItem,
             this.zionsContextMenuItem,
+            this.fragmentionsContextMenuItem,
             this.precursorIonContextMenuItem,
             this.toolStripSeparator11,
             this.chargesContextMenuItem,
@@ -780,6 +783,13 @@ namespace pwiz.Skyline
             this.zionsContextMenuItem.Name = "zionsContextMenuItem";
             resources.ApplyResources(this.zionsContextMenuItem, "zionsContextMenuItem");
             this.zionsContextMenuItem.Click += new System.EventHandler(this.zMenuItem_Click);
+            // 
+            // fragmentionsContextMenuItem
+            // 
+            this.fragmentionsContextMenuItem.CheckOnClick = true;
+            this.fragmentionsContextMenuItem.Name = "fragmentionsContextMenuItem";
+            resources.ApplyResources(this.fragmentionsContextMenuItem, "fragmentionsContextMenuItem");
+            this.fragmentionsContextMenuItem.Click += new System.EventHandler(this.fragmentsMenuItem_Click);
             // 
             // precursorIonContextMenuItem
             // 
@@ -3000,6 +3010,7 @@ namespace pwiz.Skyline
             this.xMenuItem,
             this.yMenuItem,
             this.zMenuItem,
+            this.fragmentsMenuItem,
             this.precursorIonMenuItem});
             resources.ApplyResources(this.ionTypesMenuItem, "ionTypesMenuItem");
             this.ionTypesMenuItem.Name = "ionTypesMenuItem";
@@ -3048,6 +3059,13 @@ namespace pwiz.Skyline
             this.zMenuItem.Name = "zMenuItem";
             resources.ApplyResources(this.zMenuItem, "zMenuItem");
             this.zMenuItem.Click += new System.EventHandler(this.zMenuItem_Click);
+            // 
+            // fragmentsMenuItem
+            // 
+            this.fragmentsMenuItem.CheckOnClick = true;
+            this.fragmentsMenuItem.Name = "fragmentsMenuItem";
+            resources.ApplyResources(this.fragmentsMenuItem, "fragmentsMenuItem");
+            this.fragmentsMenuItem.Click += new System.EventHandler(this.fragmentsMenuItem_Click);
             // 
             // precursorIonMenuItem
             // 
@@ -4016,6 +4034,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem xMenuItem;
         private System.Windows.Forms.ToolStripMenuItem yMenuItem;
         private System.Windows.Forms.ToolStripMenuItem zMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fragmentsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem chargesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem charge1MenuItem;
         private System.Windows.Forms.ToolStripMenuItem charge2MenuItem;
@@ -4027,6 +4046,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem xionsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem yionsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem zionsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fragmentionsContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator11;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator12;
         private System.Windows.Forms.ToolStripMenuItem ranksContextMenuItem;

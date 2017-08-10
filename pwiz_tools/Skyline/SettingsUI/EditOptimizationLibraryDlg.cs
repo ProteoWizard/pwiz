@@ -356,7 +356,7 @@ namespace pwiz.Skyline.SettingsUI
             var keySet = new HashSet<OptimizationKey>();
             foreach (DbOptimization optimization in optimizationList)
             {
-                string seqModified = optimization.PeptideModSeq;
+                string seqModified = optimization.Target.Sequence;
                 if (LibraryGridViewDriver.ValidateSequence(seqModified) != null)
                 {
                     MessageDlg.Show(this, string.Format(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_value__0__is_not_a_valid_modified_peptide_sequence_,
@@ -367,7 +367,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (keySet.Contains(optimization.Key))
                 {
                     MessageDlg.Show(this, string.Format(Resources.EditOptimizationLibraryDlg_ValidateOptimizationList_The_optimization_with_sequence__0___charge__1___fragment_ion__2__and_product_charge__3__appears_in_the__4__table_more_than_once_,
-                                                        seqModified, optimization.Charge, optimization.FragmentIon, optimization.ProductCharge, tableName));
+                                                        seqModified, optimization.Adduct, optimization.FragmentIon, optimization.ProductAdduct, tableName));
                     return false;
                 }
                 keySet.Add(optimization.Key);
@@ -480,8 +480,8 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             if (!string.IsNullOrWhiteSpace(optimization.PeptideModSeq))
                             {
-                                e.Value = (optimization.Charge > 1)
-                                    ? optimization.PeptideModSeq + Transition.GetChargeIndicator(optimization.Charge)
+                                e.Value = (optimization.Adduct.AdductCharge > 1)
+                                    ? optimization.PeptideModSeq + Transition.GetChargeIndicator(optimization.Adduct)
                                     : optimization.PeptideModSeq;
                                 e.FormattingApplied = true;
                             }
@@ -491,8 +491,8 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             if (!string.IsNullOrWhiteSpace(optimization.FragmentIon))
                             {
-                                e.Value = (optimization.ProductCharge > 1)
-                                    ? (optimization.FragmentIon + Transition.GetChargeIndicator(optimization.ProductCharge))
+                                e.Value = (optimization.ProductAdduct.AdductCharge > 1)
+                                    ? (optimization.FragmentIon + Transition.GetChargeIndicator(optimization.ProductAdduct))
                                     : optimization.FragmentIon;
                                 e.FormattingApplied = true;
                             }
@@ -514,7 +514,7 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             var seqCharge = new SequenceAndCharge(value);
                             e.Value = seqCharge.ModifiedSequence;
-                            Items[e.RowIndex].Charge = seqCharge.Charge;
+                            Items[e.RowIndex].Adduct = seqCharge.Charge;
                             e.ParsingApplied = true;
                         }
                         break;
@@ -522,7 +522,7 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             var fragCharge = new FragmentAndCharge(value);
                             e.Value = fragCharge.FragmentIon;
-                            Items[e.RowIndex].ProductCharge = fragCharge.Charge;
+                            Items[e.RowIndex].ProductAdduct = fragCharge.Adduct;
                             e.ParsingApplied = true;
                         }
                         break;
@@ -537,12 +537,12 @@ namespace pwiz.Skyline.SettingsUI
                     const int max = TransitionGroup.MAX_PRECURSOR_CHARGE;
 
                     string seq = Transition.StripChargeIndicators(sequenceAndCharge, min, max);
-                    ModifiedSequence = SequenceMassCalc.NormalizeModifiedSequence(seq);
-                    Charge = Transition.GetChargeFromIndicator(sequenceAndCharge, min, max) ?? 1;
+                    ModifiedSequence = SequenceMassCalc.NormalizeModifiedSequence(new Target(seq));
+                    Charge = Transition.GetChargeFromIndicator(sequenceAndCharge, min, max, Adduct.SINGLY_PROTONATED);
                 }
 
-                public string ModifiedSequence { get; private set; }
-                public int Charge { get; private set; }
+                public Target ModifiedSequence { get; private set; }
+                public Adduct Charge { get; private set; }
             }
 
             private class FragmentAndCharge
@@ -554,18 +554,18 @@ namespace pwiz.Skyline.SettingsUI
 
                     string frag = Transition.StripChargeIndicators(fragmentAndCharge, min, max);
                     FragmentIon = NormalizeProductIon(frag);
-                    Charge = Transition.GetChargeFromIndicator(fragmentAndCharge, min, max) ?? 1;
+                    Adduct = Transition.GetChargeFromIndicator(fragmentAndCharge, min, max, Adduct.SINGLY_PROTONATED);
                 }
 
                 public string FragmentIon { get; private set; }
-                public int Charge { get; private set; }
+                public Adduct Adduct { get; private set; }
             }
 
-            public DbOptimization GetOptimization(OptimizationType type, string sequence, int charge, string fragmentIon, int productCharge)
+            public DbOptimization GetOptimization(OptimizationType type, Target sequence, Adduct charge, string fragmentIon, Adduct productCharge)
             {
                 DbOptimization[] optimizations =
-                    Optimizations.Where(opt => Equals(opt.Type, (int)type) && Equals(opt.PeptideModSeq, sequence) &&
-                        Equals(opt.Charge, charge) && Equals(opt.FragmentIon, fragmentIon) && Equals(opt.ProductCharge, productCharge)).ToArray();
+                    Optimizations.Where(opt => Equals(opt.Type, (int)type) && Equals(opt.Target, sequence) &&
+                        Equals(opt.Adduct, charge) && Equals(opt.FragmentIon, fragmentIon) && Equals(opt.ProductAdduct, productCharge)).ToArray();
                 return optimizations.Count() == 1 ? optimizations.First() : null;
             }
 
@@ -585,7 +585,7 @@ namespace pwiz.Skyline.SettingsUI
                                 seqCharge.ModifiedSequence,
                                 seqCharge.Charge,
                                 fragCharge.FragmentIon,
-                                fragCharge.Charge,
+                                fragCharge.Adduct,
                                 double.Parse(values[2])));
                         });
                 }
@@ -598,7 +598,7 @@ namespace pwiz.Skyline.SettingsUI
                             libraryOptimizationsNew.Add(new DbOptimization(ViewDbType,
                                 seqCharge.ModifiedSequence,
                                 seqCharge.Charge,
-                                null, 0, double.Parse(values[1])));
+                                null, Adduct.EMPTY, double.Parse(values[1])));
                         });
                 }
 
@@ -701,14 +701,14 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             var seqCharge = new SequenceAndCharge(value);
                             curKey.PeptideModSeq = seqCharge.ModifiedSequence;
-                            curKey.Charge = seqCharge.Charge;
+                            curKey.PrecursorAdduct = seqCharge.Charge;
                             break;
                         }
                         case COLUMN_PRODUCT_ION:
                         {
                             var fragCharge = new FragmentAndCharge(value);
                             curKey.FragmentIon = fragCharge.FragmentIon;
-                            curKey.ProductCharge = fragCharge.Charge;
+                            curKey.ProductAdduct = fragCharge.Adduct;
                             break;
                         }
                     }
@@ -717,7 +717,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         errorText = string.Format(
                             Resources.LibraryGridViewDriver_DoCellValidating_There_is_already_an_optimization_with_sequence___0___and_product_ion___2___in_the_list_,
-                            curKey.PeptideModSeq, Transition.GetChargeIndicator(curKey.Charge), curKey.FragmentIon, Transition.GetChargeIndicator(curKey.ProductCharge));
+                            curKey.PeptideModSeq, Transition.GetChargeIndicator(curKey.PrecursorAdduct), curKey.FragmentIon, Transition.GetChargeIndicator(curKey.ProductAdduct));
                     }
                 }
                 if (errorText != null)
@@ -800,7 +800,7 @@ namespace pwiz.Skyline.SettingsUI
             private static double GetCollisionEnergy(SrmSettings settings, PeptideDocNode nodePep,
             TransitionGroupDocNode nodeGroup, CollisionEnergyRegression regression, int step)
             {
-                int charge = nodeGroup.TransitionGroup.PrecursorCharge;
+                var charge = nodeGroup.TransitionGroup.PrecursorAdduct;
                 double mz = settings.GetRegressionMz(nodePep, nodeGroup);
                 return regression.GetCollisionEnergy(charge, mz) + regression.StepSize * step;
             }
@@ -822,21 +822,21 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         foreach (TransitionGroupDocNode nodeGroup in peptide.Children)
                         {
-                            string sequence = _document.Settings.GetSourceTextId(peptide);
-                            int charge = nodeGroup.TransitionGroup.PrecursorCharge;
+                            var sequence = _document.Settings.GetSourceTarget(peptide);
+                            var charge = nodeGroup.TransitionGroup.PrecursorAdduct;
                             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                             {
                                 OptimizationKey key = null;
                                 double? value = null;
                                 if (Equals(ViewType, ExportOptimize.CE))
                                 {
-                                    key = new OptimizationKey(ViewDbType, sequence, charge, nodeTran.GetFragmentIonName(CultureInfo.InvariantCulture), nodeTran.Transition.Charge);
+                                    key = new OptimizationKey(ViewDbType, sequence, charge, nodeTran.GetFragmentIonName(CultureInfo.InvariantCulture), nodeTran.Transition.Adduct);
                                     value = OptimizationStep<CollisionEnergyRegression>.FindOptimizedValueFromResults(
                                             settings, peptide, nodeGroup, nodeTran, OptimizedMethodType.Transition, GetCollisionEnergy);
                                 }
                                 else if (Equals(ViewType, ExportOptimize.COV))
                                 {
-                                    key = new OptimizationKey(ViewDbType, sequence, charge, null, 0);
+                                    key = new OptimizationKey(ViewDbType, sequence, charge, null, Adduct.EMPTY);
                                     double? cov = OptimizationStep<CompensationVoltageRegressionFine>.FindOptimizedValueFromResults(_document.Settings,
                                         peptide, nodeGroup, null, OptimizedMethodType.Precursor, SrmDocument.GetCompensationVoltageFine);
                                     value = cov.HasValue ? cov.Value : 0;
@@ -1065,7 +1065,7 @@ namespace pwiz.Skyline.SettingsUI
             _gridViewLibraryDriver.OnPaste();
         }
 
-        public DbOptimization GetCEOptimization(string sequence, int charge, string fragmentIon, int productCharge)
+        public DbOptimization GetCEOptimization(Target sequence, Adduct charge, string fragmentIon, Adduct productCharge)
         {
             return _gridViewLibraryDriver.GetOptimization(OptimizationType.collision_energy, sequence, charge, fragmentIon, productCharge);
         }

@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return FullScan.IsolationScheme == null || FullScan.IsolationScheme.IsInRangeMz(mz);
         }
 
-        public bool Accept(string sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz)
+        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz)
         {
             if (Filter.ExclusionUseDIAWindow && FullScan.IsolationScheme != null &&
                 FullScan.IsolationScheme.MayFallIntoSameWindow(ionMz, precursorMz))
@@ -142,7 +142,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Be careful in this validate function, since it occurs before SrmSettings.ValidateLoad()
             // This means any of the sub-settings objects may be null, and they will get the defaults
             if (FullScan != null && FullScan.IsHighResPrecursor &&
-                    Prediction != null && Prediction.PrecursorMassType != MassType.Monoisotopic)
+                    Prediction != null && Prediction.PrecursorMassType.IsAverage())
             {
                 throw new InvalidDataException(
                     Resources.TransitionSettings_DoValidate_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses);
@@ -550,16 +550,22 @@ namespace pwiz.Skyline.Model.DocSettings
         public const string DEFAULT_END_FINDER = "3 ions";   // Not L10N
 
 
-        private ImmutableList<int> _precursorCharges;
-        private ImmutableList<int> _productCharges;
-        private ImmutableList<IonType> _ionTypes;
+        private ImmutableList<Adduct> _peptidePrecursorCharges;
+        private ImmutableList<Adduct> _peptideProductCharges;
+        private ImmutableList<IonType> _peptideIonTypes;
+        private ImmutableList<Adduct> _smallMoleculePrecursorAdducts;
+        private ImmutableList<Adduct> _smallMoleculeFragmentAdducts;
+        private ImmutableList<IonType> _smallMoleculeIonTypes;
         private ImmutableList<MeasuredIon> _measuredIons;
         private StartFragmentFinder _fragmentRangeFirst;
         private EndFragmentFinder _fragmentRangeLast;
 
-        public TransitionFilter(IList<int> precursorCharges,
-                                IList<int> productCharges,
-                                IList<IonType> ionTypes,
+        public TransitionFilter(IList<Adduct> peptidePrecursorCharges,
+                                IList<Adduct> peptideProductCharges,
+                                IList<IonType> peptideIonTypes,
+                                IList<Adduct> smallMoleculePrecursorAdducts,
+                                IList<Adduct> smallMoleculeFragmentAdducts,
+                                IList<IonType> smallMoleculeIonTypes,
                                 string fragmentRangeFirstName,
                                 string fragmentRangeLastName,
                                 IList<MeasuredIon> measuredIons,
@@ -567,9 +573,12 @@ namespace pwiz.Skyline.Model.DocSettings
                                 bool exclusionUseDIAWindow,
                                 bool autoSelect)
         {
-            PrecursorCharges = precursorCharges;
-            ProductCharges = productCharges;
-            IonTypes = ionTypes;
+            PeptidePrecursorCharges = peptidePrecursorCharges;
+            PeptideProductCharges = peptideProductCharges;
+            SmallMoleculePrecursorAdducts = smallMoleculePrecursorAdducts;
+            SmallMoleculeFragmentAdducts = smallMoleculeFragmentAdducts;
+            PeptideIonTypes = peptideIonTypes;
+            SmallMoleculeIonTypes = smallMoleculeIonTypes;
             FragmentRangeFirstName = fragmentRangeFirstName;
             FragmentRangeLastName = fragmentRangeLastName;
             MeasuredIons = measuredIons;
@@ -580,48 +589,77 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        public IList<int> PrecursorCharges
+        public IList<Adduct> PeptidePrecursorCharges
         {
-            get { return _precursorCharges; }
+            get { return _peptidePrecursorCharges; }
             private set
             {
                 ValidateCharges(Resources.TransitionFilter_PrecursorCharges_Precursor_charges, value,
                     TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
-                _precursorCharges = MakeChargeCollection(value);
+                _peptidePrecursorCharges = MakeChargeCollection(value);
             }
         }
 
-        public IList<int> ProductCharges
+        public IList<Adduct> PeptideProductCharges
         {
-            get { return _productCharges; }
+            get { return _peptideProductCharges; }
             private set
             {
                 ValidateCharges(Resources.TransitionFilter_ProductCharges_Product_ion_charges, value,
                     Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
-                _productCharges = MakeChargeCollection(value);
+                _peptideProductCharges = MakeChargeCollection(value);
             }
         }
 
-        public static ImmutableList<int> MakeChargeCollection(IList<int> charges)
+        public IList<Adduct> SmallMoleculePrecursorAdducts
+        {
+            get { return _smallMoleculePrecursorAdducts; }
+            private set
+            {
+                ValidateCharges(Resources.TransitionFilter_SmallMoleculePrecursorAdducts_Small_molecule_precursor_adducts, value,
+                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+                _smallMoleculePrecursorAdducts = MakeChargeCollection(value);
+            }
+        }
+
+        public IList<Adduct> SmallMoleculeFragmentAdducts
+        {
+            get { return _smallMoleculeFragmentAdducts; }
+            set { _smallMoleculeFragmentAdducts = MakeChargeCollection(value); }
+        }
+
+        public static ImmutableList<Adduct> MakeChargeCollection(IList<Adduct> charges)
         {
             var arrayCharges = charges.ToArrayStd();
             Array.Sort(arrayCharges);
             return MakeReadOnly(arrayCharges);
         }
 
-        public IList<IonType> IonTypes
+        public IList<IonType> PeptideIonTypes
         {
-            get { return _ionTypes; }
+            get { return _peptideIonTypes; }
             private set
             {
                 if (value.Count == 0)
                     throw new InvalidDataException(Resources.TransitionFilter_IonTypes_At_least_one_ion_type_is_required);
                 TypeSafeEnum.ValidateList(value);
-                _ionTypes = MakeReadOnly(value);
+                _peptideIonTypes = MakeReadOnly(value);
             }
         }
 
-        public IStartFragmentFinder FragmentRangeFirst { get { return _fragmentRangeFirst;  } }
+        public IList<IonType> SmallMoleculeIonTypes
+        {
+            get { return _smallMoleculeIonTypes; }
+            private set
+            {
+                if (value.Count == 0)
+                    throw new InvalidDataException(Resources.TransitionFilter_IonTypes_At_least_one_ion_type_is_required);
+                TypeSafeEnum.ValidateList(value);
+                _smallMoleculeIonTypes = MakeReadOnly(value);
+            }
+        }
+
+        public IStartFragmentFinder FragmentRangeFirst { get { return _fragmentRangeFirst; } }
 
         public string FragmentRangeFirstName
         {
@@ -661,7 +699,7 @@ namespace pwiz.Skyline.Model.DocSettings
             private set { _measuredIons = MakeReadOnly(value); }
         }
 
-        public bool IsSpecialFragment(string sequence, IonType ionType, int cleavageOffset)
+        public bool IsSpecialFragment(Target sequence, IonType ionType, int cleavageOffset)
         {
             return MeasuredIons.Contains(m => m.IsMatch(sequence, ionType, cleavageOffset));
         }
@@ -674,7 +712,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (!nodeTransition.Transition.IsCustom() || nodeTransition.Transition.IsNonReporterCustomIon())
                 return true;
-            return MeasuredIons.Contains(m => Equals(m.CustomIon, nodeTransition.Transition.CustomIon));
+            return MeasuredIons.Contains(m => Equals(m.SettingsCustomIon, nodeTransition.Transition.CustomIon));
         }
 
         /// <summary>
@@ -691,7 +729,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return PrecursorMzWindow != 0 && Math.Abs(ionMz - precursorMz)*2 < PrecursorMzWindow;
         }
 
-        public bool Accept(string sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz)
+        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz)
         {
             if (IsExcluded(ionMz, precursorMz))
                 return false;
@@ -710,19 +748,32 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region Property change methods
 
-        public TransitionFilter ChangePrecursorCharges(IList<int> prop)
+        public TransitionFilter ChangePeptidePrecursorCharges(IList<Adduct> prop)
         {
-            return ChangeProp(ImClone(this), im => im.PrecursorCharges = prop);
+            return ChangeProp(ImClone(this), im => im.PeptidePrecursorCharges = prop);
         }
 
-        public TransitionFilter ChangeProductCharges(IList<int> prop)
+        public TransitionFilter ChangePeptideProductCharges(IList<Adduct> prop)
         {
-            return ChangeProp(ImClone(this), im => im.ProductCharges = prop);
+            return ChangeProp(ImClone(this), im => im.PeptideProductCharges = prop);
         }
 
-        public TransitionFilter ChangeIonTypes(IList<IonType> prop)
+        public TransitionFilter ChangePeptideIonTypes(IList<IonType> prop)
         {
-            return ChangeProp(ImClone(this), im => im.IonTypes = prop);
+            return ChangeProp(ImClone(this), im => im.PeptideIonTypes = prop);
+        }
+
+        public TransitionFilter ChangeSmallMoleculePrecursorAdducts(IList<Adduct> prop)
+        {
+            return ChangeProp(ImClone(this), im => im.SmallMoleculePrecursorAdducts = prop);
+        }
+        public TransitionFilter ChangeSmallMoleculeFragmentAdducts(IList<Adduct> prop)
+        {
+            return ChangeProp(ImClone(this), im => im.SmallMoleculeFragmentAdducts = prop);
+        }
+        public TransitionFilter ChangeSmallMoleculeIonTypes(IList<IonType> prop)
+        {
+            return ChangeProp(ImClone(this), im => im.SmallMoleculeIonTypes = prop);
         }
 
         public TransitionFilter ChangeFragmentRangeFirstName(string prop)
@@ -779,21 +830,25 @@ namespace pwiz.Skyline.Model.DocSettings
             include_c_glu_asp,
             precursor_mz_window,
             exclusion_use_dia_window,
-            auto_select
+            auto_select,
+            precursor_adducts,  // For small molecule use
+            product_adducts,  // For small molecule use
+            small_molecule_fragment_types,
         }
 
-        public static void ValidateCharges(string label, ICollection<int> charges, int min, int max)
+        public static void ValidateCharges(string label, ICollection<Adduct> adducts, int min, int max)
         {
-            if (charges == null || charges.Count == 0)
+            if (adducts == null || adducts.Count == 0)
                 throw new InvalidDataException(string.Format(Resources.TransitionFilter_ValidateCharges__0__cannot_be_empty, label));
-            HashSet<int> seen = new HashSet<int>();
-            foreach (int charge in charges)
+            var seen = new HashSet<Adduct>();
+            foreach (var adduct in adducts)
             {
-                if (seen.Contains(charge))
-                    throw new InvalidDataException(string.Format(Resources.TransitionFilter_ValidateCharges_Precursor_charges_specified_charge__0__more_than_once, charge));
-                if (min > charge || charge > max)
-                    throw new InvalidDataException(string.Format(Resources.TransitionFilter_ValidateCharges_Invalid_charge__1__found__0__must_be_between__2__and__3__, label, charge, min, max));
-                seen.Add(charge);
+                var charge = adduct.AdductCharge;
+                if (seen.Contains(adduct))
+                    throw new InvalidDataException(string.Format(Resources.TransitionFilter_ValidateCharges_Precursor_charges_specified_charge__0__more_than_once, adduct));
+                if (min > Math.Abs(charge) || Math.Abs(charge) > max)
+                    throw new InvalidDataException(string.Format(Resources.TransitionFilter_ValidateCharges_Invalid_charge__1__found__0__must_be_between__2__and__3__, label, adduct, min, max));
+                seen.Add(adduct);
             }            
         }
 
@@ -831,9 +886,12 @@ namespace pwiz.Skyline.Model.DocSettings
         public void ReadXml(XmlReader reader)
         {
             // Read start tag attributes
-            PrecursorCharges = TextUtil.ParseInts(reader.GetAttribute(ATTR.precursor_charges));
-            ProductCharges = TextUtil.ParseInts(reader.GetAttribute(ATTR.product_charges));
-            IonTypes = ParseTypes(reader.GetAttribute(ATTR.fragment_types), new[] { IonType.y });
+            PeptidePrecursorCharges = ArrayUtil.Parse(reader.GetAttribute(ATTR.precursor_charges), Adduct.FromStringAssumeProtonated, TextUtil.SEPARATOR_CSV, new Adduct[0]);
+            PeptideProductCharges = ArrayUtil.Parse(reader.GetAttribute(ATTR.product_charges), Adduct.FromStringAssumeProtonated, TextUtil.SEPARATOR_CSV, new Adduct[0]);
+            PeptideIonTypes = ParseTypes(reader.GetAttribute(ATTR.fragment_types), new[] { IonType.y });
+            SmallMoleculePrecursorAdducts = ArrayUtil.Parse(reader.GetAttribute(ATTR.precursor_adducts), Adduct.FromStringAssumeChargeOnly, TextUtil.SEPARATOR_CSV, Transition.DEFAULT_MOLECULE_CHARGES);
+            SmallMoleculeFragmentAdducts = ArrayUtil.Parse(reader.GetAttribute(ATTR.product_adducts), Adduct.FromStringAssumeChargeOnly, TextUtil.SEPARATOR_CSV, Transition.DEFAULT_MOLECULE_FRAGMENT_CHARGES);
+            SmallMoleculeIonTypes = ParseSmallMoleculeTypes(reader.GetAttribute(ATTR.small_molecule_fragment_types), Transition.MOLECULE_ION_TYPES);
             FragmentRangeFirstName = reader.GetAttribute(ATTR.fragment_range_first);
             FragmentRangeLastName = reader.GetAttribute(ATTR.fragment_range_last);
             PrecursorMzWindow = reader.GetDoubleAttribute(ATTR.precursor_mz_window);
@@ -868,9 +926,12 @@ namespace pwiz.Skyline.Model.DocSettings
         public void WriteXml(XmlWriter writer)
         {
             // Write attributes
-            writer.WriteAttributeString(ATTR.precursor_charges, PrecursorCharges.ToString(TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture)));
-            writer.WriteAttributeString(ATTR.product_charges, ProductCharges.ToString(TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture)));
-            writer.WriteAttributeString(ATTR.fragment_types, ToStringIonTypes(IonTypes, false));
+            writer.WriteAttributeString(ATTR.precursor_charges, PeptidePrecursorCharges.ToString(TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture)));
+            writer.WriteAttributeString(ATTR.product_charges, PeptideProductCharges.ToString(TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture)));
+            writer.WriteAttributeString(ATTR.precursor_adducts, SmallMoleculePrecursorAdducts.ToString(TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture)));
+            writer.WriteAttributeString(ATTR.product_adducts, SmallMoleculeFragmentAdducts.ToString(TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture)));
+            writer.WriteAttributeString(ATTR.fragment_types, ToStringIonTypes(PeptideIonTypes, false));
+            writer.WriteAttributeString(ATTR.small_molecule_fragment_types, ToStringSmallMoleculeIonTypes(SmallMoleculeIonTypes, false));
             writer.WriteAttributeString(ATTR.fragment_range_first, FragmentRangeFirstName);
             writer.WriteAttributeString(ATTR.fragment_range_last, FragmentRangeLastName);
             writer.WriteAttribute(ATTR.precursor_mz_window, PrecursorMzWindow);
@@ -880,6 +941,15 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         private const string PRECURSOR_ION_CHAR = "p"; // Not L10N
+        private const string SMALL_MOLECULE_FRAGMENT_CHAR = "f"; // Not L10N
+
+        public static string ToStringSmallMoleculeIonTypes(IList<IonType> ionTypes, bool spaces)
+        {
+            string sep = TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture);
+            if (spaces)
+                sep += TextUtil.SEPARATOR_SPACE;
+            return ionTypes.ToString(sep).Replace(IonType.precursor.ToString(), PRECURSOR_ION_CHAR).Replace(IonType.custom.ToString(), SMALL_MOLECULE_FRAGMENT_CHAR);
+        }
 
         public static string ToStringIonTypes(IList<IonType> ionTypes, bool spaces)
         {
@@ -892,6 +962,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public static IonType[] ParseTypes(string s, IonType[] defaultTypes)
         {
             return ArrayUtil.Parse(s, ParseIonType, TextUtil.SEPARATOR_CSV, defaultTypes);
+        }
+
+        public static IonType[] ParseSmallMoleculeTypes(string s, IonType[] defaultTypes)
+        {
+            return ArrayUtil.Parse(s, ParseSmallMoleculeIonType, TextUtil.SEPARATOR_CSV, defaultTypes);
         }
 
         public static IonType ParseIonType(string s)
@@ -909,6 +984,20 @@ namespace pwiz.Skyline.Model.DocSettings
             return ionType;
         }
 
+        public static IonType ParseSmallMoleculeIonType(string s)
+        {
+            s = s.ToLowerInvariant();
+            if (s == PRECURSOR_ION_CHAR)
+            {
+                return IonType.precursor;
+            }
+            if (s == SMALL_MOLECULE_FRAGMENT_CHAR)
+            {
+                return IonType.custom;
+            }
+            throw new ArgumentException();
+        }
+
         #endregion
 
         #region object overrides
@@ -917,9 +1006,11 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return ArrayUtil.EqualsDeep(obj._precursorCharges, _precursorCharges) &&
-                   ArrayUtil.EqualsDeep(obj._productCharges, _productCharges) &&
-                   ArrayUtil.EqualsDeep(obj._ionTypes, _ionTypes) &&
+            return ArrayUtil.EqualsDeep(obj._peptidePrecursorCharges, _peptidePrecursorCharges) &&
+                   ArrayUtil.EqualsDeep(obj._peptideProductCharges, _peptideProductCharges) &&
+                   ArrayUtil.EqualsDeep(obj._peptideIonTypes, _peptideIonTypes) &&
+                   ArrayUtil.EqualsDeep(obj._smallMoleculePrecursorAdducts, _smallMoleculePrecursorAdducts) &&
+                   ArrayUtil.EqualsDeep(obj._smallMoleculeIonTypes, _smallMoleculeIonTypes) &&
                    Equals(obj.FragmentRangeFirst, FragmentRangeFirst) &&
                    Equals(obj.FragmentRangeLast, FragmentRangeLast) &&
                    ArrayUtil.EqualsDeep(obj.MeasuredIons, MeasuredIons) &&
@@ -940,10 +1031,12 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                int result = _precursorCharges.GetHashCodeDeep();
-                result = (result*397) ^ _productCharges.GetHashCodeDeep();
-                result = (result*397) ^ _ionTypes.GetHashCodeDeep();
-                result = (result*397) ^ FragmentRangeFirst.GetHashCode();
+                int result = _peptidePrecursorCharges.GetHashCodeDeep();
+                result = (result * 397) ^ _peptideProductCharges.GetHashCodeDeep();
+                result = (result * 397) ^ _peptideIonTypes.GetHashCodeDeep();
+                result = (result * 397) ^ _smallMoleculePrecursorAdducts.GetHashCodeDeep();
+                result = (result * 397) ^ _smallMoleculeIonTypes.GetHashCodeDeep();
+                result = (result * 397) ^ FragmentRangeFirst.GetHashCode();
                 result = (result*397) ^ FragmentRangeLast.GetHashCode();
                 result = (result*397) ^ MeasuredIons.GetHashCodeDeep();
                 result = (result*397) ^ PrecursorMzWindow.GetHashCode();
@@ -1111,7 +1204,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             public string Label { get { return _getLabel(); } }
 
-            public abstract int FindStartFragment(double[,] masses, IonType type, int charge, double precursorMz, double precursorMzWindow, out double startMz);
+            public abstract int FindStartFragment(IonTable<TypedMass> masses, IonType type, Adduct adduct, double precursorMz, double precursorMzWindow, out double startMz);
         }
 
         private class OrdinalFragmentFinder : StartFragmentFinder
@@ -1126,7 +1219,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             #region IStartFragmentFinder Members
 
-            public override int FindStartFragment(double[,] masses, IonType type, int charge, double precursorMz, double precursorMzWindow, out double startMz)
+            public override int FindStartFragment(IonTable<TypedMass> masses, IonType type, Adduct adduct, double precursorMz, double precursorMzWindow, out double startMz)
             {
                 startMz = 0;
                 int length = masses.GetLength(1);
@@ -1153,29 +1246,28 @@ namespace pwiz.Skyline.Model.DocSettings
 
             #region IStartFragmentFinder Members
 
-            public override int FindStartFragment(double[,] masses, IonType type, int charge,
+            public override int FindStartFragment(IonTable<TypedMass> masses, IonType type, Adduct adduct,
                 double precursorMz, double precursorMzWindow, out double startMz)
             {
-                int start = FindStartFragment(masses, type, charge, precursorMz, precursorMzWindow);
+                int start = FindStartFragment(masses, type, adduct, precursorMz, precursorMzWindow);
                 // If the start is not the precursor m/z, but some offset from it, use the
                 // m/z of the fragment that was chosen as the start.  Otherwise, use the precursor m/z.
                 // Unfortunately, this means you really want ion m/z values >= start m/z
                 // when start m/z is based on the first allowable fragment, but
                 // m/z values > start m/z when start m/z is the precursor m/z. At this point,
                 // using >= always is recommended for simplicity.
-                startMz = (_offset != 0 ? SequenceMassCalc.GetMZ(masses[(int) type, start], charge) : precursorMz);
+                startMz = (_offset != 0 ? SequenceMassCalc.GetMZ(masses[type, start], adduct) : precursorMz);
                 return start;
             }
 
-            private int FindStartFragment(double[,] masses, IonType type, int charge,
+            private int FindStartFragment(IonTable<TypedMass> masses, IonType type, Adduct adduct,
                                           double precursorMz, double precursorMzWindow)
             {
                 int offset = _offset;
                 int length = masses.GetLength(1);
                 if (length == 0)
                     throw new ArgumentException("Invalid attempt to find a fragment in a peptide without fragment ions."); // Not L10N
-                int typeIndex = (int) type;
-                if (0 > typeIndex || typeIndex >= masses.Length)
+                if (!masses.ContainsIonType(type))
                     throw new IndexOutOfRangeException("Ion type {0} not found in masses array"); // Not L10N
 
                 // Make sure to start outside the precursor m/z window
@@ -1185,7 +1277,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     for (int i = 0; i < length; i++)
                     {
-                        if (SequenceMassCalc.GetMZ(masses[(int)type, i], charge) > thresholdMz)
+                        if (SequenceMassCalc.GetMZ(masses[type, i], adduct) > thresholdMz)
                         {
                             int indexRet;
                             do
@@ -1195,7 +1287,7 @@ namespace pwiz.Skyline.Model.DocSettings
                             }
                             // Be sure not to start with a m/z value inside the exclusion window
                             while (precursorMzWindow > 0 && offset < 0 && i + offset >= 0 &&
-                                Math.Abs(SequenceMassCalc.GetMZ(masses[(int)type, indexRet], charge) - precursorMz)*2 < precursorMzWindow);
+                                Math.Abs(SequenceMassCalc.GetMZ(masses[type, indexRet], adduct) - precursorMz)*2 < precursorMzWindow);
                             return indexRet;
                         }
                     }
@@ -1204,7 +1296,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 for (int i = length - 1; i >= 0; i--)
                 {
-                    if (SequenceMassCalc.GetMZ(masses[(int)type, i], charge) > thresholdMz)
+                    if (SequenceMassCalc.GetMZ(masses[type, i], adduct) > thresholdMz)
                     {
                         int indexRet;
                         do
@@ -1214,7 +1306,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         }
                             // Be sure not to start with a m/z value inside the exclusion window
                         while (precursorMzWindow > 0 && offset < 0 && i - offset < length &&
-                               Math.Abs(SequenceMassCalc.GetMZ(masses[(int)type, indexRet], charge) - precursorMz)*2 < precursorMzWindow);
+                               Math.Abs(SequenceMassCalc.GetMZ(masses[type, indexRet], adduct) - precursorMz)*2 < precursorMzWindow);
                         return indexRet;
                     }
                 }
@@ -1300,7 +1392,7 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         string Label { get; }
 
-        int FindStartFragment(double[,] masses, IonType type, int charge, double precursorMz, double precursorMzWindow, out double startMz);
+        int FindStartFragment(IonTable<TypedMass> masses, IonType type, Adduct adduct, double precursorMz, double precursorMzWindow, out double startMz);
     }
 
     public interface IEndFragmentFinder : IKeyContainer<string>

@@ -23,7 +23,6 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
@@ -110,7 +109,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             PauseForScreenShot("Remove the mixture replicate so we can train on the pure run");
 
             // Get the observed drift times
-            var precursors = document.MoleculePrecursorPairs.Select(p => new LibKey(p.NodePep.RawTextId, p.NodeGroup.PrecursorCharge)).ToArray();
+            var precursors = document.MoleculePrecursorPairs.Select(p => p.NodePep.ModifiedTarget.GetLibKey(p.NodeGroup.PrecursorAdduct)).ToArray();
             // Verify ability to extract predictions from raw data
             var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(
                 () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
@@ -142,7 +141,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             WaitForClosedForm(peptideSettingsDlg);
                 
             document = SkylineWindow.Document;
-            var measuredDTs = document.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimePeptides;
+            var measuredDTs = document.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimeIons;
             var count = 0;
             foreach (var key in precursors)
             {

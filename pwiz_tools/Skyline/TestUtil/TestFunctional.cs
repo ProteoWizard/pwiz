@@ -1166,16 +1166,31 @@ namespace pwiz.SkylineTestUtil
 
         public static void RemovePeptide(string peptideSequence, bool isDecoy = false)
         {
+            RemovePeptide(new Target(peptideSequence), isDecoy);
+        }
+
+        public static void RemoveTargetByDisplayName(string targetName)
+        {
             var docStart = SkylineWindow.Document;
-            var nodePeptide = docStart.Peptides.FirstOrDefault(nodePep =>
-                Equals(peptideSequence, nodePep.Peptide.Sequence) &&
+            var nodePeptide = docStart.Molecules.FirstOrDefault(nodePep =>
+                Equals(targetName, nodePep.Peptide.Target.DisplayName));
+
+            Assert.IsNotNull(nodePeptide);
+            RemovePeptide(nodePeptide.Target);
+        }
+
+        public static void RemovePeptide(Target peptideSequence, bool isDecoy = false)
+        {
+            var docStart = SkylineWindow.Document;
+            var nodePeptide = docStart.Molecules.FirstOrDefault(nodePep =>
+                Equals(peptideSequence, nodePep.Peptide.Target) &&
                 isDecoy == nodePep.IsDecoy);
 
             Assert.IsNotNull(nodePeptide);
 
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
             {
-                findPeptideDlg.SearchString = peptideSequence;
+                findPeptideDlg.SearchString = peptideSequence.DisplayName;
                 findPeptideDlg.FindNext();
                 while (!SkylineWindow.SequenceTree.SelectedDocNodes.Contains(nodePeptide))
                     findPeptideDlg.FindNext();
@@ -1185,15 +1200,15 @@ namespace pwiz.SkylineTestUtil
             RunUI(SkylineWindow.EditDelete);
 
             Assert.IsTrue(WaitForCondition(() => !SkylineWindow.Document.Peptides.Any(nodePep =>
-                Equals(peptideSequence, nodePep.Peptide.Sequence) &&
+                Equals(peptideSequence, nodePep.Peptide.Target) &&
                 isDecoy == nodePep.IsDecoy)));
             if (nodePeptide == null)
                 Assert.Fail(); // Resharper
             AssertEx.IsDocumentState(SkylineWindow.Document, null,
-                                     docStart.PeptideGroupCount,
-                                     docStart.PeptideCount - 1,
-                                     docStart.PeptideTransitionGroupCount - nodePeptide.TransitionGroupCount,
-                                     docStart.PeptideTransitionCount - nodePeptide.TransitionCount);
+                                     docStart.MoleculeGroupCount,
+                                     docStart.MoleculeCount - 1,
+                                     docStart.MoleculeTransitionGroupCount - nodePeptide.TransitionGroupCount,
+                                     docStart.MoleculeTransitionCount - nodePeptide.TransitionCount);
         }
 
         public static SrmDocument WaitForProteinMetadataBackgroundLoaderCompletedUI(int millis = WAIT_TIME)

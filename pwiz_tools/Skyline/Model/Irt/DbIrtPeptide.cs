@@ -29,13 +29,13 @@ namespace pwiz.Skyline.Model.Irt
 {
     public interface IPeptideData
     {
-        string Sequence { get; }
+        Target Target { get; }
     }
 
     public abstract class DbAbstractPeptide : DbEntity, IPeptideData
     {
-        private string _peptideModSeq;
-        private string _normalizedModifiedSequence;
+        private Target _peptideModSeq;
+        private Target _normalizedModifiedSequence;
 
         protected DbAbstractPeptide()
         {
@@ -47,7 +47,18 @@ namespace pwiz.Skyline.Model.Irt
             _normalizedModifiedSequence = other._normalizedModifiedSequence;
         }
 
+        // For NHibernate use
         public virtual string PeptideModSeq
+        {
+            get { return _peptideModSeq.ToSerializableString(); }
+            set
+            {
+                _peptideModSeq = Target.FromSerializableString(value);
+                _normalizedModifiedSequence = null;
+            }
+        }
+
+        public virtual Target ModifiedTarget
         {
             get { return _peptideModSeq; }
             set
@@ -56,13 +67,15 @@ namespace pwiz.Skyline.Model.Irt
                 _normalizedModifiedSequence = null;
             }
         }
-        public virtual string Sequence { get { return PeptideModSeq; } }
 
-        public virtual string GetNormalizedModifiedSequence()
+        public virtual Target Target { get { return ModifiedTarget; } }
+
+        public virtual Target GetNormalizedModifiedSequence()
         {
             if (_normalizedModifiedSequence == null)
             {
-                _normalizedModifiedSequence = SequenceMassCalc.NormalizeModifiedSequence(_peptideModSeq);
+                var seq = SequenceMassCalc.NormalizeModifiedSequence(_peptideModSeq.Sequence);
+                _normalizedModifiedSequence = _peptideModSeq.ChangeSequence(seq);
             }
             return _normalizedModifiedSequence;
         }
@@ -105,14 +118,14 @@ namespace pwiz.Skyline.Model.Irt
             TimeSource = other.TimeSource;
         }
 
-        public DbIrtPeptide(string seq, double irt, bool standard, TimeSource timeSource)
+        public DbIrtPeptide(Target seq, double irt, bool standard, TimeSource timeSource)
             : this(seq, irt, standard, (int) timeSource)
         {            
         }
 
-        public DbIrtPeptide(string seq, double irt, bool standard, int? timeSource)
+        public DbIrtPeptide(Target seq, double irt, bool standard, int? timeSource)
         {
-            PeptideModSeq = seq;
+            ModifiedTarget = seq;
             Irt = irt;
             Standard = standard;
             TimeSource = timeSource;
@@ -120,13 +133,13 @@ namespace pwiz.Skyline.Model.Irt
 
         public static List<DbIrtPeptide> MakeUnique(List<DbIrtPeptide> irtPeptides)
         {
-            var uniqueIrtPeptidesDict = new Dictionary<string, DbIrtPeptide>();
+            var uniqueIrtPeptidesDict = new Dictionary<Target, DbIrtPeptide>();
             foreach (var irtPeptide in irtPeptides)
             {
                 DbIrtPeptide duplicateIrtPeptide;
-                if (irtPeptide.Standard || !uniqueIrtPeptidesDict.TryGetValue(irtPeptide.PeptideModSeq, out duplicateIrtPeptide))
+                if (irtPeptide.Standard || !uniqueIrtPeptidesDict.TryGetValue(irtPeptide.ModifiedTarget, out duplicateIrtPeptide))
                 {
-                    uniqueIrtPeptidesDict[irtPeptide.PeptideModSeq] = irtPeptide;
+                    uniqueIrtPeptidesDict[irtPeptide.ModifiedTarget] = irtPeptide;
                 }
             }
             return uniqueIrtPeptidesDict.Values.ToList();
@@ -156,14 +169,14 @@ namespace pwiz.Skyline.Model.Irt
                 progressMonitor.UpdateProgress(status);
             var peptidesNoConflict = new List<DbIrtPeptide>();
             conflicts = new List<Conflict>();
-            var dictOld = oldPeptides.ToDictionary(pep => pep.PeptideModSeq);
-            var dictNew = newPeptides.ToDictionary(pep => pep.PeptideModSeq);
+            var dictOld = oldPeptides.ToDictionary(pep => pep.ModifiedTarget);
+            var dictNew = newPeptides.ToDictionary(pep => pep.ModifiedTarget);
             foreach (var newPeptide in newPeptides)
             {
                 ++i;
                 DbIrtPeptide oldPeptide;
                 // A conflict occurs only when there is another peptide of the same sequence, and different iRT
-                if (!dictOld.TryGetValue(newPeptide.PeptideModSeq, out oldPeptide) || Math.Abs(newPeptide.Irt - oldPeptide.Irt) < IRT_MIN_DIFF )
+                if (!dictOld.TryGetValue(newPeptide.ModifiedTarget, out oldPeptide) || Math.Abs(newPeptide.Irt - oldPeptide.Irt) < IRT_MIN_DIFF )
                 {
                     peptidesNoConflict.Add(newPeptide);
                 }
@@ -186,7 +199,7 @@ namespace pwiz.Skyline.Model.Irt
             foreach (var oldPeptide in oldPeptides)
             {
                 DbIrtPeptide newPeptide;
-                if (!dictNew.TryGetValue(oldPeptide.PeptideModSeq, out newPeptide))
+                if (!dictNew.TryGetValue(oldPeptide.ModifiedTarget, out newPeptide))
                     peptidesNoConflict.Add(oldPeptide);
             }
             return peptidesNoConflict;
@@ -201,7 +214,7 @@ namespace pwiz.Skyline.Model.Irt
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return base.Equals(other) &&
-                   Equals(other.PeptideModSeq, PeptideModSeq) &&
+                   Equals(other.ModifiedTarget, ModifiedTarget) &&
                    other.Irt.Equals(Irt) &&
                    other.Standard.Equals(Standard) &&
                    other.TimeSource.Equals(TimeSource);
@@ -219,7 +232,7 @@ namespace pwiz.Skyline.Model.Irt
             unchecked
             {
                 int result = base.GetHashCode();
-                result = (result*397) ^ (PeptideModSeq != null ? PeptideModSeq.GetHashCode() : 0);
+                result = (result*397) ^ (ModifiedTarget != null ? ModifiedTarget.GetHashCode() : 0);
                 result = (result*397) ^ Irt.GetHashCode();
                 result = (result*397) ^ Standard.GetHashCode();
                 result = (result*397) ^ (TimeSource.HasValue ? TimeSource.Value : 0);

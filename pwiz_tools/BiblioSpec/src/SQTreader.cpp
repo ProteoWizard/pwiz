@@ -143,7 +143,7 @@ void SQTreader::openRead(bool warnIfNotPercolated)
             if( sqtVersion->generatorName() == "Comet" ||
                     (sqtVersion->generatorName() == "Sequest" && *sqtVersion > SequestVersion("2.7"))){
                 string residue(1, modLetter);
-                float residueMass = getPeptideMass(residue, masses_);
+                float residueMass = static_cast<float>(getPeptideMass(residue, masses_));
                 modValue = modValue - residueMass;
             } 
             staticMods[(int)modLetter]=modValue;

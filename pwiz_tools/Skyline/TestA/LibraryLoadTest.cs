@@ -43,13 +43,14 @@ namespace pwiz.SkylineTestA
         public void NistLoadLibrary()
         {
             var streamManager = new MemoryStreamManager();
-            streamManager.TextFiles.Add(PATH_NIST_LIB, TEXT_LIB_YEAST_NIST);
+            streamManager.TextFiles.Add(PATH_NIST_LIB, TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST);
             var loader = new TestLibraryLoader {StreamManager = streamManager};
 
             var librarySpec = new NistLibSpec("Yeast (NIST)", PATH_NIST_LIB);
 
             Library lib1 = librarySpec.LoadLibrary(loader);
             CheckLibrary(lib1, 100);
+            CheckLibrary(lib1, 46, KEYS_LIB_BICENE_NIST);
 
             Assert.AreEqual(streamManager.BinaryFiles.Count, 1);
             Assert.IsTrue(streamManager.IsCached(PATH_NIST_LIB, PATH_NIST_LIB_CACHE));
@@ -64,6 +65,7 @@ namespace pwiz.SkylineTestA
 
             Library lib2 = librarySpec.LoadLibrary(loader);
             CheckLibrary(lib2, 100);
+            CheckLibrary(lib2, 46, KEYS_LIB_BICENE_NIST);
 
             Assert.AreEqual(len, streamManager.BinaryFiles[PATH_NIST_LIB_CACHE].Length);
             Assert.IsTrue(lib1.IsSameLibrary(lib2));
@@ -141,11 +143,11 @@ namespace pwiz.SkylineTestA
             return libNist;
         }
 
-        private static void CheckLibrary(Library lib, int minPeaks)
+        private static void CheckLibrary(Library lib, int minPeaks, LibKey[] keys = null)
         {
             Assert.IsNotNull(lib);
             Assert.IsTrue(lib.IsLoaded);
-            foreach (var key in KEYS_LIB_YEAST_NIST)
+            foreach (var key in keys ?? KEYS_LIB_YEAST_NIST)
             {
                 SpectrumHeaderInfo info;
                 Assert.IsTrue(lib.TryGetLibInfo(key, out info));
@@ -174,10 +176,10 @@ namespace pwiz.SkylineTestA
 
         public static readonly LibKey[] KEYS_LIB_YEAST_NIST =
         {
-            new LibKey("QQGPLEPTVGNSTAITEER", 2),
-            new LibKey("IPSAIHLQISNK", 2),
-            new LibKey("NSTDIPLQDATETYR", 2),
-            new LibKey("VLHNFLTTPSK", 2),
+            new LibKey("QQGPLEPTVGNSTAITEER", Adduct.DOUBLY_PROTONATED),
+            new LibKey("IPSAIHLQISNK", Adduct.DOUBLY_PROTONATED),
+            new LibKey("NSTDIPLQDATETYR", Adduct.DOUBLY_PROTONATED),
+            new LibKey("VLHNFLTTPSK", Adduct.DOUBLY_PROTONATED),
         };
 
         public const string TEXT_LIB_YEAST_NIST =
@@ -759,5 +761,98 @@ namespace pwiz.SkylineTestA
             "1045.7\t333\t\"y9i/1.15 2/2 1.1\"\n" +
             "1070.8\t268\t\"? 2/2 1.0\"\n" +
             "1110.6\t387\t\"b10/0.01 2/2 2.2\"\n";
+
+        public static readonly LibKey[] KEYS_LIB_BICENE_NIST =
+        {
+            new LibKey(SmallMoleculeLibraryAttributes.Create("N,N-Bis(2-hydroxyethyl)glycine", "C6H13NO4", "FSVCELGFZIQNCK-UHFFFAOYSA-N", MoleculeAccessionNumbers.TagCAS+":150-25-4" ), Adduct.M_PLUS_H),
+        };
+
+        public const string TEXT_LIB_BICINE_NIST =
+            "\n" +
+            "Name: N,N-Bis(2-hydroxyethyl)glycine\n" +
+            "Synon: BICINE\n" +
+            "Synon: N,N-di(2-Hydroxyethyl)glycine\n" +
+            "Synon: Glycine, N,N-bis(2-hydroxyethyl)-\n" +
+            "Synon: Bicene\n" +
+            "Synon: Bis(2-Hydroxyethyl)glycine\n" +
+            "Synon: Diethanol glycine\n" +
+            "Synon: Diethylolglycine\n" +
+            "Synon: Dihydroxyethylglycine\n" +
+            "Synon: DHEG\n" +
+            "Synon: Fe-3-Specific\n" +
+            "Synon: Glycine, N,N-dihydroxyethyl-\n" +
+            "Synon: N,N-(2-Hydroxyethyl)glycine\n" +
+            "Synon: N,N-Bis(.beta.-hydroxyethyl)glycine\n" +
+            "Synon: N,N-Bis(hydroxyethyl)glycine\n" +
+            "Synon: N,N-Bis(2-hydroxyethyl)aminoacetic acid\n" +
+            "Synon: N,N-Dihydroxyethyl glycine\n" +
+            "Synon: [Bis(2-hydroxyethyl)amino]acetic acid #\n" +
+            "Synon: N,N-Dihydroxyethylglycine\n" +
+            "Synon: NSC 7342\n" +
+            "Ion_mode: P\n" +
+            "PrecursorMZ: 164.0917\n" +
+            "Precursor_type: [M+H]+\n" +
+            "Collision_energy: 23V\n" +
+            "In-source_voltage: 175V\n" +
+            "Instrument: Agilent QTOF 6530\n" +
+            "Instrument_type: Q-TOF\n" +
+            "Sample_inlet: direct flow injection\n" +
+            "Ionization: ESI\n" +
+            "Collision_gas: N2\n" +
+            "AUX: Consensus spectrum; micromol/L in water/acetonitrile/formic acid (50/50/0.1) mz_diff=0.0673 Vial_ID=2195 QTOF_id_2012=3917\n" +
+            "Spectrum_type: ms2\n" +
+            "InChIKey: FSVCELGFZIQNCK-UHFFFAOYSA-N\n" +
+            "Formula: C6H13NO4\n" +
+            "MW: 163\n" +
+            "ExactMass: 163.084458\n" +
+            "CAS#: 150-25-4;  NIST#: 1108883\n" +
+            "Comments: NIST Mass Spectrometry Data Center\n" +
+            "Num Peaks: 46\n" +
+            "28.018 7.79 \"84/86\"\n" +
+            "29.039 5.19 \"85/86\"\n" +
+            "30.034 13.19 \"86/86\"\n" +
+            "41.027 5.00 \"85/86\"\n" +
+            "42.035 9.39 \"86/86\"\n" +
+            "44.050 23.48 \"86/86\"\n" +
+            "45.034 430.17 \"86/86\"\n" +
+            "45.061 18.78 \"86/86\"\n" +
+            "45.080 6.59 \"49/86\"\n" +
+            "45.095 14.79 \"86/86\"\n" +
+            "45.115 4.70 \"85/86\"\n" +
+            "55.055 14.29 \"86/86\"\n" +
+            "56.050 999.00 \"86/86\"\n" +
+            "56.086 35.86 \"83/86\"\n" +
+            "56.118 40.36 \"83/86\"\n" +
+            "56.140 13.49 \"86/86\"\n" +
+            "56.159 4.30 \"57/86\"\n" +
+            "56.174 4.60 \"76/86\"\n" +
+            "56.190 4.20 \"83/86\"\n" +
+            "56.208 3.80 \"80/86\"\n" +
+            "58.029 8.59 \"86/86\"\n" +
+            "58.065 10.99 \"86/86\"\n" +
+            "70.065 67.53 \"86/86\"\n" +
+            "70.090 4.30 \"85/86\"\n" +
+            "71.049 4.40 \"83/86\"\n" +
+            "72.044 8.59 \"85/86\"\n" +
+            "72.081 42.96 \"86/86\"\n" +
+            "73.052 4.40 \"81/86\"\n" +
+            "74.060 484.91 \"86/86\"\n" +
+            "74.092 22.28 \"86/86\"\n" +
+            "74.118 8.79 \"58/86\"\n" +
+            "74.138 16.88 \"86/86\"\n" +
+            "74.164 5.59 \"86/86\"\n" +
+            "82.065 10.49 \"86/86\"\n" +
+            "88.076 53.65 \"86/86\"\n" +
+            "88.104 4.40 \"86/86\"\n" +
+            "100.075 127.87 \"86/86\"\n" +
+            "100.105 8.39 \"85/86\"\n" +
+            "102.054 13.19 \"86/86\"\n" +
+            "118.086 544.55 \"86/86\"\n" +
+            "118.127 25.17 \"86/86\"\n" +
+            "118.159 9.39 \"53/86\"\n" +
+            "118.184 18.88 \"86/86\"\n" +
+            "118.217 6.09 \"86/86\"\n" +
+            "128.070 4.10 \"83/86\"\n" +
+            "146.081 4.90 \"85/86\"\n";
     }
 }

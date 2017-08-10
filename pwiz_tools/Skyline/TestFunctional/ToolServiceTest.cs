@@ -21,7 +21,6 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.Tools;
@@ -275,10 +274,11 @@ TTDFDGYWVNHNWYSIYEST*
         {
             Assert.AreEqual(0, DocumentChangeCount);
             RunUI(SkylineWindow.EditDelete);
-            Thread.Sleep(500);  // Wait for document change event to propagate
+            const int GRACE_PERIOD_MSEC = 5 * 1000; // Normally this takes less than 1/2 second, but not always, esp. under debugger
+            WaitForCondition(GRACE_PERIOD_MSEC, () => 1 == DocumentChangeCount, "timed out waiting for DocumentChangeCount==1");
             Assert.AreEqual(1, DocumentChangeCount);
             RunUI(SkylineWindow.Undo);
-            Thread.Sleep(500);  // Wait for document change event to propagate
+            WaitForCondition(GRACE_PERIOD_MSEC, () => 2 == DocumentChangeCount, "timed out waiting for DocumentChangeCount==2");
             Assert.AreEqual(2, DocumentChangeCount);
         }
 

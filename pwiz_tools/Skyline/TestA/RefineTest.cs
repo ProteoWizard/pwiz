@@ -32,15 +32,12 @@ namespace pwiz.SkylineTestA
     /// Summary description for RefineTest
     /// </summary>
     [TestClass]
-    public class RefineTest : AbstractUnitTest
+    public class RefineTest : AbstractUnitTestEx
     {
         [TestMethod]
         public void RefineDocumentTest()
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestA\Refine.zip");
-
-            var document = InitRefineDocument(testFilesDir);
-            AssertEx.Serializable(document);  // This checks a longstanding schema error
+            var document = InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.none);
 
             // First check a few refinements which should not change the document
             var refineSettings = new RefinementSettings();
@@ -64,11 +61,11 @@ namespace pwiz.SkylineTestA
             // Remove everything but the heavy precursor
             refineSettings.RefineLabelType = IsotopeLabelType.light;
             var docRefined = refineSettings.Refine(document);
-            AssertEx.IsDocumentState(docRefined, 1, 1, 1, 1, 4);
+            AssertEx.IsDocumentState(docRefined, null, 1, 1, 1, 4);
             // Perform the operation again without protein removal
             refineSettings.MinPeptidesPerProtein = null;
             docRefined = refineSettings.Refine(document);
-            AssertEx.IsDocumentState(docRefined, 1, 4, 1, 1, 4);
+            AssertEx.IsDocumentState(docRefined, null, 4, 1, 1, 4);
             refineSettings.RefineLabelType = null;
             // Remove repeated peptides
             refineSettings.RemoveRepeatedPeptides = true;
@@ -84,16 +81,14 @@ namespace pwiz.SkylineTestA
             refineSettings.MinTransitionsPepPrecursor = 20;
             Assert.AreEqual(0, refineSettings.Refine(document).PeptideGroupCount);
 
-            testFilesDir.Dispose();
         }
 
         [TestMethod]
         public void RefineResultsTest()
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestA\Refine.zip");
             Settings.Default.RTCalculatorName = Settings.Default.RTScoreCalculatorList.GetDefaults().First().Name;
 
-            var document = InitRefineDocument(testFilesDir);
+            var document = InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.none);
 
             // First check a few refinements which should not change the document
             var refineSettings = new RefinementSettings {RTRegressionThreshold = 0.3};
@@ -206,8 +201,8 @@ namespace pwiz.SkylineTestA
                 Assert.AreEqual(IsotopeLabelType.light, lightGroup.TransitionGroup.LabelType);
                 var heavyGroup = (TransitionGroupDocNode)nodePep.Children[1];
                 Assert.AreEqual(IsotopeLabelType.heavy, heavyGroup.TransitionGroup.LabelType);
-                Assert.AreEqual(lightGroup.TransitionGroup.PrecursorCharge,
-                    heavyGroup.TransitionGroup.PrecursorCharge);
+                Assert.AreEqual(lightGroup.TransitionGroup.PrecursorAdduct,
+                    heavyGroup.TransitionGroup.PrecursorAdduct);
                 Assert.AreEqual(lightGroup.Children.Count, heavyGroup.Children.Count);
                 for (int i = 0; i < lightGroup.Children.Count; i++)
                 {
@@ -216,7 +211,6 @@ namespace pwiz.SkylineTestA
                     Assert.AreEqual(lightTran.Transition.FragmentIonName, heavyTran.Transition.FragmentIonName);
                 }
             }
-            testFilesDir.Dispose();
         }
 
         [TestMethod]
@@ -227,42 +221,36 @@ namespace pwiz.SkylineTestA
             Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(""));
             Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(null));
 
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestA\Refine.zip");
-
-            var document = InitRefineDocument(testFilesDir);
-            var refineSettings = new RefinementSettings();
-            var converted = refineSettings.ConvertToSmallMolecules(document);
-            AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(document, converted);
+            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
         [TestMethod]
         public void RefineConvertToSmallMoleculeMassesTest()
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestA\Refine.zip");
-
-            var document = InitRefineDocument(testFilesDir);
-            var refineSettings = new RefinementSettings();
-            var converted = refineSettings.ConvertToSmallMolecules(document, RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
-            AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(document, converted);
+            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
         }
 
         [TestMethod]
         public void RefineConvertToSmallMoleculeMassesAndNamesTest()
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestA\Refine.zip");
-
-            var document = InitRefineDocument(testFilesDir);
-            var refineSettings = new RefinementSettings();
-            var converted = refineSettings.ConvertToSmallMolecules(document, RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names);
-            AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(document, converted);
+            InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names);
         }
 
-        private static SrmDocument InitRefineDocument(TestFilesDir testFilesDir)
+        private SrmDocument InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode mode)
         {
-            string docPath = testFilesDir.GetTestPath("SRM_mini.sky");
-            SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
-            AssertEx.IsDocumentState(doc, 0, 4, 36, 38, 334);
-            return doc;
+            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestA\Refine.zip", mode.ToString());
+            if (mode == RefinementSettings.ConvertToSmallMoleculesMode.none)
+            {
+                var doc = ResultsUtil.DeserializeDocument(testFilesDir.GetTestPath("SRM_mini.sky"));
+                AssertEx.IsDocumentState(doc, null, 4, 36, 38, 334);
+                return doc;
+            }
+            var docPath = testFilesDir.GetTestPath("SRM_mini_single_replicate.sky");
+            var dataPaths = new[] { testFilesDir.GetTestPath("worm1.mzML") };
+            var converted = ConvertToSmallMolecules(null, ref docPath, dataPaths, mode);
+            AssertEx.IsDocumentState(converted, null, 4, 36, 38, 334);
+            return converted;
+
         }
     }
 }

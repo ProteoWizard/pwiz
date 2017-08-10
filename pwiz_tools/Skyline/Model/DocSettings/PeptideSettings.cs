@@ -423,7 +423,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // variable scheduling windows
                 if (!useMeasured || !singleWindow || MeasuredRTWindow == RetentionTime.TimeWindow)
                 {
-                    string modifiedSequence = document.Settings.GetSourceTextId(nodePep);
+                    var modifiedSequence = document.Settings.GetSourceTarget(nodePep);
                     if (null != replicateFilter && document.Settings.HasResults)
                     {
                         var retentionTimes = new List<double>();
@@ -521,7 +521,7 @@ namespace pwiz.Skyline.Model.DocSettings
             else 
             {
                 return GetDriftTimeHelper(
-                    new LibKey(nodePep.RawTextId, nodeGroup.TransitionGroup.PrecursorCharge),
+                    nodeGroup.GetLibKey(nodePep),
                     nodeGroup.PrecursorMz, instrumentInfo,
                     libraryDriftTimeInfo, driftTimeMax,
                     out windowDtMsec);
@@ -964,7 +964,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             allowVariableMods = false;
 
-            if (peptide.IsCustomIon)
+            if (peptide.IsCustomMolecule)
                 return false;
 
             // Must begin after excluded C-terminal AAs
@@ -972,7 +972,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 return false;
 
             // Must be within acceptable length range
-            string sequence = peptide.Sequence;
+            string sequence = peptide.Target.Sequence;
             int len = sequence.Length;
             if (MinPeptideLength > len || len > MaxPeptideLength)
                 return false;
@@ -992,7 +992,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 var calcMod = settings.GetPrecursorCalc(IsotopeLabelType.light, explicitMods);
                 // Use narrow format, since this is mostly what is presented to
                 // the user creating the exclusion expressions.
-                string sequenceMod = calcMod.GetModifiedSequence(sequence, true);
+                var sequenceMod = calcMod.GetModifiedSequence(peptide.Target, true).ToString();
                 if (_regexExcludeMod != null && _regexExcludeMod.Match(sequenceMod).Success)
                     return false;
                 if (_regexIncludeMod != null && !_regexIncludeMod.Match(sequenceMod).Success)
@@ -1001,7 +1001,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Peptide uniqueness checks can be expensive, so do this last
             if ((settings.PeptideSettings.Filter.PeptideUniqueness != PeptideUniquenessConstraint.none)
-                && !CheckPeptideUniqueness(settings, sequence)) 
+                && !CheckPeptideUniqueness(settings, peptide.Target)) 
                 return false;
 
             return true;
@@ -1010,17 +1010,17 @@ namespace pwiz.Skyline.Model.DocSettings
         //
         // Background proteome uniqueness constraints
         //
-        public bool CheckPeptideUniqueness(SrmSettings settings, string sequence)
+        public bool CheckPeptideUniqueness(SrmSettings settings, Target sequence)
         {
-            return CheckPeptideUniqueness(settings, new List<string> { sequence }, null)[sequence];
+            return CheckPeptideUniqueness(settings, new List<Target> { sequence }, null)[sequence];
         }
 
-        public Dictionary<string, bool> CheckPeptideUniqueness(SrmSettings settings, List<string> sequences, SrmSettingsChangeMonitor progressMonitor)
+        public Dictionary<Target, bool> CheckPeptideUniqueness(SrmSettings settings, List<Target> sequences, SrmSettingsChangeMonitor progressMonitor)
         {
-            var result = new Dictionary<string, bool>();
+            var result = new Dictionary<Target, bool>();
             foreach (var s in sequences)
             {
-                if (!string.IsNullOrEmpty(s) && !result.ContainsKey(s)) // Watch out for non-peptide molecules
+                if (!string.IsNullOrEmpty(s.Sequence) && !result.ContainsKey(s)) // Watch out for non-peptide molecules
                 {
                     result.Add(s, true);
                 }

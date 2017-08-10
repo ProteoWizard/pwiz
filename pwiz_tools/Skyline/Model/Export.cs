@@ -800,12 +800,12 @@ namespace pwiz.Skyline.Model
     {
         private bool _addTriggerReference;
         public const double DEFAULT_SLENS = 50; // per Rick Bagshaw
-        protected HashSet<string> _setRTStandards;
+        protected HashSet<Target> _setRTStandards;
 
         public ThermoMassListExporter(SrmDocument document)
             : base(document, null)
         {
-            _setRTStandards = new HashSet<string>();
+            _setRTStandards = new HashSet<Target>();
         }
 
         public bool AddEnergyRamp { get; set; }
@@ -891,7 +891,7 @@ namespace pwiz.Skyline.Model
                     writer.Write(FieldSeparator);
                 }
 
-                writer.Write((nodeTranGroup.TransitionGroup.PrecursorCharge > 0) ? 1 : 0);  // Polarity
+                writer.Write((nodeTranGroup.TransitionGroup.PrecursorAdduct.AdductCharge > 0) ? 1 : 0);  // Polarity
                 writer.Write(FieldSeparator);                    
 
                 if (MethodType == ExportMethodType.Triggered)
@@ -952,7 +952,7 @@ namespace pwiz.Skyline.Model
                     writer.Write(RunLength);
                     writer.Write(FieldSeparator);
                 }
-                writer.Write((nodeTranGroup.TransitionGroup.PrecursorCharge > 0) ? 1 : 0);  // Polarity
+                writer.Write((nodeTranGroup.TransitionGroup.PrecursorAdduct.AdductCharge > 0) ? 1 : 0);  // Polarity
                 writer.Write(FieldSeparator);                                    
             }
             // Write modified sequence for the light peptide molecular structure
@@ -1524,10 +1524,7 @@ namespace pwiz.Skyline.Model
         {
             // Compound Name
             var compound = GetCompound(nodePep, nodeTranGroup);
-            for (int i = 0; i < nodeTranGroup.PrecursorCharge; ++i)
-                compound+='+';
-            for (int ineg = 0; ineg > nodeTranGroup.PrecursorCharge; --ineg)
-                compound+='-';
+            compound += nodeTranGroup.PrecursorAdduct.AsFormulaOrSigns(); // Something like +++ or -- or [M+Na]
             writer.WriteDsvField(compound, FieldSeparator);
             writer.Write(FieldSeparator);
             // Retention Time
@@ -1555,6 +1552,7 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
             }
             // CAS Number
+            writer.Write(GetCAS(nodePep, nodeTranGroup));
             writer.Write(FieldSeparator);
             // Retention Index
             double retentionIndexKey = rt.GetValueOrDefault();
@@ -1845,7 +1843,7 @@ namespace pwiz.Skyline.Model
 
         private int OptimizeStepIndex { get; set; }
 
-        private readonly Dictionary<string, int> _groupNamesToCharge = new Dictionary<string, int>();
+        private readonly Dictionary<string, Adduct> _groupNamesToCharge = new Dictionary<string, Adduct>();
 
         protected override string InstrumentType
         {
@@ -2055,7 +2053,7 @@ namespace pwiz.Skyline.Model
             // because AB uses periods as field separators
             string modifiedPepSequence = GetSequenceWithModsString(nodePep, Document.Settings);
 
-            int charge = nodeTranGroup.TransitionGroup.PrecursorCharge;
+            var charge = nodeTranGroup.TransitionGroup.PrecursorAdduct;
             var pepGroupName = nodePepGroup.Name.Replace('.', '_');
             if (OptimizeType == null)
             {
@@ -2102,14 +2100,14 @@ namespace pwiz.Skyline.Model
             extPeptideId = extPeptideId.Replace(',', '_').Replace('/', '_').Replace(@"\", "_"); // Not L10N
             extGroupId = extGroupId.Replace(',', '_').Replace('/', '_').Replace(@"\", "_"); // Not L10N
 
-            int existCharge;
+            Adduct existCharge;
             if (!_groupNamesToCharge.TryGetValue(extGroupId, out existCharge))
             {
                 _groupNamesToCharge.Add(extGroupId, charge);
             }
             else if (existCharge != charge)
             {
-                extGroupId = string.Format("{0} {1:+#;#}", extGroupId, charge); // Not L10N
+                extGroupId = string.Format("{0} {1}", extGroupId, charge.AsFormulaOrSignedInt()); // Not L10N
             }
         }
 
@@ -2175,9 +2173,9 @@ namespace pwiz.Skyline.Model
         internal static string GetSequenceWithModsString(PeptideDocNode nodePep, SrmSettings settings)
         {
             string result;
-            if (nodePep.Peptide.IsCustomIon)
+            if (nodePep.Peptide.IsCustomMolecule)
             {
-                result = nodePep.CustomIon.DisplayName;
+                result = nodePep.CustomMolecule.DisplayName;
             }
             else
             {
@@ -2213,16 +2211,16 @@ namespace pwiz.Skyline.Model
                     mods = mods.ChangeStaticModifications(staticMods);
                 }
 
-                result = settings.GetModifiedSequence(nodePep.Peptide.Sequence,
+                result = settings.GetModifiedSequence(nodePep.Peptide.Target,
                                                                             IsotopeLabelType.light,
                                                                             mods, SequenceModFormatType.three_letter_code,
-                                                                            true);
+                                                                            true).ToString();
             }
 
             return result.Replace('.', '_');
         }
 
-        private static string GetTransitionName(int precursorCharge, TransitionDocNode transitionNode)
+        private static string GetTransitionName(Adduct precursorCharge, TransitionDocNode transitionNode)
         {
             string ionName = transitionNode.GetFragmentIonName(CultureInfo.InvariantCulture);
             if (transitionNode.Transition.IsPrecursor())
@@ -2231,22 +2229,22 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                return GetTransitionName(precursorCharge, ionName, transitionNode.Transition.Charge).Replace('.', '_');
+                return GetTransitionName(precursorCharge, ionName, transitionNode.Transition.Adduct).Replace('.', '_');
             }
         }
 
-        public static string GetTransitionName(int precursorCharge, string fragmentIonName, int fragmentCharge)
+        public static string GetTransitionName(Adduct precursorCharge, string fragmentIonName, Adduct fragmentCharge)
         {
-            return string.Format("{0:+#;#}{1}{2}", precursorCharge, // Not L10N
+            return string.Format("{0}{1}{2}", precursorCharge.AsFormulaOrSignedInt(), // Not L10N
                                  fragmentIonName,
-                                 fragmentCharge != 1
-                                     ? string.Format("{0:+#;#}", fragmentCharge) // Not L10N
+                                 fragmentCharge != Adduct.SINGLY_PROTONATED
+                                     ? fragmentCharge.AsFormulaOrSignedInt()
                                      : string.Empty); // Not L10N
         }
 
-        public static string GetPrecursorTransitionName(int precursorCharge, string fragmentIonName, int isotopeIndex)
+        public static string GetPrecursorTransitionName(Adduct precursorCharge, string fragmentIonName, int isotopeIndex)
         {
-            return string.Format("{0:+#;#}{1}{2}", precursorCharge, // Not L10N
+            return string.Format("{0}{1}{2}", precursorCharge.AsFormulaOrSignedInt(), // Not L10N
                                  fragmentIonName,
                                  isotopeIndex > 0
                                      ? string.Format("[M+{0}]", isotopeIndex) // Not L10N
@@ -2686,7 +2684,7 @@ namespace pwiz.Skyline.Model
                 return true;
             // Get all precursors with the same charge state and at least 1 transition, including this one
             var arrayTranGroups = nodePep.TransitionGroups
-                .Where(g => g.PrecursorCharge == nodeTranGroup.PrecursorCharge &&
+                .Where(g => g.PrecursorAdduct.Equals(nodeTranGroup.PrecursorAdduct) &&
                             g.TransitionCount > 0).ToArray();
             // If it is the only precursor of this charge state, then it must be the trigger
             if (arrayTranGroups.Length == 1)
@@ -2778,7 +2776,7 @@ namespace pwiz.Skyline.Model
                                                 int step)
         {
             string precursorMz = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
-            string z = nodeTranGroup.TransitionGroup.PrecursorCharge.ToString(CultureInfo);
+            string z = nodeTranGroup.TransitionGroup.PrecursorCharge.ToString(CultureInfo); // CONSIDER(bspratt): Is charge all that's interesting, or are we implying protonation
             string retentionTime = "0"; // Not L10N
             string deltaRetentionTime = string.Empty; // Not L10N
             if (MethodType == ExportMethodType.Scheduled)
@@ -3035,7 +3033,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            string z = Math.Abs(nodeTranGroup.TransitionGroup.PrecursorCharge).ToString(CultureInfo);
+            string z = Math.Abs(nodeTranGroup.TransitionGroup.PrecursorAdduct.AdductCharge).ToString(CultureInfo);
             // Note that this is normalized CE (not absolute)
             var fullScan = Document.Settings.TransitionSettings.FullScan;
             bool wideWindowDia = false;
@@ -3123,7 +3121,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            string z = nodeTranGroup.TransitionGroup.PrecursorCharge.ToString(CultureInfo);
+            string z = nodeTranGroup.TransitionGroup.PrecursorCharge.ToString(CultureInfo);  // CONSIDER(bspratt): Is charge all that matters, or are we implying protonation?
             // Note that this is normalized CE (not absolute)
             var fullScan = Document.Settings.TransitionSettings.FullScan;
             bool wideWindowDia = false;
@@ -3246,7 +3244,7 @@ namespace pwiz.Skyline.Model
 //                nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods));
             var compound = GetCompound(nodePep, nodeTranGroup);
             compound += '.'; // Not L10N
-            compound += nodeTranGroup.PrecursorCharge;
+            compound += nodeTranGroup.PrecursorAdduct.AsFormulaOrInt();
             if (step != 0)
             {
                 compound += '.'; // Not L10N           

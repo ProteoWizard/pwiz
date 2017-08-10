@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestTutorial
     /// Testing the tutorial for Skyline Collision Energy Optimization
     /// </summary>
     [TestClass]
-    public class CEOptimizationTutorialTest : AbstractFunctionalTest
+    public class CEOptimizationTutorialTest : AbstractFunctionalTestEx
     {
         private bool AsSmallMolecules { get; set; }
 
@@ -98,9 +98,7 @@ namespace pwiz.SkylineTestTutorial
 
             if (AsSmallMolecules)
             {
-                var doc = WaitForDocumentLoaded();
-                var refine = new RefinementSettings();
-                SkylineWindow.SetDocument(refine.ConvertToSmallMolecules(doc), doc);
+                ConvertDocumentToSmallMolecules();
             }
 
             // Deriving a New Linear Equation, p. 2
@@ -219,22 +217,20 @@ namespace pwiz.SkylineTestTutorial
             });
 
             WaitForDocumentLoaded(15 * 60 * 1000); // 10 minutes
+            string decorator = AsSmallMolecules
+                ? RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator
+                : string.Empty;
 
-            if (AsSmallMolecules)
-            {
-                return;  // Too peptide-centric from here to end of test
-            }
-
-            FindNode("IHGFDLAAINLQR");
+            FindNode(decorator + "IHGFDLAAINLQR");
             RestoreViewOnScreen(8);
 
             PauseForScreenShot("Main Skyline window", 8);
             
             // p. 8
             // Not L10N
-            RemovePeptide("EGIHAQQK");
+            RemoveTargetByDisplayName(decorator + "EGIHAQQK");
 
-            FindNode("IDALNENK");
+            FindNode(decorator + "IDALNENK");
 
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
 
@@ -242,7 +238,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(SkylineWindow.EditDelete);
 
-            RemovePeptide("LICDNTHITK");
+            RemoveTargetByDisplayName(AsSmallMolecules ? decorator + "LIC[+57.0]DNTHITK" : "LICDNTHITK");
 
             // Creating a New Equation for CE, p. 9
             var transitionSettingsUI1 = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);

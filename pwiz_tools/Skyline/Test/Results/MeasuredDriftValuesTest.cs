@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -25,6 +26,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.Results
@@ -39,6 +41,26 @@ namespace pwiz.SkylineTest.Results
         [TestMethod]
         public void TestMeasuredDriftValues()
         {
+            PerformTestMeasuredDriftValues(false);
+        }
+
+        [TestMethod]
+        public void TestMeasuredDriftValuesAsSmallMolecules()
+        {
+            PerformTestMeasuredDriftValues(true);
+        }
+
+        private void PerformTestMeasuredDriftValues(bool asSmallMolecules) 
+        {
+            if (asSmallMolecules)
+            {
+                if (!RunSmallMoleculeTestVersions)
+                {
+                    Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
+                    return;
+                }
+                TestSmallMolecules = false; // No need to add the magic small molecule test node
+            }
             var testFilesDir = new TestFilesDir(TestContext, @"Test\Results\BlibDriftTimeTest.zip"); // Re-used from BlibDriftTimeTest
             // Open document with some peptides but no results
             var docPath = testFilesDir.GetTestPath("BlibDriftTimeTest.sky");
@@ -49,6 +71,11 @@ namespace pwiz.SkylineTest.Results
             var pathFirstPeptide = docOriginal.GetPathTo((int) SrmDocument.Level.Molecules, 0);
             var nodeFirstPeptide = (DocNodeParent) docOriginal.FindNode(pathFirstPeptide);
             docOriginal = (SrmDocument) docOriginal.RemoveChild(pathFirstPeptide, nodeFirstPeptide.Children[0]);
+            if (asSmallMolecules)
+            {
+                var refine = new RefinementSettings();
+                docOriginal = refine.ConvertToSmallMolecules(docOriginal, testFilesDir.FullPath);
+            }
             using (var docContainer = new ResultsTestDocumentContainer(docOriginal, docPath))
             {
                 var doc = docContainer.Document;
@@ -69,7 +96,7 @@ namespace pwiz.SkylineTest.Results
                 // Verify ability to extract predictions from raw data
                 var newPred = document.Settings.PeptideSettings.Prediction.DriftTimePredictor.ChangeMeasuredDriftTimesFromResults(
                         document, docContainer.DocumentFilePath);
-                var result = newPred.MeasuredDriftTimePeptides;
+                var result = newPred.MeasuredDriftTimeIons;
                 Assert.AreEqual(TestSmallMolecules ? 2 : 1, result.Count);
                 const double expectedDT = 4.0019;
                 var expectedOffset = .4829;
@@ -80,7 +107,7 @@ namespace pwiz.SkylineTest.Results
                 var revised = new Dictionary<LibKey, DriftTimeInfo>();
                 var libKey = result.Keys.First();
                 revised.Add(libKey, new DriftTimeInfo(4, null, 0.234));  // N.B. CCS handling would require actual raw data in this test, it's covered in a perf test
-                var libKey2 = new LibKey("DEADEELS", 2);
+                var libKey2 = new LibKey("DEADEELS", asSmallMolecules ? Adduct.NonProteomicProtonatedFromCharge(2) : Adduct.DOUBLY_PROTONATED);
                 revised.Add(libKey2, new DriftTimeInfo(5, null, 0.123));
                 document =
                     document.ChangeSettings(
@@ -88,7 +115,7 @@ namespace pwiz.SkylineTest.Results
                 newPred = document.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(
                     document.Settings.PeptideSettings.Prediction.DriftTimePredictor.ChangeMeasuredDriftTimesFromResults(
                         document, docContainer.DocumentFilePath)).DriftTimePredictor;
-                result = newPred.MeasuredDriftTimePeptides;
+                result = newPred.MeasuredDriftTimeIons;
                 Assert.AreEqual(TestSmallMolecules ? 3 : 2, result.Count);
                 Assert.AreEqual(expectedDT, result[libKey].DriftTimeMsec.Value, .001);
                 Assert.AreEqual(expectedOffset, result[libKey].HighEnergyDriftTimeOffsetMsec, .001);

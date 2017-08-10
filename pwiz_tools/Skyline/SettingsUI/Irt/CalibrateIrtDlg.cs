@@ -71,9 +71,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
             foreach (var pep in StandardPeptideList)
             {
                 double irt;
-                if (!irts.TryGetValue(SequenceMassCalc.NormalizeModifiedSequence(pep.Sequence), out irt))
+                if (!irts.TryGetValue(SequenceMassCalc.NormalizeModifiedSequence(pep.Target), out irt))
                     break;
-                calibrationPeptides.Add(new Tuple<DbIrtPeptide, double>(new DbIrtPeptide(pep.Sequence, irt, true, TimeSource.peak), pep.RetentionTime));
+                calibrationPeptides.Add(new Tuple<DbIrtPeptide, double>(new DbIrtPeptide(pep.Target, irt, true, TimeSource.peak), pep.RetentionTime));
             }
             if (calibrationPeptides.Count == StandardPeptideList.Count)
             {
@@ -136,7 +136,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             foreach (var peptide in StandardPeptideList)
             {
                 double iRT = linearEquation.GetY(peptide.RetentionTime);
-                CalibrationPeptides.Add(new DbIrtPeptide(peptide.Sequence, iRT, true, TimeSource.peak));
+                CalibrationPeptides.Add(new DbIrtPeptide(peptide.Target, iRT, true, TimeSource.peak));
             }
 
             DialogResult = DialogResult.OK;
@@ -207,11 +207,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                           values =>
                                           standardPeptidesNew.Add(new StandardPeptide
                                           {
-                                              Sequence = values[0],
+                                              Target = new Target(values[0]),
                                               RetentionTime = double.Parse(values[1])
                                           }));
 
-                string message = ValidateUniquePeptides(standardPeptidesNew.Select(p => p.Sequence), null, null);
+                string message = ValidateUniquePeptides(standardPeptidesNew.Select(p => p.Target), null, null);
                 if (message != null)
                 {
                     MessageDlg.Show(MessageParent, message);
@@ -281,7 +281,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         var pep = peps[i];
                         Items.Add(new StandardPeptide
                         {
-                            Sequence = pep.Sequence,
+                            Target = pep.Target,
                             RetentionTime = pep.RetentionTime,
                             FixedPoint = (i == 0 || i == peps.Count - 1)
                         });
@@ -420,7 +420,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 foreach (var peptide in peptides)
                 {
-                    var normalizedModSeq = SequenceMassCalc.NormalizeModifiedSequence(peptide.Sequence);
+                    var normalizedModSeq = SequenceMassCalc.NormalizeModifiedSequence(peptide.Target);
                     double irtValue;
                     if (irts.TryGetValue(normalizedModSeq, out irtValue))
                     {
