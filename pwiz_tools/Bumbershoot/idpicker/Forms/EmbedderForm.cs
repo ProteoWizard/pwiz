@@ -497,10 +497,12 @@ namespace IDPicker.Forms
                                               tempFolder, string.Join(" ", fullSourceList)),
                     WorkingDirectory = tempFolder
                 };
-            var proc = new Process {StartInfo = psi};
-            proc.Start();
-            proc.WaitForExit();
-            proc.Dispose();
+            using (var proc = new Process { StartInfo = psi })
+            {
+                proc.Start();
+                proc.WaitForExit();
+                Thread.Sleep(1000); // wait for output files to show up
+            }
         }
 
         private void deleteAllButton_Click (object sender, EventArgs e)
