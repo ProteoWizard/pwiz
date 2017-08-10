@@ -53,7 +53,7 @@ namespace pwiz.Common.DataBinding.Internal
         {
             try
             {
-                var tickCounter = new Pivoter.TickCounter(_cancellationToken, 10000000);
+                var tickCounter = new Pivoter.TickCounter(_cancellationToken);
                 var queryResults = QueryResults.Empty
                     .SetParameters(QueryRequest.QueryParameters)
                     .SetSourceRows(RowSource.ListRowItems());

@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.Results
         public abstract TimeIntensitiesGroup Truncate(float newStartTime, float newEndTime);
         public abstract TimeIntensitiesGroup RetainTransitionIndexes(ISet<int> transitionIndexes);
         public abstract void WriteToStream(Stream stream);
-        public abstract int NumPoints { get; }
+        public abstract int NumInterpolatedPoints { get; }
 
         private class SingletonImpl : TimeIntensitiesGroup
         {
@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Model.Results
                 throw new NotSupportedException();
             }
 
-            public override int NumPoints
+            public override int NumInterpolatedPoints
             {
                 get { return TransitionTimeIntensities.First().NumPoints; }
             }
@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Model.Results
                 throw new NotSupportedException();
             }
 
-            public override int NumPoints
+            public override int NumInterpolatedPoints
             {
                 get { return 0; }
             }
@@ -272,7 +272,7 @@ namespace pwiz.Skyline.Model.Results
             return new InterpolatedTimeIntensities(newIndexes.Select(i=>TransitionTimeIntensities[i]), newIndexes.Select(i=>TransitionChromSources[i]));
         }
 
-        public override int NumPoints { get { return TransitionTimeIntensities.First().NumPoints; } }
+        public override int NumInterpolatedPoints { get { return TransitionTimeIntensities.First().NumPoints; } }
     }
 
     public class RawTimeIntensities : TimeIntensitiesGroup
@@ -445,11 +445,15 @@ namespace pwiz.Skyline.Model.Results
             return new RawTimeIntensities(newIndexes.Select(i => TransitionTimeIntensities[i]), InterpolationParams);
         }
 
-        public override int NumPoints
+        public override int NumInterpolatedPoints
         {
             get
             {
-                return TransitionTimeIntensities.SelectMany(timeIntensities => timeIntensities.Times).Distinct().Count();
+                if (null == InterpolationParams)
+                {
+                    return 0;
+                }
+                return InterpolationParams.NumPoints;
             }
         }
     }
