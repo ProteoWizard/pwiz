@@ -2334,7 +2334,7 @@ namespace pwiz.Skyline.Model
                         massShift = 0;
                     var tran = new Transition(transitionGroup, ionType, offset, 0, productExp.Adduct, massShift);
                     // m/z and library info calculated later
-                    return new TransitionDocNode(tran, productExp.Losses, TypedMass.ZERO_MONO_MASSH, null, null);
+                    return new TransitionDocNode(tran, productExp.Losses, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT);
                 });
             // m/z calculated later
             var newTransitionGroup = new TransitionGroupDocNode(transitionGroup, CompleteTransitions(transitions));

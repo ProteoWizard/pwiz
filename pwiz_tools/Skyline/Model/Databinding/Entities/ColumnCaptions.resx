@@ -594,6 +594,9 @@
   <data name="Quantification">
     <value>Quantification</value>
   </data>
+  <data name="Quantitative">
+    <value>Quantitative</value>
+  </data>
   <data name="Range">
     <value>Range</value>
   </data>

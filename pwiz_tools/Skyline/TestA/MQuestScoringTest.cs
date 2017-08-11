@@ -395,7 +395,7 @@ namespace pwiz.SkylineTestA
                 int offset = ionType == IonType.precursor ? 6 : 0;
                 var isotopeInfo = isotopeProportion == null ? null : new TransitionIsotopeDistInfo(1, (float)isotopeProportion);
                 NodeTran = new TransitionDocNode(new Transition(tranGroup, ionType, offset, 0, Adduct.FromChargeProtonated(charge), null),
-                                                 null, TypedMass.ZERO_MONO_MASSH, isotopeInfo, new TransitionLibInfo(1, (float)libIntensity));
+                                                 null, TypedMass.ZERO_MONO_MASSH, new TransitionDocNode.TransitionQuantInfo(isotopeInfo, new TransitionLibInfo(1, (float)libIntensity), true));
             }
 
             public TransitionDocNode NodeTran { get; private set; }

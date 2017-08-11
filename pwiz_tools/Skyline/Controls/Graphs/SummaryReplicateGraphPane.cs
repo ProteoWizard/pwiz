@@ -18,6 +18,8 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -170,6 +172,16 @@ namespace pwiz.Skyline.Controls.Graphs
             AxisChange();
         }
 
+        protected Brush GetBrushForNode(DocNode docNode, Color color)
+        {
+            var transitionDocNode = docNode as TransitionDocNode;
+            if (transitionDocNode == null || transitionDocNode.Quantitative)
+            {
+                return new SolidBrush(color);
+            }
+            return new HatchBrush(HatchStyle.Percent50, color, SystemColors.Window);
+        }
+
         /// <summary>
         /// Holds the data that is currently displayed in the graph.
         /// Currently, we don't hold onto this object, because we never need to look
@@ -287,6 +299,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 DocNodes = docNodes;
                 _docNodePaths = ImmutableList.ValueOf(docNodePaths);
                 DocNodeLabels = docNodeLabels;
+            }
+
+            protected virtual bool IncludeTransition(TransitionDocNode transitionDocNode)
+            {
+                return transitionDocNode.Quantitative || !Settings.Default.ShowQuantitativeOnly;
             }
 
             protected virtual List<LineInfo> GetPeptidePointPairLists(PeptideDocNode nodePep, bool multiplePeptides)
@@ -460,6 +477,10 @@ namespace pwiz.Skyline.Controls.Graphs
                                                           TransitionDocNode nodeTran,
                                                           DisplayTypeChrom displayType)
             {
+                if (!IncludeTransition(nodeTran))
+                {
+                    return new List<PointPairList>();
+                }
                 var transitionChromInfoDatas = TransitionChromInfoData.GetTransitionChromInfoDatas(
                     _document.Settings.MeasuredResults, nodeTran.Results);
 

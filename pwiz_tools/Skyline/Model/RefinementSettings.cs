@@ -910,7 +910,7 @@ namespace pwiz.Skyline.Model
                                 var newTransition = new Transition(newTransitionGroup, ionType,
                                     null, transition.Transition.MassIndex, transitionAdduct, null, transitionCustomMolecule);
                                 var newTransitionDocNode = new TransitionDocNode(newTransition, transition.Annotations.Merge(note),
-                                    null, mass, transition.IsotopeDistInfo, transitionLibInfo,
+                                    null, mass, transition.QuantInfo.ChangeLibInfo(transitionLibInfo),
                                     transition.Results);
                                 var mzShift = transition.Transition.IonType == IonType.precursor ?
                                     mzShiftPrecursor :
@@ -1261,7 +1261,7 @@ namespace pwiz.Skyline.Model
                 var decoyTransition = new Transition(decoyGroup, transition.IonType, transition.CleavageOffset,
                                                      transition.MassIndex, transition.Adduct, productMassShift, transition.CustomIon);
                 decoyNodeTranList.Add(new TransitionDocNode(decoyTransition, nodeTran.Losses, nodeTran.MzMassType.IsAverage() ? TypedMass.ZERO_AVERAGE_MASSH : TypedMass.ZERO_MONO_MASSH, 
-                                                            nodeTran.IsotopeDistInfo, nodeTran.LibInfo));
+                                                            nodeTran.QuantInfo));
             }
             return decoyNodeTranList.ToArray();
         }

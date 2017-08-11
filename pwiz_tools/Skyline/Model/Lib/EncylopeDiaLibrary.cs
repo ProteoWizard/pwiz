@@ -90,6 +90,7 @@ namespace pwiz.Skyline.Model.Lib
     public sealed class EncyclopeDiaLibrary : CachedLibrary<EncyclopeDiaLibrary.ElibSpectrumInfo>
     {
         private const int FORMAT_VERSION_CACHE = 1;
+        private const double MIN_QUANTITATIVE_INTENSITY = 1.0;
         private ImmutableList<string> _sourceFiles;
         private readonly PooledSqliteConnection _pooledSqliteConnection;
 
@@ -392,7 +393,7 @@ namespace pwiz.Skyline.Model.Lib
                                     UncompressEncyclopeDiaData((byte[])reader.GetValue(3), reader.GetInt32(2)), sizeof(float)));
                             return mzs
                                 .Select(
-                                    (mz, index) => new SpectrumPeaksInfo.MI { Mz = mz, Intensity = intensities[index] })
+                                    (mz, index) => new SpectrumPeaksInfo.MI { Mz = mz, Intensity = intensities[index], Quantitative = intensities[index] >= MIN_QUANTITATIVE_INTENSITY})
                                 .ToArray();
                         }
                         return null;

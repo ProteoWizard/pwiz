@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -1271,6 +1272,10 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < numTrans; i++)
             {
                 var nodeTran = displayTrans[i];
+                if (!nodeTran.Quantitative)
+                {
+                    continue;
+                }
                 int step = (numSteps > 0 ? i - numSteps : 0);
                 var transitionChromInfo = GetTransitionChromInfo(nodeTran, _chromIndex, fileId, step);
                 if (transitionChromInfo == null)
@@ -1288,6 +1293,10 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < numTrans; i++)
             {
                 var nodeTran = displayTrans[i];
+                if (!nodeTran.Quantitative)
+                {
+                    continue;
+                }
 
                 // Store library intensities for dot-product
                 if (expectedIntensities != null)
@@ -1393,6 +1402,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     continue;
 
                 var nodeTran = displayTrans[i];
+                if (!nodeTran.Quantitative && Settings.Default.ShowQuantitativeOnly)
+                {
+                    continue;
+                }
                 int step = numSteps != 0 ? i - numSteps : 0;
 
                 Color color;
@@ -1437,6 +1450,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     };
                 }
 
+                DashStyle dashStyle = nodeTran.Quantitative ? DashStyle.Solid : DashStyle.Dot;
                 var graphItem = new ChromGraphItem(nodeGroup,
                     nodeTran,
                     info,
@@ -1452,11 +1466,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     color,
                     fontSize,
                     width,
-                    fullScanInfo);
+                    fullScanInfo)
+                {
+                    LineDashStyle = dashStyle,
+                };
                 _graphHelper.AddChromatogram(graphPaneKey, graphItem);
                 if (isSelected)
                 {
-                    ShadeGraph(tranPeakInfo,info,timeRegressionFunction,dotProducts,bestProduct,isFullScanMs,step,fontSize,width,fullScanInfo,graphPaneKey);
+                    ShadeGraph(tranPeakInfo,info,timeRegressionFunction,dotProducts,bestProduct,isFullScanMs,step,fontSize,width,dashStyle,fullScanInfo,graphPaneKey);
                 }
                 iColor++;
             }
@@ -1473,7 +1490,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void ShadeGraph(TransitionChromInfo tranPeakInfo, ChromatogramInfo info,
             IRegressionFunction timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
-            int step, float fontSize, int width, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
+            int step, float fontSize, int width, DashStyle dashStyle, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
         {
             if (tranPeakInfo == null)
                 return; // Nothing to shade
@@ -1515,7 +1532,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 ChromGraphItem.ColorSelected,
                 fontSize,
                 width,
-                fullScanInfo);
+                fullScanInfo)
+            {
+                LineDashStyle = dashStyle
+            };
             var peakShadeCurveItem = _graphHelper.AddChromatogram(graphPaneKey, peakShadeItem);
             peakShadeCurveItem.Label.IsVisible = false;
             var lineItem = peakShadeCurveItem as LineItem;
@@ -1869,8 +1889,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 TransitionChromInfo tranPeakInfo = null;
                 float maxPeakHeight = float.MinValue;
                 var listChromInfo = new List<ChromatogramInfo>();
+                bool anyQuantitative = nodeGroup.Transitions.Any(transition => transition.Quantitative);
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
+                    if (anyQuantitative && !nodeTran.Quantitative)
+                    {
+                        continue;
+                    }
                     var info = chromGroupInfo.GetTransitionInfo(nodeTran.Mz, mzMatchTolerance, TransformChrom.raw);
                     if (info == null)
                         continue;
@@ -1938,7 +1963,10 @@ namespace pwiz.Skyline.Controls.Graphs
                                                        0,
                                                        color,
                                                        fontSize,
-                                                       lineWidth);
+                                                       lineWidth)
+                    {
+                        LineDashStyle = anyQuantitative ? DashStyle.Solid : DashStyle.Dot,
+                    };
                     var graphPaneKey = new PaneKey(nodeGroup);
                     _graphHelper.AddChromatogram(graphPaneKey, graphItem);
                 }

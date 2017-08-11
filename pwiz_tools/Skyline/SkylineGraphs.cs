@@ -1579,6 +1579,8 @@ namespace pwiz.Skyline
                     toolStripSeparatorTran,
                     basePeakContextMenuItem,
                     ticContextMenuItem,
+                    toolStripSeparatorOnlyQuantitative,
+                    onlyQuantitativeContextMenuItem,
                     toolStripSeparatorSplitGraph,
                     splitGraphContextMenuItem,
                 });
@@ -1800,6 +1802,8 @@ namespace pwiz.Skyline
                 (displayType == DisplayTypeChrom.tic);
             splitGraphMenuItem.Checked = splitGraphContextMenuItem.Checked
                 = Settings.Default.SplitChromatogramGraph;
+            onlyQuantitativeContextMenuItem.Checked = onlyQuantitativeContextMenuItem.Checked 
+                = Settings.Default.ShowQuantitativeOnly;
         }
 
         private bool IsMultipleIonSources
@@ -2673,6 +2677,17 @@ namespace pwiz.Skyline
         public void ShowSplitChromatogramGraph(bool split)
         {
             Settings.Default.SplitChromatogramGraph = split;
+            UpdateGraphPanes();
+        }
+
+        private void onlyQuantitativeMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowOnlyQuantitative(!Settings.Default.ShowQuantitativeOnly);
+        }
+
+        public void ShowOnlyQuantitative(bool showOnlyQuantitative)
+        {
+            Settings.Default.ShowQuantitativeOnly = showOnlyQuantitative;
             UpdateGraphPanes();
         }
 

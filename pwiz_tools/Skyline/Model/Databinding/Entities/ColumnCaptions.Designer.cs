@@ -1726,6 +1726,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Quantitative.
+        /// </summary>
+        public static string Quantitative {
+            get {
+                return ResourceManager.GetString("Quantitative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Range.
         /// </summary>
         public static string Range {

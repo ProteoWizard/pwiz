@@ -1302,7 +1302,7 @@ namespace pwiz.Skyline
                     if (chromFileInfo != null)
                         chromFileName = chromFileInfo.FilePath.GetFileName();
                 }
-                mi.Add(new SpectrumPeaksInfo.MI { Mz = nodeTran.Mz, Intensity = chromInfo.Area });
+                mi.Add(new SpectrumPeaksInfo.MI { Mz = nodeTran.Mz, Intensity = chromInfo.Area, Quantitative = nodeTran.Quantitative});
                 if (chromInfo.Height > maxApex)
                 {
                     maxApex = chromInfo.Height;

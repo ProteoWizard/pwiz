@@ -477,7 +477,8 @@ namespace pwiz.Skyline.Model
                                     var averageMass = new TypedMass(peak.Mz, MassType.Average);
                                     var transition = new Transition(nodeGroupMatched.TransitionGroup, fragmentCharge, 0,
                                         new CustomMolecule(monoisotopicMass, averageMass));
-                                    transitionsUnranked.Add(new TransitionDocNode(transition, Annotations.EMPTY, null, monoisotopicMass, null, null, null));
+                                    transitionsUnranked.Add(new TransitionDocNode(transition, Annotations.EMPTY, null, monoisotopicMass, 
+                                        TransitionDocNode.TransitionQuantInfo.DEFAULT, null));
                                 }
                                 var nodeGroupUnranked = (TransitionGroupDocNode)nodeGroupMatched.ChangeChildren(transitionsUnranked);
                                 // Filter again, retain only those with rank info
@@ -490,7 +491,8 @@ namespace pwiz.Skyline.Model
                                     var averageMass = new TypedMass(ranked.Value.ObservedMz, MassType.Average);
                                     var transition = new Transition(nodeGroupMatched.TransitionGroup, fragmentCharge, 0,
                                         new CustomMolecule(monoisotopicMass, averageMass));
-                                    transitions.Add(new TransitionDocNode(transition, Annotations.EMPTY, null, monoisotopicMass, null, new TransitionLibInfo(ranked.Value.Rank, ranked.Value.Intensity), null));
+                                    transitions.Add(new TransitionDocNode(transition, Annotations.EMPTY, null, monoisotopicMass, 
+                                        new TransitionDocNode.TransitionQuantInfo(null, new TransitionLibInfo(ranked.Value.Rank, ranked.Value.Intensity), true), null));
                                 }
                             }
                             nodeGroupMatched = (TransitionGroupDocNode)nodeGroupMatched.ChangeChildren(transitions);

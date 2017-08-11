@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Model
                 massH = calc.GetFragmentMass(tranNew, isotopeDist);
             }
             var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tranNew, losses, isotopeDist);
-            var nodeTranMatching = new TransitionDocNode(tranNew, losses, massH, isotopeDistInfo, libInfo);
+            var nodeTranMatching = new TransitionDocNode(tranNew, losses, massH, new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, libInfo, nodeTran.Quantitative));
             return nodeTranMatching;
         }
 
@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Model
                         continue;
                     var tran = new Transition(this, measuredIon.Adduct, null, measuredIon.SettingsCustomIon);
                     var mass = settings.GetFragmentMass(null, null, tran, null);
-                    var nodeTran = new TransitionDocNode(tran, null, mass, null, null);
+                    var nodeTran = new TransitionDocNode(tran, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT);
                     if (minMz <= nodeTran.Mz && nodeTran.Mz <= maxMz)
                         yield return nodeTran;
                 }
@@ -646,16 +646,17 @@ namespace pwiz.Skyline.Model
             TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, CustomMolecule customMolecule = null)
         {
             Transition transition = new Transition(this, massIndex, customMolecule);
-            var info = isotopeDistInfo == null ? TransitionDocNode.GetLibInfo(transition, Transition.CalcMass(precursorMassH, losses), transitionRanks) : null;
-            return new TransitionDocNode(transition, losses, precursorMassH, isotopeDistInfo, info);
+            var quantInfo = TransitionDocNode.TransitionQuantInfo.GetLibTransitionQuantInfo(transition, losses,
+                Transition.CalcMass(precursorMassH, losses), transitionRanks).ChangeIsotopeDistInfo(isotopeDistInfo);
+            return new TransitionDocNode(transition, losses, precursorMassH, quantInfo);
         }
 
         private TransitionDocNode CreateTransitionNode(IonType type, int cleavageOffset, Adduct charge, TypedMass massH,
             TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, CustomMolecule customMolecule = null)
         {
             Transition transition = new Transition(this, type, cleavageOffset, 0, charge, null, customMolecule);
-            var info = TransitionDocNode.GetLibInfo(transition, Transition.CalcMass(massH, losses), transitionRanks);
-            return new TransitionDocNode(transition, losses, massH, null, info);
+            var info = TransitionDocNode.TransitionQuantInfo.GetLibTransitionQuantInfo(transition, losses, Transition.CalcMass(massH, losses), transitionRanks);
+            return new TransitionDocNode(transition, losses, massH, info);
         }
 
         /// <summary>

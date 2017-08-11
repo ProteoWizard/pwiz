@@ -253,7 +253,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (curveItem != null)
                     {
                         curveItem.Bar.Border.IsVisible = false;
-                        curveItem.Bar.Fill.Brush = new SolidBrush(color);
+                        curveItem.Bar.Fill.Brush = GetBrushForNode(docNode, color);
                         curveItem.Tag = identityPath;
                         CurveList.Add(curveItem);
                     }

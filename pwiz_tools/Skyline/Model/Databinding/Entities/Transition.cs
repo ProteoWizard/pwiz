@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         protected override TransitionDocNode CreateEmptyNode()
         {
-            return new TransitionDocNode(new Model.Transition(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), Adduct.SINGLY_PROTONATED, IsotopeLabelType.light), 0), Annotations.EMPTY, null, TypedMass.ZERO_MONO_MASSH, null, null, null); // Not L10N
+            return new TransitionDocNode(new Model.Transition(new TransitionGroup(new Model.Peptide(null, "X", null, null, 0), Adduct.SINGLY_PROTONATED, IsotopeLabelType.light), 0), Annotations.EMPTY, null, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, null); // Not L10N
         }
 
         [InvariantDisplayName("TransitionResultsSummary")]
@@ -172,6 +172,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return IsCustomTransition()
                     ? null
                     : (DocNode.HasLoss ? string.Join(", ", DocNode.Losses.ToStrings()) : string.Empty);  // Not L10N
+            }
+        }
+
+        public bool Quantitative
+        {
+            get { return DocNode.Quantitative; }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn("Quantitative", value), // Not L10N
+                    DocNode.ChangeQuantitative(value));
             }
         }
         [InvariantDisplayName("TransitionNote")]

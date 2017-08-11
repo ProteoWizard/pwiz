@@ -219,6 +219,7 @@ namespace pwiz.Skyline.Model.Serialization
             public TransitionLibInfo LibInfo { get; private set; }
             public Results<TransitionChromInfo> Results { get; private set; }
             public MeasuredIon MeasuredIon { get; private set; }
+            public bool Quantitative { get; private set; }
 
             public void ReadXml(XmlReader reader)
             {
@@ -238,6 +239,7 @@ namespace pwiz.Skyline.Model.Serialization
                 PrecursorAdduct = Adduct.FromStringAssumeProtonated(reader.GetAttribute(ATTR.precursor_charge));
                 ProductAdduct = Adduct.FromStringAssumeProtonated(reader.GetAttribute(ATTR.product_charge));
                 DecoyMassShift = reader.GetNullableIntAttribute(ATTR.decoy_mass_shift);
+                Quantitative = reader.GetBoolAttribute(ATTR.quantitative, true);
                 string measuredIonName = reader.GetAttribute(ATTR.measured_ion_name);
                 if (measuredIonName != null)
                 {
@@ -1278,7 +1280,7 @@ namespace pwiz.Skyline.Model.Serialization
                 // No heavy transition support in v0.1, and no full-scan filtering
                 var massH = Settings.GetFragmentMass(null, mods, transition, null);
 
-                curList.Add(new TransitionDocNode(transition, info.Losses, massH, null, null));
+                curList.Add(new TransitionDocNode(transition, info.Losses, massH, TransitionDocNode.TransitionQuantInfo.DEFAULT));
             }
 
             // Use collected information to create the DocNodes.
@@ -1426,9 +1428,8 @@ namespace pwiz.Skyline.Model.Serialization
 
             if (group.DecoyMassShift.HasValue && !info.DecoyMassShift.HasValue)
                 throw new InvalidDataException(Resources.SrmDocument_ReadTransitionXml_All_transitions_of_decoy_precursors_must_have_a_decoy_mass_shift);
-
             return new TransitionDocNode(transition, info.Annotations, losses,
-                mass, isotopeDistInfo, info.LibInfo, info.Results);
+                mass, new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, info.LibInfo, info.Quantitative), info.Results);
         }
     }
 }

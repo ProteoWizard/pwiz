@@ -101,6 +101,7 @@ namespace pwiz.Skyline
             this.bestRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.thresholdRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.noneRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rawTimesMenuItemSplitter = new System.Windows.Forms.ToolStripSeparator();
             this.rawTimesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.retentionTimePredContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideIDTimesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -118,6 +119,7 @@ namespace pwiz.Skyline
             this.toolStripSeparatorTran = new System.Windows.Forms.ToolStripSeparator();
             this.basePeakContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ticContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.onlyQuantitativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorSplitGraph = new System.Windows.Forms.ToolStripSeparator();
             this.splitGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -412,6 +414,7 @@ namespace pwiz.Skyline
             this.toolStripSeparatorTranMain = new System.Windows.Forms.ToolStripSeparator();
             this.basePeakMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ticMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.onlyQuantitativeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator48 = new System.Windows.Forms.ToolStripSeparator();
             this.splitGraphMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -513,7 +516,8 @@ namespace pwiz.Skyline
             this.massErorrRetentionTimeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorMassToChargContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorlogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.rawTimesMenuItemSplitter = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator56 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparatorOnlyQuantitative = new System.Windows.Forms.ToolStripSeparator();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -1026,6 +1030,11 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.noneRTContextMenuItem, "noneRTContextMenuItem");
             this.noneRTContextMenuItem.Click += new System.EventHandler(this.noneRTContextMenuItem_Click);
             // 
+            // rawTimesMenuItemSplitter
+            // 
+            this.rawTimesMenuItemSplitter.Name = "rawTimesMenuItemSplitter";
+            resources.ApplyResources(this.rawTimesMenuItemSplitter, "rawTimesMenuItemSplitter");
+            // 
             // rawTimesContextMenuItem
             // 
             this.rawTimesContextMenuItem.Name = "rawTimesContextMenuItem";
@@ -1092,6 +1101,8 @@ namespace pwiz.Skyline
             this.toolStripSeparatorTran,
             this.basePeakContextMenuItem,
             this.ticContextMenuItem,
+            this.toolStripSeparatorOnlyQuantitative,
+            this.onlyQuantitativeContextMenuItem,
             this.toolStripSeparatorSplitGraph,
             this.splitGraphContextMenuItem});
             this.transitionsContextMenuItem.Name = "transitionsContextMenuItem";
@@ -1144,6 +1155,12 @@ namespace pwiz.Skyline
             this.ticContextMenuItem.Name = "ticContextMenuItem";
             resources.ApplyResources(this.ticContextMenuItem, "ticContextMenuItem");
             this.ticContextMenuItem.Click += new System.EventHandler(this.ticMenuItem_Click);
+            // 
+            // onlyQuantitativeContextMenuItem
+            // 
+            this.onlyQuantitativeContextMenuItem.Name = "onlyQuantitativeContextMenuItem";
+            resources.ApplyResources(this.onlyQuantitativeContextMenuItem, "onlyQuantitativeContextMenuItem");
+            this.onlyQuantitativeContextMenuItem.Click += new System.EventHandler(this.onlyQuantitativeMenuItem_Click);
             // 
             // toolStripSeparatorSplitGraph
             // 
@@ -3183,6 +3200,8 @@ namespace pwiz.Skyline
             this.toolStripSeparatorTranMain,
             this.basePeakMenuItem,
             this.ticMenuItem,
+            this.toolStripSeparator56,
+            this.onlyQuantitativeMenuItem,
             this.toolStripSeparator48,
             this.splitGraphMenuItem});
             resources.ApplyResources(this.transitionsMenuItem, "transitionsMenuItem");
@@ -3235,6 +3254,12 @@ namespace pwiz.Skyline
             this.ticMenuItem.Name = "ticMenuItem";
             resources.ApplyResources(this.ticMenuItem, "ticMenuItem");
             this.ticMenuItem.Click += new System.EventHandler(this.ticMenuItem_Click);
+            // 
+            // onlyQuantitativeMenuItem
+            // 
+            this.onlyQuantitativeMenuItem.Name = "onlyQuantitativeMenuItem";
+            resources.ApplyResources(this.onlyQuantitativeMenuItem, "onlyQuantitativeMenuItem");
+            this.onlyQuantitativeMenuItem.Click += new System.EventHandler(this.onlyQuantitativeMenuItem_Click);
             // 
             // toolStripSeparator48
             // 
@@ -3929,10 +3954,15 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.massErrorlogScaleContextMenuItem, "massErrorlogScaleContextMenuItem");
             this.massErrorlogScaleContextMenuItem.Click += new System.EventHandler(this.massErrorlogScaleContextMenuItem_Click);
             // 
-            // rawTimesMenuItemSplitter
+            // toolStripSeparator56
             // 
-            this.rawTimesMenuItemSplitter.Name = "rawTimesMenuItemSplitter";
-            resources.ApplyResources(this.rawTimesMenuItemSplitter, "rawTimesMenuItemSplitter");
+            this.toolStripSeparator56.Name = "toolStripSeparator56";
+            resources.ApplyResources(this.toolStripSeparator56, "toolStripSeparator56");
+            // 
+            // toolStripSeparatorOnlyQuantitative
+            // 
+            this.toolStripSeparatorOnlyQuantitative.Name = "toolStripSeparatorOnlyQuantitative";
+            resources.ApplyResources(this.toolStripSeparatorOnlyQuantitative, "toolStripSeparatorOnlyQuantitative");
             // 
             // SkylineWindow
             // 
@@ -4448,6 +4478,10 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem areaCVNoneToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVLogScaleToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator rawTimesMenuItemSplitter;
+        private System.Windows.Forms.ToolStripMenuItem onlyQuantitativeContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem onlyQuantitativeMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparatorOnlyQuantitative;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator56;
     }
 }
 

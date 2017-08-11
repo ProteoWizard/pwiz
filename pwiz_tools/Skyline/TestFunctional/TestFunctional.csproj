@@ -227,6 +227,7 @@
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
     <Compile Include="PythonInstallerTest.cs" />
+    <Compile Include="QuantitativeTest.cs" />
     <Compile Include="RefineProteinListDlgTest.cs" />
     <Compile Include="RefineListDlgTest.cs" />
     <Compile Include="RenameProteinsTest.cs" />
@@ -375,6 +376,7 @@
     <None Include="PrecursorTest.zip" />
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />
+    <None Include="QuantitativeTest.zip" />
     <None Include="ReintegrateDlgTest.zip" />
     <None Include="RenameProteinsTest.zip" />
     <None Include="ReportSharingTest.zip" />

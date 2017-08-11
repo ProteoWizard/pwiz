@@ -39,9 +39,8 @@ namespace pwiz.Skyline.Model
         public TransitionDocNode(Transition id,
                                  TransitionLosses losses,
                                  TypedMass massH,
-                                 TransitionIsotopeDistInfo isotopeDistInfo,
-                                 TransitionLibInfo libInfo)
-            : this(id, Annotations.EMPTY, losses, massH, isotopeDistInfo, libInfo, null)
+                                 TransitionQuantInfo quantInfo)
+            : this(id, Annotations.EMPTY, losses, massH, quantInfo, null)
         {
         }
 
@@ -49,8 +48,7 @@ namespace pwiz.Skyline.Model
                                  Annotations annotations,
                                  TransitionLosses losses,
                                  TypedMass mass,
-                                 TransitionIsotopeDistInfo isotopeDistInfo,
-                                 TransitionLibInfo libInfo,
+                                 TransitionQuantInfo transitionQuantInfo,
                                  Results<TransitionChromInfo> results)
             : base(id, annotations)
         {
@@ -61,9 +59,10 @@ namespace pwiz.Skyline.Model
                   new SignedMz(id.Adduct.MzFromNeutralMass(mass), id.IsNegative()) : 
                   new SignedMz(SequenceMassCalc.GetMZ(mass, id.Adduct) + SequenceMassCalc.GetPeptideInterval(id.DecoyMassShift), id.IsNegative());
             MzMassType = mass.MassType;
-            IsotopeDistInfo = isotopeDistInfo;
-            LibInfo = libInfo;
+            IsotopeDistInfo = transitionQuantInfo.IsotopeDistInfo;
+            LibInfo = transitionQuantInfo.LibInfo;
             Results = results;
+            Quantitative = transitionQuantInfo.Quantititative;
         }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.transition; } }
@@ -99,6 +98,10 @@ namespace pwiz.Skyline.Model
         public bool HasLoss { get { return Losses != null; } }
 
         public double LostMass { get { return HasLoss ? Losses.Mass : 0; } }
+
+        public bool Quantitative { get; private set; }
+
+        public TransitionQuantInfo QuantInfo { get { return new TransitionQuantInfo(IsotopeDistInfo, LibInfo, Quantitative);} }
 
         public bool IsLossPossible(int maxLossMods, IList<StaticMod> modsLossAvailable)
         {
@@ -161,15 +164,6 @@ namespace pwiz.Skyline.Model
         public TransitionLibInfo LibInfo { get; private set; }
 
         public bool HasLibInfo { get { return LibInfo != null; } }
-
-        public static TransitionLibInfo GetLibInfo(Transition transition, TypedMass massH,
-                                                   IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> ranks)
-        {
-            LibraryRankedSpectrumInfo.RankedMI rmi;
-            if (ranks == null || !ranks.TryGetValue(SequenceMassCalc.GetMZ(massH, transition.Adduct), out rmi))
-                return null;
-            return new TransitionLibInfo(rmi.Rank, rmi.Intensity);
-        }
 
         public IEnumerable<TransitionChromInfo> ChromInfos
         {
@@ -368,8 +362,7 @@ namespace pwiz.Skyline.Model
                                          Annotations,
                                          Losses,
                                          TypedMass.ZERO_MONO_MASSH, 
-                                         IsotopeDistInfo,
-                                         LibInfo,
+                                         QuantInfo,
                                          null) {Mz = Mz, MzMassType = MzMassType};
         }
 
@@ -409,7 +402,7 @@ namespace pwiz.Skyline.Model
             var transitionProto = new SkylineDocumentProto.Types.Transition
             {
                 FragmentType = DataValues.ToIonType(Transition.IonType),
-
+                NotQuantitative = !Quantitative
             };
             if (Transition.IsCustom() && !Transition.IsPrecursor())
             {
@@ -579,7 +572,7 @@ namespace pwiz.Skyline.Model
             }
             var annotations = Annotations.FromProtoAnnotations(stringPool, transitionProto.Annotations);
             var results = TransitionChromInfo.FromProtoTransitionResults(stringPool, settings, transitionProto.Results);
-            return new TransitionDocNode(transition, annotations, losses, mass, isotopeDistInfo, libInfo, results);
+            return new TransitionDocNode(transition, annotations, losses, mass, new TransitionQuantInfo(isotopeDistInfo, libInfo, !transitionProto.NotQuantitative), results);
         }
 
 
@@ -648,6 +641,11 @@ namespace pwiz.Skyline.Model
 
 
         #region Property change methods
+
+        public TransitionDocNode ChangeQuantitative(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.Quantitative = prop);
+        }
 
         public TransitionDocNode ChangeLibInfo(TransitionLibInfo prop)
         {
@@ -821,7 +819,8 @@ namespace pwiz.Skyline.Model
             var equal =  base.Equals(obj) && obj.Mz == Mz &&
                    Equals(obj.IsotopeDistInfo, IsotopeDistInfo) &&
                    Equals(obj.LibInfo, LibInfo) &&
-                   Equals(obj.Results, Results);
+                   Equals(obj.Results, Results) &&
+                   Equals(obj.Quantitative, Quantitative);
             return equal;  // For debugging convenience
         }
 
@@ -841,10 +840,81 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ (IsotopeDistInfo != null ? IsotopeDistInfo.GetHashCode() : 0);
                 result = (result*397) ^ (LibInfo != null ? LibInfo.GetHashCode() : 0);
                 result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
+                result = (result*397) ^ Quantitative.GetHashCode();
                 return result;
             }
         }
 
         #endregion
+
+        public struct TransitionQuantInfo
+        {
+            public static readonly TransitionQuantInfo DEFAULT = new TransitionQuantInfo(null, null, true);
+            private bool _notQuantitative;
+            public static TransitionQuantInfo GetTransitionQuantInfo(Transition transition, TransitionLosses losses, IsotopeDistInfo isotopeDist, TypedMass massH, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> ranks)
+            {
+                var transitionIsotopeDistInfo = GetIsotopeDistInfo(transition, losses, isotopeDist);
+                return GetLibTransitionQuantInfo(transition, losses, massH, ranks).ChangeIsotopeDistInfo(transitionIsotopeDistInfo);
+            }
+
+            public static TransitionQuantInfo GetLibTransitionQuantInfo(Transition transition, TransitionLosses losses, TypedMass massH,
+                IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> ranks)
+            {
+                LibraryRankedSpectrumInfo.RankedMI rmi = null;
+                if (ranks != null)
+                {
+                    ranks.TryGetValue(SequenceMassCalc.GetMZ(massH, transition.Adduct), out rmi);
+                }
+                TransitionLibInfo transitionLibInfo = null;
+                if (rmi != null)
+                {
+                    transitionLibInfo = new TransitionLibInfo(rmi.Rank, rmi.Intensity);
+                }
+                return new TransitionQuantInfo(null, transitionLibInfo,
+                    rmi == null || rmi.Quantitative);
+            }
+
+            public TransitionQuantInfo(TransitionIsotopeDistInfo isotopeDistInfo, TransitionLibInfo libInfo,
+                bool quantitative) : this()
+            {
+                IsotopeDistInfo = isotopeDistInfo;
+                LibInfo = libInfo;
+                Quantititative = quantitative;
+            }
+
+            public TransitionIsotopeDistInfo IsotopeDistInfo { get; private set; }
+            public TransitionLibInfo LibInfo { get; private set; }
+            public bool Quantititative {
+                get { return !_notQuantitative;}
+                private set { _notQuantitative = !value; }
+            }
+
+            public TransitionQuantInfo UseValuesFrom(TransitionQuantInfo existing)
+            {
+                var isotopeDistInfo = IsotopeDistInfo;
+                var libInfo = LibInfo;
+                Helpers.AssignIfEquals(ref isotopeDistInfo, existing.IsotopeDistInfo);
+                Helpers.AssignIfEquals(ref libInfo, LibInfo);
+                return new TransitionQuantInfo(isotopeDistInfo, libInfo, existing.Quantititative);
+            }
+
+            public TransitionQuantInfo ChangeLibInfo(TransitionLibInfo libInfo)
+            {
+                var quantInfo = this;
+                quantInfo.LibInfo = libInfo;
+                return quantInfo;
+            }
+
+            public TransitionQuantInfo ChangeIsotopeDistInfo(TransitionIsotopeDistInfo transitionIsotopeDistInfo)
+            {
+                var quantInfo = this;
+                quantInfo.IsotopeDistInfo = transitionIsotopeDistInfo;
+                if (transitionIsotopeDistInfo != null)
+                {
+                    quantInfo.LibInfo = null;
+                }
+                return quantInfo;
+            }
+        }
     }
 }

@@ -1438,11 +1438,11 @@ namespace pwiz.Skyline.Model
             }
 
             var tranPrecursorNode = new TransitionDocNode(tranPrecursor, note, null,
-                pep.CustomMolecule.GetMass(Settings.TransitionSettings.Prediction.FragmentMassType), isotopeDistInfo, null, null);
+                pep.CustomMolecule.GetMass(Settings.TransitionSettings.Prediction.FragmentMassType), new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, null, true), null);
             var tranFragmentNode = new TransitionDocNode(tranFragment, note, null,
-                tranFragment.CustomIon.GetMass(Settings.TransitionSettings.Prediction.FragmentMassType), null, null, null);
+                tranFragment.CustomIon.GetMass(Settings.TransitionSettings.Prediction.FragmentMassType), TransitionDocNode.TransitionQuantInfo.DEFAULT, null);
             var tranFragmentNode2 = new TransitionDocNode(tranFragment2, note, null,
-                tranFragment2.CustomIon.GetMass(Settings.TransitionSettings.Prediction.FragmentMassType), null, null, null);
+                tranFragment2.CustomIon.GetMass(Settings.TransitionSettings.Prediction.FragmentMassType), TransitionDocNode.TransitionQuantInfo.DEFAULT, null);
             var tranGroupNode = new TransitionGroupDocNode(tranGroup, note, Settings, null, null, ExplicitTransitionGroupValues.EMPTY, null,
                 hasPrecursorTransitions ? new[] { tranPrecursorNode, tranFragmentNode, tranFragmentNode2 } : new[] { tranFragmentNode, tranFragmentNode2 }, 
                 autoManageChildren);

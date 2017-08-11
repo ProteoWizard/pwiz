@@ -1110,7 +1110,7 @@ namespace pwiz.Skyline.Model
                 note = String.IsNullOrEmpty(note) ? molecule.Note : (note + "\r\n" + molecule.Note); // Not L10N
                 annotations = new Annotations(note, document.Annotations.ListAnnotations(), 0);
             }
-            return new TransitionDocNode(transition, annotations, null, mass, null, null, null);
+            return new TransitionDocNode(transition, annotations, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT, null);
         }
     }
 

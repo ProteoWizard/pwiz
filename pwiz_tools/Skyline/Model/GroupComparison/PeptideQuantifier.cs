@@ -104,6 +104,10 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public bool SkipTransition(TransitionDocNode transitionDocNode)
         {
+            if (!transitionDocNode.Quantitative)
+            {
+                return true;
+            }
             if (MsLevel.HasValue)
             {
                 if (MsLevel == 1)
@@ -263,6 +267,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 foreach (var transition in transitionGroup.Transitions)
                 {
+                    if (!transition.Quantitative)
+                    {
+                        continue;
+                    }
                     if (null == transition.Results || transition.Results.Count <= replicateIndex)
                     {
                         continue;

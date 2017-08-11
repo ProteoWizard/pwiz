@@ -456,6 +456,8 @@ namespace pwiz.Skyline.Model.Lib
 
             public float Intensity { get { return _mi.Intensity; } }
 
+            public bool Quantitative { get { return _mi.Quantitative; } }
+
             public double ObservedMz { get { return _mi.Mz; } }
 
             public IList<MatchedFragmentIon> MatchedIons { get; private set; }

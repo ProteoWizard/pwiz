@@ -1636,8 +1636,13 @@ namespace pwiz.Skyline.Model.Lib
 
         public struct MI
         {
+            private bool _notQuantitative;
             public double Mz { get; set; }
             public float Intensity { get; set; }
+            public bool Quantitative {
+                get { return !_notQuantitative; }
+                set { _notQuantitative = !value; }
+            }
         }
     }
 

@@ -1639,6 +1639,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Whether the transition&apos;s peak area should be included when quantifying peptides..
+        /// </summary>
+        internal static string Quantitative {
+            get {
+                return ResourceManager.GetString("Quantitative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Range.
         /// </summary>
         internal static string Range {

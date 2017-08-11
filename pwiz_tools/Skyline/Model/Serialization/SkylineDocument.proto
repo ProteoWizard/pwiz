@@ -95,6 +95,7 @@ message SkylineDocumentProto {
 		OptionalDouble monoMass = 28;
 		OptionalString adduct = 29;
 		OptionalString molecule_id = 30;
+		bool not_quantitative = 31;
 	}
 
 	message OptionalFloat {

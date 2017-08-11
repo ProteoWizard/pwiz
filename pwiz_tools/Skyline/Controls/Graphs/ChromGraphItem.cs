@@ -186,6 +186,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public string CurveAnnotation { get; set; }
         public PeptideGraphInfo GraphInfo { get; set; }
         public IdentityPath IdPath { get; set; }
+        public DashStyle? LineDashStyle { get; set; }
 
         internal PeakBoundsDragInfo DragInfo
         {
@@ -222,6 +223,10 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void CustomizeCurve(CurveItem curveItem)
         {
             ((LineItem)curveItem).Line.Width = _width;
+            if (LineDashStyle.HasValue)
+            {
+                ((LineItem)curveItem).Line.Style = LineDashStyle.Value;
+            }
         }
 
         public static string GetTitle(TransitionGroupDocNode transitionGroup, TransitionDocNode transition)

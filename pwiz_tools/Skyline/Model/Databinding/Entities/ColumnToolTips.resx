@@ -660,6 +660,9 @@ also when you hover over the protein name in the peptide tree view.</value>
   <data name="Quantification">
     <value>Values related to using the calibration curve or normalization method to quantify the analyte.</value>
   </data>
+  <data name="Quantitative">
+    <value>Whether the transition's peak area should be included when quantifying peptides.</value>
+  </data>
   <data name="Range">
     <value>Range</value>
   </data>

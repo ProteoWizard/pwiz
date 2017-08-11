@@ -109,6 +109,11 @@ namespace pwiz.Skyline.Model
 
         public IEnumerable<TransitionDocNode> Transitions { get { return Children.Cast<TransitionDocNode>(); } }
 
+        public IEnumerable<TransitionDocNode> QuantitativeTransitions
+        {
+            get { return Transitions.Where(tran => tran.Quantitative); }
+        }
+
         protected override IList<DocNode> OrderedChildren(IList<DocNode> children)
         {
             if (IsCustomIon && children.Any() && !SrmDocument.IsSpecialNonProteomicTestDocNode(this) && !SrmDocument.IsConvertedFromProteomicTestDocNode(this))
@@ -137,7 +142,7 @@ namespace pwiz.Skyline.Model
                 var tranNew = new Transition(groupNew, transition.IonType, transition.CleavageOffset,
                     transition.MassIndex, transition.Adduct, transition.DecoyMassShift, transition.CustomIon);
                 var nodeTranNew = new TransitionDocNode(tranNew, nodeTran.Annotations, nodeTran.Losses,
-                    nodeTran.GetMoleculeMass(), nodeTran.IsotopeDistInfo, nodeTran.LibInfo, nodeTran.Results);
+                    nodeTran.GetMoleculeMass(), nodeTran.QuantInfo, nodeTran.Results);
                 children.Add(nodeTranNew);
             }
             return new TransitionGroupDocNode(groupNew, Annotations, settings, null, LibInfo, ExplicitValues, Results, children.ToArray(), AutoManageChildren);
@@ -845,14 +850,14 @@ namespace pwiz.Skyline.Model
                             var annotations = nodeTranResult.Annotations;
                             var losses = nodeTranResult.Losses;
                             var massH = settingsNew.GetFragmentMass(TransitionGroup, mods, tran, isotopeDist);
-                            var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tran, losses, isotopeDist);
-                            var info = isotopeDistInfo == null ? TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks) : null;
-                            Helpers.AssignIfEquals(ref info, nodeTranResult.LibInfo);
-                            if (!ReferenceEquals(info, nodeTranResult.LibInfo))
+                            var quantInfo = TransitionDocNode.TransitionQuantInfo
+                                .GetTransitionQuantInfo(tran, losses, isotopeDist, Transition.CalcMass(massH, losses), transitionRanks)
+                                .UseValuesFrom(nodeTranResult.QuantInfo);
+                            if (!ReferenceEquals(quantInfo.LibInfo, nodeTranResult.LibInfo))
                                 dotProductChange = true;
                             var results = nodeTranResult.Results;
                             nodeTranResult = new TransitionDocNode(tran, annotations, losses,
-                                massH, isotopeDistInfo, info, results);
+                                massH, quantInfo, results);
 
                             Helpers.AssignIfEquals(ref nodeTranResult, (TransitionDocNode) existing);
                         }
@@ -929,17 +934,16 @@ namespace pwiz.Skyline.Model
                         if (!TransitionDocNode.IsValidIsotopeTransition(tran, isotopeDist))
                             continue;
                         var massH = settingsNew.GetFragmentMass(TransitionGroup, mods, tran, isotopeDist);
-                        var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tran, losses, isotopeDist);
-                        var info = isotopeDistInfo == null ? TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks) : null;
-                        Helpers.AssignIfEquals(ref info, nodeTransition.LibInfo);
-                        if (!ReferenceEquals(info, nodeTransition.LibInfo))
+                        var quantInfo = TransitionDocNode.TransitionQuantInfo.GetTransitionQuantInfo(tran, losses, isotopeDist,
+                            massH, transitionRanks).UseValuesFrom(nodeTransition.QuantInfo);
+                        if (!ReferenceEquals(quantInfo.LibInfo, nodeTransition.LibInfo))
                             dotProductChange = true;
 
                         // Avoid overwriting valid transition lib info before the libraries are loaded or for decoys
-                        if (libInfo != null && info == null && (IsDecoy || !settingsNew.PeptideSettings.Libraries.IsLoaded))
-                            info = nodeTransition.LibInfo;
+                        if (libInfo != null && quantInfo.LibInfo == null && (IsDecoy || !settingsNew.PeptideSettings.Libraries.IsLoaded))
+                            quantInfo = quantInfo.ChangeLibInfo(nodeTransition.LibInfo);
                         var nodeNew = new TransitionDocNode(tran, annotations, losses,
-                            massH, isotopeDistInfo, info, results);
+                            massH, quantInfo, results);
 
                         Helpers.AssignIfEquals(ref nodeNew, nodeTransition);
                         if (settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeNew.Mz, precursorMz))
@@ -1662,7 +1666,7 @@ namespace pwiz.Skyline.Model
                 for (int iTran = 0, len = nodeGroup.Children.Count; iTran < len; iTran++)
                 {
                     var nodeTran = (TransitionDocNode)nodeGroup.Children[iTran];
-                    childrenNew.Add(UpdateTranisitionNode(nodeTran, iTran));
+                    childrenNew.Add(UpdateTransitionNode(nodeTran, iTran));
                 }
 
                 var listChromInfoLists = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList());
@@ -1676,7 +1680,7 @@ namespace pwiz.Skyline.Model
                 return nodeGroupNew;
             }
 
-            private TransitionDocNode UpdateTranisitionNode(TransitionDocNode nodeTran, int iTran)
+            private TransitionDocNode UpdateTransitionNode(TransitionDocNode nodeTran, int iTran)
             {
                 var chromInfoSet = _arrayTransitionChromInfoSets[iTran];
                 var results = Results<TransitionChromInfo>.Merge(nodeTran.Results, chromInfoSet.ChromInfoLists);
@@ -2234,46 +2238,47 @@ namespace pwiz.Skyline.Model
                 {
                     if (info.Area > 0)
                         PeakCount++;
-
-                    Area = (Area ?? 0) + info.Area;
-                    BackgroundArea = (BackgroundArea ?? 0) + info.BackgroundArea;
-                    switch (Settings.GetChromSource(nodeTran))
+                    if (nodeTran.Quantitative)
                     {
-                        case ChromSource.ms1:
-                            AreaMs1 = (AreaMs1 ?? 0) + info.Area;
-                            BackgroundAreaMs1 = (BackgroundAreaMs1 ?? 0) + info.BackgroundArea;
-                            break;
-                        case ChromSource.fragment:
-                            AreaFragment = (AreaFragment ?? 0) + info.Area;
-                            BackgroundAreaFragment = (BackgroundAreaFragment ?? 0) + info.BackgroundArea;
-                            break;
+                        Area = (Area ?? 0) + info.Area;
+                        BackgroundArea = (BackgroundArea ?? 0) + info.BackgroundArea;
+                        if (info.MassError.HasValue)
+                        {
+                            double massError = MassError ?? 0;
+                            massError += (info.MassError.Value - massError) * info.Area / Area.Value;
+                            MassError = (float)massError;
+                        }
+                        if (info.Height > MaxHeight)
+                        {
+                            MaxHeight = info.Height;
+                            RetentionTime = info.RetentionTime;
+                        }
+                        if (!info.IsFwhmDegenerate)
+                            Fwhm = Math.Max(info.Fwhm, Fwhm ?? float.MinValue);
+                        if (info.IsTruncated.HasValue)
+                        {
+                            if (!Truncated.HasValue)
+                                Truncated = 0;
+                            if (info.IsTruncated.Value)
+                                Truncated++;
+                        }
+                        switch (Settings.GetChromSource(nodeTran))
+                        {
+                            case ChromSource.ms1:
+                                AreaMs1 = (AreaMs1 ?? 0) + info.Area;
+                                BackgroundAreaMs1 = (BackgroundAreaMs1 ?? 0) + info.BackgroundArea;
+                                break;
+                            case ChromSource.fragment:
+                                AreaFragment = (AreaFragment ?? 0) + info.Area;
+                                BackgroundAreaFragment = (BackgroundAreaFragment ?? 0) + info.BackgroundArea;
+                                break;
+                        }
+                        if (info.StartRetentionTime != 0)
+                            StartTime = Math.Min(info.StartRetentionTime, StartTime ?? float.MaxValue);
+                        if (info.EndRetentionTime != 0)
+                            EndTime = Math.Max(info.EndRetentionTime, EndTime ?? float.MinValue);
                     }
 
-                    if (info.MassError.HasValue)
-                    {
-                        double massError = MassError ?? 0;
-                        massError += (info.MassError.Value - massError)*info.Area/Area.Value;
-                        MassError = (float) massError;
-                    }
-
-                    if (info.Height > MaxHeight)
-                    {
-                        MaxHeight = info.Height;
-                        RetentionTime = info.RetentionTime;
-                    }
-                    if (info.StartRetentionTime != 0)
-                        StartTime = Math.Min(info.StartRetentionTime, StartTime ?? float.MaxValue);
-                    if (info.EndRetentionTime != 0)
-                        EndTime = Math.Max(info.EndRetentionTime, EndTime ?? float.MinValue);
-                    if (!info.IsFwhmDegenerate)
-                        Fwhm = Math.Max(info.Fwhm, Fwhm ?? float.MinValue);
-                    if (info.IsTruncated.HasValue)
-                    {
-                        if (!Truncated.HasValue)
-                            Truncated = 0;
-                        if (info.IsTruncated.Value)
-                            Truncated++;
-                    }
                     if (info.IsIdentified &&
                         (info.Identified == PeakIdentification.TRUE || Identified == PeakIdentification.FALSE))
                     {
@@ -2621,7 +2626,7 @@ namespace pwiz.Skyline.Model
                                             tranMatch.CustomIon);
                 var losses = nodeTran.Losses;
                 // m/z, isotope distribution and library info calculated later
-                var nodeTranNew = new TransitionDocNode(tran, losses, TypedMass.ZERO_MONO_MASSH, null, null);
+                var nodeTranNew = new TransitionDocNode(tran, losses, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT);
                 // keep existing nodes, if we have them
                 var nodeTranExist = nodeResult.Transitions.FirstOrDefault(n => Equals(n.Key(this), nodeTranNew.Key(this)));
                 childrenNew.Add(nodeTranExist ?? nodeTranNew);

@@ -2046,8 +2046,7 @@ namespace pwiz.Skyline
                                         nodeTran.Annotations,
                                         nodeTran.Losses,
                                         mass,
-                                        null,
-                                        null,
+                                        TransitionDocNode.TransitionQuantInfo.DEFAULT, 
                                         null);
                                 // Note we can't just Replace the node, as it has a new Id that's not in the doc.
                                 // But neither do we want the tree selection to change, so note this as a replacement.
@@ -2799,7 +2798,7 @@ namespace pwiz.Skyline
                             var transition = new Transition(transitionGroup, dlg.Adduct, null, dlg.ResultCustomMolecule);
                             var massType = doc.Settings.TransitionSettings.Prediction.FragmentMassType;
                             var mass = transition.CustomIon.GetMass(massType);
-                            var nodeTran = new TransitionDocNode(transition, null, mass, null, null);
+                            var nodeTran = new TransitionDocNode(transition, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT);
                             return (SrmDocument)doc.Add(groupPath, nodeTran);
                         });
                     }

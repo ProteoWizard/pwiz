@@ -158,6 +158,7 @@ namespace pwiz.Skyline.Model.Serialization
             public const string concentration_multiplier = "concentration_multiplier";
             public const string internal_standard_concentration = "internal_standard_concentration";
             public const string normalization_method = "normalization_method";
+            public const string quantitative = "quantitative";
 
             // Results
             public const string replicate = "replicate";
