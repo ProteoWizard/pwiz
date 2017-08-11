@@ -245,7 +245,7 @@ blib-test-build scaffold : -o : output/scaffold.blib : scaffold.check : inputs/s
 
 # Test mzid format from ByOnic
 
-blib-test-build byonic : -o : output/byonic.blib : byonic.check zbuild-score.skip-lines : inputs/byonic-test.mzid ;
+blib-test-build byonic : -o : output/byonic.blib : byonic.check byonic.skip-lines : inputs/byonic-test.mzid ;
 
 # Test mzid format from MSGF+
 
