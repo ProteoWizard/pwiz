@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Model
             {
                 case SequenceModFormatType.mass_diff:
                     // Non-narrow format is used for library look-up and must be consistent with LibKey format
-                    return string.Format(CultureInfo.InvariantCulture, "[{0}{1:F01}]",
+                    return string.Format(CultureInfo.InvariantCulture, "[{0}{1:F01}]", // Not L10N
                         (massDiff > 0 ? "+" : string.Empty), massDiff); // Not L10N
                 case SequenceModFormatType.mass_diff_narrow:
                     // Narrow format allows for removal of .0 when decimal is not present

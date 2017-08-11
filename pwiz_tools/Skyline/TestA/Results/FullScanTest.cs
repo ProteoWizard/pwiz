@@ -681,7 +681,7 @@ namespace pwiz.SkylineTestA.Results
                     Assume.IsNotNull(transDocB, "failed to find matching transition");
                     Assume.IsFalse(docBTransitionsMatched.Contains(transDocB), "transition matched twice");
                     docBTransitionsMatched.Add(transDocB);
-                    // ReSharper disable once PossibleNullReferenceException
+                    // ReSharper disable PossibleNullReferenceException
                     using (var docBChromInfos = transDocB.ChromInfos.GetEnumerator())
                     {
                         foreach (var infoDocA in transDocA.ChromInfos)
@@ -691,6 +691,7 @@ namespace pwiz.SkylineTestA.Results
                             Assume.IsTrue(infoDocA.Equals(infoDocB));
                         }
                     }
+                    // ReSharper restore PossibleNullReferenceException
                 }
             }
         }

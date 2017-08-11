@@ -25,7 +25,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -196,9 +195,11 @@ namespace pwiz.Skyline.Model.Results
                 return _monoisotopicMass;
             // Otherwize use the charge to convert from the peak center m/z values
             double shift = SequenceMassCalc.GetPeptideInterval(decoyMassShift);    // Correct for shift applied to the distribution
+            // ReSharper disable ImpureMethodCallOnReadonlyValueField
             return _monoisotopicMass.IsMassH() ? 
                 new TypedMass(SequenceMassCalc.GetMH(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _adduct.AdductCharge), _monoisotopicMass.MassType) :
                 _adduct.MassFromMz(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _monoisotopicMass.MassType);
+            // ReSharper restore ImpureMethodCallOnReadonlyValueField
         }
 
         #region object overrides
@@ -219,11 +220,13 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return  _monoisotopicMass.Equivalent(other._monoisotopicMass) && // Allows comparison of massH and straight mass
+            // ReSharper disable ImpureMethodCallOnReadonlyValueField
+            return _monoisotopicMass.Equivalent(other._monoisotopicMass) && // Allows comparison of massH and straight mass
                    other._adduct.AdductFormula == _adduct.AdductFormula &&
                    ArrayUtil.EqualsDeep(other._expectedDistribution, _expectedDistribution) &&
                    other.MonoMassIndex == MonoMassIndex &&
                    other.BaseMassIndex == BaseMassIndex;
+            // ReSharper restore ImpureMethodCallOnReadonlyValueField
         }
 
         public override bool Equals(object obj)

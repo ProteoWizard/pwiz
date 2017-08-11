@@ -232,6 +232,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public abstract class GraphData : Immutable
         {
+            // ReSharper disable PossibleMultipleEnumeration
             protected GraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, PeptideGroupDocNode selectedProtein, 
                              int? iResult, DisplayTypeChrom displayType, GraphValues.IRetentionTimeTransformOp retentionTimeTransformOp, 
                              PaneKey paneKey)
@@ -457,6 +458,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (minY != double.MaxValue)
                     MinY = minY;
             }
+            // ReSharper restore PossibleMultipleEnumeration
 
             public GraphValues.IRetentionTimeTransformOp RetentionTimeTransformOp { get; private set; }
             public IList<PointPairList> PointPairLists { get; private set; }

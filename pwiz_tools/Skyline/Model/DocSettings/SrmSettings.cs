@@ -990,6 +990,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
             foreach (var library in PeptideSettings.Libraries.Libraries.Where(library => library != null))
             {
+                // ReSharper disable ConditionIsAlwaysTrueOrFalse
+                // ReSharper disable HeuristicUnreachableCode
                 if (library is MidasLibrary)
                 {
                     foreach (var midasSpectra in precursorMzs.Select(precursorMz => GetMidasSpectra(precursorMz.Value)))
@@ -1008,9 +1010,13 @@ namespace pwiz.Skyline.Model.DocSettings
                             continue;
                         }
                         int? indexIgnore = null;
+                        // ReSharper disable PossibleMultipleEnumeration
                         times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref indexIgnore));
+                        // ReSharper restore PossibleMultipleEnumeration
                     }
                 }
+                // ReSharper restore HeuristicUnreachableCode
+                // ReSharper restore ConditionIsAlwaysTrueOrFalse
             }
             return times.ToArray();
         }

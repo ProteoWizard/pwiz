@@ -372,7 +372,7 @@ namespace pwiz.Skyline.Model.IonMobility
                     }
                     if (_schemaVersion < 3)
                     {
-                        foreach (var col in new[]{ "PrecursorAdduct", "MoleculeName", "ChemicalFormula", "InChiKey", "OtherKeys"})
+                        foreach (var col in new[] { "PrecursorAdduct", "MoleculeName", "ChemicalFormula", "InChiKey", "OtherKeys" }) // Not L10N
                         {
                             command.CommandText =
                                 string.Format("ALTER TABLE IonMobilityLibrary ADD COLUMN {0} TEXT", col); // Not L10N
@@ -380,7 +380,7 @@ namespace pwiz.Skyline.Model.IonMobility
                         }
                     }
                     _schemaVersion = SCHEMA_VERSION_CURRENT;
-                    command.CommandText = string.Format("UPDATE VersionInfo SET SchemaVersion = {0}", _schemaVersion);
+                    command.CommandText = string.Format("UPDATE VersionInfo SET SchemaVersion = {0}", _schemaVersion); // Not L10N
                     command.ExecuteNonQuery();
                     transaction.Commit();
                 }

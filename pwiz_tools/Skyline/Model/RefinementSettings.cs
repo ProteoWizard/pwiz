@@ -999,8 +999,8 @@ namespace pwiz.Skyline.Model
                 {
                     var newDbPath = document.Settings.PeptideSettings.Prediction.DriftTimePredictor
                         .IonMobilityLibrary.PersistMinimized(pathForLibraryFiles, document, precursorMap);
-                    var spec = new IonMobilityLibrary(document.Settings.PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary.Name + 
-                        " " + Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules, newDbPath);
+                    var spec = new IonMobilityLibrary(document.Settings.PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary.Name +
+                        " " + Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules, newDbPath); // Not L10N
                     var driftTimePredictor = document.Settings.PeptideSettings.Prediction.DriftTimePredictor.ChangeLibrary(spec);
                     newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangePeptideSettings(newdoc.Settings.PeptideSettings.ChangePrediction(
                         newdoc.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(driftTimePredictor))));

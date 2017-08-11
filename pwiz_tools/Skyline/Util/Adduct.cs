@@ -145,7 +145,7 @@ namespace pwiz.Skyline.Util
                 RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant;
             var outerRegex =
                 new Regex(
-                    @"\[?(?<multM>\d*)M(?<label>(\(.*\)|[^\+\-]*))?(?<adduct>[\+\-][^\]]*)(\](?<declaredChargeCount>\d*)(?<declaredChargeSign>[+-]*)?)?$",
+                    @"\[?(?<multM>\d*)M(?<label>(\(.*\)|[^\+\-]*))?(?<adduct>[\+\-][^\]]*)(\](?<declaredChargeCount>\d*)(?<declaredChargeSign>[+-]*)?)?$", // Not L10N
                     regexOptions); // Not L10N
             var innerRegex = new Regex(@"(?<oper>\+|\-)(?<multM>\d+)?(?<ion>[^-+]*)", regexOptions); // Not L10N
             int? declaredCharge = null;
@@ -432,7 +432,7 @@ namespace pwiz.Skyline.Util
             // Reuse the more common non-proteomic adducts
             var testValue = value.StartsWith("M") ? "[" + value + "]" : value; // Not L10N
             var testAdduct = new Adduct(testValue, parserMode, explicitCharge);
-            if (!testValue.EndsWith("]"))
+            if (!testValue.EndsWith("]")) // Not L10N
             {
                 // Can we trim any trailing charge info to arrive at a standard form (ie use [M+H] instead of [M+H]+)?
                 try

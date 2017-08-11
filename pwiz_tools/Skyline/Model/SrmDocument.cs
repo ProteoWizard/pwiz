@@ -1423,7 +1423,7 @@ namespace pwiz.Skyline.Model
             var transitionGroups =
                 peptideGroupDocNodes.SelectMany(node => node.Children.Cast<PeptideDocNode>())
                     .SelectMany(node => node.Children.Cast<TransitionGroupDocNode>());
-            var transitionGroupDocNodes = transitionGroups as TransitionGroupDocNode[] ?? transitionGroups.ToArray();
+            var transitionGroupDocNodes = transitionGroups.ToArray();
             TransitionIsotopeDistInfo isotopeDistInfo =
              ((transitionGroupDocNodes.Any() && transitionGroupDocNodes.First().HasIsotopeDist)) ?
                 TransitionDocNode.GetIsotopeDistInfo(tranFragment, null, transitionGroupDocNodes.First().IsotopeDist) : null;

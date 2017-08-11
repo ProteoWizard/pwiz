@@ -2017,7 +2017,7 @@ namespace pwiz.Skyline.Util
                 Fail(error);
         }
 
-        public static void AreEqual(double expected, double actual, double delta, string error = "")
+        public static void AreEqual(double expected, double actual, double delta, string error = "") // Not L10N
         {
             if (Math.Abs(expected-actual) > delta)
                 Fail(error);

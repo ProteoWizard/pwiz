@@ -2295,7 +2295,8 @@ namespace pwiz.Skyline.SettingsUI
                 SizeF sizeMz;
                 using (RenderTools rt = new RenderTools())
                 {
-                    var displayName = _pepInfo.DisplayString.Replace(".0]", "]");
+                    // TODO: should this use international decimal separator
+                    var displayName = _pepInfo.DisplayString.Replace(".0]", "]"); // Not L10N
                     table.AddDetailRow(string.Empty, displayName, rt); // Not L10N
                     ExplicitMods mods;
                     TransitionGroupDocNode transitionGroupDocNode;
@@ -2315,11 +2316,11 @@ namespace pwiz.Skyline.SettingsUI
                         mz = transitionGroup.PrecursorAdduct.MzFromNeutralMass(mol.GetMass(MassType.Monoisotopic));
                         if (!Equals(displayName, mol.Name) && ! string.IsNullOrEmpty(mol.Name))
                         {
-                            table.AddDetailRow(string.Empty, string.Format("Name: {0}", mol.Name), rt);
+                            table.AddDetailRow(string.Empty, string.Format("Name: {0}", mol.Name), rt); // Not L10N
                         }
                         if (!string.IsNullOrEmpty(mol.Formula))
                         {
-                            table.AddDetailRow(string.Empty,string.Format("Formula: {0}", mol.Formula), rt);
+                            table.AddDetailRow(string.Empty, string.Format("Formula: {0}", mol.Formula), rt); // Not L10N
                         }
                         foreach (var idKey in mol.AccessionNumbers.GetAllKeys()) // List InChiKey, CAS, etc
                         {

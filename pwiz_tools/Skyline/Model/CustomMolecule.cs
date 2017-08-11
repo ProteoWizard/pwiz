@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Model
                     string value;
                     if (AccessionNumbers.TryGetValue(key, out value) && !string.IsNullOrEmpty(value))
                     {
-                        result += string.Format("{0}{1}:{2}", 
+                        result += string.Format("{0}{1}:{2}", // Not L10N
                             string.IsNullOrEmpty(result) ? string.Empty : "\t", key, value); // Not L10N
                     }
                 }
@@ -200,10 +200,10 @@ namespace pwiz.Skyline.Model
                 return tsv;
 
             // Replace tab with something that XML parsers won't mess with
-            var newsep = "$";
+            var newsep = "$"; // Not L10N
             while (tsv.Contains(newsep))
             {
-                newsep += "_"; // Grow it until it's unique
+                newsep += "_"; // Not L10N Grow it until it's unique
             }
             // Encode the TSV, declaring the separator 
             return string.Format("#{0}#{1}", newsep, tsv.Replace("\t", newsep)); // Not L10N
@@ -321,8 +321,8 @@ namespace pwiz.Skyline.Model
         public TypedMass AverageMass { get; private set; }
 
         protected const int DEFAULT_ION_MASS_PRECISION = 6;
-        protected static readonly string massFormat = "{0} [{1:F0"+DEFAULT_ION_MASS_PRECISION+"}/{2:F0"+DEFAULT_ION_MASS_PRECISION+"}]";
-        protected static readonly string massFormatSameMass = "{0} [{1:F0"+DEFAULT_ION_MASS_PRECISION+"}]";
+        protected static readonly string massFormat = "{0} [{1:F0"+DEFAULT_ION_MASS_PRECISION+"}/{2:F0"+DEFAULT_ION_MASS_PRECISION+"}]"; // Not L10N
+        protected static readonly string massFormatSameMass = "{0} [{1:F0" + DEFAULT_ION_MASS_PRECISION + "}]"; // Not L10N
         protected const string massFormatRegex = @"(?:[a-z][a-z]+)\s+\[([+-]?\d*\.\d+)(?![-+0-9\.])\/([+-]?\d*\.\d+)(?![-+0-9\.])\]"; // Not L10N
 
         public SmallMoleculeLibraryAttributes GetSmallMoleculeLibraryAttributes()
@@ -407,7 +407,7 @@ namespace pwiz.Skyline.Model
                 var format = MonoisotopicMass.Value.Equals(AverageMass.Value) ? massFormatSameMass : massFormat;
                 var tol = tolerance.Value.ToString(CultureInfo.InvariantCulture);
                 var precision = tol.Length - tol.IndexOf(".", StringComparison.Ordinal) - 1; // Not L10N
-                format = format.Replace("F0"+DEFAULT_ION_MASS_PRECISION, "F0"+precision);
+                format = format.Replace("F0" + DEFAULT_ION_MASS_PRECISION, "F0" + precision);// Not L10N
                 return String.Format(format, DisplayNameDetail, MonoisotopicMass, AverageMass);
             }
             else
