@@ -144,7 +144,7 @@
     <Compile Include="SystemUtil\ProcessStreamReader.cs" />
     <Compile Include="SystemUtil\ProcessRunner.cs" />
     <Compile Include="SystemUtil\ProgressStatus.cs" />
-    <Compile Include="SystemUtil\QueueWorker.cs" />
+    <Compile Include="SystemUtil\ProducerConsumerWorker.cs" />
     <Compile Include="SystemUtil\StringPool.cs" />
     <Compile Include="SystemUtil\TaskbarProgress.cs" />
     <Compile Include="SystemUtil\TypeSafeEnum.cs" />

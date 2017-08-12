@@ -247,5 +247,11 @@ namespace pwiz.Skyline.Controls
                                             SystemInformation.VerticalScrollBarWidth;
             }
         }
+
+        #region Functional test support
+
+        public ListView ListView { get { return listView; } }
+
+        #endregion
     }
 }

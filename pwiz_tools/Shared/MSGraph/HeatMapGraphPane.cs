@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using ZedGraph;
 
@@ -57,7 +58,7 @@ namespace pwiz.MSGraph
 
             // Use log scale for heat intensity.
             double scale = (_heatMapColors.Length - 1)/
-                           (logScale ? Math.Log(heatMapData.MaxPoint.Z) : heatMapData.MaxPoint.Z);
+                           (logScale ? Math.Log(heatMapData.MaxPoint.Point.Z) : heatMapData.MaxPoint.Point.Z);
 
             // Create curves for each intensity color.
             var curves = new LineItem[_heatMapColors.Length];
@@ -73,7 +74,8 @@ namespace pwiz.MSGraph
                         Fill = new Fill(color),
                         Type = SymbolType.Circle,
                         IsAntiAlias = true
-                    }
+                    },
+                    Tag = new List<object>()
                 };
                 if ((i + 1) % (_heatMapColors.Length / 4) == 0)
                 {
@@ -94,9 +96,13 @@ namespace pwiz.MSGraph
 
             foreach (var heatPoint in points) {
                 // A log scale produces a better visual display.
-                int intensity = (int) ((logScale ? Math.Log(heatPoint.Z) : heatPoint.Z)*scale);
+                int intensity = (int)((logScale ? Math.Log(heatPoint.Point.Z) : heatPoint.Point.Z) * scale);
                 if (intensity >= cutoff)
-                    curves[intensity].AddPoint(heatPoint.X, heatPoint.Y);
+                {
+                    curves[intensity].AddPoint(heatPoint.Point.X, heatPoint.Point.Y);
+                    ((List<object>)curves[intensity].Tag).Add(heatPoint.Tag);
+                }
+                    
             }
         }
 

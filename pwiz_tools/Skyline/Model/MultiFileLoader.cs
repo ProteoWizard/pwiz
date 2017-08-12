@@ -29,6 +29,8 @@ namespace pwiz.Skyline.Model
 {
     public class MultiFileLoader
     {
+        private const int MAX_PARALLEL_LOAD_FILES = 8;
+
         private readonly QueueWorker<LoadInfo> _worker;
         private readonly Dictionary<MsDataFileUri, int> _loadingPaths;
         private readonly bool _synchronousMode;
@@ -100,14 +102,15 @@ namespace pwiz.Skyline.Model
                         _threadCount = 1;
                         break;
 
-                    case 1:
+                    case 1: // Several is 1/4 logical processors (i.e. 2 for an i7)
                         _threadCount = Math.Max(1, Environment.ProcessorCount / 4);
                         break;
 
-                    case 2:
+                    case 2: // Many is 1/2 logical processors (i.e. 4 for an i7)
                         _threadCount = Math.Max(1, Environment.ProcessorCount / 2);
                         break;
                 }
+                _threadCount = Math.Min(MAX_PARALLEL_LOAD_FILES, _threadCount);
             }
         }
 

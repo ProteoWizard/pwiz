@@ -284,7 +284,8 @@
     <Compile Include="AlgLib\solvers.cs" />
     <Compile Include="AlgLib\specialfunctions.cs" />
     <Compile Include="AlgLib\statistics.cs" />
-    <Compile Include="AnnotationHelper.cs" />
+    <Compile Include="Util\AnnotationHelper.cs" />
+    <Compile Include="Controls\Graphs\AreaCVGraphDataCache.cs" />
     <Compile Include="Controls\Graphs\AreaCVToolbar.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -378,6 +379,7 @@
     </Compile>
     <Compile Include="Controls\Graphs\MassErrorHistogram2DGraphPane.cs" />
     <Compile Include="Controls\Graphs\MassErrorHistogramGraphPane.cs" />
+    <Compile Include="Controls\Graphs\PeptideAnnotationPairFinder.cs" />
     <Compile Include="Controls\Graphs\PeptidesAndTransitionGroups.cs" />
     <Compile Include="Controls\Graphs\RunToRunRegressionToolbar.cs">
       <SubType>UserControl</SubType>
@@ -3207,6 +3209,7 @@
     <Compile Include="Util\AxisLabelScaler.cs" />
     <Compile Include="Util\BackgroundEventThreads.cs" />
     <Compile Include="Util\BioMassCalc.cs" />
+    <Compile Include="Util\HistogramHelper.cs" />
     <Compile Include="Util\LongOperationRunner.cs" />
     <Compile Include="Util\CultureUtil.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />

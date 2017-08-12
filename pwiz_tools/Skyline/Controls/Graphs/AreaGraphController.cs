@@ -95,7 +95,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             return PointsType == PointsTypePeakArea.targets &&
                 document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained &&
-                !double.IsNaN(Settings.Default.AreaCVQValueCutoff);
+                !double.IsNaN(Settings.Default.AreaCVQValueCutoff) &&
+                Settings.Default.AreaCVQValueCutoff < 1.0;
         }
 
         public void OnDocumentChanged(SrmDocument oldDocument, SrmDocument newDocument)
@@ -103,24 +104,33 @@ namespace pwiz.Skyline.Controls.Graphs
             var settingsNew = newDocument.Settings;
             var settingsOld = oldDocument.Settings;
 
-            if (GroupByGroup != null && !ReferenceEquals(settingsNew.DataSettings.AnnotationDefs, settingsOld.DataSettings.AnnotationDefs))
+            if (GraphType == GraphTypePeakArea.histogram || GraphType == GraphTypePeakArea.histogram2d)
             {
-                var groups = AnnotationHelper.FindGroupsByTarget(settingsNew, AnnotationDef.AnnotationTarget.replicate);
-                // The group we were grouping by has been removed
-                if (!groups.Contains(GroupByGroup))
+                if (GroupByGroup != null && !ReferenceEquals(settingsNew.DataSettings.AnnotationDefs, settingsOld.DataSettings.AnnotationDefs))
                 {
-                    GroupByGroup = GroupByAnnotation = null;
+                    var groups = AnnotationHelper.FindGroupsByTarget(settingsNew, AnnotationDef.AnnotationTarget.replicate);
+                    // The group we were grouping by has been removed
+                    if (!groups.Contains(GroupByGroup))
+                    {
+                        GroupByGroup = GroupByAnnotation = null;
+                    }
                 }
-            }
 
-            if (GroupByAnnotation != null && settingsNew.HasResults && settingsOld.HasResults &&
-                !ReferenceEquals(settingsNew.MeasuredResults.Chromatograms, settingsOld.MeasuredResults.Chromatograms))
-            {
-                var annotations = AnnotationHelper.GetPossibleAnnotations(settingsNew, GroupByGroup, AnnotationDef.AnnotationTarget.replicate);
+                if (GroupByAnnotation != null && settingsNew.HasResults && settingsOld.HasResults &&
+                    !ReferenceEquals(settingsNew.MeasuredResults.Chromatograms, settingsOld.MeasuredResults.Chromatograms))
+                {
+                    var annotations = AnnotationHelper.GetPossibleAnnotations(settingsNew, GroupByGroup, AnnotationDef.AnnotationTarget.replicate);
 
-                // The annotation we were grouping by has been removed
-                if (!annotations.Contains(GroupByAnnotation))
-                    GroupByAnnotation = null;
+                    // The annotation we were grouping by has been removed
+                    if (!annotations.Contains(GroupByAnnotation))
+                        GroupByAnnotation = null;
+
+                    var pane = GraphSummary.GraphPanes.FirstOrDefault();
+                    if (pane is AreaCVHistogramGraphPane)
+                        ((AreaCVHistogramGraphPane) pane).Cache.Cancel();
+                    else if(pane is AreaCVHistogram2DGraphPane)
+                        ((AreaCVHistogram2DGraphPane) pane).Cache.Cancel();
+                }
             }
         }
 
@@ -185,6 +195,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!(pane is AreaCVHistogram2DGraphPane))
                         GraphSummary.GraphPanes = new[] { new AreaCVHistogram2DGraphPane(GraphSummary)  };
                     break;
+            }
+
+            if (!ReferenceEquals(GraphSummary.GraphPanes.FirstOrDefault(), pane))
+            {
+                var disposable = pane as IDisposable;
+                if (disposable != null)
+                    disposable.Dispose();
             }
         }
 

@@ -9810,4 +9810,22 @@ Here are the {0} pairs with multiple entries:
   <data name="Ions_fragments" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Ions_fragments.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="AreaCVHistogramGraphPane_AddLabels_Calculating____" xml:space="preserve">
+    <value>Calculating ...</value>
+  </data>
+  <data name="HistogramHelper_CreateAndShowFindResults_Only_showing__0___1__peptides" xml:space="preserve">
+    <value>Only showing {0}/{1} peptides</value>
+  </data>
+  <data name="PeptideAnnotationPairFinder_GetDisplayText__0__CV_in__1_" xml:space="preserve">
+    <value>{0} CV in {1}</value>
+  </data>
+  <data name="PeptideAnnotationPairFinder_GetDisplayText__0__CV" xml:space="preserve">
+    <value>{0} CV</value>
+  </data>
+  <data name="PeptideAnnotationPairFinder_DisplayName_Peptides" xml:space="preserve">
+    <value>Peptides</value>
+  </data>
+  <data name="AreaCVHistogram2DGraphPane_UpdateGraph_Calculating____" xml:space="preserve">
+    <value>Calculating ...</value>
+  </data>
 </root>

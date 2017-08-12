@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -55,17 +56,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             _timer.Stop();
             _graphSummary.UpdateUIWithoutToolbar();
-        }
-
-        public IEnumerable<string> Annotations
-        {
-            get { return toolStripComboGroup.Items.Cast<string>(); }
-            set
-            {
-                toolStripComboGroup.Items.Clear();
-                // ReSharper disable once CoVariantArrayConversion
-                toolStripComboGroup.Items.AddRange(value.ToArray());
-            }
         }
 
         private void toolStripComboGroup_SelectedIndexChanged(object sender, EventArgs e)
@@ -177,7 +167,7 @@ namespace pwiz.Skyline.Controls.Graphs
             else
                 return false;
 
-            return cache.IsValidFor(new AreaCVGraphData.AreaCVGraphSettings()) &&
+            return cache.IsValidFor(_graphSummary.DocumentUIContainer.DocumentUI, new AreaCVGraphData.AreaCVGraphSettings()) &&
                 cache.Get(AreaGraphController.GroupByGroup,
                     AreaGraphController.GroupByAnnotation,
                     AreaGraphController.MinimumDetections,
@@ -284,6 +274,28 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool DetectionsVisible { get {  return toolStripLabel2.Visible && toolStripNumericDetections.Visible && toolStripLabel3.Visible; } }
 
         public bool GroupsVisible { get { return toolStripLabel1.Visible && toolStripComboGroup.Visible; } }
+
+        public IEnumerable<string> Annotations
+        {
+            get { return toolStripComboGroup.Items.Cast<string>(); }
+            set
+            {
+                toolStripComboGroup.Items.Clear();
+                // ReSharper disable once CoVariantArrayConversion
+                toolStripComboGroup.Items.AddRange(value.ToArray());
+            }
+        }
+
+        public IEnumerable<string> NormalizationMethods
+        {
+            get { return toolStripComboNormalizedTo.Items.Cast<string>(); }
+            set
+            {
+                toolStripComboNormalizedTo.Items.Clear();
+                // ReSharper disable once CoVariantArrayConversion
+                toolStripComboNormalizedTo.Items.AddRange(value.ToArray());
+            }
+        }
         #endregion
     }
 }

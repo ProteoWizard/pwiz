@@ -21,7 +21,7 @@ using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
-namespace pwiz.Skyline
+namespace pwiz.Skyline.Util
 {
     internal class AnnotationHelper
     {

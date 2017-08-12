@@ -1788,7 +1788,13 @@ namespace pwiz.Skyline
                     }
                     return;
                 }
-            }
+            } 
+
+            ShowFindResults(results);
+        }
+
+        public void ShowFindResults(IList<FindResult> findResults)
+        {
             // Consider(nicksh): if there is only one match, then perhaps just navigate to it instead
             // of displaying FindResults window
 //            if (results.Count() == 1)
@@ -1798,12 +1804,12 @@ namespace pwiz.Skyline
             var findResultsForm = FormUtil.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
             if (findResultsForm == null)
             {
-                findResultsForm = new FindResultsForm(this, results);
+                findResultsForm = new FindResultsForm(this, findResults);
                 findResultsForm.Show(dockPanel, DockState.DockBottom);
             }
             else
             {
-                findResultsForm.ChangeResults(results);
+                findResultsForm.ChangeResults(findResults);
                 findResultsForm.Activate();
             }
         }

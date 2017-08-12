@@ -3900,6 +3900,9 @@ namespace pwiz.Skyline
                     areaCVLogScaleToolStripMenuItem.Checked = Settings.Default.AreaCVLogScale;
                     menuStrip.Items.Insert(iInsert++, areaCVLogScaleToolStripMenuItem);
                 }
+
+                selectionContextMenuItem.Checked = set.ShowReplicateSelection;
+                menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
             }
             else
             {

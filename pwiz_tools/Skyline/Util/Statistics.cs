@@ -1298,11 +1298,15 @@ namespace pwiz.Skyline.Util
                 var list = CopyList();
                 double pos = (list.Length - 1) * p;
                 int j = (int)pos;
+                if (j >= list.Length)
+                    return double.NaN;
                 double value = QNthItem(list, j);
                 double g = pos - j;
                 if (g == 0)
                     return value;
                 double value2 = QNthItem(list, j + 1);
+                if (j + 1 >= list.Length)
+                    return double.NaN;
                 return (1 - g) * value + g * value2;
             }
             catch (Exception)

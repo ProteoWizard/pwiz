@@ -44,7 +44,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var enabled = _document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained &&
                 AreaGraphController.PointsType == PointsTypePeakArea.targets;
-            labelQValueCutoff.Enabled = textQValueCutoff.Enabled = enabled;
             if (enabled)
                 textQValueCutoff.Text = ValueOrEmpty(Settings.Default.AreaCVQValueCutoff);
 
@@ -182,6 +181,16 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return checkShowMedian.Checked; }
             set { checkShowMedian.Checked = value; }
+        }
+
+        public double QValueCutoff
+        {
+            get
+            {
+                double result;
+                return double.TryParse(textQValueCutoff.Text, out result) ? result : double.NaN;
+            }
+            set { textQValueCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         #endregion

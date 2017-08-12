@@ -18,215 +18,177 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Controls.Graphs;
+using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
     public class AreaCVHistogramTest : AbstractFunctionalTest
     {
-        private struct AreaCVGraphDataStatistics
+        private class AreaCVGraphDataStatistics
         {
-            public int DataCount { get; set; }
-            public double MinMeanArea { get; set; } // Smallest mean area
-            public double MaxMeanArea { get; set; } // Largest mean area
-            public int Total { get; set; } // Total number of CV's
-            public double MaxCV { get; set; } // Highest CV
-            public double MinCV { get; set; } // Smallest CV
-            public int MaxFrequency { get; set; } // Highest count of CV's
-            public double MedianCV { get; set; } // Median CV
-            public double MeanCV { get; set; } // Mean CV
-            public double belowCVCutoff { get; set; } // Fraction/Percentage of CV's below cutoff
+            public AreaCVGraphDataStatistics(int dataCount, int objects, double minMeanArea, double maxMeanArea, int total, double maxCv, double minCv, int maxFrequency, double medianCv, double meanCv, double belowCvCutoff)
+            {
+                DataCount = dataCount;
+                Objects = objects;
+                MinMeanArea = minMeanArea;
+                MaxMeanArea = maxMeanArea;
+                Total = total;
+                MaxCV = maxCv;
+                MinCV = minCv;
+                MaxFrequency = maxFrequency;
+                MedianCV = medianCv;
+                MeanCV = meanCv;
+                BelowCVCutoff = belowCvCutoff;
+            }
+
+            public AreaCVGraphDataStatistics(AreaCVGraphData data, int objects)
+            {
+                DataCount = data.Data.Count;
+                Objects = objects;
+                MinMeanArea = data.MinMeanArea;
+                MaxMeanArea = data.MaxMeanArea;
+                Total = data.Total;
+                MaxCV = data.MaxCV;
+                MinCV = data.MinCV;
+                MaxFrequency = data.MaxFrequency;
+                MedianCV = data.MedianCV;
+                MeanCV = data.MeanCV;
+                BelowCVCutoff = data.BelowCVCutoff;
+            }
+
+            protected bool Equals(AreaCVGraphDataStatistics other)
+            {
+                return DataCount == other.DataCount &&
+                       Objects == other.Objects &&
+                       MinMeanArea.Equals(other.MinMeanArea) &&
+                       MaxMeanArea.Equals(other.MaxMeanArea) &&
+                       Total == other.Total &&
+                       MaxCV.Equals(other.MaxCV) &&
+                       MinCV.Equals(other.MinCV) &&
+                       MaxFrequency == other.MaxFrequency &&
+                       MedianCV.Equals(other.MedianCV) &&
+                       MeanCV.Equals(other.MeanCV) &&
+                       BelowCVCutoff.Equals(other.BelowCVCutoff);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((AreaCVGraphDataStatistics)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = DataCount;
+                    hashCode = (hashCode * 397) ^ Objects.GetHashCode();
+                    hashCode = (hashCode * 397) ^ MinMeanArea.GetHashCode();
+                    hashCode = (hashCode * 397) ^ MaxMeanArea.GetHashCode();
+                    hashCode = (hashCode * 397) ^ Total;
+                    hashCode = (hashCode * 397) ^ MaxCV.GetHashCode();
+                    hashCode = (hashCode * 397) ^ MinCV.GetHashCode();
+                    hashCode = (hashCode * 397) ^ MaxFrequency;
+                    hashCode = (hashCode * 397) ^ MedianCV.GetHashCode();
+                    hashCode = (hashCode * 397) ^ MeanCV.GetHashCode();
+                    hashCode = (hashCode * 397) ^ BelowCVCutoff.GetHashCode();
+                    return hashCode;
+                }
+            }
+
+            public int DataCount { get; private set; }
+            public int Objects { get; private set; }
+            public double MinMeanArea { get; private set; } // Smallest mean area
+            public double MaxMeanArea { get; private set; } // Largest mean area
+            public int Total { get; private set; } // Total number of CV's
+            public double MaxCV { get; private set; } // Highest CV
+            public double MinCV { get; private set; } // Smallest CV
+            public int MaxFrequency { get; private set; } // Highest count of CV's
+            public double MedianCV { get; private set; } // Median CV
+            public double MeanCV { get; private set; } // Mean CV
+            public double BelowCVCutoff { get; private set; } // Fraction/Percentage of CV's below cutoff
         }
 
         private bool RecordData { get { return false; } }
 
-        #region Histogram Data
 
-        private static readonly AreaCVGraphDataStatistics STATS1 = new AreaCVGraphDataStatistics
+        private static readonly AreaCVGraphDataStatistics[] STATS =
         {
-            DataCount     = 68,
-            MinMeanArea   = 0,
-            MaxMeanArea   = 0,
-            Total         = 125,
-            MaxCV         = 1.96,
-            MinCV         = 0.13,
-            MaxFrequency  = 7,
-            MedianCV      = 0.48281967365197109,
-            MeanCV        = 0.56232,
-            belowCVCutoff = 0.024
+            new AreaCVGraphDataStatistics(68, 69, 0, 0, 125, 1.96, 0.13, 7, 0.48281967365197109, 0.56232, 0.024),
+            new AreaCVGraphDataStatistics(46, 47, 0, 0, 125, 1.96, 0.12, 9, 0.48281967365197109, 0.55776, 0.024),
+            new AreaCVGraphDataStatistics(65, 73, 0, 0, 1744, 1.54, 0, 219, 0.17382217742991013, 0.20458715596330274, 0.63130733944954132),
+            new AreaCVGraphDataStatistics(25, 26, 0, 0, 124, 1.54, 0.02, 20, 0.16298477433620745, 0.1970967741935484, 0.72580645161290325),
+            new AreaCVGraphDataStatistics(26, 27, 0, 0, 124, 1.5, 0, 15, 0.1372919480977226, 0.17322580645161287, 0.79032258064516125),
+            new AreaCVGraphDataStatistics(25, 26, 0, 0, 124, 1.5, 0, 19, 0.091041128301750027, 0.13629032258064519, 0.83064516129032262),
+            new AreaCVGraphDataStatistics(121, 122, 4.05, 7.9, 125, 1.96, 0.13, 2, 0.48281967365197109, 0.56232, 0.024),
+            new AreaCVGraphDataStatistics(120, 122, 4.05, 7.9, 125, 1.96, 0.12, 2, 0.48281967365197109, 0.55776, 0.024),
+            new AreaCVGraphDataStatistics(782, 782, 3.0500000000000003, 8.1, 1744, 1.54, 0, 12, 0.17382217742991013, 0.2045871559633029, 0.63130733944954132),
+            new AreaCVGraphDataStatistics(118, 118, 3.6500000000000004, 7.95, 124, 1.54, 0.02, 3, 0.16298477433620745, 0.19709677419354832, 0.72580645161290325),
+            new AreaCVGraphDataStatistics(115, 115, 3.6500000000000004, 7.95, 124, 1.5, 0, 2, 0.1372919480977226, 0.1732258064516129, 0.79032258064516125),
+            new AreaCVGraphDataStatistics(104, 104, 3.6500000000000004, 7.95, 124, 1.5, 0, 4, 0.091041128301750027, 0.13629032258064522, 0.83064516129032262),
         };
 
-
-        private static readonly AreaCVGraphDataStatistics STATS2 = new AreaCVGraphDataStatistics
+        private static readonly string[][] HISTOGRAM_FINDRESULTS = 
         {
-            DataCount     = 46,
-            MinMeanArea   = 0,
-            MaxMeanArea   = 0,
-            Total         = 125,
-            MaxCV         = 1.96,
-            MinCV         = 0.12,
-            MaxFrequency  = 9,
-            MedianCV      = 0.48281967365197109,
-            MeanCV        = 0.55776,
-            belowCVCutoff = 0.024
+            new[] { "K.DFATVYVDAVK.D [35, 45]", "14% CV in D102" },
+            new[] { "R.ASGIIDTLFQDR.F [181, 192]", "14% CV in D102" },
+            new[] { "R.HTNNGMICLTSLLR.I [279, 292]", "14% CV in D102" },
+            new[] { "K.ENSSNILDNLLSR.M [802, 814]", "14% CV in D102" },
+            new[] { "R.ALIHCLHMS.- [436, 444]", "14% CV in D102" },
+            new[] { "R.LTHGDFTWTTK.K [90, 100]", "14% CV in D102" },
+            new[] { "K.YGLDLGSLLVR.L [1066, 1076]", "14% CV in D102" },
+            new[] { "K.AGSWQITMK.G [258, 266]", "14% CV in D102" },
+            new[] { "TLNSINIAVFSK", "14% CV in D102" },
+            new[] { "ENEGTYYGPDGR", "14% CV in D102" },
+            new[] { "ENLSPPLGECLLER", "14% CV in D102" },
+            new[] { "ELLDSYIDGR", "14% CV in D102" },
+            new[] { "EEPSADALLPIDCR", "14% CV in D102" },
+            new[] { "AIEDYVNEFSAR", "14% CV in D102" },
+            new[] { "MHPELGSFYDSR", "14% CV in D102" },
+            new[] { "VTSAAFPSPIEK", "14% CV in D102" },
+            new[] { "AEQGAYLGPLPYK", "14% CV in D102" },
+            new[] { "TDEDVPSGPPR", "14% CV in D102" },
+            new[] { "ETGLMAFTNLK", "14% CV in D102" },
+            new[] { "LQTEGDGIYTLNSEK", "14% CV in D102" },
         };
 
-
-        private static readonly AreaCVGraphDataStatistics STATS3 = new AreaCVGraphDataStatistics
+        private static readonly string[][] HISTOGRAM2D_FINDRESULTS = 
         {
-            DataCount     = 65,
-            MinMeanArea   = 0,
-            MaxMeanArea   = 0,
-            Total         = 1744,
-            MaxCV         = 1.54,
-            MinCV         = 0,
-            MaxFrequency  = 219,
-            MedianCV      = 0.17382217742991013,
-            MeanCV        = 0.20458715596330274,
-            belowCVCutoff = 0.63130733944954132
+            new[] { "K.DFATVYVDAVK.D [35, 45]", "14% CV in D102" },
+            new[] { "R.ASGIIDTLFQDR.F [181, 192]", "14% CV in D102" },
+            new[] { "R.HTNNGMICLTSLLR.I [279, 292]", "14% CV in D102" },
+            new[] { "K.ENSSNILDNLLSR.M [802, 814]", "14% CV in D102" },
+            new[] { "R.ALIHCLHMS.- [436, 444]", "14% CV in D102" },
+            new[] { "R.LTHGDFTWTTK.K [90, 100]", "14% CV in D102" },
+            new[] { "K.YGLDLGSLLVR.L [1066, 1076]", "14% CV in D102" },
+            new[] { "K.AGSWQITMK.G [258, 266]", "14% CV in D102" },
+            new[] { "TLNSINIAVFSK", "14% CV in D102" },
+            new[] { "ENEGTYYGPDGR", "14% CV in D102" },
+            new[] { "ENLSPPLGECLLER", "14% CV in D102" },
+            new[] { "ELLDSYIDGR", "14% CV in D102" },
+            new[] { "EEPSADALLPIDCR", "14% CV in D102" },
+            new[] { "AIEDYVNEFSAR", "14% CV in D102" },
+            new[] { "MHPELGSFYDSR", "14% CV in D102" },
+            new[] { "VTSAAFPSPIEK", "14% CV in D102" },
+            new[] { "AEQGAYLGPLPYK", "14% CV in D102" },
+            new[] { "TDEDVPSGPPR", "14% CV in D102" },
+            new[] { "ETGLMAFTNLK", "14% CV in D102" },
+            new[] { "LQTEGDGIYTLNSEK", "14% CV in D102" },
         };
 
-
-        private static readonly AreaCVGraphDataStatistics STATS4 = new AreaCVGraphDataStatistics
-        {
-            DataCount     = 25,
-            MinMeanArea   = 0,
-            MaxMeanArea   = 0,
-            Total         = 124,
-            MaxCV         = 1.54,
-            MinCV         = 0.02,
-            MaxFrequency  = 20,
-            MedianCV      = 0.16298477433620745,
-            MeanCV        = 0.1970967741935484,
-            belowCVCutoff = 0.72580645161290325
-        };
-
-
-        private static readonly AreaCVGraphDataStatistics STATS5 = new AreaCVGraphDataStatistics
-        {
-            DataCount     = 26,
-            MinMeanArea   = 0,
-            MaxMeanArea   = 0,
-            Total         = 124,
-            MaxCV         = 1.5,
-            MinCV         = 0,
-            MaxFrequency  = 15,
-            MedianCV      = 0.1372919480977226,
-            MeanCV        = 0.17322580645161287,
-            belowCVCutoff = 0.79032258064516125
-        };
-
-
-        private static readonly AreaCVGraphDataStatistics STATS6 = new AreaCVGraphDataStatistics
-        {
-            DataCount     = 25,
-            MinMeanArea   = 0,
-            MaxMeanArea   = 0,
-            Total         = 124,
-            MaxCV         = 1.5,
-            MinCV         = 0,
-            MaxFrequency  = 19,
-            MedianCV      = 0.091041128301750027,
-            MeanCV        = 0.13629032258064519,
-            belowCVCutoff = 0.83064516129032262
-        };
-
-
-        private static readonly AreaCVGraphDataStatistics STATS7 = new AreaCVGraphDataStatistics
-        {
-            DataCount     = 121,
-            MinMeanArea   = 4.05,
-            MaxMeanArea   = 7.9,
-            Total         = 125,
-            MaxCV         = 1.96,
-            MinCV         = 0.13,
-            MaxFrequency  = 2,
-            MedianCV      = 0.48281967365197109,
-            MeanCV        = 0.56232,
-            belowCVCutoff = 0.024
-        };
-
-
-        private static readonly AreaCVGraphDataStatistics STATS8 = new AreaCVGraphDataStatistics
-        {
-            DataCount     = 120,
-            MinMeanArea   = 4.05,
-            MaxMeanArea   = 7.9,
-            Total         = 125,
-            MaxCV         = 1.96,
-            MinCV         = 0.12,
-            MaxFrequency  = 2,
-            MedianCV      = 0.48281967365197109,
-            MeanCV        = 0.55776,
-            belowCVCutoff = 0.024
-        };
-
-
-        private static readonly AreaCVGraphDataStatistics STATS9 = new AreaCVGraphDataStatistics
-        {
-            DataCount     = 782,
-            MinMeanArea   = 3.0500000000000003,
-            MaxMeanArea   = 8.1,
-            Total         = 1744,
-            MaxCV         = 1.54,
-            MinCV         = 0,
-            MaxFrequency  = 12,
-            MedianCV      = 0.17382217742991013,
-            MeanCV        = 0.2045871559633029,
-            belowCVCutoff = 0.63130733944954132
-        };
-
-
-        private static readonly AreaCVGraphDataStatistics STATS10 = new AreaCVGraphDataStatistics
-        {
-            DataCount     = 116,
-            MinMeanArea   = 4.05,
-            MaxMeanArea   = 7.8500000000000005,
-            Total         = 125,
-            MaxCV         = 0.84,
-            MinCV         = 0,
-            MaxFrequency  = 3,
-            MedianCV      = 0.13919790773338983,
-            MeanCV        = 0.16976,
-            belowCVCutoff = 0.776
-        };
-
-
-        private static readonly AreaCVGraphDataStatistics STATS11 = new AreaCVGraphDataStatistics
-        {
-            DataCount     = 110,
-            MinMeanArea   = 4.05,
-            MaxMeanArea   = 7.8500000000000005,
-            Total         = 125,
-            MaxCV         = 0.86,
-            MinCV         = 0,
-            MaxFrequency  = 5,
-            MedianCV      = 0.10056060487203196,
-            MeanCV        = 0.12944,
-            belowCVCutoff = 0.808
-        };
-
-
-        private static readonly AreaCVGraphDataStatistics STATS12 = new AreaCVGraphDataStatistics
-        {
-            DataCount     = 109,
-            MinMeanArea   = 4.05,
-            MaxMeanArea   = 7.8500000000000005,
-            Total         = 125,
-            MaxCV         = 0.84,
-            MinCV         = 0,
-            MaxFrequency  = 3,
-            MedianCV      = 0.090023027892612933,
-            MeanCV        = 0.12528,
-            belowCVCutoff = 0.84
-        };
-
-        #endregion
+        private readonly List<string[][]> RecordedFindResults = new List<string[][]>();
 
         [TestMethod]
         public void TestAreaCVHistograms()
@@ -240,61 +202,65 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"Rat_plasma.sky")));
             WaitForDocumentLoaded();
 
-            TestHistogram();
+            TestHistogram<AreaCVHistogramGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram, 0);
+            TestHistogram<AreaCVHistogram2DGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram2D, 6);
+
+            if (RecordData)
+            {
+                foreach (var recordedFindResults in RecordedFindResults)
+                {
+                    foreach (var str in recordedFindResults)
+                    {
+                        Console.WriteLine(@"new[] { " + string.Join(", ", str.Select(s => "\"" + s + "\"")) + @" },");
+                    }
+                    Console.WriteLine();
+                }
+                Assert.Fail("Successfully recorded data");
+            }
+        }
+        
+        private void TestHistogram<T>(Action showHistogram, int statsStartIndex) where T : SummaryGraphPane
+        {
+            RunUI(showHistogram);
+
+            WaitForGraphs();
 
             // Reset settings
             Settings.Default.AreaCVHistogramBinWidth = 1.0;
-            AreaGraphController.PointsType = PointsTypePeakArea.targets;
+            RunUI(() => SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.targets));
             AreaGraphController.GroupByGroup = AreaGraphController.GroupByAnnotation = null;
-            AreaGraphController.NormalizationMethod = AreaCVNormalizationMethod.none;
+            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.none));
             OpenAndChangeProperties(f => f.ShowCVCutoff = f.ShowMedianCV = true);
-
-            TestHistogram2D();
-
-            Assert.IsFalse(RecordData, "Successfully recorded data");
-        }
-
-        private void TestHistogram()
-        {
-            RunUI(() =>
-            {
-                AreaGraphController.GraphType = GraphTypePeakArea.histogram;
-                SkylineWindow.ShowGraphPeakArea(true);
-            });
-
-            WaitForGraphs();
 
             var graph = SkylineWindow.GraphPeakArea;
             var toolbar = graph.Toolbar as AreaCVToolbar;
             Assert.IsNotNull(toolbar);
 
             // Test if the toolbar is there and if the displayed data is correct
-            AreaCVHistogramGraphPane pane;
+            T pane;
             Assert.IsTrue(graph.TryGetGraphPane(out pane));
             Assert.IsTrue(pane.HasToolbar);
-            Assert.IsNotNull(graph.Toolbar);
-            AssertBarsAreEqual(72, pane);
-            Assert.IsTrue(AreaCVGraphDataStatisticsEqual(pane.CurrentData, STATS1));
+            AssertDataCorrect(pane, statsStartIndex++);
 
             // Test if the data is correct after changing the bin width and disabling the show cv cutoff option (which affects GetTotalBars)
             Settings.Default.AreaCVHistogramBinWidth = 2.0;
             OpenAndChangeProperties(f => f.ShowCVCutoff = false);
-            UpdateAndWait(graph);
-            AssertBarsAreEqual(48, pane);
-            Assert.IsTrue(AreaCVGraphDataStatisticsEqual(pane.CurrentData, STATS2));
+            AssertDataCorrect(pane, statsStartIndex++);
 
             // Make sure that there are no bars when the points type is decoys
-            AreaGraphController.PointsType = PointsTypePeakArea.decoys;
+            RunUI(() => SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.decoys));
             OpenAndChangeProperties(f => f.ShowMedianCV = false);
-            UpdateAndWait(graph);
-            AssertAllEqual(0, pane.GetTotalBars(), pane.CurrentData.Data.Count);
+            Assert.IsTrue(pane.GetBoxObjCount() == 0);
 
             // Make sure the toolbar is displaying the annotations correctly and that grouping by "All" works
-            AreaGraphController.PointsType = PointsTypePeakArea.targets;
             AreaGraphController.GroupByGroup = "SubjectId";
+            RunUI(() => SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.targets));
+            WaitForGraphs();
 
-            UpdateAndWait(graph);
-            CollectionAssert.AreEqual(toolbar.Annotations.ToArray(),
+            string[] annotations = null;
+            RunUI(() => annotations = toolbar.Annotations.ToArray());
+
+            CollectionAssert.AreEqual(annotations,
                 new[]
                 {
                     "All",
@@ -306,102 +272,71 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(toolbar.GroupsVisible);
                 Assert.IsFalse(toolbar.DetectionsVisible);
             });
-            AssertAllEqual(65, pane.GetTotalBars(), pane.CurrentData.Data.Count);
-            Assert.IsTrue(AreaCVGraphDataStatisticsEqual(pane.CurrentData, STATS3));
-            WaitForCondition(700, () => pane.Cache.DataCount == 45);
-
+            AssertDataCorrect(pane, statsStartIndex++);
+            WaitForCondition(700, () => GetCache(pane).DataCount == 45);
+            
             // Make sure that grouping by an annotation works correctly
             AreaGraphController.GroupByAnnotation = "D102";
             UpdateAndWait(graph);
-            AssertAllEqual(25, pane.GetTotalBars(), pane.CurrentData.Data.Count);
-            Assert.IsTrue(AreaCVGraphDataStatisticsEqual(pane.CurrentData, STATS4));
+            AssertDataCorrect(pane, statsStartIndex++);
 
-            // Verify that global standards normalization works
-            AreaGraphController.NormalizationMethod = AreaCVNormalizationMethod.global_standards;
-            UpdateAndWait(graph);
-            AssertAllEqual(26, pane.GetTotalBars(), pane.CurrentData.Data.Count);
-            Assert.IsTrue(AreaCVGraphDataStatisticsEqual(pane.CurrentData, STATS5));
+            // Verify that clicking a bar/point opens the find resuls and correctly shows the peptides
 
-            // Verify that median normalization works
-            AreaGraphController.NormalizationMethod = AreaCVNormalizationMethod.medians;
-            UpdateAndWait(graph);
-            AssertAllEqual(25, pane.GetTotalBars(), pane.CurrentData.Data.Count);
-            Assert.IsTrue(AreaCVGraphDataStatisticsEqual(pane.CurrentData, STATS6));
-        }
-
-        private void TestHistogram2D()
-        {
+            var p = new PointF(16.0f, 10.0f);// Center of 14 CV bar
+            p = pane.GeneralTransform(p, CoordType.AxisXYScale);
+            var mouseEventArgs = new MouseEventArgs(MouseButtons.Left, 1, (int)p.X, (int)p.Y, 0);
+            string[][] items = null;
             RunUI(() =>
             {
-                AreaGraphController.GraphType = GraphTypePeakArea.histogram2d;
-                SkylineWindow.ShowGraphPeakArea(true);
+                pane.HandleMouseMoveEvent(pane.GraphSummary.GraphControl, mouseEventArgs);
+                pane.HandleMouseClick(pane.GraphSummary.GraphControl, mouseEventArgs);
             });
 
-            var graph = SkylineWindow.GraphPeakArea;
-            UpdateAndWait(graph);
+            var form = WaitForOpenForm<FindResultsForm>();
+            RunUI(() =>
+            {
+                items = form.ListView.Items.OfType<ListViewItem>().Select(l => l.SubItems
+                    .OfType<ListViewItem.ListViewSubItem>().Where((item, index) => index != 1).Select(i => i.Text)
+                    .ToArray()).ToArray();
+            });
 
-            var toolbar = graph.Toolbar as AreaCVToolbar;
-            Assert.IsNotNull(toolbar);
+            if (RecordData)
+            {
+                RecordedFindResults.Add(items);
+            }
+            else
+            {
+                // Verify that the peptides are displayed correctly in the find results window
+                string[][] expected = null;
+                if (typeof(T) == typeof(AreaCVHistogramGraphPane))
+                    expected = HISTOGRAM_FINDRESULTS;
+                else if (typeof(T) == typeof(AreaCVHistogram2DGraphPane))
+                    expected = HISTOGRAM2D_FINDRESULTS;
+                else
+                    Assert.Fail("T not a Histogram graph pane");
 
-            // Test if the toolbar is there and if the displayed data is correct
-            AreaCVHistogram2DGraphPane pane2;
-            Assert.IsTrue(graph.TryGetGraphPane(out pane2));
-            Assert.IsTrue(pane2.HasToolbar);
-            Assert.IsNotNull(graph.Toolbar);
-            AssertBarsAreEqual(122, pane2);
-            Assert.IsTrue(AreaCVGraphDataStatisticsEqual(pane2.CurrentData, STATS7));
-
-            // Test if the data is correct after changing the bin width and disabling the show cv cutoff option (which affects the number of GetTotalBars)
-            Settings.Default.AreaCVHistogramBinWidth = 2.0;
-            OpenAndChangeProperties(f => f.ShowCVCutoff = false);
-            UpdateAndWait(graph);
-            AssertBarsAreEqual(122, pane2);
-            Assert.IsTrue(AreaCVGraphDataStatisticsEqual(pane2.CurrentData, STATS8));
-
-            // Make sure that there are no bars when the points type is decoys
-            AreaGraphController.PointsType = PointsTypePeakArea.decoys;
-            OpenAndChangeProperties(f => f.ShowMedianCV = false);
-            UpdateAndWait(graph);
-            AssertAllEqual(pane2.GetTotalBars(), pane2.CurrentData.Data.Count, 0);
-
-            // Make sure the toolbar is displaying the annotations correctly and that grouping by "All" works
-            AreaGraphController.PointsType = PointsTypePeakArea.targets;
-            AreaGraphController.GroupByGroup = "BioReplicate";
-            UpdateAndWait(graph);
-            CollectionAssert.AreEqual(toolbar.Annotations.ToArray(),
-                new[]
+                CollectionAssert.AreEqual(expected, items, Comparer<string[]>.Create((a, b) =>
                 {
-                    "All",
-                    "102", "103", "108", "138", "154", "172", "196", "146", "147", "148", "159", "160", "161", "162"      
-                });
-            RunUI(() =>
-            {
-                Assert.IsTrue(toolbar.GroupsVisible);
-                Assert.IsFalse(toolbar.DetectionsVisible);
-            });
-            Assert.IsTrue(toolbar.Visible);
-            AssertAllEqual(782, pane2.GetTotalBars(), pane2.CurrentData.Data.Count);
-            Assert.IsTrue(AreaCVGraphDataStatisticsEqual(pane2.CurrentData, STATS9));
-            WaitForCondition(700, () => pane2.Cache.DataCount == 45);
+                    for (var i = 0; i < Math.Min(a.Length, b.Length); ++i)
+                    {
+                        if (a[i] != b[i])
+                            return string.Compare(a[i], b[i], StringComparison.CurrentCulture);
+                    }
 
-            // Make sure that grouping by an annotation works correctly
-            AreaGraphController.GroupByAnnotation = "160";
-            UpdateAndWait(graph);
-            Assert.IsTrue(toolbar.Visible);
-            AssertAllEqual(116, pane2.GetTotalBars(), pane2.CurrentData.Data.Count);
-            Assert.IsTrue(AreaCVGraphDataStatisticsEqual(pane2.CurrentData, STATS10));
+                    return a.Length.CompareTo(b.Length);
+                }));
+            }
+
 
             // Verify that global standards normalization works
-            AreaGraphController.NormalizationMethod = AreaCVNormalizationMethod.global_standards;
-            UpdateAndWait(graph);
-            AssertAllEqual(110, pane2.GetTotalBars(), pane2.CurrentData.Data.Count);
-            Assert.IsTrue(AreaCVGraphDataStatisticsEqual(pane2.CurrentData, STATS11));
+            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.global_standards));
+            WaitForGraphs();
+            AssertDataCorrect(pane, statsStartIndex++);
 
             // Verify that median normalization works
-            AreaGraphController.NormalizationMethod = AreaCVNormalizationMethod.medians;
-            UpdateAndWait(graph);
-            AssertAllEqual(109, pane2.GetTotalBars(), pane2.CurrentData.Data.Count);
-            Assert.IsTrue(AreaCVGraphDataStatisticsEqual(pane2.CurrentData, STATS12));
+            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.medians));
+            WaitForGraphs();
+            AssertDataCorrect(pane, statsStartIndex++);
         }
 
         private void OpenAndChangeProperties(Action<AreaCVToolbarProperties> action)
@@ -418,57 +353,60 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        private void AssertBarsAreEqual(int expected, SummaryGraphPane pane)
-        {
-            if (RecordData)
-                return;
-
-            Assert.AreEqual(expected, pane.GetTotalBars());
-        }
-
-        private void AssertAllEqual<T>(params T[] values)
-        {
-            if (RecordData)
-                return;
-
-            for (var i = 1; i < values.Length; ++i)
-                Assert.AreEqual(values[0], values[i]);
-        }
-
         private void UpdateAndWait(GraphSummary graph)
         {
             RunUI(() => { graph.UpdateUI(); });
             WaitForGraphs();
         }
 
-        private int _currentStatsIndex = 1;
-        private bool AreaCVGraphDataStatisticsEqual(AreaCVGraphData a, AreaCVGraphDataStatistics b)
+        private static AreaCVGraphData.AreaCVGraphDataCache GetCache(SummaryGraphPane pane)
         {
+            if (pane is AreaCVHistogramGraphPane)
+                return ((AreaCVHistogramGraphPane)pane).Cache;
+            else if (pane is AreaCVHistogram2DGraphPane)
+                return ((AreaCVHistogram2DGraphPane)pane).Cache;
+            else
+                Assert.Fail("Graph pane is not a histogram/histogram2d graph pane");
+            return null;
+        }
+
+        private static AreaCVGraphData GetCurrentData(SummaryGraphPane pane)
+        {
+            if (pane is AreaCVHistogramGraphPane)
+                return ((AreaCVHistogramGraphPane)pane).CurrentData;
+            else if (pane is AreaCVHistogram2DGraphPane)
+                return ((AreaCVHistogram2DGraphPane)pane).CurrentData;
+            else
+                Assert.Fail("Graph pane is not a histogram/histogram2d graph pane");
+            return null;
+        }
+
+        private void AssertDataCorrect(SummaryGraphPane pane, int statsIndex)
+        {
+            AreaCVGraphData data = null;
+            WaitForCondition(() => (data = GetCurrentData(pane)) != null);
+            WaitForGraphs();
+
+            int objects = 0;
+            if (pane is AreaCVHistogramGraphPane)
+                objects = pane.GetBoxObjCount();
+            else if (pane is AreaCVHistogram2DGraphPane)
+                objects = pane.GetTotalBars();
+
             if (!RecordData)
             {
-                return a.Data.Count == b.DataCount && a.MinMeanArea == b.MinMeanArea && a.MaxMeanArea == b.MaxMeanArea && a.Total == b.Total &&
-                       a.MaxCV == b.MaxCV && a.MinCV == b.MinCV && a.MaxFrequency == b.MaxFrequency &&
-                       a.MedianCV == b.MedianCV && a.MeanCV == b.MeanCV && a.belowCVCutoff == b.belowCVCutoff;
+                Assert.AreEqual(STATS[statsIndex], new AreaCVGraphDataStatistics(data, objects));
+                return;
             }
-            
+
             Console.WriteLine(
-@"private static readonly AreaCVGraphDataStatistics STATS{0} = new AreaCVGraphDataStatistics
-{{
-    DataCount     = {1},
-    MinMeanArea   = {2:R},
-    MaxMeanArea   = {3:R},
-    Total         = {4},
-    MaxCV         = {5:R},
-    MinCV         = {6:R},
-    MaxFrequency  = {7},
-    MedianCV      = {8:R},
-    MeanCV        = {9:R},
-    belowCVCutoff = {10:R}
-}};
+                @"new AreaCVGraphDataStatistics({0}, {1}, {2:R}, {3:R}, {4}, {5:R}, {6:R}, {7}, {8:R}, {9:R}, {10:R}),",
+                data.Data.Count, objects, data.MinMeanArea, data.MaxMeanArea, data.Total, data.MaxCV, data.MinCV, data.MaxFrequency, data.MedianCV, data.MeanCV, data.BelowCVCutoff);
+        }
 
-", _currentStatsIndex++, a.Data.Count, a.MinMeanArea, a.MaxMeanArea, a.Total, a.MaxCV, a.MinCV, a.MaxFrequency, a.MedianCV, a.MeanCV, a.belowCVCutoff);
-
-            return true;
+        private static string Quote(string s)
+        {
+            return "\"" + s + "\"";
         }
     }
 }

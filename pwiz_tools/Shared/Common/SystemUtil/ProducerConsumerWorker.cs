@@ -24,7 +24,23 @@ using System.Threading;
 
 namespace pwiz.Common.SystemUtil
 {
-    public class QueueWorker<TItem> where TItem : class
+    public class QueueWorker<TItem> : ProducerConsumerWorker<TItem, ConcurrentQueue<TItem>> where TItem : class
+    {
+        public QueueWorker(Func<int, TItem> produce = null, Action<TItem, int> consume = null) : base(produce, consume) { }
+    }
+
+    public class StackWorker<TItem> : ProducerConsumerWorker<TItem, ConcurrentStack<TItem>> where TItem : class
+    {
+        public StackWorker(Func<int, TItem> produce = null, Action<TItem, int> consume = null) : base(produce, consume) { }
+    }
+
+    // This is possible but not used as of now
+    /*public class BagWorker<TItem> : ProducerConsumerWorker<TItem, ConcurrentBag<TItem>> where TItem : class
+    {
+        public BagWorker(Func<int, TItem> produce = null, Action<TItem, int> consume = null) : base(produce, consume) { }
+    }*/
+
+    public class ProducerConsumerWorker<TItem, TProducerConsumerCollection> where TItem : class where TProducerConsumerCollection : IProducerConsumerCollection<TItem>, new()
     {
         private readonly Func<int, TItem> _produce; 
         private readonly Action<TItem, int> _consume;
@@ -41,7 +57,7 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         /// <param name="produce">Function to produce a work item.</param>
         /// <param name="consume">Action to consume a work item.</param>
-        public QueueWorker(Func<int, TItem> produce = null, Action<TItem, int> consume = null)
+        public ProducerConsumerWorker(Func<int, TItem> produce = null, Action<TItem, int> consume = null)
         {
             _produce = produce;
             _consume = consume;
@@ -83,7 +99,7 @@ namespace pwiz.Common.SystemUtil
                         return;
                     Abort();
                 }
-                _queue = new BlockingCollection<TItem>(maxQueueSize);
+                _queue = new BlockingCollection<TItem>(new TProducerConsumerCollection(), maxQueueSize);
             }
 
             _threadExit = new CountdownEvent(consumeThreads);
@@ -196,13 +212,13 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
-        public void Abort()
+        public void Abort(bool wait = false)
         {
             if (_consumeThreads == null)
                 return;
 
             Clear();
-            DoneAdding();
+            DoneAdding(wait);
         }
 
         public void Clear()
@@ -238,13 +254,15 @@ namespace pwiz.Common.SystemUtil
         /// for them to be processed.  No subsequent calls to Add are
         /// expected.
         /// </summary>
-        public void Add(ICollection<TItem> items, bool wait = false)
+        public void Add(ICollection<TItem> items, bool wait = false, bool done = true)
         {
             foreach (var item in items)
             {
                 Add(item);
             }
-            DoneAdding(wait);
+
+            if(done)
+                DoneAdding(wait);
         }
 
         /// <summary>

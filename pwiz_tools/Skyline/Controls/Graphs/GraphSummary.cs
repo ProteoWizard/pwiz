@@ -378,6 +378,13 @@ namespace pwiz.Skyline.Controls.Graphs
             return null != graphPane && graphPane.HandleMouseDownEvent(sender, e);
         }
 
+        private void graphControl_MouseClick(object sender, MouseEventArgs e)
+        {
+            var graphPane = GraphPaneFromPoint(e.Location);
+            if(graphPane != null)
+                graphPane.HandleMouseClick(sender, e);
+        }
+
         private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState, PointF mousePosition)
         {
             foreach (var pane in GraphPanes)
@@ -402,6 +409,8 @@ namespace pwiz.Skyline.Controls.Graphs
         protected override void OnClosed(EventArgs e)
         {
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
+            foreach (var summaryGraphPane in GraphPanes)
+                summaryGraphPane.OnClose(e);
         }
 
         private void GraphSummary_Resize(object sender, EventArgs e)

@@ -1463,6 +1463,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Calculating ....
+        /// </summary>
+        public static string AreaCVHistogram2DGraphPane_UpdateGraph_Calculating____ {
+            get {
+                return ResourceManager.GetString("AreaCVHistogram2DGraphPane_UpdateGraph_Calculating____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to CV.
         /// </summary>
         public static string AreaCVHistogram2DGraphPane_UpdateGraph_CV {
@@ -1486,6 +1495,15 @@ namespace pwiz.Skyline.Properties {
         public static string AreaCVHistogram2DGraphPane_UpdateGraph_Median___0_ {
             get {
                 return ResourceManager.GetString("AreaCVHistogram2DGraphPane_UpdateGraph_Median___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculating ....
+        /// </summary>
+        public static string AreaCVHistogramGraphPane_AddLabels_Calculating____ {
+            get {
+                return ResourceManager.GetString("AreaCVHistogramGraphPane_AddLabels_Calculating____", resourceCulture);
             }
         }
         
@@ -12873,6 +12891,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Only showing {0}/{1} peptides.
+        /// </summary>
+        public static string HistogramHelper_CreateAndShowFindResults_Only_showing__0___1__peptides {
+            get {
+                return ResourceManager.GetString("HistogramHelper_CreateAndShowFindResults_Only_showing__0___1__peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap HomeIcon1 {
@@ -18718,6 +18745,33 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("Peptide_Validate_The_peptide_sequence__0__does_not_agree_with_the_protein_sequenc" +
                         "e__1__at__2__3__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptides.
+        /// </summary>
+        public static string PeptideAnnotationPairFinder_DisplayName_Peptides {
+            get {
+                return ResourceManager.GetString("PeptideAnnotationPairFinder_DisplayName_Peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} CV.
+        /// </summary>
+        public static string PeptideAnnotationPairFinder_GetDisplayText__0__CV {
+            get {
+                return ResourceManager.GetString("PeptideAnnotationPairFinder_GetDisplayText__0__CV", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} CV in {1}.
+        /// </summary>
+        public static string PeptideAnnotationPairFinder_GetDisplayText__0__CV_in__1_ {
+            get {
+                return ResourceManager.GetString("PeptideAnnotationPairFinder_GetDisplayText__0__CV_in__1_", resourceCulture);
             }
         }
         
