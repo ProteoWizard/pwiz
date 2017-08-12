@@ -108,6 +108,12 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
+            public override string ToString()
+            {
+                return string.Format(@"{0}, {1}, {2:R}, {3:R}, {4}, {5:R}, {6:R}, {7}, {8:R}, {9:R}, {10:R}",
+                    DataCount, Objects, MinMeanArea, MaxMeanArea, Total, MaxCV, MinCV, MaxFrequency, MedianCV, MeanCV, BelowCVCutoff);
+            }
+
             public int DataCount { get; private set; }
             public int Objects { get; private set; }
             public double MinMeanArea { get; private set; } // Smallest mean area
