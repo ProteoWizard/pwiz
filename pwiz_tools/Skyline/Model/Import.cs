@@ -68,6 +68,8 @@ namespace pwiz.Skyline.Model
 
         public IEnumerable<PeptideGroupDocNode> Import(TextReader reader, IProgressMonitor progressMonitor, long lineCount)
         {
+            bool requireLibraryMatch = Document.Settings.PeptideSettings.Libraries.Pick == PeptidePick.library
+                                       || Document.Settings.PeptideSettings.Libraries.Pick == PeptidePick.both;
             // Set starting values for limit counters
             _countPeptides = Document.PeptideCount;
             _countIons = Document.PeptideTransitionCount;
@@ -109,15 +111,18 @@ namespace pwiz.Skyline.Model
 
                 if (line.StartsWith(">")) // Not L10N
                 {
-                    if (_countIons > SrmDocument.MAX_TRANSITION_COUNT)
+                    if (!requireLibraryMatch)
                     {
-                        throw new InvalidDataException(TextUtil.LineSeparate(string.Format(Resources.FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__transitions_in__1_n0__peptides_at_line__2_n0__,
-                            SrmDocument.MAX_TRANSITION_COUNT, _countPeptides, linesRead), Resources.FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_));
-                    }
-                    else if (_countPeptides > SrmDocument.MAX_PEPTIDE_COUNT)
-                    {
-                        throw new InvalidDataException(TextUtil.LineSeparate(string.Format(Resources.FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__peptides_at_line__1_n0__,
-                            SrmDocument.MAX_PEPTIDE_COUNT, linesRead), Resources.FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_));
+                        if (_countIons > SrmDocument.MAX_TRANSITION_COUNT)
+                        {
+                            throw new InvalidDataException(TextUtil.LineSeparate(string.Format(Resources.FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__transitions_in__1_n0__peptides_at_line__2_n0__,
+                                SrmDocument.MAX_TRANSITION_COUNT, _countPeptides, linesRead), Resources.FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_));
+                        }
+                        else if (_countPeptides > SrmDocument.MAX_PEPTIDE_COUNT)
+                        {
+                            throw new InvalidDataException(TextUtil.LineSeparate(string.Format(Resources.FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__peptides_at_line__1_n0__,
+                                SrmDocument.MAX_PEPTIDE_COUNT, linesRead), Resources.FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_));
+                        }
                     }
                     try
                     {
