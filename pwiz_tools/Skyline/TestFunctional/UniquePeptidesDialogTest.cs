@@ -18,10 +18,13 @@
  */
 
 using System;
+using System.Diagnostics;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Properties;
 
@@ -90,11 +93,33 @@ namespace pwiz.SkylineTestFunctional
             // Add FASTA sequence that's not in the library
             using (new WaitDocumentChange())
             {
-                SkylineWindow.LogChangeFilter = "SkylineWindow.ImportFasta";
+                SkylineWindow.LogChange = LogChangeFunc;
                 RunUI(() => SkylineWindow.Paste(bogus ? TEXT_FASTA_NONSENSE : TEXT_FASTA_SPROT));
-                SkylineWindow.LogChangeFilter = null;
+                SkylineWindow.LogChange = null;
             }
             WaitForProteinMetadataBackgroundLoaderCompletedUI();
+        }
+
+        private static void LogChangeFunc(SrmDocument docNew, SrmDocument docOriginal)
+        {
+            string notLoadedText = string.Empty;
+            if (!docNew.IsLoaded)
+            {
+                var sb = new StringBuilder();
+                foreach (var desc in docNew.NonLoadedStateDescriptions)
+                {
+                    sb.AppendLine(desc);
+                }
+                notLoadedText = sb.ToString();
+            }
+            var stackTrace = new StackTrace(1, true).ToString();
+            if (!stackTrace.Contains("SkylineWindow.ImportFasta"))
+            {
+                Console.WriteLine(@"Setting document revision {0}", docNew.RevisionIndex);
+                if (!string.IsNullOrEmpty(notLoadedText))
+                    Console.WriteLine(notLoadedText);
+                Console.WriteLine(stackTrace);
+            }
         }
 
         private void scenario(int nodeNum, int expectedMatches, int expectedMoleculeFilteredCount, UniquePeptidesDlg.UniquenessType testType, bool bogus = false)
