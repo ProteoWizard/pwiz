@@ -86,7 +86,7 @@ namespace pwiz.SkylineTestFunctional
             // Check changed result state
             const int pepStandardCount = 13, tranStandardCount = 34;
             document = WaitForDocumentChange(document);
-            AssertEx.IsDocumentState(document, null, protCount, pepCount, pepCount*2, tranCount*2);
+            AssertEx.IsDocumentState(document, null, protCount, pepCount, pepCount*2-pepStandardCount, tranCount*2-tranStandardCount);
             int[] missingHeavy = {1, 1, 2, 2};
             for (int i = 0; i < EXPECTED_REPLICATES.Length; i++)
             {
@@ -110,13 +110,6 @@ namespace pwiz.SkylineTestFunctional
             };
 
             VerifyUserSets(document, matchedUserSetGroups, matchedUserSetTrans);
-
-            // Remove heavies from standards
-            RunUI(() => SkylineWindow.RemoveMissingResults());
-            document = WaitForDocumentChangeLoaded(document);
-
-            AssertEx.IsDocumentState(document, null, protCount, pepCount,
-                pepCount * 2 - pepStandardCount, tranCount * 2 - tranStandardCount);
 
             VerifyMatchingPeakBoundaries(document, true);   // CONSIDER: Strange that these peak times match exactly
 

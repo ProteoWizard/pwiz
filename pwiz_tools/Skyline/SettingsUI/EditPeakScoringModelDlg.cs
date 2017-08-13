@@ -560,29 +560,21 @@ namespace pwiz.Skyline.SettingsUI
             if (_peakScoringModel.Parameters != null && !allUnknownScores)
             {
                 // Calculate scale value for normal curve by calculating area of decoy histogram.
-                double yScaleDecoy = 0;
-                double yScaleSecondBest = 0;
+                double yScaleDecoy = GetTrapezoidalArea(decoyPoints.Select(p => p.Y));
+                double yScaleSecondBest = GetTrapezoidalArea(secondBestPoints.Select(p => p.Y));
                 double yScale = 0;
-                double previousY = 0;
-                foreach (var decoyPoint in decoyPoints)
-                {
-                    // Add trapezoidal area.
-                    yScaleDecoy += Math.Max(previousY, decoyPoint.Y) - Math.Abs(previousY - decoyPoint.Y)/2;
-                    previousY = decoyPoint.Y;
-                }
-                previousY = 0;
-                foreach (var secondBestPoint in secondBestPoints)
-                {
-                    // Add trapezoidal area.
-                    yScaleSecondBest += Math.Max(previousY, secondBestPoint.Y) - Math.Abs(previousY - secondBestPoint.Y) / 2;
-                    previousY = secondBestPoint.Y;
-                }
                 if (_peakScoringModel.UsesDecoys && _peakScoringModel.UsesSecondBest)
                     yScale = (yScaleDecoy + yScaleSecondBest) / 2.0;
                 else if (_peakScoringModel.UsesSecondBest)
                     yScale = yScaleSecondBest;
                 else if (_peakScoringModel.UsesDecoys)
                     yScale = yScaleDecoy;
+                if (yScale == 0)
+                {
+                    // If no decoys, use target points to scale the normal curve
+                    // as if there were an equal number of targets and decoys
+                    yScale = GetTrapezoidalArea(targetPoints.Select(p => p.Y));
+                }
                 double binWidth = (max - min)/HISTOGRAM_BAR_COUNT;
                 yScale *= binWidth;
 
@@ -639,6 +631,19 @@ namespace pwiz.Skyline.SettingsUI
             zedGraphMProphet.Refresh();
             zedGraphQValues.Refresh();
             tabControl1.Refresh();
+        }
+
+        private static double GetTrapezoidalArea(IEnumerable<double> heights)
+        {
+            double area = 0;
+            double previousHeight = 0;
+            foreach (var height in heights)
+            {
+                // Add trapezoidal area.
+                area += Math.Max(previousHeight, height) - Math.Abs(previousHeight - height) / 2;
+                previousHeight = height;
+            }
+            return area;
         }
 
         private static void ScaleGraph(GraphPane graphPane, double min, double max, bool hasUnknownScores)

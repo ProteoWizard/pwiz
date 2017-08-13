@@ -253,6 +253,13 @@ namespace pwiz.Skyline.Model
                 if (progressMonitor != null)
                     progressMonitor.ProcessMolecule(nodePep);
 
+                // Avoid removing standards as part of refinement
+                if (nodePep.GlobalStandardType != null)
+                {
+                    listPeptides.Add(nodePep);
+                    continue;
+                }
+
                 if (outlierIds.Contains(nodePep.Id.GlobalIndex))
                     continue;
 

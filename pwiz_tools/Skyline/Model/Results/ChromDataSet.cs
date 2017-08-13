@@ -662,7 +662,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 ++i;
             }   
-    }
+        }
 
         private static List<ChromDataPeakList> ExtendPeaks(IEnumerable<ChromDataPeakList> listPeakSets,
                                                            double[] retentionTimes,
@@ -1176,7 +1176,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return new RawTimeIntensities(_listChromData.Select(chromData => chromData.RawTimeIntensities),
                     InterpolationParams);
-    }
+            }
             return new InterpolatedTimeIntensities(_listChromData.Select(chromData=>chromData.TimeIntensities), 
                 _listChromData.Select(chromData=>chromData.PrimaryKey.Source));
         }
