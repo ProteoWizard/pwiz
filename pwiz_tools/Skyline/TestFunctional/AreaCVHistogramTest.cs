@@ -390,7 +390,7 @@ namespace pwiz.SkylineTestFunctional
         private void AssertDataCorrect(SummaryGraphPane pane, int statsIndex)
         {
             AreaCVGraphData data = null;
-            WaitForConditionUI(() => (data = GetCurrentData(pane)) != null);
+            WaitForConditionUI(() => (data = GetCurrentData(pane)) != null && data.IsValid);
             WaitForGraphs();
 
             RunUI(() =>

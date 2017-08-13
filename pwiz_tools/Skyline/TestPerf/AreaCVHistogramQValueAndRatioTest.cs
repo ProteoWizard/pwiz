@@ -289,7 +289,7 @@ namespace TestPerf
         private void AssertDataCorrect(SummaryGraphPane pane, int statsIndex, bool record = true)
         {
             AreaCVGraphData data = null;
-            WaitForConditionUI(() => (data = GetCurrentData(pane)) != null);
+            WaitForConditionUI(() => (data = GetCurrentData(pane)) != null && data.IsValid);
             WaitForGraphs();
 
             RunUI(() =>
