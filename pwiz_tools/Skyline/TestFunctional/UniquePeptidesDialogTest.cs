@@ -90,7 +90,9 @@ namespace pwiz.SkylineTestFunctional
             // Add FASTA sequence that's not in the library
             using (new WaitDocumentChange())
             {
+                SkylineWindow.LogChangeFilter = "SkylineWindow.ImportFasta";
                 RunUI(() => SkylineWindow.Paste(bogus ? TEXT_FASTA_NONSENSE : TEXT_FASTA_SPROT));
+                SkylineWindow.LogChangeFilter = null;
             }
             WaitForProteinMetadataBackgroundLoaderCompletedUI();
         }

@@ -134,6 +134,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AreaCVHistogramQValueAndRatioTest.cs" />
     <Compile Include="MeasuredDriftTimesTutorialTest.cs" />
     <Compile Include="PeakSortingTest.cs" />
     <Compile Include="PerfChorusGenerateChromatograms.cs" />

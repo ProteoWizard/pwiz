@@ -537,6 +537,11 @@ namespace pwiz.Skyline
                     throw new InvalidOperationException();
                 }
             }
+            
+            // For debugging tests with unexpected document change failures
+            if (LogChangeFilter != null)
+                LogChange(docNew);
+
             var docResult = Interlocked.CompareExchange(ref _document, docNew, docOriginal);
             if (!ReferenceEquals(docResult, docOriginal))
                 return false;
@@ -547,6 +552,30 @@ namespace pwiz.Skyline
             RunUIActionAsync(UpdateDocumentUI);
 
             return true;
+        }
+
+        public string LogChangeFilter { get; set; }
+
+        private void LogChange(SrmDocument docNew)
+        {
+            string notLoadedText = string.Empty;
+            if (!docNew.IsLoaded)
+            {
+                var sb = new StringBuilder();
+                foreach (var desc in docNew.NonLoadedStateDescriptions)
+                {
+                    sb.AppendLine(desc);
+                }
+                notLoadedText = sb.ToString();
+            }
+            var stackTrace = new StackTrace(0, true).ToString();
+            if (!stackTrace.Contains(LogChangeFilter))
+            {
+                Console.WriteLine(@"Setting document revision {0}", docNew.RevisionIndex);
+                if (!string.IsNullOrEmpty(notLoadedText))
+                    Console.WriteLine(notLoadedText);
+                Console.WriteLine(stackTrace);
+            }
         }
 
         public void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act)
