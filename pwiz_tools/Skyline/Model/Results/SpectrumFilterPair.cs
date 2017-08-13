@@ -413,7 +413,7 @@ namespace pwiz.Skyline.Model.Results
         {
             ChromatogramRequestDocumentChromatogramGroup docFilterPair = new ChromatogramRequestDocumentChromatogramGroup
             {
-                ModifiedSequence = ModifiedSequence.ToString(),
+                ModifiedSequence = ModifiedSequence != null ? ModifiedSequence.ToString() : null,
                 PrecursorMz = Q1.RawValue,  // A negative ion mode precursor will be serialized as a negative mz value
                 MassErrors = calculateMassErrors,
             };
