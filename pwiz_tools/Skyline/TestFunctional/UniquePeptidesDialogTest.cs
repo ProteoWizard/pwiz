@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Diagnostics;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -92,33 +91,40 @@ namespace pwiz.SkylineTestFunctional
 
             // Add FASTA sequence that's not in the library
             using (new WaitDocumentChange())
+            using (new DocChangeLogger())
             {
-                SkylineWindow.LogChange = LogChangeFunc;
                 RunUI(() => SkylineWindow.Paste(bogus ? TEXT_FASTA_NONSENSE : TEXT_FASTA_SPROT));
-                SkylineWindow.LogChange = null;
             }
             WaitForProteinMetadataBackgroundLoaderCompletedUI();
         }
 
-        private static void LogChangeFunc(SrmDocument docNew, SrmDocument docOriginal)
+        private class DocChangeLogger : StackTraceLogger, IDisposable
         {
-            string notLoadedText = string.Empty;
-            if (!docNew.IsLoaded)
+            public DocChangeLogger() : base("SkylineWindow.ImportFasta")
+            {
+                SkylineWindow.LogChange = LogChange;
+            }
+
+            private void LogChange(SrmDocument docNew, SrmDocument docOriginal)
+            {
+                LogStack(() => LogMessage(docNew));
+            }
+
+            private static string LogMessage(SrmDocument doc)
             {
                 var sb = new StringBuilder();
-                foreach (var desc in docNew.NonLoadedStateDescriptions)
+                sb.Append(string.Format(@"Setting document revision {0}", doc.RevisionIndex));
+                if (!doc.IsLoaded)
                 {
-                    sb.AppendLine(desc);
+                    foreach (var desc in doc.NonLoadedStateDescriptions)
+                        sb.AppendLine().Append(desc);
                 }
-                notLoadedText = sb.ToString();
+                return sb.ToString();
             }
-            var stackTrace = new StackTrace(1, true).ToString();
-            if (!stackTrace.Contains("SkylineWindow.ImportFasta"))
+
+            public void Dispose()
             {
-                Console.WriteLine(@"Setting document revision {0}", docNew.RevisionIndex);
-                if (!string.IsNullOrEmpty(notLoadedText))
-                    Console.WriteLine(notLoadedText);
-                Console.WriteLine(stackTrace);
+                SkylineWindow.LogChange = null;
             }
         }
 

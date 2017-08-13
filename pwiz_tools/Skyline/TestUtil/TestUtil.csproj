@@ -151,6 +151,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResultsUtil.cs" />
     <Compile Include="AbstractUnitTest.cs" />
+    <Compile Include="StackTraceLogger.cs" />
     <Compile Include="TestDocumentContainer.cs" />
     <Compile Include="TestFilesDir.cs" />
     <Compile Include="TestFunctional.cs" />
