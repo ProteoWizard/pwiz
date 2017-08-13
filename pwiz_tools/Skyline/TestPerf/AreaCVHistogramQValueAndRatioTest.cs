@@ -289,27 +289,30 @@ namespace TestPerf
         private void AssertDataCorrect(SummaryGraphPane pane, int statsIndex, bool record = true)
         {
             AreaCVGraphData data = null;
-            WaitForCondition(() => (data = GetCurrentData(pane)) != null);
+            WaitForConditionUI(() => (data = GetCurrentData(pane)) != null);
             WaitForGraphs();
 
-            int objects = 0;
-            if (pane is AreaCVHistogramGraphPane)
-                objects = pane.GetBoxObjCount();
-            else if (pane is AreaCVHistogram2DGraphPane)
-                objects = pane.GetTotalBars();
-
-            if (!RecordData)
+            RunUI(() =>
             {
-                Assert.AreEqual(STATS[statsIndex], new AreaCVGraphDataStatistics(data, objects));
-                return;
-            }
+                int objects = 0;
+                if (pane is AreaCVHistogramGraphPane)
+                    objects = pane.GetBoxObjCount();
+                else if (pane is AreaCVHistogram2DGraphPane)
+                    objects = pane.GetTotalBars();
 
-            if (record)
-            {
-                Console.WriteLine(
-                    @"new AreaCVGraphDataStatistics({0}, {1}, {2:R}, {3:R}, {4}, {5:R}, {6:R}, {7}, {8:R}, {9:R}, {10:R}),",
-                    data.Data.Count, objects, data.MinMeanArea, data.MaxMeanArea, data.Total, data.MaxCV, data.MinCV, data.MaxFrequency, data.MedianCV, data.MeanCV, data.BelowCVCutoff);
-            }
+                if (!RecordData)
+                {
+                    Assert.AreEqual(STATS[statsIndex], new AreaCVGraphDataStatistics(data, objects));
+                    return;
+                }
+
+                if (record)
+                {
+                    Console.WriteLine(
+                        @"new AreaCVGraphDataStatistics({0}, {1}, {2:R}, {3:R}, {4}, {5:R}, {6:R}, {7}, {8:R}, {9:R}, {10:R}),",
+                        data.Data.Count, objects, data.MinMeanArea, data.MaxMeanArea, data.Total, data.MaxCV, data.MinCV, data.MaxFrequency, data.MedianCV, data.MeanCV, data.BelowCVCutoff);
+                }
+            });
         }
     }
 }
