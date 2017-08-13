@@ -126,11 +126,16 @@ namespace TestPerf
             // Verify that a qvalue cutoff of 1.0 has the same effect as no qvalue cutoff
             OpenAndChangeProperties(p => p.QValueCutoff = 1.0);
             AreaCVGraphData qvalue1Data = null;
-            WaitForCondition(() => (qvalue1Data = GetCurrentData(pane)) != null);
+            WaitForConditionUI(() => (qvalue1Data = GetCurrentData(pane)) != null);
+            AreaCVGraphDataStatistics qvalue1Statistics = null;
+            RunUI(() => qvalue1Statistics = new AreaCVGraphDataStatistics(qvalue1Data, pane.GetTotalBars()));
             OpenAndChangeProperties(p => p.QValueCutoff = double.NaN);
             AreaCVGraphData qvalueNaNData = null;
-            WaitForCondition(() => (qvalueNaNData = GetCurrentData(pane)) != null);
-            Assert.IsTrue(new AreaCVGraphDataStatistics(qvalue1Data, pane.GetTotalBars()).Equals(new AreaCVGraphDataStatistics(qvalueNaNData, pane.GetTotalBars()))); // We don't want to record this data so we just use .Equals
+            WaitForConditionUI(() => (qvalueNaNData = GetCurrentData(pane)) != null);
+            AreaCVGraphDataStatistics qvalueNaNStatistics = null;
+            RunUI(() => qvalueNaNStatistics = new AreaCVGraphDataStatistics(qvalueNaNData, pane.GetTotalBars()));
+
+            Assert.AreEqual(qvalue1Statistics, qvalueNaNStatistics);
         }
 
         private void TestHistogramRatios<T>(Action showHistogram, int statsStartIndex) where T : SummaryGraphPane
