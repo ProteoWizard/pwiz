@@ -29,7 +29,7 @@
 #include "CompassData.hpp"
 #include "Baf2Sql.hpp"
 
-#ifdef WIN64
+#ifdef _WIN64
 #include "TimsData.hpp"
 #endif
 
@@ -108,7 +108,7 @@ void ParameterCache::update(MSSpectrumParameterList& parameters)
     }
 
     size_t i = 0;
-    BOOST_FOREACH(const MSSpectrumParameter& p, parameters)
+    for(const MSSpectrumParameter& p : parameters)
     {
         map<string, string>::const_iterator findItr = parameterAlternativeNameMap_.find(p.name);
         if (findItr != parameterAlternativeNameMap_.end())
@@ -672,7 +672,7 @@ PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath,
 {
     if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
         return CompassDataPtr(new Baf2SqlImpl(rawpath));
-#ifdef WIN64
+#ifdef _WIN64
     else if (format == Reader_Bruker_Format_TDF)
         return CompassDataPtr(new TimsDataImpl(rawpath, false));
 #endif
@@ -746,6 +746,10 @@ PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath,
 {
     if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
         return CompassDataPtr(new Baf2SqlImpl(rawpath));
+#ifdef _WIN64
+    else if (format == Reader_Bruker_Format_TDF)
+        return CompassDataPtr(new TimsDataImpl(rawpath, false));
+#endif
     else
         throw runtime_error("[CompassData::create] Bruker API was built with only BAF support; YEP and FID files not supported in this build");
 }
