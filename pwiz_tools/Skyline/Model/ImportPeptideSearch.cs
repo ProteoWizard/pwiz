@@ -376,21 +376,20 @@ namespace pwiz.Skyline.Model
         }
 
         public static SrmDocument ImportFasta(SrmDocument document, string fastaPath, IProgressMonitor monitor,
-            IdentityPath to, out IdentityPath firstAdded, out IdentityPath nextAdd, out int emptyProteinCount)
+            IdentityPath to, out IdentityPath firstAdded, out IdentityPath nextAdd, out List<PeptideGroupDocNode> peptideGroupsNew)
         {
             var importer = new FastaImporter(document, false);
             using (TextReader reader = File.OpenText(fastaPath))
             {
-                document = document.AddPeptideGroups(importer.Import(reader, monitor, Helpers.CountLinesInFile(fastaPath)),
-                    false, null, out firstAdded, out nextAdd);
+                peptideGroupsNew = importer.Import(reader, monitor, Helpers.CountLinesInFile(fastaPath)).ToList();
+                document = document.AddPeptideGroups(peptideGroupsNew, false, null, out firstAdded, out nextAdd);
             }
-            emptyProteinCount = importer.EmptyPeptideGroupCount;
             return document;
         }
 
-        public static SrmDocument RemoveEmptyProteins(SrmDocument document)
+        public static SrmDocument RemoveProteinsByPeptideCount(SrmDocument document, int minPeptides)
         {
-            return new RefinementSettings {MinPeptidesPerProtein = 1}.Refine(document);
+            return new RefinementSettings {MinPeptidesPerProtein = minPeptides}.Refine(document);
         }
 
         public class FoundResultsFile

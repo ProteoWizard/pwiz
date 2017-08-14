@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
@@ -69,6 +70,7 @@ namespace pwiz.SkylineTestFunctional
             TestWizardBuildDocumentLibraryAndFinish();
             TestWizardCancel();
             TestWizardExcludeSpectrumSourceFiles();
+            TestWizardDecoysAndMinPeptides();
         }
 
         /// <summary>
@@ -79,10 +81,12 @@ namespace pwiz.SkylineTestFunctional
             const string PREFIX = "prefix1";
             var names = new[] { PREFIX + "a", PREFIX + "b", PREFIX };
             Assert.AreEqual(PREFIX, ImportResultsDlg.GetCommonPrefix(names)); // Check common prefix code while we're at it
-            var list = new List<ImportPeptideSearch.FoundResultsFile>();
-            list.Add(new ImportPeptideSearch.FoundResultsFile( PREFIX + "a","path1"));
-            list.Add(new ImportPeptideSearch.FoundResultsFile( PREFIX + "b","path2"));
-            list.Add(new ImportPeptideSearch.FoundResultsFile( PREFIX + "a","path3"));
+            var list = new List<ImportPeptideSearch.FoundResultsFile>
+            {
+                new ImportPeptideSearch.FoundResultsFile(PREFIX + "a", "path1"),
+                new ImportPeptideSearch.FoundResultsFile(PREFIX + "b", "path2"),
+                new ImportPeptideSearch.FoundResultsFile(PREFIX + "a", "path3")
+            };
             var result = ImportResultsControl.EnsureUniqueNames(list);
             Assert.AreEqual(list[0].Name, result[0].Name);
             Assert.AreEqual(list[1].Name, result[1].Name);
@@ -211,6 +215,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFilesModless);
+                Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dda, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
             doc = WaitForDocumentChange(doc);
@@ -238,14 +243,25 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("yeast-10.fasta"));
             });
 
             // Finish wizard and have empty proteins dialog come up. Only 1 out of the 10 proteins had a match.
             // Cancel the empty proteins dialog.
-            RunDlg<EmptyProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, emptyProteinsDlg =>
+            RunDlg<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, emptyProteinsDlg =>
             {
-                Assert.AreEqual(9, emptyProteinsDlg.EmptyProteins);
+                int proteinCount, peptideCount, precursorCount, transitionCount;
+                emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                Assert.AreEqual(10, proteinCount);
+                Assert.AreEqual(1, peptideCount);
+                Assert.AreEqual(1, precursorCount);
+                Assert.AreEqual(3, transitionCount);
+                emptyProteinsDlg.NewTargetsFiltered(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                Assert.AreEqual(1, proteinCount);
+                Assert.AreEqual(1, peptideCount);
+                Assert.AreEqual(1, precursorCount);
+                Assert.AreEqual(3, transitionCount);
                 emptyProteinsDlg.CancelDialog();
             });
 
@@ -255,24 +271,13 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("yeast-9.fasta")));
                 RunDlg<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, discardNotice =>
                 {
-                    Assert.AreEqual(
-                        string.Format(Resources.SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_, 9),
-                        discardNotice.Message);
+                    Assert.AreEqual(Resources.ImportFastaControl_ImportFasta_Importing_the_FASTA_did_not_create_any_target_proteins_, discardNotice.Message);
                     discardNotice.OkDialog();
                 });
-
-                // An error will appear because the spectrum file was empty.
-                var errorDlg = WaitForOpenForm<MessageDlg>();
-                RunUI(() =>
-                    {
-                        Assert.AreEqual(Resources.ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_,
-                            errorDlg.Message);
-                        errorDlg.OkDialog();
-                    });
-
-                RunUI(importPeptideSearchDlg.CancelDialog);
-                WaitForClosedForm(importPeptideSearchDlg);
             }
+
+            RunUI(importPeptideSearchDlg.CancelDialog);
+            WaitForClosedForm(importPeptideSearchDlg);
 
             RunUI(() => SkylineWindow.SaveDocument());
         }
@@ -371,7 +376,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("mods", foundResults[1].Name);
                 Assert.AreEqual("mods.mzXML", Path.GetFileName(foundResults[1].Path));
                 Assert.IsFalse(importResultsControl.ResultsFilesMissing);
-                Assert.AreEqual(0, missingResults.Count());
+                Assert.AreEqual(0, missingResults.Length);
 
                 // Check exclude spectrum source files
                 Assert.IsTrue(importResultsControl.ExcluedSpectrumSourceFilesVisible);
@@ -385,7 +390,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("modless", foundResults[0].Name);
                 Assert.AreEqual("modless.raw", Path.GetFileName(foundResults[0].Path));
                 Assert.IsTrue(importResultsControl.ResultsFilesMissing);
-                Assert.AreEqual(1, missingResults.Count());
+                Assert.AreEqual(1, missingResults.Length);
                 Assert.AreEqual("mods.mzXML", Path.GetFileName(missingResults[0]));
                 
                 importPeptideSearchDlg.ClickCancelButton();
@@ -394,6 +399,95 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(importPeptideSearchDlg);
 
             RunUI(() => SkylineWindow.SaveDocument());
+        }
+
+        private void TestWizardDecoysAndMinPeptides()
+        {
+            PrepareDocument("ImportPeptideSearch-Decoys.sky");
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            var doc = SkylineWindow.Document;
+
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFilesModless);
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+            doc = WaitForDocumentChange(doc);
+
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+                importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles = new List<ImportPeptideSearch.FoundResultsFile>
+                {
+                    new ImportPeptideSearch.FoundResultsFile(MODLESS_BASE_NAME, SearchFilesModless.First())
+                };
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+            doc = WaitForDocumentChange(doc);
+
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+            doc = WaitForDocumentChange(doc);
+
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
+                Assert.AreEqual(Settings.Default.GetEnzymeByName("Trypsin"), importPeptideSearchDlg.ImportFastaControl.Enzyme);
+                Assert.AreEqual(0, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);
+                importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("yeast-10.fasta"));
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod = "Reverse Sequence";
+                importPeptideSearchDlg.ImportFastaControl.NumDecoys = 1.1;
+            });
+            var errMaxDecoys = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            Assert.AreEqual(Resources.ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated_when_using_reversed_decoys_, errMaxDecoys.Message);
+            OkDialog(errMaxDecoys, errMaxDecoys.OkDialog);
+            RunUI(() => { importPeptideSearchDlg.ImportFastaControl.NumDecoys = -1; });
+            var errValidNumDecoys = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            Assert.AreEqual(Resources.ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys_per_target_, errValidNumDecoys.Message);
+            OkDialog(errValidNumDecoys, errValidNumDecoys.OkDialog);
+            RunUI(() =>
+            {
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod = "Shuffle Sequence";
+                importPeptideSearchDlg.ImportFastaControl.NumDecoys = 1;
+            });
+
+            var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            RunUI(() =>
+            {
+                peptidesPerProteinDlg.KeepAll = false;
+                peptidesPerProteinDlg.MinPeptides = 2;
+                Assert.AreEqual(9, peptidesPerProteinDlg.EmptyProteins);
+                int proteins, peptides, precursors, transitions;
+                peptidesPerProteinDlg.NewTargetsAll(out proteins, out peptides, out precursors, out transitions);
+                Assert.AreEqual(11, proteins);
+                Assert.AreEqual(2, peptides);
+                Assert.AreEqual(2, precursors);
+                Assert.AreEqual(6, transitions);
+                peptidesPerProteinDlg.NewTargetsFiltered(out proteins, out peptides, out precursors, out transitions);
+                Assert.AreEqual(0, proteins);
+                Assert.AreEqual(0, peptides);
+                Assert.AreEqual(0, precursors);
+                Assert.AreEqual(0, transitions);
+                peptidesPerProteinDlg.MinPeptides = 1;
+                peptidesPerProteinDlg.NewTargetsFiltered(out proteins, out peptides, out precursors, out transitions);
+                Assert.AreEqual(2, proteins);
+                Assert.AreEqual(2, peptides);
+                Assert.AreEqual(2, precursors);
+                Assert.AreEqual(6, transitions);
+            });
+
+            var importResultsDlg = ShowDialog<AllChromatogramsGraph>(peptidesPerProteinDlg.OkDialog);
+            doc = WaitForDocumentChangeLoaded(doc);
+            OkDialog(importResultsDlg, importResultsDlg.ClickClose);
+            AssertEx.IsDocumentState(doc, null, 2, 2, 6);
         }
 
         private void VerifyDocumentLibraryBuilt(string path)

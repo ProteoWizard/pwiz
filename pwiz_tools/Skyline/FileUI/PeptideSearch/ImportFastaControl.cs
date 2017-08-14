@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -52,6 +53,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             _driverEnzyme.LoadList(SkylineWindow.Document.Settings.PeptideSettings.Enzyme.GetKey());
 
             MaxMissedCleavages = skylineWindow.Document.Settings.PeptideSettings.DigestSettings.MaxMissedCleavages;
+            cbDecoyMethod.SelectedIndex = 0;
         }
 
         private SkylineWindow SkylineWindow { get; set; }
@@ -83,16 +85,40 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public int MaxMissedCleavages
         {
-            get
-            {
-                return int.Parse(cbMissedCleavages.SelectedItem.ToString());
-            }
+            get { return int.Parse(cbMissedCleavages.SelectedItem.ToString()); }
             set
             {
                 cbMissedCleavages.SelectedItem = value.ToString(LocalizationHelper.CurrentCulture);
                 if (cbMissedCleavages.SelectedIndex < 0)
                     cbMissedCleavages.SelectedIndex = 0;
             }
+        }
+
+        public bool DecoyGenerationEnabled
+        {
+            get { return panelDecoys.Visible; }
+            set { panelDecoys.Visible = value; }
+        }
+
+        public string DecoyGenerationMethod
+        {
+            get { return DecoyGenerationEnabled ? cbDecoyMethod.SelectedItem.ToString() : string.Empty; }
+            set
+            {
+                cbDecoyMethod.SelectedItem = value;
+                if (cbDecoyMethod.SelectedIndex < 0)
+                    cbDecoyMethod.SelectedIndex = 0;
+            }
+        }
+
+        public double? NumDecoys
+        {
+            get
+            {
+                double numDecoys;
+                return DecoyGenerationEnabled && double.TryParse(txtNumDecoys.Text, out numDecoys) ? (double?) numDecoys : null;
+            }
+            set { txtNumDecoys.Text = value.ToString(); }
         }
 
         private void browseFastaBtn_Click(object sender, EventArgs e)
@@ -197,6 +223,22 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     doc.ChangeSettings(settings.ChangePeptideSettings(peptideSettings)));
             }
 
+            if (!string.IsNullOrEmpty(DecoyGenerationMethod))
+            {
+                if (!NumDecoys.HasValue || NumDecoys < 0)
+                {
+                    MessageDlg.Show(WizardForm, Resources.ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys_per_target_);
+                    txtNumDecoys.Focus();
+                    return false;
+                }
+                else if (Equals(DecoyGenerationMethod, DecoyGeneration.REVERSE_SEQUENCE) && NumDecoys > 1)
+                {
+                    MessageDlg.Show(WizardForm, Resources.ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated_when_using_reversed_decoys_);
+                    txtNumDecoys.Focus();
+                    return false;
+                }
+            }
+
             if (!ContainsFastaContent) // The user didn't specify any FASTA content
             {
                 var docCurrent = SkylineWindow.DocumentUI;
@@ -228,12 +270,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 var nodeInsert = SkylineWindow.SequenceTree.SelectedNode as SrmTreeNode;
                 IdentityPath selectedPath = nodeInsert != null ? nodeInsert.Path : null;
-                int emptyPeptideGroups = 0;
+                var newPeptideGroups = new List<PeptideGroupDocNode>();
 
                 if (!_fastaFile)
                 {
                     // Import FASTA as content
-                    docNew = ImportFastaHelper.AddFasta(docNew, ref selectedPath, out emptyPeptideGroups);
+                    using (var longWaitDlg = new LongWaitDlg(SkylineWindow) {Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA})
+                    {
+                        var docImportFasta = docNew;
+                        longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
+                        {
+                            docImportFasta = ImportFastaHelper.AddFasta(docImportFasta, longWaitBroker, ref selectedPath, out newPeptideGroups);
+                        });
+                        docNew = docImportFasta;
+                    }
                     // Document will be null if there was an error
                     if (docNew == null)
                         return false;
@@ -244,16 +294,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var fastaPath = tbxFasta.Text;
                     try
                     {
-                        using (var longWaitDlg = new LongWaitDlg(SkylineWindow) { Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA })
+                        using (var longWaitDlg = new LongWaitDlg(SkylineWindow) {Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA})
                         {
                             IdentityPath to = selectedPath;
                             var docImportFasta = docNew;
                             longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
-                                {
-                                    IdentityPath nextAdd;
-                                    docImportFasta = ImportPeptideSearch.ImportFasta(docImportFasta, fastaPath,
-                                        longWaitBroker, to, out selectedPath, out nextAdd, out emptyPeptideGroups);
-                                });
+                            {
+                                IdentityPath nextAdd;
+                                docImportFasta = ImportPeptideSearch.ImportFasta(docImportFasta, fastaPath, longWaitBroker, to, out selectedPath, out nextAdd, out newPeptideGroups);
+                            });
                             docNew = docImportFasta;
                         }
                     }
@@ -264,9 +313,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         return false;
                     }
                 }
-                
-                // Check for empty proteins
-                docNew = ImportFastaHelper.HandleEmptyPeptideGroups(WizardForm, emptyPeptideGroups, docNew);
+
+                if (!newPeptideGroups.Any())
+                {
+                    MessageDlg.Show(this, Resources.ImportFastaControl_ImportFasta_Importing_the_FASTA_did_not_create_any_target_proteins_);
+                    return false;
+                }
+
+                // Filter proteins based on number of peptides and add decoys
+                docNew = ImportFastaHelper.HandleMinPeptidesForPeptideGroups(WizardForm, docNew, newPeptideGroups, DecoyGenerationMethod, NumDecoys ?? 0);
                 // Document will be null if user was given option to keep or remove empty proteins and pressed cancel
                 if (docNew == null)
                     return false;
@@ -294,6 +349,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void enzyme_SelectedIndexChanged(object sender, EventArgs e)
         {
             _driverEnzyme.SelectedIndexChangedEvent(sender, e);
+        }
+
+        private void cbDecoyMethod_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            txtNumDecoys.Enabled = cbDecoyMethod.SelectedIndex != 0;
         }
     }
 }

@@ -41,7 +41,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.cbMissedCleavages = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
             this.comboEnzyme = new System.Windows.Forms.ComboBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.cbDecoyMethod = new System.Windows.Forms.ComboBox();
+            this.txtNumDecoys = new System.Windows.Forms.TextBox();
+            this.panelDecoys = new System.Windows.Forms.Panel();
             this.panelError.SuspendLayout();
+            this.panelDecoys.SuspendLayout();
             this.SuspendLayout();
             // 
             // tbxFasta
@@ -126,11 +132,49 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.comboEnzyme.Name = "comboEnzyme";
             this.comboEnzyme.SelectedIndexChanged += new System.EventHandler(this.enzyme_SelectedIndexChanged);
             // 
+            // label4
+            // 
+            resources.ApplyResources(this.label4, "label4");
+            this.label4.Name = "label4";
+            // 
+            // label5
+            // 
+            resources.ApplyResources(this.label5, "label5");
+            this.label5.Name = "label5";
+            // 
+            // cbDecoyMethod
+            // 
+            this.cbDecoyMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbDecoyMethod.FormattingEnabled = true;
+            this.cbDecoyMethod.Items.AddRange(new object[] {
+            resources.GetString("cbDecoyMethod.Items"),
+            resources.GetString("cbDecoyMethod.Items1"),
+            resources.GetString("cbDecoyMethod.Items2")});
+            resources.ApplyResources(this.cbDecoyMethod, "cbDecoyMethod");
+            this.cbDecoyMethod.Name = "cbDecoyMethod";
+            this.cbDecoyMethod.SelectedIndexChanged += new System.EventHandler(this.cbDecoyMethod_SelectedIndexChanged);
+            // 
+            // txtNumDecoys
+            // 
+            resources.ApplyResources(this.txtNumDecoys, "txtNumDecoys");
+            this.txtNumDecoys.Name = "txtNumDecoys";
+            this.helpTipFasta.SetToolTip(this.txtNumDecoys, resources.GetString("txtNumDecoys.ToolTip"));
+            // 
+            // panelDecoys
+            // 
+            resources.ApplyResources(this.panelDecoys, "panelDecoys");
+            this.panelDecoys.Controls.Add(this.label5);
+            this.panelDecoys.Controls.Add(this.txtNumDecoys);
+            this.panelDecoys.Controls.Add(this.cbDecoyMethod);
+            this.panelDecoys.Controls.Add(this.label4);
+            this.panelDecoys.Name = "panelDecoys";
+            // 
             // ImportFastaControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Transparent;
+            this.Controls.Add(this.panelDecoys);
             this.Controls.Add(this.comboEnzyme);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.cbMissedCleavages);
@@ -143,6 +187,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.Name = "ImportFastaControl";
             this.panelError.ResumeLayout(false);
             this.panelError.PerformLayout();
+            this.panelDecoys.ResumeLayout(false);
+            this.panelDecoys.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -161,5 +207,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.ComboBox cbMissedCleavages;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox comboEnzyme;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.ComboBox cbDecoyMethod;
+        private System.Windows.Forms.TextBox txtNumDecoys;
+        private System.Windows.Forms.Panel panelDecoys;
     }
 }

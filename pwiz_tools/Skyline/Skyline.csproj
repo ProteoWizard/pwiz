@@ -176,6 +176,12 @@
     <Compile Include="Alerts\AlertLinkDlg.Designer.cs">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\PeptidesPerProteinDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\PeptidesPerProteinDlg.Designer.cs">
+      <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\MessageDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1638,6 +1644,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PathChooserDlg.zh-CHS.resx">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\PeptidesPerProteinDlg.resx">
+      <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ReportErrorDlg.ja.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>

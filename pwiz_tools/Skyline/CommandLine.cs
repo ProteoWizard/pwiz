@@ -1293,12 +1293,12 @@ namespace pwiz.Skyline
             {
                 _out.WriteLine(Resources.CommandLine_ImportFasta_Importing_FASTA_file__0____, Path.GetFileName(commandArgs.FastaPath));
                 doc = ImportPeptideSearch.PrepareImportFasta(doc);
-                int emptyProteins;
+                List<PeptideGroupDocNode> peptideGroupsNew;
                 try
                 {
                     IdentityPath firstAdded, nextAdd;
                     doc = ImportPeptideSearch.ImportFasta(doc, commandArgs.FastaPath, progressMonitor, null,
-                        out firstAdded, out nextAdd, out emptyProteins);
+                        out firstAdded, out nextAdd, out peptideGroupsNew);
                 }
                 catch (Exception x)
                 {
@@ -1307,9 +1307,9 @@ namespace pwiz.Skyline
                     return true;  // So that document will be saved with the new library
                 }
 
-                if (emptyProteins > 0 && !commandArgs.KeepEmptyProteins)
+                if (peptideGroupsNew.Count(pepGroup => pepGroup.PeptideCount == 0) > 0 && !commandArgs.KeepEmptyProteins)
                 {
-                    doc = ImportPeptideSearch.RemoveEmptyProteins(doc);
+                    doc = ImportPeptideSearch.RemoveProteinsByPeptideCount(doc, 1);
                 }
             }
 

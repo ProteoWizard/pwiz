@@ -217,14 +217,14 @@ namespace pwiz.Skyline.EditUI
 
         private SrmDocument GetNewDocument(SrmDocument document, bool validating, ref IdentityPath selectedPath)
         {
-            int emptyPeptideGroups;
-            return GetNewDocument(document, validating, ref selectedPath, out emptyPeptideGroups);
+            List<PeptideGroupDocNode> newPeptideGroups;
+            return GetNewDocument(document, validating, ref selectedPath, out newPeptideGroups);
         }
 
-        private SrmDocument GetNewDocument(SrmDocument document, bool validating, ref IdentityPath selectedPath, out int emptyPeptideGroups)
+        private SrmDocument GetNewDocument(SrmDocument document, bool validating, ref IdentityPath selectedPath, out List<PeptideGroupDocNode> newPeptideGroups)
         {
             var fastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError, toolTip1);
-            if ((document = fastaHelper.AddFasta(document, ref selectedPath, out emptyPeptideGroups)) == null)
+            if ((document = fastaHelper.AddFasta(document, null, ref selectedPath, out newPeptideGroups)) == null)
             {
                 tabControl1.SelectedTab = tabPageFasta;  // To show fasta errors
                 return null;
@@ -1198,8 +1198,8 @@ namespace pwiz.Skyline.EditUI
                 document =>
                 {
                     newSelectedPath = SelectedPath;
-                    int emptyPeptideGroups;
-                    var newDocument = GetNewDocument(document, false, ref newSelectedPath, out emptyPeptideGroups);
+                    List<PeptideGroupDocNode> newPeptideGroups;
+                    var newDocument = GetNewDocument(document, false, ref newSelectedPath, out newPeptideGroups);
                     if (newDocument == null)
                     {
                         error = true;
@@ -1207,7 +1207,7 @@ namespace pwiz.Skyline.EditUI
                     }
                     if (!keepEmptyProteins.HasValue)
                     {
-                        keepEmptyProteins = ImportFastaHelper.AskWhetherToKeepEmptyProteins(this, emptyPeptideGroups);
+                        keepEmptyProteins = ImportFastaHelper.AskWhetherToKeepEmptyProteins(this, newPeptideGroups.Count(pepGroup => pepGroup.PeptideCount == 0));
                         if (!keepEmptyProteins.HasValue)
                         {
                             // Cancelled
@@ -1217,7 +1217,7 @@ namespace pwiz.Skyline.EditUI
                     }
                     if (!keepEmptyProteins.Value)
                     {
-                        newDocument = ImportPeptideSearch.RemoveEmptyProteins(newDocument);
+                        newDocument = ImportPeptideSearch.RemoveProteinsByPeptideCount(newDocument, 1);
                     }
                     return newDocument;
                 });
@@ -1889,9 +1889,9 @@ namespace pwiz.Skyline.EditUI
         private readonly ToolTip _helpTip;
         private ToolTip HelpTip { get { return _helpTip; } }
 
-        public SrmDocument AddFasta(SrmDocument document, ref IdentityPath selectedPath, out int emptyPeptideGroups)
+        public SrmDocument AddFasta(SrmDocument document, IProgressMonitor monitor, ref IdentityPath selectedPath, out List<PeptideGroupDocNode> newPeptideGroups)
         {
-            emptyPeptideGroups = 0;
+            newPeptideGroups = new List<PeptideGroupDocNode>();
             var text = TbxFasta.Text;
             if (text.Length == 0)
             {
@@ -1963,10 +1963,8 @@ namespace pwiz.Skyline.EditUI
                 var reader = new StringReader(TbxFasta.Text);
                 IdentityPath to = selectedPath;
                 IdentityPath firstAdded, nextAdd;
-                // TODO: support long-wait broker
-                document = document.AddPeptideGroups(importer.Import(reader, null, -1), false,
-                    to, out firstAdded, out nextAdd);
-                emptyPeptideGroups = importer.EmptyPeptideGroupCount;
+                newPeptideGroups = importer.Import(reader, monitor, -1).ToList();
+                document = document.AddPeptideGroups(newPeptideGroups, false, to, out firstAdded, out nextAdd);
                 selectedPath = firstAdded;
             }
             catch (Exception exception)
@@ -2036,7 +2034,7 @@ namespace pwiz.Skyline.EditUI
                 case true:
                     return docCurrent;
                 case false:
-                    return ImportPeptideSearch.RemoveEmptyProteins(docCurrent);
+                    return ImportPeptideSearch.RemoveProteinsByPeptideCount(docCurrent, 1);
                 default:
                     throw new InvalidOperationException();
             }
@@ -2053,7 +2051,7 @@ namespace pwiz.Skyline.EditUI
         {
             if (numberOfEmptyPeptideGroups > FastaImporter.MaxEmptyPeptideGroupCount)
             {
-                MessageDlg.Show(parent, String.Format(Resources.SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_, numberOfEmptyPeptideGroups));
+                MessageDlg.Show(parent, string.Format(Resources.SkylineWindow_ImportFasta_This_operation_discarded__0__proteins_with_no_peptides_matching_the_current_filter_settings_, numberOfEmptyPeptideGroups));
                 return true;
             }
             else if (numberOfEmptyPeptideGroups > 0)
@@ -2067,6 +2065,14 @@ namespace pwiz.Skyline.EditUI
                 }
             }
             return true;
+        }
+
+        public static SrmDocument HandleMinPeptidesForPeptideGroups(Form parent, SrmDocument docCurrent, List<PeptideGroupDocNode> newPeptideGroups, string decoyGenerationMethod, double decoysPerTarget)
+        {
+            using (var dlg = new PeptidesPerProteinDlg(docCurrent, newPeptideGroups, decoyGenerationMethod, decoysPerTarget))
+            {
+                return dlg.ShowDialog(parent) == DialogResult.OK ? dlg.DocumentFinal : null;
+            }
         }
     }
 }

@@ -54,7 +54,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             dda,
             prm,
             dia
-        };
+        }
 
         public class SpectraPage : IFormView { }
         public class ChromatogramsPage : IFormView { }
@@ -87,7 +87,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Create and add wizard pages
             BuildPepSearchLibControl = new BuildPeptideSearchLibraryControl(SkylineWindow, ImportPeptideSearch, libraryManager)
             {
-                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Location = new Point(2, 50)
             };
             BuildPepSearchLibControl.InputFilesChanged += BuildPepSearchLibForm_OnInputFilesChanged;
@@ -95,35 +95,35 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             ImportFastaControl = new ImportFastaControl(SkylineWindow)
             {
-                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Location = new Point(2, 60)
             };
             importFastaPage.Controls.Add(ImportFastaControl);
 
             MatchModificationsControl = new MatchModificationsControl(SkylineWindow, ImportPeptideSearch)
             {
-                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Location = new Point(2, 60)
             };
             matchModificationsPage.Controls.Add(MatchModificationsControl);
 
             TransitionSettingsControl = new TransitionSettingsControl(SkylineWindow)
             {
-                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Location = new Point(18, 60)
             };
             transitionSettingsUiPage.Controls.Add(TransitionSettingsControl);
 
             FullScanSettingsControl = new FullScanSettingsControl(SkylineWindow)
             {
-                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Location = new Point(18, 50)
             };
             ms1FullScanSettingsPage.Controls.Add(FullScanSettingsControl);
 
             ImportResultsControl = new ImportResultsControl(ImportPeptideSearch, SkylineWindow.DocumentFilePath)
             {
-                Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 Location = new Point(2, 60)
             };
             getChromatogramsPage.Controls.Add((Control) ImportResultsControl);
@@ -267,6 +267,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             _pagesToSkip.Add(Pages.match_modifications_page);
                         if (BuildPepSearchLibControl.FilterForDocumentPeptides)
                             _pagesToSkip.Add(Pages.import_fasta_page);
+
+                        // Decoy options enabled only for DIA
+                        ImportFastaControl.DecoyGenerationEnabled = WorkflowType == Workflow.dia;
                     }
                     break;
 
@@ -349,8 +352,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     break;
 
                 case Pages.import_fasta_page: // This is the last page
-                    if ((FastaOptional && !ImportFastaControl.ContainsFastaContent) ||
-                        ImportFastaControl.ImportFasta())
+                    if (FastaOptional && !ImportFastaControl.ContainsFastaContent || ImportFastaControl.ImportFasta())
                     {
                         WizardFinish();
                     }

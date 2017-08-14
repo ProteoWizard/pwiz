@@ -13040,6 +13040,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A maximum of one decoy per target may be generated when using reversed decoys..
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated_when_using_reversed_decoys_ {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated" +
+                        "_when_using_reversed_decoys_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change digestion settings.
         /// </summary>
         public static string ImportFastaControl_ImportFasta_Change_digestion_settings {
@@ -13067,11 +13077,31 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Importing the FASTA did not create any target proteins..
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_Importing_the_FASTA_did_not_create_any_target_proteins_ {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Importing_the_FASTA_did_not_create_any_target_prot" +
+                        "eins_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Insert FASTA.
         /// </summary>
         public static string ImportFastaControl_ImportFasta_Insert_FASTA {
             get {
                 return ResourceManager.GetString("ImportFastaControl_ImportFasta_Insert_FASTA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please enter a valid non-negative number of decoys per target..
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys_per_target_ {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys" +
+                        "_per_target_", resourceCulture);
             }
         }
         
@@ -19595,6 +19625,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("PeptideSettingsUI_ValidateNewSettings_The_file__1__may_not_be_a_valid_proteome_fi" +
                         "le", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} empty proteins will be added..
+        /// </summary>
+        public static string PeptidesPerProteinDlg_UpdateRemaining__0__empty_proteins_will_be_added_ {
+            get {
+                return ResourceManager.GetString("PeptidesPerProteinDlg_UpdateRemaining__0__empty_proteins_will_be_added_", resourceCulture);
             }
         }
         

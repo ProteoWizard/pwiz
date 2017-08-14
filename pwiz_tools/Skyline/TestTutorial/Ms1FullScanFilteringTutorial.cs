@@ -220,10 +220,26 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual("Trypsin [KR | P]", importPeptideSearchDlg.ImportFastaControl.Enzyme.GetKey());
                 importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 2;
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(fastaPath);
+                Assert.IsFalse(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
             });
             PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page", 10);
 
-            OkDialog(importPeptideSearchDlg, () => importPeptideSearchDlg.ClickNextButton());
+            var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            RunUI(() =>
+            {
+                int proteinCount, peptideCount, precursorCount, transitionCount;
+                peptidesPerProteinDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                Assert.AreEqual(11, proteinCount);
+                Assert.AreEqual(51, peptideCount);
+                Assert.AreEqual(52, precursorCount);
+                Assert.AreEqual(156, transitionCount);
+                peptidesPerProteinDlg.NewTargetsFiltered(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                Assert.AreEqual(11, proteinCount);
+                Assert.AreEqual(51, peptideCount);
+                Assert.AreEqual(52, precursorCount);
+                Assert.AreEqual(156, transitionCount);
+            });
+            OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 11);
             WaitForDocumentChangeLoaded(doc, 8 * 60 * 1000); // 10 minutes
 
