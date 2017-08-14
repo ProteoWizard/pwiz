@@ -614,39 +614,45 @@ namespace pwiz.Skyline.Controls.Graphs
         private void AddPeakRawTimes(GraphPane graphPane, ICollection<GraphObj> annotations,
             ScaledRetentionTime startTime, ScaledRetentionTime endTime, ChromatogramInfo info)
         {
-            if (info.RawTimes == null || !info.RawTimes.Any()) 
-                return; // No measured points
-            double end = endTime.DisplayTime;
-            double start = startTime.DisplayTime;
-            var times = info.RawTimes.ToArray();
+            var hasTimes = info.RawTimes != null && info.RawTimes.Any(); // has measured points
 
-            var rawtimes = new List<double>();
-            for (int j = 0; j < times.Length; j++)
-            {
-                if (start > times[j])
-                    continue;
-                if (end < times[j])
-                    break;
-                rawtimes.Add(times[j]);
-            }
-            if (rawtimes.Count == 0)
-                return;
             var scaledHeight = graphPane.YAxis.Scale.Max / 20; // 5% of graph pane height
-            foreach (var time in rawtimes)
+            var rawtimes = new List<double>();
+
+            if (hasTimes)
             {
-                LineObj stick = new LineObj(time, scaledHeight, time, 0)
+                double end = endTime.DisplayTime;
+                double start = startTime.DisplayTime;
+                var times = info.RawTimes.ToArray();
+                for (int j = 0; j < times.Length; j++)
                 {
-                    IsClippedToChartRect = true,
-                    Location = { CoordinateFrame = CoordType.AxisXYScale },
-                    ZOrder = ZOrder.A_InFront,
-                    Line = { Width = 1, Style = DashStyle.Dash, Color = ColorSelected},
-                    Tag = new GraphObjTag(this, GraphObjType.raw_time, new ScaledRetentionTime(time)),
-                };
-                annotations.Add(stick);
+                    if (start > times[j])
+                        continue;
+                    if (end < times[j])
+                        break;
+                    rawtimes.Add(times[j]);
+                }
+                if (rawtimes.Count == 0)
+                    return;
+                foreach (var time in rawtimes)
+                {
+                    LineObj stick = new LineObj(time, scaledHeight, time, 0)
+                    {
+                        IsClippedToChartRect = true,
+                        Location = { CoordinateFrame = CoordType.AxisXYScale },
+                        ZOrder = ZOrder.A_InFront,
+                        Line = { Width = 1, Style = DashStyle.Dash, Color = ColorSelected},
+                        Tag = new GraphObjTag(this, GraphObjType.raw_time, new ScaledRetentionTime(time)),
+                    };
+                    annotations.Add(stick);
+                }
             }
-            TextObj pointCount = new TextObj(" " + rawtimes.Count, endTime.DisplayTime, scaledHeight) // Not L10N
+            
+            var countTxt = hasTimes ? " " + rawtimes.Count : " ?"; // Not L10N
+            var isBold = !hasTimes; // Question mark if no times exist is visually clearer if bold
+            TextObj pointCount = new TextObj(countTxt, endTime.DisplayTime, scaledHeight) // Not L10N
             {
-                FontSpec = new FontSpec(FontSpec.Family, FontSpec.Size, ColorSelected, false, false, false)
+                FontSpec = new FontSpec(FontSpec.Family, FontSpec.Size, ColorSelected, isBold, false, false)
                 {
                     Border = new Border { IsVisible = false },
                     Fill = new Fill()
