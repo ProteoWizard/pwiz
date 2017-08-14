@@ -45,6 +45,7 @@
     <DeploymentItem filename="quantitation_1.xsd" />
     <DeploymentItem filename="quantitation_2.xsd" />
     <DeploymentItem filename="SkylineCmd.exe" />
+    <DeploymentItem filename="timsdata.dll" />
   </Deployment>
   <Execution hostProcessPlatform="MSIL">
     <Timeouts runTimeout="4800000" testTimeout="480000" />
