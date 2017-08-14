@@ -31,7 +31,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class AreaCVHistogram2DGraphPane : SummaryGraphPane, IDisposable
+    public class AreaCVHistogram2DGraphPane : SummaryGraphPane, IDisposable, IAreaCVHistogramTestSupport
     {
         private readonly AreaCVGraphData.AreaCVGraphDataCache _cache;
         private AreaCVGraphData _areaCVGraphData;
@@ -52,6 +52,8 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public AreaCVGraphData.AreaCVGraphDataCache Cache { get { return _cache; } }
+
+        public int Objects { get { return GetTotalBars(); } }
 
         public override bool HasToolbar { get { return true; } }
 

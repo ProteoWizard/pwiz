@@ -264,6 +264,22 @@ namespace pwiz.SkylineTestUtil
             WaitForGraphs();
         }
 
+        public void OpenAndChangeAreaCVProperties(Action<AreaCVToolbarProperties> action)
+        {
+            RunDlg<AreaCVToolbarProperties>(SkylineWindow.ShowAreaCVPropertyDlg, d =>
+            {
+                action(d);
+                d.OK();
+            });
+            UpdateGraphAndWait(SkylineWindow.GraphPeakArea);
+        }
+
+        public void UpdateGraphAndWait(GraphSummary graph)
+        {
+            RunUI(() => { graph.UpdateUI(); });
+            WaitForGraphs();
+        }
+
         public class Tool : IDisposable
         {
             private readonly MovedDirectory _movedDirectory;

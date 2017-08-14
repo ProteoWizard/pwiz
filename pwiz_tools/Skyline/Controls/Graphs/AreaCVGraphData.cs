@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 MedianCV = new Statistics(data.Select(d => d.CV)).Median();
         }
 
-        public static AreaCVGraphData INVALID = new AreaCVGraphData(null, null);
+        public static readonly AreaCVGraphData INVALID = new AreaCVGraphData(null, null);
 
         private void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas, PeptideDocNode peptide, string annotation)
         {
@@ -394,4 +394,106 @@ namespace pwiz.Skyline.Controls.Graphs
             public double BinWidth { get; private set; }
         }
     }
+
+    #region Functional test support
+
+    public class AreaCVGraphDataStatistics
+    {
+        public AreaCVGraphDataStatistics(int dataCount, int objects, double minMeanArea, double maxMeanArea, int total, double maxCv, double minCv, int maxFrequency, double medianCv, double meanCv, double belowCvCutoff)
+        {
+            DataCount = dataCount;
+            Objects = objects;
+            MinMeanArea = minMeanArea;
+            MaxMeanArea = maxMeanArea;
+            Total = total;
+            MaxCV = maxCv;
+            MinCV = minCv;
+            MaxFrequency = maxFrequency;
+            MedianCV = medianCv;
+            MeanCV = meanCv;
+            BelowCVCutoff = belowCvCutoff;
+        }
+
+        public AreaCVGraphDataStatistics(AreaCVGraphData data, int objects)
+        {
+            DataCount = data.Data.Count;
+            Objects = objects;
+            MinMeanArea = data.MinMeanArea;
+            MaxMeanArea = data.MaxMeanArea;
+            Total = data.Total;
+            MaxCV = data.MaxCV;
+            MinCV = data.MinCV;
+            MaxFrequency = data.MaxFrequency;
+            MedianCV = data.MedianCV;
+            MeanCV = data.MeanCV;
+            BelowCVCutoff = data.BelowCVCutoff;
+        }
+
+        protected bool Equals(AreaCVGraphDataStatistics other)
+        {
+            return DataCount == other.DataCount &&
+                   Objects == other.Objects &&
+                   MinMeanArea.Equals(other.MinMeanArea) &&
+                   MaxMeanArea.Equals(other.MaxMeanArea) &&
+                   Total == other.Total &&
+                   MaxCV.Equals(other.MaxCV) &&
+                   MinCV.Equals(other.MinCV) &&
+                   MaxFrequency == other.MaxFrequency &&
+                   MedianCV.Equals(other.MedianCV) &&
+                   MeanCV.Equals(other.MeanCV) &&
+                   BelowCVCutoff.Equals(other.BelowCVCutoff);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((AreaCVGraphDataStatistics)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = DataCount;
+                hashCode = (hashCode * 397) ^ Objects.GetHashCode();
+                hashCode = (hashCode * 397) ^ MinMeanArea.GetHashCode();
+                hashCode = (hashCode * 397) ^ MaxMeanArea.GetHashCode();
+                hashCode = (hashCode * 397) ^ Total;
+                hashCode = (hashCode * 397) ^ MaxCV.GetHashCode();
+                hashCode = (hashCode * 397) ^ MinCV.GetHashCode();
+                hashCode = (hashCode * 397) ^ MaxFrequency;
+                hashCode = (hashCode * 397) ^ MedianCV.GetHashCode();
+                hashCode = (hashCode * 397) ^ MeanCV.GetHashCode();
+                hashCode = (hashCode * 397) ^ BelowCVCutoff.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        public override string ToString()
+        {
+            return string.Format(@"{0}, {1}, {2:R}, {3:R}, {4}, {5:R}, {6:R}, {7}, {8:R}, {9:R}, {10:R}",
+                DataCount, Objects, MinMeanArea, MaxMeanArea, Total, MaxCV, MinCV, MaxFrequency, MedianCV, MeanCV, BelowCVCutoff);
+        }
+
+        public string ToCode()
+        {
+            return string.Format(@"new {0}({1}),", GetType().Name, ToString());
+        }
+
+        private int DataCount { get; set; }
+        private int Objects { get; set; }
+        private double MinMeanArea { get; set; } // Smallest mean area
+        private double MaxMeanArea { get; set; } // Largest mean area
+        private int Total { get; set; } // Total number of CV's
+        private double MaxCV { get; set; } // Highest CV
+        private double MinCV { get; set; } // Smallest CV
+        private int MaxFrequency { get; set; } // Highest count of CV's
+        private double MedianCV { get; set; } // Median CV
+        private double MeanCV { get; set; } // Mean CV
+        private double BelowCVCutoff { get; set; } // Fraction/Percentage of CV's below cutoff
+    }
+    
+    #endregion
 }

@@ -87,7 +87,7 @@ namespace TestPerf
             WaitForGraphs();
 
             AreaGraphController.MinimumDetections = 2;
-            OpenAndChangeProperties(p => p.QValueCutoff = 0.01);
+            OpenAndChangeAreaCVProperties(p => p.QValueCutoff = 0.01);
 
             var graph = SkylineWindow.GraphPeakArea;
             var toolbar = graph.Toolbar as AreaCVToolbar;
@@ -108,7 +108,7 @@ namespace TestPerf
 
 
             // Make sure the data is not affected by the qvalue cutoff if the points type is decoys
-            OpenAndChangeProperties(p => p.QValueCutoff = 0.02);
+            OpenAndChangeAreaCVProperties(p => p.QValueCutoff = 0.02);
             AssertDataCorrect(pane, statsStartIndex++, false);
 
             // Make sure that the data is correct after changing the qvalue cutoff, this time with points type targets
@@ -120,16 +120,16 @@ namespace TestPerf
             AssertDataCorrect(pane, statsStartIndex++);
 
             AreaGraphController.MinimumDetections = 3;
-            UpdateAndWait(graph);
+            UpdateGraphAndWait(graph);
             AssertDataCorrect(pane, statsStartIndex++);
 
             // Verify that a qvalue cutoff of 1.0 has the same effect as no qvalue cutoff
-            OpenAndChangeProperties(p => p.QValueCutoff = 1.0);
+            OpenAndChangeAreaCVProperties(p => p.QValueCutoff = 1.0);
             AreaCVGraphData qvalue1Data = null;
             WaitForConditionUI(() => (qvalue1Data = GetCurrentData(pane)) != null);
             AreaCVGraphDataStatistics qvalue1Statistics = null;
             RunUI(() => qvalue1Statistics = new AreaCVGraphDataStatistics(qvalue1Data, pane.GetTotalBars()));
-            OpenAndChangeProperties(p => p.QValueCutoff = double.NaN);
+            OpenAndChangeAreaCVProperties(p => p.QValueCutoff = double.NaN);
             AreaCVGraphData qvalueNaNData = null;
             WaitForConditionUI(() => (qvalueNaNData = GetCurrentData(pane)) != null);
             AreaCVGraphDataStatistics qvalueNaNStatistics = null;
@@ -150,7 +150,7 @@ namespace TestPerf
             WaitForGraphs();
 
             AreaGraphController.MinimumDetections = 2;
-            OpenAndChangeProperties(p => p.QValueCutoff = double.NaN);
+            OpenAndChangeAreaCVProperties(p => p.QValueCutoff = double.NaN);
 
             var graph = SkylineWindow.GraphPeakArea;
             var toolbar = graph.Toolbar as AreaCVToolbar;
@@ -174,116 +174,12 @@ namespace TestPerf
 
         private static AreaCVGraphData GetCurrentData(SummaryGraphPane pane)
         {
-            if (pane is AreaCVHistogramGraphPane)
-                return ((AreaCVHistogramGraphPane)pane).CurrentData;
-            else if (pane is AreaCVHistogram2DGraphPane)
-                return ((AreaCVHistogram2DGraphPane)pane).CurrentData;
-            else
-                Assert.Fail("Graph pane is not a histogram/histogram2d graph pane");
+            var testSupport = pane as IAreaCVHistogramTestSupport;
+            if (testSupport != null)
+                return testSupport.CurrentData;
+
+            Assert.Fail("Graph pane is not a histogram/histogram2d graph pane");
             return null;
-        }
-
-        private class AreaCVGraphDataStatistics
-        {
-            public AreaCVGraphDataStatistics(int dataCount, int objects, double minMeanArea, double maxMeanArea, int total, double maxCv, double minCv, int maxFrequency, double medianCv, double meanCv, double belowCvCutoff)
-            {
-                DataCount = dataCount;
-                Objects = objects;
-                MinMeanArea = minMeanArea;
-                MaxMeanArea = maxMeanArea;
-                Total = total;
-                MaxCV = maxCv;
-                MinCV = minCv;
-                MaxFrequency = maxFrequency;
-                MedianCV = medianCv;
-                MeanCV = meanCv;
-                BelowCVCutoff = belowCvCutoff;
-            }
-
-            public AreaCVGraphDataStatistics(AreaCVGraphData data, int objects)
-            {
-                DataCount = data.Data.Count;
-                Objects = objects;
-                MinMeanArea = data.MinMeanArea;
-                MaxMeanArea = data.MaxMeanArea;
-                Total = data.Total;
-                MaxCV = data.MaxCV;
-                MinCV = data.MinCV;
-                MaxFrequency = data.MaxFrequency;
-                MedianCV = data.MedianCV;
-                MeanCV = data.MeanCV;
-                BelowCVCutoff = data.BelowCVCutoff;
-            }
-
-            protected bool Equals(AreaCVGraphDataStatistics other)
-            {
-                return DataCount == other.DataCount &&
-                    Objects == other.Objects &&
-                    MinMeanArea.Equals(other.MinMeanArea) &&
-                    MaxMeanArea.Equals(other.MaxMeanArea) &&
-                    Total == other.Total &&
-                    MaxCV.Equals(other.MaxCV) &&
-                    MinCV.Equals(other.MinCV) &&
-                    MaxFrequency == other.MaxFrequency &&
-                    MedianCV.Equals(other.MedianCV) &&
-                    MeanCV.Equals(other.MeanCV) &&
-                    BelowCVCutoff.Equals(other.BelowCVCutoff);
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
-                return Equals((AreaCVGraphDataStatistics) obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    var hashCode = DataCount;
-                    hashCode = (hashCode * 397) ^ Objects.GetHashCode();
-                    hashCode = (hashCode * 397) ^ MinMeanArea.GetHashCode();
-                    hashCode = (hashCode * 397) ^ MaxMeanArea.GetHashCode();
-                    hashCode = (hashCode * 397) ^ Total;
-                    hashCode = (hashCode * 397) ^ MaxCV.GetHashCode();
-                    hashCode = (hashCode * 397) ^ MinCV.GetHashCode();
-                    hashCode = (hashCode * 397) ^ MaxFrequency;
-                    hashCode = (hashCode * 397) ^ MedianCV.GetHashCode();
-                    hashCode = (hashCode * 397) ^ MeanCV.GetHashCode();
-                    hashCode = (hashCode * 397) ^ BelowCVCutoff.GetHashCode();
-                    return hashCode;
-                }
-            }
-
-            public int DataCount { get; private set; }
-            public int Objects { get; private set; }
-            public double MinMeanArea { get; private set; } // Smallest mean area
-            public double MaxMeanArea { get; private set; } // Largest mean area
-            public int Total { get; private set; } // Total number of CV's
-            public double MaxCV { get; private set; } // Highest CV
-            public double MinCV { get; private set; } // Smallest CV
-            public int MaxFrequency { get; private set; } // Highest count of CV's
-            public double MedianCV { get; private set; } // Median CV
-            public double MeanCV { get; private set; } // Mean CV
-            public double BelowCVCutoff { get; private set; } // Fraction/Percentage of CV's below cutoff
-        }
-
-        private void OpenAndChangeProperties(Action<AreaCVToolbarProperties> action)
-        {
-            RunDlg<AreaCVToolbarProperties>(SkylineWindow.ShowAreaCVPropertyDlg, d =>
-            {
-                action(d);
-                d.OK();
-            });
-            UpdateAndWait(SkylineWindow.GraphPeakArea);
-        }
-
-        private void UpdateAndWait(GraphSummary graph)
-        {
-            RunUI(() => { graph.UpdateUI(); });
-            WaitForGraphs();
         }
 
         private void AssertDataCorrect(SummaryGraphPane pane, int statsIndex, bool record = true)
@@ -294,23 +190,17 @@ namespace TestPerf
 
             RunUI(() =>
             {
-                int objects = 0;
-                if (pane is AreaCVHistogramGraphPane)
-                    objects = pane.GetBoxObjCount();
-                else if (pane is AreaCVHistogram2DGraphPane)
-                    objects = pane.GetTotalBars();
+                var testSupport = pane as IAreaCVHistogramTestSupport;
+                int objects = testSupport != null ? testSupport.Objects : 0;
+                var graphDataStatistics = new AreaCVGraphDataStatistics(data, objects);
 
                 if (!RecordData)
                 {
-                    Assert.AreEqual(STATS[statsIndex], new AreaCVGraphDataStatistics(data, objects));
-                    return;
+                    Assert.AreEqual(STATS[statsIndex], graphDataStatistics);
                 }
-
-                if (record)
+                else if (record)
                 {
-                    Console.WriteLine(
-                        @"new AreaCVGraphDataStatistics({0}, {1}, {2:R}, {3:R}, {4}, {5:R}, {6:R}, {7}, {8:R}, {9:R}, {10:R}),",
-                        data.Data.Count, objects, data.MinMeanArea, data.MaxMeanArea, data.Total, data.MaxCV, data.MinCV, data.MaxFrequency, data.MedianCV, data.MeanCV, data.BelowCVCutoff);
+                    Console.WriteLine(graphDataStatistics.ToCode());
                 }
             });
         }
