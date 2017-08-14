@@ -646,7 +646,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             TextObj pointCount = new TextObj(" " + rawtimes.Count, endTime.DisplayTime, scaledHeight) // Not L10N
             {
-                FontSpec = new FontSpec("Arial", 12, ColorSelected, false, false, false)    // Not L10N
+                FontSpec = new FontSpec(FontSpec.Family, FontSpec.Size, ColorSelected, false, false, false)
                 {
                     Border = new Border { IsVisible = false },
                     Fill = new Fill()
