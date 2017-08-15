@@ -12,6 +12,7 @@
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\x64\baf2sql_c.dll" />
     <DeploymentItem filename="msparser.dll" />
     <DeploymentItem filename="msparserD.dll" />
+    <DeploymentItem filename="timsdata.dll" />
   </Deployment>
   <Execution hostProcessPlatform="MSIL">
     <TestTypeSpecific>
