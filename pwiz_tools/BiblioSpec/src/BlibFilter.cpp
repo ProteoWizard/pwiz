@@ -544,7 +544,7 @@ void BlibFilter::buildNonRedundantLib()
     if (!oneIon.empty()) {
         progress.increment();
         Verbosity::comment(V_DETAIL, "Selecting spec for %s, charge %i"
-                           " from %i spectra.", lastPepModSeq,
+                           " from %i spectra.", lastPepModSeq.c_str(),
                            lastCharge, oneIon.size());
         compAndInsert(oneIon);
         clearVector(oneIon);

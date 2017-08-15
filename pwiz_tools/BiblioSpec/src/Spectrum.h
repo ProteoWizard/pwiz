@@ -125,7 +125,7 @@ class Spectrum
  public:
     Spectrum();
     Spectrum(const Spectrum& s);
-    ~Spectrum();
+    virtual ~Spectrum();
 
     //overloaded operators 
     Spectrum& operator= (const Spectrum& s);
