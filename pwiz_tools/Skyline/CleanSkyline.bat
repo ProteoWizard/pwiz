@@ -39,5 +39,7 @@ IF EXIST ..\Shared\ProteowizardWrapper\Microsoft.VC90.MFC rmdir /s /q ..\Shared\
 IF EXIST ..\Shared\MSGraph\bin rmdir /s /q ..\Shared\MSGraph\bin
 IF EXIST ..\Shared\MSGraph\obj rmdir /s /q ..\Shared\MSGraph\obj
 IF EXIST ..\Shared\Crawdad\obj rmdir /s /q ..\Shared\Crawdad\obj
+IF EXIST ProtocolBuffers\tmp rmdir /s /q ProtocolBuffers\tmp
+del /q ProtocolBuffers\GeneratedCode\*
 
 popd

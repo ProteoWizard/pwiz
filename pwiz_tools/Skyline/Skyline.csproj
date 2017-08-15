@@ -1148,7 +1148,6 @@
     <Compile Include="Model\Results\Crawdad\Crawdads.cs" />
     <Compile Include="Model\Results\DriftTimeFinder.cs" />
     <Compile Include="Model\Results\FastOverlapDemultiplexer.cs" />
-    <Compile Include="Model\Results\ProtoBuf\ChromatogramGroupData.cs" />
     <Compile Include="Model\RetentionTimes\LinearAligner.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -1218,7 +1217,6 @@
     <Compile Include="Model\RetentionTimes\RetentionTimeValues.cs" />
     <Compile Include="Model\Serialization\CompactFormatOption.cs" />
     <Compile Include="Model\Serialization\DataValues.cs" />
-    <Compile Include="Model\Serialization\SkylineDocument.cs" />
     <Compile Include="Model\Serialization\DocumentReader.cs" />
     <Compile Include="Model\Serialization\DocumentSerializer.cs" />
     <Compile Include="Model\Serialization\DocumentFormat.cs" />
@@ -1249,6 +1247,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="ProtocolBuffers\GeneratedCode\ChromatogramGroupData.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\SkylineDocument.cs" />
     <Compile Include="SettingsUI\AddModificationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2442,8 +2442,8 @@
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Sciex.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\RePLiCal.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys10.sky" />
-    <None Include="Model\Results\ProtoBuf\ChromatogramGroupData.proto" />
-    <None Include="Model\Serialization\SkylineDocument.proto" />
+    <None Include="ProtocolBuffers\ChromatogramGroupData.proto" />
+    <None Include="ProtocolBuffers\SkylineDocument.proto" />
     <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
     <None Include="Resources\StartPage\DIA_thumb.jpg" />
     <None Include="Resources\StartPage\SmallMolecule_thumb.jpg" />
@@ -4067,7 +4067,6 @@
   <PropertyGroup>
     <PostBuildEvent>
     </PostBuildEvent>
-    <PreBuildEvent>
-    </PreBuildEvent>
+    <PreBuildEvent>$(ProjectDir)ProtocolBuffers\generatecode.bat</PreBuildEvent>
   </PropertyGroup>
 </Project>
