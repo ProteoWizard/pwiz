@@ -35,6 +35,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.panelError = new System.Windows.Forms.Panel();
             this.tbxError = new System.Windows.Forms.TextBox();
             this.helpTipFasta = new System.Windows.Forms.ToolTip(this.components);
+            this.txtNumDecoys = new System.Windows.Forms.TextBox();
             this.clearBtn = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -44,7 +45,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.cbDecoyMethod = new System.Windows.Forms.ComboBox();
-            this.txtNumDecoys = new System.Windows.Forms.TextBox();
             this.panelDecoys = new System.Windows.Forms.Panel();
             this.panelError.SuspendLayout();
             this.panelDecoys.SuspendLayout();
@@ -83,6 +83,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.helpTipFasta.AutoPopDelay = 32767;
             this.helpTipFasta.InitialDelay = 500;
             this.helpTipFasta.ReshowDelay = 100;
+            // 
+            // txtNumDecoys
+            // 
+            resources.ApplyResources(this.txtNumDecoys, "txtNumDecoys");
+            this.txtNumDecoys.Name = "txtNumDecoys";
+            this.helpTipFasta.SetToolTip(this.txtNumDecoys, resources.GetString("txtNumDecoys.ToolTip"));
             // 
             // clearBtn
             // 
@@ -146,19 +152,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             this.cbDecoyMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbDecoyMethod.FormattingEnabled = true;
-            this.cbDecoyMethod.Items.AddRange(new object[] {
-            resources.GetString("cbDecoyMethod.Items"),
-            resources.GetString("cbDecoyMethod.Items1"),
-            resources.GetString("cbDecoyMethod.Items2")});
             resources.ApplyResources(this.cbDecoyMethod, "cbDecoyMethod");
             this.cbDecoyMethod.Name = "cbDecoyMethod";
             this.cbDecoyMethod.SelectedIndexChanged += new System.EventHandler(this.cbDecoyMethod_SelectedIndexChanged);
-            // 
-            // txtNumDecoys
-            // 
-            resources.ApplyResources(this.txtNumDecoys, "txtNumDecoys");
-            this.txtNumDecoys.Name = "txtNumDecoys";
-            this.helpTipFasta.SetToolTip(this.txtNumDecoys, resources.GetString("txtNumDecoys.ToolTip"));
             // 
             // panelDecoys
             // 

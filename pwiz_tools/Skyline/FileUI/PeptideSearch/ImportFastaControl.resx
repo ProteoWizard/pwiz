@@ -246,6 +246,37 @@
   <data name="&gt;&gt;panelError.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
+  <data name="txtNumDecoys.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="txtNumDecoys.Location" type="System.Drawing.Point, System.Drawing">
+    <value>185, 17</value>
+  </data>
+  <data name="txtNumDecoys.Size" type="System.Drawing.Size, System.Drawing">
+    <value>44, 20</value>
+  </data>
+  <data name="txtNumDecoys.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="txtNumDecoys.Text" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="txtNumDecoys.ToolTip" xml:space="preserve">
+    <value>Multiplied by the number of peptides to be added.
+Can be a decimal number like 0.5 or 2.5.</value>
+  </data>
+  <data name="&gt;&gt;txtNumDecoys.Name" xml:space="preserve">
+    <value>txtNumDecoys</value>
+  </data>
+  <data name="&gt;&gt;txtNumDecoys.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;txtNumDecoys.Parent" xml:space="preserve">
+    <value>panelDecoys</value>
+  </data>
+  <data name="&gt;&gt;txtNumDecoys.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="clearBtn.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -486,15 +517,6 @@
   <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="cbDecoyMethod.Items" xml:space="preserve">
-    <value />
-  </data>
-  <data name="cbDecoyMethod.Items1" xml:space="preserve">
-    <value>Shuffle Sequence</value>
-  </data>
-  <data name="cbDecoyMethod.Items2" xml:space="preserve">
-    <value>Reverse Sequence</value>
-  </data>
   <data name="cbDecoyMethod.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 16</value>
   </data>
@@ -515,37 +537,6 @@
   </data>
   <data name="&gt;&gt;cbDecoyMethod.ZOrder" xml:space="preserve">
     <value>2</value>
-  </data>
-  <data name="txtNumDecoys.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="txtNumDecoys.Location" type="System.Drawing.Point, System.Drawing">
-    <value>185, 17</value>
-  </data>
-  <data name="txtNumDecoys.Size" type="System.Drawing.Size, System.Drawing">
-    <value>44, 20</value>
-  </data>
-  <data name="txtNumDecoys.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="txtNumDecoys.Text" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="txtNumDecoys.ToolTip" xml:space="preserve">
-    <value>Multiplied by the number of peptides to be added.
-Can be a decimal number like 0.5 or 2.5.</value>
-  </data>
-  <data name="&gt;&gt;txtNumDecoys.Name" xml:space="preserve">
-    <value>txtNumDecoys</value>
-  </data>
-  <data name="&gt;&gt;txtNumDecoys.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;txtNumDecoys.Parent" xml:space="preserve">
-    <value>panelDecoys</value>
-  </data>
-  <data name="&gt;&gt;txtNumDecoys.ZOrder" xml:space="preserve">
-    <value>1</value>
   </data>
   <data name="panelDecoys.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>

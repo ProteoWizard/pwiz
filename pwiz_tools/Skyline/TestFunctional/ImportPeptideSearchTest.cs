@@ -443,7 +443,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(Settings.Default.GetEnzymeByName("Trypsin"), importPeptideSearchDlg.ImportFastaControl.Enzyme);
                 Assert.AreEqual(0, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("yeast-10.fasta"));
-                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod = "Reverse Sequence";
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod = DecoyGeneration.REVERSE_SEQUENCE;
                 importPeptideSearchDlg.ImportFastaControl.NumDecoys = 1.1;
             });
             var errMaxDecoys = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
@@ -455,7 +455,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(errValidNumDecoys, errValidNumDecoys.OkDialog);
             RunUI(() =>
             {
-                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod = "Shuffle Sequence";
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod = DecoyGeneration.SHUFFLE_SEQUENCE;
                 importPeptideSearchDlg.ImportFastaControl.NumDecoys = 1;
             });
 

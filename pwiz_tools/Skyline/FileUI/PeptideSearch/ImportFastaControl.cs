@@ -53,6 +53,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             _driverEnzyme.LoadList(SkylineWindow.Document.Settings.PeptideSettings.Enzyme.GetKey());
 
             MaxMissedCleavages = skylineWindow.Document.Settings.PeptideSettings.DigestSettings.MaxMissedCleavages;
+            cbDecoyMethod.Items.Add(string.Empty);
+            cbDecoyMethod.Items.Add(DecoyGeneration.SHUFFLE_SEQUENCE);
+            cbDecoyMethod.Items.Add(DecoyGeneration.REVERSE_SEQUENCE);
             cbDecoyMethod.SelectedIndex = 0;
         }
 
