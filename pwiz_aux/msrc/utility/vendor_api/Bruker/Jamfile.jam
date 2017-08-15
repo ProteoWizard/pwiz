@@ -206,7 +206,11 @@ rule install-requirements ( properties * )
         result += <source>simplelogger.properties <source>bdal-logconf.xml ;
         if --without-compassxtract in [ modules.peek : ARGV ]
         {
-            result += <source>$(dll_location)/baf2sql_c.dll <source>$(dll_location)/timsdata.dll ;
+            result += <source>$(dll_location)/baf2sql_c.dll ;
+            if <address-model>64 in $(properties)
+            {
+                result += <source>$(dll_location)/timsdata.dll ;
+            }
         }
         else
         {
