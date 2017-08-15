@@ -473,13 +473,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override string ToString()
         {
-            return string.Format(@"{0}, {1}, {2:R}, {3:R}, {4}, {5:R}, {6:R}, {7}, {8:R}, {9:R}, {10:R}",
+            return string.Format(@"{0}, {1}, {2:R}, {3:R}, {4}, {5:R}, {6:R}, {7}, {8:R}, {9:R}, {10:R}", // Not L10N
                 DataCount, Objects, MinMeanArea, MaxMeanArea, Total, MaxCV, MinCV, MaxFrequency, MedianCV, MeanCV, BelowCVCutoff);
         }
 
         public string ToCode()
         {
-            return string.Format(@"new {0}({1}),", GetType().Name, ToString());
+            return string.Format(@"new {0}({1}),", GetType().Name, ToString()); // Not L10N
         }
 
         private int DataCount { get; set; }
