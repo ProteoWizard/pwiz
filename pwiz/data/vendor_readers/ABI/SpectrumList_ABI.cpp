@@ -278,7 +278,7 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
 
             if (config_.acceptZeroLengthSpectra)
             {
-                //msExperiment->getTIC(times, intensities);
+                msExperiment->getTIC(times, intensities);
 
                 for (int i = 0, end = (int) times.size(); i < end; ++i)
                 //    if (intensities[i] > 0)
