@@ -46,6 +46,12 @@ namespace pwiz.Skyline.Model.Serialization
         private readonly Dictionary<string, string> _uniqueSpecies = new Dictionary<string, string>();
 
         /// <summary>
+        /// In older versions of Skyline we would handle ion notation by building it into the molecule, 
+        /// so our current C12H5[M+2H] would have been C12H7 - this requires special handling on read
+        /// </summary>
+        public bool DocumentMayContainMoleculesWithEmbeddedIons { get { return FormatVersion <= DocumentFormat.VERSION_3_71; } }
+
+        /// <summary>
         /// Avoids duplication of species strings
         /// </summary>
         public string GetUniqueSpecies(string species)
@@ -795,7 +801,7 @@ namespace pwiz.Skyline.Model.Serialization
             var customMolecule = isCustomMolecule ? CustomMolecule.Deserialize(reader, out adduct) : null; // This Deserialize only reads attribures, doesn't advance the reader
             if (customMolecule != null)
             {
-                if (FormatVersion <= DocumentFormat.VERSION_3_61 && string.IsNullOrEmpty(customMolecule.Formula) && customMolecule.MonoisotopicMass.IsMassH())
+                if (DocumentMayContainMoleculesWithEmbeddedIons && string.IsNullOrEmpty(customMolecule.Formula) && customMolecule.MonoisotopicMass.IsMassH())
                 {
                     // Defined by mass only, assume it's not massH despite how it may have been written
                     customMolecule = new CustomMolecule(customMolecule.MonoisotopicMass.ChangeIsMassH(false),
@@ -803,7 +809,7 @@ namespace pwiz.Skyline.Model.Serialization
                         customMolecule.Name);
                 }
             }
-            Assume.IsTrue(FormatVersion <= DocumentFormat.VERSION_3_61 || adduct.IsEmpty); // Shouldn't be any charge info at the peptide/molecule level
+            Assume.IsTrue(DocumentMayContainMoleculesWithEmbeddedIons || adduct.IsEmpty); // Shouldn't be any charge info at the peptide/molecule level
             var peptide = isCustomMolecule ?
                 new Peptide(customMolecule) :
                 new Peptide(group as FastaSequence, sequence, start, end, missedCleavages, isDecoy);
@@ -829,9 +835,9 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     // If this is an older small molecule file, clean up any problems with former data model
                     // where the "peptide" had the same formula as the precursor - and thus was not neutral
-                    if (isCustomMolecule && FormatVersion <= DocumentFormat.VERSION_3_61)
+                    if (isCustomMolecule && DocumentMayContainMoleculesWithEmbeddedIons)
                     {
-                        peptide = HandlePre362CustomIonTransitionGroups(reader, peptide);
+                        peptide = HandlePre372CustomIonTransitionGroups(reader, peptide);
                     }
                     children = ReadTransitionGroupListXml(reader, peptide, mods);
                 }
@@ -1004,8 +1010,8 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         // Read the first-seen transition group and try to discern the actual neutral formula of the molecule
-        // Needed since we actually stored the precursor description rather than the molecule description in v3.61 and earlier
-        private Peptide HandlePre362CustomIonTransitionGroups(XmlReader reader, Peptide peptide)
+        // Needed since we actually stored the precursor description rather than the molecule description in v3.71 and earlier
+        private Peptide HandlePre372CustomIonTransitionGroups(XmlReader reader, Peptide peptide)
         {
             if (peptide.IsCustomMolecule)
             {
@@ -1098,7 +1104,7 @@ namespace pwiz.Skyline.Model.Serialization
                         }
                     }
                 }
-                if (FormatVersion <= DocumentFormat.VERSION_3_61 && !string.IsNullOrEmpty(ionFormula))
+                if (DocumentMayContainMoleculesWithEmbeddedIons && !string.IsNullOrEmpty(ionFormula))
                 {
                     // Old model - we may have encoded isotopes into the precursor's ion formula, and included the adduct's atoms in the molecule count
                     precursorAdduct = precursorAdduct.ChangeIsotopeLabels(BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula(ionFormula));
@@ -1117,7 +1123,7 @@ namespace pwiz.Skyline.Model.Serialization
                     var ionString = precursorAdduct.ApplyToFormula(neutralFormula);
                     var moleculeWithAdduct = precursorAdduct.ApplyToFormula(peptide.CustomMolecule.Formula);
                     Assume.IsTrue(Equals(ionString, moleculeWithAdduct), "Expected precursor ion formula to match parent molecule with adduct applied");  // Not L10N
-                    if (FormatVersion <= DocumentFormat.VERSION_3_61 && !typedMods.LabelType.IsLight)
+                    if (DocumentMayContainMoleculesWithEmbeddedIons && !typedMods.LabelType.IsLight)
                     {
                         // Do we actually need to embed isotope info in the adduct, or is it handled by typedMods.LabelType?
                         try
@@ -1135,7 +1141,7 @@ namespace pwiz.Skyline.Model.Serialization
                         }
                     }
                 }
-                else if (FormatVersion <= DocumentFormat.VERSION_3_61 && !typedMods.LabelType.IsLight && string.IsNullOrEmpty(peptide.CustomMolecule.Formula))
+                else if (DocumentMayContainMoleculesWithEmbeddedIons && !typedMods.LabelType.IsLight && string.IsNullOrEmpty(peptide.CustomMolecule.Formula))
                 {
                     // Labeled, but described by mass only - express label effect in the adduct, preferably as a count of the declared ion label
                     var massDiff = peptide.CustomMolecule.ReadMonoisotopicMass(reader) - peptide.CustomMolecule.MonoisotopicMass; // ReadMonoisotopicMass makes no assignments, it just alters read behavior based on type
@@ -1354,7 +1360,7 @@ namespace pwiz.Skyline.Model.Serialization
                 else
                 {
                     customMolecule = CustomMolecule.Deserialize(reader, out adduct);
-                    if (FormatVersion <= DocumentFormat.VERSION_3_61 && string.IsNullOrEmpty(customMolecule.Formula) && customMolecule.MonoisotopicMass.IsMassH())
+                    if (DocumentMayContainMoleculesWithEmbeddedIons && string.IsNullOrEmpty(customMolecule.Formula) && customMolecule.MonoisotopicMass.IsMassH())
                     {
                         // Defined by mass only, assume it's not massH despite how it may have been written
                         customMolecule = new CustomMolecule(customMolecule.MonoisotopicMass.ChangeIsMassH(false), customMolecule.AverageMass.ChangeIsMassH(false),
@@ -1368,7 +1374,7 @@ namespace pwiz.Skyline.Model.Serialization
             if (adduct.IsEmpty)
             {
                 adduct = info.ProductAdduct;
-                var isPre362NonReporterCustom = FormatVersion <= DocumentFormat.VERSION_3_61 && customMolecule != null &&
+                var isPre362NonReporterCustom = DocumentMayContainMoleculesWithEmbeddedIons && customMolecule != null &&
                                                  !(customMolecule is SettingsCustomIon); // Leave reporter ions alone
                 if (isPre362NonReporterCustom && adduct.IsProteomic)
                 {
