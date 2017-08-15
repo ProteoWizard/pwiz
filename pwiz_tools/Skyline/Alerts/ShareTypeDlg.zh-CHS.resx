@@ -471,7 +471,7 @@ Skyline 文件格式：
     <value>6</value>
   </data>
   <data name="lblLibraries.Text" xml:space="preserve">
-    <value>• 所有库都经过最小化处理，以仅包含在文档中使用的母离子</value>
+    <value>• 已最小化所有库来包含仅在文档中使用的母离子</value>
   </data>
   <data name="lblLibraries.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -516,7 +516,7 @@ Skyline 文件格式：
     <value>5</value>
   </data>
   <data name="lblRetentionTimeCalculator.Text" xml:space="preserve">
-    <value>• 已最小化保留时间计算器，以仅包含在文档中使用的标准肽段和库肽段</value>
+    <value>• 已最小化保留时间计算器来包含仅在文档中使用的标准肽段和库肽段</value>
   </data>
   <data name="lblRetentionTimeCalculator.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

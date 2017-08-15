@@ -520,10 +520,10 @@
     <value>母离子重复测定注释</value>
   </data>
   <data name="PrecursorResult">
-    <value>母离子结果</value>
+    <value>母离子结果（单个）</value>
   </data>
   <data name="PrecursorResults">
-    <value>母离子结果</value>
+    <value>母离子结果（多个）</value>
   </data>
   <data name="PrecursorResultsSummary">
     <value>母离子结果摘要</value>
@@ -556,7 +556,7 @@
     <value>蛋白质</value>
   </data>
   <data name="ProteinAccession">
-    <value>蛋白质编号</value>
+    <value>蛋白质检索号</value>
   </data>
   <data name="ProteinDescription">
     <value>蛋白质描述</value>
@@ -688,7 +688,7 @@
     <value>总面积标准偏差</value>
   </data>
   <data name="StdevTotalAreaNormalized">
-    <value>归一化的总面积标准偏差</value>
+    <value>归一化总面积的标准偏差</value>
   </data>
   <data name="StdevTotalAreaRatio">
     <value>总面积比标准偏差</value>
@@ -715,7 +715,7 @@
     <value>总体背景</value>
   </data>
   <data name="TotalBackgroundFragment">
-    <value>片段总体背景</value>
+    <value>片段总背景</value>
   </data>
   <data name="TotalBackgroundMs1">
     <value>MS1 总体背景</value>
@@ -736,10 +736,10 @@
     <value>离子对重复测定注释</value>
   </data>
   <data name="TransitionResult">
-    <value>离子对结果</value>
+    <value>离子对结果（单个）</value>
   </data>
   <data name="TransitionResults">
-    <value>离子对结果</value>
+    <value>离子对结果（多个）</value>
   </data>
   <data name="TransitionResultsSummary">
     <value>离子对结果摘要</value>

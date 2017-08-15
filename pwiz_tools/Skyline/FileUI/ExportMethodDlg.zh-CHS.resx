@@ -813,7 +813,7 @@
     <value>仅阴性</value>
   </data>
   <data name="comboPolarityFilter.Items3" xml:space="preserve">
-    <value>由极性分隔</value>
+    <value>由极性分离</value>
   </data>
   <data name="comboPolarityFilter.Location" type="System.Drawing.Point, System.Drawing">
     <value>463, 148</value>
