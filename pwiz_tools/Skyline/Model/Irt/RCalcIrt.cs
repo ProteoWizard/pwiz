@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Irt
         public static int MinStandardCount(int expectedCount)
         {
             return expectedCount <= MIN_PEPTIDES_COUNT
-                ? expectedCount
+                ? Math.Max(2, expectedCount)    // Crazy to even allow 2, but once had no minimum at all
                 : Math.Max(MIN_PEPTIDES_COUNT, (int) (expectedCount*MIN_PEPTIDES_PERCENT));
         }
 

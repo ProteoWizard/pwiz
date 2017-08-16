@@ -514,6 +514,7 @@ namespace pwiz.SkylineTestFunctional
             }));
             OkDialog(libraryDlgAll, libraryDlgAll.Btn0Click);
             TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 355); // Was 3sec wait, but that timed out under dotCover
+            WaitForDocumentLoaded();
             RunUI(() =>
             {
                 ValidateDocAndIrt(SkylineWindow.DocumentUI, 355, 355, 10);
@@ -582,8 +583,8 @@ namespace pwiz.SkylineTestFunctional
             var libraryDlgOverwriteYes = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(() => AssertEx.AreComparableStrings(Resources.SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of_library_intensities_, libraryDlgOverwriteYes.Message));
             OkDialog(libraryDlgOverwriteYes, libraryDlgOverwriteYes.Btn0Click);
+            TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 345);    // Peptide count checked below
             WaitForDocumentLoaded();
-            TryWaitForConditionUI(6000, () => SkylineWindow.DocumentUI.PeptideCount == 345);    // Peptide count checked below
             RunUI(() =>
             {
                 var calculator = ValidateDocAndIrt(SkylineWindow.DocumentUI, 345, 355, 10);
@@ -703,6 +704,7 @@ namespace pwiz.SkylineTestFunctional
             // 28.  Do exactly the same thing over again, should happen silently, with only a prompt to add library info
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ImportMassList(textConflict), libraryDlgRepeat => libraryDlgRepeat.Btn0Click());
             TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 690); // Peptide count checked below
+            WaitForDocumentLoaded();
             RunUI(() =>
             {
                 ValidateDocAndIrt(SkylineWindow.DocumentUI, 690, 355, 10);
@@ -803,7 +805,7 @@ namespace pwiz.SkylineTestFunctional
             }));
             OkDialog(libraryInterleaved, libraryInterleaved.Btn0Click);
             TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 6);  // Peptide count checked below
-            // WaitForDocumentLoaded();    TODO: Fix loading with iRT calc but no iRT peptides
+            WaitForDocumentLoaded();
             RunUI(() =>
             {
                 var docInterleaved = SkylineWindow.DocumentUI;
@@ -841,6 +843,7 @@ namespace pwiz.SkylineTestFunctional
             var libraryDlgOverwriteIrt = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(libraryDlgOverwriteIrt.Btn0Click);
             TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 6);
+            WaitForDocumentLoaded();
             Assert.AreEqual(6, SkylineWindow.Document.PeptideCount);
             var irtValue = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.ScoreSequence(new Target("AAAAAAAAAAAAAAAGAAGK"));
             Assert.IsNotNull(irtValue);
@@ -854,6 +857,7 @@ namespace pwiz.SkylineTestFunctional
             var irtOverwriteNoLib = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(irtOverwriteNoLib, irtOverwriteNoLib.Btn1Click);
             TryWaitForCondition(6000, () => SkylineWindow.Document.PeptideCount == 6);
+            WaitForDocumentLoaded();
             Assert.AreEqual(6, SkylineWindow.Document.PeptideCount);
             var irtValueNoLib = SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.ScoreSequence(new Target("AAAAAAAAAAAAAAAGAAGK"));
             Assert.IsNotNull(irtValueNoLib);
