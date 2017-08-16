@@ -224,8 +224,16 @@ namespace seems
 
             row.IonMobility = scan != null ? (double) scan.cvParam(CVID.MS_ion_mobility_drift_time).value : 0;
             if (row.IonMobility == 0 && scan != null)
-                row.IonMobility = scan != null ? (double) scan.cvParam(CVID.MS_inverse_reduced_ion_mobility).value : 0;
-
+            {
+                row.IonMobility = (double) scan.cvParam(CVID.MS_inverse_reduced_ion_mobility).value;
+                if (row.IonMobility == 0)
+                {
+                    // Early version of drift time info, before official CV params
+                    var userparam = scan.userParam("drift time");
+                    if (!userparam.empty())
+                        row.IonMobility = userparam.timeInSeconds() * 1000.0;
+                }
+            }
             row.SpotId = s.spotID;
             row.SpectrumType = s.cvParamChild( CVID.MS_spectrum_type ).name;
             row.DataPoints = s.defaultArrayLength;
