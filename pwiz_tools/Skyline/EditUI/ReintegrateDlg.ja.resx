@@ -271,7 +271,7 @@
     <value>3</value>
   </data>
   <data name="reintegrateQCutoff.Text" xml:space="preserve">
-    <value>顕著なQ値のみ統合(&amp;O)</value>
+    <value>有意なq値のみを統合(&amp;O)</value>
   </data>
   <data name="&gt;&gt;reintegrateQCutoff.Name" xml:space="preserve">
     <value>reintegrateQCutoff</value>
@@ -298,7 +298,7 @@
     <value>7</value>
   </data>
   <data name="checkBoxOverwrite.Text" xml:space="preserve">
-    <value>手動の積分を上書き(&amp;O)</value>
+    <value>手動による積分を上書き(&amp;O)</value>
   </data>
   <data name="&gt;&gt;checkBoxOverwrite.Name" xml:space="preserve">
     <value>checkBoxOverwrite</value>
@@ -328,7 +328,7 @@
     <value>0</value>
   </data>
   <data name="label36.Text" xml:space="preserve">
-    <value>ピークスコアモデル(&amp;P)：</value>
+    <value>ピークスコアリングモデル(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label36.Name" xml:space="preserve">
     <value>label36</value>

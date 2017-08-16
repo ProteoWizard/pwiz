@@ -196,7 +196,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>ペプチド衝突断面積値元：</value>
+    <value>ペプチド衝突断面積値のインポート元：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -427,7 +427,7 @@
     <value>True</value>
   </metadata>
   <data name="Slope.HeaderText" xml:space="preserve">
-    <value>勾配</value>
+    <value>傾き</value>
   </data>
   <data name="Slope.Width" type="System.Int32, mscorlib">
     <value>90</value>
@@ -457,13 +457,13 @@
     <value>17, 17</value>
   </metadata>
   <data name="gridRegression.ToolTip" xml:space="preserve">
-    <value>形式の方程式を用いたミリ秒「D」において観測された電荷ペプチドのドリフト時間から衝突断面積「C」を計算するために勾配と切片値が使用されました：
+    <value>衝突断面積「C」は、観測された荷電ペプチドのドリフト時間（「D」ミリ秒）と傾きと切片の値を使用し、次の式を用いて計算されます：
+ 
+C = （D - 切片）/傾き
 
-C = （D - 切片）/勾配
+各荷電状態では、異なる傾きと切片の値が必要です。 もし電荷の情報がこのリストにない場合は、その電荷でのドリフト時間から衝突断面積を求めることはできません。 
 
-各電荷状態には異なる勾配と切片値が必要です。 電荷状態がこのリストにない場合は、その電荷のドリフト時間情報を衝突断面積に変換することはできません。 
-
-スペクトルライブラリに、観測されたドリフト時間値の代わりに実際の衝突断面積データが含まれている場合、インポートに電荷勾配切片値は必要ありません。</value>
+スペクトルライブラリに、観測されたドリフト時間の代わりに実際の衝突断面積データが含まれている場合には、電荷、傾き、および、切片の値は必要ありません。</value>
   </data>
   <data name="&gt;&gt;gridRegression.Name" xml:space="preserve">
     <value>gridRegression</value>
@@ -496,7 +496,7 @@ C = （D - 切片）/勾配
     <value>8</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>測定ドリフト時間から変換するためのパラメータ(&amp;P)：</value>
+    <value>測定されたドリフト時間からの変換パラメータ(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>

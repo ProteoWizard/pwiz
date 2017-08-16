@@ -190,7 +190,7 @@
     <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>イオン移動度ライブラリファイル(&amp;F)：</value>
+    <value>イオンモビリティライブラリファイル(&amp;F)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -568,7 +568,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>イオン移動度ライブラリを編集</value>
+    <value>イオンモビリティライブラリを編集</value>
   </data>
   <data name="&gt;&gt;bindingSourceLibrary.Name" xml:space="preserve">
     <value>bindingSourceLibrary</value>

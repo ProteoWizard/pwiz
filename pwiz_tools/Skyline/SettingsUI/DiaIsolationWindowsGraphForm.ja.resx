@@ -247,7 +247,7 @@
     <value>4</value>
   </data>
   <data name="cbShowOverlapsSingle.Text" xml:space="preserve">
-    <value>単一サイクル重複を表示</value>
+    <value>単一サイクルの重複を表示</value>
   </data>
   <data name="&gt;&gt;cbShowOverlapsSingle.Name" xml:space="preserve">
     <value>cbShowOverlapsSingle</value>

@@ -349,7 +349,7 @@
     <value>2</value>
   </data>
   <data name="radioKeepFiltered.Text" xml:space="preserve">
-    <value>すべてのペプチドを含める</value>
+    <value>全てのペプチドを含める</value>
   </data>
   <data name="&gt;&gt;radioKeepFiltered.Name" xml:space="preserve">
     <value>radioKeepFiltered</value>

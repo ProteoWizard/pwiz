@@ -132,7 +132,7 @@
     <value>4</value>
   </data>
   <data name="labelCleavage.Text" xml:space="preserve">
-    <value>C末端の開裂先(&amp;C)：</value>
+    <value>以下のアミノ酸のC末端側で切断(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;labelCleavage.Name" xml:space="preserve">
     <value>labelCleavage</value>
@@ -159,7 +159,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textCleavage.ToolTip" xml:space="preserve">
-    <value>開裂が発生するアミノ酸残基の鎖（セパレータなし）</value>
+    <value>切断されるアミノ酸残基（セパレータなし）</value>
   </data>
   <data name="&gt;&gt;textCleavage.Name" xml:space="preserve">
     <value>textCleavage</value>
@@ -186,7 +186,7 @@
     <value>6</value>
   </data>
   <data name="labelRestrict.Text" xml:space="preserve">
-    <value>次の場合のみ(&amp;O)：</value>
+    <value>続くアミノ酸が以下の場合を除く(&amp;O)：</value>
   </data>
   <data name="&gt;&gt;labelRestrict.Name" xml:space="preserve">
     <value>labelRestrict</value>
@@ -210,9 +210,7 @@
     <value>7</value>
   </data>
   <data name="textRestrict.ToolTip" xml:space="preserve">
-    <value>N末端切断より前にあるときに
-切断を抑制するアミノ酸残基の
-リストです (セパレータなし)。</value>
+    <value>切断箇所のC末端側にある場合に切断効率を低下させるアミノ酸残基のリスト (separatorなし)</value>
   </data>
   <data name="&gt;&gt;textRestrict.Name" xml:space="preserve">
     <value>textRestrict</value>
@@ -345,7 +343,7 @@
     <value>1</value>
   </data>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>ペプチド設定形式でこのプロテアーゼ酵素の表示に使用する名前</value>
+    <value>このプロテアーゼ酵素を[Peptide Settings]フォームで列挙するために使用される名前</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -396,9 +394,7 @@
     <value>11</value>
   </data>
   <data name="textRestrictN.ToolTip" xml:space="preserve">
-    <value>N末端切断より前にあるときに
-切断を抑制するアミノ酸残基の
-リストです (セパレータなし)。</value>
+    <value>切断箇所のN末端側にある場合に切断効率を低下させるアミノ酸残基のリスト (separatorなし)</value>
   </data>
   <data name="&gt;&gt;textRestrictN.Name" xml:space="preserve">
     <value>textRestrictN</value>
@@ -422,8 +418,7 @@
     <value>9</value>
   </data>
   <data name="textCleavageN.ToolTip" xml:space="preserve">
-    <value>切断が発生する一連のアミノ酸残基N末端
-です (セパレータなし)</value>
+    <value>切断されるN末端側のアミノ酸残基 (セパレータなし)</value>
   </data>
   <data name="&gt;&gt;textCleavageN.Name" xml:space="preserve">
     <value>textCleavageN</value>
@@ -484,7 +479,7 @@
     <value>8</value>
   </data>
   <data name="labelCleavageN.Text" xml:space="preserve">
-    <value>N末端の開裂先(&amp;N)：</value>
+    <value>以下のアミノ酸のN末端側で切断(&amp;N)：</value>
   </data>
   <data name="&gt;&gt;labelCleavageN.Name" xml:space="preserve">
     <value>labelCleavageN</value>
@@ -520,7 +515,7 @@
     <value>準切断を許可(&amp;A)</value>
   </data>
   <data name="cbSemiCleavage.ToolTip" xml:space="preserve">
-    <value>一端のみが切断部位と一致するペプチドを許可します。準切断検索結果を含むスペクトルライブラリのみと使用します。</value>
+    <value>一端のみが切断部位と一致するペプチドを許可します。これには、準切断検索結果を含むスペクトルライブラリのみを使用します。</value>
   </data>
   <data name="&gt;&gt;cbSemiCleavage.Name" xml:space="preserve">
     <value>cbSemiCleavage</value>

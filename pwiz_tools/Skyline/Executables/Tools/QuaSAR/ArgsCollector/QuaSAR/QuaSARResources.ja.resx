@@ -131,7 +131,7 @@
     <value>内在性信頼度間隔は0と1の間でなければなりません</value>
   </data>
   <data name="ArgumentDocumentation_TITLE_The_title_to_be_displayed_on_each_calibration_plot" xml:space="preserve">
-    <value>各校正プロットに表示されるタイトル</value>
+    <value>各較正プロットに表示されるタイトル</value>
   </data>
   <data name="ArgumentDocumentation_CVTABLE_If_checked_then_QuaSAR_generates_a_CV__coefficient_of_variation__table" xml:space="preserve">
     <value>これを選択すると、QuaSARがCV（変動係数）表を生成します</value>

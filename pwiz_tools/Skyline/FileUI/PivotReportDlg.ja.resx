@@ -268,7 +268,7 @@
     <value>29, 20</value>
   </data>
   <data name="btnUp.Text" xml:space="preserve">
-    <value>上</value>
+    <value>上へ</value>
   </data>
   <data name="btnDown.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -448,7 +448,7 @@
     <value>3</value>
   </data>
   <data name="cbxPivotIsotopeLabel.Text" xml:space="preserve">
-    <value>ピボット同位体標識</value>
+    <value>同位体標識を軸にする</value>
   </data>
   <data name="&gt;&gt;cbxPivotIsotopeLabel.Name" xml:space="preserve">
     <value>cbxPivotIsotopeLabel</value>
@@ -475,7 +475,7 @@
     <value>2</value>
   </data>
   <data name="cbxPivotReplicate.Text" xml:space="preserve">
-    <value>ピボット繰り返し測定名</value>
+    <value>繰り返し測定名を軸にする</value>
   </data>
   <data name="&gt;&gt;cbxPivotReplicate.Name" xml:space="preserve">
     <value>cbxPivotReplicate</value>

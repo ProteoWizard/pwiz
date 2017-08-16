@@ -475,7 +475,7 @@
     <value>True</value>
   </metadata>
   <data name="columnProductCharge.HeaderText" xml:space="preserve">
-    <value>プロダクト電荷</value>
+    <value>プロダクトの電荷</value>
   </data>
   <data name="columnProductCharge.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

@@ -412,7 +412,7 @@
     <value>8</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>標準調整ステップ数(&amp;M)：</value>
+    <value>ミディアムチューンのステップ数(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>

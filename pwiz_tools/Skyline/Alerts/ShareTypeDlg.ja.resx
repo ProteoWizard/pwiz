@@ -259,7 +259,7 @@
     <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>このドキュメントは、以前のバージョンのSkylineと互換性ある形式で保存できます。以前のバージョンとして保存する場合、すべてのデータが保存されるわけではないのでご注意ください。 Skylineファイル形式：</value>
+    <value>このドキュメントは、以前のバージョンのSkylineと互換性ある形式で保存できます。以前のバージョンとして保存する場合、すべてのデータが保存されるわけではありませんのでご注意ください。 Skylineファイル形式： </value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -766,6 +766,6 @@
     <value>ShareTypeDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

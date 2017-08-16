@@ -181,7 +181,7 @@
     <value>True/False</value>
   </data>
   <data name="comboType.Items3" xml:space="preserve">
-    <value>値リスト</value>
+    <value>値のリスト</value>
   </data>
   <data name="comboType.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 79</value>

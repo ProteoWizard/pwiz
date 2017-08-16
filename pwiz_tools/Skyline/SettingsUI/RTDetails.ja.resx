@@ -141,7 +141,7 @@
     <value>True</value>
   </metadata>
   <data name="Predicted.HeaderText" xml:space="preserve">
-    <value>予測</value>
+    <value>予測された</value>
   </data>
   <data name="Predicted.Width" type="System.Int32, mscorlib">
     <value>80</value>

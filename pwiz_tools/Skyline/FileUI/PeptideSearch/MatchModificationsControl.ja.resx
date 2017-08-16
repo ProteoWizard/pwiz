@@ -262,7 +262,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>次の修飾を解釈できませんでした。</value>
+    <value>以下のアミノ酸に付与された質量差は、登録済みの翻訳後修飾と合致しません。</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

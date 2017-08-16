@@ -217,8 +217,7 @@
     <value>3</value>
   </data>
   <data name="cbMissedCleavages.ToolTip" xml:space="preserve">
-    <value>タンパク質分解後、ペプチド内で可能な
-最大未切断サイト数。</value>
+    <value>タンパク質の酵素消化で分解後、ペプチドで許容される未切断の最大数。</value>
   </data>
   <data name="&gt;&gt;cbMissedCleavages.Name" xml:space="preserve">
     <value>cbMissedCleavages</value>
@@ -256,9 +255,8 @@
     <value>5</value>
   </data>
   <data name="comboBackgroundProteome.ToolTip" xml:space="preserve">
-    <value>質量分析計に注入するサンプルマトリックス内に存在し得る
-全てのタンパク質を指定する
-処理済みFASTA配列情報です。</value>
+    <value>質量分析計に導入されるサンプルマトリックス内に存在し得る
+全てのタンパク質を指定するように処理されたFASTA配列の情報です。</value>
   </data>
   <data name="&gt;&gt;comboBackgroundProteome.Name" xml:space="preserve">
     <value>comboBackgroundProteome</value>
@@ -306,8 +304,7 @@
     <value>3</value>
   </data>
   <data name="comboBox1.ToolTip" xml:space="preserve">
-    <value>タンパク質分解後、ペプチド内で可能な
-最大未切断サイト数。</value>
+    <value>タンパク質の酵素消化で分解後、ペプチドで許容される未切断の最大数。</value>
   </data>
   <data name="&gt;&gt;comboBox1.Name" xml:space="preserve">
     <value>comboBox1</value>
@@ -345,9 +342,8 @@
     <value>5</value>
   </data>
   <data name="comboBox3.ToolTip" xml:space="preserve">
-    <value>質量分析計に注入するサンプルマトリックス内に存在し得る
-全てのタンパク質を指定する
-処理済みFASTA配列情報です。</value>
+    <value>質量分析計に導入されるサンプルマトリックス内に存在し得る
+全てのタンパク質を指定するように処理されたFASTA配列の情報です。</value>
   </data>
   <data name="&gt;&gt;comboBox3.Name" xml:space="preserve">
     <value>comboBox3</value>
@@ -368,7 +364,7 @@
     <value>2</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>最大ミス開裂数(&amp;M)：</value>
+    <value>最大未切断数(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -431,7 +427,7 @@
     <value>2</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>最大ミス開裂数(&amp;M)：</value>
+    <value>最大未切断数(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -779,7 +775,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>トランジションの設定を構成</value>
+    <value>トランジション設定を行う</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -854,7 +850,7 @@
     <value>0</value>
   </data>
   <data name="label19.Text" xml:space="preserve">
-    <value>フルスキャン設定を構成</value>
+    <value>フルスキャン設定を行う</value>
   </data>
   <data name="&gt;&gt;label19.Name" xml:space="preserve">
     <value>label19</value>

@@ -247,7 +247,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>FASTAレコードは'&gt;'で始まり、タンパク質名の後にオプションのタンパク質の説明が続きます。</value>
+    <value>FASTAレコードは'&gt;'で始まり、タンパク質名の後にオプションのタンパク質表記が続きます。</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -298,7 +298,7 @@
     <value>True</value>
   </metadata>
   <data name="colProteinDescription.HeaderText" xml:space="preserve">
-    <value>説明</value>
+    <value>表記</value>
   </data>
   <metadata name="colProteinSequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -310,7 +310,7 @@
     <value>True</value>
   </metadata>
   <data name="colProteinAccession.HeaderText" xml:space="preserve">
-    <value>取得</value>
+    <value>アクセッション番号</value>
   </data>
   <metadata name="colProteinPreferredName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -328,7 +328,7 @@
     <value>True</value>
   </metadata>
   <data name="colProteinSpecies.HeaderText" xml:space="preserve">
-    <value>生物種</value>
+    <value>種</value>
   </data>
   <data name="gridViewProteins.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>

@@ -164,7 +164,7 @@
     <value>2</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>ペプチド毎の最大トランジション：</value>
+    <value>ペプチド毎の最大トランジション数：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>

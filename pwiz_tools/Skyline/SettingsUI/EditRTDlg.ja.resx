@@ -136,7 +136,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>ぺプチド設定形式でこの式の表示に使用する名前</value>
+    <value>この式を[Peptide Settings]フォームに表示するために使用される名前</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -244,7 +244,7 @@
     <value>2</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>勾配(&amp;S)：</value>
+    <value>傾き(&amp;S)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -268,10 +268,9 @@
     <value>3</value>
   </data>
   <data name="textSlope.ToolTip" xml:space="preserve">
-    <value>勾配を使用して、このフォームの次の方程式を使って計算されたペプチドスコアから
-予測保持時間を計算します。
+    <value>算出されたペプチドのスコア（score）から保持時間（RT）の予測値を計算する傾きの値は、次の式で用いられます：
 
-RT = 勾配*スコア+切片</value>
+RT = 傾き * score + 切片</value>
   </data>
   <data name="&gt;&gt;textSlope.Name" xml:space="preserve">
     <value>textSlope</value>
@@ -322,11 +321,9 @@ RT = 勾配*スコア+切片</value>
     <value>5</value>
   </data>
   <data name="textIntercept.ToolTip" xml:space="preserve">
-    <value>Y切片を使用して、このフォームの次の方程式を使って計算されたペプチドスコアから
-予測保持時間を計算します。
+    <value>算出されたペプチドのスコア（score）から保持時間（RT）の予測値を計算するy切片の値は、次の式で用いられます：
 
-RT = 勾配*スコア+切片
-</value>
+RT = 傾き * score + 切片</value>
   </data>
   <data name="&gt;&gt;textIntercept.Name" xml:space="preserve">
     <value>textIntercept</value>
@@ -356,7 +353,7 @@ RT = 勾配*スコア+切片
     <value>計算 &gt;&gt;</value>
   </data>
   <data name="btnCalculate.ToolTip" xml:space="preserve">
-    <value>線形回帰方程式の計算に使用するペプチド値を
+    <value>線形回帰式の計算で使用するペプチドの値を
 表示または隠します</value>
   </data>
   <data name="&gt;&gt;btnCalculate.Name" xml:space="preserve">
@@ -417,8 +414,7 @@ RT = 勾配*スコア+切片
     <value>（0個のペプチド、R = 0.0）</value>
   </data>
   <data name="labelRValue.ToolTip" xml:space="preserve">
-    <value>線形回帰方程式と回帰Rの計算に
-現在使用されているペプチドの数です</value>
+    <value>線形回帰式と相関係数Rの算出に使用されているペプチドの数</value>
   </data>
   <data name="&gt;&gt;labelRValue.Name" xml:space="preserve">
     <value>labelRValue</value>
@@ -471,7 +467,7 @@ RT = 勾配*スコア+切片
   <data name="textTimeWindow.ToolTip" xml:space="preserve">
     <value>保持時間予測の表示と今後のペプチド測定の
 スケジュールに使用する予測保持時間近辺の時間枠を
-分単位で表示します。回帰計算方程式では、
+分の単位で表示します。回帰式では、
 この値は残余の標準偏差の2倍となります。
 これは回帰値の95%を含む範囲です。</value>
   </data>
@@ -585,8 +581,8 @@ SSRCalc - シークエンス固有の保持カルキュレータ。疎水性カ�
     <value>結果を使用(&amp;U)</value>
   </data>
   <data name="btnUseCurrent.ToolTip" xml:space="preserve">
-    <value>クリックして現在インポートされている結果データをこのドキュメント内のペプチドで使用し、
-線形回帰式を計算します</value>
+    <value>クリックして、現在インポートされているペプチドの結果データから
+線形回帰式を計算します。</value>
   </data>
   <data name="&gt;&gt;btnUseCurrent.Name" xml:space="preserve">
     <value>btnUseCurrent</value>
@@ -616,8 +612,8 @@ SSRCalc - シークエンス固有の保持カルキュレータ。疎水性カ�
     <value>グラフを表示(&amp;G)...</value>
   </data>
   <data name="btnShowGraph.ToolTip" xml:space="preserve">
-    <value>このドキュメント内のペプチドに対して、現在インポートされている最適化結果データの
-線形回帰グラフを表示します</value>
+    <value>このドキュメント内のペプチドに対して、現在インポートされている最適化された結果の
+線形回帰のグラフを表示します</value>
   </data>
   <data name="&gt;&gt;btnShowGraph.Name" xml:space="preserve">
     <value>btnShowGraph</value>
@@ -668,8 +664,7 @@ SSRCalc - シークエンス固有の保持カルキュレータ。疎水性カ�
     <value>14</value>
   </data>
   <data name="gridPeptides.ToolTip" xml:space="preserve">
-    <value>線形回帰方程式の計算に使用するペプチドと
-その測定保持時間です</value>
+    <value>線形回帰式の計算に使用するペプチドと その測定保持時間です</value>
   </data>
   <data name="&gt;&gt;gridPeptides.Name" xml:space="preserve">
     <value>gridPeptides</value>
@@ -699,9 +694,9 @@ SSRCalc - シークエンス固有の保持カルキュレータ。疎水性カ�
     <value>回帰を自動計算(&amp;O)</value>
   </data>
   <data name="cbAutoCalc.ToolTip" xml:space="preserve">
-    <value>チェックマークをオンにすると、Skylineが
-インポートされた各ファイルのスコアによる保持時間の各回帰に基づいて
-予測に使用する勾配と切片を計算します</value>
+    <value>チェックボックスをオンにすると、
+インポートされた各ファイルのスコア毎に保持時間のそれぞれ回帰に基づいて
+予測に使用する勾配と切片をSkylineが計算します。</value>
   </data>
   <data name="&gt;&gt;cbAutoCalc.Name" xml:space="preserve">
     <value>cbAutoCalc</value>

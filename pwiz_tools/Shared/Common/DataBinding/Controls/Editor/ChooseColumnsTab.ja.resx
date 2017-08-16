@@ -202,7 +202,7 @@
     <value>21, 20</value>
   </data>
   <data name="btnUp.Text" xml:space="preserve">
-    <value>上</value>
+    <value>上へ</value>
   </data>
   <data name="btnDown.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>

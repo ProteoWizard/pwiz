@@ -136,7 +136,7 @@
     <value>17</value>
   </data>
   <data name="textDriftTimeMsec.ToolTip" xml:space="preserve">
-    <value>任意の予測されたドリフト時間値をオーバーライド</value>
+    <value>予測されたドリフト時間の値の上書きする</value>
   </data>
   <data name="&gt;&gt;textDriftTimeMsec.Name" xml:space="preserve">
     <value>textDriftTimeMsec</value>
@@ -163,7 +163,7 @@
     <value>19</value>
   </data>
   <data name="textDriftTimeHighEnergyOffsetMsec.ToolTip" xml:space="preserve">
-    <value>事後ドリフト断片化に運動エネルギーが追加されたため、少し早くなったフライトを補正するために小さな（通常、負数）値がプロダクトイオンに適用されました。</value>
+    <value>ドリフト断片化後に運動エネルギーが加わったため、若干加速したイオン飛行を補正するために小さな（通常、負数）値がプロダクトイオンに適用されました。</value>
   </data>
   <data name="&gt;&gt;textDriftTimeHighEnergyOffsetMsec.Name" xml:space="preserve">
     <value>textDriftTimeHighEnergyOffsetMsec</value>
@@ -187,7 +187,7 @@
     <value>1</value>
   </data>
   <data name="textRetentionTime.ToolTip" xml:space="preserve">
-    <value>任意の予測された保持時間値をオーバーライド</value>
+    <value>予測された保持時間の値の上書きする</value>
   </data>
   <data name="&gt;&gt;textRetentionTime.Name" xml:space="preserve">
     <value>textRetentionTime</value>
@@ -211,7 +211,7 @@
     <value>3</value>
   </data>
   <data name="textRetentionTimeWindow.ToolTip" xml:space="preserve">
-    <value>この値は明示的な保持時間値がある場合のみ有用です。</value>
+    <value>この値は詳細な保持時間の値がある場合のみ有用です。</value>
   </data>
   <data name="&gt;&gt;textRetentionTimeWindow.Name" xml:space="preserve">
     <value>textRetentionTimeWindow</value>
@@ -238,7 +238,7 @@
     <value>5</value>
   </data>
   <data name="textCollisionEnergy.ToolTip" xml:space="preserve">
-    <value>任意の予測またはライブラリ衝突エネルギー値をオーバーライド</value>
+    <value>予測された、またはライブラリのCE値を上書きする</value>
   </data>
   <data name="&gt;&gt;textCollisionEnergy.Name" xml:space="preserve">
     <value>textCollisionEnergy</value>
@@ -271,7 +271,7 @@
     <value>8</value>
   </data>
   <data name="labelSLens.Text" xml:space="preserve">
-    <value>S-レンズ(&amp;S)：</value>
+    <value>傾き(&amp;S)：</value>
   </data>
   <data name="labelSLens.ToolTip" xml:space="preserve">
     <value>ThermoのS-レンズ値</value>
@@ -301,7 +301,7 @@
     <value>9</value>
   </data>
   <data name="textSLens.ToolTip" xml:space="preserve">
-    <value>任意の予測またはライブラリS-レンズ値をオーバーライド</value>
+    <value>予測された、またはライブラリのS-レンズの値を上書きする</value>
   </data>
   <data name="&gt;&gt;textSLens.Name" xml:space="preserve">
     <value>textSLens</value>
@@ -364,7 +364,7 @@
     <value>11</value>
   </data>
   <data name="textConeVoltage.ToolTip" xml:space="preserve">
-    <value>任意の予測またはライブラリコーン電圧値をオーバーライド</value>
+    <value>予測された、またはライブラリのコーン電圧の値を上書きする</value>
   </data>
   <data name="&gt;&gt;textConeVoltage.Name" xml:space="preserve">
     <value>textConeVoltage</value>
@@ -391,7 +391,7 @@
     <value>7</value>
   </data>
   <data name="textDeclusteringPotential.ToolTip" xml:space="preserve">
-    <value>任意の予測またはライブラリデクラスタリングポテンシャル値をオーバーライド</value>
+    <value>予測された、またはライブラリのDPの値を上書きする</value>
   </data>
   <data name="&gt;&gt;textDeclusteringPotential.Name" xml:space="preserve">
     <value>textDeclusteringPotential</value>
@@ -418,7 +418,7 @@
     <value>13</value>
   </data>
   <data name="textCompensationVoltage.ToolTip" xml:space="preserve">
-    <value>任意の予測またはライブラリ補償電圧値をオーバーライド</value>
+    <value>予測された、またはライブラリのCP値を上書きする</value>
   </data>
   <data name="&gt;&gt;textCompensationVoltage.Name" xml:space="preserve">
     <value>textCompensationVoltage</value>
@@ -442,7 +442,7 @@
     <value>3</value>
   </data>
   <data name="textCharge.ToolTip" xml:space="preserve">
-    <value>電荷は、付加物の説明（例：「[M+2K-H]」）を式で用いるよう指定することもできます</value>
+    <value>式中の付加イオンの表記（例：「[M+2K-H]」）を使って電荷を指定することもできます</value>
   </data>
   <data name="&gt;&gt;textCharge.Name" xml:space="preserve">
     <value>textCharge</value>
@@ -466,7 +466,7 @@
     <value>1</value>
   </data>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>デフォルト名は、イオン公式から付加物の説明を除いたものです</value>
+    <value>デフォルト名は、イオン式から付加物の表記を除いたものです</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -811,7 +811,7 @@
     <value>4</value>
   </data>
   <data name="labelCollisionEnergy.Text" xml:space="preserve">
-    <value>衝突エネルギー(&amp;E)：</value>
+    <value>コリジョンエネルギー(&amp;E)：</value>
   </data>
   <data name="&gt;&gt;labelCollisionEnergy.Name" xml:space="preserve">
     <value>labelCollisionEnergy</value>
@@ -835,7 +835,7 @@
     <value>6</value>
   </data>
   <data name="groupBoxOptionalValues.Text" xml:space="preserve">
-    <value>明示的な値（オプション）</value>
+    <value>指定された値（オプション）</value>
   </data>
   <data name="&gt;&gt;groupBoxOptionalValues.Name" xml:space="preserve">
     <value>groupBoxOptionalValues</value>

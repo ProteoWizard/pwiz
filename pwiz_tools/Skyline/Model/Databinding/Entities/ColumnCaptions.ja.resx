@@ -790,7 +790,7 @@
     <value>明示的ドリフト時間ミリ秒</value>
   </data>
   <data name="ExplicitGlobalStandardArea">
-    <value>指定されたグローバル標準領域</value>
+    <value>明示的グローバル標準領域</value>
   </data>
   <data name="ExplicitRetentionTime">
     <value>明示的保持時間</value>
@@ -799,10 +799,10 @@
     <value>明示的保持時間ウィンドウ</value>
   </data>
   <data name="ExplicitSLens">
-    <value>指定されたS-レンズ値</value>
+    <value>明示的S-レンズ</value>
   </data>
   <data name="ExplicitConeVoltage">
-    <value>指定されたコーン電圧値</value>
+    <value>明示的コーン電圧</value>
   </data>
   <data name="ExplicitDeclusteringPotential">
     <value>明示的デクラスタリングポテンシャル</value>
@@ -820,7 +820,7 @@
     <value>プロダクトの付加物</value>
   </data>
   <data name="ProductNeutralFormula">
-    <value>プロダクトの分子式</value>
+    <value>プロダクトのニュートラル公式</value>
   </data>
   <data name="MoleculeName">
     <value>分子名</value>

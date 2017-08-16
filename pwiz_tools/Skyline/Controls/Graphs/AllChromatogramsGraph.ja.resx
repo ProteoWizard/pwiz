@@ -777,7 +777,7 @@
     <value>22, 20</value>
   </data>
   <data name="btnAutoScaleGraphs.ToolTipText" xml:space="preserve">
-    <value>グラフのスケーリングをロックします</value>
+    <value>グラフのスケーリングを固定します</value>
   </data>
   <data name="&gt;&gt;flowFileStatus.Name" xml:space="preserve">
     <value>flowFileStatus</value>
@@ -1053,7 +1053,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>クロマトグラムの読み込み中...</value>
+    <value>結果の読み込み中…</value>
   </data>
   <data name="&gt;&gt;imageListLock.Name" xml:space="preserve">
     <value>imageListLock</value>

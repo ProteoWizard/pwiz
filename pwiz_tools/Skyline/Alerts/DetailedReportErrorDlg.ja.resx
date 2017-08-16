@@ -139,9 +139,9 @@
     <value>0</value>
   </data>
   <data name="lblReportError.Text" xml:space="preserve">
-    <value>Skyline開発者が独自のシステムでこのエラーを再現する方法を見つけることで、
-修正される可能性が大幅に高まります。
-この問題を当組織が修正するのに役立つ以下の情報を提供してください。</value>
+    <value>Skyline開発者が彼ら自身のシステムにおいてこのエラーを再現する方法を見つけることで、
+このエラーを修正できる可能性が大幅に高まります。
+当組織がこの問題を修正するのに役立つ以下の情報を提供してください。</value>
   </data>
   <data name="&gt;&gt;lblReportError.Name" xml:space="preserve">
     <value>lblReportError</value>
@@ -330,7 +330,7 @@
     <value>7</value>
   </data>
   <data name="checkBoxScreenShot.Text" xml:space="preserve">
-    <value>Skylineウィンドウのスクリーンショットのみを送信する （スクリーンショットは完全ではない）</value>
+    <value>Skylineウィンドウのスクリーンショットのみを送信する （フルスクリーンショットではない）</value>
   </data>
   <data name="&gt;&gt;checkBoxScreenShot.Name" xml:space="preserve">
     <value>checkBoxScreenShot</value>
@@ -360,7 +360,7 @@
     <value>1</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>この情報をSkyline開発チーム外と共有しない</value>
+    <value>この情報はSkyline開発チーム以外とは共有しません</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

@@ -132,7 +132,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>共通プリフィックス(&amp;C):</value>
+    <value>共通の接頭語(&amp;C):</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -228,7 +228,7 @@
     <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>選択したファイルには共通プリフィックスがあります。</value>
+    <value>選択したファイルには前に付く共通の単語があります。</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -255,7 +255,7 @@
     <value>5</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>このプリフィックスの一部またはすべてを削除して、</value>
+    <value>このプレフィックスの一部またはすべてを削除しますか</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>

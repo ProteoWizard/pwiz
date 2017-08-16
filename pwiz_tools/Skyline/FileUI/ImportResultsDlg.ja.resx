@@ -143,14 +143,14 @@
   </data>
   <data name="radioCreateMultipleMulti.ToolTip" xml:space="preserve">
     <value>ディレクトリ内で以下のように整理されている任意数のマルチインジェクション繰り返し測定を追加： 
-    &lt;root&gt;\
-        replicate1\
-            *.RAW
-        replicate2\
-            *.wiff
-        replicate3\
-            *.mzML
-ルートディレクトリを選択し、新しい繰り返し測定がそれぞれのサブディレクトリに作成されます。</value>
+  &lt;root&gt;\
+  replicate1\
+  *.RAW
+  replicate2\
+  *.wiff
+  replicate3\
+  *.mzML
+ルートディレクトリを選択すると、新しい繰り返し測定がそれぞれのサブディレクトリに作成されます。</value>
   </data>
   <data name="&gt;&gt;radioCreateMultipleMulti.Name" xml:space="preserve">
     <value>radioCreateMultipleMulti</value>
@@ -183,9 +183,9 @@
     <value>ファイルにシングルインジェクション繰り返し測定を追加(&amp;S)</value>
   </data>
   <data name="radioCreateMultiple.ToolTip" xml:space="preserve">
-    <value>任意数のシングルインジェクション測定をファイルから追加します。
-各ファイルには、1 回注入または
-複数回注入が含まれます (.wiff)。各注入は個別の繰り返し測定として
+    <value>ファイルから任意の数のシングルインジェクション繰り返し測定を追加します。
+ファイル毎に単一インジェクション、又は
+複数インジェクションのどちらかがファイルに含まれます (.wiff)。各インジェクションは個別の繰り返し測定として
 追加されます。
 </value>
   </data>
@@ -220,9 +220,9 @@
     <value>既存の繰り返し測定にファイルを追加(&amp;E)</value>
   </data>
   <data name="radioAddExisting.ToolTip" xml:space="preserve">
-    <value>注入結果が利用可能になり次第、ファイルからの注入を、
-複数回注入したが複数回の操作でインポートされていない
-既存の繰り返し測定にファイルから注入を追加します。</value>
+    <value>インジェクション結果が利用可能になり次第、
+複数インジェクションしたが複数回の操作でインポートされていない
+既存の繰り返し測定にファイル内のインジェクション結果を追加します。</value>
   </data>
   <data name="&gt;&gt;radioAddExisting.Name" xml:space="preserve">
     <value>radioAddExisting</value>
@@ -255,8 +255,8 @@
     <value>新しい繰り返し測定を1つ追加(&amp;A)</value>
   </data>
   <data name="radioCreateNew.ToolTip" xml:space="preserve">
-    <value>注入数にかかわらず、新しい複製と
-その一意名を1つ追加します。</value>
+    <value>インジェクション数にかかわらず、繰り返し測定と
+その固有名を1つ追加します。</value>
   </data>
   <data name="&gt;&gt;radioCreateNew.Name" xml:space="preserve">
     <value>radioCreateNew</value>
@@ -610,7 +610,7 @@
     <value>1</value>
   </data>
   <data name="comboSimultaneousFiles.Items" xml:space="preserve">
-    <value>一度に1つ</value>
+    <value>一つずつ</value>
   </data>
   <data name="comboSimultaneousFiles.Items1" xml:space="preserve">
     <value>いくつか</value>

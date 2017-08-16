@@ -271,7 +271,7 @@
     <value>Bottom, Left</value>
   </data>
   <data name="comboSimultaneousFiles.Items" xml:space="preserve">
-    <value>一度に1つ</value>
+    <value>一つずつ</value>
   </data>
   <data name="comboSimultaneousFiles.Items1" xml:space="preserve">
     <value>いくつか</value>

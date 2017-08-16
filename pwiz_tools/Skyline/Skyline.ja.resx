@@ -164,7 +164,7 @@
     <value>193, 26</value>
   </data>
   <data name="pickChildrenContextMenuItem.Text" xml:space="preserve">
-    <value>子の選択</value>
+    <value>プロダクトイオンの選択</value>
   </data>
   <data name="addMoleculeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 26</value>
@@ -200,7 +200,7 @@
     <value>175, 22</value>
   </data>
   <data name="normStandardContextMenuItem.Text" xml:space="preserve">
-    <value>正規化</value>
+    <value>グローバル標準</value>
   </data>
   <data name="surrogateStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 22</value>
@@ -447,7 +447,7 @@
     <value>212, 22</value>
   </data>
   <data name="applyPeakAllGraphMenuItem.Text" xml:space="preserve">
-    <value>ピークをすべてに適用</value>
+    <value>ピークを全てに適用</value>
   </data>
   <data name="applyPeakSubsequentGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
@@ -534,7 +534,7 @@
     <value>164, 22</value>
   </data>
   <data name="idTimesAlignedContextMenuItem.Text" xml:space="preserve">
-    <value>アライン</value>
+    <value>調整済み</value>
   </data>
   <data name="idTimesOtherContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>164, 22</value>
@@ -546,7 +546,7 @@
     <value>212, 22</value>
   </data>
   <data name="peptideIDTimesContextMenuItem.Text" xml:space="preserve">
-    <value>ペプチド同定回数</value>
+    <value>ペプチドが同定された回数</value>
   </data>
   <data name="toolStripSeparator16.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 6</value>
@@ -603,7 +603,7 @@
     <value>132, 22</value>
   </data>
   <data name="splitGraphContextMenuItem.Text" xml:space="preserve">
-    <value>分割グラフ</value>
+    <value>グラフの分割</value>
   </data>
   <data name="transitionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
@@ -645,7 +645,7 @@
     <value>212, 22</value>
   </data>
   <data name="transformChromContextMenuItem.Text" xml:space="preserve">
-    <value>形質転換</value>
+    <value>変換</value>
   </data>
   <data name="toolStripSeparator17.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 6</value>
@@ -678,7 +678,7 @@
     <value>212, 22</value>
   </data>
   <data name="autoZoomContextMenuItem.Text" xml:space="preserve">
-    <value>オートズームX軸</value>
+    <value>自動ズームX軸</value>
   </data>
   <data name="lockYChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
@@ -690,7 +690,7 @@
     <value>212, 22</value>
   </data>
   <data name="synchronizeZoomingContextMenuItem.Text" xml:space="preserve">
-    <value>拡大縮小を同期</value>
+    <value>拡大縮小幅の同期</value>
   </data>
   <data name="toolStripSeparator18.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 6</value>
@@ -1167,7 +1167,7 @@
     <value>170, 22</value>
   </data>
   <data name="groupReplicatesByContextMenuItem.Text" xml:space="preserve">
-    <value>グループ化</value>
+    <value>グループ別</value>
   </data>
   <data name="contextMenuPeakAreas.Size" type="System.Drawing.Size, System.Drawing">
     <value>171, 274</value>
@@ -1477,7 +1477,7 @@
     <value>197, 22</value>
   </data>
   <data name="openContainingFolderMenuItem.Text" xml:space="preserve">
-    <value>含有フォルダを開く</value>
+    <value>フォルダを開く</value>
   </data>
   <data name="toolStripSeparator53.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 6</value>
@@ -1825,13 +1825,13 @@
     <value>218, 22</value>
   </data>
   <data name="removeEmptyProteinsMenuItem.Text" xml:space="preserve">
-    <value>空のタンパク質を削除(&amp;E)</value>
+    <value>空欄のタンパク質を削除(&amp;E)</value>
   </data>
   <data name="removeEmptyPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
   <data name="removeEmptyPeptidesMenuItem.Text" xml:space="preserve">
-    <value>空のペプチドを削除(&amp;V)</value>
+    <value>空欄のペプチドを削除(&amp;V)</value>
   </data>
   <data name="removeDuplicatePeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -1849,7 +1849,7 @@
     <value>218, 22</value>
   </data>
   <data name="removeMissingResultsMenuItem.Text" xml:space="preserve">
-    <value>欠損結果を削除(&amp;M)</value>
+    <value>欠損している結果を削除(&amp;M)</value>
   </data>
   <data name="toolStripSeparator45.Size" type="System.Drawing.Size, System.Drawing">
     <value>215, 6</value>
@@ -1858,7 +1858,7 @@
     <value>218, 22</value>
   </data>
   <data name="acceptProteinsMenuItem.Text" xml:space="preserve">
-    <value>タンパク質を受け入れ(&amp;I)...</value>
+    <value>タンパク質を許可(&amp;I)...</value>
   </data>
   <data name="associateFASTAMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -2029,7 +2029,7 @@
     <value>175, 22</value>
   </data>
   <data name="normStandardMenuItem.Text" xml:space="preserve">
-    <value>正規化(&amp;O)</value>
+    <value>グローバル標準(&amp;O)</value>
   </data>
   <data name="surrogateStandardMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 22</value>
@@ -2143,7 +2143,7 @@
     <value>183, 22</value>
   </data>
   <data name="textZoomToolStripMenuItem.Text" xml:space="preserve">
-    <value>テキストズーム(&amp;Z)</value>
+    <value>テキストのズーム(&amp;Z)</value>
   </data>
   <data name="toolStripSeparator41.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 6</value>
@@ -2197,13 +2197,13 @@
     <value>186, 22</value>
   </data>
   <data name="groupedMenuItem.Text" xml:space="preserve">
-    <value>グループにまとめた(&amp;G)...</value>
+    <value>グループ化された(&amp;G)...</value>
   </data>
   <data name="arrangeGraphsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
   </data>
   <data name="arrangeGraphsToolStripMenuItem.Text" xml:space="preserve">
-    <value>グラフの配置(&amp;A)</value>
+    <value>グラフを配置する(&amp;A)</value>
   </data>
   <data name="toolStripSeparator39.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 6</value>
@@ -2434,7 +2434,7 @@
     <value>210, 22</value>
   </data>
   <data name="splitGraphMenuItem.Text" xml:space="preserve">
-    <value>分割グラフ(&amp;G)</value>
+    <value>グラフの分割(&amp;G)</value>
   </data>
   <data name="transitionsMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -2494,7 +2494,7 @@
     <value>183, 22</value>
   </data>
   <data name="transformChromMenuItem.Text" xml:space="preserve">
-    <value>形質転換(&amp;F)</value>
+    <value>変換(&amp;F)</value>
   </data>
   <data name="autoZoomNoneMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Shift+F11</value>
@@ -2539,7 +2539,7 @@
     <value>183, 22</value>
   </data>
   <data name="autoZoomMenuItem.Text" xml:space="preserve">
-    <value>オートズーム(&amp;Z)</value>
+    <value>自動ズーム(&amp;Z)</value>
   </data>
   <data name="toolStripSeparator10.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 6</value>
@@ -2587,7 +2587,7 @@
     <value>228, 22</value>
   </data>
   <data name="retentionTimeAlignmentsToolStripMenuItem.Text" xml:space="preserve">
-    <value>アライメント(&amp;G)</value>
+    <value>調整(&amp;G)</value>
   </data>
   <data name="schedulingMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
@@ -2629,7 +2629,7 @@
     <value>183, 22</value>
   </data>
   <data name="peakAreasMenuItem.Text" xml:space="preserve">
-    <value>ピーク領域(&amp;K)</value>
+    <value>ピーク面積(&amp;K)</value>
   </data>
   <data name="massErrorReplicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F6</value>
@@ -2869,7 +2869,7 @@
     <value>171, 22</value>
   </data>
   <data name="videosMenuItem.Text" xml:space="preserve">
-    <value>ビデオ(&amp;V)</value>
+    <value>動画(&amp;V)</value>
   </data>
   <data name="tutorialsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>171, 22</value>
@@ -2992,7 +2992,7 @@
     <value>168, 22</value>
   </data>
   <data name="massErrorTargets1FDRContextMenuItem.Text" xml:space="preserve">
-    <value>1% FDRのターゲット</value>
+    <value>1% FDRにおけるターゲット</value>
   </data>
   <data name="massErrorDecoysContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>168, 22</value>
@@ -3079,7 +3079,7 @@
     <value>156, 22</value>
   </data>
   <data name="massErrorMassToChargContextMenuItem.Text" xml:space="preserve">
-    <value>電圧をかける質量</value>
+    <value>質量電荷比</value>
   </data>
   <data name="massErrorXAxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>136, 22</value>

@@ -400,7 +400,7 @@
     <value>次も検索：</value>
   </data>
   <data name="radioUp.Text" xml:space="preserve">
-    <value>上(&amp;U)</value>
+    <value>上へ(&amp;U)</value>
   </data>
   <data name="radioDown.Size" type="System.Drawing.Size, System.Drawing">
     <value>53, 17</value>

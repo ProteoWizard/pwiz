@@ -376,7 +376,7 @@
     <value>3</value>
   </data>
   <data name="btnUp.Text" xml:space="preserve">
-    <value>上(&amp;U)</value>
+    <value>上へ(&amp;U)</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>リストを編集</value>

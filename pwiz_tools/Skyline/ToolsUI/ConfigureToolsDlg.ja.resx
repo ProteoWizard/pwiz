@@ -314,8 +314,10 @@ $(InputReportTempPath)が引数でなければ、選択した
   </data>
   <data name="textInitialDirectory.ToolTip" xml:space="preserve">
     <value>ツールの作業ディレクトリを入力してください。あるいは矢印ボタンで 
-既存のディレクトリの場所を選択するか、 
-[参照] ボタンでディレクトリを選択してください。</value>
+ 
+ 事前指定されたディレクトリの場所を選択するか、 
+ 
+ [参照] ボタンでディレクトリを選択してください。</value>
   </data>
   <data name="&gt;&gt;textInitialDirectory.Name" xml:space="preserve">
     <value>textInitialDirectory</value>
@@ -342,8 +344,9 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>12</value>
   </data>
   <data name="textArguments.ToolTip" xml:space="preserve">
-    <value>ツールに渡す引数を入力するか、 
-矢印ボタンを選択して事前に定義された引数を選択します。</value>
+    <value>ツールに移動させたい引数を入力するか、 
+ 
+ 矢印ボタンを選択して事前に定義された引数を選択します。</value>
   </data>
   <data name="&gt;&gt;textArguments.Name" xml:space="preserve">
     <value>textArguments</value>
@@ -517,7 +520,7 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>20</value>
   </data>
   <data name="cbOutputImmediateWindow.Text" xml:space="preserve">
-    <value>即時ウィンドウに出力</value>
+    <value>イミディエイトウィンドウへ出力</value>
   </data>
   <data name="&gt;&gt;cbOutputImmediateWindow.Name" xml:space="preserve">
     <value>cbOutputImmediateWindow</value>
@@ -688,7 +691,7 @@ $(InputReportTempPath)が引数でなければ、選択した
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>メニューのコンテンツ(&amp;M)：</value>
+    <value>メニューの内容(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>

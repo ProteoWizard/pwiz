@@ -132,7 +132,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>保持時間線形回帰の目標最小R値を指定します。</value>
+    <value>保持時間の線形回帰式の目標最小R値を指定します。</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -262,7 +262,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>保持時間閾値を設定</value>
+    <value>保持時間の閾値を設定</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SetRTThresholdDlg</value>

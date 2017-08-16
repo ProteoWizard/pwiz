@@ -138,7 +138,7 @@
     <value>True</value>
   </metadata>
   <data name="Slope.HeaderText" xml:space="preserve">
-    <value>勾配</value>
+    <value>傾き</value>
   </data>
   <data name="Slope.Width" type="System.Int32, mscorlib">
     <value>90</value>
@@ -163,11 +163,11 @@
     <value>18</value>
   </data>
   <data name="gridRegression.ToolTip" xml:space="preserve">
-    <value>形式の方程式を用い、イオン移動度におけるプリカーサー衝突断面積「C」からミリ秒「D」における予測ドリフト時間を計算するために勾配と切片値が使用されました：
+    <value>イオンモビリティライブラリのプリカーサーの衝突断面積「C」からドリフト時間（「D」ミリ秒）の予測値を計算する傾きと切片の値は、次の式で用いられます：
 
-D = 勾配* C +切片
+D = 傾き* C +切片
 
-の各プリカーサー電荷状態には異なる勾配と切片値が必要です。 プリカーサー伝家状態がこのリストにない場合は、その電荷状態に対しクロマトグラム抽出でドリフト時間情報を使用することはできません。 これは、クロマトグラムがドリフト時間フィルタリングなしですべてのドリフトビンにわたり抽出されるためです。</value>
+各荷電状態で、異なる傾きと切片の値が必要です。もし電荷の情報がこのリストにない場合は、その電荷状態のクロマトグラムの抽出にはドリフト時間情報は使用されません。つまり、ドリフト時間フィルタなしのすべてのドリフトのクロマトグラムが抽出されます。</value>
   </data>
   <data name="&gt;&gt;gridRegression.Name" xml:space="preserve">
     <value>gridRegression</value>
@@ -227,11 +227,10 @@ D = 勾配* C +切片
     <value>3</value>
   </data>
   <data name="textResolvingPower.ToolTip" xml:space="preserve">
-    <value>ドリフト時間の一致耐性を決定（ドリフト時間がミリ秒で測定される）： 
-ドリフト時間「T」での分解能「R」の場合、Tに中心のあるドリフト時間の一致ウィンドウの幅「W」は
-W = 2T/R
+    <value>ドリフト時間の許容誤差を決定する（ドリフト時間はミリ秒単位で測定される）：
+ドリフト時間「T」における分解能が「R」の場合、Tに中心のあるドリフト時間の一致ウィンドウの幅「W」は
 
-   </value>
+W = 2T/R</value>
   </data>
   <data name="&gt;&gt;textResolvingPower.Name" xml:space="preserve">
     <value>textResolvingPower</value>
@@ -261,7 +260,7 @@ W = 2T/R
     <value>1</value>
   </data>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>ペプチド設定形式でこの予測の表示に使用する名前</value>
+    <value>この予測するためのものを[Peptide Settings]フォームに表示するために使用される名前</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -309,7 +308,7 @@ W = 2T/R
     <value>True</value>
   </metadata>
   <data name="MeasuredDriftTimeHighEnergyOffsetMsec.HeaderText" xml:space="preserve">
-    <value>高エネルギードリフトオフセット（ミリ秒）</value>
+    <value>高エネルギーオフセット（ミリ秒）</value>
   </data>
   <data name="MeasuredDriftTimeHighEnergyOffsetMsec.ToolTipText" xml:space="preserve">
     <value>Waters IMSでは、高エネルギースペクトルは、ドリフト分離後、少し早く飛びます。</value>
@@ -333,7 +332,7 @@ W = 2T/R
     <value>12</value>
   </data>
   <data name="gridMeasuredDriftTimes.ToolTip" xml:space="preserve">
-    <value>観測されたドリフト時間が優先的に使用されます。 欠落した値は、提供されたイオン移動度ライブラリがある場合、そこから取得されます。</value>
+    <value>ドリフト時間の実測値がある場合には、優先的に使用されます。 実測値がない場合、イオンモビリティライブラリに対応する値があれば、そこから取得されます。</value>
   </data>
   <data name="&gt;&gt;gridMeasuredDriftTimes.Name" xml:space="preserve">
     <value>gridMeasuredDriftTimes</value>
@@ -363,10 +362,10 @@ W = 2T/R
     <value>13</value>
   </data>
   <data name="cbOffsetHighEnergySpectra.Text" xml:space="preserve">
-    <value>高エネルギースペクトルオフセットドリフト時間</value>
+    <value>高エネルギースペクトルのオフセットドリフト時間</value>
   </data>
   <data name="cbOffsetHighEnergySpectra.ToolTip" xml:space="preserve">
-    <value>ドリフトチューブ後、少し早く飛ぶ高CEイオンがある場合、Waters IMSに対し有用です。</value>
+    <value>ドリフトチューブの後でCEイオンが速く飛行するWatersのIMSに役立ちます</value>
   </data>
   <data name="&gt;&gt;cbOffsetHighEnergySpectra.Name" xml:space="preserve">
     <value>cbOffsetHighEnergySpectra</value>
@@ -396,7 +395,7 @@ W = 2T/R
     <value>結果を使用(&amp;U)</value>
   </data>
   <data name="btnUseResults.ToolTip" xml:space="preserve">
-    <value>ドリフト時間ピークがあるか現在のドキュメントの結果を検査</value>
+    <value>ドリフト時間ピークに対して現在のドキュメントの結果を検査します</value>
   </data>
   <data name="&gt;&gt;btnUseResults.Name" xml:space="preserve">
     <value>btnUseResults</value>
@@ -456,8 +455,8 @@ W = 2T/R
     <value>5</value>
   </data>
   <data name="textWidthAtDt0.ToolTip" xml:space="preserve">
-    <value>ドリフト時間の一致耐性を決定（ドリフト時間がミリ秒で測定される）。ここで：
- dtMax = 最大測定ドリフト時間
+    <value>ドリフト時間の許容誤差を決定する（ドリフト時間はミリ秒単位で測定される）。ここで：
+ dtMax = 測定ドリフト時間の最大値
  W0 = ドリフト時間ゼロでの幅
  Wmax = dtMaxでの幅
 ドリフト時間「T」に中心のあるドリフト時間の一致ウィンドウの幅
@@ -489,8 +488,8 @@ W = 2T/R
     <value>8</value>
   </data>
   <data name="textWidthAtDtMax.ToolTip" xml:space="preserve">
-    <value>ドリフト時間の一致耐性を決定（ドリフト時間がミリ秒で測定される）。ここで：
- dtMax = 最大測定ドリフト時間
+    <value>ドリフト時間の許容誤差を決定する（ドリフト時間はミリ秒単位で測定される）。ここで：
+ dtMax = 測定ドリフト時間の最大値
  W0 = ドリフト時間ゼロでの幅
  Wmax = dtMaxでの幅
 ドリフト時間「T」に中心のあるドリフト時間の一致ウィンドウの幅
@@ -636,7 +635,7 @@ W = 2T/R
     <value>15</value>
   </data>
   <data name="labelIonMobilityLibrary.Text" xml:space="preserve">
-    <value>イオン移動度ライブラリ(&amp;I)：</value>
+    <value>イオンモビリティライブラリ(&amp;I)：</value>
   </data>
   <data name="&gt;&gt;labelIonMobilityLibrary.Name" xml:space="preserve">
     <value>labelIonMobilityLibrary</value>
@@ -735,7 +734,7 @@ W = 2T/R
     <value>11</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>測定ドリフト時間(&amp;M)：</value>
+    <value>測定されたドリフト時間(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>

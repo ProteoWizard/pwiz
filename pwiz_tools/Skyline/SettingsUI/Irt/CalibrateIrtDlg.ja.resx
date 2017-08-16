@@ -325,7 +325,7 @@
     <value>True</value>
   </metadata>
   <data name="checkFixedPoint.HeaderText" xml:space="preserve">
-    <value>固定点</value>
+    <value>固定ポイント</value>
   </data>
   <data name="gridViewCalibrate.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 79</value>

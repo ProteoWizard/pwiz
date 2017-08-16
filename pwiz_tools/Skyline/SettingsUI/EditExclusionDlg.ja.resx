@@ -132,7 +132,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>排除リストに表示される排除の名前</value>
+    <value>除外リストに表示される除外されるものの名前</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -231,7 +231,7 @@
     <value>4</value>
   </data>
   <data name="textExclusionRegex.ToolTip" xml:space="preserve">
-    <value>この正規表現に一致するペプチドを排除</value>
+    <value>この正規表現に一致するペプチドを除外します</value>
   </data>
   <data name="&gt;&gt;textExclusionRegex.Name" xml:space="preserve">
     <value>textExclusionRegex</value>
@@ -258,7 +258,7 @@
     <value>2</value>
   </data>
   <data name="labelRegex.Text" xml:space="preserve">
-    <value>排除(&amp;E)</value>
+    <value>除外(&amp;E)</value>
   </data>
   <data name="&gt;&gt;labelRegex.Name" xml:space="preserve">
     <value>labelRegex</value>
@@ -288,7 +288,7 @@
     <value>アミノ酸シークエンス(&amp;A)</value>
   </data>
   <data name="radioSequence.ToolTip" xml:space="preserve">
-    <value>修飾に関係なく、PEPMICERのように単純なアミノ酸配列を
+    <value>修飾に関係なく、PEPMICERのような単純アミノ酸配列を
 一致させます。</value>
   </data>
   <data name="&gt;&gt;radioSequence.Name" xml:space="preserve">
@@ -316,7 +316,7 @@
     <value>7</value>
   </data>
   <data name="radioModSequence.Text" xml:space="preserve">
-    <value>軽修飾シークエンス(&amp;L)</value>
+    <value>軽修飾配列(&amp;L)</value>
   </data>
   <data name="radioModSequence.ToolTip" xml:space="preserve">
     <value>PEPM[+12]IC[+58]ERのような軽修飾ペプチド配列を
@@ -374,7 +374,7 @@
     <value>8</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>ペプチドを排除(&amp;X)：</value>
+    <value>ペプチドを除外(&amp;X)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -401,7 +401,7 @@
     <value>9</value>
   </data>
   <data name="radioMatching.Text" xml:space="preserve">
-    <value>一致する正規表現(&amp;M)</value>
+    <value>一致する表現(&amp;M)</value>
   </data>
   <data name="&gt;&gt;radioMatching.Name" xml:space="preserve">
     <value>radioMatching</value>
@@ -428,7 +428,7 @@
     <value>10</value>
   </data>
   <data name="radioNotMatching.Text" xml:space="preserve">
-    <value>一致しない正規表現(&amp;O)</value>
+    <value>一致しません</value>
   </data>
   <data name="&gt;&gt;radioNotMatching.Name" xml:space="preserve">
     <value>radioNotMatching</value>
@@ -525,7 +525,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>排除を編集</value>
+    <value>除外条件を編集</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>

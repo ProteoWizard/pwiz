@@ -241,7 +241,7 @@
     <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>出力パス(&amp;O)：</value>
+    <value>出力先のパス(&amp;O)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -268,7 +268,7 @@
     <value>3</value>
   </data>
   <data name="textPath.ToolTip" xml:space="preserve">
-    <value>最終非常駐ライブラリを作成する
+    <value>最終的な非重複ライブラリを作成する
 ディスク上の場所</value>
   </data>
   <data name="&gt;&gt;textPath.Name" xml:space="preserve">
@@ -290,7 +290,7 @@
     <value>作成</value>
   </data>
   <data name="comboAction.Items1" xml:space="preserve">
-    <value>追加</value>
+    <value>編集</value>
   </data>
   <data name="comboAction.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 147</value>
@@ -302,8 +302,8 @@
     <value>6</value>
   </data>
   <data name="comboAction.ToolTip" xml:space="preserve">
-    <value>新しいライブラリを作成するか、
-以前に重複許容ライブラリデータのコピーを保存している場合には
+    <value>新しいライブラリを作成するか、又は、
+以前に重複ライブラリデータのコピーを保存している場合には
 既存のライブラリに追加するかを選択してください。</value>
   </data>
   <data name="&gt;&gt;comboAction.Name" xml:space="preserve">
@@ -385,11 +385,11 @@
     <value>7</value>
   </data>
   <data name="cbKeepRedundant.Text" xml:space="preserve">
-    <value>冗長ライブラリを保持(&amp;K)</value>
+    <value>重複ライブラリを保持(&amp;K)</value>
   </data>
   <data name="cbKeepRedundant.ToolTip" xml:space="preserve">
-    <value>重複許容ライブラリにスペクトルを後で追加できるようにコピーを
-保持する場合にはチェックボックスをオンにします。</value>
+    <value>チェックボックスをオンにすると、後でスペクトルを追加できるように
+重複ライブラリのコピーを保持します。</value>
   </data>
   <data name="&gt;&gt;cbKeepRedundant.Name" xml:space="preserve">
     <value>cbKeepRedundant</value>
@@ -413,13 +413,11 @@
     <value>9</value>
   </data>
   <data name="textCutoff.ToolTip" xml:space="preserve">
-    <value>ライブラリに含めるスペクトルを決める
-基準値を設定します。(最も正しいと思われるものを 1.0 とする)
- 0 から 1.0 の値を入力してください。
+    <value>ライブラリに含めるスペクトルのカットオフ値を、検索結果におけるスコア値（0から1.0の値で、値が高いほど有意）で指定します。
 
-TPP pepXMLの場合、これはPeptideProphetの最小値です。
-Mascotの場合、これは1 - 最大期待値です。
-SEQUEST SQTの場合、これは1 - 最大FDRです。</value>
+TPP pepXMLの場合、これはPeptideProphet確率になります。
+Mascotの場合、これは1からExp値を引いた値になります。
+SEQUEST SQTの場合、これは1からFDRを引いた値になります。</value>
   </data>
   <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
     <value>textCutoff</value>
@@ -500,7 +498,7 @@ SEQUEST SQTの場合、これは1 - 最大FDRです。</value>
     <value>11</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
-    <value>あいまい一致を含める(&amp;M)</value>
+    <value>曖昧な一致を含める(&amp;M)</value>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
     <value>cbIncludeAmbiguousMatches</value>
@@ -849,9 +847,8 @@ SEQUEST SQTの場合、これは1 - 最大FDRです。</value>
     <value>1</value>
   </data>
   <data name="listInputFiles.ToolTip" xml:space="preserve">
-    <value>チェックボックスがオンのファイル中のスペクトルで、
-スコアカットオフ値を満たすものが重複許容ライブラリに追加されます。これをもとに
-重複のない最終的なライブラリが作成されます。</value>
+    <value>チェックボックスがオンのファイル中のスペクトルで、スコアカットオフ値を満たすものが、
+重複ライブラリに追加され、そこから最終的な非重複ライブラリが構築されます。</value>
   </data>
   <data name="&gt;&gt;listInputFiles.Name" xml:space="preserve">
     <value>listInputFiles</value>

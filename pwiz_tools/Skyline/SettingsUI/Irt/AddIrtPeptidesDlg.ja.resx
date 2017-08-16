@@ -813,7 +813,7 @@ MS/MSスキャンから計算されたより新しいiRT値は無視されます
     <value>0</value>
   </data>
   <data name="labelExisting.Text" xml:space="preserve">
-    <value>{0}個のペプチドは、既にライブラリに値があります。</value>
+    <value>{0}個のペプチドについて、既にライブラリ内に値が存在します：</value>
   </data>
   <data name="&gt;&gt;labelExisting.Name" xml:space="preserve">
     <value>labelExisting</value>

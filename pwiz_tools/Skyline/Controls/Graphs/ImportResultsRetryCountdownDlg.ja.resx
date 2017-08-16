@@ -187,7 +187,7 @@
     <value>1</value>
   </data>
   <data name="lblSeconds.Text" xml:space="preserve">
-    <value>インポートに失敗しました！ {0}秒以内に自動的に再試行し始めます。</value>
+    <value>インポートに失敗しました！ {0}秒以内に自動的に再試行を始めます。</value>
   </data>
   <data name="&gt;&gt;lblSeconds.Name" xml:space="preserve">
     <value>lblSeconds</value>

@@ -132,7 +132,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>トランジション設定形式でこの式の表示に使用する名前</value>
+    <value>この式を[Transition Settings]フォームに表示するために使用される名前</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -234,7 +234,7 @@
     <value>True</value>
   </metadata>
   <data name="Slope.HeaderText" xml:space="preserve">
-    <value>勾配</value>
+    <value>傾き</value>
   </data>
   <data name="Slope.Width" type="System.Int32, mscorlib">
     <value>80</value>
@@ -258,13 +258,11 @@
     <value>3</value>
   </data>
   <data name="gridRegression.ToolTip" xml:space="preserve">
-    <value>勾配と切片値は、フォームに記載されている次の式を使ってプリカーサーm/z から
-予測される最適コリジョンエネルギーの計算に使用します。
+    <value>プリカーサーイオンのm/zからコリジョンエネルギー（CE）の最適値を計算する傾きと切片の値は、次の式で用いられます：
 
-CE = 勾配 * プリカーサーm/z + 切片
+CE = 傾き * プリカーサーイオンのm/z +切片
 
-複数プリカーサー荷電状態の式が使用できます。プリカーサー
-荷電状態がこのリストにない場合は、最も近いものを使用します。</value>
+複数の電荷の状態のプリカーサーにも、この式が許容されますプリカーサーの電荷の情報がリストにない場合は、最も近いものが使用されます。</value>
   </data>
   <data name="&gt;&gt;gridRegression.Name" xml:space="preserve">
     <value>gridRegression</value>
@@ -369,7 +367,7 @@ CE = 勾配 * プリカーサーm/z + 切片
     <value>結果を使用(&amp;U)</value>
   </data>
   <data name="btnUseCurrent.ToolTip" xml:space="preserve">
-    <value>このドキュメント内のペプチドに、現在インポートされている最適化結果データを使用して
+    <value>クリックして、現在インポートされているペプチドの最適化結果データから
 線形回帰式を計算します。</value>
   </data>
   <data name="&gt;&gt;btnUseCurrent.Name" xml:space="preserve">
@@ -394,10 +392,7 @@ CE = 勾配 * プリカーサーm/z + 切片
     <value>9</value>
   </data>
   <data name="textStepCount.ToolTip" xml:space="preserve">
-    <value>CE最適化メソッドで使用するCE値の数です。ここで予想される
-最適CEが測定されると同時に、予期される値の両側で
-ステップ数がステップサイズCEボルト分の間隔をあけて
-測定されます</value>
+    <value>CE最適化メソッドにおいて、最適値を探索するために予測値を中心に両側に振るステップ数を指定します。</value>
   </data>
   <data name="&gt;&gt;textStepCount.Name" xml:space="preserve">
     <value>textStepCount</value>
@@ -448,10 +443,8 @@ CE = 勾配 * プリカーサーm/z + 切片
     <value>7</value>
   </data>
   <data name="textStepSize.ToolTip" xml:space="preserve">
-    <value>CE最適化メソッドで使用される電圧間隔です。ここで予想される
-最適CEが測定されると同時に、予期される値の両側で
-ステップ数がステップサイズCEボルト分の間隔をあけて
-測定されます</value>
+    <value>CEの最適化の条件での電圧の間隔で、予想される最適なCEが測定され、
+予測値の両側のステップカウント値がそれぞれのステップサイズのCEの電圧で分けられます。</value>
   </data>
   <data name="&gt;&gt;textStepSize.Name" xml:space="preserve">
     <value>textStepSize</value>
@@ -505,8 +498,8 @@ CE = 勾配 * プリカーサーm/z + 切片
     <value>グラフを表示(&amp;S)...</value>
   </data>
   <data name="btnShowGraph.ToolTip" xml:space="preserve">
-    <value>このドキュメント内のペプチドに対して、現在インポートされている最適化結果データの
-線形回帰グラフを表示します</value>
+    <value>このドキュメント内のペプチドに対して、現在インポートされている最適化された結果の
+線形回帰のグラフを表示します</value>
   </data>
   <data name="&gt;&gt;btnShowGraph.Name" xml:space="preserve">
     <value>btnShowGraph</value>
@@ -534,7 +527,7 @@ CE = 勾配 * プリカーサーm/z + 切片
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>衝突エネルギー計算式を編集</value>
+    <value>CE計算式を編集</value>
   </data>
   <data name="&gt;&gt;Charge.Name" xml:space="preserve">
     <value>Charge</value>

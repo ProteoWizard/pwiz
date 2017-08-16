@@ -187,7 +187,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>このライブラリには下記の修飾が含まれているようです。 ライブラリで併用するものを選択してください：</value>
+    <value>このライブラリには下記の修飾が含まれているようです。 ライブラリで使用するものを選択してください：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -307,7 +307,7 @@
     <value>2</value>
   </data>
   <data name="cbSelectAll.Text" xml:space="preserve">
-    <value>すべて選択/選択解除(&amp;A)</value>
+    <value>ドキュメントに追加(&amp;A)</value>
   </data>
   <data name="&gt;&gt;cbSelectAll.Name" xml:space="preserve">
     <value>cbSelectAll</value>
@@ -370,7 +370,7 @@
     <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>次の修飾を解釈できませんでした：</value>
+    <value>以下のアミノ酸に付与された質量差は、登録済みの翻訳後修飾と合致しません。</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>

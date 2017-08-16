@@ -142,7 +142,7 @@
     <value>3</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>予測RTから</value>
+    <value>のスキャンのみを使用します</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -199,7 +199,7 @@
     <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>分以内のスキャンのみを使用</value>
+    <value>予測された保持時間（分）</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -289,7 +289,7 @@
     <value>3</value>
   </data>
   <data name="labelTimeAroundMs2Ids1.Text" xml:space="preserve">
-    <value>MS/MS IDから</value>
+    <value>のスキャンのみを使用します</value>
   </data>
   <data name="&gt;&gt;labelTimeAroundMs2Ids1.Name" xml:space="preserve">
     <value>labelTimeAroundMs2Ids1</value>
@@ -346,7 +346,7 @@
     <value>4</value>
   </data>
   <data name="labelTimeAroundMs2Ids2.Text" xml:space="preserve">
-    <value>分以内のスキャンのみを使用</value>
+    <value>MS/MSのIDの時間（分）</value>
   </data>
   <data name="&gt;&gt;labelTimeAroundMs2Ids2.Name" xml:space="preserve">
     <value>labelTimeAroundMs2Ids2</value>
@@ -427,7 +427,7 @@
     <value>4</value>
   </data>
   <data name="radioKeepAllTime.Text" xml:space="preserve">
-    <value>一致するすべてのスキャンを含める</value>
+    <value>一致する全てのスキャンを含める</value>
   </data>
   <data name="&gt;&gt;radioKeepAllTime.Name" xml:space="preserve">
     <value>radioKeepAllTime</value>
@@ -535,7 +535,7 @@
     <value>5</value>
   </data>
   <data name="labelEnrichments.Text" xml:space="preserve">
-    <value>同位体標識濃縮度(&amp;B)：</value>
+    <value>同位体標識濃縮(&amp;B)：</value>
   </data>
   <data name="&gt;&gt;labelEnrichments.Name" xml:space="preserve">
     <value>labelEnrichments</value>
@@ -838,7 +838,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="comboPrecursorAnalyzerType.ToolTip" xml:space="preserve">
-    <value>「セントロイド化」オプションは、ベンダー提供ピーク選択があるデータ形式、または事前セントロイド化データにのみ適用されます。</value>
+    <value>「セントロイド化」オプションは、ベンダーより提供されたピーク選択のあるデータ形式、または事前にセントロイド化データにのみ適用されます。</value>
   </data>
   <data name="&gt;&gt;comboPrecursorAnalyzerType.Name" xml:space="preserve">
     <value>comboPrecursorAnalyzerType</value>
@@ -1111,7 +1111,7 @@
     <value>8</value>
   </data>
   <data name="comboProductAnalyzerType.ToolTip" xml:space="preserve">
-    <value>「セントロイド化」オプションは、ベンダー提供ピーク選択があるデータ形式、または事前セントロイド化データにのみ適用されます。</value>
+    <value>「セントロイド化」オプションは、ベンダーより提供されたピーク選択のあるデータ形式、または事前にセントロイド化データにのみ適用されます。</value>
   </data>
   <data name="&gt;&gt;comboProductAnalyzerType.Name" xml:space="preserve">
     <value>comboProductAnalyzerType</value>
@@ -1273,7 +1273,7 @@
     <value>0</value>
   </data>
   <data name="lblPrecursorCharges.Text" xml:space="preserve">
-    <value>プリカーサー電荷：</value>
+    <value>プリカーサーの電荷</value>
   </data>
   <data name="lblPrecursorCharges.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1327,11 +1327,11 @@
     <value>5</value>
   </data>
   <data name="cbHighSelectivity.Text" xml:space="preserve">
-    <value>高選択性の抽出を使用する</value>
+    <value>高選択性の抽出を使用します</value>
   </data>
   <data name="cbHighSelectivity.ToolTip" xml:space="preserve">
-    <value>このチェックボックスをオフにすると、抽出の幅に2倍の分解能を使用します。
-このチェックボックスをオンにすると、複合体試料における高選択性の抽出幅に1倍の分解能を使用します。</value>
+    <value>このチェックボックスをオフにすると、抽出幅に2倍の分解能が使用されます。
+このチェックボックスをオンにすると、複雑な試料での選択性を高めるために、抽出幅にひとつの分解能を使用します。</value>
   </data>
   <data name="&gt;&gt;cbHighSelectivity.Name" xml:space="preserve">
     <value>cbHighSelectivity</value>

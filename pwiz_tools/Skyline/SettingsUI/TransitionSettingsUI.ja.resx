@@ -328,8 +328,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="comboOptimizeType.ToolTip" xml:space="preserve">
-    <value>同一プリカーサーイオン由来のトランジションはまとめて最適化するか、
-各トランジションごとに個別に最適化するかを選択します。</value>
+    <value>すべてのトランジションに対して最適化を行うかどうかを指定します。</value>
   </data>
   <data name="comboOptimizeType.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -359,13 +358,11 @@
     <value>12</value>
   </data>
   <data name="cbUseOptimized.Text" xml:space="preserve">
-    <value>最適化値が存在する場合に使用(&amp;U)</value>
+    <value>最適化値が存在する場合には使用します(&amp;U)</value>
   </data>
   <data name="cbUseOptimized.ToolTip" xml:space="preserve">
-    <value>チェックマークをオンにすると、測定されたCEまたは
-DP最適化値を使用して、メソッドリストとトランジションリストで
-エクスポートされる値を選択します。最大総ピーク面積が
-得られる値が選択されます。</value>
+    <value>これを選択すると、CEまたはDPの最適化結果から得た値がエクスポートされます。
+最大総ピーク面積が得られる値が選択されます。</value>
   </data>
   <data name="&gt;&gt;cbUseOptimized.Name" xml:space="preserve">
     <value>cbUseOptimized</value>
@@ -389,9 +386,7 @@ DP最適化値を使用して、メソッドリストとトランジションリ
     <value>7</value>
   </data>
   <data name="comboDeclusterPotential.ToolTip" xml:space="preserve">
-    <value>m/z値からプリカーサーイオンの
-使用する一次方程式です。同位体標識ペプチドは、非標識ペプチドと同一の
-DPを使用します。（AB装置のみ）</value>
+    <value>プリカーサーイオンの質量電荷比から、それらのデクラスタリングポテンシャル（DP）を予測する一次方程式です。同位体標識ペプチドは、非標識ペプチドと同一のDPを使用します。（AB装置のみ）</value>
   </data>
   <data name="&gt;&gt;comboDeclusterPotential.Name" xml:space="preserve">
     <value>comboDeclusterPotential</value>
@@ -442,9 +437,7 @@ DPを使用します。（AB装置のみ）</value>
     <value>5</value>
   </data>
   <data name="comboCollisionEnergy.ToolTip" xml:space="preserve">
-    <value>プリカーサーイオンの最適コリジョンエネルギー (CE) を
-使用する一次方程式です。同位体標識
-ペプチドは、非標識ペプチドと同一のCEを使用します。</value>
+    <value>プリカーサーイオンの質量電荷比から最適コリジョンエネルギー (&amp;CE) を予測する一次方程式です。同位体標識ペプチドは、非標識ペプチドと同一のCEを使用します。</value>
   </data>
   <data name="&gt;&gt;comboCollisionEnergy.Name" xml:space="preserve">
     <value>comboCollisionEnergy</value>
@@ -471,7 +464,7 @@ DPを使用します。（AB装置のみ）</value>
     <value>4</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
-    <value>衝突エネルギー(&amp;C)：</value>
+    <value>コリジョンエネルギー(&amp;CE)</value>
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
@@ -501,8 +494,9 @@ DPを使用します。（AB装置のみ）</value>
     <value>3</value>
   </data>
   <data name="comboIonMass.ToolTip" xml:space="preserve">
-    <value>すべてのプリカーサー質量の計算に使用する
-分子質量計算法 (モノアイソトピックまたは平均) です</value>
+    <value>すべてのプロダクトイオンの質量の計算に使用する
+ 
+ 分子質量計算法 (&amp;モノアイソトピックまたは平均) です。</value>
   </data>
   <data name="&gt;&gt;comboIonMass.Name" xml:space="preserve">
     <value>comboIonMass</value>
@@ -559,8 +553,9 @@ DPを使用します。（AB装置のみ）</value>
     <value>1</value>
   </data>
   <data name="comboPrecursorMass.ToolTip" xml:space="preserve">
-    <value>すべてのプリカーサー質量の計算に使用する
-分子質量計算法 (モノアイソトピックまたは平均) です。</value>
+    <value>すべてのプリカーサーイオンの質量の計算に使用する
+ 
+ 分子質量計算法 (&amp;モノアイソトピックまたは平均) です。</value>
   </data>
   <data name="&gt;&gt;comboPrecursorMass.Name" xml:space="preserve">
     <value>comboPrecursorMass</value>
@@ -638,8 +633,7 @@ DPを使用します。（AB装置のみ）</value>
     <value>5</value>
   </data>
   <data name="textIonTypes.ToolTip" xml:space="preserve">
-    <value>プロダクトイオン候補の掲載に用いる
-プロダクトイオンタイプ (a、b、c、x、y、z、p (プリカーサー)) のリスト (カンマ区切り) です</value>
+    <value>プロダクトイオン候補として考慮するイオンタイプ（a, b, c, x, y, z, p）をカンマ区切りで指定します。（pはプリカーサーイオン）</value>
   </data>
   <data name="&gt;&gt;textIonTypes.Name" xml:space="preserve">
     <value>textIonTypes</value>
@@ -693,12 +687,14 @@ DPを使用します。（AB装置のみ）</value>
     <value>7</value>
   </data>
   <data name="cbAutoSelect.Text" xml:space="preserve">
-    <value>一致するすべてトランジションを自動選択(&amp;A)</value>
+    <value>一致する全てのトランジションを自動選択(&amp;A)</value>
   </data>
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
-    <value>チェックマークをオンにすると、指定したフィルタとライブラリ設定を使用して
-トランジションが自動的に選択されます。オフにすると、すべてのトランジションを
-手動ドキュメント編集で選択する必要があります。</value>
+    <value>これを選択すると、指定したフィルタとライブラリ設定を使用して
+ 
+ トランジションが自動的に選択されます。オフにすると、すべてのトランジションを
+ 
+ 手動ドキュメント編集で選択する必要があります。</value>
   </data>
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
     <value>cbAutoSelect</value>
@@ -728,10 +724,10 @@ DPを使用します。（AB装置のみ）</value>
     <value>10</value>
   </data>
   <data name="cbExclusionUseDIAWindow.Text" xml:space="preserve">
-    <value>排除に対しDIAプリカーサーウィンドウを使用(&amp;U)</value>
+    <value>除外にDIAプリカーサーウィンドウを使用します (&amp;U)</value>
   </data>
   <data name="cbExclusionUseDIAWindow.ToolTip" xml:space="preserve">
-    <value>これを選択すると、プリカーサー直近m/zの対称の代わりにフルスキャン設定からプリカーサー排除ウィンドウが選ばれます。これはDIA/SWATHデーターに対し推奨されています。</value>
+    <value>これを選択すると、プリカーサー除外ウィンドウがプリカーサーm/z周辺ではなくフルスキャン設定から選ばれます。これはDIA/SWATHデーターに対して推奨されています。</value>
   </data>
   <data name="cbExclusionUseDIAWindow.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -788,9 +784,9 @@ DPを使用します。（AB装置のみ）</value>
     <value>8</value>
   </data>
   <data name="textExclusionWindow.ToolTip" xml:space="preserve">
-    <value>プリカーサーイオン直近m/zのトランジションは除外し、
-空白となります。例えば、入力値 20 の場合は、プリカーサーイオンm/z値の前後 10 の範囲にあるすべてのトランジションを
-除外します。</value>
+    <value>プリカーサーイオンm/z周辺のm/zウィンドウ幅トランジションは除外し、
+ 
+ 空白となります。例えば、ウィンドウ幅20 の場合は、プリカーサーイオンm/z値の前後 10 の範囲にあるすべてのトランジションを除外します。</value>
   </data>
   <data name="&gt;&gt;textExclusionWindow.Name" xml:space="preserve">
     <value>textExclusionWindow</value>
@@ -817,7 +813,7 @@ DPを使用します。（AB装置のみ）</value>
     <value>7</value>
   </data>
   <data name="lbPrecursorMzWindow.Text" xml:space="preserve">
-    <value>プリカーサーm/z排除ウィンドウ：</value>
+    <value>プリカーサーm/z除外ウィンドウ：</value>
   </data>
   <data name="&gt;&gt;lbPrecursorMzWindow.Name" xml:space="preserve">
     <value>lbPrecursorMzWindow</value>
@@ -871,7 +867,7 @@ DPを使用します。（AB装置のみ）</value>
     <value>4</value>
   </data>
   <data name="label18.Text" xml:space="preserve">
-    <value>特別イオン(&amp;S)：</value>
+    <value>注目するべきイオン</value>
   </data>
   <data name="&gt;&gt;label18.Name" xml:space="preserve">
     <value>label18</value>
@@ -895,8 +891,7 @@ DPを使用します。（AB装置のみ）</value>
     <value>5</value>
   </data>
   <data name="listAlwaysAdd.ToolTip" xml:space="preserve">
-    <value>フィルタ範囲外であっても、存在していれば
-測定される特別なプロダクトイオンセットです</value>
+    <value>フィルタの範囲外であっても、存在する場合には測定対象とする特別なプロダクトイオンのセットです。</value>
   </data>
   <data name="&gt;&gt;listAlwaysAdd.Name" xml:space="preserve">
     <value>listAlwaysAdd</value>
@@ -920,7 +915,7 @@ DPを使用します。（AB装置のみ）</value>
     <value>1</value>
   </data>
   <data name="comboRangeFrom.ToolTip" xml:space="preserve">
-    <value>イオンのフィルタ範囲の開始時のプロダクトイオン</value>
+    <value>イオンのフィルタ範囲の最初のプロダクトイオン</value>
   </data>
   <data name="&gt;&gt;comboRangeFrom.Name" xml:space="preserve">
     <value>comboRangeFrom</value>
@@ -998,7 +993,7 @@ DPを使用します。（AB装置のみ）</value>
     <value>2</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>終了点(&amp;O)：</value>
+    <value>まで</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -1046,8 +1041,7 @@ DPを使用します。（AB装置のみ）</value>
     <value>3</value>
   </data>
   <data name="textIonCharges.ToolTip" xml:space="preserve">
-    <value>プリカーサーの質量電荷比の計算に使用する
-カンマ区切りの荷電状態のリストです</value>
+    <value>プロダクトイオンの質量電荷比の計算に使用する電荷をカンマ区切りで指定します。</value>
   </data>
   <data name="&gt;&gt;textIonCharges.Name" xml:space="preserve">
     <value>textIonCharges</value>
@@ -1071,8 +1065,7 @@ DPを使用します。（AB装置のみ）</value>
     <value>1</value>
   </data>
   <data name="textPrecursorCharges.ToolTip" xml:space="preserve">
-    <value>プリカーサーの質量電荷比の計算に使用する
-カンマ区切りの荷電状態のリストです</value>
+    <value>プリカーサーイオンの質量電荷比の計算に使用する電荷をカンマ区切りで指定します。</value>
   </data>
   <data name="&gt;&gt;textPrecursorCharges.Name" xml:space="preserve">
     <value>textPrecursorCharges</value>
@@ -1126,7 +1119,7 @@ DPを使用します。（AB装置のみ）</value>
     <value>0</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>プリカーサー電荷(&amp;P)：</value>
+    <value>プリカーサーの電荷(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -1180,7 +1173,7 @@ DPを使用します。（AB装置のみ）</value>
     <value>0</value>
   </data>
   <data name="label9.Text" xml:space="preserve">
-    <value>イオン一致耐性(&amp;I)：</value>
+    <value>イオン許容誤差(&amp;I)：</value>
   </data>
   <data name="&gt;&gt;label9.Name" xml:space="preserve">
     <value>label9</value>
@@ -1201,19 +1194,20 @@ DPを使用します。（AB装置のみ）</value>
     <value>17, 91</value>
   </data>
   <data name="radioAllAndFiltered.Size" type="System.Drawing.Size, System.Drawing">
-    <value>312, 17</value>
+    <value>306, 17</value>
   </data>
   <data name="radioAllAndFiltered.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
   <data name="radioAllAndFiltered.Text" xml:space="preserve">
-    <value>フィルタされたイオン電荷とタイプ、およびフィルタされたプロダクトイオン(&amp;U)</value>
+    <value>フィルタリングされたイオン電荷とタイプ及びプロダクトイオンから(&amp;U)</value>
   </data>
   <data name="radioAllAndFiltered.ToolTip" xml:space="preserve">
-    <value>[フィルタ] タブで設定したイオン電荷数とタイプだけを用いて
-MS/MSピークを選択し、ライブラリにマッチするプロダクトイオンのランキングを行います。
-ただし、ライブラリにマッチするものが見つからない場合は、
-[フィルタ] タブ全体に合致するすべてのプロダクトイオンも追加します。</value>
+    <value>[フィルタ] タブで設定したイオン電荷とタイプに合致する全てのプロダクトイオンに対して
+
+ライブラリのMS/MSピークとの一致を探索し、そのランキングからプロダクトイオンを選択します。
+ 
+ ただし、フィルタ条件に合致したプロダクトイオンは無条件で追加します。</value>
   </data>
   <data name="&gt;&gt;radioAllAndFiltered.Name" xml:space="preserve">
     <value>radioAllAndFiltered</value>
@@ -1240,11 +1234,12 @@ MS/MSピークを選択し、ライブラリにマッチするプロダクトイ
     <value>5</value>
   </data>
   <data name="radioFiltered.Text" xml:space="preserve">
-    <value>フィルタされたプロダクトイオンから(&amp;D)</value>
+    <value>フィルタリングされたプロダクトイオンから(&amp;D)</value>
   </data>
   <data name="radioFiltered.ToolTip" xml:space="preserve">
-    <value>[フィルタ] タブのパラメータを適用して、MS/MSピークを選択し、
-ライブラリとマッチするプロダクトイオンのランキングを行います。</value>
+    <value>[フィルタ]タブの条件でプロダクトイオンを選択してから、
+
+ライブラリのMS/MSピークとの一致を探索し、プロダクトイオンをランク付けします。</value>
   </data>
   <data name="&gt;&gt;radioFiltered.Name" xml:space="preserve">
     <value>radioFiltered</value>
@@ -1271,11 +1266,12 @@ MS/MSピークを選択し、ライブラリにマッチするプロダクトイ
     <value>3</value>
   </data>
   <data name="radioAll.Text" xml:space="preserve">
-    <value>イオン電荷数とタイプがフィルタを通過するものから(&amp;C)</value>
+    <value>フィルタリングされたイオン電荷数とタイプから(&amp;C)</value>
   </data>
   <data name="radioAll.ToolTip" xml:space="preserve">
-    <value>[フィルタ] タブで設定したイオン電荷数とタイプだけを用いて
-MS/MSピークを選択し、ライブラリにマッチするプロダクトイオンのランキングを行います。</value>
+    <value>[フィルタ] タブで設定したイオン電荷とタイプに合致する全てのプロダクトイオンに対して
+
+ライブラリのMS/MSピークとの一致を探索し、そのランキングからプロダクトイオンを選択します。</value>
   </data>
   <data name="&gt;&gt;radioAll.Name" xml:space="preserve">
     <value>radioAll</value>
@@ -1399,8 +1395,9 @@ MS/MSピークを選択し、ライブラリにマッチするプロダクトイ
     <value>1</value>
   </data>
   <data name="textTolerance.ToolTip" xml:space="preserve">
-    <value>予測プロダクトイオンm/z値を測定MS/MSスペクトルライブラリ
-ピークm/z値にマッチするときの最大許容誤差です。</value>
+    <value>予測プロダクトイオンのm/z値を測定MS/MSスペクトルライブラリ
+ 
+ ピークのm/z値にマッチングさせるときの最大許容誤差です。</value>
   </data>
   <data name="&gt;&gt;textTolerance.Name" xml:space="preserve">
     <value>textTolerance</value>
@@ -1427,11 +1424,10 @@ MS/MSピークを選択し、ライブラリにマッチするプロダクトイ
     <value>3</value>
   </data>
   <data name="cbLibraryPick.Text" xml:space="preserve">
-    <value>ライブラリスペクトルが利用可能な場合、最強度のイオンを選択(&amp;S)</value>
+    <value>ライブラリスペクトルが利用可能な場合、最も強度が高いイオンを選択(&amp;S)</value>
   </data>
   <data name="cbLibraryPick.ToolTip" xml:space="preserve">
-    <value>チェックマークをオンにすると、ペプチドがライブラリスペクトルに一致するときは必ず
-MS/MSスペクトルライブラリピークに基づいてトランジションフィルタが選択されます。</value>
+    <value>これを選択すると、ペプチドがスペクトルライブラリに存在するときには必ず MS/MSピークに基づいてトランジションフィルタがなされます。</value>
   </data>
   <data name="&gt;&gt;cbLibraryPick.Name" xml:space="preserve">
     <value>cbLibraryPick</value>
@@ -1512,8 +1508,7 @@ MS/MSスペクトルライブラリピークに基づいてトランジション
     <value>20</value>
   </data>
   <data name="textMaxInclusions.ToolTip" xml:space="preserve">
-    <value>多重化スキャン中に使用する装置で測定した
-最大インクルージョンウィンドウ数です。</value>
+    <value>ターゲット装置を使用したマルチプレックスDIAで測定可能な最大ウィンドウ数です。</value>
   </data>
   <data name="&gt;&gt;textMaxInclusions.Name" xml:space="preserve">
     <value>textMaxInclusions</value>
@@ -1672,9 +1667,11 @@ MS/MSスペクトルライブラリピークに基づいてトランジション
     <value>17</value>
   </data>
   <data name="textMaxTime.ToolTip" xml:space="preserve">
-    <value>分析方法を問わず、
-クロマトグラムにおける最大許容時間。 これを設定すると、データ採取に関与しない部分のグラジアントで使用される可能性のある
-メモリとディスク容量を節約できます。</value>
+    <value>分析方法に関係なく得られたクロマトグラムの最大許容時間。
+ 
+ これを設定すると、データ採取に関与しない部分であるグラジアントで使用される可能性のある
+ 
+ メモリとディスク容量を節約できます。</value>
   </data>
   <data name="&gt;&gt;textMaxTime.Name" xml:space="preserve">
     <value>textMaxTime</value>
@@ -1698,9 +1695,7 @@ MS/MSスペクトルライブラリピークに基づいてトランジション
     <value>13</value>
   </data>
   <data name="textMinTime.ToolTip" xml:space="preserve">
-    <value>分析方法を問わず、
-クロマトグラムにおける最小許容時間。 これを設定すると、データ採取に関与しない部分のグラジアントで使用される可能性のある
-メモリとディスク容量を節約できます。</value>
+    <value>データ取得方法に関係なく、クロマトグラムに許容する最小の時間です。これを設定すると、グラジエント分析において重要ではない部分のデータに使われるメモリとディスク容量を節約できます。</value>
   </data>
   <data name="&gt;&gt;textMinTime.Name" xml:space="preserve">
     <value>textMinTime</value>
@@ -1821,8 +1816,10 @@ MS/MSスペクトルライブラリピークに基づいてトランジション
   </data>
   <data name="cbDynamicMinimum.ToolTip" xml:space="preserve">
     <value>チェックマークをオンにすると、プロダクトイオンの最小m/z値を
-プリカーサーイオンm/zから動的に計算します。
-この計算にはThermo-Scientificが提供するLTQ測定器用の特定の方程式を用います。</value>
+ 
+ プリカーサーイオンm/zから同時に計算します。
+ 
+ この計算にはThermo-Scientificが提供するLTQ測定器用の特定の方程式を用います。</value>
   </data>
   <data name="&gt;&gt;cbDynamicMinimum.Name" xml:space="preserve">
     <value>cbDynamicMinimum</value>
@@ -1846,8 +1843,9 @@ MS/MSスペクトルライブラリピークに基づいてトランジション
     <value>11</value>
   </data>
   <data name="textMaxTrans.ToolTip" xml:space="preserve">
-    <value>1 回の注入でターゲット装置により測定可能な最大総トランジション数です。
-最大値が適用されない場合は空白となります</value>
+    <value>ターゲット装置を使って1 回のインジェクションで測定可能な最大総トランジション数です。
+ 
+ 最大値が適用されない場合は空白となります</value>
   </data>
   <data name="&gt;&gt;textMaxTrans.Name" xml:space="preserve">
     <value>textMaxTrans</value>
@@ -1899,8 +1897,10 @@ MS/MSスペクトルライブラリピークに基づいてトランジション
   </data>
   <data name="textMzMatchTolerance.ToolTip" xml:space="preserve">
     <value>装置メソッドのトランジションm/z値を
-予測トランジションm/z値とマッチする時の最大許容誤差です。
-（SRMとターゲットMS/MSデータにのみ適用。）</value>
+ 
+ 予測トランジションm/z値とマッチングさせる時の最大許容誤差です。
+ 
+ （SRMとターゲットMS/MSデータにのみ適用。）</value>
   </data>
   <data name="&gt;&gt;textMzMatchTolerance.Name" xml:space="preserve">
     <value>textMzMatchTolerance</value>
@@ -1927,7 +1927,7 @@ MS/MSスペクトルライブラリピークに基づいてトランジション
     <value>7</value>
   </data>
   <data name="label16.Text" xml:space="preserve">
-    <value>メソッド一致耐性誤差m/z(&amp;T)：</value>
+    <value>メソッドと一致する許容誤差m/z(&amp;T)：</value>
   </data>
   <data name="&gt;&gt;label16.Name" xml:space="preserve">
     <value>label16</value>
@@ -2029,7 +2029,7 @@ MS/MSスペクトルライブラリピークに基づいてトランジション
     <value>1</value>
   </data>
   <data name="textMinMz.ToolTip" xml:space="preserve">
-    <value>ターゲット装置で測定可能な最小m/z値です</value>
+    <value>使用する装置で測定可能な最小のm/z値です</value>
   </data>
   <data name="&gt;&gt;textMinMz.Name" xml:space="preserve">
     <value>textMinMz</value>
