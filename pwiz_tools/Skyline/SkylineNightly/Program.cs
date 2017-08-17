@@ -145,7 +145,7 @@ namespace SkylineNightly
             }
             catch (Exception ex)
             {
-				MessageBox.Show(@"Exception Caught: " + ex.Message); // Not L10N
+				MessageBox.Show(@"Exception Caught: " + ex.Message, "SkylineNightly.exe"); // Not L10N
             }
         }
     }
