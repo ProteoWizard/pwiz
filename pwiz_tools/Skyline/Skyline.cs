@@ -539,8 +539,9 @@ namespace pwiz.Skyline
             }
             
             // For debugging tests with unexpected document change failures
-            if (LogChange != null)
-                LogChange(docNew, docOriginal);
+            var logChange = LogChange;
+            if (logChange != null)
+                logChange(docNew, docOriginal);
 
             var docResult = Interlocked.CompareExchange(ref _document, docNew, docOriginal);
             if (!ReferenceEquals(docResult, docOriginal))
