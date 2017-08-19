@@ -917,16 +917,21 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool IsVariableStaticMods { get; private set; }
 
-        public bool HasNeutralLosses { get { return StaticModifications.Contains(mod => mod.Modification.HasLoss); } }
+        public bool HasNeutralLosses { get { return StaticModifications != null && StaticModifications.Any(mod => mod.Modification.HasLoss); } }
         public bool HasIsotopeLabels { get { return StaticModifications != null && StaticModifications.Any(mod => mod.Modification.LabelAtoms != 0); } }
 
         public IEnumerable<ExplicitMod> NeutralLossModifications
         {
             get
             {
-                return from mod in StaticModifications
-                       where mod.Modification.HasLoss
-                       select mod;
+                if (StaticModifications != null)
+                {
+                    foreach (var mod in StaticModifications)
+                    {
+                        if (mod.Modification.HasLoss)
+                            yield return mod;
+                    }
+                }
             }
         }
 

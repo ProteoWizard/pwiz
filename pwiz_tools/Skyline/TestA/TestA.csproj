@@ -211,6 +211,7 @@
     <Compile Include="MProphetResultsHandlerTest.cs" />
     <Compile Include="UniquePrefixTest.cs" />
     <Compile Include="CommandLineAssayImportTest.cs" />
+    <Compile Include="ExplicitLossTest.cs" />
     <Compile Include="VariableModTest.cs" />
     <Compile Include="XmlValidationTest.cs" />
   </ItemGroup>
@@ -258,6 +259,7 @@
     <None Include="CommandLineTest.zip" />
     <None Include="DocLoadLibraryTest.zip" />
     <EmbeddedResource Include="DocumentSerializerTest.sky" />
+    <EmbeddedResource Include="explicit-losses.sky" />
     <None Include="FullScanPrecursor.zip" />
     <None Include="ImportAllCmdLineTest.zip" />
     <None Include="MProphetResultsHandlerTest.zip" />

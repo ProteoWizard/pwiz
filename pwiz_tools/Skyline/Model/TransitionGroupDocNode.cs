@@ -903,6 +903,12 @@ namespace pwiz.Skyline.Model
                         !ArrayUtil.EqualsDeep(settingsNew.TransitionSettings.Filter.MeasuredIons, diff.SettingsOld.TransitionSettings.Filter.MeasuredIons) ||
                         !Equals(settingsNew.TransitionSettings.Instrument, diff.SettingsOld.TransitionSettings.Instrument))
                     {
+                        if (nodePep.HasExplicitMods && nodePep.ExplicitMods.HasNeutralLosses)
+                        {
+                            modsLossNew = modsLossNew
+                                .Union(nodePep.ExplicitMods.NeutralLossModifications.Select(m => m.Modification))
+                                .ToArray();
+                        }
                         IList<DocNode> childrenNew = new List<DocNode>();
                         foreach (TransitionDocNode nodeTransition in nodeResult.Children)
                         {

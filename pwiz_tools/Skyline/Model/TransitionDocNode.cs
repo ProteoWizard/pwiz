@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Model
                     // If the same precursor mod exists, then it will also have the
                     // loss in question, since modification equality depends on loss
                     // equality also.
-                    if (!modsLossAvailable.Contains(loss.PrecursorMod))
+                    if (!modsLossAvailable.Any(l => l.EquivalentAll(loss.PrecursorMod)))
                         return false;
                 }
             }

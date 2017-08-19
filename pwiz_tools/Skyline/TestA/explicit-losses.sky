@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="3.72" software_version="Skyline (64-bit) ">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
+      <digest_settings max_missed_cleavages="0" />
+      <peptide_prediction use_measured_rts="true" measured_rt_window="2" use_spectral_library_drift_times="false" spectral_library_drift_times_peak_width_calc_type="resolving_power" spectral_library_drift_times_resolving_power="0" spectral_library_drift_times_width_at_dt_zero="0" spectral_library_drift_times_width_at_dt_max="0" />
+      <peptide_filter start="25" min_length="6" max_length="25" auto_select="true">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="library" />
+      <peptide_modifications max_variable_mods="3" max_neutral_losses="1" internal_standard="none">
+        <static_modifications>
+          <static_modification name="Carbamidomethyl (C)" aminoacid="C" formula="H3C2NO" unimod_id="4" short_name="CAM" />
+          <static_modification name="Phospho (ST)" aminoacid="S, T" formula="HO3P" explicit_decl="true" unimod_id="21" short_name="Pho">
+            <potential_loss formula="H3O4P" massdiff_monoisotopic="97.976896" massdiff_average="97.995181" />
+          </static_modification>
+        </static_modifications>
+        <heavy_modifications />
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None">
+        <predict_collision_energy name="Thermo TSQ Quantiva" step_size="1" step_count="5">
+          <regression_ce charge="2" slope="0.0339" intercept="2.3597" />
+          <regression_ce charge="3" slope="0.0295" intercept="1.5123" />
+        </predict_collision_energy>
+      </transition_prediction>
+      <transition_filter precursor_charges="2,3" product_charges="1,2" precursor_adducts="[M-3H],[M-2H],[M-H],[M-],[M+H],[M+],[M+2H],[M+3H]" product_adducts="[M-3],[M-2],[M-],[M+],[M+2],[M+3]" fragment_types="y" small_molecule_fragment_types="f" fragment_range_first="ion 2" fragment_range_last="last ion - 1" precursor_mz_window="0" auto_select="true" />
+      <transition_libraries ion_match_tolerance="0.02" ion_count="8" pick_from="filter" />
+      <transition_integration integrate_all="true" />
+      <transition_instrument dynamic_min="true" min_mz="300" max_mz="1800" mz_match_tolerance="0.055" />
+    </transition_settings>
+  </settings_summary>
+  <peptide_list label_name="peptides1" websearch_status="X#Upeptides1">
+    <peptide auto_manage_children="false" sequence="PEPTIDER" modified_sequence="PEPT[+80.0]IDER" calc_neutral_pep_mass="1035.427406" num_missed_cleavages="0">
+      <explicit_modifications>
+        <explicit_static_modifications>
+          <explicit_modification index_aa="3" modification_name="Phospho (ST)" mass_diff="+80" />
+        </explicit_static_modifications>
+      </explicit_modifications>
+      <precursor charge="2" calc_neutral_mass="1035.427406" precursor_mz="518.720979" auto_manage_children="false" collision_energy="19.944341" modified_sequence="PEPT[+80.0]IDER">
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="938.374642" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
+          <precursor_mz>518.720979</precursor_mz>
+          <product_mz>939.381918</product_mz>
+          <collision_energy>19.944341</collision_energy>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="840.397746" product_charge="1" cleavage_aa="E" loss_neutral_mass="97.976896">
+          <precursor_mz>518.720979</precursor_mz>
+          <product_mz>841.405022</product_mz>
+          <collision_energy>19.944341</collision_energy>
+          <losses>
+            <neutral_loss modification_name="Phospho (ST)" />
+          </losses>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="809.332049" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>518.720979</precursor_mz>
+          <product_mz>810.339325</product_mz>
+          <collision_energy>19.944341</collision_energy>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="711.355153" product_charge="1" cleavage_aa="P" loss_neutral_mass="97.976896">
+          <precursor_mz>518.720979</precursor_mz>
+          <product_mz>712.362429</product_mz>
+          <collision_energy>19.944341</collision_energy>
+          <losses>
+            <neutral_loss modification_name="Phospho (ST)" />
+          </losses>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="712.279285" product_charge="1" cleavage_aa="T" loss_neutral_mass="0">
+          <precursor_mz>518.720979</precursor_mz>
+          <product_mz>713.286561</product_mz>
+          <collision_energy>19.944341</collision_energy>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="614.302389" product_charge="1" cleavage_aa="T" loss_neutral_mass="97.976896">
+          <precursor_mz>518.720979</precursor_mz>
+          <product_mz>615.309665</product_mz>
+          <collision_energy>19.944341</collision_energy>
+          <losses>
+            <neutral_loss modification_name="Phospho (ST)" />
+          </losses>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="531.265276" product_charge="1" cleavage_aa="I" loss_neutral_mass="0">
+          <precursor_mz>518.720979</precursor_mz>
+          <product_mz>532.272552</product_mz>
+          <collision_energy>19.944341</collision_energy>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+</srm_settings>

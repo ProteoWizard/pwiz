@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestUtil
             }
             catch (Exception x)
             {
-                Assert.Fail("Exception thrown: " + x.Message);
+                Assert.Fail("Exception thrown: " + x);
 // ReSharper disable HeuristicUnreachableCode
                 throw;  // Will never happen, but is necessary to compile
 // ReSharper restore HeuristicUnreachableCode
@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestUtil
             }
             catch (Exception x)
             {
-                Assert.Fail("Exception thrown: " + x.Message);
+                Assert.Fail("Exception thrown: " + x);
 // ReSharper disable HeuristicUnreachableCode
                 throw;  // Will never happen, but is necessary to compile
 // ReSharper restore HeuristicUnreachableCode
@@ -83,7 +83,7 @@ namespace pwiz.SkylineTestUtil
             }
             catch (Exception x)
             {
-                Assert.Fail("Exception thrown: " + x.Message);
+                Assert.Fail("Exception thrown: " + x);
 // ReSharper disable HeuristicUnreachableCode
                 throw;  // Will never happen, but is necessary to compile
 // ReSharper restore HeuristicUnreachableCode
