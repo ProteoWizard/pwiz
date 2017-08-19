@@ -132,7 +132,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>トランジション設定形式でこの式の表示に使用する名前</value>
+    <value>この式を[Transition Settings]フォームに表示するために使用される名前</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -263,7 +263,7 @@
   </data>
   <data name="gridEnrichments.ToolTip" xml:space="preserve">
     <value>安定同位体標識原子の
-原子濃縮パーセント (APE) 値です</value>
+原子濃縮率 (APE) 値です</value>
   </data>
   <data name="&gt;&gt;gridEnrichments.Name" xml:space="preserve">
     <value>gridEnrichments</value>
@@ -290,9 +290,9 @@
     <value>14</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>修飾で使用された場合の(&amp;E)
+    <value>修飾で使用されている(&amp;E)
 次の安定同位体標識原子の濃縮パーセントを
-入力してください。</value>
+入力してください:</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -322,7 +322,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>同位体標識濃縮を編集</value>
+    <value>安定同位体標識試薬の濃縮度(atom%)を編集</value>
   </data>
   <data name="&gt;&gt;Atom.Name" xml:space="preserve">
     <value>Atom</value>

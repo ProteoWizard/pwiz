@@ -500,7 +500,7 @@
     <value>作成(&amp;C)...</value>
   </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>行{0}のエラー：プリカーサーm/z {1}は、イオン公式および電荷状態（差分 = {3}、トランジション設定 | 装置 | メソッド一致耐性誤差m/z = {4}）から計算された値{2}に一致しません。  表でm/z値を訂正してください。空欄にしておくと、Skylineが計算します。</value>
+    <value>エラー： iRTカルキュレーターなしでドキュメントをアッセイライブラリにインポートすると、{0}が既に存在するためにこれを作成できません。</value>
   </data>
   <data name="Pivoter_QualifyColumnInfo_AreaRatio" xml:space="preserve">
     <value>AreaRatio</value>
@@ -1705,7 +1705,7 @@
     <value>{0}からタンパク質情報の読み込み中</value>
   </data>
   <data name="CommandLine_ImportTransitionList_Error__There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created_" xml:space="preserve">
-    <value>エラー：作成しようとするドキュメントライブラリと同じ名前の既存ライブラリ{0}があります。</value>
+    <value>エラー：作成しようとするドキュメントライブラリと同じ名前{0}の既存ライブラリがあります。</value>
   </data>
   <data name="DeclusterPotentialList_Label_Declustering_Potential_Regressions" xml:space="preserve">
     <value>潜在回帰のクラスター分離(&amp;D)：</value>
@@ -2494,7 +2494,7 @@
     <value>ファイル{0}がありません。ツール{1}のインポートに失敗しました</value>
   </data>
   <data name="CommandLine_ImportTransitionList_Importing__0__iRT_values_into_the_iRT_calculator__1_" xml:space="preserve">
-    <value>{0}個のiRT値をiRTカルキュレーター{1}にインポートしています</value>
+    <value>{0}個のiRT値をiRTカルキュレータ{1}にインポート中</value>
   </data>
   <data name="RInstaller_InstallPackages_The_following_packages_failed_to_install_" xml:space="preserve">
     <value>以下のパッケージをインストールできませんでした：</value>
@@ -3355,7 +3355,7 @@
     <value>利用可能な結果がありません</value>
   </data>
   <data name="PeptideGroupTreeNode_RenderTip_Species" xml:space="preserve">
-    <value>生物種</value>
+    <value>種</value>
   </data>
   <data name="ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts" xml:space="preserve">
     <value>Pythonスクリプト</value>
@@ -3997,7 +3997,7 @@
     <value>..\Resources\StartPage\CustomReports_thumb.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="CommandLine_ImportTransitionList_Warning__The_iRT_calculator_already_contains__0__with_the_value__1___Ignoring__2_" xml:space="preserve">
-    <value>警告：iRTカルキュレーターには値{1}を含む{0}が既にあります。 {2}を無視します</value>
+    <value>警告：iRTカルキュレータには値{1}を含む{0}が既にあります。 {2}を無視します</value>
   </data>
   <data name="AlignmentForm_UpdateGraph_Aligned_time" xml:space="preserve">
     <value>アライン時間</value>
@@ -4298,7 +4298,7 @@
     <value>微調整</value>
   </data>
   <data name="ChromGraphItem_AddAnnotations_Explicit" xml:space="preserve">
-    <value>指定</value>
+    <value>明示的</value>
     <comment>used for displaying explicit retention times in chromatogram graphs</comment>
   </data>
   <data name="AddIrtSpectralLibrary_OkDialog_Please_specify_a_path_to_an_existing_spectral_library" xml:space="preserve">
@@ -4353,7 +4353,7 @@
     <value>処理強度</value>
   </data>
   <data name="UniquePeptidesDlg_SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold_Some_background_proteome_proteins_did_not_have_species_information__this_selection_may_be_suspect_" xml:space="preserve">
-    <value>バックグラウンドプロテオーム中のいくつかのタンパク質には生物種の情報がないので、この選択肢は疑わしい可能性があります。</value>
+    <value>いくつかのバックグラウンドプロテオームのタンパク質には種の情報がないので、この選択肢は疑わしい可能性があります。</value>
   </data>
   <data name="LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_valid_decimal_numbers_" xml:space="preserve">
     <value>最適値は有効な十進数でなければなりません。</value>
@@ -4708,7 +4708,7 @@
     <value>「{0}」属性のない重い修飾が見つかりました。</value>
   </data>
   <data name="GraphData_Graph_Regression_Refined" xml:space="preserve">
-    <value>回帰の精製</value>
+    <value>回帰の改良</value>
   </data>
   <data name="Keep" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\keep.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -9037,7 +9037,7 @@
     <value>エラー：デコイを有するドキュメントにデコイを追加しようとしています。</value>
   </data>
   <data name="CommandLine_AddDecoys_Error_The_number_of_peptides" xml:space="preserve">
-    <value>エラー：ペプチドの数{0}は、デコイのペプチドプリカーサーモデルの数{1}より少なくなければなりません。でなければ、{2}={3}のデコイ生成法を使用してください。</value>
+    <value>エラー：ペプチド{0}の数は、デコイ{1}のペプチドプリカーサーモデルの数より少なくなければなりません。でなければ、{2}={3}のデコイ生成法を使用してください。</value>
   </data>
   <data name="CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method" xml:space="preserve">
     <value>「{1}」メソッドを使用して{0}個のデコイペプチドを追加しました</value>
@@ -9134,7 +9134,7 @@
     <value>iRTをライブラリに追加しています</value>
   </data>
   <data name="Peptide_StandardType_iRT_standards_can_only_be_changed_by_modifying_the_iRT_calculator" xml:space="preserve">
-    <value>iRT標準の変更は、iRTカルキュレーターを修正することでのみ可能です</value>
+    <value>iRT標準の変更は、iRTカルキュレータを変更することでのみ可能です</value>
   </data>
   <data name="RatioToSurrogate_ToString_Ratio_to_surrogate__0_" xml:space="preserve">
     <value>サロゲート{0}に対する比率</value>
@@ -9487,8 +9487,11 @@
   <data name="EditIrtCalcDlg_UpdateNumStandards__0__Standard_peptide___1__required_" xml:space="preserve">
     <value>{0}個の標準ペプチド（{1}個必要）</value>
   </data>
+  <data name="SkylineWindow_ImportResults_The_document_contains__0__of_these_iRT_standard_peptides_" xml:space="preserve">
+    <value>ドキュメントには、このiRT標準ペプチドが{0}個含まれています。</value>
+  </data>
   <data name="SkylineWindow_ImportResults_The_document_does_not_contain_any_of_these_iRT_standard_peptides_" xml:space="preserve">
-    <value>ドキュメントには、このiRT標準ペプチドが一切含まれていません。</value>
+    <value>ドキュメントには、このiRT標準ペプチドが全く含まれていません。</value>
   </data>
   <data name="SkylineWindow_ImportResults_A_maximum_of__0__may_be_missing_and_or_outliers_for_a_successful_import_" xml:space="preserve">
     <value>最大{0}個の欠損や異常値があっても、インポートできます。</value>

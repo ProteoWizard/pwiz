@@ -574,7 +574,7 @@
     <value>6</value>
   </data>
   <data name="cbVariableMod.Text" xml:space="preserve">
-    <value>変数</value>
+    <value>可変</value>
   </data>
   <data name="&gt;&gt;cbVariableMod.Name" xml:space="preserve">
     <value>cbVariableMod</value>

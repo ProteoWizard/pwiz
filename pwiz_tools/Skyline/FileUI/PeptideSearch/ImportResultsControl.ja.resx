@@ -202,7 +202,7 @@
     <value>17, 17</value>
   </metadata>
   <data name="cbExcludeSourceFiles.ToolTip" xml:space="preserve">
-    <value>このチェックボックスをオンにすると、元の生データが利用できる場合そのために処理済みのスペクトルファイル（mzXML、mzMLなど）を除外します</value>
+    <value>チェックボックスをオンにすると、元の生データを選択して処理済みのスペクトルファイル（mzXML、mzMLなど）を除外します。</value>
   </data>
   <data name="cbExcludeSourceFiles.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -403,7 +403,7 @@
     <value>Bottom, Left</value>
   </data>
   <data name="comboSimultaneousFiles.Items" xml:space="preserve">
-    <value>一度に1つ</value>
+    <value>一つずつ</value>
   </data>
   <data name="comboSimultaneousFiles.Items1" xml:space="preserve">
     <value>いくつか</value>

@@ -181,8 +181,7 @@
     <value>0</value>
   </data>
   <data name="settingsInfoLabel.Text" xml:space="preserve">
-    <value>データが要件に従って解析されていることを確保するため設定が重要となるため、プロジェクトの設定を確認します。
-</value>
+    <value>プロジェクトの設定を確認します。設定は確実にデータが要件に従って解析されるようにするために重要です。</value>
   </data>
   <data name="&gt;&gt;settingsInfoLabel.Name" xml:space="preserve">
     <value>settingsInfoLabel</value>
@@ -381,8 +380,8 @@
     <value>定量化</value>
   </data>
   <data name="radioBtnQuant.ToolTip" xml:space="preserve">
-    <value>変動を改善するため、すべての強制統合に対し、
-既に最適化されたトランジションを測定します。</value>
+    <value>すでに最適化されたトランジションを測定し、
+すべてを統合してバラつきを改善する。</value>
   </data>
   <data name="&gt;&gt;radioBtnQuant.Name" xml:space="preserve">
     <value>radioBtnQuant</value>

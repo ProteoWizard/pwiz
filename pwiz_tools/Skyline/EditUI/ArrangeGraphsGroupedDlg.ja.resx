@@ -187,7 +187,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>ペインのグループ化(&amp;G)：</value>
+    <value>枠のグループ化(&amp;G)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -214,7 +214,7 @@
     <value>1</value>
   </data>
   <data name="textGroups.ToolTip" xml:space="preserve">
-    <value>グラフをいくつのペインにグループ分けするかを
+    <value>グラフをいくつの枠にグループ分けするかを
 指定してください。</value>
   </data>
   <data name="&gt;&gt;textGroups.Name" xml:space="preserve">
@@ -242,11 +242,11 @@
     <value>3</value>
   </data>
   <data name="radioDistribute.Text" xml:space="preserve">
-    <value>グループ間のグラフの分布(&amp;D)</value>
+    <value>グループ間の分散グラフ(&amp;D)</value>
   </data>
   <data name="radioDistribute.ToolTip" xml:space="preserve">
     <value>グラフは、トランプのカードを配るように
-各ペインに分配されます。</value>
+各枠に分配されます。</value>
   </data>
   <data name="&gt;&gt;radioDistribute.Name" xml:space="preserve">
     <value>radioDistribute</value>
@@ -273,12 +273,10 @@
     <value>2</value>
   </data>
   <data name="radioSeparate.Text" xml:space="preserve">
-    <value>グループにグラフを分離(&amp;S)</value>
+    <value>グループにグラフを分割する(&amp;S)</value>
   </data>
   <data name="radioSeparate.ToolTip" xml:space="preserve">
-    <value>グラフは順番にグループに分割されます。つまり、
-各ペインへ 1 巡目の割り当てが終了してから、
-2 巡目の割り当てが始まります。</value>
+    <value>グラフは、次枠に行く前に各枠が割当を受けるように、順番にグループに分割されています。</value>
   </data>
   <data name="&gt;&gt;radioSeparate.Name" xml:space="preserve">
     <value>radioSeparate</value>
@@ -452,7 +450,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>グループにまとめたグラフの配置</value>
+    <value>グループ化されたグラフを配置する</value>
   </data>
   <data name="&gt;&gt;toolTipControls.Name" xml:space="preserve">
     <value>toolTipControls</value>

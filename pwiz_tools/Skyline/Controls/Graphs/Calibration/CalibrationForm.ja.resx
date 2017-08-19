@@ -151,7 +151,7 @@
     <value>198, 22</value>
   </data>
   <data name="logPlotContextMenuItem.Text" xml:space="preserve">
-    <value>ログプロット</value>
+    <value>対数プロット</value>
   </data>
   <data name="showToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>198, 22</value>

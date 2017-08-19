@@ -175,7 +175,7 @@
     <value>1</value>
   </data>
   <data name="cbShowModMasses.Text" xml:space="preserve">
-    <value>修飾質量を表示(&amp;S)</value>
+    <value>修飾の質量を表示(&amp;S)</value>
   </data>
   <data name="cbShowModMasses.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

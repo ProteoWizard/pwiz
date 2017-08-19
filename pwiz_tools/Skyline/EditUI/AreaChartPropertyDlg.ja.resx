@@ -334,7 +334,7 @@
     <value>0</value>
   </data>
   <data name="groupBox1.Text" xml:space="preserve">
-    <value>グラフ領域面積(&amp;G)：</value>
+    <value>領域面積をグラフ化(&amp;G)：</value>
   </data>
   <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
     <value>groupBox1</value>
@@ -427,7 +427,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>面積グラフ</value>
+    <value>面積グラフプロパティ</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>AreaChartPropertyDlg</value>

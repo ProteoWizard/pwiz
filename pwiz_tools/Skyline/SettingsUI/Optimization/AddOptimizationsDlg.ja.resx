@@ -136,7 +136,7 @@
     <value>0</value>
   </data>
   <data name="labelOptimizationsAdded.Text" xml:space="preserve">
-    <value>{0}新しい最適化がデータベースに追加されます。</value>
+    <value>{0}個の新しい最適化がデータベースに追加されます。</value>
   </data>
   <data name="&gt;&gt;labelOptimizationsAdded.Name" xml:space="preserve">
     <value>labelOptimizationsAdded</value>
@@ -271,7 +271,7 @@
     <value>2</value>
   </data>
   <data name="labelChoice.Text" xml:space="preserve">
-    <value>これらの最適化の処理を選択:</value>
+    <value>これらの最適化の処理を選択してください：</value>
   </data>
   <data name="&gt;&gt;labelChoice.Name" xml:space="preserve">
     <value>labelChoice</value>
@@ -301,7 +301,7 @@
     <value>0</value>
   </data>
   <data name="labelExisting.Text" xml:space="preserve">
-    <value>{0}個の最適化の値が既にライブラリ内にあります：</value>
+    <value>ライブラリ内には既に{0}個の最適値が存在します：</value>
   </data>
   <data name="&gt;&gt;labelExisting.Name" xml:space="preserve">
     <value>labelExisting</value>

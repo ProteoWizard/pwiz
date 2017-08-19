@@ -352,7 +352,7 @@
     <value>0</value>
   </data>
   <data name="labelLockMassInstructions.Text" xml:space="preserve">
-    <value>ロックスプレーが使用されなかった場合、またはロックマス補正がすでに適用されている場合は、これらのフィードを空白のままにします。</value>
+    <value>LockSprayを使用しなかった場合、又はlock mass補正が既に適用されている場合は、これらの欄を空白のままにします。</value>
   </data>
   <data name="&gt;&gt;labelLockMassInstructions.Name" xml:space="preserve">
     <value>labelLockMassInstructions</value>
@@ -382,7 +382,7 @@
     <value>7</value>
   </data>
   <data name="labelTolerance.Text" xml:space="preserve">
-    <value>耐性(&amp;T)</value>
+    <value>許容範囲(&amp;T)</value>
   </data>
   <data name="&gt;&gt;labelTolerance.Name" xml:space="preserve">
     <value>labelTolerance</value>
@@ -466,7 +466,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>Watersロックマス補正</value>
+    <value>Watersのロックマスによる補正</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ImportResultsLockMassDlg</value>

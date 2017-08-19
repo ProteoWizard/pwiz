@@ -252,9 +252,11 @@ namespace pwiz.Skyline.Model.Results
         {
             var precursorMz = nodeGroup != null ? nodeGroup.PrecursorMz : SignedMz.ZERO;
             // First try to find the entry with zero tolerance, since this is the fastest approach
-            // for large proteomewide extractions from DDA or DIA
+            // for large proteomewide extractions from DDA or DIA, but make sure there is a match
+            // with equal TextId at zer tolerance, since not doing so caused regression between 3.6
+            // the first release of 3.7 with chromatograms failing to match.
             int i = FindEntry(precursorMz, 0);
-            if (i != -1)
+            if (i != -1 && HasMatchingHeaderInfos(nodePep, precursorMz, i))
             {
                 tolerance = 0;
             }
@@ -328,10 +330,27 @@ namespace pwiz.Skyline.Model.Results
             ReadStream.CloseStream();
         }
 
+        private bool HasMatchingHeaderInfos(PeptideDocNode nodePep, SignedMz precursorMz, int i)
+        {
+            if (nodePep != null)
+            {
+                // Walk forward until entries no longer match
+                for (; i < _chromatogramEntries.Length; i++)
+                {
+                    var entry = _chromatogramEntries[i];
+                    if (!MatchMz(precursorMz, entry.Precursor, 0))
+                        break;
+                    if (TextIdEqual(entry, nodePep))
+                        return true;
+                }
+            }
+            return false;
+        }
+
         private IEnumerable<ChromatogramGroupInfo> GetHeaderInfos(PeptideDocNode nodePep, SignedMz precursorMz, double? explicitRT, float tolerance,
             ChromatogramSet chromatograms, int i)
         {
-            // Add entries to a list until they no longer match
+            // Walk forward until entries no longer match
             for (; i < _chromatogramEntries.Length; i++)
             {
                 var entry = _chromatogramEntries[i];

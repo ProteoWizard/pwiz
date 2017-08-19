@@ -160,7 +160,7 @@
     <value>1</value>
   </data>
   <data name="labelMessage.Text" xml:space="preserve">
-    <value>この操作により、現在のフィルタ基準を満たしていないペプチドを含む{0}が追加されました。
+    <value>この操作により、現在のフィルタの基準を満たしていないペプチドを含む{0}が追加されました。
 ドキュメントを表示する前に、空のタンパク質をすべて削除しますか？</value>
   </data>
   <data name="&gt;&gt;labelMessage.Name" xml:space="preserve">

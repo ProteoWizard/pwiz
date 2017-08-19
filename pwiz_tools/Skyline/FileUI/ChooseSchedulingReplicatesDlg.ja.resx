@@ -194,7 +194,7 @@
   </data>
   <data name="labelInstructions.Text" xml:space="preserve">
     <value>保持時間予測に使用する繰り返し測定を選択します。
-クロマトグラムは予測RTの{0}分以内のスキャンから抽出されます。</value>
+クロマトグラムは予測保持時間の{0}分以内のスキャンから抽出されます。</value>
   </data>
   <data name="&gt;&gt;labelInstructions.Name" xml:space="preserve">
     <value>labelInstructions</value>
@@ -269,7 +269,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>RT予測の繰り返し測定を選択</value>
+    <value>保持時間予測の繰り返し測定を選択してください</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ChooseSchedulingReplicatesDlg</value>

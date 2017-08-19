@@ -187,7 +187,7 @@
     <value>13</value>
   </data>
   <data name="comboStandardType.ToolTip" xml:space="preserve">
-    <value>内部標準、またはピーク面積比の分母として使用するタイプ。</value>
+    <value>内部標準として使用するタイプ、またはピーク面積比計算の際に分母として使用する同位体タイプです。</value>
   </data>
   <data name="&gt;&gt;comboStandardType.Name" xml:space="preserve">
     <value>comboStandardType</value>
@@ -211,8 +211,7 @@
     <value>8</value>
   </data>
   <data name="comboLabelType.ToolTip" xml:space="preserve">
-    <value>同位体修飾として選択確定した
-同位体の種類です。</value>
+    <value>同位体修飾が選択されている、現在アクティブな同位体標識のタイプです。</value>
   </data>
   <data name="&gt;&gt;comboLabelType.Name" xml:space="preserve">
     <value>comboLabelType</value>
@@ -288,7 +287,7 @@
     <value>14</value>
   </data>
   <data name="listStandardTypes.ToolTip" xml:space="preserve">
-    <value>内部標準、または他のタイプに対して計算されるピーク面積比の分母として使用するタイプ。</value>
+    <value>内部標準として使用するタイプ、またはほかのタイプに対して計算されるピーク面積比の分母です。</value>
   </data>
   <data name="&gt;&gt;listStandardTypes.Name" xml:space="preserve">
     <value>listStandardTypes</value>
@@ -362,8 +361,7 @@
     <value>3</value>
   </data>
   <data name="comboMissedCleavages.ToolTip" xml:space="preserve">
-    <value>タンパク質分解後、ペプチド内で可能な
-最大未切断サイト数。</value>
+    <value>タンパク質の酵素消化で分解後、ペプチドで許容される未切断の最大数。</value>
   </data>
   <data name="&gt;&gt;comboMissedCleavages.Name" xml:space="preserve">
     <value>comboMissedCleavages</value>
@@ -413,9 +411,7 @@
     <value>5</value>
   </data>
   <data name="comboBackgroundProteome.ToolTip" xml:space="preserve">
-    <value>質量分析計に注入するサンプルマトリックス内に
-存在し得る全てのタンパク質を
-指定する処理済みFASTA配列情報です。</value>
+    <value>質量分析計に導入されるサンプルマトリックス内に存在し得る全てのタンパク質を指定するように処理されたFASTA配列の情報です。</value>
   </data>
   <data name="&gt;&gt;comboBackgroundProteome.Name" xml:space="preserve">
     <value>comboBackgroundProteome</value>
@@ -439,8 +435,8 @@
     <value>5</value>
   </data>
   <data name="textMeasureRTWindow.ToolTip" xml:space="preserve">
-    <value>今後のペプチド測定のスケジュールに使用する測定ピーク中心 ((開始 + 終了)/2 など) 近辺の
-時間枠 (分単位) です。</value>
+    <value>今後のペプチド測定のスケジュール化に使用する測定されたピークの中心 ((開始 + 終了)/2 など) 近辺の
+時間枠 (分) です。</value>
   </data>
   <data name="&gt;&gt;textMeasureRTWindow.Name" xml:space="preserve">
     <value>textMeasureRTWindow</value>
@@ -467,11 +463,11 @@
     <value>3</value>
   </data>
   <data name="cbUseMeasuredRT.Text" xml:space="preserve">
-    <value>保持時間の実測値があれば使用(&amp;U)</value>
+    <value>保持時間の実測値があれば使用します(&amp;U)</value>
   </data>
   <data name="cbUseMeasuredRT.ToolTip" xml:space="preserve">
-    <value>チェックマークをオンにすると、以前に測定された保持時間を使って
-今後のペプチド測定のスケジュールの保持時間を予測します。</value>
+    <value>これを選択すると、以前に測定された保持時間を使って
+今後のペプチド測定のスケジュールに対する保持時間を予測します。</value>
   </data>
   <data name="&gt;&gt;cbUseMeasuredRT.Name" xml:space="preserve">
     <value>cbUseMeasuredRT</value>
@@ -526,8 +522,8 @@
     <value>すべての一致ぺプチドを自動選択(&amp;A)</value>
   </data>
   <data name="cbAutoSelect.ToolTip" xml:space="preserve">
-    <value>チェックマークをオンにすると、指定したフィルタとライブラリ設定を使って
-トランジションが自動的に選択されます。オンにしない場合は、すべてのペプチドを
+    <value>これを選択すると、指定したフィルタとライブラリ設定を使って
+タンパク質からペプチドが自動的に選択されます。オンにしない場合は、すべてのペプチドを
 手動ドキュメント編集で選択する必要があります。</value>
   </data>
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
@@ -580,11 +576,11 @@
     <value>8</value>
   </data>
   <data name="cbRaggedEnds.Text" xml:space="preserve">
-    <value>潜在的に不規則な終端を排除(&amp;R)</value>
+    <value>切断ミスが起こりやすい配列を除外</value>
   </data>
   <data name="cbRaggedEnds.ToolTip" xml:space="preserve">
-    <value>切断部位の直前直後にある別の切断部位からの
-類似ペプチドを除外します。例：トリプシンのRR、KK、RK、KR</value>
+    <value>切断部位の直前か直後にもうひとつ切断部位があるペプチドを除外します。
+例：トリプシンにおけるRR、KK、RK、KR</value>
   </data>
   <data name="&gt;&gt;cbRaggedEnds.Name" xml:space="preserve">
     <value>cbRaggedEnds</value>
@@ -611,7 +607,7 @@
     <value>リストを編集(&amp;D)...</value>
   </data>
   <data name="btnEditExlusions.ToolTip" xml:space="preserve">
-    <value>利用可能なペプチド排除のリストを編集</value>
+    <value>利用可能なペプチドの除外リストを編集</value>
   </data>
   <data name="&gt;&gt;btnEditExlusions.Name" xml:space="preserve">
     <value>btnEditExlusions</value>
@@ -635,7 +631,7 @@
     <value>10</value>
   </data>
   <data name="listboxExclusions.ToolTip" xml:space="preserve">
-    <value>排除したい特定のペプチドに使用される正規表現パターン</value>
+    <value>除外したい特定のペプチドに使用される正規表現パターン</value>
   </data>
   <data name="&gt;&gt;listboxExclusions.Name" xml:space="preserve">
     <value>listboxExclusions</value>
@@ -659,8 +655,7 @@
     <value>3</value>
   </data>
   <data name="textMaxLength.ToolTip" xml:space="preserve">
-    <value>このフィルタに一致する最長ペプチドの
-アミノ酸残基数です</value>
+    <value>このフィルタに一致するペプチドにおける最大アミノ酸残基数です</value>
   </data>
   <data name="&gt;&gt;textMaxLength.Name" xml:space="preserve">
     <value>textMaxLength</value>
@@ -739,7 +734,7 @@
     <value>構築(&amp;B)...</value>
   </data>
   <data name="btnBuildLibrary.ToolTip" xml:space="preserve">
-    <value>ペプチド検索エンジンのペプチド検索結果から
+    <value>様々なペプチド検索エンジンによるペプチド検索結果から
 MS/MSスペクトルライブラリを構築します。</value>
   </data>
   <data name="&gt;&gt;btnBuildLibrary.Name" xml:space="preserve">
@@ -764,9 +759,8 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>3</value>
   </data>
   <data name="comboRank.ToolTip" xml:space="preserve">
-    <value>一致するペプチドのランキングに使用できるライブラリ内で
-各スペクトルに関連付ける値を指定します。すべてのライブラリ形式がランキングに同じ値を提供するわけでは
-ありません。</value>
+    <value>一致するペプチドのランク付けのために使用されるライブラリーの各スペクトルに関連する値を指定します。
+すべてのライブラリがランク付けに同じ値を使用するわけではありません。</value>
   </data>
   <data name="&gt;&gt;comboRank.Name" xml:space="preserve">
     <value>comboRank</value>
@@ -790,7 +784,7 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>5</value>
   </data>
   <data name="textPeptideCount.ToolTip" xml:space="preserve">
-    <value>各タンパク質に対して選択するための上位ランクのペプチド数</value>
+    <value>各タンパク質に対し選択する上位ランクのペプチド数</value>
   </data>
   <data name="&gt;&gt;textPeptideCount.Name" xml:space="preserve">
     <value>textPeptideCount</value>
@@ -826,11 +820,11 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>1</value>
   </data>
   <data name="comboMatching.ToolTip" xml:space="preserve">
-    <value>ペプチド選択戦略を指定します：
-ライブラリ - ライブラリスペクトルに一致数ペプチドのみを選択します
+    <value>ペプチド選択する方法を指定します：
+ライブラリ - ライブラリにあるスペクトルに一致するペプチドのみを選択します
 フィルタ - ライブラリの内容を無視し、代わりに [フィルタ] タブの設定を選択して使用します。
-ライブラリとフィルタ - ライブラリスペクトルとフィルタの両方に一致するペプチドを選択します
-ライブラリまたはフィルタ - ライブラリスペクトルまたはフィルタに一致するペプチドを選択します</value>
+ライブラリとフィルタ -ライブラリにあるスペクトルとフィルタの両方に一致するペプチドを選択します
+ライブラリまたはフィルタ - ライブラリにあるスペクトルまたはフィルタに一致するペプチドを選択します</value>
   </data>
   <data name="&gt;&gt;comboMatching.Name" xml:space="preserve">
     <value>comboMatching</value>
@@ -860,7 +854,7 @@ MS/MSスペクトルライブラリを構築します。</value>
     <value>タンパク質毎のペプチド数を制限(&amp;L)</value>
   </data>
   <data name="cbLimitPeptides.ToolTip" xml:space="preserve">
-    <value>チェックマークをオンにすると、指定した数のトップランクペプチドだけが
+    <value>これを選択すると、指定した数のトップランクペプチドだけが
 各タンパク質に対して選択されます。</value>
   </data>
   <data name="&gt;&gt;cbLimitPeptides.Name" xml:space="preserve">
@@ -995,7 +989,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>9</value>
   </data>
   <data name="btnUpdateIonMobilityLibraries.ToolTip" xml:space="preserve">
-    <value>イオン移動度ライブラリ</value>
+    <value>イオンモビリティライブラリ</value>
   </data>
   <data name="&gt;&gt;btnUpdateIonMobilityLibraries.Name" xml:space="preserve">
     <value>btnUpdateIonMobilityLibraries</value>
@@ -1019,7 +1013,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>8</value>
   </data>
   <data name="comboDriftTimePredictor.ToolTip" xml:space="preserve">
-    <value>イオン移動ライブラリを併用して予測ドリフト時間を使用する可能性のある一連の一次方程式を指定します</value>
+    <value>イオンモビリティライブラリを併用してドリフト時間の予測をする一次方程式を指定します</value>
   </data>
   <data name="&gt;&gt;comboDriftTimePredictor.Name" xml:space="preserve">
     <value>comboDriftTimePredictor</value>
@@ -1043,8 +1037,8 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>12</value>
   </data>
   <data name="textSpectralLibraryDriftTimesResolvingPower.ToolTip" xml:space="preserve">
-    <value>スペクトルライブラリでドリフト時間に一致耐性を決定（ドリフト時間がミリ秒で測定される）： 
-ドリフト時間「T」での分解能「R」の場合、Tに中心のあるドリフト時間の一致ウィンドウの幅「W」は
+    <value>スペクトルライブラリにおけるドリフト時間の許容誤差を決定する（ドリフト時間はミリ秒単位で測定される）： 
+ドリフト時間「T」における分解能が「R」の場合、Tに中心のあるドリフト時間の一致ウィンドウの幅「W」は
 W = 2T/R</value>
   </data>
   <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.Name" xml:space="preserve">
@@ -1075,7 +1069,7 @@ W = 2T/R</value>
     <value>10</value>
   </data>
   <data name="cbUseSpectralLibraryDriftTimes.Text" xml:space="preserve">
-    <value>存在する場合、スペクトルライブラリのドリフト時間を使用</value>
+    <value>スペクトルライブラリのドリフト時間が存在する場合には使用します</value>
   </data>
   <data name="cbUseSpectralLibraryDriftTimes.ToolTip" xml:space="preserve">
     <value>これを選択すると、読み込まれたスペクトルライブラリのドリフト時間がクロマトグラム抽出に使用されます。</value>
@@ -1102,7 +1096,7 @@ W = 2T/R</value>
     <value>遺伝子</value>
   </data>
   <data name="comboBoxPeptideUniquenessConstraint.Items3" xml:space="preserve">
-    <value>生物種</value>
+    <value>種</value>
   </data>
   <data name="comboBoxPeptideUniquenessConstraint.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 238</value>
@@ -1114,9 +1108,9 @@ W = 2T/R</value>
     <value>7</value>
   </data>
   <data name="comboBoxPeptideUniquenessConstraint.ToolTip" xml:space="preserve">
-    <value>[タンパク質]は、バックグラウンドプロテオームにある1つ以上のタンパク質に出現するペプチドを除外します。
- [タンパク質]は、バックグラウンドプロテオームにおいて2つ以上の遺伝子にコードされるタンパク質に存在するペプチドを除外します。
- [生物種]は、バックグラウンドプロテオームにおいて2つ以上の生物種のタンパク質に存在するペプチドを除外します。</value>
+    <value>[タンパク質]は、バックグラウンドプロテオームにある1つ以上のタンパク質中に存在するペプチドを除外します。
+[遺伝子]は、バックグラウンドプロテオームにある1つ以上の遺伝子のタンパク質に出現するペプチドを除外します。
+[種]は、バックグラウンドプロテオームにある1つ以上の種のタンパク質に出現するペプチドを除外します。</value>
   </data>
   <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.Name" xml:space="preserve">
     <value>comboBoxPeptideUniquenessConstraint</value>
@@ -1140,8 +1134,8 @@ W = 2T/R</value>
     <value>17</value>
   </data>
   <data name="textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip" xml:space="preserve">
-    <value>ドリフト時間の一致耐性を決定（ドリフト時間がミリ秒で測定される）。ここで：
- dtMax = 最大測定ドリフト時間
+    <value>ドリフト時間の許容誤差を決定する（ドリフト時間はミリ秒単位で測定される）。ここで：
+ dtMax = 測定ドリフト時間の最大値
  W0 = ドリフト時間ゼロでの幅
  Wmax = dtMaxでの幅
 ドリフト時間「T」に中心のあるドリフト時間の一致ウィンドウの幅
@@ -1170,8 +1164,8 @@ W = 2T/R</value>
     <value>15</value>
   </data>
   <data name="textSpectralLibraryDriftTimesWidthAtDt0.ToolTip" xml:space="preserve">
-    <value>ドリフト時間の一致耐性を決定（ドリフト時間がミリ秒で測定される）。ここで：
- dtMax = 最大測定ドリフト時間
+    <value>ドリフト時間の許容誤差を決定する（ドリフト時間はミリ秒単位で測定される）。ここで：
+ dtMax = 測定ドリフト時間の最大値
  W0 = ドリフト時間ゼロでの幅
  Wmax = dtMaxでの幅
 ドリフト時間「T」に中心のあるドリフト時間の一致ウィンドウの幅
@@ -1239,7 +1233,7 @@ W = 2T/R</value>
     <value>6</value>
   </data>
   <data name="labelPeptideUniquenessConstraint.Text" xml:space="preserve">
-    <value>ペプチドの一意性の強制メソッド(&amp;U)：</value>
+    <value>次を使用してペプチドの一意性を強制します(&amp;U)：</value>
   </data>
   <data name="&gt;&gt;labelPeptideUniquenessConstraint.Name" xml:space="preserve">
     <value>labelPeptideUniquenessConstraint</value>
@@ -1266,7 +1260,7 @@ W = 2T/R</value>
     <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>最大ミス開裂数(&amp;M)：</value>
+    <value>最大未切断数(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -1686,7 +1680,7 @@ W = 2T/R</value>
     <value>6</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>末端AAを排除(&amp;N)：</value>
+    <value>N末端アミノ酸を除外(&amp;N)：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -1713,7 +1707,7 @@ W = 2T/R</value>
     <value>9</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>以下を含むペプチドを排除(&amp;E)：</value>
+    <value>以下を含むペプチドを除外(&amp;E)：</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -1767,7 +1761,7 @@ W = 2T/R</value>
     <value>0</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>最小長(&amp;M)：</value>
+    <value>最小長さ(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -2211,7 +2205,7 @@ W = 2T/R</value>
     <value>3</value>
   </data>
   <data name="label36.Text" xml:space="preserve">
-    <value>ピークスコアモデル(&amp;P)：</value>
+    <value>ピークスコアリングモデル(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label36.Name" xml:space="preserve">
     <value>label36</value>
@@ -2442,7 +2436,7 @@ W = 2T/R</value>
     <value>0</value>
   </data>
   <data name="label22.Text" xml:space="preserve">
-    <value>回帰適合(&amp;F)：</value>
+    <value>回帰線のフィット(&amp;F)：</value>
   </data>
   <data name="&gt;&gt;label22.Name" xml:space="preserve">
     <value>label22</value>
@@ -2490,7 +2484,7 @@ W = 2T/R</value>
     <value>4</value>
   </data>
   <data name="label21.Text" xml:space="preserve">
-    <value>回帰加重(&amp;W)：</value>
+    <value>回帰線の重み付け(&amp;W)：</value>
   </data>
   <data name="&gt;&gt;label21.Name" xml:space="preserve">
     <value>label21</value>

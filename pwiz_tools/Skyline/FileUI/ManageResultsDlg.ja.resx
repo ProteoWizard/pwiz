@@ -220,7 +220,7 @@
     <value>3</value>
   </data>
   <data name="btnUp.Text" xml:space="preserve">
-    <value>上(&amp;U)</value>
+    <value>上へ(&amp;U)</value>
   </data>
   <data name="&gt;&gt;btnUp.Name" xml:space="preserve">
     <value>btnUp</value>
@@ -451,7 +451,7 @@
     <value>9</value>
   </data>
   <data name="checkBoxRemoveLibraryRuns.Text" xml:space="preserve">
-    <value>対応するライブラリ実行を削除</value>
+    <value>対応するライブラリの実行データを削除</value>
   </data>
   <data name="&gt;&gt;checkBoxRemoveLibraryRuns.Name" xml:space="preserve">
     <value>checkBoxRemoveLibraryRuns</value>

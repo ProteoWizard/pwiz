@@ -406,7 +406,7 @@
     <value>12</value>
   </data>
   <data name="btnGraph.Text" xml:space="preserve">
-    <value>グラフ(&amp;G)...</value>
+    <value>グラフ化(&amp;G)…</value>
   </data>
   <data name="&gt;&gt;btnGraph.Name" xml:space="preserve">
     <value>btnGraph</value>
@@ -505,7 +505,7 @@
     <value>20</value>
   </data>
   <data name="cbSpecifyCERange.Text" xml:space="preserve">
-    <value>CE範囲を指定(&amp;R)</value>
+    <value>CE範囲の指定(&amp;R)</value>
   </data>
   <data name="&gt;&gt;cbSpecifyCERange.Name" xml:space="preserve">
     <value>cbSpecifyCERange</value>
@@ -703,7 +703,7 @@
     <value>2</value>
   </data>
   <data name="rbUseResultsData.Text" xml:space="preserve">
-    <value>結果データの単離ターゲットを使用(&amp;U)</value>
+    <value>単離ターゲットの結果データを使用します(&amp;U)</value>
   </data>
   <data name="&gt;&gt;rbUseResultsData.Name" xml:space="preserve">
     <value>rbUseResultsData</value>
@@ -751,7 +751,7 @@
     <value>True</value>
   </metadata>
   <data name="colEndMargin.HeaderText" xml:space="preserve">
-    <value>マージンを終了</value>
+    <value>マージン</value>
   </data>
   <data name="colEndMargin.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

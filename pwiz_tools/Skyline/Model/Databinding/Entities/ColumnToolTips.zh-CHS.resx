@@ -107,7 +107,7 @@
 重复测定数据的时间和日期。或者，如果文件通过 1.1 之前的版本导入，则为 #N/A。</value>
   </data>
   <data name="AnalyteConcentration">
-    <value>加入外部或质量控制标准的已知分析物数量。</value>
+    <value>加入外部或质量控制标准的已知量的分析物。</value>
   </data>
   <data name="Area">
     <value>离子对峰值的曲线下面积 (AUC) 减去背景。</value>
@@ -117,15 +117,15 @@
 的面积。</value>
   </data>
   <data name="AreaRatio">
-    <value>该离子对与其首个内标标签类型中相应离子对的面积比，在版本 0.7 前
-始终是轻/重，
+    <value>该离子对与其首个内标标签类型中
+相应离子对的面积比，在版本 0.7 前始终是轻标/重标，
 并显示在重离子对上。</value>
   </data>
   <data name="AverageMassErrorPPM">
     <value>平均质量误差百万分率</value>
   </data>
   <data name="AverageMeasuredRetentionTime">
-    <value>所有重复测定内的平均肽保留时间</value>
+    <value>所有重复测定结果中该肽段的平均保留时间</value>
   </data>
   <data name="Background">
     <value>由积分边界形成的矩形面积，以及基线和垂直于积分边界与
@@ -133,15 +133,15 @@
 色谱图之间的最小交点强度的线。</value>
   </data>
   <data name="BeginPos">
-    <value>在其含有的蛋白质序列中肽的第一（N-末端）氨基酸的位置，
-或如果没有蛋白质序列，则为 #N/A。
+    <value>在其归属的蛋白质序列中该肽段序列中的首位（N-末端）氨基酸的位置，
+如果没有可用的蛋白质序列，则为 #N/A。
     </value>
   </data>
   <data name="BestReplicate">
     <value>如果此重复测定得出了最高的总肽峰得分，则成立。</value>
   </data>
   <data name="BestRetentionTime">
-    <value>在母离子具有最高强度时，
+    <value>其母离子具有最高强度时
 离子对的保留时间值。</value>
   </data>
   <data name="CalculatedConcentration">
@@ -150,23 +150,23 @@
     2.使用与内标（或替代）的比，并乘以内标浓度</value>
   </data>
   <data name="CalibrationCurve">
-    <value>校正曲线，其使用样品类型为“标准”并具有“分析物浓度”的重复测定计算。</value>
+    <value>校正曲线，其使用样品类型为“标准”并标明“分析物浓度”的重复测定计算。</value>
   </data>
   <data name="CleavageAa">
     <value>在肽断裂后（C-末端）肽中的特异
 性氨基酸残基。（例如 P、M、S、T 等。）</value>
   </data>
   <data name="CollisionEnergy">
-    <value>根据仪器/厂商特定的 Skyline 内的预设碰撞能量方程，
-母离子的碰撞能量</value>
+    <value>根据仪器/厂商特定的 Skyline 内的预设碰撞能量方程
+所计算出的母离子碰撞能量</value>
   </data>
   <data name="ConcentrationMultiplier">
     <value>重复测定的“分析物浓度”所乘的值，以获得特定肽或分子的特定浓度。</value>
   </data>
   <data name="CountTruncated">
-    <value>在采集时间区间的任一一端（
-即该端的强度大于高于其他范围的整个峰高的 1%），集成峰与边界
-的母离子的离子对数量。</value>
+    <value>在采集时间区间的任意一端（即该端的强度大于高于其他范围的
+整个峰高的 1%），集成峰与边界的
+母离子的离子对数量。</value>
   </data>
   <data name="Cv">
     <value>变异系数</value>
@@ -208,8 +208,8 @@
     <value>母离子总面积比值的变异系数 (CV)</value>
   </data>
   <data name="DeclusteringPotential">
-    <value>根据 Skyline 内仪器/厂商特定的预设去簇电位方程，
-母离子的去簇电位</value>
+    <value>根据 Skyline 内仪器/厂商特定的预设去簇电位方程
+所计算出的母离子的去簇电位</value>
   </data>
   <data name="DecoyMzShift">
     <value>应用于母离子的质荷比变化，以产生
@@ -222,14 +222,14 @@
     <value>在应用 mProphet 模型后，分配给每个选定峰（目标和诱饵）的归一化 mProphet 得分，表示为平均诱饵评分的标准偏差 (SD) 数。</value>
   </data>
   <data name="EndPos">
-    <value>在其含有的蛋白质序列中肽的最后（C-末端）氨基酸的位置，
-或如果没有蛋白质序列，则为 #N/A</value>
+    <value>在其归属的蛋白质序列中肽的末尾（C-末端）氨基酸的位置，
+如果没有蛋白质序列，则为 #N/A</value>
   </data>
   <data name="EndTime">
     <value>离子对峰结束积分边界的保留时间。</value>
   </data>
   <data name="EstimatedValue">
-    <value>线性回归的斜度。</value>
+    <value>线性回归的斜率。</value>
   </data>
   <data name="ErrorMessage">
     <value>在尝试计算该值时出现的错误消息正文（如有）。</value>
@@ -294,7 +294,7 @@
     <value>离子对峰的半峰全宽 (FWHM)。</value>
   </data>
   <data name="FwhmDegenerate">
-    <value>Fwhm 退化</value>
+    <value>简并的Fwhm</value>
   </data>
   <data name="Height">
     <value>离子对峰积分边界之间的点的
@@ -341,7 +341,7 @@
   </data>
   <data name="IsotopeLabelType">
     <value>
-与母离子（轻/重）相关的标签类型名称，</value>
+与母离子（轻标/重标）相关的标签类型名称，</value>
   </data>
   <data name="Key">
     <value>表明应用了哪些同位素修饰检索表</value>
@@ -462,14 +462,14 @@
 相同的积分边界手动编辑母离子的所有离子对</value>
   </data>
   <data name="MissedCleavages">
-    <value>肽序列中缺失剪切位点的数量</value>
+    <value>肽序列中缺失酶剪切位点的数量</value>
   </data>
   <data name="ModifiedSequence">
     <value>包括任何氨基酸修饰（如半胱氨酸烷
 基化）的肽序列。（例如： AGLC[+57]QTFVYGGC[+57]R）</value>
   </data>
   <data name="ModifiedTime">
-    <value>原始质谱仪文件在磁盘上修改的最后
+    <value>原始质谱数据文件在磁盘上修改的最后
 时间和日期</value>
   </data>
   <data name="MoleculeFormula">
@@ -485,7 +485,7 @@
     <value>下一个氨基酸</value>
   </data>
   <data name="NormalizationMethod">
-    <value>覆盖与该特定分子一起使用的归一化方法，进行绝对定量和组比较。</value>
+    <value>覆盖与该特定分子一起使用的归一化方法，进行绝对定量和组间比较。</value>
   </data>
   <data name="NormalizedArea">
     <value>根据明示的肽/分子“归一化方法”或在“设定 &gt; 肽设定 &gt; 定量”中指定的归一化方法，
@@ -505,14 +505,14 @@
   <data name="OptStep">
     <value>
 
-指明与正在优化的参数的默认值的距离的优化步骤值，</value>
+指明与正在优化的参数的默认值所距离的优化步骤值，</value>
   </data>
   <data name="PeakRank">
-    <value>默认参数值为 0；或者当重复测定
-中未进行优化时。排名系基于该离子对在相同母离子的所有其他离子对中</value>
+    <value>预设参数值或者当重复测定中
+未进行优化时的值为 0。基于该离子对在相同母离子的所有其他离子对中的面积</value>
   </data>
   <data name="PeakRankByLevel">
-    <value>的面积。在特定重复测定中按质谱级别排名的峰面积（即 MS1 和串联质谱分开排名）</value>
+    <value>进行的排名在特定重复测定中按质谱级别排名的峰面积（即 MS1 和串联质谱分开排名）</value>
   </data>
   <data name="Peptide">
     <value>肽</value>
@@ -578,10 +578,10 @@
 文字注释。</value>
   </data>
   <data name="PrecursorResult">
-    <value>母离子结果</value>
+    <value>母离子结果（单个）</value>
   </data>
   <data name="PrecursorResults">
-    <value>母离子结果</value>
+    <value>母离子结果（多个）</value>
   </data>
   <data name="PrecursorResultsSummary">
     <value>母离子结果摘要</value>
@@ -617,19 +617,19 @@ SSRCalc 3.0）之间的保留时间回归预测的保留时间；
     <value>蛋白质</value>
   </data>
   <data name="ProteinAccession">
-    <value>新增蛋白质</value>
+    <value>蛋白质检索号</value>
   </data>
   <data name="ProteinDescription">
     <value>在通过公共 FASTA 序列将蛋白质导入 Skyline 时，
-提供了蛋白质描述。若将光标悬浮在
-肽树视图中的蛋白质名称，也会看到蛋白质描述。</value>
+该蛋白质的描述会被提供。若将光标悬浮在肽树视图中的蛋白质名称，
+也会看到蛋白质描述。</value>
   </data>
   <data name="ProteinGene">
     <value>蛋白质基因</value>
   </data>
   <data name="ProteinName">
-    <value>按照定义的，或输入进 Skyline 的蛋白质名称（在某些
-情况下连同新增号）</value>
+    <value>按照定义的，或输入进 Skyline 的蛋白质名称
+（在某些情况下连同检索号）</value>
   </data>
   <data name="ProteinNote">
     <value>点击“编辑”菜单中的“编辑注释”后显示的与蛋白质相关的自由
@@ -659,20 +659,20 @@ SSRCalc 3.0）之间的保留时间回归预测的保留时间；
     <value>区间</value>
   </data>
   <data name="RangeBestRetentionTime">
-    <value>最大最佳保留时间和最小最佳保留时间之间
-的差异，可用于测定所测量的保留时间的
-扩展。</value>
+    <value>最大最佳保留时间和最小最佳保留时间
+之间的差异，可用于测定所测量的保留时间的
+漂移范围。</value>
   </data>
   <data name="RangeRetentionTime">
-    <value>最大保留时间和最小保留时间之间
-的差异，可用于测定所测量的保留时间的
-扩展。</value>
+    <value>最大保留时间和最小保留时间
+之间的差异，可用于测定所测量的保留时间的
+漂移范围。</value>
   </data>
   <data name="RatioDotProduct">
     <value>比率点积</value>
   </data>
   <data name="RatioToStandard">
-    <value>肽的轻/重面积比</value>
+    <value>肽的轻标/重标面积比</value>
   </data>
   <data name="Replicate">
     <value>重复测定</value>
@@ -699,7 +699,7 @@ SSRCalc 3.0）之间的保留时间回归预测的保留时间；
     <value>结果</value>
   </data>
   <data name="RetentionTime">
-    <value>离子对峰的最大强度下的保留时间。</value>
+    <value>离子对峰的最大强度所对应的的保留时间。</value>
   </data>
   <data name="RetentionTimeCalculatorScore">
     <value>在使用保留得分计算器时（例如 SSRCalc 或 iRT 得分），
@@ -763,7 +763,7 @@ SSRCalc 3.0）之间的保留时间回归预测的保留时间；
     <value>母离子总面积值的标准偏差</value>
   </data>
   <data name="StdevTotalAreaNormalized">
-    <value>归一化的标准偏差总面积</value>
+    <value>归一化总面积的标准偏差</value>
   </data>
   <data name="StdevTotalAreaRatio">
     <value>母离子总面积归一
@@ -780,26 +780,26 @@ SSRCalc 3.0）之间的保留时间回归预测的保留时间；
     <value>片段总面积</value>
   </data>
   <data name="TotalAreaMs1">
-    <value>总面积 MS1</value>
+    <value> MS1总面积</value>
   </data>
   <data name="TotalAreaNormalized">
-    <value>文档中所有肽母离子的总面积值总和
-的总面积归一化值</value>
+    <value>根据文档中所有肽母离子的总面积值总和
+归一化计算出的总面积值</value>
   </data>
   <data name="TotalAreaRatio">
     <value>该母离子与首个内标标签类型的总面积比，
-在版本 0.7 之前始终是轻/重，
-并显示在重母离子上。</value>
+在版本 0.7 之前始终是轻标/重标，
+并显示在重标母离子上。</value>
   </data>
   <data name="TotalBackground">
     <value>特定母离子的所有单个离子对的背景值
 总和</value>
   </data>
   <data name="TotalBackgroundFragment">
-    <value>片段总体背景</value>
+    <value>片段总背景</value>
   </data>
   <data name="TotalBackgroundMs1">
-    <value>总体背景 MS1</value>
+    <value>MS1总背景</value>
   </data>
   <data name="Transition">
     <value>离子对</value>
@@ -819,10 +819,10 @@ SSRCalc 3.0）之间的保留时间回归预测的保留时间；
 文字注释。</value>
   </data>
   <data name="TransitionResult">
-    <value>离子对结果</value>
+    <value>离子对结果（单个）</value>
   </data>
   <data name="TransitionResults">
-    <value>离子对结果</value>
+    <value>离子对结果（多个）</value>
   </data>
   <data name="TransitionResultsSummary">
     <value>离子对结果摘要</value>

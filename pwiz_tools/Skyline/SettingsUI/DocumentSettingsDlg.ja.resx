@@ -391,7 +391,7 @@
     <value>8</value>
   </data>
   <data name="labelReports.Text" xml:space="preserve">
-    <value>Skylineドキュメント内でどのレポートの定義を保存するかを選択します。 これらのレポートは、ドキュメントグリッド、結果グリッド、またはその他のウィンドウで利用可能な場合があります。</value>
+    <value>Skylineドキュメント内でどのレポート定義を保存するかを選択します。 これらのレポートは、ドキュメントグリッド、結果グリッド、またはその他のウィンドウで利用することができます。</value>
   </data>
   <data name="&gt;&gt;labelReports.Name" xml:space="preserve">
     <value>labelReports</value>

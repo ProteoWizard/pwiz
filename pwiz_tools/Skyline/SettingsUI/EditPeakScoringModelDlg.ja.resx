@@ -132,7 +132,7 @@
     <value>1</value>
   </data>
   <data name="textName.ToolTip" xml:space="preserve">
-    <value>ぺプチド設定形式でこの式の表示に使用する名前</value>
+    <value>この式を[Peptide Settings]フォームに表示するために使用される名前</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
@@ -163,8 +163,8 @@
     <value>モデルのトレーニング(&amp;T)</value>
   </data>
   <data name="btnTrainModel.ToolTip" xml:space="preserve">
-    <value>クリックして現在インポートされている結果データをこのドキュメント内のペプチドで使用し、
-線形回帰式を計算します</value>
+    <value>クリックして、現在インポートされているペプチドの結果データから
+線形回帰式を計算します。</value>
   </data>
   <data name="&gt;&gt;btnTrainModel.Name" xml:space="preserve">
     <value>btnTrainModel</value>
@@ -632,7 +632,7 @@
     <value>5</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>利用可能な機能のスコア(&amp;A)：</value>
+    <value>利用可能な機能スコア(&amp;A)：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -710,7 +710,7 @@
     <value>0</value>
   </data>
   <data name="decoyCheckBox.Text" xml:space="preserve">
-    <value>デコイを使用(&amp;D)</value>
+    <value>デコイを使用します(&amp;D)</value>
   </data>
   <data name="&gt;&gt;decoyCheckBox.Name" xml:space="preserve">
     <value>decoyCheckBox</value>
@@ -740,7 +740,7 @@
     <value>1</value>
   </data>
   <data name="secondBestCheckBox.Text" xml:space="preserve">
-    <value>2番目に良いピークを使用(&amp;S)</value>
+    <value>2番目に良いピークを使用します(&amp;S)</value>
   </data>
   <data name="&gt;&gt;secondBestCheckBox.Name" xml:space="preserve">
     <value>secondBestCheckBox</value>

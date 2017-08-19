@@ -223,7 +223,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>保持するペプチド(&amp;P)：</value>
+    <value>残しておくペプチド(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -253,7 +253,7 @@
     <value>3</value>
   </data>
   <data name="cbRemoveProteins.Text" xml:space="preserve">
-    <value>空のタンパク質を削除(&amp;R)</value>
+    <value>空欄のタンパク質を削除(&amp;R)</value>
   </data>
   <data name="&gt;&gt;cbRemoveProteins.Name" xml:space="preserve">
     <value>cbRemoveProteins</value>
@@ -307,7 +307,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>ペプチドの受け入れ</value>
+    <value>ペプチドを許可</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>RefineListDlg</value>

@@ -133,7 +133,7 @@
     <value>2</value>
   </data>
   <data name="lblFormDescription.Text" xml:space="preserve">
-    <value>繰り返し測定における時間の正規化を可能にするため、Skylineでは、スペクトルライブラリのペプチド同定の保持時間を使用します。2 回の繰り返し測定をアラインする場合は、両方の繰り返し測定から共通して検出されたペプチドの保持時間を用いて線形回帰を行います。Skylineでは、.99より大きい相関係数（すなわち「R」）を伴う線形回帰を取得するようにしています。Skylineでは、異常値を排除することにより、目標相関度に達するまで、回帰を最適化します。</value>
+    <value>繰り返し測定における時間の正規化を可能にするため、Skylineでは、スペクトルライブラリのペプチド同定の保持時間を使用します。2 回の繰り返し測定を使用する場合は、両方の繰り返し測定から共通して検出されたペプチドの保持時間を用いて線形回帰を行います。Skylineでは、0.99より大きい相関係数（すなわち「R」）を伴う線形回帰式を取得するようにしています。Skylineでは、異常値を除外することにより、目標の相関係数に達するまで、回帰式の最適化を行います。</value>
   </data>
   <data name="&gt;&gt;lblFormDescription.Name" xml:space="preserve">
     <value>lblFormDescription</value>
@@ -181,7 +181,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>次に対してアラインする：</value>
+    <value>繰り返し測定を次に対して調整する：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -235,7 +235,7 @@
     <value>True</value>
   </metadata>
   <data name="colSlope.HeaderText" xml:space="preserve">
-    <value>勾配</value>
+    <value>傾き</value>
   </data>
   <metadata name="colIntercept.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -259,7 +259,7 @@
     <value>True</value>
   </metadata>
   <data name="colUnrefinedSlope.HeaderText" xml:space="preserve">
-    <value>リファインなし勾配</value>
+    <value>最適化されていない傾き</value>
   </data>
   <data name="colUnrefinedSlope.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -271,7 +271,7 @@
     <value>True</value>
   </metadata>
   <data name="colUnrefinedIntercept.HeaderText" xml:space="preserve">
-    <value>リファインなし切片</value>
+    <value>最適化されていない切片</value>
   </data>
   <data name="colUnrefinedIntercept.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -283,7 +283,7 @@
     <value>True</value>
   </metadata>
   <data name="colUnrefinedCorrelationCoefficient.HeaderText" xml:space="preserve">
-    <value>リファインなしR</value>
+    <value>最適されていないR</value>
   </data>
   <data name="colUnrefinedCorrelationCoefficient.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

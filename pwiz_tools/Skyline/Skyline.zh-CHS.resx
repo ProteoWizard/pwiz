@@ -729,7 +729,7 @@
     <value>190, 22</value>
   </data>
   <data name="replicateComparisonContextMenuItem.Text" xml:space="preserve">
-    <value>重复测定比较</value>
+    <value>样本比较</value>
   </data>
   <data name="timePeptideComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -1005,7 +1005,7 @@
     <value>190, 22</value>
   </data>
   <data name="areaReplicateComparisonContextMenuItem.Text" xml:space="preserve">
-    <value>重复测定比较</value>
+    <value>样本比较</value>
   </data>
   <data name="areaPeptideComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -2551,7 +2551,7 @@
     <value>228, 22</value>
   </data>
   <data name="replicateComparisonMenuItem.Text" xml:space="preserve">
-    <value>重复测定比较(&amp;R)</value>
+    <value>样本比较(&amp;R)</value>
   </data>
   <data name="timePeptideComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+F8</value>
@@ -2611,7 +2611,7 @@
     <value>228, 22</value>
   </data>
   <data name="areaReplicateComparisonMenuItem.Text" xml:space="preserve">
-    <value>重复测定比较(&amp;R)</value>
+    <value>样本比较(&amp;R)</value>
   </data>
   <data name="areaPeptideComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+F7</value>
@@ -2638,7 +2638,7 @@
     <value>228, 22</value>
   </data>
   <data name="massErrorReplicateComparisonMenuItem.Text" xml:space="preserve">
-    <value>重复测定比较(&amp;R)</value>
+    <value>样本比较(&amp;R)</value>
   </data>
   <data name="massErrorPeptideComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+F6</value>
@@ -2944,7 +2944,7 @@
     <value>190, 22</value>
   </data>
   <data name="massErrorReplicateComparisonContextMenuItem.Text" xml:space="preserve">
-    <value>重复测定比较</value>
+    <value>样本比较</value>
   </data>
   <data name="massErrorPeptideComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>

@@ -133,7 +133,7 @@
     <value>0</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-    <value>同意する(&amp;A)</value>
+    <value>同意します(&amp;A)</value>
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
@@ -163,7 +163,7 @@
     <value>5</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>以下のライセンスの包括により：</value>
+    <value>次のライセンスに含まれていることにより：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -190,7 +190,7 @@
     <value>4</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>新しい使用条件を承認する場合は、以下の [同意する] をクリックします。</value>
+    <value>新しい利用条件に同意する場合は、以下の「同意する」をクリックします。</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -345,7 +345,7 @@ All rights reserved.</value>
     <value>2</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-    <value>同意しない(&amp;D)</value>
+    <value>同意しません(&amp;D)</value>
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>

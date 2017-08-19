@@ -217,7 +217,7 @@
     <value>6</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
-    <value>自動-すべて選択(&amp;S)：</value>
+    <value>次の全てを自動選択(&amp;S)：</value>
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
@@ -325,8 +325,8 @@
     <value>17, 17</value>
   </metadata>
   <data name="cbRemoveRepeatedPeptides.ToolTip" xml:space="preserve">
-    <value>すべての反復ペプチドは削除され、
-最初に出現した各ペプチドだけが残ります。</value>
+    <value>すべての重複ペプチドは削除され、
+最初に記載された各ペプチドだけが残ります。</value>
   </data>
   <data name="&gt;&gt;cbRemoveRepeatedPeptides.Name" xml:space="preserve">
     <value>cbRemoveRepeatedPeptides</value>
@@ -409,7 +409,7 @@
     <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>プリカーサー毎の最小トランジション(&amp;T)：</value>
+    <value>プリカーサー毎の最小トランジション数(&amp;T)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -461,7 +461,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>タンパク質毎の最小ペプチド(&amp;M)：</value>
+    <value>タンパク質毎の最小ペプチド数(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -541,7 +541,7 @@
     <value>4</value>
   </data>
   <data name="label8.Text" xml:space="preserve">
-    <value>最大ペプチドのピークのランク(&amp;K)：</value>
+    <value>最大ペプチドピークランク(&amp;K)：</value>
   </data>
   <data name="&gt;&gt;label8.Name" xml:space="preserve">
     <value>label8</value>
@@ -568,7 +568,7 @@
     <value>13</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>繰り返し測定含有(&amp;C)：</value>
+    <value>繰り返し測定を含める(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -598,9 +598,9 @@
     <value>14</value>
   </data>
   <data name="comboReplicateUse.ToolTip" xml:space="preserve">
-    <value>繰り返し測定結果を最適化に使用するかを決定：
+    <value>繰り返し測定結果を微調整に使用するかを決定する：
 すべて - 繰り返し測定値の平均をとって、技術的繰り返し測定に使用する
-最良 - 各ペプチドに対して最良の繰り返し測定のみを分別に使用する</value>
+最良 - 最良の繰り返し測定のみを各ペプチドに対して使用する。</value>
   </data>
   <data name="&gt;&gt;comboReplicateUse.Name" xml:space="preserve">
     <value>comboReplicateUse</value>
@@ -630,12 +630,11 @@
     <value>8</value>
   </data>
   <data name="cbPreferLarger.Text" xml:space="preserve">
-    <value>大きいプロダクトイオンを選択する(&amp;P)</value>
+    <value>大きいプロダクトイオンを優先し選択する(&amp;P)</value>
   </data>
   <data name="cbPreferLarger.ToolTip" xml:space="preserve">
-    <value>小さい、選択性の良くないイオンではピーク面積が
-わずかしか上昇しない場合に、調整プロセスで大きいプロダクトイオンを
-選択します。</value>
+    <value>小さく選択性が低いプロダクトイオンと大きいプロダクトイオンでピーク面積が同等の場合、
+大きいプロダクトイオンを優先するように修正します。</value>
   </data>
   <data name="&gt;&gt;cbPreferLarger.Name" xml:space="preserve">
     <value>cbPreferLarger</value>
@@ -688,7 +687,7 @@
     <value>6</value>
   </data>
   <data name="labelMaxPeakRank.Text" xml:space="preserve">
-    <value>最大トランジションのピークのランク(&amp;T)：</value>
+    <value>最大トランジションピークランク(&amp;T)：</value>
   </data>
   <data name="&gt;&gt;labelMaxPeakRank.Name" xml:space="preserve">
     <value>labelMaxPeakRank</value>
@@ -712,12 +711,12 @@
     <value>3</value>
   </data>
   <data name="textMaxPeakFoundRatio.ToolTip" xml:space="preserve">
-    <value>次の数値を超えるピーク検出率を持つすべての成分は
+    <value>次の数値を超えるピーク検出率を持つ全ての成分は
 ドキュメントから削除されます。
 
-緑 = 1.0
+緑色 = 1.0
 橙色 &gt;= 0.5
-赤 &lt; 0.5</value>
+赤色 &lt; 0.5</value>
   </data>
   <data name="&gt;&gt;textMaxPeakFoundRatio.Name" xml:space="preserve">
     <value>textMaxPeakFoundRatio</value>
@@ -744,7 +743,7 @@
     <value>2</value>
   </data>
   <data name="label6.Text" xml:space="preserve">
-    <value>比率における最大ピーク(&amp;X)：</value>
+    <value>最大ピーク検出率(&amp;X)：</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -774,8 +773,7 @@
     <value>結果のないノードを削除(&amp;R)</value>
   </data>
   <data name="radioRemoveMissing.ToolTip" xml:space="preserve">
-    <value>測定結果のない成分はすべて
-ドキュメントから削除されます。</value>
+    <value>測定結果の無い成分は全てドキュメントから削除されます。</value>
   </data>
   <data name="&gt;&gt;radioRemoveMissing.Name" xml:space="preserve">
     <value>radioRemoveMissing</value>
@@ -830,12 +828,12 @@
     <value>1</value>
   </data>
   <data name="textMinPeakFoundRatio.ToolTip" xml:space="preserve">
-    <value>この数値を下回るピーク検出率を持つすべての成分は
+    <value>この数値を下回るピーク検出率を持つ全ての成分は
 ドキュメントから削除されます。
 
-緑 = 1.0
+緑色 = 1.0
 橙色 &gt;= 0.5
-赤 &lt; 0.5</value>
+赤色 &lt; 0.5</value>
   </data>
   <data name="&gt;&gt;textMinPeakFoundRatio.Name" xml:space="preserve">
     <value>textMinPeakFoundRatio</value>
@@ -889,8 +887,8 @@
     <value>3</value>
   </data>
   <data name="textMinIdotProduct.ToolTip" xml:space="preserve">
-    <value>MS1 プリカーサーピーク面積と予測される同位体分布の
-内積に対する比率がこの閾値を下回るすべての前駆体は
+    <value>MS1プリカーサーピーク面積を持つプリカーサーの
+予測される同位体分布の内積がこの閾値を下回るものは全て
 ドキュメントから削除されます。</value>
   </data>
   <data name="&gt;&gt;textMinIdotProduct.Name" xml:space="preserve">
@@ -948,8 +946,8 @@
     <value>1</value>
   </data>
   <data name="textMinDotProduct.ToolTip" xml:space="preserve">
-    <value>プロダクトイオンピーク面積のライブラリ
-スペクトル内積に対する比率がこの閾値を下回る前駆体はすべて
+    <value>プロダクトイオンピーク面積を持つプリカーサーの
+ライブラリスペクトル内積がこの閾値を下回るものは全て
 ドキュメントから削除されます。</value>
   </data>
   <data name="&gt;&gt;textMinDotProduct.Name" xml:space="preserve">
@@ -1007,7 +1005,7 @@
     <value>12</value>
   </data>
   <data name="groupLibCorr.Text" xml:space="preserve">
-    <value>予期相対強度相関度(&amp;E)：</value>
+    <value>予測相対強度相関度(&amp;E)：</value>
   </data>
   <data name="&gt;&gt;groupLibCorr.Name" xml:space="preserve">
     <value>groupLibCorr</value>
@@ -1061,7 +1059,7 @@
     <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>線形回帰の目標R値：</value>
+    <value>線形回帰式の目標のR値：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>

@@ -226,7 +226,7 @@
     <value>3</value>
   </data>
   <data name="proteinAccessions.Text" xml:space="preserve">
-    <value>登録(&amp;A)</value>
+    <value>アクセッション番号(&amp;A)</value>
   </data>
   <data name="&gt;&gt;proteinAccessions.Name" xml:space="preserve">
     <value>proteinAccessions</value>
@@ -286,7 +286,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>保持するタンパク質(&amp;P):</value>
+    <value>残して置おくタンパク質(&amp;P):</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -349,7 +349,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>タンパク質の受け入れ</value>
+    <value>タンパク質を許可</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>RefineProteinListDlg</value>

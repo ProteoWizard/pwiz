@@ -214,7 +214,7 @@
     <value>3</value>
   </data>
   <data name="labelIssue.Text" xml:space="preserve">
-    <value>以下のペプチドは現在のフィルタ基準を満たしませんでした：</value>
+    <value>次のペプチドは現在のフィルタ基準を満たしませんでした：</value>
   </data>
   <data name="&gt;&gt;labelIssue.Name" xml:space="preserve">
     <value>labelIssue</value>

@@ -463,7 +463,7 @@
     <value>6</value>
   </data>
   <data name="groupBox1.Text" xml:space="preserve">
-    <value>グラフ領域面積(&amp;G)：</value>
+    <value>領域面積をグラフ化(&amp;G)：</value>
   </data>
   <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
     <value>groupBox1</value>
@@ -490,7 +490,7 @@
     <value>4</value>
   </data>
   <data name="cbShowOverlappingLabels.Text" xml:space="preserve">
-    <value>重複ラベルを表示します</value>
+    <value>オーバーラップを示すラベルを表示します</value>
   </data>
   <data name="&gt;&gt;cbShowOverlappingLabels.Name" xml:space="preserve">
     <value>cbShowOverlappingLabels</value>
@@ -520,7 +520,7 @@
     <value>5</value>
   </data>
   <data name="cbShowMultiplePeptides.Text" xml:space="preserve">
-    <value>複数ペプチドを表示</value>
+    <value>複数のペプチドを表示</value>
   </data>
   <data name="&gt;&gt;cbShowMultiplePeptides.Name" xml:space="preserve">
     <value>cbShowMultiplePeptides</value>

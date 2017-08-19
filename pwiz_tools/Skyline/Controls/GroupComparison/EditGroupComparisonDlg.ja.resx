@@ -595,10 +595,10 @@
     <value>変位値</value>
   </data>
   <data name="comboNormalizationMethod.Items3" xml:space="preserve">
-    <value>グローバル標準に対し相対的</value>
+    <value>グローバル標準にする相対値</value>
   </data>
   <data name="comboNormalizationMethod.Items4" xml:space="preserve">
-    <value>内部標準に対し相対的</value>
+    <value>内標準に対する相対値</value>
   </data>
   <data name="comboNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 179</value>
@@ -766,7 +766,7 @@
     <value>0</value>
   </data>
   <data name="lblQValueCutoff.Text" xml:space="preserve">
-    <value>カットオフより大きな検知Q値を有するピークは欠けているものとして取り扱います。</value>
+    <value>カットオフより大きな検出のQ値を有するピークは欠けているものとして取り扱います。</value>
   </data>
   <data name="&gt;&gt;lblQValueCutoff.Name" xml:space="preserve">
     <value>lblQValueCutoff</value>
@@ -820,7 +820,7 @@
     <value>0</value>
   </data>
   <data name="lblSummaryMethod.Text" xml:space="preserve">
-    <value>概要メソッド：</value>
+    <value>メソッドの概要：</value>
   </data>
   <data name="&gt;&gt;lblSummaryMethod.Name" xml:space="preserve">
     <value>lblSummaryMethod</value>
@@ -874,7 +874,7 @@
     <value>2</value>
   </data>
   <data name="cbxUseZeroForMissingPeaks.Text" xml:space="preserve">
-    <value>欠けているピークにゼロを使用する</value>
+    <value>欠損しているピークはゼロを使用する</value>
   </data>
   <data name="&gt;&gt;cbxUseZeroForMissingPeaks.Name" xml:space="preserve">
     <value>cbxUseZeroForMissingPeaks</value>

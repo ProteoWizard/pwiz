@@ -135,7 +135,7 @@
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>保持時間標識を表示する強度の最小値を指定します。</value>
+    <value>保持時間の標識を表示する強度の最小値を指定します。</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -265,7 +265,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>保持時間強度閾値</value>
+    <value>保持時間の強度の閾値</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ChromatogramRTThresholdDlg</value>

@@ -262,7 +262,7 @@
     <value>8</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>プライマリトランジション数(&amp;P)：</value>
+    <value>最初のトランジション数(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -310,7 +310,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>スケジュールグラフのプロパティ</value>
+    <value>スケジューリンググラフのプロパティ</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SchedulingGraphPropertyDlg</value>

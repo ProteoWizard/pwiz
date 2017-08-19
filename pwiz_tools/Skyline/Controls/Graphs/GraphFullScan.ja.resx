@@ -202,7 +202,7 @@
     <value>23, 22</value>
   </data>
   <data name="magnifyBtn.ToolTipText" xml:space="preserve">
-    <value>選択区域にズーム</value>
+    <value>選択部分を拡大</value>
   </data>
   <data name="spectrumBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>

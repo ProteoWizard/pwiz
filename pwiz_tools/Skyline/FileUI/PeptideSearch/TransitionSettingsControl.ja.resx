@@ -132,7 +132,7 @@
     <value>0</value>
   </data>
   <data name="lblPrecursorCharges.Text" xml:space="preserve">
-    <value>プリカーサー電荷 (&amp;P)：</value>
+    <value>プリカーサーの電荷 (&amp;P)：</value>
   </data>
   <data name="&gt;&gt;lblPrecursorCharges.Name" xml:space="preserve">
     <value>lblPrecursorCharges</value>
@@ -280,7 +280,7 @@
     <value>7</value>
   </data>
   <data name="lblTolerance.Text" xml:space="preserve">
-    <value>イオン一致耐性：</value>
+    <value>イオン許容誤差：</value>
   </data>
   <data name="&gt;&gt;lblTolerance.Name" xml:space="preserve">
     <value>lblTolerance</value>
@@ -445,7 +445,7 @@
     <value>6</value>
   </data>
   <data name="cbExclusionUseDIAWindow.Text" xml:space="preserve">
-    <value>排除に対しDIAプリカーサーウィンドウを使用 (&amp;U)</value>
+    <value>除外にDIAプリカーサーウィンドウを使用します(&amp;U)</value>
   </data>
   <data name="&gt;&gt;cbExclusionUseDIAWindow.Name" xml:space="preserve">
     <value>cbExclusionUseDIAWindow</value>

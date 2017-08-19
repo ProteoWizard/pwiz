@@ -409,7 +409,7 @@
     <value>{0}从肽中缺失</value>
   </data>
   <data name="StartPage_DIA_Description" xml:space="preserve">
-    <value>使用数据独立采集 (DIA) 作业获得亲身体验，通过使用由相同仪器依次采集的 DIA 和 DDA 运行的工作流。定义和导出 DIA 隔离方案。通过在 DIA 运行前采集的 DDA 数据，为实验建立谱图库。根据谱图库，为目标蛋白质组集选择肽段和离子对。在 Skyline 中导入和分析相关的 DIA运行，掌握开始处理 DIA数据的简单工作流。</value>
+    <value>使用非数据依赖采集 (DIA) 作业获得亲身体验，通过使用由相同仪器依次采集的 DIA 和 DDA 运行的工作流。定义和导出 DIA 隔离方案。通过在 DIA 运行前采集的 DDA 数据，为实验建立谱图库。根据谱图库，为目标蛋白质组集选择肽段和离子对。在 Skyline 中导入和分析相关的 DIA运行，掌握开始处理 DIA数据的简单工作流。</value>
   </data>
   <data name="ResultsGrid_ResultsGrid_User_Set" xml:space="preserve">
     <value>用户设定</value>
@@ -2155,7 +2155,7 @@
     <value>Skyline 文档</value>
   </data>
   <data name="AnnotationDef_AnnotationTarget_TransitionResults" xml:space="preserve">
-    <value>离子对结果</value>
+    <value>离子对结果（多个）</value>
   </data>
   <data name="PeptideGridViewDriver_ValidateRow_The_pasted_text_must_have_two_columns_" xml:space="preserve">
     <value>粘贴的文本必须有两列。</value>
@@ -3343,7 +3343,7 @@
     <value>软件包安装失败。在即时窗口中记录输出失败。</value>
   </data>
   <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison" xml:space="preserve">
-    <value>重复测定比较</value>
+    <value>样本比较</value>
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_entry" xml:space="preserve">
     <value>条目</value>
@@ -3906,7 +3906,7 @@
     <value>每个条目都需要修饰肽段序列。</value>
   </data>
   <data name="AnnotationDef_AnnotationTarget_PrecursorResults" xml:space="preserve">
-    <value>母离子结果</value>
+    <value>母离子结果（多个）</value>
   </data>
   <data name="ConfigureToolsDlg_unpackZipTool_Invalid_Tool_Description_in_file__0__" xml:space="preserve">
     <value>文件{0}中的无效工具描述。</value>
@@ -4030,7 +4030,7 @@
     <value>针对{0}库构建二进制缓存</value>
   </data>
   <data name="ComparePeakPickingDlg_InitializeGraphPanes_Observed_False_Positive_Rate" xml:space="preserve">
-    <value>观察的错误判断比率</value>
+    <value>观察到的错误判断比率</value>
   </data>
   <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score" xml:space="preserve">
     <value>训练一个模型，以查看复合物得分</value>
@@ -4489,7 +4489,7 @@
     <value>将标准类型设定为{0}</value>
   </data>
   <data name="AbstractIsoWindowMapper_GetWindowMask_Tried_to_get_a_window_mask_for__0___a_spectrum_with_previously_unobserved_isolation_windows__Demultiplexing_requires_a_repeating_cycle_of_isolation_windows_" xml:space="preserve">
-    <value>尝试针对{0}获取窗口覆盖，因先前的隔离窗口无法检测谱图。无需同时检测则请重设隔离窗口。</value>
+    <value>尝试针对{0}获取窗口覆盖，因先前的隔离窗口未观察到的测谱图。无需同时检测则请重设隔离窗口。</value>
   </data>
   <data name="ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_import_results_for_all_peptides_in_the_document" xml:space="preserve">
     <value>如要导出预定方法，您必须首先在文档中导入针对所有肽段的结果。</value>
@@ -5292,7 +5292,7 @@
     <value>未能发现有效的 Analyst 安装</value>
   </data>
   <data name="ReportSpecList_GetDefaults_Transition_Results" xml:space="preserve">
-    <value>离子对结果</value>
+    <value>离子对结果（多个）</value>
   </data>
   <data name="ViewLibraryDlg_MatchModifications_these" xml:space="preserve">
     <value>这些</value>
@@ -9180,7 +9180,7 @@
     <value>将全扫描子离子质量精确度更改为 {0} ppm。</value>
   </data>
   <data name="SpectrumLibraryInfoDlg_SetDetailsText_Unique_Precursors___0_" xml:space="preserve">
-    <value>唯一母离子：{0}</value>
+    <value>特异的母离子：{0}</value>
   </data>
     <data name="UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__" xml:space="preserve">
     <value>升级到 {0}（正在下载 {1} 个，共 {2} 个）</value>
@@ -9258,13 +9258,13 @@
     <value>当前 ({0})</value>
   </data>
   <data name="SkylineVersion_GetCurrentVersionName_Developer_Build" xml:space="preserve">
-    <value>开发者构建</value>
+    <value>开发者版本</value>
   </data>
   <data name="SkylineVersion_V3_6_Skyline_3_6" xml:space="preserve">
     <value>Skyline 3.6</value>
   </data>
   <data name="GraphData_CorrelationLabel_Measured_Time___0__" xml:space="preserve">
-    <value>测量时间 ({0})</value>
+    <value>测量的时间 ({0})</value>
   </data>
   <data name="GraphData_ResidualsLabel_Time_from_Regression___0__" xml:space="preserve">
     <value>回归的时间 ({0})</value>
@@ -9312,7 +9312,7 @@
     <value>背景蛋白质组“{0}”使用旧格式。 为了能高效找到肽序列，应升级背景蛋白质组到最新版本。 是否想现在升级背景蛋白质组？</value>
   </data>
   <data name="ViewLibraryDlg_EnsureDigested_Copying_database" xml:space="preserve">
-    <value>复制数据库</value>
+    <value>正在复制数据库</value>
   </data>
   <data name="EditIrtCalcDlg_OkDialog_Spectral_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_" xml:space="preserve">
     <value>谱图库不可被修饰。您必须将此 iRT 计算器存储为新文件。</value>
@@ -9345,7 +9345,7 @@
     <value>您必须为已过滤的库输入名称。</value>
   </data>
   <data name="FilterMidasLibraryDlg_OkDialog_A_library_with_this_name_already_exists_" xml:space="preserve">
-    <value>已存在此名称的库。</value>
+    <value>此名称的库已存在。</value>
   </data>
   <data name="PeptideSettingsUI_ShowFilterMidasDlg_Multiple_MIDAS_libraries_in_document__Select_only_one_before_filtering_" xml:space="preserve">
     <value>文档中有多个 MIDAS 库。在过滤前仅选择一个。</value>
@@ -9387,7 +9387,7 @@
     <value>尝试重新校准时缺失一个标准肽段。</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_Processing_Retention_Times" xml:space="preserve">
-    <value>处理保留时间</value>
+    <value>正在处理保留时间</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_" xml:space="preserve">
     <value>处理保留时间时出错。</value>
@@ -9453,7 +9453,7 @@
     <value>茄色配柠檬色</value>
   </data>
   <data name="ColorSchemeList_GetDefaults_Distinct" xml:space="preserve">
-    <value>明显不同</value>
+    <value>明显不同的</value>
   </data>
   <data name="ColorSchemeList_GetDefaults_Colorblind_friendly" xml:space="preserve">
     <value>高对比度</value>
