@@ -59,8 +59,11 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-            Settings.Default.AreaCVShowCVCutoff = Settings.Default.AreaCVShowMedianCV = false;
-            AreaGraphController.GroupByAnnotation = AreaGraphController.GroupByGroup = null;
+            RunUI(() =>
+            {
+                Settings.Default.AreaCVShowCVCutoff = Settings.Default.AreaCVShowMedianCV = false;
+                AreaGraphController.GroupByAnnotation = AreaGraphController.GroupByGroup = null;
+            });
 
             OpenDocument(TestFilesDir.GetTestPath(@"BrukerDIA3_0.sky"));
 
@@ -86,12 +89,12 @@ namespace TestPerf
 
             WaitForGraphs();
 
-            AreaGraphController.MinimumDetections = 2;
-            OpenAndChangeAreaCVProperties(p => p.QValueCutoff = 0.01);
-
             var graph = SkylineWindow.GraphPeakArea;
             var toolbar = graph.Toolbar as AreaCVToolbar;
             Assert.IsNotNull(toolbar);
+
+            RunUI(() => toolbar.SetMinimumDetections(2));
+            OpenAndChangeAreaCVProperties(p => p.QValueCutoff = 0.01);
 
             // Test if the toolbar is there and if the displayed data is correct
             T pane;
@@ -119,7 +122,7 @@ namespace TestPerf
             WaitForGraphs();
             AssertDataCorrect(pane, statsStartIndex++);
 
-            AreaGraphController.MinimumDetections = 3;
+            RunUI(() => toolbar.SetMinimumDetections(3));
             UpdateGraphAndWait(graph);
             AssertDataCorrect(pane, statsStartIndex++);
 
@@ -149,12 +152,12 @@ namespace TestPerf
 
             WaitForGraphs();
 
-            AreaGraphController.MinimumDetections = 2;
-            OpenAndChangeAreaCVProperties(p => p.QValueCutoff = double.NaN);
-
             var graph = SkylineWindow.GraphPeakArea;
             var toolbar = graph.Toolbar as AreaCVToolbar;
             Assert.IsNotNull(toolbar);
+
+            RunUI(() => toolbar.SetMinimumDetections(2));
+            OpenAndChangeAreaCVProperties(p => p.QValueCutoff = double.NaN);
 
             // Make sure toolbar is there, combo box items are correct and data is correct
             T pane;
@@ -174,7 +177,7 @@ namespace TestPerf
 
         private static AreaCVGraphData GetCurrentData(SummaryGraphPane pane)
         {
-            var testSupport = pane as IAreaCVHistogramTestSupport;
+            var testSupport = pane as IAreaCVHistogramInfo;
             if (testSupport != null)
                 return testSupport.CurrentData;
 
@@ -190,18 +193,14 @@ namespace TestPerf
 
             RunUI(() =>
             {
-                var testSupport = pane as IAreaCVHistogramTestSupport;
+                var testSupport = pane as IAreaCVHistogramInfo;
                 int objects = testSupport != null ? testSupport.Objects : 0;
                 var graphDataStatistics = new AreaCVGraphDataStatistics(data, objects);
 
                 if (!RecordData)
-                {
                     Assert.AreEqual(STATS[statsIndex], graphDataStatistics);
-                }
                 else if (record)
-                {
                     Console.WriteLine(graphDataStatistics.ToCode());
-                }
             });
         }
     }

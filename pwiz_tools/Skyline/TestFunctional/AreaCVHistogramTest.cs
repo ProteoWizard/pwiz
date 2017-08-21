@@ -24,7 +24,6 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Controls.Graphs;
 using ZedGraph;
@@ -137,10 +136,14 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
 
             // Reset settings
-            Settings.Default.AreaCVHistogramBinWidth = 1.0;
-            RunUI(() => SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.targets));
-            AreaGraphController.GroupByGroup = AreaGraphController.GroupByAnnotation = null;
-            RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.none));
+            RunUI(() =>
+            {
+                SkylineWindow.SetAreaCVBinWidth(1.0);
+                SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.targets);
+                SkylineWindow.SetAreaCVGroup(null);
+                SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.none);
+            });
+
             OpenAndChangeAreaCVProperties(f => f.ShowCVCutoff = f.ShowMedianCV = true);
 
             var graph = SkylineWindow.GraphPeakArea;
@@ -154,17 +157,18 @@ namespace pwiz.SkylineTestFunctional
             AssertDataCorrect(pane, statsStartIndex++);
 
             // Test if the data is correct after changing the bin width and disabling the show cv cutoff option (which affects GetTotalBars)
-            Settings.Default.AreaCVHistogramBinWidth = 2.0;
+            RunUI(() => SkylineWindow.SetAreaCVBinWidth(2.0));
             OpenAndChangeAreaCVProperties(f => f.ShowCVCutoff = false);
             AssertDataCorrect(pane, statsStartIndex++);
 
             // Make sure that there are no bars when the points type is decoys
             RunUI(() => SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.decoys));
             OpenAndChangeAreaCVProperties(f => f.ShowMedianCV = false);
+            WaitForConditionUI(() => GetCurrentData(pane) != null);
             Assert.IsTrue(pane.GetBoxObjCount() == 0);
 
             // Make sure the toolbar is displaying the annotations correctly and that grouping by "All" works
-            AreaGraphController.GroupByGroup = "SubjectId";
+            RunUI(() => SkylineWindow.SetAreaCVGroup("SubjectId"));
             RunUI(() => SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.targets));
             WaitForGraphs();
 
@@ -187,13 +191,12 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(700, () => GetCache(pane).DataCount == 45);
             
             // Make sure that grouping by an annotation works correctly
-            AreaGraphController.GroupByAnnotation = "D102";
+            RunUI(() => SkylineWindow.SetAreaCVAnnotation("D102"));
             UpdateGraphAndWait(graph);
             AssertDataCorrect(pane, statsStartIndex++);
 
             // Verify that clicking a bar/point opens the find resuls and correctly shows the peptides
-
-            var p = new PointF(16.0f, 10.0f);// Center of 14 CV bar
+            var p = new PointF(15.0f, 10.0f); // Center of 14 CV bar
             p = pane.GeneralTransform(p, CoordType.AxisXYScale);
             var mouseEventArgs = new MouseEventArgs(MouseButtons.Left, 1, (int)p.X, (int)p.Y, 0);
             string[][] items = null;
@@ -260,11 +263,11 @@ namespace pwiz.SkylineTestFunctional
             return GetPaneValue(pane, support => support.CurrentData);
         }
 
-        private static TVal GetPaneValue<TVal>(SummaryGraphPane pane, Func<IAreaCVHistogramTestSupport, TVal> getValue)
+        private static TVal GetPaneValue<TVal>(SummaryGraphPane pane, Func<IAreaCVHistogramInfo, TVal> getValue)
         {
-            var testSupport = pane as IAreaCVHistogramTestSupport;
-            if (testSupport != null)
-                return getValue(testSupport);
+            var info = pane as IAreaCVHistogramInfo;
+            if (info != null)
+                return getValue(info);
 
             Assert.Fail("Graph pane is not a histogram/histogram2d graph pane");
             return default(TVal);
@@ -273,23 +276,19 @@ namespace pwiz.SkylineTestFunctional
         private void AssertDataCorrect(SummaryGraphPane pane, int statsIndex)
         {
             AreaCVGraphData data = null;
-            WaitForConditionUI(() => (data = GetCurrentData(pane)) != null && data.IsValid);
+            WaitForConditionUI(() => (data = GetCurrentData(pane)) != null);
             WaitForGraphs();
 
             RunUI(() =>
             {
-                var testSupport = pane as IAreaCVHistogramTestSupport;
-                int objects = testSupport != null ? testSupport.Objects : 0;
+                var info = pane as IAreaCVHistogramInfo;
+                int objects = info != null ? info.Objects : 0;
                 var graphDataStatistics = new AreaCVGraphDataStatistics(data, objects);
 
                 if (!RecordData)
-                {
                     Assert.AreEqual(STATS[statsIndex], new AreaCVGraphDataStatistics(data, objects));
-                }
                 else
-                {
                     Console.WriteLine(graphDataStatistics.ToCode());
-                }
             });
         }
     }

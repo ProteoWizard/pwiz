@@ -4074,12 +4074,10 @@ namespace pwiz.Skyline
         private void cvAreaHistogramGroupByMenuItem_Click(object sender, EventArgs e)
         {
             var item = (ToolStripMenuItem) sender;
-            if (((ToolStripMenuItem) item.OwnerItem).DropDownItems.IndexOf(item) == 0)
-                AreaGraphController.GroupByGroup = AreaGraphController.GroupByAnnotation = null;
-            else
-                AreaGraphController.GroupByGroup = item.Text;
-
-            UpdatePeakAreaGraph();
+            string group = null;
+            if (((ToolStripMenuItem) item.OwnerItem).DropDownItems.IndexOf(item) != 0)
+                group = item.Text;
+            SetAreaCVGroup(group);
         }
 
         private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
@@ -4146,6 +4144,22 @@ namespace pwiz.Skyline
                 {
                     Checked = (annotationDef.Name == currentOrderBy)
                 };
+        }
+
+        public void SetAreaCVGroup(string group)
+        {
+            AreaGraphController.GroupByGroup = group;
+            if (string.IsNullOrEmpty(group))
+                AreaGraphController.GroupByAnnotation = null;
+            UpdatePeakAreaGraph();
+        }
+
+        public void SetAreaCVAnnotation(string annotation, bool update = true)
+        {
+            AreaGraphController.GroupByAnnotation = annotation;
+
+            if(update)
+                UpdatePeakAreaGraph();
         }
 
         private void areaCVtargetsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -4296,12 +4310,13 @@ namespace pwiz.Skyline
             SetNormalizationMethod(AreaCVNormalizationMethod.none);
         }
 
-        public void SetNormalizationMethod(AreaCVNormalizationMethod method, int ratioIndex = -1)
+        public void SetNormalizationMethod(AreaCVNormalizationMethod method, int ratioIndex = -1, bool update = true)
         {
             AreaGraphController.NormalizationMethod = method;
             AreaGraphController.AreaCVRatioIndex = ratioIndex;
 
-            UpdatePeakAreaGraph();
+            if(update)
+                UpdatePeakAreaGraph();
         }
 
         public void ShowPeakAreaPeptideGraph()

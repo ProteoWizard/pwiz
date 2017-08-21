@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 MedianCV = new Statistics(data.Select(d => d.CV)).Median();
         }
 
-        public static readonly AreaCVGraphData INVALID = new AreaCVGraphData(null, null);
+        public static readonly AreaCVGraphData INVALID = new AreaCVGraphData(null, new AreaCVGraphSettings((GraphTypePeakArea)~0, (AreaCVNormalizationMethod)~0, -1, string.Empty, string.Empty, (PointsTypePeakArea)~0, double.NaN, double.NaN, -1, double.NaN));
 
         private void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas, PeptideDocNode peptide, string annotation)
         {

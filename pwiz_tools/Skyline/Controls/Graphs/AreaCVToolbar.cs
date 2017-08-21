@@ -67,13 +67,13 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (index == 0)
             {
-                AreaGraphController.GroupByAnnotation = null;
+                Program.MainWindow.SetAreaCVAnnotation(null, false);
                 toolStripNumericDetections.NumericUpDownControl.Maximum = _graphSummary.DocumentUIContainer.DocumentUI
                     .MeasuredResults.Chromatograms.Count;
             }
             else
             {
-                AreaGraphController.GroupByAnnotation = toolStripComboGroup.Items[index].ToString();
+                Program.MainWindow.SetAreaCVAnnotation(toolStripComboGroup.Items[index].ToString(), false);
                 toolStripNumericDetections.NumericUpDownControl.Maximum = AnnotationHelper
                     .GetReplicateIndices(_graphSummary.DocumentUIContainer.DocumentUI.Settings,
                         AreaGraphController.GroupByGroup, AreaGraphController.GroupByAnnotation).Length;
@@ -98,8 +98,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (index < _standardTypeCount)
             {
-                AreaGraphController.NormalizationMethod = AreaCVNormalizationMethod.ratio;
-                AreaGraphController.AreaCVRatioIndex = index;
+                Program.MainWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, index, false);
             }
             else
             {
@@ -107,23 +106,24 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!_graphSummary.DocumentUIContainer.DocumentUI.Settings.HasGlobalStandardArea)
                     ++index;
 
+                var normalizationMethod = AreaCVNormalizationMethod.none;
                 switch (index)
                 {
                     case 0:
-                        AreaGraphController.NormalizationMethod =
+                        normalizationMethod =
                             _graphSummary.DocumentUIContainer.Document.Settings.HasGlobalStandardArea
                                 ? AreaCVNormalizationMethod.global_standards
                                 : AreaCVNormalizationMethod.medians;
                         break;
                     case 1:
-                        AreaGraphController.NormalizationMethod = AreaCVNormalizationMethod.medians;
+                        normalizationMethod = AreaCVNormalizationMethod.medians;
                         break;
                     case 2:
-                        AreaGraphController.NormalizationMethod = AreaCVNormalizationMethod.none;
+                        normalizationMethod = AreaCVNormalizationMethod.none;
                         break;
                 }
 
-                AreaGraphController.AreaCVRatioIndex = -1;
+                Program.MainWindow.SetNormalizationMethod(normalizationMethod, -1, false);
             }
 
             if (IsCurrentDataCached())
@@ -138,7 +138,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void NumericUpDownControl_ValueChanged(object sender, EventArgs e)
         {
-            AreaGraphController.MinimumDetections = (int)toolStripNumericDetections.NumericUpDownControl.Value;
+            SetMinimumDetections((int)toolStripNumericDetections.NumericUpDownControl.Value);
+        }
+
+        public void SetMinimumDetections(int min)
+        {
+            AreaGraphController.MinimumDetections = min;
 
             if (IsCurrentDataCached())
             {
@@ -152,23 +157,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool IsCurrentDataCached()
         {
-            AreaCVGraphData.AreaCVGraphDataCache cache;
-            var pane = _graphSummary.GraphPanes.FirstOrDefault();
-            if (pane == null)
-                return false;
-            else if (pane is AreaCVHistogramGraphPane)
-            {
-                cache = ((AreaCVHistogramGraphPane) pane).Cache;
-            }
-            else if (pane is AreaCVHistogram2DGraphPane)
-            {
-                cache = ((AreaCVHistogram2DGraphPane) pane).Cache;
-            }
-            else
+            var info = _graphSummary.GraphPanes.FirstOrDefault() as IAreaCVHistogramInfo;
+            if (info == null)
                 return false;
 
-            return cache.IsValidFor(_graphSummary.DocumentUIContainer.DocumentUI, new AreaCVGraphData.AreaCVGraphSettings()) &&
-                cache.Get(AreaGraphController.GroupByGroup,
+            return info.Cache.IsValidFor(_graphSummary.DocumentUIContainer.DocumentUI, new AreaCVGraphData.AreaCVGraphSettings()) &&
+                info.Cache.Get(AreaGraphController.GroupByGroup,
                     AreaGraphController.GroupByAnnotation,
                     AreaGraphController.MinimumDetections,
                     AreaGraphController.NormalizationMethod,

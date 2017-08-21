@@ -125,11 +125,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!annotations.Contains(GroupByAnnotation))
                         GroupByAnnotation = null;
 
-                    var pane = GraphSummary.GraphPanes.FirstOrDefault();
-                    if (pane is AreaCVHistogramGraphPane)
-                        ((AreaCVHistogramGraphPane) pane).Cache.Cancel();
-                    else if(pane is AreaCVHistogram2DGraphPane)
-                        ((AreaCVHistogram2DGraphPane) pane).Cache.Cancel();
+                    var paneInfo = GraphSummary.GraphPanes.FirstOrDefault() as IAreaCVHistogramInfo;
+                    if(paneInfo != null)
+                        paneInfo.Cache.Cancel();
                 }
             }
         }
@@ -166,7 +164,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (AreaView == AreaNormalizeToView.area_ratio_view && !mods.HasHeavyModifications)
                 AreaView = AreaNormalizeToView.none;
 
-            // Only ratios if type and info match
+            // Only show ratios if type and info match
             if (NormalizationMethod == AreaCVNormalizationMethod.ratio && !mods.HasHeavyModifications ||
                 NormalizationMethod == AreaCVNormalizationMethod.global_standards && !settings.HasGlobalStandardArea)
             {

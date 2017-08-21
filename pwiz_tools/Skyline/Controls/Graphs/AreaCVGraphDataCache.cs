@@ -23,19 +23,37 @@ using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class AreaCVGraphData
     {
+        private class CacheInfo
+        {
+            public CacheInfo()
+            {
+                Data = new List<AreaCVGraphData>();
+                Document = null;
+                Settings = null;
+            }
+
+            public void Clear()
+            {
+                Data.Clear();
+                Document = null;
+                Settings = null;
+            }
+
+            public readonly List<AreaCVGraphData> Data;
+            public SrmDocument Document { get; set; }
+            public AreaCVGraphSettings Settings { get; set; }
+        }
+
         public class AreaCVGraphDataCache : IDisposable
         {
             private readonly StackWorker<GraphDataProperties> _producerConsumer;
-            private readonly List<AreaCVGraphData> _data;
-            private SrmDocument _document;
-            private AreaCVGraphSettings _settings;
+            private readonly CacheInfo _cacheInfo;
             private CancellationTokenSource _tokenSource;
 
             private readonly object _requestLock = new object();
@@ -48,26 +66,26 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 _producerConsumer = new StackWorker<GraphDataProperties>(null, CacheData);
                 _producerConsumer.RunAsync(MAX_THREADS, "AreaCVGraphDataCache"); // Not L10N
-                _data = new List<AreaCVGraphData>();
+                _cacheInfo = new CacheInfo();
                 _tokenSource = new CancellationTokenSource();
             }
 
-            public bool TryGet(SrmDocument document, AreaCVGraphSettings settings,
-                GraphDataProperties properties, Action<AreaCVGraphData> callback, out AreaCVGraphData result)
+            public bool TryGet(SrmDocument document, AreaCVGraphSettings settings, Action<AreaCVGraphData> callback, out AreaCVGraphData result)
             {
+                var properties = new GraphDataProperties(settings);
                 if (!IsValidFor(document, settings))
                 {
                     Cancel();
 
-                    lock (_data)
+                    lock (_cacheInfo)
                     {
-                        _data.Clear();
-                        _document = document;
-                        _settings = settings;
+                        _cacheInfo.Clear();
+                        _cacheInfo.Document = document;
+                        _cacheInfo.Settings = settings;
                     }
 
                     // Get a list of all properties that we want to cache data for, except for the data that just got requested
-                    var propertyList = new List<GraphDataProperties>(GetPropertyVariants().Except(new[] {properties}));
+                    var propertyList = new List<GraphDataProperties>(GetPropertyVariants(settings).Except(new[] { properties }));
                     _producerConsumer.Add(propertyList, false, false);
                 }
 
@@ -95,22 +113,30 @@ namespace pwiz.Skyline.Controls.Graphs
                 var result = Get(properties);
                 if (result == null)
                 {
-                    var factor = AreaGraphController.GetAreaCVFactorToDecimal();
-                    result = new AreaCVGraphData(_document,
-                        new AreaCVGraphSettings(AreaGraphController.GraphType,
+                    SrmDocument document;
+                    AreaCVGraphSettings settings;
+                    lock (_cacheInfo)
+                    {
+                        document = _cacheInfo.Document;
+                        settings = _cacheInfo.Settings;
+                    }
+
+                    result = new AreaCVGraphData(document,
+                        new AreaCVGraphSettings(settings.GraphType,
                             properties.NormalizationMethod,
                             properties.RatioIndex,
-                            AreaGraphController.GroupByGroup,
+                            settings.Group,
                             properties.Annotation,
-                            AreaGraphController.PointsType,
-                            Settings.Default.AreaCVQValueCutoff,
-                            Settings.Default.AreaCVCVCutoff / factor,
+                            settings.PointsType,
+                            settings.QValueCutoff,
+                            settings.CVCutoff,
                             properties.MinimumDetections,
-                            Settings.Default.AreaCVHistogramBinWidth / factor));
+                            settings.BinWidth));
 
-                    lock (_data)
+                    lock (_cacheInfo)
                     {
-                        _data.Add(result);
+                        if(IsValidFor(document, settings))
+                            _cacheInfo.Data.Add(result);
                     }
                 }
 
@@ -126,10 +152,10 @@ namespace pwiz.Skyline.Controls.Graphs
             public AreaCVGraphData Get(string group, string annotation, int minimumDetections,
                 AreaCVNormalizationMethod normalizationMethod, int ratioIndex)
             {
-                lock (_data)
+                lock (_cacheInfo)
                 {
                     // Linear search, but very short list
-                    return _data.FirstOrDefault(d => d._graphSettings.Group == group &&
+                    return _cacheInfo.Data.FirstOrDefault(d => d._graphSettings.Group == group &&
                                                      d._graphSettings.Annotation == annotation &&
                                                      d._graphSettings.MinimumDetections == minimumDetections &&
                                                      d._graphSettings.NormalizationMethod == normalizationMethod &&
@@ -139,64 +165,73 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public bool IsValidFor(SrmDocument document, AreaCVGraphSettings settings)
             {
-                return _document != null && _settings != null &&
-                       ReferenceEquals(_document.Children, document.Children) &&
-                       AreaCVGraphSettings.CacheEqual(_settings, settings);
+                lock (_cacheInfo)
+                {
+                    return _cacheInfo.Document != null && _cacheInfo.Settings != null &&
+                           ReferenceEquals(_cacheInfo.Document.Children, document.Children) &&
+                           AreaCVGraphSettings.CacheEqual(_cacheInfo.Settings, settings);
+                }
             }
 
-            private static int GetMinDetectionsForAnnotation(SrmDocument document, string annotationValue)
+            private static int GetMinDetectionsForAnnotation(SrmDocument document, AreaCVGraphSettings graphSettings, string annotationValue)
             {
-                return document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained && !double.IsNaN(Settings.Default.AreaCVQValueCutoff)
-                    ? AnnotationHelper.GetReplicateIndices(document.Settings, AreaGraphController.GroupByGroup, annotationValue).Length
+                return document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained && !double.IsNaN(graphSettings.QValueCutoff)
+                    ? AnnotationHelper.GetReplicateIndices(document.Settings, graphSettings.Group, annotationValue).Length
                     : 2;
             }
 
-            private IEnumerable<GraphDataProperties> GetPropertyVariants()
+            private IEnumerable<GraphDataProperties> GetPropertyVariants(AreaCVGraphSettings graphSettings)
             {
-                var annotationsArray = AnnotationHelper.GetPossibleAnnotations(_document.Settings,
-                    AreaGraphController.GroupByGroup, AnnotationDef.AnnotationTarget.replicate);
+                SrmDocument document;
+                lock (_cacheInfo)
+                {
+                    document = _cacheInfo.Document;
+                }
+
+                var annotationsArray = AnnotationHelper.GetPossibleAnnotations(document.Settings,
+                    graphSettings.Group, AnnotationDef.AnnotationTarget.replicate);
 
                 // Add an entry for All
                 var annotations = annotationsArray.Concat(new string[] { null }).ToList();
 
                 var normalizationMethods = new List<AreaCVNormalizationMethod> { AreaCVNormalizationMethod.none, AreaCVNormalizationMethod.medians, AreaCVNormalizationMethod.ratio };
-                if (_document.Settings.HasGlobalStandardArea)
+                if (document.Settings.HasGlobalStandardArea)
                     normalizationMethods.Add(AreaCVNormalizationMethod.global_standards);
 
                 // First cache for current normalization method
-                if (normalizationMethods.Remove(AreaGraphController.NormalizationMethod))
-                    normalizationMethods.Insert(0, AreaGraphController.NormalizationMethod);
+                if (normalizationMethods.Remove(graphSettings.NormalizationMethod))
+                    normalizationMethods.Insert(0, graphSettings.NormalizationMethod);
 
                 // First cache the histograms for the current annotation
-                if (annotations.Remove(AreaGraphController.GroupByAnnotation))
-                    annotations.Insert(0, AreaGraphController.GroupByAnnotation);
+                if (annotations.Remove(graphSettings.Annotation))
+                    annotations.Insert(0, graphSettings.Annotation);
 
                 foreach (var n in normalizationMethods)
                 {
-                    bool isRatio = n == AreaCVNormalizationMethod.ratio;
+                    var isRatio = n == AreaCVNormalizationMethod.ratio;
                     // There can be RatioInternalStandardTypes even though HasHeavyModifications is false
-                    if (isRatio && !_document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
+                    if (isRatio && !document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
                         continue;
 
                     var ratioIndices = isRatio
-                        ? Enumerable.Range(0, _document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count).ToList()
+                        ? Enumerable.Range(0, document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count).ToList()
                         : new List<int> { -1 };
 
-                    if (AreaGraphController.AreaCVRatioIndex != -1)
+                    if (graphSettings.RatioIndex != -1)
                     {
-                        if (ratioIndices.Remove(AreaGraphController.AreaCVRatioIndex))
-                            ratioIndices.Insert(0, AreaGraphController.AreaCVRatioIndex);
+                        if (ratioIndices.Remove(graphSettings.RatioIndex))
+                            ratioIndices.Insert(0, graphSettings.RatioIndex);
                     }
 
                     foreach (var r in ratioIndices)
                     {
                         foreach (var a in annotations)
                         {
-                            var minDetections = GetMinDetectionsForAnnotation(_document, a);
+                            var minDetections = GetMinDetectionsForAnnotation(document,graphSettings, a);
 
                             for (var i = 2; i <= minDetections; ++i)
                             {
-                                yield return new GraphDataProperties(AreaGraphController.GroupByGroup, n, r, a, i);
+                                yield return new GraphDataProperties(graphSettings.Group, n, r, a, i);
                             }
                         }
                     }
@@ -236,7 +271,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     _tokenSource.Cancel();
                     _producerConsumer.Abort(true);
                     _tokenSource.Dispose();
-                    _data.Clear();
+                    lock (_cacheInfo)
+                    {
+                        _cacheInfo.Clear();
+                    }
                     IsDisposed = true;
                 }
             }
@@ -294,7 +332,16 @@ namespace pwiz.Skyline.Controls.Graphs
 
             #region Functional test support
 
-            public int DataCount { get { return _data.Count; } }
+            public int DataCount
+            {
+                get
+                {
+                    lock (_cacheInfo)
+                    {
+                        return _cacheInfo.Data.Count;
+                    }
+                }
+            }
 
             #endregion
         }

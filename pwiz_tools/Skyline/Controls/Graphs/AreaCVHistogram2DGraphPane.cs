@@ -31,7 +31,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class AreaCVHistogram2DGraphPane : SummaryGraphPane, IDisposable, IAreaCVHistogramTestSupport
+    public class AreaCVHistogram2DGraphPane : SummaryGraphPane, IDisposable, IAreaCVHistogramInfo
     {
         private readonly AreaCVGraphData.AreaCVGraphDataCache _cache;
         private AreaCVGraphData _areaCVGraphData;
@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             CurveList.Clear();
 
-            var gotData = _cache.TryGet(_document, settings, new AreaCVGraphData.AreaCVGraphDataCache.GraphDataProperties(settings), DataCallback, out _areaCVGraphData);
+            var gotData = _cache.TryGet(_document, settings, DataCallback, out _areaCVGraphData);
 
             if (!gotData)
             {
