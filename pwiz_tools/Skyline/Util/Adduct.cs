@@ -1115,9 +1115,11 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public TypedMass ApplyToMass(TypedMass neutralMass)
         {
-            var adductMass = neutralMass.IsHeavy() ? 
-                neutralMass: // Mass already takes isotopes into account
-                neutralMass.MassType.IsAverage() ? (IsotopesIncrementalAverageMass + AverageMassAdduct) : (IsotopesIncrementalMonoMass + MonoMassAdduct); // Mass of the Na and 2*3(mass C' - mass C) in [2M3C13+Na]
+            var adductMass = neutralMass.IsHeavy()
+                ? neutralMass // Mass already takes isotopes into account
+                : neutralMass.MassType.IsAverage()
+                    ? IsotopesIncrementalAverageMass + AverageMassAdduct
+                    : IsotopesIncrementalMonoMass + MonoMassAdduct; // Mass of the Na and 2*3(mass C' - mass C) in [2M3C13+Na]
             Assume.IsTrue(adductMass.IsHeavy() == IsotopesIncrementalAverageMass.IsHeavy());
             return adductMass + neutralMass * MassMultiplier;
         }
@@ -1235,6 +1237,7 @@ namespace pwiz.Skyline.Util
             if (!Equals(obj.AdductCharge, AdductCharge) || 
                 !Equals(obj.Composition.Count, Composition.Count) || 
                 !Equals(obj.MassMultiplier, MassMultiplier) ||
+                !Equals(obj.IsotopeLabelMass, IsotopeLabelMass) ||
                 !Equals(IsotopeLabels == null, obj.IsotopeLabels == null) ||
                 (IsotopeLabels != null && obj.IsotopeLabels != null && !Equals(obj.IsotopeLabels.Count, IsotopeLabels.Count)))
                 return false;

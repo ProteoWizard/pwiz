@@ -137,9 +137,9 @@ namespace pwiz.SkylineTest
             AssertEx.IsDocumentState(doc, null, 1, 1, 1, 2);
             var neutralMassMolecule = 58.992724; 
             var neutralMassTransition = 55.0;
-            var transition = new CustomIon(null, Adduct.M_PLUS_H, new TypedMass(neutralMassMolecule, MassType.Monoisotopic), new TypedMass(neutralMassMolecule, MassType.Average), "molecule");
+            var transition = new CustomIon(null, Adduct.M_PLUS_H, new TypedMass(neutralMassMolecule-BioMassCalc.MassElectron, MassType.Monoisotopic), new TypedMass(neutralMassMolecule-BioMassCalc.MassElectron, MassType.Average), "molecule");
             var transition2 = new CustomIon(null, Adduct.M_PLUS_H, new TypedMass(neutralMassTransition, MassType.Monoisotopic), new TypedMass(neutralMassTransition, MassType.Average), "molecule fragment");
-            var precursor = new CustomMolecule(new TypedMass(neutralMassMolecule, MassType.Monoisotopic), new TypedMass(neutralMassMolecule, MassType.Average), "molecule");
+            var precursor = new CustomMolecule(new TypedMass(neutralMassMolecule-BioMassCalc.MassElectron, MassType.Monoisotopic), new TypedMass(neutralMassMolecule-BioMassCalc.MassElectron, MassType.Average), "molecule");
             Assert.AreEqual(BioMassCalc.CalculateIonMz(precursor.GetMass(MassType.Monoisotopic), Adduct.M_PLUS_H), doc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz, 1E-5);
             Assert.AreEqual(BioMassCalc.CalculateIonMz(transition.GetMass(MassType.Monoisotopic), Adduct.M_PLUS_H), doc.MoleculeTransitions.ElementAt(0).Mz, 1E-5);
             Assert.AreEqual(BioMassCalc.CalculateIonMz(transition2.GetMass(MassType.Monoisotopic), Adduct.M_PLUS), doc.MoleculeTransitions.ElementAt(1).Mz, 1E-5);
@@ -324,12 +324,12 @@ namespace pwiz.SkylineTest
             {
                 count = ExportAll(DOC_MOLECULES, 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
                    ExportMethodType.Scheduled, pathForLibraries, RefinementSettings.ConvertToSmallMoleculesMode.none,
-                   "Peptide,ID,Type,Precursor,Product,RT,RT Window,CE,Polarity\r\nmolecule_light,1,,60,60,3.45,4.56,-4.7,0\r\nmolecule_light,1,,60,54.999451,3.45,4.56,-4.7,0\r\n");
+                   "Peptide,ID,Type,Precursor,Product,RT,RT Window,CE,Polarity\r\nmolecule_light,1,,59.999451,59.999451,3.45,4.56,-4.7,0\r\nmolecule_light,1,,59.999451,54.999451,3.45,4.56,-4.7,0\r\n");
                 Assert.AreEqual(1, count);
                 // Try negative charges
                 count = ExportAll(DOC_MOLECULES.Replace("charge=\"", "charge=\"-"), 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
                    ExportMethodType.Scheduled, pathForLibraries, RefinementSettings.ConvertToSmallMoleculesMode.none,
-                   "Peptide,ID,Type,Precursor,Product,RT,RT Window,CE,Polarity\r\nmolecule_light,1,,60,60,3.45,4.56,4.7,1\r\nmolecule_light,1,,60,55.000549,3.45,4.56,4.7,1\r\n");
+                   "Peptide,ID,Type,Precursor,Product,RT,RT Window,CE,Polarity\r\nmolecule_light,1,,60.000549,60.000549,3.45,4.56,4.7,1\r\nmolecule_light,1,,60.000549,55.000549,3.45,4.56,4.7,1\r\n");
                 Assert.AreEqual(1, count);
             }
             count = ExportAll(DOC_0_1_PEPTIDES_NO_EMPTY, 37, CreateBrukerExporter, ExportStrategy.Single, 2, null,

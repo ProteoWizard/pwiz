@@ -804,7 +804,8 @@ namespace pwiz.Skyline.Model.Serialization
                 if (DocumentMayContainMoleculesWithEmbeddedIons && string.IsNullOrEmpty(customMolecule.Formula) && customMolecule.MonoisotopicMass.IsMassH())
                 {
                     // Defined by mass only, assume it's not massH despite how it may have been written
-                    customMolecule = new CustomMolecule(customMolecule.MonoisotopicMass.ChangeIsMassH(false),
+                    customMolecule = new CustomMolecule(
+                        customMolecule.MonoisotopicMass.ChangeIsMassH(false),
                         customMolecule.AverageMass.ChangeIsMassH(false),
                         customMolecule.Name);
                 }
@@ -835,11 +836,12 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     // If this is an older small molecule file, clean up any problems with former data model
                     // where the "peptide" had the same formula as the precursor - and thus was not neutral
+                    double massShift = 0;
                     if (isCustomMolecule && DocumentMayContainMoleculesWithEmbeddedIons)
                     {
-                        peptide = HandlePre372CustomIonTransitionGroups(reader, peptide);
+                        peptide = HandlePre372CustomIonTransitionGroups(reader, peptide, ref massShift);
                     }
-                    children = ReadTransitionGroupListXml(reader, peptide, mods);
+                    children = ReadTransitionGroupListXml(reader, peptide, mods, massShift);
                 }
                 else if (reader.IsStartElement(EL.selected_transitions))
                 {
@@ -1000,18 +1002,19 @@ namespace pwiz.Skyline.Model.Serialization
         /// <param name="reader">The reader positioned at the first element</param>
         /// <param name="peptide">A previously read parent <see cref="Identity"/></param>
         /// <param name="mods">Explicit modifications for the peptide</param>
+        /// <param name="deltaMass">Slight shift taken into account when translating pre-3.62 small molecule documents</param>
         /// <returns>A new array of <see cref="TransitionGroupDocNode"/></returns>
-        private TransitionGroupDocNode[] ReadTransitionGroupListXml(XmlReader reader, Peptide peptide, ExplicitMods mods)
+        private TransitionGroupDocNode[] ReadTransitionGroupListXml(XmlReader reader, Peptide peptide, ExplicitMods mods, double deltaMass)
         {
             var list = new List<TransitionGroupDocNode>();
             while (reader.IsStartElement(EL.precursor))
-                list.Add(ReadTransitionGroupXml(reader, peptide, mods));
+                list.Add(ReadTransitionGroupXml(reader, peptide, mods, deltaMass));
             return list.ToArray();
         }
 
         // Read the first-seen transition group and try to discern the actual neutral formula of the molecule
         // Needed since we actually stored the precursor description rather than the molecule description in v3.71 and earlier
-        private Peptide HandlePre372CustomIonTransitionGroups(XmlReader reader, Peptide peptide)
+        private Peptide HandlePre372CustomIonTransitionGroups(XmlReader reader, Peptide peptide, ref double massShift)
         {
             if (peptide.IsCustomMolecule)
             {
@@ -1056,18 +1059,27 @@ namespace pwiz.Skyline.Model.Serialization
                     var declaredMz = reader.GetDoubleAttribute(ATTR.precursor_mz);
                     var adduct = Adduct.FromChargeProtonated(precursorCharge);
                     var mass = adduct.MassFromMz(declaredMz, peptide.CustomMolecule.MonoisotopicMass.MassType);
-                    if (Math.Abs(peptide.CustomMolecule.MonoisotopicMass - mass - precursorCharge * BioMassCalc.MassProton) < 0.01)
+                    // Peptide m/z values got stored with electron mass added
+                    var ionMass = mass + precursorCharge * BioMassCalc.MassProton;
+                    var moleculeMass = peptide.CustomMolecule.MonoisotopicMass -
+                                       precursorCharge * BioMassCalc.MassElectron;
+                    if (Math.Abs(ionMass - moleculeMass) <= 5E-7)    // And they may have only been stored to 6 digits of precision
                     {
-                        var mono = new TypedMass(peptide.CustomMolecule.MonoisotopicMass - precursorCharge * BioMassCalc.MassProton, MassType.Monoisotopic);
-                        var avg = new TypedMass(peptide.CustomMolecule.AverageMass - precursorCharge * BioMassCalc.MassProton, MassType.Average);
+                        var mono = new TypedMass(moleculeMass - precursorCharge * BioMassCalc.MassProton, MassType.Monoisotopic);
+                        moleculeMass = peptide.CustomMolecule.AverageMass -
+                                       precursorCharge * BioMassCalc.MassElectron;
+                        var avg = new TypedMass(moleculeMass - precursorCharge * BioMassCalc.MassProton, MassType.Average);
                         peptide = new Peptide(new CustomMolecule(mono, avg, peptide.CustomMolecule.Name));
+                        // The difference between the mass of Hydrogen and the combined mass of a proton
+                        // and an electron shows up in translating from m/z-only small molecules
+                        massShift = BioMassCalc.MONOISOTOPIC.MassH - (BioMassCalc.MassProton + BioMassCalc.MassElectron);
                     }
                 }
             }
             return peptide;
         }
 
-        private TransitionGroupDocNode ReadTransitionGroupXml(XmlReader reader, Peptide peptide, ExplicitMods mods)
+        private TransitionGroupDocNode ReadTransitionGroupXml(XmlReader reader, Peptide peptide, ExplicitMods mods, double deltaMass)
         {
             var precursorCharge = reader.GetIntAttribute(ATTR.charge);
             var precursorAdduct = Adduct.FromChargeProtonated(precursorCharge);  // Read integer charge
@@ -1144,7 +1156,11 @@ namespace pwiz.Skyline.Model.Serialization
                 else if (DocumentMayContainMoleculesWithEmbeddedIons && !typedMods.LabelType.IsLight && string.IsNullOrEmpty(peptide.CustomMolecule.Formula))
                 {
                     // Labeled, but described by mass only - express label effect in the adduct, preferably as a count of the declared ion label
-                    var massDiff = peptide.CustomMolecule.ReadMonoisotopicMass(reader) - peptide.CustomMolecule.MonoisotopicMass; // ReadMonoisotopicMass makes no assignments, it just alters read behavior based on type
+                    var lightMz = precursorAdduct.ApplyToMass(peptide.CustomMolecule.MonoisotopicMass) - precursorCharge*deltaMass;
+                    var heavyMz = peptide.CustomMolecule.ReadMonoisotopicMass(reader); // ReadMonoisotopicMass makes no assignments, it just alters read behavior based on type
+                    var massDiff = heavyMz - lightMz;
+                    if (Math.Abs(massDiff) < 1E-4)
+                        massDiff = TypedMass.ZERO_MONO_MASSH;
                     precursorAdduct = precursorAdduct.ChangeIsotopeLabels(massDiff); // Declare as mass if we can't deduce a tidy label
                     if ((massDiff != 0) && typedMods.Modifications.Any())
                     {
