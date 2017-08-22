@@ -198,6 +198,34 @@ inline std::string escape_teamcity_string(const std::string& str)
 #else
 #define DOCTEST_CONFIG_IMPLEMENT
 #include "libraries/doctest.h"
+
+namespace std
+{
+    template <typename T>
+    vector<doctest::Approx> operator~(const vector<T>& lhs)
+    {
+        vector<doctest::Approx> result(lhs.size(), doctest::Approx(0));
+        for (size_t i = 0; i < lhs.size(); ++i)
+            result[i] = doctest::Approx(lhs[i]);
+        return result;
+    }
+
+    inline ostream& operator<< (ostream& o, const doctest::Approx& rhs)
+    {
+        o << rhs.toString();
+        return o;
+    }
+
+    template <typename T>
+    bool operator==(const vector<T>& lhs, const vector<doctest::Approx>& rhs)
+    {
+        REQUIRE(lhs.size() == rhs.size());
+        for (size_t i = 0; i < lhs.size(); ++i)
+            if (lhs[i] != rhs[i]) return false;
+        return true;
+    }
+}
+
 int main(int argc, char* argv[])
 {
     TEST_PROLOG(argc, argv)

@@ -496,7 +496,7 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
         sqlite::query q(idpDB, sql.c_str());
 
         if (bal::contains(countColumn, "ARRAY_SUM"))
-            BOOST_FOREACH(sqlite::query::rows row, q)
+            for(sqlite::query::rows row : q)
             {
                 int blobBytes = row.column_bytes(2);
                 if (blobBytes == 0)
@@ -506,7 +506,7 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
                 pivotDataMap[row.get<sqlite_int64>(0)][row.get<sqlite_int64>(1)] = blobCopy;
             }
         else
-            BOOST_FOREACH(sqlite::query::rows row, q)
+            for(sqlite::query::rows row : q)
                 pivotDataMap[row.get<sqlite_int64>(0)][row.get<sqlite_int64>(1)] = row.get<double>(2);
         return;
     }
@@ -528,7 +528,7 @@ void pivotData(sqlite::database& idpDB, GroupBy groupBy, const string& pivotMode
     if (rollupMethod != QuantitationRollupMethod::Sum) bal::replace_all(sql, "DISTINCT_DOUBLE_ARRAY_SUM", rollupMethod.value());
     cout << sql << endl;
     sqlite::query q(idpDB, sql.c_str());
-    BOOST_FOREACH(sqlite::query::rows row, q)
+    for(sqlite::query::rows row : q)
         pivotDataMap[row.get<sqlite_int64>(0)][row.get<sqlite_int64>(1)] = row.get<int>(2);
 }
 
@@ -651,12 +651,12 @@ int doQuery(GroupBy groupBy,
 
     sqlite::query quantitationMethodsQuery(idpDB, "SELECT DISTINCT QuantitationMethod FROM SpectrumSource");
     set<QuantitationMethod> quantitationMethods;
-    BOOST_FOREACH(sqlite::query::rows row, quantitationMethodsQuery)
+    for(sqlite::query::rows row : quantitationMethodsQuery)
         quantitationMethods.insert(QuantitationMethod::get_by_index(row.get<int>(0)).get());
 
     map<boost::int64_t, string> groupNameById;
     sqlite::query groupQuery(idpDB, "SELECT Id, Name FROM SpectrumSourceGroup");
-    BOOST_FOREACH(sqlite::query::rows row, groupQuery)
+    for(sqlite::query::rows row : groupQuery)
         groupNameById[row.get<sqlite_int64>(0)] = row.get<string>(1);
 
 
@@ -738,7 +738,7 @@ int doQuery(GroupBy groupBy,
             if (bal::contains(tokens[i], "ITRAQ"))
             {
                 if (!itraqMethodIons.empty())
-                    BOOST_FOREACH(sqlite::query::rows row, q)
+                    for(sqlite::query::rows row : q)
                     {
                         groupOrSourceName = row.get<string>(0);
 
@@ -751,7 +751,7 @@ int doQuery(GroupBy groupBy,
                             BOOST_FOREACH(const string& header, getReporterIonHeaders(iTRAQ_ions, quantitationMethods))
                                 outputStream << groupOrSourceName << " (" << header << ")\t";
                         else
-                            BOOST_FOREACH(const string& sample, sampleNames)
+                            for(const string& sample : sampleNames)
                                 if (sample != "Reference" && sample != "Empty")
                                     outputStream << sample << "\t";
 
@@ -761,7 +761,7 @@ int doQuery(GroupBy groupBy,
             else if (bal::contains(tokens[i], "TMT"))
             {
                 if (!tmtMethodIons.empty())
-                    BOOST_FOREACH(sqlite::query::rows row, q)
+                    for(sqlite::query::rows row : q)
                     {
                         groupOrSourceName = row.get<string>(0);
 
@@ -774,7 +774,7 @@ int doQuery(GroupBy groupBy,
                             BOOST_FOREACH(const string& header, getReporterIonHeaders(TMT_ions, quantitationMethods))
                                 outputStream << groupOrSourceName << " (" << header << ")\t";
                         else
-                            BOOST_FOREACH(const string& sample, sampleNames)
+                            for(const string& sample : sampleNames)
                                 if (sample != "Reference" && sample != "Empty")
                                     outputStream << sample << "\t";
 
@@ -784,15 +784,16 @@ int doQuery(GroupBy groupBy,
             else
             {
                 bool includeColumnName = bal::contains(tokens[i], "Precursor");
-                BOOST_FOREACH(sqlite::query::rows row, q)
+                for(sqlite::query::rows row : q)
                 {
                     outputStream << row.get<string>(0) << (includeColumnName ? " " + tokens[i] : "") << '\t';
                     pivotColumnIds.push_back(static_cast<boost::int64_t>(row.get<sqlite3_int64>(1)));
                 }
             }
 
-            if (!pivotColumnIds.empty())
-                pivotData(idpDB, groupBy, tokens[i], pivotDataByColumn[i], ModificationMassRoundToNearest, rollupMethod);
+            if (pivotColumnIds.empty())
+                throw runtime_error("no pivot columns available; are source groups set up?");
+            pivotData(idpDB, groupBy, tokens[i], pivotDataByColumn[i], ModificationMassRoundToNearest, rollupMethod);
         }
         else
         {
@@ -828,7 +829,7 @@ int doQuery(GroupBy groupBy,
     sqlite::query q(idpDB, sql.c_str());
 
     // write column values
-    BOOST_FOREACH(sqlite::query::rows row, q)
+    for(sqlite::query::rows row : q)
     {
         boost::int64_t id = static_cast<boost::int64_t>(row.get<sqlite_int64>(0));
 
@@ -1038,7 +1039,7 @@ int query(GroupBy groupBy, const vector<string>& args, double ModificationMassRo
     bal::split(tokens, args[2], bal::is_any_of(","));
 
     int result = 0;
-    BOOST_FOREACH(const bfs::path& filepath, filepaths)
+    for(const bfs::path& filepath : filepaths)
     {
         switch (groupBy.index())
         {

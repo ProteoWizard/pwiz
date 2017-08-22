@@ -31,6 +31,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
+#include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/chemistry/Chemistry.hpp"
 #include "pwiz/utility/chemistry/MZTolerance.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
@@ -42,6 +43,8 @@
 #include "boost/throw_exception.hpp"
 #include "boost/xpressive/xpressive.hpp"
 #include "boost/assign.hpp"
+#include "boost/multi_array.hpp"
+#include <memory>
 
 
 using namespace pwiz::msdata;
@@ -106,8 +109,8 @@ string findNameInPath(const string& filenameWithoutExtension,
 {
     ExtendedReaderList readerList;
 
-    BOOST_FOREACH(const string& extension, extensions)
-    BOOST_FOREACH(const string& path, searchPath)
+    for(const string& extension : extensions)
+    for(const string& path : searchPath)
     {
         bfs::path filepath(path);
         filepath /= filenameWithoutExtension + "." + extension;
@@ -152,7 +155,7 @@ void getSources(sqlite::database& idpDb,
 
     // get a list of sources from the database
     sqlite::query sourceQuery(idpDb, "SELECT Id, Name, QuantitationMethod FROM SpectrumSource ORDER BY Id");
-    BOOST_FOREACH(sqlite::query::rows row, sourceQuery)
+    for(sqlite::query::rows row : sourceQuery)
     {
         sources.push_back(SpectrumSource());
         SpectrumSource& ss = sources.back();
@@ -172,7 +175,7 @@ void getSources(sqlite::database& idpDb,
     // get a list of spectra for each source
     vector<SpectrumSource>::iterator itr = sources.begin();
     sqlite::query spectrumQuery(idpDb, ("SELECT Source, Id, NativeID FROM " + spectrumTable + " ORDER BY Source").c_str());
-    BOOST_FOREACH(sqlite::query::rows row, spectrumQuery)
+    for(sqlite::query::rows row : spectrumQuery)
     {
         sqlite3_int64 sourceId = row.get<sqlite3_int64>(0);
         if (itr->id != sourceId)
@@ -191,11 +194,11 @@ void getSources(sqlite::database& idpDb,
 
     // look for files for each source
     vector<string> missingSources;
-    BOOST_FOREACH(SpectrumSource& source, sources)
+    for(SpectrumSource& source : sources)
     {
         vector<string> perSourcePaths(paths);
         string rootInputDirectory = bfs::path(idpDbFilepath).parent_path().string();
-        BOOST_FOREACH(string& path, perSourcePaths)
+        for(string& path : perSourcePaths)
             bal::replace_all(path, "<RootInputDirectory>", rootInputDirectory);
 
         source.filepath = findNameInPath(source.name, extensions, perSourcePaths);
@@ -209,21 +212,261 @@ void getSources(sqlite::database& idpDb,
         throw runtime_error("no filepath could be found corresponding these sources:\n" + bal::join(missingSources, "\n"));
 }
 
+
+struct ReporterIon
+{
+    double mass;
+    int index;
+};
+
+struct SpectrumRow
+{
+    sqlite3_int64 id;
+    double precursorMz;
+    vector<double> reporterIonIntensities;
+};
+
+// iTRAQ
+// Label  Mass        4plex  8plex  DeltaMassFromLastReporter
+// 113    113.107873  0      1
+// 114    114.111228  1      1      1.0034
+// 115    115.108263  1      1      0.9970
+// 116    116.111618  1      1      1.0034
+// 117    117.114973  1      1      1.0034
+// 118    118.112008  0      1      0.9970
+// 119    119.115363  0      1      1.0034
+// 121    121.122072  0      1      2.0067
+ReporterIon iTRAQ_masses[8] =
+{
+    { 113.107873, 0 },
+    { 114.111228, 1 },
+    { 115.108263, 2 },
+    { 116.111618, 3 },
+    { 117.114973, 4 },
+    { 118.112008, 5 },
+    { 119.115363, 6 },
+    { 121.122072, 7 }
+};
+
+// TMT
+// http://www.piercenet.com/instructions/2162457.pdf
+// Label  Mass        2plex  6plex  10plex   DeltaMassFromLastReporter
+// 126    126.12773   1      1      1
+// 127N   127.12476   0      0      1        0.9970
+// 127C   127.13108   1      1      1        0.0063
+// 128N   128.12811   0      0      1        0.9970
+// 128C   128.13443   0      1      1        0.0063
+// 129N   129.13147   0      0      1        0.9970
+// 129C   129.13779   0      1      1        0.0063
+// 130N   130.13482   0      0      1        0.9970
+// 130C   130.14114   0      1      1        0.0063
+// 131    131.13818   0      1      1        0.9970
+ReporterIon TMT_masses[10] =
+{
+    { 126.12773, 0 },
+    { 127.12476, 1 },
+    { 127.13108, 2 },
+    { 128.12811, 3 },
+    { 128.13443, 4 },
+    { 129.13147, 5 },
+    { 129.13779, 6 },
+    { 130.13482, 7 },
+    { 130.14114, 8 },
+    { 131.13818, 9 }
+};
+
+void correctIsotopeImpurities(vector<SpectrumRow>& spectrumRows,
+                              vector<double>& totalReporterIonIntensities,
+                              const vector<ReporterIon>& reporterIons,
+                              QuantitationMethod quantitationMethod,
+                              boost::multi_array<double, 2>* userSpecifiedIsotopeCorrectionFactors)
+{
+    if (spectrumRows.empty())
+        return;
+
+    double itraq4plexIsotopeCorrectionFactors[4*4] =
+    {
+        // -2    -1     +1     +2
+        0.000, 0.01, 0.059, 0.002, // 114 (icf[0])
+        0.000, 0.02, 0.056, 0.001, // 115 (icf[1])
+        0.000, 0.03, 0.045, 0.001, // 116 (icf[2])
+        0.001, 0.04, 0.035, 0.001  // 117 (icf[3])
+    };
+
+    double itraq8plexIsotopeCorrectionFactors[8*4] =
+    {
+        //  -2      -1      +1      +2
+        0.0000, 0.0000, 0.0689, 0.0024, // 113 (icf[0])
+        0.0000, 0.0094, 0.0590, 0.0016, // 114 (icf[1])
+        0.0000, 0.0188, 0.0490, 0.0010, // 115 (icf[2])
+        0.0000, 0.0282, 0.0390, 0.0007, // 116 (icf[3])
+        0.0006, 0.0377, 0.0288, 0.0000, // 117 (icf[4])
+        0.0009, 0.0471, 0.0191, 0.0000, // 118 (icf[5])
+        0.0014, 0.0566, 0.0000, 0.0000, // 119 (icf[6])
+        0.0027, 0.0000, 0.0000, 0.0000  // 121 (icf[7])
+    };
+
+    double tmt6plexIsotopeCorrectionFactors[6*4] =
+    {
+        //  -2      -1      +1      +2
+        0.0000, 0.0000, 0.0851, 0.0026, // 126 (icf[0])
+        0.0000, 0.0072, 0.0855, 0.0028, // 127 (icf[1])
+        0.0003, 0.0124, 0.0622, 0.0009, // 128 (icf[2])
+        0.0005, 0.0167, 0.0633, 0.0013, // 129 (icf[3])
+        0.0013, 0.0307, 0.0410, 0.0000, // 130 (icf[4])
+        0.0011, 0.0290, 0.0000, 0.0000  // 131 (icf[5])
+    };
+
+    typedef boost::multi_array<double, 2> matrix;
+    typedef boost::const_multi_array_ref<double, 2> const_matrix_ref;
+
+    // start with an array like:
+    // -2    -1     +1     +2
+    // 0.000, 0.01, 0.059, 0.002, // 114
+    // 0.000, 0.02, 0.056, 0.001, // 115
+    // 0.000, 0.03, 0.045, 0.001, // 116
+    // 0.001, 0.04, 0.035, 0.001  // 117
+    std::unique_ptr<const_matrix_ref> isotopeCorrectionFactorsPtr;
+
+    switch (quantitationMethod.value())
+    {
+        case QuantitationMethod::ITRAQ4plex: isotopeCorrectionFactorsPtr.reset(new const_matrix_ref(itraq4plexIsotopeCorrectionFactors, boost::extents[4][4])); break;
+        case QuantitationMethod::ITRAQ8plex: isotopeCorrectionFactorsPtr.reset(new const_matrix_ref(itraq8plexIsotopeCorrectionFactors, boost::extents[8][4])); break;
+        case QuantitationMethod::TMT6plex: isotopeCorrectionFactorsPtr.reset(new const_matrix_ref(tmt6plexIsotopeCorrectionFactors, boost::extents[6][4])); break;
+
+        case QuantitationMethod::TMT2plex: // TODO: get default values for these
+        case QuantitationMethod::TMT10plex:
+            return;
+
+        default: return;
+    }
+    const const_matrix_ref& isotopeCorrectionFactors = *isotopeCorrectionFactorsPtr;
+
+    // convert it to an array like:
+    // 1-sum, 0.059, 0.002, 0.000
+    // 0.020, 1-sum, 0.056, 0.001
+    // 0.000, 0.030, 1-sum, 0.045
+    // 0.000, 0.001, 0.040, 1-sum
+
+    // output matrix should have one column for each reporter ion
+    matrix isotopeCorrectionMatrix(boost::extents[reporterIons.size()][reporterIons.size()]);
+    for (int i = 0; i < (int) reporterIons.size(); ++i)
+    {
+        const auto& icf = isotopeCorrectionFactors[i];
+        double totalImpurity = 0;
+        if (i - 2 >= 0) { isotopeCorrectionMatrix[i][i - 2] = icf[0]; totalImpurity += icf[0]; }
+        if (i - 1 >= 0) { isotopeCorrectionMatrix[i][i - 1] = icf[1]; totalImpurity += icf[1]; }
+        if (i + 1 < reporterIons.size()) { isotopeCorrectionMatrix[i][i + 1] = icf[2]; totalImpurity += icf[2]; }
+        if (i + 2 < reporterIons.size()) { isotopeCorrectionMatrix[i][i + 2] = icf[3]; totalImpurity += icf[3]; }
+        isotopeCorrectionMatrix[i][i] = 1 - totalImpurity;
+    }
+
+    /*for (auto r : isotopeCorrectionMatrix)
+    {
+        for (auto c : r)
+            cout << " " << c;
+        cout << endl;
+    }*/
+
+    vector<double> tmpIntensities(spectrumRows.front().reporterIonIntensities.size());
+
+    for (auto& row : spectrumRows)
+    {
+        std::fill(tmpIntensities.begin(), tmpIntensities.end(), 0);
+        for (size_t i = 0; i < reporterIons.size(); ++i)
+        {
+            for (size_t j = 0; j < reporterIons.size(); ++j)
+                tmpIntensities[reporterIons[i].index] += isotopeCorrectionMatrix[i][j] * row.reporterIonIntensities[reporterIons[j].index];
+        }
+        row.reporterIonIntensities = tmpIntensities;
+    }
+
+    std::fill(tmpIntensities.begin(), tmpIntensities.end(), 0);
+    for (size_t i = 0; i < reporterIons.size(); ++i)
+    {
+        for (size_t j = 0; j < reporterIons.size(); ++j)
+            tmpIntensities[reporterIons[i].index] += isotopeCorrectionMatrix[i][j] * totalReporterIonIntensities[reporterIons[j].index];
+    }
+    totalReporterIonIntensities = tmpIntensities;
+}
+
+TEST_CASE("Isobaric quantitation isotope purity correction tests") {
+
+    vector<ReporterIon> itraq4plexIons, itraq8plexIons;
+    vector<ReporterIon> tmt2plexIons, tmt6plexIons, tmt10plexIons;
+
+    for (int i = 1; i < 5; ++i) itraq4plexIons.push_back(iTRAQ_masses[i]);
+    for (int i = 0; i < 8; ++i) itraq8plexIons.push_back(iTRAQ_masses[i]);
+
+    tmt2plexIons += TMT_masses[0], TMT_masses[2];
+    tmt6plexIons += TMT_masses[0], TMT_masses[2], TMT_masses[4], TMT_masses[6], TMT_masses[8], TMT_masses[9];
+    tmt10plexIons.assign(TMT_masses, TMT_masses + 10);
+
+    SUBCASE("iTRAQ 4-plex") {
+        vector<SpectrumRow> rows
+        {
+            SpectrumRow{ 1, 123.4, vector<double> { 0, 1, 10, 100, 1000, 0, 0, 0 } },
+            SpectrumRow{ 2, 123.4, vector<double> { 0, 100, 1000, 10000, 100000, 0, 0, 0 } }
+        };
+        vector<double> totals{ 0, 101, 1010, 10100, 101000, 0, 0, 0 };
+        correctIsotopeImpurities(rows, totals, itraq4plexIons, QuantitationMethod::ITRAQ4plex, nullptr);
+
+        CHECK(rows[0].reporterIonIntensities == ~(vector<double> { 0, 1.729, 15.85, 137.8, 963.01, 0, 0, 0 }));
+        CHECK(rows[1].reporterIonIntensities == ~(vector<double> { 0, 172.9, 1585., 13780, 96301., 0, 0, 0 }));
+        CHECK(totals == ~(vector<double> { 0, 174.629, 1600.85, 13917.8, 97264, 0, 0, 0 }));
+    }
+
+    SUBCASE("iTRAQ 8-plex") {
+        vector<SpectrumRow> rows
+        {
+            SpectrumRow{ 1, 123.4, vector<double> { 1, 10, 100, 1000, 1000, 100, 10, 1 } }
+        };
+        vector<double> totals{ 1, 10, 100, 1000, 1000, 100, 10, 1 };
+        correctIsotopeImpurities(rows, totals, itraq8plexIons, QuantitationMethod::ITRAQ8plex, nullptr);
+
+        CHECK(rows[0].reporterIonIntensities == ~(vector<double> { 1.8577, 16.8094, 143.308, 973.99, 973.54, 141.481, 16.48, 1.2673 }));
+        CHECK(totals == ~(vector<double> { 1.8577, 16.8094, 143.308, 973.99, 973.54, 141.481, 16.48, 1.2673 }));
+    }
+
+    SUBCASE("TMT 6-plex") {
+        vector<SpectrumRow> rows
+        {
+            SpectrumRow{ 1, 123.4, vector<double> { 1, 0, 10, 0, 100, 0, 1000, 0, 100, 10 } }
+        };
+        vector<double> totals{ 1, 0, 10, 0, 100, 0, 1000, 0, 100, 10 };
+        correctIsotopeImpurities(rows, totals, tmt6plexIons, QuantitationMethod::TMT6plex, nullptr);
+
+        CHECK(rows[0].reporterIonIntensities == ~(vector<double> { 2.0233, 0, 20.4022, 0, 154.8343, 0, 926.218, 0, 123.94, 13.699 }));
+        CHECK(totals == ~(vector<double> { 2.0233, 0, 20.4022, 0, 154.8343, 0, 926.218, 0, 123.94, 13.699 }));
+    }
+
+    SUBCASE("TMT 2-plex") {
+        vector<SpectrumRow> rows
+        {
+            SpectrumRow{ 1, 123.4, vector<double> { 1, 0, 10, 0, 0, 0, 0, 0, 0, 0 } }
+        };
+        vector<double> totals{ 1, 0, 10, 0, 0, 0, 0, 0, 0, 0 };
+        correctIsotopeImpurities(rows, totals, tmt2plexIons, QuantitationMethod::TMT2plex, nullptr);
+
+        CHECK(rows[0].reporterIonIntensities == ~(vector<double> { 1, 0, 10, 0, 0, 0, 0, 0, 0, 0 }));
+        CHECK(totals == ~(vector<double> { 1, 0, 10, 0, 0, 0, 0, 0, 0, 0 }));
+    }
+
+    SUBCASE("TMT 10-plex") {
+        vector<SpectrumRow> rows
+        {
+            SpectrumRow{ 1, 123.4, vector<double> { 1, 10, 100, 1000, 10000, 10000, 1000, 100, 10, 1 } }
+        };
+        vector<double> totals{ 1, 10, 100, 1000, 10000, 10000, 1000, 100, 10, 1 };
+        correctIsotopeImpurities(rows, totals, tmt10plexIons, QuantitationMethod::TMT10plex, nullptr);
+
+        CHECK(rows[0].reporterIonIntensities == ~(vector<double> { 1, 10, 100, 1000, 10000, 10000, 1000, 100, 10, 1 }));
+        CHECK(totals == ~(vector<double> { 1, 10, 100, 1000, 10000, 10000, 1000, 100, 10, 1 }));
+    }
+}
+
 struct SpectrumList_Quantifier
 {
-    struct SpectrumRow
-    {
-        sqlite3_int64 id;
-        double precursorMz;
-        vector<double> reporterIonIntensities;
-    };
-
-    struct ReporterIon
-    {
-        double mass;
-        size_t index;
-    };
-
     map<int, int> totalSpectraByMSLevel;
     map<int, double> totalIonCurrentByMSLevel;
     vector<SpectrumRow> spectrumQuantitationRows;
@@ -235,57 +478,8 @@ struct SpectrumList_Quantifier
           quantitationMethod(quantitationConfig.quantitationMethod),
           tolerance(quantitationConfig.reporterIonMzTolerance)
     {
-        // iTRAQ
-        // Label  Mass        4plex  8plex  DeltaMassFromLastReporter
-        // 113    113.107873  0      1
-        // 114    114.111228  1      1      1.0034
-        // 115    115.108263  1      1      0.9970
-        // 116    116.111618  1      1      1.0034
-        // 117    117.114973  1      1      1.0034
-        // 118    118.112008  0      1      0.9970
-        // 119    119.115363  0      1      1.0034
-        // 121    121.122072  0      1      2.0067
-        ReporterIon iTRAQ_masses[8] =
-        {
-            { 113.107873, 0 },
-            { 114.111228, 1 },
-            { 115.108263, 2 },
-            { 116.111618, 3 },
-            { 117.114973, 4 },
-            { 118.112008, 5 },
-            { 119.115363, 6 },
-            { 121.122072, 7 }
-        };
-
-        for (int i=1; i < 5; ++i) itraq4plexIons.push_back(iTRAQ_masses[i]);
-        for (int i=0; i < 8; ++i) itraq8plexIons.push_back(iTRAQ_masses[i]);
-
-        // TMT
-        // http://www.piercenet.com/instructions/2162457.pdf
-        // Label  Mass        2plex  6plex  10plex   DeltaMassFromLastReporter
-        // 126    126.12773   1      1      1
-        // 127N   127.12476   0      0      1        0.9970
-        // 127C   127.13108   1      1      1        0.0063
-        // 128N   128.12811   0      0      1        0.9970
-        // 128C   128.13443   0      1      1        0.0063
-        // 129N   129.13147   0      0      1        0.9970
-        // 129C   129.13779   0      1      1        0.0063
-        // 130N   130.13482   0      0      1        0.9970
-        // 130C   130.14114   0      1      1        0.0063
-        // 131    131.13818   0      1      1        0.9970
-        ReporterIon TMT_masses[10] =
-        {
-            { 126.12773, 0 },
-            { 127.12476, 1 },
-            { 127.13108, 2 },
-            { 128.12811, 3 },
-            { 128.13443, 4 },
-            { 129.13147, 5 },
-            { 129.13779, 6 },
-            { 130.13482, 7 },
-            { 130.14114, 8 },
-            { 131.13818, 9 }
-        };
+        for (int i = 1; i < 5; ++i) itraq4plexIons.push_back(iTRAQ_masses[i]);
+        for (int i = 0; i < 8; ++i) itraq8plexIons.push_back(iTRAQ_masses[i]);
 
         tmt2plexIons += TMT_masses[0], TMT_masses[2];
         tmt6plexIons += TMT_masses[0], TMT_masses[2], TMT_masses[4], TMT_masses[6], TMT_masses[8], TMT_masses[9];
@@ -348,74 +542,35 @@ struct SpectrumList_Quantifier
             }
         }
 
-        double itraq4plexIsotopeCorrectionFactors[4][4] =
-        {
-            // -2    -1     +1     +2
-            { 0.000, 0.01, 0.059, 0.002 }, // 114 (icf[0])
-            { 0.000, 0.02, 0.056, 0.001 }, // 115 (icf[1])
-            { 0.000, 0.03, 0.045, 0.001 }, // 116 (icf[2])
-            { 0.001, 0.04, 0.035, 0.001 }  // 117 (icf[3])
-        };
-
-        double itraq8plexIsotopeCorrectionFactors[8][4] =
-        {
-            //  -2      -1      +1      +2
-            { 0.0000, 0.0000, 0.0689, 0.0024 }, // 113 (icf[0])
-            { 0.0000, 0.0094, 0.0590, 0.0016 }, // 114 (icf[1])
-            { 0.0000, 0.0188, 0.0490, 0.0010 }, // 115 (icf[2])
-            { 0.0000, 0.0282, 0.0390, 0.0007 }, // 116 (icf[3])
-            { 0.0006, 0.0377, 0.0288, 0.0000 }, // 117 (icf[4])
-            { 0.0009, 0.0471, 0.0191, 0.0000 }, // 118 (icf[5])
-            { 0.0014, 0.0566, 0.0087, 0.0000 }, // 119 (icf[6])
-            { 0.0027, 0.0744, 0.0018, 0.0000 }  // 121 (icf[7])
-        };
-
-        // normalize reporter ion intensities to the total for each channel
+        // correct isotope impurities and optionally normalize reporter ion intensities to the total for each channel
         switch (quantitationMethod.value())
         {
             case QuantitationMethod::ITRAQ4plex:
-            {
-                double (&icf)[4][4] = itraq4plexIsotopeCorrectionFactors;
-                for (size_t i=0; i < spectrumQuantitationRows.size(); ++i)
-                {
-                    vector<double>& rii = spectrumQuantitationRows[i].reporterIonIntensities;
-                    double icf_114_115=icf[1][1]*rii[2], icf_115_116=icf[2][1]*rii[3], icf_116_117=icf[3][1]*rii[4]; // icf_114_115 = fraction of 115's intensity to subtract from 114
-                    double icf_115_114=icf[0][2]*rii[1], icf_116_115=icf[1][2]*rii[2], icf_117_116=icf[2][2]*rii[3];
-                    /*114*/ rii[1] = max(0.0, rii[1] - icf_114_115);
-                    /*115*/ rii[2] = max(0.0, rii[2] - icf_115_116 - icf_115_114);
-                    /*116*/ rii[3] = max(0.0, rii[3] - icf_116_117 - icf_116_115);
-                    /*117*/ rii[4] = max(0.0, rii[4]               - icf_117_116);
-                }
+                correctIsotopeImpurities(spectrumQuantitationRows, itraqTotalReporterIonIntensities, itraq4plexIons, quantitationMethod, nullptr);
                 if (quantitationConfig.normalizeIntensities)
                     normalizeReporterIons(itraqTotalReporterIonIntensities);
                 break;
-            }
 
             case QuantitationMethod::ITRAQ8plex:
-            {
-                double (&icf)[8][4] = itraq8plexIsotopeCorrectionFactors;
-                for (size_t i=0; i < spectrumQuantitationRows.size(); ++i)
-                {
-                    vector<double>& rii = spectrumQuantitationRows[i].reporterIonIntensities;
-                    double icf_113_114=icf[0][1]*rii[1], icf_114_115=icf[1][1]*rii[2], icf_115_116=icf[2][1]*rii[3], icf_116_117=icf[3][1]*rii[4], icf_117_118=icf[4][1]*rii[5], icf_118_119=icf[5][1]*rii[6];
-                    double icf_114_113=icf[0][2]*rii[0], icf_115_114=icf[1][2]*rii[1], icf_116_115=icf[2][2]*rii[2], icf_117_116=icf[3][2]*rii[3], icf_118_117=icf[4][2]*rii[4], icf_119_118=icf[5][2]*rii[5];
-                    /*113*/ rii[0] = max(0.0, rii[0] - icf_113_114);
-                    /*114*/ rii[1] = max(0.0, rii[1] - icf_114_115 - icf_114_113);
-                    /*115*/ rii[2] = max(0.0, rii[2] - icf_115_116 - icf_115_114);
-                    /*116*/ rii[3] = max(0.0, rii[3] - icf_116_117 - icf_116_115);
-                    /*117*/ rii[4] = max(0.0, rii[4] - icf_117_118 - icf_117_116);
-                    /*118*/ rii[5] = max(0.0, rii[5] - icf_118_119 - icf_118_117);
-                    /*119*/ rii[6] = max(0.0, rii[6]               - icf_119_118);
-                    /*121*/ //rii[7] is not adjusted because it is 2 Da away from the previous reporter ion
-                }
+                correctIsotopeImpurities(spectrumQuantitationRows, itraqTotalReporterIonIntensities, itraq8plexIons, quantitationMethod, nullptr);
                 if (quantitationConfig.normalizeIntensities)
                     normalizeReporterIons(itraqTotalReporterIonIntensities);
                 break;
-            }
 
             case QuantitationMethod::TMT2plex:
+                correctIsotopeImpurities(spectrumQuantitationRows, tmtTotalReporterIonIntensities, tmt2plexIons, quantitationMethod, nullptr);
+                if (quantitationConfig.normalizeIntensities)
+                    normalizeReporterIons(tmtTotalReporterIonIntensities);
+                break;
+
             case QuantitationMethod::TMT6plex:
+                correctIsotopeImpurities(spectrumQuantitationRows, tmtTotalReporterIonIntensities, tmt6plexIons, quantitationMethod, nullptr);
+                if (quantitationConfig.normalizeIntensities)
+                    normalizeReporterIons(tmtTotalReporterIonIntensities);
+                break;
+
             case QuantitationMethod::TMT10plex:
+                correctIsotopeImpurities(spectrumQuantitationRows, tmtTotalReporterIonIntensities, tmt10plexIons, quantitationMethod, nullptr);
                 if (quantitationConfig.normalizeIntensities)
                     normalizeReporterIons(tmtTotalReporterIonIntensities);
                 break;
@@ -696,7 +851,7 @@ void embed(const string& idpDbFilepath,
 
             for (size_t i=0; i < slq->spectrumQuantitationRows.size(); ++i)
             {
-                SpectrumList_Quantifier::SpectrumRow& row = slq->spectrumQuantitationRows[i];
+                SpectrumRow& row = slq->spectrumQuantitationRows[i];
                 insertSpectrumQuantitation->bind(1, row.id);
                 insertSpectrumQuantitation->bind(2, static_cast<void*>(&row.reporterIonIntensities[0]), row.reporterIonIntensities.size() * sizeof(double));
                 insertSpectrumQuantitation->execute();
@@ -829,7 +984,7 @@ void embedScanTime(const string& idpDbFilepath,
 
             for (size_t i=0; i < slq->spectrumQuantitationRows.size(); ++i)
             {
-                SpectrumList_Quantifier::SpectrumRow& row = slq->spectrumQuantitationRows[i];
+                SpectrumRow& row = slq->spectrumQuantitationRows[i];
                 insertSpectrumQuantitation->bind(1, row.id);
                 insertSpectrumQuantitation->bind(2, static_cast<void*>(&row.reporterIonIntensities[0]), row.reporterIonIntensities.size() * sizeof(double));
                 insertSpectrumQuantitation->execute();
@@ -885,7 +1040,7 @@ void embedIsobaricSampleMapping(const string& idpDbFilepath, const map<string, v
                                                    "FROM SpectrumSource ss, SpectrumSourceGroup ssg "
                                                    "WHERE ss.Group_=ssg.Id AND ss.QuantitationMethod > 0 "
                                                    "GROUP BY ssg.Id");
-    BOOST_FOREACH(sqlite3pp::query::rows queryRow, sourceGroupByNameQuery)
+    for(sqlite3pp::query::rows queryRow : sourceGroupByNameQuery)
     {
         if (queryRow.get<int>(2) > 1)
             throw runtime_error("[embedIsobaricSampleMapping] source group '" + queryRow.get<string>(1) + "' uses more than one quantitation method (each group must use a single quantitation method)");
@@ -920,7 +1075,7 @@ map<string, vector<string> > getIsobaricSampleMapping(const string& idpDbFilepat
     sqlite3pp::query isobaricSampleMappingQuery(idpDb, "SELECT ssg.Name, Samples FROM IsobaricSampleMapping ism, SpectrumSourceGroup ssg WHERE GroupId=ssg.Id GROUP BY GroupId");
     map<string, vector<string> > result;
 
-    BOOST_FOREACH(sqlite3pp::query::rows queryRow, isobaricSampleMappingQuery)
+    for(sqlite3pp::query::rows queryRow : isobaricSampleMappingQuery)
     {
         vector<string>& sampleNames = result[queryRow.get<string>(0)];
         string sampleNamesString = queryRow.get<string>(1);
@@ -938,7 +1093,7 @@ void extract(const string& idpDbFilepath, const string& sourceName, const string
 
     // write the associated MSDataBytes to the given filepath
     sqlite::query blobQuery(idpDb, ("SELECT ssmd.MsDataBytes FROM SpectrumSource ss JOIN SpectrumSourceMetadata ssmd ON ss.Id=ssmd.Id AND Name = \"" + sourceName + "\"").c_str());
-    BOOST_FOREACH(sqlite::query::rows row, blobQuery)
+    for(sqlite::query::rows row : blobQuery)
     {
         const char* bytes = static_cast<const char*>(row.get<const void*>(0));
         int numBytes = row.column_bytes(0);
@@ -988,7 +1143,7 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
         sqlite::query proteinToGeneQuery(g2pDb, "SELECT ProteinAccession, ApprovedId, ApprovedName, Chromosome, TaxonId, GeneFamily, GeneDescription FROM GeneToProtein");
         string geneId, geneName, chromosome, geneFamily, geneDescription;
         int taxonId;
-        BOOST_FOREACH(sqlite::query::rows row, proteinToGeneQuery)
+        for(sqlite::query::rows row : proteinToGeneQuery)
         {
             row.getter(1) >> geneId >> geneName >> chromosome >> taxonId >> geneFamily >> geneDescription;
             string accession = regex_replace(row.get<string>(0), refseqRegex, "$1");
@@ -1019,7 +1174,7 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
     sqlite::query proteinIdAccessions(idpDb, "SELECT Id, Accession FROM Protein WHERE IsDecoy=0");
     sqlite::command proteinQuery(idpDb, "UPDATE Protein SET GeneId=? WHERE Id=?");
     sqlite::command proteinMetadataQuery(idpDb, "UPDATE ProteinMetadata SET GeneName=?, Chromosome=?, TaxonomyId=?, GeneFamily=?, GeneDescription=? WHERE Id=?");
-    BOOST_FOREACH(sqlite::query::rows row, proteinIdAccessions)
+    for(sqlite::query::rows row : proteinIdAccessions)
     {
         sqlite3_int64 id = row.get<sqlite3_int64>(0);
         string accession = regex_replace(row.get<string>(1), refseqRegex, "$1");
