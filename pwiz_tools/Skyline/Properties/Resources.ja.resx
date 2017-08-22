@@ -500,7 +500,7 @@
     <value>作成(&amp;C)...</value>
   </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Error_on_line__0___Precursor_m_z__1__does_not_agree_with_value__2__as_calculated_from_ion_formula_and_charge_state__delta____3___Transition_Settings___Instrument___Method_match_tolerance_m_z____4_____Correct_the_m_z_value_in_the_table__or_leave_it_blank_and_Skyline_will_calculate_it_for_you_" xml:space="preserve">
-    <value>エラー： iRTカルキュレーターなしでドキュメントをアッセイライブラリにインポートすると、{0}が既に存在するためにこれを作成できません。</value>
+    <value>行{0}のエラー：プリカーサーm/z {1}は、イオン公式および電荷状態（差分 = {3}、トランジション設定 | 装置 | メソッド一致耐性誤差m/z = {4}）から計算された値{2}に一致しません。  表でm/z値を訂正してください。空欄にしておくと、Skylineが計算します。</value>
   </data>
   <data name="Pivoter_QualifyColumnInfo_AreaRatio" xml:space="preserve">
     <value>AreaRatio</value>
