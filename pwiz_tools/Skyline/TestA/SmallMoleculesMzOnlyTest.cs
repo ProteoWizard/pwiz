@@ -30,18 +30,26 @@ namespace pwiz.SkylineTestA
         public void ConvertSmallMolMzOnlyFrom37Test()
         {
             var docSmall = ResultsUtil.DeserializeDocument("SmallMoleculesMzOnly_3-7.sky", GetType());
-            AssertEx.IsDocumentState(docSmall, 0, 2, 4, 5, 5);
-            // All precursor m/z values should be single-digit precision (entered by a person)
+            AssertEx.IsDocumentState(docSmall, 0, 3, 5, 7, 7);
             int iGroup = 0;
             foreach (var nodeGroup in docSmall.MoleculeTransitionGroups)
             {
-                Assert.AreEqual(Math.Round(nodeGroup.PrecursorMz.Value, 1), nodeGroup.PrecursorMz.Value);
+                if (++iGroup < 6) // The last molecule and its precursors was entered at higher precision
+                {
+                    // All precursor m/z values should be single-digit precision (entered by a person)
+                    Assert.AreEqual(Math.Round(nodeGroup.PrecursorMz.Value, 1), nodeGroup.PrecursorMz.Value);
 
-                // Check translation to adducts worked as expected
-                var expectedAdduct = Adduct.FromCharge(nodeGroup.PrecursorCharge, Adduct.ADDUCT_TYPE.non_proteomic);
-                if (++iGroup == 5)
-                    expectedAdduct = expectedAdduct.ChangeIsotopeLabels(60.0);
-                Assert.AreEqual(expectedAdduct, nodeGroup.PrecursorAdduct);
+                    // Check translation to adducts worked as expected
+                    var expectedAdduct = Adduct.FromCharge(nodeGroup.PrecursorCharge, Adduct.ADDUCT_TYPE.non_proteomic);
+                    if (iGroup == 5)
+                        expectedAdduct = expectedAdduct.ChangeIsotopeLabels(60.0);
+                    Assert.AreEqual(expectedAdduct, nodeGroup.PrecursorAdduct);
+                }
+                else
+                {
+                    var expectedAdduct = Adduct.FromCharge(iGroup-5, Adduct.ADDUCT_TYPE.non_proteomic);
+                    Assert.AreEqual(expectedAdduct, nodeGroup.PrecursorAdduct);
+                }
             }
             // All product m/z values should be single-digit precision (entered by a person)
             foreach (var nodeTran in docSmall.MoleculeTransitions)

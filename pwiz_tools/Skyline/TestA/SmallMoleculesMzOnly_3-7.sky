@@ -79,4 +79,22 @@
       </precursor>
     </molecule>
   </peptide_list>
+  <peptide_list label_name="test" websearch_status="X" auto_manage_children="false">
+    <molecule explicit_retention_time="1" explicit_retention_time_window="2" auto_manage_children="false" mass_average="177.1833" mass_monoisotopic="177.045273" custom_ion_name="test">
+      <precursor charge="1" precursor_mz="177.044724" explicit_collision_energy="3" explicit_drift_time_msec="9" explicit_drift_time_high_energy_offset_msec="-0.1" explicit_ccs_sqa="8" explicit_s_lens="5" explicit_cone_voltage="6" explicit_declustering_potential="4" explicit_compensation_voltage="7" collision_energy="8.361516" mass_average="177.18329957990946" mass_monoisotopic="177.04527257990947" custom_ion_name="test">
+        <transition fragment_type="custom" mass_average="234.50054857990946" mass_monoisotopic="234.00054857990946" custom_ion_name="f1" product_charge="1">
+          <precursor_mz>177.044724</precursor_mz>
+          <product_mz>234</product_mz>
+          <collision_energy>3</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="2" precursor_mz="88.522088" explicit_collision_energy="3" explicit_drift_time_msec="9" explicit_drift_time_high_energy_offset_msec="-0.1" explicit_ccs_sqa="8" explicit_s_lens="5" explicit_cone_voltage="6" explicit_declustering_potential="4" explicit_compensation_voltage="7" collision_energy="5.360599" mass_average="177.18329915981892" mass_monoisotopic="177.04527315981892" custom_ion_name="test">
+        <transition fragment_type="custom" mass_average="77.80054857990946" mass_monoisotopic="77.000548579909463" custom_ion_name="f2" product_charge="1">
+          <precursor_mz>88.522088</precursor_mz>
+          <product_mz>77</product_mz>
+          <collision_energy>3</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+  </peptide_list>
 </srm_settings>
