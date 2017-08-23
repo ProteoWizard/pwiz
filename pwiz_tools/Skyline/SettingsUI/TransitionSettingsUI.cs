@@ -78,8 +78,8 @@ namespace pwiz.Skyline.SettingsUI
             _transitionSettings = _parent.DocumentUI.Settings.TransitionSettings;
 
             // Populate the small mol adduct filter helper menu
-            PopulateAdductMenu(contextMenuStripPrecursorAdduct);
-            PopulateAdductMenu(contextMenuStripFragmentAdduct);
+            PopulateAdductMenu(contextMenuStripPrecursorAdduct, true, precursorAdductStripMenuItem_Click);
+            PopulateAdductMenu(contextMenuStripFragmentAdduct, false, fragmentAdductStripMenuItem_Click);
             Bitmap bm = Resources.PopupBtn;
             bm.MakeTransparent(Color.Fuchsia);
             btnPrecursorAdduct.Image = bm;
@@ -1029,16 +1029,16 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private void PopulateAdductMenu(ContextMenuStrip menu)
+        public static void PopulateAdductMenu(ContextMenuStrip menu, bool isPrecursor, EventHandler adductStripMenuItem_Click)
         {
-            bool isPrecursor = ReferenceEquals(menu, contextMenuStripPrecursorAdduct);
             var adductsInMenu = new HashSet<string>();
+
             if (!isPrecursor)
             {
                 // Charge-only adducts first
                 foreach (var adduct in Adduct.COMMON_CHARGEONLY_ADDUCTS)
                 {
-                    AddAdductMenuItem(menu, adduct, false);
+                    AddAdductMenuItem(menu, adduct, adductStripMenuItem_Click);
                     adductsInMenu.Add(adduct);
                 }
             }
@@ -1047,22 +1047,19 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (!adductsInMenu.Contains(adduct))
                 {
-                    AddAdductMenuItem(menu, adduct, isPrecursor);
+                    AddAdductMenuItem(menu, adduct, adductStripMenuItem_Click);
                     adductsInMenu.Add(adduct);
                 }
             }
         }
 
-        private void AddAdductMenuItem(ContextMenuStrip menu, string adduct, bool isPrecursor)
+        private static void AddAdductMenuItem(ContextMenuStrip menu, string adduct, EventHandler handler)
         {
             var menuItem = new ToolStripMenuItem()
             {
                 Text = adduct
             };
-            if (isPrecursor)
-                menuItem.Click += precursorAdductStripMenuItem_Click;
-            else
-                menuItem.Click += fragmentAdductStripMenuItem_Click;
+            menuItem.Click += handler;
             menu.Items.Add(menuItem);
         }
 
@@ -1075,6 +1072,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             textBox.Text += adduct;
         }
+
 
         private void precursorAdductStripMenuItem_Click(object sender, EventArgs e)
         {

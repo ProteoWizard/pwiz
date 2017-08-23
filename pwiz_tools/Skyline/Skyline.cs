@@ -1920,8 +1920,7 @@ namespace pwiz.Skyline
                     TransitionGroup.MIN_PRECURSOR_CHARGE,
                     TransitionGroup.MAX_PRECURSOR_CHARGE,
                     Document.Settings,
-                    null,
-                    nodeTransGroup.TransitionGroup.CustomMolecule.Formula,
+                    nodeTransGroup.TransitionGroup.CustomMolecule,
                     nodeTransGroup.TransitionGroup.PrecursorAdduct,
                     nodeTransGroup.ExplicitValues,
                     null,
@@ -1972,8 +1971,7 @@ namespace pwiz.Skyline
                     using (
                         var dlg = new EditCustomMoleculeDlg(this, Resources.SkylineWindow_ModifyPeptide_Modify_Small_Molecule,
                             Document.Settings,
-                            nodePep.Peptide.CustomMolecule.Name,
-                            nodePep.Peptide.CustomMolecule.Formula,
+                            nodePep.Peptide.CustomMolecule,
                             nodePep.ExplicitRetentionTime ?? ExplicitRetentionTimeInfo.EMPTY))
                     {
                         dlg.SetResult(nodePep.Peptide.CustomMolecule, Adduct.EMPTY);
@@ -2042,7 +2040,8 @@ namespace pwiz.Skyline
                     Transition.MIN_PRODUCT_CHARGE,
                     Transition.MAX_PRODUCT_CHARGE,
                     Document.Settings,
-                    null, null, nodeTran.Transition.Adduct, null, null, null))
+                    nodeGroupTree.DocNode.CustomMolecule,
+                    nodeTran.Transition.Adduct, null, null, null))
                 {
                     dlg.SetResult(nodeTran.Transition.CustomIon, nodeTran.Transition.Adduct);
                     if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -2800,7 +2799,7 @@ namespace pwiz.Skyline
                     Resources.SkylineWindow_AddMolecule_Add_Transition, null, existingIons,
                     Transition.MIN_PRODUCT_CHARGE,
                     Transition.MAX_PRODUCT_CHARGE,
-                    Document.Settings, null, null, nodeGroup.Transitions.Any() ? nodeGroup.Transitions.Last().Transition.Adduct : Adduct.SINGLY_PROTONATED, null, null, null))
+                    Document.Settings, nodeGroup.CustomMolecule, nodeGroup.Transitions.Any() ? nodeGroup.Transitions.Last().Transition.Adduct : Adduct.SINGLY_PROTONATED, null, null, null))
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
@@ -2825,17 +2824,13 @@ namespace pwiz.Skyline
                 var pepPath = nodePepTree.Path;
                 var notFirst = nodePep.TransitionGroups.Any();
                 // Get a list of existing precursors - likely basis for adding a heavy version
-                var existingIons = notFirst ? nodePep.TransitionGroups.Select(child => child.CustomMolecule).Where(x => x != null).ToArray() : null;
                 var existingPrecursors = nodePep.TransitionGroups.Select(child => child.TransitionGroup).Where(c => c.IsCustomIon).ToArray();
                 using (var dlg = new EditCustomMoleculeDlg(this,
                     EditCustomMoleculeDlg.UsageMode.precursor,
                     Resources.SkylineWindow_AddSmallMolecule_Add_Precursor,
                     null, existingPrecursors,
                     TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings,
-                    // ReSharper disable PossibleMultipleEnumeration  (inspection on TC gives false warning here)
-                    (existingIons == null) ? nodePep.Peptide.CustomMolecule.Name : existingIons.First().Name,
-                    (existingIons == null) ? nodePep.Peptide.CustomMolecule.Formula : existingIons.First().Formula,
-                    // ReSharper restore PossibleMultipleEnumeration
+                    nodePep.Peptide.CustomMolecule,
                     notFirst ? nodePep.TransitionGroups.First().TransitionGroup.PrecursorAdduct : Adduct.SINGLY_PROTONATED,
                     notFirst ? nodePep.TransitionGroups.First().ExplicitValues : ExplicitTransitionGroupValues.EMPTY,
                     null,
@@ -2871,7 +2866,7 @@ namespace pwiz.Skyline
                 using (var dlg = new EditCustomMoleculeDlg(this,
                     EditCustomMoleculeDlg.UsageMode.moleculeNew,
                     Resources.SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor, null, null,
-                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings, null, string.Empty, Adduct.NonProteomicProtonatedFromCharge(1), 
+                    TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings, null, Adduct.NonProteomicProtonatedFromCharge(1), 
                     ExplicitTransitionGroupValues.EMPTY, ExplicitRetentionTimeInfo.EMPTY, IsotopeLabelType.light))
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)

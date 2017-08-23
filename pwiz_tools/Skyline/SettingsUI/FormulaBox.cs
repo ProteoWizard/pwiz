@@ -70,6 +70,16 @@ namespace pwiz.Skyline.SettingsUI
             _adduct = adduct;
             _editMode = mode;
 
+            switch (mode)
+            {
+                case EditMode.adduct_only:
+                    TransitionSettingsUI.PopulateAdductMenu(contextFormula, false, adductStripMenuItem_Click);
+                    break;
+                case EditMode.formula_and_adduct:
+                    TransitionSettingsUI.PopulateAdductMenu(contextFormula, true, adductStripMenuItem_Click);
+                    break;
+            }
+
             toolTip1.SetToolTip(textFormula, _editMode==EditMode.adduct_only ? AdductHelpText : FormulaHelpText);  // Explain how formulas work, and ion formula adducts if charge.HasValue
 
             labelFormula.Text = labelFormulaText;
@@ -353,6 +363,27 @@ namespace pwiz.Skyline.SettingsUI
             catch (Exception)
             {
                 return null;
+            }
+        }
+
+        // Handler for adduct picker menu
+        private void adductStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var mi = sender as ToolStripMenuItem;
+            if (mi != null)
+            {
+                var adduct =  mi.Text;
+                if (!string.IsNullOrEmpty(textFormula.Text))
+                {
+                    // Replacing an existing adduct declaration?
+                    var start = textFormula.Text.LastIndexOf("[", StringComparison.Ordinal); // Not L10N
+                    var end = textFormula.Text.IndexOf("]", StringComparison.Ordinal); // Not L10N
+                    if (start >= 0 && end > start)
+                    {
+                        textFormula.Text = textFormula.Text.Substring(0, start);
+                    }
+                }
+                textFormula.Text += adduct;
             }
         }
 

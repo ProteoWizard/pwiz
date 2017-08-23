@@ -58,8 +58,8 @@ namespace pwiz.Skyline.SettingsUI
         /// For modifying at the Molecule level
         /// </summary>
         public EditCustomMoleculeDlg(SkylineWindow parent, string title,
-            SrmSettings settings, string defaultName, string defaultFormula, ExplicitRetentionTimeInfo explicitRetentionTime) :
-            this(parent, UsageMode.moleculeEdit, title, null, null, 0, 0, null, defaultName, defaultFormula, Adduct.EMPTY, null, explicitRetentionTime, null)
+            SrmSettings settings, CustomMolecule molecule, ExplicitRetentionTimeInfo explicitRetentionTime) :
+            this(parent, UsageMode.moleculeEdit, title, null, null, 0, 0, null, molecule, Adduct.EMPTY, null, explicitRetentionTime, null)
         {
         }
 
@@ -68,7 +68,7 @@ namespace pwiz.Skyline.SettingsUI
         /// Null values imply "don't ask user for this"
         /// </summary>
         public EditCustomMoleculeDlg(SkylineWindow parent, UsageMode usageMode, string title, Identity initialId, IEnumerable<Identity> existingIds, int minCharge, int maxCharge,
-            SrmSettings settings, string defaultName, string defaultFormula, Adduct defaultCharge, ExplicitTransitionGroupValues explicitAttributes, 
+            SrmSettings settings, CustomMolecule molecule, Adduct defaultCharge, ExplicitTransitionGroupValues explicitAttributes, 
             ExplicitRetentionTimeInfo explicitRetentionTime,
             IsotopeLabelType defaultIsotopeLabelType)
         {
@@ -87,7 +87,7 @@ namespace pwiz.Skyline.SettingsUI
 
             InitializeComponent();
 
-            NameText = defaultName;
+            NameText = molecule == null? String.Empty : molecule.Name;
             textName.Enabled = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.moleculeEdit || usageMode == UsageMode.fragment; // Can user edit name?
 
             var needOptionalValuesBox = explicitRetentionTime != null || explicitAttributes != null;
@@ -124,12 +124,14 @@ namespace pwiz.Skyline.SettingsUI
                 ResultExplicitTransitionGroupValues = new ExplicitTransitionGroupValues(explicitAttributes);
             }
             
-            string labelAverage = defaultCharge != null
+            string labelAverage = !defaultCharge.IsEmpty
                 ? Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_m_z_
                 : Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_A_verage_mass_;
-            string labelMono = defaultCharge != null
+            string labelMono = !defaultCharge.IsEmpty
                 ? Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_
                 : Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_mass_;
+            var defaultFormula = molecule == null ? string.Empty : molecule.Formula;
+            var transition = initialId as Transition;
 
             FormulaBox.EditMode editMode;
             if (enableAdductEditing && !enableFormulaEditing)
@@ -139,21 +141,17 @@ namespace pwiz.Skyline.SettingsUI
             else
                 editMode = FormulaBox.EditMode.formula_and_adduct;
             string formulaBoxLabel;
-            if (defaultCharge == null)
+            if (defaultCharge.IsEmpty)
             {
                 formulaBoxLabel = Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_Chemi_cal_formula_;
             }
             else if (editMode == FormulaBox.EditMode.adduct_only)
             {
                 var prompt = defaultFormula;
-                if (string.IsNullOrEmpty(defaultFormula))
+                if (string.IsNullOrEmpty(defaultFormula) && molecule != null)
                 {
                     // Defined by mass only
-                    var transitionGroup = initialId as TransitionGroup;
-                    if (transitionGroup != null)
-                    {
-                        prompt = transitionGroup.Peptide.CustomMolecule.ToString();
-                    }
+                    prompt = molecule.ToString();
                 }
                 formulaBoxLabel = string.Format(Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg_Addu_ct_for__0__, prompt);
             }
@@ -162,13 +160,17 @@ namespace pwiz.Skyline.SettingsUI
                 formulaBoxLabel = Resources.EditMeasuredIonDlg_EditMeasuredIonDlg_Ion__chemical_formula_;
             }
 
-            double? averageMassMz = null;
-            double? monoMassMz = null;
-            var transition = initialId as Transition;
+            double? averageMass = null;
+            double? monoMass = null;
             if (transition != null && string.IsNullOrEmpty(defaultFormula) && transition.IsCustom())
             {
-                averageMassMz = transition.Adduct.ApplyToMass(transition.CustomIon.AverageMass);
-                monoMassMz = transition.Adduct.ApplyToMass( transition.CustomIon.MonoisotopicMass);
+                averageMass = transition.CustomIon.AverageMass;
+                monoMass = transition.CustomIon.MonoisotopicMass;
+            }
+            else if (molecule != null)
+            {
+                averageMass = molecule.AverageMass;
+                monoMass = molecule.MonoisotopicMass;
             }
 
             _formulaBox =
@@ -180,8 +182,8 @@ namespace pwiz.Skyline.SettingsUI
                     editMode)
                 {
                     NeutralFormula = defaultFormula,
-                    AverageMass = averageMassMz,
-                    MonoMass = monoMassMz,
+                    AverageMass = averageMass,
+                    MonoMass = monoMass,
                     Location = new Point(textName.Left, textName.Bottom + 12)
                 };
             _formulaBox.ChargeChange += (sender, args) =>
@@ -194,10 +196,10 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         _formulaBox.Formula = revisedFormula;
                     }
-                    if (string.IsNullOrEmpty(_formulaBox.NeutralFormula) && averageMassMz.HasValue)
+                    if (string.IsNullOrEmpty(_formulaBox.NeutralFormula) && averageMass.HasValue)
                     {
-                        _formulaBox.AverageMass = averageMassMz;
-                        _formulaBox.MonoMass = monoMassMz;
+                        _formulaBox.AverageMass = averageMass;
+                        _formulaBox.MonoMass = monoMass;
                     }
                 }
             };
