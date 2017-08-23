@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -92,6 +93,7 @@ namespace pwiz.SkylineTestFunctional
             TestBasicFunctionality();
             RunDlg<MultiButtonMsgDlg>(SkylineWindow.NewDocument, msgDlg => msgDlg.Btn1Click());
             TestModificationMatching();
+            TestTooltip();
         }
 
         private void SetUpTestLibraries()
@@ -697,7 +699,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ModifyDocument("Change static mods",
                                                      doc => doc.ChangeSettings(phosphoNotVariable)));
 
-            RelaunchLibExplorer(false, PHOSPHO_LIB);
+            RelaunchLibExplorer(false, false, PHOSPHO_LIB);
 
             // Test doesn't find variable match if implicit match exists in doc
             WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
@@ -718,7 +720,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ModifyDocument("Change static mods", doc => 
                 doc.ChangeSettings(pepModsNoMods1)));
 
-            RelaunchLibExplorer(false, PHOSPHO_LIB);
+            RelaunchLibExplorer(false, false, PHOSPHO_LIB);
 
             using (new CheckDocumentStateWithPossibleProteinMetadataBackgroundUpdate(1, 4, 4, 12))
             {
@@ -765,7 +767,7 @@ namespace pwiz.SkylineTestFunctional
                     mods.ChangeStaticModifications(new StaticMod[0]));
             RunUI(() => SkylineWindow.ModifyDocument("Change static mods", doc =>
                 doc.ChangeSettings(pepModsNoMods2)));
-            RelaunchLibExplorer(false, YEAST);
+            RelaunchLibExplorer(false, false, YEAST);
             RunUI(() =>
             {
                 _viewLibUI.ChangeSelectedPeptide(nodeRemoved.Replace("C", "C[+57.0]"));
@@ -791,7 +793,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ModifyDocument("Change static mods", doc =>
                 doc.ChangeSettings(pepModsNoMods3)));
             Settings.Default.StaticModList.Clear();
-            RelaunchLibExplorer(true, ANL_COMBINED);
+            RelaunchLibExplorer(true, true, ANL_COMBINED);
             RunUI(() => _viewLibUI.AddPeptide());
             Assert.AreEqual(0, Settings.Default.StaticModList.Count); // TODO
 
@@ -811,7 +813,7 @@ namespace pwiz.SkylineTestFunctional
                 doc.ChangeSettings(pepModsNoMods4)));
             Settings.Default.StaticModList.Clear();
             Settings.Default.StaticModList.AddRange(Settings.Default.StaticModList.GetDefaults());
-            RelaunchLibExplorer(false, YEAST);
+            RelaunchLibExplorer(false, false, YEAST);
             Assert.IsFalse(_viewLibUI.HasUnmatchedPeptides);
 
             // Test removing mod from doc does not remove matches
@@ -853,7 +855,58 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(_viewLibUI);
         }
 
-        private void RelaunchLibExplorer(bool showModsDlg, string libName)
+        private void TestTooltip()
+        {
+            // Test modification matching tooltip coloration
+            RelaunchLibExplorer(true, true, PHOSPHO_LIB); // All ExplicitMods selected
+            RunUI(() =>
+            {
+                var pep1 = _viewLibUI.GetTipProvider(0);
+                Assert.AreEqual(pep1.GetSeqParts()[10].Text, "S[+80.0]");
+                Assert.AreEqual(pep1.GetSeqParts()[10].Color, Brushes.Black);
+                var pep3 = _viewLibUI.GetTipProvider(2);
+                Assert.AreEqual(pep3.GetSeqParts().Count, 1); // No mods so seq parts will only have one which is the whole sequence
+                Assert.AreEqual(pep1.GetMzParts().Count, 0); // In mz range so should not have red mz out of range tooltip
+                Assert.AreEqual(pep3.GetMzParts().Count, 0); // In mz range so should not have red mz out of range tooltip
+            });
+            RunUI(() => _viewLibUI.CancelDialog());
+            WaitForClosedForm(_viewLibUI);
+            RelaunchLibExplorer(true, false, PHOSPHO_LIB); // No ExplicitMods selected
+            RunUI(() =>
+            {
+                var pep1 = _viewLibUI.GetTipProvider(0);
+                // No explicit mods selected so S[+80.0] should be red and have a question mark
+                Assert.AreEqual(pep1.GetSeqParts()[10].Text, "S[+80.0?]");
+                Assert.AreEqual(pep1.GetSeqParts()[10].Color, Brushes.Red);
+                Assert.AreEqual(pep1.GetMzParts().Count, 0); // In mz range so should not have red mz out of range tooltip
+            });
+            // Test MZ range tooltip out of bounds
+            RunUI(() => SkylineWindow.ModifyDocument("Change m/z range",
+                doc => doc.ChangeSettings(doc.Settings.ChangeTransitionInstrument(inst =>
+                    inst.ChangeMinMz(700)))));
+            RunUI(() => SkylineWindow.ModifyDocument("Change m/z range",
+                doc => doc.ChangeSettings(doc.Settings.ChangeTransitionInstrument(inst =>
+                    inst.ChangeMaxMz(900)))));
+            RunUI(() =>
+            {
+                var pep1 = _viewLibUI.GetTipProvider(0);
+                Assert.AreEqual(pep1.GetSeqParts()[10].Text, "S[+80.0?]");
+                Assert.AreEqual(pep1.GetMzParts().Count, 0); // not out of bounds
+                var pep2 = _viewLibUI.GetTipProvider(1);
+                Assert.AreEqual(pep2.GetMzParts().Count, 3);
+                Assert.AreEqual(pep2.GetMzParts()[1].Text, "900"); // out of upper bound
+                Assert.AreEqual(pep2.GetMzParts()[1].Color, Brushes.Red);
+                var pep3 = _viewLibUI.GetTipProvider(2);
+                Assert.AreEqual(pep3.GetMzParts()[1].Text, "700"); // out of lower bound
+                Assert.AreEqual(pep3.GetMzParts()[1].Color, Brushes.Red);
+                var pep4 = _viewLibUI.GetTipProvider(3);
+                Assert.AreEqual(pep4.GetMzParts().Count, 0);  // not out of bounds
+            });
+            RunUI(() => _viewLibUI.CancelDialog());
+            WaitForClosedForm(_viewLibUI);
+        }
+
+        private void RelaunchLibExplorer(bool showModsDlg, bool okAll, string libName)
         {
             if (_viewLibUI != null)
             {
@@ -865,7 +918,13 @@ namespace pwiz.SkylineTestFunctional
             {
                 var modDlg = WaitForOpenForm<AddModificationsDlg>();
                 if (modDlg != null)
-                    RunUI(() => modDlg.OkDialogAll());
+                    RunUI(() =>
+                    {
+                        if (okAll)
+                            modDlg.OkDialogAll();
+                        else
+                            modDlg.OkDialog();
+                    });
                 WaitForClosedForm(modDlg);
             }
             RunUI(() =>

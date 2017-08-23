@@ -1825,7 +1825,6 @@ namespace pwiz.Skyline.SettingsUI
 
         #region Node Tip
 
-
         private void listPeptide_MouseMove(object sender, MouseEventArgs e)
         {
             Point pt = e.Location;
@@ -2028,6 +2027,18 @@ namespace pwiz.Skyline.SettingsUI
                 return split[1];
             // Trickier case of ""RT: 12.345 DT: 67.89"
             return split[1].Substring(0, split[1].LastIndexOf(' ')); // Not L10N
+        }
+
+        public PeptideTipProvider GetTipProvider(int i)
+        {
+            return new PeptideTipProvider(GetPepInfo(i), _matcher, _lookupPool);
+        }
+
+        private ViewLibraryPepInfo GetPepInfo(int i)
+        {
+            if (listPeptide.Items.Count <= i || i < 0)
+                return new ViewLibraryPepInfo();
+            return (ViewLibraryPepInfo)listPeptide.Items[i];
         }
 
         public bool HasMatches
@@ -2269,17 +2280,28 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private class PeptideTipProvider : ITipProvider
+        public class PeptideTipProvider : ITipProvider
         {
             private ViewLibraryPepInfo _pepInfo;
-            private readonly byte[] _lookupPool;
             private readonly LibKeyModificationMatcher _matcher;
+            private readonly List<TextColor> _seqPartsToDraw;
+            private readonly List<TextColor> _mzRangePartsToDraw;
+            private readonly SrmSettings _settings;
+            private readonly double _mz;
 
             public PeptideTipProvider(ViewLibraryPepInfo pepInfo, LibKeyModificationMatcher matcher, byte[] lookupPool)
             {
+                ExplicitMods mods;
+                TransitionGroupDocNode transitionGroup;
                 _pepInfo = pepInfo;
-                _lookupPool = lookupPool;
                 _matcher = matcher;
+                GetPeptideInfo(_pepInfo, _matcher, lookupPool, out _settings, out transitionGroup, out mods);
+                // build seq parts to draw
+                _seqPartsToDraw = GetSequencePartsToDraw(mods);
+                // build mz range parts to draw
+                var massH = _settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods).GetPrecursorMass(_pepInfo.Target);
+                _mz = SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorCharge));
+                _mzRangePartsToDraw = GetMzRangeItemsToDraw(_mz);
             }
 
             public bool HasTip
@@ -2291,59 +2313,210 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var table = new TableDesc();
                 var tableMz = new TableDesc();
-                SizeF size;
+                SizeF sizeSeq;
                 SizeF sizeMz;
+
                 using (RenderTools rt = new RenderTools())
                 {
-                    // TODO: should this use international decimal separator
-                    var displayName = _pepInfo.DisplayString.Replace(".0]", "]"); // Not L10N
-                    table.AddDetailRow(string.Empty, displayName, rt); // Not L10N
-                    ExplicitMods mods;
-                    TransitionGroupDocNode transitionGroupDocNode;
-                    SrmSettings settings;
-                    GetPeptideInfo(_pepInfo, _matcher, _lookupPool, out settings, out transitionGroupDocNode, out mods);
-                    TransitionGroup transitionGroup = transitionGroupDocNode.TransitionGroup;
-                    double mz;
-                    if (transitionGroup.IsProteomic)
-                    {
-                        var pCalc = settings.GetPrecursorCalc(transitionGroup.LabelType, mods);
-                        var massH = pCalc.GetPrecursorMass(_pepInfo.Target);
-                        mz = SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorCharge));
-                    }
-                    else
-                    {
-                        var mol = transitionGroup.Peptide.CustomMolecule;
-                        mz = transitionGroup.PrecursorAdduct.MzFromNeutralMass(mol.GetMass(MassType.Monoisotopic));
-                        if (!Equals(displayName, mol.Name) && ! string.IsNullOrEmpty(mol.Name))
-                        {
-                            table.AddDetailRow(string.Empty, string.Format("Name: {0}", mol.Name), rt); // Not L10N
-                        }
-                        if (!string.IsNullOrEmpty(mol.Formula))
-                        {
-                            table.AddDetailRow(string.Empty, string.Format("Formula: {0}", mol.Formula), rt); // Not L10N
-                        }
-                        foreach (var idKey in mol.AccessionNumbers.GetAllKeys()) // List InChiKey, CAS, etc
-                        {
-                            table.AddDetailRow(string.Empty, idKey, rt);
-                        }
-                    }
-                    size = table.CalcDimensions(g);
-                    tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_Precursor_m_z, string.Format("{0:F04}", mz), rt); // Not L10N
+                    // Draw sequence
+                    sizeSeq = DrawTextParts(g, 0, 0, _seqPartsToDraw, rt);
+                    
+                    // Draw mz
+                    tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_Precursor_m_z, string.Format("{0:F04}", _mz), rt); // Not L10N
                     sizeMz = tableMz.CalcDimensions(g);
-                    size.Height += 2;    // Spacing between details and fragments
+                    sizeSeq.Height += 2;    // Spacing between details and fragments
+
+                    // Draw mz range out of bounds
+                    if (_mzRangePartsToDraw.Count > 0)
+                        sizeMz.Width = DrawTextParts(g, sizeMz.Width, sizeSeq.Height, _mzRangePartsToDraw, rt).Width;
+
                     if (draw)
                     {
                         table.Draw(g);
-                        g.TranslateTransform(0, size.Height);
-
+                        g.TranslateTransform(0, sizeSeq.Height);
                         tableMz.Draw(g);
-                        g.TranslateTransform(0, -size.Height);
+                        g.TranslateTransform(0, -sizeSeq.Height);
                     }
                 }
 
-                int width = (int)Math.Round(Math.Max(sizeMz.Width, size.Width));
-                int height = (int)Math.Round(sizeMz.Height + size.Height);
-                return new Size(width + 2, height + 2);
+                int width = (int)Math.Round(Math.Max(sizeMz.Width, sizeSeq.Width));
+                int height = (int)Math.Round(sizeMz.Height + sizeSeq.Height);
+                return new Size(width + 8, height + 4); // +8 width, +4 height padding
+            }
+
+            private List<TextColor> GetMzRangeItemsToDraw(double mz)
+            {
+                var toDrawItems = new List<TextColor>();
+                var maxMz = _settings.TransitionSettings.Instrument.MaxMz;
+                var minMz = _settings.TransitionSettings.Instrument.MinMz;
+                if (mz > maxMz)
+                {
+                    toDrawItems.Add(new TextColor(" > [" + minMz + "-")); // Not L10N
+                    toDrawItems.Add(new TextColor(maxMz.ToString(), Brushes.Red));
+                    toDrawItems.Add(new TextColor("]")); // Not L10N
+                }
+                else if (mz < minMz)
+                {
+                    toDrawItems.Add(new TextColor(" < [")); // Not L10N
+                    toDrawItems.Add(new TextColor(minMz.ToString(), Brushes.Red));
+                    toDrawItems.Add(new TextColor("-" + maxMz + "]")); // Not L10N
+                }
+                return toDrawItems;
+            }
+
+            private List<TextColor> GetSequencePartsToDraw(ExplicitMods mods)
+            {
+                var toDrawParts = new List<TextColor>();
+                if (_pepInfo.Key.ModificationCount == 0)
+                {
+                    toDrawParts.Add(new TextColor(_pepInfo.Key.Sequence));
+                }
+                else
+                {
+                    var splitMods = SplitModifications(_pepInfo.Key.Sequence);
+                    for (var i = 0; i < splitMods.Count; i++)
+                    {
+                        var piece = splitMods[i];
+                        string drawStr = piece.Item1.ToString();
+                        var drawColor = Brushes.Black;
+                        if (piece.Item2 != null) // if is modified AA
+                        {
+                            drawStr += piece.Item2;
+                            var currentMod = GetCurrentMod(mods, i, piece);
+                            if (!IsMatched(currentMod, piece)) // not match if color is red
+                            {
+                                drawStr = drawStr.Replace("]", "?]"); // Not L10N
+                                drawColor = Brushes.Red;
+                            }
+                        }
+                        toDrawParts.Add(new TextColor(drawStr, drawColor));
+                    }
+                }
+                return toDrawParts;
+            }
+
+            private bool IsMatched(ExplicitMod currentMod, Tuple<char, string> piece)
+            {
+                if (currentMod == null)
+                    return false;
+
+                foreach (var mod in _matcher.MatcherPepMods.StaticModifications)
+                {
+                    if (mod.Terminus == ModTerminus.N && currentMod.IndexAA != 0)
+                    {
+                        continue;
+                    }
+                    if (mod.Terminus == ModTerminus.C &&
+                        _pepInfo.PeptideNode != null &&
+                        currentMod.IndexAA != _pepInfo.PeptideNode.Peptide.Sequence.Length - 1)
+                    {
+                        continue;
+                    }
+                    if (!MatchesAAsAndMass(piece.Item1.ToString(), currentMod.Modification.MonoisotopicMass, mod))
+                        continue;
+
+                    return true;
+                }
+                return false;
+            }
+
+            private ExplicitMod GetCurrentMod(ExplicitMods mods, int staticModIndex, Tuple<char, string> piece)
+            {
+                ExplicitMod currentMod = null;
+                if (mods != null)
+                {
+                    currentMod = mods.StaticModifications.FirstOrDefault(m => staticModIndex == m.IndexAA);
+                }
+                if (currentMod == null) // if not in docnode.staticmodifications then check implicit mods in settings
+                {
+                    var mass = double.Parse(piece.Item2.Replace("[", string.Empty).Replace("]", string.Empty)); // Not L10N
+                    foreach (var mod in _settings.PeptideSettings.Modifications.StaticModifications)
+                    {
+                        if (MatchesAAsAndMass(piece.Item1.ToString(), mass, mod))
+                            currentMod = new ExplicitMod(staticModIndex, mod);
+                    }   
+                }
+                return currentMod;
+            }
+
+            private static bool MatchesAAsAndMass(string aa, double? mass, StaticMod mod)
+            {
+                if (aa != null && mod.AAs != null)
+                {
+                    var AAs = mod.AAs.Split(',').Select(p => p.Trim()).ToArray();
+                    if (Array.IndexOf(AAs, aa) == -1)
+                        return false;
+                }
+                if (mass.HasValue && mod.MonoisotopicMass.HasValue)
+                {
+                    // CONSIDER: Hard coded tolerance may need to be reconsidered
+                    if (Math.Abs(mass.Value - mod.MonoisotopicMass.Value) > .05)
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            private List<Tuple<char, string>> SplitModifications(string modifiedSequence)
+            {
+                var result = new List<Tuple<char, string>>();
+                for (int ich = 0; ich < modifiedSequence.Length; ich++)
+                {
+                    char ch = modifiedSequence[ich];
+                    if (ich == modifiedSequence.Length - 1 || modifiedSequence[ich + 1] != '[')
+                    {
+                        result.Add(Tuple.Create(ch, (string) null));
+                    }
+                    else
+                    {
+                        int ichEndBracket = modifiedSequence.IndexOf(']', ich + 1);
+                        if (ichEndBracket == -1)
+                            ichEndBracket = modifiedSequence.Length;
+                        int ichStart = ich + 1;
+                        string modText = ichStart < ichEndBracket
+                            ? modifiedSequence.Substring(ich + 1, ichEndBracket - ich)
+                            : null;
+                        result.Add(Tuple.Create(ch, modText));
+                        ich = ichEndBracket;
+                    }
+                }
+                return result;
+            }
+
+            // draws text at a start (x,y) and returns the end (x,y) of the drawn text
+            // takes a list of <string, color> so that we can draw segments of different colors
+            private SizeF DrawTextParts(Graphics g, float startX, float startY, List<TextColor> parts, RenderTools rt)
+            {
+                var size = new SizeF(startX, startY);
+                float height = 0;
+                foreach (var part in parts)
+                {
+                    g.DrawString(part.Text, rt.FontNormal, part.Color, new PointF(size.Width, size.Height)); // Not L10N
+                    size.Width += g.MeasureString(part.Text, rt.FontNormal).Width - 3;
+                    height = g.MeasureString(part.Text, rt.FontNormal).Height;
+                }
+                size.Height = height;
+                return size;
+            }
+
+            #region Test support
+
+            public List<TextColor> GetSeqParts() { return _seqPartsToDraw; }
+            public List<TextColor> GetMzParts() { return _mzRangePartsToDraw; }
+
+            #endregion
+
+            public struct TextColor
+            {
+                public TextColor(string text, Brush color = null) : this()
+                {
+                    Text = text;
+                    Color = color ?? Brushes.Black;
+                }
+
+                public string Text { get; private set; }
+                public Brush Color { get; private set; }
             }
         }
 
