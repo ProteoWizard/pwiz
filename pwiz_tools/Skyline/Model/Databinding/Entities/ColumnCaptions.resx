@@ -846,4 +846,19 @@
   <data name="DriftTimeWindow">
     <value>Drift Time Window</value>
   </data>
+  <data name="CAS">
+    <value>CAS</value>
+  </data>
+  <data name="InChiKey">
+    <value>InChiKey</value>
+  </data>
+  <data name="InChI">
+    <value>InChI</value>
+  </data>
+  <data name="HMDB">
+    <value>HMDB</value>
+  </data>
+  <data name="SMILES">
+    <value>SMILES</value>
+  </data>
 </root>

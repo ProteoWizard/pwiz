@@ -501,6 +501,15 @@ namespace pwiz.Skyline.Model
                 moleculeIdKeys.Add(MoleculeAccessionNumbers.TagCAS, cas);
             }
 
+            var smilesCol = ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.idSMILES);
+            var smiles = NullForEmpty(row.GetCell(smilesCol));
+            if (smiles != null)
+            {
+                // Should have form like CCc1nn(C)c2c(=O)[nH]c(nc12)c3cc(ccc3OCC)S(=O)(=O)N4CCN(C)CC4 but we'll accept anything for now, having no proper parser
+                smiles = smiles.Trim();
+                moleculeIdKeys.Add(MoleculeAccessionNumbers.TagSMILES, smiles); // Not L10N
+            }
+
             return !moleculeIdKeys.Any() ?
                 MoleculeAccessionNumbers.EMPTY : 
                 new MoleculeAccessionNumbers(moleculeIdKeys);

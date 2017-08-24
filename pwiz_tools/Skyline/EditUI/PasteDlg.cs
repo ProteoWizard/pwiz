@@ -1445,7 +1445,7 @@ namespace pwiz.Skyline.EditUI
                     {
                         continue;
                     }
-                    yield return line.Split(new[] { separator });
+                    yield return line.ParseDsvFields(separator); // Properly handles quoted commas etc
                 }
             }
         }
@@ -1618,6 +1618,7 @@ namespace pwiz.Skyline.EditUI
             public const string idInChiKey = "InChiKey"; // Not L10N
             public const string idInChi = "InChi"; // Not L10N
             public const string idHMDB = "HMDB"; // Not L10N
+            public const string idSMILES = "SMILES"; // Not L10N
 
             public static List<string> KnownHeaders()
             {
@@ -1650,6 +1651,7 @@ namespace pwiz.Skyline.EditUI
                     idCAS,
                     idHMDB,
                     idInChi,
+                    idSMILES,
                 });
             }
         }
@@ -1730,6 +1732,7 @@ namespace pwiz.Skyline.EditUI
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idCAS, SmallMoleculeTransitionListColumnHeaders.idCAS); // No need to localize
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idHMDB, SmallMoleculeTransitionListColumnHeaders.idHMDB); // No need to localize
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idInChi, SmallMoleculeTransitionListColumnHeaders.idInChi); // No need to localize
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.idSMILES, SmallMoleculeTransitionListColumnHeaders.idSMILES); // No need to localize
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.slens, Resources.PasteDlg_UpdateMoleculeType_S_Lens);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.coneVoltage, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_);

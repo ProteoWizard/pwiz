@@ -82,6 +82,11 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(pasteDlg);
         }
 
+        const string caffeineInChiKey = "RYYVLZVUVIJVGH-UHFFFAOYSA-N";
+        const string caffeineHMDB = "HMDB01847";
+        const string caffeineInChi = "InChI=1S/C8H10N4O2/c1-10-4-9-6-5(10)7(13)12(3)8(14)11(6)2/h4H,1-3H3";
+        const string caffeineCAS = "58-08-2";
+        const string caffeineSMILES = "Cn1cnc2n(C)c(=O)n(C)c(=O)c12";
         protected override void DoTest()
         {
             const string caffeineFormula = "C8H10N4O2";
@@ -99,10 +104,7 @@ namespace pwiz.SkylineTestFunctional
             const double precursorRT = 3.45;
             const double precursorRTWindow = 4.567;
             const string note = "noted!";
-            const string caffeineInChiKey = "RYYVLZVUVIJVGH-UHFFFAOYSA-N";
-            const string caffeineHMDB = "HMDB01847";
-            const string caffeineInChi = "InChI=1S/C8H10N4O2/c1-10-4-9-6-5(10)7(13)12(3)8(14)11(6)2/h4H,1-3H3";
-            const string caffeineCAS = "58-08-2";
+
 
             var docEmpty = NewDocument();
 
@@ -143,12 +145,13 @@ namespace pwiz.SkylineTestFunctional
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.idHMDB,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.idInChi,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.idCAS,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.idSMILES,
                 };
 
             // Default col order is listname, preName, PreFormula, preAdduct, preMz, preCharge, prodName, ProdFormula, prodAdduct, prodMz, prodCharge
             string line1 = "MyMolecule\tMyMol\tMyFrag\t"+caffeineFormula+"\t" + caffeineFragment +"\t" + precursorMzAtZNeg2 + "\t" + productMzAtZNeg2 + "\t-2\t-2\tlight\t" +
                 precursorRT + "\t" + precursorRTWindow + "\t" + precursorCE + "\t" + note + "\t\t\t" + precursorDT + "\t" + highEnergyDtOffset + "\t" + precursorCCS + "\t" + slens + "\t" + coneVoltage +
-                "\t" + compensationVoltage + "\t" + declusteringPotential + "\t" + caffeineInChiKey + "\t" + caffeineHMDB + "\t" + caffeineInChi + "\t" + caffeineCAS; // Legit
+                "\t" + compensationVoltage + "\t" + declusteringPotential + "\t" + caffeineInChiKey + "\t" + caffeineHMDB + "\t" + caffeineInChi + "\t" + caffeineCAS + "\t" + caffeineSMILES; // Legit
             const string line2start = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCH3O\t";
             const string line3 = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCHH500000000\t\t\t1\t1";
             const string line4 = "\r\nMyMolecule3\tMyMol3\tMyFrag3\tH2\tH\t\t\t1\t1";
@@ -196,7 +199,7 @@ namespace pwiz.SkylineTestFunctional
                 string[] fields =
                 {
                     "MyMol", "MyPrecursor", "MyProduct", "C12H9O4", "C6H4O2", "217.049535420091", "108.020580420091", "1", "1", "heavy", "123", "5", "25", "this is a note", "[M+]", "[M+]", "7", "9", "123", "88.5", "99.6", "77.3", "66.2",
-                                caffeineInChiKey, caffeineHMDB, caffeineInChi, caffeineCAS };
+                                caffeineInChiKey, caffeineHMDB, caffeineInChi, caffeineCAS, caffeineSMILES };
                 string[] badfields =
                 {
                     "", "", "", "123", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "", "[M+foo]", "wut", "foosball", "greasy", "mumble", "gumdrop", "dingle", "gorse", "AHHHHHRGH", "banananana",
@@ -294,6 +297,9 @@ namespace pwiz.SkylineTestFunctional
             string cas;
             precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("cAs", out cas); // Should be case insensitive
             Assert.AreEqual(caffeineCAS, cas);
+            string smiles;
+            precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("smILes", out smiles); // Should be case insensitive
+            Assert.AreEqual(caffeineSMILES, smiles);
             // Does that produce the expected transition list file?
             TestTransitionListOutput(docOrig, "PasteMoleculeTinyTest.csv", "PasteMoleculeTinyTestExpected.csv", ExportFileType.IsolationList);
             // Does serialization of imported values work properly?
@@ -511,7 +517,13 @@ namespace pwiz.SkylineTestFunctional
                 PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
                 PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaProduct,
                 PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.note,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.idCAS,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.idHMDB,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.idInChi,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.idInChiKey,
+                PasteDlg.SmallMoleculeTransitionListColumnHeaders.idSMILES,
             };
             RunUI(() =>
             {
@@ -542,7 +554,13 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnOrder.ToList().Count);
 
-            SetCsvFileClipboardText(TestFilesDir.GetTestPath("small_molecule_paste_test.csv"));
+            var text = GetCsvFileText(TestFilesDir.GetTestPath("small_molecule_paste_test.csv"));
+            // Tack on some molecule IDs so we can test reports (NB these don't match formula, so may fail in future)
+            var rows = text.Replace("\r","").Split('\n').Select(line => line.Contains("lager") ?
+                line + TextUtil.CsvSeparator + string.Join(TextUtil.CsvSeparator.ToString(), caffeineCAS, caffeineHMDB, "\"" + caffeineInChi + "\"", caffeineInChiKey, caffeineSMILES) : 
+                line);
+            text = TextUtil.LineSeparate(rows);
+            SetClipboardText(text); 
             RunUI(pasteDlg.PasteTransitions);
             OkDialog(pasteDlg, pasteDlg.OkDialog);
             var pastedDoc = WaitForDocumentChange(docOrig);
@@ -556,7 +574,7 @@ namespace pwiz.SkylineTestFunctional
                 // We expect two molecules in each group
                 var precursors = moleculeGroups[n].Molecules.ToArray();
                 Assert.AreEqual(2, precursors.Count());
-                Assert.AreEqual("lager", precursors[0].RawTextId);
+                Assert.AreEqual(caffeineInChiKey, precursors[0].RawTextId);
                 Assert.AreEqual("dark", precursors[1].RawTextId);
                 for (int m = 0; m < 2; m++)
                 {
@@ -611,14 +629,19 @@ namespace pwiz.SkylineTestFunctional
                 WaitForCondition(() => (SkylineWindow.Document.Molecules.Any() &&
                   SkylineWindow.Document.Molecules.First().ExplicitRetentionTime.RetentionTimeWindow.Equals(explicitRTWindow)));
 
-                // Simulate user editing the precursor in the document grid
+                // Simulate user editing the precursor in the document grid, also check for molecule IDs
                 EnableDocumentGridColumns(documentGrid, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, 16, new[] {
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitDriftTimeMsec",
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitDriftTimeHighEnergyOffsetMsec",
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitCollisionalCrossSection",
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitCollisionEnergy",
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitDeclusteringPotential",
-                    "Proteins!*.Peptides!*.Precursors!*.ExplicitCompensationVoltage"});
+                    "Proteins!*.Peptides!*.Precursors!*.ExplicitCompensationVoltage",
+                    "Proteins!*.Peptides!*.InChiKey",
+                    "Proteins!*.Peptides!*.InChI",
+                    "Proteins!*.Peptides!*.HMDB",
+                    "Proteins!*.Peptides!*.SMILES",
+                    "Proteins!*.Peptides!*.CAS"});
 
                 const double explicitCE = 123.45;
                 var colCE = FindDocumentGridColumn(documentGrid, "ExplicitCollisionEnergy");
@@ -655,6 +678,31 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCCS.Index].Value = explicitCCS);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
                   SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.CollisionalCrossSectionSqA.Equals(explicitCCS)));
+
+            var colInChiKey = FindDocumentGridColumn(documentGrid, "Peptide.InChiKey");
+            var reportedInChiKey = string.Empty;
+            RunUI(() => reportedInChiKey = documentGrid.DataGridView.Rows[0].Cells[colInChiKey.Index].Value.ToString());
+            Assume.AreEqual(caffeineInChiKey, reportedInChiKey, "unexpected molecule inchikey");
+
+            var colInChI = FindDocumentGridColumn(documentGrid, "Peptide.InChI");
+            var reportedInChI = string.Empty;
+            RunUI(() => reportedInChI = documentGrid.DataGridView.Rows[0].Cells[colInChI.Index].Value.ToString());
+            Assume.AreEqual(caffeineInChi.Substring(6), reportedInChI, "unexpected molecule inchi");
+
+            var colHMDB = FindDocumentGridColumn(documentGrid, "Peptide.HMDB");
+            var reportedHMDB = string.Empty;
+            RunUI(() => reportedHMDB = documentGrid.DataGridView.Rows[0].Cells[colHMDB.Index].Value.ToString());
+            Assume.AreEqual(caffeineHMDB.Substring(4), reportedHMDB, "unexpected molecule hmdb");
+
+            var colCAS = FindDocumentGridColumn(documentGrid, "Peptide.CAS");
+            var reportedCAS = string.Empty;
+            RunUI(() => reportedCAS = documentGrid.DataGridView.Rows[0].Cells[colCAS.Index].Value.ToString());
+            Assume.AreEqual(caffeineCAS, reportedCAS, "unexpected molecule cas");
+
+            var colSMILES = FindDocumentGridColumn(documentGrid, "Peptide.SMILES");
+            var reportedSMILES = string.Empty;
+            RunUI(() => reportedSMILES = documentGrid.DataGridView.Rows[0].Cells[colSMILES.Index].Value.ToString());
+            Assume.AreEqual(caffeineSMILES, reportedSMILES, "unexpected molecule smiles");
 
                 // And clean up after ourselves
             RunUI(() => documentGrid.Close());

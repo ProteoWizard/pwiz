@@ -46,11 +46,12 @@ namespace pwiz.Skyline.Model
         public string PrimaryAccessionValue { get { return AccessionNumbers == null ? null : AccessionNumbers.Values.FirstOrDefault(); } } // Value of key, if any, in first order of PREFERRED_ACCESSION_TYPE_ORDER
 
         // Familiar molecule ID formats, and our order of preference as primary key
-        private static readonly string[] PREFERRED_ACCESSION_TYPE_ORDER = { TagInChiKey, TagCAS, TagHMDB, TagInChI }; // Not L10N
+        public static readonly string[] PREFERRED_ACCESSION_TYPE_ORDER = { TagInChiKey, TagCAS, TagHMDB, TagInChI, TagSMILES }; // Not L10N
         public const string TagInChiKey = "InChiKey"; // Not L10N
         public const string TagCAS = "CAS"; // Not L10N
         public const string TagHMDB = "HMDB"; // Not L10N
         public const string TagInChI = "InChI"; // Not L10N
+        public const string TagSMILES = "SMILES"; // Not L10N
 
         public static MoleculeAccessionNumbers FromString(string tsv)
         {
@@ -61,7 +62,7 @@ namespace pwiz.Skyline.Model
             return new MoleculeAccessionNumbers(tsv);
         }
 
-        private static SortByPreferredAccessionType ACCESSION_TYPE_SORTER = new SortByPreferredAccessionType();
+        private static readonly SortByPreferredAccessionType ACCESSION_TYPE_SORTER = new SortByPreferredAccessionType();
 
         public MoleculeAccessionNumbers(IDictionary<string, string> keys)
         {
@@ -131,10 +132,27 @@ namespace pwiz.Skyline.Model
             string inchikey;
             return AccessionNumbers != null && AccessionNumbers.TryGetValue(TagInChiKey, out inchikey) ? inchikey : null;
         }
+        public string GetInChI()
+        {
+            string inchikey;
+            return AccessionNumbers != null && AccessionNumbers.TryGetValue(TagInChI, out inchikey) ? inchikey : null;
+        }
         public string GetCAS()
         {
             string cas;
             return AccessionNumbers != null && AccessionNumbers.TryGetValue(TagCAS, out cas) ? cas : null;
+        }
+
+        public string GetHMDB()
+        {
+            string cas;
+            return AccessionNumbers != null && AccessionNumbers.TryGetValue(TagHMDB, out cas) ? cas : null;
+        }
+
+        public string GetSMILES()
+        {
+            string cas;
+            return AccessionNumbers != null && AccessionNumbers.TryGetValue(TagSMILES, out cas) ? cas : null;
         }
 
         public string GetNonInChiKeys()

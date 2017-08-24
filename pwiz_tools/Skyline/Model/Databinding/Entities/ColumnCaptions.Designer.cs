@@ -196,6 +196,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CAS.
+        /// </summary>
+        public static string CAS {
+            get {
+                return ResourceManager.GetString("CAS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cleavage Aa.
         /// </summary>
         public static string CleavageAa {
@@ -691,11 +700,38 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to HMDB.
+        /// </summary>
+        public static string HMDB {
+            get {
+                return ResourceManager.GetString("HMDB", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Identified.
         /// </summary>
         public static string Identified {
             get {
                 return ResourceManager.GetString("Identified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to InChI.
+        /// </summary>
+        public static string InChI {
+            get {
+                return ResourceManager.GetString("InChI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to InChiKey.
+        /// </summary>
+        public static string InChiKey {
+            get {
+                return ResourceManager.GetString("InChiKey", resourceCulture);
             }
         }
         
@@ -1902,6 +1938,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Slope {
             get {
                 return ResourceManager.GetString("Slope", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SMILES.
+        /// </summary>
+        public static string SMILES {
+            get {
+                return ResourceManager.GetString("SMILES", resourceCulture);
             }
         }
         

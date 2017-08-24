@@ -157,6 +157,32 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        // Small molecule IDs
+        public string CAS
+        {
+            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetCAS() ?? string.Empty : string.Empty; }
+        }
+
+        public string InChiKey
+        {
+            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetInChiKey() ?? string.Empty : string.Empty; }
+        }
+
+        public string InChI
+        {
+            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetInChI() ?? string.Empty : string.Empty; }
+        }
+
+        public string HMDB
+        {
+            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetHMDB() ?? string.Empty : string.Empty; }
+        }
+
+        public string SMILES
+        {
+            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetSMILES() ?? string.Empty : string.Empty; }
+        }
+
         [DataGridViewColumnType(typeof(StandardTypeDataGridViewColumn))]
         public StandardType StandardType
         {
