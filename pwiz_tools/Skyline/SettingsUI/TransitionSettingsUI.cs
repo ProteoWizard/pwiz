@@ -137,6 +137,7 @@ namespace pwiz.Skyline.SettingsUI
             cbLibraryPick.Checked = (Libraries.Pick != TransitionLibraryPick.none);
             panelPick.Visible = cbLibraryPick.Checked;
             textTolerance.Text = Libraries.IonMatchTolerance.ToString(LocalizationHelper.CurrentCulture);
+            textMinIonCount.Text = Libraries.MinIonCount != 0 ? Libraries.MinIonCount.ToString(LocalizationHelper.CurrentCulture) : string.Empty;
             textIonCount.Text = Libraries.IonCount.ToString(LocalizationHelper.CurrentCulture);
             if (Libraries.Pick == TransitionLibraryPick.filter)
                 radioFiltered.Checked = true;
@@ -429,18 +430,29 @@ namespace pwiz.Skyline.SettingsUI
                     minTol, maxTol, out ionMatchTolerance))
                 return;
 
+            int minIonCount = Libraries.MinIonCount;
             int ionCount = Libraries.IonCount;
 
             if (pick != TransitionLibraryPick.none)
             {
                 min = TransitionLibraries.MIN_ION_COUNT;
                 max = TransitionLibraries.MAX_ION_COUNT;
+                if (string.IsNullOrEmpty(textMinIonCount.Text))
+                    minIonCount = 0;
+                else if (!helper.ValidateNumberTextBox(tabControl1, (int) TABS.Library, textMinIonCount, 0, max, out minIonCount))
+                    return;
                 if (!helper.ValidateNumberTextBox(tabControl1, (int) TABS.Library, textIonCount,
                         min, max, out ionCount))
                     return;
+                if (minIonCount > ionCount)
+                {
+                    helper.ShowTextBoxError(textIonCount, string.Format(Resources.TransitionLibraries_DoValidate_Library_ion_count_value__0__must_not_be_less_than_min_ion_count_value__1__,
+                                                                        ionCount, minIonCount));
+                    return;
+                }
             }
 
-            TransitionLibraries libraries = new TransitionLibraries(ionMatchTolerance, ionCount, pick);
+            TransitionLibraries libraries = new TransitionLibraries(ionMatchTolerance, minIonCount, ionCount, pick);
             Helpers.AssignIfEquals(ref libraries, Libraries);
 
             // This dialog does not yet change integration settings
@@ -900,6 +912,12 @@ namespace pwiz.Skyline.SettingsUI
             {
                 comboOptimizeType.SelectedItem = value;
             }
+        }
+
+        public int MinIonCount
+        {
+            get { return Convert.ToInt32(textMinIonCount.Text); }
+            set { textMinIonCount.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public int IonCount

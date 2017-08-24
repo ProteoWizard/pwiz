@@ -9834,10 +9834,13 @@ Here are the {0} pairs with multiple entries:
   <data name="ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated_when_using_reversed_decoys_" xml:space="preserve">
     <value>A maximum of one decoy per target may be generated when using reversed decoys.</value>
   </data>
-  <data name="PeptidesPerProteinDlg_UpdateRemaining__0__empty_proteins_will_be_added_" xml:space="preserve">
-    <value>{0} empty proteins will be added.</value>
-  </data>
   <data name="ImportFastaControl_ImportFasta_Importing_the_FASTA_did_not_create_any_target_proteins_" xml:space="preserve">
     <value>Importing the FASTA did not create any target proteins.</value>
+  </data>
+  <data name="TransitionLibraries_DoValidate_Library_min_ion_count_value__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>Library min ion count value {0} must be between {1} and {2}.</value>
+  </data>
+  <data name="TransitionLibraries_DoValidate_Library_ion_count_value__0__must_not_be_less_than_min_ion_count_value__1__" xml:space="preserve">
+    <value>Library ion count value {0} must not be less than min ion count value {1}.</value>
   </data>
 </root>

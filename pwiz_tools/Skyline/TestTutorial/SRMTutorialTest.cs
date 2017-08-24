@@ -222,6 +222,35 @@ namespace pwiz.SkylineTestTutorial
             });
             PauseForScreenShot("Skyline Window", 2);
 
+            // Test min ion count setting
+            RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, dlg =>
+            {
+                dlg.MinIonCount = 3;
+                dlg.OkDialog();
+            });
+            var docMinIons = WaitForDocumentChange(docAfterPaste);
+            AssertEx.IsDocumentState(docMinIons, null, 10, 30, 66, 320);
+            RunUI(() => SkylineWindow.Undo());
+            docMinIons = WaitForDocumentChange(docMinIons);
+            RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, dlg =>
+            {
+                dlg.MinIonCount = 4;
+                dlg.OkDialog();
+            });
+            docMinIons = WaitForDocumentChange(docMinIons);
+            AssertEx.IsDocumentState(docMinIons, null, 10, 30, 64, 314);
+            RunUI(() => SkylineWindow.Undo());
+            docMinIons = WaitForDocumentChange(docMinIons);
+            RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, dlg =>
+            {
+                dlg.MinIonCount = 5;
+                dlg.OkDialog();
+            });
+            docMinIons = WaitForDocumentChange(docMinIons);
+            AssertEx.IsDocumentState(docMinIons, null, 10, 30, 58, 290);
+            RunUI(() => SkylineWindow.Undo());
+            WaitForDocumentChange(docMinIons);
+
             var exportDlg = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
             RunUI(() =>
             {

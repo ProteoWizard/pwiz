@@ -382,14 +382,14 @@ namespace pwiz.Skyline.Model
             using (TextReader reader = File.OpenText(fastaPath))
             {
                 peptideGroupsNew = importer.Import(reader, monitor, Helpers.CountLinesInFile(fastaPath)).ToList();
-                document = document.AddPeptideGroups(peptideGroupsNew, false, null, out firstAdded, out nextAdd);
+                document = document.AddPeptideGroups(peptideGroupsNew, false, to, out firstAdded, out nextAdd);
             }
             return document;
         }
 
         public static SrmDocument RemoveProteinsByPeptideCount(SrmDocument document, int minPeptides)
         {
-            return new RefinementSettings {MinPeptidesPerProtein = minPeptides}.Refine(document);
+            return minPeptides > 0 ? new RefinementSettings {MinPeptidesPerProtein = minPeptides}.Refine(document) : document;
         }
 
         public class FoundResultsFile

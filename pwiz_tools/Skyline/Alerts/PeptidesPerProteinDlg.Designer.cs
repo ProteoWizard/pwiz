@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PeptidesPerProteinDlg));
             this.label1 = new System.Windows.Forms.Label();
             this.numMinPeptides = new System.Windows.Forms.NumericUpDown();
@@ -39,7 +40,15 @@
             this.lblRemaining = new System.Windows.Forms.Label();
             this.lblRemainingHeader = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
+            this.cbRemoveRepeated = new System.Windows.Forms.CheckBox();
+            this.cbRemoveDuplicate = new System.Windows.Forms.CheckBox();
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.panelDuplicates = new System.Windows.Forms.Panel();
+            this.lblEmptyProteins = new System.Windows.Forms.Label();
+            this.panelRemaining = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.numMinPeptides)).BeginInit();
+            this.panelDuplicates.SuspendLayout();
+            this.panelRemaining.SuspendLayout();
             this.SuspendLayout();
             // 
             // label1
@@ -119,15 +128,52 @@
             resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
             // 
+            // cbRemoveRepeated
+            // 
+            resources.ApplyResources(this.cbRemoveRepeated, "cbRemoveRepeated");
+            this.cbRemoveRepeated.Name = "cbRemoveRepeated";
+            this.helpTip.SetToolTip(this.cbRemoveRepeated, resources.GetString("cbRemoveRepeated.ToolTip"));
+            this.cbRemoveRepeated.UseVisualStyleBackColor = true;
+            this.cbRemoveRepeated.CheckedChanged += new System.EventHandler(this.UpdateRemaining);
+            // 
+            // cbRemoveDuplicate
+            // 
+            resources.ApplyResources(this.cbRemoveDuplicate, "cbRemoveDuplicate");
+            this.cbRemoveDuplicate.Name = "cbRemoveDuplicate";
+            this.helpTip.SetToolTip(this.cbRemoveDuplicate, resources.GetString("cbRemoveDuplicate.ToolTip"));
+            this.cbRemoveDuplicate.UseVisualStyleBackColor = true;
+            this.cbRemoveDuplicate.CheckedChanged += new System.EventHandler(this.UpdateRemaining);
+            // 
+            // panelDuplicates
+            // 
+            this.panelDuplicates.Controls.Add(this.cbRemoveRepeated);
+            this.panelDuplicates.Controls.Add(this.cbRemoveDuplicate);
+            resources.ApplyResources(this.panelDuplicates, "panelDuplicates");
+            this.panelDuplicates.Name = "panelDuplicates";
+            // 
+            // lblEmptyProteins
+            // 
+            resources.ApplyResources(this.lblEmptyProteins, "lblEmptyProteins");
+            this.lblEmptyProteins.ForeColor = System.Drawing.Color.Red;
+            this.lblEmptyProteins.Name = "lblEmptyProteins";
+            // 
+            // panelRemaining
+            // 
+            this.panelRemaining.Controls.Add(this.lblRemainingHeader);
+            this.panelRemaining.Controls.Add(this.lblEmptyProteins);
+            this.panelRemaining.Controls.Add(this.lblRemaining);
+            resources.ApplyResources(this.panelRemaining, "panelRemaining");
+            this.panelRemaining.Name = "panelRemaining";
+            // 
             // PeptidesPerProteinDlg
             // 
             this.AcceptButton = this.btnOK;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.panelRemaining);
+            this.Controls.Add(this.panelDuplicates);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.lblRemaining);
-            this.Controls.Add(this.lblRemainingHeader);
             this.Controls.Add(this.radioKeepMinPeptides);
             this.Controls.Add(this.radioKeepAll);
             this.Controls.Add(this.lblNew);
@@ -141,6 +187,10 @@
             this.Name = "PeptidesPerProteinDlg";
             this.ShowInTaskbar = false;
             ((System.ComponentModel.ISupportInitialize)(this.numMinPeptides)).EndInit();
+            this.panelDuplicates.ResumeLayout(false);
+            this.panelDuplicates.PerformLayout();
+            this.panelRemaining.ResumeLayout(false);
+            this.panelRemaining.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -158,5 +208,11 @@
         private System.Windows.Forms.Label lblRemaining;
         private System.Windows.Forms.Label lblRemainingHeader;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.CheckBox cbRemoveRepeated;
+        private System.Windows.Forms.CheckBox cbRemoveDuplicate;
+        private System.Windows.Forms.ToolTip helpTip;
+        private System.Windows.Forms.Panel panelDuplicates;
+        private System.Windows.Forms.Label lblEmptyProteins;
+        private System.Windows.Forms.Panel panelRemaining;
     }
 }

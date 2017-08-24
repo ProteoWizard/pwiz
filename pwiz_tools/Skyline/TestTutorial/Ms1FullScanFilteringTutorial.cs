@@ -233,7 +233,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(51, peptideCount);
                 Assert.AreEqual(52, precursorCount);
                 Assert.AreEqual(156, transitionCount);
-                peptidesPerProteinDlg.NewTargetsFiltered(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                peptidesPerProteinDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 Assert.AreEqual(11, proteinCount);
                 Assert.AreEqual(51, peptideCount);
                 Assert.AreEqual(52, precursorCount);

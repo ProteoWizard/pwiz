@@ -25,6 +25,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             PeptideIonTypes = settings.Filter.PeptideIonTypes.Union(new[] { IonType.precursor, IonType.y }).ToArray(); // Add p, y if not already set
             ExclusionUseDIAWindow = settings.Filter.ExclusionUseDIAWindow;
             IonMatchTolerance = settings.Libraries.IonMatchTolerance;
+            MinIonCount = settings.Libraries.MinIonCount;
             IonCount = settings.Libraries.IonCount;
         }
 
@@ -53,6 +54,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         public double IonMatchTolerance { set { txtTolerance.Text = value.ToString(LocalizationHelper.CurrentCulture); } }
+        public int MinIonCount { set { txtMinIonCount.Text = value != 0 ? value.ToString(LocalizationHelper.CurrentCulture) : string.Empty; } }
         public int IonCount { set { txtIonCount.Text = value.ToString(LocalizationHelper.CurrentCulture); } }
 
         public void Initialize(ImportPeptideSearchDlg.Workflow workflow)
@@ -128,12 +130,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!helper.ValidateDecimalTextBox(txtTolerance, TransitionLibraries.MIN_MATCH_TOLERANCE, TransitionLibraries.MAX_MATCH_TOLERANCE, out ionMatchTolerance))
                 return null;
 
+            int minIonCount = settings.Libraries.MinIonCount;
+            if (string.IsNullOrEmpty(txtMinIonCount.Text))
+                minIonCount = 0;
+            else if (!helper.ValidateNumberTextBox(txtMinIonCount, 0, TransitionLibraries.MAX_ION_COUNT, out minIonCount))
+                return null;
+
             int ionCount = settings.Libraries.IonCount;
             if (!helper.ValidateNumberTextBox(txtIonCount, TransitionLibraries.MIN_ION_COUNT, TransitionLibraries.MAX_ION_COUNT, out ionCount))
                 return null;
 
-            TransitionLibraryPick pick = (settings.Libraries.Pick != TransitionLibraryPick.none) ? settings.Libraries.Pick : TransitionLibraryPick.all;
-            var libraries = new TransitionLibraries(ionMatchTolerance, ionCount, pick);
+            if (minIonCount > ionCount)
+            {
+                helper.ShowTextBoxError(txtIonCount, string.Format(Resources.TransitionLibraries_DoValidate_Library_ion_count_value__0__must_not_be_less_than_min_ion_count_value__1__,
+                                                                   ionCount, minIonCount));
+                return null;
+            }
+
+            TransitionLibraryPick pick = settings.Libraries.Pick != TransitionLibraryPick.none ? settings.Libraries.Pick : TransitionLibraryPick.all;
+            var libraries = new TransitionLibraries(ionMatchTolerance, minIonCount, ionCount, pick);
             Helpers.AssignIfEquals(ref libraries, settings.Libraries);
 
             return new TransitionSettings(settings.Prediction, filter, libraries, settings.Integration, settings.Instrument, settings.FullScan);

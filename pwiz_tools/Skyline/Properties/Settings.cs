@@ -2737,6 +2737,7 @@ namespace pwiz.Skyline.Properties
                     new TransitionLibraries
                     (
                         0.5,    // IonMatchTolerance
+                        0,      // MinIonCount
                         3,      // IonCount
                         TransitionLibraryPick.all  // Pick
                     ),

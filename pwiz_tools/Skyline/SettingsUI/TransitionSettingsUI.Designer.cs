@@ -83,6 +83,8 @@
             this.tabLibrary = new System.Windows.Forms.TabPage();
             this.label9 = new System.Windows.Forms.Label();
             this.panelPick = new System.Windows.Forms.Panel();
+            this.label22 = new System.Windows.Forms.Label();
+            this.textMinIonCount = new System.Windows.Forms.TextBox();
             this.radioAllAndFiltered = new System.Windows.Forms.RadioButton();
             this.radioFiltered = new System.Windows.Forms.RadioButton();
             this.radioAll = new System.Windows.Forms.RadioButton();
@@ -134,14 +136,12 @@
             resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Name = "btnCancel";
-            this.helpTip.SetToolTip(this.btnCancel, resources.GetString("btnCancel.ToolTip"));
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
             resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.Name = "btnOk";
-            this.helpTip.SetToolTip(this.btnOk, resources.GetString("btnOk.ToolTip"));
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
@@ -156,11 +156,9 @@
             this.tabControl1.DataBindings.Add(new System.Windows.Forms.Binding("SelectedIndex", global::pwiz.Skyline.Properties.Settings.Default, "TransitionSettingsTab", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.TransitionSettingsTab;
-            this.helpTip.SetToolTip(this.tabControl1, resources.GetString("tabControl1.ToolTip"));
             // 
             // tabGeneral
             // 
-            resources.ApplyResources(this.tabGeneral, "tabGeneral");
             this.tabGeneral.Controls.Add(this.comboCompensationVoltage);
             this.tabGeneral.Controls.Add(this.label19);
             this.tabGeneral.Controls.Add(this.comboOptimizationLibrary);
@@ -176,54 +174,49 @@
             this.tabGeneral.Controls.Add(this.label2);
             this.tabGeneral.Controls.Add(this.comboPrecursorMass);
             this.tabGeneral.Controls.Add(this.label1);
+            resources.ApplyResources(this.tabGeneral, "tabGeneral");
             this.tabGeneral.Name = "tabGeneral";
-            this.helpTip.SetToolTip(this.tabGeneral, resources.GetString("tabGeneral.ToolTip"));
             this.tabGeneral.UseVisualStyleBackColor = true;
             // 
             // comboCompensationVoltage
             // 
-            resources.ApplyResources(this.comboCompensationVoltage, "comboCompensationVoltage");
             this.comboCompensationVoltage.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboCompensationVoltage.FormattingEnabled = true;
+            resources.ApplyResources(this.comboCompensationVoltage, "comboCompensationVoltage");
             this.comboCompensationVoltage.Name = "comboCompensationVoltage";
-            this.helpTip.SetToolTip(this.comboCompensationVoltage, resources.GetString("comboCompensationVoltage.ToolTip"));
             this.comboCompensationVoltage.SelectedIndexChanged += new System.EventHandler(this.comboCompensationVoltage_SelectedIndexChanged);
             // 
             // label19
             // 
             resources.ApplyResources(this.label19, "label19");
             this.label19.Name = "label19";
-            this.helpTip.SetToolTip(this.label19, resources.GetString("label19.ToolTip"));
             // 
             // comboOptimizationLibrary
             // 
-            resources.ApplyResources(this.comboOptimizationLibrary, "comboOptimizationLibrary");
             this.comboOptimizationLibrary.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboOptimizationLibrary.FormattingEnabled = true;
+            resources.ApplyResources(this.comboOptimizationLibrary, "comboOptimizationLibrary");
             this.comboOptimizationLibrary.Name = "comboOptimizationLibrary";
-            this.helpTip.SetToolTip(this.comboOptimizationLibrary, resources.GetString("comboOptimizationLibrary.ToolTip"));
             this.comboOptimizationLibrary.SelectedIndexChanged += new System.EventHandler(this.comboOptimizationLibrary_SelectedIndexChanged);
             // 
             // label20
             // 
             resources.ApplyResources(this.label20, "label20");
             this.label20.Name = "label20";
-            this.helpTip.SetToolTip(this.label20, resources.GetString("label20.ToolTip"));
             // 
             // labelOptimizeType
             // 
             resources.ApplyResources(this.labelOptimizeType, "labelOptimizeType");
             this.labelOptimizeType.Name = "labelOptimizeType";
-            this.helpTip.SetToolTip(this.labelOptimizeType, resources.GetString("labelOptimizeType.ToolTip"));
             // 
             // comboOptimizeType
             // 
-            resources.ApplyResources(this.comboOptimizeType, "comboOptimizeType");
             this.comboOptimizeType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboOptimizeType.FormattingEnabled = true;
             this.comboOptimizeType.Items.AddRange(new object[] {
             resources.GetString("comboOptimizeType.Items"),
             resources.GetString("comboOptimizeType.Items1")});
+            resources.ApplyResources(this.comboOptimizeType, "comboOptimizeType");
             this.comboOptimizeType.Name = "comboOptimizeType";
             this.helpTip.SetToolTip(this.comboOptimizeType, resources.GetString("comboOptimizeType.ToolTip"));
             // 
@@ -237,9 +230,9 @@
             // 
             // comboDeclusterPotential
             // 
-            resources.ApplyResources(this.comboDeclusterPotential, "comboDeclusterPotential");
             this.comboDeclusterPotential.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboDeclusterPotential.FormattingEnabled = true;
+            resources.ApplyResources(this.comboDeclusterPotential, "comboDeclusterPotential");
             this.comboDeclusterPotential.Name = "comboDeclusterPotential";
             this.helpTip.SetToolTip(this.comboDeclusterPotential, resources.GetString("comboDeclusterPotential.ToolTip"));
             this.comboDeclusterPotential.SelectedIndexChanged += new System.EventHandler(this.comboDeclusterPotential_SelectedIndexChanged);
@@ -248,13 +241,12 @@
             // 
             resources.ApplyResources(this.label12, "label12");
             this.label12.Name = "label12";
-            this.helpTip.SetToolTip(this.label12, resources.GetString("label12.ToolTip"));
             // 
             // comboCollisionEnergy
             // 
-            resources.ApplyResources(this.comboCollisionEnergy, "comboCollisionEnergy");
             this.comboCollisionEnergy.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboCollisionEnergy.FormattingEnabled = true;
+            resources.ApplyResources(this.comboCollisionEnergy, "comboCollisionEnergy");
             this.comboCollisionEnergy.Name = "comboCollisionEnergy";
             this.helpTip.SetToolTip(this.comboCollisionEnergy, resources.GetString("comboCollisionEnergy.ToolTip"));
             this.comboCollisionEnergy.SelectedIndexChanged += new System.EventHandler(this.comboCollisionEnergy_SelectedIndexChanged);
@@ -263,16 +255,15 @@
             // 
             resources.ApplyResources(this.label7, "label7");
             this.label7.Name = "label7";
-            this.helpTip.SetToolTip(this.label7, resources.GetString("label7.ToolTip"));
             // 
             // comboIonMass
             // 
-            resources.ApplyResources(this.comboIonMass, "comboIonMass");
             this.comboIonMass.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboIonMass.FormattingEnabled = true;
             this.comboIonMass.Items.AddRange(new object[] {
             resources.GetString("comboIonMass.Items"),
             resources.GetString("comboIonMass.Items1")});
+            resources.ApplyResources(this.comboIonMass, "comboIonMass");
             this.comboIonMass.Name = "comboIonMass";
             this.helpTip.SetToolTip(this.comboIonMass, resources.GetString("comboIonMass.ToolTip"));
             // 
@@ -280,16 +271,15 @@
             // 
             resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.helpTip.SetToolTip(this.label2, resources.GetString("label2.ToolTip"));
             // 
             // comboPrecursorMass
             // 
-            resources.ApplyResources(this.comboPrecursorMass, "comboPrecursorMass");
             this.comboPrecursorMass.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboPrecursorMass.FormattingEnabled = true;
             this.comboPrecursorMass.Items.AddRange(new object[] {
             resources.GetString("comboPrecursorMass.Items"),
             resources.GetString("comboPrecursorMass.Items1")});
+            resources.ApplyResources(this.comboPrecursorMass, "comboPrecursorMass");
             this.comboPrecursorMass.Name = "comboPrecursorMass";
             this.helpTip.SetToolTip(this.comboPrecursorMass, resources.GetString("comboPrecursorMass.ToolTip"));
             // 
@@ -297,19 +287,17 @@
             // 
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.helpTip.SetToolTip(this.label1, resources.GetString("label1.ToolTip"));
             // 
             // tabFilter
             // 
-            resources.ApplyResources(this.tabFilter, "tabFilter");
             this.tabFilter.Controls.Add(this.cbExclusionUseDIAWindow);
             this.tabFilter.Controls.Add(this.lbMZ);
             this.tabFilter.Controls.Add(this.tabControlPeptidesSmallMols);
             this.tabFilter.Controls.Add(this.textExclusionWindow);
             this.tabFilter.Controls.Add(this.cbAutoSelect);
             this.tabFilter.Controls.Add(this.lbPrecursorMzWindow);
+            resources.ApplyResources(this.tabFilter, "tabFilter");
             this.tabFilter.Name = "tabFilter";
-            this.helpTip.SetToolTip(this.tabFilter, resources.GetString("tabFilter.ToolTip"));
             this.tabFilter.UseVisualStyleBackColor = true;
             // 
             // cbExclusionUseDIAWindow
@@ -323,20 +311,17 @@
             // 
             resources.ApplyResources(this.lbMZ, "lbMZ");
             this.lbMZ.Name = "lbMZ";
-            this.helpTip.SetToolTip(this.lbMZ, resources.GetString("lbMZ.ToolTip"));
             // 
             // tabControlPeptidesSmallMols
             // 
-            resources.ApplyResources(this.tabControlPeptidesSmallMols, "tabControlPeptidesSmallMols");
             this.tabControlPeptidesSmallMols.Controls.Add(this.tabPage1);
             this.tabControlPeptidesSmallMols.Controls.Add(this.tabPage2);
+            resources.ApplyResources(this.tabControlPeptidesSmallMols, "tabControlPeptidesSmallMols");
             this.tabControlPeptidesSmallMols.Name = "tabControlPeptidesSmallMols";
             this.tabControlPeptidesSmallMols.SelectedIndex = 0;
-            this.helpTip.SetToolTip(this.tabControlPeptidesSmallMols, resources.GetString("tabControlPeptidesSmallMols.ToolTip"));
             // 
             // tabPage1
             // 
-            resources.ApplyResources(this.tabPage1, "tabPage1");
             this.tabPage1.Controls.Add(this.label5);
             this.tabPage1.Controls.Add(this.textPeptideIonTypes);
             this.tabPage1.Controls.Add(this.groupBox1);
@@ -344,15 +329,14 @@
             this.tabPage1.Controls.Add(this.label8);
             this.tabPage1.Controls.Add(this.textPeptidePrecursorCharges);
             this.tabPage1.Controls.Add(this.textPeptideIonCharges);
+            resources.ApplyResources(this.tabPage1, "tabPage1");
             this.tabPage1.Name = "tabPage1";
-            this.helpTip.SetToolTip(this.tabPage1, resources.GetString("tabPage1.ToolTip"));
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // label5
             // 
             resources.ApplyResources(this.label5, "label5");
             this.label5.Name = "label5";
-            this.helpTip.SetToolTip(this.label5, resources.GetString("label5.ToolTip"));
             // 
             // textPeptideIonTypes
             // 
@@ -362,7 +346,6 @@
             // 
             // groupBox1
             // 
-            resources.ApplyResources(this.groupBox1, "groupBox1");
             this.groupBox1.Controls.Add(this.btnEditSpecialTransitions);
             this.groupBox1.Controls.Add(this.label18);
             this.groupBox1.Controls.Add(this.listAlwaysAdd);
@@ -370,9 +353,9 @@
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.comboRangeTo);
             this.groupBox1.Controls.Add(this.label4);
+            resources.ApplyResources(this.groupBox1, "groupBox1");
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.TabStop = false;
-            this.helpTip.SetToolTip(this.groupBox1, resources.GetString("groupBox1.ToolTip"));
             // 
             // btnEditSpecialTransitions
             // 
@@ -386,22 +369,21 @@
             // 
             resources.ApplyResources(this.label18, "label18");
             this.label18.Name = "label18";
-            this.helpTip.SetToolTip(this.label18, resources.GetString("label18.ToolTip"));
             // 
             // listAlwaysAdd
             // 
-            resources.ApplyResources(this.listAlwaysAdd, "listAlwaysAdd");
             this.listAlwaysAdd.CheckOnClick = true;
             this.listAlwaysAdd.FormattingEnabled = true;
+            resources.ApplyResources(this.listAlwaysAdd, "listAlwaysAdd");
             this.listAlwaysAdd.Name = "listAlwaysAdd";
             this.helpTip.SetToolTip(this.listAlwaysAdd, resources.GetString("listAlwaysAdd.ToolTip"));
             this.listAlwaysAdd.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listAlwaysAdd_ItemCheck);
             // 
             // comboRangeFrom
             // 
-            resources.ApplyResources(this.comboRangeFrom, "comboRangeFrom");
             this.comboRangeFrom.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboRangeFrom.FormattingEnabled = true;
+            resources.ApplyResources(this.comboRangeFrom, "comboRangeFrom");
             this.comboRangeFrom.Name = "comboRangeFrom";
             this.helpTip.SetToolTip(this.comboRangeFrom, resources.GetString("comboRangeFrom.ToolTip"));
             // 
@@ -409,13 +391,12 @@
             // 
             resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
-            this.helpTip.SetToolTip(this.label3, resources.GetString("label3.ToolTip"));
             // 
             // comboRangeTo
             // 
-            resources.ApplyResources(this.comboRangeTo, "comboRangeTo");
             this.comboRangeTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboRangeTo.FormattingEnabled = true;
+            resources.ApplyResources(this.comboRangeTo, "comboRangeTo");
             this.comboRangeTo.Name = "comboRangeTo";
             this.helpTip.SetToolTip(this.comboRangeTo, resources.GetString("comboRangeTo.ToolTip"));
             this.comboRangeTo.SelectedIndexChanged += new System.EventHandler(this.comboRangeTo_SelectedIndexChanged);
@@ -424,19 +405,16 @@
             // 
             resources.ApplyResources(this.label4, "label4");
             this.label4.Name = "label4";
-            this.helpTip.SetToolTip(this.label4, resources.GetString("label4.ToolTip"));
             // 
             // label6
             // 
             resources.ApplyResources(this.label6, "label6");
             this.label6.Name = "label6";
-            this.helpTip.SetToolTip(this.label6, resources.GetString("label6.ToolTip"));
             // 
             // label8
             // 
             resources.ApplyResources(this.label8, "label8");
             this.label8.Name = "label8";
-            this.helpTip.SetToolTip(this.label8, resources.GetString("label8.ToolTip"));
             // 
             // textPeptidePrecursorCharges
             // 
@@ -452,7 +430,6 @@
             // 
             // tabPage2
             // 
-            resources.ApplyResources(this.tabPage2, "tabPage2");
             this.tabPage2.Controls.Add(this.btnPrecursorAdduct);
             this.tabPage2.Controls.Add(this.btnFragmentAdduct);
             this.tabPage2.Controls.Add(this.textSmallMoleculeFragmentAdducts);
@@ -461,15 +438,14 @@
             this.tabPage2.Controls.Add(this.labelSmallMoleculeIonTypes);
             this.tabPage2.Controls.Add(this.textSmallMoleculePrecursorAdducts);
             this.tabPage2.Controls.Add(this.lblSmallMoleculePrecursorAdducts);
+            resources.ApplyResources(this.tabPage2, "tabPage2");
             this.tabPage2.Name = "tabPage2";
-            this.helpTip.SetToolTip(this.tabPage2, resources.GetString("tabPage2.ToolTip"));
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
             // btnPrecursorAdduct
             // 
             resources.ApplyResources(this.btnPrecursorAdduct, "btnPrecursorAdduct");
             this.btnPrecursorAdduct.Name = "btnPrecursorAdduct";
-            this.helpTip.SetToolTip(this.btnPrecursorAdduct, resources.GetString("btnPrecursorAdduct.ToolTip"));
             this.btnPrecursorAdduct.UseVisualStyleBackColor = true;
             this.btnPrecursorAdduct.Click += new System.EventHandler(this.btnPrecursorAdductClick);
             // 
@@ -477,7 +453,6 @@
             // 
             resources.ApplyResources(this.btnFragmentAdduct, "btnFragmentAdduct");
             this.btnFragmentAdduct.Name = "btnFragmentAdduct";
-            this.helpTip.SetToolTip(this.btnFragmentAdduct, resources.GetString("btnFragmentAdduct.ToolTip"));
             this.btnFragmentAdduct.Click += new System.EventHandler(this.btnFragmentAdductClick);
             // 
             // textSmallMoleculeFragmentAdducts
@@ -490,7 +465,6 @@
             // 
             resources.ApplyResources(this.labelSmallMoleculeFragmentAdducts, "labelSmallMoleculeFragmentAdducts");
             this.labelSmallMoleculeFragmentAdducts.Name = "labelSmallMoleculeFragmentAdducts";
-            this.helpTip.SetToolTip(this.labelSmallMoleculeFragmentAdducts, resources.GetString("labelSmallMoleculeFragmentAdducts.ToolTip"));
             // 
             // textSmallMoleculeIonTypes
             // 
@@ -502,7 +476,6 @@
             // 
             resources.ApplyResources(this.labelSmallMoleculeIonTypes, "labelSmallMoleculeIonTypes");
             this.labelSmallMoleculeIonTypes.Name = "labelSmallMoleculeIonTypes";
-            this.helpTip.SetToolTip(this.labelSmallMoleculeIonTypes, resources.GetString("labelSmallMoleculeIonTypes.ToolTip"));
             // 
             // textSmallMoleculePrecursorAdducts
             // 
@@ -514,7 +487,6 @@
             // 
             resources.ApplyResources(this.lblSmallMoleculePrecursorAdducts, "lblSmallMoleculePrecursorAdducts");
             this.lblSmallMoleculePrecursorAdducts.Name = "lblSmallMoleculePrecursorAdducts";
-            this.helpTip.SetToolTip(this.lblSmallMoleculePrecursorAdducts, resources.GetString("lblSmallMoleculePrecursorAdducts.ToolTip"));
             // 
             // textExclusionWindow
             // 
@@ -533,37 +505,46 @@
             // 
             resources.ApplyResources(this.lbPrecursorMzWindow, "lbPrecursorMzWindow");
             this.lbPrecursorMzWindow.Name = "lbPrecursorMzWindow";
-            this.helpTip.SetToolTip(this.lbPrecursorMzWindow, resources.GetString("lbPrecursorMzWindow.ToolTip"));
             // 
             // tabLibrary
             // 
-            resources.ApplyResources(this.tabLibrary, "tabLibrary");
             this.tabLibrary.Controls.Add(this.label9);
             this.tabLibrary.Controls.Add(this.panelPick);
             this.tabLibrary.Controls.Add(this.textTolerance);
             this.tabLibrary.Controls.Add(this.cbLibraryPick);
             this.tabLibrary.Controls.Add(this.label13);
+            resources.ApplyResources(this.tabLibrary, "tabLibrary");
             this.tabLibrary.Name = "tabLibrary";
-            this.helpTip.SetToolTip(this.tabLibrary, resources.GetString("tabLibrary.ToolTip"));
             this.tabLibrary.UseVisualStyleBackColor = true;
             // 
             // label9
             // 
             resources.ApplyResources(this.label9, "label9");
             this.label9.Name = "label9";
-            this.helpTip.SetToolTip(this.label9, resources.GetString("label9.ToolTip"));
             // 
             // panelPick
             // 
-            resources.ApplyResources(this.panelPick, "panelPick");
+            this.panelPick.Controls.Add(this.label22);
+            this.panelPick.Controls.Add(this.textMinIonCount);
             this.panelPick.Controls.Add(this.radioAllAndFiltered);
             this.panelPick.Controls.Add(this.radioFiltered);
             this.panelPick.Controls.Add(this.radioAll);
             this.panelPick.Controls.Add(this.label14);
             this.panelPick.Controls.Add(this.label15);
             this.panelPick.Controls.Add(this.textIonCount);
+            resources.ApplyResources(this.panelPick, "panelPick");
             this.panelPick.Name = "panelPick";
-            this.helpTip.SetToolTip(this.panelPick, resources.GetString("panelPick.ToolTip"));
+            // 
+            // label22
+            // 
+            resources.ApplyResources(this.label22, "label22");
+            this.label22.Name = "label22";
+            // 
+            // textMinIonCount
+            // 
+            resources.ApplyResources(this.textMinIonCount, "textMinIonCount");
+            this.textMinIonCount.Name = "textMinIonCount";
+            this.helpTip.SetToolTip(this.textMinIonCount, resources.GetString("textMinIonCount.ToolTip"));
             // 
             // radioAllAndFiltered
             // 
@@ -593,13 +574,11 @@
             // 
             resources.ApplyResources(this.label14, "label14");
             this.label14.Name = "label14";
-            this.helpTip.SetToolTip(this.label14, resources.GetString("label14.ToolTip"));
             // 
             // label15
             // 
             resources.ApplyResources(this.label15, "label15");
             this.label15.Name = "label15";
-            this.helpTip.SetToolTip(this.label15, resources.GetString("label15.ToolTip"));
             // 
             // textIonCount
             // 
@@ -625,11 +604,9 @@
             // 
             resources.ApplyResources(this.label13, "label13");
             this.label13.Name = "label13";
-            this.helpTip.SetToolTip(this.label13, resources.GetString("label13.ToolTip"));
             // 
             // tabInstrument
             // 
-            resources.ApplyResources(this.tabInstrument, "tabInstrument");
             this.tabInstrument.Controls.Add(this.textMaxInclusions);
             this.tabInstrument.Controls.Add(this.label21);
             this.tabInstrument.Controls.Add(this.label30);
@@ -650,8 +627,8 @@
             this.tabInstrument.Controls.Add(this.label11);
             this.tabInstrument.Controls.Add(this.textMaxMz);
             this.tabInstrument.Controls.Add(this.textMinMz);
+            resources.ApplyResources(this.tabInstrument, "tabInstrument");
             this.tabInstrument.Name = "tabInstrument";
-            this.helpTip.SetToolTip(this.tabInstrument, resources.GetString("tabInstrument.ToolTip"));
             this.tabInstrument.UseVisualStyleBackColor = true;
             // 
             // textMaxInclusions
@@ -664,31 +641,26 @@
             // 
             resources.ApplyResources(this.label21, "label21");
             this.label21.Name = "label21";
-            this.helpTip.SetToolTip(this.label21, resources.GetString("label21.ToolTip"));
             // 
             // label30
             // 
             resources.ApplyResources(this.label30, "label30");
             this.label30.Name = "label30";
-            this.helpTip.SetToolTip(this.label30, resources.GetString("label30.ToolTip"));
             // 
             // label31
             // 
             resources.ApplyResources(this.label31, "label31");
             this.label31.Name = "label31";
-            this.helpTip.SetToolTip(this.label31, resources.GetString("label31.ToolTip"));
             // 
             // label33
             // 
             resources.ApplyResources(this.label33, "label33");
             this.label33.Name = "label33";
-            this.helpTip.SetToolTip(this.label33, resources.GetString("label33.ToolTip"));
             // 
             // label34
             // 
             resources.ApplyResources(this.label34, "label34");
             this.label34.Name = "label34";
-            this.helpTip.SetToolTip(this.label34, resources.GetString("label34.ToolTip"));
             // 
             // textMaxTime
             // 
@@ -706,19 +678,16 @@
             // 
             resources.ApplyResources(this.label26, "label26");
             this.label26.Name = "label26";
-            this.helpTip.SetToolTip(this.label26, resources.GetString("label26.ToolTip"));
             // 
             // label25
             // 
             resources.ApplyResources(this.label25, "label25");
             this.label25.Name = "label25";
-            this.helpTip.SetToolTip(this.label25, resources.GetString("label25.ToolTip"));
             // 
             // label24
             // 
             resources.ApplyResources(this.label24, "label24");
             this.label24.Name = "label24";
-            this.helpTip.SetToolTip(this.label24, resources.GetString("label24.ToolTip"));
             // 
             // cbDynamicMinimum
             // 
@@ -737,7 +706,6 @@
             // 
             resources.ApplyResources(this.label17, "label17");
             this.label17.Name = "label17";
-            this.helpTip.SetToolTip(this.label17, resources.GetString("label17.ToolTip"));
             // 
             // textMzMatchTolerance
             // 
@@ -749,19 +717,16 @@
             // 
             resources.ApplyResources(this.label16, "label16");
             this.label16.Name = "label16";
-            this.helpTip.SetToolTip(this.label16, resources.GetString("label16.ToolTip"));
             // 
             // label10
             // 
             resources.ApplyResources(this.label10, "label10");
             this.label10.Name = "label10";
-            this.helpTip.SetToolTip(this.label10, resources.GetString("label10.ToolTip"));
             // 
             // label11
             // 
             resources.ApplyResources(this.label11, "label11");
             this.label11.Name = "label11";
-            this.helpTip.SetToolTip(this.label11, resources.GetString("label11.ToolTip"));
             // 
             // textMaxMz
             // 
@@ -779,7 +744,6 @@
             // 
             resources.ApplyResources(this.tabFullScan, "tabFullScan");
             this.tabFullScan.Name = "tabFullScan";
-            this.helpTip.SetToolTip(this.tabFullScan, resources.GetString("tabFullScan.ToolTip"));
             this.tabFullScan.UseVisualStyleBackColor = true;
             // 
             // helpTip
@@ -790,17 +754,15 @@
             // 
             // contextMenuStripPrecursorAdduct
             // 
-            resources.ApplyResources(this.contextMenuStripPrecursorAdduct, "contextMenuStripPrecursorAdduct");
             this.contextMenuStripPrecursorAdduct.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuStripPrecursorAdduct.Name = "contextMenuStripPrecursorAdduct";
-            this.helpTip.SetToolTip(this.contextMenuStripPrecursorAdduct, resources.GetString("contextMenuStripPrecursorAdduct.ToolTip"));
+            resources.ApplyResources(this.contextMenuStripPrecursorAdduct, "contextMenuStripPrecursorAdduct");
             // 
             // contextMenuStripFragmentAdduct
             // 
-            resources.ApplyResources(this.contextMenuStripFragmentAdduct, "contextMenuStripFragmentAdduct");
             this.contextMenuStripFragmentAdduct.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuStripFragmentAdduct.Name = "contextMenuStripFragmentAdduct";
-            this.helpTip.SetToolTip(this.contextMenuStripFragmentAdduct, resources.GetString("contextMenuStripFragmentAdduct.ToolTip"));
+            resources.ApplyResources(this.contextMenuStripFragmentAdduct, "contextMenuStripFragmentAdduct");
             // 
             // TransitionSettingsUI
             // 
@@ -816,7 +778,6 @@
             this.MinimizeBox = false;
             this.Name = "TransitionSettingsUI";
             this.ShowInTaskbar = false;
-            this.helpTip.SetToolTip(this, resources.GetString("$this.ToolTip"));
             this.tabControl1.ResumeLayout(false);
             this.tabGeneral.ResumeLayout(false);
             this.tabGeneral.PerformLayout();
@@ -928,5 +889,7 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStripPrecursorAdduct;
         private System.Windows.Forms.Button btnFragmentAdduct;
         private System.Windows.Forms.ContextMenuStrip contextMenuStripFragmentAdduct;
+        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.TextBox textMinIonCount;
     }
 }

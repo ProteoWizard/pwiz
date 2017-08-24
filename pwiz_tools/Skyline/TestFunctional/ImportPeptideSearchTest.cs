@@ -257,7 +257,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(1, peptideCount);
                 Assert.AreEqual(1, precursorCount);
                 Assert.AreEqual(3, transitionCount);
-                emptyProteinsDlg.NewTargetsFiltered(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                emptyProteinsDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 Assert.AreEqual(1, proteinCount);
                 Assert.AreEqual(1, peptideCount);
                 Assert.AreEqual(1, precursorCount);
@@ -457,27 +457,61 @@ namespace pwiz.SkylineTestFunctional
             {
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod = DecoyGeneration.SHUFFLE_SEQUENCE;
                 importPeptideSearchDlg.ImportFastaControl.NumDecoys = 1;
+                importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("yeast-10-duplicate.fasta"));
             });
+            RunDlg<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, dlg =>
+            {
+                Assert.IsTrue(dlg.DuplicateControlsVisible);
+                dlg.MinPeptides = 1;
+                dlg.RemoveRepeatedPeptides = dlg.RemoveDuplicatePeptides = false;
+                int proteins, peptides, precursors, transitions;
+                dlg.NewTargetsAll(out proteins, out peptides, out precursors, out transitions);
+                Assert.AreEqual(12, proteins);
+                Assert.AreEqual(4, peptides);
+                Assert.AreEqual(4, precursors);
+                Assert.AreEqual(12, transitions);
+                dlg.NewTargetsFinal(out proteins, out peptides, out precursors, out transitions);
+                Assert.AreEqual(3, proteins);
+                Assert.AreEqual(4, peptides);
+                Assert.AreEqual(4, precursors);
+                Assert.AreEqual(12, transitions);
+                dlg.RemoveRepeatedPeptides = true;
+                dlg.NewTargetsFinal(out proteins, out peptides, out precursors, out transitions);
+                Assert.AreEqual(2, proteins);
+                Assert.AreEqual(2, peptides);
+                Assert.AreEqual(2, precursors);
+                Assert.AreEqual(6, transitions);
+                dlg.RemoveRepeatedPeptides = false;
+                dlg.RemoveDuplicatePeptides = true;
+                dlg.NewTargetsFinal(out proteins, out peptides, out precursors, out transitions);
+                Assert.AreEqual(0, proteins);
+                Assert.AreEqual(0, peptides);
+                Assert.AreEqual(0, precursors);
+                Assert.AreEqual(0, transitions);
+                dlg.CancelDialog();
+            });
+            RunUI(() => importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("yeast-10.fasta")));
 
             var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             RunUI(() =>
             {
-                peptidesPerProteinDlg.KeepAll = false;
-                peptidesPerProteinDlg.MinPeptides = 2;
+                Assert.IsFalse(peptidesPerProteinDlg.DuplicateControlsVisible);
+                peptidesPerProteinDlg.MinPeptides = 0;
                 Assert.AreEqual(9, peptidesPerProteinDlg.EmptyProteins);
+                peptidesPerProteinDlg.MinPeptides = 2;
                 int proteins, peptides, precursors, transitions;
                 peptidesPerProteinDlg.NewTargetsAll(out proteins, out peptides, out precursors, out transitions);
                 Assert.AreEqual(11, proteins);
                 Assert.AreEqual(2, peptides);
                 Assert.AreEqual(2, precursors);
                 Assert.AreEqual(6, transitions);
-                peptidesPerProteinDlg.NewTargetsFiltered(out proteins, out peptides, out precursors, out transitions);
+                peptidesPerProteinDlg.NewTargetsFinal(out proteins, out peptides, out precursors, out transitions);
                 Assert.AreEqual(0, proteins);
                 Assert.AreEqual(0, peptides);
                 Assert.AreEqual(0, precursors);
                 Assert.AreEqual(0, transitions);
                 peptidesPerProteinDlg.MinPeptides = 1;
-                peptidesPerProteinDlg.NewTargetsFiltered(out proteins, out peptides, out precursors, out transitions);
+                peptidesPerProteinDlg.NewTargetsFinal(out proteins, out peptides, out precursors, out transitions);
                 Assert.AreEqual(2, proteins);
                 Assert.AreEqual(2, peptides);
                 Assert.AreEqual(2, precursors);

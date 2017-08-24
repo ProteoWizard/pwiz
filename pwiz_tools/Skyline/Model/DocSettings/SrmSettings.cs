@@ -2278,7 +2278,8 @@ namespace pwiz.Skyline.Model.DocSettings
                                        newTran.Instrument.MaxMz != oldTran.Instrument.MaxMz ||
                                        !Equals(isolationRangesNew, isolationRangesOld);
             bool diffIsolationScheme = !Equals(newTran.FullScan.IsolationScheme, oldTran.FullScan.IsolationScheme);
-            DiffTransitionGroups = precursorsDiff || diffHeavyMods || diffInstrumentRange || diffIsolationScheme;                
+            bool diffMinIonCount = !Equals(newTran.Libraries.MinIonCount, oldTran.Libraries.MinIonCount);
+            DiffTransitionGroups = precursorsDiff || diffHeavyMods || diffInstrumentRange || diffIsolationScheme || diffMinIonCount;
 
             // If libraries changed, then transition groups should change whenever
             // peptides change also.

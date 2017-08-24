@@ -42,6 +42,8 @@
             this.lblIonCountUnits = new System.Windows.Forms.Label();
             this.txtIonCount = new System.Windows.Forms.TextBox();
             this.cbExclusionUseDIAWindow = new System.Windows.Forms.CheckBox();
+            this.lblMinIonCountUnits = new System.Windows.Forms.Label();
+            this.txtMinIonCount = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // lblPrecursorCharges
@@ -110,11 +112,23 @@
             this.cbExclusionUseDIAWindow.Name = "cbExclusionUseDIAWindow";
             this.cbExclusionUseDIAWindow.UseVisualStyleBackColor = true;
             // 
+            // lblMinIonCountUnits
+            // 
+            resources.ApplyResources(this.lblMinIonCountUnits, "lblMinIonCountUnits");
+            this.lblMinIonCountUnits.Name = "lblMinIonCountUnits";
+            // 
+            // txtMinIonCount
+            // 
+            resources.ApplyResources(this.txtMinIonCount, "txtMinIonCount");
+            this.txtMinIonCount.Name = "txtMinIonCount";
+            // 
             // TransitionSettingsControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Transparent;
+            this.Controls.Add(this.lblMinIonCountUnits);
+            this.Controls.Add(this.txtMinIonCount);
             this.Controls.Add(this.cbExclusionUseDIAWindow);
             this.Controls.Add(this.lblTolerance);
             this.Controls.Add(this.txtTolerance);
@@ -149,5 +163,7 @@
         private System.Windows.Forms.Label lblIonCountUnits;
         private System.Windows.Forms.TextBox txtIonCount;
         private System.Windows.Forms.CheckBox cbExclusionUseDIAWindow;
+        private System.Windows.Forms.Label lblMinIonCountUnits;
+        private System.Windows.Forms.TextBox txtMinIonCount;
     }
 }

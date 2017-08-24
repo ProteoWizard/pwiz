@@ -19,51 +19,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
     public partial class PeptidesPerProteinDlg : FormEx
     {
-        public int MinPeptides
-        {
-            get { return radioKeepMinPeptides.Checked ? Convert.ToInt32(numMinPeptides.Value) : 0; }
-            set { numMinPeptides.Value = value; }
-        }
-
-        private SrmDocument DocumentFiltered { get { return ImportPeptideSearch.RemoveProteinsByPeptideCount(_document, MinPeptides); } }
-
-        public SrmDocument DocumentFinal
-        {
-            get
-            {
-                var refinement = Refinement;
-                return refinement != null ? refinement.GenerateDecoys(DocumentFiltered) : DocumentFiltered;
-            }
-        }
-
-        private RefinementSettings Refinement
-        {
-            get
-            {
-                var numDecoys = NumDecoys(FilteredPeptideGroups);
-                return numDecoys > 0
-                    ? new RefinementSettings {DecoysMethod = _decoyGenerationMethod, NumberOfDecoys = numDecoys}
-                    : null;
-            }
-        }
-
         public bool KeepAll
         {
-            get
-            {
-                return radioKeepAll.Checked;
-            }
+            get { return radioKeepAll.Checked; }
             set
             {
                 if (value)
@@ -74,20 +41,58 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
+        public int MinPeptides
+        {
+            get { return KeepAll ? 0 : Convert.ToInt32(numMinPeptides.Value); }
+            set
+            {
+                if (value == 0)
+                {
+                    KeepAll = true;
+                }
+                else
+                {
+                    KeepAll = false;
+                    numMinPeptides.Value = value;
+                }
+                UpdateRemaining(null, null);
+            }
+        }
+
+        public bool DuplicateControlsVisible { get { return panelDuplicates.Visible; } }
+
+        public bool RemoveRepeatedPeptides
+        {
+            get { return DuplicateControlsVisible && cbRemoveRepeated.Checked; }
+            set
+            {
+                cbRemoveRepeated.Checked = value;
+                UpdateRemaining(null, null);
+            }
+        }
+
+        public bool RemoveDuplicatePeptides
+        {
+            get { return DuplicateControlsVisible && cbRemoveDuplicate.Checked; }
+            set
+            {
+                cbRemoveDuplicate.Checked = value; 
+                UpdateRemaining(null, null);
+            }
+        }
+
         private readonly SrmDocument _document;
         private readonly List<PeptideGroupDocNode> _addedPeptideGroups;
 
-        private IEnumerable<PeptideGroupDocNode> FilteredPeptideGroups { get { return DocumentFiltered.PeptideGroups.Intersect(_addedPeptideGroups); } }
-        public IEnumerable<PeptideGroupDocNode> FilteredPeptideGroupsWithDecoys { get { return FilteredPeptideGroups.Concat(DocumentFinal.PeptideGroups.Where(pepGroup => Equals(pepGroup.Name, PeptideGroup.DECOYS))); } }
+        public SrmDocument DocumentFinal { get; private set; }
 
-        public int EmptyProteins { get { return _addedPeptideGroups.Count(pepGroup => pepGroup.PeptideCount == 0); } }
+        public int EmptyProteins { get { return DocumentFinal.PeptideGroups.Count(pepGroup => pepGroup.PeptideCount == 0); } }
 
         private readonly string _decoyGenerationMethod;
         private readonly double _decoysPerTarget;
 
-        private readonly string _remainingHeader;
         private readonly string _remaniningText;
-        private readonly Color _remainingColor;
+        private readonly string _emptyProteinsText;
 
         public PeptidesPerProteinDlg(SrmDocument doc, List<PeptideGroupDocNode> addedPeptideGroups, string decoyGenerationMethod, double decoysPerTarget)
         {
@@ -96,12 +101,20 @@ namespace pwiz.Skyline.Alerts
             _addedPeptideGroups = addedPeptideGroups;
             _decoyGenerationMethod = decoyGenerationMethod;
             _decoysPerTarget = decoysPerTarget;
-            _remainingHeader = lblRemainingHeader.Text;
             _remaniningText = lblRemaining.Text;
-            _remainingColor = lblRemaining.ForeColor;
+            _emptyProteinsText = lblEmptyProteins.Text;
             int proteinCount, peptideCount, precursorCount, transitionCount;
             NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
             lblNew.Text = string.Format(lblNew.Text, proteinCount, peptideCount, precursorCount, transitionCount);
+
+            var docRefined = new RefinementSettings {RemoveDuplicatePeptides = true}.Refine(_document);
+            if (_document.PeptideCount == docRefined.PeptideCount)
+            {
+                Height -= panelRemaining.Top - panelDuplicates.Top;
+                panelDuplicates.Hide();
+                panelRemaining.Top = panelDuplicates.Top;
+            }
+
             UpdateRemaining(null, null);
         }
 
@@ -121,8 +134,7 @@ namespace pwiz.Skyline.Alerts
             var pepGroups = _addedPeptideGroups.ToArray();
             if (numDecoys > 0)
             {
-                var docWithDecoys = new RefinementSettings { DecoysMethod = _decoyGenerationMethod, NumberOfDecoys = numDecoys }.GenerateDecoys(_document);
-                var decoyGroups = docWithDecoys.PeptideGroups.Where(pepGroup => Equals(pepGroup.Name, PeptideGroup.DECOYS));
+                var decoyGroups = AddDecoys(_document).PeptideGroups.Where(pepGroup => Equals(pepGroup.Name, PeptideGroup.DECOYS));
                 pepGroups = pepGroups.Concat(decoyGroups).ToArray();
             }
             proteins = pepGroups.Length;
@@ -131,9 +143,9 @@ namespace pwiz.Skyline.Alerts
             transitions = pepGroups.Sum(pepGroup => pepGroup.TransitionCount);
         }
 
-        public void NewTargetsFiltered(out int proteins, out int peptides, out int precursors, out int transitions)
+        public void NewTargetsFinal(out int proteins, out int peptides, out int precursors, out int transitions)
         {
-            var pepGroups = FilteredPeptideGroupsWithDecoys.ToArray();
+            var pepGroups = DocumentFinal.PeptideGroups.ToArray();
             proteins = pepGroups.Length;
             peptides = pepGroups.Sum(pepGroup => pepGroup.PeptideCount);
             precursors = pepGroups.Sum(pepGroup => pepGroup.TransitionGroupCount);
@@ -142,33 +154,42 @@ namespace pwiz.Skyline.Alerts
 
         private int NumDecoys(IEnumerable<PeptideGroupDocNode> pepGroups)
         {
-            return !string.IsNullOrEmpty(_decoyGenerationMethod) && _decoysPerTarget > 0 ? (int) Math.Round(pepGroups.Sum(pepGroup => pepGroup.PeptideCount) * _decoysPerTarget) : 0;
+            return !string.IsNullOrEmpty(_decoyGenerationMethod) && _decoysPerTarget > 0
+                ? (int) Math.Round(pepGroups.Sum(pepGroup => pepGroup.PeptideCount) * _decoysPerTarget)
+                : 0;
+        }
+
+        private SrmDocument AddDecoys(SrmDocument document)
+        {
+            var numDecoys = NumDecoys(document.PeptideGroups);
+            return numDecoys > 0
+                ? new RefinementSettings { DecoysMethod = _decoyGenerationMethod, NumberOfDecoys = numDecoys }.GenerateDecoys(document)
+                : document;
         }
 
         private void UpdateRemaining(object sender, EventArgs e)
         {
+            DocumentFinal = AddDecoys(ImportPeptideSearch.RemoveProteinsByPeptideCount(
+                RemoveRepeatedPeptides || RemoveDuplicatePeptides
+                    ? new RefinementSettings {RemoveRepeatedPeptides = RemoveRepeatedPeptides, RemoveDuplicatePeptides = RemoveDuplicatePeptides}.Refine(_document)
+                    : _document
+                , MinPeptides));
+
             if (KeepAll)
             {
                 numMinPeptides.Enabled = false;
-
-                lblRemainingHeader.Text = string.Format(Resources.PeptidesPerProteinDlg_UpdateRemaining__0__empty_proteins_will_be_added_, EmptyProteins);
-                lblRemainingHeader.ForeColor = Color.Red;
-
-                lblRemaining.Hide();
+                lblEmptyProteins.Text = string.Format(_emptyProteinsText, EmptyProteins);
+                lblEmptyProteins.Show();
             }
             else
             {
                 numMinPeptides.Enabled = true;
-
-                lblRemainingHeader.Text = _remainingHeader;
-                lblRemainingHeader.ForeColor = _remainingColor;
-
-                lblRemaining.Show();
-
-                int proteinCount, peptideCount, precursorCount, transitionCount;
-                NewTargetsFiltered(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                lblRemaining.Text = string.Format(_remaniningText, proteinCount, peptideCount, precursorCount, transitionCount);
+                lblEmptyProteins.Hide();
             }
+
+            int proteinCount, peptideCount, precursorCount, transitionCount;
+            NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+            lblRemaining.Text = string.Format(_remaniningText, proteinCount, peptideCount, precursorCount, transitionCount);
         }
     }
 }

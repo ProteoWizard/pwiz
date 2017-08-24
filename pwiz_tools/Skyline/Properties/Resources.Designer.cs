@@ -19629,15 +19629,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} empty proteins will be added..
-        /// </summary>
-        public static string PeptidesPerProteinDlg_UpdateRemaining__0__empty_proteins_will_be_added_ {
-            get {
-                return ResourceManager.GetString("PeptidesPerProteinDlg_UpdateRemaining__0__empty_proteins_will_be_added_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap PeptideStandard {
@@ -28284,12 +28275,32 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Library ion count value {0} must not be less than min ion count value {1}..
+        /// </summary>
+        public static string TransitionLibraries_DoValidate_Library_ion_count_value__0__must_not_be_less_than_min_ion_count_value__1__ {
+            get {
+                return ResourceManager.GetString("TransitionLibraries_DoValidate_Library_ion_count_value__0__must_not_be_less_than_" +
+                        "min_ion_count_value__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Library ion match tolerance value {0} must be between {1} and {2}..
         /// </summary>
         public static string TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_between__1__and__2__ {
             get {
                 return ResourceManager.GetString("TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_betw" +
                         "een__1__and__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library min ion count value {0} must be between {1} and {2}..
+        /// </summary>
+        public static string TransitionLibraries_DoValidate_Library_min_ion_count_value__0__must_be_between__1__and__2__ {
+            get {
+                return ResourceManager.GetString("TransitionLibraries_DoValidate_Library_min_ion_count_value__0__must_be_between__1" +
+                        "__and__2__", resourceCulture);
             }
         }
         

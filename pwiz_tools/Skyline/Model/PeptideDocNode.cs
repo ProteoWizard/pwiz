@@ -788,11 +788,15 @@ namespace pwiz.Skyline.Model
 
                     if (nodeGroup != null)
                     {
-                        TransitionGroupDocNode nodeChanged = recurse
+                        nodeGroup = recurse
                             ? nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diffNode)
                             : nodeGroup;
-                        if (transitionSettings.IsMeasurablePrecursor(nodeChanged.PrecursorMz))
-                            childrenNew.Add(nodeChanged);
+                        bool useIonMin = nodeGroup.HasLibInfo && settingsNew.TransitionSettings.Libraries.Pick != TransitionLibraryPick.none;
+                        if ((!useIonMin || nodeGroup.TransitionCount >= settingsNew.TransitionSettings.Libraries.MinIonCount) &&
+                            transitionSettings.IsMeasurablePrecursor(nodeGroup.PrecursorMz))
+                        {
+                            childrenNew.Add(nodeGroup);
+                        }
                     }
                 }
 
