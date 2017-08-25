@@ -122,12 +122,13 @@ namespace pwiz.SkylineTestFunctional
                     if (i == j)
                         continue;
                     int targetIndex = i, originalIndex = j;
+                    var summary = graphSummary;
                     RunUI(() =>
                     {
-                        RunToRunTargetReplicate(graphSummary).SelectedIndex = targetIndex;
-                        RunToRunOriginalReplicate(graphSummary).SelectedIndex = originalIndex;
+                        RunToRunTargetReplicate(summary).SelectedIndex = targetIndex;
+                        RunToRunOriginalReplicate(summary).SelectedIndex = originalIndex;
 
-                        Assert.AreEqual(targetIndex, graphSummary.StateProvider.SelectedResultsIndex);
+                        Assert.AreEqual(targetIndex, summary.StateProvider.SelectedResultsIndex);
                     });
                     WaitForGraphs();
 
@@ -166,11 +167,12 @@ namespace pwiz.SkylineTestFunctional
             for (var i = 0; i < REPLICATES; i++)
             {
                 int selfIndex = i;
+                var summary = graphSummary;
                 RunUI(() =>
                 {
                     SkylineWindow.ShowPlotType(PlotTypeRT.correlation);
-                    RunToRunTargetReplicate(graphSummary).SelectedIndex = selfIndex;
-                    RunToRunOriginalReplicate(graphSummary).SelectedIndex = selfIndex;
+                    RunToRunTargetReplicate(summary).SelectedIndex = selfIndex;
+                    RunToRunOriginalReplicate(summary).SelectedIndex = selfIndex;
                 });
                 WaitForGraphs();
                 var regression = regressionPane.RegressionRefined;
