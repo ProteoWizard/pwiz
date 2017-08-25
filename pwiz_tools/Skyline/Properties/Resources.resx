@@ -9864,4 +9864,13 @@ Here are the {0} pairs with multiple entries:
   <data name="PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_" xml:space="preserve">
     <value>The file {0} is missing.</value>
   </data>
+  <data name="TransitionSettingsUI_PopulateAdductMenu_More" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="TransitionSettingsUI_PopulateAdductMenu_Adducts_plusplusplus" xml:space="preserve">
+    <value>Adducts+++</value>
+  </data>
+  <data name="TransitionSettingsUI_PopulateAdductMenu_Adducts_minusminusminus" xml:space="preserve">
+    <value>Adducts---</value>
+  </data>
 </root>

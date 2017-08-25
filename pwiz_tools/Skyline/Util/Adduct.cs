@@ -766,6 +766,7 @@ namespace pwiz.Skyline.Util
         /// Some internals made public for test purposes
         /// </summary>
         public int GetMassMultiplier() { return MassMultiplier; }
+        public ImmutableDictionary<string, int> GetComposition() { return Composition; }
         public TypedMass GetIsotopesIncrementalAverageMass() { return IsotopesIncrementalAverageMass; }
         public TypedMass GetIsotopesIncrementalMonoisotopicMass() { return IsotopesIncrementalMonoMass; }
 

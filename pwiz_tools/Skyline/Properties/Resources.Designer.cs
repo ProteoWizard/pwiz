@@ -28557,6 +28557,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adducts---.
+        /// </summary>
+        public static string TransitionSettingsUI_PopulateAdductMenu_Adducts_minusminusminus {
+            get {
+                return ResourceManager.GetString("TransitionSettingsUI_PopulateAdductMenu_Adducts_minusminusminus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adducts+++.
+        /// </summary>
+        public static string TransitionSettingsUI_PopulateAdductMenu_Adducts_plusplusplus {
+            get {
+                return ResourceManager.GetString("TransitionSettingsUI_PopulateAdductMenu_Adducts_plusplusplus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to More.
+        /// </summary>
+        public static string TransitionSettingsUI_PopulateAdductMenu_More {
+            get {
+                return ResourceManager.GetString("TransitionSettingsUI_PopulateAdductMenu_More", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Res&amp;olution:.
         /// </summary>
         public static string TransitionSettingsUI_SetAnalyzerType_Resolution {

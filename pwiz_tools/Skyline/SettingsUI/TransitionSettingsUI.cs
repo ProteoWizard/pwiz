@@ -78,8 +78,8 @@ namespace pwiz.Skyline.SettingsUI
             _transitionSettings = _parent.DocumentUI.Settings.TransitionSettings;
 
             // Populate the small mol adduct filter helper menu
-            PopulateAdductMenu(contextMenuStripPrecursorAdduct, true, precursorAdductStripMenuItem_Click);
-            PopulateAdductMenu(contextMenuStripFragmentAdduct, false, fragmentAdductStripMenuItem_Click);
+            AppendAdductMenus(contextMenuStripPrecursorAdduct, true, precursorAdductStripMenuItem_Click);
+            AppendAdductMenus(contextMenuStripFragmentAdduct, false, fragmentAdductStripMenuItem_Click);
             Bitmap bm = Resources.PopupBtn;
             bm.MakeTransparent(Color.Fuchsia);
             btnPrecursorAdduct.Image = bm;
@@ -1047,38 +1047,95 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public static void PopulateAdductMenu(ContextMenuStrip menu, bool isPrecursor, EventHandler adductStripMenuItem_Click)
+        // Sort the list of known adducts, filtered by charge, in order of liklihood
+        private static Adduct[] AdductMenuOrder(IEnumerable<String> adducts, int charge)
         {
-            var adductsInMenu = new HashSet<string>();
+            var sorted = adducts.Select(a => Adduct.FromString(a, Adduct.ADDUCT_TYPE.non_proteomic, null)).Where(a => a.AdductCharge == charge).ToArray();
+            Array.Sort(sorted,
+                delegate(Adduct a1, Adduct that)
+                {
+                    // Show the [2M... stuff after the [M... stuff
+                    var comp = Math.Abs(a1.GetMassMultiplier()).CompareTo(Math.Abs(that.GetMassMultiplier()));
+                    if (comp != 0)
+                    {
+                        return comp;  
+                    }
+                    // Simplest first - lowest unique element count
+                    comp = Math.Abs(a1.GetComposition().Count).CompareTo(Math.Abs(that.GetComposition().Count));
+                    if (comp != 0)
+                    {
+                        return comp;  
+                    }
+                    // Simplest first - shortest text description
+                    comp = a1.ToString().Length.CompareTo(that.ToString().Length);
+                    if (comp != 0)
+                    {
+                        return comp; 
+                    }
+                    // Alpha sort
+                    return string.Compare(a1.ToString(), that.ToString(), StringComparison.Ordinal);
+                });
+            return sorted;
+        }
 
-            if (!isPrecursor)
+        // Append adduct picker submenus, one per charge 1,2,3,-1,-2,-3
+        public static void AppendAdductMenus(ContextMenuStrip menuParent, bool showOnlyAdductsWithMass, EventHandler adductStripMenuItem_Click)
+        {
+            var insertOffset = menuParent.Items.Count == 0 ? 0 : 1; // Leave Help as last item
+
+            var adductsInMenu = new HashSet<Adduct>();
+
+            foreach (var charge in new []{1,2,3,-1,-2,-3})
             {
-                // Charge-only adducts first
-                foreach (var adduct in Adduct.COMMON_CHARGEONLY_ADDUCTS)
+                // Create a cascading menu item on parent menu
+                var text = charge > 0
+                    ? Resources.TransitionSettingsUI_PopulateAdductMenu_Adducts_plusplusplus
+                    : Resources.TransitionSettingsUI_PopulateAdductMenu_Adducts_minusminusminus;
+                var menuItem = new ToolStripMenuItem()
                 {
-                    AddAdductMenuItem(menu, adduct, adductStripMenuItem_Click);
-                    adductsInMenu.Add(adduct);
+                    Text = text.Substring(0, text.Length - (3 - Math.Abs(charge)))  // Trim "Adducts +++" or "Adducts ---" as needed
+                };
+                menuParent.Items.Insert(menuParent.Items.Count - insertOffset, menuItem);
+                var cascadeTop = menuItem;
+                if (!showOnlyAdductsWithMass)
+                {
+                    // Charge-only adducts first
+                    foreach (var adduct in AdductMenuOrder(Adduct.COMMON_CHARGEONLY_ADDUCTS, charge))
+                    {
+                        AddAdductMenuItem(menuItem, adduct.ToString(), adductStripMenuItem_Click);
+                        adductsInMenu.Add(adduct);
+                    }
                 }
-            }
-            // All the adducts from Fiehn lab list
-            foreach (var adduct in Adduct.DEFACTO_STANDARD_ADDUCTS)
-            {
-                if (!adductsInMenu.Contains(adduct))
+                // All the adducts from Fiehn lab list
+                foreach (var adduct in AdductMenuOrder(Adduct.DEFACTO_STANDARD_ADDUCTS, charge))
                 {
-                    AddAdductMenuItem(menu, adduct, adductStripMenuItem_Click);
-                    adductsInMenu.Add(adduct);
+                    if (!adductsInMenu.Contains(adduct))
+                    {
+                        if (ReferenceEquals(menuItem, cascadeTop) && adduct.GetComposition().Count > 2)
+                        {
+                            // Start another cascade level for the more exotic adducts
+                            var menuItemMore = new ToolStripMenuItem()
+                            {
+                                Text = Resources.TransitionSettingsUI_PopulateAdductMenu_More
+                            };
+                            menuItem.DropDownItems.Add(menuItemMore);
+                            menuItem = menuItemMore;
+                        }
+                        AddAdductMenuItem(menuItem, adduct.ToString(), adductStripMenuItem_Click);
+                        adductsInMenu.Add(adduct);
+                    }
                 }
             }
         }
 
-        private static void AddAdductMenuItem(ContextMenuStrip menu, string adduct, EventHandler handler)
+        private static void AddAdductMenuItem(ToolStripMenuItem menu, string adduct, EventHandler handler)
         {
             var menuItem = new ToolStripMenuItem()
             {
                 Text = adduct
             };
             menuItem.Click += handler;
-            menu.Items.Add(menuItem);
+            menu.DropDownItems.Add(menuItem);
         }
 
 
