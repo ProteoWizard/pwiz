@@ -16337,22 +16337,22 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Insufficient decoys detectect to continue training..
+        ///   Looks up a localized string similar to Insufficient decoy peaks ({0} with {1} targets) to continue training..
         /// </summary>
-        public static string MProphetPeakScoringModel_CalculateWeights_Insufficient_decoys_detectect_to_continue_training_ {
+        public static string MProphetPeakScoringModel_CalculateWeights_Insufficient_decoy_peaks___0__with__1__targets__to_continue_training_ {
             get {
-                return ResourceManager.GetString("MProphetPeakScoringModel_CalculateWeights_Insufficient_decoys_detectect_to_contin" +
-                        "ue_training_", resourceCulture);
+                return ResourceManager.GetString("MProphetPeakScoringModel_CalculateWeights_Insufficient_decoy_peaks___0__with__1__" +
+                        "targets__to_continue_training_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Insufficient targets detectect to continue training..
+        ///   Looks up a localized string similar to Insufficient target peaks ({0} with {1} decoys) detected at {2}% FDR to continue training..
         /// </summary>
-        public static string MProphetPeakScoringModel_CalculateWeights_Insufficient_targets_detectect_to_continue_training_ {
+        public static string MProphetPeakScoringModel_CalculateWeights_Insufficient_target_peaks___0__with__1__decoys__detected_at__2___FDR_to_continue_training_ {
             get {
-                return ResourceManager.GetString("MProphetPeakScoringModel_CalculateWeights_Insufficient_targets_detectect_to_conti" +
-                        "nue_training_", resourceCulture);
+                return ResourceManager.GetString("MProphetPeakScoringModel_CalculateWeights_Insufficient_target_peaks___0__with__1_" +
+                        "_decoys__detected_at__2___FDR_to_continue_training_", resourceCulture);
             }
         }
         

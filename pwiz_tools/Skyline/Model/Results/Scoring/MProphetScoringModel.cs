@@ -400,10 +400,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
             WriteDistributionInfo(documentPath, targetTransitionGroups, decoyTransitionGroups); // Only if asked to do so in command-line arguments
 
-            if (truePeaks.Count*100 < decoyPeaks.Count) // Targets must be at least 1% of decoys
-                throw new Exception(Resources.MProphetPeakScoringModel_CalculateWeights_Insufficient_targets_detectect_to_continue_training_);
-            if (decoyPeaks.Count*100 < truePeaks.Count) // Decoys must be at least 1% of targets
-                throw new Exception(Resources.MProphetPeakScoringModel_CalculateWeights_Insufficient_decoys_detectect_to_continue_training_);
+            // Better to let a really poor model through for the user to see than to give an error message here
+            if (truePeaks.Count*10*1000 < decoyPeaks.Count) // Targets must be at least 0.01% of decoys (still rejects zero)
+                throw new InvalidDataException(string.Format(Resources.MProphetPeakScoringModel_CalculateWeights_Insufficient_target_peaks___0__with__1__decoys__detected_at__2___FDR_to_continue_training_, truePeaks.Count, decoyPeaks.Count, qValueCutoff*100));
+            if (decoyPeaks.Count*1000 < truePeaks.Count) // Decoys must be at least 0.1% of targets
+                throw new InvalidDataException(string.Format(Resources.MProphetPeakScoringModel_CalculateWeights_Insufficient_decoy_peaks___0__with__1__targets__to_continue_training_, decoyPeaks.Count, truePeaks.Count));
 
             var featureCount = weights.Count(w => !double.IsNaN(w));
 

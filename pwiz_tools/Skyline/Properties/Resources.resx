@@ -9571,12 +9571,6 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="ComparePeakPickingDlg_RefreshDocument_Refresh__0_" xml:space="preserve">
     <value>Refresh {0}</value>
   </data>
-  <data name="MProphetPeakScoringModel_CalculateWeights_Insufficient_targets_detectect_to_continue_training_" xml:space="preserve">
-    <value>Insufficient targets detectect to continue training.</value>
-  </data>
-  <data name="MProphetPeakScoringModel_CalculateWeights_Insufficient_decoys_detectect_to_continue_training_" xml:space="preserve">
-    <value>Insufficient decoys detectect to continue training.</value>
-  </data>
   <data name="SkylineViewContext_DeleteDocNodes_Delete_items" xml:space="preserve">
     <value>Delete items</value>
   </data>
@@ -9872,5 +9866,11 @@ Here are the {0} pairs with multiple entries:
   </data>
   <data name="TransitionSettingsUI_PopulateAdductMenu_Adducts_minusminusminus" xml:space="preserve">
     <value>Adducts---</value>
+  </data>
+  <data name="MProphetPeakScoringModel_CalculateWeights_Insufficient_target_peaks___0__with__1__decoys__detected_at__2___FDR_to_continue_training_" xml:space="preserve">
+    <value>Insufficient target peaks ({0} with {1} decoys) detected at {2}% FDR to continue training.</value>
+  </data>
+  <data name="MProphetPeakScoringModel_CalculateWeights_Insufficient_decoy_peaks___0__with__1__targets__to_continue_training_" xml:space="preserve">
+    <value>Insufficient decoy peaks ({0} with {1} targets) to continue training.</value>
   </data>
 </root>
