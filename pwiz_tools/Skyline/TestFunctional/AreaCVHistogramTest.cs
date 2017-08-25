@@ -144,11 +144,13 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.none);
             });
 
-            OpenAndChangeAreaCVProperties(f => f.ShowCVCutoff = f.ShowMedianCV = true);
+            WaitForGraphs();
 
             var graph = SkylineWindow.GraphPeakArea;
             var toolbar = graph.Toolbar as AreaCVToolbar;
             Assert.IsNotNull(toolbar);
+
+            OpenAndChangeAreaCVProperties(graph, f => f.ShowCVCutoff = f.ShowMedianCV = true);
 
             // Test if the toolbar is there and if the displayed data is correct
             T pane;
@@ -158,12 +160,12 @@ namespace pwiz.SkylineTestFunctional
 
             // Test if the data is correct after changing the bin width and disabling the show cv cutoff option (which affects GetTotalBars)
             RunUI(() => SkylineWindow.SetAreaCVBinWidth(2.0));
-            OpenAndChangeAreaCVProperties(f => f.ShowCVCutoff = false);
+            OpenAndChangeAreaCVProperties(graph, f => f.ShowCVCutoff = false);
             AssertDataCorrect(pane, statsStartIndex++);
 
             // Make sure that there are no bars when the points type is decoys
             RunUI(() => SkylineWindow.SetAreaCVPointsType(PointsTypePeakArea.decoys));
-            OpenAndChangeAreaCVProperties(f => f.ShowMedianCV = false);
+            OpenAndChangeAreaCVProperties(graph, f => f.ShowMedianCV = false);
             WaitForConditionUI(() => GetCurrentData(pane) != null);
             Assert.IsTrue(pane.GetBoxObjCount() == 0);
 

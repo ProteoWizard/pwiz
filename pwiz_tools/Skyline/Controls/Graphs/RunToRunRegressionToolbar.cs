@@ -49,13 +49,16 @@ namespace pwiz.Skyline.Controls.Graphs
             // Need at least 2 replicates to do run to run regression.
             else
             {
-                RTGraphController.GraphType = GraphTypeRT.score_to_run_regression;
+                Program.MainWindow.ShowRTRegressionGraphRunToRun();
             }
         }
 
         public override void UpdateUI()
         {
             var results = _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults;
+
+            if (results == null)
+                return;
 
             // Check to see if the list of files has changed.
             var listNames = new List<string>();

@@ -264,9 +264,9 @@ namespace pwiz.SkylineTestUtil
             WaitForGraphs();
         }
 
-        public void OpenAndChangeAreaCVProperties(Action<AreaCVToolbarProperties> action)
+        public void OpenAndChangeAreaCVProperties(GraphSummary graphSummary, Action<AreaCVToolbarProperties> action)
         {
-            RunDlg<AreaCVToolbarProperties>(SkylineWindow.ShowAreaCVPropertyDlg, d =>
+            RunDlg<AreaCVToolbarProperties>(() => SkylineWindow.ShowAreaCVPropertyDlg(graphSummary), d =>
             {
                 action(d);
                 d.OK();

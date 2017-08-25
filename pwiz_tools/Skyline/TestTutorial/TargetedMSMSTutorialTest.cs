@@ -535,7 +535,7 @@ namespace pwiz.SkylineTestTutorial
             // PeakAreaGraph Normalize to total p.20.
             RunUI(() =>
                 {
-                    SkylineWindow.ShowGraphPeakArea(true);
+                    SkylineWindow.ShowPeakAreaReplicateComparison();
                     SkylineWindow.ShowProductTransitions();
                     SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
                 });
@@ -844,7 +844,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
-                SkylineWindow.ShowGraphPeakArea(true);
+                SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.ShowPrecursorTransitions();
                 SkylineWindow.ArrangeGraphsTiled();
                 SkylineWindow.ActivateReplicate("4-BSA-10fmol");

@@ -4115,8 +4115,7 @@ namespace pwiz.Skyline
             protected virtual void OnMenuItemClick()
             {
                 _skyline.SequenceTree.RatioIndex = _ratioIndex;
-                if (_skyline._graphPeakArea != null)
-                    _skyline._graphPeakArea.RatioIndex = _ratioIndex;                
+                _skyline._listGraphPeakArea.ForEach(g => g.RatioIndex = _ratioIndex);
             }
 
             public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, int i)
@@ -4328,6 +4327,15 @@ namespace pwiz.Skyline
             return SequenceTree.GetNodeAt(ptView);
         }
 
+        private void SetResultIndexOnGraphs(IList<GraphSummary> graphs, bool useOriginalIndex)
+        {
+            foreach (var g in graphs.Where(g => g.ResultsIndex != ComboResults.SelectedIndex))
+            {
+                int origIndex = useOriginalIndex ? g.OriginalResultsIndex : -1;
+                g.SetResultIndexes(ComboResults.SelectedIndex, origIndex);
+            }
+        }
+
         private void comboResults_SelectedIndexChanged(object sender, EventArgs e)
         {
             string name = SelectedGraphChromName;
@@ -4335,12 +4343,10 @@ namespace pwiz.Skyline
                 return;
 
             // Update the summary graphs if necessary.
-            if (_graphRetentionTime != null && _graphRetentionTime.ResultsIndex != ComboResults.SelectedIndex)
-                _graphRetentionTime.SetResultIndexes(ComboResults.SelectedIndex,_graphRetentionTime.OriginalResultsIndex);
-            if (_graphPeakArea != null && _graphPeakArea.ResultsIndex != ComboResults.SelectedIndex)
-                _graphPeakArea.SetResultIndexes(ComboResults.SelectedIndex);
-            if (_graphMassError != null && _graphMassError.ResultsIndex != ComboResults.SelectedIndex)
-                _graphMassError.SetResultIndexes(ComboResults.SelectedIndex);
+            SetResultIndexOnGraphs(_listGraphRetentionTime, true);
+            SetResultIndexOnGraphs(_listGraphPeakArea, false);
+            SetResultIndexOnGraphs(_listGraphMassError, false);
+
             var liveResultsGrid = (LiveResultsGrid)_resultsGridForm;
             if (null != liveResultsGrid)
             {

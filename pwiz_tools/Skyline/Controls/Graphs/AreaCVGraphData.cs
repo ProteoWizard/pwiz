@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             var peakArea = transitionGroupDocNode.GetPeakArea(i, qvalueCutoff);
                             if (!peakArea.HasValue)
                                 continue;
-
+                            
                             double area = peakArea.Value;
                             var normalizedArea = area;
                             if (graphSettings.NormalizationMethod == AreaCVNormalizationMethod.medians)
@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 MedianCV = new Statistics(data.Select(d => d.CV)).Median();
         }
 
-        public static readonly AreaCVGraphData INVALID = new AreaCVGraphData(null, new AreaCVGraphSettings((GraphTypePeakArea)~0, (AreaCVNormalizationMethod)~0, -1, string.Empty, string.Empty, (PointsTypePeakArea)~0, double.NaN, double.NaN, -1, double.NaN));
+        public static readonly AreaCVGraphData INVALID = new AreaCVGraphData(null, new AreaCVGraphSettings((GraphTypeSummary)~0, (AreaCVNormalizationMethod)~0, -1, string.Empty, string.Empty, (PointsTypePeakArea)~0, double.NaN, double.NaN, -1, double.NaN));
 
         private void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas, PeptideDocNode peptide, string annotation)
         {
@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Round cvs so that the smallest difference between two cv's is BinWidth
             var cv = normalizedStdDev / normalizedMean;
             var cvBucketed = Math.Floor(cv / _graphSettings.BinWidth) * _graphSettings.BinWidth;
-            var log10Mean = _graphSettings.GraphType == GraphTypePeakArea.histogram2d ? Math.Floor(Math.Log10(unnomarlizedMean) / 0.05) * 0.05 : 0.0;
+            var log10Mean = _graphSettings.GraphType == GraphTypeSummary.histogram2d ? Math.Floor(Math.Log10(unnomarlizedMean) / 0.05) * 0.05 : 0.0;
             data.Add(new InternalData { Peptide = peptide, Annotation = annotation, CV = cv, CVBucketed = cvBucketed, Area = log10Mean });
         }
 
@@ -345,10 +345,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public class AreaCVGraphSettings
         {
-            public AreaCVGraphSettings(bool convertToDecimal = true)
+            public AreaCVGraphSettings(GraphTypeSummary graphType, bool convertToDecimal = true)
             {
                 var factor = !Settings.Default.AreaCVShowDecimals && convertToDecimal ? 0.01 : 1.0;
-                GraphType = AreaGraphController.GraphType;
+                GraphType = graphType;
                 NormalizationMethod = AreaGraphController.NormalizationMethod;
                 RatioIndex = AreaGraphController.AreaCVRatioIndex;
                 Group = AreaGraphController.GroupByGroup != null ? string.Copy(AreaGraphController.GroupByGroup) : null;
@@ -360,7 +360,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 BinWidth = Settings.Default.AreaCVHistogramBinWidth * factor;
             }
 
-            public AreaCVGraphSettings(GraphTypePeakArea graphType, AreaCVNormalizationMethod normalizationMethod, int ratioIndex, string group, string annotation, PointsTypePeakArea pointsType, double qValueCutoff,
+            public AreaCVGraphSettings(GraphTypeSummary graphType, AreaCVNormalizationMethod normalizationMethod, int ratioIndex, string group, string annotation, PointsTypePeakArea pointsType, double qValueCutoff,
                 double cvCutoff, int minimumDetections, double binwidth)
             {
                 GraphType = graphType;
@@ -382,7 +382,7 @@ namespace pwiz.Skyline.Controls.Graphs
                        a.CVCutoff == b.CVCutoff && a.BinWidth == b.BinWidth;
             }
 
-            public GraphTypePeakArea GraphType { get; private set; }
+            public GraphTypeSummary GraphType { get; private set; }
             public AreaCVNormalizationMethod NormalizationMethod { get; private set; }
             public int RatioIndex { get; private set; }
             public string Group { get; private set; }

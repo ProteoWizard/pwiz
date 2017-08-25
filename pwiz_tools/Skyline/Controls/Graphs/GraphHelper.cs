@@ -293,9 +293,18 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public CurveItem AddChromatogram(PaneKey paneKey, ChromGraphItem chromGraphItem)
         {
-            var chromDisplayState = (ChromDisplayState) _displayState;
-            chromDisplayState.ChromGraphItems.Add(new KeyValuePair<PaneKey, ChromGraphItem>(paneKey, chromGraphItem));
-            return GraphControl.AddGraphItem(chromDisplayState.GetOrCreateGraphPane(GraphControl, paneKey), chromGraphItem, false);
+            var chromDisplayState = _displayState as ChromDisplayState;
+            if (chromDisplayState != null)
+            {
+                chromDisplayState.ChromGraphItems.Add(
+                    new KeyValuePair<PaneKey, ChromGraphItem>(paneKey, chromGraphItem));
+                return GraphControl.AddGraphItem(chromDisplayState.GetOrCreateGraphPane(GraphControl, paneKey),
+                    chromGraphItem, false);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public MSGraphPane GetGraphPane(PaneKey paneKey)

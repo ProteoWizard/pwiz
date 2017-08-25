@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<ChromatogramRTThresholdDlg>(SkylineWindow.ShowChromatogramRTThresholdDlg);
 
             var rtReplicateGraph = ShowDialog<GraphSummary>(SkylineWindow.ShowRTReplicateGraph);
-            RunDlg<RTChartPropertyDlg>(SkylineWindow.ShowRTPropertyDlg);
+            RunDlg<RTChartPropertyDlg>(() => SkylineWindow.ShowRTPropertyDlg(rtReplicateGraph));
             OkDialog(rtReplicateGraph, rtReplicateGraph.Close);
 
             var areaReplicateGraph = ShowDialog<GraphSummary>(SkylineWindow.ShowPeakAreaReplicateComparison);

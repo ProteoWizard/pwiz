@@ -162,11 +162,15 @@ namespace pwiz.SkylineTestUtil
             ActionUtil.RunAsync(() =>
             {
                 Thread.Sleep(1000);
-                Invoke(new Action(() =>
+
+                if (IsHandleCreated)
                 {
-                    SetForegroundWindow(Handle);
-                    btnContinue.Focus();
-                }));
+                    Invoke(new Action(() =>
+                    {
+                        SetForegroundWindow(Handle);
+                        btnContinue.Focus();
+                    }));
+                }
             });
         }
 

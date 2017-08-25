@@ -44,7 +44,9 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Themes;
@@ -255,6 +257,85 @@ namespace pwiz.Skyline.Properties
             set
             {
                 this["ToolFilePaths"] = value; // Not L10N
+            }
+        }
+
+        [UserScopedSettingAttribute]
+        public UniqueList<GraphTypeSummary> AreaGraphTypes
+        {
+            get
+            {
+                if (this["AreaGraphTypes"] == null) // Not L10N
+                {
+                    AreaGraphTypes = ShowPeakAreaGraph
+                        ? new UniqueList<GraphTypeSummary> { Helpers.ParseEnum(AreaGraphType, GraphTypeSummary.replicate) }
+                        : new UniqueList<GraphTypeSummary>();
+                }
+
+                return (UniqueList<GraphTypeSummary>)this["AreaGraphTypes"]; // Not L10N
+            }
+            set
+            {
+                value.CollectionChanged += (sender, args) =>
+                {
+                    if (AreaGraphTypes.Any())
+                        AreaGraphType = AreaGraphTypes.First().ToString();
+                };
+
+                this["AreaGraphTypes"] = value; // Not L10N
+            }
+        }
+
+        [UserScopedSettingAttribute]
+        public UniqueList<GraphTypeSummary> RTGraphTypes
+        {
+            get
+            {
+                if (this["RTGraphTypes"] == null) // Not L10N
+                {
+                    RTGraphTypes = ShowRetentionTimeGraph
+                        ? new UniqueList<GraphTypeSummary> { Helpers.ParseEnum(RTGraphType, GraphTypeSummary.replicate) }
+                        : new UniqueList<GraphTypeSummary>();
+                }
+
+                return (UniqueList<GraphTypeSummary>)this["RTGraphTypes"]; // Not L10N
+            }
+            set
+            {
+                value.CollectionChanged += (sender, args) =>
+                {
+                    if (RTGraphTypes.Any())
+                        RTGraphType = RTGraphTypes.First().ToString();
+                };
+
+                this["RTGraphTypes"] = value; // Not L10N
+            }
+        }
+
+        [UserScopedSettingAttribute]
+        public UniqueList<GraphTypeSummary> MassErrorGraphTypes
+        {
+            get
+            {
+                if (this["MassErrorGraphTypes"] == null) // Not L10N
+                {
+                    MassErrorGraphTypes = ShowMassErrorGraph
+                        ? new UniqueList<GraphTypeSummary> { Helpers.ParseEnum(MassErrorGraphType, GraphTypeSummary.replicate) }
+                        : new UniqueList<GraphTypeSummary>();
+                }
+
+                return (UniqueList<GraphTypeSummary>)this["MassErrorGraphTypes"]; // Not L10N
+   
+            }
+            set
+            {
+                value.CollectionChanged += (sender, args) =>
+                {
+                    if (MassErrorGraphTypes.Any())
+                        MassErrorGraphType = MassErrorGraphTypes.First().ToString();
+                };
+
+                this["MassErrorGraphTypes"] = value; // Not L10N
             }
         }
 

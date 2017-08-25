@@ -316,6 +316,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Review iRT-C18 graph p. 12-13
             RunUI(() => SkylineWindow.ChooseCalculator(irtCalcName));
+            RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
             WaitForGraphs();
 
             PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 13);
@@ -483,6 +484,8 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
 
             // Verify regression graph, p. 19
+            RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
+            WaitForGraphs();
             PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 19);
             RunUI(() =>
                       {
@@ -492,7 +495,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Check scheduling graph, p. 20
             RunUI(SkylineWindow.ShowRTSchedulingGraph);
-            RunDlg<SchedulingGraphPropertyDlg>(SkylineWindow.ShowRTPropertyDlg, propertyDlg =>
+            RunDlg<SchedulingGraphPropertyDlg>(() => SkylineWindow.ShowRTPropertyDlg(SkylineWindow.GraphRetentionTime), propertyDlg =>
                     {
                         propertyDlg.TimeWindows = new[] { 2.0, 5.0, 10.0 };
                         propertyDlg.OkDialog();
@@ -707,6 +710,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForClosedAllChromatogramsGraph();
         }
 
+        // Always called in RunUI
         private static void VerifyRTRegression(double slope, double intercept, double r)
         {
             WaitForCondition(() => SkylineWindow.RTGraphController.RegressionRefined != null);

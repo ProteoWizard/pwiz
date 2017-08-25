@@ -11456,6 +11456,69 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 2D Histogram.
+        /// </summary>
+        public static string Extensions_CustomToString__2D_Histogram {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString__2D_Histogram", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Histogram.
+        /// </summary>
+        public static string Extensions_CustomToString_Histogram {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Histogram", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide Comparison.
+        /// </summary>
+        public static string Extensions_CustomToString_Peptide_Comparison {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Peptide_Comparison", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate Comparison.
+        /// </summary>
+        public static string Extensions_CustomToString_Replicate_Comparison {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Replicate_Comparison", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run To Run Regression.
+        /// </summary>
+        public static string Extensions_CustomToString_Run_To_Run_Regression {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Run_To_Run_Regression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scheduling.
+        /// </summary>
+        public static string Extensions_CustomToString_Scheduling {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Scheduling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score To Run Regression.
+        /// </summary>
+        public static string Extensions_CustomToString_Score_To_Run_Regression {
+            get {
+                return ResourceManager.GetString("Extensions_CustomToString_Score_To_Run_Regression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap ExternalTool {

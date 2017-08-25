@@ -29,6 +29,9 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public sealed partial class AreaCVToolbar : GraphSummaryToolbar //UserControl // for designer
     {
+        private readonly Timer _timer;
+        private int _standardTypeCount;
+
         public AreaCVToolbar(GraphSummary graphSummary) :
             base(graphSummary)
         {
@@ -161,7 +164,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (info == null)
                 return false;
 
-            return info.Cache.IsValidFor(_graphSummary.DocumentUIContainer.DocumentUI, new AreaCVGraphData.AreaCVGraphSettings()) &&
+            return info.Cache.IsValidFor(_graphSummary.DocumentUIContainer.DocumentUI, new AreaCVGraphData.AreaCVGraphSettings(_graphSummary.Type)) &&
                 info.Cache.Get(AreaGraphController.GroupByGroup,
                     AreaGraphController.GroupByAnnotation,
                     AreaGraphController.MinimumDetections,
@@ -171,7 +174,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void toolStripProperties_Click(object sender, EventArgs e)
         {
-            using (var dlgProperties = new AreaCVToolbarProperties(_graphSummary.DocumentUIContainer.DocumentUI))
+            using (var dlgProperties = new AreaCVToolbarProperties(_graphSummary))
             {
                 if (dlgProperties.ShowDialog() == DialogResult.OK)
                     _graphSummary.UpdateUI();
@@ -229,6 +232,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var standardTypes = mods.RatioInternalStandardTypes;
 
             toolStripComboNormalizedTo.Items.Clear();
+            _standardTypeCount = 0;
 
             if (mods.HasHeavyModifications)
             {
@@ -251,12 +255,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!hasGlobalStandard)
                     --index;
                 toolStripComboNormalizedTo.SelectedIndex = index;
-            }
-                
+            } 
         }
-
-        private readonly Timer _timer;
-        private int _standardTypeCount;
 
         #region Functional Test Support
         public int MinDetections { get { return (int) toolStripNumericDetections.NumericUpDownControl.Minimum; } }

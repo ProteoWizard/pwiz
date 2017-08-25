@@ -20,6 +20,7 @@
 using System;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -32,17 +33,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum AreaScope{ document, protein }
 
-    public enum GraphTypePeakArea { replicate, peptide, histogram, histogram2d }
-
     public enum PointsTypePeakArea { targets, decoys }
 
     public enum AreaCVNormalizationMethod { global_standards, medians, none, ratio }
 
     public sealed class AreaGraphController : GraphSummary.IControllerSplit
     {
-        public static GraphTypePeakArea GraphType
+        public static GraphTypeSummary GraphType
         {
-            get { return Helpers.ParseEnum(Settings.Default.AreaGraphType, GraphTypePeakArea.replicate); }
+            get { return Helpers.ParseEnum(Settings.Default.AreaGraphType, GraphTypeSummary.replicate); }
             set { Settings.Default.AreaGraphType = value.ToString(); }
         }
 
@@ -79,6 +78,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public GraphSummary GraphSummary { get; set; }
 
+        UniqueList<GraphTypeSummary> GraphSummary.IController.GraphTypes
+        {
+            get { return Settings.Default.AreaGraphTypes; }
+            set { Settings.Default.AreaGraphTypes = value; }
+        }
+
         public IFormView FormView { get { return new GraphSummary.AreaGraphView(); } }
 
         public static double GetAreaCVFactorToDecimal()
@@ -104,7 +109,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var settingsNew = newDocument.Settings;
             var settingsOld = oldDocument.Settings;
 
-            if (GraphType == GraphTypePeakArea.histogram || GraphType == GraphTypePeakArea.histogram2d)
+            if (GraphSummary.Type == GraphTypeSummary.histogram || GraphSummary.Type == GraphTypeSummary.histogram2d)
             {
                 if (GroupByGroup != null && !ReferenceEquals(settingsNew.DataSettings.AnnotationDefs, settingsOld.DataSettings.AnnotationDefs))
                 {
@@ -179,17 +184,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var pane = GraphSummary.GraphPanes.FirstOrDefault();
 
-            switch (GraphType)
+            switch (GraphSummary.Type)
             {
-                case GraphTypePeakArea.replicate:
-                case GraphTypePeakArea.peptide:
-                    GraphSummary.DoUpdateGraph(this, (GraphTypeSummary) Enum.Parse(typeof(GraphTypeSummary), GraphType.ToString()));
+                case GraphTypeSummary.replicate:
+                case GraphTypeSummary.peptide:
+                    GraphSummary.DoUpdateGraph(this, GraphSummary.Type);
                     break;
-                case GraphTypePeakArea.histogram:
+                case GraphTypeSummary.histogram:
                     if (!(pane is AreaCVHistogramGraphPane))
                         GraphSummary.GraphPanes = new[] { new AreaCVHistogramGraphPane(GraphSummary) };
                     break;
-                case GraphTypePeakArea.histogram2d:
+                case GraphTypeSummary.histogram2d:
                     if (!(pane is AreaCVHistogram2DGraphPane))
                         GraphSummary.GraphPanes = new[] { new AreaCVHistogram2DGraphPane(GraphSummary)  };
                     break;
@@ -234,15 +239,23 @@ namespace pwiz.Skyline.Controls.Graphs
                 case Keys.F7:
                     if (!e.Alt && !(e.Shift && e.Control))
                     {
-                        if (e.Control)
-                            Settings.Default.AreaGraphType = GraphTypeSummary.peptide.ToString();
-                        else
-                            Settings.Default.AreaGraphType = GraphTypeSummary.replicate.ToString();
-                        GraphSummary.UpdateUI();
+                        var type = e.Control
+                            ? GraphTypeSummary.peptide
+                            : GraphTypeSummary.replicate;
+                        Settings.Default.AreaGraphTypes.Insert(0, type);
+
+                        Program.MainWindow.ShowGraphPeakArea(true, type);
+                        return true;
                     }
                     break;
             }
             return false;
         }
+
+        public string Text
+        {
+            get { return Resources.SkylineWindow_CreateGraphPeakArea_Peak_Areas; }
+        }
     }
 }
+

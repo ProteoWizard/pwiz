@@ -418,6 +418,9 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(86, SkylineWindow.Document.PeptideCount);
             Assert.AreEqual(255, SkylineWindow.Document.PeptideTransitionCount);
 
+            RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
+            WaitForGraphs();
+
             TestRTResidualsSwitch();
 
             // Measuring Retention Times, p. 17

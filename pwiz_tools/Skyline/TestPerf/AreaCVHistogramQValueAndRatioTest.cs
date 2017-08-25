@@ -94,7 +94,7 @@ namespace TestPerf
             Assert.IsNotNull(toolbar);
 
             RunUI(() => toolbar.SetMinimumDetections(2));
-            OpenAndChangeAreaCVProperties(p => p.QValueCutoff = 0.01);
+            OpenAndChangeAreaCVProperties(graph, p => p.QValueCutoff = 0.01);
 
             // Test if the toolbar is there and if the displayed data is correct
             T pane;
@@ -111,7 +111,7 @@ namespace TestPerf
 
 
             // Make sure the data is not affected by the qvalue cutoff if the points type is decoys
-            OpenAndChangeAreaCVProperties(p => p.QValueCutoff = 0.02);
+            OpenAndChangeAreaCVProperties(graph, p => p.QValueCutoff = 0.02);
             AssertDataCorrect(pane, statsStartIndex++, false);
 
             // Make sure that the data is correct after changing the qvalue cutoff, this time with points type targets
@@ -127,12 +127,12 @@ namespace TestPerf
             AssertDataCorrect(pane, statsStartIndex++);
 
             // Verify that a qvalue cutoff of 1.0 has the same effect as no qvalue cutoff
-            OpenAndChangeAreaCVProperties(p => p.QValueCutoff = 1.0);
+            OpenAndChangeAreaCVProperties(graph, p => p.QValueCutoff = 1.0);
             AreaCVGraphData qvalue1Data = null;
             WaitForConditionUI(() => (qvalue1Data = GetCurrentData(pane)) != null);
             AreaCVGraphDataStatistics qvalue1Statistics = null;
             RunUI(() => qvalue1Statistics = new AreaCVGraphDataStatistics(qvalue1Data, pane.GetTotalBars()));
-            OpenAndChangeAreaCVProperties(p => p.QValueCutoff = double.NaN);
+            OpenAndChangeAreaCVProperties(graph, p => p.QValueCutoff = double.NaN);
             AreaCVGraphData qvalueNaNData = null;
             WaitForConditionUI(() => (qvalueNaNData = GetCurrentData(pane)) != null);
             AreaCVGraphDataStatistics qvalueNaNStatistics = null;
@@ -157,7 +157,7 @@ namespace TestPerf
             Assert.IsNotNull(toolbar);
 
             RunUI(() => toolbar.SetMinimumDetections(2));
-            OpenAndChangeAreaCVProperties(p => p.QValueCutoff = double.NaN);
+            OpenAndChangeAreaCVProperties(graph, p => p.QValueCutoff = double.NaN);
 
             // Make sure toolbar is there, combo box items are correct and data is correct
             T pane;

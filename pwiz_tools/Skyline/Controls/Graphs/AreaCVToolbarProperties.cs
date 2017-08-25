@@ -22,7 +22,6 @@ using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -31,18 +30,18 @@ namespace pwiz.Skyline.Controls.Graphs
     public partial class AreaCVToolbarProperties : FormEx
     {
         private bool _showDecimals;
-        private readonly SrmDocument _document;
+        private readonly GraphSummary _graphSummary;
 
-        public AreaCVToolbarProperties(SrmDocument document)
+        public AreaCVToolbarProperties(GraphSummary graphSummary)
         {
             InitializeComponent();
 
-            _document = document;
+            _graphSummary = graphSummary;
         }
 
         private void AreaCvToolbarSettings_Load(object sender, EventArgs e)
         {
-            var enabled = _document.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained &&
+            var enabled = _graphSummary.DocumentUIContainer.DocumentUI.Settings.PeptideSettings.Integration.PeakScoringModel.IsTrained &&
                 AreaGraphController.PointsType == PointsTypePeakArea.targets;
             if (enabled)
                 textQValueCutoff.Text = ValueOrEmpty(Settings.Default.AreaCVQValueCutoff);
@@ -59,7 +58,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             GraphFontSize.PopulateCombo(comboFontSize, Settings.Default.AreaFontSize);
 
-            var is2DHistogram = AreaGraphController.GraphType == GraphTypePeakArea.histogram2d;
+            var is2DHistogram = _graphSummary.Type == GraphTypeSummary.histogram2d;
             textMinLog10.Visible = textMaxLog10.Visible = labelMinLog10.Visible = labelMaxLog10.Visible = is2DHistogram;
             textMaxFrequency.Visible = labelMaxFrequency.Visible = !is2DHistogram;
 
@@ -80,7 +79,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void btnOk_Click(object sender, EventArgs e)
         {
             var helper = new MessageBoxHelper(this);
-            var is2DHistogram = AreaGraphController.GraphType == GraphTypePeakArea.histogram2d;
+            var is2DHistogram = _graphSummary.Type == GraphTypeSummary.histogram2d;
 
             double qvalue = double.NaN;
             if (!string.IsNullOrWhiteSpace(textQValueCutoff.Text) &&

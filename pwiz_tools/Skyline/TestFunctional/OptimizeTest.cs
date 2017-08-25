@@ -372,8 +372,7 @@ namespace pwiz.SkylineTestFunctional
             string reoptimizePath = TestFilesDir.GetTestPath("ReoptimizeCE.csv");
             ExportCETransitionList(reoptimizePath, normalPath);
 
-            RunUI(() => SkylineWindow.ShowGraphPeakArea(true));
-            RunUI(() => SkylineWindow.ShowGraphRetentionTime(true));
+            RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             RunUI(SkylineWindow.ShowRTReplicateGraph);
 
             VerifyGraphs();

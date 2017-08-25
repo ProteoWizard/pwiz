@@ -9843,4 +9843,25 @@ Here are the {0} pairs with multiple entries:
   <data name="TransitionLibraries_DoValidate_Library_ion_count_value__0__must_not_be_less_than_min_ion_count_value__1__" xml:space="preserve">
     <value>Library ion count value {0} must not be less than min ion count value {1}.</value>
   </data>
+  <data name="Extensions_CustomToString_Replicate_Comparison" xml:space="preserve">
+    <value>Replicate Comparison</value>
+  </data>
+  <data name="Extensions_CustomToString_Peptide_Comparison" xml:space="preserve">
+    <value>Peptide Comparison</value>
+  </data>
+  <data name="Extensions_CustomToString_Score_To_Run_Regression" xml:space="preserve">
+    <value>Score To Run Regression</value>
+  </data>
+  <data name="Extensions_CustomToString_Run_To_Run_Regression" xml:space="preserve">
+    <value>Run To Run Regression</value>
+  </data>
+  <data name="Extensions_CustomToString_Histogram" xml:space="preserve">
+    <value>Histogram</value>
+  </data>
+  <data name="Extensions_CustomToString__2D_Histogram" xml:space="preserve">
+    <value>2D Histogram</value>
+  </data>
+  <data name="Extensions_CustomToString_Scheduling" xml:space="preserve">
+    <value>Scheduling</value>
+  </data>
 </root>

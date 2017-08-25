@@ -197,7 +197,8 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowPlotType(PlotTypeRT.correlation);
                 SkylineWindow.ShowRTRegressionGraphScoreToRun();
             });
-            RTLinearRegressionGraphPane regressionPaneScore;
+            graphSummary = SkylineWindow.GraphRetentionTime;
+            RTLinearRegressionGraphPane regressionPaneScore;           
             if (!graphSummary.TryGetGraphPane(out regressionPaneScore))
                 Assert.Fail("First graph pane was not RTLinearRegressionGraphPane");
             WaitForCondition(() => regressionPaneScore.IsRefined);
@@ -213,6 +214,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(SkylineWindow.ShowRTRegressionGraphRunToRun);
             WaitForGraphs();
+            graphSummary = SkylineWindow.GraphRetentionTime;
             if (!graphSummary.TryGetGraphPane(out regressionPane))
                 Assert.Fail("First graph pane was not RTLinearRegressionGraphPane");
             Assert.IsTrue(regressionPane.HasToolbar);

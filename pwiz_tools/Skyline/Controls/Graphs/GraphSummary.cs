@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -30,8 +31,6 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public enum GraphTypeSummary { replicate, peptide }
-
     public partial class GraphSummary : DockableFormEx, IUpdatable, IMultipleViewProvider
     {
         private const string FONT_FACE = "Arial"; // Not L10N
@@ -51,6 +50,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             GraphSummary GraphSummary { get; set; }
 
+            UniqueList<GraphTypeSummary> GraphTypes { get; set; }
+
             void OnDocumentChanged(SrmDocument oldDocument, SrmDocument newDocument);
             void OnActiveLibraryChanged();
             void OnResultsIndexChanged();
@@ -61,6 +62,8 @@ namespace pwiz.Skyline.Controls.Graphs
             bool HandleKeyDownEvent(object sender, KeyEventArgs e);
 
             IFormView FormView { get; }
+
+            string Text { get; }
         }
 
         public interface IControllerSplit : IController
@@ -134,7 +137,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private int _ratioIndex;
 
-        public GraphSummary(IDocumentUIContainer documentUIContainer, IController controller, int targetResultsIndex, int originalIndex = -1)
+        public GraphTypeSummary Type { get; set; }
+
+        public GraphSummary(GraphTypeSummary type, IDocumentUIContainer documentUIContainer, IController controller, int targetResultsIndex, int originalIndex = -1)
         {
             _targetResultsIndex = targetResultsIndex;
             _originalResultsIndex = originalIndex;
@@ -151,6 +156,9 @@ namespace pwiz.Skyline.Controls.Graphs
             _documentContainer.ListenUI(OnDocumentUIChanged);
             _stateProvider = documentUIContainer as IStateProvider ??
                              new DefaultStateProvider();
+
+            Type = type;
+            Text = Controller.Text + @" - " + Type.CustomToString(); // Not L10N
 
             UpdateUI();
         }
@@ -269,7 +277,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override string GetPersistentString()
         {
-            return base.GetPersistentString() + '|' + _controller.GetType().Name;
+            return base.GetPersistentString() + '|' + _controller.GetType().Name + '|' + Type;
         }
 
         public IEnumerable<string> Categories
@@ -516,6 +524,47 @@ namespace pwiz.Skyline.Controls.Graphs
             paneKeys = paneKeys ?? new[] { PaneKey.DEFAULT };
             Array.Sort(paneKeys);
             return paneKeys;
+        }
+    }
+
+    [Flags]
+    public enum GraphTypeSummary
+    {
+        invalid = 0,
+        replicate = 1 << 0,
+        peptide = 1 << 1,
+        score_to_run_regression = 1 << 2,
+        schedule = 1 << 3,
+        run_to_run_regression = 1 << 4,
+        histogram = 1 << 5,
+        histogram2d = 1 << 6
+    }
+
+    public static class Extensions
+    {
+        public static string CustomToString(this GraphTypeSummary type)
+        {
+            switch (type)
+            {
+                case GraphTypeSummary.invalid:
+                    return string.Empty;
+                case GraphTypeSummary.replicate:
+                    return Resources.Extensions_CustomToString_Replicate_Comparison;
+                case GraphTypeSummary.peptide:
+                    return Resources.Extensions_CustomToString_Peptide_Comparison;
+                case GraphTypeSummary.score_to_run_regression:
+                    return Resources.Extensions_CustomToString_Score_To_Run_Regression;
+                case GraphTypeSummary.schedule:
+                    return Resources.Extensions_CustomToString_Scheduling;
+                case GraphTypeSummary.run_to_run_regression:
+                    return Resources.Extensions_CustomToString_Run_To_Run_Regression;
+                case GraphTypeSummary.histogram:
+                    return Resources.Extensions_CustomToString_Histogram;
+                case GraphTypeSummary.histogram2d:
+                    return Resources.Extensions_CustomToString__2D_Histogram;
+                default:
+                    return string.Empty;
+            }
         }
     }
 }
