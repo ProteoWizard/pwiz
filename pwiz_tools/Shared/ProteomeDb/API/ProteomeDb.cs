@@ -61,13 +61,13 @@ namespace pwiz.ProteomeDatabase.API
             _schemaVersionMajorAsRead = -1; // unknown
             _schemaVersionMinorAsRead = -1; // unknown
             _isTmp = isTmp;
-            _databaseResource = DatabaseResource.GetDbResource(path);
-            CancellationToken = cancellationToken;
             if (!File.Exists(path))
             {
                 // Do not try to open the file if it does not exist, because that would create a zero byte file.
                 throw new FileLoadException(String.Format(Resources.ProteomeDb_ProteomeDb_The_file__0__does_not_exist_, path));
             }
+            _databaseResource = DatabaseResource.GetDbResource(path);
+            CancellationToken = cancellationToken;
             using (var session = OpenSession())
             {
                 // Is this even a proper protDB file? (https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/thread.view?rowId=14893)

@@ -19672,21 +19672,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The file {0} is missing..
+        /// </summary>
+        public static string PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_ {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The file {0} may not be a valid proteome file..
         /// </summary>
         public static string PeptideSettingsUI_ValidateNewSettings_The_file__0__may_not_be_a_valid_proteome_file {
             get {
                 return ResourceManager.GetString("PeptideSettingsUI_ValidateNewSettings_The_file__0__may_not_be_a_valid_proteome_fi" +
-                        "le", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The file {1} may not be a valid proteome file..
-        /// </summary>
-        public static string PeptideSettingsUI_ValidateNewSettings_The_file__1__may_not_be_a_valid_proteome_file {
-            get {
-                return ResourceManager.GetString("PeptideSettingsUI_ValidateNewSettings_The_file__1__may_not_be_a_valid_proteome_fi" +
                         "le", resourceCulture);
             }
         }

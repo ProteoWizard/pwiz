@@ -1301,25 +1301,25 @@ namespace pwiz.Skyline.Model.DocSettings
             // CONSIDER: Simple List.Contains() checks mean that values with the same name
             //           but differing values will be overwritten.
             if (!defSet.EnzymeList.Contains(PeptideSettings.Enzyme))
-                defSet.EnzymeList.Add(PeptideSettings.Enzyme);
+                defSet.EnzymeList.SetValue(PeptideSettings.Enzyme);
             // Extra null checks to avoid ReSharper warnings.
             if (PeptideSettings.Prediction != null)
             {
                 if (PeptideSettings.Prediction.RetentionTime != null)
                 {
                     if (!defSet.RetentionTimeList.Contains(PeptideSettings.Prediction.RetentionTime))
-                        defSet.RetentionTimeList.Add(PeptideSettings.Prediction.RetentionTime);
+                        defSet.RetentionTimeList.SetValue(PeptideSettings.Prediction.RetentionTime);
                     if (!defSet.RTScoreCalculatorList.Contains(PeptideSettings.Prediction.RetentionTime.Calculator))
-                        defSet.RTScoreCalculatorList.Add(PeptideSettings.Prediction.RetentionTime.Calculator);
+                        defSet.RTScoreCalculatorList.SetValue(PeptideSettings.Prediction.RetentionTime.Calculator);
                 }
                 if (PeptideSettings.Prediction.DriftTimePredictor != null)
                 {
                     if (!defSet.DriftTimePredictorList.Contains(PeptideSettings.Prediction.DriftTimePredictor))
-                        defSet.DriftTimePredictorList.Add(PeptideSettings.Prediction.DriftTimePredictor);
+                        defSet.DriftTimePredictorList.SetValue(PeptideSettings.Prediction.DriftTimePredictor);
                     if (PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary != null &&
                         !defSet.IonMobilityLibraryList.Contains(PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary))
                     {
-                        defSet.IonMobilityLibraryList.Add(PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary);
+                        defSet.IonMobilityLibraryList.SetValue(PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary);
                     }
                 }
             }
@@ -1328,7 +1328,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 foreach (PeptideExcludeRegex exclude in PeptideSettings.Filter.Exclusions)
                 {
                     if (!defSet.PeptideExcludeList.Contains(exclude))
-                        defSet.PeptideExcludeList.Add(exclude);
+                        defSet.PeptideExcludeList.SetValue(exclude);
                 }
             }
             // First remove all old document local specs.
@@ -1339,7 +1339,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 foreach (LibrarySpec librarySpec in PeptideSettings.Libraries.LibrarySpecs)
                 {
                     if (librarySpec != null && !defSet.SpectralLibraryList.Contains(librarySpec))
-                        defSet.SpectralLibraryList.Add(librarySpec);
+                        defSet.SpectralLibraryList.SetValue(librarySpec);
                 }
             }
 
@@ -1369,51 +1369,51 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 TransitionPrediction prediction = TransitionSettings.Prediction;
                 if (!defSet.CollisionEnergyList.Contains(prediction.CollisionEnergy))
-                    defSet.CollisionEnergyList.Add(prediction.CollisionEnergy);
+                    defSet.CollisionEnergyList.SetValue(prediction.CollisionEnergy);
                 if (prediction.DeclusteringPotential != null &&
                         !defSet.DeclusterPotentialList.Contains(prediction.DeclusteringPotential))
-                    defSet.DeclusterPotentialList.Add(prediction.DeclusteringPotential);
+                    defSet.DeclusterPotentialList.SetValue(prediction.DeclusteringPotential);
                 if (prediction.CompensationVoltage != null &&
                         !defSet.CompensationVoltageList.Contains(prediction.CompensationVoltage))
-                    defSet.CompensationVoltageList.Add(prediction.CompensationVoltage);
+                    defSet.CompensationVoltageList.SetValue(prediction.CompensationVoltage);
                 if (!Equals(prediction.OptimizedLibrary, OptimizationLibrary.NONE) &&
                         Equals(defSet.GetOptimizationLibraryByName(prediction.OptimizedLibrary.Name), OptimizationLibrary.NONE))
-                    defSet.OptimizationLibraryList.Add(prediction.OptimizedLibrary);
+                    defSet.OptimizationLibraryList.SetValue(prediction.OptimizedLibrary);
             }
             if (TransitionSettings.Filter != null)
             {
                 foreach (var measuredIon in TransitionSettings.Filter.MeasuredIons)
                 {
                     if (!defSet.MeasuredIonList.Contains(measuredIon))
-                        defSet.MeasuredIonList.Add(measuredIon);
+                        defSet.MeasuredIonList.SetValue(measuredIon);
                 }
             }
             if (TransitionSettings.FullScan.IsotopeEnrichments != null)
             {
-                if (!defSet.IsotopeEnrichmentsList.ContainsKey(TransitionSettings.FullScan.IsotopeEnrichments.Name))
+                if (!defSet.IsotopeEnrichmentsList.Contains(TransitionSettings.FullScan.IsotopeEnrichments))
                 {
-                    defSet.IsotopeEnrichmentsList.Add(TransitionSettings.FullScan.IsotopeEnrichments);
+                    defSet.IsotopeEnrichmentsList.SetValue(TransitionSettings.FullScan.IsotopeEnrichments);
                 }
             }
             if (TransitionSettings.FullScan.IsolationScheme != null)
             {
-                if (!defSet.IsolationSchemeList.ContainsKey(TransitionSettings.FullScan.IsolationScheme.Name))
+                if (!defSet.IsolationSchemeList.Contains(TransitionSettings.FullScan.IsolationScheme))
                 {
-                    defSet.IsolationSchemeList.Add(TransitionSettings.FullScan.IsolationScheme);
+                    defSet.IsolationSchemeList.SetValue(TransitionSettings.FullScan.IsolationScheme);
                 }
             }
             foreach (var annotationDef in DataSettings.AnnotationDefs)
             {
                 if (!defSet.AnnotationDefList.Contains(annotationDef))
                 {
-                    defSet.AnnotationDefList.Add(annotationDef);
+                    defSet.AnnotationDefList.SetValue(annotationDef);
                 }
             }
             foreach (var groupComparisonDef in DataSettings.GroupComparisonDefs)
             {
                 if (!defSet.GroupComparisonDefList.Contains(groupComparisonDef))
                 {
-                    defSet.GroupComparisonDefList.Add(groupComparisonDef);
+                    defSet.GroupComparisonDefList.SetValue(groupComparisonDef);
                 }
             }
             var mainViewSpecList = defSet.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id);
@@ -1424,9 +1424,9 @@ namespace pwiz.Skyline.Model.DocSettings
             defSet.PersistedViews.SetViewSpecList(PersistedViews.MainGroup.Id, mainViewSpecList);
             if (!PeptideSettings.BackgroundProteome.IsNone)
             {
-                if (!defSet.BackgroundProteomeList.ContainsKey(PeptideSettings.BackgroundProteome.Name))
+                if (!defSet.BackgroundProteomeList.Contains(PeptideSettings.BackgroundProteome))
                 {
-                    defSet.BackgroundProteomeList.Add(PeptideSettings.BackgroundProteome);
+                    defSet.BackgroundProteomeList.SetValue(PeptideSettings.BackgroundProteome);
                 }
             }
         }

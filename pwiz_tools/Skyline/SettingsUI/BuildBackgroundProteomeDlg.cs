@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -368,11 +369,13 @@ namespace pwiz.Skyline.SettingsUI
                         proteomeDb.Dispose();
                     }
                 }
+                textPath.ForeColor = Color.Black;
             }
             else
             {
                 btnAddFastaFile.Enabled = false;
                 tbxStatus.Text = Resources.BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Open_button_to_choose_an_existing_proteome_file_or_click_the_Create_button_to_create_a_new_proteome_file;
+                textPath.ForeColor = Color.Red;
             }
         }
 

@@ -3565,9 +3565,6 @@ Are you sure you want to continue?</value>
   <data name="EditLabelTypeListDlg_OkDialog_The_label_name__0__may_not_be_used_more_than_once" xml:space="preserve">
     <value>The label name '{0}' may not be used more than once.</value>
   </data>
-  <data name="PeptideSettingsUI_ValidateNewSettings_The_file__1__may_not_be_a_valid_proteome_file" xml:space="preserve">
-    <value>The file {1} may not be a valid proteome file.</value>
-  </data>
   <data name="BuildLibraryDlg_AddInputFiles_The_file__0__is_not_a_valid_library_input_file" xml:space="preserve">
     <value>The file {0} is not a valid library input file.</value>
   </data>
@@ -9863,5 +9860,8 @@ Here are the {0} pairs with multiple entries:
   </data>
   <data name="Extensions_CustomToString_Scheduling" xml:space="preserve">
     <value>Scheduling</value>
+  </data>
+  <data name="PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_" xml:space="preserve">
+    <value>The file {0} is missing.</value>
   </data>
 </root>

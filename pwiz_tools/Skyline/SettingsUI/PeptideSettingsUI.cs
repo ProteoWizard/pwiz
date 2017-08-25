@@ -271,8 +271,10 @@ namespace pwiz.Skyline.SettingsUI
                 {
 
                     var message = TextUtil.LineSeparate(string.Format(Resources.PeptideSettingsUI_ValidateNewSettings_Failed_to_load_background_proteome__0__,
-                                                                      backgroundProteomeSpec.Name),
-                                                        string.Format(Resources.PeptideSettingsUI_ValidateNewSettings_The_file__0__may_not_be_a_valid_proteome_file,
+                                                                      backgroundProteomeSpec.Name),                                                        
+                                                        string.Format(File.Exists(backgroundProteomeSpec.DatabasePath)
+                                                                        ? Resources.PeptideSettingsUI_ValidateNewSettings_The_file__0__may_not_be_a_valid_proteome_file
+                                                                        : Resources.PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_,
                                                                       backgroundProteomeSpec.DatabasePath));
                     MessageDlg.Show(this, message);
                     tabControl1.SelectedIndex = 0;
