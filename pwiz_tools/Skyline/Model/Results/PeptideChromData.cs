@@ -271,6 +271,11 @@ namespace pwiz.Skyline.Model.Results
             while (ThermoZerosFix())
             {
             }
+            foreach (var chromDataSet in _dataSets)
+            {
+                chromDataSet.TruncateMs1ForScheduledMs2();
+            }
+
             // Moved to ProteoWizard
             //                else if (WiffZerosFix())
             //                {

@@ -117,6 +117,7 @@ namespace pwiz.SkylineTest.Results
                         Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
                             tolerance, true, out chromGroupInfo));
                         Assert.AreEqual(1, chromGroupInfo.Length);
+                        VerifyMs1Truncated(chromGroupInfo.First());
                     }
 
                     // now drill down for specific values
@@ -124,9 +125,9 @@ namespace pwiz.SkylineTest.Results
                     foreach (var nodePep in document.Molecules.Where(nodePep => !nodePep.Results[0].IsEmpty))
                     {
                         // expecting just one peptide result in this small data set
-                        if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)
+                        if (nodePep.Results[0].Any(chromInfo => chromInfo.PeakCountRatio > 0))
                         {
-                            Assert.AreEqual(0.2462, 
+                            Assert.AreEqual(0.25205, 
                                 (double)nodePep.GetMeasuredRetentionTime(0), .0001, "averaged retention time differs in node " + nodePep.ModifiedTarget);
                             Assert.AreEqual(0.3333, (double)nodePep.GetPeakCountRatio(0), 0.0001);
                             nPeptides++;
@@ -136,6 +137,39 @@ namespace pwiz.SkylineTest.Results
                 }
             }
             testFilesDir.Dispose();
+        }
+
+        /// <summary>
+        /// Verifies that the MS1 chromatograms have been truncated down to just slightly larger than the MS2 chromatograms.
+        /// </summary>
+        /// <param name="chromatogramGroupInfo"></param>
+        private void VerifyMs1Truncated(ChromatogramGroupInfo chromatogramGroupInfo)
+        {
+            var ms1Chromatograms = new List<ChromatogramInfo>();
+            var fragmentChromatograms = new List<ChromatogramInfo>();
+            for (int i = 0; i < chromatogramGroupInfo.NumTransitions; i++)
+            {
+                var chromatogramInfo = chromatogramGroupInfo.GetRawTransitionInfo(i);
+                if (chromatogramInfo.Source == ChromSource.fragment)
+                {
+                    fragmentChromatograms.Add(chromatogramInfo);
+                }
+                else if (chromatogramInfo.Source == ChromSource.ms1)
+                {
+                    ms1Chromatograms.Add(chromatogramInfo);
+                }
+            }
+            if (!fragmentChromatograms.Any())
+            {
+                return;
+            }
+            double minFragmentTime = fragmentChromatograms.Min(chrom => chrom.Times.First());
+            double maxFragmentTime = fragmentChromatograms.Max(chrom => chrom.Times.Last());
+            foreach (var chromatogram in ms1Chromatograms)
+            {
+                Assert.IsTrue(chromatogram.Times[1] > minFragmentTime);
+                Assert.IsTrue(chromatogram.Times[chromatogram.Times.Count - 2] < maxFragmentTime);
+            }
         }
 
         private static SrmDocument InitAgilentMseDocument(TestFilesDir testFilesDir, out string docPath)

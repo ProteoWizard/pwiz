@@ -1170,6 +1170,45 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        /// <summary>
+        /// If this dataset contains both MS1 and MS2 chromatograms, then shorten the MS1 chromatograms
+        /// so that they are the same length as the MS2 chromatograms.
+        /// </summary>
+        public void TruncateMs1ForScheduledMs2()
+        {
+            float minFragmentTime = float.MaxValue;
+            float maxFragmentTime = float.MinValue;
+            foreach (var chromData in _listChromData)
+            {
+                if (chromData.Key.Source == ChromSource.fragment)
+                {
+                    minFragmentTime = Math.Min(minFragmentTime, chromData.Times[0]);
+                    maxFragmentTime = Math.Max(maxFragmentTime, chromData.Times[chromData.Times.Count - 1]);
+                }
+            }
+            if (minFragmentTime >= maxFragmentTime)
+            {
+                return;
+            }
+            for (int i = 0; i < _listChromData.Count; i++)
+            {
+                var chromData = _listChromData[i];
+                if (chromData.Key.Source != ChromSource.ms1)
+                {
+                    continue;
+                }
+                
+                if (chromData.Times[0] > minFragmentTime ||
+                    chromData.Times[chromData.Times.Count - 1] < maxFragmentTime)
+                {
+                    // Do not truncate the MS1 chromatogram if it overlaps with the
+                    // MS2 chromatograms in an unexpected, non superset, way.
+                    continue;
+                }
+                _listChromData[i] = chromData.Truncate(minFragmentTime, maxFragmentTime);
+            }
+        }
+
         public TimeIntensitiesGroup ToGroupOfTimeIntensities(bool useRawTimes)
         {
             if (useRawTimes)
@@ -1182,3 +1221,4 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 }
+
