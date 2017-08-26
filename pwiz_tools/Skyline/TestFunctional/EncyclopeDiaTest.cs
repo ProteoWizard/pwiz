@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Lib;
@@ -59,6 +60,10 @@ namespace pwiz.SkylineTestFunctional
             var confirmationMessage = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(confirmationMessage, confirmationMessage.OkDialog);
             Assert.AreEqual(48, SkylineWindow.Document.PeptideCount);
+            foreach (var transitionGroup in SkylineWindow.Document.PeptideTransitionGroups)
+            {
+                Assert.AreNotEqual(0, transitionGroup.TransitionCount, "Transition group {0} has no transitions", transitionGroup);
+            }
             OkDialog(libraryViewer, libraryViewer.Close);
         }
     }
