@@ -2399,6 +2399,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (currentMod == null)
                     return false;
+                if (_matcher.MatcherPepMods == null)
+                    return false;
 
                 foreach (var mod in _matcher.MatcherPepMods.StaticModifications)
                 {
