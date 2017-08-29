@@ -17,7 +17,7 @@ namespace pwiz.Skyline.Model
             _items = ImmutableList.ValueOf(items);
             _itemCount = _items.Count;
             var previousChildren = previous as DocNodeChildren;
-            if (previousChildren != null && IsOrderSame(previousChildren))
+            if (previousChildren != null && previousChildren._items != null && IsOrderSame(previousChildren))
                 _indexes = previousChildren._indexes;
             else
             {

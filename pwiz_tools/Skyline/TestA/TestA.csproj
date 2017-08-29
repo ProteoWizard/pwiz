@@ -143,6 +143,7 @@
     <Compile Include="AnnotationUnitTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
+    <Compile Include="CommandLineMProphetTest.cs" />
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="CommandLineImportTest.cs" />
     <Compile Include="DecoysTest.cs" />
@@ -257,6 +258,7 @@
     <None Include="ChromatogramExporterTest.zip" />
     <None Include="CommandLineAssayImportTest.zip" />
     <None Include="CommandLineImportTest.zip" />
+    <None Include="CommandLineMProphetTest.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="DocLoadLibraryTest.zip" />
     <EmbeddedResource Include="DocumentSerializerTest.sky" />

@@ -251,15 +251,15 @@ namespace pwiz.Skyline.Model
             SetDocumentType(); // Note proteomic vs small molecule vs mixed (as we're empty, will be set to proteomic)
         }
 
-        private SrmDocument(SrmDocument doc, SrmSettings settings, IList<DocNode> children, Action<SrmDocument> changeProps = null)
-            : base(doc.Id, Annotations.EMPTY, children, false)
+        private SrmDocument(SrmDocument doc, SrmSettings settings, Action<SrmDocument> changeProps = null)
+            : base(doc.Id, Annotations.EMPTY, doc.Children, false)
         {
             FormatVersion = doc.FormatVersion;
             RevisionIndex = doc.RevisionIndex;
             UserRevisionIndex = doc.UserRevisionIndex;
             Settings = settings;
             DeferSettingsChanges = doc.DeferSettingsChanges;
-            SetDocumentType(); // Note proteomic vs small molecule vs mixed
+            DocumentType = doc.DocumentType;
 
             if (changeProps != null)
                 changeProps(this);
@@ -855,7 +855,7 @@ namespace pwiz.Skyline.Model
         /// <returns>A new document revision</returns>
         public SrmDocument ChangeSettingsNoDiff(SrmSettings settingsNew)
         {
-            return new SrmDocument(this, settingsNew, Children, doc =>
+            return new SrmDocument(this, settingsNew, doc =>
             {
                 doc.RevisionIndex++;
                 doc.IsProteinMetadataPending = doc.CalcIsProteinMetadataPending();
@@ -1007,7 +1007,7 @@ namespace pwiz.Skyline.Model
                 if (ArrayUtil.ReferencesEqual(childrenNew, Children))
                     return ChangeSettingsNoDiff(settingsNew);
 
-                return (SrmDocument)new SrmDocument(this, settingsNew, Children).ChangeChildren(childrenNew);
+                return (SrmDocument)new SrmDocument(this, settingsNew).ChangeChildren(childrenNew);
             }
         }
 
