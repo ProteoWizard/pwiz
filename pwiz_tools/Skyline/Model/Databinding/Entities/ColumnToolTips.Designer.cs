@@ -198,6 +198,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Standardized molecular identifer.
+        /// </summary>
+        internal static string CAS {
+            get {
+                return ResourceManager.GetString("CAS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Specific amino acid residue in the peptide after (C-terminal of) which the
         ///peptide was cleaved upon fragmentation. (e.g. P, M, S, T, etc.).
         /// </summary>
@@ -679,12 +688,39 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Standardized molecular identifer.
+        /// </summary>
+        internal static string HMDB {
+            get {
+                return ResourceManager.GetString("HMDB", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to True if a MS/MS peptide identification exists for the result file at a time
         ///between the peak integration boundaries..
         /// </summary>
         internal static string Identified {
             get {
                 return ResourceManager.GetString("Identified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Standardized molecular identifer.
+        /// </summary>
+        internal static string InChI {
+            get {
+                return ResourceManager.GetString("InChI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Standardized molecular identifer.
+        /// </summary>
+        internal static string InChiKey {
+            get {
+                return ResourceManager.GetString("InChiKey", resourceCulture);
             }
         }
         
@@ -1828,6 +1864,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         internal static string Slope {
             get {
                 return ResourceManager.GetString("Slope", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Standardized molecular identifer.
+        /// </summary>
+        internal static string SMILES {
+            get {
+                return ResourceManager.GetString("SMILES", resourceCulture);
             }
         }
         

@@ -867,4 +867,19 @@ higher than the other extent.</value>
   <data name="ExplicitCollisionalCrossSection">
     <value>The exact desired collisional cross section (in square angstroms) to be converted to drift time and used in extracting chromatograms from ion mobility mass spectra, overriding all model values. </value>
   </data>
+  <data name="CAS" xml:space="preserve">
+    <value>Standardized molecular identifier</value>
+  </data>
+  <data name="HMDB" xml:space="preserve">
+    <value>Standardized molecular identifier</value>
+  </data>
+  <data name="InChI" xml:space="preserve">
+    <value>Standardized molecular identifier</value>
+  </data>
+  <data name="InChiKey" xml:space="preserve">
+    <value>Standardized molecular identifier</value>
+  </data>
+  <data name="SMILES" xml:space="preserve">
+    <value>Standardized molecular identifier</value>
+  </data>
 </root>

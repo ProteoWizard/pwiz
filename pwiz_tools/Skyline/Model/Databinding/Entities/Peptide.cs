@@ -157,32 +157,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        // Small molecule IDs
-        public string CAS
-        {
-            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetCAS() ?? string.Empty : string.Empty; }
-        }
-
-        public string InChiKey
-        {
-            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetInChiKey() ?? string.Empty : string.Empty; }
-        }
-
-        public string InChI
-        {
-            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetInChI() ?? string.Empty : string.Empty; }
-        }
-
-        public string HMDB
-        {
-            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetHMDB() ?? string.Empty : string.Empty; }
-        }
-
-        public string SMILES
-        {
-            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetSMILES() ?? string.Empty : string.Empty; }
-        }
-
         [DataGridViewColumnType(typeof(StandardTypeDataGridViewColumn))]
         public StandardType StandardType
         {
@@ -409,5 +383,32 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             return string.Format(Resources.Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__peptides_, nodeCount);
         }
+
+        // Small molecule IDs (in PREFERRED_ACCESSION_TYPE_ORDER) - keep these at end
+        public string InChiKey
+        {
+            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetInChiKey() ?? string.Empty : string.Empty; }
+        }
+
+        public string CAS
+        {
+            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetCAS() ?? string.Empty : string.Empty; }
+        }
+
+        public string HMDB
+        {
+            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetHMDB() ?? string.Empty : string.Empty; }
+        }
+
+        public string InChI
+        {
+            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetInChI() ?? string.Empty : string.Empty; }
+        }
+
+        public string SMILES
+        {
+            get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetSMILES() ?? string.Empty : string.Empty; }
+        }
+
     }
 }
