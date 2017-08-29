@@ -8229,7 +8229,7 @@
     <value>不変量</value>
   </data>
   <data name="CommandLine_CreateIrtDatabase_Error__Importing_an_assay_library_to_a_document_without_an_iRT_calculator_cannot_create__0___because_it_exists_" xml:space="preserve">
-    <value>エラー： iRTカルキュレータなしでドキュメントをアッセイライブラリにインポートすると、{0}が存在するためにこれを作成できません。</value>
+    <value>エラー： iRTカルキュレーターなしでドキュメントをアッセイライブラリにインポートすると、{0}が既に存在するためにこれを作成できません。</value>
   </data>
   <data name="MassListImporter_Import_Importing__0__" xml:space="preserve">
     <value>{0}のインポート中</value>
