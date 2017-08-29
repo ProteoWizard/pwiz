@@ -42,6 +42,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private static readonly Color COLOR_RETENTION_WINDOW = Color.LightGoldenrodYellow;
         private static readonly Color COLOR_BOUNDARIES = Color.LightGray;
         private static readonly Color COLOR_BOUNDARIES_BEST = Color.Black;
+        private static readonly Color COLOR_ORIGINAL_PEAK_SHADE = Color.BlueViolet;
 
         private const int MIN_BOUNDARY_DISPLAY_WIDTH = 7;
         private const int MIN_BEST_BOUNDARY_HEIGHT = 20;
@@ -410,12 +411,38 @@ namespace pwiz.Skyline.Controls.Graphs
                     AddPeakBoundaries(graphPane, annotations, true,
                         ScaleRetentionTime(startTime), ScaleRetentionTime(endTime), intensityBest);
                 }
+                if (Chromatogram.BestPeakIndex >= 0)
+                {
+                    var bestPeak = Chromatogram.GetPeak(Chromatogram.BestPeakIndex);
+                    if (Settings.Default.ShowOriginalPeak &&
+                        TransitionChromInfo != null &&
+                        (bestPeak.StartTime != TransitionChromInfo.StartRetentionTime ||
+                         bestPeak.EndTime != TransitionChromInfo.EndRetentionTime))
+                        AddOriginalPeakAnnotation(bestPeak, annotations, graphPane);
+                }
             }
             if (_displayRawTimes.HasValue)
             {
                 AddPeakRawTimes(graphPane, annotations,
                     ScaleRetentionTime(_displayRawTimes.Value.StartBound), ScaleRetentionTime(_displayRawTimes.Value.EndBound), Chromatogram);
             }
+        }
+
+        private void AddOriginalPeakAnnotation(ChromPeak bestPeak, GraphObjList annotations, GraphPane graphPane)
+        {
+            var start = ScaleRetentionTime(bestPeak.StartTime);
+            var end = ScaleRetentionTime(bestPeak.EndTime);
+            var width = end.DisplayTime - start.DisplayTime;
+            var height = graphPane.YAxis.Scale.Max;
+            var originalPeakShadingBox = new BoxObj(start.DisplayTime, graphPane.YAxis.Scale.Max, width, height)
+            {
+                Fill = new Fill(Color.FromArgb(30, COLOR_ORIGINAL_PEAK_SHADE)),
+                ZOrder = ZOrder.F_BehindGrid,
+                Border = new Border { IsVisible = false },
+                IsClippedToChartRect = true,
+                Tag = new GraphObjTag(this, GraphObjType.original_peak_shading, start, end)
+            };
+            annotations.Add(originalPeakShadingBox);
         }
 
         public override void AddAnnotations(MSGraphPane graphPane, Graphics g,
@@ -891,6 +918,7 @@ namespace pwiz.Skyline.Controls.Graphs
             best_peak,
             raw_time,
             peak,
+            original_peak_shading
         }
 
         public class GraphObjTag
@@ -903,9 +931,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 
             }
 
+            public GraphObjTag(ChromGraphItem chromGraphItem, GraphObjType graphObjType, ScaledRetentionTime start, ScaledRetentionTime end)
+            {
+                ChromGraphItem = chromGraphItem;
+                GraphObjType = graphObjType;
+                StartTime = start;
+                EndTime = end;
+            }
+
             public ChromGraphItem ChromGraphItem { get; private set; }
             public GraphObjType GraphObjType { get; private set; }
             public ScaledRetentionTime RetentionTime { get; private set; }
+            public ScaledRetentionTime StartTime { get; private set; }
+            public ScaledRetentionTime EndTime { get; private set; }
+
             public override string ToString()
             {
                 return string.Format("{0}:{1}", GraphObjType, RetentionTime); // Not L10N

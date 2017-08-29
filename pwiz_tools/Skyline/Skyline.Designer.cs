@@ -95,6 +95,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator33 = new System.Windows.Forms.ToolStripSeparator();
             this.legendChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peakBoundariesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.originalPeakMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.retentionTimesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -928,6 +929,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator33,
             this.legendChromContextMenuItem,
             this.peakBoundariesContextMenuItem,
+            this.originalPeakMenuItem,
             this.massErrorContextMenuItem,
             this.retentionTimesContextMenuItem,
             this.retentionTimePredContextMenuItem,
@@ -984,6 +986,13 @@ namespace pwiz.Skyline
             this.peakBoundariesContextMenuItem.Name = "peakBoundariesContextMenuItem";
             resources.ApplyResources(this.peakBoundariesContextMenuItem, "peakBoundariesContextMenuItem");
             this.peakBoundariesContextMenuItem.Click += new System.EventHandler(this.peakBoundariesContextMenuItem_Click);
+            // 
+            // originalPeakMenuItem
+            // 
+            this.originalPeakMenuItem.CheckOnClick = true;
+            this.originalPeakMenuItem.Name = "originalPeakMenuItem";
+            resources.ApplyResources(this.originalPeakMenuItem, "originalPeakMenuItem");
+            this.originalPeakMenuItem.Click += new System.EventHandler(this.originalPeakContextMenuItem_Click);
             // 
             // massErrorContextMenuItem
             // 
@@ -4482,6 +4491,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem onlyQuantitativeMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparatorOnlyQuantitative;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator56;
+        private System.Windows.Forms.ToolStripMenuItem originalPeakMenuItem;
     }
 }
 

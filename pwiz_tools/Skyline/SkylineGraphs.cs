@@ -1500,6 +1500,10 @@ namespace pwiz.Skyline
             }
             peakBoundariesContextMenuItem.Checked = set.ShowPeakBoundaries;
             menuStrip.Items.Insert(iInsert++, peakBoundariesContextMenuItem);
+
+            originalPeakMenuItem.Checked = set.ShowOriginalPeak;
+            menuStrip.Items.Insert(iInsert++, originalPeakMenuItem);
+
             menuStrip.Items.Insert(iInsert++, retentionTimesContextMenuItem);
             if (retentionTimesContextMenuItem.DropDownItems.Count == 0)
             {
@@ -1663,9 +1667,20 @@ namespace pwiz.Skyline
             ShowPeakBoundaries(peakBoundariesContextMenuItem.Checked);
         }
 
+        private void originalPeakContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowOriginalPeak(originalPeakMenuItem.Checked);
+        }
+
         public void ShowPeakBoundaries(bool show)
         {
             Settings.Default.ShowPeakBoundaries = show;
+            UpdateChromGraphs();
+        }
+
+        public void ShowOriginalPeak(bool show)
+        {
+            Settings.Default.ShowOriginalPeak = show;
             UpdateChromGraphs();
         }
 

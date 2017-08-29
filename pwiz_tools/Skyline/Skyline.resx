@@ -491,6 +491,12 @@
   <data name="peakBoundariesContextMenuItem.Text" xml:space="preserve">
     <value>Peak Boundaries</value>
   </data>
+  <data name="originalPeakMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="originalPeakMenuItem.Text" xml:space="preserve">
+    <value>Original Peak</value>
+  </data>
   <data name="massErrorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
   </data>

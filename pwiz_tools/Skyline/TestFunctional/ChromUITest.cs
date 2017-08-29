@@ -17,12 +17,16 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -32,13 +36,14 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestChromUI()
         {
-            TestFilesZip = @"TestFunctional\ChromUITest.zip"; //Not L10N
+            TestFilesZip = @"TestFunctional\ChromUITest.zip"; // Not L10N
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
             TestPointsAcrossPeak();
+            TestOriginalPeak();
         }
 
         private void TestPointsAcrossPeak()
@@ -107,6 +112,53 @@ namespace pwiz.SkylineTestFunctional
                     count++;
             }
             return count;
+        }
+
+        private void TestOriginalPeak()
+        {
+            RunUI(() =>
+            {
+                SkylineWindow.ActivateReplicate("1");
+            });
+            var graphChrom = SkylineWindow.GetGraphChrom("1");
+            var norect = GetChromRect(graphChrom);
+            Assert.IsNull(norect);
+            RunUI(() =>
+            {
+                var pathPep = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.Molecules, 0);
+                var nodeGroup = SkylineWindow.DocumentUI.Peptides.ElementAt(0).TransitionGroups.First();
+                var listChanges = new List<ChangedPeakBoundsEventArgs>
+                {
+                    new ChangedPeakBoundsEventArgs(new IdentityPath(pathPep, nodeGroup.TransitionGroup),
+                        null,
+                        graphChrom.NameSet,
+                        graphChrom.ChromGroupInfos[0].FilePath,
+                        graphChrom.GraphItems.First().GetNearestDisplayTime(40.0),
+                        graphChrom.GraphItems.First().GetNearestDisplayTime(42.0),
+                        PeakIdentification.ALIGNED,
+                        PeakBoundsChangeType.both)
+                };
+                graphChrom.SimulateChangedPeakBounds(listChanges);
+            });
+
+            WaitForGraphs();
+            var rect = GetChromRect(graphChrom);
+            Assert.IsNotNull(rect);
+            var tag = (ChromGraphItem.GraphObjTag)rect.Tag;
+            Assert.AreEqual(tag.StartTime.DisplayTime.ToString("N2"), 40.31.ToString(CultureInfo.CurrentCulture));
+            Assert.AreEqual(tag.EndTime.DisplayTime.ToString("N2"), 41.21.ToString(CultureInfo.CurrentCulture));
+            Assert.IsNull(GetChromRect(SkylineWindow.GetGraphChrom("2")));
+            Assert.IsNull(GetChromRect(SkylineWindow.GetGraphChrom("3")));
+            Assert.IsNull(GetChromRect(SkylineWindow.GetGraphChrom("4")));
+        }
+
+        private static GraphObj GetChromRect(GraphChromatogram graphChrom)
+        {
+            return graphChrom.GraphItem.GraphObjList.FirstOrDefault(obj =>
+            {
+                var objTag = obj.Tag as ChromGraphItem.GraphObjTag;
+                return objTag != null && objTag.GraphObjType == ChromGraphItem.GraphObjType.original_peak_shading;
+            });
         }
     }
 }
