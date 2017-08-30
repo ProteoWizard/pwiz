@@ -70,6 +70,32 @@
       <one-to-many class="Transition"/>
     </bag>
   </class>
+  <!-- Schema format 1.2 added "ChromatogramFormat" and "UncompressedSize" to Precursor table-->
+  <class name="Precursor+Format1Dot2" table="Precursor">
+    <id name="Id">
+      <generator class="native"/>
+    </id>
+    <many-to-one class="Peptide" name="Peptide" column="PeptideId"/>
+    <property name="IsotopeLabel" />
+    <property name="Mz" />
+    <property name="Charge" />
+    <property name="NeutralMass" />
+    <property name="ModifiedSequence" />
+    <property name="CollisionEnergy" />
+    <property name="DeclusteringPotential" />
+    <property name="TotalArea" />
+    <property name="NumTransitions" />
+    <property name="NumPoints" />
+    <property name="AverageMassErrorPPM"/>
+    <property name="Chromatogram" />
+    <property name="ChromatogramFormat"/>
+    <property name="UncompressedSize" />
+    <many-to-one class="SampleFile" name="SampleFile" column="SampleFileId"/>
+    <bag name="Transitions">
+      <key column="PrecursorId"/>
+      <one-to-many class="Transition"/>
+    </bag>
+  </class>
   <class name="Transition">
     <id name="Id">
       <generator class="native"/>

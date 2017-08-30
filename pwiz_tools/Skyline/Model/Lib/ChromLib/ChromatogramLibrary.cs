@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         {
             using (var session = _pooledSessionFactory.Connection.OpenSession())
             {
-                var precursor = session.Get<Precursor>(info.Id);
+                var precursor = GetPrecursor(session, info.Id);
                 if (null != precursor)
                 {
                     var timeIntensities = precursor.ChromatogramData;
@@ -132,6 +132,18 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 }
             }
             return null;
+        }
+
+        protected Precursor GetPrecursor(ISession session, int id)
+        {
+            try
+            {
+                return session.Get<Precursor.Format1Dot2>(id);
+            }
+            catch (HibernateException)
+            {
+                return session.Get<Precursor>(id);
+            }
         }
 
         public override LibrarySpec CreateSpec(string path)
