@@ -140,7 +140,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 double maxHeight = 0;
                 var results = doc1.Settings.MeasuredResults;
 
-                var numPeaks = new[] {8, 10, 10, 10, 10, 10, 10};
+                var numPeaks = new[] {10, 10, 10, 10, 10, 10, 10};
                 int npIndex = 0;
                 var errmsg = "";
                 foreach (var pair in doc1.PeptidePrecursorPairs)
