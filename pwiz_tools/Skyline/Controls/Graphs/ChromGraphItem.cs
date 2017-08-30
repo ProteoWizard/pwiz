@@ -418,13 +418,17 @@ namespace pwiz.Skyline.Controls.Graphs
                         TransitionChromInfo != null &&
                         (bestPeak.StartTime != TransitionChromInfo.StartRetentionTime ||
                          bestPeak.EndTime != TransitionChromInfo.EndRetentionTime))
+                    {
                         AddOriginalPeakAnnotation(bestPeak, annotations, graphPane);
+                    }
                 }
             }
             if (_displayRawTimes.HasValue)
             {
                 AddPeakRawTimes(graphPane, annotations,
-                    ScaleRetentionTime(_displayRawTimes.Value.StartBound), ScaleRetentionTime(_displayRawTimes.Value.EndBound), Chromatogram);
+                    ScaleRetentionTime(_displayRawTimes.Value.StartBound),
+                    ScaleRetentionTime(_displayRawTimes.Value.EndBound),
+                    Chromatogram);
             }
         }
 
@@ -648,17 +652,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (hasTimes)
             {
-                double end = endTime.DisplayTime;
-                double start = startTime.DisplayTime;
-                var times = info.RawTimes.ToArray();
-                for (int j = 0; j < times.Length; j++)
-                {
-                    if (start > times[j])
-                        continue;
-                    if (end < times[j])
-                        break;
-                    rawtimes.Add(times[j]);
-                }
+                rawtimes.AddRange(GetRawTimes(startTime, endTime, info));
                 if (rawtimes.Count == 0)
                     return;
                 foreach (var time in rawtimes)
@@ -692,6 +686,38 @@ namespace pwiz.Skyline.Controls.Graphs
 
             };
             annotations.Add(pointCount);
+        }
+
+        private IEnumerable<double> GetRawTimes(ScaledRetentionTime startTime, ScaledRetentionTime endTime, ChromatogramInfo info)
+        {
+            double end = endTime.DisplayTime;
+            double start = startTime.DisplayTime;
+            var times = info.RawTimes;
+            if (times != null)
+            {
+                for (int j = 0; j < times.Count; j++)
+                {
+                    if (start > times[j])
+                        continue;
+                    if (end < times[j])
+                        break;
+                    yield return times[j];
+                }
+            }
+        }
+
+        public int RawTimesCount
+        {
+            get
+            {
+                if (_displayRawTimes.HasValue && Chromatogram != null)
+                {
+                    return GetRawTimes(ScaleRetentionTime(_displayRawTimes.Value.StartBound),
+                        ScaleRetentionTime(_displayRawTimes.Value.EndBound),
+                        Chromatogram).Count();
+                }
+                return 0;
+            }
         }
 
         private void AddPeakBoundaries(GraphPane graphPane, ICollection<GraphObj> annotations,

@@ -21,9 +21,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
@@ -76,21 +78,25 @@ namespace pwiz.SkylineTestFunctional
                 var tranId = nodeTran.Id;
                 RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(pathToGroup, tranId));
                 WaitForGraphs();
-                VerifyRawTimesCount("Unrefined", 5, nodeTran, showing);
-                VerifyRawTimesCount("1", 45, nodeTran, showing);
-                VerifyRawTimesCount("2", 47, nodeTran, showing);
-                VerifyRawTimesCount("3", 49, nodeTran, showing);
-                VerifyRawTimesCount("4", 51, nodeTran, showing);
-                VerifyRawTimesCount("5", 53, nodeTran, showing);
+                VerifyRawTimesCount("Unrefined", nodeTran, showing);
+                VerifyRawTimesCount("1", nodeTran, showing);
+                VerifyRawTimesCount("2", nodeTran, showing);
+                VerifyRawTimesCount("3", nodeTran, showing);
+                VerifyRawTimesCount("4", nodeTran, showing);
+                VerifyRawTimesCount("5", nodeTran, showing);
             }
         }
 
-        private void VerifyRawTimesCount(string chromName, int fileId, TransitionDocNode transition, bool showing)
+        private void VerifyRawTimesCount(string chromName, TransitionDocNode transition, bool showing)
         {
+            int resultIndex;
+            ChromatogramSet chromSet;
+            Assert.IsTrue(SkylineWindow.Document.Settings.MeasuredResults.TryGetChromatogramSet(chromName, out chromSet, out resultIndex));
+
             RunUI(() =>
             {
                 int count = GetRawTimeCount(chromName);
-                foreach (var tranChromInfo in transition.ChromInfos.Where(c => c.FileId.GlobalIndex == fileId))
+                foreach (var tranChromInfo in transition.Results[resultIndex])
                 {
                     int pointsCount = showing 
                         ? tranChromInfo.PointsAcrossPeak ?? 0
@@ -103,6 +109,9 @@ namespace pwiz.SkylineTestFunctional
         private static int GetRawTimeCount(string chromName)
         {
             var graphChrom = SkylineWindow.GetGraphChrom(chromName);
+            // Graph objects will not be present when the program is off screen
+            if (Program.SkylineOffscreen)
+                return graphChrom.GraphItems.Sum(g => g.RawTimesCount);
 
             int count = 0;
             foreach (var graphObj in graphChrom.GraphItem.GraphObjList)
@@ -120,7 +129,13 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.ActivateReplicate("1");
             });
+            WaitForGraphs();
             var graphChrom = SkylineWindow.GetGraphChrom("1");
+            // If the entire graph object list may be empty when the graph is offscreen
+            // It is not worth it to make this work.
+            if (!graphChrom.GraphItem.GraphObjList.Any() && Program.SkylineOffscreen)
+                return;
+
             var norect = GetChromRect(graphChrom);
             Assert.IsNull(norect);
             RunUI(() =>
