@@ -1180,7 +1180,7 @@ namespace pwiz.Skyline.Model.Results
             float maxFragmentTime = float.MinValue;
             foreach (var chromData in _listChromData)
             {
-                if (chromData.Key.Source == ChromSource.fragment)
+                if (chromData.Key.Source == ChromSource.fragment && chromData.Times.Any())
                 {
                     minFragmentTime = Math.Min(minFragmentTime, chromData.Times[0]);
                     maxFragmentTime = Math.Max(maxFragmentTime, chromData.Times[chromData.Times.Count - 1]);
@@ -1193,7 +1193,7 @@ namespace pwiz.Skyline.Model.Results
             for (int i = 0; i < _listChromData.Count; i++)
             {
                 var chromData = _listChromData[i];
-                if (chromData.Key.Source != ChromSource.ms1)
+                if (chromData.Key.Source != ChromSource.ms1 || !chromData.Times.Any())
                 {
                     continue;
                 }

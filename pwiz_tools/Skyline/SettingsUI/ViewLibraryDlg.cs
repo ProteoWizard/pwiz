@@ -2425,7 +2425,7 @@ namespace pwiz.Skyline.SettingsUI
             private ExplicitMod GetCurrentMod(ExplicitMods mods, int staticModIndex, Tuple<char, string> piece)
             {
                 ExplicitMod currentMod = null;
-                if (mods != null)
+                if (mods != null && mods.StaticModifications != null)
                 {
                     currentMod = mods.StaticModifications.FirstOrDefault(m => staticModIndex == m.IndexAA);
                 }
