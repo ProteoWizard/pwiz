@@ -787,6 +787,8 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        public const int RANDOM_SEED = 7 * 7 * 7 * 7 * 7; // 7^5 recommended by Brian S.
+
         /// <summary>
         /// Creates a random order of indexes into an array for a random linear walk
         /// through an array.

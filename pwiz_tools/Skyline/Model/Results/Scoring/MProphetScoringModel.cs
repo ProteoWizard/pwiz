@@ -426,7 +426,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 double proportionTrue = truePeaks.Count*1.0/totalTrainingPeaks;
                 int truePeakCount = (int) Math.Round(maxTrainingPeaks*proportionTrue);
                 int i = 0;
-                foreach (var peak in truePeaks.RandomOrder())
+                foreach (var peak in truePeaks.RandomOrder(ArrayUtil.RANDOM_SEED))
                 {
                     if (i < truePeakCount)
                         CopyToTrainData(peak.Features, trainData, weights, i, 1);
@@ -436,7 +436,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 }
                 int decoyPeakCount = maxTrainingPeaks - truePeakCount;
                 i = 0;
-                foreach (var peak in decoyPeaks.RandomOrder())
+                foreach (var peak in decoyPeaks.RandomOrder(ArrayUtil.RANDOM_SEED))
                 {
                     if (i < decoyPeakCount)
                         CopyToTrainData(peak.Features, trainData, weights, i + truePeakCount, 0);

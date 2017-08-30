@@ -510,7 +510,7 @@ namespace pwiz.Skyline.Model
             if (!MaxTransitions.HasValue)
                 throw new InvalidOperationException(Resources.AbstractMassListExporter_ExportScheduledBuckets_Maximum_transitions_per_file_required);
 
-            foreach (var schedule in bucketOver.ToArray().RandomOrder())
+            foreach (var schedule in bucketOver.ToArray().RandomOrder(ArrayUtil.RANDOM_SEED))
             {
                 // Required peptides may not be removed
                 if (RequiredPeptides.IsRequired(schedule.Peptide))
