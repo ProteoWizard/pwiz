@@ -110,7 +110,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var graphChrom = SkylineWindow.GetGraphChrom(chromName);
             // Graph objects will not be present when the program is off screen
-            if (Program.SkylineOffscreen)
+            if (!graphChrom.GraphItem.GraphObjList.Any() && Program.SkylineOffscreen)
                 return graphChrom.GraphItems.Sum(g => g.RawTimesCount);
 
             int count = 0;
