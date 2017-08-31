@@ -47,7 +47,7 @@
     <property name="Description" />
     <property name="Sequence" />
   </class>
-  <class name="Precursor">
+  <class name="Precursor" polymorphism="explicit">
     <id name="Id">
       <generator class="native"/>
     </id>
