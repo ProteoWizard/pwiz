@@ -67,15 +67,15 @@ namespace pwiz.SkylineTest
                     DOC_REPORTER_IONS_262; // new style
                 AssertEx.ValidatesAgainstSchema(xmlText);
                 SrmDocument document = AssertEx.Deserialize<SrmDocument>(xmlText);
-                AssertEx.IsDocumentState(document, null, null, 1, null, 5);
-                MeasuredIon customIon1 = new MeasuredIon("Water", "H3O3", null, null, Adduct.SINGLY_PROTONATED);
-                MeasuredIon customIon2 = new MeasuredIon("Water2", "H3O3", null, null, Adduct.DOUBLY_PROTONATED);
+                AssertEx.IsDocumentState(document, null, null, 1, null, 15);
+                MeasuredIon customIon1 = new MeasuredIon("Water", "H3O3", null, null, Adduct.M_PLUS);
+                MeasuredIon customIon2 = new MeasuredIon("Water2", "H4O3", null, null, Adduct.M_PLUS_2);
                 Assert.AreEqual(customIon1,
                     document.Settings.TransitionSettings.Filter.MeasuredIons.Where(ion => ion.Name.Equals("Water"))
                         .ElementAt(0));
-                for (int i = 0; i < 2; i ++)
+                for (int i = 1; i <= 2; i ++)
                 {
-                    Assert.AreEqual(document.MoleculeTransitions.ElementAt(i).Transition.CustomIon, (i==0) ? customIon1.SettingsCustomIon : customIon2.SettingsCustomIon);
+                    Assert.AreEqual( (i==1) ? customIon1.SettingsCustomIon : customIon2.SettingsCustomIon, document.MoleculeTransitions.ElementAt(i).Transition.CustomIon);
                 }
                 AssertEx.Serializable(document);
             }
@@ -326,8 +326,8 @@ namespace pwiz.SkylineTest
                    ExportMethodType.Scheduled, pathForLibraries, RefinementSettings.ConvertToSmallMoleculesMode.none,
                    "Peptide,ID,Type,Precursor,Product,RT,RT Window,CE,Polarity\r\nmolecule_light,1,,59.999451,59.999451,3.45,4.56,-4.7,0\r\nmolecule_light,1,,59.999451,54.999451,3.45,4.56,-4.7,0\r\n");
                 Assert.AreEqual(1, count);
-                // Try negative charges
-                count = ExportAll(DOC_MOLECULES.Replace("charge=\"", "charge=\"-"), 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
+                // Try negative charges - this bumps masses up slightly due to electron gain instead of loss
+                count = ExportAll(DOC_MOLECULES.Replace("charge=\"", "charge=\"-").Replace("59.999451", "60.000549").Replace("54.999451","55.000549"), 8, CreateShimadzuExporter, ExportStrategy.Single, 2, null,
                    ExportMethodType.Scheduled, pathForLibraries, RefinementSettings.ConvertToSmallMoleculesMode.none,
                    "Peptide,ID,Type,Precursor,Product,RT,RT Window,CE,Polarity\r\nmolecule_light,1,,60.000549,60.000549,3.45,4.56,4.7,1\r\nmolecule_light,1,,60.000549,55.000549,3.45,4.56,4.7,1\r\n");
                 Assert.AreEqual(1, count);
@@ -890,43 +890,100 @@ namespace pwiz.SkylineTest
                 "          <regression_ce charge=\"3\" slope=\"0.038\" intercept=\"2.281\" />\n" +
                 "        </predict_collision_energy>\n" +
                 "      </transition_prediction>\n" +
-                "      <transition_filter precursor_charges=\"2\" product_charges=\"1\" fragment_types=\"y\" fragment_range_first=\"m/z &gt; precursor\" fragment_range_last=\"3 ions\" precursor_mz_window=\"0\" auto_select=\"true\">\n" +
-                "        <measured_ion name=\"Water\" ion_formula=\"H3O3\" charge=\"1\" />\n" + // Note: Formerly we left an H out of a formula so we'd get the right masses when the ionization code stuck an extra H in the calculation
-                "        <measured_ion name=\"Water2\" ion_formula=\"H3O3\" charge=\"2\" />\n" +  
-                "        <measured_ion name=\"Water3\" mass_monoisotopic=\"19.01783\" mass_average=\"18.01528\" charge=\"2\" />\n" +
+                "      <transition_filter precursor_charges=\"2\" product_charges=\"1,2\" fragment_types=\"y,p\" fragment_range_first=\"m/z &gt; precursor\" fragment_range_last=\"3 ions\" precursor_mz_window=\"0\" auto_select=\"true\">\n" +
+                "        <measured_ion name=\"N-terminal to Proline\" cut=\"P\" sense=\"N\" min_length=\"3\" />\n" +
+                "        <measured_ion name=\"Water\" ion_formula=\"H3O3\" mass_monoisotopic=\"51.008219\" mass_average=\"51.02202\" charge=\"1\" />\n" +
+                "        <measured_ion name=\"Water2\" ion_formula=\"H4O3\" mass_monoisotopic=\"52.016044\" mass_average=\"52.02996\" charge=\"2\" />\n" +
+                "        <measured_ion name=\"Water3\" mass_monoisotopic=\"19.01783\" mass_average=\"18.01528\" charge=\"1\" />\n" +
                 "        <measured_ion name=\"Water4\" mass_monoisotopic=\"18.01056\" mass_average=\"18.01528\" charge=\"2\" />\n" +
+                "        <measured_ion name=\"MySpecialIonMassOnlyC12H11N2\" mass_monoisotopic=\"183.09222315981893\" mass_average=\"183.23093915981892\" charge=\"2\" />\n" +
+                "        <measured_ion name=\"MySpecialIon\" ion_formula=\"C12H8O3N\" mass_monoisotopic=\"214.050418\" mass_average=\"214.19862\" charge=\"2\" />\n" +
+                "        <measured_ion name=\"iTRAQ-114\" ion_formula=\"C5C'H13N2\" mass_monoisotopic=\"114.111228\" mass_average=\"114.174225\" charge=\"1\" />\n" +
+                "        <measured_ion name=\"iTRAQ-116\" ion_formula=\"C4C'2H13NN'\" mass_monoisotopic=\"116.111618\" mass_average=\"116.160139\" charge=\"1\" />\n" +
+                "        <measured_ion name=\"TMT-126\" ion_formula=\"C8H16N\" mass_monoisotopic=\"126.128275\" mass_average=\"126.22054\" charge=\"1\" />\n" +
+                "        <measured_ion name=\"TMT-127H\" ion_formula=\"C7C'H16N\" mass_monoisotopic=\"127.131629\" mass_average=\"127.213045\" charge=\"1\" />\n" +
                 "      </transition_filter>\n" +
                 "      <transition_libraries ion_match_tolerance=\"0.5\" ion_count=\"3\" pick_from=\"all\" />\n" +
                 "      <transition_integration />\n" +
-                "      <transition_instrument min_mz=\"50\" max_mz=\"1500\" mz_match_tolerance=\"0.055\" />\n" +
+                "      <transition_instrument min_mz=\"20\" max_mz=\"1500\" mz_match_tolerance=\"0.055\" />\n" +
                 "    </transition_settings>\n" +
                 "    <data_settings />\n" +
                 "  </settings_summary>\n" +
-                "  <peptide_list label_name=\"peptides1\" label_description=\"Bacteriocin amylovorin-L (Amylovorin-L471) (Lactobin-A)\" accession=\"P80696\" gene=\"amyL\" species=\"Lactobacillus amylovorus\" preferred_name=\"AMYL_LACAM\" websearch_status=\"X#Upeptides1\" auto_manage_children=\"false\">\n" +
-                "    <peptide sequence=\"EFPDVAVFSGGR\" modified_sequence=\"EFPDVAVFSGGR\" calc_neutral_pep_mass=\"1279.619701\" num_missed_cleavages=\"0\">\n" +
-                "      <precursor charge=\"2\" calc_neutral_mass=\"1279.619701\" precursor_mz=\"640.817127\" collision_energy=\"22.129514\" modified_sequence=\"EFPDVAVFSGGR\">\n" +
-                "        <transition measured_ion_name=\"Water\" product_charge=\"1\">\n" +
-                "          <precursor_mz>640.817127</precursor_mz>\n" +
-                "          <product_mz>50.000394</product_mz>\n" +
+                "  <peptide_list label_name=\"peptides1\" websearch_status=\"X#Upeptides1\">\n" +
+                "    <peptide sequence=\"PEPTIDER\" modified_sequence=\"PEPTIDER\" calc_neutral_pep_mass=\"955.461075\" num_missed_cleavages=\"0\">\n" +
+                "      <precursor charge=\"2\" calc_neutral_mass=\"955.461075\" precursor_mz=\"478.737814\" collision_energy=\"17.267134\" modified_sequence=\"PEPTIDER\">\n" +
+                "        <transition fragment_type=\"precursor\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>478.737814</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
                 "        </transition>\n" +
-                "        <transition measured_ion_name=\"Water2\" product_charge=\"2\">\n" +
-                "          <precursor_mz>640.817127</precursor_mz>\n" +
-                "          <product_mz>25.503835</product_mz>\n" +
+                "        <transition fragment_type=\"custom\" measured_ion_name=\"Water\" product_charge=\"1\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>51.00767</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
                 "        </transition>\n" +
-                "        <transition fragment_type=\"y\" fragment_ordinal=\"9\" calc_neutral_mass=\"906.45593\" product_charge=\"1\" cleavage_aa=\"D\" loss_neutral_mass=\"0\">\n" +
-                "          <precursor_mz>640.817127</precursor_mz>\n" +
-                "          <product_mz>907.463206</product_mz>\n" +
-                "          <collision_energy>22.129514</collision_energy>\n" +
+                "        <transition fragment_type=\"custom\" measured_ion_name=\"Water2\" product_charge=\"2\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>26.007473</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
                 "        </transition>\n" +
-                "        <transition fragment_type=\"y\" fragment_ordinal=\"8\" calc_neutral_mass=\"791.428987\" product_charge=\"1\" cleavage_aa=\"V\" loss_neutral_mass=\"0\">\n" +
+                "        <transition measured_ion_name=\"Water3\" product_charge=\"1\">\n" +
                 "          <precursor_mz>640.817127</precursor_mz>\n" +
-                "          <product_mz>792.436263</product_mz>\n" +
-                "          <collision_energy>22.129514</collision_energy>\n" +
+                "          <product_mz>19.017281</product_mz>\n" +
                 "        </transition>\n" +
-                "        <transition fragment_type=\"y\" fragment_ordinal=\"7\" calc_neutral_mass=\"692.360573\" product_charge=\"1\" cleavage_aa=\"A\" loss_neutral_mass=\"0\">\n" +
+                "        <transition measured_ion_name=\"Water4\" product_charge=\"2\">\n" +
                 "          <precursor_mz>640.817127</precursor_mz>\n" +
-                "          <product_mz>693.367849</product_mz>\n" +
-                "          <collision_energy>22.129514</collision_energy>\n" +
+                "          <product_mz>9.004731</product_mz>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"custom\" measured_ion_name=\"MySpecialIonMassOnlyC12H11N2\" product_charge=\"2\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>91.545563</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"custom\" measured_ion_name=\"MySpecialIon\" product_charge=\"2\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>107.02466</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"custom\" measured_ion_name=\"iTRAQ-114\" product_charge=\"1\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>114.110679</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"custom\" measured_ion_name=\"iTRAQ-116\" product_charge=\"1\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>116.111069</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"custom\" measured_ion_name=\"TMT-126\" product_charge=\"1\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>126.127726</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"custom\" measured_ion_name=\"TMT-127H\" product_charge=\"1\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>127.13108</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"6\" calc_neutral_mass=\"729.365718\" product_charge=\"1\" cleavage_aa=\"P\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>730.372994</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"5\" calc_neutral_mass=\"632.312954\" product_charge=\"1\" cleavage_aa=\"T\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>633.32023</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"4\" calc_neutral_mass=\"531.265276\" product_charge=\"1\" cleavage_aa=\"I\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>532.272552</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"6\" calc_neutral_mass=\"729.365718\" product_charge=\"2\" cleavage_aa=\"P\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>365.690135</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
                 "        </transition>\n" +
                 "      </precursor>\n" +
                 "    </peptide>\n" +
@@ -957,11 +1014,18 @@ namespace pwiz.SkylineTest
                 "          <regression_ce charge=\"3\" slope=\"0.038\" intercept=\"2.281\" />\n" +
                 "        </predict_collision_energy>\n" +
                 "      </transition_prediction>\n" +
-                "      <transition_filter precursor_charges=\"2\" product_charges=\"1\" fragment_types=\"y\" fragment_range_first=\"m/z &gt; precursor\" fragment_range_last=\"3 ions\" precursor_mz_window=\"0\" auto_select=\"true\">\n" +
-                "        <measured_ion name=\"Water\" formula=\"H2O3\" charges=\"1\" />\n" + // Note: Formerly we left an H out of a formula so we'd get the right masses when the ionization code stuck an extra H in the calculation
-                "        <measured_ion name=\"Water2\" formula=\"H2O3\" charges=\"2\" />\n" +  
-                "        <measured_ion name=\"Water3\" mass_monoisotopic=\"19.01783\" mass_average=\"18.01528\" charges=\"2\" />\n" + 
+                "      <transition_filter precursor_charges=\"2\" product_charges=\"1,2\" fragment_types=\"y,p\" fragment_range_first=\"m/z &gt; precursor\" fragment_range_last=\"3 ions\" precursor_mz_window=\"0\" auto_select=\"true\">\n" +
+                "        <measured_ion name=\"N-terminal to Proline\" cut=\"P\" sense=\"N\" min_length=\"3\" />\n" +
+                "        <measured_ion name=\"Water\" formula=\"H2O3\" charges=\"1\" />\n" +
+                "        <measured_ion name=\"Water2\" formula=\"H2O3\" charges=\"2\" />\n" +
+                "        <measured_ion name=\"Water3\" mass_monoisotopic=\"19.01783\" mass_average=\"18.01528\" charges=\"1\" />\n" + 
                 "        <measured_ion name=\"Water4\" mass_monoisotopic=\"18.01056\" mass_average=\"18.01528\" charges=\"2\" />\n" + 
+                "        <measured_ion name=\"MySpecialIonMassOnlyC12H9N2\" mass_monoisotopic=\"181.076573\" mass_average=\"181.21506\" charges=\"2\" />\n" +
+                "        <measured_ion name=\"MySpecialIon\" formula=\"C12H8O3N\" charges=\"2\" />\n" +
+                "        <measured_ion name=\"iTRAQ-114\" formula=\"C5C'H12N2\" charges=\"1\" />\n" +
+                "        <measured_ion name=\"iTRAQ-116\" formula=\"C4C'2H12NN'\" charges=\"1\" />\n" +
+                "        <measured_ion name=\"TMT-126\" formula=\"C8H15N\" charges=\"1\" />\n" +
+                "        <measured_ion name=\"TMT-127H\" formula=\"C7C'H15N\" charges=\"1\" />\n" +
                 "      </transition_filter>\n" +
                 "      <transition_libraries ion_match_tolerance=\"0.5\" ion_count=\"3\" pick_from=\"all\" />\n" +
                 "      <transition_integration />\n" +
@@ -969,31 +1033,73 @@ namespace pwiz.SkylineTest
                 "    </transition_settings>\n" +
                 "    <data_settings />\n" +
                 "  </settings_summary>\n" +
-                "  <peptide_list label_name=\"peptides1\" label_description=\"Bacteriocin amylovorin-L (Amylovorin-L471) (Lactobin-A)\" accession=\"P80696\" gene=\"amyL\" species=\"Lactobacillus amylovorus\" preferred_name=\"AMYL_LACAM\" websearch_status=\"X#Upeptides1\" auto_manage_children=\"false\">\n" +
-                "    <peptide sequence=\"EFPDVAVFSGGR\" modified_sequence=\"EFPDVAVFSGGR\" calc_neutral_pep_mass=\"1279.619701\" num_missed_cleavages=\"0\">\n" +
-                "      <precursor charge=\"2\" calc_neutral_mass=\"1279.619701\" precursor_mz=\"640.817127\" collision_energy=\"22.129514\" modified_sequence=\"EFPDVAVFSGGR\">\n" +
+                "  <peptide_list label_name=\"peptides1\" label_description=\"Bacteriocin amylovorin-L (Amylovorin-L471) (Lactobin-A)\" accession=\"P80696\" gene=\"amyL\" species=\"Lactobacillus amylovorus\" preferred_name=\"AMYL_LACAM\" websearch_status=\"X#Upeptides1\">\n" +
+                "    <peptide sequence=\"PEPTIDER\" modified_sequence=\"PEPTIDER\" calc_neutral_pep_mass=\"955.461075\" num_missed_cleavages=\"0\">\n" +
+                "      <precursor charge=\"2\" calc_neutral_mass=\"955.461075\" precursor_mz=\"478.737814\" collision_energy=\"17.267134\" modified_sequence=\"PEPTIDER\">\n" +
+                "        <transition fragment_type=\"precursor\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>478.737814</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
+                "        </transition>\n" +
                 "        <transition measured_ion_name=\"Water\" product_charge=\"1\">\n" +
-                "          <precursor_mz>640.817127</precursor_mz>\n" +
-                "          <product_mz>50.000394</product_mz>\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>51.00767</product_mz>\n" +
                 "        </transition>\n" +
                 "        <transition measured_ion_name=\"Water2\" product_charge=\"2\">\n" +
-                "          <precursor_mz>640.817127</precursor_mz>\n" +
-                "          <product_mz>25.503835</product_mz>\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>26.007473</product_mz>\n" +
                 "        </transition>\n" +
-                "        <transition fragment_type=\"y\" fragment_ordinal=\"9\" calc_neutral_mass=\"906.45593\" product_charge=\"1\" cleavage_aa=\"D\" loss_neutral_mass=\"0\">\n" +
+                "        <transition measured_ion_name=\"Water3\" product_charge=\"1\">\n" +
                 "          <precursor_mz>640.817127</precursor_mz>\n" +
-                "          <product_mz>907.463206</product_mz>\n" +
-                "          <collision_energy>22.129514</collision_energy>\n" +
+                "          <product_mz>20.025106</product_mz>\n" +  // 19.01783 + mH
                 "        </transition>\n" +
-                "        <transition fragment_type=\"y\" fragment_ordinal=\"8\" calc_neutral_mass=\"791.428987\" product_charge=\"1\" cleavage_aa=\"V\" loss_neutral_mass=\"0\">\n" +
+                "        <transition measured_ion_name=\"Water4\" product_charge=\"2\">\n" +
                 "          <precursor_mz>640.817127</precursor_mz>\n" +
-                "          <product_mz>792.436263</product_mz>\n" +
-                "          <collision_energy>22.129514</collision_energy>\n" +
+                "          <product_mz>10.012556</product_mz>\n" +  // (18.01056 + 2mH)/2
                 "        </transition>\n" +
-                "        <transition fragment_type=\"y\" fragment_ordinal=\"7\" calc_neutral_mass=\"692.360573\" product_charge=\"1\" cleavage_aa=\"A\" loss_neutral_mass=\"0\">\n" +
-                "          <precursor_mz>640.817127</precursor_mz>\n" +
-                "          <product_mz>693.367849</product_mz>\n" +
-                "          <collision_energy>22.129514</collision_energy>\n" +
+                "        <transition measured_ion_name=\"MySpecialIonMassOnlyC12H9N2\" product_charge=\"2\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>91.545562</product_mz>\n" +
+                "        </transition>\n" +
+                "        <transition measured_ion_name=\"MySpecialIon\" product_charge=\"2\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>108.032485</product_mz>\n" +
+                "        </transition>\n" +
+                "        <transition measured_ion_name=\"iTRAQ-114\" product_charge=\"1\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>114.110679</product_mz>\n" +
+                "        </transition>\n" +
+                "        <transition measured_ion_name=\"iTRAQ-116\" product_charge=\"1\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>116.111069</product_mz>\n" +
+                "        </transition>\n" +
+                "        <transition measured_ion_name=\"TMT-126\" product_charge=\"1\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>126.127726</product_mz>\n" +
+                "        </transition>\n" +
+                "        <transition measured_ion_name=\"TMT-127H\" product_charge=\"1\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>127.13108</product_mz>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"6\" calc_neutral_mass=\"729.365718\" product_charge=\"1\" cleavage_aa=\"P\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>730.372994</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"5\" calc_neutral_mass=\"632.312954\" product_charge=\"1\" cleavage_aa=\"T\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>633.32023</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"4\" calc_neutral_mass=\"531.265276\" product_charge=\"1\" cleavage_aa=\"I\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>532.272552</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
+                "        </transition>\n" +
+                "        <transition fragment_type=\"y\" fragment_ordinal=\"6\" calc_neutral_mass=\"729.365718\" product_charge=\"2\" cleavage_aa=\"P\" loss_neutral_mass=\"0\">\n" +
+                "          <precursor_mz>478.737814</precursor_mz>\n" +
+                "          <product_mz>365.690135</product_mz>\n" +
+                "          <collision_energy>17.267134</collision_energy>\n" +
                 "        </transition>\n" +
                 "      </precursor>\n" +
                 "    </peptide>\n" +

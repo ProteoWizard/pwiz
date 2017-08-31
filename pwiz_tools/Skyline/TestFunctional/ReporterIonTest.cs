@@ -63,8 +63,8 @@ namespace pwiz.SkylineTestFunctional
         {
             var ions = new[]
             {
-                new MeasuredIon("Water", "H2O", null, null, Adduct.SINGLY_PROTONATED),
-                new MeasuredIon("Carbon", "CO2", null, null, Adduct.SINGLY_PROTONATED, true)
+                new MeasuredIon("Water", "H2O", null, null, Adduct.M_PLUS),
+                new MeasuredIon("Carbon", "CO2", null, null, Adduct.M_PLUS, true)
             };
             var ionList = new MeasuredIonList();
             ionList.AddRange(ions);
@@ -165,8 +165,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ImportFasta(new StringReader(">peptide1\nPEPMCIDEPR"), 2, true, string.Empty));
             var newDoc = SkylineWindow.Document;
 
-            var water = new MeasuredIon("Water", "H2O", null, null, Adduct.SINGLY_PROTONATED);
-            var carbon = new MeasuredIon("Carbon", "CO2", null, null, Adduct.SINGLY_PROTONATED, true);
+            var water = new MeasuredIon("Water", "H2O", null, null, Adduct.M_PLUS); // Charge-only adduct, ionizing elements assumed to be part of formula
+            var carbon = new MeasuredIon("Carbon", "CO2", null, null, Adduct.M_PLUS, true);
 
             var nodeTranFirst = newDoc.MoleculeTransitions.ElementAt(0);
             Assert.IsTrue(nodeTranFirst.Transition.IsCustom());

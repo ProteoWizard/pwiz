@@ -170,7 +170,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 return null;
             }
-            _formulaBox.Adduct = Adduct.FromChargeProtonated(charge);
+            // CONSIDER(bspratt): should we switch to using adducts instead of baking ions into formula?
+            _formulaBox.Adduct = Adduct.FromChargeNoMass(charge); // Charge-only adduct, ionizing elements assumed to be included in formula
             return charge;
         }
 
@@ -208,7 +209,8 @@ namespace pwiz.Skyline.SettingsUI
                     return null;
                 if (!_formulaBox.ValidateAverageText(helper))
                     return null;
-                _formulaBox.Adduct = Adduct.FromChargeProtonated(charge); // This provokes calculation of mass from displayed mz values
+                // CONSIDER(bspratt): should we switch to using adducts instead of baking ions into formula?
+                _formulaBox.Adduct = Adduct.FromChargeNoMass(charge.Value); // This provokes calculation of mass from displayed mz values
                 monoMass = _formulaBox.MonoMass.Value; 
                 avgMass = _formulaBox.AverageMass.Value;
             }
@@ -232,7 +234,7 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
             }
 
-            return new MeasuredIon(name, formula, monoMass, avgMass,Adduct.FromChargeProtonated(charge));
+            return new MeasuredIon(name, formula, monoMass, avgMass, Adduct.FromChargeNoMass(charge.Value)); // Charge-only adduct: user is assumed to have placed ion elements in formula
         }
 
         private static bool ValidateAATextBox(MessageBoxHelper helper, TextBox control, bool allowEmpty, out string aaText)

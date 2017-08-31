@@ -398,7 +398,8 @@ namespace pwiz.Skyline.Model
             {
                 // As with reporter ions
                 CustomIon = (CustomIon)customMolecule;
-                Assume.IsTrue(Equals(adduct, CustomIon.Adduct));
+                Assume.IsTrue(Equals(adduct.AdductCharge, CustomIon.Adduct.AdductCharge));
+                Adduct = CustomIon.Adduct; // Ion mass is part of formula, so use charge only adduct
             }
             else if (customMolecule != null)
             {

@@ -256,18 +256,27 @@ namespace pwiz.Skyline.Model.DocSettings
                 Adduct adduct;
                 if (charges.Any())  // Old style - fix it up a little for our revised ideas about custom ion ionization
                 {
-                    adduct = Adduct.FromChargeProtonated(charges[0]);
+                    adduct = Adduct.FromChargeNoMass(charges[0]);
                     if (string.IsNullOrEmpty(parsedIon.NeutralFormula)) // Adjust the user-supplied masses
                     {
                         SettingsCustomIon = new SettingsCustomIon(parsedIon.NeutralFormula, adduct,
-                            Math.Round(parsedIon.MonoisotopicMass + BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
-                            Math.Round(parsedIon.AverageMass + BioMassCalc.AVERAGE.GetMass(BioMassCalc.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
+                            Math.Round(parsedIon.MonoisotopicMass + charges[0]*BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
+                            Math.Round(parsedIon.AverageMass + charges[0]*BioMassCalc.AVERAGE.GetMass(BioMassCalc.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
                             parsedIon.Name);
+                    }
+                    else // Adjust the formula to include ion atoms
+                    {
+                        if (charges[0] > 1) // XML deserializer will have added an H already
+                        {
+                            var adductProtonated = Adduct.FromChargeProtonated(charges[0]-1);
+                            var formula = adductProtonated.ApplyToFormula(parsedIon.NeutralFormula);
+                            parsedIon = new CustomIon(formula, adduct, parsedIon.MonoisotopicMass, parsedIon.AverageMass, Name);
+                        }
                     }
                 }
                 else
                 {
-                    adduct = Adduct.FromStringAssumeProtonated(reader.GetAttribute(ATTR.charge));
+                    adduct = Adduct.FromStringAssumeChargeOnly(reader.GetAttribute(ATTR.charge)); // Ionization mass is already in formula
                 }
                 if (SettingsCustomIon == null)
                 {

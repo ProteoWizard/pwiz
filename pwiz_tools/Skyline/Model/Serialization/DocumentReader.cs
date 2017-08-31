@@ -227,11 +227,10 @@ namespace pwiz.Skyline.Model.Serialization
             public MeasuredIon MeasuredIon { get; private set; }
             public bool Quantitative { get; private set; }
 
-            public void ReadXml(XmlReader reader)
+            public void ReadXml(XmlReader reader, out double? declaredMz)
             {
                 ReadXmlAttributes(reader);
-                double? ignoredDeclaredMz;
-                ReadXmlElements(reader, out ignoredDeclaredMz);
+                ReadXmlElements(reader, out declaredMz);
             }
 
             public void ReadXmlAttributes(XmlReader reader)
@@ -268,7 +267,7 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     reader.ReadStartElement();
                     Annotations = ReadAnnotations(reader, _documentReader._stringPool); // This is reliably first in all versions
-                    while (true)
+                    while (reader.IsStartElement())
                     {  // The order of these elements may depend on the version of the file being read
                         if (reader.IsStartElement(EL.losses))
                             Losses = ReadTransitionLosses(reader);
@@ -276,23 +275,13 @@ namespace pwiz.Skyline.Model.Serialization
                             LibInfo = ReadTransitionLibInfo(reader);
                         else if (reader.IsStartElement(EL.transition_results) || reader.IsStartElement(EL.results_data))
                             Results = ReadTransitionResults(reader);
-                        // Read and discard informational elements.  These values are always
+                        // Discard informational elements.  These values are always
                         // calculated from the settings to ensure consistency.
-                        // Note that we do use product_mz to disambiguate some older mass-only small molecule documents.
-                        else if (reader.IsStartElement(EL.precursor_mz))
-                            reader.ReadElementContentAsDoubleInvariant();
+                        // Note that we do use product_mz for sanity checks and to disambiguate some older mass-only small molecule documents.
                         else if (reader.IsStartElement(EL.product_mz))
                             declaredProductMz = reader.ReadElementContentAsDoubleInvariant();
-                        else if (reader.IsStartElement(EL.collision_energy))
-                            reader.ReadElementContentAsDoubleInvariant();
-                        else if (reader.IsStartElement(EL.declustering_potential))
-                            reader.ReadElementContentAsDoubleInvariant();
-                        else if (reader.IsStartElement(EL.start_rt))
-                            reader.ReadElementContentAsDoubleInvariant();
-                        else if (reader.IsStartElement(EL.stop_rt))
-                            reader.ReadElementContentAsDoubleInvariant();
-                        else
-                            break;
+                        else 
+                            reader.Skip();
                     }
                     reader.ReadEndElement();
                 }
@@ -1268,7 +1257,8 @@ namespace pwiz.Skyline.Model.Serialization
             while (reader.IsStartElement(EL.transition))
             {
                 // Read a transition tag.
-                info.ReadXml(reader);
+                double? declaredProductMz;
+                info.ReadXml(reader, out declaredProductMz);
 
                 // If the transition is not in the current group
                 if (curGroup == null || curGroup.PrecursorAdduct != info.PrecursorAdduct)
@@ -1302,7 +1292,9 @@ namespace pwiz.Skyline.Model.Serialization
                 // No heavy transition support in v0.1, and no full-scan filtering
                 var massH = Settings.GetFragmentMass(null, mods, transition, null);
 
-                curList.Add(new TransitionDocNode(transition, info.Losses, massH, TransitionDocNode.TransitionQuantInfo.DEFAULT));
+                var node = new TransitionDocNode(transition, info.Losses, massH, TransitionDocNode.TransitionQuantInfo.DEFAULT);
+                curList.Add(node);
+                ValidateSerializedVsCalculatedProductMz(declaredProductMz, node); // Sanity check
             }
 
             // Use collected information to create the DocNodes.
@@ -1450,8 +1442,26 @@ namespace pwiz.Skyline.Model.Serialization
 
             if (group.DecoyMassShift.HasValue && !info.DecoyMassShift.HasValue)
                 throw new InvalidDataException(Resources.SrmDocument_ReadTransitionXml_All_transitions_of_decoy_precursors_must_have_a_decoy_mass_shift);
-            return new TransitionDocNode(transition, info.Annotations, losses,
+            var node = new TransitionDocNode(transition, info.Annotations, losses,
                 mass, new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, info.LibInfo, info.Quantitative), info.Results);
+            ValidateSerializedVsCalculatedProductMz(declaredProductMz, node);  // Sanity check
+            return node;
+        }
+
+        /// <summary>
+        /// Verify that any mz values we serialize for informational purposes agree with what we calculate upon reading in again
+        /// </summary>
+        private void ValidateSerializedVsCalculatedProductMz(double? declaredProductMz, TransitionDocNode node)
+        {
+            if (declaredProductMz.HasValue && Math.Abs(declaredProductMz.Value - node.Mz.Value) >= .001)
+            {
+                var toler =
+                    FormatVersion.CompareTo(DocumentFormat.VERSION_3_6) <= 0 && node.Transition.IonType == IonType.z ? 1.007826 : // Known issue fixed in SVN 7007
+                        (FormatVersion.CompareTo(DocumentFormat.VERSION_1_6) <= 0 ? .005 : .001); // Unsure if 1.6 is the precise watershed, but this gets a couple of older tests passing
+                Assume.IsTrue(Math.Abs(declaredProductMz.Value - node.Mz.Value) < toler,
+                    string.Format("error reading mz values - declared mz value {0} does not match calculated value {1}", // Not L10N
+                        declaredProductMz.Value, node.Mz.Value));
+            }
         }
     }
 }
