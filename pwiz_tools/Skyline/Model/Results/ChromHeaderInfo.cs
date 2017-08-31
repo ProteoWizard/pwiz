@@ -2350,7 +2350,7 @@ namespace pwiz.Skyline.Model.Results
 
         public int NumPeaks { get { return _groupInfo != null ? _groupInfo.NumPeaks : 0; } }
 
-        public int BestPeakIndex { get { return _groupInfo.BestPeakIndex; } }
+        public int BestPeakIndex { get { return _groupInfo != null ? _groupInfo.BestPeakIndex : -1; } }
 
         public MsDataFileUri FilePath { get { return _groupInfo.FilePath; } }
 
