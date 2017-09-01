@@ -134,6 +134,43 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
             Assert.AreEqual(document.MoleculeTransitionGroupCount, ccount, "did not find drift times for all precursors"); // Expect to find a value for each precursor
             Assert.IsTrue(noChange.Count < ccount/2,"expected most values to shift a little without the nice clean training data");
+
+
+            // And finally verify ability to reimport with altered drift filter (would formerly fail on an erroneous Assume)
+
+            // Simulate user picking Edit Current from the Drift Time Predictor combo control, and messing with all the measured drift time values
+            var peptideSettingsDlg2 = ShowDialog<PeptideSettingsUI>(
+                () => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction));
+            var driftTimePredictorDlg2 = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg2.EditDriftTimePredictor);
+            RunUI(() =>
+            {
+                var oldPredictor = driftTimePredictorDlg2.Predictor;
+                var dict = new Dictionary<LibKey, DriftTimeInfo>();
+                foreach (var entry in oldPredictor.MeasuredDriftTimeIons)
+                {
+                    dict.Add(entry.Key, entry.Value.ChangeDriftTimeMsec(entry.Value.DriftTimeMsec??0 + .5));
+                }
+                driftTimePredictorDlg2.Predictor = oldPredictor.ChangeMeasuredDriftTimeIons(dict).ChangeName("test") as DriftTimePredictor;
+                driftTimePredictorDlg2.OkDialog();
+            });
+            WaitForClosedForm(driftTimePredictorDlg2);
+            RunUI(() =>
+            {
+                peptideSettingsDlg2.OkDialog();
+            });
+            WaitForClosedForm(peptideSettingsDlg2);
+            var docChangedDriftTimePredictor = WaitForDocumentChange(document);
+
+            // Reimport data for a replicate - without the fix this will throw
+            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
+            {
+                var chromatograms = docChangedDriftTimePredictor.Settings.MeasuredResults.Chromatograms;
+                dlg.SelectedChromatograms = new[] { chromatograms[0] };
+                dlg.ReimportResults();
+                dlg.OkDialog();
+            });
+
+            WaitForDocumentChangeLoaded(docChangedDriftTimePredictor);
         }  
     }
 }
