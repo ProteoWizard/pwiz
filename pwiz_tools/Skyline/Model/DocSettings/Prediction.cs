@@ -3145,6 +3145,10 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.WindowWidthCalculator = prop);
         }
 
+        public DriftTimePredictor ChangeMeasuredDriftTimePeptides(IDictionary<LibKey, DriftTimeInfo> prop)
+        {
+            return ChangeProp(ImClone(this), im => im.MeasuredDriftTimePeptides = prop);
+        }
 
         #endregion
 
