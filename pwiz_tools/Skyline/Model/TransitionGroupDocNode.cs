@@ -2099,7 +2099,6 @@ namespace pwiz.Skyline.Model
                 OptimizationStep = optimizationStep;
                 TransitionCount = transitionCount;
                 UserSet = UserSet.FALSE;
-                DriftTimeInfo = TransitionGroupDriftTimeInfo.EMPTY;   // This will repopulate by inspection
 
                 // Use existing ratios, annotations and peak scores
                 if (chromInfo != null)
@@ -2109,11 +2108,15 @@ namespace pwiz.Skyline.Model
 
                     Ratios = chromInfo.Ratios;
                     Annotations = chromInfo.Annotations;
+
+                    DriftTimeInfo = chromInfo.DriftInfo;
                 }
                 else
                 {
                     Ratios = TransitionGroupChromInfo.GetEmptyRatios(ratioCount);
                     Annotations = Annotations.EMPTY;
+
+                    DriftTimeInfo = TransitionGroupDriftTimeInfo.EMPTY; 
                 }
 
                 if (reintegratePeak != null)
