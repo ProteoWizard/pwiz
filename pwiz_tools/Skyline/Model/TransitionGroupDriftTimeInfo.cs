@@ -87,27 +87,15 @@ namespace pwiz.Skyline.Model
                 // Filling in MS1 or MS2 data, or just more of what we already know
                 if (isMs1)
                 {
-                    // We expect these all to be the same for MS1
-                    if (!DriftTimeMS1.HasValue)
-                    {
-                        return ChangeDriftTimeMS1(driftTime);
-                    }
-                    else
-                    {
-                        Assume.IsTrue(Equals(DriftTimeMS1, driftTime));
-                    }
+                    // We expect these all to be the same for MS1, but can't assert that here because we
+                    // may be in the process of re-import with a different filter setting.
+                    return ChangeDriftTimeMS1(driftTime);
                 }
                 else
                 {
-                    // We expect these all to be the same for MS/MS
-                    if (!DriftTimeFragment.HasValue)
-                    {
-                        return ChangeDriftTimeFragment(driftTime);
-                    }
-                    else
-                    {
-                        Assume.IsTrue(Equals(DriftTimeFragment, driftTime));
-                    }
+                    // We expect these all to be the same for MS/MS, but can't assert that here because we
+                    // may be in the process of re-import with a different filter setting.
+                    return ChangeDriftTimeFragment(driftTime);
                 }
 
             }
