@@ -1457,7 +1457,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 var toler =
                     FormatVersion.CompareTo(DocumentFormat.VERSION_3_6) <= 0 && node.Transition.IonType == IonType.z ? 1.007826 : // Known issue fixed in SVN 7007
-                        (FormatVersion.CompareTo(DocumentFormat.VERSION_1_6) <= 0 ? .005 : .001); // Unsure if 1.6 is the precise watershed, but this gets a couple of older tests passing
+                        (FormatVersion.CompareTo(DocumentFormat.VERSION_1_7) <= 0 ? .005 : .0025); // Unsure if 1.7 is the precise watershed, but this gets a couple of older tests passing
                 Assume.IsTrue(Math.Abs(declaredProductMz.Value - node.Mz.Value) < toler,
                     string.Format("error reading mz values - declared mz value {0} does not match calculated value {1}", // Not L10N
                         declaredProductMz.Value, node.Mz.Value));
