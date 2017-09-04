@@ -81,6 +81,9 @@ namespace pwiz.SkylineTestFunctional
         {
             OpenDocument(bogus ? "UniqueTestBogus.sky": "UniqueTest.sky");  // Contains every protein in the protDB file, bogus version has missing metadata in the protdb
 
+            // CONSIDER: Should WaitForDocumentLoaded() also ensure that the background proteome is loaded?
+            WaitForBackgroundProteomeLoaderCompleted();
+
             // Finish digesting and get protein metadata (should not require web access for these well formed fasta headers)
             WaitForConditionUI(() =>
             {
