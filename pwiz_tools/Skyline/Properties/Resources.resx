@@ -9876,4 +9876,7 @@ Here are the {0} pairs with multiple entries:
   <data name="Data_ToString__0__points" xml:space="preserve">
     <value>{0} points</value>
   </data>
+  <data name="SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_" xml:space="preserve">
+    <value>The document was modified in the middle of the operation.</value>
+  </data>
 </root>

@@ -18,11 +18,8 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using pwiz.Common.DataBinding.RowSources;
 
 namespace pwiz.Common.DataBinding.Internal
 {

@@ -22596,6 +22596,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The document was modified in the middle of the operation..
+        /// </summary>
+        public static string SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_ {
+            get {
+                return ResourceManager.GetString("SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_o" +
+                        "f_the_operation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         public static System.Drawing.Icon SkylineDoc {

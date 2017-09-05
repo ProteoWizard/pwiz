@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
 using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Model.Databinding.Collections

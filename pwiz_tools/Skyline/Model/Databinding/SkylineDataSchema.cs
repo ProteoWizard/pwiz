@@ -311,7 +311,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             if (!ReferenceEquals(expectedCurrentDocument, actualCurrentDocument))
             {
-                throw new InvalidOperationException("The document was modified in the middle of the operation.");
+                throw new InvalidOperationException(Resources.SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
             }
         }
 

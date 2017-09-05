@@ -18,10 +18,8 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Internal

@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -34,7 +33,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 using Transition = pwiz.Skyline.Model.Databinding.Entities.Transition;
 namespace pwiz.Skyline.Controls.Databinding
@@ -224,6 +222,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             else
             {
+                // ReSharper disable PossibleMultipleEnumeration
                 var pathLengths = _selectedIdentityPaths.Select(path => path.Length).Distinct().ToArray();
                 if (pathLengths.Length == 1)
                 {
@@ -243,6 +242,7 @@ namespace pwiz.Skyline.Controls.Databinding
                         builtInViewName = "Multiple Transition Results"; // Not L10N
                     }
                 }
+                // ReSharper restore PossibleMultipleEnumeration
             }
             if (rowSource == null)
             {
