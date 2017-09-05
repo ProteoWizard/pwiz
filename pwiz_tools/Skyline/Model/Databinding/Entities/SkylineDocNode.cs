@@ -20,6 +20,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
@@ -57,11 +59,34 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         protected IDictionary<ResultKey, TResult> MakeChromInfoResultsMap<TChromInfo, TResult>(
             Results<TChromInfo> results, Func<ResultFile, TResult> newResultFunc) where TChromInfo : ChromInfo
         {
-            var resultMap = new Dictionary<ResultKey, TResult>();
             if (results == null)
             {
-                return resultMap;
+                return ImmutableSortedList<ResultKey, TResult>.EMPTY.AsDictionary();
             }
+            var replicates = DataSchema.ReplicateList;
+            var resultFiles = DataSchema.ResultFileList;
+            if (replicates.Count == results.Count && results.All(r=>r.Count == 1 && r[0] != null))
+            {
+                // If every replicate has exactly one result, then we can reuse the keys in "DataSchema.ReplicateList".
+                var newValues = new List<TResult>(replicates.Count);
+                for (int replicateIndex = 0; replicateIndex < replicates.Count; replicateIndex++)
+                {
+                    var chromInfo = results[replicateIndex][0];
+                    var optStep = ResultFile.GetOptStep(chromInfo);
+                    ResultFile resultFile = null;
+                    if (optStep == 0)
+                    {
+                        resultFiles.TryGetValue(new ResultFileKey(replicateIndex, chromInfo.FileId, optStep), out resultFile);
+                    }
+                    if (resultFile == null)
+                    {
+                        resultFile = new ResultFile(replicates.Values[replicateIndex], chromInfo.FileId, optStep);
+                    }
+                    newValues.Add(newResultFunc(resultFile));
+                }
+                return replicates.ReplaceValues(newValues).AsDictionary();
+            }
+            var newEntries = new List<KeyValuePair<ResultKey, TResult>>();
             for (int replicateIndex = 0; replicateIndex < results.Count; replicateIndex++)
             {
                 var replicate = new Replicate(DataSchema, replicateIndex);
@@ -73,12 +98,22 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     {
                         continue;
                     }
-                    var key = new ResultKey(replicate, fileIndex);
-                    var resultFile = new ResultFile(replicate, chromInfo.FileId, ResultFile.GetOptStep(chromInfo));
-                    resultMap.Add(key, newResultFunc(resultFile));
+                    var key = fileIndex == 0 ? replicates.Keys[replicateIndex] : new ResultKey(replicate, fileIndex);
+                    int optStep = ResultFile.GetOptStep(chromInfo);
+                    ResultFile resultFile = null;
+                    if (optStep == 0)
+                    {
+                        resultFiles.TryGetValue(new ResultFileKey(replicateIndex, chromInfo.FileId, optStep), out resultFile);
+                    }
+                    if (resultFile == null)
+                    {
+                        resultFile = new ResultFile(replicates.Values[replicateIndex], chromInfo.FileId, optStep);
+                    }
+                    newEntries.Add(new KeyValuePair<ResultKey, TResult>(key, newResultFunc(resultFile)));
                 }
             }
-            return resultMap;
+            return ImmutableSortedList<ResultKey, TResult>.FromValues(newEntries, Comparer<ResultKey>.Default)
+                .AsDictionary();
         }
 
         protected bool Equals(SkylineDocNode other)
@@ -131,7 +166,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private TDocNode FindDocNode()
         {
-            return (TDocNode) DataSchema.Document.FindNode(IdentityPath) ?? CreateEmptyNode();
+            return FindDocNodeInDoc(DataSchema.Document) ?? CreateEmptyNode();
+        }
+
+        public TDocNode FindDocNodeInDoc(SrmDocument document)
+        {
+            return (TDocNode) document.FindNode(IdentityPath);
         }
 
         /// <summary>
@@ -139,9 +179,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         /// </summary>
         protected abstract TDocNode CreateEmptyNode();
 
-        public void ChangeDocNode(EditDescription editDescription, DocNode newDocNode)
+        public void ChangeDocNode(EditDescription editDescription, Func<TDocNode, TDocNode> newDocNode)
         {
-            ModifyDocument(editDescription, document => (SrmDocument) document.ReplaceChild(IdentityPath.Parent, newDocNode));
+            ModifyDocument(editDescription, document => (SrmDocument) document.ReplaceChild(IdentityPath.Parent, newDocNode(FindDocNodeInDoc(document))));
         }
 
         public override object GetAnnotation(AnnotationDef annotationDef)
@@ -151,8 +191,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public override void SetAnnotation(AnnotationDef annotationDef, object value)
         {
-            ChangeDocNode(EditDescription.SetAnnotation(annotationDef, value), 
-                DocNode.ChangeAnnotations(DocNode.Annotations.ChangeAnnotation(annotationDef, value)));
+            ChangeDocNode(EditDescription.SetAnnotation(annotationDef, value),
+                docNode => (TDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeAnnotation(annotationDef, value)));
         }
         public override string ToString()
         {

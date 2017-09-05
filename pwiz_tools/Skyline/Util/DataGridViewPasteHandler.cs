@@ -21,10 +21,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls;
-using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
@@ -36,23 +35,21 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public class DataGridViewPasteHandler
     {
-        private DataGridViewPasteHandler(SkylineWindow skylineWindow, DataGridView dataGridView)
+        private DataGridViewPasteHandler(BoundDataGridView boundDataGridView)
         {
-            SkylineWindow = skylineWindow;
-            DataGridView = dataGridView;
+            DataGridView = boundDataGridView;
             DataGridView.KeyDown += DataGridViewOnKeyDown;
         }
 
         /// <summary>
         /// Attaches a DataGridViewPasteHandler to the specified DataGridView.
         /// </summary>
-        public static DataGridViewPasteHandler Attach(SkylineWindow skylineWindow, DataGridView dataGridView)
+        public static DataGridViewPasteHandler Attach(BoundDataGridView boundDataGridView)
         {
-            return new DataGridViewPasteHandler(skylineWindow, dataGridView);
+            return new DataGridViewPasteHandler(boundDataGridView);
         }
 
-        public DataGridView DataGridView { get; private set; }
-        public SkylineWindow SkylineWindow { get; private set; }
+        public BoundDataGridView DataGridView { get; private set; }
 
         private void DataGridViewOnKeyDown(object sender, KeyEventArgs e)
         {
@@ -64,7 +61,7 @@ namespace pwiz.Skyline.Util
             {
                 return;
             }
-            if (SkylineWindow.IsPasteKeys(e.KeyData))
+            if (Equals(e.KeyData, Keys.Control | Keys.V))
             {
                 var clipboardText = ClipboardHelper.GetClipboardText(DataGridView);
                 if (null == clipboardText)
@@ -83,18 +80,22 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        private bool PerformUndoableOperation(string description, Func<ILongWaitBroker, bool> operation)
+        public bool PerformUndoableOperation(string description, Func<ILongWaitBroker, bool> operation)
         {
-            using (var undoTransaction = SkylineWindow.BeginUndo(description))
+            var skylineDataSchema = GetDataSchema();
+            if (skylineDataSchema == null)
             {
-                bool resultsGridSynchSelectionOld = Settings.Default.ResultsGridSynchSelection;
-                bool enabledOld = DataGridView.Enabled;
-                try
+                return false;
+            }
+            bool resultsGridSynchSelectionOld = Settings.Default.ResultsGridSynchSelection;
+            bool enabledOld = DataGridView.Enabled;
+            try
+            {
+                Settings.Default.ResultsGridSynchSelection = false;
+                DataGridView.Enabled = false;
+                lock (skylineDataSchema.SkylineWindow.GetDocumentChangeLock())
                 {
-                    var originalDocument = SkylineWindow.DocumentUI;
-                    SkylineWindow.ModifyDocumentNoUndo(doc => doc.BeginDeferSettingsChanges());
-                    DataGridView.Enabled = false;
-                    Settings.Default.ResultsGridSynchSelection = false;
+                    skylineDataSchema.BeginBatchModifyDocument();
                     var longOperationRunner = new LongOperationRunner
                     {
                         ParentControl = FormUtil.FindTopLevelOwner(DataGridView),
@@ -102,52 +103,28 @@ namespace pwiz.Skyline.Util
                     };
                     if (longOperationRunner.CallFunction(operation))
                     {
-                        bool success = false;
-                        SkylineWindow.ModifyDocumentNoUndo(doc =>
-                        {
-                            var newDoc = EndDeferSettingsChangesOnDocument(originalDocument.Settings, doc);
-                            if (newDoc != null)
-                            {
-                                success = true;
-                                return newDoc;
-                            }
-                            // If the user cancelled updating the settings, then we have to revert back
-                            // to what the document was before any changes were made.
-                            return originalDocument;
-                        });
-                        if (success)
-                        {
-                            undoTransaction.Commit();
-                        }
+                        skylineDataSchema.CommitBatchModifyDocument(description);
                         return true;
                     }
-                    return false;
                 }
-                finally
-                {
-                    DataGridView.Enabled = enabledOld;
-                    Settings.Default.ResultsGridSynchSelection = resultsGridSynchSelectionOld;
-                }
+                return false;
+            }
+            finally
+            {
+                DataGridView.Enabled = enabledOld;
+                Settings.Default.ResultsGridSynchSelection = resultsGridSynchSelectionOld;
+                skylineDataSchema.RollbackBatchModifyDocument();
             }
         }
 
-        private SrmDocument EndDeferSettingsChangesOnDocument(SrmSettings originalSettings, SrmDocument document)
+        private SkylineDataSchema GetDataSchema()
         {
-            string message = Resources.DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings;
-            using (var longWaitDlg = new LongWaitDlg
+            var bindingListSource = DataGridView.DataSource as BindingListSource;
+            if (bindingListSource == null || bindingListSource.ViewInfo == null)
             {
-                Message = message
-            })
-            {
-                SrmDocument newDocument = null;
-                longWaitDlg.PerformWork(SkylineWindow, 1000, progressMonitor =>
-                {
-                    var srmSettingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor, 
-                        message);
-                    newDocument = document.EndDeferSettingsChanges(originalSettings, srmSettingsChangeMonitor);
-                });
-                return newDocument;
+                return null;
             }
+            return bindingListSource.ViewInfo.DataSchema as SkylineDataSchema;
         }
 
         /// <summary>

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding
@@ -137,8 +138,12 @@ namespace pwiz.Common.DataBinding
             {
                 return new Attribute[0];
             }
-            var overrideAttributes = new Attribute[] {new DisplayNameAttribute(GetColumnCaption(pivotKey, ColumnCaptionType.localized))};
-            var mergedAttributes = AttributeCollection.FromExisting(new AttributeCollection(ColumnDescriptor.GetAttributes().ToArray()), overrideAttributes);
+            var overrideAttributes = new List<Attribute>{new DisplayNameAttribute(GetColumnCaption(pivotKey, ColumnCaptionType.localized))};
+            if (ColumnDescriptor.IsExpensive)
+            {
+                overrideAttributes.Add(new ExpensiveAttribute());
+            }
+            var mergedAttributes = AttributeCollection.FromExisting(new AttributeCollection(ColumnDescriptor.GetAttributes().ToArray()), overrideAttributes.ToArray());
             return mergedAttributes.Cast<Attribute>();
         }
     }

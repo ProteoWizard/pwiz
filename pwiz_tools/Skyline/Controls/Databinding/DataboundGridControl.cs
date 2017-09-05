@@ -24,6 +24,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Internal;
 using pwiz.Skyline.Alerts;
@@ -43,10 +44,12 @@ namespace pwiz.Skyline.Controls.Databinding
         private readonly object _errorMessageLock = new object();
         private bool _errorMessagePending;
         private bool _suppressErrorMessages;
+        private DataGridViewPasteHandler _dataGridViewPasteHandler;
 
         public DataboundGridControl()
         {
             InitializeComponent();
+            _dataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView);
         }
 
         public BindingListSource BindingListSource
@@ -403,20 +406,8 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return false;
             }
-            using (var undoTransaction = skylineWindow.BeginUndo(Resources.DataboundGridControl_FillDown_Fill_Down))
-            {
-                var longOpRunner = new LongOperationRunner()
-                {
-                    JobTitle = Resources.DataboundGridControl_FillDown_Fill_Down,
-                    ParentControl = FormUtil.FindTopLevelOwner(this)
-                };
-                if (longOpRunner.CallFunction(longWaitBroker=>
-                    DoFillDown(longWaitBroker, propertyDescriptors, firstRowIndex, lastRowIndex)))
-                {
-                    undoTransaction.Commit();
-                    return true;
-                }
-            }
+            _dataGridViewPasteHandler.PerformUndoableOperation(Resources.DataboundGridControl_FillDown_Fill_Down,
+                longWaitBroker => DoFillDown(longWaitBroker, propertyDescriptors, firstRowIndex, lastRowIndex));
             return false;
         }
         
@@ -464,12 +455,16 @@ namespace pwiz.Skyline.Controls.Databinding
             UpdateContextMenuItems();
         }
 
+        private bool IsSortable(PropertyDescriptor propertyDescriptor)
+        {
+            return propertyDescriptor != null && !propertyDescriptor.Attributes.OfType<ExpensiveAttribute>().Any();
+        }
+
         private void UpdateContextMenuItems()
         {
             clearAllFiltersToolStripMenuItem.Enabled = !BindingListSource.RowFilter.IsEmpty;
-            if (null != _columnFilterPropertyDescriptor)
+            if (null != _columnFilterPropertyDescriptor && IsSortable(_columnFilterPropertyDescriptor))
             {
-
                 clearFilterToolStripMenuItem.Enabled =
                     BindingListSource.RowFilter.ColumnFilters.Any(
                         filter => Equals(_columnFilterPropertyDescriptor.DisplayName, filter.ColumnCaption));
@@ -495,6 +490,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             else
             {
+                clearSortToolStripMenuItem.Enabled = false;
                 clearFilterToolStripMenuItem.Enabled = false;
                 filterToolStripMenuItem.Enabled = false;
                 sortAscendingToolStripMenuItem.Enabled = false;

@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.ComponentModel;
 using System.Threading;
 
 namespace pwiz.Common.DataBinding.Internal
@@ -44,7 +43,7 @@ namespace pwiz.Common.DataBinding.Internal
             Run();
         }
 
-        private void RowSourceChanged(object sender, ListChangedEventArgs listChangedEventArgs)
+        private void RowSourceChanged()
         {
             Run();
         }
@@ -53,12 +52,11 @@ namespace pwiz.Common.DataBinding.Internal
         {
             try
             {
-                var tickCounter = new Pivoter.TickCounter(_cancellationToken);
                 var queryResults = QueryResults.Empty
                     .SetParameters(QueryRequest.QueryParameters)
                     .SetSourceRows(RowSource.ListRowItems());
 
-                queryResults = RunAll(tickCounter, queryResults);
+                queryResults = RunAll(QueryRequest.CancellationToken, queryResults);
                 QueryRequest.SetFinalQueryResults(queryResults);
             }
             catch (OperationCanceledException)

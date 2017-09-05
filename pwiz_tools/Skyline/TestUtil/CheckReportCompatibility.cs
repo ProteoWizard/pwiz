@@ -21,6 +21,7 @@ using System.Collections;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -59,7 +60,7 @@ namespace pwiz.SkylineTestUtil
             Assert.IsNotNull(viewInfo);
         }
 
-        public IEnumerable GetRowSource(ViewInfo viewInfo)
+        public IRowSource GetRowSource(ViewInfo viewInfo)
         {
             var type = viewInfo.ParentColumn.PropertyType;
             if (type == typeof (Protein))
@@ -99,7 +100,7 @@ namespace pwiz.SkylineTestUtil
             using (var writer = new StreamWriter(fileName))
             {
                 IProgressStatus status = new ProgressStatus();
-                viewContext.Export(new SilentProgressMonitor(), ref status,
+                viewContext.Export(CancellationToken.None, new SilentProgressMonitor(), ref status,
                     viewContext.GetViewInfo(ViewGroup.BUILT_IN, viewSpec), writer, viewContext.GetCsvWriter());
             }
         }

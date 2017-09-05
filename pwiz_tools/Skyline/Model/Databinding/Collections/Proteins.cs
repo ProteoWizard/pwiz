@@ -28,14 +28,6 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         {
         }
 
-        public override IList<Protein> DeepClone()
-        {
-            return new Proteins(DataSchema.Clone())
-                {
-                    AncestorIdentityPaths = AncestorIdentityPaths
-                };
-        }
-
         protected override Protein ConstructItem(IdentityPath identityPath)
         {
             return new Protein(DataSchema, identityPath);

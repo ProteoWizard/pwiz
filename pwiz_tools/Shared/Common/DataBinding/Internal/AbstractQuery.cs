@@ -27,18 +27,18 @@ namespace pwiz.Common.DataBinding.Internal
 {
     internal class AbstractQuery
     {
-        protected QueryResults RunAll(Pivoter.TickCounter tickCounter, QueryResults results)
+        protected QueryResults RunAll(CancellationToken cancellationToken, QueryResults results)
         {
-            results = Pivot(tickCounter, results);
-            results = results.SetFilteredRows(Filter(tickCounter.CancellationToken, results));
-            results = results.SetSortedRows(Sort(tickCounter.CancellationToken, results));
+            results = Pivot(cancellationToken, results);
+            results = results.SetFilteredRows(Filter(cancellationToken, results));
+            results = results.SetSortedRows(Sort(cancellationToken, results));
             return results;
         }
 
-        protected QueryResults Pivot(Pivoter.TickCounter tickCounter, QueryResults results)
+        protected QueryResults Pivot(CancellationToken cancellationToken, QueryResults results)
         {
             var pivoter = new Pivoter(results.Parameters.ViewInfo);
-            return results.SetPivotedRows(pivoter.ExpandAndPivot(tickCounter, results.SourceRows));
+            return results.SetPivotedRows(pivoter.ExpandAndPivot(cancellationToken, results.SourceRows));
         }
 
         protected IEnumerable<RowItem> Filter(CancellationToken cancellationToken, QueryResults results)

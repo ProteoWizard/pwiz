@@ -19,8 +19,8 @@
 
 using System;
 using System.Linq;
-using System.Collections;
 using System.ComponentModel;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding.Internal;
@@ -35,6 +35,11 @@ namespace pwiz.Common.DataBinding.Controls
         }
         public BindingListSource() : this((TaskScheduler) null)
         {
+        }
+
+        public BindingListSource(CancellationToken cancellationToken) : this()
+        {
+            QueryLock = new QueryLock(cancellationToken);
         }
 
         private BindingListSource(TaskScheduler taskScheduler)
@@ -63,16 +68,24 @@ namespace pwiz.Common.DataBinding.Controls
         }
 
         internal BindingListView BindingListView { get; private set; }
-        public IEnumerable RowSource
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public IRowSource RowSource
         {
             get { return BindingListView.RowSource; }
-            set { BindingListView.RowSource = value; }
+            set { SetView(ViewInfo, value); }
         }
 
         [Browsable(false)]
         public new object DataSource
         {
             get { return base.DataSource; }
+        }
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public QueryLock QueryLock 
+        { 
+            get { return BindingListView.QueryLock; } 
+            set { BindingListView.QueryLock = value; }
         }
 
         public IViewContext ViewContext { get; private set; }
@@ -85,7 +98,7 @@ namespace pwiz.Common.DataBinding.Controls
             }
             else
             {
-                IEnumerable rowSource = null;
+                IRowSource rowSource = null;
                 if (null != ViewInfo)
                 {
                     if (ViewInfo.RowSourceName == viewInfo.RowSourceName)
@@ -99,7 +112,7 @@ namespace pwiz.Common.DataBinding.Controls
             OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
         }
 
-        public void SetView(ViewInfo viewInfo, IEnumerable rows)
+        public void SetView(ViewInfo viewInfo, IRowSource rows)
         {
             BindingListView.SetViewAndRows(viewInfo, rows);
         }

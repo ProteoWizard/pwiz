@@ -27,30 +27,19 @@ namespace pwiz.Skyline.Model.Databinding.Collections
     {
         public ReplicateList(SkylineDataSchema dataSchema) : base(dataSchema)
         {
-            OnDocumentChanged();
         }
-        protected override IList<int> ListKeys()
+        protected override IEnumerable<int> ListKeys()
         {
             if (!DataSchema.Document.Settings.HasResults)
             {
                 return new int[0];
             }
-            return Enumerable.Range(0, DataSchema.Document.Settings.MeasuredResults.Chromatograms.Count).ToArray();
+            return Enumerable.Range(0, DataSchema.Document.Settings.MeasuredResults.Chromatograms.Count);
         }
 
         protected override Replicate ConstructItem(int key)
         {
             return new Replicate(DataSchema, key);
-        }
-
-        public override int GetKey(Replicate value)
-        {
-            return value.ReplicateIndex;
-        }
-
-        public override IList<Replicate> DeepClone()
-        {
-            return new ReplicateList(DataSchema.Clone());
         }
     }
 }

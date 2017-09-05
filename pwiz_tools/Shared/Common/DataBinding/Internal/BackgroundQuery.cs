@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using pwiz.Common.Collections;
@@ -43,7 +42,6 @@ namespace pwiz.Common.DataBinding.Internal
         public IRowSourceWrapper RowSource { get; private set; }
         public IQueryRequest QueryRequest { get; private set; }
         public TaskScheduler BackgroundTaskScheduler { get; private set; }
-        public IList<RowItem> SourceRowItems { get; private set; }
 
         public void Start()
         {
@@ -55,12 +53,11 @@ namespace pwiz.Common.DataBinding.Internal
                 }
                 RowSource.RowSourceChanged += RowSourceChanged;
                 _rootCancellationToken.Register(() => RowSource.RowSourceChanged -= RowSourceChanged);
-                SourceRowItems = ImmutableList.ValueOf(RowSource.ListRowItems());
                 EnsureRunning();
             }
         }
 
-        private void RowSourceChanged(object sender, ListChangedEventArgs eventArgs)
+        private void RowSourceChanged()
         {
             Reset();
         }
@@ -70,7 +67,6 @@ namespace pwiz.Common.DataBinding.Internal
             lock (this)
             {
                 Stop();
-                SourceRowItems = ImmutableList.ValueOf(RowSource.ListRowItems());
                 EnsureRunning();
             }
         }
@@ -102,10 +98,13 @@ namespace pwiz.Common.DataBinding.Internal
             LocalizationHelper.InitThread();
             try
             {
-                var queryResults = QueryRequest.InitialQueryResults
-                    .SetSourceRows(SourceRowItems);
-                queryResults = RunAll(new Pivoter.TickCounter(cancellationToken), queryResults);
-                QueryRequest.SetFinalQueryResults(queryResults);
+                using (QueryRequest.QueryLock.GetReadLock())
+                {
+                    var queryResults = QueryRequest.InitialQueryResults
+                        .SetSourceRows(RowSource.ListRowItems());
+                    queryResults = RunAll(cancellationToken, queryResults);
+                    QueryRequest.SetFinalQueryResults(queryResults);
+                }
             }
             catch (OperationCanceledException)
             {

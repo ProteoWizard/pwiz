@@ -131,9 +131,14 @@ namespace pwiz.Common.DataBinding
 
         protected virtual string ToDsvField(string text)
         {
+            return ToDsvField(Separator, text);
+        }
+
+        public static string ToDsvField(char separator, string text)
+        {
             if (text == null)
                 return string.Empty;
-            if (text.IndexOfAny(new[] { '"', Separator, '\r', '\n' }) == -1)
+            if (text.IndexOfAny(new[] { '"', separator, '\r', '\n' }) == -1)
                 return text;
             return '"' + text.Replace("\"", "\"\"") + '"'; // Not L10N
         }

@@ -91,13 +91,12 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     return false;
                 }
-                var rowSource = bindingListSource.RowSource;
-                if (rowSource == null)
+                var viewInfo = bindingListSource.ViewInfo;
+                if (viewInfo == null)
                 {
                     return false;
                 }
-                var firstItem = rowSource.Cast<object>().FirstOrDefault();
-                return firstItem is SkylineDocNode;
+                return typeof(SkylineDocNode).IsAssignableFrom(viewInfo.ParentColumn.PropertyType);
             }
         }
 

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
@@ -41,10 +42,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public Precursor Precursor { get { return SkylineDocNode as Precursor; } }
         [Browsable(false)]
         public TransitionGroupChromInfo ChromInfo { get { return _chromInfo.Value; } }
-        public void ChangeChromInfo(EditDescription editDescription, TransitionGroupChromInfo newChromInfo)
+        public void ChangeChromInfo(EditDescription editDescription, Func<TransitionGroupChromInfo, TransitionGroupChromInfo> newChromInfo)
         {
-            var newDocNode = Precursor.DocNode.ChangeResults(GetResultFile().ChangeChromInfo(Precursor.DocNode.Results, newChromInfo));
-            Precursor.ChangeDocNode(editDescription, newDocNode);
+            Precursor.ChangeDocNode(editDescription, docNode => docNode.ChangeResults(GetResultFile()
+                .ChangeChromInfo(docNode.Results, newChromInfo)));
         }
         [Format(Formats.PValue, NullValue = TextUtil.EXCEL_NA)]
         public double? DetectionQValue { get { return ChromInfo.QValue; } }
@@ -150,7 +151,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 ChangeChromInfo(
                     EditDescription.SetColumn("PrecursorReplicateNote", value), // Not L10N
-                    ChromInfo.ChangeAnnotations(ChromInfo.Annotations.ChangeNote(value)));
+                    chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(value)));
             }
         }
 
@@ -163,7 +164,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return;
 
             ChangeChromInfo(EditDescription.SetAnnotation(annotationDef, value), 
-                ChromInfo.ChangeAnnotations(ChromInfo.Annotations.ChangeAnnotation(annotationDef, value)));
+                chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeAnnotation(annotationDef, value)));
         }
 
         public override object GetAnnotation(AnnotationDef annotationDef)

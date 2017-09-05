@@ -60,7 +60,7 @@ namespace pwiz.Topograph.ui.Forms
         private void Requery()
         {
             _peptides = new BindingList<LinkValue<Peptide>>(Workspace.Peptides.Select(MakeLinkValue).ToList());
-            peptidesBindingSource.RowSource = _peptides;
+            peptidesBindingSource.RowSource = BindingListRowSource.Create(_peptides);
         }
 
         private LinkValue<Peptide> MakeLinkValue(Peptide peptide)

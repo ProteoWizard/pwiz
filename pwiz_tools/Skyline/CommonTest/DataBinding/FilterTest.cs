@@ -41,7 +41,8 @@ namespace CommonTest.DataBinding
             var bindingListSource = new BindingListSource();
             var bindingListSourceWithFilter = new BindingListSource();
             bindingListSource.SetView(new ViewInfo(dataSchema, typeof(Peptide), viewSpec), null);
-            bindingListSourceWithFilter.SetView(new ViewInfo(dataSchema, typeof(Peptide), viewSpecWithFilter), new[] {new Peptide("")});
+            bindingListSourceWithFilter.SetView(new ViewInfo(dataSchema, typeof(Peptide), viewSpecWithFilter), 
+                new StaticRowSource(new[]{new Peptide("")}));
             Assert.AreEqual(0, bindingListSourceWithFilter.Count);
             bindingListSource.RowSource = bindingListSourceWithFilter.RowSource;
             Assert.AreEqual(1, bindingListSource.Count);
@@ -57,7 +58,7 @@ namespace CommonTest.DataBinding
                     .SetFilters(new[]
                     {new FilterSpec(PropertyPath.Parse("Molecule!*.Key"), FilterPredicate.CreateFilterPredicate(dataSchema, typeof(string), FilterOperations.OP_EQUALS, "S"))});
             var bindingListSource = new BindingListSource();
-            bindingListSource.SetView(new ViewInfo(dataSchema, typeof(AminoAcid), viewSpec), AminoAcid.AMINO_ACIDS);
+            bindingListSource.SetView(new ViewInfo(dataSchema, typeof(AminoAcid), viewSpec), new StaticRowSource(AminoAcid.AMINO_ACIDS));
             Assert.AreEqual(2, bindingListSource.Count);
 
 

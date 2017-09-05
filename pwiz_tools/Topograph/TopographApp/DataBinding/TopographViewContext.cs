@@ -22,6 +22,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
@@ -39,7 +40,7 @@ namespace pwiz.Topograph.ui.DataBinding
         public TopographViewContext(Workspace workspace, Type rowType, IEnumerable rows, params ViewSpec[] builtInViews) 
             : base(new TopographDataSchema(workspace), new[]
             {
-                new RowSourceInfo(rowType, rows, builtInViews.Select(
+                new RowSourceInfo(rowType, new StaticRowSource(rows), builtInViews.Select(
                     viewSpec=>new ViewInfo(new TopographDataSchema(workspace), rowType, viewSpec)))
             })
         {
@@ -173,14 +174,14 @@ namespace pwiz.Topograph.ui.DataBinding
 
 
 
-        public override bool RunLongJob(Control owner, Action<IProgressMonitor> job)
+        public override bool RunLongJob(Control owner, Action<CancellationToken, IProgressMonitor> job)
         {
             using (var longWaitDialog = new LongWaitDialog(owner.TopLevelControl, Program.AppName))
             {
                 var longOperationBroker =
                     new LongOperationBroker(
                         broker =>
-                        job.Invoke(ProgressMonitorImpl.NewProgressMonitorImpl(new ProgressStatus("Working"),
+                        job.Invoke(CancellationToken.None, ProgressMonitorImpl.NewProgressMonitorImpl(new ProgressStatus("Working"),
                                                                               iProgress =>
                                                                                   {
                                                                                       try

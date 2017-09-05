@@ -18,63 +18,49 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
-using pwiz.Common.DataBinding.RowSources;
 
 namespace pwiz.Common.DataBinding.Internal
 {
     internal interface IRowSourceWrapper
     {
-        IEnumerable WrappedRowSource { get; }
+        IRowSource WrappedRowSource { get; }
         IEnumerable<RowItem> ListRowItems();
         void StartQuery(IQueryRequest queryRequest);
-        event ListChangedEventHandler RowSourceChanged;
-        QueryResults MakeLive(QueryResults rowItems);
+        event Action RowSourceChanged;
     }
 
     internal static class RowSourceWrappers
     {
-        public static IRowSourceWrapper Wrap(IEnumerable items)
+        public static IRowSourceWrapper Wrap(IRowSource items)
         {
             if (null == items)
             {
-                return new RowSourceWrapper(new object[0]);
-            }
-            var type = items.GetType();
-            var cloneableListType = type.FindInterfaces(IsCloneableListType, null).FirstOrDefault();
-            if (null != cloneableListType)
-            {
-                var wrapperType = typeof(CloneableRowSourceWrapper<,>).MakeGenericType(cloneableListType.GetGenericArguments());
-
-                var contructor = wrapperType.GetConstructor(new[] { cloneableListType });
-                Debug.Assert(contructor != null);
-                // ReSharper disable PossibleNullReferenceException
-                return (IRowSourceWrapper)contructor.Invoke(new object[] { items });
-                // ReSharper restore PossibleNullReferenceException
+                return new RowSourceWrapper(StaticRowSource.EMPTY);
             }
             return new RowSourceWrapper(items);
-        }
-        public static bool IsCloneableListType(Type type, object args)
-        {
-            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ICloneableList<,>);
         }
     }
 
     internal class RowSourceWrapper : AbstractRowSourceWrapper
     {
-        public static readonly RowSourceWrapper Empty = new RowSourceWrapper(new object[0]);
+        public static readonly RowSourceWrapper Empty = new RowSourceWrapper(StaticRowSource.EMPTY);
 
-        public RowSourceWrapper(IEnumerable list) : base(list)
+        public RowSourceWrapper(IRowSource list) : base(list)
         {
         }
 
         public override void StartQuery(IQueryRequest queryRequest)
         {
-            new ForegroundQuery(this, queryRequest).Start();
+            if (null == queryRequest.EventTaskScheduler)
+            {
+                new ForegroundQuery(this, queryRequest).Start();
+            }
+            else
+            {
+                new BackgroundQuery(this, queryRequest.EventTaskScheduler, queryRequest).Start();
+            }
         }
 
         public override QueryResults MakeLive(QueryResults rowItems)
@@ -84,7 +70,7 @@ namespace pwiz.Common.DataBinding.Internal
 
         public override IEnumerable<RowItem> ListRowItems()
         {
-            return WrappedRowSource.Cast<object>().Select(item => new RowItem(item));
+            return WrappedRowSource.GetItems().Cast<object>().Select(item => new RowItem(item));
         }
     }
 }

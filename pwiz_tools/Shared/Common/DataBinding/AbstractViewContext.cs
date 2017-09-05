@@ -25,12 +25,12 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
-using pwiz.Common.DataBinding.RowSources;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 
@@ -59,7 +59,7 @@ namespace pwiz.Common.DataBinding
             string currentViewName = viewInfo.Name;
             return viewInfo.ParentColumn.PropertyType.Name + (currentViewName == GetDefaultViewName() ? string.Empty : currentViewName);
         }
-        public abstract bool RunLongJob(Control owner, Action<IProgressMonitor> job);
+        public abstract bool RunLongJob(Control owner, Action<CancellationToken, IProgressMonitor> job);
         public DataSchema DataSchema { get; private set; }
         public IEnumerable<ViewSpec> BuiltInViews
         {
@@ -172,12 +172,12 @@ namespace pwiz.Common.DataBinding
             return DefaultViewName;
         }
 
-        public virtual IEnumerable GetRowSource(ViewInfo viewInfo)
+        public virtual IRowSource GetRowSource(ViewInfo viewInfo)
         {
             var rowSource = _rowSources.FirstOrDefault(rowSourceInfo => rowSourceInfo.Name == viewInfo.RowSourceName);
             if (rowSource == null)
             {
-                return Array.CreateInstance(viewInfo.ParentColumn.PropertyType, 0);
+                return StaticRowSource.EMPTY;
             }
             return rowSource.Rows;
         } 
@@ -250,27 +250,16 @@ namespace pwiz.Common.DataBinding
             SafeWriteToFile(owner, filename, stream =>
             {
                 var writer = new StreamWriter(stream, new UTF8Encoding(false));
-                var cloneableRowSource = bindingListSource.RowSource as ICloneableList;
                 bool finished = false;
-                if (null == cloneableRowSource)
+                RunLongJob(owner, (cancellationToken, progressMonitor) =>
                 {
-                    var progressMonitor = new SilentProgressMonitor();
-                    WriteData(progressMonitor, writer, bindingListSource, dsvWriter);
-                    finished = true;
-                }
-                else
-                {
-                    var clonedList = cloneableRowSource.DeepClone();
-                    RunLongJob(owner, progressMonitor =>
+                    using (var clonedBindingList = new BindingListSource(cancellationToken))
                     {
-                        using (var clonedBindingList = new BindingListSource())
-                        {
-                            SetViewFrom(bindingListSource, clonedList, clonedBindingList);
-                            WriteData(progressMonitor, writer, clonedBindingList, dsvWriter);
-                            finished = !progressMonitor.IsCanceled;
-                        }
-                    });
-                }
+                        SetViewFrom(bindingListSource, bindingListSource.RowSource, clonedBindingList);
+                        WriteData(progressMonitor, writer, clonedBindingList, dsvWriter);
+                        finished = !progressMonitor.IsCanceled;
+                    }
+                });
                 if (finished)
                 {
                     writer.Flush();
@@ -298,27 +287,17 @@ namespace pwiz.Common.DataBinding
             try
             {
                 StringWriter tsvWriter = new StringWriter();
-                var cloneableRowSource = bindingListSource.RowSource as ICloneableList;
-                if (null == cloneableRowSource)
+                if (!RunLongJob(owner, (cancellationToken, progressMonitor) =>
                 {
-                    var progressMonitor = new SilentProgressMonitor();
-                    WriteData(progressMonitor, tsvWriter, bindingListSource, DataFormats.TSV.GetDsvWriter());
-                }
-                else
-                {
-                    var clonedList = cloneableRowSource.DeepClone();
-                    if (!RunLongJob(owner, progressMonitor =>
+                    using (var clonedBindingList = new BindingListSource(cancellationToken))
                     {
-                        using (var clonedBindingList = new BindingListSource())
-                        {
-                            SetViewFrom(bindingListSource, clonedList, clonedBindingList);
-                            WriteData(progressMonitor, tsvWriter, clonedBindingList, DataFormats.TSV.GetDsvWriter());
-                            progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
-                        }
-                    }))
-                    {
-                        return;
+                        SetViewFrom(bindingListSource, bindingListSource.RowSource, clonedBindingList);
+                        WriteData(progressMonitor, tsvWriter, clonedBindingList, DataFormats.TSV.GetDsvWriter());
+                        progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
                     }
+                }))
+                {
+                    return;
                 }
                 DataObject dataObject = new DataObject();
                 dataObject.SetText(tsvWriter.ToString());
@@ -663,7 +642,7 @@ namespace pwiz.Common.DataBinding
             return -1;
         }
 
-        protected void SetViewFrom(BindingListSource sourceBindingList, IEnumerable newRowSource,
+        protected void SetViewFrom(BindingListSource sourceBindingList, IRowSource newRowSource,
             BindingListSource targetBindingList)
         {
             targetBindingList.SetView(sourceBindingList.ViewInfo, newRowSource);

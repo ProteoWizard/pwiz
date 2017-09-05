@@ -22,12 +22,16 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Properties;
 using SkylineTool;
 
 namespace pwiz.Skyline.Model.Databinding
@@ -37,16 +41,19 @@ namespace pwiz.Skyline.Model.Databinding
         private readonly IDocumentContainer _documentContainer;
         private readonly HashSet<IDocumentChangeListener> _documentChangedEventHandlers 
             = new HashSet<IDocumentChangeListener>();
+        private readonly CachedValue<ImmutableSortedList<ResultKey, Replicate>> _replicates;
+        private readonly CachedValue<IDictionary<ResultFileKey, ResultFile>> _resultFiles;
+
+        private SrmDocument _batchChangesOriginalDocument;
+
+        private SrmDocument _document;
         public SkylineDataSchema(IDocumentContainer documentContainer, DataSchemaLocalizer dataSchemaLocalizer) : base(dataSchemaLocalizer)
         {
             _documentContainer = documentContainer;
-        }
-
-        public SkylineDataSchema Clone()
-        {
-            var container = new MemoryDocumentContainer();
-            container.SetDocument(Document, container.Document);
-            return new SkylineDataSchema(container, DataSchemaLocalizer);
+            _document = _documentContainer.Document;
+            ChromDataCache = new ChromDataCache();
+            _replicates = CachedValue.Create(this, CreateReplicateList);
+            _resultFiles = CachedValue.Create(this, CreateResultFileList);
         }
 
         protected override bool IsScalar(Type type)
@@ -106,15 +113,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             get
             {
-                var documentUiContainer = _documentContainer as IDocumentUIContainer;
-                if (null == documentUiContainer)
-                {
-                    return _documentContainer.Document;
-                }
-                else
-                {
-                    return documentUiContainer.DocumentUI;
-                }
+                return _document;
             }
         }
         public void Listen(IDocumentChangeListener listener)
@@ -166,14 +165,18 @@ namespace pwiz.Skyline.Model.Databinding
 
         private void DocumentChangedEventHandler(object sender, DocumentChangedEventArgs args)
         {
-            IList<IDocumentChangeListener> listeners;
-            lock (_documentChangedEventHandlers)
+            using (QueryLock.CancelAndGetWriteLock())
             {
-                listeners = _documentChangedEventHandlers.ToArray();
-            }
-            foreach (var listener in listeners)
-            {
-                listener.DocumentOnChanged(sender, args);
+                _document = _documentContainer.Document;
+                IList<IDocumentChangeListener> listeners;
+                lock (_documentChangedEventHandlers)
+                {
+                    listeners = _documentChangedEventHandlers.ToArray();
+                }
+                foreach (var listener in listeners)
+                {
+                    listener.DocumentOnChanged(sender, args);
+                }
             }
         }
 
@@ -193,6 +196,8 @@ namespace pwiz.Skyline.Model.Databinding
             }
             return _replicateSummaries = replicateSummaries;
         }
+
+        public ChromDataCache ChromDataCache { get; private set; }
 
         public override PropertyDescriptor GetPropertyDescriptor(Type type, string name)
         {
@@ -239,11 +244,101 @@ namespace pwiz.Skyline.Model.Databinding
             return null;
         }
 
+        public ImmutableSortedList<ResultKey, Replicate> ReplicateList { get { return _replicates.Value; } }
+        public IDictionary<ResultFileKey, ResultFile> ResultFileList { get { return _resultFiles.Value; } }
+
         public static DataSchemaLocalizer GetLocalizedSchemaLocalizer()
         {
             return new DataSchemaLocalizer(CultureInfo.CurrentCulture, ColumnCaptions.ResourceManager);
         }
 
+        public void BeginBatchModifyDocument()
+        {
+            if (null != _batchChangesOriginalDocument)
+            {
+                throw new InvalidOperationException();
+            }
+            _batchChangesOriginalDocument = _document;
+        }
 
+        public void CommitBatchModifyDocument(string description)
+        {
+            if (null == _batchChangesOriginalDocument)
+            {
+                throw new InvalidOperationException();
+            }
+            string message = Resources.DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings;
+            SkylineWindow.ModifyDocument(description, document =>
+            {
+                VerifyDocumentCurrent(_batchChangesOriginalDocument, document);
+                using (var longWaitDlg = new LongWaitDlg
+                {
+                    Message = message
+                })
+                {
+                    SrmDocument newDocument = null;
+                    longWaitDlg.PerformWork(SkylineWindow, 1000, progressMonitor =>
+                    {
+                        var srmSettingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor,
+                            message);
+                        newDocument = _document.EndDeferSettingsChanges(_batchChangesOriginalDocument.Settings, srmSettingsChangeMonitor);
+                    });
+                    return newDocument;
+                }
+            });
+            _batchChangesOriginalDocument = null;
+            DocumentChangedEventHandler(_documentContainer, new DocumentChangedEventArgs(_document));
+        }
+
+        public void RollbackBatchModifyDocument()
+        {
+            _batchChangesOriginalDocument = null;
+            _document = _documentContainer.Document;
+        }
+
+        public void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action)
+        {
+            if (_batchChangesOriginalDocument == null)
+            {
+                SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action);
+                return;
+            }
+            VerifyDocumentCurrent(_batchChangesOriginalDocument, _documentContainer.Document);
+            _document = action(_document.BeginDeferSettingsChanges());
+        }
+
+        private void VerifyDocumentCurrent(SrmDocument expectedCurrentDocument, SrmDocument actualCurrentDocument)
+        {
+            if (!ReferenceEquals(expectedCurrentDocument, actualCurrentDocument))
+            {
+                throw new InvalidOperationException("The document was modified in the middle of the operation.");
+            }
+        }
+
+        private ImmutableSortedList<ResultKey, Replicate> CreateReplicateList()
+        {
+            var srmDocument = Document;
+            if (!srmDocument.Settings.HasResults)
+            {
+                return ImmutableSortedList<ResultKey, Replicate>.EMPTY;
+            }
+            return ImmutableSortedList<ResultKey, Replicate>.FromValues(
+                Enumerable.Range(0, srmDocument.Settings.MeasuredResults.Chromatograms.Count)
+                    .Select(replicateIndex =>
+                    {
+                        var replicate = new Replicate(this, replicateIndex);
+                        return new KeyValuePair<ResultKey, Replicate>(new ResultKey(replicate, 0), replicate);
+                    }), Comparer<ResultKey>.Default);
+        }
+ 
+        private IDictionary<ResultFileKey, ResultFile> CreateResultFileList()
+        {
+            return ReplicateList.Values.SelectMany(
+                    replicate =>
+                        replicate.ChromatogramSet.MSDataFileInfos.Select(
+                            chromFileInfo => new ResultFile(replicate, chromFileInfo.FileId, 0)))
+                .ToDictionary(resultFile => new ResultFileKey(resultFile.Replicate.ReplicateIndex,
+                    resultFile.ChromFileInfoId, resultFile.OptimizationStep));
+        }
     }
 }

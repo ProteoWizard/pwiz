@@ -40,23 +40,16 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         public MultiTransitionResultList(SkylineDataSchema dataSchema, IEnumerable<Entities.Transition> transitions)
             : base(dataSchema, transitions)
         {
-            OnDocumentChanged();
         }
 
-        protected override IList<ResultFileKey> ListKeys()
+        protected override IEnumerable<ResultFileKey> ListKeys()
         {
-            return DocNodes.SelectMany(transition => transition.Results.Values.Select(GetResultFileKey)).Distinct().ToArray();
+            return DocNodes.SelectMany(transition => transition.Results.Values.Select(GetResultFileKey)).Distinct();
         }
 
         protected override MultiTransitionResult ConstructItem(ResultFileKey key)
         {
             return new MultiTransitionResult(DataSchema, DocNodes, key);
-        }
-
-        public override IList<MultiTransitionResult> DeepClone()
-        {
-            var dataSchema = DataSchema.Clone();
-            return new MultiTransitionResultList(dataSchema, DocNodes.Select(transition => new Entities.Transition(dataSchema, transition.IdentityPath)));
         }
     }
 
@@ -65,20 +58,14 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         public MultiPrecursorResultList(SkylineDataSchema dataSchema, IEnumerable<Precursor> precursors)
             : base(dataSchema, precursors)
         {
-            OnDocumentChanged();
         }
-        protected override IList<ResultFileKey> ListKeys()
+        protected override IEnumerable<ResultFileKey> ListKeys()
         {
-            return DocNodes.SelectMany(precursor => precursor.Results.Values.Select(GetResultFileKey)).Distinct().ToArray();
+            return DocNodes.SelectMany(precursor => precursor.Results.Values.Select(GetResultFileKey)).Distinct();
         }
         protected override MultiPrecursorResult ConstructItem(ResultFileKey key)
         {
             return new MultiPrecursorResult(DataSchema, DocNodes, key);
-        }
-        public override IList<MultiPrecursorResult> DeepClone()
-        {
-            var dataSchema = DataSchema.Clone();
-            return new MultiPrecursorResultList(dataSchema, DocNodes.Select(precursor=>new Precursor(dataSchema, precursor.IdentityPath)));
         }
     }
 }

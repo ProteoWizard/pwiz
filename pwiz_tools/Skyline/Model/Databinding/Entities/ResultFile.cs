@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return 0;
         }
 
-        public Results<TChromInfo> ChangeChromInfo<TChromInfo>(Results<TChromInfo> chromInfos, TChromInfo value)
+        public Results<TChromInfo> ChangeChromInfo<TChromInfo>(Results<TChromInfo> chromInfos, Func<TChromInfo, TChromInfo> changeFunc)
             where TChromInfo : ChromInfo
         {
             var chromInfoList = chromInfos[Replicate.ReplicateIndex];
@@ -119,7 +119,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 if (ReferenceEquals(chromInfoList[i].FileId, ChromFileInfoId) && GetOptStep(chromInfoList[i]) == OptimizationStep)
                 {
                     return (Results<TChromInfo>) chromInfos.ChangeAt(Replicate.ReplicateIndex, 
-                        chromInfoList.ChangeAt(i, value));
+                        chromInfoList.ChangeAt(i, changeFunc(chromInfoList[i])));
                 }
             }
             throw new InvalidOperationException();

@@ -47,8 +47,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void Requery()
         {
-            bindingSource1.RowSource =
-                Workspace.MsDataFiles.Select(msDataFile => new DataFileRow(this, msDataFile));
+            bindingSource1.RowSource = new StaticRowSource(Workspace.MsDataFiles.Select(msDataFile => new DataFileRow(this, msDataFile)));
         }
 
         protected override void OnHandleCreated(EventArgs e)

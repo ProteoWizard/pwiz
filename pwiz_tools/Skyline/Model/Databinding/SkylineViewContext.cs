@@ -17,13 +17,13 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Databinding
             ApplicationIcon = Resources.Skyline;
         }
 
-        public SkylineViewContext(ColumnDescriptor parentColumn, IEnumerable rowSource)
+        public SkylineViewContext(ColumnDescriptor parentColumn, IRowSource rowSource)
             : base(
                 parentColumn.DataSchema,
                 new[] {new RowSourceInfo(rowSource, GetDefaultViewInfo(parentColumn))})
@@ -207,11 +207,11 @@ namespace pwiz.Skyline.Model.Databinding
             return new AlertDlg(message, messageBoxButtons).ShowAndDispose(FormUtil.FindTopLevelOwner(owner));
         }
 
-        public override bool RunLongJob(Control owner, Action<IProgressMonitor> job)
+        public override bool RunLongJob(Control owner, Action<CancellationToken, IProgressMonitor> job)
         {
             using (var longWaitDlg = new LongWaitDlg())
             {
-                var status = longWaitDlg.PerformWork(FormUtil.FindTopLevelOwner(owner), 1000, job);
+                var status = longWaitDlg.PerformWork(FormUtil.FindTopLevelOwner(owner), 1000, progressMonitor=>job(longWaitDlg.CancellationToken, progressMonitor));
                 return status.IsComplete;
             }
         }
@@ -273,18 +273,18 @@ namespace pwiz.Skyline.Model.Databinding
                             Text = Resources.ExportReportDlg_ExportReport_Generating_Report
                         })
                     {
-                        var action = new Action<IProgressMonitor>(broker =>
+                        var action = new Action<IProgressMonitor>(progressMonitor =>
                         {
                             IProgressStatus status = new ProgressStatus(Resources.ExportReportDlg_ExportReport_Building_report);
-                            broker.UpdateProgress(status);
+                            progressMonitor.UpdateProgress(status);
                             using (var writer = new StreamWriter(stream))
                             {
-                                success = Export(broker, ref status, viewInfo, writer, dsvWriter);
+                                success = Export(longWait.CancellationToken, progressMonitor, ref status, viewInfo, writer, dsvWriter);
                                 writer.Close();
                             }
                             if (success)
                             {
-                                broker.UpdateProgress(status.Complete());
+                                progressMonitor.UpdateProgress(status.Complete());
                             }
                         });
                         longWait.PerformWork(owner, 1500, action);
@@ -301,20 +301,16 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
-        public bool Export(IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, TextWriter writer, DsvWriter dsvWriter)
+        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, TextWriter writer, DsvWriter dsvWriter)
         {
             progressMonitor = progressMonitor ?? new SilentProgressMonitor();
-            using (var bindingListSource = new BindingListSource())
+            using (var bindingListSource = new BindingListSource(cancellationToken))
             {
                 bindingListSource.SetViewContext(this, viewInfo);
-                if (progressMonitor.IsCanceled)
-                {
-                    return false;
-                }
                 progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
                     .ChangeMessage(Resources.ExportReportDlg_ExportReport_Writing_report));
 
-                WriteDataWithStatus(progressMonitor, ref status, writer, bindingListSource, dsvWriter);
+                WriteDataWithStatus( progressMonitor, ref status, writer, bindingListSource, dsvWriter);
                 if (progressMonitor.IsCanceled)
                     return false;
 
@@ -630,24 +626,24 @@ namespace pwiz.Skyline.Model.Databinding
 
         public static IEnumerable<RowSourceInfo> GetDocumentGridRowSources(SkylineDataSchema dataSchema)
         {
-            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins,
+            yield return MakeRowSource<Protein>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins,
                 () => new Proteins(dataSchema));
-            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
+            yield return MakeRowSource<Entities.Peptide>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
                 () => new Peptides(dataSchema, new[] {IdentityPath.ROOT}));
-            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, 
+            yield return MakeRowSource<Precursor>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, 
                 () => new Precursors(dataSchema, new[] { IdentityPath.ROOT }));
-            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Transitions, 
+            yield return MakeRowSource<Entities.Transition>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Transitions, 
                 () => new Transitions(dataSchema, new[] { IdentityPath.ROOT }));
-            yield return MakeRowSource(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates, 
+            yield return MakeRowSource<Replicate>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates, 
                 () => new ReplicateList(dataSchema));
-            yield return new RowSourceInfo(typeof(SkylineDocument), new SkylineDocument[0], new ViewInfo[0]);
+            yield return new RowSourceInfo(typeof(SkylineDocument), new StaticRowSource(new SkylineDocument[0]), new ViewInfo[0]);
         }
 
-        private static RowSourceInfo MakeRowSource<T>(SkylineDataSchema dataSchema, string name, Func<IEnumerable<T>> rowProvider)
+        private static RowSourceInfo MakeRowSource<T>(SkylineDataSchema dataSchema, string name, Func<IRowSource> rowProvider) where T : SkylineObject
         {
             var parentColumn = ColumnDescriptor.RootColumn(dataSchema, typeof(T));
             var viewInfo = new ViewInfo(parentColumn, GetDefaultViewInfo(parentColumn).GetViewSpec().SetName(name));
-            return RowSourceInfo.DeferredRowSourceInfo(rowProvider, viewInfo);
+            return new RowSourceInfo(rowProvider(), viewInfo);
         }
 
         protected override TColumn InitializeColumn<TColumn>(TColumn column, PropertyDescriptor propertyDescriptor)
@@ -661,6 +657,10 @@ namespace pwiz.Skyline.Model.Databinding
                 // When outputting floats and doubles as "Invariant" (e.g. for external tools) 
                 // always use the Round Trip number format
                 var type = propertyDescriptor.PropertyType;
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(FormattableList<>))
+                {
+                    type = type.GenericTypeArguments[0];
+                }
                 if (type == typeof (float) ||
                     type == typeof (float?) ||
                     type == typeof (double) ||

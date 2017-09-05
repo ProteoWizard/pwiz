@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.DataBinding;
@@ -102,10 +103,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public void ChangeChromInfo(EditDescription editDescription, PeptideChromInfo newChromInfo)
+        public void ChangeChromInfo(EditDescription editDescription, Func<PeptideChromInfo, PeptideChromInfo> newChromInfo)
         {
-            var newDocNode = Peptide.DocNode.ChangeResults(GetResultFile().ChangeChromInfo(Peptide.DocNode.Results, newChromInfo));
-            Peptide.ChangeDocNode(editDescription, newDocNode);
+            Peptide.ChangeDocNode(editDescription, docNode=>docNode.ChangeResults(GetResultFile().ChangeChromInfo(docNode.Results, newChromInfo)));
         }
 
         public bool ExcludeFromCalibration
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 ChangeChromInfo(EditDescription.SetColumn("ExcludeFromCalibration", value), // Not L10N
-                    ChromInfo.ChangeExcludeFromCalibration(value));
+                    chromInfo => chromInfo.ChangeExcludeFromCalibration(value));
             }
         }
 

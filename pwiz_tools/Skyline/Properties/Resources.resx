@@ -9873,4 +9873,7 @@ Here are the {0} pairs with multiple entries:
   <data name="MProphetPeakScoringModel_CalculateWeights_Insufficient_decoy_peaks___0__with__1__targets__to_continue_training_" xml:space="preserve">
     <value>Insufficient decoy peaks ({0} with {1} targets) to continue training.</value>
   </data>
+  <data name="Data_ToString__0__points" xml:space="preserve">
+    <value>{0} points</value>
+  </data>
 </root>

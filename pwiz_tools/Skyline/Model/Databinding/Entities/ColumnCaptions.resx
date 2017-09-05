@@ -162,6 +162,30 @@
   <data name="CalibrationCurve">
     <value>Calibration Curve</value>
   </data>
+  <data name="Chromatogram">
+    <value>Chromatogram</value>
+  </data>
+  <data name="ChromatogramDriftTime">
+    <value>Chromatogram Drift Time</value>
+  </data>
+  <data name="ChromatogramDriftTimeExtractionWidth">
+    <value>Chromatogram Drift Time Extraction Width</value>
+  </data>
+  <data name="ChromatogramExtractionWidth">
+    <value>Chromatogram Extraction Width</value>
+  </data>
+  <data name="ChromatogramExtractionWidth">
+    <value>Chromatogram Extraction Width</value>
+  </data>
+  <data name="ChromatogramPrecursorMz">
+    <value>Chromatogram Precursor M/Z</value>
+  </data>
+  <data name="ChromatogramProductMz">
+    <value>Chromatogram Product M/Z</value>
+  </data>
+  <data name="ChromatogramSource">
+    <value>Chromatogram Source</value>
+  </data>
   <data name="CleavageAa">
     <value>Cleavage Aa</value>
   </data>
@@ -279,11 +303,29 @@
   <data name="Identified">
     <value>Identified</value>
   </data>
+  <data name="Intensities">
+    <value>Intensities</value>
+  </data>
   <data name="Intercept">
     <value>Intercept</value>
   </data>
   <data name="InternalStandardConcentration">
     <value>Internal Standard Concentration</value>
+  </data>
+  <data name="InterpolatedData">
+    <value>Interpolated Data</value>
+  </data>
+  <data name="InterpolatedIntensities">
+    <value>Interpolated Intensities</value>
+  </data>
+  <data name="InterpolatedMassErrors">
+    <value>Interpolated Mass Errors</value>
+  </data>
+  <data name="InterpolatedNumberOfPoints">
+    <value>Interpolated Number of Points</value>
+  </data>
+  <data name="InterpolatedTimes">
+    <value>Interpolated Times</value>
   </data>
   <data name="IsDecoy">
     <value>Is Decoy</value>
@@ -344,6 +386,9 @@
   </data>
   <data name="MassErrorPPM">
     <value>Mass Error PPM</value>
+  </data>
+  <data name="MassErrors">
+    <value>Mass Errors</value>
   </data>
   <data name="Max">
     <value>Max</value>
@@ -437,6 +482,9 @@
   </data>
   <data name="NormalizedArea">
     <value>Normalized Area</value>
+  </data>
+  <data name="NumberOfPoints">
+    <value>Number of Points</value>
   </data>
   <data name="OptCollisionEnergy">
     <value>Opt Collision Energy</value>
@@ -612,6 +660,21 @@
   <data name="RatioToStandard">
     <value>Ratio To Standard</value>
   </data>
+  <data name="RawData">
+    <value>Raw Data</value>
+  </data>
+  <data name="RawIntensities">
+    <value>Raw Intensities</value>
+  </data>
+  <data name="RawMassErrors">
+    <value>Raw Mass Errors</value>
+  </data>
+  <data name="RawNumberOfPoints">
+    <value>Raw Number of Points</value>
+  </data>
+  <data name="RawTimes">
+    <value>Raw Times</value>
+  </data>
   <data name="Replicate">
     <value>Replicate</value>
   </data>
@@ -704,6 +767,9 @@
   </data>
   <data name="TotalArea">
     <value>Total Area</value>
+  </data>
+  <data name="Times">
+    <value>Times</value>
   </data>
   <data name="TotalAreaFragment">
     <value>Total Area Fragment</value>

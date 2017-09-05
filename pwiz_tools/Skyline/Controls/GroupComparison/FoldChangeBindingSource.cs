@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     SkylineDataSchema.GetLocalizedSchemaLocalizer());
                 var viewInfo = new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), GetDefaultViewSpec(new FoldChangeRow[0]))
                     .ChangeViewGroup(ViewGroup.BUILT_IN);
-                var rowSourceInfo = new RowSourceInfo(typeof(FoldChangeRow), new FoldChangeRow[0], new[] { viewInfo });
+                var rowSourceInfo = new RowSourceInfo(typeof(FoldChangeRow), new StaticRowSource(new FoldChangeRow[0]), new[] { viewInfo });
                 ViewContext = new GroupComparisonViewContext(_skylineDataSchema, new[]{rowSourceInfo});
                 _container = new Container();
                 _bindingListSource = new BindingListSource(_container);
@@ -127,16 +127,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 var viewInfo = new ViewInfo(_skylineDataSchema, typeof (FoldChangeRow), defaultViewSpec).ChangeViewGroup(ViewGroup.BUILT_IN);
                 ViewContext.SetRowSources(new[]
                 {
-                    new RowSourceInfo(
-                        rows, viewInfo)
+                    new RowSourceInfo(new StaticRowSource(rows), viewInfo)
                 });
                 if (null != _bindingListSource.ViewSpec && _bindingListSource.ViewSpec.Name == defaultViewSpec.Name &&
                     !_bindingListSource.ViewSpec.Equals(defaultViewSpec))
                 {
-                    _bindingListSource.SetView(viewInfo, rows);
+                    _bindingListSource.SetView(viewInfo, new StaticRowSource(rows));
                 }
             }
-            _bindingListSource.RowSource = rows;
+            _bindingListSource.RowSource = new StaticRowSource(rows);
         }
 
         private ViewSpec GetDefaultViewSpec(IList<FoldChangeRow> foldChangeRows)

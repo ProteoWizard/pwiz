@@ -57,6 +57,7 @@ namespace pwiz.Common.DataBinding.Controls
                 if (BindingListSource != null)
                 {
                     BindingListSource.ListChanged -= BindingSourceOnListChanged;
+                    BindingListSource.AllRowsChanged -= BindingSourceOnListChanged;
                     BindingListSource.CurrentChanged -= BindingSourceOnCurrentChanged;
                 }
                 _bindingListSource = value;
@@ -64,6 +65,7 @@ namespace pwiz.Common.DataBinding.Controls
                 if (BindingListSource != null)
                 {
                     BindingListSource.ListChanged += BindingSourceOnListChanged;
+                    BindingListSource.AllRowsChanged += BindingSourceOnListChanged;
                     BindingListSource.CurrentChanged += BindingSourceOnCurrentChanged;
                 }
             }

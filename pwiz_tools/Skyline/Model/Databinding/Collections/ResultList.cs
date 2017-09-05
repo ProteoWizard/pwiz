@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         {
         }
 
-        public override ResultFileKey GetKey(TResult value)
+        public ResultFileKey GetKey(TResult value)
         {
             return GetResultFileKey(value);
         }
@@ -50,19 +50,12 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         public PeptideResultList(Entities.Peptide peptide) : base(peptide.DataSchema)
         {
             Peptide = peptide;
-            OnDocumentChanged();
         }
 
         public Entities.Peptide Peptide { get; private set; }
-        public override IList<PeptideResult> DeepClone()
+        protected override IEnumerable<ResultFileKey> ListKeys()
         {
-            var dataSchema = Peptide.DataSchema.Clone();
-            return new PeptideResultList(new Entities.Peptide(dataSchema, Peptide.IdentityPath));
-        }
-
-        protected override IList<ResultFileKey> ListKeys()
-        {
-            return Peptide.Results.Values.Select(GetKey).ToArray();
+            return Peptide.Results.Values.Select(GetKey);
         }
 
         protected override PeptideResult ConstructItem(ResultFileKey key)
@@ -76,23 +69,17 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         public PrecursorResultList(Precursor precursor) : base(precursor.DataSchema)
         {
             Precursor = precursor;
-            OnDocumentChanged();
         }
 
         public Precursor Precursor { get; private set; }
-        protected override IList<ResultFileKey> ListKeys()
+        protected override IEnumerable<ResultFileKey> ListKeys()
         {
-            return Precursor.Results.Values.Select(GetKey).ToArray();
+            return Precursor.Results.Values.Select(GetKey);
         }
 
         protected override PrecursorResult ConstructItem(ResultFileKey key)
         {
             return new PrecursorResult(Precursor, GetResultFile(key));
-        }
-
-        public override IList<PrecursorResult> DeepClone()
-        {
-            return new PrecursorResultList(new Precursor(DataSchema.Clone(), Precursor.IdentityPath));
         }
     }
 
@@ -101,23 +88,16 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         public TransitionResultList(Entities.Transition transition) : base(transition.DataSchema)
         {
             Transition = transition;
-            OnDocumentChanged();
         }
         public Entities.Transition Transition { get; private set; }
-        protected override IList<ResultFileKey> ListKeys()
+        protected override IEnumerable<ResultFileKey> ListKeys()
         {
-            return Transition.Results.Values.Select(GetKey).ToArray();
+            return Transition.Results.Values.Select(GetKey);
         }
 
         protected override TransitionResult ConstructItem(ResultFileKey key)
         {
             return new TransitionResult(Transition, GetResultFile(key));
         }
-
-        public override IList<TransitionResult> DeepClone()
-        {
-            return new TransitionResultList(new Entities.Transition(DataSchema.Clone(), Transition.IdentityPath));
-        }
     }
-
 }

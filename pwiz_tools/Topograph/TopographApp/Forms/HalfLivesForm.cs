@@ -99,7 +99,7 @@ namespace pwiz.Topograph.ui.Forms
                     GetDefaultViewSpec(calculator.ByProtein));
                 bindingSource1.SetViewContext(GetViewContext(rows), viewInfo);
             }
-            bindingSource1.RowSource = rows;
+            bindingSource1.RowSource = new StaticRowSource(rows);
         }
 
         /// <summary>

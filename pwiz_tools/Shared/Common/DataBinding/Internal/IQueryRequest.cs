@@ -7,6 +7,7 @@ namespace pwiz.Common.DataBinding.Internal
     internal interface IQueryRequest
     {
         TaskScheduler EventTaskScheduler { get; }
+        QueryLock QueryLock { get; }
         CancellationToken CancellationToken { get; }
         QueryParameters QueryParameters { get; }
         QueryResults InitialQueryResults { get; }

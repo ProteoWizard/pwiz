@@ -7313,6 +7313,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} points.
+        /// </summary>
+        public static string Data_ToString__0__points {
+            get {
+                return ResourceManager.GetString("Data_ToString__0__points", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The type {0} must have a column of type {1}.
         /// </summary>
         public static string Database_GetJoinColumn_The_type__0__must_have_a_column_of_type__1_ {

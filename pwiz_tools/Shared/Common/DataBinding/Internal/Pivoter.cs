@@ -90,8 +90,9 @@ namespace pwiz.Common.DataBinding.Internal
         /// </summary>
         public IList<ColumnDescriptor> PivotColumns { get; private set; }
 
-        public IEnumerable<RowItem> Expand(TickCounter tickCounter, RowItem rowItem, int sublistColumnIndex)
+        public IEnumerable<RowItem> Expand(CancellationToken cancellationToken, RowItem rowItem, int sublistColumnIndex)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (sublistColumnIndex >= SublistColumns.Count)
             {
                 return new[] {rowItem};
@@ -107,7 +108,7 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 return new[] {rowItem};
             }
-            tickCounter.Tick();
+            cancellationToken.ThrowIfCancellationRequested();
             IList<object> keys = null;
             if (sublistColumn.CollectionInfo.IsDictionary)
             {
@@ -116,18 +117,20 @@ namespace pwiz.Common.DataBinding.Internal
             var expandedItems = new List<RowItem>();
             for (int index = 0; index < items.Length; index++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 object key = keys == null ? index : keys[index];
                 var child = rowItem.SetRowKey(rowItem.RowKey.AppendValue(sublistColumn.PropertyPath, key));
-                expandedItems.AddRange(Expand(tickCounter, child, sublistColumnIndex + 1));
+                expandedItems.AddRange(Expand(cancellationToken, child, sublistColumnIndex + 1));
             }
             return expandedItems;
         }
 
-        public RowItem Pivot(TickCounter tickCounter, RowItem rowItem)
+        public RowItem Pivot(CancellationToken cancellationToken, RowItem rowItem)
         {
-            tickCounter.Tick();
+            cancellationToken.ThrowIfCancellationRequested();
             foreach (var pivotColumn in PivotColumns)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var parent = pivotColumn.Parent.CollectionAncestor();
                 IList<PivotKey> pivotKeys;
                 if (null == parent)
@@ -140,6 +143,7 @@ namespace pwiz.Common.DataBinding.Internal
                 }
                 foreach (var pivotKey in pivotKeys)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     var parentValue = pivotColumn.Parent.GetPropertyValue(rowItem, pivotKey);
                     if (null != parentValue)
                     {
@@ -159,7 +163,7 @@ namespace pwiz.Common.DataBinding.Internal
             return rowItem;
         }
 
-        public IEnumerable<RowItem> Filter(IEnumerable<RowItem> rowItems)
+        public IEnumerable<RowItem> Filter(CancellationToken cancellationToken, IEnumerable<RowItem> rowItems)
         {
             if (ViewInfo.Filters.Count == 0)
             {
@@ -168,6 +172,7 @@ namespace pwiz.Common.DataBinding.Internal
             var filteredRows = new List<RowItem>();
             foreach (var rowItem in rowItems)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var filteredRowItem = rowItem;
                 foreach (var filter in ViewInfo.Filters)
                 {
@@ -185,21 +190,21 @@ namespace pwiz.Common.DataBinding.Internal
             return filteredRows;
         }
 
-        public PivotedRows ExpandAndPivot(TickCounter tickCounter, IEnumerable<RowItem> rowItems)
+        public PivotedRows ExpandAndPivot(CancellationToken cancellationToken, IEnumerable<RowItem> rowItems)
         {
-            var expandedItems = rowItems.SelectMany(rowItem => Expand(tickCounter, rowItem, 0)).ToArray();
-            var pivotedItems = expandedItems.Select(item => Pivot(tickCounter, item));
-            var filteredItems = Filter(pivotedItems);
+            var expandedItems = rowItems.SelectMany(rowItem => Expand(cancellationToken, rowItem, 0)).ToArray();
+            var pivotedItems = expandedItems.Select(item => Pivot(cancellationToken, item));
+            var filteredItems = Filter(cancellationToken, pivotedItems);
             var rows = ImmutableList.ValueOf(filteredItems);
             var result = new PivotedRows(rows, new PropertyDescriptorCollection(GetItemProperties(rows).ToArray()));
             if (ViewInfo.HasTotals)
             {
-                result = GroupAndTotal(tickCounter, result);
+                result = GroupAndTotal(cancellationToken, result);
             }
             return result;
         }
 
-        public PivotedRows GroupAndTotal(TickCounter tickCounter, PivotedRows pivotedRows)
+        public PivotedRows GroupAndTotal(CancellationToken cancellationToken, PivotedRows pivotedRows)
         {
             IDictionary<IList<Tuple<PropertyPath, PivotKey, object>>, List<GroupedRow>> allReportRows
                 = new Dictionary<IList<Tuple<PropertyPath, PivotKey, object>>, List<GroupedRow>>();
@@ -215,10 +220,12 @@ namespace pwiz.Common.DataBinding.Internal
             var allPivotKeys = new Dictionary<PivotKey, PivotKey>();
             foreach (var rowItem in pivotedRows.RowItems)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 allInnerPivotKeys.UnionWith(rowItem.PivotKeys);
                 IList<Tuple<PropertyPath, PivotKey, object>> groupKey = new List<Tuple<PropertyPath, PivotKey, object>>();
                 foreach (var column in groupColumns)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     var pivotColumn = GetPivotColumn(column);
                     if (null == pivotColumn)
                     {
@@ -229,6 +236,7 @@ namespace pwiz.Common.DataBinding.Internal
                     {
                         foreach (var pivotKey in GetPivotKeys(pivotColumn.PropertyPath, new []{rowItem}))
                         {
+                            cancellationToken.ThrowIfCancellationRequested();
                             if (!pivotKey.Contains(pivotColumn.PropertyPath))
                             {
                                 continue;
@@ -241,6 +249,7 @@ namespace pwiz.Common.DataBinding.Internal
                 var pivotOnKeyValues = new List<KeyValuePair<PropertyPath, object>>();
                 foreach (var column in pivotOnColumns)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     var pivotColumn = GetPivotColumn(column);
                     if (null == pivotColumn)
                     {
@@ -276,6 +285,7 @@ namespace pwiz.Common.DataBinding.Internal
             var propertyNames = new HashSet<string>();
             foreach (var displayColumn in ViewInfo.DisplayColumns)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 if (displayColumn.ColumnSpec.Hidden)
                 {
                     continue;
@@ -293,6 +303,7 @@ namespace pwiz.Common.DataBinding.Internal
                     {
                         foreach (var innerPivotKey in innerPivotKeys)
                         {
+                            cancellationToken.ThrowIfCancellationRequested();
                             string propertyName = MakeUniqueName(propertyNames, displayColumn.PropertyPath);
                             reportItemProperties.Add(new GroupedPropertyDescriptor(propertyName, displayColumn, innerPivotKey));
                         }
@@ -303,6 +314,7 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 foreach (var displayColumn in ViewInfo.DisplayColumns)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     if (displayColumn.ColumnSpec.Hidden)
                     {
                         continue;

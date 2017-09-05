@@ -36,11 +36,6 @@ namespace pwiz.Skyline.Model.Databinding.Collections
             return new Entities.Peptide(DataSchema, identityPath);
         }
 
-        public override IList<Entities.Peptide> DeepClone()
-        {
-            return new Peptides(DataSchema.Clone(), AncestorIdentityPaths);
-        }
-
         protected override int NodeDepth 
         {
             get { return 2; }

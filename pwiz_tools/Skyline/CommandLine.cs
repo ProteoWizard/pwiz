@@ -1954,7 +1954,7 @@ namespace pwiz.Skyline
 
                     using (var writer = new StreamWriter(saver.SafeName))
                     {
-                        viewContext.Export(broker, ref status, viewInfo, writer,
+                        viewContext.Export(CancellationToken.None, broker, ref status, viewInfo, writer,
                             viewContext.GetDsvWriter(reportColSeparator));
                     }
 

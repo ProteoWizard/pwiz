@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using pwiz.Common.DataBinding.Attributes;
 
 namespace pwiz.Common.DataBinding
 {
@@ -151,6 +152,11 @@ namespace pwiz.Common.DataBinding
         public virtual IEnumerable<Attribute> GetAttributes()
         {
             return new Attribute[0];
+        }
+
+        public virtual bool IsExpensive
+        {
+            get { return Parent == null ? false : Parent.IsExpensive; }
         }
 
         #region Equality Members
@@ -305,6 +311,11 @@ namespace pwiz.Common.DataBinding
             public override PropertyDescriptor ReflectedPropertyDescriptor
             {
                 get { return _propertyDescriptor; }
+            }
+
+            public override bool IsExpensive
+            {
+                get { return base.IsExpensive || GetAttributes().OfType<ExpensiveAttribute>().Any(); }
             }
         }
 

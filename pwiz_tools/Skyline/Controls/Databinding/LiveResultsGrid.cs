@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Controls.Databinding
             InitializeComponent();
             SkylineWindow = skylineWindow;
             _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            DataGridViewPasteHandler.Attach(skylineWindow, DataGridView);
+            BindingListSource.QueryLock = _dataSchema.QueryLock;
             BindingListSource.ListChanged += bindingListSource_ListChanged;
             BindingListSource.CurrentChanged += bindingListSource_CurrentChanged;
             DataGridView.DataBindingComplete += boundDataGridView_DataBindingComplete;
@@ -197,7 +197,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private void UpdateViewContext()
         {
             RememberActiveView();
-            IList rowSource = null;
+            IRowSource rowSource = null;
             Type rowType = null;
             string builtInViewName = null;
             if (_selectedIdentityPaths.Count == 1)

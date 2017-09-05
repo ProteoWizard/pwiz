@@ -79,7 +79,7 @@ namespace pwiz.SkylineTestFunctional
                 var allPeptides = new Peptides(new SkylineDataSchema(SkylineWindow, DataSchemaLocalizer.INVARIANT), new []{IdentityPath.ROOT});
                 var ratioIndex = modifications.InternalStandardTypes.IndexOf(isotopeLabel);
                 Assert.IsTrue(ratioIndex >= 0);
-                foreach (var peptide in allPeptides)
+                foreach (var peptide in allPeptides.GetItems().OfType<Peptide>())
                 {
                     var peptidePath = peptide.IdentityPath;
                     bool hasMatchingPrecursorResult =

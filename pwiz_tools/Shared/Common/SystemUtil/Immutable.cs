@@ -83,7 +83,15 @@ namespace pwiz.Common.SystemUtil
         protected static TIm ImClone<TIm>(TIm immutable)
             where TIm : Immutable
         {
-            return (TIm)immutable.MemberwiseClone();
+            return (TIm)immutable.ImmutableClone();
+        }
+
+        /// <summary>
+        /// Returns a MemberwiseClone, but could be overwritten if special handling is needed.
+        /// </summary>
+        protected virtual object ImmutableClone()
+        {
+            return MemberwiseClone();
         }
 
         /// <summary>

@@ -26,7 +26,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Databinding
@@ -40,6 +39,7 @@ namespace pwiz.Skyline.Controls.Databinding
         public DocumentGridForm(SkylineViewContext viewContext)
         {
             InitializeComponent();
+            BindingListSource.QueryLock = viewContext.SkylineDataSchema.QueryLock;
             _originalFormTitle = Text;
             BindingListSource.SetViewContext(viewContext);
             BindingListSource.ListChanged += BindingListSourceOnListChanged;
@@ -83,11 +83,6 @@ namespace pwiz.Skyline.Controls.Databinding
         public DocumentGridForm(IDocumentContainer documentContainer) 
             : this(new DocumentGridViewContext(new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer())))
         {
-            var skylineWindow = documentContainer as SkylineWindow;
-            if (null != skylineWindow)
-            {
-                DataGridViewPasteHandler.Attach(skylineWindow, DataGridView);
-            }
         }
 
         protected override void OnHandleCreated(EventArgs e)

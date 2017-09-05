@@ -109,7 +109,7 @@ namespace pwiz.Topograph.ui.Forms
         private void UpdateRows(HalfLifeCalculator halfLifeCalculator)
         {
             var resultRows = halfLifeCalculator.RowDatas.Select(rd => new PerReplicateResult(halfLifeCalculator.ComputeAvgTurnover(rd))).ToArray();
-            bindingSourceResults.RowSource = resultRows;
+            bindingSourceResults.RowSource = new StaticRowSource(resultRows);
         }
 
         public int? MaxResults

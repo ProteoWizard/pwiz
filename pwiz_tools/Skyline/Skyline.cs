@@ -108,6 +108,7 @@ namespace pwiz.Skyline
         private readonly Timer _timerProgress;
         private readonly Timer _timerGraphs;
         private readonly List<BackgroundLoader> _backgroundLoaders;
+        private readonly object _documentChangeLock = new object();
 
         /// <summary>
         /// Constructor for the main window of the Skyline program.
@@ -532,10 +533,7 @@ namespace pwiz.Skyline
             Debug.Assert(docNew != null);
             if (docNew.DeferSettingsChanges)
             {
-                if (!_undoManager.Recording)
-                {
-                    throw new InvalidOperationException();
-                }
+                throw new InvalidOperationException();
             }
             
             // For debugging tests with unexpected document change failures
@@ -543,7 +541,12 @@ namespace pwiz.Skyline
             if (logChange != null)
                 logChange(docNew, docOriginal);
 
-            var docResult = Interlocked.CompareExchange(ref _document, docNew, docOriginal);
+            SrmDocument docResult;
+            lock (_documentChangeLock)
+            {
+                docResult = Interlocked.CompareExchange(ref _document, docNew, docOriginal);
+            }
+
             if (!ReferenceEquals(docResult, docOriginal))
                 return false;
 
@@ -553,6 +556,11 @@ namespace pwiz.Skyline
             RunUIActionAsync(UpdateDocumentUI);
 
             return true;
+        }
+
+        public object GetDocumentChangeLock()
+        {
+            return _documentChangeLock;
         }
 
         public Action<SrmDocument, SrmDocument> LogChange { get; set; }

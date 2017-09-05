@@ -22,15 +22,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using pwiz.Common.DataBinding.RowSources;
+using System.Threading;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Model.Databinding.Collections
 {
-    public abstract class SkylineObjectList<TKey, TItem> : BindingListSupport<TItem>, ICloneableList<TKey, TItem> where TItem : SkylineObject
+    public abstract class SkylineObjectList<TKey, TItem> : AbstractRowSource where TItem : SkylineObject
     {
         private IDocumentChangeListener _documentChangeListener;
-        private bool _listInitialized;
         protected IDictionary<TKey, int> _keyIndexes 
             = new Dictionary<TKey, int>();
 
@@ -39,23 +39,12 @@ namespace pwiz.Skyline.Model.Databinding.Collections
             DataSchema = dataSchema;
         }
 
-        protected override IList<TItem> Items
-        {
-            get
-            {
-                if (!_listInitialized)
-                {
-                    _listInitialized = true;
-                    OnDocumentChanged();
-                }
-                return base.Items;
-            }
-        }
-
         public SrmDocument SrmDocument {get { return DataSchema.Document; }}
 
         [Browsable(false)]
         public SkylineDataSchema DataSchema { get; private set; }
+
+        public CancellationToken CancellationToken { get { return DataSchema.QueryLock.CancellationToken; } }
 
         protected override void BeforeFirstListenerAdded()
         {
@@ -75,64 +64,17 @@ namespace pwiz.Skyline.Model.Databinding.Collections
 
         private void DocumentOnChanged(object sender, DocumentChangedEventArgs documentChangedEventArgs)
         {
-            OnDocumentChanged();
+            FireListChanged();
         }
 
-        protected void OnDocumentChanged()
+        public override IEnumerable GetItems()
         {
-            var newKeys = ListKeys();
-            var newList = new List<TItem>();
-            var newKeyIndexes = new Dictionary<TKey, int>();
-            foreach (var key in newKeys)
-            {
-                int oldIndex;
-                TItem node;
-                if (!_keyIndexes.TryGetValue(key, out oldIndex))
-                {
-                    var idPath = key;
-                    node = ConstructItem(idPath);
-                }
-                else
-                {
-                    node = this[oldIndex];
-                }
-                newKeyIndexes.Add(key, newKeyIndexes.Count);
-                newList.Add(node);
-            }
-            if (!newList.SequenceEqual(this))
-            {
-                Clear();
-                foreach (var item in newList)
-                {
-                    Add(item);
-                }
-                _keyIndexes = newKeyIndexes;
-            }
-            OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
+            return ListKeys().Select(ConstructItem);
         }
 
-        protected abstract IList<TKey> ListKeys();        
-        protected abstract TItem ConstructItem(TKey key);
+        protected abstract IEnumerable<TKey> ListKeys();
 
-        public int IndexOfKey(TKey key)
-        {
-            int index;
-            if (ReferenceEquals(null, key))
-            {
-                return -1;
-            }
-            if (_keyIndexes.TryGetValue(key, out index))
-            {
-                return index;
-            }
-            return -1;
-        }
-        public abstract TKey GetKey(TItem value);
-        public abstract IList<TItem> DeepClone();
-        IEnumerable ICloneableList.DeepClone()
-        {
-            return DeepClone();
-        }
+
 
         private class DocumentChangeListener : IDocumentChangeListener
         {
@@ -147,5 +89,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
                 _skylineObjectList.DocumentOnChanged(sender, args);
             }
         }
+
+        protected abstract TItem ConstructItem(TKey key);
     }
 }

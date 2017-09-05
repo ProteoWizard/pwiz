@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.GroupComparison;
@@ -37,22 +38,26 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [AnnotationTarget(AnnotationDef.AnnotationTarget.peptide)]
     public class Peptide : SkylineDocNode<PeptideDocNode>
     {
-        private readonly CachedValue<IDictionary<ResultKey, PeptideResult>> _results;
         private readonly CachedValue<CalibrationCurveFitter> _calibrationCurveFitter;
+        private readonly CachedValue<Precursor[]> _precursors;
+        private readonly CachedValue<IDictionary<ResultKey, PeptideResult>> _results;
         public Peptide(SkylineDataSchema dataSchema, IdentityPath identityPath)
             : base(dataSchema, identityPath)
         {
-            _results = CachedValue.Create(dataSchema, MakeResults);
             _calibrationCurveFitter = CachedValue.Create(dataSchema,
                 () => new CalibrationCurveFitter(GetPeptideQuantifier(), SrmDocument.Settings));
+            _precursors = CachedValue.Create(dataSchema, ()=>DocNode.Children.Select(child=>new Precursor(DataSchema, new IdentityPath(IdentityPath, child.Id))).ToArray());
+            _results = CachedValue.Create(dataSchema, MakeResults);
         }
 
-        private Precursors _precursors;
         [OneToMany(ForeignKey = "Peptide")]
         [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
-        public Precursors Precursors
+        public IList<Precursor> Precursors
         {
-            get { return _precursors = _precursors ?? new Precursors(this); }
+            get
+            {
+                return _precursors.Value;
+            }
         }
 
         [InvariantDisplayName("PeptideResults")]
@@ -60,10 +65,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
         public IDictionary<ResultKey, PeptideResult> Results
         {
-            get
-            {
-                return _results.Value;
-            }
+            get { return _results.Value; }
         }
 
         private IDictionary<ResultKey, PeptideResult> MakeResults()
@@ -252,7 +254,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 ChangeDocNode(EditDescription.SetColumn("ExplicitRetentionTime", value), // Not L10N
-                    DocNode.ChangeExplicitRetentionTime(value));
+                    docNode=>docNode.ChangeExplicitRetentionTime(value));
             }
         }
 
@@ -276,7 +278,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 else
                 {
                     ChangeDocNode(EditDescription.SetColumn("ExplicitRetentionTimeWindow", value), // Not L10N
-                        DocNode.ChangeExplicitRetentionTime(new ExplicitRetentionTimeInfo(DocNode.ExplicitRetentionTime.RetentionTime, value)));
+                        docNode=>docNode.ChangeExplicitRetentionTime(new ExplicitRetentionTimeInfo(docNode.ExplicitRetentionTime.RetentionTime, value)));
                 }
             }
         }
@@ -288,7 +290,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 ChangeDocNode(EditDescription.SetColumn("NormalizationMethod", value), // Not L10N
-                    DocNode.ChangeNormalizationMethod(value));
+                    docNode=>docNode.ChangeNormalizationMethod(value));
             }
         }
 
@@ -298,9 +300,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return DocNode.Note; }
             set
             {
-                var docNode = DocNode;
                 ChangeDocNode(EditDescription.SetColumn("PeptideNote", value), // Not L10N
-                    docNode.ChangeAnnotations(docNode.Annotations.ChangeNote(value)));
+                    docNode=>(PeptideDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNote(value)));
             }
         }
 
@@ -332,7 +333,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 ChangeDocNode(EditDescription.SetColumn("InternalStandardConcentration", value), // Not L10N
-                    DocNode.ChangeInternalStandardConcentration(value));
+                    docNode=>docNode.ChangeInternalStandardConcentration(value));
             }
         }
 
@@ -342,7 +343,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 ChangeDocNode(EditDescription.SetColumn("ConcentrationMultiplier", value), // Not L10N
-                    DocNode.ChangeConcentrationMultiplier(value));
+                    docNode => docNode.ChangeConcentrationMultiplier(value));
             }
         }
 

@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -26,18 +25,14 @@ namespace pwiz.Common.DataBinding.Internal
 {
     internal class QueryRequestor : IDisposable
     {
-        private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly BindingListView _bindingListView;
         private Request _request;
         private QueryParameters _queryParameters;
-        private IRowSourceWrapper _rowSourceWrapper;
         public QueryRequestor(BindingListView bindingListView)
         {
             _bindingListView = bindingListView;
             // ReSharper disable once PossiblyMistakenUseOfParamsMethod
-            _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(bindingListView.CancellationToken);
             _queryParameters = QueryParameters.Empty;
-            _rowSourceWrapper = RowSourceWrapper.Empty;
         }
         public TaskScheduler EventTaskScheduler { get { return _bindingListView.EventTaskScheduler; } }
         public QueryParameters QueryParameters
@@ -53,30 +48,11 @@ namespace pwiz.Common.DataBinding.Internal
                 Requery();
             }
         }
-        public IEnumerable RowSource
+        public IRowSource RowSource
         {
-            get { return (_rowSourceWrapper ?? RowSourceWrapper.Empty).WrappedRowSource; }
-            set
-            {
-                if (ReferenceEquals(value, RowSource))
-                {
-                    return;
-                }
-                _rowSourceWrapper = WrapRowSource(value);
-                Requery();
-            }
+            get { return _bindingListView.RowSource; }
         }
 
-        public void SetRowsAndParameters(IEnumerable rowSource, QueryParameters queryParameters)
-        {
-            if (ReferenceEquals(RowSource, rowSource) && Equals(QueryParameters, queryParameters))
-            {
-                return;
-            }
-            _rowSourceWrapper = WrapRowSource(rowSource);
-            _queryParameters = queryParameters;
-            Requery();
-        }
         public QueryResults QueryResults
         {
             get
@@ -87,10 +63,12 @@ namespace pwiz.Common.DataBinding.Internal
 
         public void Dispose()
         {
-            _cancellationTokenSource.Cancel();
             _queryParameters = null;
-            _rowSourceWrapper = null;
-            _request = null;
+            var request = Interlocked.Exchange(ref _request, null);
+            if (request != null)
+            {
+                request.Dispose();
+            }
         }
         public void Requery()
         {
@@ -103,31 +81,22 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 return;
             }
-            _request = new Request(this);
-            _rowSourceWrapper.StartQuery(_request);
-        }
-
-        private IRowSourceWrapper WrapRowSource(IEnumerable items)
-        {
-            if (null == EventTaskScheduler)
-            {
-                return new RowSourceWrapper(items ?? new object[0]);
-            }
-            return RowSourceWrappers.Wrap(items);
+            _request = new Request(this, _bindingListView.QueryLock);
+            new RowSourceWrapper(RowSource).StartQuery(_request);
         }
 
         class Request : IQueryRequest, IDisposable
         {
             private readonly CancellationTokenSource _cancellationTokenSource;
             private readonly QueryRequestor _queryRequestor;
-            public Request(QueryRequestor queryRequestor)
+            public Request(QueryRequestor queryRequestor, QueryLock queryLock)
             {
                 _queryRequestor = queryRequestor;
                 QueryParameters = _queryRequestor.QueryParameters;
                 // ReSharper disable PossiblyMistakenUseOfParamsMethod
-                _cancellationTokenSource =
-                    CancellationTokenSource.CreateLinkedTokenSource(queryRequestor._cancellationTokenSource.Token);
+                _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(queryLock.CancellationToken);
                 // ReSharper restore PossiblyMistakenUseOfParamsMethod
+                QueryLock = queryLock;
             }
 
             public TaskScheduler EventTaskScheduler { get { return _queryRequestor._bindingListView.EventTaskScheduler; } }
@@ -138,13 +107,15 @@ namespace pwiz.Common.DataBinding.Internal
                 get { return QueryResults.Empty.SetParameters(QueryParameters); }
             }
 
+            public QueryLock QueryLock { get; private set; }
+
             public void SetFinalQueryResults(QueryResults newResults)
             {
                 var action = new Action(() =>
                     {
                         try
                         {
-                            LiveQueryResults = _queryRequestor._rowSourceWrapper.MakeLive(newResults);
+                            LiveQueryResults = newResults;
                             _queryRequestor._bindingListView.UpdateResults();
                         }
                         catch (Exception exception)

@@ -28,12 +28,12 @@ namespace pwiz.Common.DataBinding.Internal
 {
     internal abstract class AbstractRowSourceWrapper : IRowSourceWrapper
     {
-        private HashSet<ListChangedEventHandler> _eventHandlers;
-        protected AbstractRowSourceWrapper(IEnumerable list)
+        private HashSet<Action> _eventHandlers;
+        protected AbstractRowSourceWrapper(IRowSource list)
         {
             WrappedRowSource = list;
         }
-        public event ListChangedEventHandler RowSourceChanged 
+        public event Action RowSourceChanged 
         { 
             add
             {
@@ -41,7 +41,7 @@ namespace pwiz.Common.DataBinding.Internal
                 {
                     if (_eventHandlers == null)
                     {
-                        _eventHandlers = new HashSet<ListChangedEventHandler>();
+                        _eventHandlers = new HashSet<Action>();
                         AttachListChanged();
                     }
                     if (!_eventHandlers.Add(value))
@@ -67,9 +67,9 @@ namespace pwiz.Common.DataBinding.Internal
             }
         }
 
-        private void OnBindingListChanged(object sender, ListChangedEventArgs args)
+        private void OnBindingListChanged()
         {
-            IList<ListChangedEventHandler> handlers;
+            IList<Action> handlers;
             lock (this)
             {
                 if (null == _eventHandlers)
@@ -80,35 +80,27 @@ namespace pwiz.Common.DataBinding.Internal
             }
             foreach (var handler in handlers)
             {
-                handler(this, args);
+                handler();
             }
         }
 
         private void AttachListChanged()
         {
-            if (WrappedRowSource is IBindingList)
+            if (null != WrappedRowSource)
             {
-                ((IBindingList) WrappedRowSource).ListChanged += OnBindingListChanged;
-            } 
-            else if (WrappedRowSource is IListChanged)
-            {
-                ((IListChanged) WrappedRowSource).ListChanged += OnBindingListChanged;
+                WrappedRowSource.RowSourceChanged += OnBindingListChanged;
             }
         }
 
         private void DetachListChanged()
         {
-            if (WrappedRowSource is IBindingList)
+            if (null != WrappedRowSource)
             {
-                ((IBindingList) WrappedRowSource).ListChanged -= OnBindingListChanged;
-            }
-            else if (WrappedRowSource is IListChanged)
-            {
-                ((IListChanged) WrappedRowSource).ListChanged -= OnBindingListChanged;
+                WrappedRowSource.RowSourceChanged -= OnBindingListChanged;
             }
         }
 
-        public IEnumerable WrappedRowSource { get; private set; }
+        public IRowSource WrappedRowSource { get; private set; }
         public abstract IEnumerable<RowItem> ListRowItems();
 
         public abstract void StartQuery(IQueryRequest queryRequest);

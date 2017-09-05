@@ -2590,6 +2590,8 @@ namespace pwiz.Skyline.Model.Results
             }
             return iTime;
         }
+
+        public int TransitionIndex { get { return _transitionIndex; } }
     }
 
     public class BulkReadException : IOException

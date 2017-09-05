@@ -18,6 +18,8 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using pwiz.Skyline.Model.Databinding.Collections;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -34,10 +36,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             throw new InvalidOperationException();
         }
 
-        private Proteins _proteins;
-        public Proteins Proteins { get { return _proteins = _proteins ?? new Proteins(DataSchema); } }
-        private ReplicateList _replicates;
-        public ReplicateList Replicates { get { return _replicates = _replicates ?? new ReplicateList(DataSchema); } }
+        public IList<Protein> Proteins { get
+            {
+                return DocNode.MoleculeGroups
+                    .Select(peptideGroup => new Protein(DataSchema,
+                        new IdentityPath(IdentityPath.ROOT, peptideGroup.Id))).ToArray();
+            } }
+        public IList<Replicate> Replicates 
+        {
+            get
+            {
+                if (!DocNode.Settings.HasResults)
+                {
+                    return new Replicate[0];
+                }
+                return Enumerable.Range(0, DocNode.Settings.MeasuredResults.Chromatograms.Count)
+                    .Select(replicateIndex => new Replicate(DataSchema, replicateIndex)).ToArray();
+            } 
+        }
 
         public override string GetDeleteConfirmation(int nodeCount)
         {

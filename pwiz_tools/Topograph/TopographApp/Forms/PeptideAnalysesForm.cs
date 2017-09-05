@@ -67,7 +67,7 @@ namespace pwiz.Topograph.ui.Forms
                         new ColumnSpec(PropertyPath.Root.Property("MaxScore")),
                     });
             bindingListSource1.SetViewContext(viewContext);
-            bindingListSource1.RowSource = _peptideAnalyses;
+            bindingListSource1.RowSource = BindingListRowSource.Create(_peptideAnalyses);
         }
 
         private void btnAnalyzePeptides_Click(object sender, EventArgs e)

@@ -58,7 +58,7 @@ namespace CommonTest.DataBinding.Controls
                 // ReSharper disable once UseObjectOrCollectionInitializer
                 var innerList = new BindingList<LinkValue<Peptide>>();
                 innerList.Add(new LinkValue<Peptide>(new Peptide("AD"), null));
-                ((BindingListSource)boundDataGridView.DataSource).SetViewContext(new TestViewContext(viewInfo.DataSchema, new[]{new RowSourceInfo(innerList, viewInfo)}));
+                ((BindingListSource)boundDataGridView.DataSource).SetViewContext(new TestViewContext(viewInfo.DataSchema, new[]{new RowSourceInfo(BindingListRowSource.Create(innerList), viewInfo)}));
                 Assert.AreEqual(2, boundDataGridView.Rows.Count);
                 innerList.Add(new LinkValue<Peptide>(new Peptide("TISE"), null));
                 Assert.AreEqual(6, boundDataGridView.Rows.Count);

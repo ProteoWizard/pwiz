@@ -39,7 +39,7 @@ namespace pwiz.Common.DataBinding
         void DeleteViews(ViewGroupId groupId, IEnumerable<string> names);
         ViewGroup DefaultViewGroup { get; }
         ViewGroup FindGroup(ViewGroupId groupId);
-        IEnumerable GetRowSource(ViewInfo viewInfo);
+        IRowSource GetRowSource(ViewInfo viewInfo);
         ViewInfo GetViewInfo(ViewGroup viewGroup, ViewSpec viewSpec);
         ViewInfo GetViewInfo(ViewName? viewName);
         void Export(Control owner, BindingListSource bindingListSource);

@@ -24,6 +24,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Internal;
 
 namespace pwiz.Common.DataBinding.Controls
@@ -128,6 +129,32 @@ namespace pwiz.Common.DataBinding.Controls
                     linkValue.ClickEventHandler(this, e);
                 }
             }
+        }
+
+        protected virtual PropertyDescriptor GetPropertyDescriptor(DataGridViewColumn column)
+        {
+            var propertyName = column.DataPropertyName;
+            if (string.IsNullOrEmpty(propertyName))
+            {
+                return null;
+            }
+            return _itemProperties.FirstOrDefault(pd => pd.Name == column.DataPropertyName);
+        }
+
+        protected override void OnColumnDividerDoubleClick(DataGridViewColumnDividerDoubleClickEventArgs e)
+        {
+            if (e.ColumnIndex >= 0 && e.ColumnIndex < Columns.Count)
+            {
+                var propertyDescriptor = GetPropertyDescriptor(Columns[e.ColumnIndex]);
+                if (propertyDescriptor != null && propertyDescriptor.Attributes[typeof(ExpensiveAttribute)] != null)
+                {
+                    // If the property is expensive to calculate, then prevent double-clicking on 
+                    // column header to resize.
+                    e.Handled = true;
+                    return;
+                }
+            }
+            base.OnColumnDividerDoubleClick(e);
         }
     }
 }

@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.DataBinding.Attributes;
 
 namespace pwiz.Common.DataBinding
@@ -36,10 +37,18 @@ namespace pwiz.Common.DataBinding
         {
         }
 
-        public DataSchema(DataSchemaLocalizer dataSchemaLocalizer)
+        public DataSchema(DataSchemaLocalizer dataSchemaLocalizer) : this(new QueryLock(CancellationToken.None), dataSchemaLocalizer)
+        {
+        }
+
+        public DataSchema(QueryLock queryLock, DataSchemaLocalizer dataSchemaLocalizer)
         {
             DataSchemaLocalizer = dataSchemaLocalizer;
+            QueryLock = queryLock;
         }
+
+        public QueryLock QueryLock { get; private set; }
+
         /// <summary>
         /// Returns the properties for the specified type.
         /// </summary>

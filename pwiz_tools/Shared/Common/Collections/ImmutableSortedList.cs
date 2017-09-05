@@ -276,6 +276,17 @@ namespace pwiz.Common.Collections
             return new ImmutableSortedList<TKey, TValue>(keys, values, KeyComparer);
         }
 
+        public ImmutableSortedList<TKey, TNewValue> ReplaceValues<TNewValue>(IEnumerable<TNewValue> newValues)
+        {
+            var newValueList = ImmutableList.ValueOf(newValues);
+            if (newValueList.Count != Count)
+            {
+                throw new ArgumentException();
+            }
+            return new ImmutableSortedList<TKey, TNewValue>(Keys, newValueList, KeyComparer);
+        }
+
+
         #region object overrides
 		public bool Equals(ImmutableSortedList<TKey, TValue> other)
         {

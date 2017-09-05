@@ -181,7 +181,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 ChangeDocNode(EditDescription.SetColumn("Quantitative", value), // Not L10N
-                    DocNode.ChangeQuantitative(value));
+                    docNode=>docNode.ChangeQuantitative(value));
             }
         }
         [InvariantDisplayName("TransitionNote")]
@@ -189,7 +189,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return DocNode.Note; }
             set { ChangeDocNode(EditDescription.SetColumn("TransitionNote", value), // Not L10N
-                DocNode.ChangeAnnotations(DocNode.Annotations.ChangeNote(value)));}
+                docNode=>(TransitionDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNote(value)));}
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? LibraryRank

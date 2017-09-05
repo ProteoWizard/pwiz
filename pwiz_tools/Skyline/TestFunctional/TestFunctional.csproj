@@ -152,6 +152,7 @@
     <Compile Include="BlibIrtTest.cs" />
     <Compile Include="CalibrationScenariosTest.cs" />
     <Compile Include="CalibrationTest.cs" />
+    <Compile Include="CancelExportReportTest.cs" />
     <Compile Include="ChorusFunctionalTest.cs" />
     <Compile Include="ChromGraphTransformTest.cs" />
     <Compile Include="ChromUITest.cs" />
@@ -327,6 +328,7 @@
     <None Include="BackgroundProteomeTest.zip" />
     <None Include="CalibrationScenariosTest.zip" />
     <None Include="CalibrationTest.zip" />
+    <None Include="CancelExportReportTest.zip" />
     <None Include="ChorusFunctionalTest.zip" />
     <None Include="ChromGraphTransformTest.zip" />
     <None Include="ChromUITest.zip" />

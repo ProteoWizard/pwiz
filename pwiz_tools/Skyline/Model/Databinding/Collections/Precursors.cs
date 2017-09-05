@@ -36,11 +36,6 @@ namespace pwiz.Skyline.Model.Databinding.Collections
             return new Precursor(DataSchema, identityPath);
         }
 
-        public override IList<Precursor> DeepClone()
-        {
-            return new Precursors(DataSchema.Clone(), AncestorIdentityPaths);
-        }
-
         protected override int NodeDepth
         {
             get { return 3; }

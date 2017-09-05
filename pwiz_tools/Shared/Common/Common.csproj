@@ -117,6 +117,7 @@
     <Compile Include="DataAnalysis\LoessInterpolator.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />
     <Compile Include="DataBinding\Attributes\AdvancedAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\ExpensiveAttribute.cs" />
     <Compile Include="DataBinding\Attributes\InvariantDisplayNameAttribute.cs" />
     <Compile Include="DataBinding\Attributes\HideWhenAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ChildDisplayNameAttribute.cs" />
@@ -218,7 +219,6 @@
     <Compile Include="DataBinding\Internal\AbstractRowSourceWrapper.cs" />
     <Compile Include="DataBinding\Internal\BackgroundQuery.cs" />
     <Compile Include="DataBinding\Internal\BindingListView.cs" />
-    <Compile Include="DataBinding\Internal\CloneableRowSourceWrapper.cs" />
     <Compile Include="DataBinding\Internal\ForegroundQuery.cs" />
     <Compile Include="DataBinding\Internal\GroupedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\Internal\GroupedRow.cs" />
@@ -229,17 +229,16 @@
     <Compile Include="DataBinding\Internal\QueryResults.cs" />
     <Compile Include="DataBinding\Internal\RowFilter.cs" />
     <Compile Include="DataBinding\Internal\RowSourceWrappers.cs" />
+    <Compile Include="DataBinding\IRowSource.cs" />
     <Compile Include="DataBinding\IViewTransformer.cs" />
     <Compile Include="DataBinding\PivotKey.cs" />
     <Compile Include="DataBinding\PropertyPath.cs" />
     <Compile Include="DataBinding\IViewContext.cs" />
+    <Compile Include="DataBinding\QueryLock.cs" />
     <Compile Include="DataBinding\RowItem.cs" />
     <Compile Include="DataBinding\LinkValue.cs" />
     <Compile Include="DataBinding\RowSourceInfo.cs" />
     <Compile Include="DataBinding\RowSources\BindingListSupport.cs" />
-    <Compile Include="DataBinding\RowSources\ConvertedCloneableBindingList.cs" />
-    <Compile Include="DataBinding\RowSources\ConvertedCloneableList.cs" />
-    <Compile Include="DataBinding\RowSources\ICloneableList.cs" />
     <Compile Include="DataBinding\RowSources\IListChanged.cs" />
     <Compile Include="DataBinding\RowSources\PropertyChangeSupport.cs" />
     <Compile Include="DataBinding\RowSources\WrappedCollection.cs" />

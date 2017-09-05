@@ -18,6 +18,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Collections;
@@ -29,41 +30,50 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [AnnotationTarget(AnnotationDef.AnnotationTarget.protein)]
     public class Protein : SkylineDocNode<PeptideGroupDocNode>
     {
+        private readonly CachedValue<Peptide[]> _peptides;
+        private readonly CachedValue<IDictionary<ResultKey, ResultFile>> _results;
         public Protein(SkylineDataSchema dataSchema, IdentityPath identityPath) : base(dataSchema, identityPath)
         {
+            _peptides = CachedValue.Create(dataSchema, () => DocNode.Children
+                .Select(node => new Peptide(DataSchema, new IdentityPath(IdentityPath, node.Id))).ToArray());
+            _results = CachedValue.Create(dataSchema, MakeResults);
         }
 
-        private Peptides _peptides;
         [OneToMany(ForeignKey = "Protein")]
         [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
-        public Peptides Peptides
+        public IList<Peptide> Peptides
         {
-            get { return _peptides = _peptides ?? new Peptides(this); }
+            get
+            {
+                return _peptides.Value;
+            }
         }
 
         [OneToMany(ItemDisplayName = "ResultFile")]
         [HideWhen(AncestorsOfAnyOfTheseTypes = new []{typeof(SkylineDocument), typeof(FoldChangeBindingSource.FoldChangeRow)})]
         public IDictionary<ResultKey, ResultFile> Results
         {
-            get
+            get { return _results.Value; }
+        }
+
+        private IDictionary<ResultKey, ResultFile> MakeResults()
+        {
+            var dict = new Dictionary<ResultKey, ResultFile>();
+            var document = SrmDocument;
+            if (document.Settings.HasResults)
             {
-                var dict = new Dictionary<ResultKey, ResultFile>();
-                var document = SrmDocument;
-                if (document.Settings.HasResults)
+                for (int iResult = 0; iResult < document.Settings.MeasuredResults.Chromatograms.Count; iResult++)
                 {
-                    for (int iResult = 0; iResult < document.Settings.MeasuredResults.Chromatograms.Count; iResult++)
+                    var replicate = new Replicate(DataSchema, iResult);
+                    var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[iResult];
+                    for (int iFile = 0; iFile < chromatogramSet.MSDataFileInfos.Count; iFile++)
                     {
-                        var replicate = new Replicate(DataSchema, iResult);
-                        var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[iResult];
-                        for (int iFile = 0; iFile < chromatogramSet.MSDataFileInfos.Count; iFile++)
-                        {
-                            var resultFile = new ResultFile(replicate, chromatogramSet.MSDataFileInfos[iFile].FileId, 0);
-                            dict.Add(new ResultKey(replicate, iFile), resultFile);
-                        }
+                        var resultFile = new ResultFile(replicate, chromatogramSet.MSDataFileInfos[iFile].FileId, 0);
+                        dict.Add(new ResultKey(replicate, iFile), resultFile);
                     }
                 }
-                return dict;
             }
+            return dict;
         }
 
         protected override PeptideGroupDocNode CreateEmptyNode()
@@ -76,14 +86,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return DocNode.Name; }
             set { ChangeDocNode(EditDescription.SetColumn("ProteinName", value), // Not L10N
-                DocNode.ChangeName(value)); } // the user can overide this label
+                docNode=>docNode.ChangeName(value)); } // the user can overide this label
         }
         [InvariantDisplayName("ProteinDescription")]
         public string Description
         {
             get { return DocNode.Description; }
             set { ChangeDocNode(EditDescription.SetColumn("ProteinDescription", value), // Not L10N
-                DocNode.ChangeDescription(value)); } // the user can ovveride this label
+                docNode => docNode.ChangeDescription(value));
+            } // the user can ovveride this label
         }
         [InvariantDisplayName("ProteinAccession")]
         public string Accession
@@ -126,7 +137,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return DocNode.Note; }
             set { ChangeDocNode(EditDescription.SetColumn("ProteinNote", value), // Not L10N
-                DocNode.ChangeAnnotations(DocNode.Annotations.ChangeNote(value)));}
+                docNode => (PeptideGroupDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNote(value)));
+            }
         }
         public override string ToString()
         {

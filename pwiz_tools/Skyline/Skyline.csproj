@@ -290,6 +290,11 @@
     <Compile Include="AlgLib\solvers.cs" />
     <Compile Include="AlgLib\specialfunctions.cs" />
     <Compile Include="AlgLib\statistics.cs" />
+    <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ColumnCaptions.resx</DependentUpon>
+    </Compile>
     <Compile Include="Util\AnnotationHelper.cs" />
     <Compile Include="Controls\Graphs\AreaCVGraphDataCache.cs" />
     <Compile Include="Controls\Graphs\AreaCVToolbar.cs">
@@ -301,9 +306,7 @@
     <Compile Include="CommandArgs.cs" />
     <Compile Include="CommandLine.cs" />
     <Compile Include="CommandLineUI.cs" />
-    <Compile Include="Controls\Databinding\BoundDataGridViewEx.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Controls\Databinding\BoundDataGridViewEx.cs" />
     <Compile Include="Controls\Databinding\DataboundGridControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -334,9 +337,7 @@
     <Compile Include="Controls\Databinding\LiveResultsGrid.Designer.cs">
       <DependentUpon>LiveResultsGrid.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.cs" />
     <Compile Include="Controls\Databinding\PivotReplicateAndIsotopeLabelWidget.Designer.cs">
       <DependentUpon>PivotReplicateAndIsotopeLabelWidget.cs</DependentUpon>
     </Compile>
@@ -468,9 +469,7 @@
     <Compile Include="Controls\Graphs\GraphSummary.Designer.cs">
       <DependentUpon>GraphSummary.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\DataGridViewEx.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Controls\DataGridViewEx.cs" />
     <Compile Include="Controls\Graphs\ChromGraphItem.cs" />
     <Compile Include="Controls\Graphs\GraphChromatogram.cs">
       <SubType>Form</SubType>
@@ -803,6 +802,7 @@
     <Compile Include="Model\Databinding\AnnotationTargetAttribute.cs" />
     <Compile Include="Model\Databinding\AnnotationValueListDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\CachedValue.cs" />
+    <Compile Include="Model\Databinding\ChromDataCache.cs" />
     <Compile Include="Model\Databinding\Collections\MultiResultList.cs" />
     <Compile Include="Model\Databinding\Collections\NodeList.cs" />
     <Compile Include="Model\Databinding\Collections\Peptides.cs" />
@@ -815,6 +815,8 @@
     <Compile Include="Model\Databinding\Collections\SkylineObjectList.cs" />
     <Compile Include="Model\Databinding\Collections\Transitions.cs" />
     <Compile Include="Model\Databinding\DocumentGridViewContext.cs" />
+    <Compile Include="Model\Databinding\Entities\Chromatogram.cs" />
+    <Compile Include="Model\Databinding\Entities\ChromatogramGroup.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -826,11 +828,6 @@
     <Compile Include="Model\Databinding\Entities\PeptideResult.cs" />
     <Compile Include="Model\Databinding\Entities\Precursor.cs" />
     <Compile Include="Model\Databinding\Entities\PrecursorResult.cs" />
-    <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ColumnCaptions.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\Databinding\Entities\Protein.cs" />
     <Compile Include="Model\Databinding\Entities\ProteinResult.cs" />
     <Compile Include="Model\Databinding\Entities\RegressionResult.cs" />
@@ -3222,6 +3219,7 @@
     <Compile Include="Util\AxisLabelScaler.cs" />
     <Compile Include="Util\BackgroundEventThreads.cs" />
     <Compile Include="Util\BioMassCalc.cs" />
+    <Compile Include="Util\FormattableList.cs" />
     <Compile Include="Util\HistogramHelper.cs" />
     <Compile Include="Util\LongOperationRunner.cs" />
     <Compile Include="Util\CultureUtil.cs" />

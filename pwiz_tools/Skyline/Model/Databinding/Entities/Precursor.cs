@@ -36,13 +36,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     public class Precursor : SkylineDocNode<TransitionGroupDocNode>
     {
         private readonly Lazy<Peptide> _peptide;
-        private readonly Lazy<Transitions> _transitions;
+        private readonly CachedValue<Transition[]> _transitions;
         private readonly CachedValue<IDictionary<ResultKey, PrecursorResult>> _results;
         public Precursor(SkylineDataSchema dataSchema, IdentityPath identityPath) : base(dataSchema, identityPath)
         {
             _peptide = new Lazy<Peptide>(() => new Peptide(DataSchema, IdentityPath.Parent));
-            _transitions = new Lazy<Transitions>(() => new Transitions(this));
-            _results = CachedValue.Create(DataSchema, MakeResults);
+            _transitions = CachedValue.Create(dataSchema, () => DocNode.Children
+                .Select(child => new Transition(DataSchema, new IdentityPath(IdentityPath, child.Id))).ToArray());
+            _results = CachedValue.Create(dataSchema, MakeResults);
         }
 
         [HideWhen(AncestorOfType = typeof(Peptide))]
@@ -52,9 +53,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [OneToMany(ForeignKey = "Precursor")]
-        public Transitions Transitions
+        public IList<Transition> Transitions
         {
-            get { return _transitions.Value; }
+            get
+            {
+                return _transitions.Value;
+            }
         }
 
         [InvariantDisplayName("PrecursorResults")]
@@ -238,7 +242,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 var values = DocNode.ExplicitValues.ChangeCollisionEnergy(value);
                 ChangeDocNode(EditDescription.SetColumn("ExplicitCollisionEnergy", value), // Not L10N
-                    DocNode.ChangeExplicitValues(values));
+                    docNode=>docNode.ChangeExplicitValues(values));
             }
         }
 
@@ -251,9 +255,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                var values = DocNode.ExplicitValues.ChangeSLens(value);
                 ChangeDocNode(EditDescription.SetColumn("ExplicitSLens", value), // Not L10N
-                    DocNode.ChangeExplicitValues(values));
+                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeSLens(value)));
             }
         }
 
@@ -266,9 +269,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                var values = DocNode.ExplicitValues.ChangeConeVoltage(value);
                 ChangeDocNode(EditDescription.SetColumn("ExplicitConeVoltage", value), // Not L10N
-                    DocNode.ChangeExplicitValues(values));
+                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeConeVoltage(value)));
             }
         }
 
@@ -281,9 +283,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                var values = DocNode.ExplicitValues.ChangeDeclusteringPotential(value);
                 ChangeDocNode(EditDescription.SetColumn("ExplicitDeclusteringPotential", value), // Not L10N
-                    DocNode.ChangeExplicitValues(values));
+                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeDeclusteringPotential(value)));
             }
         }
 
@@ -296,9 +297,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                var values = DocNode.ExplicitValues.ChangeCompensationVoltage(value);
                 ChangeDocNode(EditDescription.SetColumn("ExplicitCompensationVoltage", value), // Not L10N
-                    DocNode.ChangeExplicitValues(values));
+                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeCompensationVoltage(value)));
             }
         }
         
@@ -310,9 +310,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                var values = DocNode.ExplicitValues.ChangeDriftTime(value);
                 ChangeDocNode(EditDescription.SetColumn("ExplicitDriftTimeMsec", value), // Not L10N
-                    DocNode.ChangeExplicitValues(values));
+                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeDriftTime(value)));
             }
         }
 
@@ -324,9 +323,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                var values = DocNode.ExplicitValues.ChangeDriftTimeHighEnergyOffsetMsec(value);
                 ChangeDocNode(EditDescription.SetColumn("ExplicitDriftTimeHighEnergyOffsetMsec", value), // Not L10N
-                    DocNode.ChangeExplicitValues(values));
+                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeDriftTimeHighEnergyOffsetMsec(value)));
             }
         }
 
@@ -338,9 +336,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             set
             {
-                var values = DocNode.ExplicitValues.ChangeCollisionalCrossSection(value);
                 ChangeDocNode(EditDescription.SetColumn("ExplicitCollisionalCrossSection", value), // Not L10N
-                    DocNode.ChangeExplicitValues(values));
+                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeCollisionalCrossSection(value)));
             }
         }
 
@@ -348,8 +345,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public string Note
         {
             get { return DocNode.Note; }
-            set { ChangeDocNode(EditDescription.SetColumn("PrecursorNote", value), // Not L10N
-                DocNode.ChangeAnnotations(DocNode.Annotations.ChangeNote(value))); }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn("PrecursorNote", value), // Not L10N
+                    docNode => (TransitionGroupDocNode) docNode.ChangeAnnotations(docNode.Annotations
+                        .ChangeNote(value)));
+            }
         }
 
         public string LibraryName

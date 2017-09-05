@@ -47,12 +47,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
         protected void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action)
         {
-            var skylineWindow = DataSchema.SkylineWindow;
-            if (skylineWindow == null)
-            {
-                throw new InvalidOperationException();
-            }
-            skylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchema.DataSchemaLocalizer), action);
+            DataSchema.ModifyDocument(editDescription, action);
         }
     }
 }

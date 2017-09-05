@@ -43,10 +43,5 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         {
             return new Entities.Transition(DataSchema, identityPath);
         }
-
-        public override IList<Entities.Transition> DeepClone()
-        {
-            return new Transitions(DataSchema.Clone(), AncestorIdentityPaths);
-        }
     }
 }

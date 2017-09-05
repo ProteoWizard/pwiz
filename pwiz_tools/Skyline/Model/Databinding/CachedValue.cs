@@ -13,7 +13,7 @@ namespace pwiz.Skyline.Model.Databinding
     {
         private readonly SkylineDataSchema _dataSchema;
         private readonly Func<T> _getterFunc;
-        private readonly WeakReference _documentReference = new WeakReference(null);
+        private object _documentReference;
         private T _value;
         public CachedValue(SkylineDataSchema dataSchema, Func<T> getterFunc)
         {
@@ -31,14 +31,14 @@ namespace pwiz.Skyline.Model.Databinding
 
         public T GetValue()
         {
-            if (!ReferenceEquals(_documentReference.Target, _dataSchema.Document))
+            if (!ReferenceEquals(_documentReference, _dataSchema.Document.ReferenceId))
             {
                 var newValue = _getterFunc();
                 if (!ReferenceEquals(null, newValue))
                 {
                     _value = newValue;
                 }
-                _documentReference.Target = _dataSchema.Document;
+                _documentReference = _dataSchema.Document.ReferenceId;
             }
             return _value;
         }

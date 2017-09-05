@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using pwiz.Common.DataBinding;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
 using pwiz.Topograph.ui.DataBinding;
@@ -34,8 +35,8 @@ namespace pwiz.Topograph.ui.Forms
 
         public IList<HalfLifeCalculator.ProcessedRowData> RowDatas
         {
-            get { return (IList<HalfLifeCalculator.ProcessedRowData>)bindingSource1.RowSource; }
-            set { bindingSource1.RowSource = value; }
+            get { return (IList<HalfLifeCalculator.ProcessedRowData>)bindingSource1.RowSource.GetItems(); }
+            set { bindingSource1.RowSource = new StaticRowSource(value); }
         }
 
         public string Peptide

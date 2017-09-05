@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.ComponentModel;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
@@ -30,18 +31,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     public class TransitionResult : Result
     {
         private readonly CachedValue<TransitionChromInfo> _chromInfo;
+        private readonly CachedValue<Chromatogram> _chromatogram;
         public TransitionResult(Transition transition, ResultFile resultFile) : base(transition, resultFile)
         {
             _chromInfo = CachedValue.Create(DataSchema, () => GetResultFile().FindChromInfo(transition.DocNode.Results));
+            _chromatogram = CachedValue.Create(DataSchema, 
+                () => new Chromatogram(new ChromatogramGroup(PrecursorResult), Transition));
         }
 
         [Browsable(false)]
         public TransitionChromInfo ChromInfo { get { return _chromInfo.Value; } }
 
-        public void ChangeChromInfo(EditDescription editDescription, TransitionChromInfo newChromInfo)
+        public void ChangeChromInfo(EditDescription editDescription, Func<TransitionChromInfo, TransitionChromInfo> newChromInfo)
         {
-            var newDocNode = Transition.DocNode.ChangeResults(GetResultFile().ChangeChromInfo(Transition.DocNode.Results, newChromInfo));
-            Transition.ChangeDocNode(editDescription, newDocNode);
+            Transition.ChangeDocNode(editDescription, docNode=>docNode.ChangeResults(GetResultFile().ChangeChromInfo(docNode.Results, newChromInfo)));
         }
         [HideWhen(AncestorOfType = typeof(Transition))]
         public Transition Transition { get { return (Transition)SkylineDocNode; } }
@@ -80,6 +83,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? PointsAcrossPeak { get { return ChromInfo.PointsAcrossPeak; } }
 
+        public Chromatogram Chromatogram
+        {
+            get { return _chromatogram.Value; }
+        }
+
         [InvariantDisplayName("TransitionReplicateNote")]
         public string Note
         {
@@ -87,14 +95,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set
             {
                 ChangeChromInfo(EditDescription.SetColumn("TransitionReplicateNote", value), // Not L10N
-                    ChromInfo.ChangeAnnotations(ChromInfo.Annotations.ChangeNote(value)));
+                    chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(value)));
             }
         }
 
         public override void SetAnnotation(AnnotationDef annotationDef, object value)
         {
             ChangeChromInfo(EditDescription.SetAnnotation(annotationDef, value), 
-                ChromInfo.ChangeAnnotations(ChromInfo.Annotations.ChangeAnnotation(annotationDef, value)));
+                chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeAnnotation(annotationDef, value)));
         }
 
         public override object GetAnnotation(AnnotationDef annotationDef)

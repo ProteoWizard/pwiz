@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -48,7 +49,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
                     return;
                 }
                 _ancestorIdentityPaths = newValue;
-                OnDocumentChanged();
+                FireListChanged();
             }
         }
         public void SetAncestorIdentityPaths(IEnumerable<IdentityPath> identityPaths)
@@ -59,17 +60,18 @@ namespace pwiz.Skyline.Model.Databinding.Collections
                 return;
             }
             _ancestorIdentityPaths = newPaths;
-            OnDocumentChanged();
+            FireListChanged();
         }
 
 
-        protected override IList<IdentityPath> ListKeys()
+        protected override IEnumerable<IdentityPath> ListKeys()
         {
-            return RecurseListingKeys(IdentityPath.ROOT, SrmDocument).ToArray();
+            return RecurseListingKeys(IdentityPath.ROOT, SrmDocument);
         }
 
         protected IEnumerable<IdentityPath> RecurseListingKeys(IdentityPath identityPath, DocNode docNode)
         {
+            CancellationToken.ThrowIfCancellationRequested();
             bool includeThis = AncestorIdentityPaths.Any(ancestoryIdPath => StartsWith(identityPath, ancestoryIdPath));
             if (identityPath.Length == NodeDepth)
             {
@@ -87,6 +89,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
             var result = new List<IdentityPath>();
             foreach (var child in docNodeParent.Children)
             {
+                CancellationToken.ThrowIfCancellationRequested();
                 var childIdentityPath = new IdentityPath(identityPath, child.Id);
                 if (!includeThis &&
                     !AncestorIdentityPaths.Any(ancestorIdPath => StartsWith(ancestorIdPath, childIdentityPath)))
@@ -115,9 +118,10 @@ namespace pwiz.Skyline.Model.Databinding.Collections
             }
             return true;
         }
-        public override IdentityPath GetKey(TNode item)
+
+        public override IEnumerable GetItems()
         {
-            return item.IdentityPath;
+            return ListKeys().Select(ConstructItem);
         }
     }
 }

@@ -205,6 +205,69 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chromatogram.
+        /// </summary>
+        public static string Chromatogram {
+            get {
+                return ResourceManager.GetString("Chromatogram", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chromatogram Drift Time.
+        /// </summary>
+        public static string ChromatogramDriftTime {
+            get {
+                return ResourceManager.GetString("ChromatogramDriftTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chromatogram Drift Time Extraction Width.
+        /// </summary>
+        public static string ChromatogramDriftTimeExtractionWidth {
+            get {
+                return ResourceManager.GetString("ChromatogramDriftTimeExtractionWidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chromatogram Extraction Width.
+        /// </summary>
+        public static string ChromatogramExtractionWidth {
+            get {
+                return ResourceManager.GetString("ChromatogramExtractionWidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chromatogram Precursor M/Z.
+        /// </summary>
+        public static string ChromatogramPrecursorMz {
+            get {
+                return ResourceManager.GetString("ChromatogramPrecursorMz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chromatogram Product M/Z.
+        /// </summary>
+        public static string ChromatogramProductMz {
+            get {
+                return ResourceManager.GetString("ChromatogramProductMz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chromatogram Source.
+        /// </summary>
+        public static string ChromatogramSource {
+            get {
+                return ResourceManager.GetString("ChromatogramSource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cleavage Aa.
         /// </summary>
         public static string CleavageAa {
@@ -736,6 +799,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Intensities.
+        /// </summary>
+        public static string Intensities {
+            get {
+                return ResourceManager.GetString("Intensities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Intercept.
         /// </summary>
         public static string Intercept {
@@ -750,6 +822,51 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string InternalStandardConcentration {
             get {
                 return ResourceManager.GetString("InternalStandardConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interpolated Data.
+        /// </summary>
+        public static string InterpolatedData {
+            get {
+                return ResourceManager.GetString("InterpolatedData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interpolated Intensities.
+        /// </summary>
+        public static string InterpolatedIntensities {
+            get {
+                return ResourceManager.GetString("InterpolatedIntensities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interpolated Mass Errors.
+        /// </summary>
+        public static string InterpolatedMassErrors {
+            get {
+                return ResourceManager.GetString("InterpolatedMassErrors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interpolated Number of Points.
+        /// </summary>
+        public static string InterpolatedNumberOfPoints {
+            get {
+                return ResourceManager.GetString("InterpolatedNumberOfPoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interpolated Times.
+        /// </summary>
+        public static string InterpolatedTimes {
+            get {
+                return ResourceManager.GetString("InterpolatedTimes", resourceCulture);
             }
         }
         
@@ -948,6 +1065,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MassErrorPPM {
             get {
                 return ResourceManager.GetString("MassErrorPPM", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mass Errors.
+        /// </summary>
+        public static string MassErrors {
+            get {
+                return ResourceManager.GetString("MassErrors", resourceCulture);
             }
         }
         
@@ -1245,6 +1371,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string NormalizedArea {
             get {
                 return ResourceManager.GetString("NormalizedArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of Points.
+        /// </summary>
+        public static string NumberOfPoints {
+            get {
+                return ResourceManager.GetString("NumberOfPoints", resourceCulture);
             }
         }
         
@@ -1816,6 +1951,51 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Raw Data.
+        /// </summary>
+        public static string RawData {
+            get {
+                return ResourceManager.GetString("RawData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Raw Intensities.
+        /// </summary>
+        public static string RawIntensities {
+            get {
+                return ResourceManager.GetString("RawIntensities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Raw Mass Errors.
+        /// </summary>
+        public static string RawMassErrors {
+            get {
+                return ResourceManager.GetString("RawMassErrors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Raw Number of Points.
+        /// </summary>
+        public static string RawNumberOfPoints {
+            get {
+                return ResourceManager.GetString("RawNumberOfPoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Raw Times.
+        /// </summary>
+        public static string RawTimes {
+            get {
+                return ResourceManager.GetString("RawTimes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Replicate.
         /// </summary>
         public static string Replicate {
@@ -2091,6 +2271,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string TicArea {
             get {
                 return ResourceManager.GetString("TicArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Times.
+        /// </summary>
+        public static string Times {
+            get {
+                return ResourceManager.GetString("Times", resourceCulture);
             }
         }
         
