@@ -42,11 +42,6 @@ namespace pwiz.Topograph.Model
                     entry.Key, new PeptideAnalysis(Workspace, entry.Key, entry.Value))));
         }
 
-        public override IList<PeptideAnalysis> DeepClone()
-        {
-            return new Workspace(Workspace).PeptideAnalyses;
-        }
-
         protected override ImmutableSortedList<long, PeptideAnalysisData> GetData(WorkspaceData workspaceData)
         {
             return workspaceData.PeptideAnalyses;

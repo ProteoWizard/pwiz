@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
@@ -67,7 +68,7 @@ namespace pwiz.Topograph.ui.Forms
                         new ColumnSpec(PropertyPath.Root.Property("MaxScore")),
                     });
             bindingListSource1.SetViewContext(viewContext);
-            bindingListSource1.RowSource = BindingListRowSource.Create(_peptideAnalyses);
+            bindingListSource1.RowSource = new StaticRowSource(_peptideAnalyses);
         }
 
         private void btnAnalyzePeptides_Click(object sender, EventArgs e)
@@ -258,20 +259,10 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        class PeptideAnalysisRows : ConvertedCloneableBindingList<long, PeptideAnalysis, PeptideAnalysisRow>
+        class PeptideAnalysisRows : ReadOnlyCollection<PeptideAnalysisRow>
         {
-            public PeptideAnalysisRows(PeptideAnalyses peptideAnalyses) : base(peptideAnalyses)
+            public PeptideAnalysisRows(PeptideAnalyses peptideAnalyses) : base(peptideAnalyses.Select(pa=>new PeptideAnalysisRow(pa)).ToArray())
             {
-            }
-
-            public override long GetKey(PeptideAnalysisRow value)
-            {
-                return value.PeptideAnalysis.Id;
-            }
-
-            protected override PeptideAnalysisRow Convert(PeptideAnalysis source)
-            {
-                return new PeptideAnalysisRow(source);
             }
         }
     }

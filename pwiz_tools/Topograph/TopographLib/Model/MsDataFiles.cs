@@ -41,11 +41,6 @@ namespace pwiz.Topograph.Model
                     entry.Key, new MsDataFile(Workspace, entry.Key, entry.Value))));
         }
 
-        public override IList<MsDataFile> DeepClone()
-        {
-            return Workspace.Clone().MsDataFiles;
-        }
-
         protected override MsDataFile CreateEntityForKey(long key, MsDataFileData data)
         {
             return new MsDataFile(Workspace, key, data);

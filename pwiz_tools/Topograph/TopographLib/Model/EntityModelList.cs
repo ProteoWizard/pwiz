@@ -28,7 +28,7 @@ using pwiz.Topograph.Model.Data;
 
 namespace pwiz.Topograph.Model
 {
-    public abstract class EntityModelList<TKey, TData, TEntity> : ICloneableList<TKey, TEntity>, IListChanged where TEntity : EntityModel<TKey, TData>
+    public abstract class EntityModelList<TKey, TData, TEntity> : IList<TEntity>, IListChanged where TEntity : EntityModel<TKey, TData>
     {
         private ImmutableSortedList<TKey, TEntity> _entityList;
         protected EntityModelList(Workspace workspace)
@@ -94,12 +94,6 @@ namespace pwiz.Topograph.Model
                     listChanged(this, new ListChangedEventArgs(ListChangedType.Reset, -1));
                 }
             }
-        }
-
-        public abstract IList<TEntity> DeepClone();
-        IEnumerable ICloneableList.DeepClone()
-        {
-            return DeepClone();
         }
 
         [CanBeNull]

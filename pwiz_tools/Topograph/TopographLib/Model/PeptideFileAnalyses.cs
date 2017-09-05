@@ -39,11 +39,6 @@ namespace pwiz.Topograph.Model
                     pair => new KeyValuePair<long, PeptideFileAnalysis>(pair.Key, new PeptideFileAnalysis(PeptideAnalysis, pair.Key, pair.Value))));
         }
 
-        public override IList<PeptideFileAnalysis> DeepClone()
-        {
-            return Workspace.Clone().PeptideAnalyses.FindByKey(PeptideAnalysis.Id).FileAnalyses;
-        }
-
         protected override ImmutableSortedList<long, PeptideFileAnalysisData> GetData(WorkspaceData workspaceData)
         {
             if (null == workspaceData.PeptideAnalyses)

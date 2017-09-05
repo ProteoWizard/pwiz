@@ -38,11 +38,6 @@ namespace pwiz.Topograph.Model
                     entry.Key, new Peptide(Workspace, entry.Key, entry.Value))));
         }
 
-        public override IList<Peptide> DeepClone()
-        {
-            return Workspace.Clone().Peptides;
-        }
-
         protected override Peptide CreateEntityForKey(long key, PeptideData data)
         {
             return new Peptide(Workspace, key, data);
