@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected bool RunSmallMoleculeTestVersions
         {
-            get { return GetBoolValue("RunSmallMoleculeTestVersions", true); }  // TODO(bspratt)  revert this
+            get { return GetBoolValue("RunSmallMoleculeTestVersions", false); }
             set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value ? "true" : "false"; }
         }
 
