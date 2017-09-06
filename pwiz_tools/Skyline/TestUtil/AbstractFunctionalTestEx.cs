@@ -136,12 +136,12 @@ namespace pwiz.SkylineTestUtil
             ImportResults(dataFiles, null);
         }
 
-        public void ImportResultsAsync(params string[] dataFiles )
+        public void ImportResultsAsync(params string[] dataFiles)
         {
             ImportResultsAsync(dataFiles, null);
         }
 
-        public void ImportResultsAsync(string[] dataFiles, LockMassParameters lockMassParameters, string expectedErrorMessage = null)
+        public void ImportResultsAsync(string[] dataFiles, LockMassParameters lockMassParameters, string expectedErrorMessage = null, bool? removeFix = null)
         {
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunUI(() =>
@@ -159,7 +159,15 @@ namespace pwiz.SkylineTestUtil
             }
             else if (lockMassParameters == null)
             {
-                OkDialog(importResultsDlg, importResultsDlg.OkDialog);
+                if (removeFix.HasValue)
+                {
+                    RunDlg<ImportResultsNameDlg>(importResultsDlg.OkDialog, resultsNames =>
+                        resultsNames.OkDialog(removeFix.Value ? DialogResult.Yes : DialogResult.No));
+                }
+                else
+                {
+                    OkDialog(importResultsDlg, importResultsDlg.OkDialog);
+                }
             }
             else
             {

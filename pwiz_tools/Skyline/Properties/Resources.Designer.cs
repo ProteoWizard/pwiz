@@ -13658,11 +13658,40 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The files you have chosen have a common prefix and suffix.
+        ///Would you like to remove some or all of the prefix or suffix to shorten the names used in Skyline?.
+        /// </summary>
+        public static string ImportResultsNameDlg_CommonPrefix_and_Suffix {
+            get {
+                return ResourceManager.GetString("ImportResultsNameDlg_CommonPrefix_and_Suffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The files you have chosen have a common suffix.
+        ///Would you like to remove some or all of this suffix to shorten the names used in Skyline?.
+        /// </summary>
+        public static string ImportResultsNameDlg_CommonSuffix {
+            get {
+                return ResourceManager.GetString("ImportResultsNameDlg_CommonSuffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The text &apos;{0}&apos; is not a prefix of the files chosen..
         /// </summary>
         public static string ImportResultsNameDlg_OkDialog_The_text__0__is_not_a_prefix_of_the_files_chosen {
             get {
                 return ResourceManager.GetString("ImportResultsNameDlg_OkDialog_The_text__0__is_not_a_prefix_of_the_files_chosen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The text &apos;{0}&apos; is not a suffix of the files chosen..
+        /// </summary>
+        public static string ImportResultsNameDlg_OkDialog_The_text__0__is_not_a_suffix_of_the_files_chosen {
+            get {
+                return ResourceManager.GetString("ImportResultsNameDlg_OkDialog_The_text__0__is_not_a_suffix_of_the_files_chosen", resourceCulture);
             }
         }
         

@@ -236,10 +236,12 @@ namespace pwiz.Skyline.FileUI
 
             if (NamedPathSets.Length > 1)
             {
-                string prefix = GetCommonPrefix(Array.ConvertAll(NamedPathSets, ns => ns.Key));
-                if (prefix.Length >= MIN_COMMON_PREFIX_LENGTH)
+
+                string prefix = GetCommonPrefix(NamedPathSets.Select(ns => ns.Key));
+                string suffix = GetCommonSuffix(NamedPathSets.Select(ns => ns.Key));
+                if (!String.IsNullOrEmpty(prefix) || !String.IsNullOrEmpty(suffix))
                 {
-                    using (var dlgName = new ImportResultsNameDlg(prefix))
+                    using (var dlgName = new ImportResultsNameDlg(prefix, suffix))
                     {
                         var result = dlgName.ShowDialog(this);
                         if (result == DialogResult.Cancel)
@@ -248,13 +250,7 @@ namespace pwiz.Skyline.FileUI
                         }
                         if (result == DialogResult.Yes)
                         {
-                            // Rename all the replicates to remove the specified prefix.
-                            for (int i = 0; i < NamedPathSets.Length; i++)
-                            {
-                                var namedSet = NamedPathSets[i];
-                                NamedPathSets[i] = new KeyValuePair<string, MsDataFileUri[]>(
-                                    namedSet.Key.Substring(dlgName.Prefix.Length), namedSet.Value);
-                            }
+                            dlgName.ApplyNameChange(NamedPathSets);
                         }
                     }
                 }
@@ -266,6 +262,36 @@ namespace pwiz.Skyline.FileUI
                 EnsureUniqueNames();
             
             DialogResult = DialogResult.OK;
+        }
+
+        public static string GetCommonPrefix(IEnumerable<string> names)
+        {
+            return names.GetCommonPrefix(MIN_COMMON_PREFIX_LENGTH);
+        }
+
+        private static readonly string[] SUFFIX_COMMON_CONCENTRATIONS = 
+        {
+            "amol", "fmol", "pmol", "nmol", "umol", "mol"
+        };
+
+        public static string GetCommonSuffix(IEnumerable<string> names)
+        {
+            string suffix = names.GetCommonSuffix(MIN_COMMON_PREFIX_LENGTH);
+            // Ignore common concentration suffixes
+            string prefixOfSuffix = SUFFIX_COMMON_CONCENTRATIONS.FirstOrDefault(s => suffix.Contains(s));
+            if (prefixOfSuffix != null)
+            {
+                int start = suffix.IndexOf(prefixOfSuffix, StringComparison.Ordinal);
+                if (IsNumericOrSeperator(suffix.Substring(0, start)))
+                    suffix = suffix.Substring(start + prefixOfSuffix.Length);
+            }
+            return suffix;
+        }
+
+        private static bool IsNumericOrSeperator(string s)
+        {
+            const string allowedChars = "0123456789.-_";
+            return s.All(c => allowedChars.Contains(c));
         }
 
         private bool CanCreateMultiInjectionMethods()
@@ -451,33 +477,6 @@ namespace pwiz.Skyline.FileUI
                 }
                 return namedPaths;
             }
-        }
-
-        public static string GetCommonPrefix(IEnumerable<string> values)
-        {
-            string prefix = null;
-            foreach (string value in values)
-            {
-                if (prefix == null)
-                {
-                    prefix = value;
-                    continue;
-                }
-                if (prefix == string.Empty)
-                {
-                    break;
-                }
-
-                for (int i = 0; i < prefix.Length; i++)
-                {
-                    if (i >= value.Length || prefix[i] != value[i])
-                    {
-                        prefix = prefix.Substring(0, i);
-                        break;
-                    }
-                }
-            }
-            return prefix ?? string.Empty;
         }
 
         private bool ResultsExist(string name)

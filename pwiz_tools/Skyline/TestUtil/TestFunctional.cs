@@ -1371,7 +1371,7 @@ namespace pwiz.SkylineTestUtil
                 importResultsDlg.RadioAddNewChecked = true;
                 importResultsDlg.OptimizationName = ExportOptimize.CE;
                 importResultsDlg.NamedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(replicatesDirName).ToArray();
-                string prefix = ImportResultsDlg.GetCommonPrefix(Array.ConvertAll(importResultsDlg.NamedPathSets, ns => ns.Key));
+                string prefix = TextUtil.GetCommonPrefix(importResultsDlg.NamedPathSets.Select(ns => ns.Key));
                 // Rename all the replicates to remove the specified prefix, so that dialog doesn't pop up.
                 for (int i = 0; i < importResultsDlg.NamedPathSets.Length; i++)
                 {
@@ -1391,7 +1391,7 @@ namespace pwiz.SkylineTestUtil
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunUI(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFileReplicates(fileNames));
 
-            string prefix = ImportResultsDlg.GetCommonPrefix(fileNames.Select(f => f.GetFileName()));
+            string prefix = TextUtil.GetCommonPrefix(fileNames.Select(f => f.GetFileName()));
             if (prefix.Length < ImportResultsDlg.MIN_COMMON_PREFIX_LENGTH)
             {
                 OkDialog(importResultsDlg, importResultsDlg.OkDialog);

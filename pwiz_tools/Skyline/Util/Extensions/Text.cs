@@ -359,6 +359,58 @@ namespace pwiz.Skyline.Util.Extensions
         {
             return Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(str), null, DataProtectionScope.CurrentUser));
         }
+
+        /// <summary>
+        /// Get a common prefix, if any, among a set of strings.
+        /// </summary>
+        /// <param name="values">The set of strings to test for a common prefix</param>
+        /// <param name="minLen">Minimum length of the prefix below which empty string will be returned</param>
+        /// <returns>The common prefix or empty string if none is found</returns>
+        public static string GetCommonPrefix(this IEnumerable<string> values, int minLen = 1)
+        {
+            return values.GetCommonFix(minLen, (s, i) => s[i], (s, i) => s.Substring(0, i));
+        }
+
+        /// <summary>
+        /// Get a common suffix, if any, among a set of strings.
+        /// </summary>
+        /// <param name="values">The set of strings to test for a common suffix</param>
+        /// <param name="minLen">Minimum length of the suffix below which empty string will be returned</param>
+        /// <returns>The common suffix or empty string if none is found</returns>
+        public static string GetCommonSuffix(this IEnumerable<string> values, int minLen = 1)
+        {
+            return values.GetCommonFix(minLen, (s, i) => s[s.Length - i - 1], (s, i) => s.Substring(s.Length - i));
+        }
+
+        private static string GetCommonFix(this IEnumerable<string> values,
+                                            int minLen,
+                                            Func<string, int, char> getChar,
+                                            Func<string, int, string> getSubString)
+        {
+            string commonFix = null;
+            foreach (string value in values)
+            {
+                if (commonFix == null)
+                {
+                    commonFix = value;
+                    continue;
+                }
+                if (commonFix == string.Empty)
+                {
+                    break;
+                }
+
+                for (int i = 0; i < commonFix.Length; i++)
+                {
+                    if (i >= value.Length || getChar(commonFix, i) != getChar(value, i))
+                    {
+                        commonFix = getSubString(commonFix, i);
+                        break;
+                    }
+                }
+            }
+            return commonFix != null && commonFix.Length >= minLen ? commonFix : String.Empty;
+        }
     }
 
     /// <summary>

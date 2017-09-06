@@ -291,12 +291,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             }
                         }
 
-                        if (ImportResultsControl.FoundResultsFiles.Count > 1)
+                        var foundResults = ImportResultsControl.FoundResultsFiles;
+                        if (foundResults.Count > 1)
                         {
-                            string prefix = ImportResultsDlg.GetCommonPrefix(ImportResultsControl.FoundResultsFiles.Select(f => f.Name));
-                            if (prefix.Length >= ImportResultsDlg.MIN_COMMON_PREFIX_LENGTH)
+                            string prefix = ImportResultsDlg.GetCommonPrefix(foundResults.Select(f => f.Name));
+                            string suffix = ImportResultsDlg.GetCommonSuffix(foundResults.Select(f => f.Name));
+                            if (!string.IsNullOrEmpty(prefix) || !string.IsNullOrEmpty(suffix))
                             {
-                                using (var dlgName = new ImportResultsNameDlg(prefix))
+                                using (var dlgName = new ImportResultsNameDlg(prefix, suffix))
                                 {
                                     var result = dlgName.ShowDialog(this);
                                     if (result == DialogResult.Cancel)
@@ -305,9 +307,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                     }
                                     else if (result == DialogResult.Yes)
                                     {
-                                        // Rename all the replicates to remove the specified prefix.
                                         ImportResultsControl.FoundResultsFiles = ImportResultsControl.FoundResultsFiles.Select(f =>
-                                            new ImportPeptideSearch.FoundResultsFile(f.Name.Substring(dlgName.Prefix.Length), f.Path)).ToList();
+                                            new ImportPeptideSearch.FoundResultsFile(dlgName.ApplyNameChange(f.Name), f.Path)).ToList();
                                     }
                                 }
                             }

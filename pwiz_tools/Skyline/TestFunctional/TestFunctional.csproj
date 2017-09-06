@@ -231,6 +231,7 @@
     <Compile Include="QuantitativeTest.cs" />
     <Compile Include="RefineProteinListDlgTest.cs" />
     <Compile Include="RefineListDlgTest.cs" />
+    <Compile Include="RemovePrefixSuffixTest.cs" />
     <Compile Include="RenameProteinsTest.cs" />
     <Compile Include="ReporterIonTest.cs" />
     <Compile Include="ReportErrorDlgTest.cs" />
@@ -380,6 +381,7 @@
     <None Include="ProteinMetadataFunctionalTest.zip" />
     <None Include="QuantitativeTest.zip" />
     <None Include="ReintegrateDlgTest.zip" />
+    <None Include="RemovePrefixSuffixTest.zip" />
     <None Include="RenameProteinsTest.zip" />
     <None Include="ReportSharingTest.zip" />
     <None Include="ReportSummaryTest.zip" />

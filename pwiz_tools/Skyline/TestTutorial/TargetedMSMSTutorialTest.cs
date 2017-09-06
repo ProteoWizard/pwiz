@@ -128,8 +128,8 @@ namespace pwiz.SkylineTestTutorial
             bool AsSmallMolecules = asSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
 
             const int expectedMoleculeCount = 9;
-            int expectedTransitionGroupCount = 10;
-            int expectedTransitionCount = 78;
+            const int expectedTransitionGroupCount = 10;
+            const int expectedTransitionCount = 78;
             var document = SkylineWindow.Document;
             if (AsSmallMolecules)
             {
@@ -397,7 +397,11 @@ namespace pwiz.SkylineTestTutorial
                     string.Format("Expected to be on chromatograms_page, on {0} instead", currentPage));
             }
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
-
+            RunUI(() =>
+            {
+                Assert.AreEqual("_uL_tech1", importResultsNameDlg.Suffix);
+                importResultsNameDlg.Suffix = string.Empty;
+            });
             OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
 
             // Modifications are already set up, so that page should get skipped.
@@ -433,7 +437,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForClosedAllChromatogramsGraph();
 
             const int expectedMoleculeCount = 9;
-            var expectedTransitionGroupCount = 10; // Expect this many with results
+            const int expectedTransitionGroupCount = 10; // Expect this many with results
             var expected20TransitionCount = AsSmallMolecules ? 87 : 88; // Expect this many with results
             var expected80TransitionCount = AsSmallMolecules ? 88 : 87;
 
@@ -733,16 +737,19 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
             }
 
-            var chooseSchedulingReplicateDlg = ShowDialog<ChooseSchedulingReplicatesDlg>(SkylineWindow.ImportResults);
-            RunUI(() =>
+            using (new WaitDocumentChange())
             {
-                // Make sure UI is up to date to avoid race condition
-                chooseSchedulingReplicateDlg.UpdateUi();
-                chooseSchedulingReplicateDlg.SelectOrDeselectAll(true);
-            });
-            RunDlg<ImportResultsDlg>(chooseSchedulingReplicateDlg.OkDialog, importResultsDlg2 =>
-            {
-                string[] filePaths =
+                var chooseSchedulingReplicateDlg = ShowDialog<ChooseSchedulingReplicatesDlg>(SkylineWindow.ImportResults);
+                RunUI(() =>
+                {
+                    // Make sure UI is up to date to avoid race condition
+                    chooseSchedulingReplicateDlg.UpdateUi();
+                    chooseSchedulingReplicateDlg.SelectOrDeselectAll(true);
+                });
+                var importResultsDlg4 = ShowDialog<ImportResultsDlg>(chooseSchedulingReplicateDlg.OkDialog);
+                RunUI(() =>
+                {
+                    string[] filePaths =
                     {
                         GetTestPath(@"TOF\1-BSA-50amol"  + ExtAgilentRaw),
                         GetTestPath(@"TOF\2-BSA-100amol" + ExtAgilentRaw),
@@ -750,9 +757,11 @@ namespace pwiz.SkylineTestTutorial
                         GetTestPath(@"TOF\4-BSA-10fmol"  + ExtAgilentRaw),
                         GetTestPath(@"TOF\5-BSA-100fmol" + ExtAgilentRaw),
                     };
-                importResultsDlg2.NamedPathSets = importResultsDlg2.GetDataSourcePathsFileReplicates(filePaths.Select(MsDataFileUri.Parse));
-                importResultsDlg2.OkDialog();
-            });
+                    importResultsDlg4.NamedPathSets = importResultsDlg4.GetDataSourcePathsFileReplicates(filePaths.Select(MsDataFileUri.Parse));
+                });
+                OkDialog(importResultsDlg4, importResultsDlg4.OkDialog);
+            }
+
             //Give the Raw files some time to be processed.
             WaitForCondition(15 * 60 * 1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 15 minutes  
             WaitForClosedAllChromatogramsGraph();

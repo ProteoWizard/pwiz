@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -85,7 +86,7 @@ namespace pwiz.SkylineTestTutorial
             string unschedHuman1Name = unschedHuman1Fileroot.Substring(41);
             const string unschedHuman2Fileroot = "A_D110907_SiRT_HELA_11_nsMRM_150selected_2_30min-5-35"; // Not L10N
             string unschedHuman2Name = unschedHuman2Fileroot.Substring(41);
-            ImportNewResults(new[] { unschedHuman1Fileroot, unschedHuman2Fileroot }, 41, false);
+            ImportNewResults(new[] { unschedHuman1Fileroot, unschedHuman2Fileroot }, 41, false, false);
             var docCalibrate = WaitForProteinMetadataBackgroundLoaderCompletedUI();
             const int pepCount = 11, tranCount = 33;
             AssertEx.IsDocumentState(docCalibrate, null, 1, pepCount, pepCount, tranCount);
@@ -679,7 +680,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.NewDocument);
         }
 
-        private void ImportNewResults(IEnumerable<string> baseNames, int suffixLength, bool multiFile)
+        private void ImportNewResults(IEnumerable<string> baseNames, int suffixLength, bool multiFile, bool? removeFix = null)
         {
             var listNamedPathSets = new List<KeyValuePair<string, MsDataFileUri[]>>();
             var listPaths = new List<string>();
@@ -699,12 +700,21 @@ namespace pwiz.SkylineTestTutorial
 
             using (new WaitDocumentChange())
             {
-                RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
+                var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+                RunUI(() =>
                 {
                     importResultsDlg.RadioAddNewChecked = true;
                     importResultsDlg.NamedPathSets = listNamedPathSets.ToArray();
-                    importResultsDlg.OkDialog();
                 });
+                if (removeFix.HasValue)
+                {
+                    RunDlg<ImportResultsNameDlg>(importResultsDlg.OkDialog, resultsNames =>
+                        resultsNames.OkDialog(removeFix.Value ? DialogResult.Yes : DialogResult.No));
+                }
+                else
+                {
+                    OkDialog(importResultsDlg, importResultsDlg.OkDialog);
+                }
             }
             WaitForDocumentLoaded(5 * 60 * 1000);    // 5 minutes
             WaitForClosedAllChromatogramsGraph();
