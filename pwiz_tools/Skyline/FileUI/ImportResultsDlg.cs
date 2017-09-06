@@ -271,7 +271,7 @@ namespace pwiz.Skyline.FileUI
 
         private static readonly string[] SUFFIX_COMMON_CONCENTRATIONS = 
         {
-            "amol", "fmol", "pmol", "nmol", "umol", "mol"
+            "amol", "fmol", "pmol", "nmol", "umol", "mol"   // Not L10N
         };
 
         public static string GetCommonSuffix(IEnumerable<string> names)
@@ -290,7 +290,7 @@ namespace pwiz.Skyline.FileUI
 
         private static bool IsNumericOrSeperator(string s)
         {
-            const string allowedChars = "0123456789.-_";
+            const string allowedChars = "0123456789.-_";    // Not L10N
             return s.All(c => allowedChars.Contains(c));
         }
 

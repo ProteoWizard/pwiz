@@ -53,6 +53,8 @@ namespace SkylineTester
         public void Process(string logFile, string logFileCompare)
         {
             var testDictionary = GetStatsFromLog(logFile);
+            if (testDictionary == null)
+                return;
             var compareDictionary = GetStatsFromLog(logFileCompare);
             var keys = testDictionary.Keys.ToList();
             if (compareDictionary != null)
