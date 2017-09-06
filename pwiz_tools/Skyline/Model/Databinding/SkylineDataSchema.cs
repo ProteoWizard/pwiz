@@ -167,6 +167,10 @@ namespace pwiz.Skyline.Model.Databinding
         {
             using (QueryLock.CancelAndGetWriteLock())
             {
+                if (ReferenceEquals(_document, _documentContainer.Document))
+                {
+                    return;
+                }
                 _document = _documentContainer.Document;
                 IList<IDocumentChangeListener> listeners;
                 lock (_documentChangedEventHandlers)
@@ -257,6 +261,10 @@ namespace pwiz.Skyline.Model.Databinding
             if (null != _batchChangesOriginalDocument)
             {
                 throw new InvalidOperationException();
+            }
+            if (!ReferenceEquals(_document, _documentContainer.Document))
+            {
+                DocumentChangedEventHandler(_documentContainer, new DocumentChangedEventArgs(_document));
             }
             _batchChangesOriginalDocument = _document;
         }

@@ -435,8 +435,8 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
                     catch (Exception e)
                     {
-                        MessageDlg.Show(this, TextUtil.LineSeparate(Resources.DataboundGridControl_DoFillDown_Error_setting_value_, 
-                            e.Message));
+                        MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.DataboundGridControl_DoFillDown_Error_setting_value_, 
+                            e.Message), e);
                         var column = DataGridView.Columns.OfType<DataGridViewColumn>()
                             .FirstOrDefault(col => col.DataPropertyName == propertyDescriptor.Name);
                         if (null != column)
