@@ -775,9 +775,10 @@ namespace pwiz.Skyline.Model.Lib
 
         // Not L10N
 // ReSharper disable NonLocalizedString
+        private static readonly string NAME = "Name:";
         private static readonly Regex REGEX_NAME = new Regex(@"^Name: ([A-Z()\[\]0-9]+)/(\d)"); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
         private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^Num ?[pP]eaks: (\d+)");  // NIST uses "Num peaks" and SpectraST "NumPeaks"
-        private static readonly Regex REGEX_COMMENT = new Regex(@"^Comment: ");
+        private static readonly string COMMENT = "Comment: ";
         private static readonly Regex REGEX_MODS = new Regex(@" Mods=([^ ]+) ");
         private static readonly Regex REGEX_TF_RATIO = new Regex(@" Tfratio=([^ ]+) ");
         private static readonly Regex REGEX_RT = new Regex(@" RetentionTime=([^ ,]+)");
@@ -787,7 +788,7 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly char[] MINOR_SEP = {','};
         // Small molecule items
         private static readonly Regex REGEX_NAME_SMALLMOL = new Regex(@"^Name: (.*)"); // small molecule names can be anything
-        private static readonly Regex REGEX_SYNON = new Regex(@"^Synon: ");
+        private static readonly string SYNON = "Synon: ";
         private static readonly Regex REGEX_INCHIKEY = new Regex(@"^InChIKey: (.*)");
         private static readonly Regex REGEX_FORMULA = new Regex(@"^Formula: (.*)");
         private static readonly Regex REGEX_CAS = new Regex(@"^CAS#: (\d+-\d+-\d)"); // CONSIDER(bspratt): capture NIST# as well?
@@ -800,6 +801,7 @@ namespace pwiz.Skyline.Model.Lib
             long size = sm.GetLength(FilePath);
             
             long readChars = 0;
+            var knownKeys = new HashSet<LibKey>();
             var ambiguousKeys = new HashSet<LibKey>();
 
             using (TextReader reader = sm.CreateReader(FilePath))
@@ -833,6 +835,8 @@ namespace pwiz.Skyline.Model.Lib
 
 
                     // Read until name line
+                    if (!line.StartsWith(NAME))
+                        continue;
                     Match match = REGEX_NAME.Match(line);
                     var isPeptide = true;
                     if (!match.Success)
@@ -869,8 +873,7 @@ namespace pwiz.Skyline.Model.Lib
                             break;
                         }
 
-                        match = REGEX_SYNON.Match(line);
-                        if (match.Success)
+                        if (line.StartsWith(SYNON))
                         {
                             isPeptide = false;
                             continue;
@@ -907,8 +910,7 @@ namespace pwiz.Skyline.Model.Lib
                         }
 
                         // For peptides, a lot of useful info is jammed into the COMMENT line and must be further picked apart
-                        match = REGEX_COMMENT.Match(line);
-                        if (match.Success)
+                        if (line.StartsWith(COMMENT))
                         {
                             match = REGEX_MODS.Match(line);
                             if (match.Success)
@@ -1003,11 +1005,14 @@ namespace pwiz.Skyline.Model.Lib
                     var key = isPeptide ? new LibKey(sequence, charge) : new LibKey(SmallMoleculeLibraryAttributes.Create(sequence, formula, inChiKey, CAS), adduct);
                     var info = new NistSpectrumInfo(key, tfRatio, rt, irt, Convert.ToSingle(totalIntensity),
                                                     (ushort) copies, (ushort) numPeaks, lenCompressed, location);
-                    if (libraryEntries.Any(e => key.Equals(e.Key)))
+                    if (!isPeptide)
                     {
-                        ambiguousKeys.Add(key);
-                    }
-                    
+                        // Keep an eye out for ambiguous keys, probably due to library containing multiple machine types etc
+                        if (!knownKeys.Add(key))
+                        {
+                            ambiguousKeys.Add(key); // Already in knownKeys, note ambiguity
+                        }
+                    }                    
                     libraryEntries.Add(info);
                 }
 
