@@ -28,6 +28,12 @@ namespace pwiz.Common.Collections
     /// </summary>
     public static class CollectionUtil
     {
+        public static void ForEach<T>(this IEnumerable<T> enumerable, Action<T> action)
+        {
+            foreach (var item in enumerable)
+                action(item);
+        }
+
         public static bool EqualsDeep<TKey,TValue>(IDictionary <TKey,TValue> dict1, IDictionary<TKey,TValue> dict2)
         {
             if (dict1.Count != dict2.Count)

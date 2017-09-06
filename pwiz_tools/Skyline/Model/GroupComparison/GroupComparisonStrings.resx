@@ -140,9 +140,6 @@
   <data name="GroupComparisonDefList_Label_Group_Comparisons" xml:space="preserve">
     <value>Group Comparisons</value>
   </data>
-  <data name="FoldChangeBarGraph_GetTitle_Graph" xml:space="preserve">
-    <value>Graph</value>
-  </data>
   <data name="FoldChangeBarGraph_UpdateGraph_Protein" xml:space="preserve">
     <value>Protein</value>
   </data>
@@ -198,5 +195,35 @@
   </data>
   <data name="SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish" xml:space="preserve">
     <value>Tukey's Median Polish</value>
+  </data>
+  <data name="FoldChangeBarGraph_GetTitle_Bar_Graph" xml:space="preserve">
+    <value>Bar Graph</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Properties" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Selection" xml:space="preserve">
+    <value>Selection</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_GetTitle_Volcano_Plot" xml:space="preserve">
+    <value>Volcano Plot</value>
+  </data>
+  <data name="FoldChangeRowTipProvider_RenderTip_Peptide" xml:space="preserve">
+    <value>Peptide</value>
+  </data>
+  <data name="FoldChangeRowTipProvider_RenderTip_Protein" xml:space="preserve">
+    <value>Protein</value>
+  </data>
+  <data name="FoldChangeRowTipProvider_RenderTip_Fold_Change" xml:space="preserve">
+    <value>Fold Change</value>
+  </data>
+  <data name="FoldChangeRowTipProvider_RenderTip_P_Value" xml:space="preserve">
+    <value>P Value</value>
+  </data>
+  <data name="FoldChange_Log2_Fold_Change_" xml:space="preserve">
+    <value>Log2(Fold Change)</value>
+  </data>
+  <data name="FoldChange__Log10_P_Value_" xml:space="preserve">
+    <value>-Log10(P Value)</value>
   </data>
 </root>

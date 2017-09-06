@@ -25,7 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using NHibernate.Util;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -511,6 +511,8 @@ namespace pwiz.Skyline
             type = MassErrorGraphController.GraphType;
             _listGraphMassError.ToList().ForEach(DestroyGraphMassError);
             MassErrorGraphController.GraphType = type;
+
+            FormUtil.OpenForms.OfType<FoldChangeForm>().ForEach(f => f.Close());
 
             DestroyResultsGrid();
             DestroyDocumentGrid();
@@ -1873,7 +1875,7 @@ namespace pwiz.Skyline
                 return;
 
             var menu = sender as ToolStripMenuItem;
-            if (menu == null || !menu.DropDownItems.Any())
+            if (menu == null || !menu.DropDownItems.OfType<object>().Any())
                 return;
 
             var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
@@ -1906,7 +1908,7 @@ namespace pwiz.Skyline
             var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
             if (nodePepTree != null)
             {
-                var placeholder = menu.DropDownItems.First() as ToolStripMenuItem;
+                var placeholder = menu.DropDownItems.OfType<object>().FirstOrDefault() as ToolStripMenuItem;
                 if (placeholder == null)
                     return;
 
@@ -2001,7 +2003,7 @@ namespace pwiz.Skyline
                 return;
 
             var menu = sender as ToolStripMenuItem;
-            if (menu == null || menu.DropDownItems.Any())
+            if (menu == null || menu.DropDownItems.OfType<object>().Any())
                 return;
 
             var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
@@ -2011,7 +2013,7 @@ namespace pwiz.Skyline
             {
                 nodeGroups.Add(new Tuple<TransitionGroupDocNode, IdentityPath>(nodeGroupTree.DocNode, nodeGroupTree.Path));
             }
-            else if (nodePepTree != null && nodePepTree.Nodes.Any())
+            else if (nodePepTree != null && nodePepTree.Nodes.OfType<object>().Any())
             {
                 nodeGroups.AddRange(from TransitionGroupDocNode tranGroup in nodePepTree.DocNode.Children
                                     select new Tuple<TransitionGroupDocNode, IdentityPath>(tranGroup, new IdentityPath(nodePepTree.Path, tranGroup.Id)));
@@ -3945,7 +3947,7 @@ namespace pwiz.Skyline
                 {
                     UpdateAreaPointsTypeMenuItems();
 
-                    if (!pointsToolStripMenuItem.DropDownItems.Any())
+                    if (!pointsToolStripMenuItem.DropDownItems.OfType<object>().Any())
                     {
                         pointsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                         {
@@ -3958,7 +3960,7 @@ namespace pwiz.Skyline
                 }
 
                 UpdateAreaBinWidthMenuItems();
-                if (!areaCVbinWidthToolStripMenuItem.DropDownItems.Any())
+                if (!areaCVbinWidthToolStripMenuItem.DropDownItems.OfType<object>().Any())
                 {
                     areaCVbinWidthToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {

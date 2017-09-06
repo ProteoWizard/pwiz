@@ -554,7 +554,8 @@ namespace ZedGraph
 		/// <param name="e"></param>
 		protected void ZedGraphControl_KeyDown( object sender, System.Windows.Forms.KeyEventArgs e )
 		{
-			SetCursor();
+			if(e.KeyCode == Keys.Shift)
+				SetCursor();
 
 			if ( e.KeyCode == Keys.Escape )
 			{

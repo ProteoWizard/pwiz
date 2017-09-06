@@ -927,4 +927,10 @@
   <data name="SMILES">
     <value>SMILES</value>
   </data>
+  <data name="AbsFoldChange">
+    <value>Absolute Fold Change</value>
+  </data>
+  <data name="AbsLog2FoldChange">
+    <value>Absolute Log 2 Fold Change</value>
+  </data>
 </root>

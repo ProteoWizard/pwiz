@@ -9890,4 +9890,22 @@ Would you like to remove some or all of this suffix to shorten the names used in
     <value>The files you have chosen have a common prefix and suffix.
 Would you like to remove some or all of the prefix or suffix to shorten the names used in Skyline?</value>
   </data>
+  <data name="MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than__1__" xml:space="preserve">
+    <value>{0} must be greater than {1}.</value>
+  </data>
+  <data name="MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than__1__" xml:space="preserve">
+    <value>{0} must be less than {1}.</value>
+  </data>
+  <data name="FoldChangeForm_BuildContextMenu_Grid" xml:space="preserve">
+    <value>Grid</value>
+  </data>
+  <data name="FoldChangeForm_BuildContextMenu_Bar_Graph" xml:space="preserve">
+    <value>Bar Graph</value>
+  </data>
+  <data name="FoldChangeForm_BuildContextMenu_Volcano_Plot" xml:space="preserve">
+    <value>Volcano Plot</value>
+  </data>
+  <data name="FoldChangeForm_BuildContextMenu_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
 </root>

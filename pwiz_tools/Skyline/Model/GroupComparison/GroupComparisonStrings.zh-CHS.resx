@@ -140,9 +140,6 @@
   <data name="GroupComparisonDefList_Label_Group_Comparisons" xml:space="preserve">
     <value>群组比较</value>
   </data>
-  <data name="FoldChangeBarGraph_GetTitle_Graph" xml:space="preserve">
-    <value>图</value>
-  </data>
   <data name="FoldChangeBarGraph_UpdateGraph_Protein" xml:space="preserve">
     <value>蛋白质</value>
   </data>

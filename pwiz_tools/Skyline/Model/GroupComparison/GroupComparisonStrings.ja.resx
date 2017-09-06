@@ -139,9 +139,6 @@
   <data name="GroupComparisonDefList_Label_Group_Comparisons" xml:space="preserve">
     <value>グループ比較</value>
   </data>
-  <data name="FoldChangeBarGraph_GetTitle_Graph" xml:space="preserve">
-    <value>グラフ</value>
-  </data>
   <data name="FoldChangeBarGraph_UpdateGraph_Protein" xml:space="preserve">
     <value>タンパク質</value>
   </data>

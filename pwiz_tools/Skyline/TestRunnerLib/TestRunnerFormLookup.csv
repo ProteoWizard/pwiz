@@ -83,6 +83,7 @@ FindNodeDlg,TestCustomReportsTutorial
 FindResultsForm,TestPeakPickingTutorial
 FoldChangeGrid,TestGroupComparison
 FoldChangeBarGraph,TestGroupComparison
+FoldChangeVolcanoPlot,TestGroupComparisonVolcanoPlot
 GenerateDecoysDlg,TestPeakPickingTutorial
 GraphChromatogram,TestCustomReportsTutorial
 GraphFullScan,TestFullScanGraph
@@ -186,3 +187,4 @@ UpgradeLicenseDlg,TestMiscForms
 ViewEditor.ChooseColumnsView,TestLiveReportsFilter
 ViewEditor.FilterView,TestLiveReportsFilter
 ViewLibraryDlg,TestFullScanId
+VolcanoPlotProperties,TestGroupComparisonVolcanoPlot

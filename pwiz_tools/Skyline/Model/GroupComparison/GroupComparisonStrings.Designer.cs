@@ -71,11 +71,29 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Graph.
+        ///   Looks up a localized string similar to -Log10(P Value).
         /// </summary>
-        internal static string FoldChangeBarGraph_GetTitle_Graph {
+        internal static string FoldChange__Log10_P_Value_ {
             get {
-                return ResourceManager.GetString("FoldChangeBarGraph_GetTitle_Graph", resourceCulture);
+                return ResourceManager.GetString("FoldChange__Log10_P_Value_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Log2(Fold Change).
+        /// </summary>
+        internal static string FoldChange_Log2_Fold_Change_ {
+            get {
+                return ResourceManager.GetString("FoldChange_Log2_Fold_Change_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bar Graph.
+        /// </summary>
+        internal static string FoldChangeBarGraph_GetTitle_Bar_Graph {
+            get {
+                return ResourceManager.GetString("FoldChangeBarGraph_GetTitle_Bar_Graph", resourceCulture);
             }
         }
         
@@ -148,6 +166,69 @@ namespace pwiz.Skyline.Model.GroupComparison {
         internal static string FoldChangeOptionsUi_UpdateSettings_Elapsed_time___0_ {
             get {
                 return ResourceManager.GetString("FoldChangeOptionsUi_UpdateSettings_Elapsed_time___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fold Change.
+        /// </summary>
+        internal static string FoldChangeRowTipProvider_RenderTip_Fold_Change {
+            get {
+                return ResourceManager.GetString("FoldChangeRowTipProvider_RenderTip_Fold_Change", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to P Value.
+        /// </summary>
+        internal static string FoldChangeRowTipProvider_RenderTip_P_Value {
+            get {
+                return ResourceManager.GetString("FoldChangeRowTipProvider_RenderTip_P_Value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide.
+        /// </summary>
+        internal static string FoldChangeRowTipProvider_RenderTip_Peptide {
+            get {
+                return ResourceManager.GetString("FoldChangeRowTipProvider_RenderTip_Peptide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein.
+        /// </summary>
+        internal static string FoldChangeRowTipProvider_RenderTip_Protein {
+            get {
+                return ResourceManager.GetString("FoldChangeRowTipProvider_RenderTip_Protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Properties.
+        /// </summary>
+        internal static string FoldChangeVolcanoPlot_BuildContextMenu_Properties {
+            get {
+                return ResourceManager.GetString("FoldChangeVolcanoPlot_BuildContextMenu_Properties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selection.
+        /// </summary>
+        internal static string FoldChangeVolcanoPlot_BuildContextMenu_Selection {
+            get {
+                return ResourceManager.GetString("FoldChangeVolcanoPlot_BuildContextMenu_Selection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Volcano Plot.
+        /// </summary>
+        internal static string FoldChangeVolcanoPlot_GetTitle_Volcano_Plot {
+            get {
+                return ResourceManager.GetString("FoldChangeVolcanoPlot_GetTitle_Volcano_Plot", resourceCulture);
             }
         }
         

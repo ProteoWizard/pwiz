@@ -25,6 +25,7 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.GroupComparison;
@@ -52,13 +53,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.GraphPane.YAxis.MajorTic.IsOpposite = false;
             zedGraphControl.GraphPane.XAxis.MinorTic.IsOpposite = false;
             zedGraphControl.GraphPane.YAxis.MinorTic.IsOpposite = false;
+            zedGraphControl.IsZoomOnMouseCenter = true;
 
             _axisLabelScaler = new AxisLabelScaler(zedGraphControl.GraphPane);
         }
 
         public override string GetTitle(string groupComparisonName)
         {
-            return base.GetTitle(groupComparisonName) + ':' + GroupComparisonStrings.FoldChangeBarGraph_GetTitle_Graph;
+            return base.GetTitle(groupComparisonName) + ':' + GroupComparisonStrings.FoldChangeBarGraph_GetTitle_Bar_Graph;
         }
 
         protected override void OnShown(EventArgs e)
@@ -68,7 +70,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 _bindingListSource = FoldChangeBindingSource.GetBindingListSource();
                 _bindingListSource.ListChanged += BindingListSourceOnListChanged;
-                _bindingListSource.AllRowsChanged += (sender, args)=>QueueUpdateGraph();
+                _bindingListSource.AllRowsChanged += BindingListSourceAllRowsChanged;
                 if (_skylineWindow == null)
                 {
                     _skylineWindow = ((SkylineDataSchema) _bindingListSource.ViewInfo.DataSchema).SkylineWindow;
@@ -88,7 +90,22 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _skylineWindow.SequenceTree.AfterSelect -= SequenceTreeOnAfterSelect;
                 _skylineWindow = null;
             }
+
+            _bindingListSource.AllRowsChanged -= BindingListSourceAllRowsChanged;
+            _bindingListSource.ListChanged -= BindingListSourceOnListChanged;
+
             base.OnHandleDestroyed(e);
+        }
+
+        private void BindingListSourceAllRowsChanged(object sender, EventArgs e)
+        {
+            QueueUpdateGraph();
+        }
+
+        private void zedGraphControl_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+                Program.MainWindow.FocusDocument();
         }
 
         private void SequenceTreeOnAfterSelect(object sender, TreeViewEventArgs treeViewEventArgs)
@@ -153,7 +170,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 }
                 else
                 {
-                    label = row.Protein.Name;
+                    label = PeptideGroupTreeNode.ProteinModalDisplayText(row.Protein.DocNode);
                 }
                 if (showMsLevel && row.MsLevel.HasValue)
                 {
@@ -192,6 +209,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.GraphPane.YAxis.Title.Text = GroupComparisonStrings.FoldChangeBarGraph_UpdateGraph_Log_2_Fold_Change;
             var barGraph = new MeanErrorBarItem(null, points, Color.Black, Color.Blue);
             zedGraphControl.GraphPane.CurveList.Add(barGraph);
+            zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto =
+            zedGraphControl.GraphPane.YAxis.Scale.MinAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = true;
             zedGraphControl.GraphPane.XAxis.Type = AxisType.Text;
             zedGraphControl.GraphPane.XAxis.Scale.TextLabels = textLabels.ToArray();
             _axisLabelScaler.ScaleAxisLabels();
@@ -284,7 +303,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private bool IsPathSelected(IdentityPath selectedPath, IdentityPath identityPath)
         {
-            if (selectedPath.Depth < identityPath.Depth)
+            if (selectedPath == null || identityPath == null || selectedPath.Depth < identityPath.Depth)
             {
                 return false;
             }
@@ -293,7 +312,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void zedGraphControl_ContextMenuBuilder(ZedGraphControl graphControl, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
-            ZedGraphHelper.BuildContextMenu(graphControl, menuStrip, true);
+            BuildContextMenu(graphControl, menuStrip, mousePt, objState);
         }
     }
 }

@@ -183,6 +183,7 @@
     <Compile Include="FullScanIdTest.cs" />
     <Compile Include="GroupComparisonScenariosTest.cs" />
     <Compile Include="GroupComparisonTest.cs" />
+    <Compile Include="GroupComparisonVolcanoPlotTest.cs" />
     <Compile Include="ImmediateWindowTest.cs" />
     <Compile Include="ImportDocTest.cs" />
     <Compile Include="CopyPasteTest.cs" />

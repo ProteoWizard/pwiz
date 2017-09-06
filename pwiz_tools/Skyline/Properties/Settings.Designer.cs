@@ -2580,6 +2580,66 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public double Log2FoldChangeCutoff {
+            get {
+                return ((double)(this["Log2FoldChangeCutoff"]));
+            }
+            set {
+                this["Log2FoldChangeCutoff"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.3010299956639813")]
+        public double PValueCutoff {
+            get {
+                return ((double)(this["PValueCutoff"]));
+            }
+            set {
+                this["PValueCutoff"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool GroupComparisonShowSelection {
+            get {
+                return ((bool)(this["GroupComparisonShowSelection"]));
+            }
+            set {
+                this["GroupComparisonShowSelection"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool FilterVolcanoPlotPoints {
+            get {
+                return ((bool)(this["FilterVolcanoPlotPoints"]));
+            }
+            set {
+                this["FilterVolcanoPlotPoints"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool VolcanoPlotPropertiesLog {
+            get {
+                return ((bool)(this["VolcanoPlotPropertiesLog"]));
+            }
+            set {
+                this["VolcanoPlotPropertiesLog"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool ShowOriginalPeak {
             get {

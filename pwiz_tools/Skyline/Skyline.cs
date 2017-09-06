@@ -34,6 +34,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
 using log4net;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Alerts;
@@ -2691,12 +2692,15 @@ namespace pwiz.Skyline
         {
             FoldChangeGrid.ShowFoldChangeGrid(dockPanel, GetFloatingRectangleForNewWindow(), this, groupComparisonName);
         }
-
+        
         public void UpdateTargetsDisplayMode(ProteinDisplayMode mode)
         {
             Settings.Default.ShowPeptidesDisplayMode = mode.ToString();
             Settings.Default.ShowPeptides = true;
             ShowSequenceTreeForm(true, true);
+
+            FormUtil.OpenForms.OfType<FoldChangeBarGraph>().ForEach(b => b.QueueUpdateGraph());
+            FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>().ForEach(v => v.QueueUpdateGraph());
         }
 
         private void showTargetsByNameToolStripMenuItem_Click(object sender, EventArgs e)

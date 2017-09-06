@@ -12215,6 +12215,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Bar Graph.
+        /// </summary>
+        public static string FoldChangeForm_BuildContextMenu_Bar_Graph {
+            get {
+                return ResourceManager.GetString("FoldChangeForm_BuildContextMenu_Bar_Graph", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Grid.
+        /// </summary>
+        public static string FoldChangeForm_BuildContextMenu_Grid {
+            get {
+                return ResourceManager.GetString("FoldChangeForm_BuildContextMenu_Grid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings.
+        /// </summary>
+        public static string FoldChangeForm_BuildContextMenu_Settings {
+            get {
+                return ResourceManager.GetString("FoldChangeForm_BuildContextMenu_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Volcano Plot.
+        /// </summary>
+        public static string FoldChangeForm_BuildContextMenu_Volcano_Plot {
+            get {
+                return ResourceManager.GetString("FoldChangeForm_BuildContextMenu_Volcano_Plot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Folder {
@@ -15960,12 +15996,30 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} must be greater than {1}..
+        /// </summary>
+        public static string MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than__1__ {
+            get {
+                return ResourceManager.GetString("MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} must be greater than or equal to {1}..
         /// </summary>
         public static string MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__ {
             get {
                 return ResourceManager.GetString("MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__" +
                         "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} must be less than {1}..
+        /// </summary>
+        public static string MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than__1__ {
+            get {
+                return ResourceManager.GetString("MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than__1__", resourceCulture);
             }
         }
         

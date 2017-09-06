@@ -83,16 +83,16 @@ namespace pwiz.Skyline.Controls
         }
 
         public bool ValidateDecimalTextBox(TextBox control,
-                                           double? min, double? max, out double val)
+                                           double? min, double? max, out double val, bool includeMin = true, bool includeMax = true)
         {
             if (!ValidateDecimalTextBox(control, out val))
                 return false;
 
             bool valid = false;
-            if (min.HasValue && val < min.Value)
-                ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, null, min);
-            else if (max.HasValue && val > max.Value)
-                ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, null, max);
+            if (min.HasValue && (includeMin ? val < min.Value : val <= min.Value))
+                ShowTextBoxError(control, includeMin ? Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__ : Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than__1__, null, min);
+            else if (max.HasValue && (includeMax ? val > max.Value : val >= max.Value))
+                ShowTextBoxError(control, includeMax ? Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__ : Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than__1__, null, max);
             else
                 valid = true;
             return valid;

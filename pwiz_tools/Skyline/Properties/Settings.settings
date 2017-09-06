@@ -644,6 +644,21 @@
     <Setting Name="ShowQuantitativeOnly" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="Log2FoldChangeCutoff" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="PValueCutoff" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">1.3010299956639813</Value>
+    </Setting>
+    <Setting Name="GroupComparisonShowSelection" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="FilterVolcanoPlotPoints" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="VolcanoPlotPropertiesLog" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
     <Setting Name="ShowOriginalPeak" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>

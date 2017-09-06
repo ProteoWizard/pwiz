@@ -61,6 +61,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Absolute Fold Change.
+        /// </summary>
+        public static string AbsFoldChange {
+            get {
+                return ResourceManager.GetString("AbsFoldChange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Absolute Log 2 Fold Change.
+        /// </summary>
+        public static string AbsLog2FoldChange {
+            get {
+                return ResourceManager.GetString("AbsLog2FoldChange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Accuracy.
         /// </summary>
         public static string Accuracy {

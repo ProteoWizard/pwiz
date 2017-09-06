@@ -1143,7 +1143,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (!string.IsNullOrEmpty(textBox.Text))
             {
-                textBox.Text += ", "; // Not L10N
+                textBox.Text += @", "; // Not L10N
             }
             textBox.Text += adduct;
         }

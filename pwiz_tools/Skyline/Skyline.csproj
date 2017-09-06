@@ -295,6 +295,19 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
+    <Compile Include="Controls\GroupComparison\FoldChangeRowTipProvider.cs" />
+    <Compile Include="Controls\GroupComparison\FoldChangeVolcanoPlot.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\FoldChangeVolcanoPlot.Designer.cs">
+      <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\VolcanoPlotProperties.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\VolcanoPlotProperties.Designer.cs">
+      <DependentUpon>VolcanoPlotProperties.cs</DependentUpon>
+    </Compile>
     <Compile Include="Util\AnnotationHelper.cs" />
     <Compile Include="Controls\Graphs\AreaCVGraphDataCache.cs" />
     <Compile Include="Controls\Graphs\AreaCVToolbar.cs">
@@ -1812,6 +1825,9 @@
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeGrid.zh-CHS.resx">
       <DependentUpon>FoldChangeGrid.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\FoldChangeVolcanoPlot.resx">
+      <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.ja.resx">
       <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -1820,6 +1836,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.zh-CHS.resx">
       <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotProperties.resx">
+      <DependentUpon>VolcanoPlotProperties.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
       <DependentUpon>ActionBoxControl.cs</DependentUpon>

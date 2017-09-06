@@ -192,9 +192,9 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private LineItem AddLineItem(string text, double fromX, double fromY, double toX, double toY, Color color)
+        private LineItem AddLineItem(string text, double fromX, double toX, double fromY, double toY, Color color)
         {
-            return new LineItem(text, new[] { fromX, fromY }, new[] { toX, toY }, color, SymbolType.None, 2.0f)
+            return new LineItem(text, new[] { fromX, toX }, new[] { fromY, toY }, color, SymbolType.None, 2.0f)
             { Line = { Style = DashStyle.Dash } };
         }
 
