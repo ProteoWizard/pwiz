@@ -223,6 +223,11 @@ namespace pwiz.Skyline.Model
             var adductStart = line.LastIndexOf('[');
             if (adductStart >= 0)
             {
+                if (adductStart + 2 > line.Length || line[adductStart + 1] == '+')
+                {
+                    // It was probably a modification like "[+57]", and we're being called by StripChargeIndicators on a peptide
+                    return chargePos;
+                }
                 var adductText = line.Substring(adductStart);
                 if (adductStart > 0 && line[adductStart - 1] == '(')
                 {
@@ -231,7 +236,7 @@ namespace pwiz.Skyline.Model
                 }
                 if (!Adduct.TryParse(adductText, out adduct)) // Not L10N
                 {
-                    // It was probably a modification like "[+57]", and we're being called by StripChargeIndicators on a peptide
+                    // Whatever it was, it's not an adduct
                     return chargePos;
                 }
                 chargePos = adductStart;

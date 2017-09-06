@@ -53,12 +53,19 @@ namespace pwiz.Skyline.Model
         public CustomIon(string formula, Adduct adduct, TypedMass monoisotopicMass, TypedMass averageMass, string name)
             : base(formula, monoisotopicMass, averageMass, name)
         {
-            var ionInfo = new IonInfo(NeutralFormula, adduct); // Analyzes the formula to see if it's something like "CH12[M+Na]"
-            if (!Equals(NeutralFormula, ionInfo.NeutralFormula))
+            if (adduct.IsEmpty)
             {
-                Formula = ionInfo.NeutralFormula;
+                var ionInfo = new IonInfo(NeutralFormula, adduct); // Analyzes the formula to see if it's something like "CH12[M+Na]"
+                if (!Equals(NeutralFormula, ionInfo.NeutralFormula))
+                {
+                    Formula = ionInfo.NeutralFormula;
+                }
+                Adduct = Adduct.FromStringAssumeProtonated(ionInfo.AdductText);
             }
-            Adduct = adduct.IsEmpty ? Adduct.FromStringAssumeProtonated(ionInfo.AdductText) : adduct;
+            else
+            {
+                Adduct = adduct;
+            }
         }
 
         /// <summary>

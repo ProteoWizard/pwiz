@@ -139,21 +139,25 @@ namespace pwiz.Skyline.Util
             SetHashCode(); // For fast GetHashCode()
         }
 
+        private static readonly Regex ADDUCT_OUTER_REGEX =
+            new Regex(
+                @"\[?(?<multM>\d*)M(?<label>(\(.*\)|[^\+\-]*))?(?<adduct>[\+\-][^\]]*)(\](?<declaredChargeCount>\d*)(?<declaredChargeSign>[+-]*)?)?$", // Not L10N
+                RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
+        private static readonly Regex ADDUCT_INNER_REGEX = new Regex(@"(?<oper>\+|\-)(?<multM>\d+)?(?<ion>[^-+]*)", // Not L10N
+            RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
+        private static readonly Regex ADDUCT_ION_REGEX = new Regex(@"(?<multM>\d+)?(?<ion>[A-Z][a-z]?['\""]?)", // Not L10N
+            RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
+
         private void ParseDescription(string input)
         {
-            const RegexOptions regexOptions =
-                RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant;
-            var outerRegex =
-                new Regex(
-                    @"\[?(?<multM>\d*)M(?<label>(\(.*\)|[^\+\-]*))?(?<adduct>[\+\-][^\]]*)(\](?<declaredChargeCount>\d*)(?<declaredChargeSign>[+-]*)?)?$", // Not L10N
-                    regexOptions); // Not L10N
-            var innerRegex = new Regex(@"(?<oper>\+|\-)(?<multM>\d+)?(?<ion>[^-+]*)", regexOptions); // Not L10N
             int? declaredCharge = null;
             int? calculatedCharge = null;
             int parsedCharge;
-            var match = outerRegex.Match(input.Trim());
-            var adductOperations = match.Groups["adduct"].Value; // Not L10N
-            var success = match.Success && (match.Groups.Count == 6) && !string.IsNullOrEmpty(adductOperations);
+            var match = ADDUCT_OUTER_REGEX.Match(input.Trim());
+            var success = match.Success && (match.Groups.Count == 6);
+
+            string adductOperations; 
+            success &= !string.IsNullOrEmpty(adductOperations = match.Groups["adduct"].Value); // Not L10N
 
             // Check for sane bracketing (none, or single+balanced+anchored)
             if (success)
@@ -196,8 +200,7 @@ namespace pwiz.Skyline.Util
                     {
                         label = DICT_ADDUCT_ISOTOPE_NICKNAMES.Aggregate(label, (current, nickname) => current.Replace(nickname.Key, nickname.Value)); // eg Cl37 -> Cl'
                         // Problem: normal chemical formula for "6C132N15H" -> "6C'2NH'" would be "C'6N'15H"
-                        var ionRegex = new Regex(@"(?<multM>\d+)?(?<ion>[A-Z][a-z]?['\""]?)", regexOptions); // Not L10N
-                        var ionMatches = ionRegex.Matches(label);
+                        var ionMatches = ADDUCT_ION_REGEX.Matches(label);
                         var isotopeLabels = new Dictionary<string, KeyValuePair<string, int>>();
                         foreach (Match m in ionMatches)
                         {
@@ -252,7 +255,7 @@ namespace pwiz.Skyline.Util
                 else
                 {
                     // Now parse each part of the "+Na-2H" in "[M+Na-2H]" if any such thing is there
-                    var matches = innerRegex.Matches(adductOperations);
+                    var matches = ADDUCT_INNER_REGEX.Matches(adductOperations);
                     int remaining = matches.Count;
                     foreach (Match m in matches)
                     {
