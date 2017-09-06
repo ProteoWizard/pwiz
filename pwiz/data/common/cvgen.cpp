@@ -173,7 +173,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "enum PWIZ_API_DECL CVID\n{\n"
           "    CVID_Unknown = -1";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
-    BOOST_FOREACH(const Term& term, obo->terms)
+    for(const Term& term : obo->terms)
     {
         string& eName = correctedEnumNameMaps[obo-obos.begin()][term.id];
 
@@ -183,7 +183,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
         if (obo->prefix == "MS") // add synonyms for PSI-MS only
         {
-            BOOST_FOREACH(const string& synonym, term.exactSynonyms)
+            for(const string& synonym : term.exactSynonyms)
             {
                 os << ",\n\n"
                    << "    /// " << synonym << " (" << term.name << "): " << term.def << "\n"
@@ -289,7 +289,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "const TermInfo termInfos_[] =\n{\n";
     os << "    {CVID_Unknown, \"??:0000000\", \"CVID_Unknown\", \"CVID_Unknown\", false},\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
-    BOOST_FOREACH(const Term& term, obo->terms)
+    for(const Term& term : obo->terms)
     {
         string& eName = correctedEnumNameMaps[obo-obos.begin()][term.id];
 
@@ -316,8 +316,8 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "CVIDPair relationsIsA_[] =\n{\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
-    BOOST_FOREACH(const Term& term, obo->terms)
-    BOOST_FOREACH(const Term::id_type& id, term.parentsIsA)
+    for(const Term& term : obo->terms)
+    for(const Term::id_type& id : term.parentsIsA)
         os << "    {" << correctedEnumNameMaps[obo-obos.begin()][term.id] << ", "
            << correctedEnumNameMaps[obo-obos.begin()][id] << "},\n";
     os << "}; // relationsIsA_\n\n\n";
@@ -326,8 +326,8 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "CVIDPair relationsPartOf_[] =\n{\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
-    BOOST_FOREACH(const Term& term, obo->terms)
-    BOOST_FOREACH(const Term::id_type& id, term.parentsPartOf)
+    for(const Term& term : obo->terms)
+    for(const Term::id_type& id : term.parentsPartOf)
         os << "    {" << correctedEnumNameMaps[obo-obos.begin()][term.id] << ", "
            << correctedEnumNameMaps[obo-obos.begin()][id] << "},\n";
     os << "}; // relationsPartOf_\n\n\n";
@@ -346,7 +346,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "{\n"
        << "    {CVID_Unknown, \"Unknown\", CVID_Unknown},\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
-    BOOST_FOREACH(const Term& term, obo->terms)
+    for(const Term& term : obo->terms)
     for (Term::relation_map::const_iterator jt=term.relations.begin(); jt!=term.relations.end(); ++jt)
     {
         const Term* relatedTerm = NULL;
@@ -388,8 +388,8 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "{\n"
           "    {CVID_Unknown, \"Unknown\"},\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
-    BOOST_FOREACH(const Term& term, obo->terms)
-    BOOST_FOREACH(const string& synonym, term.exactSynonyms)
+    for(const Term& term : obo->terms)
+    for(const string& synonym : term.exactSynonyms)
         os << "    {" << correctedEnumNameMaps[obo-obos.begin()][term.id] << ", \"" << synonym << "\"},\n";
     os << "}; // relationsExactSynonym_\n\n\n";
 
@@ -414,8 +414,8 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
         if (obo->prefix != "UNIMOD") // we currently only use UNIMOD properties
             continue;
 
-        BOOST_FOREACH(const Term& term, obo->terms)
-        BOOST_FOREACH(const NameValuePair& nameValuePair, term.propertyValues)
+        for(const Term& term : obo->terms)
+        for(const NameValuePair& nameValuePair : term.propertyValues)
         {
             if (!(bal::ends_with(nameValuePair.first, "_classification") ||
                   bal::ends_with(nameValuePair.first, "_position") ||
@@ -485,7 +485,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
         string version;
         for (size_t i=0; i < obo->header.size(); ++i)
         {
-            bxp::sregex e = bxp::sregex::compile(".*?[^-]version: (\\S+)");
+            bxp::sregex e = bxp::sregex::compile("data-version: (\\S+)");
             bxp::smatch what;
             if (regex_match(obo->header[i], what, e))
             {
@@ -501,8 +501,8 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
             string max_date_time_modified;
             bxp::sregex e = bxp::sregex::compile("(\\d+-\\d+-\\d+).*");
             bxp::smatch what;
-            BOOST_FOREACH(const Term& term, obo->terms)
-            BOOST_FOREACH(const NameValuePair& nameValuePair, term.propertyValues)
+            for(const Term& term : obo->terms)
+            for(const NameValuePair& nameValuePair : term.propertyValues)
                 if (nameValuePair.first == "date_time_modified" &&
                     regex_match(nameValuePair.second, what, e))
                 {
@@ -578,10 +578,10 @@ void generateFiles(const vector<OBO>& obos, const string& basename, const bfs::p
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     {
         multiset<string> enumNames;
-        BOOST_FOREACH(const Term& term, obo->terms)
+        for(const Term& term : obo->terms)
             enumNames.insert(enumName(term));
 
-        BOOST_FOREACH(const Term& term, obo->terms)
+        for(const Term& term : obo->terms)
         {
             termMaps[obo-obos.begin()][term.id] = &term;
 

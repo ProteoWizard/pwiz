@@ -1,6 +1,6 @@
 format-version: 1.2
-data-version: 4.0.13_rc1
-date: 23:06:2017 13:40
+data-version: 4.0.14
+date: 28:08:2017 11:45
 saved-by: Gerhard Mayer
 auto-generated-by: OBO-Edit 2.3.1
 import: http://ontologies.berkeleybop.org/pato.obo
@@ -8996,13 +8996,13 @@ is_a: MS:1001143 ! PSM-level search engine specific statistic
 [Term]
 id: MS:1001421
 name: pepXML format
-def: "Source file for this mzIdentML was in a pepXML file format." [PSI:PI]
+def: "The XML-based pepXML file format for encoding PSM information, created and maintained by the Trans-Proteomic Pipeline developers." [PSI:PI]
 is_a: MS:1001040 ! intermediate analysis format
 
 [Term]
 id: MS:1001422
 name: protXML format
-def: "Source file for this mzIdentML was in protXML file format." [PSI:PI]
+def: "The XML-based protXML file format for encoding protein identifications, created and maintained by the Trans-Proteomic Pipeline developers." [PSI:PI]
 is_a: MS:1001040 ! intermediate analysis format
 
 [Term]
@@ -16799,7 +16799,7 @@ is_a: MS:1001456 ! analysis software
 
 [Term]
 id: MS:1002576
-name: Andromeda result file
+name: Andromeda result format
 def: "Andromeda result file output format." [PSI:PI]
 is_a: MS:1001040 ! intermediate analysis format
 
@@ -18247,7 +18247,7 @@ is_a: MS:1002809 ! adduct ion attribute
 [Term]
 id: MS:1002812
 name: Regular expression for adduct ion formula
-def: "(\[[:digit:]{0,1}M([+][:digit:]{0,1}(H|K|(Na)|(Cl)|(Br)|(NH3)|(NH4)|(CH3OH)|(IsoProp)|(DMSO)|(FA)|(Hac)|(TFA)|(NaCOOH)|(HCOOH)|(CF3COOH)|(ACN))){0,}([-][:digit:]{0,1}(H|(H2O)|(CH2)|(CH4)|(NH3)|(CO)|(CO2)|(COCH2)|(HCOOH)|(C2H4)|(C4H8)|(C3H2O3)|(C5H8O4)|(C6H10O4)|(C6H10O5)|(C6H8O6))){0,}\][:digit:]{0,1}[+-])." [PSI:PI]
+def: "(\[[:digit:]{0,1}M([+][:digit:]{0,1}(H|K|(Na)|(Li)|(Cl)|(Br)|(NH3)|(NH4)|(CH3OH)|(IsoProp)|(DMSO)|(FA)|(Hac)|(TFA)|(NaCOOH)|(HCOOH)|(CF3COOH)|(ACN))){0,}([-][:digit:]{0,1}(H|(H2O)|(CH2)|(CH4)|(NH3)|(CO)|(CO2)|(COCH2)|(HCOOH)|(C2H4)|(C4H8)|(C3H2O3)|(C5H8O4)|(C6H10O4)|(C6H10O5)|(C6H8O6))){0,}\][:digit:]{0,1}[+-])." [PSI:PI]
 is_a: MS:1002479 ! regular expression
 
 [Term]
@@ -18256,7 +18256,7 @@ name: adduct ion formula
 def: "Adduct formation formula specified by the given value." [PMID:22111785, DOI:10.1016/S1044-0305(99)00089-6, http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1002809 ! adduct ion attribute
-relationship: has_regexp MS:1002812 ! (\[[:digit:]{0,1}M([+][:digit:]{0,1}(H|K|(Na)|(Cl)|(Br)|(NH3)|(NH4)|(CH3OH)|(IsoProp)|(DMSO)|(FA)|(Hac)|(TFA)|(NaCOOH)|(HCOOH)|(CF3COOH)|(ACN))){0,}([-][:digit:]{0,1}(H|(H2O)|(CH2)|(CH4)|(NH3)|(CO)|(CO2)|(COCH2)|(HCOOH)|(C2H4)|(C4H8)|(C3H2O3)|(C5H8O4)|(C6H10O4)|(C6H10O5)|(C6H8O6))){0,}\][:digit:]{0,1}[+-])
+relationship: has_regexp MS:1002812 ! (\[[:digit:]{0,1}M([+][:digit:]{0,1}(H|K|(Na)|(Li)|(Cl)|(Br)|(NH3)|(NH4)|(CH3OH)|(IsoProp)|(DMSO)|(FA)|(Hac)|(TFA)|(NaCOOH)|(HCOOH)|(CF3COOH)|(ACN))){0,}([-][:digit:]{0,1}(H|(H2O)|(CH2)|(CH4)|(NH3)|(CO)|(CO2)|(COCH2)|(HCOOH)|(C2H4)|(C4H8)|(C3H2O3)|(C5H8O4)|(C6H10O4)|(C6H10O5)|(C6H8O6))){0,}\][:digit:]{0,1}[+-])
 
 [Term]
 id: MS:1002814
@@ -18316,3 +18316,27 @@ name: M-H ion
 def: "M-H ion from negative ion mode (M in the property ionMass denotes the mass of the neutral molecule)." [DOI:10.1016/S1044-0305(99)00089-6, http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator]
 property_value: ionMass: "M - 1.007276" xsd:string
 is_a: MS:1002808 ! negative mode adduct ion
+
+[Term]
+id: MS:1002822
+name: OpenMS file format
+def: "File format developed by the OpenMS team." [PMID: 27575624]
+is_a: MS:1001459 ! file format
+
+[Term]
+id: MS:1002823
+name: idXML
+def: "OpenMS intermediate identification format." [PSI:PI]
+is_a: MS:1002822 ! OpenMS file format
+
+[Term]
+id: MS:1002824
+name: featureXML
+def: "OpenMS feature file format." [PSI:PI]
+is_a: MS:1002822 ! OpenMS file format
+
+[Term]
+id: MS:1002825
+name: consensusXML
+def: "OpenMS consensus map format." [PSI:PI]
+is_a: MS:1002822 ! OpenMS file format
