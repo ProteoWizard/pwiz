@@ -113,7 +113,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => AssertVolcanoPlotCorrect(volcanoPlot, true, 1, 41, 83));
             AssertSelectionCorrect(volcanoPlot, "EVLPELGIK", 1);
 
-            MoveAndClick(volcanoPlot, 5.1869, -Math.Log10(5E-6), true); // This peptide's pvalue is too small so it's capped at 5E-6
+            MoveAndClick(volcanoPlot, 5.1869, -Math.Log10(1E-6), true); // This peptide's pvalue is too small so it's capped at 1E-6
             WaitForConditionUI(() => !SkylineWindow.SequenceTree.IsInUpdate && !volcanoPlot.UpdatePending);
 
             // Now 2 peptides should be selected
