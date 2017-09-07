@@ -379,7 +379,7 @@ namespace pwiz.Common.DataBinding
                 string message;
                 if (conflicts.Count == 1)
                 {
-                    message = Resources.AbstractViewContext_CopyViewsToGroup_The_name___0___already_exists__Do_you_want_to_replace_it_;
+                    message = string.Format(Resources.AbstractViewContext_CopyViewsToGroup_The_name___0___already_exists__Do_you_want_to_replace_it_, conflicts.First());
                 }
                 else
                 {

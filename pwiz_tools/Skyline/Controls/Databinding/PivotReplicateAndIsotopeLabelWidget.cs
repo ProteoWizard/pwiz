@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Controls.Databinding
             ViewSpec = PivotIsotopeLabel(ViewSpec, pivotIsotopeLabel);
         }
         // ReSharper disable NonLocalizedString
-        private static readonly IList<PropertyPath> PrecursorCrosstabValues =
+        private static readonly IList<PropertyPath> PrecursorCrosstabValueStartsWith =
             ImmutableList.ValueOf(new[]
             {
                 PropertyPath.Root.Property("IsotopeLabelType"),
@@ -115,12 +115,16 @@ namespace pwiz.Skyline.Controls.Databinding
                 PropertyPath.Root.Property("ResultSummary"),
             });
 
+        private static readonly IList<PropertyPath> PrecursorCrosstabValueExact =
+            ImmutableList.ValueOf(new[] {PropertyPath.Root});
+
         public static ViewSpec PivotIsotopeLabel(ViewSpec viewSpec, bool pivot)
         {
             PropertyPath pivotKey;
             IList<PropertyPath> groupBy;
             IList<PropertyPath> crossTabExclude;
-            IList<PropertyPath> crosstabValues;
+            IList<PropertyPath> crosstabValueStartsWith;
+            IList<PropertyPath> crosstabValueExact;
             if (viewSpec.RowSource == typeof (Precursor).FullName)
             {
                 pivotKey = PropertyPath.Root.Property("IsotopeLabelType");
@@ -129,7 +133,8 @@ namespace pwiz.Skyline.Controls.Databinding
                     PropertyPath.Root.Property("Peptide"),
                     PropertyPath.Root.Property("Charge"),
                 };
-                crosstabValues = PrecursorCrosstabValues;
+                crosstabValueStartsWith = PrecursorCrosstabValueStartsWith;
+                crosstabValueExact = PrecursorCrosstabValueExact;
                 crossTabExclude = new []{PropertyPath.Parse("Results!*.Value.PeptideResult")};
             }
             else if (viewSpec.RowSource == typeof (Transition).FullName)
@@ -143,15 +148,18 @@ namespace pwiz.Skyline.Controls.Databinding
                     PropertyPath.Root.Property("Precursor").Property("Peptide"),
                     PropertyPath.Root.Property("Precursor").Property("Charge"),
                 };
-                crosstabValues = new[]
+                crosstabValueStartsWith = new[]
                 {
                     PropertyPath.Root.Property("ProductNeutralMass"),
                     PropertyPath.Root.Property("ProductMz"),
                     PropertyPath.Root.Property("Note"),
                     PropertyPath.Root.Property("Results").LookupAllItems(),
                     PropertyPath.Root.Property("ResultSummary"),
-                }.Concat(PrecursorCrosstabValues.Select(
+                }.Concat(PrecursorCrosstabValueStartsWith.Select(
                     propertyPath => PropertyPath.Root.Property("Precursor").Concat(propertyPath)))
+                    .ToArray();
+                crosstabValueExact = PrecursorCrosstabValueExact.Select(
+                    propertyPath=>PropertyPath.Root.Property("Precursor").Concat(propertyPath))
                     .ToArray();
                 crossTabExclude = new[] {PropertyPath.Parse("Results!*.Value.PrecursorResult.PeptideResult")};
             }
@@ -185,7 +193,8 @@ namespace pwiz.Skyline.Controls.Databinding
                     {
                         newColumns.Add(column.SetTotal(TotalOperation.GroupBy));
                     }
-                    else if (crosstabValues.Any(propertyPath => column.PropertyPath.StartsWith(propertyPath)))
+                    else if (crosstabValueStartsWith.Any(propertyPath => column.PropertyPath.StartsWith(propertyPath))
+                        || crosstabValueExact.Any(propertyPath => column.PropertyPath.Equals(propertyPath)))
                     {
                         newColumns.Add(column.SetTotal(TotalOperation.PivotValue));
                     }
