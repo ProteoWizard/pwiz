@@ -16,11 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Threading;
-using pwiz.ProteomeDatabase.Properties;
+using pwiz.Common.Properties;
 
-namespace pwiz.ProteomeDatabase.Util
+namespace pwiz.Common.Database.NHibernate
 {
     public abstract class AbstractSessionWithLock
     {

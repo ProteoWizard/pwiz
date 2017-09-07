@@ -132,12 +132,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Util\AbstractSessionWithLock.cs" />
     <Compile Include="Util\DatabaseResource.cs" />
     <Compile Include="Util\ProteomeDbPath.cs" />
-    <Compile Include="Util\SessionFactoryFactory.cs" />
-    <Compile Include="Util\SessionWithLock.cs" />
-    <Compile Include="Util\StatelessSessionWithLock.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="DataModel\mapping.xml">
@@ -156,6 +152,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Common\CommonUtil.csproj">
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>

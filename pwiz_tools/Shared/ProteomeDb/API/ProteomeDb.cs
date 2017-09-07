@@ -25,6 +25,7 @@ using System.Linq;
 using System.Threading;
 using NHibernate;
 using NHibernate.Criterion;
+using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.DataModel;
 using pwiz.ProteomeDatabase.Fasta;

@@ -22,8 +22,8 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Database.NHibernate;
 using pwiz.Common.PeakFinding;
-using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 

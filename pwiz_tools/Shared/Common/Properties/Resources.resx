@@ -370,4 +370,10 @@
   <data name="DocumentationGenerator_GetHtmlForType_List_of__0_" xml:space="preserve">
     <value>List of {0}</value>
   </data>
+  <data name="SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock" xml:space="preserve">
+    <value xml:space="preserve">Can't acquire write lock while holding read lock.</value>
+  </data>
+  <data name="SessionWithLock_EnsureWriteLock_Must_have_write_lock" xml:space="preserve">
+    <value xml:space="preserve">Must have write lock</value>
+  </data>
 </root>

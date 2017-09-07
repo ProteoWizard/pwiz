@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Data;
 using System.Linq.Expressions;
@@ -26,7 +27,7 @@ using NHibernate.Stat;
 using NHibernate.Type;
 
 #pragma warning disable 612,618
-namespace pwiz.ProteomeDatabase.Util
+namespace pwiz.Common.Database.NHibernate
 {
     public class SessionWithLock : AbstractSessionWithLock, ISession
     {

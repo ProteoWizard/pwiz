@@ -115,12 +115,6 @@
   <data name="ProteomeDb_Digest_Digested__0__proteins_into__1__unique_peptides" xml:space="preserve">
     <value xml:space="preserve">Digested {0} proteins into {1} unique peptides</value>
   </data>
-  <data name="SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock" xml:space="preserve">
-    <value xml:space="preserve">Can't acquire write lock while holding read lock.</value>
-  </data>
-  <data name="SessionWithLock_EnsureWriteLock_Must_have_write_lock" xml:space="preserve">
-    <value xml:space="preserve">Must have write lock</value>
-  </data>
     <data name="ProteomeDb_AddFastaFile_Saving_changes" xml:space="preserve">
     <value>Saving changes</value>
   </data>

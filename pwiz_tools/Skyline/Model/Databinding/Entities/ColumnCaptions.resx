@@ -174,9 +174,6 @@
   <data name="ChromatogramExtractionWidth">
     <value>Chromatogram Extraction Width</value>
   </data>
-  <data name="ChromatogramExtractionWidth">
-    <value>Chromatogram Extraction Width</value>
-  </data>
   <data name="ChromatogramPrecursorMz">
     <value>Chromatogram Precursor M/Z</value>
   </data>

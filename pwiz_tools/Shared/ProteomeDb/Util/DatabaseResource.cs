@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NHibernate;
+using pwiz.Common.Database.NHibernate;
 using pwiz.ProteomeDatabase.API;
 
 namespace pwiz.ProteomeDatabase.Util

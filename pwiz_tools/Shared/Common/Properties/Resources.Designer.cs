@@ -779,6 +779,24 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Must have write lock.
+        /// </summary>
+        internal static string SessionWithLock_EnsureWriteLock_Must_have_write_lock {
+            get {
+                return ResourceManager.GetString("SessionWithLock_EnsureWriteLock_Must_have_write_lock", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Can&apos;t acquire write lock while holding read lock..
+        /// </summary>
+        internal static string SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock {
+            get {
+                return ResourceManager.GetString("SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap SublistColumn {

@@ -55,6 +55,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Iesi.Collections">
+      <HintPath>..\Lib\NHibernate\Iesi.Collections.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <HintPath>..\Lib\log4net.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
@@ -62,9 +65,15 @@
     <Reference Include="MathNet.Numerics">
       <HintPath>..\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
+    <Reference Include="NHibernate">
+      <HintPath>..\Lib\NHibernate\NHibernate.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.SQLite">
+      <HintPath>..\..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
     </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Web" />
@@ -115,6 +124,10 @@
     <Compile Include="DataAnalysis\PValues.cs" />
     <Compile Include="DataAnalysis\NelderMeadSimplex.cs" />
     <Compile Include="DataAnalysis\LoessInterpolator.cs" />
+    <Compile Include="Database\NHibernate\AbstractSessionWithLock.cs" />
+    <Compile Include="Database\NHibernate\SessionFactoryFactory.cs" />
+    <Compile Include="Database\NHibernate\SessionWithLock.cs" />
+    <Compile Include="Database\NHibernate\StatelessSessionWithLock.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />
     <Compile Include="DataBinding\Attributes\AdvancedAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ExpensiveAttribute.cs" />

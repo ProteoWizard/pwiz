@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Data;
 using System.Linq.Expressions;
@@ -23,7 +24,7 @@ using System.Threading;
 using NHibernate;
 using NHibernate.Engine;
 
-namespace pwiz.ProteomeDatabase.Util
+namespace pwiz.Common.Database.NHibernate
 {
     public class StatelessSessionWithLock : AbstractSessionWithLock, IStatelessSession
     {

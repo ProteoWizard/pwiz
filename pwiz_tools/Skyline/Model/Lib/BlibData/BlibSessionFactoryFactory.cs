@@ -18,7 +18,7 @@
  */
 using System;
 using NHibernate;
-using pwiz.ProteomeDatabase.Util;
+using pwiz.Common.Database.NHibernate;
 
 namespace pwiz.Skyline.Model.Lib.BlibData
 {

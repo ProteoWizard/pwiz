@@ -243,23 +243,5 @@ namespace pwiz.ProteomeDatabase.Properties {
                         "sion_and_try_again_", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Must have write lock.
-        /// </summary>
-        public static string SessionWithLock_EnsureWriteLock_Must_have_write_lock {
-            get {
-                return ResourceManager.GetString("SessionWithLock_EnsureWriteLock_Must_have_write_lock", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Can&apos;t acquire write lock while holding read lock..
-        /// </summary>
-        public static string SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock {
-            get {
-                return ResourceManager.GetString("SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock", resourceCulture);
-            }
-        }
     }
 }
