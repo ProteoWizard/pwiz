@@ -129,6 +129,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void ImportOriginalPeakBoundaries()
         {
+            WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.ImportPeakBoundariesFile(GetOriginalPeakBoundariesPath()));
         }
 
