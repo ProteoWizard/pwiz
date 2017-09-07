@@ -130,7 +130,7 @@ namespace pwiz.SkylineTestFunctional
             // Test select all
             RunUI(() => SkylineWindow.SelectAll());
             WaitForConditionUI(() => !SkylineWindow.SequenceTree.IsInUpdate && !volcanoPlot.UpdatePending);
-            RunUI(() => AssertVolcanoPlotCorrect(volcanoPlot, true, 100, 0, 25)); // Selection limited to 100, all other points are not not within the cutoff
+            RunUI(() => AssertVolcanoPlotCorrect(volcanoPlot, true, 100, 0, 25)); // Selection limited to 100, all other points are not within the cutoff
 
             // Verify that the grid and the volcano plot are open after re-opening the document
             RunUI(() => SkylineWindow.SaveDocument());

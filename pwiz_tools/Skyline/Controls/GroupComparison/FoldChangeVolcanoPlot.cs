@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     }
                 }
 
-                UpdateFilter(Settings.Default.FilterVolcanoPlotPoints);
+                UpdateGraph(Settings.Default.FilterVolcanoPlotPoints);
             }
         }
 
@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 BeginInvoke(new Action(() =>
                 {
                     _updatePending = false;
-                    UpdateGraph();    
+                    UpdateGraph(Settings.Default.FilterVolcanoPlotPoints);
                 }));
             }
         }
@@ -556,7 +556,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 menuStrip.Items.Insert(index++, new ToolStripSeparator());
                 menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Properties, null, OnPropertiesClick));
-                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Selection, null, OnSelectionClick)
+                menuStrip.Items.Insert(index, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Selection, null, OnSelectionClick)
                     { Checked = Settings.Default.GroupComparisonShowSelection });
             }
         }
@@ -580,22 +580,31 @@ namespace pwiz.Skyline.Controls.GroupComparison
             ShowProperties();
         }
 
-        public void UpdateFilter(bool filter)
+        public void UpdateGraph(bool filter)
+        {
+            if (!UpdateFilter(filter))
+                UpdateGraph();
+        }
+
+        private bool UpdateFilter(bool filter)
         {
             if (!IsHandleCreated)
-                return;
+                return false;
 
             var columnFilters = _bindingListSource.RowFilter.ColumnFilters.ToList();
+            var columns = _bindingListSource.ViewSpec.Columns;
 
+            var absLog2FCExists = columns.Any(c => c.Name == "FoldChangeResult.AbsLog2FoldChange"); // Not L10N
+            var pValueExists = columns.Any(c => c.Name == "FoldChangeResult.AdjustedPValue"); // Not L10N
+
+            if (filter && ValidFilterCount(columnFilters) == 2 && absLog2FCExists && pValueExists || !filter && ValidFilterCount(columnFilters) == 0 && !absLog2FCExists)
+                return false;
+        
             columnFilters.Remove(_absLog2FoldChangeFilter);
             columnFilters.Remove(_pValueFilter);
 
             if (CutoffSettingsValid && filter)
             {
-                var columns = _bindingListSource.ViewSpec.Columns;
-                var absLog2FCExists = columns.Any(c => c.Name == "FoldChangeResult.AbsLog2FoldChange"); // Not L10N
-                var pValueExists = columns.Any(c => c.Name == "FoldChangeResult.AdjustedPValue"); // Not L10N
-
                 var missingColumns = new List<ColumnSpec>();
                 if (!absLog2FCExists)
                     missingColumns.Add(new ColumnSpec(PropertyPath.Root.Property("FoldChangeResult").Property("AbsLog2FoldChange"))); // Not L10N
@@ -618,11 +627,26 @@ namespace pwiz.Skyline.Controls.GroupComparison
             else
             {
                 // Remove AbsLog2FoldChange column
-                var columns = _bindingListSource.ViewSpec.Columns;
                 SetColumns(columns.Except(columns.Where(c => c.Name == "FoldChangeResult.AbsLog2FoldChange"))); // Not L10N
             }
 
             _bindingListSource.RowFilter = _bindingListSource.RowFilter.SetColumnFilters(columnFilters);
+            return true;
+        }
+
+        private int ValidFilterCount(IList<RowFilter.ColumnFilter> filters)
+        {
+            int test = ContainsFilter(filters, ColumnCaptions.AbsLog2FoldChange, FilterOperations.OP_IS_GREATER_THAN, Settings.Default.Log2FoldChangeCutoff) +
+                   ContainsFilter(filters, ColumnCaptions.AdjustedPValue, FilterOperations.OP_IS_LESS_THAN, Math.Pow(10, -Settings.Default.PValueCutoff));
+            return test;
+        }
+
+        // Returns 1 if the filter is found, 0 otherwise
+        int ContainsFilter(IEnumerable<RowFilter.ColumnFilter> filters, string columnCaption, IFilterOperation filterOp, double operand)
+        {
+            return filters.Contains(f => f.ColumnCaption == columnCaption &&
+                                         ReferenceEquals(f.Predicate.FilterOperation, filterOp) &&
+                                         Equals(f.Predicate.GetOperandDisplayText(_bindingListSource.ViewInfo.DataSchema, typeof(double)), operand.ToString(CultureInfo.CurrentCulture))) ? 1 : 0;
         }
 
         private void SetColumns(IEnumerable<ColumnSpec> columns)

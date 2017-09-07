@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             Settings.Default.PValueCutoff = checkBoxLog.Checked ? pValueCutoff : ConvertBetweenLogs(pValueCutoff, true, 10, true);
             Settings.Default.FilterVolcanoPlotPoints = checkBoxFilter.Checked;
 
-            FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>().ForEach(v => v.UpdateFilter(Settings.Default.FilterVolcanoPlotPoints));
+            FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>().ForEach(v => v.UpdateGraph(Settings.Default.FilterVolcanoPlotPoints));
         }
 
         private void checkBoxLog_CheckedChanged(object sender, EventArgs e)
@@ -118,7 +118,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 }
             }
 
-            FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>().ForEach(v => v.UpdateFilter(Settings.Default.FilterVolcanoPlotPoints));
+            FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>().ForEach(v => v.UpdateGraph(Settings.Default.FilterVolcanoPlotPoints));
         }
 
         private double ConvertBetweenLogs(double value, bool log, int logBase, bool negate = false)
