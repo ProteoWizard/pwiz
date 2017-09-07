@@ -48,7 +48,6 @@ using pwiz.CLI.util;
 using seems;
 using NHibernate;
 using NHibernate.Linq;
-using NHibernate.Util;
 using NHibernate.Criterion;
 using BrightIdeasSoftware;
 using PopupControl;
