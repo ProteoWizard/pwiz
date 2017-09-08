@@ -27,6 +27,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.SeqNode;
@@ -246,7 +247,20 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public int? SelectedFileIndex { get { return comboFiles.SelectedItem != null ? comboFiles.SelectedIndex : (int?) null; } }
+        public int? SelectedFileIndex
+        {
+            get
+            {
+                return comboFiles.SelectedItem != null ? comboFiles.SelectedIndex : (int?) null;
+            }
+            set
+            {
+                if (value.HasValue && value < comboFiles.Items.Count)
+                {
+                    comboFiles.SelectedIndex = value.Value;
+                }
+            }
+        }
 
         [Browsable(true)]
         public event EventHandler<PickedPeakEventArgs> PickedPeak;
@@ -649,12 +663,25 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        private bool _dontSyncSelectedFile;
+
         private void comboFiles_SelectedIndexChanged(object sender, EventArgs e)
         {
             // If the selected file is changing, then all of the chromatogram data
             // on display will change, and the graph should be auto-zoomed, if
             // any auto-zooming is turned on.
             UpdateUI();
+
+            if (_dontSyncSelectedFile)
+                return;
+
+            var panes = FormUtil.OpenForms.OfType<GraphSummary>().SelectMany(g => g.GraphPanes).OfType<SummaryReplicateGraphPane>();
+
+            foreach (var pane in panes)
+            {  
+                var item = comboFiles.SelectedItem.ToString();
+                pane.SetSelectedFile(item);
+            }
         }
 
         private void GraphChromatogram_VisibleChanged(object sender, EventArgs e)
@@ -2363,11 +2390,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     comboFiles.Items.Clear();
                     foreach (string name in listNames)
                         comboFiles.Items.Add(name);
+                    _dontSyncSelectedFile = true;
                     if (selected == null || comboFiles.Items.IndexOf(selected) == -1 || 
                         (_hasMergedChromInfo && listNames[0] != listExisting[0]))
                         comboFiles.SelectedIndex = 0;
                     else
                         comboFiles.SelectedItem = selected;
+                    _dontSyncSelectedFile = false;
                     ComboHelper.AutoSizeDropDown(comboFiles);
                 }
 
@@ -2901,8 +2930,13 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool graphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             HideFullScanTrackingPoint();
-            bool result = HandleMouseMove(e);
-            Refresh();
+            var result = HandleMouseMove(e);
+            if (result)
+            {
+                sender.Invalidate(sender.Region);
+                sender.Update();
+            }
+            
             return result;
         }
 
@@ -3048,10 +3082,11 @@ namespace pwiz.Skyline.Controls.Graphs
                         (int)(_closestCurve.Color.B * 0.6));
                     lineItem.IsVisible = true;
                     _showingTrackingDot = true;
+
+                    graphControl.Invalidate(graphControl.Region);
+                    graphControl.Update();
                 }
             }
-
-            Refresh();
         }
 
         private bool graphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)

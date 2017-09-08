@@ -20,12 +20,12 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -95,19 +95,53 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     return -1;
                 }
-                return _replicateGroups.IndexOf(group => group.ReplicateIndexes.Contains(GraphSummary.ResultsIndex));
+
+                var index = _replicateGroups.IndexOf(SelectedGroup);
+                if (index < 0) // Graph has been updated, but the selection hasn't
+                    SelectedGroup = null;
+
+                if (SelectedGroup == null || !SelectedGroup.ReplicateIndexes.Contains(GraphSummary.ResultsIndex))
+                    return _replicateGroups.IndexOf(group => group.ReplicateIndexes.Contains(GraphSummary.ResultsIndex));
+                else
+                    return index;
             }
         }
+
+        private ReplicateGroup SelectedGroup { get; set; }
 
         protected override IdentityPath GetIdentityPath(CurveItem curveItem, int barIndex)
         {
             return curveItem.Tag as IdentityPath;
         }
 
+        public void SetSelectedFile(string file)
+        {
+            var group = _replicateGroups.FirstOrDefault(g => (g.FileInfo != null && g.FileInfo.FilePath.GetFileName() == file) || (g.FileInfo == null && file == null));
+            if (group != null)
+            {
+                SelectedGroup = group;
+                GraphSummary.UpdateUI();
+            }  
+        }
+
         protected override void ChangeSelection(int selectedIndex, IdentityPath identityPath)
         {
             if (0 > selectedIndex || selectedIndex >= _replicateGroups.Count)
                 return;
+
+            var previousFile = SelectedGroup != null ? SelectedGroup.FileInfo : null;
+            SelectedGroup = _replicateGroups[selectedIndex];
+
+            if (SelectedGroup.FileInfo != null)
+            {
+                foreach (var graph in Program.MainWindow.GraphChromatograms)
+                {
+                    var files = graph.Files;
+                    var index = files.IndexOf(SelectedGroup.FileInfo.FilePath.GetFileName());
+                    if (index >= 0)
+                        graph.SelectedFileIndex = index;
+                } 
+            }
 
             // When the user clicks on the graph, they either intend to change
             // the currently selected replicate, or the currently selected IdentityPath.
@@ -120,7 +154,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Updated 10/3/2016 now can drill down to peptide level because multi peptide RT graph is supported.
             var resultIndicesArray = IndexOfReplicate(selectedIndex).ToArray();
             int iSelection = Array.IndexOf(resultIndicesArray, GraphSummary.ResultsIndex);
-            if (iSelection == resultIndicesArray.Length - 1 && (IsMultiSelect || !GraphChromatogram.IsSingleTransitionDisplay))
+            if (iSelection == resultIndicesArray.Length - 1 && (IsMultiSelect || !GraphChromatogram.IsSingleTransitionDisplay) && ReferenceEquals(previousFile, SelectedGroup.FileInfo))
             {
                     GraphSummary.StateProvider.SelectPath(identityPath);
                     UpdateGraph(true);
@@ -132,7 +166,8 @@ namespace pwiz.Skyline.Controls.Graphs
             // currently selected replicate, then iSelection will be -1, and 
             // the first replicate in that group will be selected.
             int newReplicateIndex = resultIndicesArray[((iSelection + 1) % resultIndicesArray.Length)];
-            ChangeSelectedIndex(newReplicateIndex);                
+            ChangeSelectedIndex(newReplicateIndex);
+            UpdateGraph(true);
         }
 
         protected void ChangeSelectedIndex(int iResult)
@@ -236,6 +271,20 @@ namespace pwiz.Skyline.Controls.Graphs
                     InitData();
             }
 
+            private class PointPairRef
+            {
+                public PointPairRef(PointPair pointPair, int pointPairListIndex, int groupIndex)
+                {
+                    PointPair = pointPair;
+                    PointPairListIndex = pointPairListIndex;
+                    GroupIndex = groupIndex;
+                }
+
+                public PointPair PointPair { get; private set; }
+                public int PointPairListIndex { get; private set; }
+                public int GroupIndex { get; private set; }
+            }
+
             protected virtual void InitData()
             {
                 List<DocNode> docNodes = new List<DocNode>();
@@ -246,11 +295,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (var docNodePath in _selectedDocNodePaths)
                 {
                     var docNode = _document.FindNode(docNodePath);
+                    var replicateIndices = Enumerable.Range(0, _document.Settings.MeasuredResults.Chromatograms.Count);
                     // ReSharper disable CanBeReplacedWithTryCastAndCheckForNull
                     if (docNode is TransitionDocNode)
                     {
-                        var nodeTran = (TransitionDocNode)docNode;
-                        ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodeTran)).ToArray();
+                        var nodeTran = (TransitionDocNode) docNode;
+                        ReplicateGroups = GetReplicateGroups(replicateIndices).ToArray();
                         docNodes.Add(nodeTran);
                         docNodePaths.Add(docNodePath);
                         pointPairLists.Add(GetPointPairLists(null, nodeTran, _displayType));
@@ -258,8 +308,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else if (docNode is TransitionGroupDocNode)
                     {
-                        var nodeGroup = (TransitionGroupDocNode)docNode;
-                        ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodeGroup)).ToArray();
+                        var nodeGroup = (TransitionGroupDocNode) docNode;
+                        ReplicateGroups = GetReplicateGroups(replicateIndices).ToArray();
                         if (_displayType == DisplayTypeChrom.single || _displayType == DisplayTypeChrom.total)
                         {
                             docNodes.Add(nodeGroup);
@@ -269,7 +319,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                         else
                         {
-                            foreach (TransitionDocNode nodeTran in GraphChromatogram.GetDisplayTransitions(nodeGroup, _displayType))
+                            foreach (TransitionDocNode nodeTran in GraphChromatogram.GetDisplayTransitions(nodeGroup,
+                                _displayType))
                             {
                                 docNodes.Add(nodeTran);
                                 docNodePaths.Add(new IdentityPath(docNodePath, nodeTran.Id));
@@ -280,8 +331,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else if (docNode is PeptideDocNode)
                     {
-                        var nodePep = (PeptideDocNode)docNode;
-                        ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodePep)).ToArray();
+                        var nodePep = (PeptideDocNode) docNode;
+                        ReplicateGroups = GetReplicateGroups(replicateIndices).ToArray();
                         var isMultiSelect = _selectedDocNodePaths.Count > 1 ||
                                             (_selectedDocNodePaths.Count == 1 && Program.MainWindow != null &&
                                              Program.MainWindow.SelectedNode is PeptideGroupTreeNode);
@@ -299,11 +350,130 @@ namespace pwiz.Skyline.Controls.Graphs
                 DocNodes = docNodes;
                 _docNodePaths = ImmutableList.ValueOf(docNodePaths);
                 DocNodeLabels = docNodeLabels;
+
+                var oldGroupNames = ReplicateGroups.Select(g => g.GroupName).ToArray();
+                var uniqueGroupNames = oldGroupNames.Distinct().ToArray();
+
+                // Instert "All" groups and point pair lists in their correct positions
+                InsertAllGroupsAndPointPairLists(uniqueGroupNames, docNodes.Count);
+
+                // Collect all references to points that have a valid Y value
+                var references = CollectValidPointRefs(uniqueGroupNames, oldGroupNames, docNodes.Count);
+
+                // Merge groups if their replicate index is the same and each peptide only occurs in one of the files
+                MergeGroups(uniqueGroupNames, references);  
+
+                // Remove groups that don't have any peptides in them
+                RemoveEmptyGroups(docNodes.Count);
             }
 
             protected virtual bool IncludeTransition(TransitionDocNode transitionDocNode)
             {
                 return transitionDocNode.Quantitative || !Settings.Default.ShowQuantitativeOnly;
+            }
+
+            private void InsertAllGroupsAndPointPairLists(string[] uniqueGroupNames, int docNodeCount)
+            {
+                var uniqueGroups = uniqueGroupNames.Select(n => new ReplicateGroup(n, ReplicateIndexSet.Singleton(_document.MeasuredResults.Chromatograms.IndexOf(c => c.Name == n)), null, true));
+                var newGroups = ReplicateGroups.ToList();
+                foreach (var group in uniqueGroups)
+                {
+                    var group1 = group;
+                    var firstIndex = newGroups.IndexOf(r => r.GroupName == group1.GroupName);
+                    newGroups.Insert(firstIndex, group);
+
+                    for (var node = 0; node < docNodeCount; ++node)
+                    for (var step = 0; step < PointPairLists[node].Count; ++step)
+                        PointPairLists[node][step].Insert(firstIndex, new PointPair(firstIndex, double.NaN));
+                }
+                ReplicateGroups = newGroups;
+            }
+
+            private bool ShouldMerge(List<List<PointPairRef>>[] references, IEnumerable<int> groupIndices)
+            {
+                return references.All(list => list.SelectMany(l => l).Count(p => groupIndices.Contains(p.PointPairListIndex)) <= 1);
+            }
+
+            private void MergeGroups(string[] uniqueGroupNames, List<List<PointPairRef>>[] references)
+            {
+                for (var nameIndex = 0; nameIndex < uniqueGroupNames.Length; ++nameIndex)
+                {
+                    var name = uniqueGroupNames[nameIndex];
+                    var groupIndices = ReplicateGroups.Select((r, index) => new { RepGroup = r, Index = index })
+                        .Where(g => g.RepGroup.GroupName == name).Select(g => g.Index).ToArray();
+
+                    if (ShouldMerge(references, groupIndices.Skip(1)))
+                    {
+                        for (var node = 0; node < references.Length; ++node)
+                        {
+                            for (var step = 0; step < references[node].Count; ++step)
+                            {
+                                for (var group = 0; group < references[node][step].Count; ++group)
+                                {
+                                    if (groupIndices.Skip(1).Contains(references[node][step][group].PointPairListIndex))
+                                    {
+                                        var list = PointPairLists[node][step];
+                                        var index = groupIndices.First(i => ReplicateGroups[i].IsAllGroup);
+                                        var x = list[index].X; // Backup x value
+                                        list[index] = new PointPair(references[node][step][group].PointPair) { X = x };
+                                        references[node][step][group].PointPair.Y = double.NaN;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            private bool IsValidYValue(double y)
+            {
+                return !double.IsNaN(y) && !double.IsInfinity(y) && y != double.MaxValue && y != double.MinValue;
+            }
+
+            private List<List<PointPairRef>>[] CollectValidPointRefs(string[] uniqueGroupNames, string[] oldGroupNames, int docNodeCount)
+            {
+                var references = new List<List<PointPairRef>>[docNodeCount];
+                for (var node = 0; node < docNodeCount; ++node)
+                {
+                    references[node] = new List<List<PointPairRef>>();
+                    for (var step = 0; step < PointPairLists[node].Count; ++step)
+                    {
+                        references[node].Add(new List<PointPairRef>());
+                        var groupIndex = 0;
+                        for (var group = 0; group < PointPairLists[node][step].Count; ++group)
+                        {
+                            PointPairLists[node][step][group].X = group;
+                            if (IsValidYValue(PointPairLists[node][step][group].Y))
+                                references[node][step].Add(new PointPairRef(PointPairLists[node][step][group], group, groupIndex++));
+                        }
+                    }
+                }
+                return references;
+            }
+
+            private void RemoveEmptyGroups(int docNodeCount)
+            {
+                var groups = ReplicateGroups.ToList();
+                for (var i = 0; i < groups.Count; ++i)
+                {
+                    var removeGroup = !PointPairLists.Any(p => p.Any(ppl => IsValidYValue(ppl[i].Y)));
+                    if (removeGroup)
+                    {
+                        for (var node = 0; node < docNodeCount; ++node)
+                        {
+                            for (var step = 0; step < PointPairLists[node].Count; ++step)
+                            {
+                                PointPairLists[node][step].RemoveAt(i);
+                                // Fix x values
+                                for (var j = i; j < PointPairLists[node][step].Count; ++j)
+                                    --PointPairLists[node][step][j].X;
+                            }
+                        }
+                        groups.RemoveAt(i);
+                        --i;
+                    }
+                }
+                ReplicateGroups = groups;
             }
 
             protected virtual List<LineInfo> GetPeptidePointPairLists(PeptideDocNode nodePep, bool multiplePeptides)
@@ -326,13 +496,41 @@ namespace pwiz.Skyline.Controls.Graphs
                 private set { _replicateGroups = MakeReadOnly(value); }
             }
 
+            private class GroupNameInfo
+            {
+                public GroupNameInfo(int totalCount, int currentIndex)
+                {
+                    TotalCount = totalCount;
+                    CurrentIndex = currentIndex;
+                }
+
+                public int TotalCount { get; private set; }
+                public int CurrentIndex { get; set; }
+            }
+
             public IEnumerable<string> GetReplicateLabels()
             {
                 EnsureData();
                 if (ReplicateGroups == null || !_document.Settings.HasResults)
                     return GetReplicateLabels(_document);
 
-                return ReplicateGroups.Select(replicateGroup => replicateGroup.GroupName);
+                var groupNameInfos = ReplicateGroups
+                    .Select(r => r.GroupName)
+                    .GroupBy(n => n, (n, g) => new { name = n, info = new GroupNameInfo(g.Count(), 1) })
+                    .ToDictionary(g => g.name, g => g.info);
+
+                var result = new string[ReplicateGroups.Count];
+                for (var i = 0; i < ReplicateGroups.Count; ++i)
+                {
+                    var name = result[i] = ReplicateGroups[i].GroupName;
+                    if (groupNameInfos[name].TotalCount <= 1)
+                        continue;
+
+                    var index = groupNameInfos[name].CurrentIndex++;
+                    result[i] += string.Format(CultureInfo.CurrentCulture, " ({0})", index);   // Not L10N
+                }
+
+                return result;
             }
 
             public static IEnumerable<string> GetReplicateLabels(SrmDocument document)
@@ -456,14 +654,23 @@ namespace pwiz.Skyline.Controls.Graphs
                         var chromInfoDatasForStep = new List<TChromInfoData>();
                         foreach (var chromInfoDatas in chromInfoLists)
                         {
-                            var chromInfoForStep = chromInfoDatas.FirstOrDefault(chromInfoData =>
-                                chromInfoData != null && step == chromInfoData.OptimizationStep);
-
-                            if (null == chromInfoForStep || isMissingValue(chromInfoForStep))
+                            var chromInfosForStep = new List<TChromInfoData>();
+                            if (replicateGroup.FileInfo != null)
                             {
-                                continue;
+                                var info = chromInfoDatas.FirstOrDefault(chromInfoData => chromInfoData != null && chromInfoData.ChromFileInfo.Equals(replicateGroup.FileInfo) && step == chromInfoData.OptimizationStep);
+                                chromInfosForStep.Add(info);
                             }
-                            chromInfoDatasForStep.Add(chromInfoForStep);
+                            else
+                            {
+                                var step1 = step;
+                                var chromInfos =
+                                    chromInfoDatas.Where(
+                                        chromInfoData => chromInfoData != null &&
+                                                         step1 == chromInfoData.OptimizationStep);
+                                chromInfosForStep.AddRange(chromInfos);
+                            }
+                                
+                            chromInfoDatasForStep.AddRange(chromInfosForStep.Where(c => c != null && !isMissingValue(c)));
                         }
                         var pointPairList = pointPairLists[iStep];
                         pointPairList[pointPairList.Count - 1] = createPointPair(iGroup, chromInfoDatasForStep);
@@ -529,106 +736,97 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected abstract PointPair CreatePointPair(int iResult, ICollection<TransitionGroupChromInfoData> chromInfo);
 
-            private IEnumerable<ReplicateGroup> GetReplicateGroups(IEnumerable<int> replicateIndexes)
+            protected virtual IEnumerable<ReplicateGroup> GetReplicateGroups(IEnumerable<int> replicateIndexes)
             {
                 if (_document.Settings.MeasuredResults == null)
                 {
                     return new ReplicateGroup[0]; // Likely user removed all results while Mass Errors window was open
                 }
                 var chromatograms = _document.Settings.MeasuredResults.Chromatograms;
+                var nodes = _selectedDocNodePaths.Select(i => _document.FindNode(i)).ToArray();
+                var result = new List<ReplicateGroup>();
                 if (ReplicateGroupOp.GroupByAnnotation == null)
                 {
-                    return
-                        replicateIndexes.Select(replicateIndex 
-                            => new ReplicateGroup(chromatograms[replicateIndex].Name,
-                                                  ReplicateIndexSet.Singleton(replicateIndex)));
-                }
-                var lookup = replicateIndexes.ToLookup(replicateIndex => chromatograms[replicateIndex].Annotations.GetAnnotation(ReplicateGroupOp.GroupByAnnotation));
-                var keys = lookup.Select(grouping => grouping.Key).ToList();
-                if (keys.Count > 2)
-                {
-                    // If there are more than 2 groups then exclude replicates with blank annotation values.
-                    keys.Remove(null);
-                }
-                keys.Sort();
-// ReSharper disable AssignNullToNotNullAttribute
-                return keys.Select(key => new ReplicateGroup((key ?? string.Empty).ToString(), ReplicateIndexSet.OfValues(lookup[key])));
-// ReSharper restore AssignNullToNotNullAttribute
-            }
+                    foreach (var index in replicateIndexes)
+                    {
+                        var i = index;
+                        // ReSharper disable once AccessToModifiedClosure
+                        nodes.ForEach(n => AddReplicateGroup(result, n, i));
+                    }
 
-            private IEnumerable<int> GetReplicateIndices(PeptideDocNode nodePep)
-            {
-                return GetReplicateIndices(i => GetChromFileInfoId(nodePep.Results, i));
-            }
+                    var query = result.OrderBy(g => 0);
+                    if (!string.IsNullOrEmpty(OrderByReplicateAnnotation))
+                    {
+                        var orderByReplicateAnnotationDef = _document.Settings.DataSettings.AnnotationDefs.FirstOrDefault(annotationDef => annotationDef.Name == OrderByReplicateAnnotation);
+                        if(orderByReplicateAnnotationDef != null)
+                            query = result.OrderBy(g => chromatograms[g.ReplicateIndexes.First()].Annotations.GetAnnotation(orderByReplicateAnnotationDef));    
+                    }
 
-            private IEnumerable<int> GetReplicateIndices(TransitionDocNode nodeTran)
-            {
-                return GetReplicateIndices(i => GetChromFileInfoId(nodeTran.Results, i));
-            }
+                    if (ReplicateOrder == SummaryReplicateOrder.document)
+                    {
+                        result = new List<ReplicateGroup>(query.ThenBy(g => g.ReplicateIndexes.ToArray(),
+                                Comparer<int[]>.Create((a, b) =>
+                                {
+                                    for (var i = 0; i < Math.Min(a.Length, b.Length); ++i)
+                                    {
+                                        if (a[i] != b[i])
+                                            return a[i].CompareTo(b[i]);
+                                    }
 
-            private IEnumerable<int> GetReplicateIndices(TransitionGroupDocNode nodeGroup)
-            {
-                return GetReplicateIndices(i => GetChromFileInfoId(nodeGroup.Results, i));
-            }
-
-            private IEnumerable<int> GetReplicateIndices(Func<int, ChromFileInfoId> getFileId)
-            {
-                var chromatograms = _document.Settings.MeasuredResults.Chromatograms;
-                if (ReplicateOrder == SummaryReplicateOrder.document && null == OrderByReplicateAnnotation)
-                {
-                    for (int iResult = 0; iResult < chromatograms.Count; iResult++)
-                        yield return iResult;
+                                    return a.Length.CompareTo(b.Length);
+                                })).ThenBy(g => g.FileInfo.FileIndex));
+                    }
+                    else if (ReplicateOrder == SummaryReplicateOrder.time)
+                    {
+                        result = new List<ReplicateGroup>(query
+                            .ThenBy(g => g.FileInfo.RunStartTime,
+                                Comparer<DateTime?>.Create(
+                                    (a, b) => (a ?? DateTime.MaxValue).CompareTo(
+                                        b ?? DateTime.MaxValue))).ThenBy(g => g.FileInfo.FileIndex).ToList());
+                    }
                 }
                 else
                 {
-                    // Create a list of tuple's that will sort according to user's options.
-                    // The sort is optionally by an annotation value, and then optionally acquired time, 
-                    // and finally document order.
-                    var listIndexFile = new List<Tuple<object, DateTime, int>>();
-                    AnnotationDef orderByReplicateAnnotationDef = null;
-                    if (null != OrderByReplicateAnnotation)
+                    var lookup = replicateIndexes.ToLookup(replicateIndex => chromatograms[replicateIndex].Annotations.GetAnnotation(ReplicateGroupOp.GroupByAnnotation));
+                    var keys = lookup.Select(grouping => grouping.Key).ToList();
+                    if (keys.Count > 2)
                     {
-                        orderByReplicateAnnotationDef = _document.Settings.DataSettings.AnnotationDefs.FirstOrDefault(
-                                annotationDef => annotationDef.Name == OrderByReplicateAnnotation);
+                        // If there are more than 2 groups then exclude replicates with blank annotation values.
+                        keys.Remove(null);
                     }
-                    for (int iResult = 0; iResult < chromatograms.Count; iResult++)
+                    keys.Sort();
+                    // ReSharper disable AssignNullToNotNullAttribute
+                    foreach (var key in keys)
                     {
-                        var chromSet = _document.Settings.MeasuredResults.Chromatograms[iResult];
-                        
-                        ChromFileInfoId fileId = getFileId(iResult);
-                        ChromFileInfo fileInfo = (fileId != null ? chromSet.GetFileInfo(fileId) : null);
-                        object annotationValue = null;
-                        DateTime replicateTime = DateTime.MaxValue;
-                        if (null != orderByReplicateAnnotationDef)
-                        {
-                            annotationValue = chromSet.Annotations.GetAnnotation(orderByReplicateAnnotationDef);
-                        }
-                        if (null != fileInfo && ReplicateOrder == SummaryReplicateOrder.time)
-                        {
-                            replicateTime = fileInfo.RunStartTime ?? DateTime.MaxValue;
-                        }
-                        listIndexFile.Add(new Tuple<object, DateTime, int>(annotationValue, replicateTime, iResult));
+                        result.Add(new ReplicateGroup((key ?? string.Empty).ToString(), ReplicateIndexSet.OfValues(lookup[key])));
                     }
+                    // ReSharper restore AssignNullToNotNullAttribute
+                }
 
-                    listIndexFile.Sort();
-                    foreach (var tuple in listIndexFile)
-                        yield return tuple.Item3;
+                return result.Distinct();
+            }
+
+            private void AddReplicateGroup(ICollection<ReplicateGroup> replicateGroups, DocNode docNode, int replicateIndex)
+            {
+                var nodeGroup = docNode as TransitionGroupDocNode;
+                if (nodeGroup != null)
+                {
+                    var chromSet = _document.MeasuredResults.Chromatograms[replicateIndex];
+                    foreach (var c in nodeGroup.ChromInfos)
+                    {
+                        var info = chromSet.GetFileInfo(c.FileId);
+                        if (info != null)
+                            replicateGroups.Add(new ReplicateGroup(chromSet.Name, ReplicateIndexSet.Singleton(replicateIndex), info));
+                    }
+                    return;
+                }
+
+                var nodePep = docNode as PeptideDocNode;
+                if (nodePep != null)
+                {
+                   nodePep.TransitionGroups.ForEach(n => AddReplicateGroup(replicateGroups, n, replicateIndex));
                 }
             }
-        }
-
-        private static ChromFileInfoId GetChromFileInfoId<TItem>(Results<TItem> results, int iReplicate) where TItem : ChromInfo
-        {
-            if (null == results || iReplicate >= results.Count)
-            {
-                return null;
-            }
-            var chromInfoList = results[iReplicate];
-            if (chromInfoList.Count > 0 && chromInfoList[0] != null)
-            {
-                return chromInfoList[0].FileId;
-            }
-            return null;
         }
     }
 
@@ -636,15 +834,50 @@ namespace pwiz.Skyline.Controls.Graphs
     {
     }
 
+
     public class ReplicateGroup
     {
-        public ReplicateGroup(string groupName, ReplicateIndexSet replicateIndexes)
+        public ReplicateGroup(string groupName, ReplicateIndexSet replicateIndexes, ChromFileInfo fileInfo = null, bool isAllGroup = false)
         {
             GroupName = groupName;
+            FileInfo = fileInfo;
             ReplicateIndexes = replicateIndexes;
+            IsAllGroup = isAllGroup;
         }
+
         public string GroupName { get; private set; }
+        public ChromFileInfo FileInfo { get; private set; }
         public ReplicateIndexSet ReplicateIndexes { get; private set; }
+        public bool IsAllGroup { get; private set; }
+
+        #region object overrides
+
+        protected bool Equals(ReplicateGroup other)
+        {
+            return string.Equals(GroupName, other.GroupName) && Equals(FileInfo, other.FileInfo) && Equals(ReplicateIndexes, other.ReplicateIndexes) && IsAllGroup == other.IsAllGroup;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((ReplicateGroup)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (GroupName != null ? GroupName.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (FileInfo != null ? FileInfo.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ReplicateIndexes != null ? ReplicateIndexes.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ IsAllGroup.GetHashCode();
+                return hashCode;
+            }
+        }        
+
+        #endregion
     }
 
     public class LineInfo

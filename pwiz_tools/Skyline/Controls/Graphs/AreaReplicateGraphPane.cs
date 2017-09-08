@@ -1169,7 +1169,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         var validPoints = points.Where(p => !double.IsNaN(p.Y)).ToArray();
                         if (validPoints.Length == 0)
                         {
-                            y = 0;
+                            y = double.NaN;
                         }
                         else
                         {
