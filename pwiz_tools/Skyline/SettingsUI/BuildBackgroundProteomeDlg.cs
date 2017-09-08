@@ -134,6 +134,11 @@ namespace pwiz.Skyline.SettingsUI
                 fileName = saveFileDialog.FileName;
             }
 
+            CreateDb(fileName);
+        }
+
+        public void CreateDb(string fileName)
+        {
             // If the file exists, then the user chose to overwrite,
             // so delete the existing file.
             try
@@ -148,24 +153,24 @@ namespace pwiz.Skyline.SettingsUI
 
             Settings.Default.ProteomeDbDirectory = Path.GetDirectoryName(fileName);
 
-            textPath.Text = fileName;
-            if (textName.Text.Length == 0)
-            {
-                textName.Text = Path.GetFileNameWithoutExtension(fileName);
-            }
-
             try
             {
                 ProteomeDb.CreateProteomeDb(fileName);
             }
             catch (Exception x)
             {
-                var message = TextUtil.LineSeparate(string.Format(Resources.BuildBackgroundProteomeDlg_btnCreate_Click_An_error_occurred_attempting_to_create_the_proteome_file__0__,
-                                                                  fileName), x.Message);
+                var message = TextUtil.LineSeparate(string.Format(
+                    Resources
+                        .BuildBackgroundProteomeDlg_btnCreate_Click_An_error_occurred_attempting_to_create_the_proteome_file__0__,
+                    fileName), x.Message);
                 MessageDlg.ShowWithException(this, message, x);
             }
 
-            RefreshStatus();
+            if (textName.Text.Length == 0)
+            {
+                textName.Text = Path.GetFileNameWithoutExtension(fileName);
+            }
+            textPath.Text = fileName;   // This will cause RefreshStatus()
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -224,7 +229,6 @@ namespace pwiz.Skyline.SettingsUI
             _name = textName.Text;
             _backgroundProteomeSpec = new BackgroundProteomeSpec(_name, _databasePath);
             DialogResult = DialogResult.OK;
-            Close();
         }
 
         private void btnAddFastaFile_Click(object sender, EventArgs e)
@@ -375,10 +379,9 @@ namespace pwiz.Skyline.SettingsUI
             {
                 btnAddFastaFile.Enabled = false;
                 tbxStatus.Text = Resources.BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Open_button_to_choose_an_existing_proteome_file_or_click_the_Create_button_to_create_a_new_proteome_file;
-                textPath.ForeColor = Color.Red;
+                textPath.ForeColor = string.IsNullOrEmpty(textPath.Text) ? Color.Black : Color.Red;
             }
         }
-
 
         #region Functional test support
 

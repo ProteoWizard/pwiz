@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline;
@@ -101,9 +102,8 @@ namespace pwiz.SkylineTestTutorial
                 ShowDialog<BuildBackgroundProteomeDlg>(peptideSettingsUI.ShowBuildBackgroundProteomeDlg);
             RunUI(() =>
             {
-                buildBackgroundProteomeDlg.BackgroundProteomePath =
-                    TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\Yeast"); // Not L10N
                 buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast"; // Not L10N
+                buildBackgroundProteomeDlg.CreateDb(TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\Yeast")); // Not L10N
             });
             AddFastaToBackgroundProteome(buildBackgroundProteomeDlg, TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\sgd_yeast.fasta"), 61);
             PauseForScreenShot<BuildBackgroundProteomeDlg>("Edit Background Proteome form", 5); // Not L10N
@@ -129,12 +129,14 @@ namespace pwiz.SkylineTestTutorial
             // Wait a bit in case web access is turned on and backgroundProteome is actually resolving protein metadata
             int millis = (AllowInternetAccess ? 300 : 60) * 1000;
             WaitForCondition(millis, () => !SkylineWindow.Document.Settings.PeptideSettings.BackgroundProteome.NeedsProteinMetadataSearch, "backgroundProteome.NeedsProteinMetadataSearch"); 
+            WaitForBackgroundProteomeLoaderCompleted();
 
             // Pasting FASTA Sequences, p. 5
             RunUI(() => SetClipboardFileText(@"MethodEdit\FASTA\fasta.txt")); // Not L10N
 
             // New in v0.7 : Skyline asks about removing empty proteins.
             using (new CheckDocumentState(35, 25, 25, 75, null, true))
+            using (new DocChangeLogger())
             {
                 var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(SkylineWindow.Paste);
                 RunUI(() => emptyProteinsDlg.IsKeepEmptyProteins = true);
@@ -435,7 +437,38 @@ namespace pwiz.SkylineTestTutorial
                 }
             }
         }
-        
+
+        private class DocChangeLogger : StackTraceLogger, IDisposable
+        {
+            public DocChangeLogger()
+                : base("SkylineWindow.ImportFasta")
+            {
+                SkylineWindow.LogChange = LogChange;
+            }
+
+            private void LogChange(SrmDocument docNew, SrmDocument docOriginal)
+            {
+                LogStack(() => LogMessage(docNew));
+            }
+
+            private static string LogMessage(SrmDocument doc)
+            {
+                var sb = new StringBuilder();
+                sb.Append(string.Format(@"Setting document revision {0}", doc.RevisionIndex));
+                if (!doc.IsLoaded)
+                {
+                    foreach (var desc in doc.NonLoadedStateDescriptions)
+                        sb.AppendLine().Append(desc);
+                }
+                return sb.ToString();
+            }
+
+            public void Dispose()
+            {
+                SkylineWindow.LogChange = null;
+            }
+        }
+
         private void SetClipboardFileText(string filepath)
         {
             SetClipboardTextUI(File.ReadAllText(TestFilesDirs[0].GetTestPath(filepath)));
@@ -458,6 +491,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentChangeLoaded(doc);
         }
 
+        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
         private static void CheckTransitionCount(string peptideSequence, int count)
         {
             var doc = SkylineWindow.Document;
