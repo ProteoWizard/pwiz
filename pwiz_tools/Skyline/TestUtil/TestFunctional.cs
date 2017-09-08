@@ -961,7 +961,7 @@ namespace pwiz.SkylineTestUtil
                 }
                 Settings.Default.Reset();
                 Settings.Default.ImportResultsAutoCloseWindow = true;
-                Settings.Default.ImportResultsSimultaneousFiles = 2;    // use maximum threads for multiple file import
+                Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
                 RunTest();
             }
             catch (Exception x)
@@ -1372,12 +1372,13 @@ namespace pwiz.SkylineTestUtil
                 importResultsDlg.OptimizationName = ExportOptimize.CE;
                 importResultsDlg.NamedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(replicatesDirName).ToArray();
                 string prefix = TextUtil.GetCommonPrefix(importResultsDlg.NamedPathSets.Select(ns => ns.Key));
-                // Rename all the replicates to remove the specified prefix, so that dialog doesn't pop up.
+                string suffix = TextUtil.GetCommonSuffix(importResultsDlg.NamedPathSets.Select(ns => ns.Key));
+                // Rename all the replicates to remove the specified prefix and/or suffix, so those dialogs don't pop up.
                 for (int i = 0; i < importResultsDlg.NamedPathSets.Length; i++)
                 {
                     var namedSet = importResultsDlg.NamedPathSets[i];
                     importResultsDlg.NamedPathSets[i] = new KeyValuePair<string, MsDataFileUri[]>(
-                        namedSet.Key.Substring(prefix.Length), namedSet.Value);
+                        namedSet.Key.Substring(prefix.Length, namedSet.Key.Length - (prefix.Length+suffix.Length)), namedSet.Value);
                 }
                 importResultsDlg.OkDialog();
             });

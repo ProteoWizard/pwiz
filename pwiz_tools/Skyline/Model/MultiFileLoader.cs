@@ -96,17 +96,17 @@ namespace pwiz.Skyline.Model
                 _threadCount = loadingThreads.Value;
             else
             {
-                switch (Settings.Default.ImportResultsSimultaneousFiles)
+                switch ((ImportResultsSimultaneousFileOptions)Settings.Default.ImportResultsSimultaneousFiles)
                 {
-                    case 0:
+                    case ImportResultsSimultaneousFileOptions.one_at_a_time:
                         _threadCount = 1;
                         break;
 
-                    case 1: // Several is 1/4 logical processors (i.e. 2 for an i7)
+                    case ImportResultsSimultaneousFileOptions.several: // Several is 1/4 logical processors (i.e. 2 for an i7)
                         _threadCount = Math.Max(1, Environment.ProcessorCount / 4);
                         break;
 
-                    case 2: // Many is 1/2 logical processors (i.e. 4 for an i7)
+                    case ImportResultsSimultaneousFileOptions.many: // Many is 1/2 logical processors (i.e. 4 for an i7)
                         _threadCount = Math.Max(1, Environment.ProcessorCount / 2);
                         break;
                 }
