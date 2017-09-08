@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -76,24 +78,45 @@ namespace pwiz.SkylineTestFunctional
 
         private PeptideSettingsUI PeptideSettingsUI { get; set; }
         private ViewLibraryDlg _viewLibUI;
+        private bool asSmallMolecules;
+
+        [TestMethod]
+        public void TestLibraryExplorerAsSmallMolecules()
+        {
+            if (!RunSmallMoleculeTestVersions)
+            {
+                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
+                return;
+            }
+            TestFilesZip = @"TestFunctional\LibraryExplorerTest.zip";
+            asSmallMolecules = true;
+            RunFunctionalTest();
+        }
 
         [TestMethod]
         public void TestLibraryExplorer()
         {
             TestFilesZip = @"TestFunctional\LibraryExplorerTest.zip";
+            asSmallMolecules = false;
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
             SetUpTestLibraries();
-            TestSmallMoleculeFunctionality(2, true); // NIST with redundant entries
-            TestSmallMoleculeFunctionality(1, false); // NIST
-            TestSmallMoleculeFunctionality(3, false); // .blib
-            TestBasicFunctionality();
-            RunDlg<MultiButtonMsgDlg>(SkylineWindow.NewDocument, msgDlg => msgDlg.Btn1Click());
-            TestModificationMatching();
-            TestTooltip();
+            if (asSmallMolecules)
+            {
+                TestSmallMoleculeFunctionality(2, true); // NIST with redundant entries
+                TestSmallMoleculeFunctionality(1, false); // NIST
+                TestSmallMoleculeFunctionality(3, false); // .blib
+            }
+            else
+            {
+                TestBasicFunctionality();
+                RunDlg<MultiButtonMsgDlg>(SkylineWindow.NewDocument, msgDlg => msgDlg.Btn1Click());
+                TestModificationMatching();
+                TestTooltip();
+            }
         }
 
         private void SetUpTestLibraries()
