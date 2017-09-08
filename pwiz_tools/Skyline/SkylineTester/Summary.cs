@@ -140,10 +140,11 @@ namespace SkylineTester
                 }
             }
 
-            // Show max of 30 runs.
-            if (Runs.Count > 30)
+            // Show max of 90 runs (3 months or so, or 45 days for double duty machines).
+            var MAX_STORED_SUMMARIES = 90;
+            if (Runs.Count > MAX_STORED_SUMMARIES)
             {
-                Runs.RemoveRange(0, Runs.Count - 30);
+                Runs.RemoveRange(0, Runs.Count - MAX_STORED_SUMMARIES);
                 runsRemoved = true;
             }
 
