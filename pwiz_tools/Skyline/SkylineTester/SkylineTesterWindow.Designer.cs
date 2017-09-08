@@ -252,6 +252,7 @@ namespace SkylineTester
             this.Duration = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.AverageDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.RelDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.DeltaTotalDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2629,7 +2630,8 @@ namespace SkylineTester
             this.Iterations,
             this.Duration,
             this.AverageDuration,
-            this.RelDuration});
+            this.RelDuration,
+            this.DeltaTotalDuration});
             this.dataGridRunStats.Location = new System.Drawing.Point(12, 76);
             this.dataGridRunStats.Name = "dataGridRunStats";
             this.dataGridRunStats.ReadOnly = true;
@@ -2668,6 +2670,12 @@ namespace SkylineTester
             this.RelDuration.HeaderText = "Relative duration";
             this.RelDuration.Name = "RelDuration";
             this.RelDuration.ReadOnly = true;
+            // 
+            // DeltaTotalDuration
+            // 
+            this.DeltaTotalDuration.HeaderText = "Delta total duration";
+            this.DeltaTotalDuration.Name = "DeltaTotalDuration";
+            this.DeltaTotalDuration.ReadOnly = true;
             // 
             // menuStrip1
             // 
@@ -3278,6 +3286,7 @@ namespace SkylineTester
         private DataGridViewTextBoxColumn Duration;
         private DataGridViewTextBoxColumn AverageDuration;
         private DataGridViewTextBoxColumn RelDuration;
+        private DataGridViewTextBoxColumn DeltaTotalDuration;
         private Label label6;
         private Label label3;
         private CheckBox randomize;

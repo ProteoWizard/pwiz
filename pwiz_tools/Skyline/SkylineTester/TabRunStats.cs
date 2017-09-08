@@ -84,14 +84,17 @@ namespace SkylineTester
                     TestData valRight = null;
                     compareDictionary.TryGetValue(key, out valRight);
                     var durLeftI = valLeft == null ? 0 : valLeft.Duration / valLeft.Iterations;
+                    var durLeftTotal = valLeft == null ? 0 : valLeft.Duration;
                     var durRightI = valRight == null ? 0 : valRight.Duration / valRight.Iterations;
+                    var durRightTotal = valRight == null ? 0 : valRight.Duration;
                     var durLeftD = valLeft == null ? 0 : valLeft.Duration / (double)valLeft.Iterations;
                     var durRightD = valRight == null ? 0 : valRight.Duration / (double)valRight.Iterations;
                     MainWindow.DataGridRunStats.Rows.Add(key,
                         string.Format("{0}/{1}", valLeft == null ? 0 : valLeft.Iterations, valRight == null ? 0 : valRight.Iterations),
                         string.Format("{0}/{1}", valLeft == null ? 0 : valLeft.Duration, valRight == null ? 0 : valRight.Duration),
                         string.Format("{0}/{1}", durLeftI, durRightI),
-                        (valRight == null || valLeft == null) ? "N/A" : string.Format("{0:0.00}", (durRightD == 0 ? 1 : durLeftD / durRightD)));
+                        (valRight == null || valLeft == null) ? "N/A" : string.Format("{0:0.00}", (durRightD == 0 ? 1 : durLeftD / durRightD)),
+                        string.Format("{0}",  durLeftTotal - durRightTotal));
                 }
             }
         }
