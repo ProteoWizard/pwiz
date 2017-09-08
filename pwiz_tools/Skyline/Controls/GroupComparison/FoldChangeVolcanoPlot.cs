@@ -591,6 +591,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             if (!IsHandleCreated)
                 return false;
 
+            if (!_bindingListSource.IsComplete)
+                return true;
+
             var columnFilters = _bindingListSource.RowFilter.ColumnFilters.ToList();
             var columns = _bindingListSource.ViewSpec.Columns;
 
@@ -636,9 +639,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private int ValidFilterCount(IList<RowFilter.ColumnFilter> filters)
         {
-            int test = ContainsFilter(filters, ColumnCaptions.AbsLog2FoldChange, FilterOperations.OP_IS_GREATER_THAN, Settings.Default.Log2FoldChangeCutoff) +
+            return ContainsFilter(filters, ColumnCaptions.AbsLog2FoldChange, FilterOperations.OP_IS_GREATER_THAN, Settings.Default.Log2FoldChangeCutoff) +
                    ContainsFilter(filters, ColumnCaptions.AdjustedPValue, FilterOperations.OP_IS_LESS_THAN, Math.Pow(10, -Settings.Default.PValueCutoff));
-            return test;
         }
 
         // Returns 1 if the filter is found, 0 otherwise
