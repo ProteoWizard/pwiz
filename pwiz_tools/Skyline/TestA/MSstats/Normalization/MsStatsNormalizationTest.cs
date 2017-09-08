@@ -60,10 +60,15 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
         }
 
         [TestMethod]
+        public void TestAbundancesWithNoNormalizationAsSmallMolecules()
+        {
+            RunTestAbundancesWithNoNormalization(true);
+        }
+
+        [TestMethod]
         public void TestAbundancesWithNoNormalization()
         {
             RunTestAbundancesWithNoNormalization(false);
-            RunTestAbundancesWithNoNormalization(true);
         }
 
         private void RunTestAbundancesWithNoNormalization(bool asSmallMolecules)
@@ -93,10 +98,15 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
 
 
         [TestMethod]
+        public void TestFoldChangeWithNoNormalizationAsSmallMolecules()
+        {
+            RunTestFoldChangeWithNoNormalization(true);
+        }
+
+        [TestMethod]
         public void TestFoldChangeWithNoNormalization()
         {
             RunTestFoldChangeWithNoNormalization(false);
-            RunTestFoldChangeWithNoNormalization(true);
         }
 
         private void RunTestFoldChangeWithNoNormalization(bool asSmallMolecules)
@@ -120,10 +130,15 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
         }
 
         [TestMethod]
+        public void TestAbundancesEqualizeMediansAsSmallMolecules()
+        {
+            RunTestAbundancesEqualizeMedians(true);
+        }
+
+        [TestMethod]
         public void TestAbundancesEqualizeMedians()
         {
             RunTestAbundancesEqualizeMedians(false);
-            RunTestAbundancesEqualizeMedians(true);
         }
 
         private void RunTestAbundancesEqualizeMedians(bool asSmallMolecules)
@@ -162,9 +177,14 @@ namespace pwiz.SkylineTestA.MSstats.Normalization
         }
 
         [TestMethod]
+        public void TestFoldChangeEqualizeMediansAsSmallMolecules()
+        {
+            RunTestFoldChangeEqualizeMedians(true);
+        }
+
+        [TestMethod]
         public void TestFoldChangeEqualizeMedians()
         {
-            RunTestFoldChangeEqualizeMedians(false);
             RunTestFoldChangeEqualizeMedians(true);
         }
 
