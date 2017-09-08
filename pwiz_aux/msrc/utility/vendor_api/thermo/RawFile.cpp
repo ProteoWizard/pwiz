@@ -1084,7 +1084,7 @@ void ScanInfoImpl::parseFilterString()
     precursorMZs_.insert(precursorMZs_.end(), filterParser.precursorMZs_.begin(), filterParser.precursorMZs_.end());
     precursorActivationEnergies_.insert(precursorActivationEnergies_.end(), filterParser.precursorEnergies_.begin(), filterParser.precursorEnergies_.end());
 
-    supplementalActivation_ = filterParser.supplementalCIDOn_ && activationType_ & ActivationType_ETD;
+    supplementalActivation_ = filterParser.supplementalCIDOn_ == TriBool_True && activationType_ & ActivationType_ETD;
     if (supplementalActivation_)
     {
         saType_ = filterParser.saTypes_[0];
