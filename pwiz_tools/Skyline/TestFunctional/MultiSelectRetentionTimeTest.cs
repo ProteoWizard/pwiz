@@ -47,8 +47,9 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowGraphRetentionTime(true);
             });
             WaitForGraphs();
-            Assert.AreEqual(BarType.Overlay, SkylineWindow.GraphRetentionTime.GraphControl.GraphPane.BarSettings.Type);
-            Assert.AreEqual(17, SkylineWindow.GraphRetentionTime.CurveCount);
+            Assert.AreEqual(BarType.SortedOverlay, SkylineWindow.GraphRetentionTime.GraphControl.GraphPane.BarSettings.Type);
+            Assert.AreEqual(18, SkylineWindow.GraphRetentionTime.CurveCount);
+            PauseTest();
 
             // Test selecting each node down to the peptide/precursor level
             foreach (var node in SkylineWindow.SequenceTree.Nodes)
@@ -61,7 +62,7 @@ namespace pwiz.SkylineTestFunctional
                 switch (peptideGroupTreeNode.Text)
                 {
                     case "sp|P02647|APOA1_HUMAN":
-                        curveCount = 7;
+                        curveCount = 8;
                         break;
                     case "GST_SCHJA_Fusion_Peptide":
                         curveCount = 2;
@@ -71,7 +72,7 @@ namespace pwiz.SkylineTestFunctional
                         break;
                 }
                 Assert.AreEqual(curveCount, SkylineWindow.GraphRetentionTime.CurveCount);
-                Assert.AreEqual(BarType.Overlay, SkylineWindow.GraphRetentionTime.GraphControl.GraphPane.BarSettings.Type);
+                Assert.AreEqual(BarType.SortedOverlay, SkylineWindow.GraphRetentionTime.GraphControl.GraphPane.BarSettings.Type);
                 SummaryReplicateGraphPane pane;
                 Assert.IsTrue(SkylineWindow.GraphRetentionTime.TryGetGraphPane(out pane));
                 
