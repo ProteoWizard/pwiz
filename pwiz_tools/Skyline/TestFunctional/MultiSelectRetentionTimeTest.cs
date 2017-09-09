@@ -49,7 +49,6 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             Assert.AreEqual(BarType.SortedOverlay, SkylineWindow.GraphRetentionTime.GraphControl.GraphPane.BarSettings.Type);
             Assert.AreEqual(18, SkylineWindow.GraphRetentionTime.CurveCount);
-            PauseTest();
 
             // Test selecting each node down to the peptide/precursor level
             foreach (var node in SkylineWindow.SequenceTree.Nodes)
@@ -76,13 +75,10 @@ namespace pwiz.SkylineTestFunctional
                 SummaryReplicateGraphPane pane;
                 Assert.IsTrue(SkylineWindow.GraphRetentionTime.TryGetGraphPane(out pane));
                 
-                // Select indavidual peptides
-                foreach (TreeNode peptide in peptideGroupTreeNode.Nodes)
-                {
-                    SelectNode(peptide);
-                    Assert.AreEqual(4, SkylineWindow.GraphRetentionTime.CurveCount);  // All peptides have 4 precursor ions
-                    Assert.AreEqual(BarType.Cluster, SkylineWindow.GraphRetentionTime.GraphControl.GraphPane.BarSettings.Type);
-                }
+                // Select first indavidual peptide (not worth selecting them all - slows test for not much extra coverage)
+                SelectNode(peptideGroupTreeNode.Nodes[0]);
+                Assert.AreEqual(4, SkylineWindow.GraphRetentionTime.CurveCount);  // All peptides have 4 precursor ions
+                Assert.AreEqual(BarType.Cluster, SkylineWindow.GraphRetentionTime.GraphControl.GraphPane.BarSettings.Type);
             }
         }
         private void SelectNode(TreeNode node)
