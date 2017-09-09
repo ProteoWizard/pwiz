@@ -2047,9 +2047,6 @@ namespace pwiz.Skyline.Model
 
         public double? GetOptimizedCollisionEnergy(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTransition)
         {
-            if (nodeGroup.ExplicitValues.CollisionEnergy.HasValue)
-                return nodeGroup.ExplicitValues.CollisionEnergy.Value;   // Use the explicitly imported CE value
-
             var prediction = Settings.TransitionSettings.Prediction;
             var methodType = prediction.OptimizedMethodType;
             var lib = prediction.OptimizedLibrary;

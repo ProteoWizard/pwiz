@@ -768,15 +768,9 @@ namespace pwiz.Skyline.Model
                                             TransitionDocNode nodeTran,
                                             int step)
         {
-            // If explicit CE, then no optimizing. Just return zero CE for anything but central transition
-            var explicitCE = nodeGroup.ExplicitValues.CollisionEnergy;
-            if (explicitCE.HasValue)
-            {
-                return step == 0 ? explicitCE.Value : 0;  // No optimizing of explicit values
-            }
-
             if (OptimizeType == null)
             {
+                // No optimization happening. So, use optimized values if available
                 double? optimizedCE = Document.GetOptimizedCollisionEnergy(nodePep, nodeGroup, nodeTran);
                 if (optimizedCE.HasValue)
                     return optimizedCE.Value;

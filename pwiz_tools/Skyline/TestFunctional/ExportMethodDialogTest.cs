@@ -729,6 +729,7 @@ namespace pwiz.SkylineTestFunctional
             var original = SkylineWindow.Document;
             var refine = new RefinementSettings();
             var document = refine.ConvertToSmallMolecules(original, pathForSmallMoleculeLibs);
+            int expectedTrans = document.MoleculeTransitionCount*11 + 1;
             for (var loop = 0; loop < 2; loop++)
             {
                 SkylineWindow.SetDocument(document, SkylineWindow.Document);
@@ -745,15 +746,16 @@ namespace pwiz.SkylineTestFunctional
                 if (loop == 1)
                 {
                     // Explicit CE values
-                    Assert.AreEqual(document.MoleculeTransitionCount+1, actual.Length); // Should be just one line per transition, and a header
+                    Assert.AreEqual(expectedTrans, actual.Length); // Should still contain steps based on the explicit values
                     break;
                 }
                 else
                 {
-                    Assert.AreEqual(document.MoleculeTransitionCount*11 + 1, actual.Length); // Multiple steps, and a header
+                    Assert.AreEqual(expectedTrans, actual.Length); // Multiple steps, and a header
                 }
                 // Change the current document to use explicit CE values, verify that this changes the output
-                var ce = 1;
+                var ce = 1; // Starting at 1 means some transitions will not have all CE steps
+                expectedTrans = 1;
                 for (bool changing = true; changing; )
                 {
                     changing = false;
@@ -768,6 +770,8 @@ namespace pwiz.SkylineTestFunctional
                                 if (!nodeTransitionGroup.ExplicitValues.CollisionEnergy.HasValue)
                                 {
                                     var tgPath = new IdentityPath(pepPath, nodeTransitionGroup.Id);
+                                    // Add to expected transition count, limiting to account for CE <= 0
+                                    expectedTrans += nodeTransitionGroup.TransitionCount * (Math.Min(ce-1, 5) + 6);
                                     document = (SrmDocument)document.ReplaceChild(tgPath.Parent,
                                         nodeTransitionGroup.ChangeExplicitValues(nodeTransitionGroup.ExplicitValues.ChangeCollisionEnergy(ce++)));
                                     changing = true;

@@ -230,8 +230,8 @@ namespace pwiz.Skyline.EditUI
             RefinementSettings = new RefinementSettings
                                      {
                                          MinPeptidesPerProtein = minPeptidesPerProtein,
-                                         RemoveDuplicatePeptides = removeDuplicatePeptides,
                                          RemoveRepeatedPeptides = removeRepeatedPeptides,
+                                         RemoveDuplicatePeptides = removeDuplicatePeptides,
                                          MinTransitionsPepPrecursor = minTransitionsPerPrecursor,
                                          RefineLabelType = refineLabelType,
                                          AddLabelType = addLabelType,
