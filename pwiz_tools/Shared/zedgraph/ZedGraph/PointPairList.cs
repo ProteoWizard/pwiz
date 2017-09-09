@@ -88,6 +88,15 @@ namespace ZedGraph
 			_sorted = false;
 		}
 
+	    public PointPairList(IList<PointPair> list)
+	    {
+	        int count = list.Count;
+	        for (int i = 0; i < count; i++)
+	            Add(list[i]);
+
+	        _sorted = false;
+	    }
+
 		/// <summary>
 		/// Constructor to initialize the PointPairList from an IPointList
 		/// </summary>

@@ -45,6 +45,8 @@ namespace ZedGraph
 		/// property <see cref="Bar"/> to access this value.
 		/// </summary>
 		protected Bar			_bar;
+
+	    protected int _sortedOverlayPriority;
 	#endregion
 	
 	#region Properties
@@ -56,6 +58,12 @@ namespace ZedGraph
 		{
 			get { return _bar; }
 		}
+
+	    public int SortedOverlayPriority
+	    {
+            get { return _sortedOverlayPriority; }
+            set { _sortedOverlayPriority = value; }
+	    }
 
 		/// <summary>
 		/// Gets a flag indicating if the Z data range should be included in the axis scaling calculations.

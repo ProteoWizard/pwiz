@@ -20,6 +20,7 @@
 using System;
 using System.Drawing;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ZedGraph
 {
@@ -120,18 +121,18 @@ namespace ZedGraph
 		/// </summary>
 		public bool IsPieOnly
 		{
- 			get
- 			{
+			get
+			{
 				bool hasPie = false;
- 				foreach ( CurveItem curve in this )
- 				{
- 					if ( !curve.IsPie )
- 						return false;
+				foreach ( CurveItem curve in this )
+				{
+					if ( !curve.IsPie )
+						return false;
 					else
 						hasPie = true;
- 				}
+				}
 				return hasPie;
- 			}
+			}
 		}
 
 		/// <summary>
@@ -448,7 +449,7 @@ namespace ZedGraph
 			{
 				if ( curve.IsVisible )
 				{
-                    GetCurveRange(pane, curve, out tXMinVal, out tXMaxVal, out tYMinVal, out tYMaxVal, bIgnoreInitial);
+					GetCurveRange(pane, curve, out tXMinVal, out tXMaxVal, out tYMinVal, out tYMaxVal, bIgnoreInitial);
 					// isYOrd is true if the Y axis is an ordinal type
 					Scale yScale = curve.GetYAxis( pane ).Scale;
 
@@ -553,31 +554,31 @@ namespace ZedGraph
 				scale._max : double.MaxValue;
 		}
 
-	    public void GetCurveRange(GraphPane pane, CurveItem curve, out double tXMinVal, out double tXMaxVal,
-	        out double tYMinVal, out double tYMaxVal)
-	    {
-	        GetCurveRange(pane, curve, out tXMinVal, out tXMaxVal, out tYMinVal, out tYMaxVal, false);
-	    }
+		public void GetCurveRange(GraphPane pane, CurveItem curve, out double tXMinVal, out double tXMaxVal,
+			out double tYMinVal, out double tYMaxVal)
+		{
+			GetCurveRange(pane, curve, out tXMinVal, out tXMaxVal, out tYMinVal, out tYMaxVal, false);
+		}
 
-	    private void GetCurveRange(GraphPane pane, CurveItem curve, out double tXMinVal, out double tXMaxVal, out double tYMinVal, out double tYMaxVal, bool bIgnoreInitial)
-	    {
-	        // For stacked types, use the GetStackRange() method which accounts for accumulated values
-	        // rather than simple curve values.
-	        if (((curve is BarItem) && (pane._barSettings.Type == BarType.Stack ||
-	                                    pane._barSettings.Type == BarType.PercentStack)) ||
-	            ((curve is LineItem) && pane.LineType == LineType.Stack))
-	        {
-	            GetStackRange(pane, curve, out tXMinVal, out tYMinVal,
-	                out tXMaxVal, out tYMaxVal);
-	        }
-	        else
-	        {
-	            // Call the GetRange() member function for the current
-	            // curve to get the min and max values
-	            curve.GetRange(out tXMinVal, out tXMaxVal,
-	                out tYMinVal, out tYMaxVal, bIgnoreInitial, true, pane);
-	        }
-	    }
+		private void GetCurveRange(GraphPane pane, CurveItem curve, out double tXMinVal, out double tXMaxVal, out double tYMinVal, out double tYMaxVal, bool bIgnoreInitial)
+		{
+			// For stacked types, use the GetStackRange() method which accounts for accumulated values
+			// rather than simple curve values.
+			if (((curve is BarItem) && (pane._barSettings.Type == BarType.Stack ||
+										pane._barSettings.Type == BarType.PercentStack)) ||
+				((curve is LineItem) && pane.LineType == LineType.Stack))
+			{
+				GetStackRange(pane, curve, out tXMinVal, out tYMinVal,
+					out tXMaxVal, out tYMaxVal);
+			}
+			else
+			{
+				// Call the GetRange() member function for the current
+				// curve to get the min and max values
+				curve.GetRange(out tXMinVal, out tXMaxVal,
+					out tYMinVal, out tYMaxVal, bIgnoreInitial, true, pane);
+			}
+		}
 		/// <summary>
 		/// Calculate the range for stacked bars and lines.
 		/// </summary>
@@ -687,8 +688,9 @@ namespace ZedGraph
 				{
 					// At each ordinal position, sort the curves according to the value axis value
 					tempList.Sort( pane._barSettings.Base == BarBase.X ? SortType.YValues : SortType.XValues, i );
+					var list = tempList.Cast<BarItem>().OrderByDescending(b => b.SortedOverlayPriority);
 					// plot the bars for the current ordinal position, in sorted order
-					foreach ( BarItem barItem in tempList )
+					foreach (BarItem barItem in list)
 						barItem.Bar.DrawSingleBar( g, pane, barItem,
 							((BarItem)barItem).BaseAxis( pane ),
 							((BarItem)barItem).ValueAxis( pane ),

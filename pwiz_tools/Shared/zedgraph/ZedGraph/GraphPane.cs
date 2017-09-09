@@ -731,8 +731,8 @@ namespace ZedGraph
 			if ( _rect.Width <= 1 || _rect.Height <= 1 )
 				return;
 
-            // Clip everything to the rect
-            var clip = PushClip(g, _rect);
+			// Clip everything to the rect
+			var clip = PushClip(g, _rect);
 
 			// calculate scaleFactor on "normal" pane size (BaseDimension)
 			float scaleFactor = this.CalcScaleFactor();
@@ -788,9 +788,9 @@ namespace ZedGraph
 				_graphObjList.Draw( g, this, scaleFactor, ZOrder.E_BehindCurves );
 
 				// Clip the points to the actual plot area
-                var chartClip = PushClip(g, _chart._rect);
+				var chartClip = PushClip(g, _chart._rect);
 				_curveList.Draw( g, this, scaleFactor );
-                PopClip(g, chartClip);
+				PopClip(g, chartClip);
 			}
 
 			if ( showGraf )
@@ -2161,7 +2161,7 @@ namespace ZedGraph
 											continue;
 									}
 
-									if ( nearestBar == null )
+									if (nearestBar == null || (BarSettings.Type == BarType.SortedOverlay && yVal < nearestBar.Points[iNearestBar].Y))
 									{
 										iNearestBar = iPt;
 										nearestBar = curve;

@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public AreaCVGraphData.AreaCVGraphDataCache Cache { get { return _cache; } }
 
-        public int Objects { get; private set; }
+        public int Items { get; private set; }
 
         public override bool HasToolbar { get { return true; } }
 
@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var points = _areaCVGraphData.Data
                 .Select(d => new HeatMapData.TaggedPoint3D(new Point3D(d.MeanArea, d.CV * factor, d.Frequency), d))
                 .ToList();
-            Objects = points.Count; // Because heatmaps can't be trusted to have a consistent number of points on all monitors
+            Items = points.Count; // Because heatmaps can't be trusted to have a consistent number of points on all monitors
             var heatMapData = new HeatMapData(points);
             HeatMapGraphPane.GraphHeatMap(this, heatMapData, 17, 2, (float)(_areaCVGraphData.MinCV * factor), (float)(_areaCVGraphData.MaxCV * factor), Settings.Default.AreaCVLogScale, 0);
 

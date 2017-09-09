@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public interface IAreaCVHistogramInfo    // CONSIDER: Base class instead?
     {
-        int Objects { get; }
+        int Items { get; }
         AreaCVGraphData CurrentData { get; }
         AreaCVGraphData.AreaCVGraphDataCache Cache { get; }
     }
@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public AreaCVGraphData.AreaCVGraphDataCache Cache { get { return _cache; } }
 
-        public int Objects { get { return GetBoxObjCount(); } }
+        public int Items { get { return GetTotalBars(); } }
 
         public override bool HasToolbar { get { return true; } }
 
@@ -76,9 +76,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 object nearestObject;
                 int index;
-                if (FindNearestObject(e.Location, g, out nearestObject, out index) && nearestObject is BoxObj)
+                if (FindNearestObject(e.Location, g, out nearestObject, out index) && nearestObject is BarItem)
                 {
-                    _selectedData = (AreaCVGraphData.CVData)((BoxObj) nearestObject).Tag;
+                    _selectedData = (AreaCVGraphData.CVData)((BarItem)nearestObject).Points[index].Tag;
                     sender.Cursor = Cursors.Hand;
                     return true;
                 }
@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void Draw(Graphics g)
         {
-            GraphObjList.RemoveAll(o => !(o is BoxObj));
+            GraphObjList.Clear();
 
             YAxis.Scale.Min = 0.0;
 
@@ -133,9 +133,13 @@ namespace pwiz.Skyline.Controls.Graphs
              var settings = new AreaCVGraphData.AreaCVGraphSettings(GraphSummary.Type);
             _document = GraphSummary.DocumentUIContainer.DocumentUI;
 
-            _percentage = !Settings.Default.AreaCVShowDecimals;
-
             var factor = AreaGraphController.GetAreaCVFactorToDecimal();
+
+            BarSettings.Type = BarType.SortedOverlay;
+            BarSettings.ClusterScaleWidth = Settings.Default.AreaCVHistogramBinWidth;
+            BarSettings.MinClusterGap = 0.0f;
+
+            _percentage = !Settings.Default.AreaCVShowDecimals;
             _decimals = _percentage ? 1 : 3;
 
             GraphObjList.Clear();
@@ -168,35 +172,31 @@ namespace pwiz.Skyline.Controls.Graphs
             var selected = HistogramHelper.GetSelectedPeptides(GraphSummary).NodePeps.OrderBy(p => p.Id.GlobalIndex).ToList();
             var comparer = Comparer<PeptideDocNode>.Create((a, b) => a.Id.GlobalIndex.CompareTo(b.Id.GlobalIndex));
 
+            var selectedPoints = new PointPairList();
+            var selectedPoints2 = new PointPairList();
+            var otherPoints = new PointPairList();
+
             foreach (var d in _areaCVGraphData.Data)
             {
-                int frequency = 0;
-                var x = d.CV * factor;
+                int frequency;
+                var x = d.CV * factor + Settings.Default.AreaCVHistogramBinWidth / 2.0f;
 
-                if (Settings.Default.ShowReplicateSelection)
+                var pt = new PointPair(x, d.Frequency) { Tag = d };
+                if (Settings.Default.ShowReplicateSelection &&
+                    (frequency = d.PeptideAnnotationPairs.Count(pair => selected.BinarySearch(pair.Peptide, comparer) >= 0)) > 0)
                 {
-                    frequency = d.PeptideAnnotationPairs.Count(pair => selected.BinarySearch(pair.Peptide, comparer) >= 0);
-                    
-                    // Add a red box, representing the number of selected peptides that contributed to this CV
-                    if (frequency > 0)
-                        GraphObjList.Add(new BoxObj(x, frequency, Settings.Default.AreaCVHistogramBinWidth, frequency,
-                            Color.Black, Color.Red)
-                        {
-                            ZOrder = ZOrder.E_BehindCurves,
-                            IsClippedToChartRect = true,
-                            Tag = d
-                        });
+                    selectedPoints.Add(pt);
+                    selectedPoints2.Add(new PointPair(x, frequency) { Tag = d });
                 }
-
-                GraphObjList.Add(new BoxObj(x, d.Frequency, Settings.Default.AreaCVHistogramBinWidth,
-                    d.Frequency - frequency, Color.Black,
-                    frequency > 0 ? Color.FromArgb(Color.Red.ToArgb() & 0x7FFFFFFF) : Color.FromArgb(180, 220, 255))
+                else
                 {
-                    ZOrder = ZOrder.E_BehindCurves,
-                    IsClippedToChartRect = true,
-                    Tag = d
-                });
+                    otherPoints.Add(pt);
+                }
             }
+
+            CurveList.Insert(0, MakeBarItem(selectedPoints2, Color.Red));
+            CurveList.Insert(1, MakeBarItem(selectedPoints, Color.FromArgb(Color.Red.ToArgb() & 0x7FFFFFFF)));
+            CurveList.Insert(2, MakeBarItem(otherPoints, Color.FromArgb(180, 220, 255)));
 
             XAxis.Title.Text = Resources.AreaCVHistogramGraphPane_UpdateGraph_CV + (_percentage ? " (%)" : string.Empty); // Not L10N
             YAxis.Title.Text = Resources.AreaCVHistogramGraphPane_UpdateGraph_Frequency;
@@ -215,6 +215,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 YAxis.Scale.Max = _areaCVGraphData.MaxFrequency + heightFactor * height;
 
             AxisChange();
+        }
+
+        private BarItem MakeBarItem(PointPairList points, Color color)
+        {
+            return new BarItem(null, points, color) { Bar = { Fill = { Type = FillType.Solid } } };
         }
 
         private void AddLabels(Graphics g)

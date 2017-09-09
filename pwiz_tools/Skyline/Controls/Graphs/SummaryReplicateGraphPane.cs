@@ -383,15 +383,17 @@ namespace pwiz.Skyline.Controls.Graphs
                     newGroups.Insert(firstIndex, group);
 
                     for (var node = 0; node < docNodeCount; ++node)
-                    for (var step = 0; step < PointPairLists[node].Count; ++step)
-                        PointPairLists[node][step].Insert(firstIndex, new PointPair(firstIndex, double.NaN));
+                        for (var step = 0; step < PointPairLists[node].Count; ++step)
+                            if(PointPairLists[node][step].Any())
+                                PointPairLists[node][step].Insert(firstIndex, new PointPair(firstIndex, double.NaN));
+                            
                 }
                 ReplicateGroups = newGroups;
             }
 
             private bool ShouldMerge(List<List<PointPairRef>>[] references, IEnumerable<int> groupIndices)
             {
-                return references.All(list => list.SelectMany(l => l).Count(p => groupIndices.Contains(p.PointPairListIndex)) <= 1);
+                return references.All(list => list.SelectMany(l => l).Count(p => !p.PointPair.IsMissing && groupIndices.Contains(p.PointPairListIndex)) <= 1);
             }
 
             private void MergeGroups(string[] uniqueGroupNames, List<List<PointPairRef>>[] references)
@@ -414,9 +416,13 @@ namespace pwiz.Skyline.Controls.Graphs
                                     {
                                         var list = PointPairLists[node][step];
                                         var index = groupIndices.First(i => ReplicateGroups[i].IsAllGroup);
-                                        var x = list[index].X; // Backup x value
-                                        list[index] = new PointPair(references[node][step][group].PointPair) { X = x };
-                                        references[node][step][group].PointPair.Y = double.NaN;
+
+                                        if (list[index].IsInvalid || !references[node][step][group].PointPair.IsInvalid)
+                                        {
+                                            var x = list[index].X; // Backup x value
+                                            list[index] = new PointPair(references[node][step][group].PointPair) { X = x };
+                                            references[node][step][group].PointPair.X = references[node][step][group].PointPair.Y = double.NaN;
+                                        }
                                     }
                                 }
                             }
@@ -425,9 +431,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            private bool IsValidYValue(double y)
+            private bool IsPointPairValid(PointPair pair)
             {
-                return !double.IsNaN(y) && !double.IsInfinity(y) && y != double.MaxValue && y != double.MinValue;
+                return pair.IsInvalid == pair.IsMissing;
             }
 
             private List<List<PointPairRef>>[] CollectValidPointRefs(string[] uniqueGroupNames, string[] oldGroupNames, int docNodeCount)
@@ -443,7 +449,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         for (var group = 0; group < PointPairLists[node][step].Count; ++group)
                         {
                             PointPairLists[node][step][group].X = group;
-                            if (IsValidYValue(PointPairLists[node][step][group].Y))
+                            if (IsPointPairValid(PointPairLists[node][step][group]))
                                 references[node][step].Add(new PointPairRef(PointPairLists[node][step][group], group, groupIndex++));
                         }
                     }
@@ -451,22 +457,36 @@ namespace pwiz.Skyline.Controls.Graphs
                 return references;
             }
 
+            private bool ShouldRemoveGroup(int groupIndex)
+            {
+                return !PointPairLists.Any(p => p.Any(ppl => ppl.Any() && !ppl[groupIndex].IsInvalid));
+            }
+
             private void RemoveEmptyGroups(int docNodeCount)
             {
                 var groups = ReplicateGroups.ToList();
                 for (var i = 0; i < groups.Count; ++i)
                 {
-                    var removeGroup = !PointPairLists.Any(p => p.Any(ppl => IsValidYValue(ppl[i].Y)));
+                    var index = i;
+                    var removeGroup = ShouldRemoveGroup(index);
+                    if (removeGroup && groups[index].IsAllGroup)
+                    {
+                        var fileGroups = groups.Select((g, j) => j).Where(j => groups[j].GroupName == groups[index].GroupName && !groups[j].IsAllGroup);
+                        removeGroup = fileGroups.Any(j => !ShouldRemoveGroup(j));
+                    }
                     if (removeGroup)
                     {
                         for (var node = 0; node < docNodeCount; ++node)
                         {
                             for (var step = 0; step < PointPairLists[node].Count; ++step)
                             {
-                                PointPairLists[node][step].RemoveAt(i);
-                                // Fix x values
-                                for (var j = i; j < PointPairLists[node][step].Count; ++j)
-                                    --PointPairLists[node][step][j].X;
+                                if (PointPairLists[node][step].Any())
+                                {
+                                    PointPairLists[node][step].RemoveAt(i);
+                                    // Fix x values
+                                    for (var j = i; j < PointPairLists[node][step].Count; ++j)
+                                        --PointPairLists[node][step][j].X;
+                                }
                             }
                         }
                         groups.RemoveAt(i);
@@ -743,15 +763,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     return new ReplicateGroup[0]; // Likely user removed all results while Mass Errors window was open
                 }
                 var chromatograms = _document.Settings.MeasuredResults.Chromatograms;
-                var nodes = _selectedDocNodePaths.Select(i => _document.FindNode(i)).ToArray();
+
                 var result = new List<ReplicateGroup>();
                 if (ReplicateGroupOp.GroupByAnnotation == null)
                 {
                     foreach (var index in replicateIndexes)
                     {
-                        var i = index;
-                        // ReSharper disable once AccessToModifiedClosure
-                        nodes.ForEach(n => AddReplicateGroup(result, n, i));
+                        var chromatogram = _document.MeasuredResults.Chromatograms[index];
+                        result.AddRange(chromatogram.MSDataFileInfos.Select(fileInfo => new ReplicateGroup(chromatogram.Name, ReplicateIndexSet.Singleton(index), fileInfo)));
                     }
 
                     var query = result.OrderBy(g => 0);

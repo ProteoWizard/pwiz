@@ -399,10 +399,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public class AreaCVGraphDataStatistics
     {
-        public AreaCVGraphDataStatistics(int dataCount, int objects, double minMeanArea, double maxMeanArea, int total, double maxCv, double minCv, int maxFrequency, double medianCv, double meanCv, double belowCvCutoff)
+        public AreaCVGraphDataStatistics(int dataCount, int items, double minMeanArea, double maxMeanArea, int total, double maxCv, double minCv, int maxFrequency, double medianCv, double meanCv, double belowCvCutoff)
         {
             DataCount = dataCount;
-            Objects = objects;
+            Items = items;
             MinMeanArea = minMeanArea;
             MaxMeanArea = maxMeanArea;
             Total = total;
@@ -414,10 +414,10 @@ namespace pwiz.Skyline.Controls.Graphs
             BelowCVCutoff = belowCvCutoff;
         }
 
-        public AreaCVGraphDataStatistics(AreaCVGraphData data, int objects)
+        public AreaCVGraphDataStatistics(AreaCVGraphData data, int items)
         {
             DataCount = data.Data.Count;
-            Objects = objects;
+            Items = items;
             MinMeanArea = data.MinMeanArea;
             MaxMeanArea = data.MaxMeanArea;
             Total = data.Total;
@@ -432,7 +432,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected bool Equals(AreaCVGraphDataStatistics other)
         {
             return DataCount == other.DataCount &&
-                   Objects == other.Objects &&
+                   Items == other.Items &&
                    MinMeanArea.Equals(other.MinMeanArea) &&
                    MaxMeanArea.Equals(other.MaxMeanArea) &&
                    Total == other.Total &&
@@ -457,7 +457,7 @@ namespace pwiz.Skyline.Controls.Graphs
             unchecked
             {
                 var hashCode = DataCount;
-                hashCode = (hashCode * 397) ^ Objects.GetHashCode();
+                hashCode = (hashCode * 397) ^ Items.GetHashCode();
                 hashCode = (hashCode * 397) ^ MinMeanArea.GetHashCode();
                 hashCode = (hashCode * 397) ^ MaxMeanArea.GetHashCode();
                 hashCode = (hashCode * 397) ^ Total;
@@ -474,7 +474,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public override string ToString()
         {
             return string.Format(@"{0}, {1}, {2:R}, {3:R}, {4}, {5:R}, {6:R}, {7}, {8:R}, {9:R}, {10:R}", // Not L10N
-                DataCount, Objects, MinMeanArea, MaxMeanArea, Total, MaxCV, MinCV, MaxFrequency, MedianCV, MeanCV, BelowCVCutoff);
+                DataCount, Items, MinMeanArea, MaxMeanArea, Total, MaxCV, MinCV, MaxFrequency, MedianCV, MeanCV, BelowCVCutoff);
         }
 
         public string ToCode()
@@ -483,7 +483,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private int DataCount { get; set; }
-        private int Objects { get; set; }
+        private int Items { get; set; }
         private double MinMeanArea { get; set; } // Smallest mean area
         private double MaxMeanArea { get; set; } // Largest mean area
         private int Total { get; set; } // Total number of CV's

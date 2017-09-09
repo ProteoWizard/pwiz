@@ -169,6 +169,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     int step = iStep - numSteps;
                     var pointPairList = pointPairLists[iStep];
                     Color color;
+                    var isSelected = false;
                     var nodeGroup = docNode as TransitionGroupDocNode;
                     if (IsMultiSelect)
                     {
@@ -184,6 +185,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (identityPath.Equals(selectedTreeNode.Path) && step == 0)
                         {
                             color = ChromGraphItem.ColorSelected;
+                            isSelected = true;
                         }
                     }
                     else if (parentNode is PeptideDocNode)
@@ -201,6 +203,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     else if (identityPath.Equals(selectedPath) && step == 0)
                     {
                         color = ChromGraphItem.ColorSelected;
+                        isSelected = true;
                     }
                     else
                     {
@@ -212,23 +215,19 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (step != 0)
                         label = string.Format(Resources.RTReplicateGraphPane_UpdateGraph_Step__0__, step);
                     
-                    BarItem curveItem = null;
+                    BarItem curveItem;
                     if(IsMultiSelect)
                     {
-                        var hasNaN = false;
-                        foreach(PointPair pp in pointPairList)
+                        for (var index = 0; index < pointPairList.Count; index++)
                         {
+                            PointPair pp = pointPairList[index];
                             var middle = pp.Y - (pp.Y - pp.LowValue) / 2;
-                            if (double.IsNaN(middle))
-                                hasNaN = true;
-                            else
+                            if (!double.IsNaN(middle))
                                 pp.Tag = new MiddleErrorTag(middle, 0);
                         }
-                        if (!hasNaN)
-                        {
-                            curveItem = new HiLowMiddleErrorBarItem(label, pointPairList, color, color);
-                            BarSettings.Type = BarType.Overlay;
-                        }
+
+                        curveItem = new HiLowMiddleErrorBarItem(label, pointPairList, color, color);
+                        BarSettings.Type = BarType.SortedOverlay;
                     }
                     else if (HiLowMiddleErrorBarItem.IsHiLoMiddleErrorList(pointPairList))
                     {
@@ -241,21 +240,24 @@ namespace pwiz.Skyline.Controls.Graphs
                         BarSettings.Type = BarType.Cluster;
                     }
 
-                    if (selectedReplicateIndex != -1 && selectedReplicateIndex < pointPairList.Count)
-                    {
-                        PointPair pointPair = pointPairList[selectedReplicateIndex];
-                        if (!pointPair.IsInvalid)
-                        {
-                            minRetentionTime = Math.Min(minRetentionTime, pointPair.Z);
-                            maxRetentionTime = Math.Max(maxRetentionTime, pointPair.Y);
-                        }
-                    }
                     if (curveItem != null)
                     {
                         curveItem.Bar.Border.IsVisible = false;
                         curveItem.Bar.Fill.Brush = GetBrushForNode(docNode, color);
                         curveItem.Tag = identityPath;
+                        if (!isSelected)
+                            curveItem.SortedOverlayPriority = 1;
                         CurveList.Add(curveItem);
+
+                        if (selectedReplicateIndex != -1 && selectedReplicateIndex < pointPairList.Count)
+                        {
+                            PointPair pointPair = pointPairList[selectedReplicateIndex];
+                            if (!pointPair.IsInvalid)
+                            {
+                                minRetentionTime = Math.Min(minRetentionTime, pointPair.Z);
+                                maxRetentionTime = Math.Max(maxRetentionTime, pointPair.Y);
+                            }
+                        }
                     }
                 }
             }
@@ -376,11 +378,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 if (RTPeptideValue.All == RTPeptideGraphPane.RTValue)
                 {
-                    return HiLowMiddleErrorBarItem.MakePointPair(iResult, 
+                    var point = HiLowMiddleErrorBarItem.MakePointPair(iResult, 
                         new Statistics(endTimes).Mean(), 
                         new Statistics(startTimes).Mean(), 
                         new Statistics(retentionTimes).Mean(), 
                         new Statistics(fwhms).Mean());
+                    return point.IsInvalid ? PointPairMissing(iResult) : point;
                 }
                 IEnumerable<double> values;
                 switch (RTPeptideGraphPane.RTValue)

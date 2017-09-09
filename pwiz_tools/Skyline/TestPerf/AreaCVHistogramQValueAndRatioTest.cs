@@ -194,8 +194,8 @@ namespace TestPerf
             RunUI(() =>
             {
                 var testSupport = pane as IAreaCVHistogramInfo;
-                int objects = testSupport != null ? testSupport.Objects : 0;
-                var graphDataStatistics = new AreaCVGraphDataStatistics(data, objects);
+                int items = testSupport != null ? testSupport.Items : 0;
+                var graphDataStatistics = new AreaCVGraphDataStatistics(data, items);
 
                 if (!RecordData)
                     Assert.AreEqual(STATS[statsIndex], graphDataStatistics);

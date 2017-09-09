@@ -37,8 +37,8 @@ namespace pwiz.SkylineTestFunctional
 
         private static readonly AreaCVGraphDataStatistics[] STATS =
         {
-            new AreaCVGraphDataStatistics(68, 69, 0, 0, 125, 1.96, 0.13, 7, 0.48281967365197109, 0.56232, 0.024),
-            new AreaCVGraphDataStatistics(46, 47, 0, 0, 125, 1.96, 0.12, 9, 0.48281967365197109, 0.55776, 0.024),
+            new AreaCVGraphDataStatistics(68, 73, 0, 0, 125, 1.96, 0.13, 7, 0.48281967365197109, 0.56232, 0.024),
+            new AreaCVGraphDataStatistics(46, 49, 0, 0, 125, 1.96, 0.12, 9, 0.48281967365197109, 0.55776, 0.024),
             new AreaCVGraphDataStatistics(65, 73, 0, 0, 1744, 1.54, 0, 219, 0.17382217742991013, 0.20458715596330274, 0.63130733944954132),
             new AreaCVGraphDataStatistics(25, 26, 0, 0, 124, 1.54, 0.02, 20, 0.16298477433620745, 0.1970967741935484, 0.72580645161290325),
             new AreaCVGraphDataStatistics(26, 27, 0, 0, 124, 1.5, 0, 15, 0.1372919480977226, 0.17322580645161287, 0.79032258064516125),
@@ -284,11 +284,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var info = pane as IAreaCVHistogramInfo;
-                int objects = info != null ? info.Objects : 0;
-                var graphDataStatistics = new AreaCVGraphDataStatistics(data, objects);
+                int items = info != null ? info.Items : 0;
+                var graphDataStatistics = new AreaCVGraphDataStatistics(data, items);
 
                 if (!RecordData)
-                    Assert.AreEqual(STATS[statsIndex], new AreaCVGraphDataStatistics(data, objects));
+                    Assert.AreEqual(STATS[statsIndex], new AreaCVGraphDataStatistics(data, items));
                 else
                     Console.WriteLine(graphDataStatistics.ToCode());
             });
