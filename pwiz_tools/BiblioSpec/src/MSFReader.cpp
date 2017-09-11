@@ -838,8 +838,9 @@ namespace BiblioSpec
             Verbosity::debug("Searched in table '%s' for column '%s', found",
                              table.c_str(), columnName.c_str());
         } else {
-            Verbosity::debug("Searched in table '%s' for column '%s', not found in: %s",
-                             table.c_str(), columnName.c_str(), boost::algorithm::join(foundCols, ", ").c_str());
+            string foundColsJoined = boost::algorithm::join(foundCols, ", ");
+            Verbosity::debug("Searched in table '%s' for column '%s', not found",
+                             table.c_str(), columnName.c_str(), foundColsJoined.c_str());
         }
 
         return found;
