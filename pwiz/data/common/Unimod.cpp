@@ -51,6 +51,7 @@ struct UnimodData : public boost::singleton<UnimodData>
         map<string, Formula> brickFormulaByTitle;
 
         brickFormulaByTitle["Hex"] = Formula("H10 C6 O5");
+        brickFormulaByTitle["HexN"] = Formula("H11 C6 O4 N1");
         brickFormulaByTitle["HexNAc"] = Formula("H13 C8 N1 O5");
         brickFormulaByTitle["dHex"] = Formula("C6 H10 O4");
         brickFormulaByTitle["HexA"] = Formula("C6 H8 O6");
@@ -77,7 +78,7 @@ struct UnimodData : public boost::singleton<UnimodData>
         map<string, Site> siteMap;
         siteMap["N-term"] = Site::NTerminus;
         siteMap["C-term"] = Site::CTerminus;
-        BOOST_FOREACH(char aa, string("ABCDEFGHIJKLMNPQRSTUVWXYZ"))
+        for(char aa : string("ABCDEFGHIJKLMNPQRSTUVWXYZ"))
             siteMap[string(1, aa)] = site(aa);
 
         map<string, Position> positionMap;
@@ -105,7 +106,7 @@ struct UnimodData : public boost::singleton<UnimodData>
 
         vector<string> formulaTokens;
 
-        BOOST_FOREACH(CVID cvid, cvids())
+        for(CVID cvid : cvids())
         {
             const CVTermInfo& term = cvTermInfo(cvid);
             if (!bal::starts_with(term.id, "UNIMOD") || bal::ends_with(term.id, ":0"))
@@ -127,7 +128,7 @@ struct UnimodData : public boost::singleton<UnimodData>
                 bal::split(formulaTokens, itr->second, bal::is_space());
 
                 // <brick>(<quantity>) if quantity>1 or just <brick> for quantity=1
-                BOOST_FOREACH(string& token, formulaTokens)
+                for(string& token : formulaTokens)
                 {
                     Formula brickFormula;
 
@@ -353,7 +354,7 @@ vector<Modification> modifications(double mass,
         if (!indeterminate(approved) && approved != mod.approved)
             continue;
 
-        BOOST_FOREACH(const Modification::Specificity& specificity, mod.specificities)
+        for(const Modification::Specificity& specificity : mod.specificities)
         {
             if ((site == Site::Any || site[specificity.site]) &&
                 (position == Position::Anywhere || position == specificity.position) &&
@@ -372,10 +373,10 @@ vector<Modification> modifications(double mass,
         vector<Modification> avgResults = modifications(mass, tolerance, false, approved,
                                                        site, position, classification, hidden);
         set<CVID> existingResults;
-        BOOST_FOREACH(const Modification& mod, result)
+        for(const Modification& mod : result)
             existingResults.insert(mod.cvid);
 
-        BOOST_FOREACH(const Modification& mod, avgResults)
+        for(const Modification& mod : avgResults)
             if (!existingResults.count(mod.cvid))
                 result.push_back(mod);
     }

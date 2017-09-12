@@ -1133,23 +1133,53 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
         throw runtime_error("[loadGeneMetadata] gene2protein.db3 not found: download it from http://fenchurch.mc.vanderbilt.edu/bin/g2p/gene2protein.db3 and put it in the IDPicker directory.");
 
     using namespace boost::xpressive;
-    sregex refseqRegex = sregex::compile("^(?:gi\\|\\d+\\|ref\\|)?(\\S+?)(?:\\.\\d+)(?:\\|)?$");
+    sregex refseqRegex = sregex::compile("^(?:generic\\|)?(?:gi\\|\\d+\\|ref\\|)?(\\S+?)(?:\\.\\d+)(?:\\|)?$");
+    sregex ensemblRegex = sregex::compile("^(?:generic\\|)?(ENSP[^ |]+)");
+    sregex swissProtRegex = sregex::compile("^(?:generic\\|)?(?:sp\\|)?(\\w+)");
+    sregex lrgRegex = sregex::compile("^(?:generic\\|)?(LRG_\\w+)");
 
     typedef boost::tuple<string, string, string, int, boost::optional<string>, boost::optional<string> > GeneTuple;
-    typedef map<string, GeneTuple> ProteinToGeneMap;
+    typedef map<int, GeneTuple> GeneMap;
+    typedef map<string, GeneMap::const_iterator> ProteinToGeneMap;
+    GeneMap geneMap;
     ProteinToGeneMap proteinToGeneMap;
     {
         sqlite::database g2pDb("gene2protein.db3");
-        sqlite::query proteinToGeneQuery(g2pDb, "SELECT ProteinAccession, ApprovedId, ApprovedName, Chromosome, TaxonId, GeneFamily, GeneDescription FROM GeneToProtein");
-        string geneId, geneName, chromosome, geneFamily, geneDescription;
-        int taxonId;
-        for(sqlite::query::rows row : proteinToGeneQuery)
+        sqlite::query geneQuery(g2pDb, "SELECT GeneId, ApprovedId, ApprovedName, Chromosome, TaxonId, GeneFamily, GeneDescription FROM Gene");
+        sqlite::query refseqQuery(g2pDb, "SELECT RefseqProteinAccession, GeneId FROM Refseq");
+        sqlite::query ensemblQuery(g2pDb, "SELECT EnsemblProteinAccession, GeneId FROM Ensembl");
+        sqlite::query swissProtQuery(g2pDb, "SELECT SwissProtAccession, GeneId FROM SwissProt");
+        int geneId, taxonId;
+        string approvedId, geneName, chromosome, geneFamily, geneDescription;
+        for(sqlite::query::rows row : geneQuery)
         {
-            row.getter(1) >> geneId >> geneName >> chromosome >> taxonId >> geneFamily >> geneDescription;
-            string accession = regex_replace(row.get<string>(0), refseqRegex, "$1");
-            proteinToGeneMap[accession] = boost::make_tuple(geneId, geneName, chromosome, taxonId,
-                                                            boost::make_optional(!geneFamily.empty(), geneFamily),
-                                                            boost::make_optional(!geneDescription.empty(), geneDescription));
+            row.getter() >> geneId >> approvedId >> geneName >> chromosome >> taxonId >> geneFamily >> geneDescription;
+            geneMap[geneId] = boost::make_tuple(approvedId, geneName, chromosome, taxonId,
+                                                boost::make_optional(!geneFamily.empty(), geneFamily),
+                                                boost::make_optional(!geneDescription.empty(), geneDescription));
+        }
+
+        for (auto* query : {&refseqQuery, &ensemblQuery, &swissProtQuery})
+        for (sqlite::query::rows row : *query)
+        {
+
+            string accession = row.get<string>(0);
+            int geneid = row.get<int>(1);
+            if (regex_match(accession, refseqRegex))
+            {
+                accession = regex_replace(accession, refseqRegex, "$1");
+            }
+            else if (!regex_match(accession, ensemblRegex) &&
+                     !regex_match(accession, swissProtRegex) &&
+                     !regex_match(accession, lrgRegex))
+            {
+                throw runtime_error("[loadMetadata] gene2protein.db3 accession " + accession + " does not match one of the supported accession formats");
+            }
+            auto findItr = geneMap.find(geneid);
+            if (findItr == geneMap.end())
+                throw runtime_error("[loadMetadata] gene2protein.db3 geneid " + lexical_cast<string>(geneid) + " is in protein table but missing from gene table");
+
+            proteinToGeneMap[accession] = findItr;
         }
     }
 
@@ -1183,7 +1213,7 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
         if (findItr == proteinToGeneMap.end())
             continue;
 
-        const GeneTuple& geneTuple = findItr->second;
+        const GeneTuple& geneTuple = findItr->second->second;
 
         proteinQuery.binder() << geneTuple.get<0>() << id;
         proteinQuery.step();

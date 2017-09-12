@@ -792,7 +792,11 @@ int doQuery(GroupBy groupBy,
             }
 
             if (pivotColumnIds.empty())
-                throw runtime_error("no pivot columns available; are source groups set up?");
+            {
+                outputStream.close();
+                bfs::remove(outputFilepath);
+                throw runtime_error("no pivot columns available. Are sources assigned to source groups? Has quantitation data been embedded?");
+            }
             pivotData(idpDB, groupBy, tokens[i], pivotDataByColumn[i], ModificationMassRoundToNearest, rollupMethod);
         }
         else
