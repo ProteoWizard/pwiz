@@ -413,13 +413,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 if (Chromatogram.BestPeakIndex >= 0)
                 {
-                    var bestPeak = Chromatogram.GetPeak(Chromatogram.BestPeakIndex);
-                    if (Settings.Default.ShowOriginalPeak &&
-                        TransitionChromInfo != null &&
-                        (bestPeak.StartTime != TransitionChromInfo.StartRetentionTime ||
-                         bestPeak.EndTime != TransitionChromInfo.EndRetentionTime))
+                    // Only shade peak when user modified. Otherwise, shading can be added when an entire
+                    // precursor was force integrated because of another precursor (e.g. heavy) since that
+                    // leads to an empty peak, which will not match the best peak.
+                    if (Settings.Default.ShowOriginalPeak && TransitionChromInfo != null && TransitionChromInfo.IsUserModified)
                     {
-                        AddOriginalPeakAnnotation(bestPeak, annotations, graphPane);
+                        var bestPeak = Chromatogram.GetPeak(Chromatogram.BestPeakIndex);
+                        if (bestPeak.StartTime != TransitionChromInfo.StartRetentionTime ||
+                            bestPeak.EndTime != TransitionChromInfo.EndRetentionTime)
+                        {
+                            AddOriginalPeakAnnotation(bestPeak, annotations, graphPane);
+                        }
                     }
                 }
             }
