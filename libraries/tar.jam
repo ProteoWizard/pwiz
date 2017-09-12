@@ -26,12 +26,14 @@ feature.feature tar-source : : free incidental ;
 project.initialize $(__name__) ;
 project tar ;
 
+local .os = [ modules.peek : OS ] ;
+
 rule init ( tar-binary-filepath ? )
 {
     # try some default tar binaries
     if ! $(tar-binary-filepath)
     {
-        local .os = [ modules.peek : OS ] ;
+        tar-extra-args = "" ;
         if [ os.on-windows ]
         {
             tar-binary-filepath = bsdtar.exe ;
@@ -43,6 +45,7 @@ rule init ( tar-binary-filepath ? )
         else
         {
             tar-binary-filepath = tar ;
+            tar-extra-args = "--ignore-failed-read" ;
         }
     }
 
@@ -65,17 +68,17 @@ type.register TLZ : tar.lzma tlz ;
 # $(.tar-binary-filepath) -cvjf $(<) -T $(<:B)_file_list.txt $(TAR_ARGS)
 actions tar.tbz2.create-really
 {
-    $(.tar-binary-filepath) -cjf $(<) $(TAR_ARGS)
+    $(.tar-binary-filepath) $(tar-extra-args) -cjf $(<) $(TAR_ARGS)
 }
 
 actions tar.tgz.create-really
 {
-    $(.tar-binary-filepath) -czf $(<) $(TAR_ARGS)
+    $(.tar-binary-filepath) $(tar-extra-args) -czf $(<) $(TAR_ARGS)
 }
 
 actions tar.tlz.create-really
 {
-    $(.tar-binary-filepath) -clf $(<) $(TAR_ARGS)
+    $(.tar-binary-filepath) $(tar-extra-args) -clf $(<) $(TAR_ARGS)
 }
 
 class create-tar-target-class : basic-target
