@@ -72,7 +72,7 @@ namespace pwiz.SkylineTestTutorial
                        : dirPath;
         }
 
-        private bool IsFullData { get { return IsPauseForScreenShots; } }
+        private bool IsFullData { get { return IsPauseForScreenShots || IsDemoMode || IsPass0; } }
 
         protected override void DoTest()
         {

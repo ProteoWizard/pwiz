@@ -60,7 +60,7 @@ namespace pwiz.SkylineTestTutorial
 
             TestFilesZipPaths = new[]
                 {
-                    UseRawFiles
+                    UseRawFilesOrFullData
                         ? "https://skyline.gs.washington.edu/tutorials/ExistingQuant.zip"
                         : "https://skyline.gs.washington.edu/tutorials/ExistingQuantMzml.zip",
                     @"TestTutorial\ExistingExperimentsViews.zip"
@@ -74,11 +74,22 @@ namespace pwiz.SkylineTestTutorial
 
         private string GetTestPath(string relativePath)
         {
-            var folderExistQuant = UseRawFiles ? "ExistingQuant" : "ExistingQuantMzml"; // Not L10N
+            var folderExistQuant = UseRawFilesOrFullData ? "ExistingQuant" : "ExistingQuantMzml"; // Not L10N
             return TestFilesDirs[0].GetTestPath(folderExistQuant + "\\" + relativePath);
         }
 
-        private bool IsFullData { get { return IsPauseForScreenShots || IsDemoMode; } }
+        private bool IsFullData
+        {
+            get
+            {
+                return IsPauseForScreenShots || IsDemoMode || IsPass0;
+            }
+        }
+
+        private bool UseRawFilesOrFullData
+        {
+            get { return UseRawFiles || IsFullData; }
+        }
 
         protected override void DoTest()
         {
@@ -293,9 +304,9 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath("Study 7"));
-                openDataSourceDialog1.SelectAllFileType(ExtAbWiff);
+                openDataSourceDialog1.SelectAllFileType(IsFullData ? ".wiff" : ExtensionTestContext.ExtAbWiff); // Force true wiff for FullData
             });
-            if (UseRawFiles)
+            if (UseRawFilesOrFullData)
             {
                 var importResultsSamplesDlg = ShowDialog<ImportResultsSamplesDlg>(openDataSourceDialog1.Open);
                 PauseForScreenShot<ImportResultsSamplesDlg>("Choose Samples form", 23);
@@ -356,7 +367,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowGraphRetentionTime(true);
             });
 
-            if (!IsPauseForScreenShots)
+            if (!IsPauseForScreenShots && !IsFullData)
                 TestApplyToAll();
 
             PauseForScreenShot<GraphSummary.RTGraphView>("Main window with peaks and retention times showing", 25);
@@ -464,8 +475,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 Settings.Default.ResultsGridSynchSelection = false;
-                DataGridView resultsGrid;
-                resultsGrid = FindOpenForm<LiveResultsGrid>().DataGridView;
+                var resultsGrid = FindOpenForm<LiveResultsGrid>().DataGridView;
                 var colConcentration =
 // ReSharper disable LocalizableElement
                     resultsGrid.Columns.Cast<DataGridViewColumn>().First(col => "Concentration" == col.HeaderText); // Not L10N

@@ -66,19 +66,22 @@ namespace pwiz.Skyline
         public static string MainToolServiceName { get; private set; }
         
         // Parameters for testing.
-        public static bool StressTest { get; set; }                 // Set true when doing stress testing.
+        public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
         public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
-        public static bool DemoMode { get; set; }
+        public static bool DemoMode { get; set; }                   // Set to true in demo mode (main window is full screen and pauses at screenshots)
         public static bool NoVendorReaders { get; set; }            // Set true to avoid calling vendor readers.
+        public static bool IsPassZero { get { return NoVendorReaders; } }   // Currently the only time NoVendorReaders gets set is pass0
         public static bool NoSaveSettings { get; set; }             // Set true to use separate settings file.
         public static bool ShowFormNames { get; set; }              // Set true to show each Form name in title.
         public static bool ShowMatchingPages { get; set; }          // Set true to show tutorial pages automatically when pausing for moust click
         public static int UnitTestTimeoutMultiplier { get; set; }   // Set to positive multiplier for multi-process stress runs.
         public static int PauseSeconds { get; set; }                // Positive to pause when displaying dialogs for unit test, <0 to pause for mouse click
         public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
-        public static string ExtraRawFileSearchFolder { get; set; }
-        public static List<Exception> TestExceptions { get; set; }
+        public static string ExtraRawFileSearchFolder { get; set; } // Perf test support for avoiding extra copying of large raw files
+        public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
+
+        // Command-line results import support
         public static bool DisableJoining { get; set; }
         public static bool NoAllChromatogramsGraph { get; set; }
         public static string ReplicateCachePath { get; set; }

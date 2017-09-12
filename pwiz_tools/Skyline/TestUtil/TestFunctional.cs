@@ -794,6 +794,8 @@ namespace pwiz.SkylineTestUtil
 
         public static bool IsDemoMode { get { return Program.DemoMode; } }
 
+        public static bool IsPass0 { get { return Program.IsPassZero; } }
+
         public static bool IsCheckLiveReportsCompatibility { get; set; }
 
         public string LinkPdf { get; set; }
