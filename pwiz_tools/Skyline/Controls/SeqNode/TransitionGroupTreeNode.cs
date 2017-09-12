@@ -467,13 +467,13 @@ namespace pwiz.Skyline.Controls.SeqNode
             foreach (TransitionDocNode nodTran in chosen)
             {
                 var type = nodTran.Transition.IonType;
-                if (type == IonType.precursor)
+                if (!Transition.IsPeptideFragment(type))
                     continue;
                 setCharges.Add(nodTran.Transition.Adduct);
                 setTypes.Add(type);
             }
-            setTypes.Remove(IonType.precursor);
-            var charges = setCharges.ToArray();
+            setTypes.RemoveWhere(t => !Transition.IsPeptideFragment(t));
+            var charges = setCharges.Where(c => c.IsProteomic).ToArray();
             Array.Sort(charges);
             IonType[] types = Transition.GetTypePairs(setTypes);
 
