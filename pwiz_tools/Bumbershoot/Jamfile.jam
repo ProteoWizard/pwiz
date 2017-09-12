@@ -89,7 +89,7 @@ tar.create bumbershoot-bin.tar.bz2
   : # requirements
     <conditional>@binary-tarball-requirements
   ;
-
+explicit bumbershoot-bin.tar.bz2 ;
 
 
 # source tarball
