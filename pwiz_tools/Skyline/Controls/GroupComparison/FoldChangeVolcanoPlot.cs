@@ -295,7 +295,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             string text;
             if (row.Peptide != null)
-                text = row.Peptide.ModifiedSequence;
+                text = row.Peptide.ModifiedSequence == null ? row.Peptide.ToString() : row.Peptide.ModifiedSequence.ToString();
             else if (row.Protein != null)
                 text = PeptideGroupTreeNode.ProteinModalDisplayText(row.Protein.DocNode);
             else

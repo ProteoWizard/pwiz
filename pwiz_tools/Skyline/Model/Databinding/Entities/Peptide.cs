@@ -98,13 +98,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [InvariantDisplayName("PeptideModifiedSequence")]
-        public string ModifiedSequence
+        [ChildDisplayName("PeptideModifiedSequence{0}")]
+        public ModifiedSequence ModifiedSequence
         {
             get
             {
-                return IsSmallMolecule()
-                    ? TextUtil.EXCEL_NA
-                    : DocNode.ModifiedSequenceDisplay;
+                return ModifiedSequence.GetModifiedSequence(SrmDocument.Settings, DocNode, IsotopeLabelType.light);
             }
         }
 

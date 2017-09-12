@@ -237,11 +237,36 @@ namespace pwiz.SkylineTestUtil
             string expected = null;
             var actual = RoundTrip(target, ref expected);
             DocumentClonedLoadable(ref target, ref actual, testPath, forceFullLoad);
-
+            VerifyModifiedSequences(target);
             // Validate documents or document fragments against current schema
             if (checkAgainstSkylineSchema)
                 ValidatesAgainstSchema(target, expectedTypeInSkylineSchema);
             return target;
+        }
+
+        public static void VerifyModifiedSequences(SrmDocument doc)
+        {
+            foreach (var peptide in doc.Molecules)
+            {
+                var peptideModifiedSequence =
+                    ModifiedSequence.GetModifiedSequence(doc.Settings, peptide, IsotopeLabelType.light);
+                if (peptideModifiedSequence != null)
+                {
+                    Assert.AreEqual(peptide.ModifiedSequenceDisplay, peptideModifiedSequence.ToString());
+                }
+                foreach (var precursor in peptide.TransitionGroups)
+                {
+                    var modifiedSequence = ModifiedSequence.GetModifiedSequence(doc.Settings, peptide,
+                        precursor.TransitionGroup.LabelType);
+                    if (modifiedSequence != null)
+                    {
+                        var expectedModifiedSequence = doc.Settings.GetPrecursorCalc(
+                                precursor.TransitionGroup.LabelType, peptide.ExplicitMods)
+                            .GetModifiedSequence(peptide.Peptide.Target, true).ToString();
+                        Assert.AreEqual(expectedModifiedSequence, modifiedSequence.ToString());
+                    }
+                }
+            }
         }
 
         /// <summary>

@@ -43,7 +43,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             using (var rt = new RenderTools())
             {
                 if (_row.Peptide != null)
-                    table.AddDetailRow(GroupComparisonStrings.FoldChangeRowTipProvider_RenderTip_Peptide, _row.Peptide.ModifiedSequence, rt);
+                    table.AddDetailRow(GroupComparisonStrings.FoldChangeRowTipProvider_RenderTip_Peptide, 
+                        _row.Peptide.ModifiedSequence == null ? _row.Peptide.ToString() : _row.Peptide.ModifiedSequence.ToString(), rt);
                 if (_row.Protein != null)
                     table.AddDetailRow(GroupComparisonStrings.FoldChangeRowTipProvider_RenderTip_Protein, PeptideGroupTreeNode.ProteinModalDisplayText(_row.Protein.DocNode), rt);
 

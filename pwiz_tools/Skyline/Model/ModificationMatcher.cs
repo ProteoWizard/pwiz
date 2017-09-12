@@ -247,7 +247,7 @@ namespace pwiz.Skyline.Model
         /// <returns></returns>
         public static bool TryGetIdFromUnimod(string unimodString, out int uniModId)
         {
-            const string prefixString = "unimod:"; // Not L10N
+            const string prefixString = ModifiedSequence.UnimodPrefix;
             if (unimodString.ToLowerInvariant().StartsWith(prefixString))
             {
                 int prefixLength = prefixString.Length;

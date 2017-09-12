@@ -151,6 +151,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Average Masses.
+        /// </summary>
+        public static string AverageMasses {
+            get {
+                return ResourceManager.GetString("AverageMasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Average Measured Retention Time.
         /// </summary>
         public static string AverageMeasuredRetentionTime {
@@ -732,6 +741,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string FragmentIonType {
             get {
                 return ResourceManager.GetString("FragmentIonType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Full Names.
+        /// </summary>
+        public static string FullNames {
+            get {
+                return ResourceManager.GetString("FullNames", resourceCulture);
             }
         }
         
@@ -1330,6 +1348,51 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Modified Sequence Average Masses.
+        /// </summary>
+        public static string ModifiedSequenceAverageMasses {
+            get {
+                return ResourceManager.GetString("ModifiedSequenceAverageMasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Modified Sequence Full Names.
+        /// </summary>
+        public static string ModifiedSequenceFullNames {
+            get {
+                return ResourceManager.GetString("ModifiedSequenceFullNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Modified Sequence Monoisotopic Masses.
+        /// </summary>
+        public static string ModifiedSequenceMonoisotopicMasses {
+            get {
+                return ResourceManager.GetString("ModifiedSequenceMonoisotopicMasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Modified Sequence Three Letter Codes.
+        /// </summary>
+        public static string ModifiedSequenceThreeLetterCodes {
+            get {
+                return ResourceManager.GetString("ModifiedSequenceThreeLetterCodes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Modified Sequence Unimod Ids.
+        /// </summary>
+        public static string ModifiedSequenceUnimodIds {
+            get {
+                return ResourceManager.GetString("ModifiedSequenceUnimodIds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Modified Time.
         /// </summary>
         public static string ModifiedTime {
@@ -1353,6 +1416,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MoleculeName {
             get {
                 return ResourceManager.GetString("MoleculeName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Monoisotopic Masses.
+        /// </summary>
+        public static string MonoisotopicMasses {
+            get {
+                return ResourceManager.GetString("MonoisotopicMasses", resourceCulture);
             }
         }
         
@@ -1479,6 +1551,51 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PeptideModifiedSequence {
             get {
                 return ResourceManager.GetString("PeptideModifiedSequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide Modified Sequence Average Masses.
+        /// </summary>
+        public static string PeptideModifiedSequenceAverageMasses {
+            get {
+                return ResourceManager.GetString("PeptideModifiedSequenceAverageMasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide Modified Sequence Full Names.
+        /// </summary>
+        public static string PeptideModifiedSequenceFullNames {
+            get {
+                return ResourceManager.GetString("PeptideModifiedSequenceFullNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide Modified Sequence Monoisotopic Masses.
+        /// </summary>
+        public static string PeptideModifiedSequenceMonoisotopicMasses {
+            get {
+                return ResourceManager.GetString("PeptideModifiedSequenceMonoisotopicMasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide Modified Sequence Three Letter Codes.
+        /// </summary>
+        public static string PeptideModifiedSequenceThreeLetterCodes {
+            get {
+                return ResourceManager.GetString("PeptideModifiedSequenceThreeLetterCodes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide Modified Sequence Unimod Ids.
+        /// </summary>
+        public static string PeptideModifiedSequenceUnimodIds {
+            get {
+                return ResourceManager.GetString("PeptideModifiedSequenceUnimodIds", resourceCulture);
             }
         }
         
@@ -2284,6 +2401,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Three Letter Codes.
+        /// </summary>
+        public static string ThreeLetterCodes {
+            get {
+                return ResourceManager.GetString("ThreeLetterCodes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Total Ion Current Area.
         /// </summary>
         public static string TicArea {
@@ -2469,6 +2595,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string TValue {
             get {
                 return ResourceManager.GetString("TValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unimod Ids.
+        /// </summary>
+        public static string UnimodIds {
+            get {
+                return ResourceManager.GetString("UnimodIds", resourceCulture);
             }
         }
         

@@ -141,6 +141,9 @@
   <data name="AverageMassErrorPPM">
     <value>Average Mass Error PPM</value>
   </data>
+  <data name="AverageMasses">
+    <value>Average Masses</value>
+  </data>
   <data name="AverageMeasuredRetentionTime">
     <value>Average Measured Retention Time</value>
   </data>
@@ -282,6 +285,7 @@
   <data name="FragmentIonType">
     <value>Fragment Ion Type</value>
   </data>
+  <data name="FullNames"><value>Full Names</value></data>
   <data name="FullScanFilterWidth">
     <value>Full Scan Filter Width</value>
   </data>
@@ -465,9 +469,15 @@
   <data name="ModifiedSequence">
     <value>Modified Sequence</value>
   </data>
+  <data name="ModifiedSequenceAverageMasses"><value>Modified Sequence Average Masses</value></data>
+  <data name="ModifiedSequenceFullNames"><value>Modified Sequence Full Names</value></data>
+  <data name="ModifiedSequenceMonoisotopicMasses"><value>Modified Sequence Monoisotopic Masses</value></data>
+  <data name="ModifiedSequenceThreeLetterCodes"><value>Modified Sequence Three Letter Codes</value></data>
+  <data name="ModifiedSequenceUnimodIds"><value>Modified Sequence Unimod Ids</value></data>
   <data name="ModifiedTime">
     <value>Modified Time</value>
   </data>
+  <data name="MonoisotopicMasses"><value>Monoisotopic Masses</value></data>
   <data name="MsLevel">
     <value>MS Level</value>
   </data>
@@ -510,6 +520,11 @@
   <data name="PeptideModifiedSequence">
     <value>Peptide Modified Sequence</value>
   </data>
+  <data name="PeptideModifiedSequenceAverageMasses"><value>Peptide Modified Sequence Average Masses</value></data>
+  <data name="PeptideModifiedSequenceFullNames"><value>Peptide Modified Sequence Full Names</value></data>
+  <data name="PeptideModifiedSequenceMonoisotopicMasses"><value>Peptide Modified Sequence Monoisotopic Masses</value></data>
+  <data name="PeptideModifiedSequenceThreeLetterCodes"><value>Peptide Modified Sequence Three Letter Codes</value></data>
+  <data name="PeptideModifiedSequenceUnimodIds"><value>Peptide Modified Sequence Unimod Ids</value></data>
   <data name="PeptideNote">
     <value>Peptide Note</value>
   </data>
@@ -759,6 +774,7 @@
   <data name="StdevTotalAreaRatio">
     <value>Stdev Total Area Ratio</value>
   </data>
+  <data name="ThreeLetterCodes"><value>Three Letter Codes</value></data>
   <data name="TicArea">
     <value>Total Ion Current Area</value>
   </data>
@@ -822,6 +838,7 @@
   <data name="TValue">
     <value>T-Value</value>
   </data>
+  <data name="UnimodIds"><value>Unimod Ids</value></data>
   <data name="UserSetPeak">
     <value>User Set Peak</value>
   </data>

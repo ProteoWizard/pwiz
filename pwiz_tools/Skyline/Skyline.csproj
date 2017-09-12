@@ -295,6 +295,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\ModifiedSequence.cs" />
     <Compile Include="Controls\GroupComparison\FoldChangeRowTipProvider.cs" />
     <Compile Include="Controls\GroupComparison\FoldChangeVolcanoPlot.cs">
       <SubType>Form</SubType>

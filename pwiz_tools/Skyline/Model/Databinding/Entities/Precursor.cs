@@ -217,17 +217,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return declusteringPotentialRegression.GetDeclustringPotential(GetRegressionMz());
             }
         }
-
-        public string ModifiedSequence
+        
+        [ChildDisplayName("ModifiedSequence{0}")]
+        public ModifiedSequence ModifiedSequence
         {
             get
             {
-                var peptideDocNode = Peptide.DocNode;
-                if (!peptideDocNode.IsProteomic)
-                    return TextUtil.EXCEL_NA;
-                return SrmDocument.Settings.GetPrecursorCalc(
-                    DocNode.TransitionGroup.LabelType, peptideDocNode.ExplicitMods)
-                                  .GetModifiedSequence(peptideDocNode.Peptide.Target, true).ToString();
+                return ModifiedSequence.GetModifiedSequence(SrmDocument.Settings, Peptide.DocNode, IsotopeLabelType);
             }
         }
 
