@@ -67,7 +67,9 @@ namespace SkylineTester
                     }
                 }
             }
-            MainWindow.DataGridRunStats.Columns[MainWindow.DataGridRunStats.Columns.Count - 1].Visible = compareDictionary != null;
+            // Hide columns which are for comparison only
+            for (int col = 1; col <= 2; col++)
+                MainWindow.DataGridRunStats.Columns[MainWindow.DataGridRunStats.Columns.Count - col].Visible = compareDictionary != null;
 
             MainWindow.DataGridRunStats.Rows.Clear();
             foreach (var key in keys)
