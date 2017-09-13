@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Model
             {
                 if (mod.UnimodId.HasValue)
                 {
-                    return "(" + UnimodPrefix + mod.UnimodId.Value + ")";
+                    return "(" + UnimodPrefix + mod.UnimodId.Value + ")";  // Not L10N
                 }
                 return Bracket(FormatFallback(mod));
             }));
@@ -240,7 +240,7 @@ namespace pwiz.Skyline.Model
         public static string Bracket(string str)
         {
             // ReSharper disable NonLocalizedString
-            if (!str.Contains("]"))
+            if (!str.Contains("]")) 
             {
                 return "[" + str + "]";
             }
