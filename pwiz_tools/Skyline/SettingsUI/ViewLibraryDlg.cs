@@ -2429,9 +2429,9 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     currentMod = mods.StaticModifications.FirstOrDefault(m => staticModIndex == m.IndexAA);
                 }
-                if (currentMod == null) // if not in docnode.staticmodifications then check implicit mods in settings
+                if (currentMod == null) // If not in docnode.staticmodifications then check implicit mods in settings
                 {
-                    var mass = double.Parse(piece.Item2.Replace("[", string.Empty).Replace("]", string.Empty)); // Not L10N
+                    var mass = double.Parse(piece.Item2.Replace("[", string.Empty).Replace("]", string.Empty), CultureInfo.InvariantCulture); // Not L10N
                     foreach (var mod in _settings.PeptideSettings.Modifications.StaticModifications)
                     {
                         if (MatchesAAsAndMass(piece.Item1.ToString(), mass, mod))
