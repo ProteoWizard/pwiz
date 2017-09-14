@@ -456,6 +456,14 @@ rule dotNET-dependencies ( properties * )
     }
 }
 
+rule gcc-install-dll-path ( properties * )
+{
+    if <toolset>gcc in $(properties) && <target-os>linux in $(properties)
+    {
+        return <dll-path>'$ORIGIN' ;
+    }
+}
+
 install install_cli
     : # sources
         Qonverter//idpQonvert
@@ -466,6 +474,8 @@ install install_cli
         <conditional>@install-location
         <conditional>@install-vendor-api-dependencies
         <conditional>@install-identdata-dependencies
+        <conditional>@gcc-install-dll-path
+        <install-dependencies>on <install-type>SHARED_LIB <install-type>EXE
     ;
 
 install install
@@ -479,6 +489,7 @@ install install
         <conditional>@install-location
         <conditional>@install-vendor-api-dependencies
         <conditional>@install-identdata-dependencies
+        <conditional>@gcc-install-dll-path
         <install-dependencies>on <install-type>SHARED_LIB <install-type>EXE
     ;
 

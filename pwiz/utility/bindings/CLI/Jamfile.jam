@@ -107,10 +107,10 @@ build-project-if-exists tradata ;
 
 # build XDC documentation from source files
 path-constant DOC_PATH : $(PWIZ_BUILD_PATH)/pwiz/utility/bindings/CLI/doc ;
-path.makedirs [ path.make $(DOC_PATH) ] ;
+path.makedirs $(DOC_PATH) ;
 
 path-constant DOC_DATA_PATH : $(PWIZ_BUILD_PATH)/pwiz/utility/bindings/CLI/doc/data ;
-path.makedirs [ path.make $(DOC_DATA_PATH) ] ;
+path.makedirs $(DOC_DATA_PATH) ;
 
 local clr-requirement = <conditional>@msvc-requirement <define>UNICODE <define>_UNICODE <toolset>msvc:<using-clr>true ; # requires hacked msvc.jam
 

@@ -6,8 +6,8 @@ pushd $pwiz_root > /dev/null
 echo "Cleaning project..."
 if (ls build-*-* > /dev/null 2>&1); then rm -fr build-*-*; fi;
 if (ls libraries/boost_*_*_? > /dev/null 2>&1); then rm -fr libraries/boost_*_*_?; fi;
-if [ -d libraries/boost-build/engine/bin ]; then rm -fr libraries/boost-build/engine/bin; fi;
-if [ -d libraries/boost-build/engine/bootstrap ]; then rm -fr libraries/boost-build/engine/bootstrap; fi;
+if [ -d libraries/boost-build/src/engine/bin ]; then rm -fr libraries/boost-build/src/engine/bin; fi;
+if [ -d libraries/boost-build/src/engine/bootstrap ]; then rm -fr libraries/boost-build/src/engine/bootstrap; fi;
 if [ -d libraries/gd-2.0.33 ]; then rm -fr libraries/gd-2.0.33; fi;
 if [ -d libraries/zlib-1.2.3 ]; then rm -fr libraries/zlib-1.2.3; fi;
 if [ -d libraries/libgd-2.1.0alpha ]; then rm -fr libraries/libgd-2.1.0alpha; fi;

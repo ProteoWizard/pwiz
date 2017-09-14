@@ -16,8 +16,8 @@ IF EXIST build-nt-x86 rmdir /s /q build-nt-x86
 IF EXIST build-nt-x86_64 rmdir /s /q build-nt-x86_64
 
 if %VERBOSE%==1 echo   Cleaning libraries...
-IF EXIST libraries\boost-build\engine\bin.nt rmdir /s /q libraries\boost-build\engine\bin.nt
-IF EXIST libraries\boost-build\engine\bootstrap rmdir /s /q libraries\boost-build\engine\bootstrap
+IF EXIST libraries\boost-build\src\engine\bin.nt rmdir /s /q libraries\boost-build\src\engine\bin.nt
+IF EXIST libraries\boost-build\src\engine\bootstrap rmdir /s /q libraries\boost-build\src\engine\bootstrap
 IF EXIST libraries\boost_1_43_0 rmdir /s /q libraries\boost_1_43_0
 IF EXIST libraries\boost_1_54_0 rmdir /s /q libraries\boost_1_54_0
 IF EXIST libraries\boost_1_56_0 rmdir /s /q libraries\boost_1_56_0
