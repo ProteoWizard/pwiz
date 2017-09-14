@@ -29,6 +29,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Ionic.Zip;
 using SkylineNightly.Properties;
@@ -617,7 +618,9 @@ namespace SkylineNightly
                 url = LABKEY_STRESS_URL;
             else
                 url = LABKEY_URL;
-            return PostToLink(url, xml);
+            var task = PostToLink(url, xml);
+            task.Wait();
+            return task.Result;
         }
 
         public string GetLatestLog()
@@ -633,7 +636,7 @@ namespace SkylineNightly
         /// <summary>
         /// Post data to the given link URL.
         /// </summary>
-        private string PostToLink(string link, string postData)
+        private async Task<string> PostToLink(string link, string postData)
         {
             var errmessage = string.Empty;
             Log("Posting results to " + link); // Not L10N
@@ -643,16 +646,16 @@ namespace SkylineNightly
                 {
                     var client = new HttpClient();
                     var content = new MultipartFormDataContent { { new StringContent(postData), "xml" } }; // Not L10N
-                    var result = client.PostAsync(link, content);
+                    var result = await client.PostAsync(link, content).ConfigureAwait(false);
                     if (result == null)
                     {
                         Log(errmessage = "no response from server when posting results"); // Not L10N
                     }
                     else
                     {
-                        if (result.Result.IsSuccessStatusCode)
+                        if (result.IsSuccessStatusCode)
                             return errmessage;
-                        Log(result.Result.ToString());
+                        Log(result.ToString());
                     }
                 }
                 catch (Exception e)
