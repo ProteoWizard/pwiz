@@ -30,7 +30,7 @@ if "%ALL_ARGS:address-model 64=%" neq "%ALL_ARGS%" set ADDRESS_MODEL=64
 REM # Build local copy of bjam
 IF EXIST %PWIZ_BJAM% GOTO SKIP_BJAM
 echo Building bjam for %ADDRESS_MODEL%-bit build...
-pushd %BOOST_BUILD_PATH%\engine
+pushd %BOOST_BUILD_PATH%\src\engine
 call build.bat --UPDATE -sLOCATE_TARGET=bin.nt
 @echo off
 setlocal
