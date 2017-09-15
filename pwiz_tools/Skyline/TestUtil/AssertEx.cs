@@ -252,7 +252,10 @@ namespace pwiz.SkylineTestUtil
                     ModifiedSequence.GetModifiedSequence(doc.Settings, peptide, IsotopeLabelType.light);
                 if (peptideModifiedSequence != null)
                 {
-                    Assert.AreEqual(peptide.ModifiedSequenceDisplay, peptideModifiedSequence.ToString());
+                    if (peptide.ModifiedSequenceDisplay != peptideModifiedSequence.ToString())
+                    {
+                        Assert.AreEqual(peptide.ModifiedSequenceDisplay, peptideModifiedSequence.ToString());
+                    }
                 }
                 foreach (var precursor in peptide.TransitionGroups)
                 {
@@ -263,7 +266,10 @@ namespace pwiz.SkylineTestUtil
                         var expectedModifiedSequence = doc.Settings.GetPrecursorCalc(
                                 precursor.TransitionGroup.LabelType, peptide.ExplicitMods)
                             .GetModifiedSequence(peptide.Peptide.Target, true).ToString();
-                        Assert.AreEqual(expectedModifiedSequence, modifiedSequence.ToString());
+                        if (expectedModifiedSequence != modifiedSequence.ToString())
+                        {
+                            Assert.AreEqual(expectedModifiedSequence, modifiedSequence.ToString());
+                        }
                     }
                 }
             }
