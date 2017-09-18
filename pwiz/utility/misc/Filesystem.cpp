@@ -28,6 +28,7 @@
 #include <boost/utility/singleton.hpp>
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 #include <boost/locale/conversion.hpp>
+//#include <boost/xpressive/xpressive.hpp>
 
 
 using std::string;
@@ -140,7 +141,7 @@ namespace
     {
         bfs::copy_directory(from, to);
 
-        BOOST_FOREACH(bfs::directory_entry& entry, bfs::directory_iterator(from))
+        for(bfs::directory_entry& entry : bfs::directory_iterator(from))
         {
             bfs::file_status status = entry.status();
             if (status.type() == bfs::directory_file)
@@ -158,7 +159,7 @@ namespace
         if (ec.value() != 0)
             return;
 
-        BOOST_FOREACH(bfs::directory_entry& entry, bfs::directory_iterator(from))
+        for(bfs::directory_entry& entry : bfs::directory_iterator(from))
         {
             bfs::file_status status = entry.status(ec);
             if (status.type() == bfs::directory_file)
@@ -251,6 +252,18 @@ string abbreviate_byte_size(uintmax_t byteSize, ByteSizeAbbreviation abbreviatio
 }
 
 
+PWIZ_API_DECL bool isHTTP(const string& s)
+{
+    //using namespace boost::xpressive;
+
+    // from URI RFC via http://stackoverflow.com/a/26766402/638445
+    //sregex uriRegex = sregex::compile("^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?");
+    //return regex_match(s, uriRegex);
+
+    return bal::istarts_with(s, "http://") || bal::istarts_with(s, "https://");
+}
+
+
 #ifdef WIN32
 namespace {
     struct FileWrapper : boost::noncopyable
@@ -270,7 +283,7 @@ PWIZ_API_DECL string read_file_header(const string& filepath, size_t length)
     UTF8_BoostFilesystemPathImbuer::instance->imbue();
 
     string head;
-    if (!bfs::is_directory(filepath))
+    if (!bfs::is_directory(filepath) && !isHTTP(filepath))
     {
 #ifdef WIN32 // check for locked files which can be opened by ifstream but only produce garbage when read (at least in VC12)
         {
