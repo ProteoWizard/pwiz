@@ -290,109 +290,25 @@ if $(revision-info[5]) > 0
 make IDPICKER_VERSION : : @make_IDPICKER_VERSION : <location>$(PWIZ_BUILD_PATH) ;
 actions make_IDPICKER_VERSION { @($(STDOUT):E=$(version-tag:J=.)) > "$(<)" }
 
-rule msbuild_IDPicker ( targets + : sources * : properties * )
-{
-    if <variant>debug in $(properties)
-    {
-        CONFIGURATION on $(<[1]) = "Debug" ;
-    }
-    else
-    {
-        CONFIGURATION on $(<[1]) = "Release" ;
-    }
-
-    local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
-    OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
-    INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
-    JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
-}
-
-actions msbuild_IDPicker
-{
-    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-    echo Building IDPicker in $(CONFIGURATION:L) configuration...
-    msbuild $(IDPICKER_PATH)/IDPicker.csproj /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
-}
-
-
-rule build-location ( properties * )
-{
-    local result ;
-    # don't override the location when it's already set
-    if ! <location> in $(properties:G)
-    {
-        if <variant>debug in $(properties)
-        {
-            result = <location>$(PWIZ_BUILD_PATH)/bin/$(PLATFORM)/Debug ;
-        }
-        else
-        {
-            result = <location>$(PWIZ_BUILD_PATH)/bin/$(PLATFORM)/Release ;
-        }
-        return $(result) ;
-    }
-    else
-    {
-        return $(properties) ;
-    }
-}
-
-rule seems-dependency ( properties * )
-{
-    if <toolset>msvc in $(properties)
-    {
-        properties = [ build-location $(properties) ] ;
-        local location = [ feature.get-values location : $(properties) ] ;
-        return <dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS//seems.exe ;
-    }
-}
-
-rule qonverter-dependency ( properties * )
+rule idpicker-requirements ( properties * )
 {
     if <toolset>msvc in $(properties)
     {
         local variants = [ feature.get-values <variant> : $(properties) ] ;
-        local location = <location>$(PWIZ_BUILD_PATH)/obj/$(PLATFORM)/$(variants[1]) ;
-        return <assembly>Qonverter/CLI//InteropQonverter
-               <dependency>Qonverter/CLI//InteropQonverter/$(location) ;
+        local location = <location>$(PWIZ_BUILD_PATH)/IDPicker/obj/$(PLATFORM)/$(variants[1]) ;
+        return <assembly>$(IDPICKER_PATH)/Qonverter/CLI//InteropQonverter
+               <dependency>$(IDPICKER_PATH)/Qonverter/CLI//InteropQonverter/$(location) 
+               <dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS//seems ;
     }
 }
 
-# predicate for use as a <conditional> requirement of targets that must only build with MSVC
-rule msvc-requirement ( properties * )
-{
-    if ! <toolset>msvc in $(properties) { return <build>no ; }
-}
-
-# predicate for use as a <conditional> requirement of targets that must only build with MSVC and current .NET Framework
-rule msvc-dotnet-requirement ( properties * )
-{
-    # require VS 2013 because of .NET Framework version
-    if ! ( <toolset-msvc:version>12.0 in $(properties) ||
-           12.0express in $(properties:G=) )
-    { return <build>no ; }
-}
-
-# predicate for use as a <conditional> requirement of targets that must only build with non-express version of MSVC
-rule no-express-requirement ( properties * )
-{
-    # only the latest, non-express version of MSVC
-    if ! <toolset-msvc:version>12.0 in $(properties) { return <build>no ; }
-    if 12.0express in $(properties:G=) { return <build>no ; }
-}
-
-
-make IDPicker.exe
+msbuild IDPicker
     : # sources
-        Program.cs
-    : # actions
-        @msbuild_IDPicker
+        IDPicker.csproj
     : # requirements
-        <conditional>@build-location
-        <conditional>@seems-dependency
+        <conditional>@install-location
+        <conditional>@idpicker-requirements
         <conditional>@pwiz-bindings-dependency
-        <conditional>@qonverter-dependency
         <conditional>@msvc-requirement
     ;
 
@@ -442,7 +358,7 @@ make IDPickerTest.passed
         <conditional>@no-express-requirement
         <conditional>@msvc-dotnet-requirement
         <conditional>@build-location
-        <dependency>.//IDPicker.exe
+        <dependency>.//IDPicker
     ;
 explicit IDPickerTest.passed ;
 
@@ -452,7 +368,7 @@ rule dotNET-dependencies ( properties * )
     if <toolset>msvc in $(properties)
     {
         local location = [ install-location $(properties) ] ;
-        return <dependency>IDPicker.exe/$(location) ;
+        return <dependency>IDPicker/$(location) ;
     }
 }
 

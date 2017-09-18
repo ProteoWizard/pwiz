@@ -900,7 +900,7 @@ namespace seems
                 foreach (var scan in spectrum.scanList.scans.Where(o => o.instrumentConfiguration != null))
                 {
                     // assume the last analyzer of the instrument configuration is responsible for the resolution
-                    if (scan.instrumentConfiguration.componentList.Count == 0)
+                    if (scan.instrumentConfiguration.componentList.Count(o => o.type == ComponentType.ComponentType_Analyzer) == 0)
                         continue;
                     var analyzer = scan.instrumentConfiguration.componentList.Last(o => o.type == ComponentType.ComponentType_Analyzer).cvParamChild(CVID.MS_mass_analyzer_type);
                     if (analyzer.cvid == CVID.CVID_Unknown)

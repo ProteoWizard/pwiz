@@ -100,64 +100,12 @@ using System.Runtime.InteropServices;
         : #warn-on-missing
         : : "SeeMS" "A visualization, annotation, and processing tool for mass spectrometry data." "Vanderbilt University" "SeeMS" ;
 
-
-    rule do_seems_build ( targets + : sources * : properties * )
-    {
-        if <variant>debug in $(properties) ||
-           <debug-symbols>on in $(properties)
-        {
-            CONFIGURATION on $(<[1]) = "Debug" ;
-        }
-        else
-        {
-            CONFIGURATION on $(<[1]) = "Release" ;
-        }
-
-        local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
-        OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
-        INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
-        JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
-    }
-
-    actions do_seems_build
-    {
-        IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-        echo Building SeeMS in $(CONFIGURATION:L) configuration...
-        msbuild $(SEEMS_PATH)/seems.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
-    }
-
-
-    rule build-location ( properties * )
-    {
-        local result ;
-        # don't override the location when it's already set
-        if ! <location> in $(properties:G)
-        {
-            if <variant>debug in $(properties) ||
-               <debug-symbols>on in $(properties)
-            {
-                result = <location>$(PWIZ_BUILD_PATH)/SeeMS/bin/$(PLATFORM)/Debug ;
-            }
-            else
-            {
-                result = <location>$(PWIZ_BUILD_PATH)/SeeMS/bin/$(PLATFORM)/Release ;
-            }
-            return $(result) ;
-        }
-        else
-        {
-            return $(properties) ;
-        }
-    }
-
-
-    make seems.exe
+    msbuild seems
         : # sources
-        : # actions
-            @do_seems_build
+            seems.csproj
         : # requirements
             <conditional>@msvc-dotnet-requirement
             <conditional>@pwiz-bindings-dependency
-            <conditional>@build-location
+            <conditional>@install-location
         ;
 }

@@ -36,6 +36,8 @@ import rc ;
 import set ;
 import toolset ;
 import type ;
+import project ;
+import targets ;
 
 
 type.register MANIFEST : manifest ;
@@ -43,6 +45,8 @@ feature.feature embed-manifest : on off : incidental propagated ;
 feature.feature embed-manifest-file : : free dependency ;
 
 type.register PDB : pdb ;
+type.register CSPROJ : csproj ;
+
 
 
 ################################################################################
@@ -556,6 +560,38 @@ actions compile.mc
 }
 
 
+rule compile.msbuild ( targets + : sources * : properties * )
+{
+    if <variant>debug in $(properties)
+    {
+        CONFIGURATION on $(<[1]) = "Debug" ;
+    }
+    else
+    {
+        CONFIGURATION on $(<[1]) = "Release" ;
+    }
+    
+    if <address-model>64 in $(properties)
+    {
+        PLATFORM on $(<[1]) = "x64" ;
+    }
+    else
+    {
+        PLATFORM on $(<[1]) = "x86" ;
+    }
+
+    location = [ path.make [ feature.get-values location : $(properties) ] ] ;
+    OUTPUT_PATH on $(<[1]) = [ path.native $(location) ] ; # OutDir requires trailing slash
+    #INTERMEDIATE_PATH on $(<[1]) = [ path.native "$(location)/../obj" ] ; ";BaseIntermediateOutputPath=$(INTERMEDIATE_PATH)\"
+    JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+}
+
+actions compile.msbuild bind CONFIGURATION PLATFORM INTERMEDIATE_PATH OUTPUT_PATH
+{
+    $(.MSBUILD) "$(>)" /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH)\ /nologo /verbosity:minimal
+}
+
+
 actions compile.rc
 {
     $(.RC) -l 0x409 -U$(UNDEFS) -D$(DEFINES) -I"$(INCLUDES:W)" -fo "$(<:W)" "$(>:W)"
@@ -579,6 +615,7 @@ rule copy-assemblies ( target : properties * )
             }
             assembly-path = [ path.native $(assembly-path) ] ;
             local assembly-at-target-filepath = [ path.native [ path.join $(target-path) $(assembly-path:D=) ] ] ;
+
             if $(assembly-at-target-filepath) != $(assembly-path) &&
                ! ( $(assembly-at-target-filepath) in $(.unique-targets) )
             {
@@ -617,7 +654,7 @@ rule copy-assemblies ( target : properties * )
     }
 }
 
-rule set-manifest-dependencies ( target : properties * )
+local rule set-manifest-dependencies ( target : properties * )
 {
     local manifest-dependencies-string ;
     local manifest-dependencies = [ feature.get-values <manifest-dependency> : $(properties) ] ;
@@ -1367,6 +1404,7 @@ local rule configure-really ( version ? : options * )
             toolset.flags msvc.compile .RC  <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(resource-compiler) ;
             toolset.flags msvc.compile .IDL <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(idl-compiler) ;
             toolset.flags msvc.compile .MC  <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(mc-compiler) ;
+            toolset.flags msvc.compile .MSBUILD  <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))msbuild ;
             toolset.flags msvc.link    .MT  <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(manifest-tool) -nologo ;
 
             for api in desktop store phone
@@ -1567,6 +1605,31 @@ class msvc-linking-generator : linking-generator
     }
 }
 
+class msvc-msbuild-generator : linking-generator
+{
+    rule generated-targets ( sources + : property-set : project name ? )
+    {
+        local result = [ linking-generator.generated-targets $(sources)
+          : $(property-set) : $(project) $(name) ] ;
+        return $(result) ;
+    }
+}
+
+rule msbuild ( name : sources * : requirements * : default-build * : usage-requirements * )
+{
+    local project = [ project.current ] ;
+
+    requirements += <allow>msvc.compile.msbuild ;
+
+    targets.main-target-alternative
+        [ new typed-target $(name) : $(project) : EXE
+            : [ targets.main-target-sources $(sources) : $(name) ]
+            : [ targets.main-target-requirements $(requirements) : $(project) ]
+            : [ targets.main-target-default-build $(default-build) : $(project) ]
+        ] ;
+}
+IMPORT msvc : msbuild : : msbuild ;
+
 
 # Unsafe worker rule for the register-toolset() rule. Must not be called
 # multiple times.
@@ -1636,6 +1699,9 @@ local rule register-toolset-really ( )
 
         generators.register-standard msvc.compile.mc : MC : H RC : <toolset>msvc ;
         generators.override msvc.compile.mc : mc.compile ;
+
+        generators.register [ new msvc-msbuild-generator msvc.compile.msbuild : CSPROJ : EXE : <toolset>msvc <allow>msvc.compile.msbuild ] ;
+        generators.override msvc.compile.msbuild : msvc.link ;
 
         # Note: the 'H' source type will catch both '.h' and '.hpp' headers as
         # the latter have their HPP type derived from H. The type of compilation

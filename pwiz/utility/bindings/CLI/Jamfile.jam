@@ -170,7 +170,7 @@ lib pwiz_bindings_cli
     : # requirements
         $(bound_libs)
         <link>shared
-        <linkflags>"/MACHINE:$(PLATFORM) /FIXED:No /MAP" # /KEYFILE:$(CLI_ROOT)/signature.snk"
+        <linkflags>"/MACHINE:$(PLATFORM) /FIXED:No" # /KEYFILE:$(CLI_ROOT)/signature.snk"
         $(clr-requirement)
     : # default-build
     : # usage-requirements

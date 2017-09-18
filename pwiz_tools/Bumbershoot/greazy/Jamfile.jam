@@ -162,7 +162,23 @@ using System.Runtime.InteropServices;
             CONFIGURATION on $(<[1]) = "Release" ;
         }
 
-        local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
+        if ! <location> in $(properties:G)
+        {
+            if <variant>debug in $(properties)
+            {
+                location = $(PWIZ_BUILD_PATH)/Greazy/bin/$(PLATFORM)/Debug ;
+            }
+            else
+            {
+                location = $(PWIZ_BUILD_PATH)/Greazy/bin/$(PLATFORM)/Release ;
+            }
+            return $(result) ;
+        }
+        else
+        {
+            location = [ path.make [ feature.get-values location : $(properties) ] ] ;
+        }
+
         OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
         INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
         JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;

@@ -245,6 +245,11 @@ rule mz5-build ( itemname )
 
 if ! [ modules.peek : NT ]
 {
+    # make msbuild targets a no-op
+    rule msbuild ( name : sources * : requirements * : default-build * : usage-requirements * )
+    {
+    }
+
     PREDEF_CHECKS = 
     # starting with gcc 4.8, gcc is extremely verbose about unused typedefs; heavily used in Boost concept checks
     [ predef-check "BOOST_COMP_GNUC >= 4.8" : : <cxxflags>-Wno-unused-local-typedefs ]
@@ -684,7 +689,7 @@ rule dotNET-dependencies ( properties * )
     {
         local location = [ install-location $(properties) ] ;
         return <dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/MSConvertGUI//MSConvertGUI.exe/$(location)
-               <dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS//seems.exe/$(location) ;
+               <dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS//seems/$(location) ;
     }
 }
 
