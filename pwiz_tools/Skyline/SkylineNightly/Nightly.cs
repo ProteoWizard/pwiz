@@ -49,12 +49,12 @@ namespace SkylineNightly
         private const string TEAM_CITY_BUILD_TYPE = TEAM_CITY_BUILD_TYPE_64;
         private const string TEAM_CITY_USER_NAME = "guest";
         private const string TEAM_CITY_USER_PASSWORD = "guest";
-        private const string LABKEY_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Nightly%20x64/post.view?";
-        private const string LABKEY_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Performance%20Tests/post.view?";
-        private const string LABKEY_STRESS_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/NightlyStress/post.view?";
-        private const string LABKEY_RELEASE_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Release%20Branch/post.view?";
-        private const string LABKEY_RELEASE_PERF_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Release%20Branch%20Performance%20Tests/post.view?";
-        private const string LABKEY_INTEGRATION_URL = "https://skyline.gs.washington.edu/labkey/testresults/home/development/Integration/post.view";
+        private const string LABKEY_URL = "https://skyline.ms/labkey/testresults/home/development/Nightly%20x64/post.view?";
+        private const string LABKEY_PERF_URL = "https://skyline.ms/labkey/testresults/home/development/Performance%20Tests/post.view?";
+        private const string LABKEY_STRESS_URL = "https://skyline.ms/labkey/testresults/home/development/NightlyStress/post.view?";
+        private const string LABKEY_RELEASE_URL = "https://skyline.ms/labkey/testresults/home/development/Release%20Branch/post.view?";
+        private const string LABKEY_RELEASE_PERF_URL = "https://skyline.ms/labkey/testresults/home/development/Release%20Branch%20Performance%20Tests/post.view?";
+        private const string LABKEY_INTEGRATION_URL = "https://skyline.ms/labkey/testresults/home/development/Integration/post.view";
 
         // Current integration branch is TRIC
         private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work/20170706_tric_round3";
