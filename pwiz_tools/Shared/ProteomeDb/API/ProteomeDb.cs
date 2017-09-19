@@ -160,28 +160,39 @@ namespace pwiz.ProteomeDatabase.API
 
         public void Digest(IProgressMonitor progressMonitor, ref IProgressStatus progressStatus)
         {
-            using (var session = OpenStatelessSession(true))
+            try
             {
-                using (var transation = session.BeginTransaction())
+                using (var session = OpenStatelessSession(true))
                 {
-                    var noNames = new DbProteinName[0];
-                    var proteinSequences =
-                        session.CreateQuery("SELECT P.Sequence, P.Id FROM " + typeof(DbProtein) + " P") // Not L10N
-                            .List<object[]>()
-                            .ToDictionary(row => (string) row[0], row => new ProtIdNames((long) row[1], noNames));
+                    using (var transation = session.BeginTransaction())
+                    {
+                        var noNames = new DbProteinName[0];
+                        var proteinSequences =
+                            session.CreateQuery("SELECT P.Sequence, P.Id FROM " + typeof(DbProtein) + " P") // Not L10N
+                                .List<object[]>()
+                                .ToDictionary(row => (string) row[0], row => new ProtIdNames((long) row[1], noNames));
 
-                    if (!HasSubsequencesTable(() => session.Connection))
-                    {
-                        session.CreateSQLQuery("CREATE TABLE ProteomeDbSubsequence (Sequence TEXT not null, ProteinIdBytes BLOB, primary key (Sequence));") // Not L10N
-                            .ExecuteUpdate();
+                        if (!HasSubsequencesTable(() => session.Connection))
+                        {
+                            session.CreateSQLQuery(
+                                    "CREATE TABLE ProteomeDbSubsequence (Sequence TEXT not null, ProteinIdBytes BLOB, primary key (Sequence));") // Not L10N
+                                .ExecuteUpdate();
+                        }
+                        DigestProteins(session.Connection, proteinSequences, progressMonitor, ref progressStatus);
+                        if (progressMonitor.IsCanceled)
+                        {
+                            return;
+                        }
+                        transation.Commit();
                     }
-                    DigestProteins(session.Connection, proteinSequences, progressMonitor, ref progressStatus);
-                    if (progressMonitor.IsCanceled)
-                    {
-                        return;
-                    }
-                    transation.Commit();
                 }
+            }
+            catch (Exception)
+            {
+                // If the operation was cancelled, then we want to throw OperationCancelledException instead of whatever we caught
+                CancellationToken.ThrowIfCancellationRequested();
+                // Otherwise, throw the original exception
+                throw;
             }
         }
 

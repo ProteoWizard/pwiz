@@ -230,6 +230,7 @@ namespace pwiz.Skyline.EditUI
                     ReadOnly = true,
                     ToolTipText = protein.ProteinMetadata.DisplayTextWithoutName(), 
                     SortMode = DataGridViewColumnSortMode.Automatic,
+                    FillWeight = 1f,
                     Tag = proteinColumn,
                 };
                 dataGridView1.Columns.Add(column);

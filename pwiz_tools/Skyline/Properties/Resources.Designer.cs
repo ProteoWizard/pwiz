@@ -29656,6 +29656,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred while trying to process the file {0}..
+        /// </summary>
+        public static string ViewLibraryDlg_EnsureDigested_An_error_occurred_while_trying_to_process_the_file__0__ {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_EnsureDigested_An_error_occurred_while_trying_to_process_the_file_" +
+                        "_0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Copying database.
         /// </summary>
         public static string ViewLibraryDlg_EnsureDigested_Copying_database {

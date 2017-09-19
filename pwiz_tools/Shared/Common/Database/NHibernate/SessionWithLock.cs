@@ -40,7 +40,7 @@ namespace pwiz.Common.Database.NHibernate
         }
 
         public SessionWithLock(ISession session, ReaderWriterLock readerWriterLock, bool writeLock, CancellationToken cancellationToken)
-            :base(readerWriterLock, writeLock, cancellationToken)
+            :base(readerWriterLock, writeLock, cancellationToken, session.CancelQuery)
         {
             _session = session;
         }
@@ -76,7 +76,7 @@ namespace pwiz.Common.Database.NHibernate
             return _session.Close();
         }
 
-        public override void CancelQuery()
+        public void CancelQuery()
         {
             _session.CancelQuery();
         }

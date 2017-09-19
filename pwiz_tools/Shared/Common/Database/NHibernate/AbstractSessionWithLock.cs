@@ -30,7 +30,7 @@ namespace pwiz.Common.Database.NHibernate
         private CancellationTokenRegistration _cancellationTokenRegistration;
 
         protected AbstractSessionWithLock(ReaderWriterLock readerWriterLock, bool writeLock,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken, Action cancellationAction)
         {
             _lock = readerWriterLock;
             _writeLock = writeLock;
@@ -51,7 +51,7 @@ namespace pwiz.Common.Database.NHibernate
             {
                 try
                 {
-                    CancelQuery();
+                    cancellationAction();
                 }
                 catch (Exception)
                 {
@@ -59,8 +59,6 @@ namespace pwiz.Common.Database.NHibernate
                 }
             });
         }
-
-        public abstract void CancelQuery();
 
         public virtual void Dispose()
         {

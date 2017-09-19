@@ -1500,30 +1500,44 @@ namespace pwiz.Skyline.SettingsUI
                         return true;
                 }
             }
-            using (var longWaitDlg = new LongWaitDlg())
+            try
             {
-                bool finished = false;
-                longWaitDlg.PerformWork(owner, 1000, progressMonitor =>
+                using (var longWaitDlg = new LongWaitDlg())
                 {
-                    using (var fileSaver = new FileSaver(backgroundProteome.DatabasePath))
+                    bool finished = false;
+                    longWaitDlg.PerformWork(owner, 1000, progressMonitor =>
                     {
-                        var progressStatus = new ProgressStatus().ChangeMessage(Resources.ViewLibraryDlg_EnsureDigested_Copying_database);
-                        progressMonitor.UpdateProgress(progressStatus);
-                        File.Copy(backgroundProteome.DatabasePath, fileSaver.SafeName, true);
+                        using (var fileSaver = new FileSaver(backgroundProteome.DatabasePath))
+                        {
+                            var progressStatus =
+                                new ProgressStatus().ChangeMessage(Resources
+                                    .ViewLibraryDlg_EnsureDigested_Copying_database);
+                            progressMonitor.UpdateProgress(progressStatus);
+                            File.Copy(backgroundProteome.DatabasePath, fileSaver.SafeName, true);
 
-                        using (var newProteomeDb = ProteomeDb.OpenProteomeDb(fileSaver.SafeName, longWaitDlg.CancellationToken))
-                        {
-                            newProteomeDb.Digest(progressMonitor, ref progressStatus);
+                            using (var newProteomeDb =
+                                ProteomeDb.OpenProteomeDb(fileSaver.SafeName, longWaitDlg.CancellationToken))
+                            {
+                                newProteomeDb.Digest(progressMonitor, ref progressStatus);
+                            }
+                            if (progressMonitor.IsCanceled)
+                            {
+                                return;
+                            }
+                            fileSaver.Commit();
+                            finished = true;
                         }
-                        if (progressMonitor.IsCanceled)
-                        {
-                            return;
-                        }
-                        fileSaver.Commit();
-                        finished = true;
-                    }
-                });
-                return finished;
+                    });
+                    return finished;
+                }
+            }
+            catch (Exception e)
+            {
+                string errorMessage = TextUtil.LineSeparate(
+                    string.Format(Resources.ViewLibraryDlg_EnsureDigested_An_error_occurred_while_trying_to_process_the_file__0__,
+                        backgroundProteome.DatabasePath), e.Message);
+                MessageDlg.ShowWithException(owner, errorMessage, e);
+                return false;
             }
         }
 

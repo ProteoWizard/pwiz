@@ -34,8 +34,6 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.dataGridView1 = new pwiz.Common.Controls.CommonDataGridView();
-            this.PeptideIncludedColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.PeptideColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.includeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.excludeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -58,6 +56,8 @@
             this.richTextBoxSequence = new System.Windows.Forms.RichTextBox();
             this.tbxProteinDetails = new System.Windows.Forms.TextBox();
             this.labelProteinDetails = new System.Windows.Forms.Label();
+            this.PeptideIncludedColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.PeptideColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -98,17 +98,6 @@
             this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.dataGridView1.RowHeadersVisible = false;
             this.dataGridView1.CurrentCellDirtyStateChanged += new System.EventHandler(this.dataGridView1_CurrentCellDirtyStateChanged);
-            // 
-            // PeptideIncludedColumn
-            // 
-            resources.ApplyResources(this.PeptideIncludedColumn, "PeptideIncludedColumn");
-            this.PeptideIncludedColumn.Name = "PeptideIncludedColumn";
-            this.PeptideIncludedColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // PeptideColumn
-            // 
-            resources.ApplyResources(this.PeptideColumn, "PeptideColumn");
-            this.PeptideColumn.Name = "PeptideColumn";
             // 
             // contextMenuStrip1
             // 
@@ -250,6 +239,19 @@
             resources.ApplyResources(this.labelProteinDetails, "labelProteinDetails");
             this.labelProteinDetails.Name = "labelProteinDetails";
             // 
+            // PeptideIncludedColumn
+            // 
+            this.PeptideIncludedColumn.FillWeight = 1F;
+            resources.ApplyResources(this.PeptideIncludedColumn, "PeptideIncludedColumn");
+            this.PeptideIncludedColumn.Name = "PeptideIncludedColumn";
+            this.PeptideIncludedColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // PeptideColumn
+            // 
+            this.PeptideColumn.FillWeight = 1F;
+            resources.ApplyResources(this.PeptideColumn, "PeptideColumn");
+            this.PeptideColumn.Name = "PeptideColumn";
+            // 
             // UniquePeptidesDlg
             // 
             this.AcceptButton = this.btnOK;
@@ -301,10 +303,10 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem includeAllToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem excludeAllToolStripMenuItem;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn PeptideIncludedColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn PeptideColumn;
         private System.Windows.Forms.ToolStripMenuItem uniqueProteinsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem uniqueGenesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem uniqueSpeciesToolStripMenuItem;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn PeptideIncludedColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn PeptideColumn;
     }
 }

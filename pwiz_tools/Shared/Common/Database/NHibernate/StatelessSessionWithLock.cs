@@ -32,16 +32,16 @@ namespace pwiz.Common.Database.NHibernate
 
 
         public StatelessSessionWithLock(IStatelessSession session, ReaderWriterLock readerWriterLock, bool writeLock, CancellationToken cancellationToken)
-            :base(readerWriterLock, writeLock, cancellationToken)
+            :base(readerWriterLock, writeLock, cancellationToken, ()=>CancelQuery(session))
         {
             _session = session;
         }
 
-        public override void CancelQuery()
+        private static void CancelQuery(IStatelessSession session)
         {
             try
             {
-                ISessionImplementor sessionImplementor = _session.GetSessionImplementation();
+                ISessionImplementor sessionImplementor = session.GetSessionImplementation();
                 if (sessionImplementor != null && sessionImplementor.Batcher != null)
                 {
                     sessionImplementor.Batcher.CancelLastQuery();
