@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Model.Results
         public static readonly CacheFormat CURRENT = new CacheFormat
         {
             FormatVersion = CacheFormatVersion.CURRENT,
-            VersionRequired = CacheFormatVersion.Eleven,
+            VersionRequired = CacheFormatVersion.Twelve,
             CachedFileSize = Marshal.SizeOf<CachedFileHeaderStruct>(),
             ChromGroupHeaderSize = Marshal.SizeOf<ChromGroupHeaderInfo>(),
             ChromPeakSize = Marshal.SizeOf<ChromPeak>(),
@@ -154,10 +154,19 @@ namespace pwiz.Skyline.Model.Results
             {
                 throw new NotSupportedException();
             }
+            CacheFormatVersion versionRequired;
+            if (formatVersion.CompareTo(CacheHeaderStruct.WithStructSizes) >= 0)
+            {
+                versionRequired = CacheHeaderStruct.WithStructSizes;
+            }
+            else
+            {
+                versionRequired = formatVersion;
+            }
             return new CacheFormat
             {
                 FormatVersion = formatVersion,
-                VersionRequired = formatVersion,
+                VersionRequired = versionRequired,
                 ChromPeakSize = ChromPeak.GetStructSize(formatVersion),
                 ChromTransitionSize = ChromTransition.GetStructSize(formatVersion),
                 CachedFileSize = CachedFileHeaderStruct.GetStructSize(formatVersion),
