@@ -25,11 +25,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Ionic.Zip;
 using SkylineNightly.Properties;
@@ -618,9 +617,8 @@ namespace SkylineNightly
                 url = LABKEY_STRESS_URL;
             else
                 url = LABKEY_URL;
-            var task = PostToLink(url, xml);
-            task.Wait();
-            return task.Result;
+            var result = PostToLink(url, xml);
+            return result;
         }
 
         public string GetLatestLog()
@@ -636,31 +634,55 @@ namespace SkylineNightly
         /// <summary>
         /// Post data to the given link URL.
         /// </summary>
-        private async Task<string> PostToLink(string link, string postData)
+        private string PostToLink(string link, string postData)
         {
             var errmessage = string.Empty;
             Log("Posting results to " + link); // Not L10N
             for (var retry = 5; retry > 0; retry--)
             {
+                string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x"); // Not L10N
+                byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n"); // Not L10N
+
+                var wr = (HttpWebRequest) WebRequest.Create(link);
+                wr.ProtocolVersion = HttpVersion.Version10;
+                wr.ContentType = "multipart/form-data; boundary=" + boundary; // Not L10N
+                wr.Method = "POST"; // Not L10N
+                wr.KeepAlive = true;
+                wr.Credentials = CredentialCache.DefaultCredentials;
+                
+                var rs = wr.GetRequestStream();
+
+                rs.Write(boundarybytes, 0, boundarybytes.Length);
+                const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n"; // Not L10N
+                string header = string.Format(headerTemplate, "xml_file", "xml_file", "text/xml");
+                byte[] headerbytes = Encoding.UTF8.GetBytes(header);
+                rs.Write(headerbytes, 0, headerbytes.Length);
+                var bytes = Encoding.UTF8.GetBytes(postData);
+                rs.Write(bytes, 0, bytes.Length);
+
+                byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n"); // Not L10N
+                rs.Write(trailer, 0, trailer.Length);
+                rs.Close();
+
+                WebResponse wresp = null;
                 try
                 {
-                    var client = new HttpClient();
-                    var content = new MultipartFormDataContent { { new StringContent(postData), "xml" } }; // Not L10N
-                    var result = await client.PostAsync(link, content).ConfigureAwait(false);
-                    if (result == null)
+                    wresp = wr.GetResponse();
+                    var stream2 = wresp.GetResponseStream();
+                    if (stream2 != null)
                     {
-                        Log(errmessage = "no response from server when posting results"); // Not L10N
-                    }
-                    else
-                    {
-                        if (result.IsSuccessStatusCode)
-                            return errmessage;
-                        Log(result.ToString());
+                        var reader2 = new StreamReader(stream2);
+                        var result = reader2.ReadToEnd();
+                        return result;
                     }
                 }
                 catch (Exception e)
                 {
                     Log(errmessage = e.ToString());
+                    if (wresp != null)
+                    {
+                        wresp.Close();
+                    }
                 }
                 if (retry > 1)
                 {
