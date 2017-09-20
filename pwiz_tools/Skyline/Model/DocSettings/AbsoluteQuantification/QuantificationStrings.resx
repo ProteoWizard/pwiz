@@ -239,4 +239,7 @@
   <data name="CalibrationForm_MakeExcludeStandardMenuItem_Exclude_Standard" xml:space="preserve">
     <value>Exclude Standard</value>
   </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_The_selected_peptide_is_no_longer_part_of_the_Skyline_document_" xml:space="preserve">
+    <value>The selected peptide is no longer part of the Skyline document.</value>
+  </data>
 </root>

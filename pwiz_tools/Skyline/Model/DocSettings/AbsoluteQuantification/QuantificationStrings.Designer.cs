@@ -272,6 +272,16 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The selected peptide is no longer part of the Skyline document..
+        /// </summary>
+        public static string CalibrationForm_DisplayCalibrationCurve_The_selected_peptide_is_no_longer_part_of_the_Skyline_document_ {
+            get {
+                return ResourceManager.GetString("CalibrationForm_DisplayCalibrationCurve_The_selected_peptide_is_no_longer_part_of" +
+                        "_the_Skyline_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The selected replicate has missing or truncated transitions.
         /// </summary>
         public static string CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions {
