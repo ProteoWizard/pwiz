@@ -190,6 +190,7 @@ namespace SkylineTester
 
             InitLanguages(formsLanguage);
             InitLanguages(tutorialsLanguage);
+            EnableButtonSelectFailedTests(false); // No tests run yet
 
             if (args.Length > 0)
                 _openFile = args[0];
@@ -1036,6 +1037,12 @@ namespace SkylineTester
 
             foreach (TreeNode childNode in node.Nodes)
                 GetCheckedNodes(childNode, names);
+        }
+
+        public void EnableButtonSelectFailedTests(bool hasFailures)
+        {
+            buttonSelectFailedTestsTab.Enabled = buttonSelectFailedTestsTab.Visible = hasFailures;
+            buttonSelectFailedOutputTab.Enabled = buttonSelectFailedOutputTab.Visible = hasFailures;
         }
 
         #endregion Tree support

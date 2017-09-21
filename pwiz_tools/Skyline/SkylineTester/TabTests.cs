@@ -123,6 +123,19 @@ namespace SkylineTester
             return " test=\"@{0}\"".With(testListFile);
         }
 
+        public void SetTests(HashSet<string> testSet)
+        {
+            UncheckAll();
+            foreach (TreeNode node in MainWindow.TestsTree.Nodes[0].Nodes)
+            {
+                foreach (TreeNode childNode in node.Nodes)
+                {
+                    childNode.Checked = testSet.Contains(childNode.Text);
+                }
+            }            
+            GetTestList(); // Updates the test list file contents
+        }
+
         public static void GetCheckedTests(TreeNode node, List<string> testList, bool skipTests = false)
         {
             foreach (TreeNode childNode in node.Nodes)

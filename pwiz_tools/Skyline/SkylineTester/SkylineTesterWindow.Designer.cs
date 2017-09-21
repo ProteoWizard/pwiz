@@ -285,6 +285,8 @@ namespace SkylineTester
             this.labelCompareTo = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.buttonSelectFailedTestsTab = new System.Windows.Forms.Button();
+            this.buttonSelectFailedOutputTab = new System.Windows.Forms.Button();
             this.myTreeView1 = new SkylineTester.MyTreeView();
             this.testsRunSmallMoleculeVersions = new System.Windows.Forms.CheckBox();
             this.qualityRunSmallMoleculeVersions = new System.Windows.Forms.CheckBox();
@@ -824,6 +826,7 @@ namespace SkylineTester
             // 
             this.tabTests.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(195)))), ((int)(((byte)(220)))), ((int)(((byte)(210)))));
             this.tabTests.Controls.Add(this.runTests);
+            this.tabTests.Controls.Add(this.buttonSelectFailedTestsTab);
             this.tabTests.Controls.Add(this.label17);
             this.tabTests.Controls.Add(this.groupBox15);
             this.tabTests.Controls.Add(this.windowsGroup);
@@ -2433,6 +2436,7 @@ namespace SkylineTester
             // tabOutput
             // 
             this.tabOutput.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(140)))), ((int)(((byte)(160)))));
+            this.tabOutput.Controls.Add(this.buttonSelectFailedOutputTab);
             this.tabOutput.Controls.Add(this.outputJumpTo);
             this.tabOutput.Controls.Add(this.outputSplitContainer);
             this.tabOutput.Controls.Add(this.buttonOpenLog);
@@ -2956,6 +2960,32 @@ namespace SkylineTester
             this.labelCompareTo.TabIndex = 35;
             this.labelCompareTo.Text = "compare to";
             // 
+            // buttonSelectFailedTestsTab
+            // 
+            this.buttonSelectFailedTestsTab.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.buttonSelectFailedTestsTab.Location = new System.Drawing.Point(16, 646);
+            this.buttonSelectFailedTestsTab.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonSelectFailedTestsTab.Name = "buttonSelectFailedTestsTab";
+            this.buttonSelectFailedTestsTab.Size = new System.Drawing.Size(152, 28);
+            this.buttonSelectFailedTestsTab.TabIndex = 36;
+            this.buttonSelectFailedTestsTab.Text = "Select failed tests";
+            this.toolTip1.SetToolTip(this.buttonSelectFailedTestsTab, "Select failed tests and deselect all others");
+            this.buttonSelectFailedTestsTab.UseVisualStyleBackColor = true;
+            this.buttonSelectFailedTestsTab.Click += new System.EventHandler(this.SelectFailedTests);
+            // 
+            // buttonSelectFailedOutputTab
+            // 
+            this.buttonSelectFailedOutputTab.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.buttonSelectFailedOutputTab.Location = new System.Drawing.Point(16, 646);
+            this.buttonSelectFailedOutputTab.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonSelectFailedOutputTab.Name = "buttonSelectFailedOutputTab";
+            this.buttonSelectFailedOutputTab.Size = new System.Drawing.Size(152, 28);
+            this.buttonSelectFailedOutputTab.TabIndex = 37;
+            this.buttonSelectFailedOutputTab.Text = "Select failed tests";
+            this.toolTip1.SetToolTip(this.buttonSelectFailedOutputTab, "Select failed tests and deselect all others");
+            this.buttonSelectFailedOutputTab.UseVisualStyleBackColor = true;
+            this.buttonSelectFailedOutputTab.Click += new System.EventHandler(this.SelectFailedTests);
+            // 
             // testsRunSmallMoleculeVersions
             // 
             this.testsRunSmallMoleculeVersions.AutoSize = true;
@@ -3299,5 +3329,7 @@ namespace SkylineTester
         private CheckBox qualityRunSmallMoleculeVersions;
         private ComboBox comboBoxRunStatsCompare;
         private Label labelCompareTo;
+        private Button buttonSelectFailedTestsTab;
+        private Button buttonSelectFailedOutputTab;
     }
 }

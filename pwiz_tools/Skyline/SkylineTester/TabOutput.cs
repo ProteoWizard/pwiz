@@ -32,6 +32,7 @@ namespace SkylineTester
     public class TabOutput : TabBase
     {
         public Action AfterLoad { get; set; }
+        public HashSet<string> FailedTests { get { return new HashSet<string>(_failedTests.Select(ParseTestName)); } }
 
         private readonly List<string> _buildProblems = new List<string>();
         private readonly List<string> _failedTests = new List<string>();
@@ -71,6 +72,7 @@ namespace SkylineTester
         {
             _buildProblems.Clear();
             _failedTests.Clear();
+            MainWindow.EnableButtonSelectFailedTests(false); // No failed tests to select
             _leakingTests.Clear();
             _jumpList = new List<JumpToPattern>
             {
@@ -113,6 +115,7 @@ namespace SkylineTester
                 foreach (var problem in _buildProblems)
                     MainWindow.ErrorConsole.AppendText("  {0}".With(problem));
             }
+            MainWindow.EnableButtonSelectFailedTests(_failedTests.Count > 0); // Make it convenient to re run failed tests
             if (_failedTests.Count > 0)
             {
                 if (MainWindow.ErrorConsole.TextLength > 0)
@@ -351,6 +354,12 @@ namespace SkylineTester
                 Console.WriteLine(ex.Message);
             }
             _addingErrors = false;
+        }
+
+        private static string ParseTestName(string searchText)
+        {
+            var parts = searchText.Trim().Split(' ');
+            return parts[parts.Length > 1 ? 1 : 0];
         }
 
         private class JumpToPattern

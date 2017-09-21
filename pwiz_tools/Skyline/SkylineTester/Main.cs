@@ -55,6 +55,7 @@ namespace SkylineTester
             foreach (var runButton in _runButtons)
                 runButton.Text = "Stop";
             buttonStop.Enabled = true;
+            EnableButtonSelectFailedTests(false); // Until we have failures to select
             AcceptButton = null;
 
             // Update elapsed time display.
@@ -72,6 +73,14 @@ namespace SkylineTester
                 statusRunTime.Text = "{0}:{1:D2}:{2:D2}".With(elapsedTime.Hours, elapsedTime.Minutes, elapsedTime.Seconds);
             };
             _runTimer.Start();
+        }
+
+        /// <summary>
+        /// Select failed tests from current run, deselecting others
+        /// </summary>
+        private void SelectFailedTests(object sender, EventArgs e)
+        {
+            _tabTests.SetTests(_tabOutput.FailedTests);
         }
 
         /// <summary>
