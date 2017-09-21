@@ -83,6 +83,7 @@ enum PSM_SCORE_TYPE {
     PEAKS_CONFIDENCE_SCORE,   // pepxml files with peaks confidence scores
     BYONIC_PEP,               // byonic .mzid files
     PEPTIDE_SHAKER_CONFIDENCE,// peptideshaker .mzid files
+    GENERIC_QVALUE,
 
     NUM_PSM_SCORE_TYPES
 };

@@ -329,7 +329,8 @@ void BlibFilter::buildNonRedundantLib()
                 scoreType == "MORPHEUS SCORE" ||
                 scoreType == "MSGF+ SCORE" ||
                 scoreType == "PEAKS CONFIDENCE SCORE" ||
-                scoreType == "BYONIC SCORE") {
+                scoreType == "BYONIC SCORE" ||
+                scoreType == "GENERIC Q-VALUE") {
                 higherIsBetter_[scoreTypeId] = false;
             } else if (
                 scoreType == "PEPTIDE PROPHET SOMETHING" ||

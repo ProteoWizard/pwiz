@@ -46,7 +46,8 @@ namespace BiblioSpec{
                         BYONIC_ANALYSIS,
                         MSGF_ANALYSIS,
                         PEPTIDESHAKER_ANALYSIS,
-                        MASCOT_ANALYSIS };
+                        MASCOT_ANALYSIS,
+                        GENERIC_QVALUE_ANALYSIS };
 
         ANALYSIS analysisType_;
         pwiz::identdata::IdentDataFile* pwizReader_;

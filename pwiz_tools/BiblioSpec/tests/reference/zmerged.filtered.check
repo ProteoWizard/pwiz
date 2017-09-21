@@ -95,6 +95,7 @@ id	scoreType
 16	PEAKS CONFIDENCE SCORE
 17	BYONIC SCORE
 18	PEPTIDE SHAKER CONFIDENCE
+19	GENERIC Q-VALUE
 RefSpectraID	RedundantRefSpectraID	SpectrumSourceID	driftTimeMsec	collisionalCrossSectionSqA	driftTimeHighEnergyOffsetMsec	retentionTime	bestSpectrum
 1	170	3	0.0	0.0	0.0	18.081833	1
 2	169	3	0.0	0.0	0.0	18.036833	1

@@ -100,6 +100,10 @@ bool MzIdentMLReader::parseFile(){
         case MASCOT_ANALYSIS:
             scoreType = MASCOT_IONS_SCORE;
             break;
+        case GENERIC_QVALUE_ANALYSIS:
+            scoreType = GENERIC_QVALUE;
+            lookUpBy_ = SCAN_NUM_ID;
+            break;
     }
 
     map<string, vector<PSM*> >::iterator fileIterator = fileMap_.begin();
@@ -299,6 +303,14 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
             if (analysisType_ == MASCOT_ANALYSIS) {
                 return boost::lexical_cast<double>(it->value);
             }
+        } else if (name == "PSM-level q-value") {
+            if (analysisType_ == UNKNOWN_ANALYSIS) {
+                analysisType_ = GENERIC_QVALUE_ANALYSIS;
+                scoreThreshold_ = getScoreThreshold(GENERIC_QVALUE_INPUT);
+            }
+            if (analysisType_ == GENERIC_QVALUE_ANALYSIS) {
+                return boost::lexical_cast<double>(it->value);
+            }
         }
     }
 
@@ -313,6 +325,7 @@ bool MzIdentMLReader::passThreshold(double score)
         case BYONIC_ANALYSIS:
         case MASCOT_ANALYSIS:
         case MSGF_ANALYSIS:
+        case GENERIC_QVALUE_ANALYSIS:
             return score <= scoreThreshold_;
         // Scores where higher is better
         case SCAFFOLD_ANALYSIS:

@@ -75,6 +75,7 @@ enum BUILD_INPUT
     PEAKS,
     BYONIC,
     PEPTIDE_SHAKER,
+    GENERIC_QVALUE_INPUT,
 
     // Keep this last
     NUM_BUILD_INPUTS
