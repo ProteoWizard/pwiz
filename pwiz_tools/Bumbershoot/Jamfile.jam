@@ -50,7 +50,7 @@ rule binary-tarball-requirements ( properties * )
     local location = [ install-location $(properties) ] ;
     location = $(location:G=) ;
 
-    local non-redistributables = pwiz_bindings_cli.xml ; # .NET documentation
+    local non-redistributables = pwiz_bindings_cli.xml H5detect H5make_libsettings ; # .NET documentation
 
     if $(variants[1]) = "release"
     {

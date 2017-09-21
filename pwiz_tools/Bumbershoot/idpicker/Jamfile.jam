@@ -380,18 +380,32 @@ rule gcc-install-dll-path ( properties * )
     }
 }
 
+install data_dependencies
+    : # sources
+        Qonverter//gene2protein.db3 
+    : # requirements
+        <conditional>@install-location
+        <conditional>@install-identdata-dependencies
+    ;
+
+rule install-requirements ( properties * )
+{
+    return [ install-location $(properties) ]
+           [ install-vendor-api-dependencies $(properties) ]
+           <dependency>data_dependencies/<install-dependencies>off
+           <install-dependencies>on
+           <install-type>SHARED_LIB
+           <install-type>EXE ;
+}
+
 install install_cli
     : # sources
         Qonverter//idpQonvert
         Qonverter//idpQuery
         Qonverter//idpAssemble
-        Qonverter//gene2protein.db3
     : # requirements
-        <conditional>@install-location
-        <conditional>@install-vendor-api-dependencies
-        <conditional>@install-identdata-dependencies
+        <conditional>@install-requirements
         <conditional>@gcc-install-dll-path
-        <install-dependencies>on <install-type>SHARED_LIB <install-type>EXE
     ;
 
 install install
@@ -399,14 +413,10 @@ install install
         Qonverter//idpQonvert
         Qonverter//idpQuery
         Qonverter//idpAssemble
-        Qonverter//gene2protein.db3
     : # requirements
         <conditional>@dotNET-dependencies
-        <conditional>@install-location
-        <conditional>@install-vendor-api-dependencies
-        <conditional>@install-identdata-dependencies
+        <conditional>@install-requirements
         <conditional>@gcc-install-dll-path
-        <install-dependencies>on <install-type>SHARED_LIB <install-type>EXE
     ;
 
 # TODO: figure out why this hangs on TeamCity 64-bit builds, but works fine with 32-bit builds
