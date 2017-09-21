@@ -1,0 +1,183 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{65831C55-E631-4948-9528-6431637882E3}</ProjectGuid>
+    <Keyword>MakeFileProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <NMakeBuildCommandLine>pdb_b64_all</NMakeBuildCommandLine>
+    <NMakeCleanCommandLine>CleanBiblioSpec.bat</NMakeCleanCommandLine>
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <IncludePath>$(ProjectDir)..\..\libraries\zlib-1.2.3;$(ProjectDir)..\..\libraries\boost_1_56_0;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <NMakeBuildCommandLine>b64_all .</NMakeBuildCommandLine>
+    <NMakeCleanCommandLine>CleanBiblioSpec.bat</NMakeCleanCommandLine>
+    <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <IncludePath>$(ProjectDir)..\..\libraries\zlib-1.2.3;$(ProjectDir)..\..\libraries\boost_1_56_0;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="src\AminoAcidMasses.cpp" />
+    <ClCompile Include="src\BlibBuild.cpp" />
+    <ClCompile Include="src\BlibBuilder.cpp" />
+    <ClCompile Include="src\BlibFilter.cpp" />
+    <ClCompile Include="src\BlibMaker.cpp" />
+    <ClCompile Include="src\BlibSearch.cpp" />
+    <ClCompile Include="src\BlibToMs2.cpp" />
+    <ClCompile Include="src\BlibUtils.cpp" />
+    <ClCompile Include="src\BuildParser.cpp" />
+    <ClCompile Include="src\CommandLine.cpp" />
+    <ClCompile Include="src\DotProduct.cpp" />
+    <ClCompile Include="src\IdpXMLreader.cpp" />
+    <ClCompile Include="src\LibReader.cpp" />
+    <ClCompile Include="src\LibToSqlite3.cpp" />
+    <ClCompile Include="src\MascotResultsReader.cpp" />
+    <ClCompile Include="src\MascotResultsReader_dummy.cpp" />
+    <ClCompile Include="src\Match.cpp" />
+    <ClCompile Include="src\MaxQuantModReader.cpp" />
+    <ClCompile Include="src\MaxQuantReader.cpp" />
+    <ClCompile Include="src\MSFReader.cpp" />
+    <ClCompile Include="src\MSFSpecReader.cpp" />
+    <ClCompile Include="src\MzIdentMLReader.cpp" />
+    <ClCompile Include="src\mzxmlParser.cpp" />
+    <ClCompile Include="src\Options.cpp" />
+    <ClCompile Include="src\original-LibIterator.cpp" />
+    <ClCompile Include="src\original-Library.cpp" />
+    <ClCompile Include="src\original-Modifications.cpp" />
+    <ClCompile Include="src\original-Ms2file.cpp" />
+    <ClCompile Include="src\original-ProcessedPeaks.cpp" />
+    <ClCompile Include="src\original-RefFile.cpp" />
+    <ClCompile Include="src\original-RefSpectrum.cpp" />
+    <ClCompile Include="src\original-Spectrum.cpp" />
+    <ClCompile Include="src\PeakProcess.cpp" />
+    <ClCompile Include="src\PepXMLreader.cpp" />
+    <ClCompile Include="src\PercolatorXmlReader.cpp" />
+    <ClCompile Include="src\PrideXmlReader.cpp" />
+    <ClCompile Include="src\ProteinPilotReader.cpp" />
+    <ClCompile Include="src\ProxlXmlReader.cpp" />
+    <ClCompile Include="src\PsmFile.cpp" />
+    <ClCompile Include="src\PwizReader.cpp" />
+    <ClCompile Include="src\RefSpectrum.cpp" />
+    <ClCompile Include="src\Reportfile.cpp" />
+    <ClCompile Include="src\saxhandler.cpp" />
+    <ClCompile Include="src\SearchLibrary.cpp" />
+    <ClCompile Include="src\ShimadzuMLBReader.cpp" />
+    <ClCompile Include="src\Spectrum.cpp" />
+    <ClCompile Include="src\SqliteRoutine.cpp" />
+    <ClCompile Include="src\SQTreader.cpp" />
+    <ClCompile Include="src\SQTversion.cpp" />
+    <ClCompile Include="src\SslReader.cpp" />
+    <ClCompile Include="src\TandemNativeParser.cpp" />
+    <ClCompile Include="src\TestWeibull.cpp" />
+    <ClCompile Include="src\Verbosity.cpp" />
+    <ClCompile Include="src\WatersMseReader.cpp" />
+    <ClCompile Include="src\WeibullPvalue.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\AllBuildParsers.h" />
+    <ClInclude Include="src\AminoAcidMasses.h" />
+    <ClInclude Include="src\BlibBuilder.h" />
+    <ClInclude Include="src\BlibException.h" />
+    <ClInclude Include="src\BlibMaker.h" />
+    <ClInclude Include="src\BlibUtils.h" />
+    <ClInclude Include="src\BuildParser.h" />
+    <ClInclude Include="src\CommandLine.h" />
+    <ClInclude Include="src\DelimitedFileConsumer.h" />
+    <ClInclude Include="src\DelimitedFileReader.h" />
+    <ClInclude Include="src\DotProduct.h" />
+    <ClInclude Include="src\IdpXMLreader.h" />
+    <ClInclude Include="src\LibReader.h" />
+    <ClInclude Include="src\MascotResultsReader.h" />
+    <ClInclude Include="src\MascotResultsReader_dummy.h" />
+    <ClInclude Include="src\MascotSpecReader.h" />
+    <ClInclude Include="src\Match.h" />
+    <ClInclude Include="src\MaxQuantModReader.h" />
+    <ClInclude Include="src\MaxQuantReader.h" />
+    <ClInclude Include="src\Ms2Writer.h" />
+    <ClInclude Include="src\MSFReader.h" />
+    <ClInclude Include="src\MSFSpecReader.h" />
+    <ClInclude Include="src\MzIdentMLReader.h" />
+    <ClInclude Include="src\mzxmlFinder.h" />
+    <ClInclude Include="src\mzxmlParser.h" />
+    <ClInclude Include="src\Options.h" />
+    <ClInclude Include="src\original-LibIterator.h" />
+    <ClInclude Include="src\original-Library.h" />
+    <ClInclude Include="src\original-Modifications.h" />
+    <ClInclude Include="src\original-Ms2file.h" />
+    <ClInclude Include="src\original-Ms2Spectrum.h" />
+    <ClInclude Include="src\original-ProcessedPeaks.h" />
+    <ClInclude Include="src\original-RefFile.h" />
+    <ClInclude Include="src\original-RefSpectrum.h" />
+    <ClInclude Include="src\original-Spectrum.h" />
+    <ClInclude Include="src\PeakProcess.h" />
+    <ClInclude Include="src\PepXMLreader.h" />
+    <ClInclude Include="src\PercolatorXmlReader.h" />
+    <ClInclude Include="src\PrideXmlReader.h" />
+    <ClInclude Include="src\ProgressIndicator.h" />
+    <ClInclude Include="src\ProteinPilotReader.h" />
+    <ClInclude Include="src\ProxlXmlReader.h" />
+    <ClInclude Include="src\PSM.h" />
+    <ClInclude Include="src\PsmFile.h" />
+    <ClInclude Include="src\PwizReader.h" />
+    <ClInclude Include="src\RefSpectrum.h" />
+    <ClInclude Include="src\Reportfile.h" />
+    <ClInclude Include="src\saxhandler.h" />
+    <ClInclude Include="src\SearchLibrary.h" />
+    <ClInclude Include="src\ShimadzuMLBReader.h" />
+    <ClInclude Include="src\SmallMolMetadata.h" />
+    <ClInclude Include="src\smart_stmt.h" />
+    <ClInclude Include="src\SpecData.h" />
+    <ClInclude Include="src\SpecFileReader.h" />
+    <ClInclude Include="src\Spectrum.h" />
+    <ClInclude Include="src\SqliteRoutine.h" />
+    <ClInclude Include="src\SQTreader.h" />
+    <ClInclude Include="src\SQTversion.h" />
+    <ClInclude Include="src\SslReader.h" />
+    <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\TandemNativeParser.h" />
+    <ClInclude Include="src\Verbosity.h" />
+    <ClInclude Include="src\WatersMseReader.h" />
+    <ClInclude Include="src\WeibullPvalue.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xsd Include="src\quantitation_1.xsd" />
+    <Xsd Include="src\quantitation_2.xsd" />
+    <Xsd Include="src\unimod_2.xsd" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

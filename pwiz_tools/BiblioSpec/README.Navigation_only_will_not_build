@@ -1,0 +1,5 @@
+This is a note about the .sln file in this directory.
+
+It's just there as a code navigation aid - Intellisense understands enough of the code without compilation to be useful, but you still need bjam to actually build.
+
+It's also useful for debugging if you set the debug properties to point whereever bjam built the BibilioSpec component you're working on. You can set breakpoints and everything.
