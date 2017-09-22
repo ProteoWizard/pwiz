@@ -4565,8 +4565,11 @@ namespace pwiz.Skyline
                 // The next update to the UI will display errors.
                 if (ImportingResultsWindow == null)
                     ImportingResultsWindow = new AllChromatogramsGraph { Owner = this, ChromatogramManager = _chromatogramManager };
-                ShowAllChromatogramsGraph();
+                // Add the error to the ImportingResultsWindow before calling "ShowAllChromatogramsGraph" 
+                // because "ShowAllChromatogramsGraph" may destroy the window if the job is done and there are
+                // no errors yet.
                 ImportingResultsWindow.UpdateStatus((MultiProgressStatus) e.Progress);
+                ShowAllChromatogramsGraph();
                 return;
             }
 

@@ -87,8 +87,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             Move += WindowMove;
 
-            flowFileStatus.Controls.Clear();    // Remove designer controls.
-
             btnAutoCloseWindow.Image = imageListPushPin.Images[Settings.Default.ImportResultsAutoCloseWindow ? 1 : 0];
             btnAutoScaleGraphs.Image = imageListLock.Images[Settings.Default.ImportResultsAutoScaleGraph ? 1 : 0];
 
