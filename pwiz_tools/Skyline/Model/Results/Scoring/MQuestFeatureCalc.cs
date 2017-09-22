@@ -294,6 +294,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 var peakAreas = pds.Select(pd => (double)pd.PeakData.Area);
                 var isotopeProportions = pds.Select(pd => pd.NodeTran.HasDistInfo ? pd.NodeTran.IsotopeDistInfo.Proportion : 0.0);
                 var statPeakAreas = new Statistics(peakAreas);
+                if (statPeakAreas.Length < TransitionGroupDocNode.MIN_DOT_PRODUCT_MS1_TRANSITIONS)
+                    continue;
                 var statIsotopeProportions = new Statistics(isotopeProportions);
                 var isotopeDotProduct = (float)statPeakAreas.NormalizedContrastAngleSqrt(statIsotopeProportions);
                 if (double.IsNaN(isotopeDotProduct))
@@ -415,6 +417,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     continue;
                 var transitionPeakData = GetIonTypes(new[] {pdGroup});
                 int count = transitionPeakData.Count;
+                if (count < TransitionGroupDocNode.MIN_DOT_PRODUCT_TRANSITIONS)
+                    continue;
                 var peakAreas = new double[count];
                 var libIntensities = new double[count];
                 for (int i = 0; i < count; i++)

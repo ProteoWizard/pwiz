@@ -176,31 +176,39 @@ namespace pwiz.SkylineTestA
         {
             var peakData1 = new MockTranPeakData<ISummaryPeakData>(INTENS1, IonType.a, null, 2, 0.5, 20);
             var peakData2 = new MockTranPeakData<ISummaryPeakData>(INTENS2, IonType.a, null, 2, -1.0, 300);
+            var peakData2a = new MockTranPeakData<ISummaryPeakData>(INTENS2, IonType.a, null, 2, -1.0, 300);
             var peakData3 = new MockTranPeakData<ISummaryPeakData>(INTENS3, IonType.precursor, null, 2, 5.0, 1000000, 0.8);
             var peakData4 = new MockTranPeakData<ISummaryPeakData>(INTENS3, IonType.precursor, null, 2, 5.0, 1000000, 0.2);
+            var peakData4a = new MockTranPeakData<ISummaryPeakData>(INTENS3, IonType.precursor, null, 2, 5.0, 1000000, 0.2);
             var peptidePeakData = new MockPeptidePeakData<ISummaryPeakData>(new[] { peakData1, peakData2 });
+            var peptidePeakDataFull = new MockPeptidePeakData<ISummaryPeakData>(new[] { peakData1, peakData2, peakData2a });
             var peptidePeakDataMs1 = new MockPeptidePeakData<ISummaryPeakData>(new[] { peakData1, peakData2, peakData3, peakData4 });
+            var peptidePeakDataMs1Full = new MockPeptidePeakData<ISummaryPeakData>(new[] { peakData1, peakData2, peakData2a, peakData3, peakData4, peakData4a });
             var calcPrecursorMassError = new NextGenPrecursorMassErrorCalc();
             var calcProductMassError = new NextGenProductMassErrorCalc();
             var calcIntensity = new MQuestIntensityCalc();
             var calcCrossCorr = new MQuestIntensityCorrelationCalc();
             var calcIdotp = new NextGenIsotopeDotProductCalc();
 
-            var peptidePeakDatas = new List<MockPeptidePeakData<ISummaryPeakData>> { peptidePeakData, peptidePeakDataMs1 };
             // These scores are the same with or without an extra MS1 transition
-            foreach (var peptideData in peptidePeakDatas)
+            foreach (var peptideData in new[] { peptidePeakData, peptidePeakDataMs1 })
             {
                 MQuestScoreEquals(calcProductMassError, 0.99112, peptideData);
                 MQuestScoreEquals(calcIntensity, 2.84732, peptideData);
-                MQuestScoreEquals(calcCrossCorr, 0.924226, peptideData);
+                MQuestScoreEquals(calcCrossCorr, double.NaN, peptideData);  // Not enough fragment ions
+            }
+            foreach (var peptideData in new[] {peptidePeakDataFull, peptidePeakDataMs1Full})
+            {
+                MQuestScoreEquals(calcCrossCorr, 0.945381, peptideData);
             }
             // The precursor mass error score differs when an MS1 transition is added
             MQuestScoreEquals(calcPrecursorMassError, double.NaN, peptidePeakData);
             MQuestScoreEquals(calcPrecursorMassError, 5.0, peptidePeakDataMs1);
             MQuestScoreEquals(calcIdotp, double.NaN, peptidePeakData);
-            MQuestScoreEquals(calcIdotp, 0.795167, peptidePeakDataMs1);
+            MQuestScoreEquals(calcIdotp, double.NaN, peptidePeakDataMs1);   // Not enough MS1 transitions
+            MQuestScoreEquals(calcIdotp, 0.783653, peptidePeakDataMs1Full);
 
-            var peakData1NoArea = new MockTranPeakData<ISummaryPeakData>(INTENS0, IonType.a, null,2, 0.5);
+            var peakData1NoArea = new MockTranPeakData<ISummaryPeakData>(INTENS0, IonType.a, null, 2, 0.5);
             var peakData2NoArea = new MockTranPeakData<ISummaryPeakData>(INTENS0, IonType.a, null, 2, -1.0);
             MQuestScoreEquals(calcProductMassError, 0.75,
                 new MockPeptidePeakData<ISummaryPeakData>(new[] {peakData1NoArea, peakData2NoArea}));
