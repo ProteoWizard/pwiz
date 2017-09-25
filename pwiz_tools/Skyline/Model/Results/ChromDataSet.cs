@@ -1174,11 +1174,20 @@ namespace pwiz.Skyline.Model.Results
         /// If this dataset contains both MS1 and MS2 chromatograms, then shorten the MS1 chromatograms
         /// so that they are the same length as the MS2 chromatograms.
         /// </summary>
-        public void TruncateMs1ForScheduledMs2()
+        public static void TruncateMs1ForScheduledMs2(ICollection<ChromDataSet> chromDataSets)
         {
+            // Only truncate if every ChromDataSet has at least one MS2 chromatogram and one MS1 chromatogram
+            foreach (var chromDataSet in chromDataSets)
+            {
+                if (chromDataSet._listChromData.All(data => data.Key.Source != ChromSource.ms1)
+                    || chromDataSet._listChromData.All(data => data.Key.Source != ChromSource.fragment))
+                {
+                    return;
+                }
+            }
             float minFragmentTime = float.MaxValue;
             float maxFragmentTime = float.MinValue;
-            foreach (var chromData in _listChromData)
+            foreach (var chromData in chromDataSets.SelectMany(dataSet=>dataSet._listChromData))
             {
                 if (chromData.Key.Source == ChromSource.fragment && chromData.Times.Any())
                 {
@@ -1190,22 +1199,25 @@ namespace pwiz.Skyline.Model.Results
             {
                 return;
             }
-            for (int i = 0; i < _listChromData.Count; i++)
+            foreach (var chromDataSet in chromDataSets)
             {
-                var chromData = _listChromData[i];
-                if (chromData.Key.Source != ChromSource.ms1 || !chromData.Times.Any())
+                for (int i = 0; i < chromDataSet._listChromData.Count; i++)
                 {
-                    continue;
+                    var chromData = chromDataSet._listChromData[i];
+                    if (chromData.Key.Source != ChromSource.ms1 || !chromData.Times.Any())
+                    {
+                        continue;
+                    }
+
+                    if (chromData.Times[0] > minFragmentTime ||
+                        chromData.Times[chromData.Times.Count - 1] < maxFragmentTime)
+                    {
+                        // Do not truncate the MS1 chromatogram if it overlaps with the
+                        // MS2 chromatograms in an unexpected, non superset, way.
+                        continue;
+                    }
+                    chromDataSet._listChromData[i] = chromData.Truncate(minFragmentTime, maxFragmentTime);
                 }
-                
-                if (chromData.Times[0] > minFragmentTime ||
-                    chromData.Times[chromData.Times.Count - 1] < maxFragmentTime)
-                {
-                    // Do not truncate the MS1 chromatogram if it overlaps with the
-                    // MS2 chromatograms in an unexpected, non superset, way.
-                    continue;
-                }
-                _listChromData[i] = chromData.Truncate(minFragmentTime, maxFragmentTime);
             }
         }
 
