@@ -237,6 +237,8 @@ namespace pwiz.Skyline
             this.toolStripSeparator54 = new System.Windows.Forms.ToolStripSeparator();
             this.areaCVNoneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVLogScaleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.removeAboveCVCutoffToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator57 = new System.Windows.Forms.ToolStripSeparator();
             this.panel1 = new System.Windows.Forms.Panel();
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
@@ -1667,7 +1669,9 @@ namespace pwiz.Skyline
             this.areaCVbinWidthToolStripMenuItem,
             this.pointsToolStripMenuItem,
             this.areaCVNormalizedToToolStripMenuItem,
-            this.areaCVLogScaleToolStripMenuItem});
+            this.areaCVLogScaleToolStripMenuItem,
+            this.removeAboveCVCutoffToolStripMenuItem,
+            this.toolStripSeparator57});
             this.contextMenuPeakAreas.Name = "contextMenuStrip1";
             resources.ApplyResources(this.contextMenuPeakAreas, "contextMenuPeakAreas");
             // 
@@ -1972,6 +1976,17 @@ namespace pwiz.Skyline
             this.areaCVLogScaleToolStripMenuItem.Name = "areaCVLogScaleToolStripMenuItem";
             resources.ApplyResources(this.areaCVLogScaleToolStripMenuItem, "areaCVLogScaleToolStripMenuItem");
             this.areaCVLogScaleToolStripMenuItem.Click += new System.EventHandler(this.areaCVLogScaleToolStripMenuItem_Click);
+            // 
+            // removeAboveCVCutoffToolStripMenuItem
+            // 
+            this.removeAboveCVCutoffToolStripMenuItem.Name = "removeAboveCVCutoffToolStripMenuItem";
+            resources.ApplyResources(this.removeAboveCVCutoffToolStripMenuItem, "removeAboveCVCutoffToolStripMenuItem");
+            this.removeAboveCVCutoffToolStripMenuItem.Click += new System.EventHandler(this.removeAboveCVCutoffToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator57
+            // 
+            this.toolStripSeparator57.Name = "toolStripSeparator57";
+            resources.ApplyResources(this.toolStripSeparator57, "toolStripSeparator57");
             // 
             // panel1
             // 
@@ -4492,6 +4507,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparatorOnlyQuantitative;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator56;
         private System.Windows.Forms.ToolStripMenuItem originalPeakMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem removeAboveCVCutoffToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator57;
     }
 }
 

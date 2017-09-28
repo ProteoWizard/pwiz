@@ -24613,6 +24613,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove peptides above CV cutoff.
+        /// </summary>
+        public static string SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff {
+            get {
+                return ResourceManager.GetString("SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Remove duplicate peptides.
         /// </summary>
         public static string SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides {

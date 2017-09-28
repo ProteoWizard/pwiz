@@ -199,9 +199,6 @@
   <data name="FoldChangeBarGraph_GetTitle_Bar_Graph" xml:space="preserve">
     <value>Bar Graph</value>
   </data>
-  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Properties" xml:space="preserve">
-    <value>Properties</value>
-  </data>
   <data name="FoldChangeVolcanoPlot_BuildContextMenu_Selection" xml:space="preserve">
     <value>Selection</value>
   </data>
@@ -225,5 +222,14 @@
   </data>
   <data name="FoldChange__Log10_P_Value_" xml:space="preserve">
     <value>-Log10(P Value)</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Properties___" xml:space="preserve">
+    <value>Properties...</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs" xml:space="preserve">
+    <value>Remove Below Cutoffs</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs" xml:space="preserve">
+    <value>Remove peptides below cutoffs</value>
   </data>
 </root>

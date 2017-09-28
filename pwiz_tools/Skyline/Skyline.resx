@@ -2646,6 +2646,15 @@
   <data name="toolStripSeparator56.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 6</value>
   </data>
+  <data name="removeAboveCVCutoffToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="removeAboveCVCutoffToolStripMenuItem.Text" xml:space="preserve">
+    <value>Remove Above CV Cutoff</value>
+  </data>
+  <data name="toolStripSeparator57.Size" type="System.Drawing.Size, System.Drawing">
+    <value>206, 6</value>
+  </data>
   <data name="onlyQuantitativeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>210, 22</value>
   </data>
@@ -4475,6 +4484,18 @@
   </data>
   <data name="&gt;&gt;areaCVLogScaleToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;removeAboveCVCutoffToolStripMenuItem.Name" xml:space="preserve">
+    <value>removeAboveCVCutoffToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;removeAboveCVCutoffToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator57.Name" xml:space="preserve">
+    <value>toolStripSeparator57</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator57.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;statusGeneral.Name" xml:space="preserve">
     <value>statusGeneral</value>

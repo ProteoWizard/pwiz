@@ -35,6 +35,9 @@ namespace pwiz.SkylineTestFunctional
     {
         private bool RecordData { get { return false; } }
 
+        private static int HISTOGRAM_DATA_START = 0;
+        private static int HISTOGRAM2D_DATA_START = 6;
+
         private static readonly AreaCVGraphDataStatistics[] STATS =
         {
             new AreaCVGraphDataStatistics(68, 73, 0, 0, 125, 1.96, 0.13, 7, 0.48281967365197109, 0.56232, 0.024),
@@ -99,6 +102,11 @@ namespace pwiz.SkylineTestFunctional
             new[] { "LQTEGDGIYTLNSEK", "14% CV in D102" },
         };
 
+        private static int GetItemsAboveCutoff(int statsIndex)
+        {
+            return statsIndex < HISTOGRAM2D_DATA_START ? 66 : 118;
+        }
+
         private readonly List<string[][]> RecordedFindResults = new List<string[][]>();
 
         [TestMethod]
@@ -112,8 +120,8 @@ namespace pwiz.SkylineTestFunctional
         {
             OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
 
-            TestHistogram<AreaCVHistogramGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram, 0);
-            TestHistogram<AreaCVHistogram2DGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram2D, 6);
+            TestHistogram<AreaCVHistogramGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram, HISTOGRAM_DATA_START);
+            TestHistogram<AreaCVHistogram2DGraphPane>(SkylineWindow.ShowPeakAreaCVHistogram2D, HISTOGRAM2D_DATA_START);
 
             if (RecordData)
             {
@@ -155,8 +163,25 @@ namespace pwiz.SkylineTestFunctional
             // Test if the toolbar is there and if the displayed data is correct
             T pane;
             Assert.IsTrue(graph.TryGetGraphPane(out pane));
+            Assert.IsInstanceOfType(pane, typeof(IAreaCVHistogramInfo));
             Assert.IsTrue(pane.HasToolbar);
             AssertDataCorrect(pane, statsStartIndex++);
+
+            var histogramInfo = (IAreaCVHistogramInfo) pane;
+            var itemCount = 0;
+            // Verify that removing CV's above cutoff works
+            RunUI(() =>
+            {
+                itemCount = histogramInfo.Items;
+                SkylineWindow.RemoveAboveCVCutoff(graph);
+            });
+
+            int expectedBars = itemCount - GetItemsAboveCutoff(statsStartIndex);
+            WaitForHisgramBarCount(histogramInfo, expectedBars);
+
+            RunUI(SkylineWindow.Undo);
+
+            WaitForHisgramBarCount(histogramInfo, itemCount);
 
             // Test if the data is correct after changing the bin width and disabling the show cv cutoff option (which affects GetTotalBars)
             RunUI(() => SkylineWindow.SetAreaCVBinWidth(2.0));
@@ -253,6 +278,12 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.medians));
             WaitForGraphs();
             AssertDataCorrect(pane, statsStartIndex++);
+        }
+
+        private void WaitForHisgramBarCount(IAreaCVHistogramInfo histogramInfo, int expectedBars)
+        {
+            WaitForConditionUI(() => histogramInfo.Items == expectedBars,
+                string.Format("Expecting {0} bars found {1}", expectedBars, histogramInfo.Items));
         }
 
         private static AreaCVGraphData.AreaCVGraphDataCache GetCache(SummaryGraphPane pane)

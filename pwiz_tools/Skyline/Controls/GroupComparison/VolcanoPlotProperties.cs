@@ -82,16 +82,19 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void Preview(object sender, EventArgs e)
         {
+            var log = checkBoxLog.Checked;
             double foldChangeCutoff;
-            if (!double.TryParse(textFoldChange.Text, out foldChangeCutoff) || (!checkBoxLog.Checked && foldChangeCutoff <= 0.0))
-                return;
-
+            if (double.TryParse(textFoldChange.Text, out foldChangeCutoff) && (log || foldChangeCutoff > 0.0))
+                Settings.Default.Log2FoldChangeCutoff = log ? foldChangeCutoff : ConvertBetweenLogs(foldChangeCutoff, true, 2);
+            else
+                Settings.Default.Log2FoldChangeCutoff = double.NaN;
+            
             double pValueCutoff;
-            if (!double.TryParse(textPValue.Text, out pValueCutoff) || pValueCutoff < 0.0 || (!checkBoxLog.Checked && pValueCutoff > 1.0))
-                return;
+            if (double.TryParse(textPValue.Text, out pValueCutoff) && pValueCutoff >= 0.0 && (log || pValueCutoff <= 1.0))
+                Settings.Default.PValueCutoff = log ? pValueCutoff : ConvertBetweenLogs(pValueCutoff, true, 10, true);
+            else
+                Settings.Default.PValueCutoff = double.NaN;
 
-            Settings.Default.Log2FoldChangeCutoff = checkBoxLog.Checked ? foldChangeCutoff : ConvertBetweenLogs(foldChangeCutoff, true, 2);
-            Settings.Default.PValueCutoff = checkBoxLog.Checked ? pValueCutoff : ConvertBetweenLogs(pValueCutoff, true, 10, true);
             Settings.Default.FilterVolcanoPlotPoints = checkBoxFilter.Checked;
 
             FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>().ForEach(v => v.UpdateGraph(Settings.Default.FilterVolcanoPlotPoints));

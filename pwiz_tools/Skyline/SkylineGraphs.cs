@@ -3991,6 +3991,9 @@ namespace pwiz.Skyline
 
                 selectionContextMenuItem.Checked = set.ShowReplicateSelection;
                 menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
+
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator57);
+                menuStrip.Items.Insert(iInsert++, removeAboveCVCutoffToolStripMenuItem);
             }
             else
             {
@@ -4226,6 +4229,28 @@ namespace pwiz.Skyline
                 {
                     Checked = (annotationDef.Name == currentOrderBy)
                 };
+        }
+
+        private void removeAboveCVCutoffToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            RemoveAboveCVCutoff(ContextMenuGraphSummary);
+        }
+
+        public void RemoveAboveCVCutoff(GraphSummary graphSummary)
+        {
+            var pane = graphSummary.GraphPanes.First() as IAreaCVHistogramInfo;
+            if (pane == null ||
+                (graphSummary.Type != GraphTypeSummary.histogram && graphSummary.Type != GraphTypeSummary.histogram2d))
+                return;
+
+            var cutoff = Settings.Default.AreaCVCVCutoff / AreaGraphController.GetAreaCVFactorToDecimal();
+            var ids =
+                pane.CurrentData.Data.Where(d => d.CV >= cutoff)
+                    .SelectMany(d => d.PeptideAnnotationPairs)
+                    .Select(pair => pair.Peptide.Id.GlobalIndex)
+                    .Distinct().ToArray();
+
+            ModifyDocument(Resources.SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff, doc => (SrmDocument)doc.RemoveAll(ids));
         }
 
         public void SetAreaCVGroup(string group)

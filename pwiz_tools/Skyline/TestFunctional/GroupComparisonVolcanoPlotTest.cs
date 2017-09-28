@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Check if data is displayed correctly without any bounds set
             OpenVolcanoPlotProperties(volcanoPlot, p => p.TextFoldChangeCutoff.Text = p.TextFoldChangeCutoff.Text = p.TextPValueCutoff.Text = "");
-            WaitForConditionUI(() => grid.DataboundGridControl.RowCount == 125 && grid.DataboundGridControl.IsComplete);
+            WaitForVolcanoPlotPointCount(grid, 125);
             RunUI(() => AssertVolcanoPlotCorrect(volcanoPlot, false, 1, 124, 0));
 
             // Set bounds to p value < 0.05 and fold-change 2
@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Check if data is displayed correctly with default settings
-            WaitForConditionUI(() => grid.DataboundGridControl.RowCount == 125 && grid.DataboundGridControl.IsComplete);
+            WaitForVolcanoPlotPointCount(grid, 125);
             RunUI(() => AssertVolcanoPlotCorrect(volcanoPlot, true, 1, 42, 82));
 
             // Verify that checking/unchecking the checkbox correctly converts the values
@@ -83,13 +83,25 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(1.0, value, ACCURACY);
                 Assert.IsTrue(double.TryParse(p.TextPValueCutoff.Text, out value));
                 Assert.AreEqual(-Math.Log10(0.05), value, ACCURACY);
+            });
 
+            // Remove peptides below cutoffs and restore them
+            var count = GetRowCount(grid);
+            RunUI(volcanoPlot.RemoveBelowCutoffs);
+            WaitForVolcanoPlotPointCount(grid, count - 83); // 83 peptides are below the cutoffs
+            Assert.AreEqual(count - 83, GetPeptideCount());
+            RunUI(SkylineWindow.Undo);
+            WaitForVolcanoPlotPointCount(grid, count);
+            Assert.AreEqual(count, GetPeptideCount());
+
+            OpenVolcanoPlotProperties(volcanoPlot, p =>
+            {
                 // Enable filtering for next check
                 p.CheckBoxFilter.Checked = true;
             });
 
             // Check if the the points that are not within cutoff have been removed -> outCount should stay the same, selectedCount and inCount 0
-            WaitForConditionUI(() => grid.DataboundGridControl.RowCount == 42 && grid.DataboundGridControl.IsComplete);
+            WaitForVolcanoPlotPointCount(grid, 42);
             RunUI(() => AssertVolcanoPlotCorrect(volcanoPlot, true, 0, 42, 0));
 
             // Disable filtering
@@ -99,7 +111,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Verify that the filtered points are back
-            WaitForConditionUI(() => grid.DataboundGridControl.RowCount == 125 && grid.DataboundGridControl.IsComplete);
+            WaitForVolcanoPlotPointCount(grid, 125);
             RunUI(() => AssertVolcanoPlotCorrect(volcanoPlot, true, 1, 42, 82));
 
             // Test that unchecking removes the absolute fold-change column
@@ -142,6 +154,26 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(openForms.Any(f => f is FoldChangeGrid));
         }
 
+        private int GetRowCount(FoldChangeGrid grid)
+        {
+            var count = -1;
+            RunUI(() => count = grid.DataboundGridControl.RowCount);
+            return count;
+        }
+
+        private int GetPeptideCount()
+        {
+            var count = -1;
+            RunUI(() => count = SkylineWindow.DocumentUI.PeptideCount);
+            return count;
+        }
+
+        private void WaitForVolcanoPlotPointCount(FoldChangeGrid grid, int expected)
+        {
+            WaitForConditionUI(() => expected == grid.DataboundGridControl.RowCount && grid.DataboundGridControl.IsComplete,
+                string.Format("Expecting {0} points found {1}", expected, GetRowCount(grid)));
+        }
+
         private static void AssertSelectionCorrect(FoldChangeVolcanoPlot volcanoPlot, string selectedSequence, int totalSelected)
         {
             RunUI(() =>
@@ -170,7 +202,7 @@ namespace pwiz.SkylineTestFunctional
         private static void AssertVolcanoPlotCorrect(FoldChangeVolcanoPlot plot, bool showingBounds, int selectedCount, int outCount, int inCount)
         {
             var curveCounts = plot.GetCurveCounts();
-            Assert.AreEqual(showingBounds, FoldChangeVolcanoPlot.CutoffSettingsValid);
+            Assert.AreEqual(showingBounds, FoldChangeVolcanoPlot.AnyCutoffSettingsValid);
             Assert.AreEqual(showingBounds ? 6 : 3,  curveCounts.CurveCount);
             Assert.AreEqual(selectedCount, curveCounts.SelectedCount);
             Assert.AreEqual(outCount, curveCounts.OutCount);

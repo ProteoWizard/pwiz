@@ -206,11 +206,20 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Properties.
+        ///   Looks up a localized string similar to Properties....
         /// </summary>
-        internal static string FoldChangeVolcanoPlot_BuildContextMenu_Properties {
+        internal static string FoldChangeVolcanoPlot_BuildContextMenu_Properties___ {
             get {
-                return ResourceManager.GetString("FoldChangeVolcanoPlot_BuildContextMenu_Properties", resourceCulture);
+                return ResourceManager.GetString("FoldChangeVolcanoPlot_BuildContextMenu_Properties___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove Below Cutoffs.
+        /// </summary>
+        internal static string FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs {
+            get {
+                return ResourceManager.GetString("FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs", resourceCulture);
             }
         }
         
@@ -229,6 +238,15 @@ namespace pwiz.Skyline.Model.GroupComparison {
         internal static string FoldChangeVolcanoPlot_GetTitle_Volcano_Plot {
             get {
                 return ResourceManager.GetString("FoldChangeVolcanoPlot_GetTitle_Volcano_Plot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove peptides below cutoffs.
+        /// </summary>
+        internal static string FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs {
+            get {
+                return ResourceManager.GetString("FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs", resourceCulture);
             }
         }
         

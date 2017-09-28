@@ -103,13 +103,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             pane.YAxis.Scale.Min = 0.0;
 
-            if (_foldChangeCutoffLine1 == null || _foldChangeCutoffLine2 == null || _minPValueLine == null)
-                return;
+            if (_foldChangeCutoffLine1 != null && _foldChangeCutoffLine2 != null)
+            {
+                _foldChangeCutoffLine1[0].Y = _foldChangeCutoffLine2[0].Y = pane.YAxis.Scale.Min;
+                _foldChangeCutoffLine1[1].Y = _foldChangeCutoffLine2[1].Y = pane.YAxis.Scale.Max;
+            }
 
-            _foldChangeCutoffLine1[0].Y = _foldChangeCutoffLine2[0].Y = pane.YAxis.Scale.Min;
-            _foldChangeCutoffLine1[1].Y = _foldChangeCutoffLine2[1].Y = pane.YAxis.Scale.Max;
-            _minPValueLine[0].X = pane.XAxis.Scale.Min;
-            _minPValueLine[1].X = pane.XAxis.Scale.Max;
+            if (_minPValueLine != null)
+            {
+                _minPValueLine[0].X = pane.XAxis.Scale.Min;
+                _minPValueLine[1].X = pane.XAxis.Scale.Max;
+            }
 
             foreach (var selection in _selections)
                 if (selection.Label != null)
@@ -198,15 +202,19 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
         }
 
-        public static bool CutoffSettingsValid
+        public static bool FoldChangCutoffValid
         {
-            get
-            {
-                return !double.IsNaN(Settings.Default.Log2FoldChangeCutoff) &&
-                       !double.IsNaN(Settings.Default.PValueCutoff) &&
-                       Settings.Default.Log2FoldChangeCutoff != 0.0 &&
-                       Settings.Default.PValueCutoff >= 0.0;
-            }
+            get { return !double.IsNaN(Settings.Default.Log2FoldChangeCutoff) && Settings.Default.Log2FoldChangeCutoff != 0.0; }
+        }
+
+        public static bool PValueCutoffValid
+        {
+            get { return !double.IsNaN(Settings.Default.PValueCutoff) && Settings.Default.PValueCutoff >= 0.0; }
+        }
+
+        public static bool AnyCutoffSettingsValid
+        {
+            get { return FoldChangCutoffValid || PValueCutoffValid; }
         }
 
         private class Selection
@@ -257,10 +265,16 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     _selections.Add(new Selection(point, textObj));
                     ++count;
                 }
-                else if (!CutoffSettingsValid || pvalue > Settings.Default.PValueCutoff && row.FoldChangeResult.AbsLog2FoldChange > Math.Abs(Settings.Default.Log2FoldChangeCutoff))
-                    outPoints.Add(point);
-                else
+                else if ((PValueCutoffValid && pvalue <= Settings.Default.PValueCutoff) ||
+                         (FoldChangCutoffValid && row.FoldChangeResult.AbsLog2FoldChange <=
+                          Math.Abs(Settings.Default.Log2FoldChangeCutoff)))
+                {
                     inPoints.Add(point);
+                }
+                else
+                {
+                    outPoints.Add(point);
+                }
             }
 
             // The order matters here, selected points should be highest in the zorder, followed by out points and in points
@@ -268,14 +282,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
             AddPoints(outPoints, Color.Blue, OUT_SIZE);
             AddPoints(inPoints, Color.Gray, IN_SIZE);
 
-            if (CutoffSettingsValid)
+            // The coordinates that depened on the axis scale dont matter here, the AxisChangeEvent will fix those
+            // Insert after selected items, but before all other items
+            var index = 1;
+            if (FoldChangCutoffValid)
             {
-                // Insert after selected items, but before all other items
-
-                int index = 1;
-                // The coordinates that depened on the axis scale dont matter here, the AxisChangeEvent will fix those
                 _foldChangeCutoffLine1 = CreateAndInsert(index++, Settings.Default.Log2FoldChangeCutoff, Settings.Default.Log2FoldChangeCutoff, 0.0, 0.0);
-                _foldChangeCutoffLine2 = CreateAndInsert(index++, - Settings.Default.Log2FoldChangeCutoff, -Settings.Default.Log2FoldChangeCutoff, 0.0, 0.0);
+                _foldChangeCutoffLine2 = CreateAndInsert(index++, -Settings.Default.Log2FoldChangeCutoff, -Settings.Default.Log2FoldChangeCutoff, 0.0, 0.0);
+            }
+
+            if (PValueCutoffValid)
+            {
                 _minPValueLine = CreateAndInsert(index, 0.0, 0.0, Settings.Default.PValueCutoff, Settings.Default.PValueCutoff);
             }
 
@@ -555,10 +572,43 @@ namespace pwiz.Skyline.Controls.GroupComparison
             if (index >= 0)
             {
                 menuStrip.Items.Insert(index++, new ToolStripSeparator());
-                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Properties, null, OnPropertiesClick));
-                menuStrip.Items.Insert(index, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Selection, null, OnSelectionClick)
-                    { Checked = Settings.Default.GroupComparisonShowSelection });
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Properties___, null, OnPropertiesClick));
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Selection, null, OnSelectionClick) { Checked = Settings.Default.GroupComparisonShowSelection });
+                if (AnyCutoffSettingsValid)
+                {
+                    menuStrip.Items.Insert(index++, new ToolStripSeparator());
+                    menuStrip.Items.Insert(index, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs, null, OnRemoveBelowCutoffsClick));
+                }  
             }
+        }
+
+        private void OnRemoveBelowCutoffsClick(object o, EventArgs eventArgs)
+        {
+            RemoveBelowCutoffs();
+        }
+
+        private int GetGlobalIndex(FoldChangeBindingSource.FoldChangeRow row)
+        {
+            return row.Peptide != null ? row.Peptide.DocNode.Id.GlobalIndex : row.Protein.DocNode.Id.GlobalIndex;
+        }
+
+        public void RemoveBelowCutoffs()
+        {
+            var rows = _bindingListSource.OfType<RowItem>()
+                .Select(rowItem => rowItem.Value)
+                .OfType<FoldChangeBindingSource.FoldChangeRow>()
+                .ToArray();
+
+            var foldchangeCutoff = Math.Abs(Settings.Default.Log2FoldChangeCutoff);
+            var pvalueCutoff = Math.Pow(10, -Settings.Default.PValueCutoff);
+
+            var indices =
+                rows.Where(r => PValueCutoffValid && r.FoldChangeResult.AdjustedPValue > pvalueCutoff || FoldChangCutoffValid && r.FoldChangeResult.AbsLog2FoldChange < foldchangeCutoff)
+                    .Select(GetGlobalIndex)
+                    .Distinct()
+                    .ToArray();
+
+            _skylineWindow.ModifyDocument(GroupComparisonStrings.FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs, document => (SrmDocument)document.RemoveAll(indices));
         }
 
         private void OnSelectionClick(object o, EventArgs eventArgs)
@@ -600,30 +650,44 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var absLog2FCExists = columns.Any(c => c.Name == "FoldChangeResult.AbsLog2FoldChange"); // Not L10N
             var pValueExists = columns.Any(c => c.Name == "FoldChangeResult.AdjustedPValue"); // Not L10N
 
-            if (filter && ValidFilterCount(columnFilters) == 2 && absLog2FCExists && pValueExists || !filter && ValidFilterCount(columnFilters) == 0 && !absLog2FCExists)
-                return false;
+            if (filter)
+            {
+                if ((FoldChangCutoffValid == absLog2FCExists && absLog2FCExists == FoldChangeFilterValid(columnFilters)) &&
+                    (pValueExists && PValueCutoffValid == PValueFilterValid(columnFilters)))
+                    return false;
+            }
+            else
+            {
+                if (!absLog2FCExists && !FoldChangeFilterValid(columnFilters) && !PValueFilterValid(columnFilters))
+                    return false;
+            }
         
             columnFilters.Remove(_absLog2FoldChangeFilter);
             columnFilters.Remove(_pValueFilter);
 
-            if (CutoffSettingsValid && filter)
+            if (AnyCutoffSettingsValid && filter)
             {
                 var missingColumns = new List<ColumnSpec>();
-                if (!absLog2FCExists)
+                if (FoldChangCutoffValid && !absLog2FCExists)
                     missingColumns.Add(new ColumnSpec(PropertyPath.Root.Property("FoldChangeResult").Property("AbsLog2FoldChange"))); // Not L10N
-                if (!pValueExists)
+                if (PValueCutoffValid && !pValueExists)
                     missingColumns.Add(new ColumnSpec(PropertyPath.Root.Property("FoldChangeResult").Property("AdjustedPValue"))); // Not L10N
 
-                if (!absLog2FCExists || !pValueExists)
+                if (missingColumns.Any())
                     SetColumns(_bindingListSource.ViewSpec.Columns.Concat(missingColumns));
 
-                _absLog2FoldChangeFilter = CreateColumnFilter(ColumnCaptions.AbsLog2FoldChange, FilterOperations.OP_IS_GREATER_THAN, Settings.Default.Log2FoldChangeCutoff); // Not L10N
-                _pValueFilter = CreateColumnFilter(ColumnCaptions.AdjustedPValue, FilterOperations.OP_IS_LESS_THAN, Math.Pow(10, -Settings.Default.PValueCutoff)); // Not L10N
+                _absLog2FoldChangeFilter = _pValueFilter = null;
 
-                if (_absLog2FoldChangeFilter != null && _pValueFilter != null)
+                columnFilters.Clear();
+                if (FoldChangCutoffValid)
                 {
-                    columnFilters.Clear();
+                    _absLog2FoldChangeFilter = CreateColumnFilter(ColumnCaptions.AbsLog2FoldChange, FilterOperations.OP_IS_GREATER_THAN, Settings.Default.Log2FoldChangeCutoff); // Not L10N
                     columnFilters.Add(_absLog2FoldChangeFilter);
+                }
+
+                if (PValueCutoffValid)
+                {
+                    _pValueFilter = CreateColumnFilter(ColumnCaptions.AdjustedPValue, FilterOperations.OP_IS_LESS_THAN, Math.Pow(10, -Settings.Default.PValueCutoff)); // Not L10N
                     columnFilters.Add(_pValueFilter);  
                 }
             }
@@ -637,18 +701,23 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return true;
         }
 
-        private int ValidFilterCount(IList<RowFilter.ColumnFilter> filters)
+        private bool FoldChangeFilterValid(IList<RowFilter.ColumnFilter> filters)
         {
-            return ContainsFilter(filters, ColumnCaptions.AbsLog2FoldChange, FilterOperations.OP_IS_GREATER_THAN, Settings.Default.Log2FoldChangeCutoff) +
-                   ContainsFilter(filters, ColumnCaptions.AdjustedPValue, FilterOperations.OP_IS_LESS_THAN, Math.Pow(10, -Settings.Default.PValueCutoff));
+            return ContainsFilter(filters, ColumnCaptions.AbsLog2FoldChange, FilterOperations.OP_IS_GREATER_THAN, Settings.Default.Log2FoldChangeCutoff);
         }
 
-        // Returns 1 if the filter is found, 0 otherwise
-        int ContainsFilter(IEnumerable<RowFilter.ColumnFilter> filters, string columnCaption, IFilterOperation filterOp, double operand)
+        private bool PValueFilterValid(IList<RowFilter.ColumnFilter> filters)
+        {
+            return ContainsFilter(filters, ColumnCaptions.AdjustedPValue, FilterOperations.OP_IS_LESS_THAN,
+                Math.Pow(10, -Settings.Default.PValueCutoff));
+        }
+
+        // Returns true if the filter is found
+        bool ContainsFilter(IEnumerable<RowFilter.ColumnFilter> filters, string columnCaption, IFilterOperation filterOp, double operand)
         {
             return filters.Contains(f => f.ColumnCaption == columnCaption &&
                                          ReferenceEquals(f.Predicate.FilterOperation, filterOp) &&
-                                         Equals(f.Predicate.GetOperandDisplayText(_bindingListSource.ViewInfo.DataSchema, typeof(double)), operand.ToString(CultureInfo.CurrentCulture))) ? 1 : 0;
+                                         Equals(f.Predicate.GetOperandDisplayText(_bindingListSource.ViewInfo.DataSchema, typeof(double)), operand.ToString(CultureInfo.CurrentCulture)));
         }
 
         private void SetColumns(IEnumerable<ColumnSpec> columns)
@@ -700,7 +769,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public CurveCounts GetCurveCounts()
         {
-            var index = CutoffSettingsValid ? 4 : 1;
+            var index = 1 + ((FoldChangCutoffValid ? 2 : 0) + (PValueCutoffValid ? 1 : 0));
             var curveList = zedGraphControl.GraphPane.CurveList;
             return new CurveCounts(curveList.Count, curveList[0].Points.Count,
                 curveList[index++].Points.Count,
