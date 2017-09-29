@@ -562,13 +562,23 @@ namespace pwiz.Skyline.Model
                 charge = trycharge;
             else if (!String.IsNullOrEmpty(row.GetCell(indexCharge)))
             {
-                ShowTransitionError(new PasteError
+                Adduct test;
+                if (Adduct.TryParse(row.GetCell(indexCharge), out test))
                 {
-                    Column = indexCharge,
-                    Line = row.Index,
-                    Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_charge_value__0_, row.GetCell(indexCharge))
-                });
-                return null;
+                    // Adduct formula in charge column, let's allow it
+                    adduct = test;
+                    charge = adduct.AdductCharge;
+                }
+                else
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = indexCharge,
+                        Line = row.Index,
+                        Message = String.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_charge_value__0_, row.GetCell(indexCharge))
+                    });
+                    return null;
+                }
             }
             double dtmp;
             double? collisionEnergy = null;
@@ -812,7 +822,9 @@ namespace pwiz.Skyline.Model
                 countValues++;
                 if (adduct.IsEmpty)
                 {
-                    adduct = Adduct.NonProteomicProtonatedFromCharge(charge.Value);
+                    adduct = string.IsNullOrEmpty(formula) ?
+                        Adduct.FromChargeNoMass(charge.Value) : // If all we have is mz, don't make guesses at proton gain or loss
+                        Adduct.NonProteomicProtonatedFromCharge(charge.Value);
                     row.SetCell(indexAdduct, adduct.AdductFormula);
                 }
             }
@@ -945,7 +957,7 @@ namespace pwiz.Skyline.Model
                              !(massTooLow = (monoMass < CustomMolecule.MIN_MASS || averageMmass < CustomMolecule.MIN_MASS));
                     errColumn = indexMz;
                     if (massOk)
-                        return new MoleculeInfo(name, formula, Adduct.FromChargeProtonated(charge), mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note, moleculeID);
+                        return new MoleculeInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note, moleculeID);
                 }
                 if (massTooLow)
                 {
@@ -1061,7 +1073,7 @@ namespace pwiz.Skyline.Model
             if (!Equals(pep.CustomMolecule.MonoisotopicMass, customIon.MonoisotopicMass) && !adduct.HasIsotopeLabels)
             {
                 // Some kind of undescribed isotope labeling going on
-                if (Equals(pep.CustomMolecule.Formula, customIon.Formula))
+                if (!string.IsNullOrEmpty(pep.CustomMolecule.Formula) && Equals(pep.CustomMolecule.Formula, customIon.Formula))
                 {
                     // No formula for label, describe as mass
                     var labelMass = customIon.MonoisotopicMass - pep.CustomMolecule.MonoisotopicMass;

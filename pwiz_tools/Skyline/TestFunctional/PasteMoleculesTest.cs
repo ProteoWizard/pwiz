@@ -555,6 +555,9 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnOrder.ToList().Count);
 
             var text = GetCsvFileText(TestFilesDir.GetTestPath("small_molecule_paste_test.csv"));
+            // Now that we support charge-only adducts, "1" means "[M+]" rather than "[M+H]" in a numbers-only transition list
+            // But these mz values were calculated with protonation in mind
+            text = text.Replace(",,1,1,", ",,M+H,M+H,").Replace(",,2,2,", ",,M+2H,M+2H,").Replace(",,3,3,", ",,M+3H,M+3H,").Replace(",,4,4,", ",,M+4H,M+4H,");
             // Tack on some molecule IDs so we can test reports (NB these don't match formula, so may fail in future)
             var rows = text.Replace("\r","").Split('\n').Select(line => line.Contains("lager") ?
                 line + TextUtil.CsvSeparator + string.Join(TextUtil.CsvSeparator.ToString(), caffeineCAS, caffeineHMDB, "\"" + caffeineInChi + "\"", caffeineInChiKey, caffeineSMILES) : 
