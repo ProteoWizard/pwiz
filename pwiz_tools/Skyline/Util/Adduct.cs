@@ -365,7 +365,7 @@ namespace pwiz.Skyline.Util
                             return string.Format("[M{0:+#;-#}H]", AdductCharge); // Not L10N
                     }
                 }
-                return Description;
+                return !string.IsNullOrEmpty(Description) ? Description : string.Format("[M{0:+#;-#}]", AdductCharge);
             }
         }
 
@@ -1390,6 +1390,10 @@ namespace pwiz.Skyline.Util
             if (!string.IsNullOrEmpty(Description))
             {
                 return Description;
+            }
+            if (IsChargeOnly)
+            {
+                return string.Format("[M{0:+#;-#}]", AdductCharge);
             }
             Assume.IsFalse(HasIsotopeLabels); // For peptides we don't normally handle isotopes in the adduct
             return Composition.Aggregate("[M", (current, atom) => current + (atom.Value==1 ? "+" : atom.Value==-1 ? "-" : string.Format("{0:+#;-#;#}", atom.Value)) + atom.Key)+"]"; // Not L10N

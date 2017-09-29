@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return DocNode.Transition.Adduct.ToString();
+                return DocNode.Transition.Adduct.AsFormula();
             }
         }
         public IonType FragmentIonType
