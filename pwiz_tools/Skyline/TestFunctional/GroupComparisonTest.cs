@@ -134,7 +134,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 foldChangeGridControl.SetSortDirection(foldChangeGridControl.GetPropertyDescriptor(foldChangeResultColumn), ListSortDirection.Ascending);
             });
-            WaitForConditionUI(() => foldChangeGridControl.IsComplete);
+            WaitForConditionUI(() => foldChangeGridControl.IsComplete && !foldChangeGraph.IsUpdatePending);
             var values = GetYValues(foldChangeGraph.ZedGraphControl.GraphPane.CurveList.First().Points);
             var sortedValues = (double[]) values.Clone();
             Array.Sort(sortedValues);
@@ -143,7 +143,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 foldChangeGridControl.SetSortDirection(foldChangeGridControl.GetPropertyDescriptor(foldChangeResultColumn), ListSortDirection.Descending);
             });
-            WaitForConditionUI(() => foldChangeGridControl.IsComplete);
+            WaitForConditionUI(() => foldChangeGridControl.IsComplete && !foldChangeGraph.IsUpdatePending);
             values = GetYValues(foldChangeGraph.ZedGraphControl.GraphPane.CurveList.First().Points);
             CollectionAssert.AreNotEqual(sortedValues, values);
             Array.Reverse(sortedValues);

@@ -130,6 +130,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
         }
 
+        public bool IsUpdatePending { get { return _updatePending; } }
+
         private void UpdateGraph()
         {
             if (!IsHandleCreated)
