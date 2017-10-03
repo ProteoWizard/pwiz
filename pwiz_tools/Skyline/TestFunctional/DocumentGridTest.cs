@@ -122,7 +122,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void AssertRowCount(int expectedRowCount, DataboundGridForm databoundGridForm)
         {
-            if (!TryWaitForCondition(() =>databoundGridForm.IsComplete && (expectedRowCount == databoundGridForm.BindingListSource.Count)))
+            if (!TryWaitForConditionUI(() =>databoundGridForm.IsComplete && (expectedRowCount == databoundGridForm.BindingListSource.Count)))
                 Assert.AreEqual(expectedRowCount, databoundGridForm.BindingListSource.Count, "wrong row count in databoundGridForm");
         }
     }
