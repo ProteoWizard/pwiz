@@ -320,7 +320,7 @@ namespace analysis {
         cout << "Build IndexMapper: " << duration << endl;
 #endif
         // Use a SpectrumListCache since we expect to request the same spectra multiple times to extract all demux spectra before moving to the next
-        sl_ = boost::make_shared<SpectrumListCache>(inner, MemoryMRUCacheMode_MetaDataAndBinaryData, 200);
+        sl_ = boost::make_shared<SpectrumListCache>(inner, MemoryMRUCacheMode_MetaDataAndBinaryData, 1000);
         // Record the processing method that will be used to demultiplex
         ProcessingMethod method = pmc_->GetProcessingMethod();
         method.order = static_cast<int>(dp->processingMethods.size());
