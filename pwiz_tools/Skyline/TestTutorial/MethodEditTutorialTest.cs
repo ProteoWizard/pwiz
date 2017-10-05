@@ -259,21 +259,24 @@ namespace pwiz.SkylineTestTutorial
                     });
             }
 
+            // Wait for protein metadata again to avoid changes during paste
+            WaitForProteinMetadataBackgroundLoaderCompleted(millis);
+            
             // Inserting a Peptide List, p. 13
             using (new CheckDocumentState(25, 70, 70, 338, null, true))
+            using (new DocChangeLogger())
             {
                 RunUI(() =>
                     {
                         SetClipboardFileText(@"MethodEdit\FASTA\Peptide list.txt"); // Not L10N
                         SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
                         SkylineWindow.Paste();
-// ReSharper disable LocalizableElement
-                        SkylineWindow.SequenceTree.Nodes[0].Text = "Primary Peptides"; // Not L10N
-// ReSharper restore LocalizableElement
                     });
-                FindNode("TLTAQSMQNSTQSAPNK"); // Not L10N
-                PauseForScreenShot("Main window", 16); // Not L10N
             }
+
+            RunUI(() => SkylineWindow.SequenceTree.Nodes[0].Text = @"Primary Peptides");
+            FindNode("TLTAQSMQNSTQSAPNK"); // Not L10N
+            PauseForScreenShot("Main window", 16); // Not L10N
 
             using (new CheckDocumentState(35, 70, 70, 338, null, true))
             {
