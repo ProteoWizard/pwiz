@@ -212,7 +212,7 @@ namespace pwiz.ProteomeDatabase.API
                     }
                     matchTypesRemaining = matchTypesRemaining.Except(ProteinMatchType.sequence);
 
-                    if ((_matches == null) || (_matches.Count < MaxResults))
+                    if (DoMatching)
                     {
                         string pattern =  "%" + Settings.SearchText + "%"; // Not L10N
                         if (Settings.SearchText.Length < MIN_FREE_SEARCH_LENGTH)
@@ -250,6 +250,17 @@ namespace pwiz.ProteomeDatabase.API
                     return;
                 }
                 Trace.TraceError("Unhandled exception: {0}", exception); // Not L10N
+            }
+        }
+
+        public bool DoMatching
+        {
+            get
+            {
+                lock (this)
+                {
+                    return _matches == null || _matches.Count < MaxResults;
+                }
             }
         }
     }

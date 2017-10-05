@@ -99,18 +99,22 @@ namespace SkylineTester
 
         public static void ShowMemoryChart()
         {
-            if (_memoryChartWindow != null)
-                _memoryChartWindow.BringToFront();
-            else
+            lock (_graphPane)
             {
-                _memoryChartWindow = new MemoryChartWindow();
-                _memoryChartWindow.Show();
+                if (_memoryChartWindow != null)
+                    _memoryChartWindow.BringToFront();
+                else
+                {
+                    _memoryChartWindow = new MemoryChartWindow();
+                    _memoryChartWindow.Show();
+                }
             }
         }
 
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
+
             lock (_graphPane)
             {
                 _memoryChartWindow = null;
