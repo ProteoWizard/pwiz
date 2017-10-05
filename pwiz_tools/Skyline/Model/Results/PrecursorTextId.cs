@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Results
         public bool Equals(PrecursorTextId other)
         {
             return PrecursorMz.Equals(other.PrecursorMz) &&
-                string.Equals(Target, other.Target) &&
+                Equals(Target, other.Target) &&
                 Extractor == other.Extractor;
         }
 

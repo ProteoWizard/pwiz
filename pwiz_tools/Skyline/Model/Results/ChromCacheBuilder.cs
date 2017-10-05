@@ -760,7 +760,7 @@ namespace pwiz.Skyline.Model.Results
         private void StorePeptideRetentionTime(PeptideChromDataSets peptideChromDataSets)
         {
             var nodePep = peptideChromDataSets.NodePep;
-            if (nodePep == null || !string.Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT))
+            if (nodePep == null || !Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT))
                 return;
 
             var dataSet = peptideChromDataSets.DataSets.FirstOrDefault();
@@ -861,7 +861,7 @@ namespace pwiz.Skyline.Model.Results
 
             public bool IsFirstPassPeptide(PeptideDocNode nodePep)
             {
-                return string.Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT);
+                return Equals(nodePep.GlobalStandardType, PeptideDocNode.STANDARD_TYPE_IRT);
             }
         }
 
@@ -878,7 +878,7 @@ namespace pwiz.Skyline.Model.Results
             for (; i < listMzPrecursors.Count && listMzPrecursors[i].PrecursorMz <= maxMzMatch && listMzPrecursors[i].PrecursorMz.IsNegative == maxMzMatch.IsNegative; i++)
             {
                 var peptidePrecursorMz = listMzPrecursors[i];
-                if (modSeq != null && !string.Equals(modSeq, peptidePrecursorMz.NodePeptide.ModifiedTarget)) // ModifiedSequence for peptides, other id for customIons
+                if (modSeq != null && !Equals(modSeq, peptidePrecursorMz.NodePeptide.ModifiedTarget)) // ModifiedSequence for peptides, other id for customIons
                     continue;
 
                 var nodeGroup = peptidePrecursorMz.NodeGroup;

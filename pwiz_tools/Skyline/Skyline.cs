@@ -2741,7 +2741,7 @@ namespace pwiz.Skyline
             {
                 var listProteins = new List<PeptideGroupDocNode>(doc.MoleculeGroups);
                 listProteins.Sort(comparison);
-                return (SrmDocument)doc.ChangeChildrenChecked(listProteins.Cast<DocNode>().ToArray());
+                return (SrmDocument)doc.ChangeChildrenChecked(listProteins.ToArray());
             });
         }
 

@@ -1848,7 +1848,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool Equals(ChromKey other)
         {
-            return string.Equals(Target, other.Target) &&
+            return Equals(Target, other.Target) &&
                 Precursor.Equals(other.Precursor) &&
                 DriftFilter.Equals(other.DriftFilter) &&
                 Product.Equals(other.Product) &&

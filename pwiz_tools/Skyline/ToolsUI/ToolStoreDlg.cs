@@ -253,7 +253,7 @@ namespace pwiz.Skyline.ToolsUI
                 return tools;
             foreach (var toolDir in _toolDir.GetFiles())
             {                
-                if (toolDir == null || toolDir.DirectoryName == null)
+                if (toolDir == null || string.IsNullOrEmpty(toolDir.DirectoryName))
                     continue;
 
                 string fileName = Path.GetFileNameWithoutExtension(toolDir.Name);

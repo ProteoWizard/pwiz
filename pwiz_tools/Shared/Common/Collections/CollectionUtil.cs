@@ -73,6 +73,8 @@ namespace pwiz.Common.Collections
         {
             public bool Equals(IList<T> x, IList<T> y)
             {
+                if (x == null || y == null)
+                    return ReferenceEquals(x, y);
                 return x.SequenceEqual(y);
             }
 

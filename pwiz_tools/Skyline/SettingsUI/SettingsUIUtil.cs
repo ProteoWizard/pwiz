@@ -55,7 +55,7 @@ namespace pwiz.Skyline.SettingsUI
             grid.Rows.Clear();
 
             bool result = DoPasteText(parent, textClip, grid, validate,
-                (values, lineNum) => grid.Rows.Add(values.Cast<object>().ToArray()));
+                (values, lineNum) => grid.Rows.Add(values.ToArray()));
 
             grid.ResumeLayout();
             return result;
