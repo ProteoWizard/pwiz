@@ -423,5 +423,17 @@ namespace IDPicker.Properties {
                 this["GroupConcatSeparator"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("00000000-0000-0000-0000-000000000000")]
+        public global::System.Guid UUID {
+            get {
+                return ((global::System.Guid)(this["UUID"]));
+            }
+            set {
+                this["UUID"] = value;
+            }
+        }
     }
 }

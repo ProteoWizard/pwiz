@@ -88,6 +88,8 @@ namespace IDPicker
                 // initialize webClient asynchronously
                 initializeWebClient();
 
+                checkin();
+
                 automaticCheckForUpdates();
 
                 //HibernatingRhinos.Profiler.Appender.NHibernate.NHibernateProfiler.Initialize();
@@ -202,8 +204,7 @@ namespace IDPicker
         private static CookieAwareWebClient webClient = new CookieAwareWebClient();
         public static CookieAwareWebClient WebClient { get { return webClient; } }
 
-        private const string loginAddress = "http://forge.fenchurch.mc.vanderbilt.edu/account/login.php";
-        private const string errorReportAddress = "http://forge.fenchurch.mc.vanderbilt.edu/tracker/index.php?func=add&group_id=10&atid=149";
+        //private const string errorReportAddress = "http://forge.fenchurch.mc.vanderbilt.edu/tracker/index.php?func=add&group_id=10&atid=149";
         
         private static void initializeWebClient ()
         {
@@ -238,6 +239,24 @@ namespace IDPicker
                 }
                 catch {}
             }).Start();*/
+        }
+
+        private static void checkin ()
+        {
+            if (!Properties.GUI.Settings.Default.AutomaticCheckForUpdates)
+                return;
+
+            // create a unique user id if we haven't already done so
+            if (Properties.Settings.Default.UUID == Guid.Empty)
+            {
+                Properties.Settings.Default.UUID = Guid.NewGuid();
+                Properties.Settings.Default.Save();
+            }
+
+            string analyticsToken = "UA-30609227-2";
+            string clientId = Properties.Settings.Default.UUID.ToString();
+            string checkinAddressFormat = "http://www.google-analytics.com/collect?v=1&tid={0}&cid={1}&t=pageview&dh=idpicker.org&dp=/checkin/IDPicker%20{2}";
+            webClient.DownloadStringAsync(new Uri(String.Format(checkinAddressFormat, analyticsToken, clientId, Util.Version)));
         }
 
         private static void automaticCheckForUpdates ()
