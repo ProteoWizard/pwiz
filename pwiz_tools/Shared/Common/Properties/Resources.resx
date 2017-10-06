@@ -376,4 +376,10 @@
   <data name="SessionWithLock_EnsureWriteLock_Must_have_write_lock" xml:space="preserve">
     <value xml:space="preserve">Must have write lock</value>
   </data>
+  <data name="ColumnLimitExceededColumn_TruncatedColumnCount__0__additional_columns_not_shown_" xml:space="preserve">
+    <value>{0} additional columns not shown.</value>
+  </data>
+  <data name="ColumnLimitExceededColumn_ColumnLimitExceededColumn_Column_Limit_Exceeded" xml:space="preserve">
+    <value>Column Limit Exceeded</value>
+  </data>
 </root>

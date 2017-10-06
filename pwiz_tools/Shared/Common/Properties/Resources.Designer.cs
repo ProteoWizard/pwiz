@@ -291,6 +291,24 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Column Limit Exceeded.
+        /// </summary>
+        internal static string ColumnLimitExceededColumn_ColumnLimitExceededColumn_Column_Limit_Exceeded {
+            get {
+                return ResourceManager.GetString("ColumnLimitExceededColumn_ColumnLimitExceededColumn_Column_Limit_Exceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} additional columns not shown..
+        /// </summary>
+        internal static string ColumnLimitExceededColumn_TruncatedColumnCount__0__additional_columns_not_shown_ {
+            get {
+                return ResourceManager.GetString("ColumnLimitExceededColumn_TruncatedColumnCount__0__additional_columns_not_shown_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;&lt; Hide &amp;Advanced.
         /// </summary>
         internal static string CustomizeViewForm_AdvancedShowing____Hide__Advanced {

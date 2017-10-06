@@ -9911,6 +9911,9 @@ Would you like to remove some or all of the prefix or suffix to shorten the name
   <data name="ViewLibraryDlg_EnsureDigested_An_error_occurred_while_trying_to_process_the_file__0__" xml:space="preserve">
     <value>An error occurred while trying to process the file {0}.</value>
   </data>
+  <data name="UniquePeptidesDlg_AddProteinRowsToGrid_Adding_rows_to_grid_" xml:space="preserve">
+    <value>Adding rows to grid.</value>
+  </data>
   <data name="SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff" xml:space="preserve">
     <value>Remove peptides above CV cutoff</value>
   </data>

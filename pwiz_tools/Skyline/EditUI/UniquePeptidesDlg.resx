@@ -148,7 +148,7 @@
     <value>dataGridView1</value>
   </data>
   <data name="&gt;&gt;dataGridView1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Common.Controls.CommonDataGridView, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridView1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -175,7 +175,7 @@
     <value>233, 6</value>
   </data>
   <data name="uniqueProteinsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>117, 22</value>
   </data>
   <data name="uniqueProteinsToolStripMenuItem.Text" xml:space="preserve">
     <value>Proteins</value>
@@ -184,7 +184,7 @@
     <value>Exclude any peptides found in more than one protein in the background proteome</value>
   </data>
   <data name="uniqueGenesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>117, 22</value>
   </data>
   <data name="uniqueGenesToolStripMenuItem.Text" xml:space="preserve">
     <value>Genes</value>
@@ -193,7 +193,7 @@
     <value>Exclude peptides found in proteins from more than one gene in the background proteome</value>
   </data>
   <data name="uniqueSpeciesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>117, 22</value>
   </data>
   <data name="uniqueSpeciesToolStripMenuItem.Text" xml:space="preserve">
     <value>Species</value>
@@ -229,7 +229,7 @@
     <value>Exclude All</value>
   </data>
   <data name="contextMenuStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>237, 170</value>
+    <value>237, 148</value>
   </data>
   <data name="&gt;&gt;contextMenuStrip1.Name" xml:space="preserve">
     <value>contextMenuStrip1</value>
@@ -610,6 +610,6 @@
     <value>UniquePeptidesDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -29022,6 +29022,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adding rows to grid..
+        /// </summary>
+        public static string UniquePeptidesDlg_AddProteinRowsToGrid_Adding_rows_to_grid_ {
+            get {
+                return ResourceManager.GetString("UniquePeptidesDlg_AddProteinRowsToGrid_Adding_rows_to_grid_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}
         ///(gene: {1}).
         /// </summary>

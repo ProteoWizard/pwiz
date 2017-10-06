@@ -521,12 +521,7 @@ namespace pwiz.Skyline.Model
         /// <returns>The index of the child, or -1 if not found</returns>
         public int FindNodeIndex(Identity id)
         {
-            for (int i = 0; i < Children.Count; i++)
-            {
-                if (ReferenceEquals(id, Children[i].Id))
-                    return i;
-            }
-            return -1;
+            return _children.IndexOf(id);
         }
 
         /// <summary>

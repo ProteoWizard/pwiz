@@ -111,6 +111,7 @@
     <Compile Include="Controls\RecordNavBar.Designer.cs">
       <DependentUpon>RecordNavBar.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ColumnLimitExceededColumn.cs" />
     <Compile Include="DataAnalysis\LinearFitResult.cs" />
     <Compile Include="DataAnalysis\FoldChange\FoldChangeDataSet.cs" />
     <Compile Include="DataAnalysis\FoldChange\DesignMatrix.cs" />

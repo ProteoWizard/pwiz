@@ -45,6 +45,7 @@ namespace pwiz.Common.DataBinding.Controls
         public BoundDataGridView()
         {
             AutoGenerateColumns = false;
+            MaximumColumnCount = 65000;
         }
 
         protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
@@ -112,7 +113,7 @@ namespace pwiz.Common.DataBinding.Controls
             if (newColumns.Count > 0)
             {
                 Columns.Clear();
-                Columns.AddRange(newColumns.ToArray());
+                AddColumns(newColumns);
             }
             _itemProperties = newItemProperties;
         }
