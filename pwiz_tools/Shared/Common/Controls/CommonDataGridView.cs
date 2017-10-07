@@ -37,7 +37,7 @@ namespace pwiz.Common.Controls
         }
 
         /// <summary>
-        /// Adds multiple columns to the <see cref=".Columns"/> collection.
+        /// Adds multiple columns to the <see cref="DataGridView.Columns"/> collection.
         /// If more than one column is being added, then turns off "DataGridViewColumnHeadersHeightSizeMode",
         /// because it takes ridiculously long to add a few thousand columns when that property is "AutoSize".
         /// </summary>
