@@ -346,22 +346,45 @@ namespace SkylineNightly
             };
 
             var startTime = DateTime.Now;
-            var skylineTesterProcess = Process.Start(processInfo);
-            if (skylineTesterProcess == null)
-            {
-                LogAndThrow(result = "SkylineTester did not start");
-                return result; 
-            }
-            Log("SkylineTester started");
-            if (!skylineTesterProcess.WaitForExit(durationSeconds*1000))
-            {
-                SaveErrorScreenshot();
-                Log(result = "SkylineTester has exceeded its " + durationSeconds + " second WaitForExit timeout.  You should investigate.");
-            }
-            else
-                Log("SkylineTester finished");
 
-            _duration = DateTime.Now - startTime;
+            bool retryTester;
+            const int maxRetryMinutes = 60;
+            do
+            {
+                var skylineTesterProcess = Process.Start(processInfo);
+                if (skylineTesterProcess == null)
+                {
+                    LogAndThrow(result = "SkylineTester did not start");
+                    return result;
+                }
+                Log("SkylineTester started");
+                if (!skylineTesterProcess.WaitForExit(durationSeconds * 1000))
+                {
+                    SaveErrorScreenshot();
+                    Log(result = "SkylineTester has exceeded its " + durationSeconds +
+                                 " second WaitForExit timeout.  You should investigate.");
+                }
+                else
+                {
+                    Log("SkylineTester finished");
+                }
+
+                _duration = DateTime.Now - startTime;
+                retryTester = _duration.TotalMinutes < maxRetryMinutes;
+                if (retryTester)
+                {
+                    // Retry a very short test run if there is no log file or the log file does not contain any tests
+                    string logFile = GetLatestLog();
+                    if (logFile != null && File.Exists(logFile))
+                        retryTester = ParseTests(File.ReadAllText(logFile), false) == 0;
+                    if (retryTester)
+                    {
+                        Log("No tests run in " + Math.Round(_duration.TotalMinutes) + " minutes retrying.");
+                    }
+                }
+            }
+            while (retryTester);
+
             return result;
         }
 
@@ -487,7 +510,7 @@ namespace SkylineNightly
                 : (isIntegration ? RunMode.integration :  (hasPerftests ? RunMode.release_perf : RunMode.release));
         }
 
-        private int ParseTests(string log)
+        private int ParseTests(string log, bool storeXml = true)
         {
             var startTest = new Regex(@"\r\n\[(\d\d:\d\d)\] +(\d+).(\d+) +(\S+) +\((\w\w)\) ", RegexOptions.Compiled);
             var endTest = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, (\d+) sec\.\r\n", RegexOptions.Compiled);
@@ -513,18 +536,24 @@ namespace SkylineNightly
                 if (lastPass != passId)
                 {
                     lastPass = passId;
-                    _pass = _nightly.Append("pass");
-                    _pass["id"] = passId;
+                    if (storeXml)
+                    {
+                        _pass = _nightly.Append("pass");
+                        _pass["id"] = passId;
+                    }
                 }
 
-                var test = _pass.Append("test");
-                test["id"] = testId;
-                test["name"] = name;
-                test["language"] = language;
-                test["timestamp"] = timestamp;
-                test["duration"] = duration;
-                test["managed"] = managed;
-                test["total"] = total;
+                if (storeXml)
+                {
+                    var test = _pass.Append("test");
+                    test["id"] = testId;
+                    test["name"] = name;
+                    test["language"] = language;
+                    test["timestamp"] = timestamp;
+                    test["duration"] = duration;
+                    test["managed"] = managed;
+                    test["total"] = total;
+                }
 
                 testCount++;
             }
