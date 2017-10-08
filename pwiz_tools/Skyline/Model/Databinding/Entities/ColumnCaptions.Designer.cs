@@ -1672,6 +1672,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptide Sequence Length.
+        /// </summary>
+        public static string PeptideSequenceLength {
+            get {
+                return ResourceManager.GetString("PeptideSequenceLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Point Count.
         /// </summary>
         public static string PointCount {

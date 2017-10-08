@@ -419,6 +419,12 @@ namespace pwiz.Skyline.Model
             }
             return seq;
         }
+
+        public FastaSequence AddAlternative(ProteinMetadata proteinMetadata)
+        {
+            var alternativesNew = new List<ProteinMetadata>(Alternatives) {proteinMetadata};
+            return new FastaSequence(_name, _description, alternativesNew, _sequence, _isDecoy);
+        }
     }
 
 // ReSharper disable InconsistentNaming

@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Standardized molecular identifer.
+        ///   Looks up a localized string similar to Standardized molecular identifier.
         /// </summary>
         internal static string CAS {
             get {
@@ -688,7 +688,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Standardized molecular identifer.
+        ///   Looks up a localized string similar to Standardized molecular identifier.
         /// </summary>
         internal static string HMDB {
             get {
@@ -707,7 +707,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Standardized molecular identifer.
+        ///   Looks up a localized string similar to Standardized molecular identifier.
         /// </summary>
         internal static string InChI {
             get {
@@ -716,7 +716,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Standardized molecular identifer.
+        ///   Looks up a localized string similar to Standardized molecular identifier.
         /// </summary>
         internal static string InChiKey {
             get {
@@ -1372,11 +1372,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to  Amino acid sequence of the peptide..
+        ///   Looks up a localized string similar to Amino acid sequence of the peptide..
         /// </summary>
         internal static string PeptideSequence {
             get {
                 return ResourceManager.GetString("PeptideSequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Amino acid count in the sequence of the peptide..
+        /// </summary>
+        internal static string PeptideSequenceLength {
+            get {
+                return ResourceManager.GetString("PeptideSequenceLength", resourceCulture);
             }
         }
         
@@ -1868,7 +1877,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Standardized molecular identifer.
+        ///   Looks up a localized string similar to Standardized molecular identifier.
         /// </summary>
         internal static string SMILES {
             get {

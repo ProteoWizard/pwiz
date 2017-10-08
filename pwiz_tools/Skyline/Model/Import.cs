@@ -84,6 +84,7 @@ namespace pwiz.Skyline.Model
             }
 
             var peptideGroupsNew = new List<PeptideGroupDocNode>();
+            var dictGroupsNew = new Dictionary<string, int>();
             PeptideGroupBuilder seqBuilder = null;
 
             long linesRead = 0;
@@ -127,7 +128,7 @@ namespace pwiz.Skyline.Model
                     try
                     {
                         if (seqBuilder != null)
-                            AddPeptideGroup(peptideGroupsNew, set, seqBuilder);
+                            AddPeptideGroup(peptideGroupsNew, dictGroupsNew, set, seqBuilder);
 
                         seqBuilder = _modMatcher == null
                             ? new PeptideGroupBuilder(line, PeptideList, Document.Settings, null)
@@ -153,12 +154,14 @@ namespace pwiz.Skyline.Model
             }
             // Add last sequence.
             if (seqBuilder != null)
-                AddPeptideGroup(peptideGroupsNew, set, seqBuilder);
+                AddPeptideGroup(peptideGroupsNew, dictGroupsNew, set, seqBuilder);
             return peptideGroupsNew;
         }
 
         private void AddPeptideGroup(List<PeptideGroupDocNode> listGroups,
-            ICollection<FastaSequence> set, PeptideGroupBuilder builder)
+            Dictionary<string, int> dictGroupsNew,
+            ICollection<FastaSequence> set,
+            PeptideGroupBuilder builder)
         {
             PeptideGroupDocNode nodeGroup = builder.ToDocNode();
             FastaSequence fastaSeq = nodeGroup.Id as FastaSequence;
@@ -174,17 +177,52 @@ namespace pwiz.Skyline.Model
                 {
                     if (EmptyPeptideGroupCount == MaxEmptyPeptideGroupCount + 1)
                     {
-                        var nonEmptyGroups = listGroups.Where(g => g.MoleculeCount > 0).ToArray();
-                        listGroups.Clear();
-                        listGroups.AddRange(nonEmptyGroups);
-
+                        ReduceToNonEmptyGroups(listGroups, dictGroupsNew);
                     }
                     return;
                 }
             }
+            int indexExist;
+            if (fastaSeq != null && dictGroupsNew.TryGetValue(fastaSeq.Sequence, out indexExist))
+            {
+                AddPeptideGroupAlternative(listGroups, indexExist, fastaSeq);
+                return;
+            }
+
+            if (fastaSeq != null)
+                dictGroupsNew.Add(fastaSeq.Sequence, listGroups.Count);
             listGroups.Add(nodeGroup);
             _countPeptides += nodeGroup.MoleculeCount;
             _countIons += nodeGroup.TransitionCount;
+        }
+
+        private static void ReduceToNonEmptyGroups(List<PeptideGroupDocNode> listGroups, Dictionary<string, int> dictGroupsNew)
+        {
+            var nonEmptyGroups = listGroups.Where(g => g.MoleculeCount > 0).ToArray();
+            listGroups.Clear();
+            listGroups.AddRange(nonEmptyGroups);
+            dictGroupsNew.Clear();
+            for (int i = 0; i < listGroups.Count; i++)
+            {
+                var seq = listGroups[i].Id as FastaSequence;
+                if (seq != null)
+                    dictGroupsNew.Add(seq.Sequence, i);
+            }
+        }
+
+        private static void AddPeptideGroupAlternative(List<PeptideGroupDocNode> listGroups, int indexExist, FastaSequence fastaSeq)
+        {
+            var nodeGroupExist = listGroups[indexExist];
+            var fastaSeqExist = (FastaSequence) nodeGroupExist.Id;
+            string seqName = fastaSeq.Name;
+            if (Equals(fastaSeqExist.Name, seqName) || fastaSeqExist.Alternatives.Contains(a => Equals(a.Name, seqName)))
+                return;  // The new name for this sequence is already accounted for
+
+            // Add this as an alternative to the existing node
+            fastaSeq = fastaSeqExist.AddAlternative(new ProteinMetadata(fastaSeq.Name, fastaSeq.Description));
+            listGroups[indexExist] = new PeptideGroupDocNode(fastaSeq, nodeGroupExist.Annotations,
+                nodeGroupExist.Name, nodeGroupExist.Description,
+                nodeGroupExist.Peptides.ToArray(), nodeGroupExist.AutoManageChildren);
         }
 
         /// <summary>

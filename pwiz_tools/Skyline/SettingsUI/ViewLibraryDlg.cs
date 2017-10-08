@@ -2445,12 +2445,16 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 if (currentMod == null) // If not in docnode.staticmodifications then check implicit mods in settings
                 {
-                    var mass = double.Parse(piece.Item2.Replace("[", string.Empty).Replace("]", string.Empty), CultureInfo.InvariantCulture); // Not L10N
-                    foreach (var mod in _settings.PeptideSettings.Modifications.StaticModifications)
+                    double mass;
+                    if (double.TryParse(piece.Item2.Replace("[", string.Empty).Replace("]", string.Empty),  // Not L10N
+                        NumberStyles.Float, CultureInfo.InvariantCulture, out mass))
                     {
-                        if (MatchesAAsAndMass(piece.Item1.ToString(), mass, mod))
-                            currentMod = new ExplicitMod(staticModIndex, mod);
-                    }   
+                        foreach (var mod in _settings.PeptideSettings.Modifications.StaticModifications)
+                        {
+                            if (MatchesAAsAndMass(piece.Item1.ToString(), mass, mod))
+                                currentMod = new ExplicitMod(staticModIndex, mod);
+                        }
+                    }
                 }
                 return currentMod;
             }

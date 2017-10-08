@@ -978,6 +978,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             private void AddToLibrary(ProcessedIrtAverages irtAverages)
             {
+                if (irtAverages == null)
+                    return; // Canceled
+
                 var listPeptidesNew = irtAverages.DbIrtPeptides.ToList();
                 Dictionary<Target, int> dictLibraryIndices;
                 List<Target> listChangedPeptides, listOverwritePeptides, listKeepPeptides;

@@ -97,6 +97,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     : ToString(); } 
         }
 
+        [InvariantDisplayName("PeptideSequenceLength")]
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public int? SequenceLength
+        {
+            get
+            {
+                if (IsSmallMolecule())
+                    return null;
+                return Sequence.Length;
+            }
+        }
+
         [InvariantDisplayName("PeptideModifiedSequence")]
         [ChildDisplayName("PeptideModifiedSequence{0}")]
         public ModifiedSequence ModifiedSequence
