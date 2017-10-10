@@ -4244,13 +4244,25 @@ namespace pwiz.Skyline
                 return;
 
             var cutoff = Settings.Default.AreaCVCVCutoff / AreaGraphController.GetAreaCVFactorToDecimal();
-            var ids =
-                pane.CurrentData.Data.Where(d => d.CV >= cutoff)
+            // Create a set of everything that should remain, so that peptides excluded by
+            // the q value cut-off will also be removed
+            var ids = new HashSet<int>(pane.CurrentData.Data.Where(d => d.CV < cutoff)
                     .SelectMany(d => d.PeptideAnnotationPairs)
-                    .Select(pair => pair.Peptide.Id.GlobalIndex)
-                    .Distinct().ToArray();
+                    .Select(pair => pair.TransitionGroup.Id.GlobalIndex));
 
-            ModifyDocument(Resources.SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff, doc => (SrmDocument)doc.RemoveAll(ids));
+            // Remove everything not in the set
+            ModifyDocument(Resources.SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff, doc =>
+            {
+                var setRemove = new HashSet<int>();
+                foreach (var nodeMolecule in doc.Molecules)
+                {
+                    if (nodeMolecule.GlobalStandardType != null)
+                        continue;
+                    foreach (var nodeGroup in nodeMolecule.TransitionGroups.Where(n => !ids.Contains(n.Id.GlobalIndex)))
+                        setRemove.Add(nodeGroup.Id.GlobalIndex);
+                }
+                return (SrmDocument)doc.RemoveAll(setRemove, (int) SrmDocument.Level.TransitionGroups, (int) SrmDocument.Level.Molecules);
+            });
         }
 
         public void SetAreaCVGroup(string group)

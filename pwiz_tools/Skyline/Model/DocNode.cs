@@ -1042,10 +1042,12 @@ namespace pwiz.Skyline.Model
         /// from the tree.
         /// </summary>
         /// <param name="descendentsRemoveIds">Collection of the <see cref="Identity.GlobalIndex"/> values for the descendents to remove</param>
+        /// <param name="level">Optional level below which not to descend</param>
+        /// <param name="levelRemoveEmpty">Optional level to which empty nodes are removed</param>
         /// <returns>A node with the desendents removed</returns>
-        public DocNodeParent RemoveAll(ICollection<int> descendentsRemoveIds)
+        public DocNodeParent RemoveAll(ICollection<int> descendentsRemoveIds, int? level = null, int? levelRemoveEmpty = null)
         {
-            if (Children == null)
+            if (Children == null || (level.HasValue && level.Value < 0))
                 return this;
 
             List<DocNode> childrenNew = new List<DocNode>();
@@ -1060,7 +1062,10 @@ namespace pwiz.Skyline.Model
                 var childNew = child;
                 var docNodeParent = child as DocNodeParent;
                 if (docNodeParent != null)
-                    childNew = docNodeParent.RemoveAll(descendentsRemoveIds);
+                    childNew = docNodeParent.RemoveAll(descendentsRemoveIds, level-1, levelRemoveEmpty-1);
+                if (childNew == null)
+                    continue;
+
                 childrenNew.Add(childNew);
                 AddCounts(childNew, nodeCountStack);
             }
@@ -1068,6 +1073,10 @@ namespace pwiz.Skyline.Model
             // If no children changed, then just return this node
             if (ArrayUtil.ReferencesEqual(Children, childrenNew))
                 return this;
+
+            // If this is a level below which empty nodes are removed, return null if empty
+            if (levelRemoveEmpty.HasValue && levelRemoveEmpty.Value < 0 && childrenNew.Count == 0)
+                return null;
 
             return ChangeChildren(childrenNew, nodeCountStack).ChangeAutoManageChildren(false);
         }
@@ -1079,7 +1088,7 @@ namespace pwiz.Skyline.Model
 
         private static DocNodeParent RemoveAll(DocNodeParent parent, IdentityPathTraversal traversal, ICollection<int> descendentsRemove)
         {
-            return traversal.Traverse(parent, descendentsRemove, RemoveAll, parent.RemoveAll);
+            return traversal.Traverse(parent, descendentsRemove, RemoveAll, ids => parent.RemoveAll(ids));
         }
 
         /// <summary>

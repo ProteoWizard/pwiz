@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (qvalueCutoff.HasValue && areas.Count < graphSettings.MinimumDetections)
                             continue;
 
-                        AddToInternalData(data, areas, peptide, a);
+                        AddToInternalData(data, areas, peptide, transitionGroupDocNode, a);
                     }
                 }
             }
@@ -119,7 +119,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var groupedArray = grouped.ToArray();
                 return new CVData(
-                        groupedArray.Select(idata => new PeptideAnnotationPair(idata.Peptide, idata.Annotation)),
+                        groupedArray.Select(idata => new PeptideAnnotationPair(idata.Peptide, idata.TransitionGroup, idata.Annotation, idata.CV)),
                         key.CVBucketed, key.Area, groupedArray.Length);
             }).OrderBy(d => d.CV));
 
@@ -131,7 +131,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static readonly AreaCVGraphData INVALID = new AreaCVGraphData(null, new AreaCVGraphSettings((GraphTypeSummary)~0, (AreaCVNormalizationMethod)~0, -1, string.Empty, string.Empty, (PointsTypePeakArea)~0, double.NaN, double.NaN, -1, double.NaN));
 
-        private void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas, PeptideDocNode peptide, string annotation)
+        private void AddToInternalData(ICollection<InternalData> data, List<AreaInfo> areas, PeptideDocNode peptide, TransitionGroupDocNode tranGroup, string annotation)
         {
             var normalizedStatistics = new Statistics(areas.Select(a => a.NormalizedArea));
             var normalizedMean = normalizedStatistics.Mean();
@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var cv = normalizedStdDev / normalizedMean;
             var cvBucketed = Math.Floor(cv / _graphSettings.BinWidth) * _graphSettings.BinWidth;
             var log10Mean = _graphSettings.GraphType == GraphTypeSummary.histogram2d ? Math.Floor(Math.Log10(unnomarlizedMean) / 0.05) * 0.05 : 0.0;
-            data.Add(new InternalData { Peptide = peptide, Annotation = annotation, CV = cv, CVBucketed = cvBucketed, Area = log10Mean });
+            data.Add(new InternalData { Peptide = peptide, TransitionGroup = tranGroup, Annotation = annotation, CV = cv, CVBucketed = cvBucketed, Area = log10Mean });
         }
 
         private static double NormalizeToGlobalStandard(SrmDocument document, TransitionGroupDocNode transitionGroupDocNode, int replicateIndex, double area)
@@ -283,14 +283,18 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public class PeptideAnnotationPair
         {
-            public PeptideAnnotationPair(PeptideDocNode peptide, string annotation)
+            public PeptideAnnotationPair(PeptideDocNode peptide, TransitionGroupDocNode tranGroup, string annotation, double cvRaw)
             {
                 Peptide = peptide;
+                TransitionGroup = tranGroup;
                 Annotation = annotation;
+                CVRaw = cvRaw;
             }
 
             public PeptideDocNode Peptide { get; private set; }
+            public TransitionGroupDocNode TransitionGroup { get; private set; }
             public string Annotation { get; private set; }
+            public double CVRaw { get; private set; }
         }
 
         public class CVData
@@ -312,6 +316,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private class InternalData
         {
             public PeptideDocNode Peptide;
+            public TransitionGroupDocNode TransitionGroup;
             public string Annotation;
             public double CV;
             public double CVBucketed;

@@ -655,6 +655,9 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
             else if (!materialize)
             {
+                // Avoid updating a lot of nodes just because a parent tree node was opened
+                if (docNodes.Count > 1000)
+                    treeNodes.Clear();
                 if (treeNodes.Count == 0)
                     treeNodes.Add(new DummyNode());
                 if (treeNodes[0] is DummyNode)
