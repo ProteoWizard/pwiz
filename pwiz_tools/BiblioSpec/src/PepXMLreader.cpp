@@ -315,25 +315,6 @@ void PepXMLreader::endElement(const XML_Char* name)
         // scan numbers/indexes, here's a hack to get them
         if( analysisType_ == SPECTRUM_MILL_ANALYSIS ) {
             findScanIndexFromName(precursorMap_);
-            verifySequences();
-            for (size_t i = 0; i < psms_.size(); i++) {
-                PSM* iPSM = psms_[i];
-                for (size_t j = i + 1; j < psms_.size(); j++) {
-                    PSM* jPSM = psms_[j];
-                    if (iPSM->modifiedSeq == jPSM->modifiedSeq && iPSM->charge == jPSM->charge) {
-                        double iScore = spectrumMillScores_[iPSM];
-                        double jScore = spectrumMillScores_[jPSM];
-                        if (iScore < jScore) {
-                            delete iPSM;
-                            psms_.erase(psms_.begin() + i--);
-                            break;
-                        } else {
-                            delete jPSM;
-                            psms_.erase(psms_.begin() + j--);
-                        }
-                    }
-                }
-            }
         }
         // file progress will be incremented in buildTables
         // if we are counting bytes instead of number of spec files
