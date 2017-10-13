@@ -1524,9 +1524,17 @@ namespace pwiz.Skyline.Properties
 
     public sealed class CollisionEnergyList : SettingsList<CollisionEnergyRegression>
     {
-        public override int RevisionIndexCurrent { get { return 7; } }
+        public static readonly CollisionEnergyRegression NONE =
+            new CollisionEnergyRegression(ELEMENT_NONE, new [] { new ChargeRegressionLine(2, 0, 0) });
+
+        public override int RevisionIndexCurrent { get { return 8; } }
 
         public static CollisionEnergyRegression GetDefault()
+        {
+            return NONE;
+        }
+
+        public static CollisionEnergyRegression GetDefault3_6()
         {
             var thermoRegressions = new[]
                                 {
@@ -1544,6 +1552,18 @@ namespace pwiz.Skyline.Properties
                                     new ChargeRegressionLine(3, 0.038, 2.281)
                                 };
             return new CollisionEnergyRegression("Thermo TSQ Vantage", thermoRegressions); // Not L10N
+        }
+
+        protected override void ValidateLoad()
+        {
+            base.ValidateLoad();
+
+            // Make sure NONE is at the beginning of the list
+            if (!ReferenceEquals(NONE, this[0]))
+            {
+                Remove(NONE);
+                InsertItem(0, NONE);
+            }
         }
 
         public override IEnumerable<CollisionEnergyRegression> GetDefaults(int revisionIndex)
@@ -1703,12 +1723,18 @@ namespace pwiz.Skyline.Properties
                         }));
                         return list5.ToArray();
                     }
-                default:    // v3.6 patch - add Thermo TSQ Quantiva
+                case 7:    // v3.6 patch - add Thermo TSQ Quantiva
                     {
                         var list6 = GetDefaults(6).ToList();
-                        list6.Insert(0, GetDefault());
+                        list6.Insert(0, GetDefault3_6());
                         return list6.ToArray();
                     }
+                default:    // v3.7.1 - add None as default
+                {
+                    var list6 = GetDefaults(7).ToList();
+                    list6.Insert(0, GetDefault());
+                    return list6.ToArray();
+                }
             }
         }
 
@@ -1732,6 +1758,8 @@ namespace pwiz.Skyline.Properties
         public override string Title { get { return Resources.CollisionEnergyList_Title_Edit_Collision_Energy_Regressions; } }
 
         public override string Label { get { return Resources.CollisionEnergyList_Label_Collision_Energy_Regression; } }
+
+        public override int ExcludeDefaults { get { return 1; } }
     }
 
     public sealed class OptimizationLibraryList : SettingsList<OptimizationLibrary>

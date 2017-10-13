@@ -463,13 +463,18 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Consume tag
             if (reader.IsEmptyElement)
+            {
                 reader.Read();
+
+                CollisionEnergy = CollisionEnergyList.NONE;
+                OptimizedLibrary = OptimizationLibrary.NONE;
+            }
             else
             {
                 reader.ReadStartElement();
 
                 // Read child elements.
-                CollisionEnergy = reader.DeserializeElement<CollisionEnergyRegression>();
+                CollisionEnergy = reader.DeserializeElement<CollisionEnergyRegression>() ?? CollisionEnergyList.NONE;
                 RetentionTime = reader.DeserializeElement<RetentionTimeRegression>();   // v0.1.0 support
                 DeclusteringPotential = reader.DeserializeElement<DeclusteringPotentialRegression>();
                 OptimizedLibrary = reader.DeserializeElement<OptimizationLibrary>() ?? OptimizationLibrary.NONE;
@@ -488,7 +493,8 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.fragment_mass_type, FragmentMassType);
             writer.WriteAttribute(ATTR.optimize_by, OptimizedMethodType);
             // Write child elements
-            writer.WriteElement(CollisionEnergy);
+            if (!CollisionEnergy.Equals(CollisionEnergyList.NONE))
+                writer.WriteElement(CollisionEnergy);
             if (DeclusteringPotential != null)
                 writer.WriteElement(DeclusteringPotential);
             if (OptimizedLibrary != null && !OptimizedLibrary.IsNone)

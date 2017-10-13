@@ -186,7 +186,7 @@ namespace pwiz.SkylineTest
             AssertEx.Serialization<StaticModList>(SETTINGS_STATIC_MOD_LIST, CheckSettingsList, false); // Not part of a Skyline document, don't check against schema
             AssertEx.Serialization<HeavyModList>(SETTINGS_HEAVY_MOD_LIST, CheckSettingsList, false); // Not part of a Skyline document, don't check against schema
             AssertEx.Serialization<PeptideExcludeList>(SETTINGS_EXCLUSIONS_LIST, CheckSettingsList, false); // Not part of a Skyline document, don't check against schema
-            AssertEx.Serialization<CollisionEnergyList>(SETTINGS_CE_LIST, CheckSettingsList, false); // Not part of a Skyline document, don't check against schema
+            AssertEx.Serialization<CollisionEnergyList>(SETTINGS_CE_LIST, (t, c) => CheckSettingsList(t, c, true), false); // Not part of a Skyline document, don't check against schema
             AssertEx.Serialization<DeclusterPotentialList>(SETTINGS_DP_LIST, CheckSettingsList, false); // Not part of a Skyline document, don't check against schema
             AssertEx.Serialization<RetentionTimeList>(SETTINGS_RT_LIST, CheckSettingsList, false); // Not part of a Skyline document, don't check against schema
         }
@@ -638,8 +638,8 @@ namespace pwiz.SkylineTest
                 "<predict_collision_energy name=\"Fail\">" +
                 "<regressions><regression_ce slope=\"0.1\" intercept=\"4.7\" charge=\"2\" /></regressions>" +
                 "</predict_collision_energy></transition_prediction>");
-            // No collision energy regression
-            AssertEx.DeserializeError<TransitionPrediction>("<transition_prediction/>");
+            // No collision energy regression (Allowed during 3.7.1 development)
+            AssertEx.DeserializeNoError<TransitionPrediction>("<transition_prediction/>");
         }
 
         /// <summary>
@@ -686,8 +686,9 @@ namespace pwiz.SkylineTest
             {
                 var listCE = (CollisionEnergyList) ser.Deserialize(reader);
 
-                Assert.AreEqual(10, listCE.Count);
-                Assert.AreEqual(7, listCE.RevisionIndexCurrent);
+                Assert.AreSame(CollisionEnergyList.NONE, listCE[0]);
+                Assert.AreEqual(11, listCE.Count);
+                Assert.AreEqual(8, listCE.RevisionIndexCurrent);
 
                 int i = 0;
                 foreach (var regressionCE in listCE.GetDefaults(1))
@@ -1215,9 +1216,20 @@ namespace pwiz.SkylineTest
         private static void CheckSettingsList<TItem>(SettingsList<TItem> target, SettingsList<TItem> copy)
             where TItem : IKeyContainer<string>, IXmlSerializable
         {
+            CheckSettingsList(target, copy, false);
+        }
+
+        private static void CheckSettingsList<TItem>(SettingsList<TItem> target, SettingsList<TItem> copy, bool firstSame)
+            where TItem : IKeyContainer<string>, IXmlSerializable
+        {
             Assert.AreEqual(target.Count, copy.Count);
             for (int i = 0; i < target.Count; i++)
-                AssertEx.Cloned(target[i], copy[i]);
+            {
+                if (firstSame && i == 0)
+                    Assert.AreSame(target[i], copy[i]);
+                else
+                    AssertEx.Cloned(target[i], copy[i]);
+            }
         }
     }
 }
