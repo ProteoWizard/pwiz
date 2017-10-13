@@ -98,6 +98,10 @@ namespace pwiz.Skyline.Model
 
         bool ICollection<DocNode>.Contains(DocNode item)
         {
+            if (ReferenceEquals(null, item))
+            {
+                return false;
+            }
             int index = IndexOf(item.Id);
             return index >= 0 && Equals(item, _items[index]);
         }
@@ -124,6 +128,10 @@ namespace pwiz.Skyline.Model
 
         int IList<DocNode>.IndexOf(DocNode item)
         {
+            if (ReferenceEquals(item, null))
+            {
+                return -1;
+            }
             int index = IndexOf(item.Id);
             if (index < 0)
             {

@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model
                         var staticMod = GetStaticMod(uniModId, aa, modTerminus);
                         if (staticMod == null)
                         {
-                            ThrowUnimodException(seq, uniModId, indexAA, indexBracket, indexClose);
+                            throw ThrowUnimodException(seq, uniModId, indexAA, indexBracket, indexClose);
                         }
                         name = staticMod.Name;
                         isHeavy = !UniMod.IsStructuralModification(name);
@@ -308,7 +308,7 @@ namespace pwiz.Skyline.Model
             return sb.ToString();
         }
 
-        private static void ThrowUnimodException(string seq, int uniModId, int indexAA, int indexBracket, int indexClose)
+        private static Exception ThrowUnimodException(string seq, int uniModId, int indexAA, int indexBracket, int indexClose)
         {
             int indexFirst = Math.Max(0, indexBracket - 1);
             int indexLast = Math.Min(seq.Length, indexClose + 1);

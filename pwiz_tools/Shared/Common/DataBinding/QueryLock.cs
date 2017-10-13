@@ -53,9 +53,15 @@ namespace pwiz.Common.DataBinding
 
         public IDisposable CancelAndGetWriteLock()
         {
-            _cancellationTokenSource.Cancel();
+            lock (this)
+            {
+                _cancellationTokenSource.Cancel();
+            }
             _readerWriterLock.AcquireWriterLock(int.MaxValue);
-            _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_rootCancellationToken);
+            lock (this)
+            {
+                _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_rootCancellationToken);
+            }
             return new DisposableLock(_readerWriterLock, true);
         }
 

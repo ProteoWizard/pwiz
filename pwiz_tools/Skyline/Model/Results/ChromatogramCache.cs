@@ -1384,6 +1384,10 @@ namespace pwiz.Skyline.Model.Results
         {
             public bool Equals(ChromatogramCache x, ChromatogramCache y)
             {
+                if (ReferenceEquals(x, null) || ReferenceEquals(y, null))
+                {
+                    return ReferenceEquals(x, null) && ReferenceEquals(y, null);
+                }
                 return Equals(x.CachePath, y.CachePath);
             }
 

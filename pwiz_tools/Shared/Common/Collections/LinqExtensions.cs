@@ -64,8 +64,15 @@ namespace pwiz.Common.Collections
                         }
                         return 0;
                     }
-
-                    int result = itr1.Current.CompareTo(itr2.Current);
+                    int result;
+                    if (itr1.Current == null)
+                    {
+                        result = itr2.Current == null ? 0 : -itr2.Current.CompareTo(itr1.Current);
+                    }
+                    else
+                    {
+                        result = itr1.Current.CompareTo(itr2.Current);
+                    }
                     if (result != 0)
                         return result;
                 }

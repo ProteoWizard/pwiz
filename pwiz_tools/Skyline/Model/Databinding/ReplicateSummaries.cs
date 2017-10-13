@@ -57,10 +57,13 @@ namespace pwiz.Skyline.Model.Databinding
         public SrmDocument Document { get; private set; }
         public double GetTotalArea(int replicateIndex, IsotopeLabelType isotopeLabelType)
         {
+            // ReSharper disable InconsistentlySynchronizedField
             if (replicateIndex >= _allTotalAreas.Length)
             {
                 return 0;
             }
+            // ReSharper restore InconsistentlySynchronizedField
+
             ImmutableSortedList<IsotopeLabelType, double> areasByLabelType;
             lock (_allTotalAreas)
             {

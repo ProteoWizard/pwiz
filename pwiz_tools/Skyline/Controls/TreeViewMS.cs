@@ -404,6 +404,10 @@ namespace pwiz.Skyline.Controls
 
             public void Add(TreeNodeMS item)
             {
+                if (item == null)
+                {
+                    throw new ArgumentNullException();
+                }
                 item.IsInSelection = true;
                 _nodes.Add(item);                
             }
@@ -426,6 +430,10 @@ namespace pwiz.Skyline.Controls
 
             public bool Remove(TreeNodeMS item)
             {
+                if (item == null)
+                {
+                    return false;
+                }
                 if (_nodes.Remove(item))
                 {
                     item.IsInSelection = false;

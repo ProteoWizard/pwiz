@@ -999,6 +999,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     convertedMoleculesIterator.MoveNext();
                     var convertedMol = convertedMoleculesIterator.Current;
+                    Assert.IsNotNull(convertedMol);
                     if (convertedMol.Note != null)
                         Assert.AreEqual(mol.Note ?? string.Empty,
                             convertedMol.Note.Replace(RefinementSettings.TestingConvertedFromProteomic, string.Empty));
@@ -1051,6 +1052,7 @@ namespace pwiz.SkylineTestUtil
                     convertedTransitionGroupIterator.MoveNext();
                     var convertedTransitionGroupDocNode = convertedTransitionGroupIterator.Current;
                     ConvertedSmallMoleculePrecursorIsSimilar(convertedTransitionGroupDocNode, transitionGroupDocNode, conversionMode);
+                    Assert.IsNotNull(convertedTransitionGroupDocNode);
                     Assert.AreEqual(transitionGroupDocNode.TransitionGroup.PrecursorCharge,
                         convertedTransitionGroupDocNode.TransitionGroup.PrecursorCharge);
                     Assert.AreEqual(transitionGroupDocNode.TransitionGroup.LabelType,
@@ -1076,6 +1078,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     convertedTransitionIterator.MoveNext();
                     var convertedTransition = convertedTransitionIterator.Current;
+                    Assert.IsNotNull(convertedTransition);
                     if (Math.Abs(transition.Mz - convertedTransition.Mz) > SequenceMassCalc.MassTolerance)
                         Assert.AreEqual(transition.Mz, convertedTransition.Mz, "mz mismatch transition as small molecule");
                     Assert.AreEqual(transition.IsotopeDistInfo, convertedTransition.IsotopeDistInfo);

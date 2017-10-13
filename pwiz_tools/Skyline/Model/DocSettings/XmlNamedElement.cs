@@ -180,6 +180,10 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         public bool Equals(TElem n1, TElem n2)
         {
+            if (ReferenceEquals(null, n1) || ReferenceEquals(null, n2))
+            {
+                return ReferenceEquals(null, n1) && ReferenceEquals(null, n2);
+            }
             return Equals(n1.Name, n2.Name);
         }
 

@@ -1547,6 +1547,10 @@ namespace pwiz.Skyline.Model.Results
     {
         public bool Equals(TItem f1, TItem f2)
         {
+            if (ReferenceEquals(f1, null) || ReferenceEquals(f2, null))
+            {
+                return ReferenceEquals(f1, null) && ReferenceEquals(f2, null);
+            }
             return Equals(f1.FilePath, f2.FilePath);
         }
 
@@ -2279,6 +2283,10 @@ namespace pwiz.Skyline.Model.Results
         {
             public bool Equals(ChromatogramGroupInfo x, ChromatogramGroupInfo y)
             {
+                if (ReferenceEquals(x, null) || ReferenceEquals(y, null))
+                {
+                    return ReferenceEquals(x, null) && ReferenceEquals(y, null);
+                }
                 return Equals(x.FilePath, y.FilePath);
             }
 
