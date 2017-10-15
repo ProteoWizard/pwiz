@@ -167,7 +167,10 @@ namespace pwiz.SkylineTestFunctional
             // Initially, peptide with index 0 should be selected
             WaitForConditionUI(() => pepList.SelectedIndex != -1);
             var modDlg = WaitForOpenForm<AddModificationsDlg>();
+            _viewLibUI.IsUpdateComplete = false;
             RunUI(modDlg.OkDialogAll);
+            // Wait for the list update caused by adding all modifications to complete
+            WaitForConditionUI(() => _viewLibUI.IsUpdateComplete);
 
             ViewLibraryPepInfo previousPeptide = new ViewLibraryPepInfo();
             int peptideIndex = -1;
@@ -276,7 +279,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test selecting a different library
             previousPeptide = selPeptide;
-            RunDlg<AddModificationsDlg>(() => libComboBox.SelectedIndex = 1, dlg => dlg.OkDialogAll());
+            SelectLibWithAllMods(libComboBox, 1);
             RunUI(() =>
             {
                 libComboBox.SelectedIndex = 1;
@@ -452,7 +455,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(3, SkylineWindow.Document.PeptideCount);
 
             // Switch to the Phospho Loss Library
-            RunDlg<AddModificationsDlg>(() => libComboBox.SelectedIndex = 3, msgDlg => msgDlg.OkDialogAll());
+            SelectLibWithAllMods(libComboBox, 3);
 
             // Add modifications to the document matching the settings of the library. 
             var phosphoLossMod = new StaticMod("Phospho Loss", "S, T", null, true, "HPO3",
@@ -620,6 +623,16 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
         }
 
+        private void SelectLibWithAllMods(ComboBox libComboBox, int libIndex)
+        {
+            RunDlg<AddModificationsDlg>(() => libComboBox.SelectedIndex = libIndex, dlg =>
+            {
+                _viewLibUI.IsUpdateComplete = false;
+                dlg.OkDialogAll();
+            });
+            WaitForConditionUI(() => _viewLibUI.IsUpdateComplete);
+        }
+
         private void TestSmallMoleculeFunctionality(int index, bool expectError)
         {
 
@@ -756,7 +769,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test implicit mods only created if safe to do so
             RunUI(() => SkylineWindow.Undo());
-            RunDlg<AddModificationsDlg>(() => _libComboBox.SelectedIndex = 4, msgDlg => msgDlg.OkDialogAll());
+            SelectLibWithAllMods(_libComboBox, 4);
             WaitForConditionUI(() => _pepList.SelectedIndex != -1);
             WaitForConditionUI(() => _viewLibUI.HasMatches);
             RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.CheckLibraryInSettings(),
@@ -940,15 +953,16 @@ namespace pwiz.SkylineTestFunctional
             if (showModsDlg)
             {
                 var modDlg = WaitForOpenForm<AddModificationsDlg>();
-                if (modDlg != null)
-                    RunUI(() =>
-                    {
-                        if (okAll)
-                            modDlg.OkDialogAll();
-                        else
-                            modDlg.OkDialog();
-                    });
+                RunUI(() =>
+                {
+                    _viewLibUI.IsUpdateComplete = false;
+                    if (okAll)
+                        modDlg.OkDialogAll();
+                    else
+                        modDlg.OkDialog();
+                });
                 WaitForClosedForm(modDlg);
+                WaitForConditionUI(() => _viewLibUI.IsUpdateComplete);
             }
             RunUI(() =>
             {
