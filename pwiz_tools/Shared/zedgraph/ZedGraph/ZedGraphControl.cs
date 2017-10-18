@@ -611,11 +611,9 @@ namespace ZedGraph
 					_masterPane.Draw(e.Graphics);
 					if (_isZooming)
 					{
-						Rectangle selection = new Rectangle(Math.Min(_dragStartPt.X, _dragEndPt.X),
-							Math.Min(_dragStartPt.Y, _dragEndPt.Y), Math.Abs(_dragEndPt.X - _dragStartPt.X),
-							Math.Abs(_dragEndPt.Y - _dragStartPt.Y));
+						Rectangle rect = CalcScreenRect(_dragStartPt, _dragEndPt);
 						Pen p = new Pen(Color.Black) {DashStyle = DashStyle.Dash};
-						e.Graphics.DrawRectangle(p, selection);
+						e.Graphics.DrawRectangle(p, rect);
 					}
 				}
 				catch { }

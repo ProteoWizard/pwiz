@@ -1358,15 +1358,13 @@ namespace ZedGraph
 
 		private Rectangle CalcScreenRect( Point mousePt1, Point mousePt2 )
 		{
-			Point screenPt = PointToScreen( mousePt1 );
-			Size size = new Size( mousePt2.X - mousePt1.X, mousePt2.Y - mousePt1.Y );
-			Rectangle rect = new Rectangle( screenPt, size );
+			Rectangle rect = new Rectangle(Math.Min(mousePt1.X, mousePt2.X), Math.Min(mousePt1.Y, mousePt2.Y), Math.Abs(mousePt2.X - mousePt1.X), Math.Abs(mousePt2.Y - mousePt1.Y));
 
 			if ( _isZooming )
 			{
 				Rectangle chartRect = Rectangle.Round( _dragPane.Chart._rect );
 
-				Point chartPt = PointToScreen( chartRect.Location );
+				Point chartPt = chartRect.Location;
 
 				if ( !_isEnableVZoom )
 				{
