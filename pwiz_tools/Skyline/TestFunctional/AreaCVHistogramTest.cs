@@ -177,11 +177,11 @@ namespace pwiz.SkylineTestFunctional
             });
 
             int expectedBars = itemCount - GetItemsAboveCutoff(statsStartIndex);
-            WaitForHisgramBarCount(histogramInfo, expectedBars);
+            WaitForHistogramBarCount(histogramInfo, expectedBars);
 
             RunUI(SkylineWindow.Undo);
 
-            WaitForHisgramBarCount(histogramInfo, itemCount);
+            WaitForHistogramBarCount(histogramInfo, itemCount);
 
             // Test if the data is correct after changing the bin width and disabling the show cv cutoff option (which affects GetTotalBars)
             RunUI(() => SkylineWindow.SetAreaCVBinWidth(2.0));
@@ -280,10 +280,10 @@ namespace pwiz.SkylineTestFunctional
             AssertDataCorrect(pane, statsStartIndex++);
         }
 
-        private void WaitForHisgramBarCount(IAreaCVHistogramInfo histogramInfo, int expectedBars)
+        private void WaitForHistogramBarCount(IAreaCVHistogramInfo histogramInfo, int expectedBars)
         {
             WaitForConditionUI(() => histogramInfo.Items == expectedBars,
-                string.Format("Expecting {0} bars found {1}", expectedBars, histogramInfo.Items));
+                string.Format("Waiting for {0} bars", expectedBars));
         }
 
         private static AreaCVGraphData.AreaCVGraphDataCache GetCache(SummaryGraphPane pane)
