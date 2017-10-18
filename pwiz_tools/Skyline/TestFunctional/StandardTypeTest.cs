@@ -321,11 +321,18 @@ namespace pwiz.SkylineTestFunctional
                                 float peptideLightRatio = (float)(double)row.Cells[iLightRatio].Value;
                                 // Light ration never empty
                                 Assert.IsTrue(peptideLightRatio > 0);
-                                float peptideHeavyRatio = (float)(double)row.Cells[iHeavyRatio].Value;
+                                float? peptideHeavyRatio = (float?)(double?)row.Cells[iHeavyRatio].Value;
                                 // Heavy ratio empty when peptide has only a light precursor
-                                Assert.IsTrue(nodePep.TransitionGroupCount == 1
-                                    ? peptideHeavyRatio == 0
-                                    : peptideHeavyRatio > 0 && peptideHeavyRatio != peptideLightRatio);
+                                if (nodePep.TransitionGroupCount == 1)
+                                {
+                                    Assert.IsNull(peptideHeavyRatio);
+                                }
+                                else
+                                {
+                                    Assert.IsNotNull(peptideHeavyRatio);
+                                    Assert.IsTrue(peptideHeavyRatio > 0);
+                                    Assert.AreNotEqual(peptideHeavyRatio.Value, peptideLightRatio);
+                                }
                                 string labelType = row.Cells[iLabelType].Value.ToString();
                                 float precursorRatio = (float)(double)row.Cells[iPrecRatio].Value;
                                 if (string.Equals(labelType, IsotopeLabelType.light.Name))
@@ -335,7 +342,7 @@ namespace pwiz.SkylineTestFunctional
                                 if (iPeptide == SELECTED_PEPTIDE_INDEX)
                                 {
                                     Assert.AreEqual(lightValues[i], peptideLightRatio);
-                                    Assert.AreEqual(heavyValues[i], peptideHeavyRatio);
+                                    Assert.AreEqual(heavyValues[i], peptideHeavyRatio.Value);
                                 }
 
                                 float transitionRatio = (float)(double)row.Cells[iTranRatio].Value;

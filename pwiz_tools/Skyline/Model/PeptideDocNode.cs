@@ -1661,6 +1661,7 @@ namespace pwiz.Skyline.Model
                 if (GlobalStandardArea == 0)
                     return null;
 
+                int count = 0;
                 double num = 0;
                 foreach (var pair in GetAreaPairs(labelType))
                 {
@@ -1668,8 +1669,12 @@ namespace pwiz.Skyline.Model
                     if (!key.IsMatchForRatioPurposes(precursorAdduct))
                         continue;
                     num += pair.Value;
+                    count++;
                 }
-
+                if (count == 0)
+                {
+                    return null;
+                }
                 return new RatioValue(num / GlobalStandardArea);
             }
 
