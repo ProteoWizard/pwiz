@@ -55,8 +55,8 @@ namespace SkylineNightly
         private const string LABKEY_RELEASE_PERF_URL = "https://skyline.ms/labkey/testresults/home/development/Release%20Branch%20Performance%20Tests/post.view?";
         private const string LABKEY_INTEGRATION_URL = "https://skyline.ms/labkey/testresults/home/development/Integration/post.view";
 
-        // Current integration branch is TRIC
-        private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work/20170706_tric_round3";
+        // Current integration branch is for run-up to Merck teaching session
+        private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work/20171019_merck_daily";
 
         private DateTime _startTime;
         public string LogFileName { get; private set; }
