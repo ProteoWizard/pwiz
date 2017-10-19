@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Globalization;
 using System.Threading;
 
@@ -61,5 +62,21 @@ namespace pwiz.Common.SystemUtil
         public static CultureInfo CurrentCulture { get; set; }
 
         public static CultureInfo CurrentUICulture { get; set; }
+
+        public static T CallWithCulture<T>(CultureInfo cultureInfo, Func<T> func)
+        {
+            var originalCulture = Thread.CurrentThread.CurrentCulture;
+            var originalUiCulture = Thread.CurrentThread.CurrentUICulture;
+            try
+            {
+                Thread.CurrentThread.CurrentUICulture = Thread.CurrentThread.CurrentCulture = cultureInfo;
+                return func();
+            }
+            finally
+            {
+                Thread.CurrentThread.CurrentUICulture = originalUiCulture;
+                Thread.CurrentThread.CurrentCulture = originalCulture;
+            }
+        }
     }
 }

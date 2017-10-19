@@ -24,6 +24,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
@@ -292,31 +293,23 @@ namespace pwiz.Common.DataBinding
     /// Models a user's customization of a view.
     /// A view has a list of columns to display.  It also can have a filter and sort to be applied (NYI).
     /// </summary>
-    public class ViewSpec : IComparable<ViewSpec>
+    public class ViewSpec : Immutable, IComparable<ViewSpec>
     {
         public ViewSpec()
         {
-            Columns = new ColumnSpec[0];
-            Filters = new FilterSpec[0];
-        }
-        private ViewSpec(ViewSpec that)
-        {
-            Name = that.Name;
-            Columns = that.Columns;
-            Filters = that.Filters;
-            SublistName = that.SublistName;
-            RowSource = that.RowSource;
+            Columns = ImmutableList.Empty<ColumnSpec>();
+            Filters = ImmutableList.Empty<FilterSpec>();
         }
         public string Name { get; private set; }
         public ViewSpec SetName(string value)
         {
-            return new ViewSpec(this){Name = value};
+            return ChangeProp(ImClone(this), im=>im.Name = value);
         }
         public string RowSource { get; private set; }
 
         public ViewSpec SetRowSource(string value)
         {
-            return new ViewSpec(this){RowSource = value};
+            return ChangeProp(ImClone(this), im => im.RowSource = value);
         }
 
         public ViewSpec SetRowType(Type type)
@@ -325,18 +318,15 @@ namespace pwiz.Common.DataBinding
         }
 
 
-        public IList<ColumnSpec> Columns { get; private set; }
+        public ImmutableList<ColumnSpec> Columns { get; private set; }
         public ViewSpec SetColumns(IEnumerable<ColumnSpec> value)
         {
-            return new ViewSpec(this)
-                       {
-                           Columns = Array.AsReadOnly(value.ToArray())
-                       };
+            return ChangeProp(ImClone(this), im => im.Columns = ImmutableList.ValueOf(value));
         }
-        public IList<FilterSpec> Filters { get; private set; }
+        public ImmutableList<FilterSpec> Filters { get; private set; }
         public ViewSpec SetFilters(IEnumerable<FilterSpec> value)
         {
-            return new ViewSpec(this){Filters = Array.AsReadOnly(value.ToArray())};
+            return ChangeProp(ImClone(this), im => im.Filters = ImmutableList.ValueOf(value));
         }
         public string SublistName { get; private set; }
         public PropertyPath SublistId
@@ -346,7 +336,7 @@ namespace pwiz.Common.DataBinding
         }
         public ViewSpec SetSublistId(PropertyPath sublistId)
         {
-            return new ViewSpec(this){SublistId = sublistId};
+            return ChangeProp(ImClone(this), im => im.SublistId = sublistId);
         }
 
         public bool HasTotals
@@ -391,11 +381,11 @@ namespace pwiz.Common.DataBinding
                 }
                 else
                 {
-                    reader.Read();
+                    reader.Skip();
                 }
             }
-            viewSpec.Columns = Array.AsReadOnly(columns.ToArray());
-            viewSpec.Filters = Array.AsReadOnly(filters.ToArray());
+            viewSpec.Columns = ImmutableList.ValueOf(columns);
+            viewSpec.Filters = ImmutableList.ValueOf(filters);
             return viewSpec;
         }
 
@@ -465,5 +455,4 @@ namespace pwiz.Common.DataBinding
             return CaseInsensitiveComparer.Default.Compare(Name, other.Name);
         }
     }
-
 }

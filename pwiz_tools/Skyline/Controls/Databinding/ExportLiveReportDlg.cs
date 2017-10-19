@@ -212,10 +212,10 @@ namespace pwiz.Skyline.Controls.Databinding
             var viewInfo = viewContext.GetViewInfo(SelectedViewName);
             var form = new DocumentGridForm(viewContext)
             {
-                ViewInfo = viewInfo,
                 Text = Resources.ExportLiveReportDlg_ShowPreview_Preview__ + viewInfo.Name,
                 ShowViewsMenu = false,
             };
+            form.BindingListSource.SetViewContext(viewContext, viewInfo);
             form.Show(Owner);
         }
 

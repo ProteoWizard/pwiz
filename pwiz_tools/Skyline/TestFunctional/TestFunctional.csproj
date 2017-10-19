@@ -181,6 +181,7 @@
     <Compile Include="FindColumnTest.cs" />
     <Compile Include="FullScanGraphTest.cs" />
     <Compile Include="FullScanIdTest.cs" />
+    <Compile Include="GroupComparisonPivotEditorTest.cs" />
     <Compile Include="GroupComparisonScenariosTest.cs" />
     <Compile Include="GroupComparisonTest.cs" />
     <Compile Include="GroupComparisonVolcanoPlotTest.cs" />
@@ -222,6 +223,7 @@
     <Compile Include="NonLinearRegressionTest.cs" />
     <Compile Include="PasteMoleculesTest.cs" />
     <Compile Include="PeakScoringModelTest.cs" />
+    <Compile Include="PivotEditorTest.cs" />
     <Compile Include="PolarityMismatchTest.cs" />
     <Compile Include="PrecursorTest.cs" />
     <Compile Include="ProfileImport.cs" />
@@ -348,6 +350,7 @@
     <None Include="ExportSpectralLibraryTest.zip" />
     <None Include="FilterMzTest.zip" />
     <None Include="FullScanIdTest.zip" />
+    <None Include="GroupComparisonPivotEditorTest.zip" />
     <None Include="GroupComparisonTest.zip" />
     <None Include="ImportDocTest.zip" />
     <None Include="ImportFailureTest.zip" />
@@ -377,6 +380,7 @@
     <None Include="PasteMoleculeTest.zip" />
     <None Include="PeakBoundaryCompareTest.zip" />
     <None Include="PeakScoringModelTest.zip" />
+    <None Include="PivotEditorTest.zip" />
     <None Include="PrecursorTest.zip" />
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />

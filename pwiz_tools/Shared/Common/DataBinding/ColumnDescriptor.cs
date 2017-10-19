@@ -100,7 +100,7 @@ namespace pwiz.Common.DataBinding
 
         public string GetColumnCaption(ColumnCaptionType columnCaptionType)
         {
-            return DataSchema.GetColumnCaption(DataSchema.GetColumnCaption(this), columnCaptionType);
+            return DataSchema.GetColumnCaption(this).GetCaption(DataSchema.GetDataSchemaLocalizer(columnCaptionType));
         }
 
         public ColumnDescriptor CollectionAncestor()

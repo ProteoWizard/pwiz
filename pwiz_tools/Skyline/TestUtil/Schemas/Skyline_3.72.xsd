@@ -593,11 +593,11 @@
       </xs:element>
       <xs:element name="views" minOccurs="0">
         <xs:complexType>
-          <xs:sequence>
-            <xs:element name="view" minOccurs="0" maxOccurs="unbounded">
+          <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="view">
               <xs:complexType>
                 <xs:sequence>
-                  <xs:element name="column" minOccurs ="0" maxOccurs="unbounded">
+                <xs:element name="column" minOccurs ="0" maxOccurs="unbounded">
                     <xs:complexType>
                       <xs:attribute name="name" type="xs:string"/>
                       <xs:attribute name="caption" type="xs:string" />
@@ -621,7 +621,74 @@
                 <xs:attribute name="sublist" type="xs:string" />
               </xs:complexType>
             </xs:element>
-          </xs:sequence>
+            <xs:element name="layouts">
+              <xs:complexType>
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                  <xs:element name="layout">
+                    <xs:complexType>
+                      <xs:choice minOccurs="0" maxOccurs="unbounded">
+                        <xs:element name="columnFormat">
+                          <xs:complexType>
+                            <xs:attribute name="column" type="xs:string"/>
+                            <xs:attribute name="width" type="xs:int"/>
+                            <xs:attribute name="format" type="xs:string"/>
+                          </xs:complexType>
+                        </xs:element>
+                        <xs:element name="pivot">
+                          <xs:complexType>
+                            <xs:sequence>
+                              <xs:element name="rowHeader" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                  <xs:attribute name="sourceColumn" type="xs:string"/>
+                                  <xs:attribute name="caption" type="xs:string"/>
+                                </xs:complexType>
+                              </xs:element>
+                              <xs:element name="columnHeader" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                  <xs:attribute name="sourceColumn" type="xs:string"/>
+                                </xs:complexType>
+                              </xs:element>
+                              <xs:element name="value" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                  <xs:attribute name="sourceColumn" type="xs:string"/>
+                                  <xs:attribute name="caption" type="xs:string"/>
+                                  <xs:attribute name="op" type="xs:string"/>
+                                </xs:complexType>
+                              </xs:element>
+                            </xs:sequence>
+                          </xs:complexType>
+                        </xs:element>
+                        <xs:element name="rowFilter">
+                          <xs:complexType>
+                            <xs:sequence>
+                              <xs:element name="columnFilter" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                  <xs:attribute name="column" type="xs:string"/>
+                                  <xs:attribute name="opname" type="xs:string"/>
+                                  <xs:attribute name="operand" type="xs:string"/>
+                                </xs:complexType>
+                              </xs:element>
+                              <xs:element name="columnSort" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                  <xs:attribute name="column" type="xs:string"/>
+                                  <xs:attribute name="direction" type="xs:string"/>
+                                </xs:complexType>
+                              </xs:element>
+                            </xs:sequence>
+                            <xs:attribute name="text" type="xs:string"/>
+                            <xs:attribute name="caseSensitive" type="xs:boolean"/>
+                          </xs:complexType>
+                        </xs:element>
+                      </xs:choice>
+                      <xs:attribute name="name" type="xs:string"/>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:choice>
+                <xs:attribute name="viewName" type="xs:string"/>
+                <xs:attribute name="defaultLayout" type="xs:string"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:choice>
         </xs:complexType>
       </xs:element>
     </xs:sequence>

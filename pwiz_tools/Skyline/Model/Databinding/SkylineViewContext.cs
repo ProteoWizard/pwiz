@@ -29,6 +29,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -85,7 +86,7 @@ namespace pwiz.Skyline.Model.Databinding
             var viewSpecs = viewSpecList.ViewSpecs.ToArray();
             var stringComparer = StringComparer.Create(SkylineDataSchema.DataSchemaLocalizer.FormatProvider, true);
             Array.Sort(viewSpecs, (v1,v2)=>stringComparer.Compare(v1.Name, v2.Name));
-            return new ViewSpecList(viewSpecs);
+            return new ViewSpecList(viewSpecs, viewSpecList.ViewLayouts);
         }
 
         public override void AddOrReplaceViews(ViewGroupId groupId, IEnumerable<ViewSpec> viewSpecs)
@@ -134,15 +135,21 @@ namespace pwiz.Skyline.Model.Databinding
                         newViews[viewSpec.Name] = viewSpec;
                     }
                     var newDocViews = new List<ViewSpec>();
+                    var newLayouts = new List<ViewLayoutList>();
                     foreach (var oldDocView in docViewSpecList.ViewSpecs)
                     {
                         ViewSpec newDocView;
                         if (newViews.TryGetValue(oldDocView.Name, out newDocView))
                         {
                             newDocViews.Add(newDocView);
+                            ViewLayoutList viewLayoutList = viewSpecList.GetViewLayouts(oldDocView.Name);
+                            if (!viewLayoutList.IsEmpty)
+                            {
+                                newLayouts.Add(viewLayoutList);
+                            }
                         }
                     }
-                    return new ViewSpecList(newDocViews);
+                    return new ViewSpecList(newDocViews, newLayouts);
                 });
 
                 var skylineWindow = SkylineDataSchema.SkylineWindow;
@@ -150,10 +157,9 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     skylineWindow.ModifyDocument(Resources.SkylineViewContext_SaveViewSpecList_Change_Document_Reports, doc =>
                     {
-                        var oldViews = new HashSet<string>(
+                        var oldViewNames = new HashSet<string>(
                             doc.Settings.DataSettings.ViewSpecList.ViewSpecs.Select(spec => spec.Name));
-                        var newViewSpecList =
-                            new ViewSpecList(viewSpecList.ViewSpecs.Where(spec => oldViews.Contains(spec.Name)));
+                        var newViewSpecList = viewSpecList.Filter(spec => oldViewNames.Contains(spec.Name));
                         if (Equals(newViewSpecList, doc.Settings.DataSettings.ViewSpecList))
                         {
                             return doc;
@@ -211,9 +217,22 @@ namespace pwiz.Skyline.Model.Databinding
         {
             using (var longWaitDlg = new LongWaitDlg())
             {
-                var status = longWaitDlg.PerformWork(FormUtil.FindTopLevelOwner(owner), 1000, progressMonitor=>job(longWaitDlg.CancellationToken, progressMonitor));
+                var status = longWaitDlg.PerformWork(FormUtil.FindTopLevelOwner(owner), 1000, progressMonitor => job(longWaitDlg.CancellationToken, progressMonitor));
                 return status.IsComplete;
             }
+        }
+
+        public override bool RunOnThisThread(Control owner, Action<CancellationToken, IProgressMonitor> job)
+        {
+            var longOperationRunner = new LongOperationRunner();
+            bool finished = false;
+            longOperationRunner.Run(longWaitBroker =>
+            {
+                var progressWaitBroker = new ProgressWaitBroker(progressMonitor=>job(longWaitBroker.CancellationToken, progressMonitor));
+                progressWaitBroker.PerformWork(longWaitBroker);
+                finished = !longWaitBroker.IsCanceled;
+            });
+            return finished;
         }
 
         public bool Export(Control owner, ViewInfo viewInfo)

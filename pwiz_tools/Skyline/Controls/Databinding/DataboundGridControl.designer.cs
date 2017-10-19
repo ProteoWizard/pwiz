@@ -44,8 +44,10 @@
             this.clearFilterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearAllFiltersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.formatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fillDownToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).BeginInit();
             this.contextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).BeginInit();
@@ -73,6 +75,8 @@
             this.clearFilterToolStripMenuItem,
             this.clearAllFiltersToolStripMenuItem,
             this.toolStripSeparator2,
+            this.formatToolStripMenuItem,
+            this.toolStripSeparator3,
             this.fillDownToolStripMenuItem});
             this.contextMenuStrip.Name = "contextMenuStrip";
             resources.ApplyResources(this.contextMenuStrip, "contextMenuStrip");
@@ -124,6 +128,12 @@
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             resources.ApplyResources(this.toolStripSeparator2, "toolStripSeparator2");
             // 
+            // formatToolStripMenuItem
+            // 
+            this.formatToolStripMenuItem.Name = "formatToolStripMenuItem";
+            resources.ApplyResources(this.formatToolStripMenuItem, "formatToolStripMenuItem");
+            this.formatToolStripMenuItem.Click += new System.EventHandler(this.formatToolStripMenuItem_Click);
+            // 
             // fillDownToolStripMenuItem
             // 
             this.fillDownToolStripMenuItem.Name = "fillDownToolStripMenuItem";
@@ -166,6 +176,11 @@
             this.boundDataGridView.CellContextMenuStripNeeded += new System.Windows.Forms.DataGridViewCellContextMenuStripNeededEventHandler(this.boundDataGridView_CellContextMenuStripNeeded);
             this.boundDataGridView.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.boundDataGridView_ColumnHeaderMouseClick);
             // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            resources.ApplyResources(this.toolStripSeparator3, "toolStripSeparator3");
+            // 
             // DataboundGridControl
             // 
             resources.ApplyResources(this, "$this");
@@ -196,5 +211,7 @@
         private System.Windows.Forms.ToolStripMenuItem fillDownToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripMenuItem formatToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
     }
 }

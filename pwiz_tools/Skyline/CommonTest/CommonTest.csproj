@@ -88,6 +88,7 @@
     <Compile Include="DataBinding\SampleData\AminoAcid.cs" />
     <Compile Include="DataBinding\SampleData\Peptide.cs" />
     <Compile Include="DataBinding\SampleData\TestViewContext.cs" />
+    <Compile Include="DataBinding\ViewLayoutListTest.cs" />
     <Compile Include="FastaImporterTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ViewSpecTest.cs" />

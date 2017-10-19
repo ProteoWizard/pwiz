@@ -38,14 +38,14 @@ namespace CommonTest.DataBinding
             var coldescRetentionTime = coldescRoot.ResolveChild("RetentionTime");
             var coldescMinRetentionTime = coldescRetentionTime.ResolveChild("Min");
             var coldescMeanRetentionTime = coldescRetentionTime.ResolveChild("Mean");
-            Assert.AreEqual("MinRetentionTime", dataSchema.GetColumnCaption(coldescMinRetentionTime).InvariantCaption);
-            Assert.AreEqual("AverageRetentionTime", dataSchema.GetColumnCaption(coldescMeanRetentionTime).InvariantCaption);
+            Assert.AreEqual("MinRetentionTime", dataSchema.GetColumnCaption(coldescMinRetentionTime).GetCaption(DataSchemaLocalizer.INVARIANT));
+            Assert.AreEqual("AverageRetentionTime", dataSchema.GetColumnCaption(coldescMeanRetentionTime).GetCaption(DataSchemaLocalizer.INVARIANT));
             var coldescParent = coldescRoot.ResolveChild("Parent");
             var coldescParentRetentionTime = coldescParent.ResolveChild("RetentionTime");
             var coldescParentMeanRetentionTime = coldescParentRetentionTime.ResolveChild("Mean");
-            Assert.AreEqual("Parent", dataSchema.GetColumnCaption(coldescParent).InvariantCaption);
-            Assert.AreEqual("ParentRetentionTime", dataSchema.GetColumnCaption(coldescParentRetentionTime).InvariantCaption);
-            Assert.AreEqual("ParentAverageRetentionTime", dataSchema.GetColumnCaption(coldescParentMeanRetentionTime).InvariantCaption);
+            Assert.AreEqual("Parent", dataSchema.GetColumnCaption(coldescParent).GetCaption(DataSchemaLocalizer.INVARIANT));
+            Assert.AreEqual("ParentRetentionTime", dataSchema.GetColumnCaption(coldescParentRetentionTime).GetCaption(DataSchemaLocalizer.INVARIANT));
+            Assert.AreEqual("ParentAverageRetentionTime", dataSchema.GetColumnCaption(coldescParentMeanRetentionTime).GetCaption(DataSchemaLocalizer.INVARIANT));
         }
 
         class Stats

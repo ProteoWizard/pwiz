@@ -236,12 +236,8 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return description;
             }
-            ColumnCaption columnCaption = GetColumnCaption(columnDescriptor);
-            if (columnCaption.IsLocalizable)
-            {
-                return ColumnToolTips.ResourceManager.GetString(columnCaption.InvariantCaption);
-            }
-            return null;
+            var columnCaption = GetColumnCaption(columnDescriptor);
+            return ColumnToolTips.ResourceManager.GetString(columnCaption.GetCaption(DataSchemaLocalizer.INVARIANT));
         }
 
         public ImmutableSortedList<ResultKey, Replicate> ReplicateList { get { return _replicates.Value; } }

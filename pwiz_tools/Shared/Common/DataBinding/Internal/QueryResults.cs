@@ -20,29 +20,18 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding.Layout;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Internal
 {
-    internal class QueryResults
+    internal class QueryResults : Immutable
     {
         public static readonly QueryResults Empty = new QueryResults();
         private QueryResults()
         {
             Parameters = QueryParameters.Empty;
-            PivotedRows = FilteredRows = SortedRows = new RowItem[0];
-            ItemProperties = null;
-        }
-        public QueryResults(QueryResults copy)
-        {
-            Parameters = copy.Parameters;
-
-            SourceRows = copy.SourceRows;
-
-            PivotedRows = copy.PivotedRows;
-            ItemProperties = copy.ItemProperties;
-
-            FilteredRows = copy.FilteredRows;
-            SortedRows = copy.SortedRows;
+            TransformResults = TransformResults.EMPTY;
         }
 
         public QueryParameters Parameters { get; private set; }
@@ -50,76 +39,53 @@ namespace pwiz.Common.DataBinding.Internal
         {
             var result = new QueryResults
                              {
-                                 Parameters = newParameters
+                                 Parameters = newParameters,
+                                 TransformResults = TransformResults.EMPTY
                              };
-            if (Parameters.PivotValid(result.Parameters))
-            {
-                result.PivotedRows = PivotedRows;
-                result.ItemProperties = ItemProperties;
-                if (Parameters.FilterValid(newParameters))
-                {
-                    result.FilteredRows = FilteredRows;
-                    if (Parameters.SortValid(newParameters))
-                    {
-                        result.SortedRows = SortedRows;
-                    }
-                    else
-                    {
-                        result.SortedRows = null;
-                    }
-                }
-                else
-                {
-                    result.FilteredRows = result.SortedRows = null;
-                }
-            }
-            else
-            {
-                if (result.Parameters.ViewInfo == null)
-                {
-                    result.SortedRows = result.FilteredRows = result.PivotedRows = Empty.ResultRows;
-                }
-                else
-                {
-                    result.SortedRows = result.FilteredRows = result.PivotedRows = null;
-                }
-                result.ItemProperties = null;
-            }
             return result;
         }
-        public bool IsComplete
+
+        public ImmutableList<DataPropertyDescriptor> ItemProperties
         {
-            get { return SortedRows != null;}
+            get { return (TransformResults ?? TransformResults.EMPTY).PivotedRows.ItemProperties; }
         }
-        public PropertyDescriptorCollection ItemProperties { get; private set; }
 
         public IList<RowItem> SourceRows { get; private set; }
         public QueryResults SetSourceRows(IEnumerable<RowItem> sourceRows)
         {
-            return new QueryResults(this) {
-                SourceRows = ImmutableList.ValueOf(sourceRows)
-            };
+            if (ReferenceEquals(sourceRows, SourceRows))
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.SourceRows = ImmutableList.ValueOf(sourceRows);
+                im.TransformResults = TransformResults.EMPTY;
+            });
         }
-        public IList<RowItem> PivotedRows { get; private set; }
-        public QueryResults SetPivotedRows(PivotedRows pivotedRows)
+
+        public TransformResults TransformResults { get; private set; }
+
+        public QueryResults ChangeTransformResults(TransformResults partialResults)
         {
-            return new QueryResults(this)
-                       {
-                           PivotedRows = pivotedRows.RowItems,
-                           ItemProperties = pivotedRows.ItemProperties,
-                       };
+            TransformResults transformResults = partialResults;
+            while (transformResults != null && transformResults.Depth > Parameters.TransformStack.ResultDepth)
+            {
+                transformResults = transformResults.Parent;
+            }
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.TransformResults = transformResults ?? TransformResults.EMPTY;
+            });
         }
-        public IList<RowItem> FilteredRows { get; private set; }
-        public QueryResults SetFilteredRows(IEnumerable<RowItem> value)
+
+        public IList<RowItem> ResultRows
         {
-            return new QueryResults(this) {FilteredRows = ImmutableList.ValueOf(value)};
+            get
+            {
+                return TransformResults.PivotedRows.RowItems;
+            }
         }
-        public IList<RowItem> SortedRows { get; private set; }
-        public QueryResults SetSortedRows(IEnumerable<RowItem> value)
-        {
-            return new QueryResults(this) {SortedRows = ImmutableList.ValueOf(value)};
-        }
-        public IList<RowItem> ResultRows { get { return SortedRows;} }
     }
 
     internal class QueryParameters
@@ -128,46 +94,35 @@ namespace pwiz.Common.DataBinding.Internal
         private QueryParameters()
         {
             ViewInfo = null;
-            RowFilter = RowFilter.Empty;
+            TransformStack = TransformStack.EMPTY;
         }
-        public QueryParameters(ViewInfo viewInfo, RowFilter rowFilter, ListSortDescriptionCollection sortDescriptions)
+        public QueryParameters(ViewInfo viewInfo, TransformStack rowTransform, ListSortDescriptionCollection sortDescriptions)
         {
             ViewInfo = viewInfo;
-            RowFilter = rowFilter;
-            SortDescriptions = sortDescriptions;
+            TransformStack = rowTransform;
         }
         public QueryParameters(QueryParameters that)
         {
             ViewInfo = that.ViewInfo;
-            RowFilter = that.RowFilter;
-            SortDescriptions = that.SortDescriptions;
+            TransformStack = that.TransformStack;
         }
         public ViewInfo ViewInfo { get; private set;}
         public QueryParameters SetViewInfo(ViewInfo value)
         {
             return new QueryParameters(this) {ViewInfo = value};
         }
-        public RowFilter RowFilter { get; private set; }
-        public QueryParameters SetRowFilter(RowFilter value)
+        public TransformStack TransformStack { get; private set; }
+        public QueryParameters SetTransformStack(TransformStack value)
         {
-            return new QueryParameters(this) {RowFilter = value};
+            return new QueryParameters(this) { TransformStack = value };
         }
-        public ListSortDescriptionCollection SortDescriptions { get; private set; }
-        public QueryParameters SetSortDescriptions(ListSortDescriptionCollection value)
-        {
-            return new QueryParameters(this) {SortDescriptions = value};
-        }
-        public bool PivotValid(QueryParameters that)
+        public bool QueryValid(QueryParameters that)
         {
             return ReferenceEquals(ViewInfo, that.ViewInfo);
         }
         public bool FilterValid(QueryParameters that)
         {
-            return PivotValid(that) && Equals(RowFilter, that.RowFilter);
-        }
-        public bool SortValid(QueryParameters that)
-        {
-            return FilterValid(that) && Equals(SortDescriptions, that.SortDescriptions);
+            return QueryValid(that) && Equals(TransformStack, that.TransformStack);
         }
     }
 }

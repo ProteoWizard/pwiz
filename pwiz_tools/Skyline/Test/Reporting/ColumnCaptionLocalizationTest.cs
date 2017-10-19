@@ -72,8 +72,8 @@ namespace pwiz.SkylineTest.Reporting
             foreach (var columnDescriptor in
                     EnumerateAllColumnDescriptors(skylineDataSchema, STARTING_TYPES))
             {
-                var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor);
-                if (!skylineDataSchema.DataSchemaLocalizer.HasEntry(invariantCaption))
+                var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor) as ColumnCaption;
+                if (invariantCaption != null && !skylineDataSchema.DataSchemaLocalizer.HasEntry(invariantCaption))
                 {
                     missingCaptions.Add(invariantCaption);
                 }
@@ -106,7 +106,7 @@ namespace pwiz.SkylineTest.Reporting
                 if (string.IsNullOrEmpty(invariantDescription))
                 {
                     var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor);
-                    missingCaptions.Add(invariantCaption);
+                    missingCaptions.Add((ColumnCaption) invariantCaption);
                 }
             }
             if (missingCaptions.Count == 0)
@@ -142,11 +142,10 @@ namespace pwiz.SkylineTest.Reporting
                     }
                 }
             }
-            foreach (var columnDescriptor in EnumerateAllColumnDescriptors(dataSchema, STARTING_TYPES)
-                )
+            foreach (var columnDescriptor in EnumerateAllColumnDescriptors(dataSchema, STARTING_TYPES))
             {
                 var invariantCaption = dataSchema.GetColumnCaption(columnDescriptor);
-                columnCaptions.Remove(invariantCaption.InvariantCaption);
+                columnCaptions.Remove(invariantCaption.GetCaption(DataSchemaLocalizer.INVARIANT));
             }
             var unusedCaptions = columnCaptions.ToArray();
             Assert.AreEqual(0, unusedCaptions.Length, "Unused entries found in ColumnCaptions.resx: {0}", string.Join(",", unusedCaptions));
@@ -188,7 +187,11 @@ namespace pwiz.SkylineTest.Reporting
             var allColumnCaptions = new HashSet<ColumnCaption>();
             foreach (var columnDescriptor in EnumerateAllColumnDescriptors(dataSchema, startingTypes))
             {
-                allColumnCaptions.Add(dataSchema.GetColumnCaption(columnDescriptor));
+                var columnCaption = dataSchema.GetColumnCaption(columnDescriptor) as ColumnCaption;
+                if (columnCaption != null)
+                {
+                    allColumnCaptions.Add(columnCaption);
+                }
             }
             WriteResXFile(writer, allColumnCaptions);
         }

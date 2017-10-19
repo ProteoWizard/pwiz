@@ -12306,6 +12306,42 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Full Precision.
+        /// </summary>
+        public static string FormatSuggestion_FullPrecision_Full_Precision {
+            get {
+                return ResourceManager.GetString("FormatSuggestion_FullPrecision_Full_Precision", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Integer.
+        /// </summary>
+        public static string FormatSuggestion_Integer_Integer {
+            get {
+                return ResourceManager.GetString("FormatSuggestion_Integer_Integer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Percent.
+        /// </summary>
+        public static string FormatSuggestion_Percent_Percent {
+            get {
+                return ResourceManager.GetString("FormatSuggestion_Percent_Percent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scientific.
+        /// </summary>
+        public static string FormatSuggestion_Scientific_Scientific {
+            get {
+                return ResourceManager.GetString("FormatSuggestion_Scientific_Scientific", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Formulas are written in standard chemical notation, e.g. &quot;C2H6O&quot;.  Heavy isotopes are indicated by a prime (e.g. C&apos; for C13) or double prime for less abundant stable iostopes (e.g. O&quot; for O17, O&apos; for O18)..
         /// </summary>
         public static string FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__ {
@@ -19971,15 +20007,6 @@ namespace pwiz.Skyline.Properties {
         public static string PivotReportDlg_OkDialog_A_report_must_have_at_least_one_column {
             get {
                 return ResourceManager.GetString("PivotReportDlg_OkDialog_A_report_must_have_at_least_one_column", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The report &apos;{0}&apos; already exists..
-        /// </summary>
-        public static string PivotReportDlg_OkDialog_The_report__0__already_exists {
-            get {
-                return ResourceManager.GetString("PivotReportDlg_OkDialog_The_report__0__already_exists", resourceCulture);
             }
         }
         

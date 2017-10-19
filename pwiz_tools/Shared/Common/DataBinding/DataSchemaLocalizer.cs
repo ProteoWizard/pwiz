@@ -17,10 +17,12 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Resources;
+using System.Threading;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding
@@ -42,10 +44,6 @@ namespace pwiz.Common.DataBinding
 
         public string LookupColumnCaption(ColumnCaption caption)
         {
-            if (!caption.IsLocalizable)
-            {
-                return caption.InvariantCaption;
-            }
             foreach (var columnCaptionResourceManager in ColumnCaptionResourceManagers)
             {
                 string localizedCaption = columnCaptionResourceManager.GetString(caption.InvariantCaption);
@@ -59,12 +57,24 @@ namespace pwiz.Common.DataBinding
 
         public bool HasEntry(ColumnCaption caption)
         {
-            if (!caption.IsLocalizable)
-            {
-                return true;
-            }
             return ColumnCaptionResourceManagers
                 .Any(resourceManager => null != resourceManager.GetString(caption.InvariantCaption));
+        }
+
+        public T CallWithCultureInfo<T>(Func<T> func)
+        {
+            var oldCulture = Thread.CurrentThread.CurrentCulture;
+            var oldUiCulture = Thread.CurrentThread.CurrentUICulture;
+            try
+            {
+                Thread.CurrentThread.CurrentUICulture = Thread.CurrentThread.CurrentCulture = FormatProvider;
+                return func();
+            }
+            finally
+            {
+                Thread.CurrentThread.CurrentUICulture = oldUiCulture;
+                Thread.CurrentThread.CurrentCulture = oldCulture;
+            }
         }
     }
 }

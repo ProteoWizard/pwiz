@@ -118,7 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-<!-- ReSharper disable DuplicateResource -->
   <data name="agg_count" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\agg_count.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -371,15 +370,151 @@
     <value>List of {0}</value>
   </data>
   <data name="SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock" xml:space="preserve">
-    <value xml:space="preserve">Can't acquire write lock while holding read lock.</value>
+    <value>Can't acquire write lock while holding read lock.</value>
   </data>
   <data name="SessionWithLock_EnsureWriteLock_Must_have_write_lock" xml:space="preserve">
-    <value xml:space="preserve">Must have write lock</value>
+    <value>Must have write lock</value>
+  </data>
+  <data name="Filter" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Filter.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Filter1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Filter.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Pivot" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Pivot.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PivotAndFilter" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PivotAndFilter.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PlainLayout" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PlainLayout.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="AggregateOperation_Sum_Sum__0_" xml:space="preserve">
+    <value>Sum {0}</value>
+  </data>
+  <data name="AggregateOperation_Mean_Mean__0_" xml:space="preserve">
+    <value>Mean {0}</value>
+  </data>
+  <data name="AggregateOperation_Min_Min__0_" xml:space="preserve">
+    <value>Min {0}</value>
+  </data>
+  <data name="AggregateOperation_Max_Max__0_" xml:space="preserve">
+    <value>Max {0}</value>
+  </data>
+  <data name="AggregateOperation_StdDev_StdDev__0_" xml:space="preserve">
+    <value>StdDev {0}</value>
+  </data>
+  <data name="AggregateOperation_Cv_CV_Of__0_" xml:space="preserve">
+    <value>CV {0}</value>
+  </data>
+  <data name="CountImpl_CountImpl_Count__0_" xml:space="preserve">
+    <value>Count {0}</value>
+  </data>
+  <data name="AggregateOperation_Sum_Sum" xml:space="preserve">
+    <value>Sum</value>
+  </data>
+  <data name="AggregateOperation_Mean_Mean" xml:space="preserve">
+    <value>Mean</value>
+  </data>
+  <data name="AggregateOperation_Min_Min" xml:space="preserve">
+    <value>Min</value>
+  </data>
+  <data name="AggregateOperation_Max_Max" xml:space="preserve">
+    <value>Max</value>
+  </data>
+  <data name="AggregateOperation_StdDev_Standard_Deviation" xml:space="preserve">
+    <value>Standard Deviation</value>
+  </data>
+  <data name="AggregateOperation_Cv_Coefficient_Of_Variation" xml:space="preserve">
+    <value>Coefficient Of Variation</value>
+  </data>
+  <data name="CountImpl_CountImpl_Count" xml:space="preserve">
+    <value>Count</value>
   </data>
   <data name="ColumnLimitExceededColumn_TruncatedColumnCount__0__additional_columns_not_shown_" xml:space="preserve">
     <value>{0} additional columns not shown.</value>
   </data>
   <data name="ColumnLimitExceededColumn_ColumnLimitExceededColumn_Column_Limit_Exceeded" xml:space="preserve">
     <value>Column Limit Exceeded</value>
+  </data>
+  <data name="PivotingForm_ShowPivotingForm_The_Pivot_Editor_cannot_be_shown_because_there_are_more_than__0__columns_" xml:space="preserve">
+    <value>The Pivot Editor cannot be shown because there are more than {0} columns.</value>
+  </data>
+  <data name="NavBar_MakeTransformStackMenuItem_No_Transforms" xml:space="preserve">
+    <value>No Transforms</value>
+  </data>
+  <data name="ManageLayoutsForm_UpdateButtons_Clear_Default" xml:space="preserve">
+    <value>Clear Default</value>
+  </data>
+  <data name="ManageLayoutsForm_UpdateButtons_Set_Default" xml:space="preserve">
+    <value>Set Default</value>
+  </data>
+  <data name="NavBar_UpdateGroupTotalDropdown_New_Pivot___" xml:space="preserve">
+    <value>New Pivot...</value>
+  </data>
+  <data name="NavBar_UpdateGroupTotalDropdown_Remember_current_layout___" xml:space="preserve">
+    <value>Remember current layout...</value>
+  </data>
+  <data name="NavBar_UpdateGroupTotalDropdown_Manage_layouts___" xml:space="preserve">
+    <value>Manage layouts...</value>
+  </data>
+  <data name="NavBar_UpdateGroupTotalDropdown_Modify_Current_Pivot___" xml:space="preserve">
+    <value>Modify Current Pivot...</value>
+  </data>
+  <data name="ManageLayoutsForm_UpdateUi_Manage_layouts_for__0_" xml:space="preserve">
+    <value>Manage layouts for {0}</value>
+  </data>
+  <data name="NameLayoutForm_OkDialog_Name_cannot_be_empty" xml:space="preserve">
+    <value>Name cannot be empty</value>
+  </data>
+  <data name="NameLayoutForm_OkDialog_You_already_have_a_layout_named___0____Do_you_want_to_replace_it_" xml:space="preserve">
+    <value>You already have a layout named '{0}'. Do you want to replace it?</value>
+  </data>
+  <data name="NavBar_UpdateGroupTotalDropdown_Transforms" xml:space="preserve">
+    <value>Transforms</value>
+  </data>
+  <data name="PivotEditor_MakeListItem_Unable_to_find_column___0___" xml:space="preserve">
+    <value>Unable to find column '{0}'.</value>
+  </data>
+  <data name="RowFilter_Summary_Sort_on_" xml:space="preserve">
+    <value>Sort on </value>
+  </data>
+  <data name="RowFilter_Summary__desc" xml:space="preserve">
+    <value> desc</value>
+    <comment>This is short for "descending".</comment>
+  </data>
+  <data name="RowFilter_Summary_Filter_on__0_" xml:space="preserve">
+    <value>Filter on {0}</value>
+  </data>
+  <data name="RowFilter_Summary_Filter_on__0__columns" xml:space="preserve">
+    <value>Filter on {0} columns</value>
+  </data>
+  <data name="RowFilter_Summary_Filter_for__0_" xml:space="preserve">
+    <value>Filter for {0}</value>
+  </data>
+  <data name="RowFilter_Summary_Filter_for_text_and__0__columns" xml:space="preserve">
+    <value>Filter for text and {0} columns</value>
+  </data>
+  <data name="RowFilter_GetDescription__case_sensitive" xml:space="preserve">
+    <value> case sensitive</value>
+  </data>
+  <data name="RowFilter_GetDescription_Order_by_" xml:space="preserve">
+    <value>Order by </value>
+  </data>
+  <data name="RowFilter_GetDescription_then_" xml:space="preserve">
+    <value>then </value>
+  </data>
+  <data name="PivotSpec_Summary_Pivot__0_x_1_x_2_" xml:space="preserve">
+    <value>Pivot {0}x{1}x{2}</value>
+  </data>
+  <data name="PivotSpec_GetDescription_Row_Headers_" xml:space="preserve">
+    <value>Row Headers:</value>
+  </data>
+  <data name="PivotSpec_GetDescription_Column_Headers_" xml:space="preserve">
+    <value>Column Headers:</value>
+  </data>
+  <data name="PivotSpec_GetDescription_Values_" xml:space="preserve">
+    <value>Values:</value>
   </data>
 </root>

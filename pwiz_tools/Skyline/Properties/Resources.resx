@@ -7273,9 +7273,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="PeptideGroupTreeNode_ChildUndoHeading__0__" xml:space="preserve">
     <value>{0} peptides</value>
   </data>
-  <data name="PivotReportDlg_OkDialog_The_report__0__already_exists" xml:space="preserve">
-    <value>The report '{0}' already exists.</value>
-  </data>
   <data name="SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_does_not_contain_any_Skyline_documents" xml:space="preserve">
     <value>The zip file is not a shared file. The file does not contain any Skyline documents.</value>
   </data>
@@ -9916,5 +9913,17 @@ Would you like to remove some or all of the prefix or suffix to shorten the name
   </data>
   <data name="SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff" xml:space="preserve">
     <value>Remove peptides above CV cutoff</value>
+  </data>
+  <data name="FormatSuggestion_FullPrecision_Full_Precision" xml:space="preserve">
+    <value>Full Precision</value>
+  </data>
+  <data name="FormatSuggestion_Scientific_Scientific" xml:space="preserve">
+    <value>Scientific</value>
+  </data>
+  <data name="FormatSuggestion_Integer_Integer" xml:space="preserve">
+    <value>Integer</value>
+  </data>
+  <data name="FormatSuggestion_Percent_Percent" xml:space="preserve">
+    <value>Percent</value>
   </data>
 </root>

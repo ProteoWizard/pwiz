@@ -112,7 +112,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             var viewSpecList = ViewContext.GetViewSpecList(chooseViewsControl1.SelectedGroup.Id);
             var selectedViewNames = new HashSet<string>(chooseViewsControl1.SelectedViews.Select(viewName => viewName.Name));
-            viewSpecList = new ViewSpecList(viewSpecList.ViewSpecs.Where(view => selectedViewNames.Contains(view.Name)));
+            viewSpecList = viewSpecList.Filter(view => selectedViewNames.Contains(view.Name));
             if (null == filename)
             {
                 ViewContext.ExportViews(this, viewSpecList);
@@ -206,7 +206,10 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public void CopyToGroup(ViewGroup group)
         {
-            var selectedViews = new ViewSpecList(chooseViewsControl1.SelectedViews.Select(viewName=>ViewContext.GetViewSpecList(viewName.GroupId).GetView(viewName.Name)));
+            var selectedNames = new HashSet<ViewName>(chooseViewsControl1.SelectedViews);
+            var currentGroupId = chooseViewsControl1.SelectedGroup.Id;
+            var selectedViews = ViewContext.GetViewSpecList(chooseViewsControl1.SelectedGroup.Id)
+                .Filter(view => selectedNames.Contains(currentGroupId.ViewName(view.Name)));
             ViewContext.CopyViewsToGroup(this, group, selectedViews);
         }
 

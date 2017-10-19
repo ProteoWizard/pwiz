@@ -130,7 +130,9 @@
     <Compile Include="Database\NHibernate\SessionWithLock.cs" />
     <Compile Include="Database\NHibernate\StatelessSessionWithLock.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />
+    <Compile Include="DataBinding\AggregateOperation.cs" />
     <Compile Include="DataBinding\Attributes\AdvancedAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\ColumnCaptionAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ExpensiveAttribute.cs" />
     <Compile Include="DataBinding\Attributes\InvariantDisplayNameAttribute.cs" />
     <Compile Include="DataBinding\Attributes\HideWhenAttribute.cs" />
@@ -140,6 +142,16 @@
     <Compile Include="DataBinding\Attributes\OneToManyAttribute.cs" />
     <Compile Include="DataBinding\ChainedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\CollectionInfo.cs" />
+    <Compile Include="DataBinding\ColumnFormats.cs" />
+    <Compile Include="DataBinding\Controls\ColumnListEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\ColumnListEditor.Designer.cs">
+      <DependentUpon>ColumnListEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataBinding\Controls\ColumnListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="DataBinding\Controls\Editor\ChooseViewsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -158,12 +170,31 @@
     <Compile Include="DataBinding\Controls\Editor\DocumentationViewer.Designer.cs">
       <DependentUpon>DocumentationViewer.cs</DependentUpon>
     </Compile>
+    <Compile Include="DataBinding\Controls\ManageLayoutsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\ManageLayoutsForm.Designer.cs">
+      <DependentUpon>ManageLayoutsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataBinding\Controls\NameLayoutForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\NameLayoutForm.Designer.cs">
+      <DependentUpon>NameLayoutForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataBinding\Controls\PivotEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\PivotEditor.Designer.cs">
+      <DependentUpon>PivotEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="DataBinding\Controls\QuickFilterForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="DataBinding\Controls\QuickFilterForm.Designer.cs">
       <DependentUpon>QuickFilterForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="DataBinding\DataPropertyDescriptor.cs" />
     <Compile Include="DataBinding\DataSchemaLocalizer.cs" />
     <Compile Include="DataBinding\ColumnCaption.cs" />
     <Compile Include="DataBinding\ColumnDescriptor.cs" />
@@ -230,22 +261,27 @@
     <Compile Include="DataBinding\FilterOperation.cs" />
     <Compile Include="DataBinding\FilterPredicate.cs" />
     <Compile Include="DataBinding\Internal\AbstractQuery.cs" />
-    <Compile Include="DataBinding\Internal\AbstractRowSourceWrapper.cs" />
     <Compile Include="DataBinding\Internal\BackgroundQuery.cs" />
     <Compile Include="DataBinding\Internal\BindingListView.cs" />
     <Compile Include="DataBinding\Internal\ForegroundQuery.cs" />
+    <Compile Include="DataBinding\Internal\GroupAndTotaler.cs" />
     <Compile Include="DataBinding\Internal\GroupedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\Internal\GroupedRow.cs" />
+    <Compile Include="DataBinding\Internal\IndexedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\Internal\IQueryRequest.cs" />
     <Compile Include="DataBinding\Internal\PivotedRows.cs" />
     <Compile Include="DataBinding\Internal\Pivoter.cs" />
     <Compile Include="DataBinding\Internal\QueryRequestor.cs" />
     <Compile Include="DataBinding\Internal\QueryResults.cs" />
-    <Compile Include="DataBinding\Internal\RowFilter.cs" />
-    <Compile Include="DataBinding\Internal\RowSourceWrappers.cs" />
+    <Compile Include="DataBinding\Layout\RowFilter.cs" />
+    <Compile Include="DataBinding\Internal\RowSourceWrapper.cs" />
     <Compile Include="DataBinding\IRowSource.cs" />
+    <Compile Include="DataBinding\Layout\IRowTransform.cs" />
     <Compile Include="DataBinding\IViewTransformer.cs" />
+    <Compile Include="DataBinding\Layout\TransformStack.cs" />
+    <Compile Include="DataBinding\Layout\ViewLayoutList.cs" />
     <Compile Include="DataBinding\PivotKey.cs" />
+    <Compile Include="DataBinding\Layout\PivotSpec.cs" />
     <Compile Include="DataBinding\PropertyPath.cs" />
     <Compile Include="DataBinding\IViewContext.cs" />
     <Compile Include="DataBinding\QueryLock.cs" />
@@ -259,6 +295,9 @@
     <Compile Include="DataBinding\SerializableViewGroups.cs" />
     <Compile Include="DataBinding\SortableBindingList.cs" />
     <Compile Include="DataBinding\TotalOperation.cs" />
+    <Compile Include="DataBinding\TransformResults.cs" />
+    <Compile Include="DataBinding\Layout\ColumnId.cs" />
+    <Compile Include="DataBinding\Layout\ViewLayout.cs" />
     <Compile Include="DataBinding\ViewGroup.cs" />
     <Compile Include="DataBinding\ViewGroupInfo.cs" />
     <Compile Include="DataBinding\ViewInfo.cs" />
@@ -306,6 +345,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\RecordNavBar.zh-CHS.resx">
       <DependentUpon>RecordNavBar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\ColumnListEditor.resx">
+      <DependentUpon>ColumnListEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseColumnsTab.ja.resx">
       <DependentUpon>ChooseColumnsTab.cs</DependentUpon>
@@ -382,6 +424,15 @@
     <EmbeddedResource Include="DataBinding\Controls\Editor\ViewEditor.zh-CHS.resx">
       <DependentUpon>ViewEditor.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\ManageLayoutsForm.resx">
+      <DependentUpon>ManageLayoutsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\NameLayoutForm.resx">
+      <DependentUpon>NameLayoutForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\PivotEditor.resx">
+      <DependentUpon>PivotEditor.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\NavBar.ja.resx">
       <DependentUpon>NavBar.cs</DependentUpon>
     </EmbeddedResource>
@@ -436,6 +487,10 @@
     <Content Include="Resources\agg_stddev.bmp" />
     <Content Include="Resources\close.bmp" />
     <Content Include="Resources\BoolColumn.bmp" />
+    <Content Include="Resources\Filter.bmp" />
+    <Content Include="Resources\PlainLayout.bmp" />
+    <Content Include="Resources\PivotAndFilter.bmp" />
+    <Content Include="Resources\Pivot.bmp" />
     <Content Include="Resources\SublistColumn.bmp" />
     <Content Include="Resources\LinkColumn.bmp" />
     <Content Include="Resources\DataColumn.bmp" />
@@ -460,7 +515,9 @@
       <Name>CommonUtil</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="DataBinding\ColumnCaptions\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

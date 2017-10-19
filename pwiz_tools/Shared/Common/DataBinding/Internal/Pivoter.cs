@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -196,7 +195,7 @@ namespace pwiz.Common.DataBinding.Internal
             var pivotedItems = expandedItems.Select(item => Pivot(cancellationToken, item));
             var filteredItems = Filter(cancellationToken, pivotedItems);
             var rows = ImmutableList.ValueOf(filteredItems);
-            var result = new PivotedRows(rows, new PropertyDescriptorCollection(GetItemProperties(rows).ToArray()));
+            var result = new PivotedRows(rows, GetItemProperties(rows));
             if (ViewInfo.HasTotals)
             {
                 result = GroupAndTotal(cancellationToken, result);
@@ -281,7 +280,7 @@ namespace pwiz.Common.DataBinding.Internal
             Array.Sort(outerPivotKeys, pivotKeyComparer);
             var innerPivotKeys = allInnerPivotKeys.ToArray();
             Array.Sort(innerPivotKeys, pivotKeyComparer);
-            var reportItemProperties = new List<PropertyDescriptor>();
+            var reportItemProperties = new List<DataPropertyDescriptor>();
             var propertyNames = new HashSet<string>();
             foreach (var displayColumn in ViewInfo.DisplayColumns)
             {
@@ -340,7 +339,7 @@ namespace pwiz.Common.DataBinding.Internal
             }
             return new PivotedRows(allReportRows.SelectMany(entry=>entry.Value.Select(
                 reportRow=>new RowItem(reportRow))), 
-                new PropertyDescriptorCollection(reportItemProperties.ToArray()));
+                reportItemProperties);
         }
 
         public HashSet<PivotKey> GetPivotKeys(PropertyPath pivotColumnId, IEnumerable<RowItem> rowItems)
@@ -369,10 +368,10 @@ namespace pwiz.Common.DataBinding.Internal
             return PivotColumns.LastOrDefault(col => columnDescriptor.PropertyPath.StartsWith(col.PropertyPath));
         }
 
-        public IEnumerable<PropertyDescriptor> GetItemProperties(IEnumerable<RowItem> rowItems)
+        public IEnumerable<DataPropertyDescriptor> GetItemProperties(IEnumerable<RowItem> rowItems)
         {
             var columnNames = new HashSet<string>();
-            var propertyDescriptors = new List<PropertyDescriptor>();
+            var propertyDescriptors = new List<DataPropertyDescriptor>();
             var pivotDisplayColumns = new Dictionary<PivotKey, List<DisplayColumn>>();
             var rowItemsArray = rowItems as RowItem[] ?? rowItems.ToArray();
             foreach (var displayColumn in ViewInfo.DisplayColumns)

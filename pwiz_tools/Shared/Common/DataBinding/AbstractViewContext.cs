@@ -31,6 +31,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 
@@ -60,6 +61,12 @@ namespace pwiz.Common.DataBinding
             return viewInfo.ParentColumn.PropertyType.Name + (currentViewName == GetDefaultViewName() ? string.Empty : currentViewName);
         }
         public abstract bool RunLongJob(Control owner, Action<CancellationToken, IProgressMonitor> job);
+
+        public virtual bool RunOnThisThread(Control owner, Action<CancellationToken, IProgressMonitor> job)
+        {
+            job(CancellationToken.None, new SilentProgressMonitor());
+            return true;
+        }
         public DataSchema DataSchema { get; private set; }
         public IEnumerable<ViewSpec> BuiltInViews
         {
@@ -251,14 +258,10 @@ namespace pwiz.Common.DataBinding
             {
                 var writer = new StreamWriter(stream, new UTF8Encoding(false));
                 bool finished = false;
-                RunLongJob(owner, (cancellationToken, progressMonitor) =>
+                RunOnThisThread(owner, (cancellationToken, progressMonitor) =>
                 {
-                    using (var clonedBindingList = new BindingListSource(cancellationToken))
-                    {
-                        SetViewFrom(bindingListSource, bindingListSource.RowSource, clonedBindingList);
-                        WriteData(progressMonitor, writer, clonedBindingList, dsvWriter);
-                        finished = !progressMonitor.IsCanceled;
-                    }
+                    WriteData(progressMonitor, writer, bindingListSource, dsvWriter);
+                    finished = !progressMonitor.IsCanceled;
                 });
                 if (finished)
                 {
@@ -287,14 +290,10 @@ namespace pwiz.Common.DataBinding
             try
             {
                 StringWriter tsvWriter = new StringWriter();
-                if (!RunLongJob(owner, (cancellationToken, progressMonitor) =>
+                if (!RunOnThisThread(owner, (cancellationToken, progressMonitor) =>
                 {
-                    using (var clonedBindingList = new BindingListSource(cancellationToken))
-                    {
-                        SetViewFrom(bindingListSource, bindingListSource.RowSource, clonedBindingList);
-                        WriteData(progressMonitor, tsvWriter, clonedBindingList, DataFormats.TSV.GetDsvWriter());
+                    WriteData(progressMonitor, tsvWriter, bindingListSource, DataFormats.TSV.GetDsvWriter());
                         progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
-                    }
                 }))
                 {
                     return;
@@ -350,7 +349,7 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        protected virtual void SaveView(ViewGroupId groupId, ViewSpec viewSpec, string originalName)
+        public virtual void SaveView(ViewGroupId groupId, ViewSpec viewSpec, string originalName)
         {
             var viewSpecList = GetViewSpecList(groupId) ?? ViewSpecList.EMPTY;
             viewSpecList = viewSpecList.ReplaceView(originalName, viewSpec);
@@ -395,7 +394,7 @@ namespace pwiz.Common.DataBinding
                     case DialogResult.Cancel:
                         return;
                     case DialogResult.Yes:
-                        currentViews = new ViewSpecList(currentViews.ViewSpecs.Where(view => !conflicts.Contains(view.Name)));
+                        currentViews = currentViews.Filter(view => !conflicts.Contains(view.Name));
                         break;
                 }
             }
@@ -404,6 +403,8 @@ namespace pwiz.Common.DataBinding
                 if (null == currentViews.GetView(view.Name))
                 {
                     currentViews = currentViews.ReplaceView(null, view);
+                    currentViews = currentViews.SaveViewLayouts(currentViews.GetViewLayouts(view.Name)
+                        .Merge(viewSpecList.GetViewLayouts(view.Name).Layouts));
                 }
             }
             SaveViewSpecList(viewGroup.Id, currentViews);
@@ -497,17 +498,24 @@ namespace pwiz.Common.DataBinding
             column.HeaderText = propertyDescriptor.DisplayName;
             column.SortMode = DataGridViewColumnSortMode.Automatic;
             column.FillWeight = 1;
-            var attributes = GetAttributeCollection(propertyDescriptor);
-            var formatAttribute = attributes[typeof (FormatAttribute)] as FormatAttribute;
-            if (null != formatAttribute)
+            var dataPropertyDescriptor = propertyDescriptor as DataPropertyDescriptor;
+            if (dataPropertyDescriptor != null)
             {
-                if (null != formatAttribute.Format)
+                var format = (FormatAttribute) dataPropertyDescriptor.Attributes[typeof(FormatAttribute)];
+                if (format != null)
                 {
-                    column.DefaultCellStyle.Format = formatAttribute.Format;
-                }
-                if (null != formatAttribute.NullValue && propertyDescriptor.IsReadOnly)
-                {
-                    column.DefaultCellStyle.NullValue = formatAttribute.NullValue;
+                    if (null != format.Format)
+                    {
+                        column.DefaultCellStyle.Format = format.Format;
+                    }
+                    if (null != format.NullValue && propertyDescriptor.IsReadOnly)
+                    {
+                        column.DefaultCellStyle.NullValue = format.NullValue;
+                    }
+                    if (format.Width.HasValue)
+                    {
+                        column.Width = format.Width.Value;
+                    }
                 }
             }
             column.DefaultCellStyle.FormatProvider = DataSchema.DataSchemaLocalizer.FormatProvider;
@@ -651,6 +659,18 @@ namespace pwiz.Common.DataBinding
             {
                 targetBindingList.ApplySort(sourceBindingList.SortDescriptions);
             }
+        }
+
+        public ViewLayoutList GetViewLayoutList(ViewName viewName)
+        {
+            return GetViewSpecList(viewName.GroupId).GetViewLayouts(viewName.Name);
+        }
+
+        public void SetViewLayoutList(ViewGroupId viewGroup, ViewLayoutList list)
+        {
+            var viewSpecList = GetViewSpecList(viewGroup);
+            viewSpecList = viewSpecList.SaveViewLayouts(list);
+            SaveViewSpecList(viewGroup, viewSpecList);
         }
 
         // Default implementation of ViewsChanged which never fires.

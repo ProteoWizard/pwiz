@@ -28,7 +28,7 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
-using pwiz.Common.DataBinding.Internal;
+using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -681,13 +681,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 columnFilters.Clear();
                 if (FoldChangCutoffValid)
                 {
-                    _absLog2FoldChangeFilter = CreateColumnFilter(ColumnCaptions.AbsLog2FoldChange, FilterOperations.OP_IS_GREATER_THAN, Settings.Default.Log2FoldChangeCutoff); // Not L10N
+                    _absLog2FoldChangeFilter = CreateColumnFilter(new ColumnId("AbsLog2FoldChange"), // Not L10N
+                        FilterOperations.OP_IS_GREATER_THAN, Settings.Default.Log2FoldChangeCutoff);
                     columnFilters.Add(_absLog2FoldChangeFilter);
                 }
 
                 if (PValueCutoffValid)
                 {
-                    _pValueFilter = CreateColumnFilter(ColumnCaptions.AdjustedPValue, FilterOperations.OP_IS_LESS_THAN, Math.Pow(10, -Settings.Default.PValueCutoff)); // Not L10N
+                    _pValueFilter = CreateColumnFilter(new ColumnId("AdjustedPValue"), // Not L10N
+                        FilterOperations.OP_IS_LESS_THAN, Math.Pow(10, -Settings.Default.PValueCutoff)); 
                     columnFilters.Add(_pValueFilter);  
                 }
             }
@@ -703,19 +705,20 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private bool FoldChangeFilterValid(IList<RowFilter.ColumnFilter> filters)
         {
-            return ContainsFilter(filters, ColumnCaptions.AbsLog2FoldChange, FilterOperations.OP_IS_GREATER_THAN, Settings.Default.Log2FoldChangeCutoff);
+            return ContainsFilter(filters, new ColumnId("AbsLog2FoldChange"), // Not L10N
+                FilterOperations.OP_IS_GREATER_THAN, Settings.Default.Log2FoldChangeCutoff);
         }
 
         private bool PValueFilterValid(IList<RowFilter.ColumnFilter> filters)
         {
-            return ContainsFilter(filters, ColumnCaptions.AdjustedPValue, FilterOperations.OP_IS_LESS_THAN,
-                Math.Pow(10, -Settings.Default.PValueCutoff));
+            return ContainsFilter(filters, new ColumnId("AdjustedPValue"), // Not L10N
+                FilterOperations.OP_IS_LESS_THAN, Math.Pow(10, -Settings.Default.PValueCutoff));
         }
 
         // Returns true if the filter is found
-        bool ContainsFilter(IEnumerable<RowFilter.ColumnFilter> filters, string columnCaption, IFilterOperation filterOp, double operand)
+        bool ContainsFilter(IEnumerable<RowFilter.ColumnFilter> filters, ColumnId columnId, IFilterOperation filterOp, double operand)
         {
-            return filters.Contains(f => f.ColumnCaption == columnCaption &&
+            return filters.Contains(f => Equals(f.ColumnId, columnId) &&
                                          ReferenceEquals(f.Predicate.FilterOperation, filterOp) &&
                                          Equals(f.Predicate.GetOperandDisplayText(_bindingListSource.ViewInfo.DataSchema, typeof(double)), operand.ToString(CultureInfo.CurrentCulture)));
         }
@@ -728,13 +731,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     _bindingListSource.ViewSpec.SetColumns(columns)));
         }
 
-        private RowFilter.ColumnFilter CreateColumnFilter(string columnDisplayName, IFilterOperation filterOp, double operand)
+        private RowFilter.ColumnFilter CreateColumnFilter(ColumnId columnId, IFilterOperation filterOp, double operand)
         {
             var op = FilterPredicate.CreateFilterPredicate(_bindingListSource.ViewInfo.DataSchema,
                 typeof(double), filterOp,
                 operand.ToString(CultureInfo.CurrentCulture));
 
-            return new RowFilter.ColumnFilter(columnDisplayName, op);
+            return new RowFilter.ColumnFilter(columnId, op);
         }
 
         public Rectangle ScreenRect { get { return  Screen.GetBounds(this); } }

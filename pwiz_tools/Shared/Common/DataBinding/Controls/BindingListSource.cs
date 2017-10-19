@@ -23,7 +23,9 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Internal;
+using pwiz.Common.DataBinding.Layout;
 
 namespace pwiz.Common.DataBinding.Controls
 {
@@ -35,6 +37,7 @@ namespace pwiz.Common.DataBinding.Controls
         }
         public BindingListSource() : this((TaskScheduler) null)
         {
+            
         }
 
         public BindingListSource(CancellationToken cancellationToken) : this()
@@ -47,6 +50,7 @@ namespace pwiz.Common.DataBinding.Controls
             base.DataSource = BindingListView = new BindingListView(taskScheduler);
             BindingListView.UnhandledExceptionEvent += BindingListViewOnUnhandledException;
             BindingListView.AllRowsChanged += BindingListViewOnAllRowsChanged;
+            ColumnFormats = new ColumnFormats();
         }
 
         private void BindingListViewOnAllRowsChanged(object sender, EventArgs eventArgs)
@@ -99,15 +103,36 @@ namespace pwiz.Common.DataBinding.Controls
             else
             {
                 IRowSource rowSource = null;
+                bool viewChanged = true;
                 if (null != ViewInfo)
                 {
                     if (ViewInfo.RowSourceName == viewInfo.RowSourceName)
                     {
                         rowSource = RowSource;
+                        if (ViewInfo.Name == viewInfo.Name)
+                        {
+                            viewChanged = false;
+                        }
                     }
                 }
                 rowSource = rowSource ?? viewContext.GetRowSource(viewInfo);
                 BindingListView.SetViewAndRows(viewInfo, rowSource);
+                if (viewChanged)
+                {
+                    BindingListView.ClearTransformStack();
+                }
+                if (ViewContext != null && viewInfo.ViewGroup != null)
+                {
+                    var viewLayoutList = ViewContext.GetViewLayoutList(viewInfo.ViewGroup.Id.ViewName(viewInfo.Name));
+                    if (null != viewLayoutList)
+                    {
+                        var defaultLayout = viewLayoutList.FindLayout(viewLayoutList.DefaultLayoutName);
+                        if (defaultLayout != null)
+                        {
+                            ApplyLayout(defaultLayout);
+                        }
+                    }
+                }
             }
             OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
         }
@@ -162,5 +187,27 @@ namespace pwiz.Common.DataBinding.Controls
         /// current cell in the DataGridView to the beginning of the row.
         /// </summary>
         public event EventHandler AllRowsChanged;
+
+        public ColumnFormats ColumnFormats
+        {
+            get; private set;
+        }
+
+        public ImmutableList<DataPropertyDescriptor> ItemProperties { get { return BindingListView.ItemProperties; } }
+
+        public DataPropertyDescriptor FindDataProperty(string dataPropertyName)
+        {
+            return ItemProperties.FirstOrDefault(pd => pd.Name == dataPropertyName);
+        }
+
+        public void ApplyLayout(ViewLayout viewLayout)
+        {
+            BindingListView.TransformStack = new TransformStack(viewLayout.RowTransforms, 0);
+            foreach (var format in viewLayout.ColumnFormats)
+            {
+                ColumnFormats.SetFormat(format.Item1, format.Item2);
+            }
+            // TODO: sort
+        }
     }
 }

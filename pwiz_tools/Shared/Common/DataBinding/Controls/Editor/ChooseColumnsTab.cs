@@ -109,8 +109,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 listViewItem.Font = new Font(listViewItem.Font, FontStyle.Bold | listViewItem.Font.Style);
                 DataSchema dataSchema = displayColumn.DataSchema;
-                ColumnCaption columnCaption = dataSchema.GetColumnCaption(displayColumn.ColumnDescriptor);
-                listViewItem.ToolTipText = dataSchema.GetLocalizedColumnCaption(columnCaption);
+                var columnCaption = dataSchema.GetColumnCaption(displayColumn.ColumnDescriptor);
+                listViewItem.ToolTipText = columnCaption.GetCaption(dataSchema.DataSchemaLocalizer);
             }
             return listViewItem;
         }

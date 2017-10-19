@@ -253,6 +253,114 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Coefficient Of Variation.
+        /// </summary>
+        internal static string AggregateOperation_Cv_Coefficient_Of_Variation {
+            get {
+                return ResourceManager.GetString("AggregateOperation_Cv_Coefficient_Of_Variation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CV {0}.
+        /// </summary>
+        internal static string AggregateOperation_Cv_CV_Of__0_ {
+            get {
+                return ResourceManager.GetString("AggregateOperation_Cv_CV_Of__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max.
+        /// </summary>
+        internal static string AggregateOperation_Max_Max {
+            get {
+                return ResourceManager.GetString("AggregateOperation_Max_Max", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max {0}.
+        /// </summary>
+        internal static string AggregateOperation_Max_Max__0_ {
+            get {
+                return ResourceManager.GetString("AggregateOperation_Max_Max__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mean.
+        /// </summary>
+        internal static string AggregateOperation_Mean_Mean {
+            get {
+                return ResourceManager.GetString("AggregateOperation_Mean_Mean", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mean {0}.
+        /// </summary>
+        internal static string AggregateOperation_Mean_Mean__0_ {
+            get {
+                return ResourceManager.GetString("AggregateOperation_Mean_Mean__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min.
+        /// </summary>
+        internal static string AggregateOperation_Min_Min {
+            get {
+                return ResourceManager.GetString("AggregateOperation_Min_Min", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min {0}.
+        /// </summary>
+        internal static string AggregateOperation_Min_Min__0_ {
+            get {
+                return ResourceManager.GetString("AggregateOperation_Min_Min__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Standard Deviation.
+        /// </summary>
+        internal static string AggregateOperation_StdDev_Standard_Deviation {
+            get {
+                return ResourceManager.GetString("AggregateOperation_StdDev_Standard_Deviation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to StdDev {0}.
+        /// </summary>
+        internal static string AggregateOperation_StdDev_StdDev__0_ {
+            get {
+                return ResourceManager.GetString("AggregateOperation_StdDev_StdDev__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sum.
+        /// </summary>
+        internal static string AggregateOperation_Sum_Sum {
+            get {
+                return ResourceManager.GetString("AggregateOperation_Sum_Sum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sum {0}.
+        /// </summary>
+        internal static string AggregateOperation_Sum_Sum__0_ {
+            get {
+                return ResourceManager.GetString("AggregateOperation_Sum_Sum__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap BoolColumn {
@@ -305,6 +413,24 @@ namespace pwiz.Common.Properties {
         internal static string ColumnLimitExceededColumn_TruncatedColumnCount__0__additional_columns_not_shown_ {
             get {
                 return ResourceManager.GetString("ColumnLimitExceededColumn_TruncatedColumnCount__0__additional_columns_not_shown_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Count.
+        /// </summary>
+        internal static string CountImpl_CountImpl_Count {
+            get {
+                return ResourceManager.GetString("CountImpl_CountImpl_Count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Count {0}.
+        /// </summary>
+        internal static string CountImpl_CountImpl_Count__0_ {
+            get {
+                return ResourceManager.GetString("CountImpl_CountImpl_Count__0_", resourceCulture);
             }
         }
         
@@ -457,6 +583,26 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Filter {
+            get {
+                object obj = ResourceManager.GetObject("Filter", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Filter1 {
+            get {
+                object obj = ResourceManager.GetObject("Filter1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Contains.
         /// </summary>
         internal static string FilterOperations_Contains {
@@ -584,6 +730,33 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Clear Default.
+        /// </summary>
+        internal static string ManageLayoutsForm_UpdateButtons_Clear_Default {
+            get {
+                return ResourceManager.GetString("ManageLayoutsForm_UpdateButtons_Clear_Default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set Default.
+        /// </summary>
+        internal static string ManageLayoutsForm_UpdateButtons_Set_Default {
+            get {
+                return ResourceManager.GetString("ManageLayoutsForm_UpdateButtons_Set_Default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Manage layouts for {0}.
+        /// </summary>
+        internal static string ManageLayoutsForm_UpdateUi_Manage_layouts_for__0_ {
+            get {
+                return ResourceManager.GetString("ManageLayoutsForm_UpdateUi_Manage_layouts_for__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete the view &apos;{0}&apos;?.
         /// </summary>
         internal static string ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___ {
@@ -619,6 +792,34 @@ namespace pwiz.Common.Properties {
             get {
                 object obj = ResourceManager.GetObject("maximize", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name cannot be empty.
+        /// </summary>
+        internal static string NameLayoutForm_OkDialog_Name_cannot_be_empty {
+            get {
+                return ResourceManager.GetString("NameLayoutForm_OkDialog_Name_cannot_be_empty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You already have a layout named &apos;{0}&apos;. Do you want to replace it?.
+        /// </summary>
+        internal static string NameLayoutForm_OkDialog_You_already_have_a_layout_named___0____Do_you_want_to_replace_it_ {
+            get {
+                return ResourceManager.GetString("NameLayoutForm_OkDialog_You_already_have_a_layout_named___0____Do_you_want_to_rep" +
+                        "lace_it_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Transforms.
+        /// </summary>
+        internal static string NavBar_MakeTransformStackMenuItem_No_Transforms {
+            get {
+                return ResourceManager.GetString("NavBar_MakeTransformStackMenuItem_No_Transforms", resourceCulture);
             }
         }
         
@@ -686,6 +887,51 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Manage layouts....
+        /// </summary>
+        internal static string NavBar_UpdateGroupTotalDropdown_Manage_layouts___ {
+            get {
+                return ResourceManager.GetString("NavBar_UpdateGroupTotalDropdown_Manage_layouts___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Modify Current Pivot....
+        /// </summary>
+        internal static string NavBar_UpdateGroupTotalDropdown_Modify_Current_Pivot___ {
+            get {
+                return ResourceManager.GetString("NavBar_UpdateGroupTotalDropdown_Modify_Current_Pivot___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New Pivot....
+        /// </summary>
+        internal static string NavBar_UpdateGroupTotalDropdown_New_Pivot___ {
+            get {
+                return ResourceManager.GetString("NavBar_UpdateGroupTotalDropdown_New_Pivot___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remember current layout....
+        /// </summary>
+        internal static string NavBar_UpdateGroupTotalDropdown_Remember_current_layout___ {
+            get {
+                return ResourceManager.GetString("NavBar_UpdateGroupTotalDropdown_Remember_current_layout___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transforms.
+        /// </summary>
+        internal static string NavBar_UpdateGroupTotalDropdown_Transforms {
+            get {
+                return ResourceManager.GetString("NavBar_UpdateGroupTotalDropdown_Transforms", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap NumberColumn {
@@ -707,9 +953,94 @@ namespace pwiz.Common.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap Pivot {
+            get {
+                object obj = ResourceManager.GetObject("Pivot", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap PivotAndFilter {
+            get {
+                object obj = ResourceManager.GetObject("PivotAndFilter", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap PivotColumn {
             get {
                 object obj = ResourceManager.GetObject("PivotColumn", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find column &apos;{0}&apos;..
+        /// </summary>
+        internal static string PivotEditor_MakeListItem_Unable_to_find_column___0___ {
+            get {
+                return ResourceManager.GetString("PivotEditor_MakeListItem_Unable_to_find_column___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Pivot Editor cannot be shown because there are more than {0} columns..
+        /// </summary>
+        internal static string PivotingForm_ShowPivotingForm_The_Pivot_Editor_cannot_be_shown_because_there_are_more_than__0__columns_ {
+            get {
+                return ResourceManager.GetString("PivotingForm_ShowPivotingForm_The_Pivot_Editor_cannot_be_shown_because_there_are_" +
+                        "more_than__0__columns_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Column Headers:.
+        /// </summary>
+        internal static string PivotSpec_GetDescription_Column_Headers_ {
+            get {
+                return ResourceManager.GetString("PivotSpec_GetDescription_Column_Headers_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Row Headers:.
+        /// </summary>
+        internal static string PivotSpec_GetDescription_Row_Headers_ {
+            get {
+                return ResourceManager.GetString("PivotSpec_GetDescription_Row_Headers_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Values:.
+        /// </summary>
+        internal static string PivotSpec_GetDescription_Values_ {
+            get {
+                return ResourceManager.GetString("PivotSpec_GetDescription_Values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pivot {0}x{1}x{2}.
+        /// </summary>
+        internal static string PivotSpec_Summary_Pivot__0_x_1_x_2_ {
+            get {
+                return ResourceManager.GetString("PivotSpec_Summary_Pivot__0_x_1_x_2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap PlainLayout {
+            get {
+                object obj = ResourceManager.GetObject("PlainLayout", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -793,6 +1124,87 @@ namespace pwiz.Common.Properties {
             get {
                 object obj = ResourceManager.GetObject("restore", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  case sensitive.
+        /// </summary>
+        internal static string RowFilter_GetDescription__case_sensitive {
+            get {
+                return ResourceManager.GetString("RowFilter_GetDescription__case_sensitive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Order by .
+        /// </summary>
+        internal static string RowFilter_GetDescription_Order_by_ {
+            get {
+                return ResourceManager.GetString("RowFilter_GetDescription_Order_by_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to then .
+        /// </summary>
+        internal static string RowFilter_GetDescription_then_ {
+            get {
+                return ResourceManager.GetString("RowFilter_GetDescription_then_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  desc.
+        /// </summary>
+        internal static string RowFilter_Summary__desc {
+            get {
+                return ResourceManager.GetString("RowFilter_Summary__desc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter for {0}.
+        /// </summary>
+        internal static string RowFilter_Summary_Filter_for__0_ {
+            get {
+                return ResourceManager.GetString("RowFilter_Summary_Filter_for__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter for text and {0} columns.
+        /// </summary>
+        internal static string RowFilter_Summary_Filter_for_text_and__0__columns {
+            get {
+                return ResourceManager.GetString("RowFilter_Summary_Filter_for_text_and__0__columns", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter on {0}.
+        /// </summary>
+        internal static string RowFilter_Summary_Filter_on__0_ {
+            get {
+                return ResourceManager.GetString("RowFilter_Summary_Filter_on__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter on {0} columns.
+        /// </summary>
+        internal static string RowFilter_Summary_Filter_on__0__columns {
+            get {
+                return ResourceManager.GetString("RowFilter_Summary_Filter_on__0__columns", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sort on .
+        /// </summary>
+        internal static string RowFilter_Summary_Sort_on_ {
+            get {
+                return ResourceManager.GetString("RowFilter_Summary_Sort_on_", resourceCulture);
             }
         }
         

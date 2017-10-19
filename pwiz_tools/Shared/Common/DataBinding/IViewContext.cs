@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Layout;
 
 namespace pwiz.Common.DataBinding
 {
@@ -45,6 +46,8 @@ namespace pwiz.Common.DataBinding
         void CopyAll(Control owner, BindingListSource bindingListSource);
         ViewSpec NewView(Control owner, ViewGroup viewGroup);
         ViewSpec CustomizeView(Control owner, ViewSpec viewSpec, ViewGroup viewGroup);
+        ViewLayoutList GetViewLayoutList(ViewName viewName);
+        void SetViewLayoutList(ViewGroupId viewGroup, ViewLayoutList list);
         void ManageViews(Control owner);
         void ExportViews(Control owner, ViewSpecList views);
         void ExportViewsToFile(Control owner, ViewSpecList views, string fileName);
@@ -61,5 +64,6 @@ namespace pwiz.Common.DataBinding
         Image[] GetImageList();
         int GetImageIndex(ViewSpec viewSpec);
         event Action ViewsChanged;
+        DataSchema DataSchema { get; }
     }
 }

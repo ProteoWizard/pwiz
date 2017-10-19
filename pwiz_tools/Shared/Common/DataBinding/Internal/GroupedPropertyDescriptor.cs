@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 
 namespace pwiz.Common.DataBinding.Internal
@@ -27,14 +26,14 @@ namespace pwiz.Common.DataBinding.Internal
     /// PropertyDescriptor for a property which gets its value from a <see cref="GroupedRow"/> 
     /// inside of a <see cref="RowItem"/>.
     /// </summary>
-    internal class GroupedPropertyDescriptor : PropertyDescriptor
+    internal class GroupedPropertyDescriptor : DataPropertyDescriptor
     {
         public GroupedPropertyDescriptor(string name, DisplayColumn displayColumn, PivotKey innerPivotKey) : this(name, null, displayColumn, innerPivotKey)
         {
         }
 
         public GroupedPropertyDescriptor(string name, PivotKey outerPivotKey, DisplayColumn displayColumn, PivotKey innerPivotKey) 
-            : base(name, displayColumn.GetAttributes(MergePivotKeys(outerPivotKey, innerPivotKey)).ToArray())
+            : base(name, displayColumn.GetColumnCaption(MergePivotKeys(outerPivotKey, innerPivotKey)), displayColumn.DataSchema.DataSchemaLocalizer, displayColumn.GetAttributes(MergePivotKeys(outerPivotKey, innerPivotKey)).ToArray())
         {
             OuterPivotKey = outerPivotKey;
             InnerPivotKey = innerPivotKey;

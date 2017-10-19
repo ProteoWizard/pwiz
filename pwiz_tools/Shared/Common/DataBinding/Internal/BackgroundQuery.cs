@@ -29,7 +29,7 @@ namespace pwiz.Common.DataBinding.Internal
         private CancellationToken _rootCancellationToken;
         private CancellationTokenSource _cancellationTokenSource;
 
-        public BackgroundQuery(IRowSourceWrapper rowSource, TaskScheduler backgroundTaskScheduler, IQueryRequest queryRequest)
+        public BackgroundQuery(RowSourceWrapper rowSource, TaskScheduler backgroundTaskScheduler, IQueryRequest queryRequest)
         {
             RowSource = rowSource;
             BackgroundTaskScheduler = backgroundTaskScheduler;
@@ -37,7 +37,7 @@ namespace pwiz.Common.DataBinding.Internal
             _rootCancellationToken = QueryRequest.CancellationToken;
         }
 
-        public IRowSourceWrapper RowSource { get; private set; }
+        public RowSourceWrapper RowSource { get; private set; }
         public IQueryRequest QueryRequest { get; private set; }
         public TaskScheduler BackgroundTaskScheduler { get; private set; }
 
@@ -98,7 +98,8 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 using (QueryRequest.QueryLock.GetReadLock())
                 {
-                    var queryResults = QueryRequest.InitialQueryResults
+                    var queryResults = QueryResults.Empty
+                        .SetParameters(QueryRequest.QueryParameters)
                         .SetSourceRows(RowSource.ListRowItems());
                     queryResults = RunAll(cancellationToken, queryResults);
                     QueryRequest.SetFinalQueryResults(queryResults);

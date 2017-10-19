@@ -50,8 +50,9 @@
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.lblFilterApplied = new System.Windows.Forms.ToolStripLabel();
             this.bindingNavigator1 = new System.Windows.Forms.BindingNavigator(this.components);
-            this.navBarButtonCopyAll = new System.Windows.Forms.ToolStripButton();
+            this.btnGroupTotal = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.navBarButtonCopyAll = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator1)).BeginInit();
             this.bindingNavigator1.SuspendLayout();
             this.SuspendLayout();
@@ -176,6 +177,7 @@
             this.bindingNavigator1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.bindingNavigator1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.navBarButtonViews,
+            this.btnGroupTotal,
             this.bindingNavigatorMoveFirstItem,
             this.bindingNavigatorMovePreviousItem,
             this.bindingNavigatorSeparator,
@@ -204,17 +206,25 @@
             this.bindingNavigator1.Name = "bindingNavigator1";
             this.bindingNavigator1.PositionItem = this.bindingNavigatorPositionItem;
             // 
+            // btnGroupTotal
+            // 
+            this.btnGroupTotal.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.btnGroupTotal, "btnGroupTotal");
+            this.btnGroupTotal.Name = "btnGroupTotal";
+            this.btnGroupTotal.ButtonClick += new System.EventHandler(this.btnGroupTotal_Click);
+            this.btnGroupTotal.DropDownOpening += new System.EventHandler(this.btnGroupTotal_DropDownOpening);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            resources.ApplyResources(this.toolStripSeparator3, "toolStripSeparator3");
+            // 
             // navBarButtonCopyAll
             // 
             this.navBarButtonCopyAll.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.navBarButtonCopyAll, "navBarButtonCopyAll");
             this.navBarButtonCopyAll.Name = "navBarButtonCopyAll";
             this.navBarButtonCopyAll.Click += new System.EventHandler(this.NavBarButtonCopyAllOnClick);
-            // 
-            // toolStripSeparator3
-            // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            resources.ApplyResources(this.toolStripSeparator3, "toolStripSeparator3");
             // 
             // NavBar
             // 
@@ -254,6 +264,7 @@
         private System.Windows.Forms.BindingNavigator bindingNavigator1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripButton navBarButtonCopyAll;
+        private System.Windows.Forms.ToolStripSplitButton btnGroupTotal;
 
 
 

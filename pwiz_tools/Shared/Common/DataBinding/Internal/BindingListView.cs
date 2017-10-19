@@ -25,7 +25,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Layout;
 
 namespace pwiz.Common.DataBinding.Internal
 {
@@ -46,7 +48,7 @@ namespace pwiz.Common.DataBinding.Internal
     internal class BindingListView : BindingList<RowItem>, ITypedList, IBindingListView, IRaiseItemChangedEvents, IDisposable
     {
         private readonly HashSet<ListChangedEventHandler> _listChangedEventHandlers = new HashSet<ListChangedEventHandler>();
-        private PropertyDescriptorCollection _itemProperties;
+        private ImmutableList<DataPropertyDescriptor> _itemProperties;
         private QueryResults _queryResults;
         private IRowSource _rowSource = StaticRowSource.EMPTY;
         private readonly QueryRequestor _queryRequestor;
@@ -56,7 +58,7 @@ namespace pwiz.Common.DataBinding.Internal
             EventTaskScheduler = eventTaskScheduler;
             QueryLock = new QueryLock(CancellationToken.None);
             _queryResults = QueryResults.Empty;
-            _itemProperties = new PropertyDescriptorCollection(new PropertyDescriptor[0], true);
+            _itemProperties = ImmutableList<DataPropertyDescriptor>.EMPTY;
             _queryRequestor = new QueryRequestor(this);
             AllowNew = AllowRemove = AllowEdit = false;
         }
@@ -83,6 +85,11 @@ namespace pwiz.Common.DataBinding.Internal
         {
             RowSource = rows;
             _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.SetViewInfo(viewInfo);
+        }
+
+        public void ClearTransformStack()
+        {
+            TransformStack = TransformStack.EMPTY;
         }
         public ViewSpec ViewSpec
         {
@@ -129,7 +136,7 @@ namespace pwiz.Common.DataBinding.Internal
 
         public void ApplySort(ListSortDescriptionCollection sorts)
         {
-            _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.SetSortDescriptions(sorts);
+            RowFilter = RowFilter.ChangeListSortDescriptionCollection(sorts);
             // Fire an event so that the NavBar updates to show that the DataGridView is sorting
             OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
         }
@@ -209,7 +216,7 @@ namespace pwiz.Common.DataBinding.Internal
         {
             get
             {
-                return _queryRequestor.QueryParameters.SortDescriptions;
+                return RowFilter.GetListSortDescriptionCollection(ItemProperties);
             }
         }
 
@@ -229,7 +236,7 @@ namespace pwiz.Common.DataBinding.Internal
         {
             if (listAccessors == null || listAccessors.Length == 0)
             {
-                return _itemProperties;
+                return new PropertyDescriptorCollection(_itemProperties.ToArray());
             }
             var propertyDescriptor = listAccessors[listAccessors.Length - 1];
             var collectionInfo = ViewInfo.DataSchema.GetCollectionInfo(propertyDescriptor.PropertyType);
@@ -239,6 +246,8 @@ namespace pwiz.Common.DataBinding.Internal
             }
             return new PropertyDescriptorCollection(ViewInfo.DataSchema.GetPropertyDescriptors(propertyDescriptor.PropertyType).ToArray());
         }
+
+        public ImmutableList<DataPropertyDescriptor> ItemProperties { get { return _itemProperties; } }
 
         private List<RowItem> RowItemList
         {
@@ -267,8 +276,7 @@ namespace pwiz.Common.DataBinding.Internal
             {
                 propsChanged = true;
             }
-            else if (!_itemProperties.Cast<PropertyDescriptor>()
-                .SequenceEqual(QueryResults.ItemProperties.Cast<PropertyDescriptor>()))
+            else if (!_itemProperties.SequenceEqual(QueryResults.ItemProperties))
             {
                 propsChanged = true;
             }
@@ -298,16 +306,47 @@ namespace pwiz.Common.DataBinding.Internal
             }
             set
             {
+                
                 RowFilter = RowFilter.SetText(value, true);
             }
         }
 
         public RowFilter RowFilter
         {
-            get { return QueryResults.Parameters.RowFilter; }
+            get
+            {
+                return TransformStack.CurrentTransform as RowFilter ?? RowFilter.Empty;
+            }
             set
             {
-                _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.SetRowFilter(value);
+                if (Equals(RowFilter, value))
+                {
+                    return;
+                }
+                if (TransformStack.CurrentTransform is RowFilter)
+                {
+                    if (value.IsEmpty)
+                    {
+                        TransformStack = TransformStack.Predecessor.TrimTop();
+                    }
+                    else
+                    {
+                        TransformStack = TransformStack.Predecessor.PushTransform(value);
+                    }
+                }
+                else
+                {
+                    TransformStack = TransformStack.PushTransform(value);
+                }
+            }
+        }
+
+        public TransformStack TransformStack
+        {
+            get { return _queryRequestor.QueryParameters.TransformStack; }
+            set
+            {
+                _queryRequestor.QueryParameters = _queryRequestor.QueryParameters.SetTransformStack(value);
             }
         }
 

@@ -17,37 +17,73 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding.Layout;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
     [XmlRoot("views")]
-    public class ViewSpecList : IXmlSerializable
+    public class ViewSpecList : Immutable, IXmlSerializable
     {
         public static readonly ViewSpecList EMPTY = new ViewSpecList(ImmutableList.Empty<ViewSpec>());
 
         public ViewSpecList(IEnumerable<ViewSpec> viewSpecs)
         {
             ViewSpecs = ImmutableList.ValueOf(viewSpecs);
+            ViewLayouts = ImmutableList<ViewLayoutList>.EMPTY;
         }
 
+        public ViewSpecList(IEnumerable<ViewSpec> viewSpecs, IEnumerable<ViewLayoutList> viewLayouts)
+        {
+            ViewSpecs = ImmutableList.ValueOfOrEmpty(viewSpecs);
+            ViewLayouts = ImmutableList.ValueOfOrEmpty(viewLayouts);
+        }
         
         public ImmutableList<ViewSpec> ViewSpecs { get;private set; }
+        public ImmutableList<ViewLayoutList> ViewLayouts { get; private set; }
 
         public ViewSpecList FilterRowSources(ICollection<string> rowSources)
         {
             return new ViewSpecList(ViewSpecs.Where(viewSpec=>rowSources.Contains(viewSpec.RowSource)));
         }
 
+        public ViewSpecList Filter(Func<ViewSpec, bool> viewPredicate)
+        {
+            var viewSpecs = ImmutableList.ValueOf(ViewSpecs.Where(viewPredicate));
+            var viewSpecNames = new HashSet<string>(viewSpecs.Select(viewSpec=>viewSpec.Name));
+            return new ViewSpecList(viewSpecs, ViewLayouts.Where(layout=>viewSpecNames.Contains(layout.ViewName)));
+        }
+
         public ViewSpec GetView(string name)
         {
             return ViewSpecs.FirstOrDefault(viewSpec => viewSpec.Name == name);
+        }
+
+        public ViewLayoutList GetViewLayouts(string name)
+        {
+            return ViewLayouts.FirstOrDefault(layout => layout.ViewName == name) ??
+                   ViewLayoutList.EMPTY.ChangeViewName(name);
+        }
+
+        [Pure]
+        public ViewSpecList SaveViewLayouts(ViewLayoutList viewLayoutList)
+        {
+            IEnumerable<ViewLayoutList> newLayouts;
+            newLayouts = ViewLayouts.Where(layout => layout.ViewName != viewLayoutList.ViewName);
+            if (!viewLayoutList.IsEmpty)
+            {
+                newLayouts = new[] {viewLayoutList}.Concat(newLayouts);
+            }
+            return new ViewSpecList(ViewSpecs, newLayouts);
         }
 
         public ViewSpecList ReplaceView(string oldName, ViewSpec newView)
@@ -71,7 +107,28 @@ namespace pwiz.Common.DataBinding
             {
                 items.Add(newView);
             }
-            return new ViewSpecList(items);
+            IEnumerable<ViewLayoutList> newLayouts;
+            if (oldName != null)
+            {
+                if (newView == null)
+                {
+                    newLayouts = ViewLayouts.Where(layout => layout.ViewName != oldName);
+                }
+                else if (newView.Name == oldName)
+                {
+                    newLayouts = ViewLayouts;
+                }
+                else
+                {
+                    newLayouts = ViewLayouts.Where(layout => layout.ViewName != newView.Name)
+                        .Select(layout => layout.ViewName == oldName ? layout.ChangeViewName(newView.Name) : layout);
+                }
+            }
+            else
+            {
+                newLayouts = ViewLayouts;
+            }
+            return new ViewSpecList(items, newLayouts);
         }
 
         public ViewSpecList RenameView(string oldName, string newName)
@@ -129,11 +186,16 @@ namespace pwiz.Common.DataBinding
             }
             reader.Read();
             var viewItems = new List<ViewSpec>();
+            var layouts = new List<ViewLayoutList>();
             while (true)
             {
                 if (reader.IsStartElement("view")) // Not L10N
                 {
                     viewItems.Add(ViewSpec.ReadXml(reader));
+                }
+                else if (reader.IsStartElement("layouts")) // Not L10N
+                {
+                    layouts.Add(ViewLayoutList.ReadXml(reader));
                 }
                 else if (reader.NodeType == XmlNodeType.EndElement)
                 {
@@ -142,10 +204,11 @@ namespace pwiz.Common.DataBinding
                 }
                 else
                 {
-                    reader.Read();
+                    reader.Skip();
                 }
             }
             ViewSpecs = ImmutableList.ValueOf(viewItems);
+            ViewLayouts = ImmutableList.ValueOf(layouts);
         }
 
         public void WriteXml(XmlWriter writer)
@@ -154,6 +217,12 @@ namespace pwiz.Common.DataBinding
             {
                 writer.WriteStartElement("view"); // Not L10N
                 viewItem.WriteXml(writer);
+                writer.WriteEndElement();
+            }
+            foreach (var viewLayoutList in ViewLayouts)
+            {
+                writer.WriteStartElement("layouts"); // Not L10N
+                viewLayoutList.WriteXml(writer);
                 writer.WriteEndElement();
             }
         }
@@ -169,7 +238,7 @@ namespace pwiz.Common.DataBinding
         #region Equality Members
         protected bool Equals(ViewSpecList other)
         {
-            return Equals(ViewSpecs, other.ViewSpecs);
+            return Equals(ViewSpecs, other.ViewSpecs) && Equals(ViewLayouts, other.ViewLayouts);
         }
 
         public override bool Equals(object obj)
@@ -182,9 +251,9 @@ namespace pwiz.Common.DataBinding
 
         public override int GetHashCode()
         {
-            // unchecked
+            unchecked
             {
-                return ViewSpecs.GetHashCode();
+                return (ViewSpecs.GetHashCode() * 397) ^ ViewLayouts.GetHashCode();
             }
         }
         #endregion

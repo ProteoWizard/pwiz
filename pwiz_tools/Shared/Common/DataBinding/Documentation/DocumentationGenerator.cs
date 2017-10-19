@@ -92,8 +92,8 @@ namespace pwiz.Common.DataBinding.Documentation
             stringWriter.WriteLine("<table><tr><th>Name</th><th>Description</th><th>Type</th>");
             foreach (var child in GetChildColumns(columnDescriptor))
             {
-                ColumnCaption columnCaption = DataSchema.GetColumnCaption(child);
-                stringWriter.Write("<tr><td class=\"ColumnCaption\">" + HtmlEncode(DataSchema.GetColumnCaption(columnCaption, ColumnCaptionType.localized)) + "</td>");
+                var columnCaption = DataSchema.GetColumnCaption(child);
+                stringWriter.Write("<tr><td class=\"ColumnCaption\">" + HtmlEncode(columnCaption.GetCaption(DataSchema.DataSchemaLocalizer)) + "</td>");
                 stringWriter.Write("<td class=\"ColumnDescription\">");
                 String tooltip = DataSchema.GetColumnDescription(child);
                 stringWriter.Write(HtmlEncode(tooltip));

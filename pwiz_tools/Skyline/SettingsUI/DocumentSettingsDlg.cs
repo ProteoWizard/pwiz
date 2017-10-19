@@ -47,10 +47,10 @@ namespace pwiz.Skyline.SettingsUI
                 .Where(viewName=>viewName.GroupId.Equals(PersistedViews.MainGroup.Id))
                 .Select(viewName=>viewName.Name));
             var viewSpecs = Settings.Default.PersistedViews.GetViewSpecList(PersistedViews.MainGroup.Id)
-                .ViewSpecs.Where(view => selectedViews.Contains(view.Name));
+                .Filter(view => selectedViews.Contains(view.Name));
             return dataSettings.ChangeAnnotationDefs(_annotationsListBoxDriver.Chosen)
                 .ChangeGroupComparisonDefs(_groupComparisonsListBoxDriver.Chosen)
-                .ChangeViewSpecList(new ViewSpecList(viewSpecs));
+                .ChangeViewSpecList(viewSpecs);
         }
 
         private void btnAddAnnotation_Click(object sender, System.EventArgs e)

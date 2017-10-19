@@ -26,7 +26,7 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
-using pwiz.Common.DataBinding.Internal;
+using pwiz.Common.DataBinding.Layout;
 using pwiz.Skyline.Alerts;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Controls.Databinding
 {
     public partial class DataboundGridControl: UserControl
     {
-        private PropertyDescriptor _columnFilterPropertyDescriptor;
+        private DataPropertyDescriptor _columnFilterPropertyDescriptor;
         private readonly object _errorMessageLock = new object();
         private bool _errorMessagePending;
         private bool _suppressErrorMessages;
@@ -148,6 +148,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             return DataGridView.Columns.Cast<DataGridViewColumn>().FirstOrDefault(col => col.DataPropertyName == propertyDescriptor.Name);
         }
+
         public bool IsComplete
         {
             get
@@ -209,15 +210,21 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void QuickFilter(DataGridViewColumn column)
         {
-            _columnFilterPropertyDescriptor = BindingListSource.GetItemProperties(null)[column.DataPropertyName];
+            _columnFilterPropertyDescriptor = BindingListSource.FindDataProperty(column.DataPropertyName);
             filterToolStripMenuItem_Click(filterToolStripMenuItem, new EventArgs());
+        }
+
+        public void ShowFormatDialog(DataGridViewColumn column)
+        {
+            _columnFilterPropertyDescriptor = BindingListSource.FindDataProperty(column.DataPropertyName);
+            formatToolStripMenuItem_Click(formatToolStripMenuItem, new EventArgs());
         }
 
         #endregion
 
         protected virtual void boundDataGridView_CellContextMenuStripNeeded(object sender, DataGridViewCellContextMenuStripNeededEventArgs e)
         {
-            PropertyDescriptor propertyDescriptor = null;
+            DataPropertyDescriptor propertyDescriptor = null;
             if (e.ColumnIndex >= 0)
             {
                 var column = boundDataGridView.Columns[e.ColumnIndex];
@@ -302,9 +309,10 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             if (null != _columnFilterPropertyDescriptor)
             {
+                var columnId = ColumnId.GetColumnId(_columnFilterPropertyDescriptor);
                 var rowFilter = BindingListSource.RowFilter;
                 rowFilter = rowFilter.SetColumnFilters(
-                    rowFilter.ColumnFilters.Where(spec => !Equals(spec.ColumnCaption, _columnFilterPropertyDescriptor.DisplayName)));
+                    rowFilter.ColumnFilters.Where(spec => !Equals(spec.ColumnId, columnId)));
                 BindingListSource.RowFilter = rowFilter;
             }
         }
@@ -382,9 +390,9 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        public PropertyDescriptor GetPropertyDescriptor(DataGridViewColumn column)
+        public DataPropertyDescriptor GetPropertyDescriptor(DataGridViewColumn column)
         {
-            return bindingListSource.GetItemProperties(null)[column.DataPropertyName];
+            return bindingListSource.FindDataProperty(column.DataPropertyName);
         }
 
         private void fillDownToolStripMenuItem_Click(object sender, EventArgs e)
@@ -460,14 +468,29 @@ namespace pwiz.Skyline.Controls.Databinding
             return propertyDescriptor != null && !propertyDescriptor.Attributes.OfType<ExpensiveAttribute>().Any();
         }
 
+        private bool IsFormattable(PropertyDescriptor propertyDescriptor)
+        {
+            if (propertyDescriptor == null)
+            {
+                return false;
+            }
+            var type = BindingListSource.ViewInfo.DataSchema.GetWrappedValueType(propertyDescriptor.PropertyType);
+            if (typeof(IFormattable).IsAssignableFrom(type))
+            {
+                return true;
+            }
+            return false;
+        }
+
         private void UpdateContextMenuItems()
         {
             clearAllFiltersToolStripMenuItem.Enabled = !BindingListSource.RowFilter.IsEmpty;
             if (null != _columnFilterPropertyDescriptor && IsSortable(_columnFilterPropertyDescriptor))
             {
+                var columnId = ColumnId.GetColumnId(_columnFilterPropertyDescriptor);
                 clearFilterToolStripMenuItem.Enabled =
                     BindingListSource.RowFilter.ColumnFilters.Any(
-                        filter => Equals(_columnFilterPropertyDescriptor.DisplayName, filter.ColumnCaption));
+                        filter => Equals(columnId, filter.ColumnId));
                 filterToolStripMenuItem.Enabled = true;
                 ListSortDirection? sortDirection = null;
                 if (null != BindingListSource.SortDescriptions && BindingListSource.SortDescriptions.Count > 0)
@@ -497,6 +520,14 @@ namespace pwiz.Skyline.Controls.Databinding
                 sortDescendingToolStripMenuItem.Enabled = false;
                 sortAscendingToolStripMenuItem.Checked = false;
                 sortDescendingToolStripMenuItem.Checked = false;
+            }
+            if (IsFormattable(_columnFilterPropertyDescriptor))
+            {
+                formatToolStripMenuItem.Enabled = true;
+            }
+            else
+            {
+                formatToolStripMenuItem.Enabled = false;
             }
             fillDownToolStripMenuItem.Enabled = IsEnableFillDown();
         }
@@ -549,6 +580,36 @@ namespace pwiz.Skyline.Controls.Databinding
                 lock (_errorMessageLock)
                 {
                     _errorMessagePending = false;
+                }
+            }
+        }
+
+        private void formatToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_columnFilterPropertyDescriptor == null)
+            {
+                return;
+            }
+            using (var dlg = new ChooseFormatDlg(BindingListSource.ViewInfo.DataSchema.DataSchemaLocalizer))
+            {
+                var columnId = ColumnId.GetColumnId(_columnFilterPropertyDescriptor);
+                var columnFormat =
+                    BindingListSource.ColumnFormats.GetFormat(ColumnId.GetColumnId(_columnFilterPropertyDescriptor));
+                if (null != columnFormat.Format)
+                {
+                    dlg.FormatText = columnFormat.Format;
+                }
+                if (dlg.ShowDialog(FormUtil.FindTopLevelOwner(this)) == DialogResult.OK)
+                {
+                    if (string.IsNullOrEmpty(dlg.FormatText))
+                    {
+                        columnFormat = columnFormat.ChangeFormat(null);
+                    }
+                    else
+                    {
+                        columnFormat = columnFormat.ChangeFormat(dlg.FormatText);
+                    }
+                    BindingListSource.ColumnFormats.SetFormat(columnId, columnFormat);
                 }
             }
         }

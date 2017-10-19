@@ -168,7 +168,16 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 string label;
                 if (null != row.Peptide)
                 {
-                    label = uniquePrefixGenerator.GetUniquePrefix(row.Peptide.GetDocNode().ModifiedTarget.DisplayName, row.Peptide.GetDocNode().IsProteomic);
+                    try
+                    {
+                        label = uniquePrefixGenerator.GetUniquePrefix(
+                            row.Peptide.GetDocNode().ModifiedTarget.DisplayName, row.Peptide.GetDocNode().IsProteomic);
+                    }
+                    catch
+                    {
+                        // Peptide must have been deleted.
+                        label = row.Peptide.GetDocNode().ModifiedTarget.DisplayName;
+                    }
                 }
                 else
                 {

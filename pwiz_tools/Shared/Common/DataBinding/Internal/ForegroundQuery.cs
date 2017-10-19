@@ -26,13 +26,13 @@ namespace pwiz.Common.DataBinding.Internal
     {
         private CancellationToken _cancellationToken;
 
-        public ForegroundQuery(IRowSourceWrapper rowSource, IQueryRequest queryRequest)
+        public ForegroundQuery(RowSourceWrapper rowSource, IQueryRequest queryRequest)
         {
             RowSource = rowSource;
             QueryRequest = queryRequest;
         }
 
-        public IRowSourceWrapper RowSource { get; private set; }
+        public RowSourceWrapper RowSource { get; private set; }
         public IQueryRequest QueryRequest { get; private set; }
 
         public void Start()

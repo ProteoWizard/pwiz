@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.DataBinding.Layout;
 
 namespace pwiz.Common.DataBinding.Internal
 {
@@ -29,32 +30,59 @@ namespace pwiz.Common.DataBinding.Internal
     {
         protected QueryResults RunAll(CancellationToken cancellationToken, QueryResults results)
         {
-            results = Pivot(cancellationToken, results);
-            results = results.SetFilteredRows(Filter(cancellationToken, results));
-            results = results.SetSortedRows(Sort(cancellationToken, results));
-            return results;
+            var pivotedRows = Pivot(cancellationToken, results);
+            var dataSchema = results.Parameters.ViewInfo.DataSchema;
+            var transformedRows = Transform(cancellationToken, dataSchema, new TransformResults(null, null, pivotedRows), results.Parameters.TransformStack);
+            return results.ChangeTransformResults(transformedRows);
         }
 
-        protected QueryResults Pivot(CancellationToken cancellationToken, QueryResults results)
+        protected PivotedRows Pivot(CancellationToken cancellationToken, QueryResults results)
         {
             var pivoter = new Pivoter(results.Parameters.ViewInfo);
-            return results.SetPivotedRows(pivoter.ExpandAndPivot(cancellationToken, results.SourceRows));
+            return pivoter.ExpandAndPivot(cancellationToken, results.SourceRows);
         }
 
-        protected IEnumerable<RowItem> Filter(CancellationToken cancellationToken, QueryResults results)
+        protected TransformResults Transform(CancellationToken cancellationToken, DataSchema dataSchema, TransformResults input,
+            TransformStack transformStack)
         {
-            var unfilteredRows = results.PivotedRows;
-            var filter = results.Parameters.RowFilter;
-            if (filter.IsEmpty)
+            if (transformStack == null || transformStack.StackIndex >= transformStack.RowTransforms.Count)
             {
-                return unfilteredRows;
+                return input;
             }
-            var properties = results.ItemProperties;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (transformStack.Predecessor != null)
+            {
+                input = Transform(cancellationToken, dataSchema, input, transformStack.Predecessor);
+            }
+            var filter = transformStack.CurrentTransform as RowFilter;
+            if (filter != null)
+            {
+                var filteredRows = new PivotedRows(Filter(cancellationToken, dataSchema, filter, input.PivotedRows),
+                    input.PivotedRows.ItemProperties);
+                filteredRows = Sort(cancellationToken, dataSchema, filter, filteredRows);
+                return new TransformResults(input, filter, filteredRows);
+            }
+            var pivotSpec = transformStack.CurrentTransform as PivotSpec;
+            if (pivotSpec != null)
+            {
+                var pivotedRows = GroupAndTotaler.GroupAndTotal(cancellationToken, dataSchema, pivotSpec, input.PivotedRows);
+                return new TransformResults(input, pivotSpec, pivotedRows);
+            }
+            return input;
+        }
+
+        protected IEnumerable<RowItem> Filter(CancellationToken cancellationToken, DataSchema dataSchema, RowFilter filter, PivotedRows pivotedRows)
+        {
+            if (filter.IsEmptyFilter)
+            {
+                return pivotedRows.RowItems;
+            }
+            var properties = pivotedRows.ItemProperties;
             Predicate<object>[] columnPredicates = new Predicate<object>[properties.Count];
             
             for (int i = 0; i < properties.Count; i++)
             {
-                columnPredicates[i] = filter.GetPredicate(results.Parameters.ViewInfo.DataSchema, properties[i]);
+                columnPredicates[i] = filter.GetPredicate(dataSchema, properties[i]);
             }
             var filteredRows = new List<RowItem>();
             // toString on an enum is incredibly slow, so we cache the results in 
@@ -68,9 +96,8 @@ namespace pwiz.Common.DataBinding.Internal
                     toStringCaches[i] = new Dictionary<object, string>();
                 }
             }
-
             
-            foreach (var row in unfilteredRows)
+            foreach (var row in pivotedRows.RowItems)
             {
                 bool matchesText = string.IsNullOrEmpty(filter.Text);
                 bool matchesFilter = true;
@@ -117,16 +144,31 @@ namespace pwiz.Common.DataBinding.Internal
                 }
             }
 
-            if (filteredRows.Count == unfilteredRows.Count)
+            if (filteredRows.Count == pivotedRows.RowItems.Count)
             {
-                return unfilteredRows;
+                return pivotedRows.RowItems;
             }
             return filteredRows;
         }
-        protected IEnumerable<RowItem> Sort(CancellationToken cancellationToken, QueryResults results)
+
+        protected PivotedRows Sort(CancellationToken cancellationToken, DataSchema dataSchema, RowFilter rowFilter,
+            PivotedRows pivotedRows)
         {
-            var sortDescriptions = results.Parameters.SortDescriptions;
-            var unsortedRows = results.FilteredRows;
+            if (rowFilter.ColumnSorts.Count == 0)
+            {
+                return pivotedRows;
+            }
+            var sortDescriptions = rowFilter.GetListSortDescriptionCollection(pivotedRows.ItemProperties);
+            if (sortDescriptions.Count == 0)
+            {
+                return pivotedRows;
+            }
+            return pivotedRows.ChangeRowItems(Sort(cancellationToken, dataSchema, sortDescriptions, pivotedRows));
+        }
+
+        protected IEnumerable<RowItem> Sort(CancellationToken cancellationToken, DataSchema dataSchema, ListSortDescriptionCollection sortDescriptions, PivotedRows pivotedRows)
+        {
+            var unsortedRows = pivotedRows.RowItems;
             if (sortDescriptions == null || sortDescriptions.Count == 0)
             {
                 return unsortedRows;
@@ -134,7 +176,7 @@ namespace pwiz.Common.DataBinding.Internal
             var sortRows = new SortRow[unsortedRows.Count];
             for (int iRow = 0; iRow < sortRows.Count(); iRow++)
             {
-                sortRows[iRow] = new SortRow(cancellationToken, results.Parameters, unsortedRows[iRow], iRow);
+                sortRows[iRow] = new SortRow(cancellationToken, dataSchema, sortDescriptions, unsortedRows[iRow], iRow);
             }
             Array.Sort(sortRows);
             return Array.AsReadOnly(sortRows.Select(sr => sr.RowItem).ToArray());
@@ -142,10 +184,11 @@ namespace pwiz.Common.DataBinding.Internal
         class SortRow : IComparable<SortRow>
         {
             private readonly object[] _keys;
-            public SortRow(CancellationToken cancellationToken, QueryParameters queryParameters, RowItem rowItem, int rowIndex)
+            public SortRow(CancellationToken cancellationToken, DataSchema dataSchema, ListSortDescriptionCollection sorts, RowItem rowItem, int rowIndex)
             {
                 CancellationToken = cancellationToken;
-                QueryParameters = queryParameters;
+                DataSchema = dataSchema;
+                Sorts = sorts;
                 RowItem = rowItem;
                 OriginalRowIndex = rowIndex;
                 _keys = new object[Sorts.Count];
@@ -156,13 +199,10 @@ namespace pwiz.Common.DataBinding.Internal
             }
 // ReSharper disable MemberCanBePrivate.Local
             public CancellationToken CancellationToken { get; private set; }
-            public QueryParameters QueryParameters { get; private set; }
+            public DataSchema DataSchema { get; private set; }
             public RowItem RowItem { get; private set; }
             public int OriginalRowIndex { get; private set; }
-            public ListSortDescriptionCollection Sorts
-            {
-                get { return QueryParameters.SortDescriptions; }
-            }
+            public ListSortDescriptionCollection Sorts { get; private set; }
 // ReSharper restore MemberCanBePrivate.Local
             public int CompareTo(SortRow other)
             {
@@ -170,7 +210,7 @@ namespace pwiz.Common.DataBinding.Internal
                 for (int i = 0; i < Sorts.Count; i++)
                 {
                     var sort = Sorts[i];
-                    int result = QueryParameters.ViewInfo.DataSchema.Compare(_keys[i], other._keys[i]);
+                    int result = DataSchema.Compare(_keys[i], other._keys[i]);
                     if (sort.SortDirection == ListSortDirection.Descending)
                     {
                         result = -result;

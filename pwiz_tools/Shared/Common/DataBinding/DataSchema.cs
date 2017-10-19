@@ -287,7 +287,7 @@ namespace pwiz.Common.DataBinding
             return FormatChildDisplayName(columnDescriptor.Parent, childDisplayName);
         }
 
-        public virtual ColumnCaption GetColumnCaption(ColumnDescriptor columnDescriptor)
+        public virtual IColumnCaption GetColumnCaption(ColumnDescriptor columnDescriptor)
         {
             DisplayNameAttribute displayNameAttribute =
                 columnDescriptor.GetAttributes().OfType<DisplayNameAttribute>().FirstOrDefault();
@@ -355,6 +355,11 @@ namespace pwiz.Common.DataBinding
         }
         public DataSchemaLocalizer DataSchemaLocalizer { get; protected set; }
 
+        public DataSchemaLocalizer GetDataSchemaLocalizer(ColumnCaptionType captionType)
+        {
+            return captionType == ColumnCaptionType.invariant ? DataSchemaLocalizer.INVARIANT : DataSchemaLocalizer;
+        }
+
         public virtual String GetColumnDescription(ColumnDescriptor columnDescriptor)
         {
             PropertyDescriptor reflectedPropertyDescriptor = columnDescriptor.ReflectedPropertyDescriptor;
@@ -363,6 +368,30 @@ namespace pwiz.Common.DataBinding
                 return reflectedPropertyDescriptor.Description;
             }
             return null;
+        }
+
+        public virtual IEnumerable<Attribute> GetAggregateAttributes(PropertyDescriptor originalPropertyDescriptor,
+            AggregateOperation aggregateOperation)
+        {
+            var formatAttribute = GetFormatAttribute(originalPropertyDescriptor, aggregateOperation);
+            if (formatAttribute != null)
+            {
+                yield return formatAttribute;
+            }
+        }
+
+        protected FormatAttribute GetFormatAttribute(PropertyDescriptor originalPropertyDescriptor,
+            AggregateOperation aggregateOperation)
+        {
+            if (aggregateOperation == AggregateOperation.Count)
+            {
+                return null;
+            }
+            if (aggregateOperation == AggregateOperation.Cv)
+            {
+                return new FormatAttribute("0.#%"); // Not L10N
+            }
+            return (FormatAttribute) originalPropertyDescriptor.Attributes[typeof(FormatAttribute)];
         }
     }
 }

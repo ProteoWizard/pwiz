@@ -34,7 +34,6 @@ namespace pwiz.Common.DataBinding.Internal
             // ReSharper disable once PossiblyMistakenUseOfParamsMethod
             _queryParameters = QueryParameters.Empty;
         }
-        public TaskScheduler EventTaskScheduler { get { return _bindingListView.EventTaskScheduler; } }
         public QueryParameters QueryParameters
         {
             get { return _queryParameters; }
@@ -47,10 +46,6 @@ namespace pwiz.Common.DataBinding.Internal
                 _queryParameters = value;
                 Requery();
             }
-        }
-        public IRowSource RowSource
-        {
-            get { return _bindingListView.RowSource; }
         }
 
         public QueryResults QueryResults
@@ -72,26 +67,36 @@ namespace pwiz.Common.DataBinding.Internal
         }
         public void Requery()
         {
-            if (null != _request)
+            using (var lastRequest = _request)
             {
-                _request.Dispose();
                 _request = null;
+                if (null == QueryParameters || null == QueryParameters.ViewInfo)
+                {
+                    return;
+                }
+                RowSourceWrapper rowSourceWrapper;
+                if (lastRequest != null && ReferenceEquals(lastRequest.RowSourceWrapper.WrappedRowSource,
+                        _bindingListView.RowSource))
+                {
+                    rowSourceWrapper = lastRequest.RowSourceWrapper;
+                }
+                else
+                {
+                    rowSourceWrapper = new RowSourceWrapper(_bindingListView.RowSource);
+                }
+                _request = new Request(this, _bindingListView.QueryLock, rowSourceWrapper);
+                _request.StartQuery();
             }
-            if (null == QueryParameters || null == QueryParameters.ViewInfo)
-            {
-                return;
-            }
-            _request = new Request(this, _bindingListView.QueryLock);
-            new RowSourceWrapper(RowSource).StartQuery(_request);
         }
 
         class Request : IQueryRequest, IDisposable
         {
             private readonly CancellationTokenSource _cancellationTokenSource;
             private readonly QueryRequestor _queryRequestor;
-            public Request(QueryRequestor queryRequestor, QueryLock queryLock)
+            public Request(QueryRequestor queryRequestor, QueryLock queryLock, RowSourceWrapper rowSourceWrapper)
             {
                 _queryRequestor = queryRequestor;
+                RowSourceWrapper = rowSourceWrapper;
                 QueryParameters = _queryRequestor.QueryParameters;
                 // ReSharper disable PossiblyMistakenUseOfParamsMethod
                 _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(queryLock.CancellationToken);
@@ -100,14 +105,22 @@ namespace pwiz.Common.DataBinding.Internal
             }
 
             public TaskScheduler EventTaskScheduler { get { return _queryRequestor._bindingListView.EventTaskScheduler; } }
+            public RowSourceWrapper RowSourceWrapper { get; private set; }
             public CancellationToken CancellationToken { get { return _cancellationTokenSource.Token; } }
             public QueryParameters QueryParameters { get; private set; }
-            public QueryResults InitialQueryResults
-            {
-                get { return QueryResults.Empty.SetParameters(QueryParameters); }
-            }
-
             public QueryLock QueryLock { get; private set; }
+
+            public void StartQuery()
+            {
+                if (null == EventTaskScheduler)
+                {
+                    new ForegroundQuery(RowSourceWrapper, this).Start();
+                }
+                else
+                {
+                    new BackgroundQuery(RowSourceWrapper, EventTaskScheduler, this).Start();
+                }
+            }
 
             public void SetFinalQueryResults(QueryResults newResults)
             {
