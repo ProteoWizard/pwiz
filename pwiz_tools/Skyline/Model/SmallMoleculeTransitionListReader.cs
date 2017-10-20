@@ -352,7 +352,7 @@ namespace pwiz.Skyline.Model
             return (str.Length == 0) ? null : str;
         }
 
-        private class MoleculeInfo : IonInfo
+        private class ParsedIonInfo : IonInfo
         {
             public string Name { get; private set; }
             public string Note { get; private set; }
@@ -364,7 +364,7 @@ namespace pwiz.Skyline.Model
             public ExplicitRetentionTimeInfo ExplicitRetentionTime { get; private set; }
             public ExplicitTransitionGroupValues ExplicitTransitionGroupValues { get; private set; }
             public MoleculeAccessionNumbers MoleculeAccessionNumbers { get; private set; } // InChiKey, CAS etc
-            public MoleculeInfo(string name, string formula, Adduct adduct, double mz, TypedMass monoMass, TypedMass averageMass,
+            public ParsedIonInfo(string name, string formula, Adduct adduct, double mz, TypedMass monoMass, TypedMass averageMass,
                 IsotopeLabelType isotopeLabelType,
                 ExplicitRetentionTimeInfo explicitRetentionTime,
                 ExplicitTransitionGroupValues explicitTransitionGroupValues,
@@ -383,7 +383,7 @@ namespace pwiz.Skyline.Model
                 MoleculeAccessionNumbers = accessionNumbers;
             }
 
-            public CustomMolecule ToCustomIon()
+            public CustomMolecule ToCustomMolecule()
             {
                 return new CustomMolecule(Formula, MonoMass, AverageMass, Name??string.Empty, MoleculeAccessionNumbers);
             }
@@ -519,7 +519,7 @@ namespace pwiz.Skyline.Model
         //  Formula and mz
         //  Formula and charge
         //  mz and charge
-        private MoleculeInfo ReadPrecursorOrProductColumns(SrmDocument document,
+        private ParsedIonInfo ReadPrecursorOrProductColumns(SrmDocument document,
             Row row,
             bool getPrecursorColumns)
         {
@@ -906,7 +906,7 @@ namespace pwiz.Skyline.Model
                                 if (charge.HasValue)
                                 {
                                     row.UpdateCell(indexCharge, charge.Value);
-                                    return new MoleculeInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note, moleculeID);
+                                    return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note, moleculeID);
                                 }
                                 else if (mzCalc.HasValue)
                                 {
@@ -939,7 +939,7 @@ namespace pwiz.Skyline.Model
                                      !(massTooLow = (monoMass < CustomMolecule.MIN_MASS || averageMmass < CustomMolecule.MIN_MASS));
                             row.UpdateCell(indexMz, mz);
                             if (massOk)
-                                return new MoleculeInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note, moleculeID);
+                                return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note, moleculeID);
                         }
                     }
                     catch (InvalidDataException x)
@@ -957,7 +957,7 @@ namespace pwiz.Skyline.Model
                              !(massTooLow = (monoMass < CustomMolecule.MIN_MASS || averageMmass < CustomMolecule.MIN_MASS));
                     errColumn = indexMz;
                     if (massOk)
-                        return new MoleculeInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note, moleculeID);
+                        return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, note, moleculeID);
                 }
                 if (massTooLow)
                 {
@@ -1000,22 +1000,22 @@ namespace pwiz.Skyline.Model
         {
 
             CustomMolecule molecule;
-            MoleculeInfo moleculeInfo;
+            ParsedIonInfo parsedIonInfo;
             try
             {
-                moleculeInfo = ReadPrecursorOrProductColumns(document, row, true); // Re-read the precursor columns
-                if (moleculeInfo == null)
+                parsedIonInfo = ReadPrecursorOrProductColumns(document, row, true); // Re-read the precursor columns
+                if (parsedIonInfo == null)
                     return null; // Some failure, but exception was already handled
                 // Identify items with same formula and different adducts
-                var neutralFormula = moleculeInfo.NeutralFormula;
+                var neutralFormula = parsedIonInfo.NeutralFormula;
                 var shortName = row.GetCell(INDEX_MOLECULE_NAME);
                 if (!string.IsNullOrEmpty(neutralFormula))
                 {
-                    molecule = new CustomMolecule(neutralFormula, shortName, moleculeInfo.MoleculeAccessionNumbers);
+                    molecule = new CustomMolecule(neutralFormula, shortName, parsedIonInfo.MoleculeAccessionNumbers);
                 }
                 else
                 {
-                    molecule = new CustomMolecule(moleculeInfo.Formula, moleculeInfo.MonoMass, moleculeInfo.AverageMass, shortName, moleculeInfo.MoleculeAccessionNumbers);
+                    molecule = new CustomMolecule(parsedIonInfo.Formula, parsedIonInfo.MonoMass, parsedIonInfo.AverageMass, shortName, parsedIonInfo.MoleculeAccessionNumbers);
                 }
             }
             catch (ArgumentException e)
@@ -1034,7 +1034,7 @@ namespace pwiz.Skyline.Model
                 var tranGroup = GetMoleculeTransitionGroup(document, row, pep, requireProductInfo);
                 if (tranGroup == null)
                     return null;
-                return new PeptideDocNode(pep, document.Settings, null, null, moleculeInfo.ExplicitRetentionTime, new[] { tranGroup }, true);
+                return new PeptideDocNode(pep, document.Settings, null, null, parsedIonInfo.ExplicitRetentionTime, new[] { tranGroup }, true);
             }
             catch (InvalidOperationException e)
             {
@@ -1066,20 +1066,22 @@ namespace pwiz.Skyline.Model
                 return null;
             }
 
-            var customIon = moleculeInfo.ToCustomIon();
+            var customIon = moleculeInfo.ToCustomMolecule();
             var isotopeLabelType = moleculeInfo.IsotopeLabelType ?? IsotopeLabelType.light;
             Assume.IsTrue(Equals(pep.CustomMolecule.PrimaryEquivalenceKey, customIon.PrimaryEquivalenceKey));  // TODO(bspratt) error handling here
             var adduct = moleculeInfo.Adduct;
             if (!Equals(pep.CustomMolecule.MonoisotopicMass, customIon.MonoisotopicMass) && !adduct.HasIsotopeLabels)
             {
                 // Some kind of undescribed isotope labeling going on
-                if (!string.IsNullOrEmpty(pep.CustomMolecule.Formula) && Equals(pep.CustomMolecule.Formula, customIon.Formula))
+                if ((!string.IsNullOrEmpty(pep.CustomMolecule.Formula) && Equals(pep.CustomMolecule.Formula, customIon.Formula)) ||
+                    (string.IsNullOrEmpty(pep.CustomMolecule.Formula) && string.IsNullOrEmpty(customIon.Formula)))
                 {
                     // No formula for label, describe as mass
                     var labelMass = customIon.MonoisotopicMass - pep.CustomMolecule.MonoisotopicMass;
                     if (labelMass > 0)
                     {
                         adduct = adduct.ChangeIsotopeLabels(labelMass); // Isostopes add weight
+                        isotopeLabelType = moleculeInfo.IsotopeLabelType ?? IsotopeLabelType.heavy;
                     }
                 }
             }
@@ -1109,26 +1111,30 @@ namespace pwiz.Skyline.Model
             var massType =
                 document.Settings.TransitionSettings.Prediction.FragmentMassType;
 
-            var molecule = ReadPrecursorOrProductColumns(document, row, !requireProductInfo); // Re-read the product columns, or copy precursor
-            if (requireProductInfo && molecule == null)
+            var ion = ReadPrecursorOrProductColumns(document, row, !requireProductInfo); // Re-read the product columns, or copy precursor
+            if (requireProductInfo && ion == null)
             {
                 return null;
             }
-            var ion = molecule.ToCustomIon();
+            var customMolecule = ion.ToCustomMolecule();
             var ionType = !requireProductInfo || // We inspected the input list and found only precursor info
                           // Or the mass is explained by an isotopic label in the adduct
-                          (Math.Abs(ion.MonoisotopicMass.Value - group.PrecursorAdduct.ApplyIsotopeLabelsToMass(pep.CustomMolecule.MonoisotopicMass)) <= MzMatchTolerance &&
-                           Math.Abs(ion.AverageMass.Value - group.PrecursorAdduct.ApplyIsotopeLabelsToMass(pep.CustomMolecule.AverageMass)) <= MzMatchTolerance) // Same mass, must be a precursor transition
+                          (Math.Abs(customMolecule.MonoisotopicMass.Value - group.PrecursorAdduct.ApplyIsotopeLabelsToMass(pep.CustomMolecule.MonoisotopicMass)) <= MzMatchTolerance &&
+                           Math.Abs(customMolecule.AverageMass.Value - group.PrecursorAdduct.ApplyIsotopeLabelsToMass(pep.CustomMolecule.AverageMass)) <= MzMatchTolerance) // Same mass, must be a precursor transition
                 ? IonType.precursor
                 : IonType.custom;
-            var mass = ion.GetMass(massType);
+            if (ionType == IonType.precursor)
+            {
+                customMolecule = pep.CustomMolecule; // Some mz-only lists will give precursor mz as double, and product mz as int, even though they're meant to be the same thing
+            }
+            var mass = customMolecule.GetMass(massType);
 
-            var transition = new Transition(group, molecule.Adduct, null, ion, ionType);
+            var transition = new Transition(group, ion.Adduct, null, customMolecule, ionType);
             var annotations = document.Annotations;
-            if (!String.IsNullOrEmpty(molecule.Note))
+            if (!String.IsNullOrEmpty(ion.Note))
             {
                 var note = document.Annotations.Note;
-                note = String.IsNullOrEmpty(note) ? molecule.Note : (note + "\r\n" + molecule.Note); // Not L10N
+                note = String.IsNullOrEmpty(note) ? ion.Note : (note + "\r\n" + ion.Note); // Not L10N
                 annotations = new Annotations(note, document.Annotations.ListAnnotations(), 0);
             }
             return new TransitionDocNode(transition, annotations, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT, null);

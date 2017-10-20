@@ -1032,8 +1032,9 @@ namespace pwiz.Skyline.Model.Serialization
                         var declaredMz = reader.GetDoubleAttribute(ATTR.precursor_mz);
                         if (Math.Abs(peptide.CustomMolecule.MonoisotopicMass - Math.Abs(precursorCharge) * declaredMz) < .01)
                         {
-                            // The "peptide" formula is actually the protonated precursor ion formula
-                            var newFormula = Molecule.AdjustElementCount(ionFormula, "H", -precursorCharge); // Not L10N
+                            // The "peptide" formula is actually the protonated precursor ion formula, work back to a neutral formula
+                            var possiblyLabeledMolecule = new CustomMolecule(ionFormula, peptide.CustomMolecule.Name);
+                            var newFormula = Molecule.AdjustElementCount(possiblyLabeledMolecule.UnlabeledFormula, "H", -precursorCharge); // Not L10N
                             peptide = new Peptide(new CustomMolecule(newFormula, peptide.CustomMolecule.Name));
                         }
                     }
@@ -1109,7 +1110,8 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     // Old model - we may have encoded isotopes into the precursor's ion formula, and included the adduct's atoms in the molecule count
                     precursorAdduct = precursorAdduct.ChangeIsotopeLabels(BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula(ionFormula));
-                    if (!Equals(precursorAdduct.ApplyToFormula(peptide.CustomMolecule.Formula),
+                    if (!Molecule.AreEquivalentFormulas(ionFormula, peptide.CustomMolecule.Formula) &&
+                        !Molecule.AreEquivalentFormulas(precursorAdduct.ApplyToFormula(peptide.CustomMolecule.Formula),
                         adduct.IsEmpty ? ionFormula : adduct.ApplyToFormula(neutralFormula)))
                     {
                         // Take precursor adduct as the difference between the precursor ion formula and the molecule ion formula
@@ -1131,7 +1133,7 @@ namespace pwiz.Skyline.Model.Serialization
                         {
                             string isotopicFormula;
                             Settings.GetPrecursorMass(typedMods.LabelType, peptide.CustomMolecule, typedMods, precursorAdduct.Unlabeled, out isotopicFormula);
-                            if (Equals(moleculeWithAdduct, precursorAdduct.Unlabeled.ApplyToFormula(isotopicFormula)))
+                            if (Molecule.AreEquivalentFormulas(moleculeWithAdduct, precursorAdduct.Unlabeled.ApplyToFormula(isotopicFormula)))
                             {
                                 precursorAdduct = precursorAdduct.Unlabeled; // No need to be explicit about labels in the adduct
                             }
@@ -1455,7 +1457,7 @@ namespace pwiz.Skyline.Model.Serialization
         {
             if (declaredProductMz.HasValue && Math.Abs(declaredProductMz.Value - node.Mz.Value) >= .001)
             {
-                var toler =
+                var toler = node.Transition.IsPrecursor() ? .5 : // We do see mz-only transition lists where precursor mz is given as double and product mz as int
                     FormatVersion.CompareTo(DocumentFormat.VERSION_3_6) <= 0 && node.Transition.IonType == IonType.z ? 1.007826 : // Known issue fixed in SVN 7007
                         (FormatVersion.CompareTo(DocumentFormat.VERSION_1_7) <= 0 ? .005 : .0025); // Unsure if 1.7 is the precise watershed, but this gets a couple of older tests passing
                 Assume.IsTrue(Math.Abs(declaredProductMz.Value - node.Mz.Value) < toler,

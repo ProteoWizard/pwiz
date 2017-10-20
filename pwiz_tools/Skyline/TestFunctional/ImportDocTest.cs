@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestFunctional
     /// Functional test for handling of older doc formats.
     /// </summary>
     [TestClass]
-    public class ImportDocTest : AbstractFunctionalTest
+    public class ImportDocTest : AbstractFunctionalTestEx
     {
         private string[] _documentPaths;
         private string[] _cachePaths;
@@ -53,7 +53,9 @@ namespace pwiz.SkylineTestFunctional
         /// Test import document functionality with results importing
         /// </summary>
         protected override void DoTest()
-        {            
+        {
+
+            TestOlderSmallMoleculeFormats();
             _documentPaths = new[]
                                          {
                                              TestFilesDir.GetTestPath("document1.sky"), // subject1, subject2, buffer (waters calcurv - annotations, manual integration, removed peak)
@@ -432,6 +434,15 @@ namespace pwiz.SkylineTestFunctional
                           SkylineWindow.SaveDocument();
                       });
             Assert.IsFalse(File.Exists(cachePersistPath));
+        }
+
+        private void TestOlderSmallMoleculeFormats()
+        {
+            // This pre-adduct-era file has isotope labels in the molecule declaration
+            OpenDocument(TestFilesDir.GetTestPath("HILIC_QE_NEGATIVE.sky"));
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 11, 11, 11);
+
+            RunUI(() => SkylineWindow.NewDocument(true) ); // Clean up for next test step
         }
 
         private long GetCacheSize(int docIndex, SrmDocument docInitial = null)

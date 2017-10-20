@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Model
             if (!useFilter || types.Contains(IonType.precursor))
             {
                 bool libraryFilter = (pick == TransitionLibraryPick.all || pick == TransitionLibraryPick.filter);
-                foreach (var nodeTran in GetPrecursorTransitions(settings, mods, calcFilterPre, calcPredict,
+                foreach (var nodeTran in GetPrecursorTransitions(settings, mods, calcFilterPre, calcPredict ?? calcFilter,
                     precursorMz, isotopeDist, potentialLosses, transitionRanks, libraryFilter, useFilter))
                 {
                     if (minMz <= nodeTran.Mz && nodeTran.Mz <= maxMz)
@@ -471,22 +471,25 @@ namespace pwiz.Skyline.Model
         {
             var tranSettings = settings.TransitionSettings;
             var fullScan = tranSettings.FullScan;
-            MassType massType = tranSettings.Prediction.FragmentMassType;
             int minMz = tranSettings.Instrument.GetMinMz(precursorMz);
             int maxMz = tranSettings.Instrument.MaxMz;
             bool precursorMS1 = fullScan.IsEnabledMs;
+            MassType massType = tranSettings.Prediction.FragmentMassType;
+            MassType massTypeIon = precursorMS1 ? tranSettings.Prediction.PrecursorMassType : massType;
 
             var sequence = Peptide.Target;
             var ionTypes = IsProteomic ? tranSettings.Filter.PeptideIonTypes : tranSettings.Filter.SmallMoleculeIonTypes;
             bool precursorNoProducts = precursorMS1 && !fullScan.IsEnabledMsMs &&
                 ionTypes.Count == 1 && ionTypes[0] == IonType.precursor;
-            var precursorMassPredict = calcPredict.GetPrecursorFragmentMass(sequence);
+            var precursorMassPredict = precursorMS1
+                ? calcFilterPre.GetPrecursorMass(sequence)
+                : calcPredict.GetPrecursorFragmentMass(sequence);
 
             foreach (var losses in CalcTransitionLosses(IonType.precursor, 0, massType, potentialLosses))
             {
                 double ionMz = IsProteomic ? 
                     SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMassPredict, losses), PrecursorAdduct) :
-                    PrecursorAdduct.MzFromNeutralMass(CustomMolecule.GetMass(massType), massType);
+                    PrecursorAdduct.MzFromNeutralMass(CustomMolecule.GetMass(massTypeIon), massTypeIon);
 
                 if (losses == null)
                 {

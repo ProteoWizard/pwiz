@@ -19,6 +19,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using pwiz.Common.Collections;
 
@@ -320,6 +321,18 @@ namespace pwiz.Common.Chemistry
                 }
             }
             return formula;
+        }
+
+        public static bool AreEquivalentFormulas(string formulaLeft, string formulaRight)
+        {
+            if (string.Equals(formulaLeft, formulaRight))
+            {
+                return true;
+            }
+            // Consider C2C'4H5 to be same as H5C'4C2
+            var left = Parse(formulaLeft);
+            var right = Parse(formulaRight);
+            return left.Difference(right).All(atom => atom.Value == 0);
         }
 
         public override string ToString()

@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
@@ -965,7 +966,8 @@ namespace pwiz.SkylineTestFunctional
             const string transistionList =
                 "Amino Acids B\tAlaB\t\tlight\t\t\t225\t44\t-1\t-1\t3\n" +
                 "Amino Acids B\tArgB\t\tlight\t\t\t310\t217\t-1\t-1\t19\n" +
-                "Amino Acids\tAla\t\tlight\t\t\t225\t44\t1\t1\t3\n" +
+                "Amino Acids\tAla\t\tlight\t\t\t226.001\t226\t1\t1\t3\n" + // This should be read as a precursor transition
+                "Amino Acids\tAla\t\tlight\t\t\t226.001\t44\t1\t1\t3\n" +
                 "Amino Acids\tAla\t\theavy\t\t\t229\t48\t1\t1\t4\n" + // NB we ignore RT conflicts
                 "Amino Acids\tArg\t\tlight\t\t\t310\t217\t1\t1\t19\n" +
                 "Amino Acids\tArg\t\theavy\t\t\t312\t219\t1\t1\t19\n" +
@@ -977,13 +979,17 @@ namespace pwiz.SkylineTestFunctional
                 "Amino Acids B\tArgB\t\theavy\t\t\t312\t220\t-1\t-1\t19\n";
 
 
-            SetClipboardText(transistionList);
+            SetClipboardText(transistionList.Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator));
             RunUI(pasteDlg2.PasteTransitions);
             OkDialog(pasteDlg2, pasteDlg2.OkDialog);
             var pastedDoc = WaitForDocumentChange(docOrig);
-            Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
-            Assert.AreEqual(4, pastedDoc.MoleculeCount);
-            
+            Assume.AreEqual(2, pastedDoc.MoleculeGroupCount);
+            Assume.AreEqual(4, pastedDoc.MoleculeCount);
+            var precursors = pastedDoc.MoleculeTransitionGroups.ToArray();
+            Assume.IsTrue(!precursors[0].PrecursorAdduct.HasIsotopeLabels);
+            Assume.IsTrue(precursors[1].PrecursorAdduct.HasIsotopeLabels);
+            var transitions = pastedDoc.MoleculeTransitions.ToArray();
+            Assume.AreEqual(1, transitions.Count(t => t.IsMs1));
             NewDocument();
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
         }
