@@ -225,7 +225,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 quickFilterForm.SetFilterOperation(0, FilterOperations.OP_NOT_EQUALS);
-                quickFilterForm.SetFilterOperand(0, "NaN");
+                quickFilterForm.SetFilterOperand(0, double.NaN.ToString(CultureInfo.CurrentCulture));
             });
             OkDialog(quickFilterForm, quickFilterForm.OkDialog);
         }
