@@ -2388,7 +2388,7 @@ namespace pwiz.Skyline
             var missingIrtPeptides = CheckMissingIrtPeptides(DocumentUI).ToArray();
             if (missingIrtPeptides.Any())
             {
-                var numStandards = RCalcIrtPeptides(DocumentUI).Count();
+                var numStandards = RCalcIrt.IrtPeptides(DocumentUI).Count();
                 var numDocument = numStandards - missingIrtPeptides.Length;
                 var numRequired = RCalcIrt.MinStandardCount(numStandards);
                 var message = TextUtil.LineSeparate(
@@ -2523,7 +2523,7 @@ namespace pwiz.Skyline
 
         private static IEnumerable<Target> CheckMissingIrtPeptides(SrmDocument document)
         {
-            return RCalcIrtPeptides(document).Except(document.Peptides.Select(nodePep => nodePep.ModifiedTarget));
+            return RCalcIrt.IrtPeptides(document).Except(document.Peptides.Select(nodePep => nodePep.ModifiedTarget));
         }
 
         public SrmDocument ImportResults(SrmDocument doc, List<KeyValuePair<string, MsDataFileUri[]>> namedResults, string optimize)

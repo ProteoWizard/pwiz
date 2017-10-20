@@ -578,7 +578,11 @@ namespace pwiz.Skyline.Controls.SeqNode
                     ? DocSettings.TransitionSettings.Filter.PeptidePrecursorCharges
                     : DocSettings.TransitionSettings.Filter.SmallMoleculePrecursorAdducts;
                 if (Math.Abs(group.PrecursorAdduct.AdductCharge) <= TransitionGroup.MAX_PRECURSOR_CHARGE_PICK || charges.Contains(group.PrecursorAdduct))
-                    listChildrenNew.Add(CreateChoice(group, mods));
+                {
+                    var nodeChoice = CreateChoice(group, mods);
+                    if (!useFilter || DocSettings.TransitionSettings.Libraries.HasMinIonCount(nodeChoice))
+                        listChildrenNew.Add(nodeChoice);
+                }
             }
             var nodePep = (PeptideDocNode)DocNode.ChangeChildren(listChildrenNew);
             nodePep.ChangeSettings(DocSettings, SrmSettingsDiff.PROPS);
@@ -587,7 +591,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             return listChildrenNew;
         }
 
-        private DocNode CreateChoice(Identity childId, ExplicitMods mods)
+        private TransitionGroupDocNode CreateChoice(Identity childId, ExplicitMods mods)
         {
             TransitionGroup tranGroup = (TransitionGroup)childId;
             TransitionDocNode[] transitions = DocNode.GetMatchingTransitions(

@@ -290,6 +290,29 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
+        public static IEnumerable<Target> IrtPeptides(SrmDocument document)
+        {
+            if (!document.Settings.HasRTPrediction)
+                yield break;
+
+            var calc = document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;
+            if (calc == null)
+                yield break;
+
+            try
+            {
+                calc = calc.Initialize(null) as RCalcIrt;
+            }
+            catch
+            {
+                yield break;
+            }
+
+            if (calc != null)
+                foreach (var peptide in calc.GetStandardPeptides())
+                    yield return peptide;
+        }
+
         #region Property change methods
 
         public RCalcIrt ChangeDatabasePath(string path)

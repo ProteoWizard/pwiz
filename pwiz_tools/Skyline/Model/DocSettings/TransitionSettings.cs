@@ -1441,6 +1441,18 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public TransitionLibraryPick Pick { get; private set; }
 
+        public bool HasMinIonCount(TransitionGroupDocNode nodeGroup)
+        {
+            if (!nodeGroup.HasLibInfo || Pick == TransitionLibraryPick.none)
+                return true;
+            // Slight problem with nodeTran.IsMs1, not being entirely deterministic. So for now we check for library
+            // info to differentiate in corner cases.
+            // CONSIDER: Maybe we should be storing a ChromSource on the transition at the time it is created, which
+            // seems to be the only time we really know that a precursor ion is being created for MS1 filtering
+            // or not.
+            return nodeGroup.Transitions.Count(nodeTran => !nodeTran.IsMs1 || nodeTran.HasLibInfo) >= MinIonCount;
+        }
+
         #region Property change methods
 
         public TransitionLibraries ChangeIonMatchTolerance(double prop)

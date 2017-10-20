@@ -949,12 +949,15 @@ namespace pwiz.Skyline.SettingsUI
                 groupBoxMS1.Top = textPrecursorCharges.Bottom + sepMS1FromMS2;
             }
 
-            int newRadioTimeAroundTop = radioUseSchedulingWindow.Top;
-            int radioTimeAroundTopDifference = radioKeepAllTime.Top - newRadioTimeAroundTop;
-            radioUseSchedulingWindow.Visible = false;
-            flowLayoutPanelUseSchedulingWindow.Visible = false;
-            radioKeepAllTime.Top = newRadioTimeAroundTop;
-            groupBoxRetentionTimeToKeep.Height -= radioTimeAroundTopDifference;
+            if (workflow != ImportPeptideSearchDlg.Workflow.dia)
+            {
+                int newRadioTimeAroundTop = radioUseSchedulingWindow.Top;
+                int radioTimeAroundTopDifference = radioKeepAllTime.Top - newRadioTimeAroundTop;
+                radioUseSchedulingWindow.Visible = false;
+                flowLayoutPanelUseSchedulingWindow.Visible = false;
+                radioKeepAllTime.Top = newRadioTimeAroundTop;
+                groupBoxRetentionTimeToKeep.Height -= radioTimeAroundTopDifference;
+            }
 
             // Select defaults
             PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;

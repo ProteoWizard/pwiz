@@ -20,8 +20,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
@@ -84,12 +89,15 @@ namespace pwiz.Skyline.Alerts
         private readonly SrmDocument _document;
         private readonly List<PeptideGroupDocNode> _addedPeptideGroups;
 
+        public bool DocumentFinalCalculated { get; private set; }
         public SrmDocument DocumentFinal { get; private set; }
-
-        public int EmptyProteins { get { return DocumentFinal.PeptideGroups.Count(pepGroup => pepGroup.PeptideCount == 0); } }
+        private int? _documentFinalEmptyProteins;
+        public int? DocumentFinalEmptyProteins { get { return DocumentFinalCalculated ? _documentFinalEmptyProteins : null; } }
 
         private readonly string _decoyGenerationMethod;
         private readonly double _decoysPerTarget;
+
+        private CancellationTokenSource _cancellationTokenSource;
 
         private readonly string _remaniningText;
         private readonly string _emptyProteinsText;
@@ -105,7 +113,7 @@ namespace pwiz.Skyline.Alerts
             _emptyProteinsText = lblEmptyProteins.Text;
             int proteinCount, peptideCount, precursorCount, transitionCount;
             NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-            lblNew.Text = string.Format(lblNew.Text, proteinCount, peptideCount, precursorCount, transitionCount);
+            lblNew.Text = FormatCounts(lblNew.Text, proteinCount, peptideCount, precursorCount, transitionCount);
 
             var docRefined = new RefinementSettings {RemoveDuplicatePeptides = true}.Refine(_document);
             if (_document.PeptideCount == docRefined.PeptideCount)
@@ -114,6 +122,8 @@ namespace pwiz.Skyline.Alerts
                 panelDuplicates.Hide();
                 panelRemaining.Top = panelDuplicates.Top;
             }
+
+            numMinPeptides.TextChanged += UpdateRemaining;
 
             UpdateRemaining(null, null);
         }
@@ -125,7 +135,20 @@ namespace pwiz.Skyline.Alerts
 
         public void OkDialog()
         {
+            if (!DocumentFinalCalculated)
+                return;
             DialogResult = DialogResult.OK;
+        }
+
+        private static string FormatCounts(string text, int proteins, int peptides, int precursors, int transitions)
+        {
+            const int separatorThreshold = 10000;
+            var culture = LocalizationHelper.CurrentCulture;
+            var proteinString = proteins < separatorThreshold ? proteins.ToString(culture) : proteins.ToString("N0", culture); // Not L10N
+            var peptideString = peptides < separatorThreshold ? peptides.ToString(culture) : peptides.ToString("N0", culture); // Not L10N
+            var precursorString = precursors < separatorThreshold ? precursors.ToString(culture) : precursors.ToString("N0", culture); // Not L10N
+            var transitionString = transitions < separatorThreshold ? transitions.ToString(culture) : transitions.ToString("N0", culture); // Not L10N
+            return string.Format(text, proteinString, peptideString, precursorString, transitionString);
         }
 
         public void NewTargetsAll(out int proteins, out int peptides, out int precursors, out int transitions)
@@ -145,6 +168,8 @@ namespace pwiz.Skyline.Alerts
 
         public void NewTargetsFinal(out int proteins, out int peptides, out int precursors, out int transitions)
         {
+            if (!DocumentFinalCalculated)
+                throw new Exception();
             var pepGroups = DocumentFinal.PeptideGroups.ToArray();
             proteins = pepGroups.Length;
             peptides = pepGroups.Sum(pepGroup => pepGroup.PeptideCount);
@@ -169,27 +194,103 @@ namespace pwiz.Skyline.Alerts
 
         private void UpdateRemaining(object sender, EventArgs e)
         {
-            DocumentFinal = AddDecoys(ImportPeptideSearch.RemoveProteinsByPeptideCount(
-                RemoveRepeatedPeptides || RemoveDuplicatePeptides
-                    ? new RefinementSettings {RemoveRepeatedPeptides = RemoveRepeatedPeptides, RemoveDuplicatePeptides = RemoveDuplicatePeptides}.Refine(_document)
-                    : _document
-                , MinPeptides));
+            if (_cancellationTokenSource != null)
+            {
+                _cancellationTokenSource.Cancel();
+            }
+            _cancellationTokenSource = new CancellationTokenSource();
+            DoUpdateRemaining(_cancellationTokenSource.Token);
+        }
+        
+        private async void DoUpdateRemaining(CancellationToken cancellationToken)
+        {
+            btnOK.Enabled = false;
+            DocumentFinalCalculated = false;
 
-            if (KeepAll)
+            lblRemaining.Text = Resources.PeptidesPerProteinDlg_UpdateRemaining_Calculating___;
+            lblEmptyProteins.Text = string.Empty;
+
+            var keepAll = KeepAll;
+            numMinPeptides.Enabled = !keepAll;
+
+            var doc = _document;
+            var minPeptides = MinPeptides;
+            var removeRepeated = RemoveRepeatedPeptides;
+            var removeDuplicate = RemoveDuplicatePeptides;
+            SrmDocument docFinal;
+            try
             {
-                numMinPeptides.Enabled = false;
-                lblEmptyProteins.Text = string.Format(_emptyProteinsText, EmptyProteins);
-                lblEmptyProteins.Show();
+                docFinal = await Task.Run(() => GetDocumentFinal(cancellationToken, doc, minPeptides, removeRepeated, removeDuplicate, out _documentFinalEmptyProteins), cancellationToken);
             }
-            else
+            catch (OperationCanceledException)
             {
-                numMinPeptides.Enabled = true;
-                lblEmptyProteins.Hide();
+                docFinal = null;
             }
+            if (docFinal == null)
+                return;
+
+            DocumentFinal = docFinal;
+            DocumentFinalCalculated = true;
+            btnOK.Enabled = true;
+
+            if (keepAll)
+                lblEmptyProteins.Text = string.Format(_emptyProteinsText, DocumentFinalEmptyProteins.GetValueOrDefault());
 
             int proteinCount, peptideCount, precursorCount, transitionCount;
             NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-            lblRemaining.Text = string.Format(_remaniningText, proteinCount, peptideCount, precursorCount, transitionCount);
+            lblRemaining.Text = FormatCounts(_remaniningText, proteinCount, peptideCount, precursorCount, transitionCount);
+        }
+
+        private SrmDocument GetDocumentFinal(CancellationToken cancellationToken, SrmDocument doc, int minPeptides, bool removeRepeated, bool removeDuplicate, out int? emptyProteins)
+        {
+            emptyProteins = null;
+
+            // Remove repeated/duplicate peptides
+            var newDoc = removeRepeated || removeDuplicate
+                ? new RefinementSettings {RemoveRepeatedPeptides = removeRepeated, RemoveDuplicatePeptides = removeDuplicate}.Refine(doc)
+                : doc;
+
+            if (cancellationToken.IsCancellationRequested)
+                return null;
+
+            // Remove proteins without enough peptides
+            newDoc = ImportPeptideSearch.RemoveProteinsByPeptideCount(newDoc, minPeptides);
+
+            if (cancellationToken.IsCancellationRequested)
+                return null;
+
+            // Move iRT proteins to top
+            var irtPeptides = new HashSet<Target>(RCalcIrt.IrtPeptides(newDoc));
+            var proteins = new List<PeptideGroupDocNode>(newDoc.PeptideGroups);
+            var proteinsIrt = new List<PeptideGroupDocNode>();
+            for (var i = 0; i < proteins.Count; i++)
+            {
+                var nodePepGroup = proteins[i];
+                if (nodePepGroup.Peptides.All(nodePep => irtPeptides.Contains(new Target(nodePep.ModifiedSequence))))
+                {
+                    proteinsIrt.Add(nodePepGroup);
+                    proteins.RemoveAt(i--);
+                }
+            }
+            if (proteinsIrt.Any())
+                newDoc = (SrmDocument) newDoc.ChangeChildrenChecked(proteinsIrt.Concat(proteins).Cast<DocNode>().ToArray());
+
+            if (cancellationToken.IsCancellationRequested)
+                return null;
+
+            // Add decoys
+            newDoc = AddDecoys(newDoc);
+
+            if (cancellationToken.IsCancellationRequested)
+                return null;
+
+            // Count empty proteins
+            emptyProteins = newDoc.PeptideGroups.Count(pepGroup => pepGroup.PeptideCount == 0);
+
+            if (cancellationToken.IsCancellationRequested)
+                return null;
+
+            return newDoc;
         }
     }
 }
