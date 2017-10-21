@@ -97,8 +97,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public bool RequirePrecursorTransition { private get; set; }
-
         public bool DecoyGenerationEnabled
         {
             get { return panelDecoys.Visible; }
@@ -326,11 +324,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
 
                 // Filter proteins based on number of peptides and add decoys
-                using (var dlg = new PeptidesPerProteinDlg(docNew, newPeptideGroups, DecoyGenerationMethod, NumDecoys ?? 0))
-                {
-                    docNew = dlg.ShowDialog(WizardForm) == DialogResult.OK ? dlg.DocumentFinal : null;
-                }
-
+                docNew = ImportFastaHelper.HandleMinPeptidesForPeptideGroups(WizardForm, docNew, newPeptideGroups, DecoyGenerationMethod, NumDecoys ?? 0);
                 // Document will be null if user was given option to keep or remove empty proteins and pressed cancel
                 if (docNew == null)
                     return false;
@@ -342,7 +336,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return docNew;
                 });
 
-                if (RequirePrecursorTransition && !VerifyAtLeastOnePrecursorTransition(SkylineWindow.Document))
+                if (!VerifyAtLeastOnePrecursorTransition(SkylineWindow.Document))
                     return false;
             }
 

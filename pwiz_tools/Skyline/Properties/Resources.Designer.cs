@@ -13513,16 +13513,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Full-scan MS1 or MS/MS filtering must be enabled in order to import a peptide search..
-        /// </summary>
-        public static string ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_or_MS_MS_filtering_must_be_enabled_in_order_to_import_a_peptide_search_ {
-            get {
-                return ResourceManager.GetString("ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_or_MS_MS_filtering_mu" +
-                        "st_be_enabled_in_order_to_import_a_peptide_search_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Import Peptide Search.
         /// </summary>
         public static string ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search {
@@ -19825,15 +19815,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("PeptideSettingsUI_ValidateNewSettings_The_file__0__may_not_be_a_valid_proteome_fi" +
                         "le", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Calculating....
-        /// </summary>
-        public static string PeptidesPerProteinDlg_UpdateRemaining_Calculating___ {
-            get {
-                return ResourceManager.GetString("PeptidesPerProteinDlg_UpdateRemaining_Calculating___", resourceCulture);
             }
         }
         

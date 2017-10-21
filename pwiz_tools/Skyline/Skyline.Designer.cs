@@ -120,7 +120,6 @@ namespace pwiz.Skyline
             this.toolStripSeparatorTran = new System.Windows.Forms.ToolStripSeparator();
             this.basePeakContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ticContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparatorOnlyQuantitative = new System.Windows.Forms.ToolStripSeparator();
             this.onlyQuantitativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorSplitGraph = new System.Windows.Forms.ToolStripSeparator();
             this.splitGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -418,7 +417,6 @@ namespace pwiz.Skyline
             this.toolStripSeparatorTranMain = new System.Windows.Forms.ToolStripSeparator();
             this.basePeakMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ticMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator56 = new System.Windows.Forms.ToolStripSeparator();
             this.onlyQuantitativeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator48 = new System.Windows.Forms.ToolStripSeparator();
             this.splitGraphMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -521,6 +519,8 @@ namespace pwiz.Skyline
             this.massErorrRetentionTimeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorMassToChargContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorlogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator56 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparatorOnlyQuantitative = new System.Windows.Forms.ToolStripSeparator();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -1166,11 +1166,6 @@ namespace pwiz.Skyline
             this.ticContextMenuItem.Name = "ticContextMenuItem";
             resources.ApplyResources(this.ticContextMenuItem, "ticContextMenuItem");
             this.ticContextMenuItem.Click += new System.EventHandler(this.ticMenuItem_Click);
-            // 
-            // toolStripSeparatorOnlyQuantitative
-            // 
-            this.toolStripSeparatorOnlyQuantitative.Name = "toolStripSeparatorOnlyQuantitative";
-            resources.ApplyResources(this.toolStripSeparatorOnlyQuantitative, "toolStripSeparatorOnlyQuantitative");
             // 
             // onlyQuantitativeContextMenuItem
             // 
@@ -3284,11 +3279,6 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.ticMenuItem, "ticMenuItem");
             this.ticMenuItem.Click += new System.EventHandler(this.ticMenuItem_Click);
             // 
-            // toolStripSeparator56
-            // 
-            this.toolStripSeparator56.Name = "toolStripSeparator56";
-            resources.ApplyResources(this.toolStripSeparator56, "toolStripSeparator56");
-            // 
             // onlyQuantitativeMenuItem
             // 
             this.onlyQuantitativeMenuItem.Name = "onlyQuantitativeMenuItem";
@@ -3987,6 +3977,16 @@ namespace pwiz.Skyline
             this.massErrorlogScaleContextMenuItem.Name = "massErrorlogScaleContextMenuItem";
             resources.ApplyResources(this.massErrorlogScaleContextMenuItem, "massErrorlogScaleContextMenuItem");
             this.massErrorlogScaleContextMenuItem.Click += new System.EventHandler(this.massErrorlogScaleContextMenuItem_Click);
+            // 
+            // toolStripSeparator56
+            // 
+            this.toolStripSeparator56.Name = "toolStripSeparator56";
+            resources.ApplyResources(this.toolStripSeparator56, "toolStripSeparator56");
+            // 
+            // toolStripSeparatorOnlyQuantitative
+            // 
+            this.toolStripSeparatorOnlyQuantitative.Name = "toolStripSeparatorOnlyQuantitative";
+            resources.ApplyResources(this.toolStripSeparatorOnlyQuantitative, "toolStripSeparatorOnlyQuantitative");
             // 
             // SkylineWindow
             // 

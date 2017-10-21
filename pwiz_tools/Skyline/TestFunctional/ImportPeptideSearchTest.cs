@@ -28,7 +28,6 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -72,7 +71,6 @@ namespace pwiz.SkylineTestFunctional
             TestWizardCancel();
             TestWizardExcludeSpectrumSourceFiles();
             TestWizardDecoysAndMinPeptides();
-            TestMinIonCount();
         }
 
         /// <summary>
@@ -461,52 +459,37 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.ImportFastaControl.NumDecoys = 1;
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("yeast-10-duplicate.fasta"));
             });
-            var peptidesPerProteinDlg2 = ShowDialog<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-            RunUI(() =>
+            RunDlg<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, dlg =>
             {
-                Assert.IsTrue(peptidesPerProteinDlg2.DuplicateControlsVisible);
-                peptidesPerProteinDlg2.MinPeptides = 1;
-                peptidesPerProteinDlg2.RemoveRepeatedPeptides = peptidesPerProteinDlg2.RemoveDuplicatePeptides = false;
-            });
-            WaitForCondition(() => peptidesPerProteinDlg2.DocumentFinalCalculated);
-            RunUI(() =>
-            {
+                Assert.IsTrue(dlg.DuplicateControlsVisible);
+                dlg.MinPeptides = 1;
+                dlg.RemoveRepeatedPeptides = dlg.RemoveDuplicatePeptides = false;
                 int proteins, peptides, precursors, transitions;
-                peptidesPerProteinDlg2.NewTargetsAll(out proteins, out peptides, out precursors, out transitions);
+                dlg.NewTargetsAll(out proteins, out peptides, out precursors, out transitions);
                 Assert.AreEqual(12, proteins);
                 Assert.AreEqual(4, peptides);
                 Assert.AreEqual(4, precursors);
                 Assert.AreEqual(12, transitions);
-                peptidesPerProteinDlg2.NewTargetsFinal(out proteins, out peptides, out precursors, out transitions);
+                dlg.NewTargetsFinal(out proteins, out peptides, out precursors, out transitions);
                 Assert.AreEqual(3, proteins);
                 Assert.AreEqual(4, peptides);
                 Assert.AreEqual(4, precursors);
                 Assert.AreEqual(12, transitions);
-                peptidesPerProteinDlg2.RemoveRepeatedPeptides = true;
-            });
-            WaitForCondition(() => peptidesPerProteinDlg2.DocumentFinalCalculated);
-            RunUI(() =>
-            {
-                int proteins, peptides, precursors, transitions;
-                peptidesPerProteinDlg2.NewTargetsFinal(out proteins, out peptides, out precursors, out transitions);
+                dlg.RemoveRepeatedPeptides = true;
+                dlg.NewTargetsFinal(out proteins, out peptides, out precursors, out transitions);
                 Assert.AreEqual(2, proteins);
                 Assert.AreEqual(2, peptides);
                 Assert.AreEqual(2, precursors);
                 Assert.AreEqual(6, transitions);
-                peptidesPerProteinDlg2.RemoveRepeatedPeptides = false;
-                peptidesPerProteinDlg2.RemoveDuplicatePeptides = true;
-            });
-            WaitForCondition(() => peptidesPerProteinDlg2.DocumentFinalCalculated);
-            RunUI(() =>
-            {
-                int proteins, peptides, precursors, transitions;
-                peptidesPerProteinDlg2.NewTargetsFinal(out proteins, out peptides, out precursors, out transitions);
+                dlg.RemoveRepeatedPeptides = false;
+                dlg.RemoveDuplicatePeptides = true;
+                dlg.NewTargetsFinal(out proteins, out peptides, out precursors, out transitions);
                 Assert.AreEqual(0, proteins);
                 Assert.AreEqual(0, peptides);
                 Assert.AreEqual(0, precursors);
                 Assert.AreEqual(0, transitions);
+                dlg.CancelDialog();
             });
-            OkDialog(peptidesPerProteinDlg2, peptidesPerProteinDlg2.CancelDialog);
             RunUI(() => importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("yeast-10.fasta")));
 
             var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
@@ -514,16 +497,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsFalse(peptidesPerProteinDlg.DuplicateControlsVisible);
                 peptidesPerProteinDlg.MinPeptides = 0;
-            });
-            WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
-            RunUI(() =>
-            {
-                Assert.AreEqual(9, peptidesPerProteinDlg.DocumentFinalEmptyProteins);
+                Assert.AreEqual(9, peptidesPerProteinDlg.EmptyProteins);
                 peptidesPerProteinDlg.MinPeptides = 2;
-            });
-            WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
-            RunUI(() =>
-            {
                 int proteins, peptides, precursors, transitions;
                 peptidesPerProteinDlg.NewTargetsAll(out proteins, out peptides, out precursors, out transitions);
                 Assert.AreEqual(11, proteins);
@@ -536,11 +511,6 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(0, precursors);
                 Assert.AreEqual(0, transitions);
                 peptidesPerProteinDlg.MinPeptides = 1;
-            });
-            WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
-            RunUI(() =>
-            {
-                int proteins, peptides, precursors, transitions;
                 peptidesPerProteinDlg.NewTargetsFinal(out proteins, out peptides, out precursors, out transitions);
                 Assert.AreEqual(2, proteins);
                 Assert.AreEqual(2, peptides);
@@ -552,59 +522,6 @@ namespace pwiz.SkylineTestFunctional
             doc = WaitForDocumentChangeLoaded(doc);
             OkDialog(importResultsDlg, importResultsDlg.ClickClose);
             AssertEx.IsDocumentState(doc, null, 2, 2, 6);
-        }
-
-        private void TestMinIonCount()
-        {
-            const string protein = ">sp|P62258|1433E_HUMAN 14-3-3 protein epsilon OS=Homo sapiens GN=YWHAE PE=1 SV=1\r\n" +
-                                   "MDDREDLVYQAKLAEQAERYDEMVESMKKVAGMDVELTVEERNLLSVAYKNVIGARRASW\r\n" +
-                                   "RIISSIEQKEENKGGEDKLKMIREYRQMVETELKLICCDILDVLDKHLIPAANTGESKVF\r\n" +
-                                   "YYKMKGDYHRYLAEFATGNDRKEAAENSLVAYKAASDIAMTELPPTHPIRLGLALNFSVF\r\n" +
-                                   "YYEILNSPDRACRLAKAAFDDAIAELDTLSEESYKDSTLIMQLLRDNLTLWTSDMQGDGE\r\n" +
-                                   "EQNKEALQDVEDENQ*";
-            SrmDocument doc = null;
-            RunUI(() =>
-            {
-                doc = SkylineWindow.DocumentUI;
-                Assert.IsTrue(SkylineWindow.LoadFile(GetTestPath("MinIonCount.sky")));
-                doc = WaitForDocumentChangeLoaded(doc);
-                SkylineWindow.Paste(protein);
-                doc = SkylineWindow.DocumentUI;
-            });
-            int minIonCount = 6;
-            Assert.AreEqual(minIonCount, doc.Settings.TransitionSettings.Libraries.MinIonCount);
-            Assert.AreEqual(11, doc.PeptideCount);
-            foreach (var nodePepGroup in doc.MoleculeGroups)
-            {
-                foreach (var nodePep in nodePepGroup.Peptides)
-                {
-                    Assert.AreNotEqual(0, nodePep.TransitionGroupCount);
-                    foreach (var nodeTranGroup in nodePep.TransitionGroups)
-                    {
-                        Assert.IsTrue(nodeTranGroup.TransitionCount >= minIonCount);
-                    }
-                }
-            }
-
-            minIonCount = 5;
-            RunUI(() => Assert.IsTrue(SkylineWindow.SetDocument(
-                doc.ChangeSettings(doc.Settings.ChangeTransitionLibraries(libraries => libraries.ChangeMinIonCount(minIonCount))), doc)));
-            doc = WaitForDocumentChange(doc);
-            Assert.AreEqual(minIonCount, doc.Settings.TransitionSettings.Libraries.MinIonCount);
-            Assert.AreEqual(12, doc.PeptideCount);
-            foreach (var nodePepGroup in doc.MoleculeGroups)
-            {
-                foreach (var nodePep in nodePepGroup.Peptides)
-                {
-                    Assert.AreNotEqual(0, nodePep.TransitionGroupCount);
-                    foreach (var nodeTranGroup in nodePep.TransitionGroups)
-                    {
-                        Assert.IsTrue(nodeTranGroup.TransitionCount >= minIonCount);
-                    }
-                }
-            }
-
-            RunUI(() => SkylineWindow.SaveDocument());
         }
 
         private void VerifyDocumentLibraryBuilt(string path)

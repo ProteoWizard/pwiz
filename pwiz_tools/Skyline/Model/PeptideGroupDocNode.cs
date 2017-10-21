@@ -220,8 +220,6 @@ namespace pwiz.Skyline.Model
                     {
                         // Materialize children of the peptide.
                         nodePepResult = nodePepResult.ChangeSettings(settingsNew, diffNode);
-                        if (settingsNew.TransitionSettings.Libraries.MinIonCount > 0 && nodePepResult.TransitionGroupCount == 0)
-                            continue;
 
                         childrenNew.Add(nodePepResult);
 

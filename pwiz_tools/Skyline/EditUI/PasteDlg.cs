@@ -2069,5 +2069,13 @@ namespace pwiz.Skyline.EditUI
             }
             return true;
         }
+
+        public static SrmDocument HandleMinPeptidesForPeptideGroups(Form parent, SrmDocument docCurrent, List<PeptideGroupDocNode> newPeptideGroups, string decoyGenerationMethod, double decoysPerTarget)
+        {
+            using (var dlg = new PeptidesPerProteinDlg(docCurrent, newPeptideGroups, decoyGenerationMethod, decoysPerTarget))
+            {
+                return dlg.ShowDialog(parent) == DialogResult.OK ? dlg.DocumentFinal : null;
+            }
+        }
     }
 }

@@ -269,7 +269,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             _pagesToSkip.Add(Pages.import_fasta_page);
 
                         // Decoy options enabled only for DIA
-                        ImportFastaControl.RequirePrecursorTransition = WorkflowType != Workflow.dia;
                         ImportFastaControl.DecoyGenerationEnabled = WorkflowType == Workflow.dia;
                     }
                     break;
@@ -481,25 +480,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
             }
 
-            switch (WorkflowType)
+            // MS1 filtering must be enabled
+            if (!FullScan.IsEnabledMs)
             {
-            default:
-                // MS1 filtering must be enabled
-                if (!FullScan.IsEnabledMs)
-                {
-                    MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_);
-                    return false;
-                }
-                break;
-            case Workflow.dia:
-                if (!FullScan.IsEnabled)
-                {
-                    MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_or_MS_MS_filtering_must_be_enabled_in_order_to_import_a_peptide_search_);
-                    return false;
-                }
-                break;
+                MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_);
+                return false;
             }
-            
+
             return true;
         }
 

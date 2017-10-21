@@ -122,7 +122,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var filter = new TransitionFilter(peptidePrecursorCharges, peptideProductCharges, peptideIonTypes,
                 settings.Filter.SmallMoleculePrecursorAdducts, settings.Filter.SmallMoleculeFragmentAdducts, settings.Filter.SmallMoleculeIonTypes, 
                 settings.Filter.FragmentRangeFirstName, settings.Filter.FragmentRangeLastName,
-                settings.Filter.MeasuredIons, settings.Filter.PrecursorMzWindow, exclusionUseDIAWindow, settings.Filter.AutoSelect);
+                                              settings.Filter.MeasuredIons, settings.Filter.PrecursorMzWindow, exclusionUseDIAWindow, settings.Filter.AutoSelect);
             Helpers.AssignIfEquals(ref filter, settings.Filter);
 
             // Validate and store library settings
