@@ -135,8 +135,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SetClipboardFileText(@"MethodEdit\FASTA\fasta.txt")); // Not L10N
 
             // New in v0.7 : Skyline asks about removing empty proteins.
-            using (new CheckDocumentState(35, 25, 25, 75, null, true))
             using (new DocChangeLogger())
+            using (new CheckDocumentState(35, 25, 25, 75, null, true))
             {
                 var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(SkylineWindow.Paste);
                 RunUI(() => emptyProteinsDlg.IsKeepEmptyProteins = true);
@@ -263,8 +263,8 @@ namespace pwiz.SkylineTestTutorial
             WaitForProteinMetadataBackgroundLoaderCompleted(millis);
             
             // Inserting a Peptide List, p. 13
-            using (new CheckDocumentState(25, 70, 70, 338, null, true))
             using (new DocChangeLogger())
+            using (new CheckDocumentState(25, 70, 70, 338, null, true))
             {
                 RunUI(() =>
                     {
