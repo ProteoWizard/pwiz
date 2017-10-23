@@ -30,6 +30,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using Ionic.Zip;
 using SkylineNightly.Properties;
 
@@ -632,6 +633,17 @@ namespace SkylineNightly
             }
             
             var xml = File.ReadAllText(xmlFile);
+            var logFile = GetLatestLog();
+            if (logFile != null)
+            {
+                var log = File.ReadAllText(logFile);
+                XDocument doc = XDocument.Parse(xml);
+                if (doc.Root != null)
+                {
+                    doc.Root.Add(new XElement("Log", log));
+                    xml = doc.ToString();
+                }
+            }
             string url;
             // Post to server.
             if (mode == RunMode.integration)
