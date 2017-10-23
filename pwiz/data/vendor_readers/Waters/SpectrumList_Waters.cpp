@@ -368,7 +368,7 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
         else
         {
             for (int i=0; i < scanCount; ++i)
-                functionAndScanByRetentionTime.insert(make_pair(rawdata_->Info.GetRetentionTime(function, i), make_pair(function, i)));
+                functionAndScanByRetentionTime.insert(make_pair(scanStats[i].rt, make_pair(function, i)));
         }
     }
 
