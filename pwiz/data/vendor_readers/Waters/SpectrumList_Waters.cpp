@@ -328,11 +328,11 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
 {
     using namespace boost::spirit::karma;
 
-    map<double, std::pair<int, int> > functionAndScanByRetentionTime;
+    multimap<float, std::pair<int, int> > functionAndScanByRetentionTime;
 
     int numScansInBlock = 0;   // number of drift scans per compressed block
 
-    BOOST_FOREACH(int function, rawdata_->FunctionIndexList())
+    for(int function : rawdata_->FunctionIndexList())
     {
         int msLevel;
         CVID spectrumType;
@@ -368,7 +368,7 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
         else
         {
             for (int i=0; i < scanCount; ++i)
-                functionAndScanByRetentionTime[scanStats[i].rt] = make_pair(function, i);
+                functionAndScanByRetentionTime.insert(make_pair(rawdata_->Info.GetRetentionTime(function, i), make_pair(function, i)));
         }
     }
 
