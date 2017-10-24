@@ -1107,7 +1107,7 @@ namespace pwiz.Skyline
                     ImportWarnOnFailure = true;
                 }
 
-                else if (IsNameValue(pair, "remove-all")) // Not L10N
+                else if (IsNameOnly(pair, "remove-all")) // Not L10N
                 {
                     RemovingResults = true;
                     RequiresSkylineDocument = true;

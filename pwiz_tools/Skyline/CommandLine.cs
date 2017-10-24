@@ -235,6 +235,7 @@ namespace pwiz.Skyline
 
             if (commandArgs.RemovingResults && !commandArgs.RemoveBeforeDate.HasValue)
             {
+                // Remove all existing results in the document.
                 RemoveResults(null);
             }
 
@@ -248,6 +249,9 @@ namespace pwiz.Skyline
 
             if (commandArgs.RemovingResults && commandArgs.RemoveBeforeDate.HasValue)
             {
+                // We are given a remove-before date. Remove results AFTER all results have been imported. 
+                // Some of the results that were just imported may have been acquired before the remove-before 
+                // date and we want to remove them.
                 RemoveResults(commandArgs.RemoveBeforeDate);
             }
 
@@ -335,6 +339,8 @@ namespace pwiz.Skyline
                         commandArgs.ImportWarnOnFailure))
                     return false;
             }
+
+            WaitForDocumentLoaded();
             return true;
         }
 
