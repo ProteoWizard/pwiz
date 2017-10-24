@@ -44,7 +44,8 @@ class MascotSpecReader : public SpecFileReader {
     MascotSpecReader(const char* filename,
                      ms_mascotresfile* ms_file, 
                      ms_mascotresults* ms_results = NULL,
-                     const std::vector<std::string>& rawfiles = std::vector<std::string>()){
+                     const std::vector<std::string>& rawfiles = std::vector<std::string>())
+        : disableRtConversion_(false), needsRtConversion_(false) {
         setFile(ms_file, ms_results);
         filename_ = filename;
         numRawFiles_ = rawfiles.size();
@@ -128,17 +129,30 @@ class MascotSpecReader : public SpecFileReader {
 
         ms_inputquery spec(*ms_file_, specId);
         // retention time is optional in .dat files
-        string rtStr = spec.getRetentionTimes();
-        if (rtStr.empty()) {
-            for (size_t i = 0; i < numRawFiles_; i++)
-                if (!(rtStr = spec.getRetentionTimes(i)).empty())
-                    break;
+        double rt = -1;
+        try {
+            rt = boost::lexical_cast<double>(spec.getRetentionTimes());
+        } catch (...) {
+            rt = -1;
         }
-        try{
-            returnData.retentionTime = boost::lexical_cast<double>(rtStr) / 60;
+
+        if (rt < 0) {
+            for (size_t i = 0; i < numRawFiles_; i++) {
+                try {
+                    rt = boost::lexical_cast<double>(spec.getRetentionTimes(i));
+                    break;
+                } catch (...) {
+                    rt = -1;
+                }
+            }
+        }
+
+        if (rt >= 0) {
+            returnData.retentionTime = rt / 60;
             disableRtConversion_ = true;
+            needsRtConversion_ = false;
             // seconds to minutes
-        } catch (...){
+        } else {
             // if it wasn't there, try the title string
             returnData.retentionTime = getRetentionTimeFromTitle(spec.getStringTitle(true));
         }
