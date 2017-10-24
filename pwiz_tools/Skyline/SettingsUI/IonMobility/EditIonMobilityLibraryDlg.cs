@@ -638,7 +638,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
 
 
-        private static IEnumerable<IDriftTimeInfoProvider> GetIonMobilityProviders(Library library)
+        private static IEnumerable<IIonMobilityInfoProvider> GetIonMobilityProviders(Library library)
         {
             int? fileCount = library.FileCount;
             if (!fileCount.HasValue)
@@ -646,14 +646,14 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
             for (int i = 0; i < fileCount.Value; i++)
             {
-                LibraryDriftTimeInfo driftTimes;
-                if (library.TryGetDriftTimeInfos(i, out driftTimes))
-                    yield return driftTimes;
+                LibraryIonMobilityInfo ionMobilities;
+                if (library.TryGetIonMobilityInfos(i, out ionMobilities))
+                    yield return ionMobilities;
             }
         }
 
         public static IEnumerable<ValidatingIonMobilityPeptide> ConvertDriftTimesToCollisionalCrossSections(IProgressMonitor monitor,
-                                      IEnumerable<IDriftTimeInfoProvider> providers,
+                                      IEnumerable<IIonMobilityInfoProvider> providers,
                                       int countProviders,
                                       IDictionary<int, RegressionLine> regressions)
         {
@@ -676,7 +676,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     int count = 0;
                     foreach (var ionMobilityInfo in ionMobilityList.Value)
                     {
-                        totalHighEnergyOffset += ionMobilityInfo.HighEnergyDriftTimeOffsetMsec;
+                        totalHighEnergyOffset += ionMobilityInfo.HighEnergyIonMobilityValueOffset;
                         if (ionMobilityInfo.HasCollisionalCrossSection)
                         {
                             totalCCS += ionMobilityInfo.CollisionalCrossSectionSqA.Value;
@@ -686,9 +686,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                             // Convert from a measured drift time
                             RegressionLine regression;
                             if ((regressions != null) && regressions.TryGetValue(ionMobilityList.Key.Charge, out regression))
-                                totalCCS += regression.GetX(ionMobilityInfo.DriftTimeMsec.Value); // x = (y-intercept)/slope
+                                totalCCS += regression.GetX(ionMobilityInfo.IonMobility.Mobility.Value); // x = (y-intercept)/slope
                             else
-                                throw new Exception(String.Format(Resources.CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__,
+                                throw new Exception(String.Format(Resources.CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_ion_mobility_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__,
                                     ionMobilityList.Key.Target,
                                     ionMobilityList.Key.Charge));
                         }

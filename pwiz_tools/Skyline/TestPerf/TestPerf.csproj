@@ -148,6 +148,7 @@
     <Compile Include="PerfLockmassCmdlineTest.cs" />
     <Compile Include="PerfLockmassTest.cs" />
     <Compile Include="PerfMeasuredDriftTimes.cs" />
+    <Compile Include="PerfMeasuredInverseK0.cs" />
     <Compile Include="PerfNegativeIonDIATest.cs" />
     <Compile Include="PerfOpenSwathConvert.cs" />
     <Compile Include="PerfOptimizeCEImportResultsNativeVsMz5Test.cs" />

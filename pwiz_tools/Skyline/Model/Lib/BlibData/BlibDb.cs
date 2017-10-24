@@ -26,6 +26,8 @@ using System.Threading;
 using NHibernate;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Properties;
@@ -209,6 +211,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             var peaksInfo = spectrum.SpectrumPeaks;
             var smallMoleculeAttributes = spectrum.SmallMoleculeLibraryAttributes ?? SmallMoleculeLibraryAttributes.EMPTY;
             var isProteomic = smallMoleculeAttributes.IsEmpty;
+            var ionMobility = spectrum.IonMobility ?? IonMobilityAndCCS.EMPTY;
             var refSpectra = new DbRefSpectra
             {
                 PeptideSeq = isProteomic ? FastaSequence.StripModifications(spectrum.Key.Target).Sequence : string.Empty,
@@ -223,6 +226,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 Copies = 1,
                 NumPeaks = (ushort)peaksInfo.Peaks.Length,
                 RetentionTime = spectrum.RetentionTime.GetValueOrDefault(),
+                IonMobility = ionMobility.IonMobility.Mobility,
+                IonMobilityType = (int)ionMobility.IonMobility.Units,
+                IonMobilityHighEnergyOffset = ionMobility.HighEnergyIonMobilityValueOffset,
+                CollisionalCrossSectionSqA = ionMobility.CollisionalCrossSectionSqA,
                 FileId = GetSpectrumSourceId(session, spectrum.SourceFile, sourceFiles),
                 SpecIdInFile = null,
                 Score = 0.0,
@@ -239,16 +246,20 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             refSpectra.RetentionTimes = new List<DbRetentionTimes>();
             if (spectrum.RetentionTimes != null && spectrum.RetentionTimes.Any())
             {
-                foreach (var rt in spectrum.RetentionTimes)
+                foreach (var rt in spectrum.RetentionTimes) // CONSIDER(bspratt) not ion mobility info here?
                 {
-                    if (string.IsNullOrEmpty(rt.Item1))
+                    if (string.IsNullOrEmpty(rt.SourceFile))
                         throw new InvalidDataException("Spectrum must have a source file"); // Not L10N
 
                     refSpectra.RetentionTimes.Add(new DbRetentionTimes
                     {
-                        BestSpectrum = rt.Item3 ? 1 : 0,
-                        RetentionTime = rt.Item2,
-                        SpectrumSourceId = GetSpectrumSourceId(session, rt.Item1, sourceFiles),
+                        BestSpectrum = rt.IsBest ? 1 : 0,
+                        RetentionTime = rt.RetentionTime,
+                        SpectrumSourceId = GetSpectrumSourceId(session, rt.SourceFile, sourceFiles),
+                        IonMobility = rt.IonMobility.IonMobility.Mobility,
+                        IonMobilityType = (int)rt.IonMobility.IonMobility.Units,
+                        IonMobilityHighEnergyOffset = rt.IonMobility.HighEnergyIonMobilityValueOffset,
+                        CollisionalCrossSectionSqA = rt.IonMobility.CollisionalCrossSectionSqA,
                         RedundantRefSpectraId = -1
                     });
                 }
@@ -260,6 +271,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     BestSpectrum = 1,
                     RetentionTime = refSpectra.RetentionTime,
                     SpectrumSourceId = refSpectra.FileId.GetValueOrDefault(),
+                    IonMobility = refSpectra.IonMobility,
+                    IonMobilityHighEnergyOffset = refSpectra.IonMobilityHighEnergyOffset,
+                    IonMobilityType = refSpectra.IonMobilityType,
+                    CollisionalCrossSectionSqA = refSpectra.CollisionalCrossSectionSqA,
                     RedundantRefSpectraId = -1
                 });
             }
@@ -585,21 +600,16 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                 // Get peaks for the redundant spectrum
                 var peaksInfo = library.LoadSpectrum(specLiteKey.Key);
-                double? driftTimeMsec;
+                double? ionMobility;
+                double? ionMobilityHighEnergyOffset;
+                int? ionMobilityType;
                 double? collisionalCrossSectionSqA;
-                double? highEnergyDriftTimeOffsetMsec;
-                if (specLiteKey.Time.IonMobilityValue.HasValue  || specLiteKey.Time.IonMobilityType.HasValue) // Older formats
-                {
-                    driftTimeMsec = specLiteKey.Time.IonMobilityType > 1 ? null : specLiteKey.Time.IonMobilityValue;
-                    collisionalCrossSectionSqA = specLiteKey.Time.IonMobilityType < 2 ? null : specLiteKey.Time.IonMobilityValue;
-                    highEnergyDriftTimeOffsetMsec = specLiteKey.Time.IonMobilityHighEnergyDriftTimeOffsetMsec;
-                }
-                else
-                {
-                    driftTimeMsec = specLiteKey.Time.DriftTimeMsec;
-                    collisionalCrossSectionSqA = specLiteKey.Time.CollisionalCrossSectionSqA;
-                    highEnergyDriftTimeOffsetMsec = specLiteKey.Time.HighEnergyDriftTimeOffsetMsec;
-                }
+
+                ionMobility = specLiteKey.Time.IonMobility;
+                ionMobilityHighEnergyOffset = specLiteKey.Time.IonMobilityHighEnergyOffset;
+                collisionalCrossSectionSqA = specLiteKey.Time.CollisionalCrossSectionSqA;
+                ionMobilityType = specLiteKey.Time.IonMobilityType;
+
                 var redundantSpectra = new DbRefSpectraRedundant
                                            {
                                                Id = specLiteKey.Key.RedundantId,
@@ -615,9 +625,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                                NumPeaks = (ushort) peaksInfo.Peaks.Count(),
                                                Copies = refSpectra.Copies,
                                                RetentionTime = specLiteKey.Time.RetentionTime,
-                                               DriftTimeMsec = driftTimeMsec.GetValueOrDefault(),
-                                               CollisionalCrossSectionSqA = collisionalCrossSectionSqA.GetValueOrDefault(),
-                                               DriftTimeHighEnergyOffsetMsec = highEnergyDriftTimeOffsetMsec,
+                                               IonMobility = ionMobility,
+                                               IonMobilityHighEnergyOffset =  ionMobilityHighEnergyOffset,
+                                               CollisionalCrossSectionSqA = collisionalCrossSectionSqA,
+                                               IonMobilityType = ionMobilityType,
                                                FileId = spectrumSourceId
                                            };
 
@@ -689,15 +700,17 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     RetentionTime = spectrum.RetentionTime,
                     SpectrumSourceId = spectrumSourceId,
                     BestSpectrum = spectrum.IsBest ? 1 : 0,
-                    DriftTimeMsec = 0,
-                    CollisionalCrossSectionSqA = 0,
-                    HighEnergyDriftTimeOffsetMsec = 0,
+                    IonMobility = null,
+                    IonMobilityHighEnergyOffset = null,
+                    CollisionalCrossSectionSqA = null,
+                    IonMobilityType = (int)MsDataFileImpl.eIonMobilityUnits.none
                 };
-                if (null != spectrum.DriftTimeInfo)
+                if (null != spectrum.IonMobilityInfo && spectrum.IonMobilityInfo.HasIonMobilityValue)
                 {
-                    dbRetentionTimes.CollisionalCrossSectionSqA = spectrum.DriftTimeInfo.CollisionalCrossSectionSqA.GetValueOrDefault();
-                    dbRetentionTimes.DriftTimeMsec = spectrum.DriftTimeInfo.DriftTimeMsec ?? 0; // Get the low energy value
-                    dbRetentionTimes.HighEnergyDriftTimeOffsetMsec = spectrum.DriftTimeInfo.HighEnergyDriftTimeOffsetMsec;
+                    dbRetentionTimes.CollisionalCrossSectionSqA = spectrum.IonMobilityInfo.CollisionalCrossSectionSqA.GetValueOrDefault();
+                    dbRetentionTimes.IonMobilityType = (int) spectrum.IonMobilityInfo.IonMobility.Units;
+                    dbRetentionTimes.IonMobility = spectrum.IonMobilityInfo.IonMobility.Mobility.GetValueOrDefault(); // Get the low energy value
+                    dbRetentionTimes.IonMobilityHighEnergyOffset = spectrum.IonMobilityInfo.HighEnergyIonMobilityValueOffset;
                 }
 
                 if (refSpectra.RetentionTimes == null)
@@ -761,11 +774,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                        PeakMZ = MZsToBytes(peaksInfo.Peaks)
                                    };
 
-            if (null != spectrum.DriftTimeInfo)
+            if (null != spectrum.IonMobilityInfo)
             {
-                refSpectra.CollisionalCrossSectionSqA = spectrum.DriftTimeInfo.CollisionalCrossSectionSqA.GetValueOrDefault();
-                refSpectra.DriftTimeMsec = spectrum.DriftTimeInfo.DriftTimeMsec ?? 0;
-                refSpectra.DriftTimeHighEnergyOffsetMsec = spectrum.DriftTimeInfo.HighEnergyDriftTimeOffsetMsec;
+                refSpectra.CollisionalCrossSectionSqA = spectrum.IonMobilityInfo.CollisionalCrossSectionSqA;
+                refSpectra.IonMobilityType = (int)spectrum.IonMobilityInfo.IonMobility.Units;
+                refSpectra.IonMobility = spectrum.IonMobilityInfo.IonMobility.Mobility;
+                refSpectra.IonMobilityHighEnergyOffset = spectrum.IonMobilityInfo.HighEnergyIonMobilityValueOffset;
             }
 
             refSpectra.RetentionTime = spectrum.RetentionTime.GetValueOrDefault();

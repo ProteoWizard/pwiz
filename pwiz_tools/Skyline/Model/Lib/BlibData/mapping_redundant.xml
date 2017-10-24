@@ -29,9 +29,10 @@
     <property name="NextAA" column="nextAA"/>
     <property name="Copies" column="copies" not-null="true"/>
     <property name="NumPeaks" column="numPeaks" not-null="true"/>
-    <property name="DriftTimeMsec" column="driftTimeMsec"/>
+    <property name="IonMobility" column="ionMobility"/>
     <property name="CollisionalCrossSectionSqA" column="collisionalCrossSectionSqA"/>
-    <property name="DriftTimeHighEnergyOffsetMsec" column="driftTimeHighEnergyOffsetMsec"/>
+    <property name="IonMobilityHighEnergyOffset" column="ionMobilityHighEnergyOffset"/>
+    <property name="IonMobilityType" column="ionMobilityType"/>
     <property name="RetentionTime" column="retentionTime"/>
     <property name="FileId" column="fileId"/>
     <property name="SpecIdInFile" column="SpecIDinFile"/>

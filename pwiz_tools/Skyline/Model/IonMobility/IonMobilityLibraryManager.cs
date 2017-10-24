@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.IonMobility
                 EndProcessing(document);
                 return false;
             }
-            var dtPredictor = docCurrent.Settings.PeptideSettings.Prediction.DriftTimePredictor;
+            var dtPredictor = docCurrent.Settings.PeptideSettings.Prediction.IonMobilityPredictor;
             var dtPredictorNew = !ReferenceEquals(ionMobilityLibrary, dtPredictor.IonMobilityLibrary)
                 ? dtPredictor.ChangeLibrary(ionMobilityLibrary)
                 : dtPredictor;
@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.IonMobility
             {
                 // Change the document to use the new predictor.
                 docCurrent = container.Document;
-                if (!ReferenceEquals(dtPredictor, docCurrent.Settings.PeptideSettings.Prediction.DriftTimePredictor))
+                if (!ReferenceEquals(dtPredictor, docCurrent.Settings.PeptideSettings.Prediction.IonMobilityPredictor))
                     return false;
                 docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptidePrediction(predictor =>
                     predictor.ChangeDriftTimePredictor(dtPredictorNew)));
@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Model.IonMobility
         {
             if (document == null)
                 return null;
-            var driftTimePredictor = document.Settings.PeptideSettings.Prediction.DriftTimePredictor;
+            var driftTimePredictor = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor;
             if (driftTimePredictor == null)
                 return null;
             return driftTimePredictor.IonMobilityLibrary as IonMobilityLibrary;

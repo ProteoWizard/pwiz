@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -57,6 +58,11 @@ namespace pwiz.SkylineTestFunctional
         {
             using (var testFilesDir = new TestFilesDir(TestContext, TestFilesZip))
             {
+                // Make sure we haven't forgotten to update anything if a new IMS type has been added
+                foreach(MsDataFileImpl.eIonMobilityUnits units in Enum.GetValues(typeof(MsDataFileImpl.eIonMobilityUnits)))
+                {
+                    Assume.IsNotNull(IonMobilityFilter.IonMobilityUnitsL10NString(units));
+                }
 
                 const double HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC = -.1;
 
@@ -163,6 +169,7 @@ namespace pwiz.SkylineTestFunctional
                 const double resolvingPower = 123.4;
                 RunUI(() =>
                 {
+                    driftTimePredictorDlg.SetIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits.drift_time_msec); 
                     driftTimePredictorDlg.SetResolvingPower(resolvingPower);
                     driftTimePredictorDlg.SetPredictorName(predictorName);
                     SetClipboardText("1\t2\t3\n2\t4\t5"); // Silly values: z=1 s=2 i=3, z=2 s=4 i=5
@@ -210,13 +217,13 @@ namespace pwiz.SkylineTestFunctional
                 double windowDT;
                 double driftTimeMax = 1000.0;
                 int z = 1;
-                DriftTimeInfo centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
+                IonMobilityAndCCS centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
                     new LibKey("ANELLINV", z), 0, null, null, driftTimeMax, out windowDT);
                 var slope = 2;
                 var intercept = 3;
-                Assert.AreEqual((slope * CCS_ANELLINVK) + intercept, centerDriftTime.DriftTimeMsec);
+                Assert.AreEqual((slope * CCS_ANELLINVK) + intercept, centerIonMobility.IonMobility.Mobility);
                 Assert.AreEqual(2 * ((slope * CCS_ANELLINVK) + intercept) / resolvingPower, windowDT);
-                Assert.AreEqual((slope * CCS_ANELLINVK) + intercept + HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, centerDriftTime.GetHighEnergyDriftTimeMsec());
+                Assert.AreEqual((slope * CCS_ANELLINVK) + intercept + HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, centerIonMobility.GetHighEnergyDriftTimeMsec());
 
                 //
                 // Test importing collisional cross sections from a spectral lib that has drift times but no high energy offset info
@@ -276,6 +283,7 @@ namespace pwiz.SkylineTestFunctional
                                deadeelsDTHighEnergyOffset.ToString(CultureInfo.CurrentCulture);
                 RunUI(() =>
                 {
+                    driftTimePredictorDlg3.SetIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits.drift_time_msec); 
                     driftTimePredictorDlg3.SetResolvingPower(resolvingPower);
                     driftTimePredictorDlg3.SetPredictorName("test3");
                     SetClipboardText("1\t2\t3\n2\t4\t5"); // Silly values: z=1 s=2 i=3, z=2 s=4 i=5
@@ -340,34 +348,34 @@ namespace pwiz.SkylineTestFunctional
                 WaitForCondition(() => ionMobilityLibDlg3.LibraryPeptideCount > 8); // Let that library load
                 RunUI(ionMobilityLibDlg3.OkDialog);
                 WaitForClosedForm(ionMobilityLibDlg3);
-                RunUI(driftTimePredictorDlg3.OkDialog);
+                RunUI(() => driftTimePredictorDlg3.OkDialog());
                 WaitForClosedForm(driftTimePredictorDlg3);
-                RunUI(peptideSettingsDlg3.OkDialog);
+                RunUI(() => peptideSettingsDlg3.OkDialog());
                 WaitForClosedForm(peptideSettingsDlg3);
                 doc = WaitForDocumentChangeLoaded(doc); // Let that library load
 
                 // Do some DT calculations with this new library
-                centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
+                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
                     new LibKey("ANELLINVK", Adduct.DOUBLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
                 double ccs = 3.8612432898618; // should have imported CCS without any transformation
-                Assert.AreEqual((4 * (ccs)) + 5, centerDriftTime.DriftTimeMsec ?? ccs, .000001);
+                Assert.AreEqual((4 * (ccs)) + 5, centerIonMobility.IonMobility.Mobility.Value, .000001);
                 Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
-                centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
+                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
                     new LibKey("ANGTTVLVGMPAGAK", Adduct.DOUBLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
                 ccs = (4.99820623749102 - 2)/2; // should have imported CCS as a converted drift time
-                Assert.AreEqual((4 * (ccs)) + 5, centerDriftTime.DriftTimeMsec ?? ccs, .000001);
+                Assert.AreEqual((4 * (ccs)) + 5, centerIonMobility.IonMobility.Mobility.Value, .000001);
                 Assert.AreEqual(2 * ((4 * (ccs)) + 5) / resolvingPower, windowDT, .000001);
 
                 // Do some DT calculations with the measured drift time
-                centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
+                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
                     new LibKey("DEADEELS", Adduct.TRIPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT); // Should fail
                 Assert.AreEqual(windowDT, 0);
-                Assert.IsFalse(centerDriftTime.DriftTimeMsec.HasValue);
+                Assert.IsFalse(centerIonMobility.IonMobility.HasValue);
 
-                centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
+                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
                     new LibKey("DEADEELS", Adduct.QUINTUPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
-                Assert.AreEqual(deadeelsDT, centerDriftTime.DriftTimeMsec ?? -1, .000001);
-                Assert.AreEqual(deadeelsDT+deadeelsDTHighEnergyOffset, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? -1, .000001);
+                Assert.AreEqual(deadeelsDT, centerIonMobility.IonMobility.Mobility.Value, .000001);
+                Assert.AreEqual(deadeelsDT+deadeelsDTHighEnergyOffset, centerIonMobility.GetHighEnergyDriftTimeMsec() ?? -1, .000001);
                 Assert.AreEqual(2 * (deadeelsDT / resolvingPower), windowDT, .0001); // Directly measured, should match
 
                 // Now check handling of scenario where user pastes in high energy offsets then unchecks the "Use High Energy Offsets" box
@@ -381,15 +389,15 @@ namespace pwiz.SkylineTestFunctional
                     driftTimePredictorDlg4.SetOffsetHighEnergySpectraCheckbox(false); // Turn off the high energy offset column
                     driftTimePredictorDlg4.SetPredictorName("test4");
                 });
-                RunUI(driftTimePredictorDlg4.OkDialog);
+                RunUI(()=>driftTimePredictorDlg4.OkDialog());
                 WaitForClosedForm(driftTimePredictorDlg4);
                 RunUI(peptideSettingsDlg4.OkDialog);
                 WaitForClosedForm(peptideSettingsDlg4);
                 doc = WaitForDocumentChangeLoaded(doc); 
-                centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
+                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
                     new LibKey("DEADEELS", Adduct.QUINTUPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
-                Assert.AreEqual(deadeelsDT, centerDriftTime.DriftTimeMsec ?? -1, .000001);
-                Assert.AreEqual(deadeelsDT, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? -1, .000001); // High energy value should now be same as low energy value
+                Assert.AreEqual(deadeelsDT, centerIonMobility.IonMobility.Mobility.Value, .000001);
+                Assert.AreEqual(deadeelsDT, centerIonMobility.GetHighEnergyDriftTimeMsec() ?? -1, .000001); // High energy value should now be same as low energy value
                 Assert.AreEqual(2 * (deadeelsDT / resolvingPower), windowDT, .0001); // Directly measured, should match
 
                 // Now make sure that high energy checkbox initial state is as we expect
@@ -416,10 +424,10 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(driftTimePredictorDlg6, () => driftTimePredictorDlg6.OkDialog());
                 OkDialog(peptideSettingsDlg6, () => peptideSettingsDlg6.OkDialog());
                 doc = WaitForDocumentChangeLoaded(doc);
-                centerDriftTime = doc.Settings.PeptideSettings.Prediction.GetDriftTimeHelper(
+                centerIonMobility = doc.Settings.PeptideSettings.Prediction.GetIonMobilityHelper(
                     new LibKey("DEADEELS", Adduct.QUINTUPLY_PROTONATED), 0, null, null, driftTimeMax, out windowDT);
-                Assert.AreEqual(deadeelsDT, centerDriftTime.DriftTimeMsec ?? -1, .000001);
-                Assert.AreEqual(deadeelsDT, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? -1, .000001); // High energy value should now be same as low energy value
+                Assert.AreEqual(deadeelsDT, centerIonMobility.IonMobility.Mobility.Value, .000001);
+                Assert.AreEqual(deadeelsDT, centerIonMobility.GetHighEnergyDriftTimeMsec() ?? -1, .000001); // High energy value should now be same as low energy value
                 Assert.AreEqual(widthAtDtZero + deadeelsDT * (widthAtDtMax - widthAtDtZero) / driftTimeMax, windowDT, .0001); 
 
             }
@@ -575,28 +583,28 @@ namespace pwiz.SkylineTestFunctional
                 String.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_sequence__0__is_not_a_valid_modified_peptide_sequence_, dtValues[0]));
             dtValues[EditDriftTimePredictorDlg.COLUMN_SEQUENCE] = "JKLM";
             dtValues[EditDriftTimePredictorDlg.COLUMN_CHARGE] = "dog";
-            dtValues[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_MSEC] = "-0.2";
+            dtValues[EditDriftTimePredictorDlg.COLUMN_ION_MOBILITY] = "-0.2";
             dtValues[EditDriftTimePredictorDlg.COLUMN_CCS] = "1";
-            dtValues[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET] = "";
+            dtValues[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET] = "";
             AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues),
                 String.Format(Resources.EditDriftTimePredictorDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge__Precursor_charges_must_be_integer_values_between_1_and__1__,
                     dtValues[EditDriftTimePredictorDlg.COLUMN_CHARGE].Trim(), TransitionGroup.MAX_PRECURSOR_CHARGE));
-            dtValues[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_MSEC] = (17.9).ToString(CultureInfo.CurrentCulture);
+            dtValues[EditDriftTimePredictorDlg.COLUMN_ION_MOBILITY] = (17.9).ToString(CultureInfo.CurrentCulture);
             dtValues[EditDriftTimePredictorDlg.COLUMN_CHARGE] = "2";
             Assert.IsNull(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues), 
                 string.Format("unexpected error {0}", MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues)));
-            dtValues[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_MSEC] = "fish";
+            dtValues[EditDriftTimePredictorDlg.COLUMN_ION_MOBILITY] = "fish";
             AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues),
-                String.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_drift_time_, dtValues[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_MSEC].Trim()));
-            dtValues[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_MSEC] = (17.9).ToString(CultureInfo.CurrentCulture);
+                String.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_drift_time_, dtValues[EditDriftTimePredictorDlg.COLUMN_ION_MOBILITY].Trim()));
+            dtValues[EditDriftTimePredictorDlg.COLUMN_ION_MOBILITY] = (17.9).ToString(CultureInfo.CurrentCulture);
             dtValues[EditDriftTimePredictorDlg.COLUMN_CCS] = "fish";
-            dtValues[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET] = "-.3";
+            dtValues[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET] = "-.3";
             AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues),
                 String.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_collisional_cross_section_, dtValues[EditDriftTimePredictorDlg.COLUMN_CCS].Trim()));
             dtValues[EditDriftTimePredictorDlg.COLUMN_CCS] = "123";
-            dtValues[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET] = "dog";
+            dtValues[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET] = "dog";
             AssertEx.Contains(MeasuredDriftTimeTable.ValidateMeasuredDriftTimeCellValues(dtValues),
-                String.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_high_energy_offset_, dtValues[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET].Trim()));
+                String.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_high_energy_offset_, dtValues[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET].Trim()));
 
             AssertEx.Contains(ChargeRegressionTable.ValidateCharge(0),
                 String.Format(
@@ -714,6 +722,7 @@ namespace pwiz.SkylineTestFunctional
             const double resolvingPower = 123.4;
             RunUI(() =>
             {
+                driftTimePredictorDlg.SetIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits.drift_time_msec); 
                 driftTimePredictorDlg.SetResolvingPower(resolvingPower);
                 driftTimePredictorDlg.SetPredictorName(predictorName);
                 driftTimePredictorDlg.GetDriftTimesFromResults();
@@ -728,18 +737,18 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(peptideSettingsDlg);
             doc = WaitForDocumentChange(doc);
             
-            var result = doc.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimeIons;
+            var result = doc.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons;
             Assert.AreEqual(2, result.Count);
             var key3 = new LibKey("GLAGVENVTELKK", Adduct.TRIPLY_PROTONATED);
             var key2 = new LibKey("GLAGVENVTELKK", Adduct.DOUBLY_PROTONATED);
             const double expectedDT3= 4.0709;
             const double expectedOffset3 = 0.8969;
-            Assert.AreEqual(expectedDT3, result[key3].DriftTimeMsec.Value, .001);
-            Assert.AreEqual(expectedOffset3, result[key3].HighEnergyDriftTimeOffsetMsec, .001); // High energy offset
+            Assert.AreEqual(expectedDT3, result[key3].IonMobility.Mobility.Value, .001);
+            Assert.AreEqual(expectedOffset3, result[key3].HighEnergyIonMobilityValueOffset, .001); // High energy offset
             const double expectedDT2 = 5.5889;
             const double expectedOffset2 = -1.1039;
-            Assert.AreEqual(expectedDT2, result[key2].DriftTimeMsec.Value, .001);
-            Assert.AreEqual(expectedOffset2, result[key2].HighEnergyDriftTimeOffsetMsec, .001);  // High energy offset
+            Assert.AreEqual(expectedDT2, result[key2].IonMobility.Mobility.Value, .001);
+            Assert.AreEqual(expectedOffset2, result[key2].HighEnergyIonMobilityValueOffset, .001);  // High energy offset
             WaitForDocumentLoaded();
 
             // Verify exception handling by deleting the msdata file
@@ -749,6 +758,7 @@ namespace pwiz.SkylineTestFunctional
             var driftTimePredictorDoomedDlg = ShowDialog<EditDriftTimePredictorDlg>(peptideSettingsDlg.AddDriftTimePredictor);
             RunUI(() =>
             {
+                driftTimePredictorDoomedDlg.SetIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits.drift_time_msec); 
                 driftTimePredictorDoomedDlg.SetResolvingPower(resolvingPower);
                 driftTimePredictorDoomedDlg.SetPredictorName(predictorName+"_doomed");
             });

@@ -43,12 +43,13 @@ void test(const string& filepath, const ReaderList& readerList)
     {
         SpectrumList_IonMobility slim(msd.run.spectrumListPtr);
         ostringstream failedTests;
-        unit_assert_equal_to_stream(242.55569, slim.driftTimeToCCS(32.62, 922.01, 1), EPSILON, failedTests);
-        unit_assert_equal_to_stream(195.69509, slim.driftTimeToCCS(25.78, 400.1755, 1), EPSILON, failedTests);
-        unit_assert_equal_to_stream(243.57694, slim.driftTimeToCCS(31.55, 254.0593, 1), EPSILON, failedTests);
-        unit_assert_equal_to_stream(202.32441, slim.driftTimeToCCS(26.98, 622.0291, 1), EPSILON, failedTests);
-        unit_assert_equal_to_stream(254.05743, slim.driftTimeToCCS(33.92, 609.2808, 1), EPSILON, failedTests);
-        unit_assert_equal_to_stream(172.09947, slim.driftTimeToCCS(22.38, 294.1601, 1), EPSILON, failedTests);
+        unit_assert_to_stream(slim.getIonMobilityUnits() == SpectrumList_IonMobility::eIonMobilityUnits::drift_time_msec, failedTests);
+        unit_assert_equal_to_stream(242.55569, slim.ionMobilityToCCS(32.62, 922.01, 1), EPSILON, failedTests);
+        unit_assert_equal_to_stream(195.69509, slim.ionMobilityToCCS(25.78, 400.1755, 1), EPSILON, failedTests);
+        unit_assert_equal_to_stream(243.57694, slim.ionMobilityToCCS(31.55, 254.0593, 1), EPSILON, failedTests);
+        unit_assert_equal_to_stream(202.32441, slim.ionMobilityToCCS(26.98, 622.0291, 1), EPSILON, failedTests);
+        unit_assert_equal_to_stream(254.05743, slim.ionMobilityToCCS(33.92, 609.2808, 1), EPSILON, failedTests);
+        unit_assert_equal_to_stream(172.09947, slim.ionMobilityToCCS(22.38, 294.1601, 1), EPSILON, failedTests);
         if (!failedTests.str().empty())
             throw runtime_error(failedTests.str());
     }

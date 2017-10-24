@@ -445,12 +445,12 @@ public ref class SpectrumList_3D : public msdata::SpectrumList
     SpectrumList_3D(msdata::SpectrumList^ inner);
 
     /// <summary>
-    /// creates a 3d spectrum at the given scan start time (specified in seconds) and including the given drift time ranges (specified in milliseconds)
+    /// creates a 3d spectrum at the given scan start time (specified in seconds) and including the given ion mobility ranges (units depend on equipment type)
     /// </summary>
-    virtual Spectrum3D^ spectrum3d(double scanStartTime, System::Collections::Generic::IEnumerable<ContinuousInterval>^ driftTimeRanges);
+    virtual Spectrum3D^ spectrum3d(double scanStartTime, System::Collections::Generic::IEnumerable<ContinuousInterval>^ ionMobilityRanges);
 
     /// <summary>
-    /// works only on SpectrumList_Waters and SpectrumList_Agilent
+    /// return true if underlying data supports a 2nd degree of separation (drift time, inverse ion mobility, etc)
     /// </summary>
     static bool accept(msdata::SpectrumList^ inner);
 };
@@ -471,14 +471,18 @@ public ref class SpectrumList_IonMobility : public msdata::SpectrumList
     /// </summary>
     static bool accept(msdata::SpectrumList^ inner);
 
-    // returns true if the data file actually has necessary info for CCS/DT handling
-    virtual bool canConvertDriftTimeAndCCS();
+    enum class eIonMobilityUnits { none, drift_time_msec, inverse_reduced_ion_mobility_Vsec_per_cm2 };
 
-    /// returns collisional cross-section associated with the drift time (specified in milliseconds)
-    virtual double driftTimeToCCS(double driftTime, double mz, int charge);
+    virtual eIonMobilityUnits getIonMobilityUnits();
 
-    /// returns the drift time (in milliseconds) associated with the given collisional cross-section
-    virtual double ccsToDriftTime(double ccs, double mz, int charge);
+    // returns true if the data file actually has necessary info for CCS/ion mobility conversion handling
+    virtual bool canConvertIonMobilityAndCCS(eIonMobilityUnits units);
+
+    /// returns collisional cross-section associated with the ion mobility value (units depend on equipment type)
+    virtual double ionMobilityToCCS(double ionMobility, double mz, int charge);
+
+    /// returns the ion mobility (units depend on equipment type) associated with the given collisional cross-section
+    virtual double ccsToIonMobility(double ccs, double mz, int charge);
 };
 
 public ref class ChromatogramList_XICGenerator : public msdata::ChromatogramList

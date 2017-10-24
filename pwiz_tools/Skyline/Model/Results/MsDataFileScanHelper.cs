@@ -65,54 +65,62 @@ namespace pwiz.Skyline.Model.Results
         public MsDataSpectrum[] GetFilteredScans()
         {
             var fullScans = MsDataSpectra;
-            double minDrift, maxDrift;
-            if (Settings.Default.FilterDriftTimesFullScan && GetDriftRange(out minDrift, out maxDrift, Source))
-                fullScans = fullScans.Where(s => minDrift <= s.DriftTimeMsec && s.DriftTimeMsec <= maxDrift).ToArray();
+            double minIonMobility, maxIonMobility;
+            if (Settings.Default.FilterIonMobilityFullScan && GetIonMobilityRange(out minIonMobility, out maxIonMobility, Source))
+                fullScans = fullScans.Where(s => minIonMobility <= s.IonMobility.Mobility && s.IonMobility.Mobility <= maxIonMobility).ToArray();
             return fullScans;
         }
 
-        public bool GetDriftRange(out double minDrift, out double maxDrift, ChromSource sourceType)
+        public bool GetIonMobilityRange(out double minIonMobility, out double maxIonMobility, ChromSource sourceType)
         {
-            minDrift = double.MaxValue;
-            maxDrift = double.MinValue;
-            var hasDriftInfo = false;
+            minIonMobility = double.MaxValue;
+            maxIonMobility = double.MinValue;
+            var hasIonMobilityInfo = false;
             foreach (var transition in ScanProvider.Transitions)
             {
-                if (!transition.DriftTimeInfo.HasDriftTime || !transition.DriftTimeInfo.DriftTimeExtractionWindowWidthMsec.HasValue)
+                if (!transition._ionMobilityInfo.HasIonMobilityValue || !transition._ionMobilityInfo.IonMobilityExtractionWindowWidth.HasValue)
                 {
                     // Accept all values
-                    minDrift = double.MinValue;
-                    maxDrift = double.MaxValue;
+                    minIonMobility = double.MinValue;
+                    maxIonMobility = double.MaxValue;
                 }
                 else if (sourceType == ChromSource.unknown || transition.Source == sourceType)
                 {
-                    // Products and precursors may have different expected drift time values in Waters MsE
-                    double startDrift = transition.DriftTimeInfo.DriftTimeMsec.Value -
-                                        transition.DriftTimeInfo.DriftTimeExtractionWindowWidthMsec.Value / 2;
-                    double endDrift = startDrift + transition.DriftTimeInfo.DriftTimeExtractionWindowWidthMsec.Value;
-                    minDrift = Math.Min(minDrift, startDrift);
-                    maxDrift = Math.Max(maxDrift, endDrift);
-                    hasDriftInfo = true;
+                    // Products and precursors may have different expected ion mobility values in Waters MsE
+                    double startIM = transition._ionMobilityInfo.IonMobility.Mobility.Value -
+                                        transition._ionMobilityInfo.IonMobilityExtractionWindowWidth.Value / 2;
+                    double endIM = startIM + transition._ionMobilityInfo.IonMobilityExtractionWindowWidth.Value;
+                    minIonMobility = Math.Min(minIonMobility, startIM);
+                    maxIonMobility = Math.Max(maxIonMobility, endIM);
+                    hasIonMobilityInfo = true;
                 }
             }
-            return hasDriftInfo;
+            return hasIonMobilityInfo;
         }
 
         /// <summary>
-        /// Return a collisional cross section for this drift time at this mz, if reader supports this
+        /// Return a collisional cross section for this ion mobility at this mz, if reader supports this
         /// </summary>
-        public double? CCSFromDriftTime(double driftTime, double mz, int charge)
+        public double? CCSFromIonMobility(IonMobilityValue ionMobility, double mz, int charge)
         {
             if (ScanProvider == null)
             {
                 return null;
             }
-            return ScanProvider.CCSFromDriftTime(driftTime, mz, charge);
+            return ScanProvider.CCSFromIonMobility(ionMobility, mz, charge);
         }
 
         public bool ProvidesCollisionalCrossSectionConverter
         {
             get { return ScanProvider != null && ScanProvider.ProvidesCollisionalCrossSectionConverter; }
+        }
+
+        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
+        {
+            get
+            {
+                return ScanProvider.IonMobilityUnits;
+            }
         }
 
         public IList<int> GetScanIndexes(ChromSource source)
@@ -240,16 +248,25 @@ namespace pwiz.Skyline.Model.Results
             }
 
             /// <summary>
-            /// Return a collisional cross section for this drift time at this mz, if reader supports this
+            /// Return a collisional cross section for this ion mobility at this mz, if reader supports this
             /// </summary>
-            public double? CCSFromDriftTime(double driftTime, double mz, int charge)
+            public double? CCSFromIonMobility(IonMobilityValue ionMobility, double mz, int charge)
             {
                 if (_scanProvider == null)
                 {
                     return null;
                 }
-                return _scanProvider.CCSFromDriftTime(driftTime, mz, charge);
+                return _scanProvider.CCSFromIonMobility(ionMobility, mz, charge);
             }
+
+            public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
+            {
+                get
+                {
+                    return _scanProvider != null
+                        ? _scanProvider.IonMobilityUnits
+                        : MsDataFileImpl.eIonMobilityUnits.none;
+                } }
 
             public bool ProvidesCollisionalCrossSectionConverter { get { return _scanProvider != null && _scanProvider.ProvidesCollisionalCrossSectionConverter; } }
 
@@ -280,7 +297,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         try
                         {
-                            var msDataSpectra = scanProvider.GetMsDataFileSpectraWithCommonRetentionTime(internalScanIndex); // Get a collection of scans with increasing drift time but same retention time, or single scan if no drift info
+                            var msDataSpectra = scanProvider.GetMsDataFileSpectraWithCommonRetentionTime(internalScanIndex); // Get a collection of scans with changing ion mobility but same retention time, or single scan if no ion mobility info
                             _successAction(msDataSpectra);
                         }
                         catch (Exception ex)

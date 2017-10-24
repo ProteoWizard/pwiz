@@ -108,7 +108,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            LibraryDriftTimeInfo driftInfoExplicitDT= null;
+            LibraryIonMobilityInfo driftInfoExplicitDT= null;
             Testit(true, ref driftInfoExplicitDT); // Read both CCS and DT
             if (_testCase == 1)
             {
@@ -120,7 +120,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         private void Testit(
             bool useDriftTimes, // If false, don't use any drift information in chromatogram extraction
-            ref LibraryDriftTimeInfo driftInfoExplicitDT
+            ref LibraryIonMobilityInfo driftInfoExplicitDT
             )
         {
             bool CCSonly = driftInfoExplicitDT != null;  // If true, force conversion from CCS to DT
@@ -261,12 +261,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 WaitForClosedForm(peptideSettingsDlg);
 
                 var document = SkylineWindow.Document;
-                var measuredDTs = document.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimeIons;
+                var measuredDTs = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons;
                 Assert.IsNotNull(driftInfoExplicitDT, "driftInfoExplicitDT != null");
                 var explicitDTs = driftInfoExplicitDT.GetIonMobilityDict();
 
                 string errMsgAll = string.Empty;
-
                 // A handful of peptides that really should have been trained on a clean sample
                 var expectedDiffs = new Dictionary<string, double>
                 {
@@ -290,13 +289,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     var msg = CheckDeltaPct(given.CollisionalCrossSectionSqA ?? 0, measured.CollisionalCrossSectionSqA ?? 0, tolerCCS, "measured CCS", key.ToString());
                     if (!string.IsNullOrEmpty(msg))
                     {
-                        errMsg += msg + CheckDeltaPct(given.DriftTimeMsec.Value, measured.DriftTimeMsec.Value, -1, "measured drift time", key.ToString());
+                        errMsg += msg + CheckDeltaPct(given.IonMobility.Mobility.Value, measured.IonMobility.Mobility.Value, -1, "measured drift time", key.ToString());
                     }
                     else
                     {
-                        errMsg += CheckDelta(given.DriftTimeMsec.Value, measured.DriftTimeMsec.Value, 10.0, "measured drift time", key.ToString());
+                        errMsg += CheckDelta(given.IonMobility.Mobility.Value, measured.IonMobility.Mobility.Value, 10.0, "measured drift time", key.ToString());
                     }
-                    errMsg += CheckDelta(given.HighEnergyDriftTimeOffsetMsec, measured.HighEnergyDriftTimeOffsetMsec, 2.0, "measured drift time high energy offset", key.ToString());
+                    errMsg += CheckDelta(given.HighEnergyIonMobilityValueOffset, measured.HighEnergyIonMobilityValueOffset, 2.0, "measured drift time high energy offset", key.ToString());
                     if (!string.IsNullOrEmpty(errMsg))
                         errMsgAll += "\n" + errMsg;
                 }
@@ -305,11 +304,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 return;
             }
 
-            LibraryDriftTimeInfo libraryDriftTimeInfo;
-            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetDriftTimeInfos(0, out libraryDriftTimeInfo);
+            LibraryIonMobilityInfo libraryIonMobilityInfo;
+            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetIonMobilityInfos(0, out libraryIonMobilityInfo);
             if (driftInfoExplicitDT == null)
             {
-                driftInfoExplicitDT = libraryDriftTimeInfo;
+                driftInfoExplicitDT = libraryIonMobilityInfo;
             }
             else
             {
@@ -320,10 +319,10 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     foreach (var nodeGroup in pep.TransitionGroups)
                     {
                         double windowDT;
-                        var calculatedDriftTime = doc1.Settings.PeptideSettings.Prediction.GetDriftTime(
-                            pep, nodeGroup, libraryDriftTimeInfo, instrumentInfo, 0, out windowDT);
+                        var calculatedDriftTime = doc1.Settings.PeptideSettings.Prediction.GetIonMobility(
+                            pep, nodeGroup, libraryIonMobilityInfo, instrumentInfo, 0, out windowDT);
                         var libKey = new LibKey(pep.ModifiedSequence, nodeGroup.PrecursorAdduct);
-                        DriftTimeInfo[] infoValueExplicitDT;
+                        IonMobilityAndCCS[] infoValueExplicitDT;
                         if (!dictExplicitDT.TryGetValue(libKey, out infoValueExplicitDT))
                         {
                             errmsg += "No driftinfo value found for " + libKey.Key + "\n";
@@ -331,11 +330,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                         else
                         {
                             var ionMobilityInfo = infoValueExplicitDT[0];
-                            if (Math.Abs((ionMobilityInfo.DriftTimeMsec??0) - (calculatedDriftTime.DriftTimeMsec??0))>1)
+                            if (Math.Abs((ionMobilityInfo.IonMobility.Mobility.Value) - (calculatedDriftTime.IonMobility.Mobility.Value)) > 1)
                             {
                                 errmsg += String.Format("calculated DT ({0}) and explicit DT ({1}, CCS={4}) do not agree (abs delta = {2}) for {3}\n",
-                                    calculatedDriftTime.DriftTimeMsec, ionMobilityInfo.DriftTimeMsec, 
-                                    Math.Abs((calculatedDriftTime.DriftTimeMsec??0) - (ionMobilityInfo.DriftTimeMsec??0)), libKey,
+                                    calculatedDriftTime.IonMobility, ionMobilityInfo.IonMobility,
+                                    Math.Abs((calculatedDriftTime.IonMobility.Mobility.Value) - (ionMobilityInfo.IonMobility.Mobility.Value)), libKey,
                                     ionMobilityInfo.CollisionalCrossSectionSqA??0);
                             }
                         }
@@ -392,7 +391,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             });
             TestReports(SkylineWindow.Document, 1, expectedDtWindow);
 
-            /* TODO(bspratt) - this is a known problem but no time to fix it right now
             // Watch for problem with reimport after changed DT window
             var docResolvingPower = SkylineWindow.Document;
             var peptideSettingsUI2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
@@ -412,12 +410,15 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 dlg.ReimportResults();
                 dlg.OkDialog();
             });
-            TestReports(SkylineWindow.Document, 0, 0.92);
-            */
+            WaitForDocumentChangeLoaded(docReimport);
+            var expectedDtWindow0 = _testCase == 2 ? 1.175 : 0.92;
+            var expectedDtWindow1 = _testCase == 2 ? 0.94 : 0.92;
+            TestReports(SkylineWindow.Document, 0, expectedDtWindow0, string.Format(" row {0} case {1} ccsOnly {2}", 0, _testCase, CCSonly));
+            TestReports(SkylineWindow.Document, 1, expectedDtWindow1, string.Format(" row {0} case {1} ccsOnly {2}", 1, _testCase, CCSonly));
 
         }
 
-        private void TestReports(SrmDocument doc1, int row, double expectedDtWindow)
+        private void TestReports(SrmDocument doc1, int row, double expectedDtWindow, string msg = null)
         {
             // Verify reports working for CCS
             var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
@@ -431,23 +432,23 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.DriftTimeFragment",
                     "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.DriftTimeWindow"
                 });
-            CheckFieldByName(documentGrid, "DriftTimeMS1", row, _testCase == 1 ? 18.43 : 23.50);
-            CheckFieldByName(documentGrid, "DriftTimeFragment", row, null); // Document is all precursor
-            CheckFieldByName(documentGrid, "DriftTimeWindow", row, expectedDtWindow);
-            CheckFieldByName(documentGrid, "CollisionalCrossSection", row, _testCase == 1 ? 292.4 : 333.34);
+            CheckFieldByName(documentGrid, "DriftTimeMS1", row, _testCase == 1 ? 18.43 : 23.50, msg);
+            CheckFieldByName(documentGrid, "DriftTimeFragment", row, null, msg); // Document is all precursor
+            CheckFieldByName(documentGrid, "DriftTimeWindow", row, expectedDtWindow, msg);
+            CheckFieldByName(documentGrid, "CollisionalCrossSection", row, _testCase == 1 ? 292.4 : 333.34, msg);
             // And clean up after ourselves
             RunUI(() => documentGrid.Close());
         }
 
-        private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, double? expected)
+        private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, double? expected, string msg = null)
         {
             var col = FindDocumentGridColumn(documentGrid, "Results!*.Value.PrecursorResult."+name);
             RunUI(() =>
             {
                 // By checking the 1th row we check both the single file and two file cases
                 var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as double?;
-                Assert.AreEqual(expected.HasValue, val.HasValue, name);
-                Assert.AreEqual(expected??0, val??0, 0.005, name);
+                Assert.AreEqual(expected.HasValue, val.HasValue, name + (msg??string.Empty));
+                Assert.AreEqual(expected ?? 0, val ?? 0, 0.005, name + (msg ?? string.Empty));
             });
         }
     }

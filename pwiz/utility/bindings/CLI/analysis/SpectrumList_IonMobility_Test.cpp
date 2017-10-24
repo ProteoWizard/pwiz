@@ -46,12 +46,14 @@ void test(const string& filepath)
     if (bal::ends_with(filepath, "ImsSynth_Chrom.d"))
     {
         SpectrumList_IonMobility slim(msd->run->spectrumList);
-        unit_assert_equal(242.55569, slim.driftTimeToCCS(32.62, 922.01, 1), EPSILON);
-        unit_assert_equal(195.69509, slim.driftTimeToCCS(25.78, 400.1755, 1), EPSILON);
-        unit_assert_equal(243.57694, slim.driftTimeToCCS(31.55, 254.0593, 1), EPSILON);
-        unit_assert_equal(202.32441, slim.driftTimeToCCS(26.98, 622.0291, 1), EPSILON);
-        unit_assert_equal(254.05743, slim.driftTimeToCCS(33.92, 609.2808, 1), EPSILON);
-        unit_assert_equal(172.09947, slim.driftTimeToCCS(22.38, 294.1601, 1), EPSILON);
+        unit_assert(slim.canConvertIonMobilityAndCCS(SpectrumList_IonMobility::eIonMobilityUnits::drift_time_msec));
+        unit_assert(slim.getIonMobilityUnits() == SpectrumList_IonMobility::eIonMobilityUnits::drift_time_msec);
+        unit_assert_equal(242.55569, slim.ionMobilityToCCS(32.62, 922.01, 1), EPSILON);
+        unit_assert_equal(195.69509, slim.ionMobilityToCCS(25.78, 400.1755, 1), EPSILON);
+        unit_assert_equal(243.57694, slim.ionMobilityToCCS(31.55, 254.0593, 1), EPSILON);
+        unit_assert_equal(202.32441, slim.ionMobilityToCCS(26.98, 622.0291, 1), EPSILON);
+        unit_assert_equal(254.05743, slim.ionMobilityToCCS(33.92, 609.2808, 1), EPSILON);
+        unit_assert_equal(172.09947, slim.ionMobilityToCCS(22.38, 294.1601, 1), EPSILON);
     }
 }
 

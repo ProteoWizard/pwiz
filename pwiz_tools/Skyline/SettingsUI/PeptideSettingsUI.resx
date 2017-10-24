@@ -1077,10 +1077,10 @@ W = 2T/R</value>
     <value>10</value>
   </data>
   <data name="cbUseSpectralLibraryDriftTimes.Text" xml:space="preserve">
-    <value>Use &amp;spectral library drift times when present</value>
+    <value>Use &amp;spectral library ion mobility values when present</value>
   </data>
   <data name="cbUseSpectralLibraryDriftTimes.ToolTip" xml:space="preserve">
-    <value>If checked, then drift time in any loaded spectral libraries will be used in chromatogram extraction.</value>
+    <value>If checked, then ion mobility values in any loaded spectral libraries will be used in chromatogram extraction.</value>
   </data>
   <data name="&gt;&gt;cbUseSpectralLibraryDriftTimes.Name" xml:space="preserve">
     <value>cbUseSpectralLibraryDriftTimes</value>
@@ -1556,7 +1556,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>7</value>
   </data>
   <data name="label19.Text" xml:space="preserve">
-    <value>&amp;Drift time predictor:</value>
+    <value>&amp;Ion mobility predictor:</value>
   </data>
   <data name="&gt;&gt;label19.Name" xml:space="preserve">
     <value>label19</value>

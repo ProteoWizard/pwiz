@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
@@ -297,33 +298,76 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeCompensationVoltage(value)));
             }
         }
-        
-        public double? ExplicitDriftTimeMsec
+
+        [Obsolete("use ExplicitIonMobility instead")] 
+        public double? ExplicitDriftTimeMsec // Backward compatibility, the more general "ExplicitIonMobility" is preferred
         {
             get
             {
-                return DocNode.ExplicitValues.DriftTimeMsec;
+                return DocNode.ExplicitValues.IonMobilityUnits == MsDataFileImpl.eIonMobilityUnits.drift_time_msec ? DocNode.ExplicitValues.IonMobility : null;
             }
             set
             {
                 ChangeDocNode(EditDescription.SetColumn("ExplicitDriftTimeMsec", value), // Not L10N
-                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeDriftTime(value)));
+                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, MsDataFileImpl.eIonMobilityUnits.drift_time_msec)));
             }
         }
 
-        public double? ExplicitDriftTimeHighEnergyOffsetMsec
+        [Obsolete("use IonMobilityHighEnergyOffset instead")] 
+        public double? ExplicitDriftTimeHighEnergyOffsetMsec  // Backward compatibility, the more general "ExplicitIonMobility" is preferred
         {
             get
             {
-                return DocNode.ExplicitValues.DriftTimeHighEnergyOffsetMsec;
+                return DocNode.ExplicitValues.IonMobilityUnits == MsDataFileImpl.eIonMobilityUnits.drift_time_msec ? DocNode.ExplicitValues.IonMobilityHighEnergyOffset : null;
             }
             set
             {
                 ChangeDocNode(EditDescription.SetColumn("ExplicitDriftTimeHighEnergyOffsetMsec", value), // Not L10N
-                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeDriftTimeHighEnergyOffsetMsec(value)));
+                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobilityHighEnergyOffset(value)));
             }
         }
 
+        public double? ExplicitIonMobility
+        {
+            get
+            {
+                return DocNode.ExplicitValues.IonMobility;
+            }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn("ExplicitIonMobility", value), // Not L10N
+                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, docNode.ExplicitValues.IonMobilityUnits)));
+            }
+        }
+
+        public string ExplicitIonMobilityUnits
+        {
+            get
+            {
+                return DocNode.ExplicitValues.IonMobilityUnits.ToString();
+            }
+            set
+            {
+                MsDataFileImpl.eIonMobilityUnits eValue;
+                if (SmallMoleculeTransitionListReader.IonMobilityUnitsSynonyms.TryGetValue(value.Trim(), out eValue))
+                    ChangeDocNode(EditDescription.SetColumn("ExplicitIonMobilityUnits", eValue), // Not L10N
+                        docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(docNode.ExplicitValues.IonMobility, eValue)));
+            }
+        }
+
+        public double? ExplicitIonMobilityHighEnergyOffset
+        {
+            get
+            {
+                return DocNode.ExplicitValues.IonMobilityHighEnergyOffset;
+            }
+            set
+            {
+                ChangeDocNode(EditDescription.SetColumn("ExplicitIonMobilityHighEnergyOffset", value), // Not L10N
+                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobilityHighEnergyOffset(value)));
+            }
+        }
+        
         public double? ExplicitCollisionalCrossSection
         {
             get

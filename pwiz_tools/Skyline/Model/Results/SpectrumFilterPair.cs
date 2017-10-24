@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Results
         private static readonly SpectrumProductFilter[] EMPTY_FILTERS = new SpectrumProductFilter[0];
 
         public SpectrumFilterPair(PrecursorTextId precursorTextId, Color peptideColor, int id, double? minTime, double? maxTime,
-            double? minDriftTimeMsec, double? maxDriftTimeMsec, DriftTimeInfo driftTimeInfo, bool highAccQ1, bool highAccQ3)
+            double? minIonMobilityValue, double? maxIonMobilityValue, IonMobilityAndCCS ionMobilityInfo, bool highAccQ1, bool highAccQ3)
         {
             Id = id;
             ModifiedSequence = precursorTextId.Target;
@@ -43,9 +43,9 @@ namespace pwiz.Skyline.Model.Results
             Extractor = precursorTextId.Extractor;
             MinTime = minTime;
             MaxTime = maxTime;
-            MinDriftTimeMsec = minDriftTimeMsec;
-            MaxDriftTimeMsec = maxDriftTimeMsec;
-            DriftTimeInfo = driftTimeInfo ?? DriftTimeInfo.EMPTY;
+            MinIonMobilityValue = minIonMobilityValue;
+            MaxIonMobilityValue = maxIonMobilityValue;
+            IonMobilityInfo = ionMobilityInfo ?? IonMobilityAndCCS.EMPTY;
             HighAccQ1 = highAccQ1;
             HighAccQ3 = highAccQ3;
 
@@ -103,9 +103,9 @@ namespace pwiz.Skyline.Model.Results
         public SignedMz Q1 { get; private set; }
         public double? MinTime { get; private set; }
         public double? MaxTime { get; private set; }
-        private double? MinDriftTimeMsec { get; set; }
-        private double? MaxDriftTimeMsec { get; set; }
-        private DriftTimeInfo DriftTimeInfo { get; set; }
+        private double? MinIonMobilityValue { get; set; }
+        private double? MaxIonMobilityValue { get; set; }
+        private IonMobilityAndCCS IonMobilityInfo { get; set; }
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
         public SpectrumProductFilter[] Ms2ProductFilters { get; set; }
@@ -162,9 +162,9 @@ namespace pwiz.Skyline.Model.Results
         /// Apply the filter to a list of spectra.  In "normal" operation
         /// this list has a length of one. For ion mobility data it
         /// may be a list of spectra with the same retention time but
-        /// different drift times. For Agilent Mse data it may be
+        /// different ion mobility values. For Agilent Mse data it may be
         /// a list of MS2 spectra that need averaging (or even a list
-        /// of MS2 spectra with mixed retention and drift times).  Averaging
+        /// of MS2 spectra with mixed retention and ion mobility values).  Averaging
         /// is done by unique retention time count, rather than by spectrum
         /// count, so that ion mobility data ion counts are additive (we're
         /// trying to measure ions per injection, basically).
@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Model.Results
             foreach (var spectrum in spectra)
             {
                 // If these are spectra from distinct retention times, average them.
-                // Note that for drift time data we will see fewer retention time changes 
+                // Note that for ion mobility data we will see fewer retention time changes 
                 // than the total spectra count - ascending DT within each RT.  Within a
                 // single retention time the ions are additive.
                 var rt = spectrum.RetentionTime ?? 0;
@@ -205,15 +205,15 @@ namespace pwiz.Skyline.Model.Results
                 if (Q1.IsNegative != spectrum.NegativeCharge)
                     continue;
 
-                // Filter on drift time, if any
-                if (!ContainsDriftTime(spectrum.DriftTimeMsec, useDriftTimeHighEnergyOffset))
+                // Filter on ion mobility, if any
+                if (!ContainsIonMobilityValue(spectrum.IonMobility, useDriftTimeHighEnergyOffset))
                     continue;
 
                 var mzArray = spectrum.Mzs;
                 if ((mzArray == null) || (mzArray.Length==0))
                     continue;
 
-                // It's not unusual for mzarray and centerArray to have no overlap, esp. with drift time data
+                // It's not unusual for mzarray and centerArray to have no overlap, esp. with ion mobility data
                 if (Q1 != 0)
                 {
                     var lastProductFilter = productFilters[targetCount - 1];
@@ -291,14 +291,14 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // If we summed across spectra of different retention times, scale per
-            // unique retention time (but not per drift time)
+            // unique retention time (but not per ion mobility value)
             if ((Extractor == ChromExtractor.summed) && (rtCount > 1))
             {
                 float scale = (float)(1.0 / rtCount);
                 for (int i = 0; i < targetCount; i++)
                     extractedIntensities[i] *= scale;
             }
-            var dtFilter = GetDriftTimeWindow(useDriftTimeHighEnergyOffset);
+            var dtFilter = GetIonMobilityWindow(useDriftTimeHighEnergyOffset);
             return new ExtractedSpectrum(ModifiedSequence,
                 PeptideColor,
                 Q1,
@@ -387,7 +387,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (null != productFilters)
             {
-                var ionMobility = GetDriftTimeWindow(highEnergy);
+                var ionMobility = GetIonMobilityWindow(highEnergy);
                 foreach (var spectrumProductFilter in productFilters)
                 {
                     spectrumProductFilter.FilterId = listChromKeys.Count;
@@ -436,15 +436,15 @@ namespace pwiz.Skyline.Model.Results
                 docFilterPair.MaxTime = MaxTime.Value;
                 docFilterPair.MaxTimeSpecified = true;
             }
-            if (MinDriftTimeMsec.HasValue && MaxDriftTimeMsec.HasValue)
+            if (MinIonMobilityValue.HasValue && MaxIonMobilityValue.HasValue)
             {
-                docFilterPair.DriftTime = (MinDriftTimeMsec.Value + MaxDriftTimeMsec.Value)/2;
+                docFilterPair.DriftTime = (MinIonMobilityValue.Value + MaxIonMobilityValue.Value)/2;
                 if (ChromSource.fragment == chromSource) // Use high energy offset for fragments
                 {
-                    docFilterPair.DriftTime += DriftTimeInfo.HighEnergyDriftTimeOffsetMsec;
+                    docFilterPair.DriftTime += IonMobilityInfo.HighEnergyIonMobilityValueOffset;
                 }
                 docFilterPair.DriftTimeSpecified = true;
-                docFilterPair.DriftTimeWindow = MaxDriftTimeMsec.Value - MinDriftTimeMsec.Value;
+                docFilterPair.DriftTimeWindow = MaxIonMobilityValue.Value - MinIonMobilityValue.Value;
                 docFilterPair.DriftTimeWindowSpecified = true;
             }
             switch (chromSource)
@@ -463,28 +463,28 @@ namespace pwiz.Skyline.Model.Results
             return docFilterPair;
         }
 
-        public bool ContainsDriftTime(double? driftTimeMsec, bool highEnergy)
+        public bool ContainsIonMobilityValue(IonMobilityValue ionMobility, bool highEnergy)
         {
-            if (!driftTimeMsec.HasValue)
-                return true; // It doesn't NOT have the drift time, since there isn't one
-            double offset = highEnergy ? DriftTimeInfo.HighEnergyDriftTimeOffsetMsec : 0;
-            return (!MinDriftTimeMsec.HasValue || MinDriftTimeMsec.Value+offset <= driftTimeMsec) &&
-                (!MaxDriftTimeMsec.HasValue || MaxDriftTimeMsec.Value+offset >= driftTimeMsec);
+            if (!ionMobility.HasValue)
+                return true; // It doesn't NOT have the ion mobility, since there isn't one
+            double offset = highEnergy ? IonMobilityInfo.HighEnergyIonMobilityValueOffset : 0;
+            return (!MinIonMobilityValue.HasValue || MinIonMobilityValue.Value+offset <= ionMobility.Mobility) &&
+                (!MaxIonMobilityValue.HasValue || MaxIonMobilityValue.Value+offset >= ionMobility.Mobility);
         }
 
-        public DriftTimeFilter GetDriftTimeWindow(bool highEnergy)
+        public IonMobilityFilter GetIonMobilityWindow(bool highEnergy)
         {
-            if (MinDriftTimeMsec.HasValue && MaxDriftTimeMsec.HasValue)
+            if (MinIonMobilityValue.HasValue && MaxIonMobilityValue.HasValue)
             {
-                // High energy (product ion) scans may have a faster drift time, as in Waters MsE
-                double offset = highEnergy ? DriftTimeInfo.HighEnergyDriftTimeOffsetMsec : 0;
-                var width = MaxDriftTimeMsec.Value - MinDriftTimeMsec.Value;
-                var center = offset + MinDriftTimeMsec.Value + 0.5*width;
-                return DriftTimeFilter.GetDriftTimeFilter(center, width, DriftTimeInfo.CollisionalCrossSectionSqA);
+                // High energy (product ion) scans may have a faster ion mobility, as in Waters MsE
+                double offset = highEnergy ? IonMobilityInfo.HighEnergyIonMobilityValueOffset : 0;
+                var width = MaxIonMobilityValue.Value - MinIonMobilityValue.Value;
+                var center = offset + MinIonMobilityValue.Value + 0.5*width;
+                return IonMobilityFilter.GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(center, IonMobilityInfo.IonMobility.Units), width, IonMobilityInfo.CollisionalCrossSectionSqA);
             }
             else
             {
-                return DriftTimeFilter.EMPTY;
+                return IonMobilityFilter.EMPTY;
             }
         }
     }

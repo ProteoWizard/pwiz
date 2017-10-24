@@ -73,7 +73,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private readonly SettingsListComboDriver<Enzyme> _driverEnzyme;
         private readonly SettingsListComboDriver<RetentionTimeRegression> _driverRT;
-        private readonly SettingsListComboDriver<DriftTimePredictor> _driverDT;
+        private readonly SettingsListComboDriver<IonMobilityPredictor> _driverDT;
         private readonly SettingsListBoxDriver<PeptideExcludeRegex> _driverExclusion;
         private readonly SettingsListBoxDriver<LibrarySpec> _driverLibrary;
         private readonly SettingsListComboDriver<BackgroundProteomeSpec> _driverBackgroundProteome;
@@ -111,15 +111,15 @@ namespace pwiz.Skyline.SettingsUI
             if (Prediction.MeasuredRTWindow.HasValue)
                 textMeasureRTWindow.Text = Prediction.MeasuredRTWindow.Value.ToString(LocalizationHelper.CurrentCulture);
 
-            _driverDT = new SettingsListComboDriver<DriftTimePredictor>(comboDriftTimePredictor, Settings.Default.DriftTimePredictorList);
-            string selDT = (Prediction.DriftTimePredictor == null ? null : Prediction.DriftTimePredictor.Name);
+            _driverDT = new SettingsListComboDriver<IonMobilityPredictor>(comboDriftTimePredictor, Settings.Default.DriftTimePredictorList);
+            string selDT = (Prediction.IonMobilityPredictor == null ? null : Prediction.IonMobilityPredictor.Name);
             _driverDT.LoadList(selDT);
-            cbUseSpectralLibraryDriftTimes.Checked = textSpectralLibraryDriftTimesResolvingPower.Enabled = Prediction.UseLibraryDriftTimes;
-            if (Prediction.LibraryDriftTimesWindowWidthCalculator != null)
+            cbUseSpectralLibraryDriftTimes.Checked = textSpectralLibraryDriftTimesResolvingPower.Enabled = Prediction.UseLibraryIonMobilityValues;
+            if (Prediction.LibraryIonMobilityWindowWidthCalculator != null)
             {
-                textSpectralLibraryDriftTimesResolvingPower.Text = Prediction.LibraryDriftTimesWindowWidthCalculator.ResolvingPower.ToString(LocalizationHelper.CurrentCulture);
-                textSpectralLibraryDriftTimesWidthAtDt0.Text = Prediction.LibraryDriftTimesWindowWidthCalculator.PeakWidthAtDriftTimeZero.ToString(LocalizationHelper.CurrentCulture);
-                textSpectralLibraryDriftTimesWidthAtDtMax.Text = Prediction.LibraryDriftTimesWindowWidthCalculator.PeakWidthAtDriftTimeMax.ToString(LocalizationHelper.CurrentCulture);
+                textSpectralLibraryDriftTimesResolvingPower.Text = Prediction.LibraryIonMobilityWindowWidthCalculator.ResolvingPower.ToString(LocalizationHelper.CurrentCulture);
+                textSpectralLibraryDriftTimesWidthAtDt0.Text = Prediction.LibraryIonMobilityWindowWidthCalculator.PeakWidthAtIonMobilityValueZero.ToString(LocalizationHelper.CurrentCulture);
+                textSpectralLibraryDriftTimesWidthAtDtMax.Text = Prediction.LibraryIonMobilityWindowWidthCalculator.PeakWidthAtIonMobilityValueMax.ToString(LocalizationHelper.CurrentCulture);
             }
 
             // Initialize filter settings
@@ -312,26 +312,26 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             string nameDt = comboDriftTimePredictor.SelectedItem.ToString();
-            DriftTimePredictor driftTimePredictor =
+            IonMobilityPredictor ionMobilityPredictor =
                 Settings.Default.GetDriftTimePredictorByName(nameDt);
-            if (driftTimePredictor != null && driftTimePredictor.IonMobilityLibrary != null)
+            if (ionMobilityPredictor != null && ionMobilityPredictor.IonMobilityLibrary != null)
             {
                 IonMobilityLibrarySpec ionMobilityLibrary =
-                    Settings.Default.GetIonMobilityLibraryByName(driftTimePredictor.IonMobilityLibrary.Name);
+                    Settings.Default.GetIonMobilityLibraryByName(ionMobilityPredictor.IonMobilityLibrary.Name);
                 // Just in case the library in use in the current documet got removed,
                 // never set the library to null.  Just keep using the one we have.
-                if (ionMobilityLibrary != null && !ReferenceEquals(ionMobilityLibrary, driftTimePredictor.IonMobilityLibrary))
-                    driftTimePredictor = driftTimePredictor.ChangeLibrary(ionMobilityLibrary);
+                if (ionMobilityLibrary != null && !ReferenceEquals(ionMobilityLibrary, ionMobilityPredictor.IonMobilityLibrary))
+                    ionMobilityPredictor = ionMobilityPredictor.ChangeLibrary(ionMobilityLibrary);
             }
             bool useLibraryDriftTime = cbUseSpectralLibraryDriftTimes.Checked;
 
-            var libraryDriftTimeWindowWidthCalculator = DriftTimeWindowWidthCalculator.EMPTY;
+            var libraryDriftTimeWindowWidthCalculator = IonMobilityWindowWidthCalculator.EMPTY;
             if (useLibraryDriftTime)
             {
                 double resolvingPower = 0;
                 double widthAtDt0 = 0;
                 double widthAtDtMax = 0;
-                DriftTimeWindowWidthCalculator.DriftTimePeakWidthType peakWidthType;
+                IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType peakWidthType;
                 if (cbLinear.Checked)
                 {
                     if (!helper.ValidateDecimalTextBox(textSpectralLibraryDriftTimesWidthAtDt0, out widthAtDt0))
@@ -350,7 +350,7 @@ namespace pwiz.Skyline.SettingsUI
                         helper.ShowTextBoxError(textSpectralLibraryDriftTimesWidthAtDtMax, errmsg);
                         return null;
                     }
-                    peakWidthType = DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.linear_range;
+                    peakWidthType = IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
                 }
                 else
                 {
@@ -362,12 +362,12 @@ namespace pwiz.Skyline.SettingsUI
                         helper.ShowTextBoxError(textSpectralLibraryDriftTimesResolvingPower, errmsg);
                         return null;
                     }
-                    peakWidthType = DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power;
+                    peakWidthType = IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power;
                 }
-                libraryDriftTimeWindowWidthCalculator = new DriftTimeWindowWidthCalculator(peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax);
+                libraryDriftTimeWindowWidthCalculator = new IonMobilityWindowWidthCalculator(peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax);
             }
 
-            var prediction = new PeptidePrediction(retentionTime, driftTimePredictor, useMeasuredRT, measuredRTWindow, useLibraryDriftTime, libraryDriftTimeWindowWidthCalculator);
+            var prediction = new PeptidePrediction(retentionTime, ionMobilityPredictor, useMeasuredRT, measuredRTWindow, useLibraryDriftTime, libraryDriftTimeWindowWidthCalculator);
             Helpers.AssignIfEquals(ref prediction, Prediction);
 
             // Validate and hold filter settings

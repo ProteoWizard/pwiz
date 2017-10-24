@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly IRetentionTimePredictor _retentionTimePredictor;
         private List<string> _scanIdList = new List<string>();
         private readonly bool _isProcessedScans;
-        private double? _maxDriftTime;
+        private double? _maxIonMobilityValue;
         private bool _isSingleMzMatch;
         private bool _sourceHasPositivePolarityData;
         private bool _sourceHasNegativePolarityData;
@@ -106,12 +106,12 @@ namespace pwiz.Skyline.Model.Results
             _isProcessedScans = dataFile.IsMzWiffXml;
 
             UpdatePercentComplete();
-            _maxDriftTime = dataFile.GetMaxDriftTime(); // Needed for linear range drift time window width calculations
+            _maxIonMobilityValue = dataFile.GetMaxIonMobility(); // Needed for linear range ion mobility window width calculations
 
             // Create the filter responsible for chromatogram extraction
             bool firstPass = (_retentionTimePredictor != null);
             _filter = new SpectrumFilter(_document, FileInfo.FilePath, new DataFileInstrumentInfo(dataFile),
-                _maxDriftTime,
+                _maxIonMobilityValue,
                 _retentionTimePredictor, firstPass);
 
             if (!_isSrm && (_filter.EnabledMs || _filter.EnabledMsMs))
@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Model.Results
             var dataFile = _spectra.Detach();
 
             // Start the second pass
-            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _maxDriftTime, _retentionTimePredictor);
+            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _maxIonMobilityValue, _retentionTimePredictor);
             _spectra = null;
             _isSrm = false;
 
@@ -195,6 +195,8 @@ namespace pwiz.Skyline.Model.Results
             InitChromatogramExtraction();
             return true;
         }
+
+        public override MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return _filter.IonMobilityUnits; } }
 
         private void ExtractionComplete()
         {
@@ -273,7 +275,7 @@ namespace pwiz.Skyline.Model.Results
                         filterIndex,
                         dataSpectrum.Mzs,
                         dataSpectrum.Intensities,
-                        DriftTimeFilter.EMPTY, // ion mobility unknown
+                        IonMobilityFilter.EMPTY, // ion mobility unknown
                         chromMap);
                 }
                 else if (_filter.EnabledMsMs || _filter.EnabledMs)
@@ -488,7 +490,7 @@ namespace pwiz.Skyline.Model.Results
                                                int filterIndex,
                                                double[] mzs,
                                                double[] intensities,
-                                               DriftTimeFilter ionMobility,
+                                               IonMobilityFilter ionMobility,
                                                ChromDataCollectorSet chromMap)
         {
             float[] intensityFloats = new float[intensities.Length];
@@ -956,7 +958,7 @@ namespace pwiz.Skyline.Model.Results
 
                         // Deal with ion mobility data - look ahead for a run of scans all 
                         // with the same retention time.  For non-IMS data we'll just get
-                        // a single "drift bin" with no drift time.
+                        // a single "ion mobility bin" with no ion mobility value.
                         //
                         // Also for Agilent ramped-CE msE, gather MS2 scans together
                         // so they get averaged.
@@ -1164,7 +1166,7 @@ namespace pwiz.Skyline.Model.Results
                 _filter = filter;
                 _dataFile = dataFile;
                 _rt = null;
-                _previousDriftTime = 0;
+                _previousIonMobilityValue = IonMobilityValue.EMPTY;
                 _lenSpectra = dataFile.SpectrumCount;
             }
 
@@ -1174,7 +1176,7 @@ namespace pwiz.Skyline.Model.Results
             private readonly MsDataFileImpl _dataFile;
             private MsDataSpectrum _lookAheadDataSpectrum; // Result of _datafile.GetSpectrum(_lookaheadIndex), or null
             private readonly int _lenSpectra;
-            private double _previousDriftTime;
+            private IonMobilityValue _previousIonMobilityValue;
 
             public int GetMsLevel(int index)
             {
@@ -1226,11 +1228,11 @@ namespace pwiz.Skyline.Model.Results
                 return _lookAheadIndex;
             }
 
-            private bool NextSpectrumIsDriftScanForCurrentRetentionTime(MsDataSpectrum nextSpectrum)
+            private bool NextSpectrumIsIonMobilityScanForCurrentRetentionTime(MsDataSpectrum nextSpectrum)
             {
                 bool result = ((_rt ?? 0) == (nextSpectrum.RetentionTime ?? -1)) &&
-                              ((nextSpectrum.DriftTimeMsec ?? 0) > _previousDriftTime);
-                _previousDriftTime = nextSpectrum.DriftTimeMsec ?? 0;
+                              IonMobilityValue.IsExpectedValueOrdering(_previousIonMobilityValue, nextSpectrum.IonMobility);
+                _previousIonMobilityValue = nextSpectrum.IonMobility;
                 return result;
             }
 
@@ -1245,7 +1247,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Deal with ion mobility data - look ahead for a run of scans all
             // with the same retention time.  For non-IMS data we'll just get
-            // a single "drift bin" with no drift time.
+            // a single "ion mobility bin" with no ion mobility value.
             //
             // Also for Agilent ramped-CE msE, gather MS2 scans together
             // so they get averaged.
@@ -1254,7 +1256,7 @@ namespace pwiz.Skyline.Model.Results
                 var spectrumList = new List<MsDataSpectrum>();
                 int listLevel = dataSpectrum.Level;
                 double startCE = GetPrecursorCollisionEnergy(dataSpectrum);
-                _previousDriftTime = -1;
+                _previousIonMobilityValue = IonMobilityValue.EMPTY;
                 double rtTotal = 0;
                 double? rtFirst = null;
                 _lookAheadDataSpectrum = null;
@@ -1268,21 +1270,21 @@ namespace pwiz.Skyline.Model.Results
                         if (!rtFirst.HasValue)
                             rtFirst = dataSpectrum.RetentionTime;
                     }
-                    if (!_filter.IsAgilentMse && !dataSpectrum.DriftTimeMsec.HasValue)
+                    if (!_filter.IsAgilentMse && !dataSpectrum.IonMobility.HasValue)
                         break;
 
                     if (_lookAheadIndex < _lenSpectra)
                     {
                         dataSpectrum = _lookAheadDataSpectrum = _dataFile.GetSpectrum(_lookAheadIndex);
                         // Reasons to keep adding to the list:
-                        //   Retention time hasn't changed but drift time has increased, or
+                        //   Retention time hasn't changed but ion mobility has changed, or
                         //   Agilent ramped-CE data - MS2 scans get averaged
-                        if (!(NextSpectrumIsDriftScanForCurrentRetentionTime(dataSpectrum) ||
+                        if (!(NextSpectrumIsIonMobilityScanForCurrentRetentionTime(dataSpectrum) ||
                               NextSpectrumIsAgilentMse(dataSpectrum, listLevel, startCE)))
                             break;
                     }
                 }
-                if (spectrumList.Any()) // Should have at least one non-empty scan at this drift time
+                if (spectrumList.Any()) // Should have at least one non-empty scan at this ion mobility
                     _rt = _filter.IsAgilentMse ? (rtTotal / spectrumList.Count()) : rtFirst;
                 else
                     _rt = null;
@@ -1313,14 +1315,15 @@ namespace pwiz.Skyline.Model.Results
         public bool IsAgilentFile { get { return _dataFile.IsAgilentFile; } }
 
         public bool ProvidesCollisionalCrossSectionConverter { get { return _dataFile.ProvidesCollisionalCrossSectionConverter; } }
+        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return _dataFile.IonMobilityUnits; } }
 
-        public double DriftTimeFromCCS(double ccs, double mz, int charge)
+        public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge)
         {
-            return _dataFile.DriftTimeFromCCS(ccs, mz, charge);
+            return _dataFile.IonMobilityFromCCS(ccs, mz, charge);
         }
-        public double CCSFromDriftTime(double dt, double mz, int charge)
+        public double CCSFromIonMobility(IonMobilityValue im, double mz, int charge)
         {
-            return _dataFile.CCSFromDriftTime(dt, mz, charge);
+            return _dataFile.CCSFromIonMobilityValue(im, mz, charge);
         }
     }
     internal enum TimeSharing { single, shared, grouped }
@@ -1459,7 +1462,7 @@ namespace pwiz.Skyline.Model.Results
 
     internal sealed class ChromDataCollector
     {
-        public ChromDataCollector(Target modifiedSequence, SignedMz precursorMz, DriftTimeFilter ionMobility, int statusId, bool isGroupedTime)
+        public ChromDataCollector(Target modifiedSequence, SignedMz precursorMz, IonMobilityFilter ionMobility, int statusId, bool isGroupedTime)
         {
             ModifiedSequence = modifiedSequence;
             PrecursorMz = precursorMz;
@@ -1475,7 +1478,7 @@ namespace pwiz.Skyline.Model.Results
 
         public Target ModifiedSequence { get; private set; }
         public SignedMz PrecursorMz { get; private set; }
-        public DriftTimeFilter IonMobility { get; private set; }
+        public IonMobilityFilter IonMobility { get; private set; }
         public int StatusId { get; private set; }
         public Dictionary<SpectrumProductFilter, ChromCollector> ProductIntensityMap { get; private set; }
         public readonly SortedBlockedList<float> GroupedTimesCollector;

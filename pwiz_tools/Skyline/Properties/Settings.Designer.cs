@@ -1885,12 +1885,12 @@ namespace pwiz.Skyline.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool FilterDriftTimesFullScan {
+        public bool FilterIonMobilityFullScan {
             get {
-                return ((bool)(this["FilterDriftTimesFullScan"]));
+                return ((bool)(this["FilterIonMobilityFullScan"]));
             }
             set {
-                this["FilterDriftTimesFullScan"] = value;
+                this["FilterIonMobilityFullScan"] = value;
             }
         }
         

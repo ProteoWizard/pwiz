@@ -469,9 +469,6 @@
   <data name="WatersMethodExporter_EnsureLibraries_Failed_to_find_a_valid_MassLynx_installation" xml:space="preserve">
     <value>有効なMassLynxのインストールが見つかりませんでした。</value>
   </data>
-  <data name="DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_" xml:space="preserve">
-    <value>イオン移動ライブラリを使用するドリフト時間予測には電荷毎の回帰値が含まれなければなりません。</value>
-  </data>
   <data name="SkylineWindow_generateDecoysMenuItem_Click_The_document_must_contain_peptides_to_generate_decoys_" xml:space="preserve">
     <value>ドキュメントにはデコイを生成するためのペプチドが含まれていなければなりません。</value>
   </data>
@@ -1425,9 +1422,6 @@
   <data name="AminoAcid_ValidateAAList_The_amino_acid__0__is_repeated_in_the_value__1__" xml:space="preserve">
     <value>値「{1}」でアミノ酸「{0}」が繰り返されています。</value>
   </data>
-  <data name="GraphFullScan_CreateDriftTimeHeatmap_Drift_Time__ms_" xml:space="preserve">
-    <value>ドリフト時間（ms）</value>
-  </data>
   <data name="CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_The_library__0__does_not_contain_ion_mobility_information_" xml:space="preserve">
     <value>ライブラリ{0}にはイオン移動度情報が含まれていません。</value>
   </data>
@@ -1931,9 +1925,6 @@
   </data>
   <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope_" xml:space="preserve">
     <value>値{0}は有効な勾配ではありません。</value>
-  </data>
-  <data name="DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_" xml:space="preserve">
-    <value>イオン移動ライブラリを使用するドリフト時間予測はライブラリに対するファイル名を提供しなければなりません。</value>
   </data>
   <data name="ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute_" xml:space="preserve">
     <value>エラー： {0}には有効な{1}属性が含まれていません。</value>
@@ -4926,9 +4917,6 @@
   <data name="OpenDataSourceDialog_populateComboBoxFromDirectory_Network_Share" xml:space="preserve">
     <value>ネットワーク共有</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_btnGenerateFromDocument_Click_Finding_drift_time_values_for_peaks" xml:space="preserve">
-    <value>ピークのドリフト時間値を検索中</value>
-  </data>
   <data name="ExportOptimize_COV_ROUGH_Rough_Tune" xml:space="preserve">
     <value>粗調整</value>
   </data>
@@ -6553,7 +6541,7 @@
   <data name="ImportFastaControl_ImportFasta_Change_digestion_settings" xml:space="preserve">
     <value>消化設定を変更</value>
   </data>
-  <data name="CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__" xml:space="preserve">
+  <data name="CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_ion_mobility_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__" xml:space="preserve">
     <value>シークエンス{0}に対する測定ドリフト時間をインポートすることができません：電荷状態{1}に対する衝突断面積変換パラメータが提供されていません。</value>
   </data>
   <data name="ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist" xml:space="preserve">

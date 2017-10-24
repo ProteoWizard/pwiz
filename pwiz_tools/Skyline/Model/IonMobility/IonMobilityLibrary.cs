@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Model.IonMobility
             return persistPath;
         }
 
-        public override DriftTimeInfo GetDriftTimeInfo(LibKey key, ChargeRegressionLine regressionLine)
+        public override IonMobilityAndCCS GetIonMobilityInfo(LibKey key, ChargeRegressionLine regressionLine)
         {
             if (_database != null)
                 return _database.GetDriftTimeInfo(key, regressionLine);

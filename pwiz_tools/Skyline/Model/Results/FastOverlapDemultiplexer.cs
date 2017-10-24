@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 RetentionTime = originalSpectrum.RetentionTime,
                 Centroided = originalSpectrum.Centroided,
-                DriftTimeMsec = originalSpectrum.DriftTimeMsec,
+                IonMobility = originalSpectrum.IonMobility,
                 Level = originalSpectrum.Level,
                 Mzs = peaks.Select(p=>p.Key).ToArray(),
                 Intensities = peaks.Select(p=>p.Value).ToArray(),

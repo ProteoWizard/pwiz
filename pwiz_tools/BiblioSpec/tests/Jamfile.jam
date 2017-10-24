@@ -265,6 +265,10 @@ blib-test-build mascot : -o : output/mascot.blib : mascot.check : inputs/F027319
 blib-test-build mascot-15N : -o : output/mascot-15N.blib : mascot-15N.check : inputs/F027752.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 blib-test-build mascot-distiller-and-title : -o : output/mascot-distiller-1.blib : mascot-distiller-1.check : inputs/F007401.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 blib-test-build mascot-distiller-from-file : -o : output/mascot-distiller-2.blib : mascot-distiller-2.check : inputs/F007401b.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
+blib-test-build mascot_tims : -o : output/mascot_tims.blib : mascot_tims.check : inputs/mascot_tims.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
+
+# we expect this one to fail, with the error message 'ERROR: Failure reading TIMS ion mobility value ":0.78079097398941"', so args are "-e 0.78079097398941"
+blib-test-build mascot_tims_bad : -e_0.78079097398941 -o : output/mascot_tims_bad.blib : mascot_tims_bad.check : inputs/mascot_tims_bad.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 
 # Test merging existing libraries
 

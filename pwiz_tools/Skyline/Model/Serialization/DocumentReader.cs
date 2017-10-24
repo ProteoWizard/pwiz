@@ -27,6 +27,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
@@ -67,12 +68,12 @@ namespace pwiz.Skyline.Model.Serialization
             return uniqueSpecies;
         }
 
-        private PeptideChromInfo ReadPeptideChromInfo(XmlReader reader, ChromFileInfoId fileId)
+        private PeptideChromInfo ReadPeptideChromInfo(XmlReader reader, ChromFileInfo fileInfo)
         {
             float peakCountRatio = reader.GetFloatAttribute(ATTR.peak_count_ratio);
             float? retentionTime = reader.GetNullableFloatAttribute(ATTR.retention_time);
             bool excludeFromCalibration = reader.GetBoolAttribute(ATTR.exclude_from_calibration);
-            return new PeptideChromInfo(fileId, peakCountRatio, retentionTime, ImmutableList<PeptideLabelRatio>.EMPTY)
+            return new PeptideChromInfo(fileInfo.FileId, peakCountRatio, retentionTime, ImmutableList<PeptideLabelRatio>.EMPTY)
                 .ChangeExcludeFromCalibration(excludeFromCalibration);
         }
 
@@ -91,7 +92,7 @@ namespace pwiz.Skyline.Model.Serialization
             return null;
         }
 
-        private TransitionGroupChromInfo ReadTransitionGroupChromInfo(XmlReader reader, ChromFileInfoId fileId)
+        private TransitionGroupChromInfo ReadTransitionGroupChromInfo(XmlReader reader, ChromFileInfo fileInfo)
         {
             int optimizationStep = reader.GetIntAttribute(ATTR.step);
             float peakCountRatio = reader.GetFloatAttribute(ATTR.peak_count_ratio);
@@ -99,9 +100,17 @@ namespace pwiz.Skyline.Model.Serialization
             float? startTime = reader.GetNullableFloatAttribute(ATTR.start_time);
             float? endTime = reader.GetNullableFloatAttribute(ATTR.end_time);
             float? ccs = reader.GetNullableFloatAttribute(ATTR.ccs);
-            float? driftTimeMS1 = reader.GetNullableFloatAttribute(ATTR.drift_time_ms1);
-            float? driftTimeFragment = reader.GetNullableFloatAttribute(ATTR.drift_time_fragment);
-            float? driftTimeWindow = reader.GetNullableFloatAttribute(ATTR.drift_time_window);
+            float? ionMobilityMS1 = reader.GetNullableFloatAttribute(ATTR.drift_time_ms1);
+            float? ionMobilityFragment = reader.GetNullableFloatAttribute(ATTR.drift_time_fragment);
+            float? ionMobilityWindow = reader.GetNullableFloatAttribute(ATTR.drift_time_window);
+            var ionMobilityUnits = MsDataFileImpl.eIonMobilityUnits.drift_time_msec;
+            if (!ionMobilityWindow.HasValue)
+            {
+                ionMobilityUnits = GetAttributeMobilityUnits(reader, ATTR.ion_mobility_type, fileInfo);
+                ionMobilityWindow = reader.GetNullableFloatAttribute(ATTR.ion_mobility_window);
+                ionMobilityMS1 = reader.GetNullableFloatAttribute(ATTR.ion_mobility_ms1);
+                ionMobilityFragment = reader.GetNullableFloatAttribute(ATTR.ion_mobility_fragment);
+            }
             float? fwhm = reader.GetNullableFloatAttribute(ATTR.fwhm);
             float? area = reader.GetNullableFloatAttribute(ATTR.area);
             float? backgroundArea = reader.GetNullableFloatAttribute(ATTR.background);
@@ -128,13 +137,15 @@ namespace pwiz.Skyline.Model.Serialization
 //            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
             const UserSet userSet = UserSet.FALSE;
             int countRatios = Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
-            return new TransitionGroupChromInfo(fileId,
+            var transitionGroupIonMobilityInfo = TransitionGroupIonMobilityInfo.GetTransitionGroupIonMobilityInfo(ccs,
+                ionMobilityMS1, ionMobilityFragment, ionMobilityWindow, ionMobilityUnits);
+            return new TransitionGroupChromInfo(fileInfo.FileId,
                 optimizationStep,
                 peakCountRatio,
                 retentionTime,
                 startTime,
                 endTime,
-                TransitionGroupDriftTimeInfo.GetTransitionGroupIonMobilityInfo(ccs, driftTimeMS1, driftTimeFragment, driftTimeWindow),
+                transitionGroupIonMobilityInfo,
                 fwhm,
                 area, null, null, // Ms1 and Fragment values calculated later
                 backgroundArea, null, null, // Ms1 and Fragment values calculated later
@@ -149,6 +160,16 @@ namespace pwiz.Skyline.Model.Serialization
                 zscore,
                 annotations,
                 userSet);
+        }
+
+        private static MsDataFileImpl.eIonMobilityUnits GetAttributeMobilityUnits(XmlReader reader, string attrName, ChromFileInfo fileInfo)
+        {
+            string ionMobilityUnitsString = reader.GetAttribute(attrName);
+            MsDataFileImpl.eIonMobilityUnits ionMobilityUnits =
+              string.IsNullOrEmpty( ionMobilityUnitsString) ?
+              MsDataFileImpl.eIonMobilityUnits.none : 
+              TypeSafeEnum.Parse<MsDataFileImpl.eIonMobilityUnits>(ionMobilityUnitsString);
+            return ionMobilityUnits;
         }
 
         private static Annotations ReadAndRemoveScoreAnnotation(Annotations annotations, string annotationName, ref float? annotationValue)
@@ -356,7 +377,7 @@ namespace pwiz.Skyline.Model.Serialization
                 return null;
             }
 
-            private TransitionChromInfo ReadTransitionPeak(XmlReader reader, ChromFileInfoId fileId)
+            private TransitionChromInfo ReadTransitionPeak(XmlReader reader, ChromFileInfo fileInfo)
             {
                 int optimizationStep = reader.GetIntAttribute(ATTR.step);
                 float? massError = reader.GetNullableFloatAttribute(ATTR.mass_error_ppm);
@@ -381,8 +402,15 @@ namespace pwiz.Skyline.Model.Serialization
                     PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
                 UserSet userSet = reader.GetEnumAttribute(ATTR.user_set, UserSetFastLookup.Dict,
                     UserSet.FALSE, XmlUtil.EnumCase.upper);
-                double? driftTime = reader.GetNullableDoubleAttribute(ATTR.drift_time);
-                double? driftTimeWindow = reader.GetNullableDoubleAttribute(ATTR.drift_time_window);
+                double? ionMobility = reader.GetNullableDoubleAttribute(ATTR.drift_time);
+                MsDataFileImpl.eIonMobilityUnits ionMobilityUnits = MsDataFileImpl.eIonMobilityUnits.drift_time_msec;
+                if (!ionMobility.HasValue)
+                {
+                    ionMobility = reader.GetNullableDoubleAttribute(ATTR.ion_mobility);
+                    ionMobilityUnits = GetAttributeMobilityUnits(reader, ATTR.ion_mobility_type, fileInfo);
+                }
+                double? ionMobilityWindow = reader.GetNullableDoubleAttribute(ATTR.drift_time_window) ??
+                                            reader.GetNullableDoubleAttribute(ATTR.ion_mobility_window);
                 var annotations = Annotations.EMPTY;
                 if (!reader.IsEmptyElement)
                 {
@@ -390,13 +418,13 @@ namespace pwiz.Skyline.Model.Serialization
                     annotations = ReadAnnotations(reader, _documentReader._stringPool);
                 }
                 int countRatios = _documentReader.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
-                return new TransitionChromInfo(fileId,
+                return new TransitionChromInfo(fileInfo.FileId,
                     optimizationStep,
                     massError,
                     retentionTime,
                     startRetentionTime,
-                    endRetentionTime, 
-                    DriftTimeFilter.GetDriftTimeFilter(driftTime, driftTimeWindow, null), 
+                    endRetentionTime,
+                    IonMobilityFilter.GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(ionMobility, ionMobilityUnits), ionMobilityWindow, null), 
                     area,
                     backgroundArea,
                     height,
@@ -414,7 +442,7 @@ namespace pwiz.Skyline.Model.Serialization
         }
 
         private Results<TItem> ReadResults<TItem>(XmlReader reader, string start,
-            Func<XmlReader, ChromFileInfoId, TItem> readInfo)
+            Func<XmlReader, ChromFileInfo, TItem> readInfo)
             where TItem : ChromInfo
         {
             // If the results element is empty, then there are no results to read.
@@ -446,8 +474,9 @@ namespace pwiz.Skyline.Model.Serialization
                     : chromatogramSet.MSDataFileInfos[0].FileId);
                 if (fileInfoId == null)
                     throw new InvalidDataException(String.Format(Resources.SrmDocument_ReadResults_No_file_with_id__0__found_in_the_replicate__1__, fileId, name));
+                var fileInfo = chromatogramSet.GetFileInfo(fileInfoId);
 
-                TItem chromInfo = readInfo(reader, fileInfoId);
+                TItem chromInfo = readInfo(reader, fileInfo);
                 // Consume the tag
                 reader.Read();
 
@@ -736,13 +765,26 @@ namespace pwiz.Skyline.Model.Serialization
         {
             double? importedCollisionEnergy = reader.GetNullableDoubleAttribute(ATTR.explicit_collision_energy);
             double? importedDriftTimeMsec = reader.GetNullableDoubleAttribute(ATTR.explicit_drift_time_msec);
-            double? importedDriftTimeHighEnergyOffsetMsec = reader.GetNullableDoubleAttribute(ATTR.explicit_drift_time_high_energy_offset_msec);
+            double? importedIonMobilityHighEnergyOffset =
+                reader.GetNullableDoubleAttribute(ATTR.explicit_drift_time_high_energy_offset_msec) ??
+                reader.GetNullableDoubleAttribute(ATTR.explicit_ion_mobility_high_energy_offset);
+            var importedIonMobilityUnits = MsDataFileImpl.eIonMobilityUnits.none;
+            if (importedDriftTimeMsec.HasValue)
+            {
+                importedIonMobilityUnits = MsDataFileImpl.eIonMobilityUnits.drift_time_msec;
+            }
+            else
+            {
+                var attr = reader.GetAttribute(ATTR.explicit_ion_mobility_units);
+                importedIonMobilityUnits = SmallMoleculeTransitionListReader.IonMobilityUnitsFromAttributeValue(attr);
+            }
+            double? importedIonMobility = importedDriftTimeMsec ?? reader.GetNullableDoubleAttribute(ATTR.explicit_ion_mobility);
             double? importedCCS = reader.GetNullableDoubleAttribute(ATTR.explicit_ccs_sqa);
             double? importedSLens = reader.GetNullableDoubleAttribute(FormatVersion.CompareTo(DocumentFormat.VERSION_3_52) < 0 ? ATTR.s_lens_obsolete : ATTR.explicit_s_lens);
             double? importedConeVoltage = reader.GetNullableDoubleAttribute(FormatVersion.CompareTo(DocumentFormat.VERSION_3_52) < 0 ? ATTR.cone_voltage_obsolete : ATTR.explicit_cone_voltage);
             double? importedCompensationVoltage = reader.GetNullableDoubleAttribute(ATTR.explicit_compensation_voltage);
             double? importedDeclusteringPotential = reader.GetNullableDoubleAttribute(ATTR.explicit_declustering_potential);
-            return new ExplicitTransitionGroupValues(importedCollisionEnergy, importedDriftTimeMsec, importedDriftTimeHighEnergyOffsetMsec, importedCCS, importedSLens, importedConeVoltage,
+            return new ExplicitTransitionGroupValues(importedCollisionEnergy, importedIonMobility, importedIonMobilityHighEnergyOffset, importedIonMobilityUnits, importedCCS, importedSLens, importedConeVoltage,
                 importedDeclusteringPotential, importedCompensationVoltage);
         }
 
@@ -1209,7 +1251,7 @@ namespace pwiz.Skyline.Model.Serialization
                                                   results,
                                                   children,
                                                   autoManageChildren);
-                children = ReadTransitionListXml(reader, group, mods, nodeGroup.IsotopeDist);
+                children = ReadTransitionListXml(reader, nodeGroup, mods);
 
                 reader.ReadEndElement();
 
@@ -1314,13 +1356,14 @@ namespace pwiz.Skyline.Model.Serialization
         /// a <see cref="TransitionDocNode"/> positioned at the first element in the list.
         /// </summary>
         /// <param name="reader">The reader positioned at the first element</param>
-        /// <param name="group">A previously read parent <see cref="Identity"/></param>
+        /// <param name="nodeGroup">A previously read parent <see cref="Identity"/></param>
         /// <param name="mods">Explicit modifications for the peptide</param>
-        /// <param name="isotopeDist">Isotope peak distribution to use for assigning M+N m/z values</param>
         /// <returns>A new array of <see cref="TransitionDocNode"/></returns>
         private TransitionDocNode[] ReadTransitionListXml(XmlReader reader, 
-            TransitionGroup group, ExplicitMods mods, IsotopeDistInfo isotopeDist)
+            TransitionGroupDocNode nodeGroup, ExplicitMods mods)
         {
+            var group = nodeGroup.TransitionGroup;
+            var isotopeDist = nodeGroup.IsotopeDist;
             var list = new List<TransitionDocNode>();
             if (reader.IsStartElement(EL.transition_data))
             {

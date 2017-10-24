@@ -217,7 +217,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A measure of ion mobility, in square angstroms, which is typically converted to drift time and used in extracting chromatograms from ion mobility mass spectra..
+        ///   Looks up a localized string similar to A measure of ion mobility, in square angstroms, which is typically converted to appropriate units (eg drift time, inverseK0) and used in extracting chromatograms from ion mobility mass spectra..
         /// </summary>
         internal static string CollisionalCrossSection {
             get {
@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ion mobility drift time (in milliseconds) for fragment ions, which typically move faster due to more energetic collisions.
+        ///   Looks up a localized string similar to Ion mobility drift time (in milliseconds) for fragment ions, which typically move faster due to more energetic collisions. (For backward compatibility only: IonMobilityFragment and IonMobilityUnits are the preferred terms.).
         /// </summary>
         internal static string DriftTimeFragment {
             get {
@@ -414,7 +414,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ion mobility drift time (in milliseconds)  for precursor ions, which typically move slightly slower than fragment ions as they are less energetic.
+        ///   Looks up a localized string similar to Ion mobility drift time (in milliseconds)  for precursor ions, which typically move slightly slower than fragment ions as they are less energetic. (For backward compatibility only: IonMobilityMS1 and IonMobilityUnits are the preferred terms.).
         /// </summary>
         internal static string DriftTimeMS1 {
             get {
@@ -423,7 +423,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ion mobility drift time window (in milliseconds)  used in chromatogram extraction.
+        ///   Looks up a localized string similar to Ion mobility drift time window (in milliseconds)  used in chromatogram extraction. (For backward compatibility only: IonMobilityWindow and IonMobilityUnits are the preferred terms.).
         /// </summary>
         internal static string DriftTimeWindow {
             get {
@@ -478,7 +478,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The exact desired collisional cross section (in square angstroms) to be converted to drift time and used in extracting chromatograms from ion mobility mass spectra, overriding all model values. .
+        ///   Looks up a localized string similar to The exact desired collisional cross section (in square angstroms) to be converted to ion mobility and used in extracting chromatograms from ion mobility mass spectra, overriding all model values. .
         /// </summary>
         internal static string ExplicitCollisionalCrossSection {
             get {
@@ -748,6 +748,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         internal static string IonFormula {
             get {
                 return ResourceManager.GetString("IonFormula", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Center of the ion mobility filter window used in chromatogram extraction for a fragment ion. This may differ from the value for precursor ions , as fragment ions may move faster due to more energetic collisions,.
+        /// </summary>
+        internal static string IonMobilityFragment {
+            get {
+                return ResourceManager.GetString("IonMobilityFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Center of the ion mobility filter window used in chromatogram extraction for a precursor ion..
+        /// </summary>
+        internal static string IonMobilityMS1 {
+            get {
+                return ResourceManager.GetString("IonMobilityMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Units for ion mobility used in chromatogram extraction..
+        /// </summary>
+        internal static string IonMobilityUnits {
+            get {
+                return ResourceManager.GetString("IonMobilityUnits", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Width of the ion mobility filter window used in chromatogram extraction..
+        /// </summary>
+        internal static string IonMobilityWindow {
+            get {
+                return ResourceManager.GetString("IonMobilityWindow", resourceCulture);
             }
         }
         

@@ -32,6 +32,7 @@
 #include <vector>
 #include "boost/lexical_cast.hpp"
 #include "SmallMolMetadata.h"
+#include "BlibUtils.h" // For IONMOBILITY_TYPE enum
 
 /**
  * \struct SeqMod
@@ -115,8 +116,8 @@ struct PSM{
   bool IsCompleteEnough() const
   {
       return (specKey >= 0 || !specName.empty()) && 
-		  (smallMolMetadata.IsCompleteEnough() ||
-		   (charge != 0 && !unmodSeq.empty()));
+          (smallMolMetadata.IsCompleteEnough() ||
+           (charge != 0 && !unmodSeq.empty()));
   }
 
   std::string idAsString() const {

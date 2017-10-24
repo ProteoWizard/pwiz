@@ -55,7 +55,7 @@ namespace pwiz.SkylineTest.Results
                                                     testFilesDir.GetTestPath("BlibDriftTimeTest.blib"));
                 doc = doc.ChangeSettings(
                     doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] { librarySpec })).
-                    ChangePeptidePrediction(p => p.ChangeLibraryDriftTimesWindowWidthCalculator(new DriftTimeWindowWidthCalculator(DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, 20, 0, 0))).
+                    ChangePeptidePrediction(p => p.ChangeLibraryDriftTimesWindowWidthCalculator(new IonMobilityWindowWidthCalculator(IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 20, 0, 0))).
                     ChangePeptidePrediction(p => p.ChangeUseLibraryDriftTimes(true))
                     );
 

@@ -54,6 +54,10 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListBase
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+    virtual bool hasIonMobility() const;
+    virtual bool canConvertInverseK0AndCCS() const;
+    virtual double inverseK0ToCCS(double inverseK0, double mz, int charge) const;
+    virtual double ccsToInverseK0(double ccs, double mz, int charge) const;
 
 #ifdef PWIZ_READER_BRUKER
     SpectrumList_Bruker(MSData& msd,

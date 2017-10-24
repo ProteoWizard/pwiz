@@ -31,17 +31,18 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public interface IFilterInstrumentInfo : IConversionDriftTimeCCSProvider
+    public interface IFilterInstrumentInfo : IIonMobilityFunctionsProvider
     {
         bool IsWatersFile { get; }
         bool IsAgilentFile { get; }
     }
 
-    public interface IConversionDriftTimeCCSProvider
+    public interface IIonMobilityFunctionsProvider
     {
         bool ProvidesCollisionalCrossSectionConverter { get; }
-        double DriftTimeFromCCS(double ccs, double mz, int charge); // Convert from Collisional Cross Section to Drift Time (Agilent only, at least initially)
-        double CCSFromDriftTime(double dt, double mz, int charge); // Convert from Drift Time to Collisional Cross Section (Agilent only, at least initially)
+        MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get; } // Reports ion mobility units in use by the mass spec
+        IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge); // Convert from Collisional Cross Section to ion mobility
+        double CCSFromIonMobility(IonMobilityValue im, double mz, int charge); // Convert from ion mobility to Collisional Cross Section
     }
 
     public sealed class SpectrumFilter : IFilterInstrumentInfo
@@ -63,7 +64,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _isWatersFile;
         private readonly bool _isWatersMse;
         private readonly bool _isAgilentMse;
-        private readonly IConversionDriftTimeCCSProvider _conversionDriftTimeCcsProvider;
+        private readonly IIonMobilityFunctionsProvider _ionMobilityFunctionsProvider;
         private int _mseLevel;
         private MsDataSpectrum _mseLastSpectrum;
         private int _mseLastSpectrumLevel; // for averaging Agilent stepped CE spectra
@@ -71,13 +72,13 @@ namespace pwiz.Skyline.Model.Results
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
 
         public SpectrumFilter(SrmDocument document, MsDataFileUri msDataFileUri, IFilterInstrumentInfo instrumentInfo,
-            double? maxObservedDriftTime = null,
+            double? maxObservedIonMobilityValue = null,
             IRetentionTimePredictor retentionTimePredictor = null, bool firstPass = false)
         {
             _fullScan = document.Settings.TransitionSettings.FullScan;
             _instrument = document.Settings.TransitionSettings.Instrument;
             _acquisitionMethod = _fullScan.AcquisitionMethod;
-            _conversionDriftTimeCcsProvider = instrumentInfo;
+            _ionMobilityFunctionsProvider = instrumentInfo;
             if (instrumentInfo != null)
             {
                 _isWatersFile = instrumentInfo.IsWatersFile;
@@ -98,10 +99,10 @@ namespace pwiz.Skyline.Model.Results
                     {
                         var key = new PrecursorTextId(SignedMz.ZERO, null, ChromExtractor.summed);  // TIC
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
-                            _instrument.MinTime, _instrument.MaxTime, null, null, DriftTimeInfo.EMPTY, _isHighAccMsFilter, _isHighAccProductFilter));
+                            _instrument.MinTime, _instrument.MaxTime, null, null, IonMobilityAndCCS.EMPTY, _isHighAccMsFilter, _isHighAccProductFilter));
                         key = new PrecursorTextId(SignedMz.ZERO, null, ChromExtractor.base_peak);   // BPC
                         dictPrecursorMzToFilter.Add(key, new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, dictPrecursorMzToFilter.Count,
-                            _instrument.MinTime, _instrument.MaxTime, null, null, DriftTimeInfo.EMPTY, _isHighAccMsFilter, _isHighAccProductFilter));
+                            _instrument.MinTime, _instrument.MaxTime, null, null, IonMobilityAndCCS.EMPTY, _isHighAccMsFilter, _isHighAccProductFilter));
                     }
                 }
                 if (EnabledMsMs)
@@ -130,11 +131,11 @@ namespace pwiz.Skyline.Model.Results
                 //       times can be shared for MS1 without SIM scans
                 _isSharedTime = !canSchedule;
 
-                // If we're using bare measured drift times from spectral libraries, go get those now
-                var libraryIonMobilityInfo = document.Settings.PeptideSettings.Prediction.UseLibraryDriftTimes
+                // If we're using bare measured ion mobility values from spectral libraries, go get those now
+                var libraryIonMobilityInfo = document.Settings.PeptideSettings.Prediction.UseLibraryIonMobilityValues
                     ? document.Settings.GetIonMobilities(msDataFileUri)
                     : null;
-                var driftTimeMax = maxObservedDriftTime??0;
+                var ionMobilityMax = maxObservedIonMobilityValue??0;
 
                 int filterCount = 0;
                 foreach (var nodePep in document.Molecules)
@@ -148,18 +149,18 @@ namespace pwiz.Skyline.Model.Results
                             continue;
 
                         double? minTime = _minTime, maxTime = _maxTime;
-                        double? startDriftTimeMsec = null, endDriftTimeMsec = null;
-                        double windowDT;
-                        var ionMobility = document.Settings.PeptideSettings.Prediction.GetDriftTime(
-                            nodePep, nodeGroup, libraryIonMobilityInfo, _conversionDriftTimeCcsProvider, driftTimeMax, out windowDT);
-                        if (ionMobility.DriftTimeMsec.HasValue)
+                        double? startIM = null, endIM = null;
+                        double windowIM;
+                        var ionMobility = document.Settings.PeptideSettings.Prediction.GetIonMobility(
+                            nodePep, nodeGroup, libraryIonMobilityInfo, _ionMobilityFunctionsProvider, ionMobilityMax, out windowIM);
+                        if (ionMobility.IonMobility.HasValue)
                         {
-                            startDriftTimeMsec = ionMobility.DriftTimeMsec - windowDT / 2; // Get the low energy drift time
-                            endDriftTimeMsec = startDriftTimeMsec + windowDT;
+                            startIM = ionMobility.IonMobility.Mobility - windowIM / 2; // Get the low energy ion mobility
+                            endIM = startIM + windowIM;
                         }
                         else
                         {
-                            ionMobility = DriftTimeInfo.EMPTY;
+                            ionMobility = IonMobilityAndCCS.EMPTY;
                         }
 
                         
@@ -225,7 +226,7 @@ namespace pwiz.Skyline.Model.Results
                         if (!dictPrecursorMzToFilter.TryGetValue(key, out filter))
                         {
                             filter = new SpectrumFilterPair(key, nodePep.Color, dictPrecursorMzToFilter.Count, minTime, maxTime,
-                                startDriftTimeMsec, endDriftTimeMsec, ionMobility,
+                                startIM, endIM, ionMobility,
                                 _isHighAccMsFilter, _isHighAccProductFilter);
                             dictPrecursorMzToFilter.Add(key, filter);
                         }
@@ -267,25 +268,34 @@ namespace pwiz.Skyline.Model.Results
             InitRTLimits();
         }
 
-        public bool ProvidesCollisionalCrossSectionConverter { get { return _conversionDriftTimeCcsProvider != null;  } }
+        public bool ProvidesCollisionalCrossSectionConverter { get { return _ionMobilityFunctionsProvider != null;  } }
 
-        public double DriftTimeFromCCS(double ccs, double mz, int charge)
+        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
+        {
+            get
+            {
+                return ProvidesCollisionalCrossSectionConverter
+                    ? _ionMobilityFunctionsProvider.IonMobilityUnits
+                    : MsDataFileImpl.eIonMobilityUnits.none;
+            } }
+
+        public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge)
         {
             if (ProvidesCollisionalCrossSectionConverter)
             {
-                return _conversionDriftTimeCcsProvider.DriftTimeFromCCS(ccs, mz, charge);
+                return _ionMobilityFunctionsProvider.IonMobilityFromCCS(ccs, mz, charge);
             }
-            Assume.IsNotNull(_conversionDriftTimeCcsProvider, "No CCS to DT translation is possible for this data set"); // Not L10N
-            return 0;
+            Assume.IsNotNull(_ionMobilityFunctionsProvider, "No CCS to ion mobility translation is possible for this data set"); // Not L10N
+            return IonMobilityValue.EMPTY;
         }
 
-        public double CCSFromDriftTime(double dt, double mz, int charge)
+        public double CCSFromIonMobility(IonMobilityValue im, double mz, int charge)
         {
             if (ProvidesCollisionalCrossSectionConverter)
             {
-                return _conversionDriftTimeCcsProvider.CCSFromDriftTime(dt, mz, charge);
+                return _ionMobilityFunctionsProvider.CCSFromIonMobility(im, mz, charge);
             }
-            Assume.IsNotNull(_conversionDriftTimeCcsProvider, "No DT to CCS translation is possible for this data set"); // Not L10N
+            Assume.IsNotNull(_ionMobilityFunctionsProvider, "No ion mobility to CCS translation is possible for this data set"); // Not L10N
             return 0;
         }
 
@@ -467,7 +477,7 @@ namespace pwiz.Skyline.Model.Results
                 for (var i = 1; i < spectra.Length; i++)
                 {
                     var spec = spectra[i];
-                    if (!Equals(spec.RetentionTime, rt) || (spec.DriftTimeMsec ?? 0) <= (spectra[i - 1].DriftTimeMsec ?? 0))
+                    if (!Equals(spec.RetentionTime, rt) || !IonMobilityValue.IsExpectedValueOrdering(spectra[i - 1].IonMobility, spec.IonMobility))
                         return true;  // Not a run of IMS bins, must have been actual SIM scan
                     win = GetIsolationWindows(spec.Precursors).FirstOrDefault();
                     mzLow = Math.Min(mzLow, win.IsolationMz.Value - win.IsolationWidth.Value / 2);

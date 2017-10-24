@@ -469,9 +469,6 @@
   <data name="WatersMethodExporter_EnsureLibraries_Failed_to_find_a_valid_MassLynx_installation" xml:space="preserve">
     <value>Failed to find a valid MassLynx installation.</value>
   </data>
-  <data name="DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_" xml:space="preserve">
-    <value>Drift time predictors using an ion mobility library must include per-charge regression values.</value>
-  </data>
   <data name="SkylineWindow_generateDecoysMenuItem_Click_The_document_must_contain_peptides_to_generate_decoys_" xml:space="preserve">
     <value>The document must contain peptides to generate decoys.</value>
   </data>
@@ -1431,9 +1428,6 @@
   <data name="AminoAcid_ValidateAAList_The_amino_acid__0__is_repeated_in_the_value__1__" xml:space="preserve">
     <value>The amino acid '{0}' is repeated in the value '{1}'.</value>
   </data>
-  <data name="GraphFullScan_CreateDriftTimeHeatmap_Drift_Time__ms_" xml:space="preserve">
-    <value>Drift Time (ms)</value>
-  </data>
   <data name="CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_The_library__0__does_not_contain_ion_mobility_information_" xml:space="preserve">
     <value>The library {0} does not contain ion mobility information.</value>
   </data>
@@ -1940,9 +1934,6 @@
   </data>
   <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope_" xml:space="preserve">
     <value>the value {0} is not a valid slope.</value>
-  </data>
-  <data name="DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_" xml:space="preserve">
-    <value>Drift time predictors using an ion mobility library must provide a filename for the library.</value>
   </data>
   <data name="ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute_" xml:space="preserve">
     <value>Error: The {0} does not contain a valid {1} attribute.</value>
@@ -4944,9 +4935,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="OpenDataSourceDialog_populateComboBoxFromDirectory_Network_Share" xml:space="preserve">
     <value>Network Share</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_btnGenerateFromDocument_Click_Finding_drift_time_values_for_peaks" xml:space="preserve">
-    <value>Finding drift time values for peaks</value>
-  </data>
   <data name="ExportOptimize_COV_ROUGH_Rough_Tune" xml:space="preserve">
     <value>Rough Tune</value>
   </data>
@@ -6571,8 +6559,8 @@ If you prefer you can choose to report anonymously.</value>
   <data name="ImportFastaControl_ImportFasta_Change_digestion_settings" xml:space="preserve">
     <value>Change digestion settings</value>
   </data>
-  <data name="CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__" xml:space="preserve">
-    <value>Cannot import measured drift time for sequence {0}: no collisional cross section conversion parameters were provided for charge state {1}.</value>
+  <data name="CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_ion_mobility_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__" xml:space="preserve">
+    <value>Cannot import measured ion mobility for sequence {0}: no collisional cross section conversion parameters were provided for charge state {1}.</value>
   </data>
   <data name="ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist" xml:space="preserve">
     <value>The file {0} does not exist.</value>
@@ -9925,5 +9913,48 @@ Would you like to remove some or all of the prefix or suffix to shorten the name
   </data>
   <data name="FormatSuggestion_Percent_Percent" xml:space="preserve">
     <value>Percent</value>
+  </data>
+  <data name="EditDriftTimePredictorDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks" xml:space="preserve">
+    <value>Finding ion mobility values for peaks</value>
+  </data>
+  <data name="IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_" xml:space="preserve">
+    <value>Ion mobility predictors using an ion mobility library must provide a filename for the library.</value>
+  </data>
+  <data name="IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_" xml:space="preserve">
+    <value>Ion mobility predictors using an ion mobility library must include per-charge regression values.</value>
+  </data>
+  <data name="PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_" xml:space="preserve">
+    <value>Supported values for {0} are: {1}</value>
+    <comment>{1} is a comma seprated list of supported ion mobility units</comment>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_" xml:space="preserve">
+    <value>Invalid ion mobility value {0}</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_high_energy_offset_value__0_" xml:space="preserve">
+    <value>Invalid ion mobility high energy offset value {0}</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units" xml:space="preserve">
+    <value>Missing ion mobility units</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility" xml:space="preserve">
+    <value>Explicit Ion Mobility</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units" xml:space="preserve">
+    <value>Explicit Ion Mobility Units</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset" xml:space="preserve">
+    <value>Explicit Ion Mobility High Energy Offset</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_units_value__0___accepted_values_are__1__" xml:space="preserve">
+    <value>Invalid ion mobility units value {0} (accepted values are {1})</value>
+  </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_" xml:space="preserve">
+    <value>1/K0 (Vs/cm^2)</value>
+  </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_" xml:space="preserve">
+    <value>Drift Time (ms)</value>
+  </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsL10NString_None" xml:space="preserve">
+    <value>None</value>
   </data>
 </root>

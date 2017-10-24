@@ -27,7 +27,8 @@
 #include "pwiz/utility/misc/Std.hpp"
 
 #include "pwiz/data/vendor_readers/Agilent/SpectrumList_Agilent.hpp"
-//#include "pwiz/data/vendor_readers/Waters/SpectrumList_Waters.hpp"
+#include "pwiz/data/vendor_readers/Bruker/SpectrumList_Bruker.hpp"
+#include "pwiz/data/vendor_readers/Waters/SpectrumList_Waters.hpp"
 
 
 namespace pwiz {
@@ -40,71 +41,112 @@ using namespace pwiz::util;
 
 PWIZ_API_DECL
 SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr& inner)
-:   SpectrumListWrapper(inner),
-    mode_(0)
+:   SpectrumListWrapper(inner), equipment_(SpectrumList_IonMobility::eIonMobilityEquipment::None)
 {
-    detail::SpectrumList_Agilent* agilent = dynamic_cast<detail::SpectrumList_Agilent*>(&*inner);
-    if (agilent)
+    units_ = eIonMobilityUnits::none;
+    if (dynamic_cast<detail::SpectrumList_Agilent*>(&*inner) != NULL)
     {
-        mode_ = 1;
+        equipment_ = eIonMobilityEquipment::AgilentDrift;
+        units_ = eIonMobilityUnits::drift_time_msec;
     }
-
-    /*detail::SpectrumList_Waters* waters = dynamic_cast<detail::SpectrumList_Waters*>(&*inner);
-    if (waters)
+    else if (dynamic_cast<detail::SpectrumList_Waters*>(&*inner) != NULL)
     {
-        mode_ = 2;
-    }*/
+        equipment_ = eIonMobilityEquipment::WatersDrift;
+        units_ = eIonMobilityUnits::drift_time_msec; 
+    }
+    else if (dynamic_cast<detail::SpectrumList_Bruker*>(&*inner) != NULL)
+    {
+        if ((dynamic_cast<detail::SpectrumList_Bruker*>(&*inner))->hasIonMobility())
+        {
+            equipment_ = eIonMobilityEquipment::BrukerTIMS;
+            units_ = eIonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2;
+        }
+    }
+    else // reading an mzML conversion?
+    {
+        try
+        {
+            // See if first scan has any ion mobility data
+            SpectrumPtr spectrum = inner->spectrum(0, false);
+            if (spectrum != NULL)
+            {
+                Scan dummy;
+                Scan& scan = spectrum->scanList.scans.empty() ? dummy : spectrum->scanList.scans[0];
+                if (scan.hasCVParam(CVID::MS_ion_mobility_drift_time))
+                    units_ = eIonMobilityUnits::drift_time_msec;
+                else if (scan.hasCVParam(CVID::MS_inverse_reduced_ion_mobility))
+                    units_ = eIonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2;
+                else if (!scan.userParam("drift time").empty()) // Oldest known mzML drift time style
+                    units_ = eIonMobilityUnits::drift_time_msec;
+            }
+        }
+        catch (...)
+        {
+            // No scans to check
+        }
+    }
 }
 
+PWIZ_API_DECL SpectrumList_IonMobility::eIonMobilityUnits SpectrumList_IonMobility::getIonMobilityUnits() const
+{
+    return units_;
+}
 
 PWIZ_API_DECL bool SpectrumList_IonMobility::accept(const msdata::SpectrumListPtr& inner)
 {
-    return dynamic_cast<detail::SpectrumList_Agilent*>(&*inner) != NULL /*|| dynamic_cast<detail::SpectrumList_Waters*>(&*inner)*/;
+    return true; // We'll wrap anything, but getIonMobilityUnits() may well return "none"
 }
-
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_IonMobility::spectrum(size_t index, bool getBinaryData) const
 {
     return inner_->spectrum(index, getBinaryData);
 }
 
-PWIZ_API_DECL bool SpectrumList_IonMobility::canConvertDriftTimeAndCCS() const
+PWIZ_API_DECL bool SpectrumList_IonMobility::canConvertIonMobilityAndCCS(eIonMobilityUnits units) const
 {
-    switch (mode_)
+    if (units != units_)
+        return false; // wrong units for this equipment
+
+    switch (equipment_)
     {
-    case 0:
     default:
-        return false; // Only Agilent provides this capabilty, for now
+        return false; // Only Agilent and Bruker provide this capabilty, for now
 
-    case 1: return dynamic_cast<detail::SpectrumList_Agilent*>(&*inner_)->canConvertDriftTimeAndCCS();
+    case eIonMobilityEquipment::BrukerTIMS:
+        return dynamic_cast<detail::SpectrumList_Bruker*>(&*inner_)->canConvertInverseK0AndCCS();
+
+    case eIonMobilityEquipment::AgilentDrift:
+        return dynamic_cast<detail::SpectrumList_Agilent*>(&*inner_)->canConvertDriftTimeAndCCS();
     }
 }
 
-PWIZ_API_DECL double SpectrumList_IonMobility::driftTimeToCCS(double driftTime, double mz, int charge) const
+PWIZ_API_DECL double SpectrumList_IonMobility::ionMobilityToCCS(double ionMobility, double mz, int charge) const
 {
-    switch (mode_)
+    switch (equipment_)
     {
-        case 0:
         default:
-            throw runtime_error("SpectrumList_IonMobility::driftTimeToCCS] function only supported when reading native Agilent MassHunter files with ion-mobility data");
+            throw runtime_error("SpectrumList_IonMobility::ionMobilityToCCS function only supported when reading native Agilent or Bruker files with ion-mobility data");
 
-        case 1: return dynamic_cast<detail::SpectrumList_Agilent*>(&*inner_)->driftTimeToCCS(driftTime, mz, charge);
+        case eIonMobilityEquipment::BrukerTIMS:  return dynamic_cast<detail::SpectrumList_Bruker*>(&*inner_)->inverseK0ToCCS(ionMobility, mz, charge);
+
+        case eIonMobilityEquipment::AgilentDrift: return dynamic_cast<detail::SpectrumList_Agilent*>(&*inner_)->driftTimeToCCS(ionMobility, mz, charge);
     }
 }
 
 
-PWIZ_API_DECL double SpectrumList_IonMobility::ccsToDriftTime(double ccs, double mz, int charge) const
+PWIZ_API_DECL double SpectrumList_IonMobility::ccsToIonMobility(double ccs, double mz, int charge) const
 {
-    switch (mode_)
+    switch (equipment_)
     {
-        case 0:
         default:
-            throw runtime_error("SpectrumList_IonMobility::ccsToDriftTime] function only supported when reading native Agilent MassHunter files with ion-mobility data");
+            throw runtime_error("SpectrumList_IonMobility::ccsToIonMobility] function only supported when reading native Agilent or Bruker files with ion-mobility data");
 
-        case 1: return dynamic_cast<detail::SpectrumList_Agilent*>(&*inner_)->ccsToDriftTime(ccs, mz, charge);
+        case eIonMobilityEquipment::BrukerTIMS:  
+            return dynamic_cast<detail::SpectrumList_Bruker*>(&*inner_)->ccsToInverseK0(ccs, mz, charge);
+        case eIonMobilityEquipment::AgilentDrift: 
+            return dynamic_cast<detail::SpectrumList_Agilent*>(&*inner_)->ccsToDriftTime(ccs, mz, charge);
     }
 }
-
 
 } // namespace analysis 
 } // namespace pwiz

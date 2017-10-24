@@ -485,6 +485,7 @@ namespace pwiz.Skyline.Model.Results
                                      _currentFileInfo.SizeScanIds,
                                      _currentFileInfo.LocationScanIds,
                                      (float?) provider.TicArea,
+                                     provider.IonMobilityUnits,
                                      _currentFileInfo.InstrumentInfoList));
         }
 
@@ -1370,9 +1371,9 @@ namespace pwiz.Skyline.Model.Results
                     chromDataSet.StatusRank,
                     chromDataSet.MinRawTime,
                 chromDataSet.MaxRawTime,
-				// TODO(version)
-				chromDataSet.CollisionalCrossSection
-);
+                // TODO(version)
+                chromDataSet.CollisionalCrossSectionSqA,
+                chromDataSet.IonMobilityUnits);
                 header.CalcTextIdIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listTextIdBytes);
 
                 int? transitionPeakCount = null;
@@ -1380,11 +1381,11 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var chromTran = new ChromTransition(chromData.Key.Product,
                         chromData.Key.ExtractionWidth,
-                    (float)(chromData.Key.DriftFilter.DriftTimeMsec ?? 0),
-                    (float)(chromData.Key.DriftFilter.DriftTimeExtractionWindowWidthMsec ?? 0),
+                       (float)(chromData.Key.IonMobilityFilter.IonMobility.Mobility ?? 0),
+                       (float)(chromData.Key.IonMobilityFilter.IonMobilityExtractionWindowWidth ?? 0),
                         chromData.Key.Source);
-					
-                if (groupOfTimeIntensities.HasMassErrors && chromData.TimeIntensities.MassErrors == null)
+
+                    if (groupOfTimeIntensities.HasMassErrors && chromData.TimeIntensities.MassErrors == null)
                     {
                         chromTran.MissingMassErrors = true;
                     }

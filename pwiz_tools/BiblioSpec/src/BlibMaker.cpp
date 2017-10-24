@@ -43,8 +43,9 @@ static const char ERROR_GENERIC[] = "Unexpected failure.";
 // integer values minorVersion, the minorVersion field has been taken
 // for use as a schemaVersion
 #define MAJOR_VERSION_CURRENT 0
-#define MINOR_VERSION_CURRENT 5 // Version 5 adds small molecule columns
-                                // Version 4 adds collisional cross section, removes ion mobility type
+#define MINOR_VERSION_CURRENT 6 // Version 6 generalizes ion mobility to value, high energy offset, and type (currently drift time msec, and inverse reduced ion mobility Vsec/cm2)
+                                // Version 5 adds small molecule columns
+                                // Version 4 adds collisional cross section, removes ion mobility type (which distinguished CCS vs DT as value type), supports drift time only
                                 // Version 3 adds product ion mobility offset information for Waters Mse IMS
                                 // Version 2 adds ion mobility information
 
@@ -286,7 +287,7 @@ string BlibMaker::getLSID()
 
 /**
  * Executes all the "CREATE TABLE" commands in the current open
- * library.  Adds information to LibInfo and to SpectrumScoreTypes.
+ * library.  Adds information to LibInfo and to SpectrumScoreTypes and IonMobilityTypes.
  */
 void BlibMaker::createTables()
 {
@@ -319,9 +320,10 @@ void BlibMaker::createTables()
            "nextAA CHAR(1), "
            "copies INTEGER, "
            "numPeaks INTEGER, "
-           "driftTimeMsec REAL, "
+           "ionMobility REAL, "
            "collisionalCrossSectionSqA REAL, "
-           "driftTimeHighEnergyOffsetMsec REAL, "
+           "ionMobilityHighEnergyOffset REAL, "
+           "ionMobilityType TINYINT, "
            "retentionTime REAL, ";
     cols += SmallMolMetadata::sql_col_decls();
     cols += ", "
@@ -349,6 +351,7 @@ void BlibMaker::createTables()
 
     createTable("SpectrumSourceFiles");
     createTable("ScoreTypes");
+    createTable("IonMobilityTypes");
 }
 
 /**
@@ -378,6 +381,20 @@ void BlibMaker::createTable(const char* tableName){
             snprintf(zSql, ZSQLBUFLEN, 
                     "INSERT INTO ScoreTypes(id, scoreType) VALUES(%d, '%s')",
                     i, scoreTypeToString((PSM_SCORE_TYPE)i));//scoreTypeNames[i]);
+            sql_stmt(zSql);
+        }
+    }     else if (strcmp(tableName, "IonMobilityTypes") == 0){
+        // set key = enum value of score type; don't autoincrement
+        strncpy(zSql,
+            "CREATE TABLE IonMobilityTypes (id INTEGER PRIMARY KEY, "
+            "ionMobilityType VARCHAR(128) )",
+            ZSQLBUFLEN);
+        sql_stmt(zSql);
+        // insert all ionMobility types
+        for (int i = 0; i < NUM_IONMOBILITY_TYPES; i++){
+            snprintf(zSql, ZSQLBUFLEN,
+                "INSERT INTO IonMobilityTypes(id, ionMobilityType) VALUES(%d, '%s')",
+                i, ionMobilityTypeToString((IONMOBILITY_TYPE)i));
             sql_stmt(zSql);
         }
     } else {
@@ -418,10 +435,13 @@ void BlibMaker::updateTables(){
     newColumns.push_back(make_pair("SpecIDinFile", "VARCHAR(256)"));
     newColumns.push_back(make_pair("score", "REAL"));
     newColumns.push_back(make_pair("scoreType", "TINYINT"));
-    newColumns.push_back(make_pair("driftTimeMsec", "REAL"));
-    newColumns.push_back(make_pair("collisionalCrossSectionSqA", "REAL"));
-    newColumns.push_back(make_pair("driftTimeHighEnergyOffsetMsec", "REAL"));
 
+    // Ion mobility
+    newColumns.push_back(make_pair("collisionalCrossSectionSqA", "REAL"));
+    newColumns.push_back(make_pair("ionMobility", "REAL"));
+    newColumns.push_back(make_pair("ionMobilityHighEnergyOffset", "REAL"));
+    newColumns.push_back(make_pair("ionMobilityType", "TINYINT"));
+    
     vector <string> smallMolCols;
     string smcols(SmallMolMetadata::sql_col_decls()); // ie "moleculeName VARCHAR(128), chemicalFormula VARCHAR(128), precursorAdduct VARCHAR(128), inchiKey VARCHAR(128), otherKeys VARCHAR(128)"
     boost::replace_all(smcols, ", ", ",");
@@ -631,17 +651,22 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
             alternate_cols = "ionMobilityValue, ionMobilityType, '0'"; // Handle missing ion mobility info
         else if (tableVersion == 3)
             alternate_cols = "ionMobilityValue, ionMobilityType, ionMobilityHighEnergyDriftTimeOffsetMsec";
-        else if (tableVersion >= 4)
+        else if (tableVersion == 4 || tableVersion == 5)
         {
-            alternate_cols = "driftTimeMsec, collisionalCrossSectionSqA, driftTimeHighEnergyOffsetMsec";
+            alternate_cols = "driftTimeMsec, collisionalCrossSectionSqA, driftTimeHighEnergyOffsetMsec, '1'"; // DriftTime is only ionmobility type from this era
             if (tableVersion == 5)
             {
                 alternate_cols += ",";
                 alternate_cols += SmallMolMetadata::sql_cols();
             }
         }
+        else if (tableVersion >= 6)
+        {
+            alternate_cols = "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, ";
+            alternate_cols += SmallMolMetadata::sql_cols();
+        }
         else
-            alternate_cols = "'0', '0', '0', '', '', '', '', ''"; // Handle missing ion mobility and small molecule info
+            alternate_cols = "'0', '0', '0', '0', '', '', '', '', ''"; // Handle missing ion mobility and small molecule info
         alternate_cols += ", retentionTime, specIDinFile, score, scoreType";
     }
 
@@ -654,6 +679,7 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
         sqlite3_stmt* stmt;
         sqlite3_prepare(db, zSql, -1, &stmt, 0);
         int rc;
+
         while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
             string peptideSeq(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));
             double precursorMz = sqlite3_column_double(stmt, 1);
@@ -672,13 +698,16 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
             snprintf(zSql, ZSQLBUFLEN,
                     "INSERT INTO RefSpectra(peptideSeq, precursorMz, precursorCharge, "
                     "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
-                    "driftTimeMsec, collisionalCrossSectionSqA, driftTimeHighEnergyOffsetMsec, "
+                    "ionMobility, collisionalCrossSectionSqA,  ionMobilityHighEnergyOffset, ionMobilityType, "
                     "retentionTime, specIDinFile, score, scoreType) "
-                    "VALUES('%s', %f, %d, '%s', '%s', '%s', %d, %d, %d, %f, %f, %f, %f, '%s', %f, %d)",
+                    "VALUES('%s', %f, %d, '%s', '%s', '%s', %d, %d, %d, %f, %f, %f, %d, %f, '%s', %f, %d)",
                     peptideSeq.c_str(), precursorMz, precursorCharge, peptideModSeq.c_str(),
                     prevAA.c_str(), nextAA.c_str(), copies, numPeaks, newFileID,
-                    ionMobilityType == 1 ? ionMobilityValue : 0, ionMobilityType == 2 ? ionMobilityValue : 0,
-                    driftTimeHighEnergyOffsetMsec, retentionTime, specIDinFile.c_str(),
+                    ionMobilityType == 1 ? ionMobilityValue : 0, // DT if known
+                    ionMobilityType == 2 ? ionMobilityValue : 0, // CCS if known
+                    driftTimeHighEnergyOffsetMsec, 
+                    ionMobilityType == 1 ? IONMOBILITY_DRIFTTIME_MSEC : IONMOBILITY_NONE, // ion mobility type if known
+                    retentionTime, specIDinFile.c_str(),
                     score, scoreType);
             sql_stmt(zSql);
         }
@@ -688,7 +717,7 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
         snprintf(zSql, ZSQLBUFLEN,
             "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
-            "driftTimeMsec, collisionalCrossSectionSqA, driftTimeHighEnergyOffsetMsec,"
+            "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, "
             "retentionTime, specIDinFile, score, scoreType) "
             "SELECT peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, %d, numPeaks, %d, %s "
@@ -696,11 +725,12 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
             copies, newFileID, alternate_cols.c_str(), schemaTmp, spectraTmpID);
         sql_stmt(zSql);
     }
-    else {
+    else
+    {
         snprintf(zSql, ZSQLBUFLEN,
             "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
-            "driftTimeMsec, collisionalCrossSectionSqA, driftTimeHighEnergyOffsetMsec, %s, "
+            "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, %s, "
             "retentionTime, specIDinFile, score, scoreType) "
             "SELECT peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, %d, numPeaks, %d, %s "

@@ -2248,6 +2248,7 @@ namespace pwiz.Skyline.Model
                     Key = new LibKey(modifiedSequenceWithIsotopes, groupLibTriple.NodeGroup.TransitionGroup.PrecursorAdduct),
                     Label = groupLibTriple.SpectrumInfo.Label,
                     PrecursorMz = groupLibTriple.SpectrumInfo.PrecursorMz,
+                    IonMobility = groupLibTriple.SpectrumInfo.IonMobility,
                     SpectrumPeaks = groupLibTriple.SpectrumInfo.SpectrumPeaks
                 }); 
             }

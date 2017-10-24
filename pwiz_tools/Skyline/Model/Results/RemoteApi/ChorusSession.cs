@@ -269,11 +269,15 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             float[] intensityFloats = PrimitiveArrays.FromBytes<float>(
                 PrimitiveArrays.ReverseBytesInBlocks(intensityBytes, sizeof(float)));
             double[] intensities = intensityFloats.Select(f => (double)f).ToArray();
-            double? driftTime = null;
+            IonMobilityValue ionMobility = IonMobilityValue.EMPTY;
             JToken jDriftTime;
             if (jObject.TryGetValue("driftTime", out jDriftTime))
             {
-                driftTime = jDriftTime.ToObject<double>();
+                var driftTime = jDriftTime.ToObject<double>();
+                if (driftTime != 0)
+                {
+                    ionMobility = IonMobilityValue.GetIonMobilityValue(driftTime, MsDataFileImpl.eIonMobilityUnits.drift_time_msec);
+                }
             }
             MsDataSpectrum spectrum = new MsDataSpectrum
             {
@@ -281,7 +285,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 RetentionTime = jObject["rt"].ToObject<double>(),
                 Mzs = mzs,
                 Intensities = intensities,
-                DriftTimeMsec = driftTime,
+                IonMobility = ionMobility,
             };
             return spectrum;
             // ReSharper restore NonLocalizedString

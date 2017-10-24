@@ -37,6 +37,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <vector>
+#include "BlibUtils.h" // For IONMOBILITY_TYPE enum
 
 using namespace std;
 
@@ -110,9 +111,10 @@ class Spectrum
     int scanNumber_;
     SPEC_TYPE type_;
     double mz_;
-    double driftTime_;
+    double ionMobility_;
     double collisionalCrossSection_;
-    double driftTimeHighEnergyOffsetMsec_; // for Waters Mse IMS, where product ions fly a little faster between the end of the drift tube and the detector
+    double ionMobilityHighEnergyOffset_; // for Waters Mse IMS, where product ions fly a little faster between the end of the drift tube and the detector
+    IONMOBILITY_TYPE ionMobilityType_;
     double retentionTime_;
     double totalIonCurrentRaw_;
     double totalIonCurrentProcessed_;
@@ -136,8 +138,9 @@ class Spectrum
     //getters
     int getScanNumber() const;
     double getMz() const;
-    double getDriftTime() const;
-    double getDriftTimeHighEnergyOffsetMsec() const;
+    double getIonMobility() const;
+    double getIonMobilityHighEnergyOffset() const;
+    IONMOBILITY_TYPE getIonMobilityType() const;
     double getCollisionalCrossSection() const;
     double getRetentionTime() const;
     int getNumRawPeaks() const; 
@@ -159,8 +162,8 @@ class Spectrum
     
     //setters
     void setScanNumber(int newNum);
-    void setDriftTime(double dt);
-    void setDriftTimeHighEnergyOffsetMsec(double msec);
+    void setIonMobility(double im, IONMOBILITY_TYPE type);
+    void setIonMobilityHighEnergyOffset(double imHEO);
     void setCollisionalCrossSection(double ccs);
     void setRetentionTime(double rt);
     void setRawPeaks(const vector<PEAK_T>& newpeaks);

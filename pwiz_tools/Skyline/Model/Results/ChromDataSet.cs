@@ -25,6 +25,7 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -66,6 +67,8 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromData BestChromatogram { get { return _listChromData[0]; } }
+//        private ChromData BestNonFragmentChromatogram { get { return _listChromData.FirstOrDefault(t => t.Key.Source != ChromSource.fragment); } }
+//        private ChromData BestFragmentChromatogram { get { return _listChromData.FirstOrDefault(t => t.Key.Source == ChromSource.fragment); } }
         public IList<ChromData> Chromatograms { get { return _listChromData; } }
 
         /// <summary>
@@ -134,9 +137,14 @@ namespace pwiz.Skyline.Model.Results
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.Precursor : SignedMz.ZERO; }
         }
 
-        public double? CollisionalCrossSection
+        public double? CollisionalCrossSectionSqA
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Key.CollisionalCrossSection : null; }
+            get { return _listChromData.Count > 0 ? BestChromatogram.Key.CollisionalCrossSectionSqA : null; }
+        }
+
+        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
+        {
+            get { return _listChromData.Count > 0 ? BestChromatogram.Key.IonMobilityUnits : MsDataFileImpl.eIonMobilityUnits.none; }
         }
 
         public ChromExtractor Extractor

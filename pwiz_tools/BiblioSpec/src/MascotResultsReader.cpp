@@ -256,8 +256,8 @@ bool MascotResultsReader::parseFile(){
         }
     }
 
-    MascotSpecReader* mascotSpecReader = NULL;
-    if ((mascotSpecReader = dynamic_cast<MascotSpecReader*>(specReader_)) && mascotSpecReader->needsRtConversion()) {
+    MascotSpecReader* mascotSpecReader;
+    if (((mascotSpecReader = dynamic_cast<MascotSpecReader*>(specReader_)) != NULL) && mascotSpecReader->needsRtConversion()) {
         Verbosity::status("Converting retention times to minutes for RefSpectra with id > %d.", maxRefSpectraId);
         char stmtBuf[128];
         sprintf(stmtBuf, "UPDATE RefSpectra SET retentionTime = retentionTime / 60.0 WHERE id > %d", maxRefSpectraId);

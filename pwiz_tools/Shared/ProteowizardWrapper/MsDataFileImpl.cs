@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using pwiz.CLI.cv;
@@ -58,8 +59,9 @@ namespace pwiz.ProteowizardWrapper
         private readonly ReaderConfig _config;
         private SpectrumList _spectrumList;
         private ChromatogramList _chromatogramList;
-        private bool? _providesConversionCCStoDT;
-        private SpectrumList_IonMobility _collisionalCrossSectionConverter; // For Agilent (and others, eventually?) conversion from CCS to DT
+        private bool _providesConversionCCStoIonMobility;
+        private SpectrumList_IonMobility.eIonMobilityUnits _ionMobilityUnits;
+        private SpectrumList_IonMobility _ionMobilitySpectrumList; // For Agilent and Bruker (and others, eventually?) conversion from CCS to ion mobility
         private MsDataScanCache _scanCache;
         private readonly IPerfUtil _perf; // for performance measurement, dummied by default
         private readonly LockMassParameters _lockmassParameters; // For Waters lockmass correction
@@ -72,7 +74,7 @@ namespace pwiz.ProteowizardWrapper
 
         private DetailLevel _detailStartTime = DetailLevel.InstantMetadata;
 
-        private DetailLevel _detailDriftTime = DetailLevel.InstantMetadata;
+        private DetailLevel _detailIonMobility = DetailLevel.InstantMetadata;
 
         private static double[] ToArray(BinaryDataArray binaryDataArray)
         {
@@ -413,31 +415,47 @@ namespace pwiz.ProteowizardWrapper
 
         public bool ProvidesCollisionalCrossSectionConverter
         {
+            get { return SpectrumList != null && _providesConversionCCStoIonMobility; } // Checking SpectrumList provokes initialization of ionMobility info
+        }
+
+        private SpectrumList_IonMobility IonMobilitySpectrumList
+        {
+            get { return SpectrumList == null ? null : _ionMobilitySpectrumList; }  // Checking SpectrumList provokes initialization of ionMobility info
+        }
+
+        public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge)
+        {
+            return IonMobilityValue.GetIonMobilityValue(IonMobilitySpectrumList.ccsToIonMobility(ccs, mz, charge), IonMobilityUnits);
+        }
+
+        public double CCSFromIonMobilityValue(IonMobilityValue ionMobilityValue, double mz, int charge)
+        {
+            return ionMobilityValue.Mobility.HasValue ? IonMobilitySpectrumList.ionMobilityToCCS(ionMobilityValue.Mobility.Value, mz, charge) : 0;
+        }
+
+        public enum eIonMobilityUnits
+        {
+            none,
+            drift_time_msec,
+            inverse_K0_Vsec_per_cm2,
+        }
+
+        public eIonMobilityUnits IonMobilityUnits
+        {
             get
             {
-                if (!_providesConversionCCStoDT.HasValue)
-                    _providesConversionCCStoDT = CollisionalCrossSectionConverter.canConvertDriftTimeAndCCS();
-                return _providesConversionCCStoDT.Value;
+                switch (_ionMobilityUnits)
+                {
+                    case SpectrumList_IonMobility.eIonMobilityUnits.none:
+                        return eIonMobilityUnits.none;
+                    case SpectrumList_IonMobility.eIonMobilityUnits.drift_time_msec:
+                        return eIonMobilityUnits.drift_time_msec;
+                    case SpectrumList_IonMobility.eIonMobilityUnits.inverse_reduced_ion_mobility_Vsec_per_cm2:
+                        return eIonMobilityUnits.inverse_K0_Vsec_per_cm2;
+                    default:
+                        throw new InvalidDataException(string.Format("unknown ion mobility type {0}", _ionMobilityUnits)); // Not L10N
+                }
             }
-        }
-
-        public SpectrumList_IonMobility CollisionalCrossSectionConverter
-        {
-            // Currently only works for Agilent, allows for conversion from CCS to DT
-            get {
-                return _collisionalCrossSectionConverter ??
-                       (_collisionalCrossSectionConverter = new SpectrumList_IonMobility(SpectrumList));
-            }
-        }
-
-        public double DriftTimeFromCCS(double ccs, double mz, int charge)
-        {
-            return CollisionalCrossSectionConverter.ccsToDriftTime(ccs, mz, charge);
-        }
-
-        public double CCSFromDriftTime(double dt, double mz, int charge)
-        {
-            return CollisionalCrossSectionConverter.driftTimeToCCS(dt, mz, charge);
         }
 
         private ChromatogramList ChromatogramList
@@ -467,7 +485,7 @@ namespace pwiz.ProteowizardWrapper
                         if (_requireVendorCentroidedMS2)
                             centroidLevel.Add(2);
                     }
-                    if (centroidLevel.Any())
+                    if (centroidLevel.Any() && _spectrumList != null)
                     {
                         _spectrumList = new SpectrumList_PeakPicker(_spectrumList,
                             new VendorOnlyPeakDetector(), // Throws an exception when no vendor centroiding available
@@ -475,14 +493,14 @@ namespace pwiz.ProteowizardWrapper
                     }
 
                     _lockmassFunction = null;
-                    if (_lockmassParameters != null && !_lockmassParameters.IsEmpty)
+                    if (_lockmassParameters != null && !_lockmassParameters.IsEmpty  && _spectrumList != null)
                     {
                         _spectrumList = new SpectrumList_LockmassRefiner(_spectrumList,
                             _lockmassParameters.LockmassPositive ?? 0,
                             _lockmassParameters.LockmassNegative ?? 0,
                             _lockmassParameters.LockmassTolerance ?? LockMassParameters.LOCKMASS_TOLERANCE_DEFAULT);
                     }
-                    if (IsWatersFile)
+                    if (IsWatersFile  && _spectrumList != null)
                     {
                         if (_spectrumList.size() > 0 && !hasSrmSpectra)
                         {
@@ -501,14 +519,22 @@ namespace pwiz.ProteowizardWrapper
                             }
                         }
                     }
+
+                    // Ion mobility info
+                    if (_spectrumList != null) // No ion mobility for chromatogram-only files
+                    {
+                        _ionMobilitySpectrumList = new SpectrumList_IonMobility(_spectrumList);
+                        _ionMobilityUnits = _ionMobilitySpectrumList.getIonMobilityUnits();
+                        _providesConversionCCStoIonMobility = _ionMobilitySpectrumList.canConvertIonMobilityAndCCS(_ionMobilityUnits);
+                    }
                 }
                 return _spectrumList;
             }
         }
 
-        public double? GetMaxDriftTime()
+        public double? GetMaxIonMobility()
         {
-            return GetMaxDriftTimeInList(SpectrumList);
+            return GetMaxIonMobilityInList();
         }
 
         public int ChromatogramCount
@@ -683,7 +709,7 @@ namespace pwiz.ProteowizardWrapper
                 Level = GetMsLevel(spectrum) ?? 0,
                 Index = spectrum.index,
                 RetentionTime = GetStartTime(spectrum),
-                DriftTimeMsec = GetDriftTimeMsec(spectrum),
+                IonMobility = GetIonMobility(spectrum),
                 Precursors = GetPrecursors(spectrum),
                 Centroided = IsCentroided(spectrum),
                 NegativeCharge = NegativePolarity(spectrum)
@@ -720,9 +746,9 @@ namespace pwiz.ProteowizardWrapper
             get { return HasSrmSpectraInList(SpectrumList); }
         }
 
-        public bool HasDriftTimeSpectra
+        public bool HasIonMobilitySpectra
         {
-            get { return HasDriftTimeSpectraInList(SpectrumList); }
+            get { return HasIonMobilitySpectraInList(); }
         }
 
         public bool HasChromatogramData
@@ -759,52 +785,52 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        private static bool HasDriftTimeSpectraInList(SpectrumList spectrumList)
+        private bool HasIonMobilitySpectraInList()
         {
-            if (spectrumList == null || spectrumList.size() == 0)
+            if (IonMobilitySpectrumList == null || IonMobilitySpectrumList.size() == 0)
                 return false;
 
-            // Assume that if any spectra have drift times, all do
-            using (var spectrum = spectrumList.spectrum(0, false))
+            // Assume that if any spectra have ion mobility info, all do
+            using (var spectrum = IonMobilitySpectrumList.spectrum(0, false))
             {
-                return GetDriftTimeMsec(spectrum).HasValue;
+                return GetIonMobility(spectrum).HasValue;
             }
         }
 
-        private double? GetMaxDriftTimeInList(SpectrumList spectrumList)
+        private double? GetMaxIonMobilityInList()
         {
-            if (spectrumList == null || spectrumList.size() == 0)
+            if (IonMobilitySpectrumList == null || IonMobilitySpectrumList.size() == 0)
                 return null;
 
-            // Assume that if any spectra have drift times, all do, and all are same range
-            double? maxDrift = null;
-            for (var i = 0; i < spectrumList.size(); i++)
+            // Assume that if any spectra have ion mobility values, all do, and all are same range
+            double? maxIonMobility = null;
+            for (var i = 0; i < IonMobilitySpectrumList.size(); i++)
             {
-                using (var spectrum = spectrumList.spectrum(i, false))
+                using (var spectrum = IonMobilitySpectrumList.spectrum(i, false))
                 {
-                    var dt = GetDriftTimeMsec(spectrum);
-                    if (!dt.HasValue)
+                    var ionMobility = GetIonMobility(spectrum);
+                    if (!ionMobility.HasValue)
                     {
                         if (IsWatersLockmassSpectrum(GetSpectrum(spectrum, i)))
-                            continue;  // In SONAR data, lockmass scan without drift info doesn't mean there's no drift info
-                        if (!maxDrift.HasValue)
-                            return null; // Assume that if first regular scan is without drift info, they are all
+                            continue;  // In SONAR data, lockmass scan without IM info doesn't mean there's no IM info
+                        if (!maxIonMobility.HasValue)
+                            return null; // Assume that if first regular scan is without IM info, they are all
                     }
-                    if (!maxDrift.HasValue)
+                    if (!maxIonMobility.HasValue)
                     {
-                        maxDrift = dt;
+                        maxIonMobility = ionMobility.Mobility;
                     }
-                    else if (dt.Value < maxDrift.Value)
+                    else if (ionMobility.Mobility < maxIonMobility.Value)
                     {
                         break;  // We've cycled 
                     }
                     else
                     {
-                        maxDrift = dt;
+                        maxIonMobility = ionMobility.Mobility;
                     }
                 }
             }
-            return maxDrift;
+            return maxIonMobility;
         }
 
         public MsDataSpectrum GetSrmSpectrum(int scanIndex)
@@ -882,38 +908,58 @@ namespace pwiz.ProteowizardWrapper
             return (int) param.value;
         }
 
-        public double? GetDriftTimeMsec(int scanIndex)
+        public IonMobilityValue GetIonMobility(int scanIndex)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex, _detailDriftTime))
+            using (var spectrum = SpectrumList.spectrum(scanIndex, _detailIonMobility))
             {
-                double? driftTime = GetDriftTimeMsec(spectrum);
-                if (driftTime.HasValue || _detailDriftTime >= DetailLevel.FullMetadata)
-                    return driftTime ?? 0;
+                var ionMobility = GetIonMobility(spectrum);
+                if (ionMobility != null || _detailIonMobility >= DetailLevel.FullMetadata)
+                    return ionMobility;
 
                 // If level is not found with faster metadata methods, try the slower ones.
-                if (_detailDriftTime == DetailLevel.InstantMetadata)
-                    _detailDriftTime = DetailLevel.FastMetadata;
-                else if (_detailDriftTime == DetailLevel.FastMetadata)
-                    _detailDriftTime = DetailLevel.FullMetadata;
-                return GetDriftTimeMsec(scanIndex);
+                if (_detailIonMobility == DetailLevel.InstantMetadata)
+                    _detailIonMobility = DetailLevel.FastMetadata;
+                else if (_detailIonMobility == DetailLevel.FastMetadata)
+                    _detailIonMobility = DetailLevel.FullMetadata;
+                return GetIonMobility(scanIndex);
             }
         }
 
-        private static double? GetDriftTimeMsec(Spectrum spectrum)
+        private IonMobilityValue GetIonMobility(Spectrum spectrum)
         {
-            if (spectrum.scanList.scans.Count == 0)
-                return null;
+            if (IonMobilityUnits == eIonMobilityUnits.none || spectrum.scanList.scans.Count == 0)
+                return IonMobilityValue.EMPTY;
             var scan = spectrum.scanList.scans[0];
-            CVParam driftTime = scan.cvParam(CVID.MS_ion_mobility_drift_time);
-            if (driftTime.empty())
+            double value;
+            var expectedUnits = IonMobilityUnits;
+            switch (expectedUnits)
             {
-                UserParam param = scan.userParam(USERPARAM_DRIFT_TIME); // support files with the original drift time UserParam
-                if (param.empty())
-                    return null;
-                return param.timeInSeconds() * 1000.0;
+                case eIonMobilityUnits.drift_time_msec:
+                    CVParam driftTime = scan.cvParam(CVID.MS_ion_mobility_drift_time);
+                    if (driftTime.empty())
+                    {
+                        const string USERPARAM_DRIFT_TIME = "drift time"; // Not L10N
+                        UserParam param = scan.userParam(USERPARAM_DRIFT_TIME); // support files with the original drift time UserParam
+                        if (param.empty())
+                            return IonMobilityValue.EMPTY;
+                        value =  param.timeInSeconds() * 1000.0;
+                    }
+                    else
+                        value = driftTime.timeInSeconds() * 1000.0;
+                    return IonMobilityValue.GetIonMobilityValue(value, expectedUnits);
+
+                case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                    var irim = scan.cvParam(CVID.MS_inverse_reduced_ion_mobility);
+                    if (irim.empty())
+                    {
+                        return IonMobilityValue.EMPTY;
+                    }
+                    value = irim.value;
+                    return IonMobilityValue.GetIonMobilityValue(value, expectedUnits);
+
+                default:
+                    return IonMobilityValue.EMPTY;
             }
-            else
-                return driftTime.timeInSeconds() * 1000.0;
         }
 
         public double? GetStartTime(int scanIndex)
@@ -971,7 +1017,6 @@ namespace pwiz.ProteowizardWrapper
                 new MsPrecursor
                     {
                         PrecursorMz = GetPrecursorMz(p, negativePolarity),
-                        PrecursorDriftTimeMsec = GetPrecursorDriftTimeMsec(p),
                         PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
                         IsolationWindowTargetMz = GetSignedMz(GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z), negativePolarity),
                         IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
@@ -1012,16 +1057,6 @@ namespace pwiz.ProteowizardWrapper
             return null;
         }
 
-        private const string USERPARAM_DRIFT_TIME = "drift time"; // Not L10N
-
-        private static double? GetPrecursorDriftTimeMsec(Precursor precursor)
-        {
-            UserParam param = precursor.userParam(USERPARAM_DRIFT_TIME);  //   CONSIDER: this will eventually be a proper CVParam
-            if (param.empty())
-                return null;
-            return param.timeInSeconds() * 1000.0;
-        }
-
         private static double? GetPrecursorCollisionEnergy(Precursor precursor)
         {
             var param = precursor.activation.cvParam(CVID.MS_collision_energy);
@@ -1051,9 +1086,9 @@ namespace pwiz.ProteowizardWrapper
             if (_chromatogramList != null)
                 _chromatogramList.Dispose();
             _chromatogramList = null;
-            if (_collisionalCrossSectionConverter != null)
-                _collisionalCrossSectionConverter.Dispose();
-            _collisionalCrossSectionConverter = null;
+            if (_ionMobilitySpectrumList != null)
+                _ionMobilitySpectrumList.Dispose();
+            _ionMobilitySpectrumList = null;
             if (_msDataFile != null)
                 _msDataFile.Dispose();
             _msDataFile = null;
@@ -1161,7 +1196,6 @@ namespace pwiz.ProteowizardWrapper
     public struct MsPrecursor
     {
         public SignedMz? PrecursorMz { get; set; }
-        public double? PrecursorDriftTimeMsec { get; set; }
         public double? PrecursorCollisionEnergy  { get; set; }
         public SignedMz? IsolationWindowTargetMz { get; set; }
         public double? IsolationWindowUpper { get; set; }
@@ -1200,13 +1234,133 @@ namespace pwiz.ProteowizardWrapper
         public MsPrecursor[] Precursors { get; set; }
     }
 
+    public sealed class IonMobilityValue : IComparable<IonMobilityValue>, IComparable
+    {
+        public static IonMobilityValue EMPTY = new IonMobilityValue(null, MsDataFileImpl.eIonMobilityUnits.none);
+
+        // Private so we can issue EMPTY in the common case of no ion mobility info
+        private IonMobilityValue(double? mobility, MsDataFileImpl.eIonMobilityUnits units)
+        {
+            Mobility = mobility;
+            Units = units;
+        }
+
+        public static IonMobilityValue GetIonMobilityValue(double mobility, MsDataFileImpl.eIonMobilityUnits units)
+        {
+            return (units == MsDataFileImpl.eIonMobilityUnits.none)
+                ? EMPTY
+                : new IonMobilityValue(mobility, units);
+        }
+
+
+        public static IonMobilityValue GetIonMobilityValue(double? value, MsDataFileImpl.eIonMobilityUnits units)
+        {
+            return (units == MsDataFileImpl.eIonMobilityUnits.none || !value.HasValue)
+                ? EMPTY
+                : new IonMobilityValue(value, units);
+        }
+
+        /// <summary>
+        /// With drift time, we expect value to go up with each bin. With TIMS we expect it to go down.
+        /// </summary>
+        public static bool IsExpectedValueOrdering(IonMobilityValue left, IonMobilityValue right)
+        {
+            if (!left.HasValue)
+            {
+                return true; // Anything orders after nothing
+            }
+            if (left.Units == MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2)
+            {
+                return (right.Mobility??0) < (left.Mobility??0);
+            }
+            return (left.Mobility??0) < (right.Mobility??0);
+        }
+        public IonMobilityValue ChangeIonMobility(double? value, MsDataFileImpl.eIonMobilityUnits units)
+        {
+            return value == Mobility && units == Units ? this : GetIonMobilityValue(value, units);
+        }
+        public IonMobilityValue ChangeIonMobility(double? value)
+        {
+            return value == Mobility  ?this : GetIonMobilityValue(value, Units);
+        }
+        public double? Mobility { get; private set; }
+        public MsDataFileImpl.eIonMobilityUnits Units { get; private set; }
+        public bool HasValue { get { return Mobility.HasValue; } }
+
+        public static string GetUnitsString(MsDataFileImpl.eIonMobilityUnits units)
+        {
+            switch (units)
+            {
+                case MsDataFileImpl.eIonMobilityUnits.none:
+                    return "#N/A"; // Not L10N
+                case MsDataFileImpl.eIonMobilityUnits.drift_time_msec:
+                    return "msec"; // Not L10N
+                case MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                    return "Vs/cm^2"; // Not L10N
+            }
+            return "unknown ion mobility type"; // Not L10N
+        }
+        public string UnitsString
+        {
+            get { return GetUnitsString(Units); }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(IonMobilityValue)) return false;
+            return Equals((IonMobilityValue)obj);
+        }
+
+        public bool Equals(IonMobilityValue other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.Units, Units) &&
+                   Equals(other.Mobility, Mobility);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = Mobility.GetHashCode();
+                result = (result * 397) ^ Units.GetHashCode();
+                return result;
+            }
+        }
+        public override string ToString()
+        {
+            return Mobility+UnitsString;
+        }
+
+        public int CompareTo(IonMobilityValue other)
+        {
+            if (ReferenceEquals(this, other)) return 0;
+            if (ReferenceEquals(null, other)) return 1;
+            var valueComparison = Nullable.Compare(Mobility, other.Mobility);
+            if (valueComparison != 0) return valueComparison;
+            return Units.CompareTo(other.Units);
+        }
+
+        public int CompareTo(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return 1;
+            if (ReferenceEquals(this, obj)) return 0;
+            if (!(obj is IonMobilityValue)) throw new ArgumentException("Object must be of type IonMobilityValue"); // Not L10N
+            return CompareTo((IonMobilityValue) obj);
+        }
+    }
+
     public sealed class MsDataSpectrum
     {
+        private IonMobilityValue _ionMobility;
         public string Id { get; set; }
         public int Level { get; set; }
         public int Index { get; set; } // index into parent file, if any
         public double? RetentionTime { get; set; }
-        public double? DriftTimeMsec { get; set; }
+        public IonMobilityValue IonMobility { get { return _ionMobility ?? IonMobilityValue.EMPTY; } set { _ionMobility = value; } }
         public MsPrecursor[] Precursors { get; set; }
         public bool Centroided { get; set; }
         public bool NegativeCharge { get; set; } // True if negative ion mode

@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.BlibData;
 
 namespace pwiz.Skyline.Model.Lib.Midas
@@ -50,6 +51,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
                     // For each precursor, export the spectrum with the highest TIC within peak boundaries
                     DbSpectrum bestSpectrum = null;
                     var bestDistance = double.MaxValue;
+
                     foreach (var result in nodeTranGroup.Results)
                     {
                         if (result.IsEmpty)
@@ -76,7 +78,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
                             PrecursorMz = bestSpectrum.PrecursorMz,
                             SpectrumPeaks = _library.LoadSpectrum(bestSpectrum),
                             Key = nodeTranGroup.GetLibKey(nodePep),
-                            RetentionTimes = new[]{Tuple.Create(bestSpectrum.ResultsFile.FilePath, bestSpectrum.RetentionTime, true)}.ToList()
+                            RetentionTimes = new[] { new SpectrumMzInfo.IonMobilityAndRT(bestSpectrum.ResultsFile.FilePath, IonMobilityAndCCS.EMPTY, bestSpectrum.RetentionTime, true) }.ToList()
                         });
                     }
                 }

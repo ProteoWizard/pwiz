@@ -21,6 +21,7 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
@@ -135,13 +136,30 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? CollisionalCrossSection { get { return ChromInfo.DriftInfo.CollisionalCrossSection; } }
+        public double? CollisionalCrossSection { get { return ChromInfo.IonMobilityInfo.CollisionalCrossSection; } }
+
+        [Obsolete("use IonMobilityMS1 instead")] 
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? DriftTimeMS1 { get { return ChromInfo.DriftInfo.DriftTimeMS1; } }
+        public double? DriftTimeMS1 { get { return ChromInfo.IonMobilityInfo.DriftTimeMS1; } }
+
+        [Obsolete("use IonMobilityFragment instead")] 
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? DriftTimeFragment { get { return ChromInfo.DriftInfo.DriftTimeFragment; } }
+        public double? DriftTimeFragment { get { return ChromInfo.IonMobilityInfo.DriftTimeFragment; } }
+
+        [Obsolete("use IonMobilityWindow instead")]
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? DriftTimeWindow { get { return ChromInfo.DriftInfo.DriftTimeWindow; } }
+        public double? DriftTimeWindow { get { return ChromInfo.IonMobilityInfo.DriftTimeWindow; } }
+
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public double? IonMobilityMS1 { get { return ChromInfo.IonMobilityInfo.IonMobilityMS1; } }
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public double? IonMobilityFragment { get { return ChromInfo.IonMobilityInfo.IonMobilityFragment; } }
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public double? IonMobilityWindow { get { return ChromInfo.IonMobilityInfo.IonMobilityWindow; } }
+
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public string IonMobilityUnits { get { return IonMobilityValue.GetUnitsString(ChromInfo.IonMobilityInfo.IonMobilityUnits); } }
+
 
         [InvariantDisplayName("PrecursorReplicateNote")]
         public string Note 

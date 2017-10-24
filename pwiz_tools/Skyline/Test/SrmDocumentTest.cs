@@ -151,8 +151,8 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(4.56, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow);
             Assert.AreEqual(98, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.SLens);
             Assert.AreEqual(99, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.ConeVoltage);
-            Assert.AreEqual(2.34, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.DriftTimeMsec);
-            Assert.AreEqual(-0.12, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.DriftTimeHighEnergyOffsetMsec.Value, 1E-12);
+            Assert.AreEqual(2.34, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.IonMobility);
+            Assert.AreEqual(-0.12, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.IonMobilityHighEnergyOffset.Value, 1E-12);
             if (doc.FormatVersion.CompareTo(DocumentFormat.VERSION_3_61) >= 0)
                 Assert.AreEqual(345.6, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionalCrossSectionSqA.Value, 1E-12);
             Assert.IsTrue(doc.MoleculeTransitions.ElementAt(0).Transition.IsCustom());

@@ -25,6 +25,7 @@ using System.Text;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -719,6 +720,7 @@ namespace pwiz.Skyline.Model.Results
                                                              cachedFileStruct.sizeScanIds,
                                                              cachedFileStruct.locationScanIds,
                                                              cachedFileStruct.ticArea == 0 ? (float?) null : cachedFileStruct.ticArea,
+                                                             ChromCachedFile.IonMobilityUnitsFromFlags(cachedFileStruct.flags),
                                                              instrumentInfoList);
             }
 
@@ -1118,16 +1120,23 @@ namespace pwiz.Skyline.Model.Results
                 if (groupInfo.FileIndex != fileIndex)
                     continue;
 
+                IonMobilityValue ionMobilityValue = null;
                 for (int j = 0; j < groupInfo.NumTransitions; j++)
                 {
                     int tranIndex = groupInfo.StartTransitionIndex + j;
                     var tranInfo = _chromTransitions[tranIndex];
                     var product = new SignedMz(tranInfo.Product, groupInfo.NegativeCharge);
                     float extractionWidth = tranInfo.ExtractionWidth;
+                    var units = groupInfo.IonMobilityUnits;
+                    if (units == MsDataFileImpl.eIonMobilityUnits.none && extractionWidth != 0)
+                        units = MsDataFileImpl.eIonMobilityUnits.drift_time_msec; // Backward compatibility - drift time is all we had before
                     ChromSource source = tranInfo.Source;
+                    ionMobilityValue = ionMobilityValue == null ? 
+                        IonMobilityValue.GetIonMobilityValue(tranInfo.IonMobilityValue, units) :
+                        ionMobilityValue.ChangeIonMobility(tranInfo.IonMobilityValue); // This likely doesn't change from transition to transition, so reuse it
                     ChromKey key = new ChromKey(_textIdBytes, groupInfo.TextIdIndex, groupInfo.TextIdLen,
                         groupInfo.Precursor, product, extractionWidth, 
-                        DriftTimeFilter.GetDriftTimeFilter(tranInfo.DriftTime, tranInfo.DriftTimeExtractionWidth, groupInfo.CollisionalCrossSection),
+                        IonMobilityFilter.GetIonMobilityFilter(ionMobilityValue, tranInfo.IonMobilityExtractionWidth, groupInfo.CollisionalCrossSection),
                         source, groupInfo.Extractor, true, true,
                         null, null);    // this provider can't provide these optional times
 
@@ -1243,7 +1252,8 @@ namespace pwiz.Skyline.Model.Results
                             lastEntry.StatusRank,
                             lastEntry.StartTime,
                             lastEntry.EndTime,
-                            lastEntry.CollisionalCrossSection));
+                            lastEntry.CollisionalCrossSection, 
+                            lastEntry.IonMobilityUnits));
                         int start = lastEntry.StartTransitionIndex;
                         int end = start + lastEntry.NumTransitions;
                         for (int j = start; j < end; j++)

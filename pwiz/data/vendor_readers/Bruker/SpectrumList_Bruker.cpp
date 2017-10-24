@@ -24,6 +24,7 @@
 
 
 #include "SpectrumList_Bruker.hpp"
+#include "pwiz/utility/chemistry/Chemistry.hpp"
 
 
 #ifdef PWIZ_READER_BRUKER
@@ -374,7 +375,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
     return result;
 }
 
-
+    
 namespace {
 
 void recursivelyEnumerateFIDs(vector<bfs::path>& fidPaths, const bfs::path& rootpath)
@@ -609,6 +610,41 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
     size_ = index_.size();
 }
 
+PWIZ_API_DECL bool SpectrumList_Bruker::hasIonMobility() const
+{
+    return format_ == Reader_Bruker_Format_TDF;
+}
+
+PWIZ_API_DECL bool SpectrumList_Bruker::canConvertInverseK0AndCCS() const
+{
+    return format_ == Reader_Bruker_Format_TDF;
+}
+
+// Per email thread Aug 22 2017 bpratt, mattc, Bruker's SvenB:
+// The gas is nitrogen(14.0067 AMU) and the temperature is(according to Sven) assumed to be 305K.
+static const double ccs_conversion_factor = 18509.863216340458;
+static const double MolWeightGas = 14.0067;
+static const double Temperature = 305;
+
+double SpectrumList_Bruker::inverseK0ToCCS(double inverseK0, double mz, int charge) const
+{
+    double MolWeight = mz * abs(charge) + chemistry::Electron * charge;
+    double ReducedMass = MolWeight * MolWeightGas / (MolWeight + MolWeightGas);
+    double K0 = (inverseK0 == 0) ? 0 : (1.0 / inverseK0);
+    double ccs = ccs_conversion_factor * abs(charge) / (sqrt(ReducedMass * Temperature) * K0);
+    return ccs;    // in Angstrom^2
+}
+
+double SpectrumList_Bruker::ccsToInverseK0(double ccs, double mz, int charge) const
+{
+    double MolWeight = mz * abs(charge) + chemistry::Electron * charge;
+    double ReducedMass = MolWeight * MolWeightGas / (MolWeight + MolWeightGas);
+    double K0 = ccs_conversion_factor * abs(charge) / (sqrt(ReducedMass * Temperature) * ccs);
+    return K0 == 0 ? 0 : 1 / K0;    // in Vs/cm^2
+}
+
+
+
 } // detail
 } // msdata
 } // pwiz
@@ -633,7 +669,9 @@ SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData) cons
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
-
+bool SpectrumList_Bruker::canConvertInverseK0AndCCS() const { return false; }
+double SpectrumList_Bruker::inverseK0ToCCS(double inverseK0, double mz, int charge) const {return 0;}
+double SpectrumList_Bruker::ccsToInverseK0(double ccs, double mz, int charge) const {return 0;}
 } // detail
 } // msdata
 } // pwiz

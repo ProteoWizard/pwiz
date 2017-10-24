@@ -27,6 +27,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.ChromLib;
@@ -286,37 +287,37 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double MAX_MEASURED_RT_WINDOW = 300.0;
         public const double DEFAULT_MEASURED_RT_WINDOW = 2.0;
 
-        public PeptidePrediction(RetentionTimeRegression retentionTime, DriftTimePredictor driftTimePredictor = null)
-            : this(retentionTime, driftTimePredictor, true, DEFAULT_MEASURED_RT_WINDOW, false, DriftTimeWindowWidthCalculator.EMPTY)
+        public PeptidePrediction(RetentionTimeRegression retentionTime, IonMobilityPredictor ionMobilityPredictor = null)
+            : this(retentionTime, ionMobilityPredictor, true, DEFAULT_MEASURED_RT_WINDOW, false, IonMobilityWindowWidthCalculator.EMPTY)
         {            
         }
 
-        public PeptidePrediction(RetentionTimeRegression retentionTime, DriftTimePredictor driftTimePredictor, bool useMeasuredRTs, double? measuredRTWindow,
-            bool useLibraryDriftTimes, DriftTimeWindowWidthCalculator libraryDriftTimeWindowWidthCalculator)
+        public PeptidePrediction(RetentionTimeRegression retentionTime, IonMobilityPredictor ionMobilityPredictor, bool useMeasuredRTs, double? measuredRTWindow,
+            bool useLibraryIonMobilityValues, IonMobilityWindowWidthCalculator libraryIonMobilityWindowWidthCalculator)
         {
             RetentionTime = retentionTime;
-            DriftTimePredictor = driftTimePredictor;
+            IonMobilityPredictor = ionMobilityPredictor;
             UseMeasuredRTs = useMeasuredRTs;
             MeasuredRTWindow = measuredRTWindow;
-            UseLibraryDriftTimes = useLibraryDriftTimes;
-            LibraryDriftTimesWindowWidthCalculator = libraryDriftTimeWindowWidthCalculator;
+            UseLibraryIonMobilityValues = useLibraryIonMobilityValues;
+            LibraryIonMobilityWindowWidthCalculator = libraryIonMobilityWindowWidthCalculator;
 
             DoValidate();
         }
 
         public RetentionTimeRegression RetentionTime { get; private set; }
 
-        public DriftTimePredictor DriftTimePredictor { get; private set; }
+        public IonMobilityPredictor IonMobilityPredictor { get; private set; }
 
         public bool UseMeasuredRTs { get; private set; }
 
         public double? MeasuredRTWindow { get; private set; }
 
-        public bool UseLibraryDriftTimes { get; private set; }
+        public bool UseLibraryIonMobilityValues { get; private set; }
 
-        public DriftTimeWindowWidthCalculator LibraryDriftTimesWindowWidthCalculator { get; private set; }
+        public IonMobilityWindowWidthCalculator LibraryIonMobilityWindowWidthCalculator { get; private set; }
 
-        public LibraryDriftTimeInfo LibraryDriftTimeInfo { get; private set; }
+        public LibraryIonMobilityInfo LibraryIonMobilityInfo { get; private set; }
 
         public int CalcMaxTrendReplicates(SrmDocument document)
         {
@@ -463,98 +464,98 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         /// <summary>
-        /// Get drift time for the charged peptide from explicitly set values, or our drift time predictor, or,
-        /// failing that, from the provided spectral library if it has bare drift times.
-        /// If no drift info is available, returns a new zero'd out ion mobility info object.
+        /// Get ion mobility for the charged peptide from explicitly set values, or our drift time predictor, or,
+        /// failing that, from the provided spectral library if it has bare ion mobility values.
+        /// If no ion mobility info is available, returns a new zero'd out ion mobility info object.
         /// </summary>
-        public DriftTimeInfo GetDriftTime(PeptideDocNode  nodePep,
+        public IonMobilityAndCCS GetIonMobility(PeptideDocNode  nodePep,
             TransitionGroupDocNode nodeGroup,
-            LibraryDriftTimeInfo libraryDriftTimeInfo,
-            IConversionDriftTimeCCSProvider instrumentInfo, // For converting CCS to DT if needed
-            double driftTimeMax, 
-            out double windowDtMsec)
+            LibraryIonMobilityInfo libraryIonMobilityInfo,
+            IIonMobilityFunctionsProvider instrumentInfo, // For converting CCS to IM if needed
+            double ionMobilityMax, 
+            out double windowIM)
         {
             if (nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.HasValue && instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
             {
                 // Use the explicitly specified CCS value
-                var dt = instrumentInfo.DriftTimeFromCCS(nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.Value, 
+                var im = instrumentInfo.IonMobilityFromCCS(nodeGroup.ExplicitValues.CollisionalCrossSectionSqA.Value, 
                     nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
-                var result = new DriftTimeInfo(dt,
+                var result =  IonMobilityAndCCS.GetIonMobilityAndCCS(im,
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
-                    nodeGroup.ExplicitValues.DriftTimeHighEnergyOffsetMsec ?? 0);
+                    nodeGroup.ExplicitValues.IonMobilityHighEnergyOffset ?? 0);
                 // Now get the resolving power
-                if (DriftTimePredictor != null)
+                if (IonMobilityPredictor != null)
                 {
-                    windowDtMsec = DriftTimePredictor.WindowWidthCalculator.WidthAt(result.DriftTimeMsec.Value, driftTimeMax);
+                    windowIM = IonMobilityPredictor.WindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
                 }
-                else if (UseLibraryDriftTimes)
+                else if (UseLibraryIonMobilityValues)
                 {
-                    windowDtMsec = LibraryDriftTimesWindowWidthCalculator.WidthAt(result.DriftTimeMsec.Value, driftTimeMax);
+                    windowIM = LibraryIonMobilityWindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
                 }
                 else
                 {
-                    windowDtMsec = 0;
+                    windowIM = 0;
                 }
                 return result;
             }
-            else if (nodeGroup.ExplicitValues.DriftTimeMsec.HasValue)
+            else if (nodeGroup.ExplicitValues.IonMobility.HasValue)
             {
                 // Use the explicitly specified DT value
-                var result = new DriftTimeInfo(nodeGroup.ExplicitValues.DriftTimeMsec,
+                var result =  IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(nodeGroup.ExplicitValues.IonMobility, MsDataFileImpl.eIonMobilityUnits.drift_time_msec),
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
-                    nodeGroup.ExplicitValues.DriftTimeHighEnergyOffsetMsec ?? 0);
+                    nodeGroup.ExplicitValues.IonMobilityHighEnergyOffset ?? 0);
                 // Now get the resolving power
-                if (DriftTimePredictor != null)
+                if (IonMobilityPredictor != null)
                 {
-                    windowDtMsec = DriftTimePredictor.WindowWidthCalculator.WidthAt(result.DriftTimeMsec.Value, driftTimeMax);
+                    windowIM = IonMobilityPredictor.WindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
                 }
-                else if (UseLibraryDriftTimes)
+                else if (UseLibraryIonMobilityValues)
                 {
-                    windowDtMsec = LibraryDriftTimesWindowWidthCalculator.WidthAt(result.DriftTimeMsec.Value, driftTimeMax);
+                    windowIM = LibraryIonMobilityWindowWidthCalculator.WidthAt(result.IonMobility.Mobility.Value, ionMobilityMax);
                 }
                 else
                 {
-                    windowDtMsec = 0;
+                    windowIM = 0;
                 }
                 return result;
             }
             else 
             {
-                return GetDriftTimeHelper(
+                return GetIonMobilityHelper(
                     nodeGroup.GetLibKey(nodePep),
                     nodeGroup.PrecursorMz, instrumentInfo,
-                    libraryDriftTimeInfo, driftTimeMax,
-                    out windowDtMsec);
+                    libraryIonMobilityInfo, ionMobilityMax,
+                    out windowIM);
             }
         }
 
         /// <summary>
         /// Made public for testing purposes only: exercises library and predictor but doesn't handle explicitly set drift times.
-        /// Use GetDriftTime() instead.
+        /// Use GetIonMobility() instead.
         /// </summary>
-        public DriftTimeInfo GetDriftTimeHelper(LibKey chargedPeptide,
-            double mz, IConversionDriftTimeCCSProvider conversionDriftTimeCcsProvider,
-            LibraryDriftTimeInfo libraryDriftTimeInfo, 
-            double driftTimeMax, out  double windowDtMsec)
+        public IonMobilityAndCCS GetIonMobilityHelper(LibKey chargedPeptide,
+            double mz, IIonMobilityFunctionsProvider ionMobilityFunctionsProvider,
+            LibraryIonMobilityInfo libraryIonMobilityInfo, 
+            double ionMobilityMax, out  double ionMobilityWindow)
         {
-            if (DriftTimePredictor != null)
+            if (IonMobilityPredictor != null)
             {
-                var result = DriftTimePredictor.GetDriftTimeInfo(chargedPeptide, conversionDriftTimeCcsProvider, driftTimeMax, out windowDtMsec);
-                if (result != null && result.DriftTimeMsec.HasValue)
+                var result = IonMobilityPredictor.GetIonMobilityInfo(chargedPeptide, ionMobilityFunctionsProvider, ionMobilityMax, out ionMobilityWindow);
+                if (result != null && result.IonMobility.HasValue)
                     return result;
             }
 
-            if (libraryDriftTimeInfo != null)
+            if (libraryIonMobilityInfo != null)
             {
-                var dt = libraryDriftTimeInfo.GetLibraryMeasuredDriftTimeAndHighEnergyOffset(chargedPeptide, mz, conversionDriftTimeCcsProvider);
-                if ((dt != null) && dt.DriftTimeMsec.HasValue && UseLibraryDriftTimes)
+                var dt = libraryIonMobilityInfo.GetLibraryMeasuredIonMobilityAndHighEnergyOffset(chargedPeptide, mz, ionMobilityFunctionsProvider);
+                if (dt.IonMobility.HasValue && UseLibraryIonMobilityValues)
                 {
-                    windowDtMsec = LibraryDriftTimesWindowWidthCalculator.WidthAt(dt.DriftTimeMsec.Value, driftTimeMax);
+                    ionMobilityWindow = LibraryIonMobilityWindowWidthCalculator.WidthAt(dt.IonMobility.Mobility.Value, ionMobilityMax);
                     return dt;
                 }
             }
-            windowDtMsec = 0;
-            return DriftTimeInfo.EMPTY;
+            ionMobilityWindow = 0;
+            return IonMobilityAndCCS.EMPTY;
         }
 
         /// <summary>
@@ -645,17 +646,17 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptidePrediction ChangeUseLibraryDriftTimes(bool prop)
         {
-            return ChangeProp(ImClone(this), im => im.UseLibraryDriftTimes = prop);
+            return ChangeProp(ImClone(this), im => im.UseLibraryIonMobilityValues = prop);
         }
 
-        public PeptidePrediction ChangeLibraryDriftTimesWindowWidthCalculator(DriftTimeWindowWidthCalculator prop)
+        public PeptidePrediction ChangeLibraryDriftTimesWindowWidthCalculator(IonMobilityWindowWidthCalculator prop)
         {
-            return ChangeProp(ImClone(this), im => im.LibraryDriftTimesWindowWidthCalculator = prop);
+            return ChangeProp(ImClone(this), im => im.LibraryIonMobilityWindowWidthCalculator = prop);
         }
 
-        public PeptidePrediction ChangeDriftTimePredictor(DriftTimePredictor prop)
+        public PeptidePrediction ChangeDriftTimePredictor(IonMobilityPredictor prop)
         {
-            return ChangeProp(ImClone(this), im => im.DriftTimePredictor = prop);
+            return ChangeProp(ImClone(this), im => im.IonMobilityPredictor = prop);
         }
 
         #endregion
@@ -696,11 +697,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
-            if (UseLibraryDriftTimes)
+            if (UseLibraryIonMobilityValues)
             {
-                if (LibraryDriftTimesWindowWidthCalculator == null)
-                    LibraryDriftTimesWindowWidthCalculator = DriftTimeWindowWidthCalculator.EMPTY;
-                string errmsg = LibraryDriftTimesWindowWidthCalculator.Validate();
+                if (LibraryIonMobilityWindowWidthCalculator == null)
+                    LibraryIonMobilityWindowWidthCalculator = IonMobilityWindowWidthCalculator.EMPTY;
+                string errmsg = LibraryIonMobilityWindowWidthCalculator.Validate();
                 if (errmsg != null)
                 {
                     throw new InvalidDataException(errmsg);
@@ -728,7 +729,7 @@ namespace pwiz.Skyline.Model.DocSettings
             MeasuredRTWindow = reader.GetNullableDoubleAttribute(ATTR.measured_rt_window);
             bool? useLibraryDriftTimes = reader.GetNullableBoolAttribute(ATTR.use_spectral_library_drift_times);
 
-            LibraryDriftTimesWindowWidthCalculator = new DriftTimeWindowWidthCalculator(reader, PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES); // Not L10N
+            LibraryIonMobilityWindowWidthCalculator = new IonMobilityWindowWidthCalculator(reader, PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES); // Not L10N
             // Keep XML values, if written by v0.5 or later 
             if (useMeasuredRTs.HasValue)
                 UseMeasuredRTs = useMeasuredRTs.Value;
@@ -741,10 +742,10 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             if (useLibraryDriftTimes.HasValue)
-                UseLibraryDriftTimes = useLibraryDriftTimes.Value;
+                UseLibraryIonMobilityValues = useLibraryDriftTimes.Value;
             else
             {
-                UseLibraryDriftTimes = false;
+                UseLibraryIonMobilityValues = false;
             }
 
             // Consume tag
@@ -755,7 +756,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 reader.ReadStartElement();
                 // Read child elements
                 RetentionTime = reader.DeserializeElement<RetentionTimeRegression>();
-                DriftTimePredictor = reader.DeserializeElement<DriftTimePredictor>();
+                IonMobilityPredictor = reader.DeserializeElement<IonMobilityPredictor>();
                 reader.ReadEndElement();                
             }
 
@@ -769,15 +770,15 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.use_measured_rts, UseMeasuredRTs, !UseMeasuredRTs);
             writer.WriteAttributeNullable(ATTR.measured_rt_window, MeasuredRTWindow);
 
-            writer.WriteAttribute(ATTR.use_spectral_library_drift_times, UseLibraryDriftTimes, !UseLibraryDriftTimes);
-            if (LibraryDriftTimesWindowWidthCalculator != null)
-                LibraryDriftTimesWindowWidthCalculator.WriteXML(writer, PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES); // Not L10N
+            writer.WriteAttribute(ATTR.use_spectral_library_drift_times, UseLibraryIonMobilityValues, !UseLibraryIonMobilityValues);
+            if (LibraryIonMobilityWindowWidthCalculator != null)
+                LibraryIonMobilityWindowWidthCalculator.WriteXML(writer, PREFIX_SPECTRAL_LIBRARY_DRIFT_TIMES); // Not L10N
 
             // Write child elements
             if (RetentionTime != null)
                 writer.WriteElement(RetentionTime);
-            if (DriftTimePredictor != null)
-                writer.WriteElement(DriftTimePredictor);
+            if (IonMobilityPredictor != null)
+                writer.WriteElement(IonMobilityPredictor);
         }
 
         #endregion
@@ -789,9 +790,9 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return Equals(other.RetentionTime, RetentionTime) &&
-                Equals(other.DriftTimePredictor, DriftTimePredictor) &&
-                Equals(other.UseLibraryDriftTimes, UseLibraryDriftTimes) &&
-                Equals(other.LibraryDriftTimesWindowWidthCalculator, LibraryDriftTimesWindowWidthCalculator) &&
+                Equals(other.IonMobilityPredictor, IonMobilityPredictor) &&
+                Equals(other.UseLibraryIonMobilityValues, UseLibraryIonMobilityValues) &&
+                Equals(other.LibraryIonMobilityWindowWidthCalculator, LibraryIonMobilityWindowWidthCalculator) &&
                 other.UseMeasuredRTs.Equals(UseMeasuredRTs) &&
                 other.MeasuredRTWindow.Equals(MeasuredRTWindow);
         }
@@ -809,9 +810,9 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 int result = (RetentionTime != null ? RetentionTime.GetHashCode() : 0);
-                result = (result * 397) ^ (DriftTimePredictor != null ? DriftTimePredictor.GetHashCode() : 0);
-                result = (result * 397) ^ UseLibraryDriftTimes.GetHashCode();
-                result = (result * 397) ^ (LibraryDriftTimesWindowWidthCalculator != null ? LibraryDriftTimesWindowWidthCalculator.GetHashCode() : 0);
+                result = (result * 397) ^ (IonMobilityPredictor != null ? IonMobilityPredictor.GetHashCode() : 0);
+                result = (result * 397) ^ UseLibraryIonMobilityValues.GetHashCode();
+                result = (result * 397) ^ (LibraryIonMobilityWindowWidthCalculator != null ? LibraryIonMobilityWindowWidthCalculator.GetHashCode() : 0);
                 result = (result * 397) ^ UseMeasuredRTs.GetHashCode();
                 result = (result * 397) ^ (MeasuredRTWindow.HasValue ? MeasuredRTWindow.Value.GetHashCode() : 0);
                 return result;
@@ -2091,16 +2092,16 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Retrieve library ion mobility info for this particular file, if any
         /// </summary>
-        private LibraryDriftTimeInfo GetLibraryDriftTimesForFilePath(MsDataFileUri filePath)
+        private LibraryIonMobilityInfo GetLibraryDriftTimesForFilePath(MsDataFileUri filePath)
         {
             foreach (var lib in _libraries)
             {
                 // Only one of the available libraries may claim ownership of the file
                 // in question.
-                LibraryDriftTimeInfo driftTimes;
-                if (lib != null && lib.TryGetDriftTimeInfos(filePath, out driftTimes))
+                LibraryIonMobilityInfo ionMobilities;
+                if (lib != null && lib.TryGetIonMobilityInfos(filePath, out ionMobilities))
                 {
-                    return driftTimes; // Found a library for this file in particular
+                    return ionMobilities; // Found a library for this file in particular
                 }
             }
             return null;
@@ -2109,24 +2110,24 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Combine ion mobility info from all lib and sub-libs into a single dict
         /// </summary>
-        private Dictionary<LibKey, List<DriftTimeInfo>> GetAllLibraryDriftTimes()
+        private Dictionary<LibKey, List<IonMobilityAndCCS>> GetAllLibraryDriftTimes()
         {
-            var ionMobilitiesDict = new Dictionary<LibKey, List<DriftTimeInfo>>();
+            var ionMobilitiesDict = new Dictionary<LibKey, List<IonMobilityAndCCS>>();
             foreach (var lib in _libraries.Where(l => l != null))
             {
                 // Get drift times for all files in each library
-                LibraryDriftTimeInfo driftTimes;
-                for (int i = 0; lib.TryGetDriftTimeInfos(i, out driftTimes); i++) // Returns false when i> internal list length
+                LibraryIonMobilityInfo ionMobilities;
+                for (int i = 0; lib.TryGetIonMobilityInfos(i, out ionMobilities); i++) // Returns false when i> internal list length
                 {
-                    if (driftTimes == null)
+                    if (ionMobilities == null)
                         continue;
 
-                    foreach (var dt in driftTimes.GetIonMobilityDict())
+                    foreach (var dt in ionMobilities.GetIonMobilityDict())
                     {
-                        List<DriftTimeInfo> listTimes;
+                        List<IonMobilityAndCCS> listTimes;
                         if (!ionMobilitiesDict.TryGetValue(dt.Key, out listTimes))
                         {
-                            listTimes = new List<DriftTimeInfo>();
+                            listTimes = new List<IonMobilityAndCCS>();
                             ionMobilitiesDict.Add(dt.Key, listTimes);
                         }
                         listTimes.AddRange(dt.Value);
@@ -2143,14 +2144,14 @@ namespace pwiz.Skyline.Model.DocSettings
         /// shared some kind of common interface so there is guaranteed consistent behavior around how we pick from
         /// other libraries when the ostensibly correct library doesn't have values we need
         /// </summary>
-        public bool TryGetDriftTimeInfos(MsDataFileUri filePath, out LibraryDriftTimeInfo driftTimes)
+        public bool TryGetDriftTimeInfos(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
             Assume.IsTrue(IsLoaded);
             // Get driftimes from library for this file, if any
-            driftTimes = GetLibraryDriftTimesForFilePath(filePath);
-            var resultDict = driftTimes == null ?
-                new Dictionary<LibKey, DriftTimeInfo[]>() :
-                new Dictionary<LibKey, DriftTimeInfo[]>(driftTimes.GetIonMobilityDict());
+            ionMobilities = GetLibraryDriftTimesForFilePath(filePath);
+            var resultDict = ionMobilities == null ?
+                new Dictionary<LibKey, IonMobilityAndCCS[]>() :
+                new Dictionary<LibKey, IonMobilityAndCCS[]>(ionMobilities.GetIonMobilityDict());
             // Note initial findings
             var foundDictKeys = new HashSet<LibKey>(resultDict.Keys); 
             // Look at all available libraries and sublibraries, use them to backfill any potentially missing drift time info 
@@ -2161,9 +2162,9 @@ namespace pwiz.Skyline.Model.DocSettings
             if (resultDict.Count > foundDictKeys.Count)
             {
                 // Other libraries contributed some drift info
-                driftTimes = new LibraryDriftTimeInfo(filePath.GetFilePath(), resultDict);
+                ionMobilities = new LibraryIonMobilityInfo(filePath.GetFilePath(), resultDict);
             }
-            return driftTimes != null;
+            return ionMobilities != null;
         }
 
 

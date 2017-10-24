@@ -1284,6 +1284,7 @@ namespace pwiz.Skyline
             }
             var mi = new List<SpectrumPeaksInfo.MI>();
             var rt = 0.0;
+            var im = IonMobilityAndCCS.EMPTY;
             var maxApex = float.MinValue;
             string chromFileName = null;
             foreach (var nodeTran in nodeTranGroup.Transitions)
@@ -1307,6 +1308,7 @@ namespace pwiz.Skyline
                 {
                     maxApex = chromInfo.Height;
                     rt = chromInfo.RetentionTime;
+                    im = IonMobilityAndCCS.GetIonMobilityAndCCS(chromInfo.IonMobility.IonMobility, chromInfo.IonMobility.CollisionalCrossSectionSqA, 0);
                 }
             }
             if (chromFileName == null)
@@ -1320,11 +1322,11 @@ namespace pwiz.Skyline
                     Key = key,
                     PrecursorMz = nodeTranGroup.PrecursorMz,
                     SpectrumPeaks = new SpectrumPeaksInfo(mi.ToArray()),
-                    RetentionTimes = new List<Tuple<string, double, bool>>()
+                    RetentionTimes = new List<SpectrumMzInfo.IonMobilityAndRT>()
                 };
                 spectra[key] = spectrumMzInfo;
             }
-            spectrumMzInfo.RetentionTimes.Add(Tuple.Create(chromFileName, rt, replicateIndex == nodePep.BestResult));
+            spectrumMzInfo.RetentionTimes.Add(new SpectrumMzInfo.IonMobilityAndRT(chromFileName, im, rt, replicateIndex == nodePep.BestResult));
         }
 
         private void exportReportMenuItem_Click(object sender, EventArgs e)

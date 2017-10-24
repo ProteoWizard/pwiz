@@ -80,7 +80,8 @@ namespace pwiz.Skyline.Util
                 {
                     if (dirInfo.GetDirectories("AcqData").Length > 0)
                         return TYPE_AGILENT;
-                    if (dirInfo.GetFiles("analysis.baf").Length > 0)
+                    if (dirInfo.GetFiles("analysis.baf").Length > 0 || 
+                        dirInfo.GetFiles("analysis.tdf").Length > 0) // TIMS ion mobility data
                         return TYPE_BRUKER;
                 }
                 return FOLDER_TYPE;

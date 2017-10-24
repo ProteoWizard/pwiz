@@ -1076,12 +1076,6 @@ MS/MS谱图库。</value>
   <data name="cbUseSpectralLibraryDriftTimes.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
   </data>
-  <data name="cbUseSpectralLibraryDriftTimes.Text" xml:space="preserve">
-    <value>使用谱图库漂移时间，如存在(&amp;S)</value>
-  </data>
-  <data name="cbUseSpectralLibraryDriftTimes.ToolTip" xml:space="preserve">
-    <value>如选中，则任何加载的谱图库中的漂移时间都将用于色谱图提取。</value>
-  </data>
   <data name="&gt;&gt;cbUseSpectralLibraryDriftTimes.Name" xml:space="preserve">
     <value>cbUseSpectralLibraryDriftTimes</value>
   </data>
@@ -1554,9 +1548,6 @@ W = (W0 + T*(Wmax-W0)/dtMax)
   </data>
   <data name="label19.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
-  </data>
-  <data name="label19.Text" xml:space="preserve">
-    <value>漂移时间预测器(&amp;D)：</value>
   </data>
   <data name="&gt;&gt;label19.Name" xml:space="preserve">
     <value>label19</value>

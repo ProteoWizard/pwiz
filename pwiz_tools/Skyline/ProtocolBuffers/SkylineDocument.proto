@@ -48,8 +48,8 @@ message SkylineDocumentProto {
 		float retentionTime = 4;
 		float startRetentionTime = 5;
 		float endRetentionTime = 6;
-		OptionalDouble driftTime = 7;
-		OptionalDouble driftTimeWindow = 8;
+		OptionalDouble ionMobility = 7;
+		OptionalDouble ionMobilityWindow = 8;
 		float area = 9;
 		float backgroundArea = 10;
 		float height = 11;

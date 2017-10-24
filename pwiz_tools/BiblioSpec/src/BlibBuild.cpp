@@ -56,6 +56,24 @@ int main(int argc, char* argv[])
     //    _crtBreakAlloc = 624219;
 #endif
 #endif
+
+    // Are we anticipating an error message?
+    string expectedError="";
+    for (int argfind = 1; argfind < argc - 2; argfind++)
+    {
+        if (!strcmp(argv[argfind], "-e"))
+        {
+            expectedError = argv[argfind + 1];
+            // Remove from arglist before passing along
+            for (int a = argfind; a < argc - 2; a++)
+            {
+                argv[a] = argv[a + 2];
+            }
+            argc -= 2;
+            break;
+        }
+    }
+
     // Verbosity::set_verbosity(V_ALL); // useful for debugging
     BlibBuilder builder;
     builder.parseCommandArgs(argc, argv);
@@ -69,6 +87,7 @@ int main(int argc, char* argv[])
     const ProgressIndicator* progress_cptr = &progress; // read-only pointer
 
     bool success = true;
+    string failureMessage;
 
     // process each .sqt, .pepxml, .idpXML, .xtan.xml, .dat, .blib file
     for(int i=0; i<(int)inFiles.size(); i++) {
@@ -162,33 +181,46 @@ int main(int argc, char* argv[])
                 throw errorMsg;
             }
         } catch(BlibException& e){
+            failureMessage = e.what();
             WriteErrorLines(e.what());
             if( ! e.hasFilename() ){
                 cerr << "ERROR: reading file " << inFiles.at(i) << endl;
             }
             success = false;
         } catch(std::exception& e){
+            failureMessage = e.what();
             WriteErrorLines(e.what());
             cerr << "ERROR: reading file " << inFiles.at(i) << endl;
             success = false;
         } catch(string s){ // in case a throwParseError is not caught
+            failureMessage = s;
             cerr << "ERROR: " << s << endl;
             success = false;
         }
         catch (const char *str){
+            failureMessage = str;
             cerr << str << endl;
             cerr << "ERROR: reading file '" << inFiles.at(i) << "'" << endl;
             success = false;
         }
         catch (...){
+            failureMessage = "Unknown ERROR";
             cerr << "Unknown ERROR: reading file '" << inFiles.at(i) << "'" << endl;
             success = false;
         }
     }
 
     if( ! success ){
+        if (expectedError != "" && failureMessage.find(expectedError) != string::npos)
+            success = true; // We actually expected a failure, this is a negative test
         // try saving the library
         builder.undoActiveTransaction();
+    }
+    else if (expectedError != "")
+    {
+        // We expected to catch a failure
+        cerr << "FAILED: This negative test expected an error containing \"" << expectedError << "\"" << endl;
+        success = false;
     }
 
     // check that library contains spectra

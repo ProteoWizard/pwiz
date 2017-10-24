@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.MSGraph;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -783,7 +784,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.EndTime));
             var chromPeak = new ChromPeak(crawPeakFinder, crawdadPeak, 0, timeIntensities, null);
             transitionChromInfo = new TransitionChromInfo(null, 0, chromPeak,
-                null, // CONSIDER(bspratt) IMS in chromatogram libraries?
+                IonMobilityFilter.EMPTY, // CONSIDER(bspratt) IMS in chromatogram libraries?
                 new float?[0], Annotations.EMPTY,
                                                             UserSet.FALSE);
             var peaks = new[] {chromPeak};
@@ -799,12 +800,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 0, // compressedSize
                 0, // uncompressedsize
                 0,  //location
-                0, -1, -1, null, null, null); // CONSIDER(bspratt) IMS in chromatogram libraries?
-            var driftTimeFilter = DriftTimeFilter.EMPTY; // CONSIDER(bspratt) IMS in chromatogram libraries?
+                0, -1, -1, null, null, null, MsDataFileImpl.eIonMobilityUnits.none); // CONSIDER(bspratt) IMS in chromatogram libraries?
+            var driftTimeFilter = IonMobilityFilter.EMPTY; // CONSIDER(bspratt) IMS in chromatogram libraries?
             var groupInfo = new ChromatogramGroupInfo(header,
                     new Dictionary<Type, int>(),
                     new ChromCachedFile[0],
-                    new[] { new ChromTransition(chromData.Mz, 0, (float)(driftTimeFilter.DriftTimeMsec??0), (float)(driftTimeFilter.DriftTimeExtractionWindowWidthMsec??0), ChromSource.unknown), },
+                    new[] { new ChromTransition(chromData.Mz, 0, (float)(driftTimeFilter.IonMobility.Mobility??0), (float)(driftTimeFilter.IonMobilityExtractionWindowWidth??0), ChromSource.unknown), },
                     peaks,
                     null) { TimeIntensitiesGroup = TimeIntensitiesGroup.Singleton(timeIntensities) };
 

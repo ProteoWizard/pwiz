@@ -124,16 +124,16 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public bool HasDriftTimePrediction { get { return PeptideSettings.Prediction.DriftTimePredictor != null; } }
+        public bool HasDriftTimePrediction { get { return PeptideSettings.Prediction.IonMobilityPredictor != null; } }
 
         public bool HasIonMobilityLibraryPersisted
         {
             get
             {
                 return HasDriftTimePrediction && 
-                    PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary != null &&
-                    !PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary.IsNone &&
-                    PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary.PersistencePath != null;
+                    PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary != null &&
+                    !PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary.IsNone &&
+                    PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary.PersistencePath != null;
             }
         }
 
@@ -1100,12 +1100,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetRetentionTimes(new MsDataFilePath(name));
         }
 
-        public LibraryDriftTimeInfo GetIonMobilities(MsDataFileUri filePath)
+        public LibraryIonMobilityInfo GetIonMobilities(MsDataFileUri filePath)
         {
             var libraries = PeptideSettings.Libraries;
-            LibraryDriftTimeInfo driftTimes;
-            if (libraries.TryGetDriftTimeInfos(filePath, out driftTimes))
-                return driftTimes;
+            LibraryIonMobilityInfo ionMobilities;
+            if (libraries.TryGetDriftTimeInfos(filePath, out ionMobilities))
+                return ionMobilities;
             return null;
         }
 
@@ -1312,14 +1312,14 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (!defSet.RTScoreCalculatorList.Contains(PeptideSettings.Prediction.RetentionTime.Calculator))
                         defSet.RTScoreCalculatorList.SetValue(PeptideSettings.Prediction.RetentionTime.Calculator);
                 }
-                if (PeptideSettings.Prediction.DriftTimePredictor != null)
+                if (PeptideSettings.Prediction.IonMobilityPredictor != null)
                 {
-                    if (!defSet.DriftTimePredictorList.Contains(PeptideSettings.Prediction.DriftTimePredictor))
-                        defSet.DriftTimePredictorList.SetValue(PeptideSettings.Prediction.DriftTimePredictor);
-                    if (PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary != null &&
-                        !defSet.IonMobilityLibraryList.Contains(PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary))
+                    if (!defSet.DriftTimePredictorList.Contains(PeptideSettings.Prediction.IonMobilityPredictor))
+                        defSet.DriftTimePredictorList.SetValue(PeptideSettings.Prediction.IonMobilityPredictor);
+                    if (PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary != null &&
+                        !defSet.IonMobilityLibraryList.Contains(PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary))
                     {
-                        defSet.IonMobilityLibraryList.SetValue(PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary);
+                        defSet.IonMobilityLibraryList.SetValue(PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary);
                     }
                 }
             }
@@ -1480,10 +1480,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public SrmSettings ConnectIonMobilityLibrary(Func<IonMobilityLibrarySpec, IonMobilityLibrarySpec> findIonMobilityLibSpec)
         {
-            if (PeptideSettings.Prediction.DriftTimePredictor == null)
+            if (PeptideSettings.Prediction.IonMobilityPredictor == null)
                 return this;
 
-            var ionMobilityLibrary = PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary;
+            var ionMobilityLibrary = PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary;
             if (ionMobilityLibrary == null)
                 return this;
 
@@ -1500,7 +1500,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             return this.ChangePeptidePrediction(predict =>
                 predict.ChangeDriftTimePredictor(!ionMobilityLibSpec.IsNone
-                    ? predict.DriftTimePredictor.ChangeLibrary(ionMobilityLibSpec)
+                    ? predict.IonMobilityPredictor.ChangeLibrary(ionMobilityLibSpec)
                     : null));
         }
 

@@ -241,29 +241,38 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Chromatogram Drift Time.
-        /// </summary>
-        public static string ChromatogramDriftTime {
-            get {
-                return ResourceManager.GetString("ChromatogramDriftTime", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Chromatogram Drift Time Extraction Width.
-        /// </summary>
-        public static string ChromatogramDriftTimeExtractionWidth {
-            get {
-                return ResourceManager.GetString("ChromatogramDriftTimeExtractionWidth", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Chromatogram Extraction Width.
         /// </summary>
         public static string ChromatogramExtractionWidth {
             get {
                 return ResourceManager.GetString("ChromatogramExtractionWidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chromatogram Ion Mobility.
+        /// </summary>
+        public static string ChromatogramIonMobility {
+            get {
+                return ResourceManager.GetString("ChromatogramIonMobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chromatogram Ion Mobility Extraction Width.
+        /// </summary>
+        public static string ChromatogramIonMobilityExtractionWidth {
+            get {
+                return ResourceManager.GetString("ChromatogramIonMobilityExtractionWidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chromatogram Ion Mobility Units.
+        /// </summary>
+        public static string ChromatogramIonMobilityUnits {
+            get {
+                return ResourceManager.GetString("ChromatogramIonMobilityUnits", resourceCulture);
             }
         }
         
@@ -646,6 +655,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Explicit Ion Mobility.
+        /// </summary>
+        public static string ExplicitIonMobility {
+            get {
+                return ResourceManager.GetString("ExplicitIonMobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Ion Mobility High Energy Offset.
+        /// </summary>
+        public static string ExplicitIonMobilityHighEnergyOffset {
+            get {
+                return ResourceManager.GetString("ExplicitIonMobilityHighEnergyOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Ion Mobility Units.
+        /// </summary>
+        public static string ExplicitIonMobilityUnits {
+            get {
+                return ResourceManager.GetString("ExplicitIonMobilityUnits", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit Retention Time.
         /// </summary>
         public static string ExplicitRetentionTime {
@@ -912,6 +948,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string IonFormula {
             get {
                 return ResourceManager.GetString("IonFormula", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility Fragment.
+        /// </summary>
+        public static string IonMobilityFragment {
+            get {
+                return ResourceManager.GetString("IonMobilityFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility MS1.
+        /// </summary>
+        public static string IonMobilityMS1 {
+            get {
+                return ResourceManager.GetString("IonMobilityMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility Units.
+        /// </summary>
+        public static string IonMobilityUnits {
+            get {
+                return ResourceManager.GetString("IonMobilityUnits", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility Window.
+        /// </summary>
+        public static string IonMobilityWindow {
+            get {
+                return ResourceManager.GetString("IonMobilityWindow", resourceCulture);
             }
         }
         

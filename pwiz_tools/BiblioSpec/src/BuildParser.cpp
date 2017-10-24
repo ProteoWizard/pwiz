@@ -50,11 +50,11 @@ BuildParser::BuildParser(BlibBuilder& maker,
     this->specReader_ = new PwizReader();
 
     string stmt = "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
-        "peptideModSeq, prevAA, nextAA, copies, numPeaks, driftTimeMsec, collisionalCrossSectionSqA, "
-        "driftTimeHighEnergyOffsetMsec, retentionTime, fileID, specIDinFile, "
+        "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobility, collisionalCrossSectionSqA, "
+        "ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, fileID, specIDinFile, "
         "score, scoreType, " + 
         SmallMolMetadata::sql_cols() + 
-        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
+        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
     sqlite3_prepare(maker.getDb(), stmt.c_str(),
      -1, &insertSpectrumStmt_, NULL);
 
@@ -404,34 +404,31 @@ void BuildParser::insertSpectrum(PSM* psm,
         }
     }
     
-    // construct insert statement for RefSpectra
-    // "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
-    // "peptideModSeq, prevAA, nextAA, copies, numPeaks, driftTimeMsec, collisionalCrossSectionSqA, "
-    // "driftTimeHighEnergyOffsetMsec, retentionTime, fileID, specIDinFile, "
-    // "score, scoreType) "
-    // "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    sqlite3_bind_text(insertSpectrumStmt_, 1, psm->unmodSeq.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_double(insertSpectrumStmt_, 2, curSpectrum.mz);
-    sqlite3_bind_int(insertSpectrumStmt_, 3, psm->charge);
-    sqlite3_bind_text(insertSpectrumStmt_, 4, psm->modifiedSeq.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(insertSpectrumStmt_, 5, "-", -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(insertSpectrumStmt_, 6, "-", -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int(insertSpectrumStmt_, 7, 1);
-    sqlite3_bind_int(insertSpectrumStmt_, 8, curSpectrum.numPeaks);
-    sqlite3_bind_double(insertSpectrumStmt_, 9, curSpectrum.driftTime);
-    sqlite3_bind_double(insertSpectrumStmt_, 10, curSpectrum.ccs);
-    sqlite3_bind_double(insertSpectrumStmt_, 11, curSpectrum.getDriftTimeHighEnergyOffsetMsec());
-    sqlite3_bind_double(insertSpectrumStmt_, 12, curSpectrum.retentionTime);
-    sqlite3_bind_int(insertSpectrumStmt_, 13, fileId);
-    sqlite3_bind_text(insertSpectrumStmt_, 14, specIdStr.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_double(insertSpectrumStmt_, 15, psm->score);
-    sqlite3_bind_int(insertSpectrumStmt_, 16, scoreType);
+    // this order must agree with insertSpectrumStmt_ as set in the ctor
+    int field = 1;
+    sqlite3_bind_text(insertSpectrumStmt_, field++, psm->unmodSeq.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.mz);
+    sqlite3_bind_int(insertSpectrumStmt_, field++, psm->charge);
+    sqlite3_bind_text(insertSpectrumStmt_, field++, psm->modifiedSeq.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(insertSpectrumStmt_, field++, "-", -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(insertSpectrumStmt_, field++, "-", -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(insertSpectrumStmt_, field++, 1);
+    sqlite3_bind_int(insertSpectrumStmt_, field++, curSpectrum.numPeaks);
+    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.ionMobility);
+    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.ccs);
+    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.getIonMobilityHighEnergyOffset());
+    sqlite3_bind_int(insertSpectrumStmt_, field++, (int)curSpectrum.ionMobilityType);
+    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.retentionTime);
+    sqlite3_bind_int(insertSpectrumStmt_, field++, fileId);
+    sqlite3_bind_text(insertSpectrumStmt_, field++, specIdStr.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_double(insertSpectrumStmt_, field++, psm->score);
+    sqlite3_bind_int(insertSpectrumStmt_, field++, scoreType);
     // Small molecule: moleculeName VARCHAR(128), chemicalFormula VARCHAR(128), precursorAdduct VARCHAR(128), inchiKey VARCHAR(128), otherKeys VARCHAR(128)
-    sqlite3_bind_text(insertSpectrumStmt_, 17, psm->smallMolMetadata.moleculeName.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(insertSpectrumStmt_, 18, psm->smallMolMetadata.chemicalFormula.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(insertSpectrumStmt_, 19, psm->smallMolMetadata.precursorAdduct.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(insertSpectrumStmt_, 20, psm->smallMolMetadata.inchiKey.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(insertSpectrumStmt_, 21, psm->smallMolMetadata.otherKeys.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(insertSpectrumStmt_, field++, psm->smallMolMetadata.moleculeName.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(insertSpectrumStmt_, field++, psm->smallMolMetadata.chemicalFormula.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(insertSpectrumStmt_, field++, psm->smallMolMetadata.precursorAdduct.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(insertSpectrumStmt_, field++, psm->smallMolMetadata.inchiKey.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(insertSpectrumStmt_, field++, psm->smallMolMetadata.otherKeys.c_str(), -1, SQLITE_STATIC);
 
     
     // submit

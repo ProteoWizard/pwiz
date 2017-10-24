@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -855,6 +856,8 @@ namespace pwiz.Skyline.EditUI
         {
             var helpText = Resources.PasteDlg_btnTransitionListHelp_Click_ +
                 SmallMoleculeTransitionListColumnHeaders.KnownHeaders().Aggregate((s1, s2) => s1 + ", " + s2) + // Not L10N
+                "\r\n" + // Not L10N
+                string.Format(Resources.PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_, SmallMoleculeTransitionListColumnHeaders.imUnits, Enum.GetNames(typeof(MsDataFileImpl.eIonMobilityUnits)).Aggregate((s1, s2) => s1 + ", " + s2)) + // Not L10N
                 "\r\n\r\n" + // Not L10N
                 Resources.PasteDlg_btnTransitionListHelp_Click_2_ +
                 "\r\n\r\n" + // Not L10N
@@ -1603,8 +1606,11 @@ namespace pwiz.Skyline.EditUI
             public const string rtPrecursor = "PrecursorRT"; // Not L10N
             public const string rtWindowPrecursor = "PrecursorRTWindow"; // Not L10N
             public const string cePrecursor = "PrecursorCE"; // Not L10N
-            public const string dtPrecursor = "PrecursorDT"; // Not L10N
-            public const string dtHighEnergyOffset = "HighEnergyDTOffset"; // Not L10N
+            public const string dtPrecursor = "PrecursorDT"; // Drift time - IMUnits is implied // Not L10N
+            public const string dtHighEnergyOffset = "HighEnergyDTOffset";  // Drift time - IMUnits is implied // Not L10N
+            public const string imPrecursor = "PrecursorIM"; // Not L10N
+            public const string imHighEnergyOffset = "HighEnergyIMOffset"; // Not L10N
+            public const string imUnits = "IMUnits"; // Not L10N
             public const string ccsPrecursor = "PrecursorCCS"; // Not L10N
             public const string slens = "SLens"; // Not L10N
             public const string coneVoltage = "ConeVoltage"; // Not L10N
@@ -1638,8 +1644,11 @@ namespace pwiz.Skyline.EditUI
                     rtPrecursor,
                     rtWindowPrecursor,
                     cePrecursor,
-                    dtPrecursor,
-                    dtHighEnergyOffset,
+                    dtPrecursor, // Drift time - IMUnits implied
+                    dtHighEnergyOffset, // Drift time - IMUnits implied
+                    imPrecursor, // General ion mobility, imUnits required
+                    imHighEnergyOffset,
+                    imUnits,
                     ccsPrecursor,
                     slens,
                     coneVoltage,
@@ -1737,6 +1746,9 @@ namespace pwiz.Skyline.EditUI
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.coneVoltage, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.dtHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.imPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.imUnits, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units);
+                gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.imHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
                 gridViewTransitionList.Columns.Add(SmallMoleculeTransitionListColumnHeaders.declusteringPotential, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential);

@@ -28,31 +28,33 @@ namespace BiblioSpec {
 
 struct SpecData{
     int id;
-    float driftTime; // precursor ion mobility
+    float ionMobility; // precursor ion mobility
+    IONMOBILITY_TYPE ionMobilityType;
     float ccs; // collisional cross section
     double retentionTime; // in minutes
     double mz;
     int numPeaks;
     double* mzs;
     float* intensities;
-    float* productDriftTimes; // In Waters machines, product ions have kinetic energy added after the drift tube and thus slightly faster time than the precursor from there to the detector.
+    float* productIonMobilities; // In Waters machines, product ions have kinetic energy added after the drift tube and thus slightly faster time than the precursor from there to the detector.
     
     SpecData():
-    id(0), driftTime(0), ccs(0), retentionTime(0), mz(0), numPeaks(-1){
+        id(0), ionMobility(0), ionMobilityType(IONMOBILITY_NONE), ccs(0), retentionTime(0), mz(0), numPeaks(-1){
         mzs = NULL;
         intensities = NULL;
-        productDriftTimes = NULL;
+        productIonMobilities = NULL;
     };
 
     ~SpecData(){
         delete [] mzs;
         delete [] intensities;
-        delete [] productDriftTimes;
+        delete [] productIonMobilities;
     };
 
     SpecData& operator=(SpecData& rhs){
         id = rhs.id;
-        driftTime = rhs.driftTime;
+        ionMobility = rhs.ionMobility;
+        ionMobilityType = rhs.ionMobilityType;
         ccs = rhs.ccs;
         retentionTime = rhs.retentionTime;
         mz = rhs.mz;
@@ -61,35 +63,35 @@ struct SpecData{
         // clear any existing peaks
         delete [] mzs;
         delete [] intensities;
-        delete [] productDriftTimes;
+        delete [] productIonMobilities;
         mzs = NULL;
         intensities = NULL;
-        productDriftTimes = NULL;
+        productIonMobilities = NULL;
 
         if( numPeaks){
             mzs = new double[numPeaks];
             intensities = new float[numPeaks];
-            productDriftTimes = ( (rhs.productDriftTimes == NULL) ? NULL : new float[numPeaks] );
+            productIonMobilities = ( (rhs.productIonMobilities == NULL) ? NULL : new float[numPeaks] );
             for(int i=0; i<numPeaks; i++){
                 mzs[i] = rhs.mzs[i];
                 intensities[i] = rhs.intensities[i];
-                if (rhs.productDriftTimes != NULL)
-                    productDriftTimes[i] = rhs.productDriftTimes[i];
+                if (rhs.productIonMobilities != NULL)
+                    productIonMobilities[i] = rhs.productIonMobilities[i];
             }   
         }
         return *this;
     }
 
     // In Waters machines, product ions have kinetic energy added after the drift tube and thus fly slightly faster than the precursor from there to the detector.
-    double getDriftTimeHighEnergyOffsetMsec() const
+    double getIonMobilityHighEnergyOffset() const
     {
-        if (productDriftTimes != NULL)
+        if (productIonMobilities != NULL)
         {
             double sum = 0;
             for (int i=0; i<numPeaks; i++)
-                sum += productDriftTimes[i];
+                sum += productIonMobilities[i];
             if (sum > 0)
-                return (sum/numPeaks)-driftTime;
+                return (sum/numPeaks)-ionMobility;
         }
         return 0;
     }

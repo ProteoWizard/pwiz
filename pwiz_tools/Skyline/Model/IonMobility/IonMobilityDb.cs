@@ -25,6 +25,7 @@ using NHibernate;
 using pwiz.Common.Collections;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -108,11 +109,12 @@ namespace pwiz.Skyline.Model.IonMobility
             return new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, true);
         }
 
-        public DriftTimeInfo GetDriftTimeInfo(LibKey key, ChargeRegressionLine regression)
+        // TODO(bspratt) either upgrade this for all ion mobility types, or rip out this code altogether
+        public IonMobilityAndCCS GetDriftTimeInfo(LibKey key, ChargeRegressionLine regression)
         {
             DbIonMobilityPeptide pep;
             if (DictLibrary.TryGetValue(key, out pep))
-                return new DriftTimeInfo(regression.GetY(pep.CollisionalCrossSection), pep.CollisionalCrossSection, pep.HighEnergyDriftTimeOffsetMsec);
+                return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(regression.GetY(pep.CollisionalCrossSection), MsDataFileImpl.eIonMobilityUnits.drift_time_msec), pep.CollisionalCrossSection, pep.HighEnergyDriftTimeOffsetMsec);
             return null;
         }
 

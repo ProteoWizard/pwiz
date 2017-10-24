@@ -1,6 +1,7 @@
 #include "BlibException.h"
 #include "mzxmlParser.h"
 #include "Verbosity.h"
+#include "BlibUtils.h" // For IONMOBILITY_TYPE enum
 
 #include <cstdlib>
 
@@ -41,11 +42,12 @@ void MzXMLParser::startElement(const XML_Char *el, const XML_Char **attr) {
             state_.push(PRECURSOR_MZ_STATE);
             charBuf_.clear();
 
-            string dt(getAttrValue("DT", attr));
+            string dt(getAttrValue("DT", attr)); // As in SpectrumMill output
             if (!dt.empty()) {
-                currentSpectrum_->driftTime = static_cast<float>(atof(dt.c_str()));
+                currentSpectrum_->ionMobility = static_cast<float>(atof(dt.c_str()));
+                currentSpectrum_->ionMobilityType = IONMOBILITY_DRIFTTIME_MSEC;
             }
-            string ccs(getAttrValue("CCS", attr));
+            string ccs(getAttrValue("CCS", attr));  // As in SpectrumMill output
             if (!ccs.empty()) {
                 currentSpectrum_->ccs = static_cast<float>(atof(ccs.c_str()));
             }

@@ -570,21 +570,21 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         // No ion mobility data in BiblioSpec libs (those are ancient - try BiblioSpecLite instead)
-        public override bool TryGetDriftTimeInfos(LibKey key, MsDataFileUri filePath, out DriftTimeInfo[] driftTimes)
+        public override bool TryGetIonMobilityInfos(LibKey key, MsDataFileUri filePath, out IonMobilityAndCCS[] ionMobilities)
         {
-            driftTimes = null;
+            ionMobilities = null;
             return false;
         }
 
-        public override bool TryGetDriftTimeInfos(MsDataFileUri filePath, out LibraryDriftTimeInfo driftTimes)
+        public override bool TryGetIonMobilityInfos(MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
         {
-            driftTimes = null;
+            ionMobilities = null;
             return false;
         }
 
-        public override bool TryGetDriftTimeInfos(int fileIndex, out LibraryDriftTimeInfo driftTimes)
+        public override bool TryGetIonMobilityInfos(int fileIndex, out LibraryIonMobilityInfo ionMobilities)
         {
-            driftTimes = null;
+            ionMobilities = null;
             return false;
         }
 

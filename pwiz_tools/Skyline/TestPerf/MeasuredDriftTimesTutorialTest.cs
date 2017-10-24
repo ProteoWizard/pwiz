@@ -141,7 +141,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             WaitForClosedForm(peptideSettingsDlg);
                 
             document = SkylineWindow.Document;
-            var measuredDTs = document.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimeIons;
+            var measuredDTs = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons;
             var count = 0;
             foreach (var key in precursors)
             {

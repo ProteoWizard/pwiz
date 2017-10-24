@@ -61,10 +61,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public bool ProvidesCollisionalCrossSectionConverter { get { return false; } }
 
-        public double? CCSFromDriftTime(double driftTime, double mz, int charge)
+        public double? CCSFromIonMobility(IonMobilityValue ionMobilityValue, double mz, int charge)
         {
             return null; // Unsupported
         }
+
+        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return MsDataFileImpl.eIonMobilityUnits.none; } }
 
         public bool Adopt(IScanProvider scanProvider)
         {

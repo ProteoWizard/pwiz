@@ -156,6 +156,7 @@ class MascotSpecReader : public SpecFileReader {
             // if it wasn't there, try the title string
             returnData.retentionTime = getRetentionTimeFromTitle(spec.getStringTitle(true));
         }
+        getIonMobilityFromTitle(returnData, spec.getStringTitle(true)); // For Bruker TIMS
         returnData.numPeaks = spec.getNumberOfPeaks(1);// first ion series
 
         if( getPeaks ){
@@ -253,6 +254,36 @@ class MascotSpecReader : public SpecFileReader {
         }
 
         return time;
+    }
+
+    /**
+     * Get ion mobility as encoded for Bruker TIMS
+     */
+    void getIonMobilityFromTitle(SpecData& returnData, const string& title) // For Bruker TIMS
+    {
+        const char* tag = "Mobility=";
+        const int tagLen = 9;
+        size_t start = title.find(tag, 0);
+        if (start != string::npos)
+        {
+            start += tagLen;
+            size_t end = title.find("|", start);
+            if (end == string::npos)
+                end = title.length();
+            string imStr = title.substr(start, end - start);
+            try
+            {
+                returnData.ionMobility = boost::lexical_cast<double>(imStr);
+                returnData.ionMobilityType = IONMOBILITY_INVERSEREDUCED_VSECPERCM2;
+                return;
+            }
+            catch (...)
+            {
+            }
+            returnData.ionMobility = 0;
+            returnData.ionMobilityType = IONMOBILITY_NONE;
+            throw BlibException(false, "Failure reading TIMS ion mobility value \"%s\"", imStr.c_str());
+        }
     }
 
     /**

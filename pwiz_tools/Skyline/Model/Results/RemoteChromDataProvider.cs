@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Properties;
 
@@ -135,6 +136,8 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return null; }
         }
+
+        public override MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return MsDataFileImpl.eIonMobilityUnits.none; } }
 
         public override double? MaxIntensity
         {

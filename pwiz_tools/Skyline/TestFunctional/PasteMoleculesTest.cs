@@ -28,6 +28,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -146,12 +147,16 @@ namespace pwiz.SkylineTestFunctional
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.idInChi,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.idCAS,
                     PasteDlg.SmallMoleculeTransitionListColumnHeaders.idSMILES,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.imPrecursor,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.imHighEnergyOffset,
+                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.imUnits,
                 };
 
             // Default col order is listname, preName, PreFormula, preAdduct, preMz, preCharge, prodName, ProdFormula, prodAdduct, prodMz, prodCharge
             string line1 = "MyMolecule\tMyMol\tMyFrag\t"+caffeineFormula+"\t" + caffeineFragment +"\t" + precursorMzAtZNeg2 + "\t" + productMzAtZNeg2 + "\t-2\t-2\tlight\t" +
                 precursorRT + "\t" + precursorRTWindow + "\t" + precursorCE + "\t" + note + "\t\t\t" + precursorDT + "\t" + highEnergyDtOffset + "\t" + precursorCCS + "\t" + slens + "\t" + coneVoltage +
-                "\t" + compensationVoltage + "\t" + declusteringPotential + "\t" + caffeineInChiKey + "\t" + caffeineHMDB + "\t" + caffeineInChi + "\t" + caffeineCAS + "\t" + caffeineSMILES; // Legit
+                "\t" + compensationVoltage + "\t" + declusteringPotential + "\t" + caffeineInChiKey + "\t" + caffeineHMDB + "\t" + caffeineInChi + "\t" + caffeineCAS + "\t" + caffeineSMILES 
+                + "\t" +  precursorDT + "\t" + highEnergyDtOffset + "\t" + MsDataFileImpl.eIonMobilityUnits.drift_time_msec; // Legit
             const string line2start = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCH3O\t";
             const string line3 = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCHH500000000\t\t\t1\t1";
             const string line4 = "\r\nMyMolecule3\tMyMol3\tMyFrag3\tH2\tH\t\t\t1\t1";
@@ -199,11 +204,13 @@ namespace pwiz.SkylineTestFunctional
                 string[] fields =
                 {
                     "MyMol", "MyPrecursor", "MyProduct", "C12H9O4", "C6H4O2", "217.049535420091", "108.020580420091", "1", "1", "heavy", "123", "5", "25", "this is a note", "[M+]", "[M+]", "7", "9", "123", "88.5", "99.6", "77.3", "66.2",
-                                caffeineInChiKey, caffeineHMDB, caffeineInChi, caffeineCAS, caffeineSMILES };
+                                caffeineInChiKey, caffeineHMDB, caffeineInChi, caffeineCAS, caffeineSMILES, "123.4", "-0.234", "Vsec/cm2"  };
                 string[] badfields =
                 {
-                    "", "", "", "123", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "", "[M+foo]", "wut", "foosball", "greasy", "mumble", "gumdrop", "dingle", "gorse", "AHHHHHRGH", "banananana",
-                    "shamble-raft4", "bags34", "bumble", "12-foo"};
+                    "", "", "", "123", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "", "[M+foo]", "wut", "foosballDT", "greasyDTHEO", "mumbleCCS", "gumdropSLEN", "dingleConeV", "dangleCompV", "gorseDP", "AHHHHHRGHinchik", "bananananahndb",
+                    "shamble-raft4-inchi", "bags34cas","flansmile", "12-fooim", "bumbleimheo", "dingoimunit"};
+                Assert.AreEqual(fields.Count(), badfields.Count());
+
                 var expectedErrors = new List<string>()
                 {
                     Resources.PasteDlg_ShowNoErrors_No_errors, Resources.PasteDlg_ShowNoErrors_No_errors, Resources.PasteDlg_ShowNoErrors_No_errors,  // No name, no problem
@@ -246,6 +253,14 @@ namespace pwiz.SkylineTestFunctional
                         string.Format(Resources.SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_InChI_identifier_, badfields[s++]));
                     expectedErrors.Add(
                         string.Format(Resources.SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_CAS_registry_number_, badfields[s++]));
+                    expectedErrors.Add(
+                        Resources.PasteDlg_ShowNoErrors_No_errors); s++;  // We don't have a proper SMILES syntax check yet
+                    expectedErrors.Add(
+                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_, badfields[s++]));
+                    expectedErrors.Add(
+                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_high_energy_offset_value__0_, badfields[s++]));
+                    expectedErrors.Add(
+                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_units_value__0___accepted_values_are__1__, badfields[s++], SmallMoleculeTransitionListReader.GetAcceptedIonMobilityUnitsString()));
                 }
                 expectedErrors.Add(Resources.PasteDlg_ShowNoErrors_No_errors); // N+1'th pass is unadulterated
                 for (var bad = 0; bad < expectedErrors.Count(); bad++)
@@ -269,14 +284,15 @@ namespace pwiz.SkylineTestFunctional
             var precursor = docOrig.Molecules.First();
             var product = transitionGroup.Transitions.First();
             Assert.AreEqual(precursorCE, transitionGroup.ExplicitValues.CollisionEnergy);
-            Assert.AreEqual(precursorDT, transitionGroup.ExplicitValues.DriftTimeMsec);
+            Assert.AreEqual(precursorDT, transitionGroup.ExplicitValues.IonMobility);
+            Assert.AreEqual(MsDataFileImpl.eIonMobilityUnits.drift_time_msec, transitionGroup.ExplicitValues.IonMobilityUnits);
             Assert.AreEqual(precursorCCS, transitionGroup.ExplicitValues.CollisionalCrossSectionSqA);
             Assert.AreEqual(slens, transitionGroup.ExplicitValues.SLens);
             Assert.AreEqual(coneVoltage, transitionGroup.ExplicitValues.ConeVoltage);
             Assert.AreEqual(compensationVoltage, transitionGroup.ExplicitValues.CompensationVoltage);
             Assert.AreEqual(declusteringPotential, transitionGroup.ExplicitValues.DeclusteringPotential);
             Assert.AreEqual(note, product.Annotations.Note);
-            Assert.AreEqual(highEnergyDtOffset, transitionGroup.ExplicitValues.DriftTimeHighEnergyOffsetMsec.Value, 1E-7);
+            Assert.AreEqual(highEnergyDtOffset, transitionGroup.ExplicitValues.IonMobilityHighEnergyOffset.Value, 1E-7);
             Assert.AreEqual(precursorRT, precursor.ExplicitRetentionTime.RetentionTime);
             Assert.AreEqual(precursorRTWindow, precursor.ExplicitRetentionTime.RetentionTimeWindow);
             Assert.IsTrue(ReferenceEquals(transitionGroup.TransitionGroup, product.Transition.Group));
@@ -639,8 +655,8 @@ namespace pwiz.SkylineTestFunctional
 
                 // Simulate user editing the precursor in the document grid, also check for molecule IDs
                 EnableDocumentGridColumns(documentGrid, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, 16, new[] {
-                    "Proteins!*.Peptides!*.Precursors!*.ExplicitDriftTimeMsec",
-                    "Proteins!*.Peptides!*.Precursors!*.ExplicitDriftTimeHighEnergyOffsetMsec",
+                    "Proteins!*.Peptides!*.Precursors!*.ExplicitIonMobility",
+                    "Proteins!*.Peptides!*.Precursors!*.ExplicitIonMobilityHighEnergyOffset",
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitCollisionalCrossSection",
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitCollisionEnergy",
                     "Proteins!*.Peptides!*.Precursors!*.ExplicitDeclusteringPotential",
@@ -670,16 +686,16 @@ namespace pwiz.SkylineTestFunctional
                   SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.CompensationVoltage.Equals(explicitCV)));
 
                 const double explicitDT = 23.465;
-                var colDT = FindDocumentGridColumn(documentGrid, "ExplicitDriftTimeMsec");
+                var colDT = FindDocumentGridColumn(documentGrid, "ExplicitIonMobility");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDT.Index].Value = explicitDT);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.DriftTimeMsec.Equals(explicitDT)));
+                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.IonMobility.Equals(explicitDT)));
 
                 const double explicitDTOffset = -3.4657;
-                var colDTOffset = FindDocumentGridColumn(documentGrid, "ExplicitDriftTimeHighEnergyOffsetMsec");
+                var colDTOffset = FindDocumentGridColumn(documentGrid, "ExplicitIonMobilityHighEnergyOffset");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDTOffset.Index].Value = explicitDTOffset);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.DriftTimeHighEnergyOffsetMsec.Equals(explicitDTOffset)));
+                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.IonMobilityHighEnergyOffset.Equals(explicitDTOffset)));
 
                 const double explicitCCS = 345.6;
                 var colCCS = FindDocumentGridColumn(documentGrid, "ExplicitCollisionalCrossSection");

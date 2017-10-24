@@ -936,12 +936,12 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            if (newdoc.Settings.PeptideSettings.Prediction.DriftTimePredictor != null &&
-                newdoc.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimeIons != null &&
-                newdoc.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimeIons.Any())
+            if (newdoc.Settings.PeptideSettings.Prediction.IonMobilityPredictor != null &&
+                newdoc.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons != null &&
+                newdoc.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons.Any())
             {
-                var mapped = new Dictionary<LibKey, DriftTimeInfo>();
-                foreach (var item in newdoc.Settings.PeptideSettings.Prediction.DriftTimePredictor.MeasuredDriftTimeIons)
+                var mapped = new Dictionary<LibKey, IonMobilityAndCCS>();
+                foreach (var item in newdoc.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons)
                 {
                     LibKey smallMolKey;
                     if (precursorMap.TryGetValue(item.Key, out smallMolKey))
@@ -949,7 +949,7 @@ namespace pwiz.Skyline.Model
                         mapped.Add(smallMolKey, item.Value);
                     }
                 }
-                var newpredictorDt = newdoc.Settings.PeptideSettings.Prediction.DriftTimePredictor.ChangeMeasuredDriftTimes(mapped);
+                var newpredictorDt = newdoc.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValues(mapped);
                 var newpredictor = newdoc.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(newpredictorDt);
                 var newSettings = newdoc.Settings.ChangePeptideSettings(newdoc.Settings.PeptideSettings.ChangePrediction(newpredictor));
                 newdoc = newdoc.ChangeSettings(newSettings);
@@ -1004,11 +1004,11 @@ namespace pwiz.Skyline.Model
                 }
                 if (document.Settings.HasIonMobilityLibraryPersisted)
                 {
-                    var newDbPath = document.Settings.PeptideSettings.Prediction.DriftTimePredictor
+                    var newDbPath = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor
                         .IonMobilityLibrary.PersistMinimized(pathForLibraryFiles, document, precursorMap);
-                    var spec = new IonMobilityLibrary(document.Settings.PeptideSettings.Prediction.DriftTimePredictor.IonMobilityLibrary.Name +
+                    var spec = new IonMobilityLibrary(document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.IonMobilityLibrary.Name +
                         " " + Resources.RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules, newDbPath); // Not L10N
-                    var driftTimePredictor = document.Settings.PeptideSettings.Prediction.DriftTimePredictor.ChangeLibrary(spec);
+                    var driftTimePredictor = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeLibrary(spec);
                     newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangePeptideSettings(newdoc.Settings.PeptideSettings.ChangePrediction(
                         newdoc.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(driftTimePredictor))));
                 }

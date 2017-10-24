@@ -168,14 +168,17 @@
   <data name="Chromatogram">
     <value>Chromatogram</value>
   </data>
-  <data name="ChromatogramDriftTime">
-    <value>Chromatogram Drift Time</value>
-  </data>
-  <data name="ChromatogramDriftTimeExtractionWidth">
-    <value>Chromatogram Drift Time Extraction Width</value>
-  </data>
   <data name="ChromatogramExtractionWidth">
     <value>Chromatogram Extraction Width</value>
+  </data>
+  <data name="ChromatogramIonMobility">
+    <value>Chromatogram Ion Mobility</value>
+  </data>
+  <data name="ChromatogramIonMobilityExtractionWidth">
+    <value>Chromatogram Ion Mobility Extraction Width</value>
+  </data>
+  <data name="ChromatogramIonMobilityUnits">
+    <value>Chromatogram Ion Mobility Units</value>
   </data>
   <data name="ChromatogramPrecursorMz">
     <value>Chromatogram Precursor M/Z</value>
@@ -877,6 +880,27 @@
   </data>
   <data name="ExplicitDriftTimeMsec">
     <value>Explicit Drift Time Msec</value>
+  </data>
+  <data name="ExplicitIonMobility">
+    <value>Explicit Ion Mobility</value>
+  </data>
+  <data name="ExplicitIonMobilityHighEnergyOffset">
+    <value>Explicit Ion Mobility High Energy Offset</value>
+  </data>
+  <data name="ExplicitIonMobilityUnits">
+    <value>Explicit Ion Mobility Units</value>
+  </data>
+  <data name="IonMobilityFragment">
+    <value>Ion Mobility Fragment</value>
+  </data>
+  <data name="IonMobilityMS1">
+    <value>Ion Mobility MS1</value>
+  </data>
+  <data name="IonMobilityWindow">
+    <value>Ion Mobility Window</value>
+  </data>
+  <data name="IonMobilityUnits">
+    <value>Ion Mobility Units</value>
   </data>
   <data name="ExplicitGlobalStandardArea">
     <value>Explicit Global Standard Area</value>

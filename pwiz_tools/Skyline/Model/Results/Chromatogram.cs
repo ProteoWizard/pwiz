@@ -652,6 +652,7 @@ namespace pwiz.Skyline.Model.Results
             has_midas_spectra,
             explicit_global_standard_area,
             tic_area,
+            ion_mobility_type,
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -686,9 +687,12 @@ namespace pwiz.Skyline.Model.Results
                     reader.IsStartElement(EL.replicate_file) ||
                     reader.IsStartElement(EL.chromatogram_file))
             {
-                // Note that the file path is actually be a URI that encodes things like lockmass correction as well as filename
+                // Note that the file path may actually be a URI that encodes things like lockmass correction as well as filename
                 ChromFileInfo chromFileInfo = new ChromFileInfo(MsDataFileUri.Parse(reader.GetAttribute(ATTR.file_path)));
                 chromFileInfo = chromFileInfo.ChangeHasMidasSpectra(reader.GetBoolAttribute(ATTR.has_midas_spectra, false));
+                var imUnitsStr = reader.GetAttribute(ATTR.ion_mobility_type);
+                var imUnits = SmallMoleculeTransitionListReader.IonMobilityUnitsFromAttributeValue(imUnitsStr);
+                chromFileInfo = chromFileInfo.ChangeIonMobilityUnits(imUnits);
                 chromFileInfo = chromFileInfo.ChangeExplicitGlobalStandardArea(
                     reader.GetNullableDoubleAttribute(ATTR.explicit_global_standard_area));
                 chromFileInfo = chromFileInfo.ChangeTicArea(reader.GetNullableDoubleAttribute(ATTR.tic_area));
@@ -751,6 +755,8 @@ namespace pwiz.Skyline.Model.Results
                 writer.WriteAttribute(ATTR.has_midas_spectra, fileInfo.HasMidasSpectra, false);
                 writer.WriteAttributeNullable(ATTR.explicit_global_standard_area, fileInfo.ExplicitGlobalStandardArea);
                 writer.WriteAttributeNullable(ATTR.tic_area, fileInfo.TicArea);
+                if (fileInfo.IonMobilityUnits != MsDataFileImpl.eIonMobilityUnits.none)
+                    writer.WriteAttribute(ATTR.ion_mobility_type, fileInfo.IonMobilityUnits.ToString());
 
                 // instrument information
                 WriteInstrumentConfigList(writer, fileInfo.InstrumentInfoList);
@@ -891,6 +897,7 @@ namespace pwiz.Skyline.Model.Results
         public bool HasMidasSpectra { get; private set; }
         public double? ExplicitGlobalStandardArea { get; private set; }
         public double? TicArea { get; private set; }
+        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get; private set; }
 
         public IList<MsInstrumentConfigInfo> InstrumentInfoList
         {
@@ -917,6 +924,11 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.HasMidasSpectra = prop);
         }
 
+        public ChromFileInfo ChangeIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IonMobilityUnits = prop);
+        }
+
         public ChromFileInfo ChangeInfo(ChromCachedFile fileInfo)
         {
             return ChangeProp(ImClone(this), im =>
@@ -929,6 +941,7 @@ namespace pwiz.Skyline.Model.Results
                                                      im.MaxIntensity = fileInfo.MaxIntensity;
                                                      im.HasMidasSpectra = fileInfo.HasMidasSpectra;
                                                      im.TicArea = fileInfo.TicArea;
+                                                     im.IonMobilityUnits = fileInfo.IonMobilityUnits;
                                                  });
         }
 
@@ -977,6 +990,8 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             if (!Equals(TicArea, other.TicArea))
                 return false;
+            if (!Equals(IonMobilityUnits, other.IonMobilityUnits))
+                return false;
             if (!ArrayUtil.EqualsDeep(other.InstrumentInfoList, InstrumentInfoList))
                 return false;
             if (!ArrayUtil.EqualsDeep(other.RetentionTimeAlignments, RetentionTimeAlignments))
@@ -1010,6 +1025,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ HasMidasSpectra.GetHashCode();
                 result = (result*397) ^ ExplicitGlobalStandardArea.GetHashCode();
                 result = (result * 397) ^ TicArea.GetHashCode();
+                result = (result * 397) ^ IonMobilityUnits.GetHashCode();
                 return result;
             }
         }

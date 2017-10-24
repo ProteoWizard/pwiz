@@ -137,7 +137,7 @@ namespace pwiz.SkylineTestFunctional
                 int countNull = 0;
                 foreach (var tuple in LoadAllChromatograms(document, chromatogramSet))
                 {
-                    var prediction = new PeptidePrediction(null, null, true, 1, false, DriftTimeWindowWidthCalculator.EMPTY);
+                    var prediction = new PeptidePrediction(null, null, true, 1, false, IonMobilityWindowWidthCalculator.EMPTY);
                     double windowRtIgnored;
 
                     var schedulingPeptide =

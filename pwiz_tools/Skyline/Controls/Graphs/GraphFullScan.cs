@@ -28,6 +28,7 @@ using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -46,7 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private HeatMapData _heatMapData;
         private double _maxMz;
         private double _maxIntensity;
-        private double _maxDriftTime;
+        private double _maxIonMobility;
         private bool _zoomXAxis;
         private bool _zoomYAxis;
         private readonly MsDataFileScanHelper _msDataFileScanHelper;
@@ -75,7 +76,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             magnifyBtn.Checked = Settings.Default.AutoZoomFullScanGraph;
             spectrumBtn.Checked = Settings.Default.SumScansFullScan;
-            filterBtn.Checked = Settings.Default.FilterDriftTimesFullScan;
+            filterBtn.Checked = Settings.Default.FilterIonMobilityFullScan;
 
             spectrumBtn.Visible = false;
             filterBtn.Visible = false;
@@ -98,9 +99,9 @@ namespace pwiz.Skyline.Controls.Graphs
             _maxMz = 0;
             _maxIntensity = 0;
             GetMaxMzIntensity(out _maxMz, out _maxIntensity);
-            _maxDriftTime = 0;
+            _maxIonMobility = 0;
             foreach (var spectrum in spectra)
-                _maxDriftTime = Math.Max(_maxDriftTime, spectrum.DriftTimeMsec ?? 0);
+                _maxIonMobility = Math.Max(_maxIonMobility, spectrum.IonMobility.Mobility ?? 0);
 
             if (_zoomXAxis)
             {
@@ -235,19 +236,19 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphPane.CurveList.Clear();
             GraphPane.GraphObjList.Clear();
 
-            bool hasDriftDimension = _msDataFileScanHelper.MsDataSpectra.Length > 1;
-            bool useHeatMap = hasDriftDimension && !Settings.Default.SumScansFullScan;
+            bool hasIonMobilityDimension = _msDataFileScanHelper.MsDataSpectra.Length > 1;
+            bool useHeatMap = hasIonMobilityDimension && !Settings.Default.SumScansFullScan;
 
-            filterBtn.Visible = spectrumBtn.Visible = hasDriftDimension;
+            filterBtn.Visible = spectrumBtn.Visible = hasIonMobilityDimension;
             graphControl.IsEnableVPan = graphControl.IsEnableVZoom = useHeatMap;
             GraphPane.Legend.IsVisible = useHeatMap;
 
-            if (hasDriftDimension)
+            if (hasIonMobilityDimension)
             {
                 // Is there actually any drift time filtering available?
-                double minDriftTime, maxDriftTime;
-                _msDataFileScanHelper.GetDriftRange(out minDriftTime, out maxDriftTime, ChromSource.unknown); // Get range of drift times for all products and precursors
-                if ((minDriftTime == double.MinValue) && (maxDriftTime == double.MaxValue))
+                double minIonMobility, maxIonMobility;
+                _msDataFileScanHelper.GetIonMobilityRange(out minIonMobility, out maxIonMobility, ChromSource.unknown); // Get range of IM values for all products and precursors
+                if ((minIonMobility == double.MinValue) && (maxIonMobility == double.MaxValue))
                 {
                     filterBtn.Visible = false;
                     filterBtn.Checked = false;
@@ -257,7 +258,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (useHeatMap)
             {
                 ZoomYAxis(); // Call this again now that cues are there to indicate need for drift scale
-                CreateDriftTimeHeatmap();
+                CreateIonMobilityHeatmap();
             }
             else
             {
@@ -320,11 +321,11 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
-        /// Create a drift time heat map graph.
+        /// Create an ion mobility heat map graph.
         /// </summary>
-        private void CreateDriftTimeHeatmap()
+        private void CreateIonMobilityHeatmap()
         {
-            GraphPane.YAxis.Title.Text = Resources.GraphFullScan_CreateDriftTimeHeatmap_Drift_Time__ms_;
+            GraphPane.YAxis.Title.Text = IonMobilityFilter.IonMobilityUnitsL10NString(_msDataFileScanHelper.IonMobilityUnits);
             graphControl.IsEnableVZoom = graphControl.IsEnableVPan = true;
 
             if (_heatMapData == null)
@@ -332,17 +333,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 var points = new List<Point3D>(5000);
                 foreach (var scan in _msDataFileScanHelper.MsDataSpectra)
                 {
-                    if (!scan.DriftTimeMsec.HasValue)
+                    if (!scan.IonMobility.HasValue)
                         continue;
                     for (int j = 0; j < scan.Mzs.Length; j++)
-                        points.Add(new Point3D(scan.Mzs[j], scan.DriftTimeMsec.Value, scan.Intensities[j]));
+                        points.Add(new Point3D(scan.Mzs[j], scan.IonMobility.Mobility.Value, scan.Intensities[j]));
                 }
                 _heatMapData = new HeatMapData(points);
             }
 
             double minDrift;
             double maxDrift;
-            _msDataFileScanHelper.GetDriftRange(out minDrift, out maxDrift, _msDataFileScanHelper.Source);  // There may be a different drift time filter for products in Waters
+            _msDataFileScanHelper.GetIonMobilityRange(out minDrift, out maxDrift, _msDataFileScanHelper.Source);  // There may be a different drift time filter for products in Waters
 
             if (minDrift > 0 && maxDrift < double.MaxValue)
             {
@@ -378,7 +379,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 GraphPane.GraphObjList.Add(driftTimeOutline);
             }
 
-            if (!Settings.Default.FilterDriftTimesFullScan)
+            if (!Settings.Default.FilterIonMobilityFullScan)
             {
                 minDrift = 0;
                 maxDrift = double.MaxValue;
@@ -628,12 +629,12 @@ namespace pwiz.Skyline.Controls.Graphs
             else if (!filterBtn.Checked && !magnifyBtn.Checked)
             {
                 yScale.Min = 0;
-                yScale.Max = _maxDriftTime * 1.1;
+                yScale.Max = _maxIonMobility * 1.1;
             }
             else
             {
                 double minDriftTime, maxDriftTime;
-                _msDataFileScanHelper.GetDriftRange(out minDriftTime, out maxDriftTime, _msDataFileScanHelper.Source);
+                _msDataFileScanHelper.GetIonMobilityRange(out minDriftTime, out maxDriftTime, _msDataFileScanHelper.Source);
                 if (minDriftTime > double.MinValue && maxDriftTime < double.MaxValue)
                 {
                     double range = filterBtn.Checked
@@ -645,7 +646,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                 {
                     yScale.Min = 0;
-                    yScale.Max = _maxDriftTime * 1.1;
+                    yScale.Max = _maxIonMobility * 1.1;
                 }
             }
             GraphPane.AxisChange();
@@ -782,7 +783,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void FilterDriftTimes(bool filter)
         {
-            Settings.Default.FilterDriftTimesFullScan = filterBtn.Checked = filter;
+            Settings.Default.FilterIonMobilityFullScan = filterBtn.Checked = filter;
             _zoomYAxis = true;
             SetSpectraUI(_msDataFileScanHelper.MsDataSpectra);
         }

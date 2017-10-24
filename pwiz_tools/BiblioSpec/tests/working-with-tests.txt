@@ -25,6 +25,14 @@ tests/reference/.  The comparison is done as part of the test.  If the
 BiblioSpec code changes such that the output changes, simply update
 the appropriate file in tests/reference/.
 
+Negative Tests
+
+In some cases we want to check that bad inputs are refused. For this,
+use the "-e <fragment of expected failure message>" option to BlibBuild.
+Within the jamfile, this looks like -e_<fragment of expected failure message>
+and the _ indicates an associated argment (so "-e_foo" gets pass to BlibBuild
+as "-e foo").
+
 Invocations (Jamfile.jam)
 
 The BiblioSpec tests are run automatically as part of the bjam build

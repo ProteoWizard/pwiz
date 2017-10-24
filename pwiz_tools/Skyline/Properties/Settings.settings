@@ -470,7 +470,7 @@
     <Setting Name="AutoZoomFullScanGraph" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="FilterDriftTimesFullScan" Type="System.Boolean" Scope="User">
+    <Setting Name="FilterIonMobilityFullScan" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="SumScansFullScan" Type="System.Boolean" Scope="User">

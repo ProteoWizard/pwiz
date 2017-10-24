@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -38,23 +39,30 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
     {
         private readonly SettingsListComboDriver<IonMobilityLibrarySpec> _driverIonMobilityLibraryListComboDriver;
 
-        private DriftTimePredictor _predictor;
-        private readonly IEnumerable<DriftTimePredictor> _existing;
+        private IonMobilityPredictor _predictor;
+        private readonly IEnumerable<IonMobilityPredictor> _existing;
         private bool _showRegressions;
 
         public const int COLUMN_SEQUENCE = 0;
         public const int COLUMN_CHARGE = 1;
-        public const int COLUMN_DRIFT_TIME_MSEC = 2;
+        public const int COLUMN_ION_MOBILITY = 2;
         public const int COLUMN_CCS = 3;
-        public const int COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET = 4;
+        public const int COLUMN_HIGH_ENERGY_OFFSET = 4;
 
 
-        public EditDriftTimePredictorDlg(IEnumerable<DriftTimePredictor> existing)
+        public EditDriftTimePredictorDlg(IEnumerable<IonMobilityPredictor> existing)
         {
             _existing = existing;
             _showRegressions = true;
 
             InitializeComponent();
+            foreach (MsDataFileImpl.eIonMobilityUnits units in Enum.GetValues(typeof(MsDataFileImpl.eIonMobilityUnits)))
+            {
+                if (units != MsDataFileImpl.eIonMobilityUnits.none) // Don't present "none" as an option
+                {
+                    comboBoxIonMobilityUnits.Items.Add(IonMobilityFilter.IonMobilityUnitsL10NString(units));
+                }
+            }
 
 
             // TODO: ion mobility libraries are more complex than initially thought - leave these conversions to the mass spec vendors for now
@@ -67,7 +75,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             UpdateControls();
         }
 
-        public DriftTimePredictor Predictor
+        public IonMobilityPredictor Predictor
         {
             get { return _predictor; }
 
@@ -99,39 +107,56 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                         }
                     }
                     textResolvingPower.Text = string.Format("{0:F04}", _predictor.WindowWidthCalculator.ResolvingPower); // Not L10N
-                    textWidthAtDt0.Text = string.Format("{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtDriftTimeZero); // Not L10N
-                    textWidthAtDtMax.Text = string.Format("{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtDriftTimeMax); // Not L10N
-                    cbLinear.Checked = _predictor.WindowWidthCalculator.PeakWidthMode == DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.linear_range;
+                    textWidthAtDt0.Text = string.Format("{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueZero); // Not L10N
+                    textWidthAtDtMax.Text = string.Format("{0:F04}", _predictor.WindowWidthCalculator.PeakWidthAtIonMobilityValueMax); // Not L10N
+                    cbLinear.Checked = _predictor.WindowWidthCalculator.PeakWidthMode == IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
                 }
                 UpdateControls();
             }
         }
 
-        private void UpdateMeasuredDriftTimesControl(DriftTimePredictor predictor)
+        private MsDataFileImpl.eIonMobilityUnits Units
         {
-            // List any measured drift times
+            set { comboBoxIonMobilityUnits.SelectedIndex = (int)value - 1; } // We don't present "none" as an option
+            get { return (MsDataFileImpl.eIonMobilityUnits)comboBoxIonMobilityUnits.SelectedIndex + 1; }
+        }
+
+        private void UpdateMeasuredDriftTimesControl(IonMobilityPredictor predictor)
+        {
+
+            // List any measured ion mobility values, taking care to show only those matching display units
             gridMeasuredDriftTimes.Rows.Clear();
-            if (predictor.MeasuredDriftTimeIons != null)
+            if (predictor == null)
+            {
+                return;
+            }
+            _predictor = (_predictor??IonMobilityPredictor.EMPTY).ChangeMeasuredIonMobilityValues(predictor.MeasuredMobilityIons);
+            Units = _predictor.GetIonMobilityUnits();
+            var units = Units;
+
+            if (predictor.MeasuredMobilityIons != null)
             {
                 bool hasHighEnergyOffsets =
-                    predictor.MeasuredDriftTimeIons.Any(p => p.Value.HighEnergyDriftTimeOffsetMsec != 0);
+                    predictor.MeasuredMobilityIons.Any(p => p.Value.HighEnergyIonMobilityValueOffset != 0);
                 cbOffsetHighEnergySpectra.Checked = hasHighEnergyOffsets;
-                foreach (var p in predictor.MeasuredDriftTimeIons)
+                foreach (var p in predictor.MeasuredMobilityIons)
                 {
                     var ccs = p.Value.CollisionalCrossSectionSqA.HasValue
                         ? string.Format("{0:F04}",p.Value.CollisionalCrossSectionSqA.Value) // Not L10N
                         : string.Empty;
+                    var im = p.Value.IonMobility.Units == units ? p.Value.IonMobility.Mobility : null;
+                    var imOffset = p.Value.IonMobility.Units == units ? p.Value.HighEnergyIonMobilityValueOffset : 0;
                     if (hasHighEnergyOffsets)
                         gridMeasuredDriftTimes.Rows.Add(p.Key.Target,
                             p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
-                            (p.Value.DriftTimeMsec ?? 0).ToString(LocalizationHelper.CurrentCulture),
+                            im.HasValue ? im.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty,
                             ccs,
-                            p.Value.HighEnergyDriftTimeOffsetMsec.ToString(LocalizationHelper.CurrentCulture)
+                            imOffset.ToString(LocalizationHelper.CurrentCulture)
                             );
                     else
                         gridMeasuredDriftTimes.Rows.Add(p.Key.Target,
                             p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
-                            (p.Value.DriftTimeMsec ?? 0).ToString(LocalizationHelper.CurrentCulture),
+                            im.HasValue ? im.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty,
                             ccs
                             );
                 }
@@ -169,7 +194,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             labelConversionParameters.Enabled = gridRegression.Enabled =
                 labelConversionParameters.Visible = gridRegression.Visible =
                     _showRegressions;
-            gridMeasuredDriftTimes.Columns[COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET].Visible = cbOffsetHighEnergySpectra.Checked;
+            gridMeasuredDriftTimes.Columns[COLUMN_HIGH_ENERGY_OFFSET].Visible = cbOffsetHighEnergySpectra.Checked;
 
             if (oldVisible != _showRegressions)
             {
@@ -185,7 +210,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
         }
 
-        public void OkDialog()
+        public void OkDialog(bool forceOverwrite = false)
         {
             var helper = new MessageBoxHelper(this);
 
@@ -197,7 +222,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             if (!helper.ValidateNameTextBox(textName, out name))
                 return;
 
-            if (_existing.Contains(r => !ReferenceEquals(_predictor, r) && Equals(name, r.Name)))
+            if (_existing.Contains(r => !Equals(_predictor, r) && Equals(name, r.Name)) && !forceOverwrite)
             {
                 if (MessageBox.Show(this,
                     TextUtil.LineSeparate(string.Format(Resources.EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_,name),
@@ -207,7 +232,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     return;
                 }
             }
-            if (driftTable.GetTableMeasuredDriftTimes(cbOffsetHighEnergySpectra.Checked) == null) // Some error detected in the measured drift times table
+            if (driftTable.GetTableMeasuredIonMobility(cbOffsetHighEnergySpectra.Checked, Units) == null) // Some error detected in the measured drift times table
             {
                 return;
             }
@@ -218,7 +243,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             double resolvingPower = 0;
             double widthAtDt0 = 0;
             double widthAtDtMax = 0;
-            DriftTimeWindowWidthCalculator.DriftTimePeakWidthType peakWidthType;
+            IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType peakWidthType;
             if (cbLinear.Checked)
             {
                 if (!helper.ValidateDecimalTextBox(textWidthAtDt0, out widthAtDt0))
@@ -237,7 +262,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     helper.ShowTextBoxError(textWidthAtDtMax, errmsg);
                     return;
                 }
-                peakWidthType = DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.linear_range;
+                peakWidthType = IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
             }
             else
             {
@@ -250,7 +275,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     helper.ShowTextBoxError(textResolvingPower, errmsg);
                     return;
                 }
-                peakWidthType = DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power;
+                peakWidthType = IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power;
             }
 
             if ((comboLibrary.SelectedIndex > 0) && (comboLibrary.SelectedItem.ToString().Length == 0))
@@ -262,8 +287,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
             var ionMobilityLibrary = _driverIonMobilityLibraryListComboDriver.SelectedItem;
 
-            DriftTimePredictor predictor =
-                new DriftTimePredictor(name, driftTable.GetTableMeasuredDriftTimes(cbOffsetHighEnergySpectra.Checked), 
+            IonMobilityPredictor predictor =
+                new IonMobilityPredictor(name, driftTable.GetTableMeasuredIonMobility(cbOffsetHighEnergySpectra.Checked, Units), 
                     ionMobilityLibrary, table.GetTableChargeRegressionLines(), peakWidthType, resolvingPower, widthAtDt0, widthAtDtMax);
 
             _predictor = predictor;
@@ -318,6 +343,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         #region Functional test support
 
+        public void SetIonMobilityUnits(MsDataFileImpl.eIonMobilityUnits units)
+        {
+            Units = units;
+        }
         public void SetResolvingPower(double power)
         {
             textResolvingPower.Text = power.ToString(LocalizationHelper.CurrentCulture);
@@ -396,20 +425,21 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             try
             {
                 var driftTable = new MeasuredDriftTimeTable(gridMeasuredDriftTimes);
-                var tempDriftTimePredictor = new DriftTimePredictor("tmp", driftTable.GetTableMeasuredDriftTimes(cbOffsetHighEnergySpectra.Checked), null, null, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, 30, 0, 0); // Not L10N
+                var tempDriftTimePredictor = new IonMobilityPredictor("tmp", driftTable.GetTableMeasuredIonMobility(cbOffsetHighEnergySpectra.Checked, Units), null, null, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 30, 0, 0); // Not L10N
                 using (var longWaitDlg = new LongWaitDlg
                 {
-                    Text = Resources.EditDriftTimePredictorDlg_btnGenerateFromDocument_Click_Finding_drift_time_values_for_peaks,
+                    Text = Resources.EditDriftTimePredictorDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks,
                     Message = string.Empty,
                     ProgressValue = 0
                 })
                 {
                     longWaitDlg.PerformWork(this, 100, broker =>
                     {
-                        tempDriftTimePredictor = tempDriftTimePredictor.ChangeMeasuredDriftTimesFromResults(Program.MainWindow.Document, Program.MainWindow.DocumentFilePath, broker);
+                        tempDriftTimePredictor = tempDriftTimePredictor.ChangeMeasuredIonMobilityValuesFromResults(Program.MainWindow.Document, Program.MainWindow.DocumentFilePath, broker);
                     });
                     if (!longWaitDlg.IsCanceled && tempDriftTimePredictor != null)
                     {
+                        // Set display units based on what we found in the data
                         UpdateMeasuredDriftTimesControl(tempDriftTimePredictor);
                     }
                 }
@@ -478,10 +508,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             _gridMeasuredDriftTimePeptides = gridMeasuredDriftTimePeptides;
         }
 
-        public Dictionary<LibKey, DriftTimeInfo> GetTableMeasuredDriftTimes(bool useHighEnergyOffsets)
+        public Dictionary<LibKey, IonMobilityAndCCS> GetTableMeasuredIonMobility(bool useHighEnergyOffsets, MsDataFileImpl.eIonMobilityUnits units)
         {
             var e = new CancelEventArgs();
-            var dict = new Dictionary<LibKey, DriftTimeInfo>();
+            var dict = new Dictionary<LibKey, IonMobilityAndCCS>();
             foreach (DataGridViewRow row in _gridMeasuredDriftTimePeptides.Rows)
             {
                 if (row.IsNewRow)
@@ -495,21 +525,21 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 if (!ValidateCharge(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_CHARGE], out charge))
                     return null;
 
-                double driftTime;
-                if (!ValidateDriftTime(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_MSEC], out driftTime))
+                double mobility;
+                if (!ValidateDriftTime(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_ION_MOBILITY], out mobility))
                     return null;
 
                 double? ccs;
                 if (!ValidateCCS(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_CCS], out ccs))
                     return null;
 
-                double highEnergyDriftTimeOffset = 0; // Set default value in case user does not provide one
-                if (useHighEnergyOffsets && !ValidateHighEnergyDriftTimeOffset(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET], out highEnergyDriftTimeOffset))
+                double highEnergyOffset = 0; // Set default value in case user does not provide one
+                if (useHighEnergyOffsets && !ValidateHighEnergyDriftTimeOffset(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET], out highEnergyOffset))
                     return null;
-
+                var ionMobility = IonMobilityValue.GetIonMobilityValue(mobility, units);
                 try
                 {
-                    dict.Add(new LibKey(seq, charge.AdductCharge), new DriftTimeInfo(driftTime, ccs, highEnergyDriftTimeOffset));
+                    dict.Add(new LibKey(seq, charge.AdductCharge),  IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, ccs, highEnergyOffset));
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch
@@ -655,8 +685,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     values[EditDriftTimePredictorDlg.COLUMN_CHARGE].Trim(), TransitionGroup.MAX_PRECURSOR_CHARGE);
 
             // Parse drift time
-            if (!double.TryParse(values[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_MSEC].Trim(), out tempDouble))
-                return string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_drift_time_, values[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_MSEC].Trim());
+            if (!double.TryParse(values[EditDriftTimePredictorDlg.COLUMN_ION_MOBILITY].Trim(), out tempDouble))
+                return string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_drift_time_, values[EditDriftTimePredictorDlg.COLUMN_ION_MOBILITY].Trim());
 
             if (values.Length > EditDriftTimePredictorDlg.COLUMN_CCS)
             {
@@ -665,12 +695,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                         !double.TryParse(values[EditDriftTimePredictorDlg.COLUMN_CCS].Trim(), out tempDouble))
                     return string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_collisional_cross_section_, values[EditDriftTimePredictorDlg.COLUMN_CCS].Trim());
             }
-            if (values.Length > EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET)
+            if (values.Length > EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET)
             {
                 // Parse high energy offset, if any
-                if (!string.IsNullOrEmpty(values[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET]) &&
-                        !double.TryParse(values[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET].Trim(), out tempDouble))
-                    return string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_high_energy_offset_, values[EditDriftTimePredictorDlg.COLUMN_DRIFT_TIME_HIGH_ENERGY_OFFSET].Trim());
+                if (!string.IsNullOrEmpty(values[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET]) &&
+                        !double.TryParse(values[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET].Trim(), out tempDouble))
+                    return string.Format(Resources.MeasuredDriftTimeTable_ValidateMeasuredDriftTimeCellValues_The_value__0__is_not_a_valid_high_energy_offset_, values[EditDriftTimePredictorDlg.COLUMN_HIGH_ENERGY_OFFSET].Trim());
             }
             return null;
         }

@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Model.Results
         public SignedMz PrecursorMz;
         public SignedMz ProductMz;
         public double? ExtractionWidth;
-        public DriftTimeFilter DriftTimeInfo;
+        public IonMobilityFilter _ionMobilityInfo;
         public Identity Id;  // ID of the associated TransitionDocNode
     }
 
@@ -48,9 +48,10 @@ namespace pwiz.Skyline.Model.Results
         ChromSource Source { get; }
         IList<float> Times { get; }
         TransitionFullScanInfo[] Transitions { get; }
-        MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int dataFileSpectrumStartIndex); // Return a collection of consecutive scans with common retention time and increasing drift times (or a single scan if no drift info in file)
+        MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int dataFileSpectrumStartIndex); // Return a collection of consecutive scans with common retention time and changing ion mobility (or a single scan if no drift info in file)
         bool ProvidesCollisionalCrossSectionConverter { get; }
-        double? CCSFromDriftTime(double driftTime, double mz, int charge); // Return a collisional cross section for this drift time at this mz and charge, if reader supports this
+        double? CCSFromIonMobility(IonMobilityValue ionMobilityValue, double mz, int charge); // Return a collisional cross section for this ion mobility value at this mz and charge, if reader supports this
+        MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get; } 
         bool Adopt(IScanProvider scanProvider);
     }
 
@@ -74,11 +75,21 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ProvidesCollisionalCrossSectionConverter { get { return _dataFile != null && _dataFile.ProvidesCollisionalCrossSectionConverter; } }
 
-        public double? CCSFromDriftTime(double driftTime, double mz, int charge)
+        public double? CCSFromIonMobility(IonMobilityValue ionMobilityValue, double mz, int charge)
         {
             if (_dataFile == null)
                 return null;
-            return _dataFile.CCSFromDriftTime(driftTime, mz, charge);
+            return _dataFile.CCSFromIonMobilityValue(ionMobilityValue, mz, charge);
+        }
+
+        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
+        {
+            get
+            {
+                if (_dataFile == null)
+                    return MsDataFileImpl.eIonMobilityUnits.none;
+                return _dataFile.IonMobilityUnits;
+            }
         }
 
         public bool Adopt(IScanProvider other)
@@ -102,10 +113,10 @@ namespace pwiz.Skyline.Model.Results
         public TransitionFullScanInfo[] Transitions { get; private set; }
 
         /// <summary>
-        /// Retrieve a run of raw spectra with common retention time and increasing drift times, or a single raw spectrum if no drift info
+        /// Retrieve a run of raw spectra with common retention time and changing ion mobility, or a single raw spectrum if no drift info
         /// </summary>
         /// <param name="internalScanIndex">an index in pwiz.Skyline.Model.Results space</param>
-        /// <returns>Array of spectra with the same retention time (potentially different drift times for IMS, or just one spectrum)</returns>
+        /// <returns>Array of spectra with the same retention time (potentially different ion mobility values for IMS, or just one spectrum)</returns>
         public MsDataSpectrum[] GetMsDataFileSpectraWithCommonRetentionTime(int internalScanIndex)
         {
             var spectra = new List<MsDataSpectrum>();
@@ -125,14 +136,14 @@ namespace pwiz.Skyline.Model.Results
             }
             var currentSpectrum = GetDataFile().GetSpectrum(dataFileSpectrumStartIndex);
             spectra.Add(currentSpectrum);
-            if (currentSpectrum.DriftTimeMsec.HasValue)
+            if (currentSpectrum.IonMobility.HasValue)
             {
-                // Look for spectra with identical retention time and increasing drift time
+                // Look for spectra with identical retention time and changing ion mobility values
                 while (true)
                 {
                     dataFileSpectrumStartIndex++;
                     var nextSpectrum = GetDataFile().GetSpectrum(dataFileSpectrumStartIndex);
-                    if (!nextSpectrum.DriftTimeMsec.HasValue ||
+                    if (!nextSpectrum.IonMobility.HasValue ||
                         nextSpectrum.RetentionTime != currentSpectrum.RetentionTime)
                     {
                         break;

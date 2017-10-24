@@ -25,12 +25,14 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -1564,20 +1566,20 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
     /// <summary>
-    /// Represents an observed drift time in msec for
+    /// Represents an observed ion mobility value for
     /// a molecule at a given charge state.
     /// </summary>
-    public sealed class MeasuredDriftTimeIon : IXmlSerializable, IComparable<MeasuredDriftTimeIon>
+    public sealed class MeasuredIonMobility : IXmlSerializable, IComparable<MeasuredIonMobility>
     {
-        public Target TextId { get; private set; } // ModifiedSequence for peptides, PrimaryEquivalenceKey for small molecules
+        public Target Target { get; private set; } // ModifiedSequence for peptides, PrimaryEquivalenceKey for small molecules
         public Adduct Charge { get; private set; }
-        public DriftTimeInfo DriftTimeInfo { get; private set; }
+        public IonMobilityAndCCS IonMobilityInfo { get; private set; }
 
-        public MeasuredDriftTimeIon(Target seq, Adduct charge, DriftTimeInfo driftTimeInfo)
+        public MeasuredIonMobility(Target target, Adduct charge, IonMobilityAndCCS ionMobilityInfo)
         {
-            TextId = seq;
+            Target = target;
             Charge = charge;
-            DriftTimeInfo = driftTimeInfo;
+            IonMobilityInfo = ionMobilityInfo;
         }
 
         #region Implementation of IXmlSerializable
@@ -1585,7 +1587,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// For serialization
         /// </summary>
-        private MeasuredDriftTimeIon()
+        private MeasuredIonMobility()
         {
         }
 
@@ -1593,14 +1595,18 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             modified_sequence,
             charge,
-            drift_time,
+            drift_time, // Obsolete
             ccs,
-            high_energy_drift_time_offset
+            high_energy_drift_time_offset, // Obsolete
+            ion_mobility,
+            high_energy_ion_mobility_offset,
+            ion_mobility_units
+
         }
 
-        public static MeasuredDriftTimeIon Deserialize(XmlReader reader)
+        public static MeasuredIonMobility Deserialize(XmlReader reader)
         {
-            return reader.Deserialize(new MeasuredDriftTimeIon());
+            return reader.Deserialize(new MeasuredIonMobility());
         }
 
         public XmlSchema GetSchema()
@@ -1611,11 +1617,32 @@ namespace pwiz.Skyline.Model.DocSettings
         public void ReadXml(XmlReader reader)
         {
             // Read tag attributes
-            TextId = Target.FromSerializableString(reader.GetAttribute(ATTR.modified_sequence)); // CONSIDER(bspratt): different attribute for small molecule?
+            Target = Target.FromSerializableString(reader.GetAttribute(ATTR.modified_sequence)); // CONSIDER(bspratt): different attribute for small molecule?
             Charge = Adduct.FromStringAssumeProtonated(reader.GetAttribute(ATTR.charge));
-            DriftTimeInfo = new DriftTimeInfo(reader.GetNullableDoubleAttribute(ATTR.drift_time),
-                reader.GetNullableDoubleAttribute(ATTR.ccs),
-                reader.GetDoubleAttribute(ATTR.high_energy_drift_time_offset, 0));
+            var ionMobilityValue = reader.GetNullableDoubleAttribute(ATTR.drift_time);
+            if (ionMobilityValue.HasValue)
+            {
+                IonMobilityInfo =  IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobilityValue.Value,
+                    MsDataFileImpl.eIonMobilityUnits.drift_time_msec), 
+                    reader.GetNullableDoubleAttribute(ATTR.ccs),
+                    reader.GetDoubleAttribute(ATTR.high_energy_drift_time_offset, 0));
+            }
+            else
+            {
+                ionMobilityValue = reader.GetNullableDoubleAttribute(ATTR.ion_mobility);
+                if (ionMobilityValue.HasValue)
+                {
+                    var units = SmallMoleculeTransitionListReader.IonMobilityUnitsFromAttributeValue(reader.GetAttribute(ATTR.ion_mobility_units));
+                    IonMobilityInfo =  IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobilityValue.Value,
+                            units),
+                        reader.GetNullableDoubleAttribute(ATTR.ccs),
+                        reader.GetDoubleAttribute(ATTR.high_energy_ion_mobility_offset, 0));
+                }
+                else
+                {
+                    IonMobilityInfo = IonMobilityAndCCS.EMPTY;
+                }
+            }
             // Consume tag
             reader.Read();
         }
@@ -1623,28 +1650,32 @@ namespace pwiz.Skyline.Model.DocSettings
         public void WriteXml(XmlWriter writer)
         {
             // Write tag attributes
-            writer.WriteAttribute(ATTR.modified_sequence, TextId.ToSerializableString()); // CONSIDER(bspratt): different attribute for small molecule?
+            writer.WriteAttribute(ATTR.modified_sequence, Target.ToSerializableString()); // CONSIDER(bspratt): different attribute for small molecule?
             writer.WriteAttribute(ATTR.charge, Charge);
-            writer.WriteAttributeNullable(ATTR.drift_time, DriftTimeInfo.DriftTimeMsec);
-            writer.WriteAttribute(ATTR.high_energy_drift_time_offset, DriftTimeInfo.HighEnergyDriftTimeOffsetMsec);
-            writer.WriteAttributeNullable(ATTR.ccs, DriftTimeInfo.CollisionalCrossSectionSqA);
+            if (IonMobilityInfo.IonMobility.Units != MsDataFileImpl.eIonMobilityUnits.none)
+            {
+                writer.WriteAttributeNullable(ATTR.ion_mobility, IonMobilityInfo.IonMobility.Mobility);
+                writer.WriteAttribute(ATTR.high_energy_ion_mobility_offset, IonMobilityInfo.HighEnergyIonMobilityValueOffset);
+                writer.WriteAttributeNullable(ATTR.ccs, IonMobilityInfo.CollisionalCrossSectionSqA);
+                writer.WriteAttributeString(ATTR.ion_mobility_units, IonMobilityInfo.IonMobility.Units.ToString());
+            }
         }
 
         #endregion
 
         #region object overrides
 
-        public bool Equals(MeasuredDriftTimeIon obj)
+        public bool Equals(MeasuredIonMobility obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj.TextId, TextId) && Equals(obj.Charge, Charge) &&
-                   Equals(obj.DriftTimeInfo, DriftTimeInfo);
+            return Equals(obj.Target, Target) && Equals(obj.Charge, Charge) &&
+                   Equals(obj.IonMobilityInfo, IonMobilityInfo);
         }
 
-        public int CompareTo(MeasuredDriftTimeIon other)
+        public int CompareTo(MeasuredIonMobility other)
         {
-            int result = TextId.CompareTo(other.TextId);
+            int result = Target.CompareTo(other.Target);
             if (result != 0)
                 return result;
 
@@ -1652,23 +1683,23 @@ namespace pwiz.Skyline.Model.DocSettings
             if (result != 0)
                 return result;
 
-            return DriftTimeInfo.CompareTo(other.DriftTimeInfo);
+            return IonMobilityInfo.CompareTo(other.IonMobilityInfo);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof(MeasuredDriftTimeIon)) return false;
-            return Equals((MeasuredDriftTimeIon)obj);
+            if (obj.GetType() != typeof(MeasuredIonMobility)) return false;
+            return Equals((MeasuredIonMobility)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                int result = (TextId != null ? TextId.GetHashCode() : 0);
-                result = (result*397) ^ DriftTimeInfo.GetHashCode();
+                int result = (Target != null ? Target.GetHashCode() : 0);
+                result = (result*397) ^ IonMobilityInfo.GetHashCode();
                 result = (result*397) ^ Charge.GetHashCode();
                 return result;
             }
@@ -2709,85 +2740,90 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
-    public interface IDriftTimeInfoProvider
+    public interface IIonMobilityInfoProvider
     {
         string Name { get; }
 
-        DriftTimeInfo GetLibraryMeasuredDriftTimeAndHighEnergyOffset(LibKey peptide, double mz, IConversionDriftTimeCCSProvider instrumentInfo);
+        IonMobilityAndCCS GetLibraryMeasuredIonMobilityAndHighEnergyOffset(LibKey peptide, double mz, IIonMobilityFunctionsProvider instrumentInfo);
 
-        IDictionary<LibKey, DriftTimeInfo[]> GetIonMobilityDict();
+        IDictionary<LibKey, IonMobilityAndCCS[]> GetIonMobilityDict();
 
     }
 
     /// <summary>
-    /// Contains drift time and its Collisional Cross Section basis (if known), 
-    /// and the effect on drift time in high energy spectra as in Waters MSe
+    /// Contains ion mobility and its Collisional Cross Section basis (if known), 
+    /// and the effect on ion mobility in high energy spectra as in Waters MSe
     /// </summary>
-    public class DriftTimeInfo : IComparable
+    public class IonMobilityAndCCS : IComparable
     {
-        public static readonly DriftTimeInfo EMPTY = new DriftTimeInfo(null, null, 0);
+        public static readonly IonMobilityAndCCS EMPTY = new IonMobilityAndCCS(IonMobilityValue.EMPTY, null, 0);
       
 
-        public DriftTimeInfo(double? driftTimeMsec, double? collisionalCrossSectionSqA, 
-            double highEnergyDriftTimeOffsetMsec)
+        private IonMobilityAndCCS(IonMobilityValue ionMobility, double? collisionalCrossSectionSqA, 
+            double highEnergyIonMobilityValueOffset)
         {
-            DriftTimeMsec = driftTimeMsec;
+            IonMobility = ionMobility;
             CollisionalCrossSectionSqA = collisionalCrossSectionSqA;
-            HighEnergyDriftTimeOffsetMsec = highEnergyDriftTimeOffsetMsec;
+            HighEnergyIonMobilityValueOffset = highEnergyIonMobilityValueOffset;
         }
 
-        public double? DriftTimeMsec { get; private set; } 
+        public static IonMobilityAndCCS GetIonMobilityAndCCS(IonMobilityValue ionMobilityValue, double? collisionalCrossSectionSqA, double highEnergyIonMobilityValueOffset)
+        {
+            return ionMobilityValue.HasValue || collisionalCrossSectionSqA.HasValue ? new IonMobilityAndCCS(ionMobilityValue, collisionalCrossSectionSqA, highEnergyIonMobilityValueOffset) : EMPTY;
+        }
+
+        public IonMobilityValue IonMobility { get; private set; }
         public double? CollisionalCrossSectionSqA { get; private set; } 
-        public double HighEnergyDriftTimeOffsetMsec { get; private set; } // As in Waters MSe, where product ions fly a bit faster due to added kinetic energy
+        public double HighEnergyIonMobilityValueOffset { get; private set; } // As in Waters MSe, where product ions fly a bit faster due to added kinetic energy
 
         public double? GetHighEnergyDriftTimeMsec()
         {
-            if (DriftTimeMsec.HasValue)
+            if (IonMobility.HasValue)
             {
-                return DriftTimeMsec.Value + HighEnergyDriftTimeOffsetMsec;
+                return IonMobility.Mobility + HighEnergyIonMobilityValueOffset;
             }
             return null;
         }
 
         public bool HasCollisionalCrossSection { get { return (CollisionalCrossSectionSqA ?? 0) != 0; } }
-        public bool HasDriftTime { get { return (DriftTimeMsec ?? 0) != 0; } }
-        public bool IsEmpty { get { return !HasDriftTime && !HasCollisionalCrossSection; } }
+        public bool HasIonMobilityValue { get { return IonMobility.HasValue; } }
+        public bool IsEmpty { get { return !HasIonMobilityValue && !HasCollisionalCrossSection; } }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return 0 == CompareTo(obj as DriftTimeInfo);
+            return 0 == CompareTo(obj as IonMobilityAndCCS);
         }
 
-        public DriftTimeInfo ChangeDriftTimeMsec(double? driftTimeMsec)
+        public IonMobilityAndCCS ChangeIonMobilityValue(IonMobilityValue ionMobility)
         {
-            return new DriftTimeInfo(driftTimeMsec, CollisionalCrossSectionSqA, HighEnergyDriftTimeOffsetMsec);
+            return IonMobility.CompareTo(ionMobility) == 0 ? this : GetIonMobilityAndCCS(ionMobility, CollisionalCrossSectionSqA, HighEnergyIonMobilityValueOffset);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                var hashCode = DriftTimeMsec.GetHashCode();
+                var hashCode = IonMobility.GetHashCode();
                 hashCode = (hashCode * 397) ^ CollisionalCrossSectionSqA.GetHashCode();
-                hashCode = (hashCode * 397) ^ HighEnergyDriftTimeOffsetMsec.GetHashCode();
+                hashCode = (hashCode * 397) ^ HighEnergyIonMobilityValueOffset.GetHashCode();
                 return hashCode;
             }
         }
 
         public int CompareTo(object obj)
         {
-            DriftTimeInfo other = obj as DriftTimeInfo;
+            IonMobilityAndCCS other = obj as IonMobilityAndCCS;
             if (other == null)
                 return 1;
-            var val = Nullable.Compare(CollisionalCrossSectionSqA, other.CollisionalCrossSectionSqA);
+            var val = IonMobility.CompareTo(other.IonMobility);
             if (val != 0)
                 return val;
-            val = Nullable.Compare(DriftTimeMsec, other.DriftTimeMsec);
+            val = Nullable.Compare(CollisionalCrossSectionSqA, other.CollisionalCrossSectionSqA);
             if (val != 0)
                 return val;
-            var diff =  HighEnergyDriftTimeOffsetMsec - other.HighEnergyDriftTimeOffsetMsec;
+            var diff = HighEnergyIonMobilityValueOffset - other.HighEnergyIonMobilityValueOffset;
             if (diff > 0)
                 return 1;
             else if (diff < 0)
@@ -2797,56 +2833,133 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
     /// <summary>
-    /// Contains the drift time and window used to filter scans, and and CCS basis for the drift time if known
+    /// Contains the ion mobility and window used to filter scans
+    /// May also contain CCS value associated with the ion mobility, normally only when used in context of chromatogram extraction (not serialized)
     /// </summary>
-    public class DriftTimeFilter : IComparable
+    public class IonMobilityFilter : IComparable
     {
-        public static readonly DriftTimeFilter EMPTY = new DriftTimeFilter(null, null, null);
+        public static readonly IonMobilityFilter EMPTY = new IonMobilityFilter(IonMobilityValue.EMPTY, null, null);
 
-        public static DriftTimeFilter GetDriftTimeFilter(double? driftTimeMsec,
-            double? driftTimeExtractionWindowWidthMsec,
+        public static IonMobilityFilter GetIonMobilityFilter(IonMobilityValue ionMobility,
+            double? ionMobilityExtractionWindowWidth,
             double? collisionalCrossSectionSqA)
         {
-            if (!driftTimeMsec.HasValue
-                && !driftTimeExtractionWindowWidthMsec.HasValue
-                && !collisionalCrossSectionSqA.HasValue)
+            if (!ionMobility.HasValue
+                && !ionMobilityExtractionWindowWidth.HasValue)
             {
                 return EMPTY;
             }
-            return new DriftTimeFilter(driftTimeMsec, 
-                driftTimeExtractionWindowWidthMsec,
+            return new IonMobilityFilter(ionMobility, 
+                ionMobilityExtractionWindowWidth,
                 collisionalCrossSectionSqA);
         }
 
-        private DriftTimeFilter(double? driftTimeMsec,
-            double? driftTimeExtractionWindowWidthMsec,
-            double? collisionalCrossSectionSqA)
+        public IonMobilityFilter ChangeIonMobilityValue(IonMobilityValue value)
         {
-            DriftTimeMsec = driftTimeMsec;
-            DriftTimeExtractionWindowWidthMsec = driftTimeExtractionWindowWidthMsec;
-            CollisionalCrossSectionSqA = collisionalCrossSectionSqA;
+            return (IonMobility.CompareTo(value) == 0) ? this : GetIonMobilityFilter(value, IonMobilityExtractionWindowWidth, CollisionalCrossSectionSqA);
         }
 
-        public double? DriftTimeMsec { get; private set; }
-        public double? DriftTimeExtractionWindowWidthMsec { get; private set; }
-        public double? CollisionalCrossSectionSqA { get; private set; } // The CCS value used to get the drift time, if any
+        public IonMobilityFilter ChangeIonMobilityValue(double? value, MsDataFileImpl.eIonMobilityUnits units)
+        {
+            var im = IonMobility.ChangeIonMobility(value, units);
+            return (IonMobility.CompareTo(im) == 0) ? this : GetIonMobilityFilter(im, IonMobilityExtractionWindowWidth, CollisionalCrossSectionSqA);
+        }
 
-        public bool HasDriftTime { get { return (DriftTimeMsec ?? 0) != 0; } }
-        public bool IsEmpty { get { return !HasDriftTime; } }
+        public IonMobilityFilter ChangeIonMobilityValue(double? value)
+        {
+            var im = IonMobility.ChangeIonMobility(value, IonMobilityUnits);
+            return (IonMobility.CompareTo(im) == 0) ? this : GetIonMobilityFilter(im, IonMobilityExtractionWindowWidth, CollisionalCrossSectionSqA);
+        }
+
+        public IonMobilityFilter ChangeExtractionWindowWidth(double? value)
+        {
+            return (IonMobilityExtractionWindowWidth == value) ? this : GetIonMobilityFilter(IonMobility, value, CollisionalCrossSectionSqA);
+        }
+
+        private IonMobilityFilter(IonMobilityValue ionMobility,
+            double? ionMobilityExtractionWindowWidth,
+            double? collisionalCrossSectionSqA)
+        {
+            IonMobility = ionMobility;
+            IonMobilityExtractionWindowWidth = ionMobilityExtractionWindowWidth;
+            CollisionalCrossSectionSqA = collisionalCrossSectionSqA;
+        }
+        public IonMobilityValue IonMobility { get; private set; }
+        public double? CollisionalCrossSectionSqA { get; private set; } // The CCS value used to get the ion mobility, if known
+        public double? IonMobilityExtractionWindowWidth { get; private set; }
+        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return HasIonMobilityValue ? IonMobility.Units : MsDataFileImpl.eIonMobilityUnits.none; } }
+
+        public bool HasIonMobilityValue { get { return IonMobility.HasValue; } }
+        public bool IsEmpty { get { return !HasIonMobilityValue; } }
+
+        public static string IonMobilityUnitsL10NString(MsDataFileImpl.eIonMobilityUnits units)
+        {
+            switch (units)
+            {
+                case MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                    return Resources.IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_;
+                case MsDataFileImpl.eIonMobilityUnits.drift_time_msec:
+                    return Resources.IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_;
+                case MsDataFileImpl.eIonMobilityUnits.none:
+                    return Resources.IonMobilityFilter_IonMobilityUnitsL10NString_None;
+                default:
+                    return null;
+            }
+        }
+
+        public void WriteXML(XmlWriter writer, bool omitTypeAndCCS)
+        {
+            if (IonMobility.Mobility.HasValue)
+            {
+                writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility, IonMobility.Mobility);
+                writer.WriteAttributeNullable(DocumentSerializer.ATTR.ion_mobility_window, IonMobilityExtractionWindowWidth);
+                if (omitTypeAndCCS)
+                    return;
+                writer.WriteAttributeNullable(DocumentSerializer.ATTR.ccs, CollisionalCrossSectionSqA);
+                writer.WriteAttribute(DocumentSerializer.ATTR.ion_mobility_type, IonMobilityUnits.ToString());
+            }
+        }
+
+        public static IonMobilityFilter ReadXML(XmlReader reader, IonMobilityFilter defaultIonMobilityValues)
+        {
+            var ionMobilityFilter = EMPTY;
+            var driftTime = reader.GetNullableDoubleAttribute(DocumentSerializer.ATTR.drift_time);
+            var ccs = reader.GetNullableDoubleAttribute(DocumentSerializer.ATTR.ccs);
+            if (driftTime.HasValue)
+            {
+                var driftTimeWindow = reader.GetNullableDoubleAttribute(DocumentSerializer.ATTR.drift_time_window);
+                ionMobilityFilter = GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(driftTime.Value,
+                    MsDataFileImpl.eIonMobilityUnits.drift_time_msec), driftTimeWindow, ccs);
+            }
+            else
+            {
+                var ionMobility = reader.GetNullableDoubleAttribute(DocumentSerializer.ATTR.ion_mobility); 
+                if (ionMobility.HasValue)
+                {
+                    var ionMobilityWindow = reader.GetNullableDoubleAttribute(DocumentSerializer.ATTR.ion_mobility_window) ??
+                                            defaultIonMobilityValues.CollisionalCrossSectionSqA;
+                    string ionMobilityUnitsString = reader.GetAttribute(DocumentSerializer.ATTR.ion_mobility_type);
+                    var ionMobilityUnits = SmallMoleculeTransitionListReader.IonMobilityUnitsFromAttributeValue(ionMobilityUnitsString);
+                    ionMobilityFilter = GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(ionMobility.Value,
+                        ionMobilityUnits), ionMobilityWindow, ccs);
+                }
+            }
+            return ionMobilityFilter;
+        }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return 0 == CompareTo(obj as DriftTimeFilter);
+            return 0 == CompareTo(obj as IonMobilityFilter);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                var hashCode = DriftTimeMsec.GetHashCode();
-                hashCode = (hashCode * 397) ^ DriftTimeExtractionWindowWidthMsec.GetHashCode();
+                var hashCode = IonMobility.GetHashCode();
+                hashCode = (hashCode * 397) ^ IonMobilityExtractionWindowWidth.GetHashCode();
                 hashCode = (hashCode * 397) ^ CollisionalCrossSectionSqA.GetHashCode();
                 return hashCode;
             }
@@ -2854,32 +2967,38 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public int CompareTo(object obj)
         {
-            var other = obj as DriftTimeFilter;
+            var other = obj as IonMobilityFilter;
             if (other == null)
                 return 1;
-            var val = Nullable.Compare(DriftTimeMsec, other.DriftTimeMsec);
+            var val = IonMobility.CompareTo(other.IonMobility);
             if (val != 0)
                 return val;
             val = Nullable.Compare(CollisionalCrossSectionSqA, other.CollisionalCrossSectionSqA);
             if (val != 0)
                 return val;
-            return Nullable.Compare(DriftTimeExtractionWindowWidthMsec, other.DriftTimeExtractionWindowWidthMsec);
+            return Nullable.Compare(IonMobilityExtractionWindowWidth, other.IonMobilityExtractionWindowWidth);
         }
 
-        public override string ToString()
+        public override string ToString() // For debugging convenience, not user-facing
         {
-            if (CollisionalCrossSectionSqA.HasValue)
+            string ionMobilityAbbrev = "im"; // Not L10N
+            switch (IonMobility.Units)
             {
-                return string.Format("dt{0:F04}(ccs{2:F04})/w{1:F04}", DriftTimeMsec, DriftTimeExtractionWindowWidthMsec, CollisionalCrossSectionSqA); // Not L10N
+                case MsDataFileImpl.eIonMobilityUnits.drift_time_msec:
+                    ionMobilityAbbrev = "dt"; // Not L10N
+                    break;
+                case MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                    ionMobilityAbbrev = "irim"; // Not L10N
+                    break;
             }
-            return string.Format("dt{0:F04}/w{1:F04}", DriftTimeMsec, DriftTimeExtractionWindowWidthMsec); // Not L10N
+            return string.Format("{2}{0:F04}/w{1:F04}", IonMobility.Mobility, IonMobilityExtractionWindowWidth, ionMobilityAbbrev); // Not L10N
         }
     }
 
     public interface IIonMobilityLibrary
     {
         string Name { get; }
-        DriftTimeInfo GetDriftTimeInfo(LibKey chargedPeptide, ChargeRegressionLine regressionLine);
+        IonMobilityAndCCS GetIonMobilityInfo(LibKey chargedPeptide, ChargeRegressionLine regressionLine);
     }
 
     public abstract class IonMobilityLibrarySpec : XmlNamedElement, IIonMobilityLibrary
@@ -2890,12 +3009,12 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         /// <summary>
-        /// Get the drift time for the charged peptide.
+        /// Get the ion mobility for the charged peptide.
         /// </summary>
         /// <param name="chargedPeptide"></param>
         /// <param name="regressionLine"></param>
-        /// <returns>drift time, or null</returns>
-        public abstract DriftTimeInfo GetDriftTimeInfo(LibKey chargedPeptide, ChargeRegressionLine regressionLine);
+        /// <returns>ion mobility, or null</returns>
+        public abstract IonMobilityAndCCS GetIonMobilityInfo(LibKey chargedPeptide, ChargeRegressionLine regressionLine);
 
         public virtual bool IsUsable { get { return true; } }
 
@@ -2925,31 +3044,31 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
-    public class DriftTimeWindowWidthCalculator : IEquatable<DriftTimeWindowWidthCalculator>
+    public class IonMobilityWindowWidthCalculator : IEquatable<IonMobilityWindowWidthCalculator>
     {
         private enum ATTR
         {
             resolving_power,
             peak_width_calc_type,
-            width_at_dt_zero,
-            width_at_dt_max
+            width_at_dt_zero, // Misnomer, used for IMS types other than drift time
+            width_at_dt_max   // Misnomer, used for IMS types other than drift time
         }
 
-        public static readonly DriftTimeWindowWidthCalculator EMPTY = new DriftTimeWindowWidthCalculator(DriftTimePeakWidthType.resolving_power, 0, 0, 0);
+        public static readonly IonMobilityWindowWidthCalculator EMPTY = new IonMobilityWindowWidthCalculator(IonMobilityPeakWidthType.resolving_power, 0, 0, 0);
 
-        public DriftTimeWindowWidthCalculator(DriftTimePeakWidthType peakWidthMode,
+        public IonMobilityWindowWidthCalculator(IonMobilityPeakWidthType peakWidthMode,
                                     double resolvingPower,
-                                    double widthAtDriftTimeZero, 
-                                    double widthAtDriftTimeMax)
+                                    double widthAtIonMobilityValueZero, 
+                                    double widthAtIonMobilityValueMax)
         {
             PeakWidthMode = peakWidthMode;
             ResolvingPower = resolvingPower;
-            PeakWidthAtDriftTimeZero = widthAtDriftTimeZero;
-            PeakWidthAtDriftTimeMax = widthAtDriftTimeMax;
+            PeakWidthAtIonMobilityValueZero = widthAtIonMobilityValueZero;
+            PeakWidthAtIonMobilityValueMax = widthAtIonMobilityValueMax;
         }
 
-        public DriftTimeWindowWidthCalculator(XmlReader reader, string prefix = "") : this( // Not L10N
-            reader.GetEnumAttribute(prefix + ATTR.peak_width_calc_type, DriftTimePeakWidthType.resolving_power),
+        public IonMobilityWindowWidthCalculator(XmlReader reader, string prefix = "") : this( // Not L10N
+            reader.GetEnumAttribute(prefix + ATTR.peak_width_calc_type, IonMobilityPeakWidthType.resolving_power),
             reader.GetDoubleAttribute(prefix + ATTR.resolving_power, 0),
             reader.GetDoubleAttribute(prefix + ATTR.width_at_dt_zero, 0),
             reader.GetDoubleAttribute(prefix + ATTR.width_at_dt_max, 0))
@@ -2960,21 +3079,21 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             writer.WriteAttribute(prefix + ATTR.peak_width_calc_type, PeakWidthMode);
             writer.WriteAttribute(prefix + ATTR.resolving_power, ResolvingPower);
-            writer.WriteAttribute(prefix + ATTR.width_at_dt_zero, PeakWidthAtDriftTimeZero);
-            writer.WriteAttribute(prefix + ATTR.width_at_dt_max, PeakWidthAtDriftTimeMax);
+            writer.WriteAttribute(prefix + ATTR.width_at_dt_zero, PeakWidthAtIonMobilityValueZero);
+            writer.WriteAttribute(prefix + ATTR.width_at_dt_max, PeakWidthAtIonMobilityValueMax);
         }
 
-        public enum DriftTimePeakWidthType
+        public enum IonMobilityPeakWidthType
         {
             resolving_power,  // Agilent, etc
             linear_range      // Waters SONAR etc
         };
 
-        public DriftTimePeakWidthType PeakWidthMode { get; private set; }
+        public IonMobilityPeakWidthType PeakWidthMode { get; private set; }
 
         // For Water-style (SONAR) linear peak width calcs
-        public double PeakWidthAtDriftTimeZero { get; private set; }
-        public double PeakWidthAtDriftTimeMax { get; private set; }
+        public double PeakWidthAtIonMobilityValueZero { get; private set; }
+        public double PeakWidthAtIonMobilityValueMax { get; private set; }
 
         // For Agilent-style resolving power peak width calcs
         public double ResolvingPower { get; private set; }
@@ -2982,112 +3101,112 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double WidthAt(double driftTime, double driftTimeMax)
         {
-            if (PeakWidthMode == DriftTimePeakWidthType.resolving_power)
+            if (PeakWidthMode == IonMobilityPeakWidthType.resolving_power)
             {
                 return (ResolvingPower > 0 ? 2.0 / ResolvingPower : double.MaxValue) * driftTime; // 2.0*driftTime/resolvingPower
             }
             Assume.IsTrue(driftTimeMax > 0, "Expected dtMax value > 0 for linear range drift window calculation"); // Not L10N
-            return PeakWidthAtDriftTimeZero + driftTime * (PeakWidthAtDriftTimeMax - PeakWidthAtDriftTimeZero) / driftTimeMax;
+            return PeakWidthAtIonMobilityValueZero + driftTime * (PeakWidthAtIonMobilityValueMax - PeakWidthAtIonMobilityValueZero) / driftTimeMax;
         }
 
         public string Validate()
         {
-            if (PeakWidthMode == DriftTimePeakWidthType.resolving_power)
+            if (PeakWidthMode == IonMobilityPeakWidthType.resolving_power)
             {
                 if (ResolvingPower <= 0)
                     return Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_;
             }
             else
             {
-                if (PeakWidthAtDriftTimeZero < 0 || PeakWidthAtDriftTimeMax < PeakWidthAtDriftTimeZero)
+                if (PeakWidthAtIonMobilityValueZero < 0 || PeakWidthAtIonMobilityValueMax < PeakWidthAtIonMobilityValueZero)
                     return Resources.DriftTimeWindowWidthCalculator_Validate_Peak_width_must_be_non_negative_;
             }
             return null;
         }
 
-        public bool Equals(DriftTimeWindowWidthCalculator other)
+        public bool Equals(IonMobilityWindowWidthCalculator other)
         {
             return other != null &&
                    Equals(other.PeakWidthMode, PeakWidthMode) &&
                    Equals(other.ResolvingPower, ResolvingPower) &&
-                   Equals(other.PeakWidthAtDriftTimeZero, PeakWidthAtDriftTimeZero) &&
-                   Equals(other.PeakWidthAtDriftTimeMax, PeakWidthAtDriftTimeMax);
+                   Equals(other.PeakWidthAtIonMobilityValueZero, PeakWidthAtIonMobilityValueZero) &&
+                   Equals(other.PeakWidthAtIonMobilityValueMax, PeakWidthAtIonMobilityValueMax);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj as DriftTimeWindowWidthCalculator);
+            return Equals(obj as IonMobilityWindowWidthCalculator);
         }
 
         public override int GetHashCode()
         {
             int result = PeakWidthMode.GetHashCode();
             result = (result * 397) ^ ResolvingPower.GetHashCode();
-            result = (result * 397) ^ PeakWidthAtDriftTimeZero.GetHashCode();
-            result = (result * 397) ^ PeakWidthAtDriftTimeMax.GetHashCode();
+            result = (result * 397) ^ PeakWidthAtIonMobilityValueZero.GetHashCode();
+            result = (result * 397) ^ PeakWidthAtIonMobilityValueMax.GetHashCode();
             return result;
         }
     }
 
     /// <summary>
     /// Describes a slope and intercept for converting from a
-    /// collisional cross section value to a predicted drift time in milliseconds.
+    /// collisional cross section value to a predicted ion mobility.
     /// </summary>
-    [XmlRoot("predict_drift_time")]
-    public sealed class DriftTimePredictor : XmlNamedElement
+    [XmlRoot("predict_drift_time")]  // CONSIDER: This is now a misnomer
+    public sealed class IonMobilityPredictor : XmlNamedElement
     {
-        public static double? GetDriftTimeDisplay(double? dtMsec)
+        public static double? GetIonMobilityDisplay(double? ionMobility)
         {
-            if (!dtMsec.HasValue)
+            if (!ionMobility.HasValue)
                 return null;
-            return Math.Round(dtMsec.Value, 4);
+            return Math.Round(ionMobility.Value, 4);
         }
 
-        private ImmutableDictionary<LibKey, DriftTimeInfo> _measuredDriftTimeIons;
+        private ImmutableDictionary<LibKey, IonMobilityAndCCS> _measuredMobilityIons;
         private ImmutableList<ChargeRegressionLine> _chargeRegressionLines;
 
-        public DriftTimePredictor(string name,
-                                    Dictionary<LibKey, DriftTimeInfo> measuredDriftTimeIons,
+        public IonMobilityPredictor(string name,
+                                    Dictionary<LibKey, IonMobilityAndCCS> measuredMobilityIons,
                                     IonMobilityLibrarySpec ionMobilityLibrary,
                                     IList<ChargeRegressionLine> chargeSlopeIntercepts,
-                                    DriftTimeWindowWidthCalculator.DriftTimePeakWidthType peakWidthMode,
+                                    IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType peakWidthMode,
                                     double resolvingPower,
-                                    double widthAtDtZero, double widthAtDtMax)
+                                    double widthAtIonMobilityZero, double widthAtIonMobilityMax)
             : base(name)
         {
-            WindowWidthCalculator = new DriftTimeWindowWidthCalculator(peakWidthMode,
-               resolvingPower, widthAtDtZero, widthAtDtMax);
-            MeasuredDriftTimeIons = measuredDriftTimeIons;
+            WindowWidthCalculator = new IonMobilityWindowWidthCalculator(peakWidthMode,
+               resolvingPower, widthAtIonMobilityZero, widthAtIonMobilityMax);
+            MeasuredMobilityIons = measuredMobilityIons;
             ChargeRegressionLines = (chargeSlopeIntercepts == null) ? null : chargeSlopeIntercepts.ToArray();
             IonMobilityLibrary = ionMobilityLibrary; // Actual loading, if any, happens in background
             Validate();
         }
 
-        public static readonly DriftTimePredictor EMPTY = new DriftTimePredictor();  // For test purposes
+        public static readonly IonMobilityPredictor EMPTY = new IonMobilityPredictor();  // For test purposes
 
         public IonMobilityLibrarySpec IonMobilityLibrary { get; private set; }
 
-        public DriftTimeWindowWidthCalculator WindowWidthCalculator;
+        public IonMobilityWindowWidthCalculator WindowWidthCalculator;
 
-        public DriftTimeInfo GetMeasuredDriftTimeMsec(LibKey chargedPeptide)
+        public IonMobilityAndCCS GetMeasuredIonMobility(LibKey chargedPeptide)
         {
-            if (MeasuredDriftTimeIons != null)
+            if (MeasuredMobilityIons != null)
             {
-                DriftTimeInfo dt;
-                if (MeasuredDriftTimeIons.TryGetValue(chargedPeptide, out dt))
-                    return dt;
+                IonMobilityAndCCS im;
+                if (MeasuredMobilityIons.TryGetValue(chargedPeptide, out im))
+                    return im;
             }
-            return DriftTimeInfo.EMPTY;
+            return IonMobilityAndCCS.EMPTY;
         }
 
-        public IDictionary<LibKey, DriftTimeInfo> MeasuredDriftTimeIons
+        public IDictionary<LibKey, IonMobilityAndCCS> MeasuredMobilityIons
         {
-            get { return _measuredDriftTimeIons; }
+            get { return _measuredMobilityIons; }
             private set 
             {
-                _measuredDriftTimeIons = (value == null) ? null : new ImmutableDictionary<LibKey, DriftTimeInfo>(value);
+                _measuredMobilityIons = (value == null) ? null : new ImmutableDictionary<LibKey, IonMobilityAndCCS>(value);
             }
         }
 
@@ -3120,52 +3239,63 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public bool IsUsable
+        public MsDataFileImpl.eIonMobilityUnits GetIonMobilityUnits()
         {
-            get
+            foreach (MsDataFileImpl.eIonMobilityUnits units in Enum.GetValues(typeof(MsDataFileImpl.eIonMobilityUnits)))
             {
-                // We're usable if we have measured drift times, or a CCS library
-                bool usable = (_measuredDriftTimeIons != null) && _measuredDriftTimeIons.Any();
-                if (IonMobilityLibrary != null && !IonMobilityLibrary.IsNone)
+                if (units != MsDataFileImpl.eIonMobilityUnits.none && IsUsable(units))
                 {
-                    // If we have a CCS library, we need regressions, and the library itself needs to be ready
-                    usable |= ( ChargeRegressionLines != null && ChargeRegressionLines.Any() && IonMobilityLibrary.IsUsable );
+                    return units;
                 }
-                return usable;
             }
+            return MsDataFileImpl.eIonMobilityUnits.none;
+        }
+
+        public bool IsUsable(MsDataFileImpl.eIonMobilityUnits units)
+        {
+            // We're usable if we have measured ion mobility values, or a CCS library
+            bool usable = (_measuredMobilityIons != null) && _measuredMobilityIons.Any(m => m.Value.IonMobility.Units == units);
+            if (IonMobilityLibrary != null && !IonMobilityLibrary.IsNone)
+            {
+                // If we have a CCS library, we need regressions, and the library itself needs to be ready
+                usable |= ( ChargeRegressionLines != null && ChargeRegressionLines.Any() && IonMobilityLibrary.IsUsable );
+            }
+            return usable;
         }
 
         #region Property change methods
 
-        public DriftTimePredictor ChangeLibrary(IonMobilityLibrarySpec prop)
+        public IonMobilityPredictor ChangeLibrary(IonMobilityLibrarySpec prop)
         {
             return ChangeProp(ImClone(this), im => im.IonMobilityLibrary = prop);
         }
 
-        public DriftTimePredictor ChangeMeasuredDriftTimesFromResults(SrmDocument document, string documentFilePath, IProgressMonitor progressMonitor = null)
+        public IonMobilityPredictor ChangeMeasuredIonMobilityValuesFromResults(SrmDocument document, string documentFilePath, IProgressMonitor progressMonitor = null)
         {
             // Overwrite any existing measurements with newly derived ones
-            Dictionary<LibKey, DriftTimeInfo> measured;
-            using (var finder = new DriftTimeFinder(document, documentFilePath, this, progressMonitor))
+            Dictionary<LibKey, IonMobilityAndCCS> measured;
+            using (var finder = new IonMobilityFinder(document, documentFilePath, this, progressMonitor))
             {
-                measured = finder.FindDriftTimePeaks(); // Returns null on cancel
+                measured = finder.FindIonMobilityPeaks(); // Returns null on cancel
             }
-            return measured == null ? this : ChangeProp(ImClone(this), im => im.MeasuredDriftTimeIons = measured);
+            return ChangeMeasuredIonMobilityValues(measured);
         }
 
-        public DriftTimePredictor ChangeMeasuredDriftTimes(Dictionary<LibKey, DriftTimeInfo> measured)
+        public IonMobilityPredictor ChangeMeasuredIonMobilityValues(IDictionary<LibKey, IonMobilityAndCCS> measured)
         {
-            return measured == null ? this : ChangeProp(ImClone(this), im => im.MeasuredDriftTimeIons = measured);
+            if (measured != null && (MeasuredMobilityIons == null || !ArrayUtil.EqualsDeep(MeasuredMobilityIons, measured)))
+                return ChangeProp(ImClone(this), im => im.MeasuredMobilityIons = measured);
+            return this;
         }
 
-        public DriftTimePredictor ChangeDriftTimeWindowWidthCalculator(DriftTimeWindowWidthCalculator prop)
+        public IonMobilityPredictor ChangeDriftTimeWindowWidthCalculator(IonMobilityWindowWidthCalculator prop)
         {
             return ChangeProp(ImClone(this), im => im.WindowWidthCalculator = prop);
         }
 
-        public DriftTimePredictor ChangeMeasuredDriftTimeIons(IDictionary<LibKey, DriftTimeInfo> prop)
+        public IonMobilityPredictor ChangeMeasuredMobilityIons(IDictionary<LibKey, IonMobilityAndCCS> prop)
         {
-            return ChangeProp(ImClone(this), im => im.MeasuredDriftTimeIons = prop);
+            return ChangeProp(ImClone(this), im => im.MeasuredMobilityIons = prop);
         }
 
         #endregion
@@ -3180,27 +3310,28 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
 
-        public DriftTimeInfo GetDriftTimeInfo(LibKey peptide, IConversionDriftTimeCCSProvider conversionDriftTimeCcsProvider)
+        public IonMobilityAndCCS GetIonMobilityInfo(LibKey peptide, IIonMobilityFunctionsProvider ionMobilityFunctionsProvider)
         {
             var ionMobility = GetIonMobilityInfo(peptide);
-            // Convert from CCS to DT if possible
-            if (conversionDriftTimeCcsProvider != null && ionMobility != null && ionMobility.HasCollisionalCrossSection && peptide.PrecursorMz.HasValue)
+            // Convert from CCS to ion mobility if possible
+            if (ionMobilityFunctionsProvider != null && ionMobilityFunctionsProvider.ProvidesCollisionalCrossSectionConverter && 
+                ionMobility != null && ionMobility.HasCollisionalCrossSection && peptide.PrecursorMz.HasValue)
             {
-                var driftTimeMsec = conversionDriftTimeCcsProvider.DriftTimeFromCCS(ionMobility.CollisionalCrossSectionSqA.Value,
+                var ionMobilityValue = ionMobilityFunctionsProvider.IonMobilityFromCCS(ionMobility.CollisionalCrossSectionSqA.Value,
                     peptide.PrecursorMz.Value, peptide.Charge);
-                ionMobility = new DriftTimeInfo(driftTimeMsec, ionMobility.CollisionalCrossSectionSqA, ionMobility.HighEnergyDriftTimeOffsetMsec);
+                ionMobility =  IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobilityValue, ionMobility.CollisionalCrossSectionSqA, ionMobility.HighEnergyIonMobilityValueOffset);
             }
             return ionMobility;
         }
 
-        public DriftTimeInfo GetIonMobilityInfo(LibKey peptide)
+        public IonMobilityAndCCS GetIonMobilityInfo(LibKey peptide)
         {
-            // Do we see this in our list of observed drift times?
-            DriftTimeInfo driftTime = null;
+            // Do we see this in our list of observed ion mobilities?
+            IonMobilityAndCCS ionMobility = null;
             var found = false;
-            if (MeasuredDriftTimeIons != null)
+            if (MeasuredMobilityIons != null)
             {
-                if (MeasuredDriftTimeIons.TryGetValue(peptide, out driftTime))
+                if (MeasuredMobilityIons.TryGetValue(peptide, out ionMobility))
                     found = true;
             }
             if (!found && IonMobilityLibrary != null && !IonMobilityLibrary.IsNone)
@@ -3213,28 +3344,28 @@ namespace pwiz.Skyline.Model.DocSettings
                         // First access?  Load the library.
                         IonMobilityLibrary = IonMobilityLibrary.Initialize(null);
                     }
-                    driftTime = IonMobilityLibrary.GetDriftTimeInfo(peptide, regressionLine); //  regressionLine.GetY(peptideInfo.CollisionalCrossSection) or null;
+                    ionMobility = IonMobilityLibrary.GetIonMobilityInfo(peptide, regressionLine); //  regressionLine.GetY(peptideInfo.CollisionalCrossSection) or null;
                 }
             }
-            return driftTime;
+            return ionMobility;
         }
 
         /// <summary>
-        /// Get the drift time in msec for the charged peptide, and the width of the window
-        /// centered on that based on the drift time predictor's claimed resolving power
+        /// Get the ion mobility for the charged peptide, and the width of the window
+        /// centered on that based on the predictor's claimed resolving power
         /// </summary>
-        public DriftTimeInfo GetDriftTimeInfo(LibKey peptide, IConversionDriftTimeCCSProvider conversionDriftTimeCcsProvider, double driftTimeMax, out double dtWindowWidthMsec)
+        public IonMobilityAndCCS GetIonMobilityInfo(LibKey peptide, IIonMobilityFunctionsProvider ionMobilityFunctionsProvider, double ionMobilityRangeMax, out double ionMobilityWindowWidth)
         {
-            DriftTimeInfo driftTime = GetDriftTimeInfo(peptide, conversionDriftTimeCcsProvider);
-            if (driftTime != null)
+            IonMobilityAndCCS ionMobility = GetIonMobilityInfo(peptide, ionMobilityFunctionsProvider);
+            if (ionMobility != null && ionMobility.IonMobility.HasValue)
             {
-                dtWindowWidthMsec = WindowWidthCalculator.WidthAt(driftTime.DriftTimeMsec ?? 0, driftTimeMax); 
+                ionMobilityWindowWidth = WindowWidthCalculator.WidthAt(ionMobility.IonMobility.Mobility.Value, ionMobilityRangeMax); 
             }
             else
             {
-                dtWindowWidthMsec = 0;
+                ionMobilityWindowWidth = 0;
             }
-            return driftTime;
+            return ionMobility;
         }
 
         #region Implementation of IXmlSerializable
@@ -3242,23 +3373,23 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// For serialization
         /// </summary>
-        private DriftTimePredictor()
+        private IonMobilityPredictor()
         {
         }
 
         private enum EL
         {
-            regression_dt,
-            measured_dt
+            regression_dt, // Misnomer - this is used for all IMS types, not just DT
+            measured_dt  // Misnomer - this is used for all IMS types, not just DT
         }
 
         private void Validate()
         {
             // This is active if:
-            // Measured drift times are provided, or
+            // Measured ion mobilities are provided, or
             // Ion mobility library is provided
             bool hasLib = ((IonMobilityLibrary != null) && !IonMobilityLibrary.IsNone);
-            bool hasMeasured = ((MeasuredDriftTimeIons != null) && MeasuredDriftTimeIons.Any());
+            bool hasMeasured = ((MeasuredMobilityIons != null) && MeasuredMobilityIons.Any());
             if (hasLib || hasMeasured)
             {
                 var messages = new List<string>();
@@ -3266,24 +3397,24 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (msg != null)
                     messages.Add(msg);
                 if (hasLib && String.IsNullOrEmpty(IonMobilityLibrary.PersistencePath))
-                    messages.Add(Resources.DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_);
+                    messages.Add(Resources.IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_);
                 if (hasLib && !ChargeRegressionLines.Any())
-                    messages.Add(Resources.DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_);
+                    messages.Add(Resources.IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_);
                 if (messages.Any())
                     throw new InvalidDataException(TextUtil.LineSeparate(messages));
             }
         }
 
-        public static DriftTimePredictor Deserialize(XmlReader reader)
+        public static IonMobilityPredictor Deserialize(XmlReader reader)
         {
-            return reader.Deserialize(new DriftTimePredictor());
+            return reader.Deserialize(new IonMobilityPredictor());
         }
 
         public override void ReadXml(XmlReader reader)
         {
             // Read start tag attributes
             base.ReadXml(reader);
-            WindowWidthCalculator = new DriftTimeWindowWidthCalculator(reader);
+            WindowWidthCalculator = new IonMobilityWindowWidthCalculator(reader);
 
             // Consume start tag
             reader.ReadStartElement();
@@ -3301,19 +3432,19 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             ChargeRegressionLines = list.ToArray();
 
-            // Read all measured drift times
-            var dict = new Dictionary<LibKey, DriftTimeInfo>();
-            while (reader.IsStartElement(EL.measured_dt))
+            // Read all measured ion mobilities
+            var dict = new Dictionary<LibKey, IonMobilityAndCCS>();
+            while (reader.IsStartElement(EL.measured_dt)) // N.B. EL.measured_dt is a misnomer, this covers all IMS types
             {
-                var dt = MeasuredDriftTimeIon.Deserialize(reader);
-                var key = new LibKey(dt.TextId, dt.Charge);
+                var dt = MeasuredIonMobility.Deserialize(reader);
+                var key = new LibKey(dt.Target, dt.Charge);
                 if (!dict.ContainsKey(key))
                 {
-                    dict.Add(key, dt.DriftTimeInfo);
+                    dict.Add(key, dt.IonMobilityInfo);
                 }
             }
             if (dict.Any())
-                MeasuredDriftTimeIons = dict;
+                MeasuredMobilityIons = dict;
 
             reader.Read();             // Consume end tag
 
@@ -3344,13 +3475,13 @@ namespace pwiz.Skyline.Model.DocSettings
                     writer.WriteEndElement();
                 }
             }
-            // Write all measured drift times
-            if (MeasuredDriftTimeIons != null)
+            // Write all measured ion mobilities
+            if (MeasuredMobilityIons != null)
             {
-                foreach (var dt in MeasuredDriftTimeIons)
+                foreach (var im in MeasuredMobilityIons)
                 {
-                    writer.WriteStartElement(EL.measured_dt);
-                    var mdt = new MeasuredDriftTimeIon(dt.Key.Target, dt.Key.Adduct, dt.Value);
+                    writer.WriteStartElement(EL.measured_dt); // N.B. EL.measured_dt is a misnomer, this covers all IMS types
+                    var mdt = new MeasuredIonMobility(im.Key.Target, im.Key.Adduct, im.Value);
                     mdt.WriteXml(writer);
                     writer.WriteEndElement();
                 }
@@ -3361,14 +3492,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region object overrides
 
-        public bool Equals(DriftTimePredictor obj)
+        public bool Equals(IonMobilityPredictor obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return base.Equals(obj) &&
                    Equals(obj.IonMobilityLibrary, IonMobilityLibrary) &&
                    ArrayUtil.EqualsDeep(obj.ChargeRegressionLines, ChargeRegressionLines) &&
-                   ArrayUtil.EqualsDeep(obj.MeasuredDriftTimeIons, MeasuredDriftTimeIons) &&
+                   ArrayUtil.EqualsDeep(obj.MeasuredMobilityIons, MeasuredMobilityIons) &&
                    Equals(obj.WindowWidthCalculator, WindowWidthCalculator);
         }
 
@@ -3376,7 +3507,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj as DriftTimePredictor);
+            return Equals(obj as IonMobilityPredictor);
         }
 
         public override int GetHashCode()
@@ -3386,7 +3517,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 int result = base.GetHashCode();
                 result = (result * 397) ^ IonMobilityLibrary.GetHashCode();
                 result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(ChargeRegressionLines);
-                result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(MeasuredDriftTimeIons);
+                result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(MeasuredMobilityIons);
                 result = (result * 397) ^ WindowWidthCalculator.GetHashCode();
                 return result;
             }

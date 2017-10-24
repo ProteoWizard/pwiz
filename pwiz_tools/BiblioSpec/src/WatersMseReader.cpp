@@ -611,7 +611,8 @@ bool WatersMseReader::getSpectrum(PSM* psm,
                                   bool getPeaks){    
 
     returnData.id = ((MsePSM*)psm)->specKey;
-    returnData.driftTime = ((MsePSM*)psm)->precursorIonMobility;
+    returnData.ionMobility = ((MsePSM*)psm)->precursorIonMobility;
+    returnData.ionMobilityType = IONMOBILITY_DRIFTTIME_MSEC;
     returnData.ccs = 0;
     returnData.retentionTime = ((MsePSM*)psm)->retentionTime;
     returnData.mz = ((MsePSM*)psm)->mz;
@@ -620,16 +621,16 @@ bool WatersMseReader::getSpectrum(PSM* psm,
     if( getPeaks ){
         returnData.mzs = new double[returnData.numPeaks];
         returnData.intensities = new float[returnData.numPeaks];
-        returnData.productDriftTimes = new float[returnData.numPeaks];
+        returnData.productIonMobilities = new float[returnData.numPeaks];
         for(int i=0; i < returnData.numPeaks; i++){
             returnData.mzs[i] = ((MsePSM*)psm)->mzs[i]; 
             returnData.intensities[i] = (float)((MsePSM*)psm)->intensities[i];  
-            returnData.productDriftTimes[i] = (float)((MsePSM*)psm)->productIonMobilities[i];  
+            returnData.productIonMobilities[i] = (float)((MsePSM*)psm)->productIonMobilities[i];  
         }
     } else {
         returnData.mzs = NULL;
         returnData.intensities = NULL;
-        returnData.productDriftTimes = NULL;
+        returnData.productIonMobilities = NULL;
     }
     return true;
 }

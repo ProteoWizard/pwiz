@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -48,6 +49,8 @@ namespace pwiz.SkylineTestFunctional
         const double monoMass105 = 105;
         const double testRT = 234.56;
         const double testRTWindow = 4.56;
+
+        public static readonly ExplicitTransitionGroupValues TESTVALUES = new ExplicitTransitionGroupValues(1.23, 2.34, -.345, MsDataFileImpl.eIonMobilityUnits.drift_time_msec, 345.6, 4.56, 5.67, 6.78, 7.89); // Using this helps catch untested functionality as we add members
 
         protected override void DoTest()
         {
@@ -140,7 +143,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(doc.MoleculeTransitionGroups.ElementAt(0).EqualsId(docA.MoleculeTransitionGroups.ElementAt(0)));  // No change to Id node or its child Ids
             Assert.AreEqual(testRT, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTime);
             Assert.AreEqual(testRTWindow, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow);
-            Assert.AreEqual(ExplicitTransitionGroupValues.TEST, docA.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
+            Assert.AreEqual(TESTVALUES, docA.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
 
             var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifyPeptide);
             double massPrecisionTolerance = Math.Pow(10, -SequenceMassCalc.MassPrecision);
@@ -250,14 +253,15 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 // Test the "set" part of "Issue 371: Small molecules: need to be able to import and/or set CE, RT and DT for individual precursors and products"
-                editMoleculeDlgA.DriftTimeMsec = ExplicitTransitionGroupValues.TEST.DriftTimeMsec.Value;
-                editMoleculeDlgA.DriftTimeHighEnergyOffsetMsec = ExplicitTransitionGroupValues.TEST.DriftTimeHighEnergyOffsetMsec.Value;
-                editMoleculeDlgA.CollisionalCrossSectionSqA = ExplicitTransitionGroupValues.TEST.CollisionalCrossSectionSqA.Value;
-                editMoleculeDlgA.CollisionEnergy = ExplicitTransitionGroupValues.TEST.CollisionEnergy.Value;
-                editMoleculeDlgA.SLens = ExplicitTransitionGroupValues.TEST.SLens.Value;
-                editMoleculeDlgA.ConeVoltage = ExplicitTransitionGroupValues.TEST.ConeVoltage;
-                editMoleculeDlgA.DeclusteringPotential = ExplicitTransitionGroupValues.TEST.DeclusteringPotential;
-                editMoleculeDlgA.CompensationVoltage = ExplicitTransitionGroupValues.TEST.CompensationVoltage;
+                editMoleculeDlgA.IonMobility = TESTVALUES.IonMobility.Value;
+                editMoleculeDlgA.IonMobilityHighEnergyOffset = TESTVALUES.IonMobilityHighEnergyOffset.Value;
+                editMoleculeDlgA.IonMobilityUnits = TESTVALUES.IonMobilityUnits;
+                editMoleculeDlgA.CollisionalCrossSectionSqA = TESTVALUES.CollisionalCrossSectionSqA.Value;
+                editMoleculeDlgA.CollisionEnergy = TESTVALUES.CollisionEnergy.Value;
+                editMoleculeDlgA.SLens = TESTVALUES.SLens.Value;
+                editMoleculeDlgA.ConeVoltage = TESTVALUES.ConeVoltage;
+                editMoleculeDlgA.DeclusteringPotential = TESTVALUES.DeclusteringPotential;
+                editMoleculeDlgA.CompensationVoltage = TESTVALUES.CompensationVoltage;
             });
             OkDialog(editMoleculeDlgA, editMoleculeDlgA.OkDialog);
             var doc = WaitForDocumentChange(docA);
@@ -265,7 +269,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(peptideDocNode);
             Assert.IsTrue(peptideDocNode.EqualsId(docA.Molecules.ElementAt(0))); // No Id change
             Assert.IsTrue(doc.MoleculeTransitionGroups.ElementAt(0).EqualsId(docA.MoleculeTransitionGroups.ElementAt(0)));  // No change to Id node or its child Ids
-            Assert.AreEqual(ExplicitTransitionGroupValues.TEST, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
+            Assert.AreEqual(TESTVALUES, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
             Assert.IsNull(peptideDocNode.ExplicitRetentionTime);
             var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup);
             double massPrecisionTolerance = Math.Pow(10, -SequenceMassCalc.MassPrecision);
@@ -351,16 +355,16 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.IsFalse(newdoc.MoleculeTransitionGroups.ElementAt(0).EqualsId(peptideDocNode));  // Changing the adduct changes the Id node
             // Verify that CE overrides work
-            Assert.AreEqual(ExplicitTransitionGroupValues.TEST, newdoc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
+            Assert.AreEqual(TESTVALUES, newdoc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
             Assert.IsNull(newdoc.Molecules.ElementAt(0).ExplicitRetentionTime);  // Not set yet
 
             // Verify that the explicitly set drift time overides any calculations
             double windowDT;
             double driftTimeMax = 1000.0;
-            var centerDriftTime = newdoc.Settings.PeptideSettings.Prediction.GetDriftTime(
+            var centerDriftTime = newdoc.Settings.PeptideSettings.Prediction.GetIonMobility(
                                        newdoc.Molecules.First(), newdoc.MoleculeTransitionGroups.First(), null, null, driftTimeMax, out windowDT);
-            Assert.AreEqual(ExplicitTransitionGroupValues.TEST.DriftTimeMsec.Value, centerDriftTime.DriftTimeMsec ?? 0, .0001);
-            Assert.AreEqual(ExplicitTransitionGroupValues.TEST.DriftTimeMsec.Value + ExplicitTransitionGroupValues.TEST.DriftTimeHighEnergyOffsetMsec.Value, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? 0, .0001);
+            Assert.AreEqual(TESTVALUES.IonMobility.Value, centerDriftTime.IonMobility.Mobility.Value, .0001);
+            Assert.AreEqual(TESTVALUES.IonMobility.Value + TESTVALUES.IonMobilityHighEnergyOffset.Value, centerDriftTime.GetHighEnergyDriftTimeMsec() ?? 0, .0001);
             Assert.AreEqual(0, windowDT, .0001);
 
             // Verify that tree selection doesn't change just because we changed an ID object

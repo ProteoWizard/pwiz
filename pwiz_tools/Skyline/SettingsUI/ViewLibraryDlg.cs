@@ -801,16 +801,16 @@ namespace pwiz.Skyline.SettingsUI
                             {
                                 labelRT.Text = Resources.ViewLibraryDlg_UpdateUI_RT + COLON_SEP + rt;
                             }
-                            DriftTimeInfo dt = bestSpectrum.DriftTimeInfo;
+                            IonMobilityAndCCS dt = bestSpectrum.IonMobilityInfo;
                             if (dt != null && !dt.IsEmpty)
                             {
                                 var dtText = string.Empty;
                                 if (dt.HasCollisionalCrossSection)
                                     dtText = "CCS" + COLON_SEP + string.Format("{0:F4} ", dt.CollisionalCrossSectionSqA.Value); // Not L10N
-                                if (dt.HasDriftTime)
-                                    dtText += "DT" + COLON_SEP + string.Format("{0:F4}", dt.DriftTimeMsec.Value); // Not L10N
-                                if (dt.HighEnergyDriftTimeOffsetMsec != 0) // Show the high energy value (as in Waters MSe) if different
-                                    dtText += String.Format("({0:F4}ms)", dt.HighEnergyDriftTimeOffsetMsec); // Not L10N
+                                if (dt.HasIonMobilityValue)
+                                    dtText += "IM" + COLON_SEP + string.Format("{0:F4}", dt.IonMobility.Mobility); // Not L10N
+                                if (dt.HighEnergyIonMobilityValueOffset != 0) // Show the high energy value (as in Waters MSe) if different
+                                    dtText += String.Format("({0:F4})", dt.HighEnergyIonMobilityValueOffset); // Not L10N
                                 labelRT.Text = TextUtil.SpaceSeparate(labelRT.Text, dtText);
                             }
                         }

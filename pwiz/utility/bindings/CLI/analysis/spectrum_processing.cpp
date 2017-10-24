@@ -426,13 +426,13 @@ SpectrumList_3D::SpectrumList_3D(msdata::SpectrumList^ inner)
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
 }
 
-Spectrum3D^ SpectrumList_3D::spectrum3d(double scanStartTime, System::Collections::Generic::IEnumerable<ContinuousInterval>^ driftTimeRanges)
+Spectrum3D^ SpectrumList_3D::spectrum3d(double scanStartTime, System::Collections::Generic::IEnumerable<ContinuousInterval>^ ionMobilityRanges)
 {
-    boost::icl::interval_set<double> driftTimeRangesSet;
-    for each (ContinuousInterval interval in driftTimeRanges)
-        driftTimeRangesSet.add(boost::icl::continuous_interval<double>(interval.Begin, interval.End));
+    boost::icl::interval_set<double> ionMobilityRangesSet;
+    for each (ContinuousInterval interval in ionMobilityRanges)
+        ionMobilityRangesSet.add(boost::icl::continuous_interval<double>(interval.Begin, interval.End));
 
-    b::Spectrum3DPtr nativeResult = base_->spectrum3d(scanStartTime, driftTimeRangesSet);
+    b::Spectrum3DPtr nativeResult = base_->spectrum3d(scanStartTime, ionMobilityRangesSet);
 
     int i=0;
     Spectrum3D^ result = gcnew Spectrum3D(nativeResult->size());
@@ -459,19 +459,24 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(msdata::SpectrumList^ inner)
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
 }
 
-bool SpectrumList_IonMobility::canConvertDriftTimeAndCCS()
+SpectrumList_IonMobility::eIonMobilityUnits SpectrumList_IonMobility::getIonMobilityUnits()
 {
-    try { return base_->canConvertDriftTimeAndCCS(); } CATCH_AND_FORWARD
+    try { return static_cast<SpectrumList_IonMobility::eIonMobilityUnits>(base_->getIonMobilityUnits()); } CATCH_AND_FORWARD
 }
 
-double SpectrumList_IonMobility::driftTimeToCCS(double driftTime, double mz, int charge)
+bool SpectrumList_IonMobility::canConvertIonMobilityAndCCS(eIonMobilityUnits units)
 {
-    try { return base_->driftTimeToCCS(driftTime, mz, charge); } CATCH_AND_FORWARD
+    try { return base_->canConvertIonMobilityAndCCS(static_cast<b::SpectrumList_IonMobility::eIonMobilityUnits>(units)); } CATCH_AND_FORWARD
 }
 
-double SpectrumList_IonMobility::ccsToDriftTime(double ccs, double mz, int charge)
+double SpectrumList_IonMobility::ionMobilityToCCS(double ionMobility, double mz, int charge)
 {
-    try { return base_->ccsToDriftTime(ccs, mz, charge); } CATCH_AND_FORWARD
+    try { return base_->ionMobilityToCCS(ionMobility, mz, charge); } CATCH_AND_FORWARD
+}
+
+double SpectrumList_IonMobility::ccsToIonMobility(double ccs, double mz, int charge)
+{
+    try { return base_->ccsToIonMobility(ccs, mz, charge); } CATCH_AND_FORWARD
 }
 
 bool SpectrumList_IonMobility::accept(msdata::SpectrumList^ inner)

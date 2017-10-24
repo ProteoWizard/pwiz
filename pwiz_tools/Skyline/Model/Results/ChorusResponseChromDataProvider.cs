@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -42,6 +43,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 new ChromCachedFile(chromFileInfo.FilePath, chromCacheFile.Flags, chromCacheFile.FileWriteTime,
                     chromCacheFile.RunStartTime, chromCacheFile.MaxRetentionTime, chromCacheFile.MaxIntensity,
+                    chromCacheFile.IonMobilityUnits,
                     chromCacheFile.InstrumentInfoList),
             };
             var cache = new ChromatogramCache("cachePath", rawData, stream); // Not L10N
@@ -60,6 +62,9 @@ namespace pwiz.Skyline.Model.Results
                 id, modifiedSequence, peptideColor,
                 out extra, out timeIntensities);
         }
+
+        public override MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get { return MsDataFileImpl.eIonMobilityUnits.none; } }
+
 
         public override double? MaxRetentionTime
         {

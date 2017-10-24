@@ -469,9 +469,6 @@
   <data name="WatersMethodExporter_EnsureLibraries_Failed_to_find_a_valid_MassLynx_installation" xml:space="preserve">
     <value>未能发现有效的 MassLynx 安装。</value>
   </data>
-  <data name="DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_" xml:space="preserve">
-    <value>使用离子迁移库的漂移时间预测器必须包含每个电荷回归值。</value>
-  </data>
   <data name="SkylineWindow_generateDecoysMenuItem_Click_The_document_must_contain_peptides_to_generate_decoys_" xml:space="preserve">
     <value>文档必须包含肽以生成诱饵。</value>
   </data>
@@ -1425,9 +1422,6 @@
   <data name="AminoAcid_ValidateAAList_The_amino_acid__0__is_repeated_in_the_value__1__" xml:space="preserve">
     <value>氨基酸“{0}”在值“{1}”中重复。</value>
   </data>
-  <data name="GraphFullScan_CreateDriftTimeHeatmap_Drift_Time__ms_" xml:space="preserve">
-    <value>漂移时间 （毫秒）</value>
-  </data>
   <data name="CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_The_library__0__does_not_contain_ion_mobility_information_" xml:space="preserve">
     <value>库{0}不包含离子迁移信息。</value>
   </data>
@@ -1931,9 +1925,6 @@
   </data>
   <data name="EditDriftTimePredictorDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope_" xml:space="preserve">
     <value>值 {0} 不是有效的斜率。</value>
-  </data>
-  <data name="DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_" xml:space="preserve">
-    <value>使用离子迁移库的漂移时间预测器必须提供针对库的文件名称。</value>
   </data>
   <data name="ToolInstaller_UnpackZipTool_Error__The__0__does_not_contain_a_valid__1__attribute_" xml:space="preserve">
     <value>错误： {0}不包含有效的{1}属性。</value>
@@ -4929,9 +4920,6 @@
   <data name="OpenDataSourceDialog_populateComboBoxFromDirectory_Network_Share" xml:space="preserve">
     <value>网络共享</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_btnGenerateFromDocument_Click_Finding_drift_time_values_for_peaks" xml:space="preserve">
-    <value>查找峰的漂移时间值</value>
-  </data>
   <data name="ExportOptimize_COV_ROUGH_Rough_Tune" xml:space="preserve">
     <value>粗略调谐</value>
   </data>
@@ -6556,7 +6544,7 @@
   <data name="ImportFastaControl_ImportFasta_Change_digestion_settings" xml:space="preserve">
     <value>更改酶解设置</value>
   </data>
-  <data name="CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__" xml:space="preserve">
+  <data name="CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_ion_mobility_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__" xml:space="preserve">
     <value>无法针对序列 {0} 导入测量的漂移时间：未针对电荷态{1}提供任何碰撞横截面转换参数。</value>
   </data>
   <data name="ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist" xml:space="preserve">

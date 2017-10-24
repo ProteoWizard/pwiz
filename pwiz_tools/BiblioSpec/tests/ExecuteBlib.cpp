@@ -44,6 +44,7 @@ int main(int argc, char** argv)
     const char* libExt = ".blib";
 	const char* pdbExt = ".pdb";
     string inputs;  // all else
+    string expectedErrorMsg = "";
 
     for(int i = 1; i < argc; i++)
     {
@@ -60,6 +61,9 @@ int main(int argc, char** argv)
             }
             options += token;
             options += " ";
+            // Is this a negative test?
+            if (token[1] == 'e')
+                expectedErrorMsg = token.substr(3);
         }
         else if (bal::contains(token, "BlibBuild") ||
                  bal::contains(token, "BlibFilter") ||
@@ -107,6 +111,10 @@ int main(int argc, char** argv)
     int returnValue = system(fullCommand.c_str());
     cerr << "System returned " << returnValue << endl;
 
+    if (expectedErrorMsg != "")
+    {
+        return !returnValue; // Expecting a failure
+    }
     // why does 'return returnValue' exit with 0 when returnValue != 0?
 
     if( returnValue != 0 ){

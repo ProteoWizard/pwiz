@@ -20,6 +20,7 @@ using System;
 using System.ComponentModel;
 using System.Globalization;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -63,9 +64,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return _chromatogramInfo.Value == null ? null : _chromatogramInfo.Value.ExtractionWidth;
             } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
-        public double? ChromatogramDriftTime { get { return _chromatogramInfo.Value == null ? null : _chromatogramInfo.Value.DriftTime; } }
+        public double? ChromatogramIonMobility { get { return _chromatogramInfo.Value == null ? null : _chromatogramInfo.Value.IonMobility; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
-        public double? ChromatogramDriftTimeExtractionWidth { get { return _chromatogramInfo.Value == null ? null : _chromatogramInfo.Value.DriftTimeExtractionWidth; } }
+        public double? ChromatogramIonMobilityExtractionWidth { get { return _chromatogramInfo.Value == null ? null : _chromatogramInfo.Value.IonMobilityExtractionWidth; } }
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public string ChromatogramIonMobilityUnits
+        {
+            get
+            {
+                if (_chromatogramInfo.Value == null)
+                    return null;
+                return IonMobilityFilter.IonMobilityUnitsL10NString(_chromatogramInfo.Value.IonMobilityUnits);
+            }
+        }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public ChromSource? ChromatogramSource { get { return _chromatogramInfo.Value == null ? (ChromSource?)null : _chromatogramInfo.Value.Source; } }
 

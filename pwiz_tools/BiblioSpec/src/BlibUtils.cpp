@@ -79,6 +79,22 @@ const char* scoreTypeToString(PSM_SCORE_TYPE scoreType){
     return scoreTypeNames[scoreType];
 }
 
+
+const char* ionMobilityTypeToString(IONMOBILITY_TYPE ionMobilityType)
+{
+    switch (ionMobilityType)
+    {
+    case IONMOBILITY_NONE:
+        return "none";
+    case IONMOBILITY_DRIFTTIME_MSEC:
+        return "driftTime(msec)";
+    case IONMOBILITY_INVERSEREDUCED_VSECPERCM2:
+        return "inverseK0(Vsec/cm^2)";
+    default:
+        throw BlibException(true, "unknown ion mobility type");
+    }
+}
+
 /**
  * \brief Return a string from the root to the given filename.
  * For filenames with no path, prepends current working directory.

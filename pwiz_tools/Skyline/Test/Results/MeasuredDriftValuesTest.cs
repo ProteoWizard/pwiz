@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -91,36 +92,36 @@ namespace pwiz.SkylineTest.Results
                 Assert.IsTrue(docContainer.SetDocument(docResults, docOriginal, true));
                 docContainer.AssertComplete();
                 var document = docContainer.Document;
-                document = document.ChangeSettings(document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, DriftTimePredictor.EMPTY)));
+                document = document.ChangeSettings(document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, IonMobilityPredictor.EMPTY)));
 
                 // Verify ability to extract predictions from raw data
-                var newPred = document.Settings.PeptideSettings.Prediction.DriftTimePredictor.ChangeMeasuredDriftTimesFromResults(
+                var newPred = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
                         document, docContainer.DocumentFilePath);
-                var result = newPred.MeasuredDriftTimeIons;
+                var result = newPred.MeasuredMobilityIons;
                 Assert.AreEqual(TestSmallMolecules ? 2 : 1, result.Count);
                 const double expectedDT = 4.0019;
                 var expectedOffset = .4829;
-                Assert.AreEqual(expectedDT, result.Values.First().DriftTimeMsec.Value, .001);
-                Assert.AreEqual(expectedOffset, result.Values.First().HighEnergyDriftTimeOffsetMsec, .001);
+                Assert.AreEqual(expectedDT, result.Values.First().IonMobility.Mobility.Value, .001);
+                Assert.AreEqual(expectedOffset, result.Values.First().HighEnergyIonMobilityValueOffset, .001);
 
                 // Check ability to update, and to preserve unchanged
-                var revised = new Dictionary<LibKey, DriftTimeInfo>();
+                var revised = new Dictionary<LibKey, IonMobilityAndCCS>();
                 var libKey = result.Keys.First();
-                revised.Add(libKey, new DriftTimeInfo(4, null, 0.234));  // N.B. CCS handling would require actual raw data in this test, it's covered in a perf test
+                revised.Add(libKey, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(4, MsDataFileImpl.eIonMobilityUnits.drift_time_msec), null, 0.234));  // N.B. CCS handling would require actual raw data in this test, it's covered in a perf test
                 var libKey2 = new LibKey("DEADEELS", asSmallMolecules ? Adduct.NonProteomicProtonatedFromCharge(2) : Adduct.DOUBLY_PROTONATED);
-                revised.Add(libKey2, new DriftTimeInfo(5, null, 0.123));
+                revised.Add(libKey2, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(5, MsDataFileImpl.eIonMobilityUnits.drift_time_msec), null, 0.123));
                 document =
                     document.ChangeSettings(
-                        document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, new DriftTimePredictor("test", revised, null, null, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, 40, 0, 0))));
+                        document.Settings.ChangePeptidePrediction(prediction => new PeptidePrediction(null, new IonMobilityPredictor("test", revised, null, null, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, 40, 0, 0))));
                 newPred = document.Settings.PeptideSettings.Prediction.ChangeDriftTimePredictor(
-                    document.Settings.PeptideSettings.Prediction.DriftTimePredictor.ChangeMeasuredDriftTimesFromResults(
-                        document, docContainer.DocumentFilePath)).DriftTimePredictor;
-                result = newPred.MeasuredDriftTimeIons;
+                    document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.ChangeMeasuredIonMobilityValuesFromResults(
+                        document, docContainer.DocumentFilePath)).IonMobilityPredictor;
+                result = newPred.MeasuredMobilityIons;
                 Assert.AreEqual(TestSmallMolecules ? 3 : 2, result.Count);
-                Assert.AreEqual(expectedDT, result[libKey].DriftTimeMsec.Value, .001);
-                Assert.AreEqual(expectedOffset, result[libKey].HighEnergyDriftTimeOffsetMsec, .001);
-                Assert.AreEqual(5, result[libKey2].DriftTimeMsec.Value, .001);
-                Assert.AreEqual(0.123, result[libKey2].HighEnergyDriftTimeOffsetMsec, .001);
+                Assert.AreEqual(expectedDT, result[libKey].IonMobility.Mobility.Value, .001);
+                Assert.AreEqual(expectedOffset, result[libKey].HighEnergyIonMobilityValueOffset, .001);
+                Assert.AreEqual(5, result[libKey2].IonMobility.Mobility.Value, .001);
+                Assert.AreEqual(0.123, result[libKey2].HighEnergyIonMobilityValueOffset, .001);
             }
         }
     }

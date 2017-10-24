@@ -18,6 +18,7 @@
  */
 
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 
 namespace pwiz.Skyline.Model
 {
@@ -29,11 +30,11 @@ namespace pwiz.Skyline.Model
         /// </summary>
 
         public static readonly ExplicitTransitionGroupValues EMPTY = new ExplicitTransitionGroupValues(null);
-        public static readonly ExplicitTransitionGroupValues TEST = new ExplicitTransitionGroupValues(1.23, 2.34, -.345, 345.6, 4.56, 5.67, 6.78, 7.89); // Using this helps catch untested functionality as we add members
 
         public ExplicitTransitionGroupValues(double? explicitCollisionEnergy,
-            double? explicitDriftTimeMsec,
-            double? explicitDriftTimeHighEnergyOffsetMsec,
+            double? explicitIonMobility,
+            double? explicitIonMobilityHighEnergyOffset,
+            MsDataFileImpl.eIonMobilityUnits explicitIonMobilityUnits,
             double? explicitCollisionalCrossSectionSqA,
             double? explicitSLens,
             double? explicitConeVoltage,
@@ -41,8 +42,9 @@ namespace pwiz.Skyline.Model
             double? explicitCompensationVoltage)
         {
             CollisionEnergy = explicitCollisionEnergy;
-            DriftTimeMsec = explicitDriftTimeMsec;
-            DriftTimeHighEnergyOffsetMsec = explicitDriftTimeHighEnergyOffsetMsec;
+            IonMobility = explicitIonMobility;
+            IonMobilityHighEnergyOffset = explicitIonMobilityHighEnergyOffset;
+            IonMobilityUnits = explicitIonMobilityUnits;
             CollisionalCrossSectionSqA = explicitCollisionalCrossSectionSqA;
             SLens = explicitSLens;
             ConeVoltage = explicitConeVoltage;
@@ -53,8 +55,9 @@ namespace pwiz.Skyline.Model
         public ExplicitTransitionGroupValues(ExplicitTransitionGroupValues other)
             : this(
                 (other == null) ? null : other.CollisionEnergy,
-                (other == null) ? null : other.DriftTimeMsec,
-                (other == null) ? null : other.DriftTimeHighEnergyOffsetMsec,
+                (other == null) ? null : other.IonMobility,
+                (other == null) ? null : other.IonMobility,
+                (other == null) ? MsDataFileImpl.eIonMobilityUnits.none : other.IonMobilityUnits,
                 (other == null) ? null : other.CollisionalCrossSectionSqA,
                 (other == null) ? null : other.SLens,
                 (other == null) ? null : other.ConeVoltage,
@@ -64,8 +67,9 @@ namespace pwiz.Skyline.Model
         }
 
         public double? CollisionEnergy { get; private set; } // For import formats with explicit values for CE
-        public double? DriftTimeMsec { get; private set; } // For import formats with explicit values for DT
-        public double? DriftTimeHighEnergyOffsetMsec { get; private set; } // For import formats with explicit values for DT
+        public double? IonMobility { get; private set; } // For import formats with explicit values for DT
+        public double? IonMobilityHighEnergyOffset { get; private set; } // For import formats with explicit values for DT
+        public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits { get; private set; } // For import formats with explicit values for DT
         public double? CollisionalCrossSectionSqA { get; private set; } // For import formats with explicit values for CCS
         public double? SLens { get; private set; } // For Thermo
         public double? ConeVoltage { get; private set; } // For Waters
@@ -77,14 +81,15 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), (im, v) => im.CollisionEnergy = v, ce);
         }
 
-        public ExplicitTransitionGroupValues ChangeDriftTimeHighEnergyOffsetMsec(double? dtOffset)
+        public ExplicitTransitionGroupValues ChangeIonMobilityHighEnergyOffset(double? dtOffset)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.DriftTimeHighEnergyOffsetMsec = v, dtOffset);
+            return ChangeProp(ImClone(this), (im, v) => im.IonMobilityHighEnergyOffset = v, dtOffset);
         }
 
-        public ExplicitTransitionGroupValues ChangeDriftTime(double? dt)
+        public ExplicitTransitionGroupValues ChangeIonMobility(double? imNew, MsDataFileImpl.eIonMobilityUnits unitsNew)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.DriftTimeMsec = v, dt);
+            var explicitTransitionGroupValues = ChangeProp(ImClone(this), (im, v) => im.IonMobility = v, imNew);
+            return ChangeProp(ImClone(explicitTransitionGroupValues), (im, v) => im.IonMobilityUnits = v, unitsNew);
         }
 
         public ExplicitTransitionGroupValues ChangeCollisionalCrossSection(double? ccs)
@@ -115,8 +120,9 @@ namespace pwiz.Skyline.Model
         protected bool Equals(ExplicitTransitionGroupValues other)
         {
             return Equals(CollisionEnergy, other.CollisionEnergy) &&
-                   Equals(DriftTimeMsec, other.DriftTimeMsec) &&
-                   Equals(DriftTimeHighEnergyOffsetMsec, other.DriftTimeHighEnergyOffsetMsec) &&
+                   Equals(IonMobility, other.IonMobility) &&
+                   Equals(IonMobilityHighEnergyOffset, other.IonMobilityHighEnergyOffset) &&
+                   Equals(IonMobilityUnits, other.IonMobilityUnits) &&
                    Equals(CollisionalCrossSectionSqA, other.CollisionalCrossSectionSqA) &&
                    Equals(SLens, other.SLens) &&
                    Equals(ConeVoltage, other.ConeVoltage) &&
@@ -137,8 +143,9 @@ namespace pwiz.Skyline.Model
             unchecked
             {
                 int hashCode = CollisionEnergy.GetHashCode();
-                hashCode = (hashCode * 397) ^ DriftTimeMsec.GetHashCode();
-                hashCode = (hashCode * 397) ^ DriftTimeHighEnergyOffsetMsec.GetHashCode();
+                hashCode = (hashCode * 397) ^ IonMobility.GetHashCode();
+                hashCode = (hashCode * 397) ^ IonMobilityHighEnergyOffset.GetHashCode();
+                hashCode = (hashCode * 397) ^ IonMobilityUnits.GetHashCode();
                 hashCode = (hashCode * 397) ^ CollisionalCrossSectionSqA.GetHashCode();
                 hashCode = (hashCode * 397) ^ SLens.GetHashCode();
                 hashCode = (hashCode * 397) ^ ConeVoltage.GetHashCode();

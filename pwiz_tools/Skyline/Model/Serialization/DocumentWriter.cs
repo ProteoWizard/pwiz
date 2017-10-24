@@ -24,6 +24,7 @@ using System.Text;
 using System.Xml;
 using Google.Protobuf;
 using pwiz.ProteomeDatabase.API;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
@@ -175,8 +176,10 @@ namespace pwiz.Skyline.Model.Serialization
         private void WriteExplicitTransitionGroupValuesAttributes(XmlWriter writer, ExplicitTransitionGroupValues importedAttributes)
         {
             writer.WriteAttributeNullable(ATTR.explicit_collision_energy, importedAttributes.CollisionEnergy);
-            writer.WriteAttributeNullable(ATTR.explicit_drift_time_msec, importedAttributes.DriftTimeMsec);
-            writer.WriteAttributeNullable(ATTR.explicit_drift_time_high_energy_offset_msec, importedAttributes.DriftTimeHighEnergyOffsetMsec);
+            writer.WriteAttributeNullable(ATTR.explicit_ion_mobility, importedAttributes.IonMobility);
+            writer.WriteAttributeNullable(ATTR.explicit_ion_mobility_high_energy_offset, importedAttributes.IonMobilityHighEnergyOffset);
+            if (importedAttributes.IonMobility.HasValue)
+                writer.WriteAttribute(ATTR.explicit_ion_mobility_units, importedAttributes.IonMobilityUnits.ToString());
             writer.WriteAttributeNullable(ATTR.explicit_ccs_sqa, importedAttributes.CollisionalCrossSectionSqA);
             writer.WriteAttributeNullable(ATTR.explicit_s_lens, importedAttributes.SLens);
             writer.WriteAttributeNullable(ATTR.explicit_cone_voltage, importedAttributes.ConeVoltage);
@@ -510,10 +513,14 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttributeNullable(ATTR.retention_time, chromInfo.RetentionTime);
             writer.WriteAttributeNullable(ATTR.start_time, chromInfo.StartRetentionTime);
             writer.WriteAttributeNullable(ATTR.end_time, chromInfo.EndRetentionTime);
-            writer.WriteAttributeNullable(ATTR.ccs, chromInfo.DriftInfo.CollisionalCrossSection);
-            writer.WriteAttributeNullable(ATTR.drift_time_ms1, chromInfo.DriftInfo.DriftTimeMS1);
-            writer.WriteAttributeNullable(ATTR.drift_time_fragment, chromInfo.DriftInfo.DriftTimeFragment);
-            writer.WriteAttributeNullable(ATTR.drift_time_window, chromInfo.DriftInfo.DriftTimeWindow);
+            writer.WriteAttributeNullable(ATTR.ccs, chromInfo.IonMobilityInfo.CollisionalCrossSection);
+            if (chromInfo.IonMobilityInfo.IonMobilityUnits != MsDataFileImpl.eIonMobilityUnits.none)
+            {
+                writer.WriteAttributeNullable(ATTR.ion_mobility_ms1, chromInfo.IonMobilityInfo.IonMobilityMS1);
+                writer.WriteAttributeNullable(ATTR.ion_mobility_fragment, chromInfo.IonMobilityInfo.IonMobilityFragment);
+                writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobilityInfo.IonMobilityWindow);
+                writer.WriteAttribute(ATTR.ion_mobility_type, chromInfo.IonMobilityInfo.IonMobilityUnits.ToString());
+            }
             writer.WriteAttributeNullable(ATTR.fwhm, chromInfo.Fwhm);
             writer.WriteAttributeNullable(ATTR.area, chromInfo.Area);
             writer.WriteAttributeNullable(ATTR.background, chromInfo.BackgroundArea);
@@ -713,8 +720,8 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttribute(ATTR.retention_time, chromInfo.RetentionTime);
                 writer.WriteAttribute(ATTR.start_time, chromInfo.StartRetentionTime);
                 writer.WriteAttribute(ATTR.end_time, chromInfo.EndRetentionTime);
-                writer.WriteAttributeNullable(ATTR.drift_time, chromInfo.DriftTimeFilter.DriftTimeMsec);
-                writer.WriteAttributeNullable(ATTR.drift_time_window, chromInfo.DriftTimeFilter.DriftTimeExtractionWindowWidthMsec);
+                writer.WriteAttributeNullable(ATTR.ion_mobility, chromInfo.IonMobility.IonMobility.Mobility);
+                writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobility.IonMobilityExtractionWindowWidth);
                 writer.WriteAttribute(ATTR.area, chromInfo.Area);
                 writer.WriteAttribute(ATTR.background, chromInfo.BackgroundArea);
                 writer.WriteAttribute(ATTR.height, chromInfo.Height);

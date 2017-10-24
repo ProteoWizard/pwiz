@@ -105,6 +105,9 @@
     <ClCompile Include="src\Verbosity.cpp" />
     <ClCompile Include="src\WatersMseReader.cpp" />
     <ClCompile Include="src\WeibullPvalue.cpp" />
+    <ClCompile Include="tests\CompareLibraryContents.cpp" />
+    <ClCompile Include="tests\CompareTextFiles.cpp" />
+    <ClCompile Include="tests\ExecuteBlib.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AllBuildParsers.h" />
@@ -171,6 +174,7 @@
     <ClInclude Include="src\Verbosity.h" />
     <ClInclude Include="src\WatersMseReader.h" />
     <ClInclude Include="src\WeibullPvalue.h" />
+    <ClInclude Include="tests\Compare.h" />
   </ItemGroup>
   <ItemGroup>
     <Xsd Include="src\quantitation_1.xsd" />

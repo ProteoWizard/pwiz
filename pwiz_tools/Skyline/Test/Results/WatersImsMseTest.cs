@@ -56,49 +56,49 @@ namespace pwiz.SkylineTest.Results
         [TestMethod]
         public void WatersImsMseNoDriftTimesChromatogramTest()
         {
-            WatersImsMseChromatogramTest(DriftFilterType.none, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power);
+            WatersImsMseChromatogramTest(DriftFilterType.none, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power);
         }
 
         [TestMethod]
         public void WatersImsMsePredictedDriftTimesChromatogramTest()
         {
-            WatersImsMseChromatogramTest(DriftFilterType.predictor, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power);
-            WatersImsMseChromatogramTest(DriftFilterType.predictor, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.linear_range);
+            WatersImsMseChromatogramTest(DriftFilterType.predictor, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power);
+            WatersImsMseChromatogramTest(DriftFilterType.predictor, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range);
         }
 
         [TestMethod]
         public void WatersImsMseLibraryDriftTimesChromatogramTest()
         {
-            WatersImsMseChromatogramTest(DriftFilterType.library, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power);
-            WatersImsMseChromatogramTest(DriftFilterType.library, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.linear_range);
+            WatersImsMseChromatogramTest(DriftFilterType.library, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power);
+            WatersImsMseChromatogramTest(DriftFilterType.library, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range);
         }
 
         [TestMethod]
         public void WatersImsMseNoDriftTimesChromatogramTestAsSmallMolecules()
         {
-            WatersImsMseChromatogramTest(DriftFilterType.none, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
+            WatersImsMseChromatogramTest(DriftFilterType.none, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
         [TestMethod]
         public void WatersImsMseNoDriftTimesChromatogramTestAsSmallMoleculeMasses()
         {
-            WatersImsMseChromatogramTest(DriftFilterType.none, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
+            WatersImsMseChromatogramTest(DriftFilterType.none, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
         }
 
         [TestMethod]
         public void WatersImsMsePredictedDriftTimesChromatogramTestAsSmallMolecules()
         {
-            WatersImsMseChromatogramTest(DriftFilterType.predictor, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
+            WatersImsMseChromatogramTest(DriftFilterType.predictor, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
         [TestMethod]
         public void WatersImsMseLibraryDriftTimesChromatogramTestAsSmallMolecules()
         {
-            WatersImsMseChromatogramTest(DriftFilterType.library, DriftTimeWindowWidthCalculator.DriftTimePeakWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
+            WatersImsMseChromatogramTest(DriftFilterType.library, IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
         private void WatersImsMseChromatogramTest(DriftFilterType mode,
-            DriftTimeWindowWidthCalculator.DriftTimePeakWidthType driftPeakWidthCalcType,
+            IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType driftPeakWidthCalcType,
             RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules = RefinementSettings.ConvertToSmallMoleculesMode.none)
         {
             if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
@@ -214,9 +214,9 @@ namespace pwiz.SkylineTest.Results
                             foreach (TransitionGroupDocNode nodeGroup in pep.Children)
                             {
                                 double windowDT;
-                                var centerDriftTime = document2.Settings.PeptideSettings.Prediction.GetDriftTime(
+                                var centerDriftTime = document2.Settings.PeptideSettings.Prediction.GetIonMobility(
                                     pep, nodeGroup, im, null, driftTimeMax, out windowDT);
-                                Assume.AreEqual(3.86124, centerDriftTime.DriftTimeMsec ?? 0, .0001, testModeStr);
+                                Assume.AreEqual(3.86124, centerDriftTime.IonMobility.Mobility.Value, .0001, testModeStr);
                                 Assume.AreEqual(0.077224865797235934, windowDT, .0001, testModeStr);
                             }
                         }
@@ -228,7 +228,7 @@ namespace pwiz.SkylineTest.Results
         private static double driftTimeMax = 13.799765403988133; // Known max drift time for this file - use to mimic resolving power logic for test purposes
 
         private static SrmDocument InitWatersImsMseDocument(TestFilesDir testFilesDir,
-            DriftTimeWindowWidthCalculator.DriftTimePeakWidthType driftPeakWidthCalcType,
+            IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType driftPeakWidthCalcType,
             bool withDriftTimeFilter, bool withDriftTimePredictor, 
             out string docPath)
         {
@@ -246,7 +246,7 @@ namespace pwiz.SkylineTest.Results
 
                 double resolvingPower = 100; // Test was originally written with resolving power 100
                 double widthAtDtMax = 2 * driftTimeMax / resolvingPower;
-                var driftTimeWindowWidthCalculator = new DriftTimeWindowWidthCalculator(driftPeakWidthCalcType, resolvingPower, 0, widthAtDtMax);
+                var driftTimeWindowWidthCalculator = new IonMobilityWindowWidthCalculator(driftPeakWidthCalcType, resolvingPower, 0, widthAtDtMax);
 
                 if (withDriftTimeFilter && !withDriftTimePredictor)
                 {
@@ -263,7 +263,7 @@ namespace pwiz.SkylineTest.Results
                 {
                     doc = doc.ChangeSettings(
                         doc.Settings.ChangePeptideSettings(ps => ps.ChangePrediction(
-                            ps.Prediction.ChangeDriftTimePredictor(ps.Prediction.DriftTimePredictor.ChangeDriftTimeWindowWidthCalculator(driftTimeWindowWidthCalculator)))));
+                            ps.Prediction.ChangeDriftTimePredictor(ps.Prediction.IonMobilityPredictor.ChangeDriftTimeWindowWidthCalculator(driftTimeWindowWidthCalculator)))));
                 }
             }
             return doc;

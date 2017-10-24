@@ -3814,13 +3814,13 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot import measured drift time for sequence {0}: no collisional cross section conversion parameters were provided for charge state {1}..
+        ///   Looks up a localized string similar to Cannot import measured ion mobility for sequence {0}: no collisional cross section conversion parameters were provided for charge state {1}..
         /// </summary>
-        public static string CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_drift_time_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__ {
+        public static string CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_ion_mobility_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__ {
             get {
                 return ResourceManager.GetString("CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_meas" +
-                        "ured_drift_time_for_sequence__0___no_collisional_cross_section_conversion_parame" +
-                        "ters_were_provided_for_charge_state__1__", resourceCulture);
+                        "ured_ion_mobility_for_sequence__0___no_collisional_cross_section_conversion_para" +
+                        "meters_were_provided_for_charge_state__1__", resourceCulture);
             }
         }
         
@@ -7863,26 +7863,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Drift time predictors using an ion mobility library must include per-charge regression values..
-        /// </summary>
-        public static string DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_ {
-            get {
-                return ResourceManager.GetString("DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_m" +
-                        "ust_include_per_charge_regression_values_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Drift time predictors using an ion mobility library must provide a filename for the library..
-        /// </summary>
-        public static string DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_ {
-            get {
-                return ResourceManager.GetString("DriftTimePredictor_Validate_Drift_time_predictors_using_an_ion_mobility_library_m" +
-                        "ust_provide_a_filename_for_the_library_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Resolving power must be greater than 0..
         /// </summary>
         public static string DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_ {
@@ -8358,12 +8338,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finding drift time values for peaks.
+        ///   Looks up a localized string similar to Finding ion mobility values for peaks.
         /// </summary>
-        public static string EditDriftTimePredictorDlg_btnGenerateFromDocument_Click_Finding_drift_time_values_for_peaks {
+        public static string EditDriftTimePredictorDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks {
             get {
-                return ResourceManager.GetString("EditDriftTimePredictorDlg_btnGenerateFromDocument_Click_Finding_drift_time_values" +
-                        "_for_peaks", resourceCulture);
+                return ResourceManager.GetString("EditDriftTimePredictorDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_fo" +
+                        "r_peaks", resourceCulture);
             }
         }
         
@@ -12745,15 +12725,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Drift Time (ms).
-        /// </summary>
-        public static string GraphFullScan_CreateDriftTimeHeatmap_Drift_Time__ms_ {
-            get {
-                return ResourceManager.GetString("GraphFullScan_CreateDriftTimeHeatmap_Drift_Time__ms_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0}  ({1:F2} min).
         /// </summary>
         public static string GraphFullScan_CreateGraph__0_____1_F2__min_ {
@@ -13974,6 +13945,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string IonMobilityFilter_IonMobilityUnitsL10NString_None {
+            get {
+                return ResourceManager.GetString("IonMobilityFilter_IonMobilityUnitsL10NString_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1/K0 (Vs/cm^2).
+        /// </summary>
+        public static string IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_ {
+            get {
+                return ResourceManager.GetString("IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drift Time (ms).
+        /// </summary>
+        public static string IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_ {
+            get {
+                return ResourceManager.GetString("IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The drift time predictors:.
         /// </summary>
         public static string IonMobilityLibraryList_AcceptList_The_drift_time_predictors_ {
@@ -14007,6 +14005,26 @@ namespace pwiz.Skyline.Properties {
         public static string IonMobilityLibraryList_Title_Edit_Ion_Mobility_Libraries {
             get {
                 return ResourceManager.GetString("IonMobilityLibraryList_Title_Edit_Ion_Mobility_Libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion mobility predictors using an ion mobility library must include per-charge regression values..
+        /// </summary>
+        public static string IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_ {
+            get {
+                return ResourceManager.GetString("IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_libra" +
+                        "ry_must_include_per_charge_regression_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion mobility predictors using an ion mobility library must provide a filename for the library..
+        /// </summary>
+        public static string IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_ {
+            get {
+                return ResourceManager.GetString("IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_libra" +
+                        "ry_must_provide_a_filename_for_the_library_", resourceCulture);
             }
         }
         
@@ -17966,6 +17984,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Supported values for {0} are: {1}.
+        /// </summary>
+        public static string PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transition List Help.
         /// </summary>
         public static string PasteDlg_btnTransitionListHelp_Click_Transition_List_Help {
@@ -18262,6 +18289,33 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_ {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Ion Mobility.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Ion Mobility High Energy Offset.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Ion Mobility Units.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units", resourceCulture);
             }
         }
         
@@ -25545,6 +25599,46 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_collision" +
                         "al_cross_section_value__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid ion mobility high energy offset value {0}.
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_high_energy_offset_value__0_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobil" +
+                        "ity_high_energy_offset_value__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid ion mobility units value {0} (accepted values are {1}).
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_units_value__0___accepted_values_are__1__ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobil" +
+                        "ity_units_value__0___accepted_values_are__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid ion mobility value {0}.
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobil" +
+                        "ity_value__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing ion mobility units.
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobil" +
+                        "ity_units", resourceCulture);
             }
         }
         

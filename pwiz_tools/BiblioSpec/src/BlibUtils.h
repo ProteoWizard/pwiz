@@ -61,6 +61,13 @@ namespace BiblioSpec {
 enum SPEC_ID_TYPE { SCAN_NUM_ID, INDEX_ID, NAME_ID };
 
 /**
+ * Different kinds of ion mobility are supported.
+ * N.B. this should agree with the enum eIonMobilityUnits in pwiz.CLI.analysis.SpectrumList_IonMobility
+ */
+enum IONMOBILITY_TYPE { IONMOBILITY_NONE, IONMOBILITY_DRIFTTIME_MSEC, IONMOBILITY_INVERSEREDUCED_VSECPERCM2, NUM_IONMOBILITY_TYPES };
+const char* ionMobilityTypeToString(IONMOBILITY_TYPE ionMobilityType);
+
+/**
  * All possible scores from different search algorithms.
  */
 enum PSM_SCORE_TYPE {
