@@ -80,10 +80,10 @@ void LibReader::setMaxLibId(){
                                      NULL); // statement tail null
     if(resultCode != SQLITE_OK) {
         string dbMsg = sqlite3_errmsg(db_);
-        Verbosity::debug("SQLITE error message: %s", dbMsg );
+        Verbosity::debug("SQLITE error message: %s", dbMsg.c_str() );
         Verbosity::error("LibReader::setMaxLibId cannot prepare "
                          "SQL statement for finding maxLibId from %s (%s)",
-                         libraryName_, dbMsg);
+                         libraryName_, dbMsg.c_str());
     }
 
     if( sqlite3_step(statement) != SQLITE_ROW ){
