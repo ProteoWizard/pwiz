@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Model.Serialization
             string ionMobilityUnitsString = reader.GetAttribute(attrName);
             MsDataFileImpl.eIonMobilityUnits ionMobilityUnits =
               string.IsNullOrEmpty( ionMobilityUnitsString) ?
-              MsDataFileImpl.eIonMobilityUnits.none : 
+              (fileInfo == null ? MsDataFileImpl.eIonMobilityUnits.none : fileInfo.IonMobilityUnits) : // Use the file-level declaration if no local declaration
               TypeSafeEnum.Parse<MsDataFileImpl.eIonMobilityUnits>(ionMobilityUnitsString);
             return ionMobilityUnits;
         }

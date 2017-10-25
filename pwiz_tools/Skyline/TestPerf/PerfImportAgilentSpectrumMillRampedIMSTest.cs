@@ -428,13 +428,16 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 new[]
                 {
                     "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.CollisionalCrossSection",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.DriftTimeMS1",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.DriftTimeFragment",
-                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.DriftTimeWindow"
+                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityMS1",
+                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityFragment",
+                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityUnits",
+                    "Proteins!*.Peptides!*.Precursors!*.Results!*.Value.IonMobilityWindow"
                 });
-            CheckFieldByName(documentGrid, "DriftTimeMS1", row, _testCase == 1 ? 18.43 : 23.50, msg);
-            CheckFieldByName(documentGrid, "DriftTimeFragment", row, null, msg); // Document is all precursor
-            CheckFieldByName(documentGrid, "DriftTimeWindow", row, expectedDtWindow, msg);
+
+            CheckFieldByName(documentGrid, "IonMobilityMS1", row, _testCase == 1 ? 18.43 : 23.50, msg);
+            CheckFieldByName(documentGrid, "IonMobilityFragment", row, (double?)null, msg); // Document is all precursor
+            CheckFieldByName(documentGrid, "IonMobilityUnits", row, IonMobilityValue.GetUnitsString(MsDataFileImpl.eIonMobilityUnits.drift_time_msec), msg);
+            CheckFieldByName(documentGrid, "IonMobilityWindow", row, expectedDtWindow, msg);
             CheckFieldByName(documentGrid, "CollisionalCrossSection", row, _testCase == 1 ? 292.4 : 333.34, msg);
             // And clean up after ourselves
             RunUI(() => documentGrid.Close());
@@ -442,13 +445,24 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, double? expected, string msg = null)
         {
-            var col = FindDocumentGridColumn(documentGrid, "Results!*.Value.PrecursorResult."+name);
+            var col = FindDocumentGridColumn(documentGrid, "Results!*.Value.PrecursorResult." + name);
             RunUI(() =>
             {
                 // By checking the 1th row we check both the single file and two file cases
                 var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as double?;
-                Assert.AreEqual(expected.HasValue, val.HasValue, name + (msg??string.Empty));
+                Assert.AreEqual(expected.HasValue, val.HasValue, name + (msg ?? string.Empty));
                 Assert.AreEqual(expected ?? 0, val ?? 0, 0.005, name + (msg ?? string.Empty));
+            });
+        }
+
+        private void CheckFieldByName(DocumentGridForm documentGrid, string name, int row, string expected, string msg = null)
+        {
+            var col = FindDocumentGridColumn(documentGrid, "Results!*.Value.PrecursorResult." + name);
+            RunUI(() =>
+            {
+                // By checking the 1th row we check both the single file and two file cases
+                var val = documentGrid.DataGridView.Rows[row].Cells[col.Index].Value as string;
+                Assert.AreEqual(expected, val, name + (msg ?? string.Empty));
             });
         }
     }
