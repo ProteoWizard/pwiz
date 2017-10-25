@@ -469,6 +469,8 @@ InstrumentModelType RawFileImpl::getInstrumentModel()
         }
 
         instrumentModel_ = parseInstrumentModelType(modelString);
+        if (instrumentModel_ == InstrumentModelType_Unknown)
+            instrumentModel_ = parseInstrumentModelType(value(InstName));
     }
     return instrumentModel_;
 }
@@ -1045,13 +1047,27 @@ void ScanInfoImpl::initTrailerExtraHelper() const
     _variant_t variantTrailerExtraLabels;
     _variant_t variantTrailerExtraValues;
 
-    checkResult(rawfile_->raw_->GetTrailerExtraForScanNum(scanNumber_,
-                                                &variantTrailerExtraLabels,
-                                                &variantTrailerExtraValues,
-                                                &trailerExtraSize_),
-                                                "[ScanInfoImpl::initTrailerExtra(), GetTrailerExtraForScanNum()] ");
-    trailerExtraLabels_ = auto_ptr<VariantStringArray>(new VariantStringArray(variantTrailerExtraLabels, trailerExtraSize_));
-    trailerExtraValues_ = auto_ptr<VariantStringArray>(new VariantStringArray(variantTrailerExtraValues, trailerExtraSize_));
+    try
+    {
+        checkResult(rawfile_->raw_->GetTrailerExtraForScanNum(scanNumber_,
+                                                    &variantTrailerExtraLabels,
+                                                    &variantTrailerExtraValues,
+                                                    &trailerExtraSize_),
+                                                    "[ScanInfoImpl::initTrailerExtra(), GetTrailerExtraForScanNum()] ");
+    }
+    catch (RawEgg& e)
+    {
+        if (bal::contains(e.what(), "Incorrect function"))
+        {
+            trailerExtraLabels_.reset(new VariantStringArray());
+            trailerExtraValues_.reset(new VariantStringArray());
+            return;
+        }
+        else
+            throw;
+    }
+    trailerExtraLabels_.reset(new VariantStringArray(variantTrailerExtraLabels, trailerExtraSize_));
+    trailerExtraValues_.reset(new VariantStringArray(variantTrailerExtraValues, trailerExtraSize_));
 
     if (trailerExtraLabels_->size() != trailerExtraValues_->size())
         throw RawEgg("[ScanInfoImpl::initTrailerExtra()] Trailer Extra sizes do not match."); 

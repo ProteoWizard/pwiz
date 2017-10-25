@@ -37,6 +37,12 @@ namespace Thermo {
 class ManagedSafeArray
 {
     public:
+    ManagedSafeArray()
+    :   size_(0),
+        array_(0),
+        data_(0)
+    {
+    }
 
     ManagedSafeArray(VARIANT& v, long size)
     :   size_(size),
@@ -82,6 +88,9 @@ class ManagedSafeArray
 class VariantStringArray : public StringArray
 {
     public:
+    VariantStringArray()
+    {
+    }
 
     VariantStringArray(VARIANT& v, long size)
     :   msa_(v, size)

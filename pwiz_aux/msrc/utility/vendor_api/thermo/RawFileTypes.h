@@ -139,6 +139,7 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "DSQ")                     return InstrumentModelType_DSQ;
     else if (type == "POLARISQ")                return InstrumentModelType_PolarisQ;
     else if (type == "SURVEYOR MSQ")            return InstrumentModelType_Surveyor_MSQ;
+    else if (type == "MSQ PLUS")                return InstrumentModelType_Surveyor_MSQ;
     else if (type == "TEMPUS TOF")              return InstrumentModelType_Tempus_TOF;
     else if (type == "TRACE DSQ")               return InstrumentModelType_Trace_DSQ;
     else if (type == "TRITON")                  return InstrumentModelType_Triton;
