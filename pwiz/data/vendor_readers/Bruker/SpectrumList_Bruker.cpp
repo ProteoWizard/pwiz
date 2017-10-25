@@ -669,6 +669,7 @@ SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData) cons
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
+bool SpectrumList_Bruker::hasIonMobility() const { return false; }
 bool SpectrumList_Bruker::canConvertInverseK0AndCCS() const { return false; }
 double SpectrumList_Bruker::inverseK0ToCCS(double inverseK0, double mz, int charge) const {return 0;}
 double SpectrumList_Bruker::ccsToInverseK0(double ccs, double mz, int charge) const {return 0;}
