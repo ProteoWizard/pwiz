@@ -92,19 +92,27 @@ double getField(int fieldIdx, const string& line,
     return atof(field.c_str());
 }
 
+// account for Windows line endings
+string trim(const string &raw)
+{
+    string result = raw;
+    int len = result.size();
+    if (len > 0 && result[len - 1] == '\r')
+        result.erase(len - 1);
+    return result;
+}
 
 // Return true if the lines match, false if not.
 // Use the information in CompareDetails to decide if an exact
 // text match is required.
-bool linesMatch(const string& expected,
-	       	const string& observed,
-	       	CompareDetails& details){
-
+bool linesMatch(const string& expectedRaw,
+                const string& observedRaw,
+                CompareDetails& details)
+{
     // account for Windows line endings
-    size_t length = observed.size() ;
-    if( (observed.size() > 0) && (observed[observed.size() - 1] == '\r') ){
-        length--;
-    }
+    string expected = trim(expectedRaw);
+    string observed = trim(observedRaw);
+    size_t length = observed.size();
 
     // they match if both empty
     if(expected.empty() && length == 0 ){
