@@ -261,10 +261,9 @@ int test (const vector<string>& args)
     string libName = tokens[0];
     string expectedOutput = tokens[1];
 
-    vector<string> skipLines;
     CompareDetails compareDetails;
     if( args.size() > 3 )
-        getSkipLines(tokens[2].c_str(), skipLines, compareDetails);
+        getSkipLines(tokens[2].c_str(), compareDetails);
 
     // clean up from previous tests
     removeObservedFiles(libName);

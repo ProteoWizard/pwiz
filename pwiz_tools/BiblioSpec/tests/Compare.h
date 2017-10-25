@@ -21,23 +21,24 @@
 
 #include "pwiz/utility/misc/Std.hpp"
 #include <stdlib.h>
+#include <algorithm>
 
 
-// Allowed tolerance on one column of a tab-delimited file
+// Allowed tolerance on one or all columns of a tab-delimited file
 struct CompareDetails
 {
-    int fieldIdx_;   // compare the ith field 
+    int fieldIdx_;   // compare the ith field (-1 means compare all doubles at default tolerance)
     double delta_;   // allow this much difference
+    vector<string> skipLines_; // list of keyphrases which if found cause a line to be skipped
 
-    CompareDetails() : fieldIdx_(-1), delta_(0) {};
-    bool empty(){ return (fieldIdx_ == -1); }
+    CompareDetails() : fieldIdx_(-1), delta_(1.0e-9) {}; // default is to allow a very small tolerance to all doubles, for OS/compiler effects
+    bool allow_tolerance_all_doubles(){ return (fieldIdx_ == -1); }
 };
 
 // Read from file and save each line in vector.
 // Save optional info about allowed tolerance in compareDetails.
 void getSkipLines(const char* fileName, 
-		  vector<string>& skipLines, 
-		  CompareDetails& compareDetails){
+          CompareDetails& compareDetails){
 
     ifstream infile(fileName);
 
@@ -63,7 +64,11 @@ void getSkipLines(const char* fileName,
 
     // now get remaining lines of text to skip
     while( !infile.eof() ){
-        skipLines.push_back(line);
+        int length = line.size();
+        if (length > 0 && line[length - 1] == '\r')
+            line.erase(length - 1);
+        if (line.size() > 0)
+            compareDetails.skipLines_.push_back(line);
         getline(infile, line);
     }
 
@@ -73,7 +78,8 @@ void getSkipLines(const char* fileName,
 // Split the given string on tab, extract the nth field, cast to double,
 // save the beginning and ending indexes of the field in the string.
 double getField(int fieldIdx, const string& line, 
-		size_t& finalStart, size_t& finalEnd){
+        size_t& finalStart, size_t& finalEnd, string &field)
+{
 
     size_t start = line.find('\t');
     int counter = 1;
@@ -85,7 +91,7 @@ double getField(int fieldIdx, const string& line,
     }
 
     size_t end = line.find('\t', start + 1);
-    string field = line.substr(start + 1, end - start - 1);
+    field = line.substr(start + 1, end - start - 1);
     finalStart = start + 1;
     finalEnd = end;
 
@@ -125,39 +131,51 @@ bool linesMatch(const string& expectedRaw,
         return true;
     }
 
-    // now compare a single field for a small numerical difference, if given
-    if( details.empty() ){
-        return false;
+    // Does this line contain a keyphrase indicating that it can be ignored for comparison purposes?
+    for (int i = 0; i < details.skipLines_.size(); i++)
+    {
+        if (expected.find(details.skipLines_[i]) != string::npos)
+        {
+            return true;
+        }
     }
 
-    // else, get a substr from each, cast to double and compare with delta
-    size_t expStart, expEnd, obsStart, obsEnd;
-    double expectedField = getField(details.fieldIdx_, expected, 
-                                    expStart, expEnd);
-    double observedField = getField(details.fieldIdx_, observed, 
-                                    obsStart, obsEnd);
-
-    // get absolute value of difference between the two
-    double diff = expectedField - observedField;
-    if( diff < 0 ) { diff = diff * -1; }
-
-    if( diff > details.delta_ ){
-        return false;
-    }
-
-    // also compare remaining string, after the field is removed
+    // now compare for a particular small numerical difference, if given, or a very small difference across all doubles if not
+    int startRange = details.allow_tolerance_all_doubles() ? 0 : details.fieldIdx_; 
+    int endRange = details.allow_tolerance_all_doubles() ? std::count(expected.begin(), expected.end(), '\t') : details.fieldIdx_;
     string expectedRemaining = expected;
-    expectedRemaining.erase(expStart, expEnd - expStart);
     string observedRemaining = observed;
-    observedRemaining.erase(obsStart, obsEnd - obsStart);
-    
-    if( observedRemaining.compare(0, length - (obsEnd - obsStart), 
-                                  expectedRemaining) == 0){
-        return true;
-    }
+    for (int fieldIdx = endRange; fieldIdx >= startRange; fieldIdx--) // work from end, trimming as we resolve
+    {
+        // get a substr from each, cast to double and compare with delta
+        size_t expStart, expEnd, obsStart, obsEnd;
+        string parsedExpected, parsedObserved;
+        double expectedField = getField(fieldIdx, expected,
+            expStart, expEnd, parsedExpected);
+        double observedField = getField(fieldIdx, observed,
+            obsStart, obsEnd, parsedObserved);
 
-    // else
-    return false;
+        if (parsedExpected.find(".") == string::npos)
+            continue; // Not a double, leave it alone
+
+        // get absolute value of difference between the two
+        double diff = expectedField - observedField;
+        if (diff < 0)
+        {
+            diff = diff * -1;
+        }
+
+        if (diff > details.delta_)
+        {
+            return false;
+        }
+
+        // also compare remaining string, after the field is removed
+        expectedRemaining.erase(expStart, expEnd - expStart);
+        observedRemaining.erase(obsStart, obsEnd - obsStart);
+    }
+    length = observedRemaining.size();
+    return length==0 || observedRemaining.compare(0, length, expectedRemaining) == 0;
 }
 
 
