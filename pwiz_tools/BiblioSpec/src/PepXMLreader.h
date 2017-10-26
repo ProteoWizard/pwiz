@@ -83,7 +83,6 @@ class PepXMLreader : public BuildParser{
   PSM_SCORE_TYPE scoreType_;
   int lastFilePosition_;
   map<PSM*, double> precursorMap_;
-  map<PSM*, double> spectrumMillScores_;
 
   //for each spectrum
   

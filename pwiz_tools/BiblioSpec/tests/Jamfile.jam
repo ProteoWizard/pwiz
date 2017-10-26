@@ -199,6 +199,7 @@ blib-test-build msgfdb : -o : output/msgfdb.blib : msgfdb.check : inputs/ms-gfdb
 blib-test-build peaksdb : -o : output/peaksdb.blib : peaksdb.check : inputs/peaksdb.pep.xml ;
 blib-test-build prospector : -o : output/prospector.blib : prospector.check zbuild.skip-lines : inputs/V20120113-01_ITMSms2cid.pep.xml ;
 blib-test-build smill : -o : output/smill.blib : smill.check : inputs/CPTAC_Set4_725_091509.pep.XML ;
+blib-test-build smill_ims : -o : output/smill_ims.blib : smill_ims.check : inputs/40minG_WBP_wide_z2-3_mid_BSA_5pmol_01.pep.xml ;
 blib-test-build bad-index : -o : output/bad-index.blib : bad-index.check : inputs/interact-prob-three-spec.pep.xml ;
 
 # Test other xml formats (idpicker, xtandem)
@@ -258,6 +259,12 @@ blib-test-build mse : -o : output/mse.blib : mse.check : inputs/tiny_final_fragm
 # Test waters csv format with precursor mobility
 
 blib-test-build mse-mobility : -o -P 0.068999 : output/mse-mobility.blib : mse-mobility.check : inputs/waters-mobility.final_fragment.csv : <vendor-api-support>on ;
+
+# Check backward compatibilty with previous notions of ion mobility
+blib-test-build mse-mobility-v12 : -o : output/mse-mobility-from-v12.blib : mse-mobility-from-v12.check mse-mobility.skip-lines : inputs/mse-mobility-v12.blib ;
+blib-test-build mse-mobility-v13 : -o : output/mse-mobility-from-v13.blib : mse-mobility.check mse-mobility.skip-lines : inputs/mse-mobility-v13.blib ;
+blib-test-build mse-mobility-v14 : -o : output/mse-mobility-from-v14.blib : mse-mobility.check mse-mobility.skip-lines : inputs/mse-mobility-v14.blib ;
+blib-test-build mse-mobility-v15 : -o : output/mse-mobility-from-v15.blib : mse-mobility.check mse-mobility.skip-lines : inputs/mse-mobility-v15.blib ;
 
 # Test building with Mascot .dat files, contingent on Mascot support (FIXME: these tests are broken on Linux)
 

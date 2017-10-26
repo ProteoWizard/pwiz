@@ -31,27 +31,31 @@ namespace BiblioSpec {
 /**
  * String representations of score types.
  */
-const char* scoreTypeNames[NUM_PSM_SCORE_TYPES] = {
-    "UNKNOWN", 
-    "PERCOLATOR QVALUE", 
-    "PEPTIDE PROPHET SOMETHING",
-    "SPECTRUM MILL",
-    "IDPICKER FDR",
-    "MASCOT IONS SCORE", 
-    "TANDEM EXPECTATION VALUE", 
-    "PROTEIN PILOT CONFIDENCE",
-    "SCAFFOLD SOMETHING",
-    "WATERS MSE PEPTIDE SCORE",
-    "OMSSA EXPECTATION SCORE",
-    "PROTEIN PROSPECTOR EXPECTATION SCORE",
-    "SEQUEST XCORR",
-    "MAXQUANT SCORE",
-    "MORPHEUS SCORE",
-    "MSGF+ SCORE",
-    "PEAKS CONFIDENCE SCORE",
-    "BYONIC SCORE",
-    "PEPTIDE SHAKER CONFIDENCE",
-    "GENERIC Q-VALUE"
+    
+enum PROBABILITY_TYPE { NONE, PROBABILITY_CORRECT, PROBABILITY_INCORRECT };
+struct scoreTypeInfo { char *name; PROBABILITY_TYPE probabilityType; };
+
+const scoreTypeInfo scoreTypes[NUM_PSM_SCORE_TYPES] = {
+    {"UNKNOWN", NONE}, // default for ssl files
+    {"PERCOLATOR QVALUE", PROBABILITY_INCORRECT}, // sequest/percolator .sqt files
+    {"PEPTIDE PROPHET SOMETHING", PROBABILITY_CORRECT}, // pepxml files
+    {"SPECTRUM MILL", NONE}, // pepxml files (score is not in range 0-1)
+    {"IDPICKER FDR", PROBABILITY_INCORRECT}, // idpxml files
+    {"MASCOT IONS SCORE", PROBABILITY_INCORRECT}, // mascot .dat files (.pep.xml?, .mzid?)
+    {"TANDEM EXPECTATION VALUE", PROBABILITY_INCORRECT}, // tandem .xtan.xml files
+    {"PROTEIN PILOT CONFIDENCE", PROBABILITY_CORRECT}, // protein pilot .group.xml files
+    {"SCAFFOLD SOMETHING", PROBABILITY_CORRECT}, // scaffold .mzid files
+    {"WATERS MSE PEPTIDE SCORE", NONE}, // Waters MSE .csv files (score is not in range 0-1)
+    {"OMSSA EXPECTATION SCORE", PROBABILITY_INCORRECT}, // pepxml files
+    {"PROTEIN PROSPECTOR EXPECTATION SCORE", PROBABILITY_INCORRECT}, // pepxml with expectation score
+    {"SEQUEST XCORR", PROBABILITY_INCORRECT}, // sequest (no percolator) .sqt files - actually the associated qvalue, not the raw xcorr
+    {"MAXQUANT SCORE", PROBABILITY_INCORRECT}, // maxquant msms.txt files
+    {"MORPHEUS SCORE", PROBABILITY_INCORRECT}, // pepxml files with morpehus scores
+    {"MSGF+ SCORE", PROBABILITY_INCORRECT}, // pepxml files with ms-gfdb scores
+    {"PEAKS CONFIDENCE SCORE", PROBABILITY_INCORRECT}, // pepxml files with peaks confidence scores
+    {"BYONIC SCORE", PROBABILITY_INCORRECT}, // byonic .mzid files
+    {"PEPTIDE SHAKER CONFIDENCE", PROBABILITY_CORRECT}, // peptideshaker .mzid files
+    {"GENERIC Q-VALUE", PROBABILITY_INCORRECT}
 };
 
 /**
@@ -63,7 +67,7 @@ PSM_SCORE_TYPE stringToScoreType(const string& scoreName){
     PSM_SCORE_TYPE valFromString = UNKNOWN_SCORE_TYPE;
 
     for(int i = 0; i < NUM_PSM_SCORE_TYPES; i++){
-        if( scoreName.compare(scoreTypeNames[i]) == 0 ){
+        if( scoreName.compare(scoreTypes[i].name) == 0 ){
             valFromString = (PSM_SCORE_TYPE)i;
             break;
         }
@@ -76,7 +80,24 @@ PSM_SCORE_TYPE stringToScoreType(const string& scoreName){
  * Returns the string representation of the score type.
  */
 const char* scoreTypeToString(PSM_SCORE_TYPE scoreType){
-    return scoreTypeNames[scoreType];
+    return scoreTypes[scoreType].name;
+}
+
+/**
+* Returns the string representation of the score's cutoff type.
+*/
+const char* scoreTypeToProbabilityTypeString(PSM_SCORE_TYPE scoreType){
+    switch (scoreTypes[scoreType].probabilityType)
+    {
+    case NONE:
+        return "NOT_A_PROBABILITY_VALUE";
+    case PROBABILITY_CORRECT:
+        return "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT";
+    case PROBABILITY_INCORRECT:
+        return "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT";
+    default:
+        return "UNKNOWN";
+    };
 }
 
 

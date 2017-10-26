@@ -318,14 +318,12 @@ void BlibFilter::buildNonRedundantLib()
             int scoreTypeId = sqlite3_column_int(scoreStmt, 0);
             string scoreType = (const char*)sqlite3_column_text(scoreStmt, 1);
             if (scoreType == "PERCOLATOR QVALUE" ||
-                scoreType == "SPECTRUM MILL" ||
                 scoreType == "IDPICKER FDR" ||
                 scoreType == "MASCOT IONS SCORE" ||
                 scoreType == "TANDEM EXPECTATION VALUE" ||
-                scoreType == "WATERS MSE PEPTIDE SCORE" ||
                 scoreType == "OMSSA EXPECTATION SCORE" ||
                 scoreType == "PROTEIN PROSPECTOR EXPECTATION SCORE" ||
-                scoreType == "SEQUEST XCORR" ||
+                scoreType == "SEQUEST XCORR" ||  // This is actually the associated qvalue, not the raw xcorr
                 scoreType == "MAXQUANT SCORE" ||
                 scoreType == "MORPHEUS SCORE" ||
                 scoreType == "MSGF+ SCORE" ||
@@ -334,6 +332,8 @@ void BlibFilter::buildNonRedundantLib()
                 scoreType == "GENERIC Q-VALUE") {
                 higherIsBetter_[scoreTypeId] = false;
             } else if (
+                scoreType == "SPECTRUM MILL" || // not actually a probablilty value
+                scoreType == "WATERS MSE PEPTIDE SCORE" || // not actually a probablilty value
                 scoreType == "PEPTIDE PROPHET SOMETHING" ||
                 scoreType == "PROTEIN PILOT CONFIDENCE" ||
                 scoreType == "SCAFFOLD SOMETHING" ||

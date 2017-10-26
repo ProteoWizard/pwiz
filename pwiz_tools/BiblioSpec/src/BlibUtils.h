@@ -108,6 +108,10 @@ PSM_SCORE_TYPE stringToScoreType(const string& scoreName);
 const char* scoreTypeToString(PSM_SCORE_TYPE scoreType);
 
 /**
+* Returns the string representation of the score's cutoff type.
+*/
+const char* scoreTypeToProbabilityTypeString(PSM_SCORE_TYPE scoreType);
+/**
  * \brief Return a string from the root to the given filename.
  * Converts relative paths to absolute.  For filenames with no path,
  * prepends current working directory.  Does not check that the file

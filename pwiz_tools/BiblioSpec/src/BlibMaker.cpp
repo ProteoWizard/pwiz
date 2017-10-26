@@ -373,14 +373,14 @@ void BlibMaker::createTable(const char* tableName){
         // set key = enum value of score type; don't autoincrement
         strncpy(zSql,
                "CREATE TABLE ScoreTypes (id INTEGER PRIMARY KEY, "
-               "scoreType VARCHAR(128) )",
+               "scoreType VARCHAR(128), probabilityType VARCHAR(128))",
                ZSQLBUFLEN);
         sql_stmt(zSql);
         // insert all score types
         for(int i=0; i < NUM_PSM_SCORE_TYPES; i++){
             snprintf(zSql, ZSQLBUFLEN, 
-                    "INSERT INTO ScoreTypes(id, scoreType) VALUES(%d, '%s')",
-                    i, scoreTypeToString((PSM_SCORE_TYPE)i));//scoreTypeNames[i]);
+                    "INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES(%d, '%s', '%s')",
+                    i, scoreTypeToString((PSM_SCORE_TYPE)i), scoreTypeToProbabilityTypeString((PSM_SCORE_TYPE)i));
             sql_stmt(zSql);
         }
     }     else if (strcmp(tableName, "IonMobilityTypes") == 0){

@@ -31,7 +31,7 @@ struct CompareDetails
     double delta_;   // allow this much difference
     vector<string> skipLines_; // list of keyphrases which if found cause a line to be skipped
 
-    CompareDetails() : fieldIdx_(-1), delta_(1.0e-9) {}; // default is to allow a very small tolerance to all doubles, for OS/compiler effects
+    CompareDetails() : fieldIdx_(-999), delta_(0) {}; // user can configure to allow a very small tolerance to doubles for OS/compiler effects
     bool allow_tolerance_all_doubles(){ return (fieldIdx_ == -1); }
 };
 
@@ -132,7 +132,7 @@ bool linesMatch(const string& expectedRaw,
     }
 
     // Does this line contain a keyphrase indicating that it can be ignored for comparison purposes?
-    for (int i = 0; i < details.skipLines_.size(); i++)
+    for (int i = 0; i < (int)details.skipLines_.size(); i++)
     {
         if (expected.find(details.skipLines_[i]) != string::npos)
         {

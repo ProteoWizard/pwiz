@@ -132,7 +132,7 @@ before passing them to the BiblioSpec tool.
 
 CompareLibraryContents has this usage statement:
 
-CompareLibraryContents <library> <expected output> [<skip>]
+CompareLibraryContents <library> <expected output> [<skip lines>]
 
 It requires a BiblioSpec library and a file with what the library
 should contain (files in tests/reference/).  There is an optional file
@@ -143,7 +143,8 @@ CompareDetails: 4       0.00005
 
 Which would mean that if the value in column 4 is not the same between the
 library and the reference file, call it the same if it differs by no
-more than 0.00005.
+more than 0.00005. Column "-1" means all numeric columns are treated with 
+this tolerance value. Column number is zero-based.
 
 The final test source is CompareTextFiles.cpp
 
@@ -165,7 +166,8 @@ observed file.  The next line following that containing "Library" will
 be skipped.
 
 The skip file may also begin with "CompareDetails" and information
-about accepted tolerance of a column.
+about accepted tolerance of a single column, or all columns if -1 is 
+given as the column index, as described above.
 
 
-Last updated May 4, 2012
+Last updated Oct 25 2017

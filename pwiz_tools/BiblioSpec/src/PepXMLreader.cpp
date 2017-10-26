@@ -364,11 +364,6 @@ void PepXMLreader::endElement(const XML_Char* name)
         if( scorePasses(pepProb) && (int)strlen(pepSeq) > 0) {
             curPSM_ = new PSM();
             
-            if (analysisType_ == SPECTRUM_MILL_ANALYSIS) {
-                // store score for comparison later, but not in database
-                spectrumMillScores_[curPSM_] = pepProb;
-                pepProb = 0;
-            }
             
             curPSM_->charge = charge;
             curPSM_->unmodSeq = pepSeq;
