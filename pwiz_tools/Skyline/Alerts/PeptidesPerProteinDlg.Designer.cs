@@ -75,7 +75,6 @@
             0,
             0,
             0});
-            this.numMinPeptides.ValueChanged += new System.EventHandler(this.UpdateRemaining);
             // 
             // btnOK
             // 

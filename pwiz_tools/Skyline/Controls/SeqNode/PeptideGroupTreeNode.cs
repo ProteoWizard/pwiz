@@ -221,7 +221,11 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             List<DocNode> listPeptides = new List<DocNode>();
             foreach (var nodePep in DocNode.GetPeptideNodes(settings, useFilter))
-                listPeptides.Add(nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL));
+            {
+                var nodePepMaterialized = nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL);
+                if (!useFilter || settings.TransitionSettings.Libraries.MinIonCount == 0 || nodePepMaterialized.Children.Count != 0)
+                    listPeptides.Add(nodePepMaterialized);
+            }
 
             PeptideRankId rankId = DocSettings.PeptideSettings.Libraries.RankId;
             if (rankId != null && !DocNode.IsPeptideList)

@@ -2739,9 +2739,28 @@ namespace pwiz.Skyline
         {
             ModifyDocument(title, doc =>
             {
-                var listProteins = new List<PeptideGroupDocNode>(doc.MoleculeGroups);
+                var listIrt = new List<PeptideGroupDocNode>();
+                var listProteins = new List<PeptideGroupDocNode>(doc.Children.Count);
+                var listDecoy = new List<PeptideGroupDocNode>();
+                foreach (var nodePepGroup in doc.MoleculeGroups)
+                {
+                    if (nodePepGroup.IsDecoy)
+                    {
+                        listDecoy.Add(nodePepGroup);
+                    }
+                    else if (nodePepGroup.PeptideCount > 0 && nodePepGroup.Peptides.All(nodePep => nodePep.GlobalStandardType == StandardType.IRT))
+                    {
+                        listIrt.Add(nodePepGroup);
+                    }
+                    else
+                    {
+                        listProteins.Add(nodePepGroup);
+                    }
+                }
+                listIrt.Sort(comparison);
                 listProteins.Sort(comparison);
-                return (SrmDocument)doc.ChangeChildrenChecked(listProteins.ToArray());
+                listDecoy.Sort(comparison);
+                return (SrmDocument)doc.ChangeChildrenChecked(listIrt.Concat(listProteins).Concat(listDecoy).ToArray());
             });
         }
 
@@ -3063,31 +3082,8 @@ namespace pwiz.Skyline
         private IrtStandard RCalcIrtStandard(out HashSet<Target> missingPeptides)
         {
             missingPeptides = new HashSet<Target>();
-            var calcPeptides = RCalcIrtPeptides(Document).ToArray();
+            var calcPeptides = RCalcIrt.IrtPeptides(Document).ToArray();
             return calcPeptides.Any() ? IrtStandard.WhichStandard(calcPeptides, out missingPeptides) : IrtStandard.NULL;
-        }
-
-        private static IEnumerable<Target> RCalcIrtPeptides(SrmDocument document)
-        {
-            if (!document.Settings.HasRTPrediction)
-                yield break;
-
-            var calc = document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;
-            if (calc == null)
-                yield break;
-
-            try                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
-            {
-                calc = calc.Initialize(null) as RCalcIrt;
-            }
-            catch
-            {
-                yield break;
-            }
-
-            if (calc != null)
-                foreach (var peptide in calc.GetStandardPeptides())
-                    yield return peptide;
         }
 
         private void transitionSettingsMenuItem_Click(object sender, EventArgs e)

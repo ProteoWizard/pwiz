@@ -718,7 +718,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // If light version not found, try heavy
             foreach (var labelType in GetHeavyLabelTypes(mods))
-            {                
+            {
                 if (LibrariesContainMeasurablePeptide(peptide, labelType, precursorCharges, mods))
                     return true;
             }
@@ -2305,6 +2305,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 // libraries are loaded and have changed.
                 DiffTransitionGroupProps = !newLib.HasLibraries || (newLib.IsLoaded && diffLibraries);
             }
+
+            // Any time the transition groups can change, that can change the accepted peptides
+            DiffPeptides = DiffPeptides || DiffTransitionGroups;
 
             // Change transitions if anything in the transition filter changes.
             DiffTransitions = !newTran.Filter.Equals(oldTran.Filter) ||
