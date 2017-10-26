@@ -362,7 +362,10 @@ namespace pwiz.Skyline.Model
         }
         public string ToTSV()
         {
-            var result  = string.Join("\t", Name, Formula, AccessionNumbers.ToString()); // Not L10N
+            var massOrFormula = !string.IsNullOrEmpty(Formula) ? 
+                Formula : 
+                string.Format(CultureInfo.InvariantCulture, "{0:F09}/{1:F09}", MonoisotopicMass, AverageMass); // Not L10N
+            var result  = string.Join("\t", Name, massOrFormula, AccessionNumbers.ToString()); // Not L10N
             if (result.Equals("\t\t")) // Not L10N
                 result = InvariantName;
             return result;
@@ -393,6 +396,21 @@ namespace pwiz.Skyline.Model
                     {
                         Assume.Fail("unable to read custom molecule information"); // Not L10N
                     }
+                }
+            }
+            else if (formula != null && formula.Contains("/")) // Not L10N
+            {
+                // "formula" is actually mono and average masses
+                try
+                {
+                    var values = formula.Split('/');
+                    var massMono = new TypedMass(double.Parse(values[0], CultureInfo.InvariantCulture), MassType.Monoisotopic);
+                    var massAvg = new TypedMass(double.Parse(values[1], CultureInfo.InvariantCulture), MassType.Average);
+                    return new CustomMolecule(massMono, massAvg, name, new MoleculeAccessionNumbers(keysTSV));
+                }
+                catch
+                {
+                    Assume.Fail("unable to read custom molecule information"); // Not L10N
                 }
             }
             return new CustomMolecule(formula, null, null, name, new MoleculeAccessionNumbers(keysTSV));
