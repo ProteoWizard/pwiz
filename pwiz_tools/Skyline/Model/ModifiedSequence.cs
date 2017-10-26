@@ -287,6 +287,56 @@ namespace pwiz.Skyline.Model
             public int? UnimodId { get { return StaticMod.UnimodId; } }
             public double MonoisotopicMass { get; private set; }
             public double AverageMass { get; private set; }
+
+            protected bool Equals(Modification other)
+            {
+                return ExplicitMod.Equals(other.ExplicitMod) && MonoisotopicMass.Equals(other.MonoisotopicMass) &&
+                       AverageMass.Equals(other.AverageMass);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((Modification) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = ExplicitMod.GetHashCode();
+                    hashCode = (hashCode * 397) ^ MonoisotopicMass.GetHashCode();
+                    hashCode = (hashCode * 397) ^ AverageMass.GetHashCode();
+                    return hashCode;
+                }
+            }
+        }
+
+        protected bool Equals(ModifiedSequence other)
+        {
+            return string.Equals(_unmodifiedSequence, other._unmodifiedSequence) &&
+                   _explicitMods.Equals(other._explicitMods) && _defaultMassType == other._defaultMassType;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((ModifiedSequence) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = _unmodifiedSequence.GetHashCode();
+                hashCode = (hashCode * 397) ^ _explicitMods.GetHashCode();
+                hashCode = (hashCode * 397) ^ (int) _defaultMassType;
+                return hashCode;
+            }
         }
     }
 }
