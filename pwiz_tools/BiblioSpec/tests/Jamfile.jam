@@ -199,7 +199,7 @@ blib-test-build msgfdb : -o : output/msgfdb.blib : msgfdb.check : inputs/ms-gfdb
 blib-test-build peaksdb : -o : output/peaksdb.blib : peaksdb.check : inputs/peaksdb.pep.xml ;
 blib-test-build prospector : -o : output/prospector.blib : prospector.check zbuild.skip-lines : inputs/V20120113-01_ITMSms2cid.pep.xml ;
 blib-test-build smill : -o : output/smill.blib : smill.check : inputs/CPTAC_Set4_725_091509.pep.XML ;
-blib-test-build smill_ims : -o : output/smill_ims.blib : smill_ims.check : inputs/40minG_WBP_wide_z2-3_mid_BSA_5pmol_01.pep.xml ;
+blib-test-build smill_ims : -o : output/smill_ims.blib : smill_ims.check smill_ims.skip-lines : inputs/40minG_WBP_wide_z2-3_mid_BSA_5pmol_01.pep.xml ;
 blib-test-build bad-index : -o : output/bad-index.blib : bad-index.check : inputs/interact-prob-three-spec.pep.xml ;
 
 # Test other xml formats (idpicker, xtandem)
