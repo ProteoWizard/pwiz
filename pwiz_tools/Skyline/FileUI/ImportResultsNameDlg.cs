@@ -39,17 +39,18 @@ namespace pwiz.Skyline.FileUI
             textPrefix.Text = _prefixInitial = prefix;
             textSuffix.Text = _suffixInitial = suffix;
             int heightDistance = textSuffix.Location.Y - textPrefix.Location.Y;
+            var defaultHeight = Height;
             if (string.IsNullOrEmpty(suffix))
             {
                 // Use default text in form
-                Height = 311 - heightDistance;
+                Height = defaultHeight - heightDistance;
                 textSuffix.Visible = false;
                 label5.Visible = false;
             }
             else if (string.IsNullOrEmpty(prefix))
             {
                 label2.Text = Resources.ImportResultsNameDlg_CommonSuffix;
-                Height = 311 - heightDistance;
+                Height = defaultHeight - heightDistance;
                 textPrefix.Visible = false;
                 label1.Visible = false;
                 textSuffix.Location -= new Size(0, heightDistance);
@@ -58,7 +59,6 @@ namespace pwiz.Skyline.FileUI
             else
             {
                 label2.Text = Resources.ImportResultsNameDlg_CommonPrefix_and_Suffix;
-                Height = 311; 
             }
         }
 
