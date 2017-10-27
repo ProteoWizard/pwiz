@@ -121,6 +121,9 @@
     <value>17, 17</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="textIonMobility.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="textIonMobility.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 234</value>
   </data>
@@ -145,6 +148,9 @@
   </data>
   <data name="&gt;&gt;textIonMobility.ZOrder" xml:space="preserve">
     <value>8</value>
+  </data>
+  <data name="textIonMobilityHighEnergyOffset.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
   <data name="textIonMobilityHighEnergyOffset.Location" type="System.Drawing.Point, System.Drawing">
     <value>173, 234</value>
@@ -218,6 +224,9 @@
   <data name="&gt;&gt;textRetentionTimeWindow.ZOrder" xml:space="preserve">
     <value>14</value>
   </data>
+  <data name="textCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="textCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 98</value>
   </data>
@@ -241,6 +250,9 @@
   </data>
   <data name="&gt;&gt;textCollisionEnergy.ZOrder" xml:space="preserve">
     <value>17</value>
+  </data>
+  <data name="labelSLens.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
   <data name="labelSLens.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -276,6 +288,9 @@
   <data name="&gt;&gt;labelSLens.ZOrder" xml:space="preserve">
     <value>18</value>
   </data>
+  <data name="textSLens.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="textSLens.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 143</value>
   </data>
@@ -299,6 +314,9 @@
   </data>
   <data name="&gt;&gt;textSLens.ZOrder" xml:space="preserve">
     <value>19</value>
+  </data>
+  <data name="labelConeVoltage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
   <data name="labelConeVoltage.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -333,6 +351,9 @@
   <data name="&gt;&gt;labelConeVoltage.ZOrder" xml:space="preserve">
     <value>20</value>
   </data>
+  <data name="textConeVoltage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="textConeVoltage.Location" type="System.Drawing.Point, System.Drawing">
     <value>173, 143</value>
   </data>
@@ -357,6 +378,9 @@
   <data name="&gt;&gt;textConeVoltage.ZOrder" xml:space="preserve">
     <value>21</value>
   </data>
+  <data name="textDeclusteringPotential.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="textDeclusteringPotential.Location" type="System.Drawing.Point, System.Drawing">
     <value>173, 98</value>
   </data>
@@ -380,6 +404,9 @@
   </data>
   <data name="&gt;&gt;textDeclusteringPotential.ZOrder" xml:space="preserve">
     <value>7</value>
+  </data>
+  <data name="textCompensationVoltage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
   <data name="textCompensationVoltage.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 189</value>
@@ -452,6 +479,9 @@
   </data>
   <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
     <value>7</value>
+  </data>
+  <data name="textBoxCCS.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
   <data name="textBoxCCS.Location" type="System.Drawing.Point, System.Drawing">
     <value>173, 189</value>
@@ -537,6 +567,9 @@
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <data name="comboBoxIonMobilityUnits.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="comboBoxIonMobilityUnits.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 277</value>
   </data>
@@ -557,6 +590,9 @@
   </data>
   <data name="&gt;&gt;comboBoxIonMobilityUnits.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="labelIonMobilityUnits.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
   <data name="labelIonMobilityUnits.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -588,6 +624,10 @@
   <data name="&gt;&gt;labelIonMobilityUnits.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+
+  <data name="labelCCS.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="labelCCS.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -617,6 +657,9 @@
   </data>
   <data name="&gt;&gt;labelCCS.ZOrder" xml:space="preserve">
     <value>2</value>
+  </data>
+  <data name="labelCompensationVoltage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
   <data name="labelCompensationVoltage.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -648,6 +691,9 @@
   <data name="&gt;&gt;labelCompensationVoltage.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
+  <data name="labelDeclusteringPotential.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="labelDeclusteringPotential.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -678,6 +724,9 @@
   <data name="&gt;&gt;labelDeclusteringPotential.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
+  <data name="labelIonMobility.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="labelIonMobility.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -707,6 +756,9 @@
   </data>
   <data name="&gt;&gt;labelIonMobility.ZOrder" xml:space="preserve">
     <value>9</value>
+  </data>
+  <data name="labelIonMobilityHighEnergyOffset.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
   <data name="labelIonMobilityHighEnergyOffset.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -797,6 +849,9 @@
   </data>
   <data name="&gt;&gt;labelRetentionTimeWindow.ZOrder" xml:space="preserve">
     <value>15</value>
+  </data>
+  <data name="labelCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
   <data name="labelCollisionEnergy.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>

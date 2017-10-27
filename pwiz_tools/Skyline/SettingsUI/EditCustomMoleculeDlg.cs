@@ -46,6 +46,7 @@ namespace pwiz.Skyline.SettingsUI
         private PeptideSettings _peptideSettings;
         private readonly PeptideSettingsUI.LabelTypeComboDriver _driverLabelType;
         private readonly SkylineWindow _parent;
+        private readonly UsageMode _usageMode;
 
         public enum UsageMode
         {
@@ -85,6 +86,8 @@ namespace pwiz.Skyline.SettingsUI
             _transitionSettings = settings != null ? settings.TransitionSettings : null;
             _peptideSettings = settings != null ? settings.PeptideSettings : null;
             _resultAdduct = Adduct.EMPTY;
+            _resultCustomMolecule = molecule;
+            _usageMode = usageMode;
 
             var enableFormulaEditing = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.moleculeEdit ||
                                        usageMode == UsageMode.fragment;
@@ -124,6 +127,8 @@ namespace pwiz.Skyline.SettingsUI
                 textIonMobility.Visible = false;
                 labelIonMobilityUnits.Visible = false;
                 comboBoxIonMobilityUnits.Visible = false;
+                labelDeclusteringPotential.Visible = false;
+                textDeclusteringPotential.Visible = false;
                 if (needOptionalValuesBox)
                 {
                     // We blanked out everything but the retention time
@@ -531,7 +536,12 @@ namespace pwiz.Skyline.SettingsUI
                         .SkylineWindow_AddMolecule_The_precursor_m_z_for_this_molecule_is_out_of_range_for_your_instrument_settings_);
                 return;
             }
-            if (!string.IsNullOrEmpty(_formulaBox.NeutralFormula))
+            if (_usageMode == UsageMode.precursor)
+            {
+                // Only the adduct should be changing
+                SetResult(_resultCustomMolecule, Adduct);
+            }
+            else if (!string.IsNullOrEmpty(_formulaBox.NeutralFormula))
             {
                 try
                 {
