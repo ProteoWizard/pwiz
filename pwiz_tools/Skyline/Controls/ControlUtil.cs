@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Controls
         public string GetControlMessage(Control control)
         {
             Control label = control;
-            while(label != null && !(label is Label))
+            while(label != null && !(label is Label && label.Visible))
                 label = _parent.GetNextControl(label, false);
             string message = (label == null ? Resources.MessageBoxHelper_GetControlMessage_Field : label.Text);
             int ampIndex = message.IndexOf('&');

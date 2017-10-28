@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model
         public const int DWELL_TIME_MAX = 1000;
         public const int DWELL_TIME_DEFAULT = 20;
 
-        public const int RUN_LENGTH_MIN = 5;
+        public const int RUN_LENGTH_MIN = 0; // Not inclusive
         public const int RUN_LENGTH_MAX = 500;
         public const int RUN_LENGTH_DEFAULT = 60;
 

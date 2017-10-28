@@ -1114,7 +1114,7 @@ namespace pwiz.Skyline.FileUI
             if (textRunLength.Visible)
             {
                 double runLength;
-                if (!helper.ValidateDecimalTextBox(textRunLength, AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX, out runLength))
+                if (!helper.ValidateDecimalTextBox(textRunLength, AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX, out runLength, false))
                     return false;
 
                 _exportProperties.RunLength = runLength;
@@ -1627,7 +1627,9 @@ namespace pwiz.Skyline.FileUI
                 }
             }
             labelDwellTime.Visible = showDwell || showRunLength;
+            labelDwellTime.TabIndex = textRunLength.TabIndex-1;
             textDwellTime.Visible = showDwell;
+            textDwellTime.TabIndex = textRunLength.TabIndex;
             textRunLength.Visible = showRunLength;
         }
 

@@ -197,7 +197,8 @@ namespace pwiz.Skyline.Model
                 var adduct = groupDocNode.TransitionGroup.PrecursorAdduct;
                 string isotopicFormula;
                 precursorMz = IsCustomIon ?
-                    adduct.MzFromNeutralMass(calcFilterPre.GetPrecursorMass(groupDocNode.CustomMolecule, null, Adduct.EMPTY, out isotopicFormula), calcFilterPre.MassType) : 
+                    adduct.MzFromNeutralMass(calcFilterPre.GetPrecursorMass(groupDocNode.CustomMolecule, null, Adduct.EMPTY, out isotopicFormula), 
+                        calcFilterPre.MassType.IsMonoisotopic() ? MassType.Monoisotopic : MassType.Average) : // Don't pass the isMassH bit
                     SequenceMassCalc.GetMZ(calcFilterPre.GetPrecursorMass(sequence), adduct);
             }
             if (!IsAvoidMismatchedIsotopeTransitions)
