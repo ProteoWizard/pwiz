@@ -415,7 +415,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         color = COLORS_GROUPS[iColor%COLORS_GROUPS.Count];
                     }
-                    else if (docNode.Equals(selectedNode) && step == 0)
+                    else if (ReferenceEquals(docNode, selectedNode) && step == 0)
                     {
                         color = ChromGraphItem.ColorSelected;
                     }
@@ -449,20 +449,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         if (IsMultiSelect)
                         {
-                             curveItem = new LineItem(label, pointPairList, color, SymbolType.None) 
-                             {
-                                 Line = new Line {Width = 2, Color = color, IsAntiAlias = true}, 
-                                 Symbol = new Symbol
-                                 {
-                                     Type = SymbolType.Circle, 
-                                     Size = 4,
-                                     Border = new Border(color, 0),
-                                     Fill = new Fill(color)
-                                 }
-                             };
+                            curveItem = CreateLineItem(label, pointPairList, color);
                         }
                         else
+                        {
                             curveItem = new BarItem(label, pointPairList, color);
+                        }
                     }
                     if (0 <= selectedReplicateIndex && selectedReplicateIndex < pointPairList.Count)
                     {
@@ -499,45 +491,51 @@ namespace pwiz.Skyline.Controls.Graphs
             // Draw a box around the currently selected replicate
             if (ShowSelection && maxArea >  -double.MaxValue)
             {
-                double yValue;
-                switch (BarSettings.Type)
-                {
-                    case BarType.Stack:
-                        // The Math.Min(sumArea, .999) makes sure that if graph is in normalized view
-                        // height of the selection rectangle does not exceed 1, so that top of the rectangle
-                        // can be viewed when y-axis scale maximum is at 1
-                        yValue = (areaView == AreaNormalizeToView.area_maximum_view ? Math.Min(sumArea, .999) : sumArea);
-                        break;
-                    case BarType.PercentStack:
-                        yValue = 99.99;
-                        break;
-                    default:
-                        // Scale the selection box to fit exactly the bar height
-                        yValue = (areaView == AreaNormalizeToView.area_maximum_view ? Math.Min(maxArea, .999) : maxArea);
-                        break;
-                }
-                if (IsMultiSelect)
-                {
-                    GraphObjList.Add(new LineObj(Color.Black, selectedReplicateIndex + 1, 0, selectedReplicateIndex + 1, maxArea)
-                    {
-                        IsClippedToChartRect = true,
-                        Line = new Line() { Width = 2, Color = Color.Black, Style = DashStyle.Dash}
-                    });
-                }
-                else
-                {
-                    GraphObjList.Add(new BoxObj(selectedReplicateIndex + .5, yValue, 0.99,
-                        -yValue, Color.Black, Color.Empty) // Just passing in yValue here doesn't work when log scale is enabled, -yValue works with and without log scale enabled
-                    {
-                        IsClippedToChartRect = true,
-                    });
-                }
+                AddSelection(areaView, selectedReplicateIndex, sumArea, maxArea);
             }
             // Reset the scale when the parent node changes
             bool resetAxes = (_parentNode == null || !ReferenceEquals(_parentNode.Id, parentNode.Id));
             _parentNode = parentNode;
 
             UpdateAxes(resetAxes, aggregateOp, normalizeData, areaView, standardType);
+        }
+
+        private void AddSelection(AreaNormalizeToView areaView, int selectedReplicateIndex, double sumArea, double maxArea)
+        {
+            double yValue;
+            switch (BarSettings.Type)
+            {
+                case BarType.Stack:
+                    // The Math.Min(sumArea, .999) makes sure that if graph is in normalized view
+                    // height of the selection rectangle does not exceed 1, so that top of the rectangle
+                    // can be viewed when y-axis scale maximum is at 1
+                    yValue = (areaView == AreaNormalizeToView.area_maximum_view ? Math.Min(sumArea, .999) : sumArea);
+                    break;
+                case BarType.PercentStack:
+                    yValue = 99.99;
+                    break;
+                default:
+                    // Scale the selection box to fit exactly the bar height
+                    yValue = (areaView == AreaNormalizeToView.area_maximum_view ? Math.Min(maxArea, .999) : maxArea);
+                    break;
+            }
+            if (IsMultiSelect)
+            {
+                GraphObjList.Add(new LineObj(Color.Black, selectedReplicateIndex + 1, 0, selectedReplicateIndex + 1, maxArea)
+                {
+                    IsClippedToChartRect = true,
+                    Line = new Line() {Width = 2, Color = Color.Black, Style = DashStyle.Dash}
+                });
+            }
+            else
+            {
+                GraphObjList.Add(new BoxObj(selectedReplicateIndex + .5, yValue, 0.99,
+                        -yValue, Color.Black, Color.Empty)
+                // Just passing in yValue here doesn't work when log scale is enabled, -yValue works with and without log scale enabled
+                {
+                    IsClippedToChartRect = true,
+                });
+            }
         }
 
         private void UpdateAxes(bool resetAxes, GraphValues.AggregateOp aggregateOp, AreaNormalizeToData normalizeData,

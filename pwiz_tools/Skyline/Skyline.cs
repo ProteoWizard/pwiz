@@ -1480,6 +1480,10 @@ namespace pwiz.Skyline
                 copyToolBarButton.Enabled = copyMenuItem.Enabled = false;
                 pasteToolBarButton.Enabled = pasteMenuItem.Enabled = false;
                 deleteMenuItem.Enabled = false;
+                // If it is a grid, then disable next and previous replicate keys in favor of ctrl-Up and ctrl-Down
+                // working in the grid
+                if (_activeClipboardControl is DataboundGridControl)
+                    nextReplicateMenuItem.Enabled = previousReplicateMenuItem.Enabled = false;
                 return;
             }
 
@@ -1489,6 +1493,8 @@ namespace pwiz.Skyline
             copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
             pasteToolBarButton.Enabled = pasteMenuItem.Enabled = true;
             deleteMenuItem.Enabled = enabled;
+            // Always enable these, as they are harmless if enabled with no results and otherwise unmanaged.
+            nextReplicateMenuItem.Enabled = previousReplicateMenuItem.Enabled = true;
         }
 
         private void deleteMenuItem_Click(object sender, EventArgs e) { EditDelete(); }
@@ -4411,8 +4417,9 @@ namespace pwiz.Skyline
                     positions[i] = -1;
             }
 
-            UpdateStatusCounter(statusSequences, positions, SrmDocument.Level.MoleculeGroups, "prot"); // Not L10N
-            UpdateStatusCounter(statusPeptides, positions, SrmDocument.Level.Molecules, "pep"); // Not L10N
+            bool isProtOnly = DocumentUI.DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic;
+            UpdateStatusCounter(statusSequences, positions, SrmDocument.Level.MoleculeGroups, isProtOnly ? "prot" : "list"); // Not L10N
+            UpdateStatusCounter(statusPeptides, positions, SrmDocument.Level.Molecules, isProtOnly ? "pep" : "mol"); // Not L10N
             UpdateStatusCounter(statusPrecursors, positions, SrmDocument.Level.TransitionGroups, "prec"); // Not L10N
             UpdateStatusCounter(statusIons, positions, SrmDocument.Level.Transitions, "tran"); // Not L10N
         }
@@ -4928,6 +4935,43 @@ namespace pwiz.Skyline
             using (var associateFasta = new AssociateProteinsDlg(this))
             {
                 associateFasta.ShowDialog(this);
+            }
+        }
+
+        private string _originalProteinsText;
+        private string _originalPeptidesText;
+
+        private void expandAllMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            _originalProteinsText = _originalProteinsText ?? expandProteinsMenuItem.Text;
+            _originalPeptidesText = _originalPeptidesText ?? expandPeptidesMenuItem.Text;
+
+            if (DocumentUI.DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic)
+            {
+                expandProteinsMenuItem.Text = _originalProteinsText;
+                expandPeptidesMenuItem.Text = _originalPeptidesText;
+            }
+            else
+            {
+                expandProteinsMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Lists;
+                expandPeptidesMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules;
+            }
+        }
+
+        private void collapseAllToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            _originalProteinsText = _originalProteinsText ?? expandProteinsMenuItem.Text;
+            _originalPeptidesText = _originalPeptidesText ?? expandPeptidesMenuItem.Text;
+
+            if (DocumentUI.DocumentType == SrmDocument.DOCUMENT_TYPE.proteomic)
+            {
+                collapseProteinsMenuItem.Text = _originalProteinsText;
+                collapsePeptidesMenuItem.Text = _originalPeptidesText;
+            }
+            else
+            {
+                collapseProteinsMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Lists;
+                collapsePeptidesMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules;
             }
         }
     }

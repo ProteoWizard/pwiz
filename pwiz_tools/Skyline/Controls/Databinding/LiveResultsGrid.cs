@@ -418,5 +418,15 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             synchronizeSelectionContextMenuItem.Checked = Settings.Default.ResultsGridSynchSelection;
         }
+
+        private void LiveResultsGrid_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.Escape:
+                    SkylineWindow.FocusDocument();
+                    break;
+            }
+        }
     }
 }

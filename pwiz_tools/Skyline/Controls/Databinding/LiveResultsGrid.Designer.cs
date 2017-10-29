@@ -62,10 +62,12 @@
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.KeyPreview = true;
             this.Name = "LiveResultsGrid";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.LiveResultsGrid_KeyDown);
+            this.Controls.SetChildIndex(this.databoundGridControl, 0);
             this.contextMenuResultsGrid.ResumeLayout(false);
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 

@@ -28,15 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DocumentGridForm));
             this.SuspendLayout();
+            // 
+            // DocumentGridForm
+            // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.KeyPreview = true;
             this.Name = "DocumentGridForm";
-            this.ShowInTaskbar = false;
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.DocumentGridForm_KeyDown);
             this.ResumeLayout(false);
-            this.PerformLayout();
+
         }
 
         #endregion

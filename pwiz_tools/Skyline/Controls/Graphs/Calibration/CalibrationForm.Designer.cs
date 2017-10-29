@@ -100,8 +100,10 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.zedGraphControl);
+            this.KeyPreview = true;
             this.Name = "CalibrationForm";
             this.ShowInTaskbar = false;
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.CalibrationForm_KeyDown);
             this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
 

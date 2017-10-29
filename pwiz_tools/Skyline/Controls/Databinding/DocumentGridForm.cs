@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model;
@@ -153,6 +154,16 @@ namespace pwiz.Skyline.Controls.Databinding
                 {
                     BindingListSource.SetView(newViewInfo, BindingListSource.RowSource);
                 }
+            }
+        }
+
+        private void DocumentGridForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.Escape:
+                    _skylineWindow.FocusDocument();
+                    break;
             }
         }
     }

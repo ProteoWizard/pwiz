@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -87,7 +88,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (displayType != DisplayTypeChrom.single)
                 {
                     SrmTreeNode parentTreeNode = selectedTreeNode.SrmParent;
-                    selectedNode = parentTreeNode.Model;
+                    parentNode = parentTreeNode.Model;
                     selectedPath = parentTreeNode.Path;
                 }
             }
@@ -200,7 +201,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         color = COLORS_GROUPS[iColor%COLORS_GROUPS.Count];
                     }
-                    else if (identityPath.Equals(selectedPath) && step == 0)
+                    else if (ReferenceEquals(docNode, selectedNode) && step == 0)
                     {
                         color = ChromGraphItem.ColorSelected;
                         isSelected = true;
@@ -215,38 +216,42 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (step != 0)
                         label = string.Format(Resources.RTReplicateGraphPane_UpdateGraph_Step__0__, step);
                     
-                    BarItem curveItem;
+                    CurveItem curveItem;
                     if(IsMultiSelect)
                     {
-                        for (var index = 0; index < pointPairList.Count; index++)
-                        {
-                            PointPair pp = pointPairList[index];
-                            var middle = pp.Y - (pp.Y - pp.LowValue) / 2;
-                            if (!double.IsNaN(middle))
-                                pp.Tag = new MiddleErrorTag(middle, 0);
-                        }
-
-                        curveItem = new HiLowMiddleErrorBarItem(label, pointPairList, color, color);
-                        BarSettings.Type = BarType.SortedOverlay;
+                        if (rtValue != RTPeptideValue.All)
+                            curveItem = CreateLineItem(label, pointPairList, color);
+                        else
+                            curveItem = CreateMultiSelectBarItem(label, pointPairList, color);
                     }
                     else if (HiLowMiddleErrorBarItem.IsHiLoMiddleErrorList(pointPairList))
                     {
                         curveItem = new HiLowMiddleErrorBarItem(label, pointPairList, color, Color.Black);
                         BarSettings.Type = BarType.Cluster;
                     }
-                    else
+                    else if (rtValue == RTPeptideValue.All)
                     {
                         curveItem = new MeanErrorBarItem(label, pointPairList, color, Color.Black);
                         BarSettings.Type = BarType.Cluster;
                     }
+                    else
+                    {
+                        // TODO: Add whiskers
+                        curveItem = CreateLineItem(label, pointPairList, color);
+                    }
 
                     if (curveItem != null)
                     {
-                        curveItem.Bar.Border.IsVisible = false;
-                        curveItem.Bar.Fill.Brush = GetBrushForNode(docNode, color);
                         curveItem.Tag = identityPath;
-                        if (!isSelected)
-                            curveItem.SortedOverlayPriority = 1;
+
+                        var barItem = curveItem as BarItem;
+                        if (barItem != null)
+                        {
+                            barItem.Bar.Border.IsVisible = false;
+                            barItem.Bar.Fill.Brush = GetBrushForNode(docNode, color);
+                            if (!isSelected)
+                                barItem.SortedOverlayPriority = 1;
+                        }
                         CurveList.Add(curveItem);
 
                         if (selectedReplicateIndex != -1 && selectedReplicateIndex < pointPairList.Count)
@@ -264,11 +269,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Draw a box around the currently selected replicate
             if (ShowSelection && minRetentionTime != double.MaxValue)
             {
-                GraphObjList.Add(new BoxObj(selectedReplicateIndex + .5, maxRetentionTime, 1,
-                                            maxRetentionTime - minRetentionTime, Color.Black, Color.Empty)
-                                     {
-                                         IsClippedToChartRect = true,
-                                     });
+                AddSelection(selectedReplicateIndex, maxRetentionTime, minRetentionTime);
             }
             // Reset the scale when the parent node changes
             if (_parentNode == null || !ReferenceEquals(_parentNode.Id, parentNode.Id))
@@ -281,6 +282,44 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphSummary.GraphControl.Invalidate();
             AxisChange();
         }
+
+        private void AddSelection(int selectedReplicateIndex, double maxRetentionTime, double minRetentionTime)
+        {
+            bool selectLines = CurveList.Any(c => c is LineItem);
+            if (selectLines)
+            {
+                GraphObjList.Add(new LineObj(Color.Black, selectedReplicateIndex + 1, 0, selectedReplicateIndex + 1,
+                    maxRetentionTime)
+                {
+                    IsClippedToChartRect = true,
+                    Line = new Line {Width = 2, Color = Color.Black, Style = DashStyle.Dash}
+                });
+            }
+            else
+            {
+                GraphObjList.Add(new BoxObj(selectedReplicateIndex + .5, maxRetentionTime, 1,
+                    maxRetentionTime - minRetentionTime, Color.Black, Color.Empty)
+                {
+                    IsClippedToChartRect = true,
+                });
+            }
+        }
+
+        private CurveItem CreateMultiSelectBarItem(string label, PointPairList pointPairList, Color color)
+        {
+            for (var index = 0; index < pointPairList.Count; index++)
+            {
+                PointPair pp = pointPairList[index];
+                var middle = pp.Y - (pp.Y - pp.LowValue)/2;
+                if (!double.IsNaN(middle))
+                    pp.Tag = new MiddleErrorTag(middle, 0);
+            }
+
+            var curveItem = new HiLowMiddleErrorBarItem(label, pointPairList, color, color);
+            BarSettings.Type = BarType.SortedOverlay;
+            return curveItem;
+        }
+
         private PeptidesAndTransitionGroups GetSelectedPeptides()
         {
             return PeptidesAndTransitionGroups.Get(GraphSummary.StateProvider.SelectedNodes, GraphSummary.ResultsIndex, 100);

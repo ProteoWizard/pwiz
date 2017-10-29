@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             base.OnHandleDestroyed(e);
         }
 
-        public static FoldChangeGrid ShowFoldChangeGrid(DockPanel dockPanel, Rectangle rcFloating, IDocumentContainer documentContainer,
+        public static FoldChangeGrid ShowFoldChangeGrid(DockPanel dockPanel, Rectangle rcFloating, IDocumentUIContainer documentContainer,
             string groupComparisonName)
         {
             var grid = FindForm<FoldChangeGrid>(documentContainer, groupComparisonName);

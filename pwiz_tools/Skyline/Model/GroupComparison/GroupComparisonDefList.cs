@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public override GroupComparisonDef EditItem(Control owner, GroupComparisonDef item, IEnumerable<GroupComparisonDef> existing, object tag)
         {
-            using (var dlg = new EditGroupComparisonDlg(tag as IDocumentContainer, item ?? GroupComparisonDef.EMPTY, existing))
+            using (var dlg = new EditGroupComparisonDlg(tag as IDocumentUIContainer, item ?? GroupComparisonDef.EMPTY, existing))
             {
                 if (dlg.ShowDialog(owner) == DialogResult.OK)
                 {

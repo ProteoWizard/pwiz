@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
     public partial class FoldChangeBarGraph : FoldChangeForm
     {
         private BindingListSource _bindingListSource;
-        private AxisLabelScaler _axisLabelScaler;
+        private readonly AxisLabelScaler _axisLabelScaler;
         private CurveItem _barGraph;
         private FoldChangeBindingSource.FoldChangeRow[] _rows;
         private SkylineWindow _skylineWindow;
@@ -324,6 +324,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private void zedGraphControl_ContextMenuBuilder(ZedGraphControl graphControl, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             BuildContextMenu(graphControl, menuStrip, mousePt, objState);
+        }
+
+        private void FoldChangeBarGraph_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.Escape:
+                    _skylineWindow.FocusDocument();
+                    e.Handled = true;
+                    break;
+            }
         }
     }
 }

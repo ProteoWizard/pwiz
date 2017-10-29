@@ -217,6 +217,21 @@ namespace pwiz.Skyline.Controls.Graphs
             return new HatchBrush(HatchStyle.Percent50, color, SystemColors.Window);
         }
 
+        protected static CurveItem CreateLineItem(string label, PointPairList pointPairList, Color color)
+        {
+            return new LineItem(label, pointPairList, color, SymbolType.None)
+            {
+                Line = new Line { Width = 2, Color = color, IsAntiAlias = true },
+                Symbol = new Symbol
+                {
+                    Type = SymbolType.Circle,
+                    Size = 4,
+                    Border = new Border(color, 0),
+                    Fill = new Fill(color)
+                }
+            };
+        }
+
         /// <summary>
         /// Holds the data that is currently displayed in the graph.
         /// Currently, we don't hold onto this object, because we never need to look

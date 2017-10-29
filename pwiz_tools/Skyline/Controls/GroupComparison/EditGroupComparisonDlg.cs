@@ -32,12 +32,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
 {
     public partial class EditGroupComparisonDlg : FormEx
     {
-        private GroupComparisonDef _originalGroupComparisonDef;
-        private IEnumerable<GroupComparisonDef> _existingGroupComparisons;
+        private readonly GroupComparisonDef _originalGroupComparisonDef;
+        private readonly IEnumerable<GroupComparisonDef> _existingGroupComparisons;
         protected bool _inChangeSettings;
         private readonly bool _pushChangesToDocument;
 
-        public EditGroupComparisonDlg(IDocumentContainer documentContainer,
+        public EditGroupComparisonDlg(IDocumentUIContainer documentContainer,
             GroupComparisonDef groupComparisonDef, IEnumerable<GroupComparisonDef> existingGroupComparisons)
             : this(new GroupComparisonModel(documentContainer, null) { GroupComparisonDef = groupComparisonDef})
         {

@@ -24,7 +24,7 @@ using pwiz.Common.Graph;
 namespace pwiz.Skyline.Controls.Graphs
 {
     /// <summary>
-    /// BarItem with an error bar at the top indicating meand and standard deviation.
+    /// BarItem with an error bar at the top indicating mean and standard deviation.
     /// </summary>
     [CurveDataHandler(typeof(MeanErrorBarDataHandler))]
     public class MeanErrorBarItem : BarItem

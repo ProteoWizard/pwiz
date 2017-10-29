@@ -377,10 +377,8 @@ namespace pwiz.Skyline.EditUI
             // 
             // PasteDlg
             // 
-            this.AcceptButton = this.btnInsert;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.CancelButton = this.btnCancel;
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.panelButtons);
             this.Controls.Add(this.panelError);
@@ -390,6 +388,7 @@ namespace pwiz.Skyline.EditUI
             this.Name = "PasteDlg";
             this.ShowInTaskbar = false;
             this.Load += new System.EventHandler(this.OnLoad);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PasteDlg_KeyDown);
             this.tabControl1.ResumeLayout(false);
             this.tabPageFasta.ResumeLayout(false);
             this.tabPageFasta.PerformLayout();

@@ -313,6 +313,11 @@ namespace pwiz.Skyline.Model
             return string.Format("[M{0}{1}]", massIndex > 0 ? "+" : string.Empty, massIndex); // Not L10N 
         }
 
+        public double GetAAMass(char c)
+        {
+            return _aminoMasses[c];
+        }
+
         private readonly BioMassCalc _massCalc;
         public readonly double[] _aminoMasses = new double[128];
 

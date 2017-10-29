@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.GroupComparison
     public class GroupComparisonModel
     {
         private readonly object _lock = new object();
-        private IDocumentContainer _documentContainer;
+        private readonly IDocumentContainer _documentContainer;
         private GroupComparisonDef _groupComparisonDef = GroupComparisonDef.EMPTY;
         private GroupComparer _groupComparer;
         private CancellationTokenSource _cancellationTokenSource;

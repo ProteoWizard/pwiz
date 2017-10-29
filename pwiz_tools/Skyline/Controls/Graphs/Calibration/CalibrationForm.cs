@@ -532,6 +532,17 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             UpdateUI(false);
         }
 
+        private void CalibrationForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.Escape:
+                    _skylineWindow.FocusDocument();
+                    e.Handled = true;
+                    break;
+            }
+        }
+
         #region Test Methods
         public ZedGraphControl ZedGraphControl { get { return zedGraphControl; } }
         #endregion

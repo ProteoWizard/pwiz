@@ -99,6 +99,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void SetNormalizationIndex(int index)
         {
+            // TODO(Tobi): Fix this. It causes an error loading a saved layout with an Area CV graph and normalization meth
+            if (Program.MainWindow == null)
+                return;
+
             if (index < _standardTypeCount)
             {
                 Program.MainWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, index, false);

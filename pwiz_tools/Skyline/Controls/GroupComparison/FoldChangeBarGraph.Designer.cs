@@ -56,6 +56,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.zedGraphControl);
             this.Name = "FoldChangeBarGraph";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.FoldChangeBarGraph_KeyDown);
             this.ResumeLayout(false);
 
         }

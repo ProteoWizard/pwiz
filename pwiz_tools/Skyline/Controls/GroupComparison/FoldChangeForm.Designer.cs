@@ -35,7 +35,9 @@
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.KeyPreview = true;
             this.Name = "FoldChangeForm";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.FoldChangeForm_KeyDown);
             this.ResumeLayout(false);
 
         }

@@ -9963,4 +9963,10 @@ Would you like to remove some or all of the prefix or suffix to shorten the name
   <data name="PeptidesPerProteinDlg_UpdateRemaining_Calculating___" xml:space="preserve">
     <value>Calculating...</value>
   </data>
+  <data name="SkylineWindow_expandAllMenuItem_DropDownOpening__Lists" xml:space="preserve">
+    <value>&amp;Lists</value>
+  </data>
+  <data name="SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules" xml:space="preserve">
+    <value>&amp;Molecules</value>
+  </data>
 </root>

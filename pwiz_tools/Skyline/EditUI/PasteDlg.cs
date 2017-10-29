@@ -1232,6 +1232,11 @@ namespace pwiz.Skyline.EditUI
             DialogResult = DialogResult.OK;
         }
 
+        public override void CancelDialog()
+        {
+            DialogResult = DialogResult.Cancel;
+        }
+
         private void tbxFasta_TextChanged(object sender, EventArgs e)
         {
             HideNoErrors();
@@ -1859,6 +1864,32 @@ namespace pwiz.Skyline.EditUI
             public override void ShowTransitionError(PasteError error)
             {
                 _pasteDlg.ShowTransitionError(error);
+            }
+        }
+
+        private void PasteDlg_KeyDown(object sender, KeyEventArgs e)
+        {
+            // This keyboard handling is necessary to get Escape and Enter keys to work correctly in this form
+            // They need to generally work, but not when grid controls are in edit mode and not Enter when the
+            // FASTA text box has the focus. Especially to make grid editing work as expected, it seems to be
+            // necessary to not have an Accept or Cancel button on the form.
+            switch (e.KeyCode)
+            {
+                case Keys.Escape:
+                    // Somehow a grid in edit mode doesn't end up here, if there is no Cancel button on the form
+                    CancelDialog();
+                    e.Handled = true;
+                    break;
+
+                case Keys.Enter:
+                    // Allow the FASTA text box to have enter keys
+                    if (!tbxFasta.Focused)
+                    {
+                        // Otherwise, OK the dialog
+                        OkDialog();
+                        e.Handled = true;
+                    }
+                    break;
             }
         }
     }

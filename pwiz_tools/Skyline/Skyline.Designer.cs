@@ -2764,6 +2764,7 @@ namespace pwiz.Skyline
             this.expandPrecursorsMenuItem});
             this.expandAllToolStripMenuItem.Name = "expandAllToolStripMenuItem";
             resources.ApplyResources(this.expandAllToolStripMenuItem, "expandAllToolStripMenuItem");
+            this.expandAllToolStripMenuItem.DropDownOpening += new System.EventHandler(this.expandAllMenuItem_DropDownOpening);
             // 
             // expandProteinsMenuItem
             // 
@@ -2791,6 +2792,7 @@ namespace pwiz.Skyline
             this.collapsePrecursorsMenuItem});
             this.collapseAllToolStripMenuItem.Name = "collapseAllToolStripMenuItem";
             resources.ApplyResources(this.collapseAllToolStripMenuItem, "collapseAllToolStripMenuItem");
+            this.collapseAllToolStripMenuItem.DropDownOpening += new System.EventHandler(this.collapseAllToolStripMenuItem_DropDownOpening);
             // 
             // collapseProteinsMenuItem
             // 

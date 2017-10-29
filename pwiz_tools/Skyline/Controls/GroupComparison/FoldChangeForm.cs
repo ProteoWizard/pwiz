@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 {
     public partial class FoldChangeForm : DockableFormEx
     {
-        private IDocumentContainer _documentContainer;
+        private IDocumentUIContainer _documentContainer;
         private string _groupComparisonName;
         private Form _owner;
         public FoldChangeForm()
@@ -47,10 +47,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
             FoldChangeBindingSource = bindingSource;
             string groupComparisonName = bindingSource.GroupComparisonModel.GroupComparisonName ??
                                          bindingSource.GroupComparisonModel.GroupComparisonDef.Name;
-            SetGroupComparisonName(bindingSource.GroupComparisonModel.DocumentContainer, groupComparisonName);
+            SetGroupComparisonName(bindingSource.GroupComparisonModel.DocumentContainer as IDocumentUIContainer, groupComparisonName);
         }
 
-        public void SetGroupComparisonName(IDocumentContainer documentContainer, string groupComparisonName)
+        public void SetGroupComparisonName(IDocumentUIContainer documentContainer, string groupComparisonName)
         {
             _documentContainer = documentContainer;
             _groupComparisonName = groupComparisonName;
@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             Program.MainWindow.ShowGroupComparisonWindow(_groupComparisonName);
         }
 
-        public static FoldChangeBindingSource FindOrCreateBindingSource(IDocumentContainer documentContainer,
+        public static FoldChangeBindingSource FindOrCreateBindingSource(IDocumentUIContainer documentContainer,
             string groupComparisonName)
         {
             var form = FindForm<FoldChangeForm>(documentContainer, groupComparisonName);
@@ -274,7 +274,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return new FoldChangeBindingSource(new GroupComparisonModel(documentContainer, groupComparisonName));
         }
 
-        public static FoldChangeForm RestoreFoldChangeForm(IDocumentContainer documentContainer, string persistentString)
+        public static FoldChangeForm RestoreFoldChangeForm(IDocumentUIContainer documentContainer, string persistentString)
         {
             var formContructors = new[]
             {
@@ -326,6 +326,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     FormType = typeof (T),
                     Constructor = constructor
                 };
+            }
+        }
+
+        private void FoldChangeForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.Escape:
+                    _documentContainer.FocusDocument();
+                    e.Handled = true;
+                    break;
             }
         }
     }

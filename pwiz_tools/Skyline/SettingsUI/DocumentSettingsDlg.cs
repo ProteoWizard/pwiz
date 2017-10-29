@@ -18,7 +18,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListBoxDriver<AnnotationDef> _annotationsListBoxDriver;
         private readonly SettingsListBoxDriver<GroupComparisonDef> _groupComparisonsListBoxDriver;
 
-        public DocumentSettingsDlg(IDocumentContainer documentContainer)
+        public DocumentSettingsDlg(IDocumentUIContainer documentContainer)
         {
             InitializeComponent();
             Icon = Resources.Skyline;
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.SettingsUI
                     viewSpec => PersistedViews.MainGroup.Id.ViewName(viewSpec.Name));
         }
 
-        public IDocumentContainer DocumentContainer { get; private set; }
+        public IDocumentUIContainer DocumentContainer { get; private set; }
 
         public DataSettings GetDataSettings(DataSettings dataSettings)
         {

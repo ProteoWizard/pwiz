@@ -23475,6 +23475,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;Lists.
+        /// </summary>
+        public static string SkylineWindow_expandAllMenuItem_DropDownOpening__Lists {
+            get {
+                return ResourceManager.GetString("SkylineWindow_expandAllMenuItem_DropDownOpening__Lists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Molecules.
+        /// </summary>
+        public static string SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules {
+            get {
+                return ResourceManager.GetString("SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The number of targets exceeds the limit for this operation..
         /// </summary>
         public static string SkylineWindow_ExpandProteins_The_number_of_targets_exceeds_the_limit_for_this_operation_ {
