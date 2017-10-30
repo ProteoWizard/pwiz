@@ -119,37 +119,37 @@ namespace pwiz.SkylineTestFunctional
 
             var fullColumnOrder = new[]
                 {
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.cePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.note,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.adductProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.dtPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.dtHighEnergyOffset,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.ccsPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.slens,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.coneVoltage,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.compensationVoltage,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.declusteringPotential,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.idInChiKey,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.idHMDB,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.idInChi,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.idCAS,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.idSMILES,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.imPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.imHighEnergyOffset,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.imUnits,
+                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                    SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                    SmallMoleculeTransitionListColumnHeaders.labelType,
+                    SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.cePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.note,
+                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.adductProduct,
+                    SmallMoleculeTransitionListColumnHeaders.dtPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.dtHighEnergyOffset,
+                    SmallMoleculeTransitionListColumnHeaders.ccsPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.slens,
+                    SmallMoleculeTransitionListColumnHeaders.coneVoltage,
+                    SmallMoleculeTransitionListColumnHeaders.compensationVoltage,
+                    SmallMoleculeTransitionListColumnHeaders.declusteringPotential,
+                    SmallMoleculeTransitionListColumnHeaders.idInChiKey,
+                    SmallMoleculeTransitionListColumnHeaders.idHMDB,
+                    SmallMoleculeTransitionListColumnHeaders.idInChi,
+                    SmallMoleculeTransitionListColumnHeaders.idCAS,
+                    SmallMoleculeTransitionListColumnHeaders.idSMILES,
+                    SmallMoleculeTransitionListColumnHeaders.imPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.imHighEnergyOffset,
+                    SmallMoleculeTransitionListColumnHeaders.imUnits,
                 };
 
             // Default col order is listname, preName, PreFormula, preAdduct, preMz, preCharge, prodName, ProdFormula, prodAdduct, prodMz, prodCharge
@@ -382,10 +382,10 @@ namespace pwiz.SkylineTestFunctional
 
             var columnOrderB = new[]
                 {
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
                 };
 
             // Doc is set for MS1 filtering, fragment transitions, charge=1, two peaks, should show M and M+1, M+2 after filter is invoked by changing to 3 peaks
@@ -418,13 +418,13 @@ namespace pwiz.SkylineTestFunctional
             // Verify that we can import heavy/light pairs
             var columnOrderC = new[]
                 {
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType,
+                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                    SmallMoleculeTransitionListColumnHeaders.labelType,
                 };
             pasteText =
                 "A,27-HC,C36H57N2O3,135,1,1,light\r\n" +
@@ -443,14 +443,14 @@ namespace pwiz.SkylineTestFunctional
             // Verify adduct usage - none, or in own column, or as part of formula
             columnOrderC = new[]
                 {
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType,
+                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                    SmallMoleculeTransitionListColumnHeaders.labelType,
                 };
             pasteText =
                 "A,27-HC,C36H57N2O3,,1,135,1,light\r\n" + // No adduct, just charge
@@ -468,12 +468,12 @@ namespace pwiz.SkylineTestFunctional
             // Verify adduct usage - none, or in own column, or as part of formula, when no name hints are given
             columnOrderC = new[]
                 {
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType,
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                    SmallMoleculeTransitionListColumnHeaders.labelType,
                 };
             pasteText =
                 "C36H57N2O3,,1,135,1,light\r\n" + // No adduct
@@ -525,21 +525,21 @@ namespace pwiz.SkylineTestFunctional
             // small_molecule_paste_test.csv has non-standard column order (mz and formula swapped)
             var columnOrder = new[]
             {
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.note,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.idCAS,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.idHMDB,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.idInChi,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.idInChiKey,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.idSMILES,
+                SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                SmallMoleculeTransitionListColumnHeaders.note,
+                SmallMoleculeTransitionListColumnHeaders.idCAS,
+                SmallMoleculeTransitionListColumnHeaders.idHMDB,
+                SmallMoleculeTransitionListColumnHeaders.idInChi,
+                SmallMoleculeTransitionListColumnHeaders.idInChiKey,
+                SmallMoleculeTransitionListColumnHeaders.idSMILES,
             };
             RunUI(() =>
             {
@@ -748,17 +748,17 @@ namespace pwiz.SkylineTestFunctional
             //non-standard column order
             var columnOrder = new[]
             {
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.note,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType,
+                SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                SmallMoleculeTransitionListColumnHeaders.note,
+                SmallMoleculeTransitionListColumnHeaders.labelType,
            };
             // If user omits some product info but not others, complain
             RunUI(() =>
@@ -857,17 +857,17 @@ namespace pwiz.SkylineTestFunctional
             // Test the tool service logic without actually using tool service (there's a test for that too)
             var header = string.Join(",", new string[]
             {
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                SmallMoleculeTransitionListColumnHeaders.labelType,
+                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
            });
            var textCSV = header + "\n" +
                 "Amino Acids B,AlaB,,light,,,225.1,44,-1,-1,3\n" +
@@ -884,9 +884,10 @@ namespace pwiz.SkylineTestFunctional
                 "Amino Acids B,ArgB,,heavy,,,312,220,-1,-1,19\n";
 
             var docOrig = SkylineWindow.Document;
+            var textClean = textCSV;
             SkylineWindow.Invoke(new Action(() =>
             {
-                SkylineWindow.InsertSmallMoleculeTransitionList(textCSV, Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
+                SkylineWindow.InsertSmallMoleculeTransitionList(textClean, Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
             }));
 
             var pastedDoc = WaitForDocumentChange(docOrig);
@@ -894,7 +895,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(4, pastedDoc.MoleculeCount);
 
             // Now feed it some nonsense headers, verify helpful error message
-            var textCSV2 = textCSV.Replace(PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType, "labbel").Replace(PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,"grommet");
+            var textCSV2 = textCSV.Replace(SmallMoleculeTransitionListColumnHeaders.labelType, "labbel").Replace(SmallMoleculeTransitionListColumnHeaders.moleculeGroup,"grommet");
             AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
             {
                 SkylineWindow.InsertSmallMoleculeTransitionList(textCSV2,
@@ -902,7 +903,7 @@ namespace pwiz.SkylineTestFunctional
             })),
                 string.Format(Resources.SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_,
                     TextUtil.LineSeparate(new[] { "grommet", "labbel"}),
-                    TextUtil.LineSeparate(PasteDlg.SmallMoleculeTransitionListColumnHeaders.KnownHeaders())));
+                    TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys)));
             // This should still be close enough to correct that we can tell that's what the user was going for
             Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2));
            
@@ -920,31 +921,65 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
             Assert.AreEqual(4, pastedDoc.MoleculeCount);
 
-            // Check our ability to help users with localized headers understand that we need standard strings
-            // They might reasonably guess that we would support the names visible in the pasteDlg, but we prefer internal space-free names
-            var textCSV4 = textCSV3.Replace(PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name);
+            // Check our ability to help users with nearly correct headers
+            var nearly = "precsr";
+            var textCSV4 = textCSV3.Replace(SmallMoleculeTransitionListColumnHeaders.namePrecursor, nearly);
             AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
-            {
-                SkylineWindow.InsertSmallMoleculeTransitionList(textCSV4,
-                    Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
-            })),
+                {
+                    SkylineWindow.InsertSmallMoleculeTransitionList(textCSV4,
+                        Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
+                })),
                 string.Format(Resources.SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_,
-                    Resources.PasteDlg_UpdateMoleculeType_Precursor_Name,
-                    TextUtil.LineSeparate(PasteDlg.SmallMoleculeTransitionListColumnHeaders.KnownHeaders())));
+                    nearly,
+                    TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys)));
             // This should still be close enough to correct that we can tell that's what the user was going for
             Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV4));
 
-            // Check ability to paste into the Skyline window
+            // Check our ability to help users with localized headers that match the human readable names we use in the UI
             NewDocument();
             docOrig = WaitForDocumentChange(pastedDoc);
-            RunUI(() =>
+            var textCSV5 = textCSV3.Replace(SmallMoleculeTransitionListColumnHeaders.namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name);
+            SkylineWindow.Invoke(new Action(() =>
             {
-                SetClipboardText(textCSV);
-                SkylineWindow.Paste();
-            });
+                SkylineWindow.InsertSmallMoleculeTransitionList(textCSV5,
+                    Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
+            }));
             pastedDoc = WaitForDocumentChange(docOrig);
             Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
             Assert.AreEqual(4, pastedDoc.MoleculeCount);
+
+            // Check ability to paste into the Skyline window
+            // Use various combinations of CSV vs TSV and . vs ,
+            var textCSV6 = textCSV;
+            for (var style = 0; style < (CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator.Equals(".") ? 2 : 4); style++)
+            {
+                switch (style)
+                {
+                    case 0:
+                        // CSV US
+                        break;
+                    case 1:
+                        textCSV6 = textCSV6.Replace(",", "\t"); // TSV US
+                        break;
+                    case 2:
+                        textCSV6 = textCSV6.Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator); // TSV FR
+                        break;
+                    case 3:
+                        textCSV6 = textCSV6.Replace("\t", ";"); // Excel FR
+                        break;
+                }
+                NewDocument();
+                docOrig = WaitForDocumentChange(pastedDoc);
+                var csv6 = textCSV6;
+                RunUI(() =>
+                {
+                    SetClipboardText(csv6);
+                    SkylineWindow.Paste();
+                });
+                pastedDoc = WaitForDocumentChange(docOrig);
+                Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
+                Assert.AreEqual(4, pastedDoc.MoleculeCount);
+            }
         }
 
         private void TestLabelsNoFormulas()
@@ -958,17 +993,17 @@ namespace pwiz.SkylineTestFunctional
             //non-standard column order
             var columnOrder = new[]
             {
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                SmallMoleculeTransitionListColumnHeaders.labelType,
+                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
            };
             // If user omits some product info but not others, complain
             RunUI(() =>

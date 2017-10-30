@@ -96,20 +96,20 @@ namespace pwiz.SkylineTestTutorial
                 var columnsOrdered = new[]
                 {
                     // Molecule List Name,Precursor Name,Precursor Formula,Precursor Charge,Precursor RT,Precursor CE,Product m/z,Product Charge, label type
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.cePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType
+                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.cePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                    SmallMoleculeTransitionListColumnHeaders.labelType
                 }.ToList();
                 if (_inferredLabels)
                 {
-                    columnsOrdered.Remove(PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType);
+                    columnsOrdered.Remove(SmallMoleculeTransitionListColumnHeaders.labelType);
                 }
                 RunUI(() => { pasteDlg.SetSmallMoleculeColumns(columnsOrdered); });
                 WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);

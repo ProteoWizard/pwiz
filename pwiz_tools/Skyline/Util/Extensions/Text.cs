@@ -458,7 +458,12 @@ namespace pwiz.Skyline.Util.Extensions
             Initialize(reader, separator, hasHeaders);
         }
 
-        public void Initialize(TextReader reader, char separator, bool hasHeaders = true)
+        public DsvFileReader(TextReader reader, char separator, IReadOnlyDictionary<string, string> headerSynonyms)
+        {
+            Initialize(reader, separator, true, headerSynonyms);
+        }
+
+        public void Initialize(TextReader reader, char separator, bool hasHeaders = true, IReadOnlyDictionary<string, string> headerSynonyms = null)
         {
             _separator = separator;
             _reader = reader;
@@ -481,6 +486,16 @@ namespace pwiz.Skyline.Util.Extensions
             {
                 FieldNames.Add(fields[i]);
                 FieldDict[fields[i]] = i;
+                // Check to see if the given column name is actually a synonym for the internal canonical (no spaces, serialized) name
+                string syn;
+                if (headerSynonyms != null && headerSynonyms.TryGetValue(fields[i], out syn))
+                {
+                    if (!FieldDict.ContainsKey(syn))
+                    {
+                        // Note the internal name for this field
+                        FieldDict.Add(syn, i);
+                    }
+                }
             }
         }
 

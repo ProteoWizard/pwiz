@@ -855,9 +855,9 @@ namespace pwiz.Skyline.EditUI
         private void btnTransitionListHelp_Click(object sender, EventArgs e)
         {
             var helpText = Resources.PasteDlg_btnTransitionListHelp_Click_ +
-                SmallMoleculeTransitionListColumnHeaders.KnownHeaders().Aggregate((s1, s2) => s1 + ", " + s2) + // Not L10N
+                string.Join(", ", SmallMoleculeTransitionListColumnHeaders.KnownHeaders) + // Not L10N
                 "\r\n" + // Not L10N
-                string.Format(Resources.PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_, SmallMoleculeTransitionListColumnHeaders.imUnits, Enum.GetNames(typeof(MsDataFileImpl.eIonMobilityUnits)).Aggregate((s1, s2) => s1 + ", " + s2)) + // Not L10N
+                string.Format(Resources.PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_, SmallMoleculeTransitionListColumnHeaders.imUnits, string.Join(", ", Enum.GetNames(typeof(MsDataFileImpl.eIonMobilityUnits)))) + // Not L10N
                 "\r\n\r\n" + // Not L10N
                 Resources.PasteDlg_btnTransitionListHelp_Click_2_ +
                 "\r\n\r\n" + // Not L10N
@@ -1596,79 +1596,6 @@ namespace pwiz.Skyline.EditUI
             UpdateMoleculeType();
         }
 
-        // Custom molecule transition list internal column names, for saving to settings
-        public static class SmallMoleculeTransitionListColumnHeaders
-        {
-            public const string moleculeGroup = "MoleculeGroup"; // Not L10N
-            public const string namePrecursor = "PrecursorName"; // Not L10N
-            public const string nameProduct = "ProductName"; // Not L10N
-            public const string formulaPrecursor = "PrecursorFormula"; // Not L10N
-            public const string formulaProduct = "ProductFormula"; // Not L10N
-            public const string mzPrecursor = "PrecursorMz"; // Not L10N
-            public const string mzProduct = "ProductMz"; // Not L10N
-            public const string chargePrecursor = "PrecursorCharge"; // Not L10N
-            public const string chargeProduct = "ProductCharge"; // Not L10N
-            public const string rtPrecursor = "PrecursorRT"; // Not L10N
-            public const string rtWindowPrecursor = "PrecursorRTWindow"; // Not L10N
-            public const string cePrecursor = "PrecursorCE"; // Not L10N
-            public const string dtPrecursor = "PrecursorDT"; // Drift time - IMUnits is implied // Not L10N
-            public const string dtHighEnergyOffset = "HighEnergyDTOffset";  // Drift time - IMUnits is implied // Not L10N
-            public const string imPrecursor = "PrecursorIM"; // Not L10N
-            public const string imHighEnergyOffset = "HighEnergyIMOffset"; // Not L10N
-            public const string imUnits = "IMUnits"; // Not L10N
-            public const string ccsPrecursor = "PrecursorCCS"; // Not L10N
-            public const string slens = "SLens"; // Not L10N
-            public const string coneVoltage = "ConeVoltage"; // Not L10N
-            public const string compensationVoltage = "CompensationVoltage"; // Not L10N
-            public const string declusteringPotential = "DeclusteringPotential"; // Not L10N
-            public const string note = "Note"; // Not L10N
-            public const string labelType = "LabelType"; // Not L10N
-            public const string adductPrecursor = "PrecursorAdduct"; // Not L10N
-            public const string adductProduct = "ProductAdduct"; // Not L10N
-            public const string idCAS = "CAS"; // Not L10N
-            public const string idInChiKey = "InChiKey"; // Not L10N
-            public const string idInChi = "InChi"; // Not L10N
-            public const string idHMDB = "HMDB"; // Not L10N
-            public const string idSMILES = "SMILES"; // Not L10N
-
-            public static List<string> KnownHeaders()
-            {
-                return new List<string>(new[]
-                {
-                    moleculeGroup,
-                    namePrecursor,
-                    nameProduct,
-                    formulaPrecursor,
-                    formulaProduct,
-                    mzPrecursor,
-                    mzProduct,
-                    chargePrecursor,
-                    chargeProduct,
-                    adductPrecursor,
-                    adductProduct,
-                    rtPrecursor,
-                    rtWindowPrecursor,
-                    cePrecursor,
-                    dtPrecursor, // Drift time - IMUnits implied
-                    dtHighEnergyOffset, // Drift time - IMUnits implied
-                    imPrecursor, // General ion mobility, imUnits required
-                    imHighEnergyOffset,
-                    imUnits,
-                    ccsPrecursor,
-                    slens,
-                    coneVoltage,
-                    compensationVoltage,
-                    declusteringPotential,
-                    note,
-                    labelType,
-                    idInChiKey,
-                    idCAS,
-                    idHMDB,
-                    idInChi,
-                    idSMILES,
-                });
-            }
-        }
         private void UpdateMoleculeType()
         {
             bool isPeptide = radioPeptide.Checked;

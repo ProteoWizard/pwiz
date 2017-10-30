@@ -46,13 +46,13 @@ namespace pwiz.SkylineTestFunctional
                 pasteDlg.IsMolecule = true;
                 pasteDlg.SetSmallMoleculeColumns(new[]
                 {
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct
+                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.chargeProduct
                 }.ToList());
                 string text = TextUtil.LineSeparate(
                     "Drugs\tCaffeine\tLoss of CHO\tC8H10N4O2\tC7H9N4O\t1\t1",

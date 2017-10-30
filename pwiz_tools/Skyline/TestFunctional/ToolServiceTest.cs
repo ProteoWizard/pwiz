@@ -22,7 +22,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -179,17 +179,17 @@ TTDFDGYWVNHNWYSIYEST*
         {
             var header = string.Join(",", new string[]
             {
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                SmallMoleculeTransitionListColumnHeaders.labelType,
+                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
            });
            return header + "\n" +
                "Amino Acids B,AlaB,,light,,,225,44,-1,-1,3\n" +

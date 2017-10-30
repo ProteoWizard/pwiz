@@ -116,15 +116,15 @@ namespace pwiz.SkylineTestFunctional
             // Class,Name,Pre charge,Pre,Prod,Prod charge,RT,window,CE
             var columnOrder = new[]
                 {
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.cePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                    SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.cePrecursor,
                 };
             var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             RunUI(() =>

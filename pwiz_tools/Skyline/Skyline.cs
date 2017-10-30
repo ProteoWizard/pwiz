@@ -1241,6 +1241,12 @@ namespace pwiz.Skyline
                     }
                 }
             }
+            // Perhaps it's a small molecule list with headers
+            else if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text) &&
+                     MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
+            {
+                InsertSmallMoleculeTransitionList(text, Resources.SkylineWindow_Paste_Paste_transition_list);
+            }
             // If the text contains numbers, see if it can be imported as a mass list.
             // It is definitly not a sequence, if it has numbers.  Whereas, sequences do
             // allow internal white space including tabs.

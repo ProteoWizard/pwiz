@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.ProteowizardWrapper;
@@ -39,7 +40,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public abstract class SmallMoleculeTransitionListReader
     {
-        protected CultureInfo _cultureInfo;
+        protected IFormatProvider _cultureInfo;
         protected List<Row> Rows { get; set; }
         public abstract void UpdateCellBackingStore(int row, int col, object value);
         public abstract void ShowTransitionError(PasteError error);
@@ -282,132 +283,132 @@ namespace pwiz.Skyline.Model
 
         private int INDEX_MOLECULE_GROUP
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.moleculeGroup); }
         }
 
         private int INDEX_MOLECULE_NAME
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.namePrecursor); }
         }
 
         private int INDEX_PRODUCT_NAME
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.nameProduct); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.nameProduct); }
         }
 
         private int INDEX_MOLECULE_FORMULA
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.formulaPrecursor); }
         }
 
         private int INDEX_MOLECULE_ADDUCT
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.adductPrecursor); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.adductPrecursor); }
         }
 
         private int INDEX_PRODUCT_FORMULA
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaProduct); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.formulaProduct); }
         }
 
         private int INDEX_PRODUCT_ADDUCT
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.adductProduct); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.adductProduct); }
         }
 
         private int INDEX_MOLECULE_MZ
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzPrecursor); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.mzPrecursor); }
         }
 
         private int INDEX_PRODUCT_MZ
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.mzProduct); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.mzProduct); }
         }
 
         private int INDEX_MOLECULE_CHARGE
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargePrecursor); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.chargePrecursor); }
         }
 
         private int INDEX_PRODUCT_CHARGE
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.chargeProduct); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.chargeProduct); }
         }
 
         private int INDEX_LABEL_TYPE
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.labelType); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.labelType); }
         }
 
         private int INDEX_RETENTION_TIME
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtPrecursor); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.rtPrecursor); }
         }
 
         private int INDEX_RETENTION_TIME_WINDOW
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor); }
         }
 
         private int INDEX_COLLISION_ENERGY
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.cePrecursor); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.cePrecursor); }
         }
 
         private int INDEX_NOTE
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.note); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.note); }
         }
 
         private int INDEX_MOLECULE_DRIFT_TIME_MSEC
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.dtPrecursor); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.dtPrecursor); }
         }
 
         private int INDEX_HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.dtHighEnergyOffset); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.dtHighEnergyOffset); }
         }
 
         private int INDEX_MOLECULE_ION_MOBILITY
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.imPrecursor); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.imPrecursor); }
         }
 
         private int INDEX_MOLECULE_ION_MOBILITY_UNITS
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.imUnits); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.imUnits); }
         }
 
         private int INDEX_HIGH_ENERGY_ION_MOBILITY_OFFSET
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.imHighEnergyOffset); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.imHighEnergyOffset); }
         }
 
         private int INDEX_MOLECULE_CCS
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.ccsPrecursor); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.ccsPrecursor); }
         }
 
         private int INDEX_SLENS
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.slens); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.slens); }
         }
 
         private int INDEX_CONE_VOLTAGE
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.coneVoltage); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.coneVoltage); }
         }
 
         private int INDEX_COMPENSATION_VOLTAGE
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.compensationVoltage); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.compensationVoltage); }
         }
 
         private int INDEX_DECLUSTERING_POTENTIAL
         {
-            get { return ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.declusteringPotential); }
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.declusteringPotential); }
         }
 
         private static int? ValidateFormulaWithMz(SrmDocument document, ref string moleculeFormula, Adduct adduct,
@@ -548,7 +549,7 @@ namespace pwiz.Skyline.Model
         {
             var moleculeIdKeys = new Dictionary<string, string>();
 
-            var inchikeyCol = ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.idInChiKey);
+            var inchikeyCol = ColumnIndex(SmallMoleculeTransitionListColumnHeaders.idInChiKey);
             var inchikey = NullForEmpty(row.GetCell(inchikeyCol));
             if (inchikey != null)
             {
@@ -569,7 +570,7 @@ namespace pwiz.Skyline.Model
             }
             moleculeIdKeys.Add(MoleculeAccessionNumbers.TagInChiKey, inchikey);
 
-            var hmdbCol = ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.idHMDB);
+            var hmdbCol = ColumnIndex(SmallMoleculeTransitionListColumnHeaders.idHMDB);
             var hmdb = NullForEmpty(row.GetCell(hmdbCol));
             if (hmdb != null)
             {
@@ -595,7 +596,7 @@ namespace pwiz.Skyline.Model
                 moleculeIdKeys.Add(MoleculeAccessionNumbers.TagHMDB, hmdb.Substring(4)); // Not L10N
             }
 
-            var inchiCol = ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.idInChi);
+            var inchiCol = ColumnIndex(SmallMoleculeTransitionListColumnHeaders.idInChi);
             var inchi = NullForEmpty(row.GetCell(inchiCol));
             if (inchi != null)
             {
@@ -624,7 +625,7 @@ namespace pwiz.Skyline.Model
                 moleculeIdKeys.Add(MoleculeAccessionNumbers.TagInChI, inchi.Substring(6)); // Not L10N
             }
 
-            var casCol = ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.idCAS);
+            var casCol = ColumnIndex(SmallMoleculeTransitionListColumnHeaders.idCAS);
             var cas = NullForEmpty(row.GetCell(casCol));
             if (cas != null)
             {
@@ -647,7 +648,7 @@ namespace pwiz.Skyline.Model
                 moleculeIdKeys.Add(MoleculeAccessionNumbers.TagCAS, cas);
             }
 
-            var smilesCol = ColumnIndex(PasteDlg.SmallMoleculeTransitionListColumnHeaders.idSMILES);
+            var smilesCol = ColumnIndex(SmallMoleculeTransitionListColumnHeaders.idSMILES);
             var smiles = NullForEmpty(row.GetCell(smilesCol));
             if (smiles != null)
             {
@@ -681,9 +682,7 @@ namespace pwiz.Skyline.Model
 
         public static string GetAcceptedIonMobilityUnitsString()
         {
-            var vals = string.Empty;
-            return IonMobilityUnitsSynonyms
-                .Aggregate(vals, (current, pair) => current + ", " + pair.Key); // Not L10N
+            return string.Join(", ", IonMobilityUnitsSynonyms.Keys); // Not L10N
         }
 
 
@@ -1389,41 +1388,27 @@ namespace pwiz.Skyline.Model
         public SmallMoleculeTransitionListCSVReader(string csvText)
         {
             // Accept either true CSV or currentculture equivalent
-            var badHeaders = new List<string>();
-            int maxHeaders = -1;
-            for (var tryCultures = 0; tryCultures < 3; tryCultures++)
-            {
-                var reader = new StringReader(csvText);
-                _cultureInfo = CultureInfo.InvariantCulture; // Initally assume actual CSV
-                var separator = TextUtil.SEPARATOR_CSV;
-                if (tryCultures == 1)
-                {
-                    // In retry - is the problem that this isn't actually CSV, but rather a local L10N format?
-                    _cultureInfo = LocalizationHelper.CurrentCulture; // Perhaps it's in local culture
-                    separator = TextUtil.CsvSeparator;
-                }
-                _csvReader = new DsvFileReader(reader, separator);
-                // Do we recognize all the headers?
-                if (_csvReader.FieldNames.Count > maxHeaders)
-                {
-                    // This was probably at least the correct CultureInfo
-                    badHeaders =
-                        _csvReader.FieldNames.Where(
-                            n => !PasteDlg.SmallMoleculeTransitionListColumnHeaders.KnownHeaders().Contains(n)).ToList();
-                    maxHeaders = _csvReader.FieldNames.Count;
-                }
-                if (!badHeaders.Any())
-                {
-                    break;
-                }
-            }
+            Type[] columnTypes;
+            IFormatProvider formatProvider;
+            char separator;
+            // Skip over header line to deduce decimal format
+            var endLine = csvText.IndexOf('\n'); // Not L10N 
+            var line = (endLine != -1 ? csvText.Substring(endLine+1) : csvText);
+            MassListImporter.IsColumnar(line, out formatProvider, out separator, out columnTypes);
+            _cultureInfo = formatProvider;
+            var reader = new StringReader(csvText);
+            _csvReader = new DsvFileReader(reader, separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms);
+            // Do we recognize all the headers?
+            var badHeaders =
+                _csvReader.FieldNames.Where(
+                    n => !SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.ContainsKey(n)).ToList();
             if (badHeaders.Any())
             {
                 throw new LineColNumberedIoException(
                     string.Format(
                         Resources.SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_,
                         TextUtil.LineSeparate(badHeaders),
-                        TextUtil.LineSeparate(PasteDlg.SmallMoleculeTransitionListColumnHeaders.KnownHeaders())),
+                        TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys)),
                         1, _csvReader.FieldNames.IndexOf(badHeaders.First())+1);
             }
             string[] columns;
@@ -1453,20 +1438,28 @@ namespace pwiz.Skyline.Model
             {
                 // Not a proper small molecule transition list, but was it trying to be one?
                 var header = csvText.Split('\n')[0];
-                var hints = new[]
-                {
+                foreach (var hint in new [] {
                     // These are pretty basic, without overlap in peptide lists
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                    PasteDlg.SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    // Perhaps they were trying to use header names as seen in the UI (these have spaces, may be localized)
-                    Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name,  
-                    Resources.PasteDlg_UpdateMoleculeType_Precursor_Name,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Name,
-                    Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula
-                };
-                return hints.Any(h => header.Contains(h));
+                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
+                    SmallMoleculeTransitionListColumnHeaders.idCAS,
+                    SmallMoleculeTransitionListColumnHeaders.idInChiKey,
+                    SmallMoleculeTransitionListColumnHeaders.idInChi,
+                    SmallMoleculeTransitionListColumnHeaders.idHMDB,
+                    SmallMoleculeTransitionListColumnHeaders.idSMILES,
+                })
+                {
+                    foreach (var kvp in  
+                        SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Where(p => string.Compare(p.Value, hint, StringComparison.OrdinalIgnoreCase) == 0))
+                    {
+                        if (header.Contains(kvp.Key))
+                            return true;
+                    }
+                }
+                return false;
             }
         }
 
@@ -1488,6 +1481,138 @@ namespace pwiz.Skyline.Model
         public override int ColumnIndex(string columnName)
         {
             return _csvReader.GetFieldIndex(columnName);
+        }
+    }
+
+    // Custom molecule transition list internal column names, for saving to settings
+    public static class SmallMoleculeTransitionListColumnHeaders
+    {
+        public const string moleculeGroup = "MoleculeGroup"; // Not L10N
+        public const string namePrecursor = "PrecursorName"; // Not L10N
+        public const string nameProduct = "ProductName"; // Not L10N
+        public const string formulaPrecursor = "PrecursorFormula"; // Not L10N
+        public const string formulaProduct = "ProductFormula"; // Not L10N
+        public const string mzPrecursor = "PrecursorMz"; // Not L10N
+        public const string mzProduct = "ProductMz"; // Not L10N
+        public const string chargePrecursor = "PrecursorCharge"; // Not L10N
+        public const string chargeProduct = "ProductCharge"; // Not L10N
+        public const string rtPrecursor = "PrecursorRT"; // Not L10N
+        public const string rtWindowPrecursor = "PrecursorRTWindow"; // Not L10N
+        public const string cePrecursor = "PrecursorCE"; // Not L10N
+        public const string dtPrecursor = "PrecursorDT"; // Drift time - IMUnits is implied // Not L10N
+        public const string dtHighEnergyOffset = "HighEnergyDTOffset";  // Drift time - IMUnits is implied // Not L10N
+        public const string imPrecursor = "PrecursorIM"; // Not L10N
+        public const string imHighEnergyOffset = "HighEnergyIMOffset"; // Not L10N
+        public const string imUnits = "IMUnits"; // Not L10N
+        public const string ccsPrecursor = "PrecursorCCS"; // Not L10N
+        public const string slens = "SLens"; // Not L10N
+        public const string coneVoltage = "ConeVoltage"; // Not L10N
+        public const string compensationVoltage = "CompensationVoltage"; // Not L10N
+        public const string declusteringPotential = "DeclusteringPotential"; // Not L10N
+        public const string note = "Note"; // Not L10N
+        public const string labelType = "LabelType"; // Not L10N
+        public const string adductPrecursor = "PrecursorAdduct"; // Not L10N
+        public const string adductProduct = "ProductAdduct"; // Not L10N
+        public const string idCAS = "CAS"; // Not L10N
+        public const string idInChiKey = "InChiKey"; // Not L10N
+        public const string idInChi = "InChi"; // Not L10N
+        public const string idHMDB = "HMDB"; // Not L10N
+        public const string idSMILES = "SMILES"; // Not L10N
+
+        public static readonly List<string> KnownHeaders;
+
+        public static IReadOnlyDictionary<string, string> KnownHeaderSynonyms;
+
+        static SmallMoleculeTransitionListColumnHeaders()
+        {
+            // The list of internal values, as used in serialization
+            KnownHeaders =  new List<string>(new[]
+            {
+                moleculeGroup,
+                namePrecursor,
+                nameProduct,
+                formulaPrecursor,
+                formulaProduct,
+                mzPrecursor,
+                mzProduct,
+                chargePrecursor,
+                chargeProduct,
+                adductPrecursor,
+                adductProduct,
+                rtPrecursor,
+                rtWindowPrecursor,
+                cePrecursor,
+                dtPrecursor, // Drift time - IMUnits implied
+                dtHighEnergyOffset, // Drift time - IMUnits implied
+                imPrecursor, // General ion mobility, imUnits required
+                imHighEnergyOffset,
+                imUnits,
+                ccsPrecursor,
+                slens,
+                coneVoltage,
+                compensationVoltage,
+                declusteringPotential,
+                note,
+                labelType,
+                idInChiKey,
+                idCAS,
+                idHMDB,
+                idInChi,
+                idSMILES,
+            });
+
+            // A dictionary of terms that can be understood as column headers - this includes
+            // the internal names, and the names presented in the UI (for all supported cultures)
+            var currentCulture = Thread.CurrentThread.CurrentCulture;
+            var currentUICulture = Thread.CurrentThread.CurrentUICulture;
+            var knownColumnHeadersAllCultures = KnownHeaders.ToDictionary( hdr => hdr, hdr => hdr);
+            foreach (var culture in new[] { "en", "zh-CHS", "ja" }) // Not L10N
+            {
+                Thread.CurrentThread.CurrentUICulture =
+                    Thread.CurrentThread.CurrentCulture = new CultureInfo(culture);
+                foreach (var pair in new Dictionary<string, string> {
+                    {moleculeGroup, Resources.PasteDlg_UpdateMoleculeType_Molecule_List_Name},
+                    {namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name},
+                    {nameProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Name},
+                    {formulaPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Formula},
+                    {formulaProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Formula},
+                    {mzPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_m_z},
+                    {mzProduct, Resources.PasteDlg_UpdateMoleculeType_Product_m_z},
+                    {chargePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Charge},
+                    {chargeProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Charge},
+                    {adductPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct},
+                    {adductProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct},
+                    {rtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time},
+                    {rtWindowPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window},
+                    {cePrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy},
+                    {dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_},
+                    {dtHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_},
+                    {imPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility},
+                    {imHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset},
+                    {imUnits, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units},
+                    {ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_},
+                    {slens, Resources.PasteDlg_UpdateMoleculeType_S_Lens},
+                    {coneVoltage, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage},
+                    {compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage},
+                    {declusteringPotential, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential},
+                    {note, Resources.PasteDlg_UpdateMoleculeType_Note},
+                    {labelType, Resources.PasteDlg_UpdateMoleculeType_Label_Type},
+                    {idInChiKey, idInChiKey},
+                    {idCAS, idCAS},
+                    {idHMDB, idHMDB},
+                    {idInChi, idInChi},
+                    {idSMILES, idSMILES},
+                })
+                {
+                    if (!knownColumnHeadersAllCultures.ContainsKey(pair.Value))
+                    {
+                        knownColumnHeadersAllCultures.Add(pair.Value, pair.Key);
+                    }
+                }
+            }
+            Thread.CurrentThread.CurrentCulture = currentCulture;
+            Thread.CurrentThread.CurrentUICulture = currentUICulture;
+            KnownHeaderSynonyms = knownColumnHeadersAllCultures;
         }
     }
 }
