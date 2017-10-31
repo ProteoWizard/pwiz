@@ -1438,28 +1438,21 @@ namespace pwiz.Skyline.Model
             {
                 // Not a proper small molecule transition list, but was it trying to be one?
                 var header = csvText.Split('\n')[0];
-                foreach (var hint in new [] {
-                    // These are pretty basic, without overlap in peptide lists
-                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.idCAS,
-                    SmallMoleculeTransitionListColumnHeaders.idInChiKey,
-                    SmallMoleculeTransitionListColumnHeaders.idInChi,
-                    SmallMoleculeTransitionListColumnHeaders.idHMDB,
-                    SmallMoleculeTransitionListColumnHeaders.idSMILES,
-                })
+                return new[]
                 {
-                    foreach (var kvp in  
-                        SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Where(p => string.Compare(p.Value, hint, StringComparison.OrdinalIgnoreCase) == 0))
-                    {
-                        if (header.Contains(kvp.Key))
-                            return true;
-                    }
-                }
-                return false;
+                    // These are pretty basic, without overlap in peptide lists
+                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup, 
+                    SmallMoleculeTransitionListColumnHeaders.namePrecursor, 
+                    SmallMoleculeTransitionListColumnHeaders.nameProduct, 
+                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor, 
+                    SmallMoleculeTransitionListColumnHeaders.adductPrecursor, 
+                    SmallMoleculeTransitionListColumnHeaders.idCAS, 
+                    SmallMoleculeTransitionListColumnHeaders.idInChiKey, 
+                    SmallMoleculeTransitionListColumnHeaders.idInChi, 
+                    SmallMoleculeTransitionListColumnHeaders.idHMDB, 
+                    SmallMoleculeTransitionListColumnHeaders.idSMILES,
+                }.Any(hint => SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Where(
+                    p => string.Compare(p.Value, hint, StringComparison.OrdinalIgnoreCase) == 0).Any(kvp => header.Contains(kvp.Key)));
             }
         }
 
