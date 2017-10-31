@@ -130,6 +130,7 @@ namespace pwiz.SkylineTestTutorial
             int millis = (AllowInternetAccess ? 300 : 60) * 1000;
             WaitForCondition(millis, () => !SkylineWindow.Document.Settings.PeptideSettings.BackgroundProteome.NeedsProteinMetadataSearch, "backgroundProteome.NeedsProteinMetadataSearch"); 
             WaitForBackgroundProteomeLoaderCompleted();
+            WaitForProteinMetadataBackgroundLoaderCompleted();
 
             // Pasting FASTA Sequences, p. 5
             RunUI(() => SetClipboardFileText(@"MethodEdit\FASTA\fasta.txt")); // Not L10N
