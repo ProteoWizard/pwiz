@@ -29,11 +29,6 @@ namespace pwiz.Skyline.Controls.Graphs
     [CurveDataHandler(typeof(MeanErrorBarDataHandler))]
     public class MeanErrorBarItem : BarItem
     {
-        public static bool IsMeanErrorList(PointPairList pointPairList)
-        {
-            return pointPairList.Count > 0 && pointPairList[0].Tag is ErrorTag;
-        }
-
         public static PointPair MakePointPair(double xValue, double yValue, double errorValue)
         {
             if (double.IsNaN(errorValue))

@@ -93,6 +93,8 @@ namespace pwiz.Skyline.Controls.Graphs
             public PointPair MakeBarValue(double xValue, IEnumerable<double> values)
             {
                 var statValues = new Statistics(values);
+                if (statValues.Length == 0)
+                    return MeanErrorBarItem.MakePointPair(xValue, PointPairBase.Missing, PointPairBase.Missing);
                 if (Cv)
                 {
                     var cv = statValues.StdDev()/statValues.Mean();

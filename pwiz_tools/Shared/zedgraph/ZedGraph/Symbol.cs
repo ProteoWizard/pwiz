@@ -366,7 +366,7 @@ namespace ZedGraph
 		/// If this symbol uses a <see cref="LinearGradientBrush"/>, it will be created on the fly for
 		/// each point, since it has to be scaled to the individual point coordinates.</param>
 		private void DrawSymbol( Graphics g, int x, int y, GraphicsPath path,
-							Pen pen, Brush brush )
+							Pen pen, Brush brush, object tag = null )
 		{
 			// Only draw if the symbol is visible
 			if ( _isVisible &&
@@ -376,6 +376,9 @@ namespace ZedGraph
 			{
 				Matrix saveMatrix = g.Transform;
 				g.TranslateTransform( x, y );
+
+			    if (tag != null)
+			        DrawTag(g, tag);
 
 				// Fill or draw the symbol as required
 				if ( _fill.IsVisible )
@@ -390,7 +393,16 @@ namespace ZedGraph
 			}
 		}
 
-		/// <summary>
+        protected virtual object TransformTag(GraphPane pane, object tag, double x, double y, Scale xScale, Scale yScale, bool isOverrideOrdinal, int pointIndex)
+        {
+            return tag;
+;        }
+
+        protected virtual void DrawTag(Graphics g, object tag)
+	    {
+	    }
+
+	    /// <summary>
 		/// Draw the <see cref="Symbol"/> to the specified <see cref="Graphics"/> device
 		/// at the specified location.  This routine draws a single symbol.
 		/// </summary>
@@ -608,6 +620,7 @@ namespace ZedGraph
 						{
 							// Get the user scale values for the current point
 							// use the valueHandler only for stacked types
+						    object tag = null; 
 							if ( pane.LineType == LineType.Stack )
 							{
 								valueHandler.GetValues( curve, i, out curX, out lowVal, out curY );
@@ -622,6 +635,7 @@ namespace ZedGraph
 									curY = points[i].Z;
 								else
 									curY = points[i].Y;
+							    tag = points[i].Tag;
 							}
 
 							// Any value set to double max is invalid and should be skipped
@@ -642,6 +656,7 @@ namespace ZedGraph
 								// Transform the user scale values to pixel locations
 								tmpX = (int) xScale.Transform( curve.IsOverrideOrdinal, i, curX );
 								tmpY = (int) yScale.Transform( curve.IsOverrideOrdinal, i, curY );
+							    tag = TransformTag(pane, tag, curX, curY, xScale, yScale, curve.IsOverrideOrdinal, i);
 
 								// Maintain an array of "used" pixel locations to avoid duplicate drawing operations
 								if ( tmpX >= minX && tmpX <= maxX && tmpY >= minY && tmpY <= maxY ) // guard against the zoom-in case
@@ -663,7 +678,7 @@ namespace ZedGraph
 								{
 									// Otherwise, the brush is already defined
 									// Draw the symbol at the specified pixel location
-									this.DrawSymbol( g, tmpX, tmpY, path, pen, brush );
+									this.DrawSymbol( g, tmpX, tmpY, path, pen, brush, tag );
 								}
 							}
 						}

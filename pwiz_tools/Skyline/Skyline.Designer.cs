@@ -198,6 +198,9 @@ namespace pwiz.Skyline
             this.areaPeptideComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogramContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogram2DContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.graphTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.barAreaGraphDisplayTypeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.lineAreaGraphDisplayTypeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideOrderContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideOrderDocumentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideOrderRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1659,6 +1662,7 @@ namespace pwiz.Skyline
             // 
             this.contextMenuPeakAreas.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.areaGraphContextMenuItem,
+            this.graphTypeToolStripMenuItem,
             this.peptideOrderContextMenuItem,
             this.replicateOrderContextMenuItem,
             this.areaNormalizeContextMenuItem,
@@ -1714,6 +1718,28 @@ namespace pwiz.Skyline
             this.areaCVHistogram2DContextMenuItem.Name = "areaCVHistogram2DContextMenuItem";
             resources.ApplyResources(this.areaCVHistogram2DContextMenuItem, "areaCVHistogram2DContextMenuItem");
             this.areaCVHistogram2DContextMenuItem.Click += new System.EventHandler(this.areaCVHistogram2DToolStripMenuItem1_Click);
+            // 
+            // graphTypeToolStripMenuItem
+            // 
+            this.graphTypeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.barAreaGraphDisplayTypeMenuItem,
+            this.lineAreaGraphDisplayTypeMenuItem});
+            this.graphTypeToolStripMenuItem.Name = "graphTypeToolStripMenuItem";
+            resources.ApplyResources(this.graphTypeToolStripMenuItem, "graphTypeToolStripMenuItem");
+            // 
+            // barAreaGraphDisplayTypeMenuItem
+            // 
+            this.barAreaGraphDisplayTypeMenuItem.Checked = true;
+            this.barAreaGraphDisplayTypeMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.barAreaGraphDisplayTypeMenuItem.Name = "barAreaGraphDisplayTypeMenuItem";
+            resources.ApplyResources(this.barAreaGraphDisplayTypeMenuItem, "barAreaGraphDisplayTypeMenuItem");
+            this.barAreaGraphDisplayTypeMenuItem.Click += new System.EventHandler(this.barAreaGraphTypeMenuItem_Click);
+            // 
+            // lineAreaGraphDisplayTypeMenuItem
+            // 
+            this.lineAreaGraphDisplayTypeMenuItem.Name = "lineAreaGraphDisplayTypeMenuItem";
+            resources.ApplyResources(this.lineAreaGraphDisplayTypeMenuItem, "lineAreaGraphDisplayTypeMenuItem");
+            this.lineAreaGraphDisplayTypeMenuItem.Click += new System.EventHandler(this.lineAreaGraphTypeMenuItem_Click);
             // 
             // peptideOrderContextMenuItem
             // 
@@ -4511,6 +4537,9 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem originalPeakMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeAboveCVCutoffToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator57;
+        private System.Windows.Forms.ToolStripMenuItem graphTypeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem barAreaGraphDisplayTypeMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem lineAreaGraphDisplayTypeMenuItem;
     }
 }
 

@@ -3871,8 +3871,21 @@ namespace pwiz.Skyline
                     areaCVHistogram2DContextMenuItem
                 });
             }
+            var graphType = graphSummary.Type;
+            if (graphType == GraphTypeSummary.replicate)
+            {
+                menuStrip.Items.Insert(iInsert++, graphTypeToolStripMenuItem);
+                if (graphTypeToolStripMenuItem.DropDownItems.Count == 0)
+                {
+                    graphTypeToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                    {
+                        barAreaGraphDisplayTypeMenuItem,
+                        lineAreaGraphDisplayTypeMenuItem
+                    });
+                }
+ 
+            }
 
-            GraphTypeSummary graphType = graphSummary.Type;
             menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
 
             var isHistogram = graphType == GraphTypeSummary.histogram || graphType == GraphTypeSummary.histogram2d;
@@ -4062,6 +4075,24 @@ namespace pwiz.Skyline
             areaCV10binWidthToolStripMenuItem.Checked = binwidth == 1.0 / factor;
             areaCV15binWidthToolStripMenuItem.Checked = binwidth == 1.5 / factor;
             areaCV20binWidthToolStripMenuItem.Checked = binwidth == 2.0 / factor;
+        }
+
+        private void barAreaGraphTypeMenuItem_Click(object sender, EventArgs e)
+        {
+            SetAreaGraphDisplayType(AreaGraphDisplayType.bars);
+        }
+
+        private void lineAreaGraphTypeMenuItem_Click(object sender, EventArgs e)
+        {
+            SetAreaGraphDisplayType(AreaGraphDisplayType.lines);
+        }
+
+        public void SetAreaGraphDisplayType(AreaGraphDisplayType displayType)
+        {
+            AreaGraphController.GraphDisplayType = displayType;
+            barAreaGraphDisplayTypeMenuItem.Checked = (displayType == AreaGraphDisplayType.bars);
+            lineAreaGraphDisplayTypeMenuItem.Checked = (displayType == AreaGraphDisplayType.lines);
+            UpdatePeakAreaGraph();
         }
 
         public void SynchronizeSummaryZooming(GraphSummary graphSummary = null, ZoomState zoomState = null)

@@ -37,12 +37,20 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum AreaCVNormalizationMethod { global_standards, medians, none, ratio }
 
+    public enum AreaGraphDisplayType { bars, lines }
+
     public sealed class AreaGraphController : GraphSummary.IControllerSplit
     {
         public static GraphTypeSummary GraphType
         {
             get { return Helpers.ParseEnum(Settings.Default.AreaGraphType, GraphTypeSummary.replicate); }
             set { Settings.Default.AreaGraphType = value.ToString(); }
+        }
+
+        public static AreaGraphDisplayType GraphDisplayType
+        {
+            get { return Helpers.ParseEnum(Settings.Default.AreaGraphDisplayType, AreaGraphDisplayType.bars); }
+            set { Settings.Default.AreaGraphDisplayType = value.ToString(); }
         }
 
         public static AreaNormalizeToView AreaView

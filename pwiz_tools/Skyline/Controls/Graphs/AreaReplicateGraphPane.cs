@@ -59,7 +59,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 Array.Copy(labels, 0, withLibLabel, 1, labels.Length);
                
-
                 XAxis.Scale.TextLabels = withLibLabel;
                 ScaleAxisLabels();
             }
@@ -96,6 +95,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool CanShowDotProduct { get; private set; }
 
         public bool IsDotProductVisible { get { return CanShowDotProduct && Settings.Default.ShowDotProductPeakArea; } }
+
+        public bool IsLineGraph { get { return CurveList.Count > 0 && CurveList[0].IsLine; } }
 
         public bool CanShowPeakAreaLegend { get; private set; }
         
@@ -306,6 +307,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
             }
+            var graphType = AreaGraphController.GraphDisplayType;
             var expectedValue = IsExpectedVisible ? ExpectedVisible : AreaExpectedValue.none;
             var replicateGroupOp = GraphValues.ReplicateGroupOp.FromCurrentSettings(document.Settings);
             var graphData = IsMultiSelect  ? 
@@ -324,7 +326,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     ratioIndex,
                     normalizeData,
                     expectedValue,
-                    PaneKey);
+                    PaneKey,
+                    graphType == AreaGraphDisplayType.bars);
 
             var aggregateOp = replicateGroupOp.AggregateOp;
             // Avoid stacking CVs
@@ -441,7 +444,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     // Only use a MeanErrorBarItem if bars are not going to be stacked.
                     // TODO(nicksh): AreaGraphData.NormalizeTo does not know about MeanErrorBarItem 
-                    if (!IsMultiSelect && BarSettings.Type != BarType.Stack && BarSettings.Type != BarType.PercentStack && normalizeData == AreaNormalizeToData.none)
+                    if (graphType == AreaGraphDisplayType.lines)
+                    {
+                        curveItem = CreateLineItem(label, pointPairList, color);
+                    }
+                    else if (!IsMultiSelect && BarSettings.Type != BarType.Stack && BarSettings.Type != BarType.PercentStack && normalizeData == AreaNormalizeToData.none)
                     {
                         curveItem = new MeanErrorBarItem(label, pointPairList, color, Color.Black);
                     }
@@ -468,9 +475,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     // Add area for this transition to each area entry
                     AddAreasToSums(pointPairList, sumAreas);
-                    if (IsMultiSelect)
+                    var lineItem = curveItem as LineItem;
+                    if (lineItem != null)
                     {
-                        var lineItem = (LineItem)curveItem;
                         lineItem.Tag = identityPath;
                         CurveList.Add(lineItem);
                     }
@@ -519,7 +526,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     yValue = (areaView == AreaNormalizeToView.area_maximum_view ? Math.Min(maxArea, .999) : maxArea);
                     break;
             }
-            if (IsMultiSelect)
+            if (IsLineGraph)
             {
                 GraphObjList.Add(new LineObj(Color.Black, selectedReplicateIndex + 1, 0, selectedReplicateIndex + 1, maxArea)
                 {
@@ -689,6 +696,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void AddDotProductLabels(Graphics g, TransitionGroupDocNode nodeGroup, IList<double> sumAreas)
         {
+            if (IsLineGraph)
+                return;
+
             // Create temporary label to calculate positions
             var pointSize = GetDotProductsPointSize(g);
             bool visible = pointSize.HasValue;
@@ -866,6 +876,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly int _ratioIndex;
             private readonly AreaNormalizeToData _normalize;
             private readonly AreaExpectedValue _expectedVisible;
+            private readonly bool _zeroMissingValues;
 
             public AreaGraphData(SrmDocument document,
                                  IdentityPath identityPath,
@@ -874,25 +885,32 @@ namespace pwiz.Skyline.Controls.Graphs
                                  int ratioIndex,
                                  AreaNormalizeToData normalize,
                                  AreaExpectedValue expectedVisible,
-                                 PaneKey paneKey)
+                                 PaneKey paneKey,
+                                 bool zeroMissingValues)
                 : base(document, identityPath, displayType, replicateGroupOp, paneKey)
             {
                 _docNode = document.FindNode(identityPath);
                 _ratioIndex = ratioIndex;
                 _normalize = normalize;
                 _expectedVisible = expectedVisible;
+                _zeroMissingValues = zeroMissingValues;
             }
 
-            public AreaGraphData(SrmDocument document, IEnumerable<IdentityPath> selectedDocNodePaths, DisplayTypeChrom displayType,
-                GraphValues.ReplicateGroupOp replicateGroupOp,  int ratioIndex,
-                AreaNormalizeToData normalize,
-                AreaExpectedValue expectedVisible,
-                PaneKey paneKey)
+            public AreaGraphData(SrmDocument document,
+                                 IEnumerable<IdentityPath> selectedDocNodePaths,
+                                 DisplayTypeChrom displayType,
+                                 GraphValues.ReplicateGroupOp replicateGroupOp,
+                                 int ratioIndex,
+                                 AreaNormalizeToData normalize,
+                                 AreaExpectedValue expectedVisible,
+                                 PaneKey paneKey,
+                                 bool zeroMissingValues = false)
                 : base(document, selectedDocNodePaths, displayType, replicateGroupOp, paneKey)
             {
                 _ratioIndex = ratioIndex;
                 _normalize = normalize;
                 _expectedVisible = expectedVisible;
+                _zeroMissingValues = zeroMissingValues;
             }
 
             protected override void InitData()
@@ -939,6 +957,13 @@ namespace pwiz.Skyline.Controls.Graphs
                         FixupForTotals();
                         break;
                 }
+            }
+
+            public override PointPair PointPairMissing(int xValue)
+            {
+                return _zeroMissingValues
+                    ? base.PointPairMissing(xValue)
+                    : new PointPair(xValue, PointPairBase.Missing);
             }
 
             private float GetExpectedValue(TransitionDocNode nodeTran)
@@ -1021,11 +1046,13 @@ namespace pwiz.Skyline.Controls.Graphs
                                 // calculate the proportion of the denominator for each point
                                 if (_expectedVisible != AreaExpectedValue.none && i == 0)
                                     pointPairList[i].Y *= (denominator/libraryHeight);
-                                if(_normalize != AreaNormalizeToData.none)
+                                if (_normalize != AreaNormalizeToData.none)
                                     pointPairList[i].Y /= denominator;
                             }
-                            else
+                            else if (_zeroMissingValues)
+                            {
                                 pointPairList[i].Y = 0;
+                            }
                         }
                     }
                 }
@@ -1111,13 +1138,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override bool IsMissingValue(TransitionChromInfoData chromInfo)
             {
-                return false;
+                return !_zeroMissingValues && !GetValue(chromInfo.ChromInfo).HasValue;
             }
 
             protected override PointPair CreatePointPair(int iResult, ICollection<TransitionChromInfoData> chromInfoDatas)
             {
                 return ReplicateGroupOp.AggregateOp.MakeBarValue(iResult, 
-                    chromInfoDatas.Select(chromInfoData => (double) (GetValue(chromInfoData.ChromInfo) ?? 0)));
+                    chromInfoDatas.Where(c => !IsMissingValue(c)).Select(c => (double) (GetValue(c.ChromInfo) ?? 0)));
             }
 
             protected override bool IsMissingValue(TransitionGroupChromInfoData chromInfoData)
@@ -1157,10 +1184,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (var points in pointLists)
                 {
                     var x = points[0].X;
+                    ErrorTag tag = null;
                     double y;
                     if (_ratioIndex == RATIO_INDEX_NONE)
                     {
                         y = points.Sum(point => point.Y);
+                        tag = CalcErrorTag(points, false);
                     }
                     else
                     {
@@ -1172,16 +1201,32 @@ namespace pwiz.Skyline.Controls.Graphs
                         else
                         {
                             y = validPoints.Average(p => p.Y);
+                            tag = CalcErrorTag(validPoints, true);
                         }
                     }
-                    result.Add(new PointPair(x, y));
+                    result.Add(new PointPair(x, y){Tag = tag});
                 }
                 return new List<LineInfo>()
                 {
                     new LineInfo(nodePep, nodePep.ModifiedSequenceDisplay, new List<PointPairList> {result})
                 };
             }
-            
+
+            private ErrorTag CalcErrorTag(IList<PointPair> points, bool average)
+            {
+                double? variance = null;
+                foreach (var errorTag in points.Select(point => point.Tag as ErrorTag))
+                {
+                    if (errorTag != null)
+                        variance = (variance ?? 0) + errorTag.Error*errorTag.Error;
+                }
+                if (!variance.HasValue)
+                    return null;
+                if (average)
+                    variance = variance/points.Count;
+                return new ErrorTag(Math.Sqrt(variance.Value));
+            }
+
             private float? GetValue(TransitionGroupChromInfo chromInfo)
             {
                 if (chromInfo == null)
@@ -1194,7 +1239,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private float? GetValue(TransitionChromInfo chromInfo)
             {
-                if (chromInfo == null)
+                if (chromInfo == null || chromInfo.IsEmpty)
                     return null;
                 if (_ratioIndex == RATIO_INDEX_NONE)
                     return chromInfo.Area;

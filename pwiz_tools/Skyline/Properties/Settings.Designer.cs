@@ -2649,5 +2649,17 @@ namespace pwiz.Skyline.Properties {
                 this["ShowOriginalPeak"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("bars")]
+        public string AreaGraphDisplayType {
+            get {
+                return ((string)(this["AreaGraphDisplayType"]));
+            }
+            set {
+                this["AreaGraphDisplayType"] = value;
+            }
+        }
     }
 }

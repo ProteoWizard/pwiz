@@ -219,17 +219,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected static CurveItem CreateLineItem(string label, PointPairList pointPairList, Color color)
         {
-            return new LineItem(label, pointPairList, color, SymbolType.None)
-            {
-                Line = new Line { Width = 2, Color = color, IsAntiAlias = true },
-                Symbol = new Symbol
-                {
-                    Type = SymbolType.Circle,
-                    Size = 4,
-                    Border = new Border(color, 0),
-                    Fill = new Fill(color)
-                }
-            };
+            return new LineErrorBarItem(label, pointPairList, color, Color.Black);
         }
 
         /// <summary>
