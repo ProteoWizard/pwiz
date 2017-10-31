@@ -39,34 +39,6 @@ using namespace pwiz::util;
 namespace sqlite = sqlite3pp;
 
 
-namespace std
-{
-    template <typename T>
-    vector<doctest::Approx> operator~(const vector<T>& lhs)
-    {
-        vector<doctest::Approx> result(lhs.size(), doctest::Approx(0));
-        for (size_t i = 0; i < lhs.size(); ++i)
-            result[i] = doctest::Approx(lhs[i]);
-        return result;
-    }
-
-    inline ostream& operator<< (ostream& o, const doctest::Approx& rhs)
-    {
-        o << rhs.toString();
-        return o;
-    }
-
-    template <typename T>
-    bool operator==(const vector<T>& lhs, const vector<doctest::Approx>& rhs)
-    {
-        REQUIRE(lhs.size() == rhs.size());
-        for (size_t i = 0; i < lhs.size(); ++i)
-            if (lhs[i] != rhs[i]) return false;
-        return true;
-    }
-}
-
-
 BEGIN_IDPICKER_NAMESPACE
 
 const int CURRENT_SCHEMA_REVISION = 17;
@@ -241,7 +213,7 @@ void update_16_to_17(sqlite::database& db, const IterationListenerRegistry* ilr,
     CSHA1 hasher;
     char hash[20];
 
-    BOOST_FOREACH(sqlite::query::rows row, q)
+    for(sqlite::query::rows row : q)
     {
         row.getter() >> proId >> sequence;
 
@@ -297,7 +269,7 @@ void update_13_to_14(sqlite::database& db, const IterationListenerRegistry* ilr,
         int totalSpectra;
         string settings;
 
-        BOOST_FOREACH(sqlite::query::rows row, q)
+        for(sqlite::query::rows row : q)
         {
             row.getter() >> sourceId >> totalSpectra >> settings;
 
@@ -521,7 +493,7 @@ void update_6_to_7(sqlite::database& db, const IterationListenerRegistry* ilr, b
                   "GROUP BY IsDecoy "
                   "ORDER BY IsDecoy");
         vector<int> peptideLevelDecoys;
-        BOOST_FOREACH(sqlite::query::rows row, q)
+        for(sqlite::query::rows row : q)
             peptideLevelDecoys.push_back(row.get<int>(0));
 
         // without both targets and decoys, FDR can't be calculated
@@ -544,7 +516,7 @@ void update_6_to_7(sqlite::database& db, const IterationListenerRegistry* ilr, b
                   "GROUP BY IsDecoy "
                   "ORDER BY IsDecoy");
         vector<int> spectrumLevelDecoys;
-        BOOST_FOREACH(sqlite::query::rows row, q)
+        for(sqlite::query::rows row : q)
             spectrumLevelDecoys.push_back(row.get<int>(0));
 
         // without both targets and decoys, FDR can't be calculated

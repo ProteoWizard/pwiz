@@ -62,8 +62,8 @@ struct Merger
     Merger();
     ~Merger();
 
-    void merge(const string& mergeTargetFilepath, const std::vector<string>& mergeSourceFilepaths, int maxThreads = 8, pwiz::util::IterationListenerRegistry* ilr = 0);
-    void merge(const string& mergeTargetFilepath, sqlite3* mergeSourceConnection, pwiz::util::IterationListenerRegistry* ilr = 0);
+    void merge(const string& mergeTargetFilepath, const std::vector<string>& mergeSourceFilepaths, int maxThreads = 4, pwiz::util::IterationListenerRegistry* ilr = 0, bool skipPeptideMismatchCheck = false);
+    void merge(const string& mergeTargetFilepath, sqlite3* mergeSourceConnection, pwiz::util::IterationListenerRegistry* ilr = 0, bool skipPeptideMismatchCheck = false);
 
     struct Impl;
 

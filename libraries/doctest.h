@@ -3607,7 +3607,7 @@ bool operator==(double lhs, Approx const& rhs) {
            rhs.m_epsilon * (rhs.m_scale + detail::my_max(std::fabs(lhs), std::fabs(rhs.m_value)));
 }
 
-String Approx::toString() const { return String("Approx( ") + doctest::toString(m_value) + " )"; }
+String Approx::toString() const { return String("~") + doctest::toString(m_value); }
 
 #ifdef DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
 String toString(char* in) { return toString(static_cast<const char*>(in)); }

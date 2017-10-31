@@ -222,6 +222,48 @@ namespace {
         }
     };
 
+    void PrintDoubleArray(sqlite3_context* context, int numValues, sqlite3_value** values)
+    {
+        if (numValues != 1)
+        {
+            sqlite3_result_error(context, "[PRINT_DOUBLE_ARRAY] requires 1 double array argument", -1);
+            return;
+        }
+
+        if (values[0] == NULL)
+        {
+            sqlite3_result_null(context);
+            return;
+        }
+
+        const void* blob = sqlite3_value_blob(values[0]);
+        int size = sqlite3_value_bytes(values[0]) / sizeof(double);
+
+        char* str;
+        int strSize;
+        if (blob == NULL)
+        {
+            strSize = size * 2; // all 0s with commas between plus a null terminator
+            str = (char*)sqlite3_malloc(strSize); // all 0s with commas between plus a null terminator
+            for (size_t i = 0; i < size; ++i)
+                str[i*2] = '0', str[i*2 + 1] = ',';
+            str[size * 2 - 1] = 0;
+        }
+        else
+        {
+            strSize = size * 30;
+            str = (char*)sqlite3_malloc(strSize);
+
+            const double* blobArray = reinterpret_cast<const double*>(blob);
+
+            int offset = 0;
+            for (size_t i = 0; i < size; ++i)
+                offset += sprintf(&str[offset], "%.5f,", blobArray[i]);
+        }
+
+        sqlite3_result_text(context, str, strSize, sqlite3_free);
+    }
+
     struct GroupConcatEx
     {
         static void Step(sqlite3_context *context, int argc, sqlite3_value **argv)
@@ -377,6 +419,8 @@ PWIZ_API_DECL int sqlite3_idpsqlextensions_init(sqlite3 *idpDbConnection, char *
     rc += sqlite3_create_function(idpDbConnection, "distinct_double_array_tukey_biweight_average", -1, SQLITE_ANY, 0, NULL, &DistinctTukeyBiweightAverage::Step, &DistinctTukeyBiweightAverage::Final);
 
     rc += sqlite3_create_function(idpDbConnection, "distinct_double_array_tukey_biweight_log_average", -1, SQLITE_ANY, 0, NULL, &DistinctTukeyBiweightAverage::Step, &DistinctTukeyBiweightAverage::FinalLog);
+
+    rc += sqlite3_create_function(idpDbConnection, "print_double_array", 1, SQLITE_ANY, 0, &PrintDoubleArray, NULL, NULL);
 
     rc += sqlite3_create_function(idpDbConnection, "group_concat", -1, SQLITE_ANY, 0, NULL, &GroupConcatEx::Step, &GroupConcatEx::Final);
     rc += sqlite3_create_function(idpDbConnection, "group_concat_ex", -1, SQLITE_ANY, 0, NULL, &GroupConcatEx::Step, &GroupConcatEx::Final);

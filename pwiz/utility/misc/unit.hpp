@@ -192,12 +192,35 @@ inline std::string escape_teamcity_string(const std::string& str)
 
 
 // without PWIZ_DOCTEST defined, disable doctest macros; when it is defined, doctest will be configured with main()
-#ifndef PWIZ_DOCTEST
+#if !defined(PWIZ_DOCTEST) && !defined(PWIZ_DOCTEST_NO_MAIN)
 #define DOCTEST_CONFIG_DISABLE
 #include "libraries/doctest.h"
 #else
 #define DOCTEST_CONFIG_IMPLEMENT
 #include "libraries/doctest.h"
+
+#ifndef PWIZ_DOCTEST_NO_MAIN
+int main(int argc, char* argv[])
+{
+    TEST_PROLOG(argc, argv)
+
+    try
+    {
+        doctest::Context context;
+        testExitStatus = context.run();
+    }
+    catch (exception& e)
+    {
+        TEST_FAILED(e.what())
+    }
+    catch (...)
+    {
+        TEST_FAILED("Caught unknown exception.")
+    }
+
+    TEST_EPILOG
+}
+#endif
 
 namespace std
 {
@@ -219,32 +242,21 @@ namespace std
     template <typename T>
     bool operator==(const vector<T>& lhs, const vector<doctest::Approx>& rhs)
     {
-        REQUIRE(lhs.size() == rhs.size());
+        if (doctest::isRunningInTest())
+            REQUIRE(lhs.size() == rhs.size());
+        else if (lhs.size() != rhs.size())
+            return false;
+
         for (size_t i = 0; i < lhs.size(); ++i)
             if (lhs[i] != rhs[i]) return false;
         return true;
     }
-}
 
-int main(int argc, char* argv[])
-{
-    TEST_PROLOG(argc, argv)
-
-    try
+    template <typename T>
+    bool operator==(const vector<doctest::Approx>& rhs, const vector<T>& lhs)
     {
-        doctest::Context context;
-        testExitStatus = context.run();
+        return lhs == rhs;
     }
-    catch (exception& e)
-    {
-        TEST_FAILED(e.what())
-    }
-    catch (...)
-    {
-        TEST_FAILED("Caught unknown exception.")
-    }
-
-    TEST_EPILOG
 }
 #endif
 

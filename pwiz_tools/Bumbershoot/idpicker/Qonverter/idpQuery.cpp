@@ -60,8 +60,8 @@ BOOST_ENUM(GroupBy,
     (DistinctMatch)
     (Peptide)
     (PeptideGroup)
-    /*(PeptideSpectrumMatch)
     (Spectrum)
+    /*(PeptideSpectrumMatch)
     (SpectrumSourceAndGroup)*/
     (Modification)
     (DeltaMass)
@@ -218,6 +218,7 @@ BOOST_ENUM(PeptideColumn,
     (Instances)
     (Modifications)
     (Charges)
+    (SpectrumId)
     SHARED_QUANTATITIVE_COLUMNS
 );
 
@@ -258,6 +259,7 @@ SqlColumn getSqlColumn(PeptideColumn column)
                                                             "        WHERE {GroupBy} = {SubGroupBy} AND psm_.Peptide=pep_.Id AND psm_.Id=dm_.PsmId "
                                                             "        GROUP BY {SubGroupBy}), '')", SQLITE_TEXT);
         case PeptideColumn::Charges: return make_pair("GROUP_CONCAT(DISTINCT psm.Charge)", SQLITE_TEXT);
+        case PeptideColumn::SpectrumId: return make_pair("GROUP_CONCAT(DISTINCT ssg.Name || '/' || ss.Name || '/' || s.NativeID)", SQLITE_TEXT);
         SHARED_QUANTITATIVE_SQLCOLUMNS(PeptideColumn)
     }
 }
@@ -418,6 +420,7 @@ string getGroupByString(GroupBy groupBy, double ModificationMassRoundToNearest)
         case GroupBy::DistinctMatch:    return "dm.DistinctMatchId";
         case GroupBy::Peptide:          return "psm.Peptide";
         case GroupBy::PeptideGroup:     return "pep.PeptideGroup";
+        case GroupBy::Spectrum:         return "s.Id || '/' || psm.Peptide";
 
         case GroupBy::Modification:     return "pm.Modification";
         case GroupBy::DeltaMass:        return bal::replace_all_copy(string("ROUND(mod.MonoMassDelta/{ModificationMassRoundToNearest})*{ModificationMassRoundToNearest}"), string("{ModificationMassRoundToNearest}"), lexical_cast<string>(ModificationMassRoundToNearest));
@@ -821,6 +824,8 @@ int doQuery(GroupBy groupBy,
                  "LEFT JOIN PeptideModification pm ON psm.Id = pm.PeptideSpectrumMatch "
                  "LEFT JOIN Modification mod ON pm.Modification = mod.Id "
                  "JOIN Spectrum s ON psm.Spectrum=s.Id "
+                 "JOIN SpectrumSource ss ON s.Source=ss.Id "
+                 "JOIN SpectrumSourceGroup ssg ON ss.Group_=ssg.Id "
                  "JOIN DistinctMatch dm ON psm.Id=dm.PsmId " +
                  string(hasSpectrumQuantitation ? "LEFT JOIN SpectrumQuantitation sq ON psm.Spectrum=sq.Id " : "") +
                  string(hasPrecursorQuantitation ? "LEFT JOIN XICMetrics xic ON dm.DistinctMatchId=xic.DistinctMatch AND s.Source=xic.SpectrumSource " : "") +
@@ -935,12 +940,12 @@ int doQuery(GroupBy groupBy,
                             findIdItr = pivotDataMap.find(id);
 
                             vector<ReporterIon>* reporterIonsPtr = &itraqMethodIons;
-                            if (enumColumns[i].index() == ProteinColumn::PivotTMTByGroup || enumColumns[i].index() == ProteinColumn::PivotTMTBySource)
+                            if (enumColumns[i].index() == ColumnType::PivotTMTByGroup || enumColumns[i].index() == ColumnType::PivotTMTBySource)
                                 reporterIonsPtr = &tmtMethodIons;
                             vector<ReporterIon>& reporterIons = *reporterIonsPtr;
 
                             // reset reference/empty properties for reporter ions
-                            if (enumColumns[i].index() == ProteinColumn::PivotITRAQByGroup || enumColumns[i].index() == ProteinColumn::PivotTMTByGroup)
+                            if (enumColumns[i].index() == ColumnType::PivotITRAQByGroup || enumColumns[i].index() == ColumnType::PivotTMTByGroup)
                                 for (size_t j=0; j < reporterIons.size(); ++j)
                                     reporterIons[j].reference = reporterIons[j].empty = false;
 
@@ -1065,6 +1070,7 @@ int query(GroupBy groupBy, const vector<string>& args, double ModificationMassRo
             case GroupBy::DistinctMatch:
             case GroupBy::Peptide:
             case GroupBy::PeptideGroup:
+            case GroupBy::Spectrum:
                 result += doQuery<PeptideColumn>(groupBy, filepath, tokens, ModificationMassRoundToNearest, rollupMethod);
                 break;
 
@@ -1183,7 +1189,7 @@ int main(int argc, const char* argv[])
             usage += string("  ") + itr->str() + "\n";
 
         usage += "\n\n"
-                 "DistinctMatch, Peptide, PeptideGroup\n"
+                 "DistinctMatch, Peptide, PeptideGroup, Spectrum\n"
                  "------------------------------------\n";
         for (PeptideColumn::const_iterator itr = PeptideColumn::begin()+1; itr < PeptideColumn::end(); ++itr)
             usage += string("  ") + itr->str() + "\n";

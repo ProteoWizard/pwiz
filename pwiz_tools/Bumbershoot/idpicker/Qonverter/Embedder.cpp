@@ -546,31 +546,31 @@ struct SpectrumList_Quantifier
         switch (quantitationMethod.value())
         {
             case QuantitationMethod::ITRAQ4plex:
-                correctIsotopeImpurities(spectrumQuantitationRows, itraqTotalReporterIonIntensities, itraq4plexIons, quantitationMethod, nullptr);
+                //correctIsotopeImpurities(spectrumQuantitationRows, itraqTotalReporterIonIntensities, itraq4plexIons, quantitationMethod, nullptr);
                 if (quantitationConfig.normalizeIntensities)
                     normalizeReporterIons(itraqTotalReporterIonIntensities);
                 break;
 
             case QuantitationMethod::ITRAQ8plex:
-                correctIsotopeImpurities(spectrumQuantitationRows, itraqTotalReporterIonIntensities, itraq8plexIons, quantitationMethod, nullptr);
+                //correctIsotopeImpurities(spectrumQuantitationRows, itraqTotalReporterIonIntensities, itraq8plexIons, quantitationMethod, nullptr);
                 if (quantitationConfig.normalizeIntensities)
                     normalizeReporterIons(itraqTotalReporterIonIntensities);
                 break;
 
             case QuantitationMethod::TMT2plex:
-                correctIsotopeImpurities(spectrumQuantitationRows, tmtTotalReporterIonIntensities, tmt2plexIons, quantitationMethod, nullptr);
+                //correctIsotopeImpurities(spectrumQuantitationRows, tmtTotalReporterIonIntensities, tmt2plexIons, quantitationMethod, nullptr);
                 if (quantitationConfig.normalizeIntensities)
                     normalizeReporterIons(tmtTotalReporterIonIntensities);
                 break;
 
             case QuantitationMethod::TMT6plex:
-                correctIsotopeImpurities(spectrumQuantitationRows, tmtTotalReporterIonIntensities, tmt6plexIons, quantitationMethod, nullptr);
+                //correctIsotopeImpurities(spectrumQuantitationRows, tmtTotalReporterIonIntensities, tmt6plexIons, quantitationMethod, nullptr);
                 if (quantitationConfig.normalizeIntensities)
                     normalizeReporterIons(tmtTotalReporterIonIntensities);
                 break;
 
             case QuantitationMethod::TMT10plex:
-                correctIsotopeImpurities(spectrumQuantitationRows, tmtTotalReporterIonIntensities, tmt10plexIons, quantitationMethod, nullptr);
+                //correctIsotopeImpurities(spectrumQuantitationRows, tmtTotalReporterIonIntensities, tmt10plexIons, quantitationMethod, nullptr);
                 if (quantitationConfig.normalizeIntensities)
                     normalizeReporterIons(tmtTotalReporterIonIntensities);
                 break;

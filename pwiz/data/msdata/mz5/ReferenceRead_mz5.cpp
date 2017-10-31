@@ -448,6 +448,14 @@ void ReferenceRead_mz5::fill(boost::shared_ptr<Connection_mz5>& connectionPtr)
         }
         connectionPtr.get()->clean(Configuration_mz5::Run, rl, dsend);
     }
+
+    if (fields.find(Configuration_mz5::SpectrumMetaData) != fields.end())
+    {
+        SpectrumMZ5* smd = (SpectrumMZ5*) connectionPtr->readDataSet(Configuration_mz5::SpectrumMetaData, dsend);
+        for (size_t i = 0; i < dsend; ++i)
+            addSpectrumIndexPair(smd[i].id, smd[i].index);
+        connectionPtr->clean(Configuration_mz5::SpectrumMetaData, smd, dsend);
+    }
 }
 
 pwiz::msdata::DataProcessingPtr ReferenceRead_mz5::getDefaultChromatogramDP(

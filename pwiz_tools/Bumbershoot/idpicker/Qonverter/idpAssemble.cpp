@@ -102,7 +102,7 @@ void embedIsobaricSampleMapping(const string& idpDbFilepath, const string& isoba
 
     sqlite3pp::database idpDb(idpDbFilepath);
     sqlite3pp::query sourceIdByNameQuery(idpDb, "SELECT Id, Name FROM SpectrumSourceGroup");
-    BOOST_FOREACH(sqlite3pp::query::rows queryRow, sourceIdByNameQuery)
+    for(sqlite3pp::query::rows queryRow : sourceIdByNameQuery)
     {
         groupIdByName[queryRow.get<string>(1)] = queryRow.get<sqlite3_int64>(0);
     }
@@ -151,7 +151,7 @@ void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assem
     vector<string> sourceGroups;
 
     sqlite3pp::query sourceIdByNameQuery(idpDb, "SELECT Id, Name FROM SpectrumSource");
-    BOOST_FOREACH(sqlite3pp::query::rows queryRow, sourceIdByNameQuery)
+    for(sqlite3pp::query::rows queryRow : sourceIdByNameQuery)
     {
         sourceIdByName[queryRow.get<string>(1)] = queryRow.get<sqlite3_int64>(0);
         ungroupedSources.insert(queryRow.get<sqlite3_int64>(0));
@@ -187,7 +187,7 @@ void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assem
 
                 vector<bfs::path> matchingPaths;
                 expand_pathmask(filemask, matchingPaths);
-                BOOST_FOREACH(bfs::path& filepath, matchingPaths)
+                for(bfs::path& filepath : matchingPaths)
                 {
                     bfs::path basename = filepath.filename().replace_extension("");
                     map<string, sqlite3_int64>::const_iterator findItr = sourceIdByName.find(basename.string());
@@ -217,7 +217,7 @@ void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assem
     }
 
     // assign ungrouped source to the root group
-    BOOST_FOREACH(sqlite3_int64 sourceId, ungroupedSources)
+    for(sqlite3_int64 sourceId : ungroupedSources)
         sourcesByGroup["/"].insert(sourceId);
 
     sqlite3pp::transaction transaction(idpDb);
@@ -241,7 +241,7 @@ void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assem
         addSpectrumSourceGroup.step();
         addSpectrumSourceGroup.reset();
 
-        BOOST_FOREACH(sqlite3_int64 sourceId, sources)
+        for(sqlite3_int64 sourceId : sources)
         {
             // update the source's group id
             updateSpectrumSource.binder() << groupId << sourceId;
@@ -277,7 +277,7 @@ void assignSourceGroupHierarchy(const string& idpDbFilepath, const string& assem
         addSpectrumSourceGroup.step();
         addSpectrumSourceGroup.reset();
 
-        BOOST_FOREACH(sqlite3_int64 sourceId, sources)
+        for(sqlite3_int64 sourceId : sources)
         {
             // add the source/group pair as a link
             addSpectrumSourceGroupLink.binder() << ++linkId << sourceId << parentGroupId;
@@ -324,6 +324,7 @@ struct UserFeedbackIterationListener : public IterationListener
         // when logging to stdout, skip the log in order to use carriage returns to show iteration updates on a single line
         if (logFilepath.empty() && !stdOutRedirected)
         {
+            cout << "\r";
             if (index == 0 && count <= 1 && logLevel <= MessageSeverity::BriefInfo)
                 cout << updateMessage.message;
             else if (count > 1 && logLevel <= MessageSeverity::VerboseInfo)
@@ -409,7 +410,7 @@ void summarizeAssembly(const string& filepath, bool summarizeSources)
     BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "\n\nSpectra    Matches  Peptides  Proteins  Protein Groups  Analysis/Source\n"
                                                                 << "-----------------------------------------------------------------------\n";
     if (summarizeSources)
-        BOOST_FOREACH(sqlite::query::rows row, summaryQuery)
+        for(sqlite::query::rows row : summaryQuery)
         {
             string source, analysis;
             SourceAnalysisCountRow rowCounts;
@@ -466,6 +467,7 @@ int main(int argc, const char* argv[])
                    "                   [-AssignSourceHierarchy <assemble.tsv>]\n"
                    "                   [-IsobaricSampleMapping <mapping.tsv>]\n"
                    "                   [-SummarizeSources <boolean>]\n"
+                   "                   [-SkipPeptideMismatchCheck <boolean>]\n"
                    "                   [-LogLevel <Error|Warning|BriefInfo|VerboseInfo|DebugInfo>]\n"
                    "                   [-LogFilepath <filepath to log to>]\n"
                    "                   [-cpus <max thread count>]\n"
@@ -501,6 +503,7 @@ int main(int argc, const char* argv[])
     string assembleTextFilepath;
     string isobaricSampleMappingFilepath;
     string logFilepath;
+    bool skipPeptideMismatchCheck = false;
     vector<string> mergeSourceFilepaths;
     Filter::Config filterConfig;
     int maxThreads = 8;
@@ -567,6 +570,8 @@ int main(int argc, const char* argv[])
             filterConfig.geneLevelFiltering = lexical_cast<bool>(args[++i]);
         else if (args[i] == "-SummarizeSources")
             summarizeSources = lexical_cast<bool>(args[++i]);
+        else if (args[i] == "-SkipPeptideMismatchCheck")
+            skipPeptideMismatchCheck = lexical_cast<bool>(args[++i]);
         else if (args[i] == "-LogLevel")
             parse(logLevel, args[++i]);
         else if (args[i] == "-LogFilepath")
@@ -582,7 +587,7 @@ int main(int argc, const char* argv[])
             if (matchingFiles.empty())
                 BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << "no matching files for filemask: " << args[i] << endl;
             else
-                BOOST_FOREACH(const bfs::path& p, matchingFiles)
+                for(const bfs::path& p : matchingFiles)
                     mergeSourceFilepaths.push_back(p.string());
         }
     }
@@ -617,7 +622,7 @@ int main(int argc, const char* argv[])
             if (matchingFiles.empty())
                 BOOST_LOG_SEV(logSource::get(), MessageSeverity::Warning) << "no matching files for filemask: " << line << endl;
             else
-                BOOST_FOREACH(const bfs::path& p, matchingFiles)
+                for(const bfs::path& p : matchingFiles)
                     mergeSourceFilepaths.push_back(p.string());
         }
     }
@@ -659,7 +664,7 @@ int main(int argc, const char* argv[])
             BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "Merging " << mergeSourceFilepaths.size() << " files to: " << mergeTargetFilepath << endl;
             bpt::ptime start = bpt::microsec_clock::local_time();
             Merger merger;
-            merger.merge(mergeTargetFilepath, mergeSourceFilepaths, maxThreads, &ilr);
+            merger.merge(mergeTargetFilepath, mergeSourceFilepaths, maxThreads, &ilr, skipPeptideMismatchCheck);
             //std::random_shuffle(mergeSourceFilepaths.begin(), mergeSourceFilepaths.end());
             //merger.merge(bfs::path(mergeTargetFilepath).replace_extension(".reverse.idpDB").string(), mergeSourceFilepaths, 1, &ilr);
             BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "Merging finished in " << bpt::to_simple_string(bpt::microsec_clock::local_time() - start);
