@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
@@ -729,20 +730,31 @@ namespace pwiz.Skyline.Model.Results
             for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
             {
                 var transitionChromInfos = peaksByReplicate[replicateIndex]
-                    .Select(transitionPeak => FromProtoTransitionPeak(stringPool, settings, transitionPeak, IonMobilityFilter.EMPTY)).ToArray();
+                    .Select(transitionPeak => FromProtoTransitionPeak(stringPool, settings, transitionPeak)).ToArray();
                 lists.Add(new ChromInfoList<TransitionChromInfo>(transitionChromInfos));
             }
             return new Results<TransitionChromInfo>(lists);
         }
 
         private static TransitionChromInfo FromProtoTransitionPeak(StringPool stringPool, SrmSettings settings,
-            SkylineDocumentProto.Types.TransitionPeak transitionPeak, IonMobilityFilter defaultIonMobilityFilter)
+            SkylineDocumentProto.Types.TransitionPeak transitionPeak)
         {
             var measuredResults = settings.MeasuredResults;
-            var fileId = measuredResults.Chromatograms[transitionPeak.ReplicateIndex]
-                .MSDataFileInfos[transitionPeak.FileIndexInReplicate]
-                .FileId;
-            var ionMobility = defaultIonMobilityFilter.ChangeIonMobilityValue(DataValues.FromOptional(transitionPeak.IonMobility)).ChangeExtractionWindowWidth(DataValues.FromOptional(transitionPeak.IonMobilityWindow));
+            var msDataFileInfo = measuredResults.Chromatograms[transitionPeak.ReplicateIndex]
+                .MSDataFileInfos[transitionPeak.FileIndexInReplicate];
+            var fileId = msDataFileInfo.FileId;
+            var ionMobilityValue = DataValues.FromOptional(transitionPeak.IonMobility);
+            IonMobilityFilter ionMobility;
+            if (ionMobilityValue.HasValue)
+            {
+                var ionMobilityWidth = DataValues.FromOptional(transitionPeak.IonMobilityWindow);
+                var ionMobilityUnits = msDataFileInfo.IonMobilityUnits;
+                ionMobility = IonMobilityFilter.GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(ionMobilityValue, ionMobilityUnits), ionMobilityWidth, null);
+            }
+            else
+            {
+                ionMobility = IonMobilityFilter.EMPTY;
+            }
             short? pointsAcrossPeak = (short?) DataValues.FromOptional(transitionPeak.PointsAcrossPeak);
             PeakIdentification peakIdentification = PeakIdentification.FALSE;
             switch (transitionPeak.Identified)
