@@ -460,6 +460,9 @@
       <Component Id="System.Data.SQLite.dll">
         <File Source="$(var.Skyline.TargetDir)/System.Data.SQLite.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="timsdata.dll">
+        <File Source="$(var.Skyline.TargetDir)/timsdata.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="UIMFLibrary.dll">
         <File Source="$(var.Skyline.TargetDir)/UIMFLibrary.dll" KeyPath="yes"/>
       </Component>
