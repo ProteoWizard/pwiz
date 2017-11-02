@@ -433,17 +433,6 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             return allPeakAreas;
         }
 
-        private void SetLibraryEntries(IEnumerable<ChromLibSpectrumInfo> spectrumInfos)
-        {
-            var libraryEntries = spectrumInfos.ToArray();
-            Array.Sort(libraryEntries);
-            _libraryEntries = libraryEntries;
-            _setSequences = _libraryEntries
-                        .Select(info => new LibSeqKey(info.Key))
-                        .Distinct()
-                        .ToDictionary(key => key, key => true);
-        }
-
         private bool LoadFromCache(ILoadMonitor loadMonitor, ProgressStatus status)
         {
             if (!loadMonitor.StreamManager.IsCached(FilePath, CachePath))
@@ -685,12 +674,13 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             }
             private void ReadEntries()
             {
+                var valueCache = new ValueCache();
                 _stream.Seek(_locationEntries, SeekOrigin.Begin);
                 int entryCount = PrimitiveArrays.ReadOneValue<int>(_stream);
                 var entries = new ChromLibSpectrumInfo[entryCount];
                 for (int i = 0; i < entryCount; i++)
                 {
-                    entries[i] = ChromLibSpectrumInfo.Read(_stream);
+                    entries[i] = ChromLibSpectrumInfo.Read(valueCache, _stream);
                 }
                 _library.SetLibraryEntries(entries);
                 int irtCount = PrimitiveArrays.ReadOneValue<int>(_stream);

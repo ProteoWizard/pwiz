@@ -47,8 +47,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SrmDocument _document;
         private readonly Library _selectedLibrary;
         private readonly LibrarySpec _selectedSpec;
-        private readonly byte[] _lookupPool;
-        private readonly ViewLibraryPepInfo[] _libraryPepInfos;
+        private readonly IReadOnlyList<ViewLibraryPepInfo> _libraryPepInfos;
         private readonly LibKeyModificationMatcher _matcher;
         private AdductMap<SrmSettings> _chargeSettingsMap;
         private BackgroundProteome _backgroundProteome;
@@ -66,14 +65,12 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryPepMatching(SrmDocument document,
                                       Library library,
                                       LibrarySpec spec,
-                                      byte[] lookupPool,
                                       LibKeyModificationMatcher matcher,
-                                      ViewLibraryPepInfo[] peptides)
+                                      IReadOnlyList<ViewLibraryPepInfo> peptides)
         {
             _document = document;
             _selectedLibrary = library;
             _selectedSpec = spec;
-            _lookupPool = lookupPool;
             _matcher = matcher;
             _libraryPepInfos = peptides;
             _chargeSettingsMap = new  AdductMap<SrmSettings>();
@@ -153,7 +150,7 @@ namespace pwiz.Skyline.SettingsUI
             MatchedPeptideCount = 0;
 
             int peptides = 0;
-            int totalPeptides = _libraryPepInfos.Length;
+            int totalPeptides = _libraryPepInfos.Count;
 
             ProteomeDb proteomeDb = null;
             IStatelessSession session = null;
@@ -320,10 +317,10 @@ namespace pwiz.Skyline.SettingsUI
                 _chargeSettingsMap[charge] = settings;
             }
 
-            var nodePep = _matcher.GetModifiedNode(key, pepInfo.GetSmallMoleculeLibraryAttributes(_lookupPool) , pepInfo.GetAASequence(_lookupPool), settings, settingsDiff);
+            var nodePep = _matcher.GetModifiedNode(key, settings, settingsDiff);
             if (nodePep != null)
             {
-                pepInfo.PeptideNode = nodePep;
+                pepInfo = pepInfo.ChangePeptideNode(nodePep);
             }
             return pepInfo;
         }

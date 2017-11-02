@@ -99,10 +99,9 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(z, key.Charge);
                 Assert.AreEqual(adduct, key.Adduct);
                 Assert.AreEqual(caffeineInChiKey, key.Target.ToString());
-                var bytes = new List<byte>();
-                var viewLibPepInfo = new ViewLibraryPepInfo(key, bytes);
+                var viewLibPepInfo = new ViewLibraryPepInfo(key);
                 Assert.AreEqual(key, viewLibPepInfo.Key);
-                var smallMolInfo = viewLibPepInfo.GetSmallMoleculeLibraryAttributes(bytes.ToArray());
+                var smallMolInfo = viewLibPepInfo.GetSmallMoleculeLibraryAttributes();
                 Assert.AreEqual(moleculeName, smallMolInfo.MoleculeName);
                 Assert.AreEqual(caffeineInChiKey, smallMolInfo.InChiKey);
                 Assert.AreEqual(caffeineFormula, smallMolInfo.ChemicalFormula);
@@ -124,10 +123,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, key.ModificationCount);
             Assert.AreEqual(Adduct.DOUBLY_PROTONATED, key.Adduct);
             Assert.AreEqual(seq, key.Target.ToString());
-            var key2 = new LibKey(seq.Replace("[+57.0]",""), Adduct.DOUBLY_PROTONATED);
-            var seqKey = new LibSeqKey(key);
-            var seqKey2 = new LibSeqKey(key2);
-            Assert.IsTrue(seqKey.Equals(seqKey2));
 
             // Test error conditions
             BuildLibraryError("missing_charge.pep.XML", TestFilesDir.FullPath);

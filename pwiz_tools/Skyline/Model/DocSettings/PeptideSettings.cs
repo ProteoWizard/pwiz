@@ -993,7 +993,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 var calcMod = settings.GetPrecursorCalc(IsotopeLabelType.light, explicitMods);
                 // Use narrow format, since this is mostly what is presented to
                 // the user creating the exclusion expressions.
-                var sequenceMod = calcMod.GetModifiedSequence(peptide.Target, true).ToString();
+                var sequenceMod = calcMod.GetModifiedSequenceDisplay(peptide.Target).ToString();
                 if (_regexExcludeMod != null && _regexExcludeMod.Match(sequenceMod).Success)
                     return false;
                 if (_regexIncludeMod != null && !_regexIncludeMod.Match(sequenceMod).Success)
@@ -2023,13 +2023,13 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
-        public bool ContainsAny(LibSeqKey key)
+        public bool ContainsAny(Target target)
         {
             Assume.IsTrue(IsLoaded);
 
             foreach (Library lib in _libraries)
             {
-                if (lib != null && lib.ContainsAny(key))
+                if (lib != null && lib.ContainsAny(target))
                     return true;
             }
             return false;

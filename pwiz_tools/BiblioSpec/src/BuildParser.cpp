@@ -488,7 +488,7 @@ void BuildParser::verifySequences()
         // create the modified sequence, if we don't have it already
         if( psm->modifiedSeq.empty() ){
             sortPsmMods(psm);
-            psm->modifiedSeq = BlibBuilder::generateModifiedSeq(psm->unmodSeq.c_str(),
+            psm->modifiedSeq = blibMaker_.generateModifiedSeq(psm->unmodSeq.c_str(),
                                                                 psm->mods);
         } else {
             psm->modifiedSeq = boost::to_upper_copy(psm->modifiedSeq);
@@ -517,11 +517,17 @@ void BuildParser::filterBySequence(const set<string>* targetSequences,
         //     OR
         //   targetSequencesModified is not null and it contains the modified sequence
         if ((targetSequences != NULL &&
-             targetSequences->find(psms_[i]->unmodSeq) != targetSequences->end()) ||
-            (targetSequencesModified != NULL &&
-             targetSequencesModified->find(psms_[i]->modifiedSeq) != targetSequencesModified->end()))
+             targetSequences->find(psms_[i]->unmodSeq) != targetSequences->end()))
         {
             continue;
+        } 
+        if (targetSequencesModified != NULL) 
+        {
+            string normalizedSequence = BlibBuilder::getLowPrecisionModSeq(psms_[i]->unmodSeq.c_str(), psms_[i]->mods);
+            if (targetSequencesModified->find(normalizedSequence) != targetSequencesModified->end()) 
+            {
+                continue;
+            }
         }
         delete psms_[i];
         psms_.erase(psms_.begin() + i);

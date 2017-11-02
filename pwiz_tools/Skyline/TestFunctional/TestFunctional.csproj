@@ -185,6 +185,7 @@
     <Compile Include="GroupComparisonScenariosTest.cs" />
     <Compile Include="GroupComparisonTest.cs" />
     <Compile Include="GroupComparisonVolcanoPlotTest.cs" />
+    <Compile Include="HighPrecModsTest.cs" />
     <Compile Include="ImmediateWindowTest.cs" />
     <Compile Include="ImportDocTest.cs" />
     <Compile Include="CopyPasteTest.cs" />
@@ -353,6 +354,7 @@
     <None Include="FullScanIdTest.zip" />
     <None Include="GroupComparisonPivotEditorTest.zip" />
     <None Include="GroupComparisonTest.zip" />
+    <None Include="HighPrecModsTest.zip" />
     <None Include="ImportDocTest.zip" />
     <None Include="ImportFailureTest.zip" />
     <None Include="ImportIsolationSchemeTest.zip" />

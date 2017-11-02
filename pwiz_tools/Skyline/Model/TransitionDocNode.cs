@@ -710,8 +710,7 @@ namespace pwiz.Skyline.Model
                     listChromInfoNew.Add(CreateChromInfo(fileId, step, peak, ionMobility, ratioCount, userSet));
             }
 
-            return ChangeResults((Results<TransitionChromInfo>)
-                                 Results.ChangeAt(indexSet, new ChromInfoList<TransitionChromInfo>(listChromInfoNew)));
+            return ChangeResults(Results.ChangeAt(indexSet, new ChromInfoList<TransitionChromInfo>(listChromInfoNew)));
         }
 
         private static TransitionChromInfo CreateChromInfo(ChromFileInfoId fileId, int step, ChromPeak peak, IonMobilityFilter ionMobility, int ratioCount, UserSet userSet)
@@ -743,8 +742,7 @@ namespace pwiz.Skyline.Model
             }
             if (listChromInfo.Count == listChromInfoNew.Count && !peakChanged)
                 return this;
-            return ChangeResults((Results<TransitionChromInfo>)
-                                 Results.ChangeAt(indexSet, new ChromInfoList<TransitionChromInfo>(listChromInfoNew)));
+            return ChangeResults(Results.ChangeAt(indexSet, new ChromInfoList<TransitionChromInfo>(listChromInfoNew)));
         }
 
         public TransitionDocNode MergeUserInfo(SrmSettings settings, TransitionDocNode nodeTranMerge)

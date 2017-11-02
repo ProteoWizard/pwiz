@@ -111,6 +111,7 @@ void BlibBuilder::usage()
         "   -s                Result file names from stdin. e.g. ls *sqt | BlibBuild -s new.blib.\n"
         "   -u                Ignore peptides except those with the unmodified sequences from stdin.\n"
         "   -U                Ignore peptides except those with the modified sequences from stdin.\n"
+        "   -H                Use more than one decimal place when describing mass modifications.\n"
         "   -C  <file size>   Minimum file size required to use caching for .dat files.  Specifiy units as B,K,G or M.  Default 800M.\n"
         "   -c <cutoff>       Score threshold (0-1) for PSMs to be included in library. Higher threshold is more exclusive.\n"
         "   -v  <level>       Level of output to stderr (silent, error, status, warn).  Default status.\n"
@@ -495,6 +496,8 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
         ambiguityMessages_ = true;
     } else if (switchName == 'K') {
         keepAmbiguous_ = true;
+    } else if (switchName == 'H') {
+        setHighPrecisionModifications(true);
     } else {
         return BlibMaker::parseNextSwitch(i, argc, argv);
     }
@@ -577,7 +580,9 @@ int BlibBuilder::readSequences(set<string>** seqSet, bool modified)
         }
         if (modified)
         {
-            newSeq = generateModifiedSeq(newSeq.c_str(), mods);
+            // We use the low precision form of the sequence for this list.
+            // This needs to match the logic in BuildParser::filterBySequence
+            newSeq = getLowPrecisionModSeq(newSeq.c_str(), mods);
         }
         Verbosity::debug("Adding target sequence %s", newSeq.c_str());
         (*seqSet)->insert(newSeq);
@@ -587,14 +592,34 @@ int BlibBuilder::readSequences(set<string>** seqSet, bool modified)
     return sequencesRead;
 }
 
-/**
- * \brief Create a sequence that includes modifications from an
- * unmodified seq and a list of mods.  Assumes that mods are sorted in
- * increasing order by position and that no two entries in the mods
- * vector are to the same position.
- */
-string BlibBuilder::generateModifiedSeq(const char* unmodSeq,
-                                        const vector<SeqMod>& mods) {
+static const char* getModMassFormat(double mass, bool highPrecision) {
+    if (!highPrecision) {
+        return "[%+.1f]";
+    }
+    double decimal = (mass - (int) mass);
+    int decimalInt = (int) round(decimal * 1000000);
+    if (decimalInt == (decimalInt / 100000) * 100000) {
+        return "[%+.1f]";
+    }
+    if (decimalInt == (decimalInt / 10000) * 10000) {
+        return "[%+.2f]";
+    }
+    if (decimalInt == (decimalInt /1000) * 1000) {
+        return "[%+.3f]";
+    }
+    if (decimalInt == (decimalInt /100) * 100) {
+        return "[%+.4f]";
+    }
+    if (decimalInt == (decimalInt / 10) * 10) {
+        return "[%+.5f]";
+    }
+    return "[%+.6f]";
+}
+
+string BlibBuilder::getModifiedSequenceWithPrecision(const char* unmodSeq,
+                                        const vector<SeqMod>& mods,
+                                        bool highPrecision) 
+{
     string modifiedSeq(unmodSeq);
     char modBuffer[SMALL_BUFFER_SIZE];
 
@@ -609,11 +634,23 @@ string BlibBuilder::generateModifiedSeq(const char* unmodSeq,
                              modifiedSeq.size(), mods.back().position);
         }
 
-        sprintf(modBuffer, "[%+.1f]", mods.at(i).deltaMass);
+        double deltaMass = mods.at(i).deltaMass;
+        sprintf(modBuffer, getModMassFormat(deltaMass, highPrecision), deltaMass);
         modifiedSeq.insert(mods.at(i).position, modBuffer);
     }
 
     return modifiedSeq;
+}
+
+/**
+ * \brief Create a sequence that includes modifications from an
+ * unmodified seq and a list of mods.  Assumes that mods are sorted in
+ * increasing order by position and that no two entries in the mods
+ * vector are to the same position.
+ */
+string BlibBuilder::generateModifiedSeq(const char* unmodSeq,
+                                        const vector<SeqMod>& mods) {
+    return getModifiedSequenceWithPrecision(unmodSeq, mods, isHighPrecisionModifications());
 }
 
 string base_name(const char* name)

@@ -296,7 +296,8 @@ void BlibMaker::createTables()
            "createTime TEXT, "
            "numSpecs INTEGER, "
            "majorVersion INTEGER, "
-           "minorVersion INTEGER)",
+           "minorVersion INTEGER, "
+           "preciseMods INTEGER)",
            ZSQLBUFLEN);
     sql_stmt(zSql);
 
@@ -305,10 +306,11 @@ void BlibMaker::createTables()
     char* date = ctime(&t);
 
     string blibLSID = getLSID();
-    snprintf(zSql, ZSQLBUFLEN, "INSERT INTO LibInfo values('%s','%s',%i,%i,%i)", 
+    snprintf(zSql, ZSQLBUFLEN, "INSERT INTO LibInfo values('%s','%s',%i,%i,%i,%i)", 
             blibLSID.c_str(), date, 
             -1, // init count as -1 to mean 'not counted', 0 could be 'no spec'
-            MAJOR_VERSION_CURRENT, MINOR_VERSION_CURRENT);
+            MAJOR_VERSION_CURRENT, MINOR_VERSION_CURRENT,
+            1);
     sql_stmt(zSql);
     string cols =
            "CREATE TABLE RefSpectra (id INTEGER primary key autoincrement not null, "

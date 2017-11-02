@@ -2525,7 +2525,9 @@ namespace pwiz.Skyline
 
         private static IEnumerable<Target> CheckMissingIrtPeptides(SrmDocument document)
         {
-            return RCalcIrt.IrtPeptides(document).Except(document.Peptides.Select(nodePep => nodePep.ModifiedTarget));
+            var existingPeptides = new LibKeyIndex(document.Peptides.Select(pep=>new LibKey(pep.ModifiedTarget, Adduct.EMPTY).LibraryKey));
+            return RCalcIrt.IrtPeptides(document)
+                .Where(target => !existingPeptides.ItemsMatching(new LibKey(target, Adduct.EMPTY).LibraryKey, false).Any());
         }
 
         public SrmDocument ImportResults(SrmDocument doc, List<KeyValuePair<string, MsDataFileUri[]>> namedResults, string optimize)

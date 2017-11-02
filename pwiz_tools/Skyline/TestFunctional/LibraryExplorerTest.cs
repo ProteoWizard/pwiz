@@ -172,7 +172,7 @@ namespace pwiz.SkylineTestFunctional
             // Wait for the list update caused by adding all modifications to complete
             WaitForConditionUI(() => _viewLibUI.IsUpdateComplete);
 
-            ViewLibraryPepInfo previousPeptide = new ViewLibraryPepInfo();
+            ViewLibraryPepInfo previousPeptide = default(ViewLibraryPepInfo);
             int peptideIndex = -1;
             RunUI(() =>
             {
@@ -181,7 +181,7 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsNotNull(previousPeptide);
             Assert.AreEqual(0, peptideIndex);
-            Assert.AreEqual(3, previousPeptide.Adduct.AdductCharge, "Expected charge 3 on " + previousPeptide.DisplayString);
+            Assert.AreEqual(3, previousPeptide.Adduct.AdductCharge, "Expected charge 3 on " + previousPeptide.AnnotatedDisplayText);
 
             // Now try to select a different peptide and check to see if the
             // selection changes
@@ -191,7 +191,7 @@ namespace pwiz.SkylineTestFunctional
                 pepList.SelectedIndex = selectPeptideIndex;
             });
 
-            ViewLibraryPepInfo selPeptide = new ViewLibraryPepInfo();
+            ViewLibraryPepInfo selPeptide = default(ViewLibraryPepInfo);
             RunUI(() =>
             {
                 Assert.AreEqual(selectPeptideIndex, pepList.SelectedIndex); // Did selection change work?
@@ -200,8 +200,8 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsNotNull(selPeptide);
             if (Equals(previousPeptide, selPeptide))
-                Assert.AreNotEqual(previousPeptide.DisplayString, selPeptide.DisplayString);
-            Assert.AreEqual(2, selPeptide.Adduct.AdductCharge, "Expected charge 2 on " + selPeptide.DisplayString);
+                Assert.AreNotEqual(previousPeptide.AnnotatedDisplayText, selPeptide.AnnotatedDisplayText);
+            Assert.AreEqual(2, selPeptide.Adduct.AdductCharge, "Expected charge 2 on " + selPeptide.AnnotatedDisplayText);
 
             // Click the "Next" link
             RunUI(() =>
@@ -247,7 +247,7 @@ namespace pwiz.SkylineTestFunctional
                 selPeptide = (ViewLibraryPepInfo)pepList.SelectedItem;
                 pepsCount = pepList.Items.Count;
             });
-            Assert.AreEqual(_testLibs[0].UniquePeptide, selPeptide.DisplayString);
+            Assert.AreEqual(_testLibs[0].UniquePeptide, selPeptide.AnnotatedDisplayText);
             Assert.AreEqual(1, pepsCount);
 
             // Test invalid peptide search
@@ -268,7 +268,7 @@ namespace pwiz.SkylineTestFunctional
                 pepTextBox.Focus();
                 pepTextBox.Text = "";
             });
-            selPeptide = new ViewLibraryPepInfo();
+            selPeptide = default(ViewLibraryPepInfo);
             RunUI(() =>
             {
                 selPeptide = (ViewLibraryPepInfo)pepList.SelectedItem;
@@ -683,13 +683,13 @@ namespace pwiz.SkylineTestFunctional
                 pepTextBox.Text = _testLibs[libIndex].UniquePeptide;
             });
             int pepsCount = 0;
-            ViewLibraryPepInfo selPeptide = new ViewLibraryPepInfo();
+            ViewLibraryPepInfo selPeptide = default(ViewLibraryPepInfo);
             RunUI(() =>
             {
                 selPeptide = (ViewLibraryPepInfo)pepList.SelectedItem;
                 pepsCount = pepList.Items.Count;
             });
-            Assert.AreEqual(_testLibs[libIndex].UniquePeptide, selPeptide.DisplayString);
+            Assert.AreEqual(_testLibs[libIndex].UniquePeptide, selPeptide.AnnotatedDisplayText);
             Assert.AreEqual(1, pepsCount);
 
             // Add all to document, expect to be asked if we want to add library to doc as well

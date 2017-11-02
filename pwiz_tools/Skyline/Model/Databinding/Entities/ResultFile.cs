@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (ReferenceEquals(chromInfoList[i].FileId, ChromFileInfoId) && GetOptStep(chromInfoList[i]) == OptimizationStep)
                 {
-                    return (Results<TChromInfo>) chromInfos.ChangeAt(Replicate.ReplicateIndex, 
+                    return chromInfos.ChangeAt(Replicate.ReplicateIndex, 
                         chromInfoList.ChangeAt(i, changeFunc(chromInfoList[i])));
                 }
             }

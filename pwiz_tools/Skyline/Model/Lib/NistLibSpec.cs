@@ -650,6 +650,7 @@ namespace pwiz.Skyline.Model.Lib
                         return false;
                 }
 
+                var valueCache = new ValueCache();
                 status = status.ChangeMessage(string.Format(Resources.NistLibraryBase_Load_Loading__0__library, Path.GetFileName(FilePath)));
                 loader.UpdateProgress(status);
 
@@ -669,13 +670,10 @@ namespace pwiz.Skyline.Model.Lib
 
                 int numSpectra = GetInt32(libHeader, (int) LibHeaders.num_spectra);
                 var libraryEntries = new NistSpectrumInfo[numSpectra];
-                var setSequences = new Dictionary<LibSeqKey, bool>(numSpectra);
                 
                 // Seek to beginning of spectrum headers
                 long locationHeaders = BitConverter.ToInt64(libHeader, ((int)LibHeaders.location_headers_lo)*4);
                 stream.Seek(locationHeaders, SeekOrigin.Begin);
-
-                byte[] specSequence = new byte[1024];
                 for (int i = 0; i < numSpectra; i++)
                 {
                     int percent = (100 - loadPercent) + (i * loadPercent / numSpectra);
@@ -693,8 +691,6 @@ namespace pwiz.Skyline.Model.Lib
                     }
 
                     // Read spectrum header
-                    int seqKeyHash = ReadSize(stream);
-                    int seqKeyLength = ReadSize(stream);
                     int charge = ReadSize(stream);
                     if (charge == 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
                         throw new InvalidDataException(Resources.NistLibraryBase_Load_Invalid_precursor_charge_found_File_may_be_corrupted);
@@ -709,28 +705,12 @@ namespace pwiz.Skyline.Model.Lib
                     int numPeaks = ReadSize(stream);
                     int compressedSize = ReadSize(stream);
                     long location = PrimitiveArrays.ReadOneValue<long>(stream);
-                    int seqLength = ReadSize(stream);
-
-                    // Read sequence information
-                    ReadComplete(stream, specSequence, seqLength);
-
-                    // Add new entry
-                    LibKey key = seqLength > 0 && LibKey.HasAdduct(specSequence) ?
-                        new LibKey(specSequence, seqLength) : 
-                        new LibKey(specSequence, 0, seqLength, charge);
-
+                    LibKey key = LibKey.Read(valueCache, stream);
                     libraryEntries[i] = new NistSpectrumInfo(key, tfRatio, rt, irt, totalIntensity,
                                                               (ushort)copies, (ushort)numPeaks, compressedSize, location);
-                    
-                    if (seqKeyLength > 0)
-                    {
-                        LibSeqKey seqKey = new LibSeqKey(key, seqKeyHash, seqKeyLength);
-                        setSequences.Add(seqKey, true);
-                    }
                 }
                 // Checksum = checksum.ChecksumValue;
-                _libraryEntries = libraryEntries;
-                _setSequences = setSequences;
+                SetLibraryEntries(libraryEntries);
 
                 loader.UpdateProgress(status.Complete());
 
@@ -809,7 +789,6 @@ namespace pwiz.Skyline.Model.Lib
             using (Stream outStream = sm.CreateStream(fs.SafeName, FileMode.Create, true))
             {
                 var libraryEntries = new List<NistSpectrumInfo>(10000);
-                var setSequences = new Dictionary<LibSeqKey, bool>(10000);
 
                 long lineCount = 0;
                 string line;
@@ -1018,24 +997,9 @@ namespace pwiz.Skyline.Model.Lib
 
                 var libraryEntriesArray = libraryEntries.ToArray();
 
-                Array.Sort(libraryEntriesArray, CompareSpectrumInfo);
-
                 long locationHeaders = outStream.Position;
                 foreach (var info in libraryEntriesArray)
                 {
-                    LibSeqKey seqKey = new LibSeqKey(info.Key);
-                    if (setSequences.ContainsKey(seqKey))
-                    {
-                        outStream.Write(BitConverter.GetBytes(0), 0, sizeof(int));
-                        outStream.Write(BitConverter.GetBytes(-1), 0, sizeof(int));
-                    }
-                    else
-                    {
-                        // If it is unique, it will need to be added at cache load time.
-                        outStream.Write(BitConverter.GetBytes(seqKey.GetHashCode()), 0, sizeof(int));
-                        outStream.Write(BitConverter.GetBytes(seqKey.Length), 0, sizeof(int));
-                        setSequences.Add(seqKey, true);
-                    }
                     outStream.Write(BitConverter.GetBytes(info.Key.Charge), 0, sizeof (int));
                     outStream.Write(BitConverter.GetBytes(info.TFRatio), 0, sizeof (float));
                     if (info.RT.HasValue)
@@ -1061,10 +1025,7 @@ namespace pwiz.Skyline.Model.Lib
                     outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof (int));
                     outStream.Write(BitConverter.GetBytes(info.CompressedSize), 0, sizeof (int));
                     outStream.Write(BitConverter.GetBytes(info.Location), 0, sizeof (long));
-                    if (info.Key.IsSmallMoleculeKey)
-                        info.Key.Write(outStream); // Write the entire key, which includes the adduct description CONSIDER:(bspratt) should we bump FORMAT_VERSION_CACHE?
-                    else
-                        info.Key.WriteSequence(outStream);
+                    info.Key.Write(outStream);
                 }
 
                 outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));

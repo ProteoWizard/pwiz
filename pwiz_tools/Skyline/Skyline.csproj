@@ -290,6 +290,12 @@
     <Compile Include="AlgLib\solvers.cs" />
     <Compile Include="AlgLib\specialfunctions.cs" />
     <Compile Include="AlgLib\statistics.cs" />
+    <Compile Include="Model\Lib\LibKeyIndex.cs" />
+    <Compile Include="Model\Lib\ViewLibraryPepInfoList.cs" />
+    <Compile Include="Model\Lib\LibKeyMap.cs" />
+    <Compile Include="Model\Lib\LibraryKey.cs" />
+    <Compile Include="Model\MassModification.cs" />
+    <Compile Include="Model\TargetMap.cs" />
     <Compile Include="Controls\Databinding\ChooseFormatDlg.cs">
       <SubType>Form</SubType>
     </Compile>

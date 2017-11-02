@@ -22,6 +22,7 @@ using System.Globalization;
 using System.Linq;
 using System.IO;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 
 namespace UniModCompiler
 {
@@ -44,6 +45,9 @@ namespace UniModCompiler
         private static List<Mod> _listedHiddenMods;
         private static List<string> _impossibleMods;
         private static Dictionary<string, ThreeLetterCodeUsed> _dictModNameToThreeLetterCode;
+        private static readonly MassDistribution EmptyMassDistribution = new MassDistribution(.001, .00001);
+        private static readonly IsotopeAbundances IsotopeAbundances = GetIsotopeAbundances();
+        private static Dictionary<Mod, int> _requiredPrecisions;
 
         private class ThreeLetterCodeUsed
         {
@@ -123,6 +127,8 @@ namespace UniModCompiler
                             _listedHiddenMods.AddRange(ReadListedMods(reader));
                     }
                 }
+
+                _requiredPrecisions = GetRequiredPrecisions(3);
 
                 _impossibleMods = new List<string>();
 
@@ -375,7 +381,7 @@ namespace UniModCompiler
             }
             return listedMods;
         }
-              
+
         /// <summary>
         /// Search for the listed modifications within the XML modifications, and write matches to the C# file.
         /// </summary>
@@ -485,7 +491,11 @@ namespace UniModCompiler
                         }
                     }
                 }
-                writer.WriteLine("Hidden = {0}, ", hidden.ToString().ToLower());
+                writer.Write("Hidden = {0}, ", hidden.ToString().ToLower());
+                int precisionRequired;
+                if (!_requiredPrecisions.TryGetValue(mod, out precisionRequired))
+                    precisionRequired = 1;
+                writer.WriteLine("PrecisionRequired = {0}", precisionRequired);
                 writer.WriteLine("            },");
 
                 
@@ -494,6 +504,99 @@ namespace UniModCompiler
                 else
                     _listedMods.Remove(mod);
             }
+        }
+
+        private static Dictionary<Mod, int> GetRequiredPrecisions(int decimalsToCheck)
+        {
+            var all = new List<Tuple<Mod, double>>();
+            foreach (var mod in _listedMods.Concat(_listedHiddenMods))
+            {
+                var dictMods = new List<mod_t>();
+                mod_t dictLookupMod;
+                if (_dictIsotopeMods.TryGetValue(mod.Title, out dictLookupMod))
+                    dictMods.Add(dictLookupMod);
+                if (_dictStructuralMods.TryGetValue(mod.Title, out dictLookupMod))
+                    dictMods.Add(dictLookupMod);
+                if (!dictMods.Any())
+                    continue;
+
+                var curMod = mod;
+                all.AddRange(from dictMod in dictMods
+                             select BuildFormula(dictMod.delta.element)
+                             into skylineFormula where skylineFormula.Length > 0
+                             select GetMassDistribution(skylineFormula)
+                             into massDistribution
+                             select massDistribution.MostAbundanceMass into monoMass
+                             select Tuple.Create(curMod, monoMass));
+            }
+
+            all.Sort((x, y) => x.Item2.CompareTo(y.Item2));
+            var precisions = new Dictionary<Mod, int>();
+            for (var i = 0; i < all.Count; i++)
+            {
+                var current = all[i];
+                var requiredLower = RequiredPrecision(current, all.Take(i).Reverse(), decimalsToCheck);
+                var requiredUpper = RequiredPrecision(current, all.Skip(i + 1), decimalsToCheck);
+                precisions[current.Item1] = Math.Max(requiredLower, requiredUpper);
+            }
+
+            return precisions;
+        }
+
+        private static int RequiredPrecision(Tuple<Mod, double> cur, IEnumerable<Tuple<Mod, double>> check, int decimalsToCheck)
+        {
+            var protein = string.Join(string.Empty, cur.Item1.AAs).Equals("Protein");
+            // find first Mod in check with at least one matching AA
+            foreach (var other in check)
+            {
+                if (protein || !cur.Item1.AAs.Any() || !other.Item1.AAs.Any() || cur.Item1.AAs.Intersect(other.Item1.AAs).Any())
+                {
+                    // find minimum amount of decimals needed to distinguish cur from other
+                    for (var i = 1; i <= decimalsToCheck; i++)
+                    {
+                        if (!ValuesEqualWithPrecision(cur.Item2, other.Item2, i))
+                            return i;
+                    }
+                    break; // not distinguishable with any amount of decimals up to limit
+                }
+            }
+            return 1;
+        }
+
+        private static bool ValuesEqualWithPrecision(double x, double y, int precision)
+        {
+            var formatString = "F0" + precision;
+            return Equals(x.ToString(formatString), y.ToString(formatString));
+        }
+
+        private static MassDistribution GetMassDistribution(string formula)
+        {
+            var md = EmptyMassDistribution;
+            var result = md;
+            Molecule moleculePlus;
+            Molecule moleculeMinus;
+            var indexMinus = formula.IndexOf("-", StringComparison.InvariantCulture);
+            if (indexMinus < 0)
+            {
+                moleculePlus = Molecule.Parse(formula.Trim());
+                moleculeMinus = Molecule.Empty;
+            }
+            else
+            {
+                moleculePlus = Molecule.Parse(formula.Substring(0, indexMinus).Trim());
+                moleculeMinus = Molecule.Parse(formula.Substring(indexMinus + 1).Trim());
+            }
+            var isotopeAbundances = IsotopeAbundances;
+            foreach (var element in moleculePlus)
+            {
+                result = result.Add(md.Add(isotopeAbundances[element.Key]).Multiply(element.Value));
+            }
+            foreach (var element in moleculeMinus)
+            {
+                result = result.Add(md.Add(isotopeAbundances[element.Key]).Multiply(-element.Value));
+            }
+            return result;
+
         }
 
         private static bool ListEquals(List<string> list1, List<string> list2)
@@ -675,6 +778,28 @@ namespace UniModCompiler
             AMINO_FORMULAS['w'] = AMINO_FORMULAS['W'] = "C11H10ON2";
             AMINO_FORMULAS['y'] = AMINO_FORMULAS['Y'] = "C9H9O2N";
             // ReSharper restore CharImplicitlyConvertedToNumeric
+        }
+
+        private static IsotopeAbundances GetIsotopeAbundances()
+        {
+            var isotopeAbundances = IsotopeAbundances.Default;
+            isotopeAbundances = isotopeAbundances.SetAbundances(
+                new Dictionary<string, MassDistribution>
+                {
+                    {"H'", SingleMass(2.014101779)},
+                    {"O\"", SingleMass(16.9991315)},
+                    {"O'", SingleMass(17.9991604)},
+                    {"N'", SingleMass(15.0001088984)},
+                    {"C'", SingleMass(13.0033548378)},
+                    {"Cl'", SingleMass(36.965902602)},
+                    {"Br'", SingleMass(80.9162897)}
+                });
+            return isotopeAbundances;
+        }
+
+        private static MassDistribution SingleMass(double mass)
+        {
+            return EmptyMassDistribution.SetAbundance(mass, 1.0);
         }
     }
 

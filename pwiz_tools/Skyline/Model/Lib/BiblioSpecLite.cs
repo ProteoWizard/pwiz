@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 12;  // v10 changes ion mobility encoding, v11 startTime and endTime in RetentionTimes table, v12 adds small molecule support
+        private const int FORMAT_VERSION_CACHE = 13;  // v13 variable precision modifications
 
         public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu"; // Not L10N
 
@@ -169,8 +169,7 @@ namespace pwiz.Skyline.Model.Lib
             Lsid = lsid;
             SetRevision(dataRev, schemaVer);
 
-            _libraryEntries = libraryEntries;
-            Array.Sort(_libraryEntries, CompareSpectrumInfo);
+            SetLibraryEntries(libraryEntries);
 
             // Create the SQLite connection without actually connecting
             _sqliteConnection = new PooledSqliteConnection(streamManager.ConnectionPool, FilePath);
@@ -418,7 +417,7 @@ namespace pwiz.Skyline.Model.Lib
             createTime,
             numSpecs,
             majorVersion,
-            minorVersion
+            minorVersion,
         }
 
         public enum IonMobilityType
@@ -513,21 +512,6 @@ namespace pwiz.Skyline.Model.Lib
 
             count
         }
-
-        private enum SpectrumCacheHeader
-        {
-            seq_key_hash,
-            seq_key_length,
-            charge,
-            copies,
-            num_peaks,
-            id,
-            adduct_len,
-            small_mol_info_len,
-            seq_len,
-
-            count
-        }
         // ReSharper restore InconsistentNaming
         // ReSharper restore UnusedMember.Local
 
@@ -540,6 +524,20 @@ namespace pwiz.Skyline.Model.Lib
                 int rows;
                 string lsid;
                 int dataRev, schemaVer;
+
+                // check what columns exist in LibInfo
+                var libInfoCols = new HashSet<string>();
+                using (var cmd = _sqliteConnection.Connection.CreateCommand())
+                {
+                    cmd.CommandText = "PRAGMA table_info(LibInfo)"; // Not L10N
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            libInfoCols.Add(reader.GetString(1).ToLower());
+                        }
+                    }
+                }
 
                 // First get header information
                 select.CommandText = "SELECT * FROM [LibInfo]"; // Not L10N
@@ -601,8 +599,8 @@ namespace pwiz.Skyline.Model.Lib
                     {
                     }
                 }
+
                 var setLibKeys = new Dictionary<LibKey, bool>(rows);
-                var setSequences = new Dictionary<LibSeqKey, bool>(rows);
                 var libraryEntries = new List<BiblioLiteSpectrumInfo>(rows);
                 var librarySourceFiles = new List<BiblioLiteSourceInfo>();
 
@@ -610,7 +608,8 @@ namespace pwiz.Skyline.Model.Lib
                 using (SQLiteDataReader reader = select.ExecuteReader())
                 {
                     int iId = reader.GetOrdinal(RefSpectra.id);
-                    int iSeq = reader.GetOrdinal(RefSpectra.peptideModSeq);
+                    //int iSeq = reader.GetOrdinal(RefSpectra.peptideSeq);
+                    int iModSeq = reader.GetOrdinal(RefSpectra.peptideModSeq);
                     int iCharge = reader.GetOrdinal(RefSpectra.precursorCharge);
                     int iCopies = reader.GetOrdinal(RefSpectra.copies);
                     int iPeaks = reader.GetOrdinal(RefSpectra.numPeaks);
@@ -637,12 +636,13 @@ namespace pwiz.Skyline.Model.Lib
                             loader.UpdateProgress(status = status.ChangePercentComplete(percent));
                         }
 
-                        string sequence = reader.GetString(iSeq);
+                        int id = reader.GetInt32(iId);
+
+                        string sequence = reader.GetString(iModSeq);
                         int charge = reader.GetInt16(iCharge);
                         string adduct = iAdduct >= 0 && !reader.IsDBNull(iAdduct) ? reader.GetString(iAdduct) : null;
                         int copies = reader.GetInt32(iCopies);
                         int numPeaks = reader.GetInt32(iPeaks);
-                        int id = reader.GetInt32(iId);
                         var chemicalFormula = iChemicalFormula >= 0 && !reader.IsDBNull(iChemicalFormula) ? reader.GetString(iChemicalFormula) : null;
                         bool isProteomic = (string.IsNullOrEmpty(adduct) || Adduct.FromStringAssumeProtonated(adduct).IsProtonated) && 
                             string.IsNullOrEmpty(chemicalFormula); // We may write an adduct like [M+H] for peptides
@@ -682,11 +682,18 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             peakBoundariesByFileId = ImmutableSortedList.FromValues(peakBoundsBySpectraIdAndFileId[id].Distinct());
                         }
+                        LibKey key;
+                        if (isProteomic)
+                        {
+                            var peptideLibraryKey = new PeptideLibraryKey(sequence, charge);
+                            key = new LibKey(peptideLibraryKey);
+                        }
+                        else
+                        {
+                            key = new LibKey(smallMoleculeLibraryAttributes, Adduct.FromStringAssumeChargeOnly(adduct));
+                        }
                         // These libraries should not have duplicates, but just in case.
                         // CONSIDER: Emit error about redundancy?
-                        var key = isProteomic ?
-                            new LibKey(sequence, charge) :
-                            new LibKey(smallMoleculeLibraryAttributes, Adduct.FromStringAssumeChargeOnly(adduct));
                         if (!setLibKeys.ContainsKey(key))
                         {
                             setLibKeys.Add(key, true);
@@ -694,8 +701,6 @@ namespace pwiz.Skyline.Model.Lib
                         }
                     }
                 }
-
-                libraryEntries.Sort(CompareSpectrumInfo);
 
                 if (schemaVer > 0)
                 {
@@ -721,32 +726,10 @@ namespace pwiz.Skyline.Model.Lib
                     foreach (var info in libraryEntries)
                     {
                         // Write the spectrum header - order must match enum SpectrumCacheHeader
-                        LibSeqKey seqKey = new LibSeqKey(info.Key);
-                        if (setSequences.ContainsKey(seqKey))
-                        {
-                            outStream.Write(BitConverter.GetBytes(0), 0, sizeof(int));
-                            outStream.Write(BitConverter.GetBytes(-1), 0, sizeof(int));
-                        }
-                        else
-                        {
-                            // If it is unique, it will need to be added at cache load time.
-                            outStream.Write(BitConverter.GetBytes(seqKey.GetHashCode()), 0, sizeof(int));
-                            outStream.Write(BitConverter.GetBytes(seqKey.Length), 0, sizeof(int));
-                            setSequences.Add(seqKey, true);
-                        }
-                        outStream.Write(BitConverter.GetBytes(info.Key.Charge), 0, sizeof (int));
+                        info.Key.Write(outStream);
                         outStream.Write(BitConverter.GetBytes(info.Copies), 0, sizeof (int));
                         outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof (int));
                         outStream.Write(BitConverter.GetBytes(info.Id), 0, sizeof (int));
-                        var adduct = info.Key.Adduct;
-                        var adductFormulaBytes = Encoding.UTF8.GetBytes(adduct.IsProteomic ? string.Empty : adduct.AdductFormula);
-                        outStream.Write(BitConverter.GetBytes(adductFormulaBytes.Length), 0, sizeof(int));
-                        var smallmolinfoBytes = SmallMoleculeLibraryAttributes.ToBytes(info.SmallMoleculeLibraryAttributes);
-                        outStream.Write(BitConverter.GetBytes(smallmolinfoBytes.Length), 0, sizeof(int));
-                        info.Key.WriteSequence(outStream);
-                        LibKey.EncodeAdduct(adductFormulaBytes, 0, adductFormulaBytes, adductFormulaBytes.Length); // Change [M+Na] to {M+Na}
-                        outStream.Write(adductFormulaBytes, 0, adductFormulaBytes.Length);
-                        outStream.Write(smallmolinfoBytes, 0, smallmolinfoBytes.Length);
                         info.RetentionTimesByFileId.Write(outStream);
                         info.IonMobilitiesByFileId.Write(outStream);
                         WritePeakBoundaries(outStream, info.PeakBoundariesByFileId);
@@ -822,6 +805,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             try
             {
+                var valueCache = new ValueCache();
                 int loadPercent = 100;                
                 if (!cached)
                 {
@@ -863,7 +847,6 @@ namespace pwiz.Skyline.Model.Lib
 
                     int numSpectra = GetInt32(libHeader, (int) LibHeaders.num_spectra);
 
-                    var setSequences = new Dictionary<LibSeqKey, bool>(numSpectra);
                     var libraryEntries = new BiblioLiteSpectrumInfo[numSpectra];
                     var librarySourceFiles = new List<BiblioLiteSourceInfo>();
 
@@ -892,14 +875,6 @@ namespace pwiz.Skyline.Model.Lib
                     // Seek to beginning of spectrum headers, which is the beginning of the
                     // files, since spectra are not stored in the cache.
                     stream.Seek(0, SeekOrigin.Begin);
-
-                    byte[] specSequence = new byte[1024];
-                    byte[] specHeader = new byte[1024];
-                    byte[] specAdduct = new byte[1024];
-                    byte[] specSmallMolInfo = new byte[1024];
-
-                    countHeader = (int) SpectrumCacheHeader.count*sizeof (int);
-
                     for (int i = 0; i < numSpectra; i++)
                     {
                         int percent = (100 - loadPercent) + (i*loadPercent/numSpectra);
@@ -916,51 +891,19 @@ namespace pwiz.Skyline.Model.Lib
                         }
 
                         // Read spectrum header
-                        ReadComplete(stream, specHeader, countHeader);
-
-                        int seqKeyHash = GetInt32(specHeader, ((int) SpectrumCacheHeader.seq_key_hash));
-                        int seqKeyLength = GetInt32(specHeader, ((int) SpectrumCacheHeader.seq_key_length));
-                        int adductLength = GetInt32(specHeader, (int)SpectrumCacheHeader.adduct_len);
-                        int smallMolInfoLength = GetInt32(specHeader, (int)SpectrumCacheHeader.small_mol_info_len);
-                        bool isProteomic = adductLength == 0;
-                        int charge = GetInt32(specHeader, ((int) SpectrumCacheHeader.charge));
-                        if (charge == 0 || (isProteomic && charge < 0) || Math.Abs(charge) > TransitionGroup.MAX_PRECURSOR_CHARGE)
-                            throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_Load_Invalid_precursor_charge__0__found__File_may_be_corrupted, charge));
-                        int copies = GetInt32(specHeader, ((int) SpectrumCacheHeader.copies));
-                        int numPeaks = GetInt32(specHeader, ((int) SpectrumCacheHeader.num_peaks));
-                        int id = GetInt32(specHeader, ((int) SpectrumCacheHeader.id));
-                        int seqLength = GetInt32(specHeader, (int) SpectrumCacheHeader.seq_len);
-
-                        // Read sequence information
-                        SafeReadComplete(stream, ref specSequence, seqLength);
-
-                        // Read adduct information
-                        SafeReadComplete(stream, ref specAdduct, adductLength);
-
-                        // Read small molecule information
-                        SafeReadComplete(stream, ref specSmallMolInfo, smallMolInfoLength);
-
+                        var key = LibKey.Read(valueCache, stream);
+                        int copies = PrimitiveArrays.ReadOneValue<int>(stream);
+                        int numPeaks = PrimitiveArrays.ReadOneValue<int>(stream);
+                        int id = PrimitiveArrays.ReadOneValue<int>(stream);
                         var retentionTimesByFileId = IndexedRetentionTimes.Read(stream);
                         var driftTimesByFileId = IndexedIonMobilities.Read(stream);
-                        var key = isProteomic ?
-                            new LibKey(specSequence, 0, seqLength, charge) :
-                            new LibKey(specAdduct, adductLength, specSequence, seqLength, specSmallMolInfo, smallMolInfoLength, charge);
                         ImmutableSortedList<int, PeakBounds> peakBoundaries =
                             ReadPeakBoundaries(stream);
                         libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, retentionTimesByFileId, driftTimesByFileId, peakBoundaries);
-                        if (seqKeyLength > 0)
-                        {
-                            LibSeqKey seqKey = new LibSeqKey(key, seqKeyHash, seqKeyLength);
-                            // These libraries should not have duplicates, but just in case.
-                            // CONSIDER: Emit error about redundancy?
-                            if (!setSequences.ContainsKey(seqKey))
-                                setSequences.Add(seqKey, true);
-                        }
                     }
 
                     // Checksum = checksum.ChecksumValue;
-                    _libraryEntries = libraryEntries;
-                    _setSequences = setSequences;
+                    SetLibraryEntries(libraryEntries);
 
                     loader.UpdateProgress(status.Complete());
 
@@ -1159,25 +1102,6 @@ namespace pwiz.Skyline.Model.Lib
             return null;
         }
 
-        private double[] ReadRetentionTimes(BiblioLiteSpectrumInfo info, BiblioLiteSourceInfo sourceInfo)
-        {
-            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
-            {
-                select.CommandText = "SELECT retentionTime FROM [RetentionTimes] " + // Not L10N
-                    "WHERE [RefSpectraID] = ? AND [SpectrumSourceId] = ?"; // Not L10N
-                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
-                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)sourceInfo.Id));
-
-                using (SQLiteDataReader reader = select.ExecuteReader())
-                {
-                    var listRetentionTimes = new List<double>();
-                    while (reader.Read())
-                        listRetentionTimes.Add(reader.GetDouble(0));
-                    return listRetentionTimes.ToArray();
-                }
-            }
-        }
-
         public override bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes)
         {
             return TryGetRetentionTimes(MsDataFileUri.Parse(_librarySourceFiles[fileIndex].FilePath), out retentionTimes);
@@ -1219,23 +1143,9 @@ namespace pwiz.Skyline.Model.Lib
                 return new double[0];
             }
             var times = new List<double[]>();
-            foreach (var sequence in peptideSequences)
+            foreach (var item in LibraryEntriesWithSequences(peptideSequences))
             {
-                LibKey libKey = new LibKey(sequence, Adduct.EMPTY);
-                int iFirstEntry = CollectionUtil.BinarySearch(_libraryEntries, item => item.Key.CompareSequence(libKey), true);
-                if (iFirstEntry < 0)
-                {
-                    continue;
-                }
-                for (int index = iFirstEntry; index < _libraryEntries.Length; index++)
-                {
-                    var item = _libraryEntries[index];
-                    if (0 != libKey.CompareSequence(item.Key))
-                    {
-                        break;
-                    }
-                    times.Add(item.RetentionTimesByFileId.GetTimes(_librarySourceFiles[iFile.Value].Id));
-                }
+                times.Add(item.RetentionTimesByFileId.GetTimes(_librarySourceFiles[iFile.Value].Id));
             }
             return times.SelectMany(array => array);
         }
@@ -2012,6 +1922,36 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 return Convert.ToInt32(value);
             }
+        }
+
+        public static PeptideLibraryKey MakePrecisePeptideLibraryKey(PeptideLibraryKey impreciseLibraryKey,
+            IList<Tuple<int, double>> modificationMasses)
+        {
+            var modificationIndexes = new HashSet<int>(modificationMasses.Select(tuple => tuple.Item1 - 1));
+            var expectedModificationIndexes =
+                new HashSet<int>(impreciseLibraryKey.GetModifications().Select(mod => mod.Key));
+            if (!expectedModificationIndexes.SetEquals(modificationIndexes))
+            {
+                return impreciseLibraryKey;
+            }
+            IList<KeyValuePair<int, string>> newModifications = impreciseLibraryKey.GetModifications()
+                .Where(mod => !modificationIndexes.Contains(mod.Key)).ToList();
+            foreach (var modMass in modificationMasses)
+            {
+                var massModification = MassModification.FromMass(modMass.Item2);
+                newModifications.Add(new KeyValuePair<int, string>(modMass.Item1 - 1, massModification.ToString()));
+            }
+            StringBuilder newSequence = new StringBuilder();
+            int aaCount = 0;
+            var unmodifiedSequence = impreciseLibraryKey.UnmodifiedSequence;
+            foreach (var mod in newModifications.OrderBy(mod => mod.Key))
+            {
+                newSequence.Append(unmodifiedSequence.Substring(aaCount, mod.Key + 1 - aaCount));
+                aaCount = mod.Key + 1;
+                newSequence.Append(ModifiedSequence.Bracket(mod.Value));
+            }
+            newSequence.Append(unmodifiedSequence.Substring(aaCount));
+            return new PeptideLibraryKey(newSequence.ToString(), impreciseLibraryKey.Charge);
         }
     }
 

@@ -19,9 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -39,7 +41,7 @@ namespace pwiz.Skyline.EditUI
             _document = document;
         }
 
-        public RefinementSettings.PeptideCharge[] AcceptedPeptides { get; private set; }
+        public LibraryKey[] AcceptedPeptides { get; private set; }
 
         public bool RemoveEmptyProteins
         {
@@ -64,7 +66,7 @@ namespace pwiz.Skyline.EditUI
             var reader = new StringReader(PeptidesText);
             var invalidLines = new List<string>();
             var notFoundLines = new List<string>();
-            var acceptedPeptides = new List<RefinementSettings.PeptideCharge>();
+            var acceptedPeptides = new List<LibraryKey>();
             var peptideSequences = GetPeptideSequences();
 
             string line;
@@ -96,10 +98,10 @@ namespace pwiz.Skyline.EditUI
                     continue;
                 }
 
-                if (!peptideSequences.Contains(target))
+                if (!peptideSequences.ContainsKey(target))
                     notFoundLines.Add(line);
                 else
-                    acceptedPeptides.Add(new RefinementSettings.PeptideCharge(target, charge)); 
+                    acceptedPeptides.Add(new LibKey(target, charge).LibraryKey); 
             }
 
             if (invalidLines.Count > 0)
@@ -146,14 +148,9 @@ namespace pwiz.Skyline.EditUI
             OkDialog();
         }
 
-        private HashSet<Target> GetPeptideSequences()
+        private TargetMap<PeptideDocNode> GetPeptideSequences()
         {
-            var peptideSequences = new HashSet<Target>();
-            foreach (var nodePep in _document.Peptides)
-            {
-                peptideSequences.Add(MatchModified ? nodePep.ModifiedTarget : nodePep.Peptide.Target);
-            }
-            return peptideSequences;
+            return new TargetMap<PeptideDocNode>(_document.Peptides.Select(pep=>new KeyValuePair<Target, PeptideDocNode>(MatchModified ? pep.ModifiedTarget : pep.Target, pep)));
         }
 
         private void textPeptides_Enter(object sender, EventArgs e)

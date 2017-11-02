@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Model
 
         public enum ProteinSpecType {  name, accession, preferred }
 
-        public IEnumerable<PeptideCharge> AcceptedPeptides { get; set; }
+        public IEnumerable<LibraryKey> AcceptedPeptides { get; set; }
         public IEnumerable<string> AcceptedProteins { get; set; }
         public ProteinSpecType AcceptProteinType { get; set; }
         public bool AcceptModified { get; set; }
@@ -136,26 +136,27 @@ namespace pwiz.Skyline.Model
 
             HashSet<RefinementIdentity> includedPeptides = (RemoveRepeatedPeptides ? new HashSet<RefinementIdentity>() : null);
             HashSet<RefinementIdentity> repeatedPeptides = (RemoveDuplicatePeptides ? new HashSet<RefinementIdentity>() : null);
-            Dictionary<RefinementIdentity, List<Adduct>> acceptedPeptides = null;
+            TargetMap<List<Adduct>> acceptedPeptides = null;
             if (AcceptedPeptides != null)
             {
-                acceptedPeptides = new Dictionary<RefinementIdentity, List<Adduct>>();
+                var acceptedPeptidesDict = new Dictionary<Target, List<Adduct>>();
                 foreach (var peptideCharge in AcceptedPeptides)
                 {
                     List<Adduct> charges;
-                    if (!acceptedPeptides.TryGetValue(new RefinementIdentity(peptideCharge.Sequence), out charges))
+                    if (!acceptedPeptidesDict.TryGetValue(peptideCharge.Target, out charges))
                     {
-                        charges = (!peptideCharge.Charge.IsEmpty ? new List<Adduct> {peptideCharge.Charge} : null);
-                        acceptedPeptides.Add(new RefinementIdentity(peptideCharge.Sequence), charges);
+                        charges = !peptideCharge.Adduct.IsEmpty ? new List<Adduct> {peptideCharge.Adduct} : null;
+                        acceptedPeptidesDict.Add(peptideCharge.Target, charges);
                     }
                     else if (charges != null)
                     {
-                        if (!peptideCharge.Charge.IsEmpty)
-                            charges.Add(peptideCharge.Charge);
+                        if (!peptideCharge.Adduct.IsEmpty)
+                            charges.Add(peptideCharge.Adduct);
                         else
-                            acceptedPeptides[new RefinementIdentity(peptideCharge.Sequence)] = null;
+                            acceptedPeptidesDict[peptideCharge.Target] = null;
                     }
                 }
+                acceptedPeptides = new TargetMap<List<Adduct>>(acceptedPeptidesDict);
             }
             HashSet<string> acceptedProteins = (AcceptedProteins != null ? new HashSet<string>(AcceptedProteins) : null);
 
@@ -243,7 +244,7 @@ namespace pwiz.Skyline.Model
                                            ICollection<int> outlierIds,
                                            ICollection<RefinementIdentity> includedPeptides,
                                            ICollection<RefinementIdentity> repeatedPeptides,
-                                           Dictionary<RefinementIdentity, List<Adduct>> acceptedPeptides,
+                                           TargetMap<List<Adduct>> acceptedPeptides,
                                            SrmSettingsChangeMonitor progressMonitor)
         {
             var listPeptides = new List<PeptideDocNode>();
@@ -267,7 +268,7 @@ namespace pwiz.Skyline.Model
                 // then skip it.
                 List<Adduct> acceptedCharges = null;
                 if (acceptedPeptides != null &&
-                    !acceptedPeptides.TryGetValue(AcceptModified ? new RefinementIdentity(nodePep.ModifiedTarget) : new RefinementIdentity(nodePep.Target), out acceptedCharges))
+                    !acceptedPeptides.TryGetValue(AcceptModified ? nodePep.ModifiedTarget : nodePep.Target, out acceptedCharges))
                 {
                     continue;
                 }

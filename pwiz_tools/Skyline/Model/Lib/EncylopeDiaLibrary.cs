@@ -314,6 +314,7 @@ namespace pwiz.Skyline.Model.Lib
             }
             try
             {
+                ValueCache valueCache = new ValueCache();
                 using (var stream = loader.StreamManager.CreateStream(CachePath, FileMode.Open, true))
                 {
                     int version = PrimitiveArrays.ReadOneValue<int>(stream);
@@ -335,7 +336,7 @@ namespace pwiz.Skyline.Model.Lib
                     List<ElibSpectrumInfo> spectrumInfos = new List<ElibSpectrumInfo>();
                     while (spectrumInfos.Count < spectrumInfoCount)
                     {
-                        spectrumInfos.Add(ElibSpectrumInfo.Read(stream));
+                        spectrumInfos.Add(ElibSpectrumInfo.Read(valueCache, stream));
                     }
                     SetLibraryEntries(spectrumInfos);
                     return true;
@@ -346,17 +347,6 @@ namespace pwiz.Skyline.Model.Lib
                 Trace.TraceWarning("Exception loading cache: {0}", exception); // Not L10N
                 return false;
             }
-        }
-
-        private void SetLibraryEntries(IEnumerable<ElibSpectrumInfo> spectrumInfos)
-        {
-            var libraryEntries = spectrumInfos.ToArray();
-            Array.Sort(libraryEntries);
-            _libraryEntries = libraryEntries;
-            _setSequences = _libraryEntries
-                        .Select(info => new LibSeqKey(info.Key))
-                        .Distinct()
-                        .ToDictionary(key => key, key => true);
         }
 
         protected override SpectrumPeaksInfo.MI[] ReadSpectrum(ElibSpectrumInfo info)
@@ -621,7 +611,7 @@ namespace pwiz.Skyline.Model.Lib
 
         }
 
-        public class ElibSpectrumInfo : ICachedSpectrumInfo, IComparable
+        public class ElibSpectrumInfo : ICachedSpectrumInfo
         {
             public ElibSpectrumInfo(String peptideModSeq, int charge, int bestFileId, IEnumerable<KeyValuePair<int, FileData>> fileDatas)
             {
@@ -635,15 +625,6 @@ namespace pwiz.Skyline.Model.Lib
             public LibKey Key { get; private set; }
             public int BestFileId { get; private set;}
             public ImmutableSortedList<int, FileData> FileDatas { get; private set; }
-
-            public int CompareTo(object obj)
-            {
-                if (null == obj)
-                {
-                    return 1;
-                }
-                return Key.Compare(((ICachedSpectrumInfo)obj).Key);
-            }
 
             public void Write(Stream stream)
             {
@@ -669,11 +650,11 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            public static ElibSpectrumInfo Read(Stream stream)
+            public static ElibSpectrumInfo Read(ValueCache valueCache, Stream stream)
             {
                 byte[] peptideModSeqBytes = new byte[PrimitiveArrays.ReadOneValue<int>(stream)];
                 stream.Read(peptideModSeqBytes, 0, peptideModSeqBytes.Length);
-                var peptideModSeq = Encoding.UTF8.GetString(peptideModSeqBytes);
+                var peptideModSeq = valueCache.CacheValue(Encoding.UTF8.GetString(peptideModSeqBytes));
                 int charge = PrimitiveArrays.ReadOneValue<int>(stream);
                 int bestFileId = PrimitiveArrays.ReadOneValue<int>(stream);
                 int peakBoundCount = PrimitiveArrays.ReadOneValue<int>(stream);

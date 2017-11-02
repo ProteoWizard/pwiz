@@ -24,7 +24,7 @@ namespace pwiz.Skyline.SettingsUI
             public override string ToString()
             {
                 var aa = Mod.AAs != null ? Mod.AAs.FirstOrDefault() : '\0';
-                var mass = Math.Round(AbstractModificationMatcher.GetDefaultModMass(aa, Mod), 1);
+                var mass = Math.Round(AbstractModificationMatcher.GetDefaultModMass(aa, Mod), MassModification.MAX_PRECISION);
                 var definition = string.Format("{0}[{1}]", Mod.AAs, mass); // Not L10N
                 return string.Format(Resources.AbstractModificationMatcherFoundMatches__0__equals__1__, Mod.Name, definition);
             }

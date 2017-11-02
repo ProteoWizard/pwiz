@@ -329,7 +329,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                         IonMobilityAndCCS[] infoValueExplicitDT;
                         if (!dictExplicitDT.TryGetValue(libKey, out infoValueExplicitDT))
                         {
-                            errmsg += "No driftinfo value found for " + libKey.Key + "\n";
+                            errmsg += "No driftinfo value found for " + libKey + "\n";
                         }
                         else
                         {

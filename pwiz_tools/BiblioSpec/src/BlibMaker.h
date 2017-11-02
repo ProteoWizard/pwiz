@@ -85,6 +85,7 @@ public:
     
     bool ambiguityMessages() const { return ambiguityMessages_; }
     bool keepAmbiguous() const { return keepAmbiguous_; }
+    bool isHighPrecisionModifications() const { return highPrecisionModifications_;}
 
 protected:
     virtual int parseNextSwitch(int i, int argc, char* argv[]);
@@ -125,12 +126,15 @@ protected:
     bool isRedundant() const { return redundant; };
     void setRedundant(bool value) { redundant = value; }
 
+    void setHighPrecisionModifications(bool value) { highPrecisionModifications_ = value; }
+
 protected:
 #define ZSQLBUFLEN 8192
     char zSql[ZSQLBUFLEN];
     bool verbose;
     bool ambiguityMessages_;
     bool keepAmbiguous_;
+    bool highPrecisionModifications_;
 
 private:
     const char* libIdFromName(const char* name);

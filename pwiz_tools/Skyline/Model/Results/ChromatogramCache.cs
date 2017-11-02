@@ -27,6 +27,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -116,6 +117,7 @@ namespace pwiz.Skyline.Model.Results
         private BlockedArray<ChromGroupHeaderInfo> _chromatogramEntries;
         private BlockedArray<ChromTransition> _chromTransitions;
         private BlockedArray<ChromPeak> _chromatogramPeaks;
+        private readonly LibKeyMap<int[]> _chromEntryIndex;
         private readonly Dictionary<Type, int> _scoreTypeIndices;
         private BlockedArray<float> _scores;
         private byte[] _textIdBytes;
@@ -138,6 +140,7 @@ namespace pwiz.Skyline.Model.Results
             _locationScanIds = raw.LocationScanIds;
             _countBytesScanIds = raw.CountBytesScanIds;
             ReadStream = readStream;
+            _chromEntryIndex = MakeChromEntryIndex();
         }
 
         public string CachePath { get; private set; }
@@ -252,29 +255,13 @@ namespace pwiz.Skyline.Model.Results
             float tolerance, ChromatogramSet chromatograms)
         {
             var precursorMz = nodeGroup != null ? nodeGroup.PrecursorMz : SignedMz.ZERO;
-            // First try to find the entry with zero tolerance, since this is the fastest approach
-            // for large proteomewide extractions from DDA or DIA, but make sure there is a match
-            // with equal TextId at zer tolerance, since not doing so caused regression between 3.6
-            // the first release of 3.7 with chromatograms failing to match.
-            int i = FindEntry(precursorMz, 0);
-            if (i != -1 && HasMatchingHeaderInfos(nodePep, precursorMz, i))
-            {
-                tolerance = 0;
-            }
-            else
-            {
-                i = FindEntry(precursorMz, tolerance);
-                if (i == -1)
-                    return new ChromatogramGroupInfo[0];
-            }
-
             double? explicitRT = null;
             if (nodePep != null && nodePep.ExplicitRetentionTime != null)
             {
                 explicitRT = nodePep.ExplicitRetentionTime.RetentionTime;
             }
 
-            return GetHeaderInfos(nodePep, precursorMz, explicitRT, tolerance, chromatograms, i);
+            return GetHeaderInfos(nodePep, precursorMz, explicitRT, tolerance, chromatograms);
         }
 
         public bool HasAllIonsChromatograms
@@ -331,44 +318,71 @@ namespace pwiz.Skyline.Model.Results
             ReadStream.CloseStream();
         }
 
-        private bool HasMatchingHeaderInfos(PeptideDocNode nodePep, SignedMz precursorMz, int i)
+        private IEnumerable<ChromatogramGroupInfo> GetHeaderInfos(PeptideDocNode nodePep, SignedMz precursorMz, double? explicitRT, float tolerance,
+            ChromatogramSet chromatograms)
         {
-            if (nodePep != null)
+            foreach (int i in ChromatogramIndexesMatching(nodePep, precursorMz, tolerance, chromatograms))
             {
-                // Walk forward until entries no longer match
-                for (; i < _chromatogramEntries.Length; i++)
+                var entry = _chromatogramEntries[i];
+                // If explict retention time info is available, use that to discard obvious mismatches
+                if (!explicitRT.HasValue || // No explicit RT
+                    !entry.StartTime.HasValue || // No time data loaded yet
+                    (entry.StartTime <= explicitRT && explicitRT <= entry.EndTime))
+                    // No overlap
                 {
-                    var entry = _chromatogramEntries[i];
-                    if (!MatchMz(precursorMz, entry.Precursor, 0))
-                        break;
-                    if (TextIdEqual(entry, nodePep))
-                        return true;
+                    yield return LoadChromatogramInfo(entry);
                 }
             }
-            return false;
         }
 
-        private IEnumerable<ChromatogramGroupInfo> GetHeaderInfos(PeptideDocNode nodePep, SignedMz precursorMz, double? explicitRT, float tolerance,
-            ChromatogramSet chromatograms, int i)
+        public IEnumerable<int> ChromatogramIndexesMatching(PeptideDocNode nodePep, SignedMz precursorMz,
+            float tolerance, ChromatogramSet chromatograms)
         {
-            // Walk forward until entries no longer match
+            if (nodePep != null && nodePep.IsProteomic && _chromEntryIndex != null)
+            {
+                bool anyFound = false;
+                var key = new LibKey(nodePep.ModifiedTarget, Adduct.EMPTY).LibraryKey;
+                foreach (var chromatogramIndex in _chromEntryIndex.ItemsMatching(key, false).SelectMany(list=>list))
+                {
+                    var entry = _chromatogramEntries[chromatogramIndex];
+                    if (!MatchMz(precursorMz, entry.Precursor, tolerance))
+                    {
+                        continue;
+                    }
+                    if (chromatograms != null &&
+                        !chromatograms.ContainsFile(_cachedFiles[entry.FileIndex]
+                            .FilePath))
+                    {
+                        continue;
+                    }
+                    anyFound = true;
+                    yield return chromatogramIndex;
+                }
+                if (anyFound)
+                {
+                    yield break;
+                }
+            }
+            int i = FindEntry(precursorMz, tolerance);
+            if (i < 0)
+            {
+                yield break;
+            }
             for (; i < _chromatogramEntries.Length; i++)
             {
                 var entry = _chromatogramEntries[i];
                 if (!MatchMz(precursorMz, entry.Precursor, tolerance))
                     break;
+                if (chromatograms != null &&
+                    !chromatograms.ContainsFile(_cachedFiles[entry.FileIndex]
+                        .FilePath))
+                {
+                    continue;
+                }
+
                 if (nodePep != null && !TextIdEqual(entry, nodePep))
                     continue;
-                if (chromatograms != null && !chromatograms.ContainsFile(_cachedFiles[entry.FileIndex].FilePath))
-                    continue;
-                // If explict retention time info is available, use that to discard obvious mismatches
-                if (!explicitRT.HasValue || // No explicit RT
-                    !entry.StartTime.HasValue || // No time data loaded yet
-                    (entry.StartTime <= explicitRT && explicitRT <= entry.EndTime))
-                // No overlap
-                {
-                    yield return LoadChromatogramInfo(entry);
-                }
+                yield return i;
             }
         }
 
@@ -395,13 +409,9 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
-                if (textIdLen != compareText.Length)
-                    return false;
-                for (int i = 0; i < textIdLen; i++)
-                {
-                    if (_textIdBytes[textIdIndex + i] != (byte)compareText[i])
-                        return false;
-                }
+                var key1 = new PeptideLibraryKey(nodePep.ModifiedSequence, 0);
+                var key2 = new PeptideLibraryKey(Encoding.ASCII.GetString(_textIdBytes, textIdIndex, textIdLen), 0);
+                return LibKeyIndex.KeysMatch(key1, key2);
             }
             return true;
         }
@@ -1412,6 +1422,64 @@ namespace pwiz.Skyline.Model.Results
         static ChromatogramCache()
         {
             PathComparer = new PathEqualityComparer();
+        }
+
+        /// <summary>
+        /// Create a map of LibraryKey to the indexes into _chromatogramEntries that have that particular
+        /// TextId.
+        /// </summary>
+        private LibKeyMap<int[]> MakeChromEntryIndex()
+        {
+            if (_textIdBytes == null)
+            {
+                return null;
+            }
+
+            var libraryKeyIndexes= new Dictionary<KeyValuePair<int, int>, int>();
+            List<LibraryKey> libraryKeys = new List<LibraryKey>();
+            List<List<int>> chromGroupIndexes = new List<List<int>>();
+
+            for (int i = 0; i < _chromatogramEntries.Count; i++)
+            {
+                var entry = _chromatogramEntries[i];
+                int textIdIndex = entry.TextIdIndex;
+                int textIdLength = entry.TextIdLen;
+                if (textIdLength == 0)
+                {
+                    continue;
+                }
+                var kvp = new KeyValuePair<int, int>(textIdIndex, textIdLength);
+                int libraryKeyIndex;
+                List<int> chromGroupIndexList;
+                if (libraryKeyIndexes.TryGetValue(kvp, out libraryKeyIndex))
+                {
+                    chromGroupIndexList = chromGroupIndexes[libraryKeyIndex];
+                }
+                else
+                {
+                    libraryKeyIndexes.Add(kvp, libraryKeys.Count);
+                    LibraryKey libraryKey;
+                    if (_textIdBytes[textIdIndex] == '#')
+                    {
+                        var customMolecule =
+                            CustomMolecule.FromSerializableString(Encoding.UTF8.GetString(_textIdBytes, textIdIndex,
+                                textIdLength));
+                        libraryKey = new MoleculeLibraryKey(customMolecule.GetSmallMoleculeLibraryAttributes(), Adduct.EMPTY);
+                    }
+                    else
+                    {
+                        libraryKey =
+                            new PeptideLibraryKey(Encoding.ASCII.GetString(_textIdBytes, textIdIndex, textIdLength), 0);
+                    }
+                    libraryKeys.Add(libraryKey);
+                    chromGroupIndexList = new List<int>();
+                    chromGroupIndexes.Add(chromGroupIndexList);
+                }
+                chromGroupIndexList.Add(i);
+            }
+            return new LibKeyMap<int[]>(
+                ImmutableList.ValueOf(chromGroupIndexes.Select(indexes=>indexes.ToArray())), 
+                libraryKeys);
         }
     }
 

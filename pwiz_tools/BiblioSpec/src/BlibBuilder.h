@@ -111,8 +111,13 @@ class BlibBuilder : public BlibMaker
                    double* pM, 
                    float* pI);
   int getCacheThreshold(){ return fileSizeThresholdForCaching; }
-  static string generateModifiedSeq(const char* unmodSeq, const vector<SeqMod>& mods);
+  string generateModifiedSeq(const char* unmodSeq, const vector<SeqMod>& mods);
   virtual double getCutoffScore() const;
+  static string getModifiedSequenceWithPrecision(const char* unmodSeq, const vector<SeqMod>& mods, bool isHighPrecision);
+  static string getLowPrecisionModSeq(const char* unmodSeq, const vector<SeqMod>& mods) 
+  {
+    return getModifiedSequenceWithPrecision(unmodSeq, mods, false);
+  }
 
  protected:
   int parseNextSwitch(int i, int argc, char* argv[]);

@@ -18,8 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -32,7 +30,7 @@ namespace pwiz.Skyline.Model
     public class LibKeyModificationMatcher : AbstractModificationMatcher
     {
         private IEnumerator<LibKey> _libKeys;
-        private Dictionary<AATermKey, List<byte[]>> _dictAAMassPairs;
+        private Dictionary<AATermKey, List<string>> _dictAAMassPairs;
         private readonly bool?[] _aasConflictingMods = new bool?[128];
 
         public PeptideModifications MatcherPepMods { get; set; }
@@ -40,7 +38,7 @@ namespace pwiz.Skyline.Model
         public void CreateMatches(SrmSettings settings, IEnumerable<LibKey> libKeys,
             MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy)
         {
-            _dictAAMassPairs = new Dictionary<AATermKey, List<byte[]>>();
+            _dictAAMassPairs = new Dictionary<AATermKey, List<string>>();
             _libKeys = libKeys.GetEnumerator();
             InitMatcherSettings(settings, defSetStatic, defSetHeavy);
             MatcherPepMods = CreateMatcherPeptideSettings(settings);
@@ -106,25 +104,29 @@ namespace pwiz.Skyline.Model
         {
             if (_libKeys.Current.IsSmallMoleculeKey)
                 return new AAModInfo[0];
-            var sequence = _libKeys.Current.Key;
-            return EnumerateSequenceInfos(sequence, false);
+            return EnumerateSequenceInfos(_libKeys.Current.LibraryKey as PeptideLibraryKey, false);
         }
 
-        private IEnumerable<AAModInfo> EnumerateSequenceInfos(byte[] sequence, bool allowDuplicates)
+        private IEnumerable<AAModInfo> EnumerateSequenceInfos(PeptideLibraryKey peptideLibraryKey, bool allowDuplicates)
         {
-            bool isSpecificHeavy = !AllAminoAcidsModified(sequence);
-            byte prevAA = 0;
-            int indexAA = -1;
-            for (int index = 1; index < sequence.Length; index++)
+            if (peptideLibraryKey == null)
             {
-                byte b = sequence[index];
-                if (b != (byte)'[') // L10N
+                yield break;
+            }
+            string sequence = peptideLibraryKey.ModifiedSequence;
+            bool isSpecificHeavy = !AllAminoAcidsModified(sequence);
+            char? prevAA = null;
+            int indexAA = -1;
+            for (int index = 0; index < sequence.Length; index++)
+            {
+                char b = sequence[index];
+                if (b != '[') // L10N
                 {
                     if (isSpecificHeavy)
                     {
-                        if (index > 1 && prevAA != 0)
+                        if (index > 0 && prevAA.HasValue)
                             AddConflictKey(prevAA, null, true);
-                        if (index == 2)
+                        if (index == 1)
                             AddConflictKey(prevAA, ModTerminus.N, true);
                     }
                     prevAA = b;
@@ -134,48 +136,43 @@ namespace pwiz.Skyline.Model
                 {
                     ModTerminus? terminus = null;
                     int startIndex = index + 1;
-                    int endIndex = sequence.IndexOf(seqByte => seqByte == (byte)']', startIndex);
+                    int endIndex = sequence.IndexOf(']', startIndex);
                     if (endIndex == -1)
                         endIndex = sequence.Length;
-                    if (index == 2)
+                    if (index == 1)
                         terminus = ModTerminus.N;
                     if (endIndex == sequence.Length - 1)
                         terminus = ModTerminus.C;
                     // Only if prevAA is an amino acid character should AAModInfo be created
                     // Some libraries, for instance, have been created with the sequence starting
                     // with a modification before any amino acid, as an attempt at a n-terminal modification
-                    if (AminoAcid.IsExAA((char)prevAA))
+                    if (prevAA.HasValue && AminoAcid.IsExAA(prevAA.Value))
                     {
-                        List<byte[]> listMasses;
+                        List<string> listMasses;
                         if (!_dictAAMassPairs.TryGetValue(new AATermKey(prevAA, terminus), out listMasses))
                         {
-                            listMasses = new List<byte[]>();
+                            listMasses = new List<string>();
                             _dictAAMassPairs.Add(new AATermKey(prevAA, terminus), listMasses);
                         }
-                        var modArr = new byte[endIndex - startIndex];
-                        Array.Copy(sequence, startIndex, modArr, 0, endIndex - startIndex);
-                        if (allowDuplicates || !listMasses.Contains(arr => ArrayUtil.EqualsDeep(arr, modArr)))
+                        var modArr = sequence.Substring(startIndex, endIndex - startIndex);
+                        if (allowDuplicates || !listMasses.Contains(modArr))
                         {
                             if (!allowDuplicates)
                                 listMasses.Add(modArr);
-                            double mass;
-                            string massString = Encoding.UTF8.GetString(modArr);
-                            if (double.TryParse(massString,
-                                                NumberStyles.Float | NumberStyles.AllowThousands,
-                                                CultureInfo.InvariantCulture,
-                                                out mass))
+                            string massString = modArr;
+                            var massModification = MassModification.Parse(massString);
+                            if (massModification != null) 
                             {
-
                                 yield return new AAModInfo
                                     {
                                         IndexAA = indexAA,
                                         ModKey = new AAModKey
                                             {
-                                                AA = (char) prevAA,
+                                                AA = prevAA.Value,
                                                 Terminus = terminus,
                                                 AppearsToBeSpecificMod = isSpecificHeavy,
-                                                Mass = mass,
-                                                RoundedTo = 1
+                                                Mass = massModification.Mass,
+                                                RoundedTo = massModification.Precision
                                             }
                                     };
                             }
@@ -187,12 +184,12 @@ namespace pwiz.Skyline.Model
                             }
                         }
                     }
-                    prevAA = 0;
+                    prevAA = null;
                     index = endIndex;
                 }
             }
             // If the last AA was not modified, we need to update the conflictingMods array.
-            if (prevAA != 0)
+            if (prevAA.HasValue)
             {
                 AddConflictKey(prevAA, null, true);
                 AddConflictKey(null, ModTerminus.C, true);
@@ -203,15 +200,15 @@ namespace pwiz.Skyline.Model
         /// Returns true if all amino acids in a sequence are followed by a modification mass in brackets.
         /// This needs to be as fast as possible to avoid being a profiler identified bottleneck.
         /// </summary>
-        private static bool AllAminoAcidsModified(byte[] sequence)
+        private static bool AllAminoAcidsModified(string sequence)
         {
             for (int i = 0; i < sequence.Length; i++)
             {
                 // Check each amino acid character to make sure it is followed by an opening bracket
                 // The vast majority of sequences will fail this test on the second character
-                byte b = sequence[i];
-                if (((byte)'A' <= b || b <= (byte)'Z') // L10N
-                        && (i == sequence.Length - 1 || sequence[i] != (byte)'[')) // L10N
+                char b = sequence[i];
+                if (('A' <= b || b <= 'Z') // L10N
+                        && (i == sequence.Length - 1 || sequence[i] != '[')) // L10N
                     return false;
             }
             return true;
@@ -249,7 +246,7 @@ namespace pwiz.Skyline.Model
             {
                 foreach (char aa in mod.AminoAcids)
                 {
-                    bool? conflict = IsAAConflict((byte) aa, mod.Terminus);
+                    bool? conflict = IsAAConflict(aa, mod.Terminus);
                     if (conflict.HasValue)
                         return conflict.Value;
                 }
@@ -268,7 +265,7 @@ namespace pwiz.Skyline.Model
             // Update the conflicting mod array.
             if (!string.IsNullOrEmpty(match.Value.StructuralMod.AAs))
             {
-                AddConflictKey((byte) info.AA, info.Terminus, false);
+                AddConflictKey(info.AA, info.Terminus, false);
             }
             if (info.Terminus != null)
             {
@@ -276,18 +273,18 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private void AddConflictKey(byte? aa, ModTerminus? terminus, bool startingValue)
+        private void AddConflictKey(char? aa, ModTerminus? terminus, bool startingValue)
         {
             int i = GetAAConflictIndex(aa, terminus);
             _aasConflictingMods[i] = startingValue || _aasConflictingMods[i].HasValue;
         }
 
-        private bool? IsAAConflict(byte? aa, ModTerminus? terminus)
+        private bool? IsAAConflict(char? aa, ModTerminus? terminus)
         {
             return _aasConflictingMods[GetAAConflictIndex(aa, terminus)];
         }
 
-        private static int GetAAConflictIndex(byte? aa, ModTerminus? terminus)
+        private static int GetAAConflictIndex(char? aa, ModTerminus? terminus)
         {
             int i = 0;
             if (terminus.HasValue)
@@ -297,15 +294,24 @@ namespace pwiz.Skyline.Model
                        : i;
         }
 
-        public PeptideDocNode GetModifiedNode(LibKey key, SmallMoleculeLibraryAttributes smallMolAttributes, string seqUnmod, SrmSettings settings, SrmSettingsDiff diff)
+        public PeptideDocNode GetModifiedNode(LibKey key, SrmSettings settings, SrmSettingsDiff diff)
         {
-            if (string.IsNullOrEmpty(seqUnmod))
+            var smallMoleculeKey = key.LibraryKey as MoleculeLibraryKey;
+            var peptideKey = key.LibraryKey as PeptideLibraryKey;
+            Peptide peptide;
+            if (smallMoleculeKey != null)
+            {
+                peptide = new Peptide(new CustomMolecule(smallMoleculeKey.SmallMoleculeLibraryAttributes));
+            }
+            else if (peptideKey != null)
+            {
+                peptide = new Peptide(null, peptideKey.UnmodifiedSequence, null, null,
+                    settings.PeptideSettings.Enzyme.CountCleavagePoints(peptideKey.UnmodifiedSequence));
+            }
+            else
+            {
                 return null;
-
-            var peptide = key.IsSmallMoleculeKey ?
-                new Peptide(new CustomMolecule(smallMolAttributes)) : 
-                new Peptide(null, seqUnmod, null, null,
-                                  settings.PeptideSettings.Enzyme.CountCleavagePoints(seqUnmod));
+            }
             // First try and create the match from the settings created to match the library explorer.
             Settings = HasMatches
                 ? settings.ChangePeptideModifications(mods => MatcherPepMods)
@@ -333,7 +339,7 @@ namespace pwiz.Skyline.Model
             bool hasHeavy;
             // Create explicit mods from the found matches.
             nodePep = CreateDocNodeFromMatches(new PeptideDocNode(peptide),
-                                            EnumerateSequenceInfos(key.Key, true), false, out hasHeavy);
+                                            EnumerateSequenceInfos(key.LibraryKey as PeptideLibraryKey, true), false, out hasHeavy);
 
             if (nodePep == null)
                 return null;
@@ -367,7 +373,7 @@ namespace pwiz.Skyline.Model
                     return false;
                 var modSequence = calc.GetModifiedSequence(nodePepMod.Peptide.Target, false);
                 // If this sequence matches the sequence of the library peptide, a match has been found.
-                if (Equals(seqMod, modSequence))
+                if (LibKeyIndex.KeysMatch(seqMod.GetLibKey(Adduct.EMPTY), modSequence.GetLibKey(Adduct.EMPTY)))
                     return true;
             }
             nodeGroup = null;
@@ -593,13 +599,13 @@ namespace pwiz.Skyline.Model
 
         private struct AATermKey
         {
-            public AATermKey(byte? aa, ModTerminus? terminus)
+            public AATermKey(char? aa, ModTerminus? terminus)
             {
                 _aa = aa;
                 _terminus = terminus;
             }
 
-            private byte? _aa;
+            private char? _aa;
             private ModTerminus? _terminus;
 
             #region object overrides

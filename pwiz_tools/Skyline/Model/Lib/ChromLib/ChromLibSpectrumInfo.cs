@@ -16,15 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Lib.ChromLib
 {
-    public class ChromLibSpectrumInfo : ICachedSpectrumInfo, IComparable
+    public class ChromLibSpectrumInfo : ICachedSpectrumInfo
     {
         public ChromLibSpectrumInfo(LibKey key, int id, double peakArea, IndexedRetentionTimes retentionTimesByFileId, IEnumerable<SpectrumPeaksInfo.MI> transitionAreas)
         {
@@ -39,14 +39,6 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         public double PeakArea { get; private set; }
         public IndexedRetentionTimes RetentionTimesByFileId { get; private set; }
         public IList<SpectrumPeaksInfo.MI> TransitionAreas { get; private set; }
-        public int CompareTo(object obj)
-        {
-            if (null == obj)
-            {
-                return 1;
-            }
-            return Key.Compare(((ChromLibSpectrumInfo) obj).Key);
-        }
         public void Write(Stream stream)
         {
             Key.Write(stream);
@@ -58,9 +50,9 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             PrimitiveArrays.Write(stream, TransitionAreas.Select(mi=>mi.Intensity).ToArray());
         }
 
-        public static ChromLibSpectrumInfo Read(Stream stream)
+        public static ChromLibSpectrumInfo Read(ValueCache valueCache, Stream stream)
         {
-            LibKey key = LibKey.Read(stream);
+            LibKey key = LibKey.Read(valueCache, stream);
             int id = PrimitiveArrays.ReadOneValue<int>(stream);
             double peakArea = PrimitiveArrays.ReadOneValue<double>(stream);
             var retentionTimesByFileId = IndexedRetentionTimes.Read(stream);

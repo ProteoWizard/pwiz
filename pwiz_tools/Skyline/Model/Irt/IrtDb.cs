@@ -24,7 +24,6 @@ using System.Linq;
 using System.IO;
 using System.Threading;
 using NHibernate;
-using pwiz.Common.Collections;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -60,8 +59,8 @@ namespace pwiz.Skyline.Model.Irt
         private readonly ReaderWriterLock _databaseLock;
 
         private DateTime _modifiedTime;
-        private ImmutableDictionary<Target, double> _dictStandards;
-        private ImmutableDictionary<Target, double> _dictLibrary;
+        private TargetMap<double> _dictStandards;
+        private TargetMap<double> _dictLibrary;
 
         private IrtDb(String path, ISessionFactory sessionFactory)
         {
@@ -118,13 +117,13 @@ namespace pwiz.Skyline.Model.Irt
         private IDictionary<Target, double> DictStandards
         {
             get { return _dictStandards; }
-            set { _dictStandards = new ImmutableDictionary<Target, double>(value); }
+            set { _dictStandards = new TargetMap<double>(value); }
         }
 
         private IDictionary<Target, double> DictLibrary
         {
             get { return _dictLibrary; }
-            set { _dictLibrary = new ImmutableDictionary<Target, double>(value); }
+            set { _dictLibrary = new TargetMap<double>(value); }
         }
 
         private ISession OpenWriteSession()

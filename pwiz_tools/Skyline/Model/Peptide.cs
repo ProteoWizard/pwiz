@@ -648,7 +648,7 @@ namespace pwiz.Skyline.Model
                 return Sequence.Sequence;
 
             var calc = new ExplicitSequenceMassCalc(Modifications, SrmSettings.MonoisotopicMassCalc, IsotopeLabelType.light);
-            return calc.GetModifiedSequence(Sequence, true).ToString();
+            return calc.GetModifiedSequenceDisplay(Sequence).ToString();
         }
 
         #endregion

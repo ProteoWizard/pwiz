@@ -803,18 +803,33 @@ namespace pwiz.Skyline.Model.Results
     /// in <see cref="SrmSettings.MeasuredResults"/>.  This collection will have the same
     /// number of items as the chromatograms list.
     /// </summary>
-    public class Results<TItem> : OneOrManyList<ChromInfoList<TItem>>
-//        VS Issue: https://connect.microsoft.com/VisualStudio/feedback/ViewFeedback.aspx?FeedbackID=324473 (seems fixed)
+    public sealed class Results<TItem> : AbstractReadOnlyList<ChromInfoList<TItem>>
         where TItem : ChromInfo
     {
+        private readonly ImmutableList<ChromInfoList<TItem>> _list;
         public Results(params ChromInfoList<TItem>[] elements)
-            : base(elements)
         {
+            _list = ImmutableList.ValueOf(elements);
         }
 
         public Results(IList<ChromInfoList<TItem>> elements)
-            : base(elements)
         {
+            _list = ImmutableList.ValueOf(elements);
+        }
+
+        public override int Count
+        {
+            get { return _list.Count; }
+        }
+
+        public override ChromInfoList<TItem> this[int index]
+        {
+            get { return _list[index]; }
+        }
+
+        public Results<TItem> ChangeAt(int index, ChromInfoList<TItem> list)
+        {
+            return new Results<TItem>(_list.ReplaceAt(index, list));
         }
 
         public static Results<TItem> Merge(Results<TItem> resultsOld, List<IList<TItem>> chromInfoSet)
@@ -973,6 +988,23 @@ namespace pwiz.Skyline.Model.Results
                         string.Format(Resources.Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results));
                 }
             }
+        }
+
+        private bool Equals(Results<TItem> other)
+        {
+            return _list.Equals(other._list);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is Results<TItem> && Equals((Results<TItem>) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return _list.GetHashCode();
         }
     }
 

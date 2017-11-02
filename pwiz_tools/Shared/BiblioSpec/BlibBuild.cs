@@ -109,7 +109,7 @@ namespace pwiz.BiblioSpec
         {
             // Arguments for BlibBuild
             // ReSharper disable NonLocalizedString
-            List<string> argv = new List<string> { "-s", "-A" };  // Read from stdin, get ambiguous match messages
+            List<string> argv = new List<string> { "-s", "-A", "-H" };  // Read from stdin, get ambiguous match messages, high precision modifications
             if (libraryBuildAction == LibraryBuildAction.Create)
                 argv.Add("-o");
             if (CutOffScore.HasValue)

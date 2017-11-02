@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -590,9 +589,9 @@ namespace pwiz.Skyline.Model.Lib
         /// Determines if the library contains any spectra for a peptide, based on its
         /// unmodified amino acid sequence.
         /// </summary>
-        /// <param name="key">An unmodified sequence optimized to consume minimal memory</param>
+        /// <param name="target">An unmodified sequence</param>
         /// <returns>True if the library contains any spectra for this peptide regardless of modification or charge</returns>
-        public abstract bool ContainsAny(LibSeqKey key);
+        public abstract bool ContainsAny(Target target);
 
         /// <summary>
         /// Some details for the library. 
@@ -871,10 +870,7 @@ namespace pwiz.Skyline.Model.Lib
         {
         }
 
-        protected TInfo[] _libraryEntries;
-
-        protected Dictionary<LibSeqKey, bool> _setSequences;
-
+        protected LibKeyMap<TInfo> _libraryEntries;
         protected string CachePath { get; set; }
 
         public override string IsNotLoadedExplained
@@ -882,9 +878,9 @@ namespace pwiz.Skyline.Model.Lib
             get { return (_libraryEntries != null) ? null : "no library entries"; } // Not L10N
         }
 
-        public override bool ContainsAny(LibSeqKey key)
+        public override bool ContainsAny(Target target)
         {
-            return (_setSequences != null && _setSequences.ContainsKey(key));
+            return LibraryEntriesWithSequence(target).Any();
         }
 
         public override bool Contains(LibKey key)
@@ -892,38 +888,40 @@ namespace pwiz.Skyline.Model.Lib
             return FindEntry(key) != -1;
         }
 
-        protected static int CompareSpectrumInfo(TInfo info1, TInfo info2)
+        protected int FindExactEntry(LibKey key)
         {
-            return info1.Key.Compare(info2.Key);
+            if (_libraryEntries == null)
+                return -1;
+            return _libraryEntries.IndexOf(key.LibraryKey);
         }
 
         protected int FindEntry(LibKey key)
         {
             if (_libraryEntries == null)
+            {
                 return -1;
-            return FindEntry(key, 0, _libraryEntries.Length - 1);
+            }
+            foreach (var entry in _libraryEntries.Index.ItemsMatching(key, true))
+            {
+                return entry.OriginalIndex;
+            }
+            return -1;
         }
 
-        private int FindEntry(LibKey key, int left, int right)
+        protected void SetLibraryEntries(IEnumerable<TInfo> entries)
         {
-            // Binary search for the right key
-            if (left > right)
-                return -1;
-            int mid = (left + right) / 2;
-            int compare = key.Compare(_libraryEntries[mid].Key);
-            if (compare < 0)
-                return FindEntry(key, left, mid - 1);
-            if (compare > 0)
-                return FindEntry(key, mid + 1, right);
-            return mid;
+            var entryList = ImmutableList.ValueOf(entries);
+
+            _libraryEntries = new LibKeyMap<TInfo>(entryList, entryList.Select(entry=>entry.Key.LibraryKey));
         }
 
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
         {
-            int i = FindEntry(key);
-            if (i != -1)
+            var index = FindEntry(key);
+            
+            if (index != -1)
             {
-                libInfo = CreateSpectrumHeaderInfo(_libraryEntries[i]);
+                libInfo = CreateSpectrumHeaderInfo(_libraryEntries[index]);
                 return true;
 
             }
@@ -951,11 +949,11 @@ namespace pwiz.Skyline.Model.Lib
 
         public override SpectrumPeaksInfo LoadSpectrum(object spectrumKey)
         {
-                var spectrumPeaks = ReadSpectrum(_libraryEntries[(int)spectrumKey]);
-                if (spectrumPeaks == null)
-                    throw new IOException(string.Format(Resources.CachedLibrary_LoadSpectrum_Library_entry_not_found__0__, spectrumKey));
+            var spectrumPeaks = ReadSpectrum(_libraryEntries[(int)spectrumKey]);
+            if (spectrumPeaks == null)
+                throw new IOException(string.Format(Resources.CachedLibrary_LoadSpectrum_Library_entry_not_found__0__, spectrumKey));
 
-                return new SpectrumPeaksInfo(spectrumPeaks);
+            return new SpectrumPeaksInfo(spectrumPeaks);
         }
 
         protected abstract SpectrumPeaksInfo.MI[] ReadSpectrum(TInfo info);
@@ -1042,7 +1040,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override int SpectrumCount
         {
-            get { return _libraryEntries == null ? 0 : _libraryEntries.Length; }
+            get { return _libraryEntries == null ? 0 : _libraryEntries.Count; }
         }
 
         public override IEnumerable<LibKey> Keys
@@ -1057,24 +1055,12 @@ namespace pwiz.Skyline.Model.Lib
 
         protected IEnumerable<TInfo> LibraryEntriesWithSequences(IEnumerable<Target> peptideSequences)
         {
-            foreach (var sequence in peptideSequences)
-            {
-                var libKey = new LibKey(sequence, Adduct.EMPTY);
-                int iFirstEntry = CollectionUtil.BinarySearch(_libraryEntries, item => item.Key.CompareSequence(libKey), true);
-                if (iFirstEntry < 0)
-                {
-                    continue;
-                }
-                for (int index = iFirstEntry; index < _libraryEntries.Length; index++)
-                {
-                    var item = _libraryEntries[index];
-                    if (0 != libKey.CompareSequence(item.Key))
-                    {
-                        break;
-                    }
-                    yield return _libraryEntries[index];
-                }
-            }
+            return peptideSequences.SelectMany(LibraryEntriesWithSequence);
+        }
+
+        protected IEnumerable<TInfo> LibraryEntriesWithSequence(Target target)
+        {
+            return _libraryEntries.ItemsWithUnmodifiedSequence(target);
         }
 
         // ReSharper disable PossibleMultipleEnumeration
@@ -2068,305 +2054,134 @@ namespace pwiz.Skyline.Model.Lib
 
     /// <summary>
     /// Key for use in dictionaries that store library header information in
-    /// memory.  The key is tuned to consume as little memory as possible, and
-    /// reduces the memory consumed by the <see cref="BiblioSpecLibrary"/> by
-    /// about 60% over <see cref="LibKeyOld"/>.
-    /// <para>
-    /// The sequence could be tuned further to store amino acids as nibbles
-    /// instead of bytes, because it will need to support modification
-    /// information, and because already the byte arrays are less than
-    /// 50% of the total dictionary size for <see cref="BiblioSpecLibrary"/>
-    /// further compression is left as an exercise for the future.</para>
-    /// <para>
-    /// Keys are implemented as byte arrays, with the first byte providing a hint as to
-    /// key contents: precursor, simple charge and amino acid sequence, or adduct and 
-    /// charge and small molecule identifier followed by small molecule metadata.</para>
-    /// <para>
-    /// That small molecule metadata isn't used in equality checks, which stretches the notion of a "key",
-    /// but in practice these keys are used not only to match libraries but also to tell the user 
-    /// about the nature of the molecules in the library. As we want to readily find matches to keys with
-    /// partial or missing metdata It's not possible to embed the needed metadata in the actual match part 
-    /// of the key the way we can with peptides, which are actually nothing but metadata (AA is just code for 
-    /// chemical formula etc).
-    /// </para>
+    /// memory.
     /// </summary>
     public struct LibKey
     {
-        private const byte PRECURSOR_MAGIC_BYTE = (byte) '~'; // NB was '#'=34, but MAX_PRECURSOR_CHARGE=80
-
-        private const byte ADDUCT_MAGIC_BYTE =
-            (byte) '{'; // We'd use '[' if it wasn't already in use for modifications, also this allows charge up to 122
-
-        private const byte ADDUCT_END_MAGIC_BYTE =
-            (byte) '}'; // We'd use ']' if it wasn't already in use for modifications
-
-        private byte[] _key;
-        private int _sequenceStart;
-        private int _sequenceLength;
+        public LibKey(LibraryKey libraryKey) : this()
+        {
+            LibraryKey = libraryKey;
+        }
 
         public LibKey(string sequence, int charge) : this()
         {
-            EncodeSequenceAndCharge(sequence, charge);
+            LibraryKey = new PeptideLibraryKey(sequence, charge);
         }
 
         public LibKey(SmallMoleculeLibraryAttributes attributes, Adduct adduct) : this()
         {
-            EncodeSmallMoleculeAndAdduct(attributes, adduct);
+            LibraryKey = new MoleculeLibraryKey(attributes, adduct);
         }
 
         public LibKey(string primaryKey, Adduct adduct) : this()
         {
             if (adduct.IsProteomic)
             {
-                EncodeSequenceAndCharge(primaryKey, adduct.AdductCharge);
+                LibraryKey = new PeptideLibraryKey(primaryKey, adduct.AdductCharge);
             }
             else
             {
-                // It is sufficient to create a key without full small mol metadata, for matching purposes
-                var adductBytes = Encoding.UTF8.GetBytes(adduct.AdductFormula);
-                var sequenceBytes = Encoding.UTF8.GetBytes(primaryKey);
-                _sequenceLength = sequenceBytes.Length;
-                var auxInfoBytes = SmallMoleculeLibraryAttributes.ToBytes(SmallMoleculeLibraryAttributes.EMPTY);
-                _key = SetSmallMoleculeKeyBytes(adduct.AdductCharge, adductBytes, adductBytes.Length,
-                    sequenceBytes, sequenceBytes.Length, auxInfoBytes, auxInfoBytes.Length, out _sequenceStart);
+                LibraryKey = new MoleculeLibraryKey(SmallMoleculeLibraryAttributes.Create(primaryKey, null, null, null), adduct);
             }
         }
 
-        private static byte[] SetSmallMoleculeKeyBytes(int charge, byte[] adductUTF8, int adductLen,
-            byte[] sequenceUTF8, int seqLen,
-            byte[] auxInfoUTF8, int auxInfoLen, out int sequenceStart)
-        {
-            var key = new byte[seqLen + adductLen + auxInfoLen + 2];
-            EncodeAdduct(key, 0, adductUTF8, adductLen);
-            key[adductLen] = (byte) charge;
-            key[adductLen + 1] = (byte) seqLen;
-            Array.Copy(sequenceUTF8, 0, key, sequenceStart = adductLen + 2, seqLen);
-            Array.Copy(auxInfoUTF8, 0, key, sequenceStart + seqLen, auxInfoLen);
-            return key;
-        }
-
-        public LibKey(byte[] sequence, int start, int len, int charge)
-        {
-            _key = new byte[len + 1];
-            _key[0] = (byte) charge;
-            Array.Copy(sequence, start, _key, _sequenceStart = 1, _sequenceLength = len);
-        }
-
-        // For deserializing small molecules from library cache format
-        public LibKey(byte[] keybuf, int length)
-        {
-            _key = new byte[length];
-            Array.Copy(keybuf, 0, _key, 0, length);
-            _sequenceStart = GetSequenceStart(_key, out _sequenceLength);
-        }
-
-        public LibKey(byte[] adductUTF8, int adductLen, byte[] sequenceUTF8, int seqLen, byte[] auxInfoUTF8,
-            int auxInfoLen, int charge)
-        {
-            _key = SetSmallMoleculeKeyBytes(charge, adductUTF8, adductLen, sequenceUTF8, _sequenceLength = seqLen,
-                auxInfoUTF8, auxInfoLen, out _sequenceStart);
-        }
+        public LibraryKey LibraryKey { get; private set; }
 
         public LibKey(double precursorMz,
-            double? retentionTime = null) // TODO(bspratt) probably should add ion mobility 
+            double? retentionTime = null)
+            : this() // TODO(bspratt) probably should add ion mobility 
         {
-            _key = !retentionTime.HasValue ? new byte[1 + sizeof(double)] : new byte[1 + 2 * sizeof(double)];
-            _key[0] = PRECURSOR_MAGIC_BYTE;
-            _sequenceStart = 0;
-            _sequenceLength = 0;
-            Array.Copy(BitConverter.GetBytes(precursorMz), 0, _key, 1, sizeof(double));
-            if (retentionTime.HasValue)
-                Array.Copy(BitConverter.GetBytes(retentionTime.Value), 0, _key, 1 + sizeof(double), sizeof(double));
+            LibraryKey = new PrecursorLibraryKey(precursorMz, retentionTime);
         }
 
         public LibKey(Target target, Adduct adduct)
             : this()
         {
             if (target.IsProteomic)
-                EncodeSequenceAndCharge(target.Sequence, adduct.AdductCharge);
+                LibraryKey = new PeptideLibraryKey(target.Sequence, adduct.AdductCharge);
             else
-                EncodeSmallMoleculeAndAdduct(target.Molecule.GetSmallMoleculeLibraryAttributes(), adduct);
+                LibraryKey = new MoleculeLibraryKey(target.Molecule.GetSmallMoleculeLibraryAttributes(), adduct);
         }
 
         public LibKey(Target target, int charge) : this(target.Sequence, charge)
         {
         }
 
-        private void EncodeSequenceAndCharge(string seq, int charge)
-        {
-            // Protonated charges can be represented by an integer
-            _key = new byte[seq.Length + 1];
-            _key[0] = (byte) charge;
-            Encoding.ASCII.GetBytes(seq, 0, _sequenceLength = seq.Length, _key, _sequenceStart = 1);
-        }
-
-        private void EncodeSmallMoleculeAndAdduct(SmallMoleculeLibraryAttributes attributes, Adduct adduct)
-        {
-            // For more exotic adducts, write adduct (ie [M+Na]) followed by charge byte
-            // (note we use {M+Na} instead of [M+Na] because [] have a special meaning in peptides)
-            // followed by byte indicating the length of the match string (usually InChiKey)
-            // followed by the length match string
-            // followed by the byte encoded SmallMoleculeLibraryInfo struct
-            var adductBytes = Encoding.UTF8.GetBytes(adduct.AdductFormula);
-
-            var sequenceBytes = Encoding.UTF8.GetBytes(attributes.GetPreferredKey() ?? String.Empty);
-            _sequenceLength = sequenceBytes.Length;
-            var auxInfoBytes = SmallMoleculeLibraryAttributes.ToBytes(attributes);
-            _key = SetSmallMoleculeKeyBytes(adduct.AdductCharge, adductBytes, adductBytes.Length, sequenceBytes,
-                sequenceBytes.Length,
-                auxInfoBytes, auxInfoBytes.Length, out _sequenceStart);
-        }
-
-        private LibKey(byte[] key)
-        {
-            _key = key;
-            _sequenceStart = GetSequenceStart(key, out _sequenceLength);
-        }
-
-        public static void EncodeAdduct(byte[] buf, int start, byte[] adductBytesUTF8, int adductlen)
-        {
-            if (adductlen > 0)
-            {
-                buf[start] = ADDUCT_MAGIC_BYTE;
-                if (!ReferenceEquals(buf, adductBytesUTF8))
-                    Array.Copy(adductBytesUTF8, 1, buf, start+1, adductlen -2);
-                buf[start+adductlen-1] = ADDUCT_END_MAGIC_BYTE;
-            }
-        }
-
-        public int SequenceStart { get { return _sequenceStart; } }
-        public int SequenceLength { get { return _sequenceLength; } }
-        public int MatchLength { get { return _sequenceStart + _sequenceLength; } }  // N.B. for equality we ignore any small molecule metadata
-        public bool IsProteomicKey { get { return IsPeptideKey(_key); } }
-        public bool IsSmallMoleculeKey { get { return HasAdduct(_key); } }
-        public bool IsPrecursorKey { get { return _key.Length >= 1 + sizeof(double) && _key[0] == PRECURSOR_MAGIC_BYTE; } }
-        public bool HasRetentionTime { get { return IsPrecursorKey && _key.Length >= 1 + 2*sizeof(double); } }
+        public bool IsProteomicKey { get { return LibraryKey is PeptideLibraryKey; } }
+        public bool IsSmallMoleculeKey { get { return LibraryKey is MoleculeLibraryKey; } }
+        public bool IsPrecursorKey { get { return LibraryKey is PrecursorLibraryKey; } }
+        public bool HasRetentionTime { get { return IsPrecursorKey && ((PrecursorLibraryKey)LibraryKey).RetentionTime.HasValue; } }
 
         public string Sequence
         {
             get
             {
-                if (IsPrecursorKey)
-                    return null;
-                if (IsProteomicKey)
-                    return Encoding.UTF8.GetString(_key, SequenceStart, SequenceLength);
-                return null;
+                var peptideKey = LibraryKey as PeptideLibraryKey;
+                return peptideKey == null ? null : peptideKey.ModifiedSequence;
             }
         }
         public Target Target
         {
             get
             {
-                if (IsPrecursorKey)
-                    return null;
-                if (IsProteomicKey)
-                    return new Target(Encoding.UTF8.GetString(_key, SequenceStart, SequenceLength));
-                return new Target(SmallMoleculeLibraryAttributes);
+                return LibraryKey.Target;
             }
         }
-        public SmallMoleculeLibraryAttributes SmallMoleculeLibraryAttributes { get { return IsSmallMoleculeKey ? SmallMoleculeLibraryAttributes.FromBytes(_key, SequenceStart + SequenceLength) : SmallMoleculeLibraryAttributes.EMPTY; } }
-        public int Charge { get { return IsProteomicKey ? (sbyte) _key[0] : (IsPrecursorKey ? 0 : (sbyte)_key[SequenceStart-2]); } }
+
+        public SmallMoleculeLibraryAttributes SmallMoleculeLibraryAttributes
+        {
+            get
+            {
+                var moleculeLibraryKey = LibraryKey as MoleculeLibraryKey;
+                return moleculeLibraryKey == null
+                    ? SmallMoleculeLibraryAttributes.EMPTY
+                    : moleculeLibraryKey.SmallMoleculeLibraryAttributes;
+            }
+        }
+        public int Charge { get
+        {
+            return IsProteomicKey
+                ? ((PeptideLibraryKey) LibraryKey).Charge
+                : (IsPrecursorKey ? 0 : ((MoleculeLibraryKey) LibraryKey).Adduct.AdductCharge);
+        } }
         public Adduct Adduct 
         {
             get
             {
-                if (IsPrecursorKey)
-                {
-                    return Adduct.EMPTY;
-                }
-                if (IsProteomicKey)
-                {
-                    return Adduct.FromChargeProtonated((sbyte) _key[0]);
-                }
-                // Pick <adduct> and <z> out of a byte array "{<adduct>}<z><seqlen><sequence><smallmolinfo>" leaving out the { and }
-                return Adduct.FromString(Encoding.UTF8.GetString(_key, 1, SequenceStart-4), Adduct.ADDUCT_TYPE.non_proteomic, (sbyte)_key[SequenceStart-2]);
+                return LibraryKey.Adduct;
             }
         }
 
-        public bool IsModified { get { return !IsPrecursorKey && !IsSmallMoleculeKey && _key.Contains((byte)'['); } } // Not L10N
-        public double? PrecursorMz { get { return IsPrecursorKey ? BitConverter.ToDouble(_key, 1) : default(double?); } }
-        public double? RetentionTime { get { return HasRetentionTime ? BitConverter.ToDouble(_key, 1 + sizeof(double)) : default(double?); } }
-
-        /// <summary>
-        /// Only for use by <see cref="LibSeqKey"/>
-        /// </summary>
-        public byte[] Key { get { return _key; }}
-
-        public void WriteSequence(Stream outStream)
+        public bool IsModified { get
         {
-            outStream.Write(BitConverter.GetBytes(SequenceLength), 0, sizeof(int)); // Write the sequence length
-            outStream.Write(_key, SequenceStart, SequenceLength); // Write the sequence (ASCII for peptides, UTF8 for small mol)
-        }
+            var key = LibraryKey as PeptideLibraryKey;
+            return key != null && key.HasModifications;
+        } } // Not L10N
 
-        // Compare keys ignoring adduct and small mol details
-        public int CompareSequence(LibKey key2)
-        {
-            byte[] raw1 = _key, raw2 = key2._key;
-            var s1 = SequenceStart;
-            var s2 = key2.SequenceStart;
-            var seqLen1 = SequenceLength;
-            var seqLen2 = key2.SequenceLength;
-            var len = Math.Min(seqLen1, seqLen2);
-            for (var i = 0; i < len; i++)
-            {
-                byte b1 = raw1[s1++], b2 = raw2[s2++];
-                if (b1 != b2)
-                    return b1 - b2;
-            }
-            return seqLen1 - seqLen2;
-        }
-
-        // Compare keys ignoring small mol details (so matching InChiKeys is enough, even if one has say HMDB as well)
-        public int Compare(LibKey key2)
-        {
-            int result = CompareSequence(key2);
-            if (result != 0)
-            {
-                return result;
-            }
-            result = Charge.CompareTo(key2.Charge);
-            if (result != 0)
-            {
-                return result;
-            }
-            return IsSmallMoleculeKey || key2.IsSmallMoleculeKey ? Adduct.CompareTo(key2.Adduct) : 0;
-        }
-
-        public IEnumerable<byte> SequenceLookupBytes
+        public double? PrecursorMz
         {
             get
             {
-                if (IsPrecursorKey)
-                    yield break;
+                var key = LibraryKey as PrecursorLibraryKey;
+                return key != null ? key.Mz : default(double?);
+            }
+        }
 
-                if (IsSmallMoleculeKey)
-                {
-                    // Get human-friendly name if any
-                    var name = SmallMoleculeLibraryAttributes.MoleculeName;
-                    if (!string.IsNullOrEmpty(name))
-                    {
-                        for (var i = 0; i < name.Length; i++)
-                        {
-                            yield return (byte)name[i];
-                        }
-                        yield break;
-                    }
-                    // Get the preferred key (usually InChiKey)
-                    var j = 0;
-                    for (var i = SequenceStart; j++ < SequenceLength; i++)
-                    {
-                        yield return _key[i];
-                    }
-                    yield break;
-                }
+        public double? RetentionTime
+        {
+            get
+            {
+                var key = LibraryKey as PrecursorLibraryKey;
+                return key != null ? key.RetentionTime : default(double?);
+            }
+        }
 
-                // Filter out any non-AA characters
-                for (int i = SequenceStart; i < _key.Length; i++)
-                {
-                    var aa = (char)_key[i]; // ASCII encoded, so this is safe
-                    if (AminoAcid.IsExAA(aa))
-                        yield return (byte)aa;
-                }
+        public bool HasModifications
+        {
+            get
+            {
+                var peptideKey = LibraryKey as PeptideLibraryKey;
+                return peptideKey != null && peptideKey.HasModifications;
             }
         }
 
@@ -2374,57 +2189,21 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                if (!IsPeptideKey(_key))
-                {
-                    return 0;
-                }
-                int count = 0;
-                for (int i = SequenceStart; i < _key.Length; i++)
-                {
-                    if (_key[i] == '[') // Not L10N
-                        count++;
-                }
-                return count;
+                var peptideKey = LibraryKey as PeptideLibraryKey;
+                return peptideKey != null ? peptideKey.ModificationCount : 0;
             }
-        }   
+        }
+
+        public static implicit operator LibraryKey(LibKey libKey)
+        {
+            return libKey.LibraryKey;
+        }
 
         #region object overrides
 
         public bool Equals(LibKey obj)
         {
-            var len = obj.MatchLength; // N.B. for equality we ignore any small molecule metadata
-
-            if (len != MatchLength)
-                return false;
-
-            for (int i = 0; i < len; i++)
-                if (obj._key[i] != _key[i])
-                    return false;
-
-            return true;
-        }
-
-        public static bool IsPeptideKey(byte[] bytes)
-        {
-            return bytes[0] != PRECURSOR_MAGIC_BYTE && bytes[0] != ADDUCT_MAGIC_BYTE;
-        }
-
-        public static bool HasAdduct(byte[] bytes)
-        {
-            return bytes[0] == ADDUCT_MAGIC_BYTE;
-        }
-
-        // Locate the position of the molecule ID or AA sequence
-        public static int GetSequenceStart(byte[] bytes, out int sequenceLength)
-        {
-            if (bytes.Length > 1 && bytes[0] == ADDUCT_MAGIC_BYTE)
-            {
-                var adductEndIndex = bytes.IndexOf(b => b==ADDUCT_END_MAGIC_BYTE);
-                sequenceLength = bytes[adductEndIndex + 2];
-                return adductEndIndex + 3; // After adduct is byte charge then byte sequencelen
-            }
-            sequenceLength = bytes.Length - 1;
-            return 1;
+            return LibraryKey.IsEquivalentTo(obj.LibraryKey);
         }
 
         public override bool Equals(object obj)
@@ -2436,230 +2215,25 @@ namespace pwiz.Skyline.Model.Lib
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                var result = 0;
-                var len = MatchLength; // N.B. for equality we ignore any small molecule metadata
-                for (var b=0; b < len;)
-                    result = (result*31) ^ _key[b++];
-                return result;
-            }
+            return LibraryKey.GetEquivalencyHashCode();
         }
 
         public override string ToString()
         {
-            if (IsProteomicKey)
-                return Target + Transition.GetChargeIndicator(Adduct);
-            if (IsSmallMoleculeKey)
-                return SmallMoleculeLibraryAttributes.ToString() + Adduct;
-            var precursor = PrecursorMz.GetValueOrDefault().ToString("0.000", CultureInfo.CurrentCulture); // Not L10N
-            if (!HasRetentionTime)
-                return precursor;
-            var rt = RetentionTime.GetValueOrDefault().ToString("0.00", CultureInfo.CurrentCulture); // Not L10N
-            return string.Format("{0} ({1})", precursor, rt); // Not L10N
+            return LibraryKey.ToString();
         }
 
         #endregion
 
         public void Write(Stream outStream)
         {
-            PrimitiveArrays.WriteOneValue(outStream, _key.Length);
-            outStream.Write(_key, 0, _key.Length);
+            LibraryKey.Write(outStream);
         }
 
-        public static LibKey Read(Stream inStream)
+        public static LibKey Read(ValueCache valueCache, Stream inStream)
         {
-            int length = PrimitiveArrays.ReadOneValue<int>(inStream);
-            var key = new byte[length];
-            inStream.Read(key, 0, key.Length);
-            return new LibKey(key);
+            return new LibKey(LibraryKey.Read(valueCache, inStream));
         }
-    }
-
-    /// <summary>
-    /// This key represents a plain, unmodified peptide amino acid sequence, but
-    /// allows either a plain string or the bytes from a potentially modified
-    /// <see cref="LibKey"/> to be used as the internal representation of the
-    /// amino acides.  Using the <see cref="LibKey"/> bytes greatly reduces the
-    /// memory cost of keeping a set of these in every library.
-    /// </summary>
-    public struct LibSeqKey
-    {
-        private readonly int _length;
-        private readonly int _cachedHash;
-        private readonly string _seq;
-        private readonly byte[] _libKeyBytes;
-
-        /// <summary>
-        /// Creates a key from a plain string of amino acid characters.
-        /// </summary>
-        /// <param name="seq">String of amino acid characters</param>
-        public LibSeqKey(string seq) : this()
-        {
-            _seq = seq;
-            _length = seq.Length;
-            _cachedHash = GetHashCodeInternal();
-        }
-
-        /// <summary>
-        /// Creates a key from an existing <see cref="LibKey"/> using the same
-        /// key bytes to minimize memory impact.
-        /// </summary>
-        /// <param name="key">A <see cref="LibKey"/> with modified sequence bytes from a library</param>
-        public LibSeqKey(LibKey key) : this()
-        {
-            _libKeyBytes = key.Key;
-            _length = AminoAcids.Count();
-            _cachedHash = GetHashCodeInternal();
-        }
-
-        public LibSeqKey(LibKey key, int hash, int aminoAcid)
-            : this()
-        {
-            _libKeyBytes = key.Key;
-            _length = aminoAcid;
-            _cachedHash = hash;
-        }
-
-        public int Length { get { return _length; } }
-
-        /// <summary>
-        /// Enumerates the amino acid characters of the sequence, with special handling for
-        /// the case where the internal representation is the byte sequence from at
-        /// <see cref="LibKey"/>.
-        /// </summary>
-        private IEnumerable<char> AminoAcids
-        {
-            get
-            {
-                if (_seq != null)
-                {
-                    foreach (char aa in _seq)
-                        yield return aa;
-                }
-                else if (!LibKey.IsPeptideKey(_libKeyBytes))
-                {
-                    // This is UTF8 encoded
-                    int sequenceLength;
-                    var start = LibKey.GetSequenceStart(_libKeyBytes, out sequenceLength);
-                    var moleculeIdentifier = Encoding.UTF8.GetString(_libKeyBytes, start, sequenceLength);
-                    foreach (var t in moleculeIdentifier)
-                    {
-                        yield return t;
-                    }
-                }
-                else
-                {
-                    for (int i = 1; i < _libKeyBytes.Length; i++)
-                    {
-                        char aa = (char)_libKeyBytes[i]; // ASCII encoded, so this is safe
-                        if ('A' <= aa && aa <= 'Z') // Not L10N: Amino Acids
-                            yield return aa;
-                    }
-                }
-            }
-        }
-
-        #region object overrides
-
-        public bool Equals(LibSeqKey obj)
-        {
-            // Length check short-cut
-            if (obj._length != _length)
-                return false;
-
-            // Compare each amino acid
-            using (var enumObjAa = obj.AminoAcids.GetEnumerator())
-            {
-                foreach (char aa in AminoAcids)
-                {
-                    enumObjAa.MoveNext();
-                    if (aa != enumObjAa.Current)
-                        return false;
-                }
-            }
-
-            return true;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj == null) return false;
-            if (obj.GetType() != typeof(LibSeqKey)) return false;
-            return Equals((LibSeqKey)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return _cachedHash;
-        }
-        private int GetHashCodeInternal()
-        {
-            unchecked
-            {
-                int result = _length.GetHashCode();
-                foreach (char aa in AminoAcids)
-                {
-                    result = (result*31) ^ aa;
-                }
-                return result;
-            }
-        }
-        #endregion
-    }
-
-    /// <summary>
-    /// This version supports the same interface, but uses considerably more
-    /// memory, both in the unicode strings and doubling the size of the
-    /// struct stored in the dictionary.
-    /// </summary>
-    public struct LibKeyOld
-    {
-        private readonly string _sequence;
-        private readonly int _charge;
-
-        public LibKeyOld(string sequence, int charge)
-        {
-            _sequence = sequence;
-            _charge = charge;
-        }
-
-        public LibKeyOld(byte[] sequence, int start, int len, int charge)
-            : this(Encoding.UTF8.GetString(sequence, start, len), charge)
-        {
-        }
-
-        public string Sequence { get { return _sequence; } }
-        public int Charge { get { return _charge; } }
-
-        #region object overrides
-
-        public bool Equals(LibKeyOld obj)
-        {
-            return obj._charge == _charge && Equals(obj._sequence, _sequence);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj == null) return false;
-            if (obj.GetType() != typeof(LibKeyOld)) return false;
-            return Equals((LibKeyOld)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return (_charge * 397) ^ _sequence.GetHashCode();
-            }
-        }
-
-        public override string ToString()
-        {
-            return _sequence + Transition.GetChargeIndicator(Adduct.FromChargeProtonated(_charge));
-        }
-
-        #endregion
     }
 
     public class SpectrumSourceFileDetails

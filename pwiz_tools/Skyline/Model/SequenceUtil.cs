@@ -274,23 +274,35 @@ namespace pwiz.Skyline.Model
 
         public static string GetModDiffDescription(double massDiff)
         {
-            return GetModDiffDescription(massDiff, null, SequenceModFormatType.mass_diff);
+            return GetModDiffDescription(massDiff, null, SequenceModFormatType.mass_diff, true);
         }
 
-        public static string GetModDiffDescription(double massDiff, StaticMod mod, SequenceModFormatType format)
+        public static string GetModDiffDescription(double massDiff, StaticMod mod, SequenceModFormatType format, bool standardPrecision)
         {
+            var precisionRequired = 1;
+            if (!standardPrecision)
+            {
+                var unimod = mod != null
+                    ? UniMod.FindMatchingStaticMod(mod, false) ?? UniMod.FindMatchingStaticMod(mod, true)
+                    : null;
+                precisionRequired = unimod != null ? unimod.PrecisionRequired : 1;
+            }
+            if (mod == null && format == SequenceModFormatType.three_letter_code)
+                format = SequenceModFormatType.mass_diff_narrow;
+            // ReSharper disable FormatStringProblem
             switch (format)
             {
                 case SequenceModFormatType.mass_diff:
                     // Non-narrow format is used for library look-up and must be consistent with LibKey format
-                    return string.Format(CultureInfo.InvariantCulture, "[{0}{1:F01}]", // Not L10N
+                    return string.Format(CultureInfo.InvariantCulture, "[{0}{1:F0" + precisionRequired + "}]", // Not L10N
                         (massDiff > 0 ? "+" : string.Empty), massDiff); // Not L10N
                 case SequenceModFormatType.mass_diff_narrow:
                     // Narrow format allows for removal of .0 when decimal is not present
                     // One of the more important cases is 15N labeling which produces a lot of
                     // [+1] and [+2] values.  Also assumed to be for UI, so use local format.
-                    return string.Format("[{0}{1}]", (massDiff > 0 ? "+" : string.Empty), Math.Round(massDiff, 1)); // Not L10N
+                    return string.Format(CultureInfo.InvariantCulture, "[{0}{1}]", massDiff > 0 ? "+" : string.Empty, Math.Round(massDiff, precisionRequired)); // Not L10N
                 case SequenceModFormatType.three_letter_code:
+                    // ReSharper disable once PossibleNullReferenceException
                     var shortName = mod.ShortName;
                     if (string.IsNullOrEmpty(shortName))
                     {
@@ -301,10 +313,11 @@ namespace pwiz.Skyline.Model
                     }
                     return shortName != null
                         ? string.Format("[{0}]", shortName) // Not L10N
-                        : GetModDiffDescription(massDiff, null, SequenceModFormatType.mass_diff_narrow);
+                        : GetModDiffDescription(massDiff, null, SequenceModFormatType.mass_diff_narrow, standardPrecision);
                 default:
                     throw new ArgumentOutOfRangeException("format"); // Not L10N
             }
+            // ReSharper restore FormatStringProblem
         }
 
         public static string GetMassIDescripion(int massIndex)
@@ -634,24 +647,24 @@ namespace pwiz.Skyline.Model
             return seq.Any(c => _modMasses._aminoModMasses[c] != 0);
         }
 
-        public Target GetModifiedSequence(Target seq, bool formatNarrow)
+        public Target GetModifiedSequence(Target seq, bool narrow)
         {
-            return GetModifiedSequence(seq, null, formatNarrow);
+            return GetModifiedSequence(seq, null, narrow ? SequenceModFormatType.mass_diff_narrow : SequenceModFormatType.mass_diff, false, true);
         }
 
-        public Target GetModifiedSequence(Target seq, SequenceModFormatType format, bool useExplicitModsOnly)
+        public Target GetModifiedSequence(Target seq, SequenceModFormatType format, bool useExplicitModsOnly, bool standardPrecision)
         {
-            return GetModifiedSequence(seq, null, format, useExplicitModsOnly);
+            return GetModifiedSequence(seq, null, format, useExplicitModsOnly, standardPrecision);
         }
 
-        public Target GetModifiedSequence(Target seq, ExplicitSequenceMods mods, bool formatNarrow)
+        public Target GetModifiedSequence(Target seq, ExplicitSequenceMods mods, bool formatNarrow, bool standardPrecision)
         {
             var format = formatNarrow ? SequenceModFormatType.mass_diff_narrow : SequenceModFormatType.mass_diff;
-            return GetModifiedSequence(seq, mods, format, false);
+            return GetModifiedSequence(seq, mods, format, false, standardPrecision);
         }
-
+        
         public Target GetModifiedSequence(Target val, ExplicitSequenceMods mods, SequenceModFormatType format,
-            bool useExplicitModsOnly)
+            bool useExplicitModsOnly, bool standardPrecision)
         {
             if (!val.IsProteomic)
                 return val;
@@ -674,10 +687,15 @@ namespace pwiz.Skyline.Model
                     if (mod == null && useExplicitModsOnly)
                         continue;
 
-                    sb.Append(GetModDiffDescription(modMass, mod, format));
+                    sb.Append(GetModDiffDescription(modMass, mod, format, standardPrecision));
                 }
             }
             return val.ChangeSequence(sb.ToString());
+        }
+
+        public Target GetModifiedSequenceDisplay(Target seq)
+        {
+            return GetModifiedSequence(seq, SequenceModFormatType.mass_diff_narrow, false, true);
         }
 
         public Adduct GetModifiedAdduct(Adduct adduct, string neutralFormula)
@@ -727,7 +745,17 @@ namespace pwiz.Skyline.Model
                     throw new ArgumentException(string.Format(Resources.SequenceMassCalc_NormalizeModifiedSequence_The_modification__0__is_not_valid___Expected_a_numeric_delta_mass_, strMassDiff));
                 }
                 normalizedSeq.Append(rawModifiedSequence.Substring(ichLast, ichOpenBracket - ichLast));
-                normalizedSeq.Append(GetModDiffDescription(massDiff, null, SequenceModFormatType.mass_diff));
+                // TODO: no precision to 1 decimal; 1+ unchanged
+                ///////
+                var x = strMassDiff.IndexOfAny(new[] {'.', ','});
+                var numdecimals = x >= 0 ? strMassDiff.Length - x - 1 : -1;
+                if (numdecimals < 2)
+                    normalizedSeq.Append(GetModDiffDescription(massDiff, null, SequenceModFormatType.mass_diff, true)); // TODO true or false standard?
+                else
+                {
+                    var massdiff2 = strMassDiff.TrimStart('+', '-');
+                    normalizedSeq.Append(string.Format(CultureInfo.InvariantCulture, "[{0}{1}]", massDiff > 0 ? "+" : string.Empty, massdiff2)); // Not L10N
+                }
                 ichLast = ichCloseBracket + 1;
             }
             normalizedSeq.Append(rawModifiedSequence.Substring(ichLast));
@@ -1414,18 +1442,22 @@ namespace pwiz.Skyline.Model
                 _mods.ModMasses.IndexOf(m => m != 0) != -1; // If any non-zero modification values
         }
 
-        public Target GetModifiedSequence(Target seq, SequenceModFormatType format, bool useExplicitModsOnly)
+        public Target GetModifiedSequence(Target seq, SequenceModFormatType format, bool useExplicitModsOnly, bool standardPrecision)
         {
-            return _massCalcBase.GetModifiedSequence(seq, _mods, format, useExplicitModsOnly);
+            return _massCalcBase.GetModifiedSequence(seq, _mods, format, useExplicitModsOnly, standardPrecision);
         }
 
-        public Target GetModifiedSequence(Target seq, bool formatNarrow)
+        public Target GetModifiedSequence(Target seq, bool narrow)
         {
             return GetModifiedSequence(seq,
-                                       formatNarrow
-                                           ? SequenceModFormatType.mass_diff_narrow
-                                           : SequenceModFormatType.mass_diff,
-                                       false);
+                                       narrow ? SequenceModFormatType.mass_diff_narrow : SequenceModFormatType.mass_diff,
+                                       false,
+                                       true);
+        }
+
+        public Target GetModifiedSequenceDisplay(Target seq)
+        {
+            return GetModifiedSequence(seq, SequenceModFormatType.mass_diff_narrow, false, true);
         }
 
         public Adduct GetModifiedAdduct(Adduct adduct, string neutralFormula)

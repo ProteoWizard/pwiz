@@ -19,7 +19,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -32,6 +31,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Properties;
@@ -406,158 +406,36 @@ namespace pwiz.Skyline.Util
     /// be empty, thought it may contain a single null element.
     /// </summary>
     /// <typeparam name="TItem">Type of the elements in the list</typeparam>
-    public class OneOrManyList<TItem> : IList<TItem>
-//        VS Issue: https://connect.microsoft.com/VisualStudio/feedback/ViewFeedback.aspx?FeedbackID=324473
-//        where T : class
+    public class OneOrManyList<TItem> : AbstractReadOnlyList<TItem>
     {
-        private TItem _one;
-        private TItem[] _many;
+        private ImmutableList<TItem> _list;
 
         public OneOrManyList(params TItem[] elements)
         {
-            if (elements.Length > 1)
-                _many = elements;
-            else if (elements.Length == 1)
-                _one = elements[0];            
+            _list = ImmutableList.ValueOf(elements);
         }
 
         public OneOrManyList(IList<TItem> elements)
         {
-            if (elements.Count > 1)
-                _many = elements.ToArray();
-            else if (elements.Count == 1)
-                _one = elements[0];
+            _list = ImmutableList.ValueOf(elements);
         }
 
-        public IEnumerator<TItem> GetEnumerator()
+        public override int Count
         {
-            return GetEnumerable().GetEnumerator();
+            get { return _list.Count; }
         }
 
-        private IEnumerable<TItem> GetEnumerable()
-        {
-            if (Equals(_many, null))
-            {
-                yield return _one;
-            }
-            else
-            {
-                foreach (var item in _many)
-                    yield return item;
-            }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public void Add(TItem item)
-        {
-            throw new ReadOnlyException(Resources.OneOrManyList_Add_Attempted_modification_of_a_read_only_collection);
-        }
-
-        public void Clear()
-        {
-            throw new ReadOnlyException(Resources.OneOrManyList_Add_Attempted_modification_of_a_read_only_collection);
-        }
-
-        public bool Contains(TItem item)
-        {
-            if (Equals(_many, null))
-                return Equals(_one, item);
-            return _many.Contains(item);
-        }
-
-        public void CopyTo(TItem[] array, int arrayIndex)
-        {
-            if (Equals(_many, null))
-                array[arrayIndex] = _one;
-            else
-                _many.CopyTo(array, arrayIndex);            
-        }
-
-        public bool Remove(TItem item)
-        {
-            throw new ReadOnlyException(Resources.OneOrManyList_Add_Attempted_modification_of_a_read_only_collection);
-        }
-
-        public int Count
+        public override TItem this[int index]
         {
             get
             {
-                if (Equals(_many, null))
-                    return 1;
-                return _many.Length;
-            }
-        }
-
-        public bool IsReadOnly
-        {
-            get { return true; }
-        }
-
-        public int IndexOf(TItem item)
-        {
-            if (Equals(_many, null))
-                return Equals(_one, item) ? 0 : -1;
-            return _many.IndexOf(v => Equals(v, item));
-        }
-
-        public void Insert(int index, TItem item)
-        {
-            throw new ReadOnlyException(Resources.OneOrManyList_Add_Attempted_modification_of_a_read_only_collection);
-        }
-
-        public void RemoveAt(int index)
-        {
-            throw new ReadOnlyException(Resources.OneOrManyList_Add_Attempted_modification_of_a_read_only_collection);
-        }
-
-        public TItem this[int index]
-        {
-            get
-            {
-                ValidateIndex(index);
-                if (Equals(_many, null))
-                    return _one;
-                return _many[index];
-            }
-
-            set
-            {
-                throw new ReadOnlyException(Resources.OneOrManyList_Add_Attempted_modification_of_a_read_only_collection);
+                return _list[index];
             }
         }
 
         public OneOrManyList<TItem> ChangeAt(int index, TItem item)
         {
-            ValidateIndex(index);
-            var cloneNew = (OneOrManyList<TItem>) MemberwiseClone();
-            if (Equals(_many, null))
-                cloneNew._one = item;
-            else
-            {
-                cloneNew._many = new TItem[_many.Length];
-                Array.Copy(_many, cloneNew._many, _many.Length);
-                cloneNew._many[index] = item;
-            }
-            return cloneNew;
-        }
-
-        private void ValidateIndex(int index)
-        {
-            if (Equals(_many, null))
-            {
-                if (index != 0)
-                    throw new IndexOutOfRangeException(
-                        string.Format(
-                            Resources.OneOrManyList_ValidateIndex_The_index__0__must_be_0_for_a_single_entry_list, index));
-            }
-            else if (0 > index || index > _many.Length)
-                throw new IndexOutOfRangeException(
-                    string.Format(Resources.OneOrManyList_ValidateIndex_The_index__0__must_be_between_0_and__1__, index,
-                                  _many.Length));
+            return new OneOrManyList<TItem>(_list.ReplaceAt(index, item));
         }
 
         #region object overrides
@@ -566,8 +444,7 @@ namespace pwiz.Skyline.Util
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj._one, _one) &&
-                ArrayUtil.EqualsDeep(obj._many, _many);
+            return _list.Equals(obj._list);
         }
 
         public override bool Equals(object obj)
@@ -580,13 +457,7 @@ namespace pwiz.Skyline.Util
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-// ReSharper disable NonReadonlyFieldInGetHashCode
-                return ((!Equals(_one, default(TItem)) ? _one.GetHashCode() : 0)*397) ^
-                    (_many != null ? _many.GetHashCodeDeep() : 0);
-// ReSharper restore NonReadonlyFieldInGetHashCode
-            }
+            return _list.GetHashCode();
         }
 
         #endregion

@@ -140,3 +140,21 @@ message SkylineDocumentProto {
 	}
 }
 
+message LibraryKeyProto
+{
+	enum KeyType {
+		peptide = 0;
+		small_molecule = 1;
+		precursor_mz = 2;
+	}
+	KeyType keyType = 1;
+	string modifiedSequence = 2;
+	int32 charge = 3;
+	string moleculeName = 4;
+	string chemicalFormula = 5;
+	string inChiKey = 6;
+	string otherKeys = 7;
+	string adduct = 8;
+	double precursorMz = 9;
+	double retentionTime = 10;
+}

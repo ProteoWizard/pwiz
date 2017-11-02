@@ -384,11 +384,12 @@ namespace pwiz.Skyline.Model.Lib.Midas
             return !keyRt.HasValue ? spectra.Any() : spectra.Any(s => Equals(keyRt.Value, s.RetentionTime));
         }
 
-        public override bool ContainsAny(LibSeqKey key)
+        public override bool ContainsAny(Target target)
         {
+            var key = new PeptideLibraryKey(target.Sequence, 0);
             return _spectra.SelectMany(fileSpectra => fileSpectra.Value)
-                           .Where(spectra=> null != spectra.DocumentPeptide)
-                           .Any(spectra => new LibSeqKey(FastaSequence.StripModifications(spectra.DocumentPeptide)).Equals(key));
+                .Any(spectrum => null != spectrum.DocumentPeptide && key.UnmodifiedSequence ==
+                                 new PeptideLibraryKey(spectrum.DocumentPeptide, 0).UnmodifiedSequence);
         }
 
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)

@@ -825,8 +825,13 @@ namespace pwiz.Skyline.Model
             public bool AppearsToBeSpecificMod { get { return ModKey.AppearsToBeSpecificMod; } }
             public bool IsMassMatch(StaticMod mod, double mass)
             {
-                return Equals(Math.Round(GetDefaultModMass(AA, mod), RoundedTo), mass)
-                    && IsModMatch(mod);
+                var mod1 = new MassModification(GetDefaultModMass(AA, mod), RoundedTo);
+                var mod2 = new MassModification(mass, RoundedTo);
+                if (!mod1.Matches(mod2))
+                {
+                    return false;
+                }
+                return IsModMatch(mod);
             }
             public bool IsModMatch(StaticMod mod)
             {

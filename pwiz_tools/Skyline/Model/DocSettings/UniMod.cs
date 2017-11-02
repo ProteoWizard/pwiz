@@ -35,6 +35,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public static HashSet<int> SetUniModIds { get; private set; }
         public static Dictionary<string, int> DictShortNamesToUniMod { get; private set; } 
         public static ModMassLookup MassLookup { get; private set; }
+        public static Dictionary<string, int> DictRequiredPrecision { get; private set; }
 
         public static readonly char[] AMINO_ACIDS = 
             {
@@ -53,6 +54,7 @@ namespace pwiz.Skyline.Model.DocSettings
             SetUniModIds = new HashSet<int>();
             DictShortNamesToUniMod = new Dictionary<string, int>();
             MassLookup = new ModMassLookup();
+            DictRequiredPrecision = new Dictionary<string, int>();
 
             INITIALIZING = true;
             
@@ -70,7 +72,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             var newMod = new StaticMod(data.Name, data.AAs, data.Terminus, false, data.Formula, data.LabelAtoms,
                                        RelativeRT.Matching, null, null, data.Losses, data.ID,
-                                       data.ShortName);
+                                       data.ShortName, data.PrecisionRequired);
             if (data.ID.HasValue && data.ShortName != null)
             {
                 int id;
@@ -120,6 +122,20 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!DictUniModIds.ContainsKey(idKey))
                     DictUniModIds.Add(idKey, mod);
             }
+
+            // Add to precision lookup.
+            if (mod.PrecisionRequired > 1 && mod.MonoisotopicMass.HasValue)
+            {
+                foreach (var aa in mod.AminoAcids)
+                {
+                    DictRequiredPrecision[PrecisionLookupString(aa, mod.MonoisotopicMass.Value)] = mod.PrecisionRequired;
+                }
+            }
+        }
+
+        public static string PrecisionLookupString(char aa, double mass)
+        {
+            return string.Format("{0}[{1}{2:F01}]", aa, mass > 0 ? "+" : string.Empty, mass); // Not L10N
         }
 
         /// <summary>
@@ -215,6 +231,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public int? ID { get; set; }
         public bool Structural { get; set; }
         public bool Hidden { get; set; }
+        public int? PrecisionRequired { get; set; }
         public string ShortName { get; set; }
     }
 
@@ -266,6 +283,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (!_completed)
                 throw new InvalidOperationException(Resources.ModMassLookup_MatchModificationMass_Invalid_attempt_to_access_incomplete_MassLookup);
+            roundTo = Math.Min(roundTo, MassModification.MAX_PRECISION);
+            mass = Math.Round(mass, roundTo);
             var massLookup = _aaMassLookups[structural ? ToStructuralIndex(aa) : ToIsotopeIndex(aa)];
             return massLookup != null ? massLookup.ClosestMatch(mass, roundTo, terminus, specific) : null;
         }

@@ -172,7 +172,7 @@ namespace pwiz.SkylineTestFunctional
             // Modification specific acceptance
             string peptideMods = TextUtil.LineSeparate(
                 PEPTIDE_MODIFIED.Insert(6, "[57]"),
-                PEPTIDE_MODIFIED.Insert(6, "[+57]").Insert(4, "[+" + 80.01234567 + "]").Insert(3, string.Format("[+{0:F01}]", 80)),
+                PEPTIDE_MODIFIED.Insert(6, "[+57]").Insert(4, "[+" + 79.966331 + "]").Insert(3, string.Format("[+{0:F01}]", 80)),
                 PEPTIDE_UNMODIFIED);
             TestRefineListDlg(dlg =>
             {

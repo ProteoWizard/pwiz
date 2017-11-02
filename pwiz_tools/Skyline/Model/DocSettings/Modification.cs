@@ -104,14 +104,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public StaticMod(string name, string aas, ModTerminus? term,
             string formula, LabelAtoms labelAtoms, double? monoMass, double? avgMass)
-            : this(name, aas, term, false, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null, null, null)
+            : this(name, aas, term, false, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null, null, null, null)
         {
             
         }
 
         public StaticMod(string name, string aas, ModTerminus? term, bool isVariable, string formula,
                          LabelAtoms labelAtoms, RelativeRT relativeRT, double? monoMass, double? avgMass, IList<FragmentLoss> losses)
-            : this(name, aas, term, isVariable, formula, labelAtoms, relativeRT, monoMass, avgMass, losses, null, null)
+            : this(name, aas, term, isVariable, formula, labelAtoms, relativeRT, monoMass, avgMass, losses, null, null, null)
         {
             
         }
@@ -127,7 +127,8 @@ namespace pwiz.Skyline.Model.DocSettings
                          double? avgMass,
                          IList<FragmentLoss> losses,
                          int? uniModId,
-                         string shortName)
+                         string shortName,
+                         int? precisionRequired)
             : base(name)
         {
             AAs = aas;
@@ -143,6 +144,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             UnimodId = uniModId;
             ShortName = shortName;
+            _precisionRequired = precisionRequired;
 
             Validate();
         }
@@ -222,6 +224,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get
             {
+                if (string.IsNullOrEmpty(AAs))
+                    yield break;
+
                 foreach (var aaPart in AAs.Split(','))
                     yield return aaPart.Trim()[0];
             }
@@ -302,6 +307,9 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public string ShortName { get; private set; }
+
+        private readonly int? _precisionRequired;
+        public int PrecisionRequired { get { return _precisionRequired ?? 1; }}
 
         #region Property change methods
 

@@ -599,7 +599,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             ExplicitMods mods = (nodePep != null ? nodePep.ExplicitMods : null);
             var calcPre = settings.GetPrecursorCalc(nodeGroup.TransitionGroup.LabelType, mods);
             var seq = nodeGroup.TransitionGroup.Peptide.Target;
-            return calcPre.GetModifiedSequence(seq, true);            
+            return calcPre.GetModifiedSequenceDisplay(seq);            
         }
 
         private static CellDesc CreateHead(string text, RenderTools rt)
