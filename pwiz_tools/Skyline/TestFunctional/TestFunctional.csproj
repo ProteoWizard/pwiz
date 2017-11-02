@@ -256,6 +256,7 @@
     <Compile Include="SrmCourseScenarioTest.cs" />
     <Compile Include="StandardTypeTest.cs" />
     <Compile Include="StartPageTest.cs" />
+    <Compile Include="SummaryGraphLinePlotsTest.cs" />
     <Compile Include="SurrogateStandardTest.cs" />
     <Compile Include="SynchronizeSummaryZoomingTest.cs" />
     <Compile Include="SynchSiblingsSmallMoleculesTest.cs" />

@@ -1997,13 +1997,19 @@ namespace pwiz.Skyline
 
         private void removePeakMenuItem_Click(object sender, EventArgs e)
         {
+            var menu = sender as ToolStripMenuItem;
+            if (menu == null || menu.DropDownItems.OfType<object>().Any())
+                return;
+            bool removePeakByContextMenu = menu == removePeakContextMenuItem;
+
+            RemovePeak(removePeakByContextMenu);
+        }
+
+        public void RemovePeak(bool removePeakByContextMenu = false)
+        {
             bool canApply, canRemove;
             CanApplyOrRemovePeak(null, null, out canApply, out canRemove);
             if (!canRemove)
-                return;
-
-            var menu = sender as ToolStripMenuItem;
-            if (menu == null || menu.DropDownItems.OfType<object>().Any())
                 return;
 
             var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
@@ -2016,7 +2022,8 @@ namespace pwiz.Skyline
             else if (nodePepTree != null && nodePepTree.Nodes.OfType<object>().Any())
             {
                 nodeGroups.AddRange(from TransitionGroupDocNode tranGroup in nodePepTree.DocNode.Children
-                                    select new Tuple<TransitionGroupDocNode, IdentityPath>(tranGroup, new IdentityPath(nodePepTree.Path, tranGroup.Id)));
+                    select
+                    new Tuple<TransitionGroupDocNode, IdentityPath>(tranGroup, new IdentityPath(nodePepTree.Path, tranGroup.Id)));
             }
             else
             {
@@ -2024,7 +2031,7 @@ namespace pwiz.Skyline
             }
 
             TransitionDocNode nodeTran = null;
-            if (menu == removePeakContextMenuItem)
+            if (removePeakByContextMenu)
             {
                 var nodeTranTree = SelectedNode as TransitionTreeNode;
                 if (nodeTranTree != null)
@@ -2040,9 +2047,10 @@ namespace pwiz.Skyline
             }
             else
             {
-// ReSharper disable once PossibleNullReferenceException
+                // ReSharper disable once PossibleNullReferenceException
                 ModifyDocument(string.Format(Resources.SkylineWindow_removePeakContextMenuItem_Click_Remove_all_peaks_from__0_, nodePepTree.DocNode.ModifiedSequenceDisplay),
-                    document => nodeGroups.Aggregate(Document, (doc, nodeGroup) => RemovePeakInternal(doc, SelectedResultsIndex, nodeGroup.Item2, nodeGroup.Item1, nodeTran)));
+                    document => nodeGroups.Aggregate(Document,
+                            (doc, nodeGroup) => RemovePeakInternal(doc, SelectedResultsIndex, nodeGroup.Item2, nodeGroup.Item1, nodeTran)));
             }
         }
 

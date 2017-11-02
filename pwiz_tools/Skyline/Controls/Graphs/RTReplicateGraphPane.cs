@@ -236,7 +236,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else
                     {
-                        // TODO: Add whiskers
                         curveItem = CreateLineItem(label, pointPairList, color);
                     }
 

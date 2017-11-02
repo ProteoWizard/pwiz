@@ -156,7 +156,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
     }
 
-    internal class ErrorTag
+    public class ErrorTag
     {
         public ErrorTag(double error)
         {

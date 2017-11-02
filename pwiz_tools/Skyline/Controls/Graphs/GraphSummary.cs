@@ -261,7 +261,12 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public int CurveCount { get { return GraphPanes.Sum(pane=>pane.CurveList.Count); } }
+        public int CurveCount { get { return CountCurves(c => true); } }
+
+        public int CountCurves(Func<CurveItem, bool> isCounted)
+        {
+            return GraphPanes.Sum(pane => pane.CurveList.Count(isCounted));
+        }
 
         internal IEnumerable<SummaryGraphPane> GraphPanes
         {

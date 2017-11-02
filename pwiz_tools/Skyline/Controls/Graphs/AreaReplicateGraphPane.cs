@@ -168,6 +168,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
             BarSettings.Type = BarType;
+            if (IsMultiSelect)
+                BarSettings.Type = BarType.Cluster;
             Title.Text = null;
 
             DisplayTypeChrom displayType;
@@ -1028,8 +1030,17 @@ namespace pwiz.Skyline.Controls.Graphs
             /// </summary>
             /// <param name="denominator">Divide all point y values by this number</param>
             /// <param name="libraryHeight">Total height of the library column</param>
-            private void NormalizeTo(double denominator, double libraryHeight)
+            private void NormalizeTo(double? denominator, double libraryHeight)
             {
+                IList<double> listTotals = null;
+                if (!denominator.HasValue)
+                {
+                    if (_docNode == null)
+                        denominator = 1;    // Multi-select peptid graph
+                    else
+                        listTotals = GetTotalsList().Select(t => t / 100).ToArray();  // Normalize to 100%
+                }
+
                 foreach (var pointPairLists in PointPairLists)
                 {
                     if (pointPairLists.Count == 0)
@@ -1041,13 +1052,20 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             if (pointPairList[i].Y != PointPairBase.Missing)
                             {
+                                double pointDenom = denominator ?? listTotals[i];
+
                                 // If library is displayed and the set of data to plot is at
                                 // index 0 (where we store library intensity data)
                                 // calculate the proportion of the denominator for each point
-                                if (_expectedVisible != AreaExpectedValue.none && i == 0)
-                                    pointPairList[i].Y *= (denominator/libraryHeight);
+                                if (_expectedVisible != AreaExpectedValue.none && i == 0 && denominator.HasValue)
+                                    pointPairList[i].Y *= (pointDenom/libraryHeight);
                                 if (_normalize != AreaNormalizeToData.none)
-                                    pointPairList[i].Y /= denominator;
+                                {
+                                    pointPairList[i].Y /= pointDenom;
+                                    var errorTag = pointPairList[i].Tag as ErrorTag;
+                                    if (errorTag != null && errorTag.Error != 0 && errorTag.Error != PointPairBase.Missing)
+                                        pointPairList[i].Tag = new ErrorTag(errorTag.Error/pointDenom);
+                                }
                             }
                             else if (_zeroMissingValues)
                             {
@@ -1092,6 +1110,26 @@ namespace pwiz.Skyline.Controls.Graphs
             // Then normalizes the data to the maximum stacked bar height
             private void NormalizeMaxStack()
             {
+                var listTotals = GetTotalsList();
+
+                // Finds the maximum bar height from the list of bar heights
+                if (listTotals.Count != 0)
+                {
+                    double firstColumnHeight = listTotals[0];
+                    // If the library column is visible, remove it before getting the max height
+                    if (_expectedVisible != AreaExpectedValue.none)
+                        listTotals.RemoveAt(0);
+                    double maxBarHeight = listTotals.Aggregate(Math.Max);
+
+                    // Normalizes each non-missing point by max bar height
+                    NormalizeTo(maxBarHeight, _expectedVisible != AreaExpectedValue.none
+                                                  ? firstColumnHeight
+                                                  : 0);
+                }
+            }
+
+            private IList<double> GetTotalsList()
+            {
                 var listTotals = new List<double>();
                 // Populates a list storing each of the bar heights
                 foreach (var pointPairLists in PointPairLists)
@@ -1113,27 +1151,13 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                     }
                 }
-
-                // Finds the maximum bar height from the list of bar heights
-                if (listTotals.Count != 0)
-                {
-                    double firstColumnHeight = listTotals[0];
-                    // If the library column is visible, remove it before getting the max height
-                    if (_expectedVisible != AreaExpectedValue.none)
-                        listTotals.RemoveAt(0);
-                    double maxBarHeight = listTotals.Aggregate(Math.Max);
-
-                    // Normalizes each non-missing point by max bar height
-                    NormalizeTo(maxBarHeight, _expectedVisible != AreaExpectedValue.none
-                                                  ? firstColumnHeight
-                                                  : 0);
-                }
+                return listTotals;
             }
 
             // Sets each missing point to be 0, so that the percent stack will show
             private void FixupForTotals()
             {
-                NormalizeTo(1, 1);
+                NormalizeTo(null, 1);
             }
 
             protected override bool IsMissingValue(TransitionChromInfoData chromInfo)
@@ -1215,15 +1239,20 @@ namespace pwiz.Skyline.Controls.Graphs
             private ErrorTag CalcErrorTag(IList<PointPair> points, bool average)
             {
                 double? variance = null;
+                int count = 0;
                 foreach (var errorTag in points.Select(point => point.Tag as ErrorTag))
                 {
-                    if (errorTag != null)
-                        variance = (variance ?? 0) + errorTag.Error*errorTag.Error;
+                    if (errorTag != null && errorTag.Error != PointPairBase.Missing)
+                    {
+                        // CONSIDER: Some chance of overflow with this method of calculating variance
+                        variance = (variance ?? 0) + errorTag.Error * errorTag.Error;
+                        count++;
+                    }
                 }
                 if (!variance.HasValue)
                     return null;
                 if (average)
-                    variance = variance/points.Count;
+                    variance = variance/count;
                 return new ErrorTag(Math.Sqrt(variance.Value));
             }
 
