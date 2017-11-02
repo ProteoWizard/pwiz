@@ -293,9 +293,12 @@ namespace pwiz.Skyline.Model
             switch (format)
             {
                 case SequenceModFormatType.mass_diff:
+                {
+                    string formatString = "[{0}{1:F0" + precisionRequired + "}]"; // Not L10N
                     // Non-narrow format is used for library look-up and must be consistent with LibKey format
-                    return string.Format(CultureInfo.InvariantCulture, "[{0}{1:F0" + precisionRequired + "}]", // Not L10N
-                        (massDiff > 0 ? "+" : string.Empty), massDiff); // Not L10N
+                    return string.Format(CultureInfo.InvariantCulture, formatString, // Not L10N
+                        massDiff > 0 ? "+" : string.Empty, massDiff); // Not L10N
+                }
                 case SequenceModFormatType.mass_diff_narrow:
                     // Narrow format allows for removal of .0 when decimal is not present
                     // One of the more important cases is 15N labeling which produces a lot of
