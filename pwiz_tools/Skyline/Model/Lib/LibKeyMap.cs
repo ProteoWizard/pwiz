@@ -73,9 +73,25 @@ namespace pwiz.Skyline.Model.Lib
             return _index.ItemsMatching(libraryKey, matchAdductAlso).Select(GetItem);
         }
 
+        public IDictionary<LibKey, TItem> AsDictionary()
+        {
+            return new LibKeyDictionary(this);
+        }
+
         private TItem GetItem(LibKeyIndex.IndexItem indexItem)
         {
             return _allItems[indexItem.OriginalIndex];
+        }
+
+        public bool TryGetValue(LibKey key, out TItem value)
+        {
+            foreach (TItem matchingValue in ItemsMatching(key.LibraryKey, true))
+            {
+                value = matchingValue;
+                return true;
+            }
+            value = default(TItem);
+            return false;
         }
 
         private class ItemIndexList : AbstractReadOnlyList<TItem>
@@ -96,6 +112,30 @@ namespace pwiz.Skyline.Model.Lib
             public override TItem this[int index]
             {
                 get { return _allItems[_indexItems[index].OriginalIndex]; }
+            }
+        }
+
+        private class LibKeyDictionary : AbstractReadOnlyDictionary<LibKey, TItem>
+        {
+            private readonly LibKeyMap<TItem> _libKeyMap;
+
+            public LibKeyDictionary(LibKeyMap<TItem> libKeyMap)
+            {
+                _libKeyMap = libKeyMap;
+            }
+
+            public override ICollection<LibKey> Keys
+            {
+                get { return ReadOnlyList.Create(_libKeyMap.Count, i=>new LibKey(_libKeyMap.Index[i].LibraryKey)); }
+            }
+
+            public override ICollection<TItem> Values
+            {
+                get { return _libKeyMap; }
+            }
+            public override bool TryGetValue(LibKey key, out TItem value)
+            {
+                return _libKeyMap.TryGetValue(key, out value);
             }
         }
     }

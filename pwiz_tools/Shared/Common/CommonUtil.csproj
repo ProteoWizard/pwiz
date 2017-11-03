@@ -115,6 +115,7 @@
     <Compile Include="Chemistry\MassDistribution.cs" />
     <Compile Include="Chemistry\Molecule.cs" />
     <Compile Include="Chemistry\SignedMz.cs" />
+    <Compile Include="Collections\AbstractReadOnlyDictionary.cs" />
     <Compile Include="Collections\AbstractReadOnlyList.cs" />
     <Compile Include="Collections\BindingLists.cs" />
     <Compile Include="Collections\LinqExtensions.cs" />
@@ -127,6 +128,7 @@
     <Compile Include="Collections\ImmutableSortedList.cs" />
     <Compile Include="Collections\Range.cs" />
     <Compile Include="Collections\RangeList.cs" />
+    <Compile Include="Collections\ReadOnlyList.cs" />
     <Compile Include="Collections\StructSerializer.cs" />
     <Compile Include="Collections\UniqueList.cs" />
     <Compile Include="SystemUtil\ValueCache.cs" />

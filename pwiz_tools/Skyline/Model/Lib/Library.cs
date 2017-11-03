@@ -1219,9 +1219,15 @@ namespace pwiz.Skyline.Model.Lib
 
     public sealed class LibraryIonMobilityInfo : IIonMobilityInfoProvider
     {
-        private readonly IDictionary<LibKey, IonMobilityAndCCS[]> _dictChargedPeptideDriftTimeInfos;
+        private readonly LibKeyMap<IonMobilityAndCCS[]> _dictChargedPeptideDriftTimeInfos;
 
-        public LibraryIonMobilityInfo(string path, IDictionary<LibKey, IonMobilityAndCCS[]> dictChargedPeptideDriftTimeInfos)
+        public LibraryIonMobilityInfo(string path, IDictionary<LibKey, IonMobilityAndCCS[]> dict) 
+            : this(path, new LibKeyMap<IonMobilityAndCCS[]>(
+                ImmutableList.ValueOf(dict.Values), dict.Keys.Select(key=>key.LibraryKey)))
+        {
+            
+        }
+        public LibraryIonMobilityInfo(string path, LibKeyMap<IonMobilityAndCCS[]> dictChargedPeptideDriftTimeInfos)
         {
             Name = path;
             _dictChargedPeptideDriftTimeInfos = dictChargedPeptideDriftTimeInfos;
@@ -1265,7 +1271,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 // Use median CCS to calculate an ion mobility value
                 ccs = new Statistics(ionMobilityInfos.Select(im => im.CollisionalCrossSectionSqA.Value)).Median(); // Median is more tolerant of errors than Average
-                ionMobility = IonMobilityValue.GetIonMobilityValue(ionMobilityFunctionsProvider.IonMobilityFromCCS(ccs.Value, mz, chargedPeptide.Charge).Mobility, 
+                ionMobility = IonMobilityValue.GetIonMobilityValue(ionMobilityFunctionsProvider.IonMobilityFromCCS(ccs.Value, mz, chargedPeptide.Charge).Mobility,
                     ionMobilityFunctionsProvider.IonMobilityUnits);
             }
             else
@@ -1287,11 +1293,11 @@ namespace pwiz.Skyline.Model.Lib
                 return IonMobilityAndCCS.EMPTY;
             var highEnergyDriftTimeOffsetMsec = new Statistics(ionMobilityInfos.Select(im => im.HighEnergyIonMobilityValueOffset)).Median(); // Median is more tolerant of errors than Average
             return IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, ccs, highEnergyDriftTimeOffsetMsec);
-       }
+        }
 
         public IDictionary<LibKey, IonMobilityAndCCS[]> GetIonMobilityDict()
         {
-            return _dictChargedPeptideDriftTimeInfos;
+            return _dictChargedPeptideDriftTimeInfos.AsDictionary();
         }
     }
 
