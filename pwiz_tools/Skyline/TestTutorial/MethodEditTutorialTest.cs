@@ -445,7 +445,7 @@ namespace pwiz.SkylineTestTutorial
         private class DocChangeLogger : StackTraceLogger, IDisposable
         {
             public DocChangeLogger()
-                : base("SkylineWindow.ImportFasta")
+                : base("SkylineWindow.ImportFastax")
             {
                 SkylineWindow.LogChange = LogChange;
             }
