@@ -119,7 +119,8 @@ namespace pwiz.Skyline
             CommonFormEx.ShowFormNames = FormEx.ShowFormNames = ShowFormNames;
 
             // For testing and debugging Skyline command-line interface
-            if (args != null && args.Length > 0 && args[0] != OPEN_DOCUMENT_ARG) 
+            bool openDoc = args != null && args.Length > 0 && args[0] == OPEN_DOCUMENT_ARG;
+            if (args != null && args.Length > 0 && !openDoc) 
             {
                 if (!CommandLineRunner.HasCommandPrefix(args[0]))
                 {
@@ -261,6 +262,7 @@ namespace pwiz.Skyline
                     if ((activationArgs != null &&
                         activationArgs.ActivationData != null &&
                         activationArgs.ActivationData.Length != 0) ||
+                        openDoc ||
                         !Settings.Default.ShowStartupForm)
                     {
                         MainWindow = new SkylineWindow(args);

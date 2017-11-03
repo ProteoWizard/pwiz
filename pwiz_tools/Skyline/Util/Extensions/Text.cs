@@ -238,7 +238,15 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static int[] ParseInts(string s)
         {
-            return ArrayUtil.Parse(s, Convert.ToInt32, SEPARATOR_CSV, new int[0]);
+            return ArrayUtil.Parse(s, Convert.ToInt32, SEPARATOR_CSV);
+        }
+
+        /// <summary>
+        /// Puts quotation marks before and after the text passed in
+        /// </summary>
+        public static string Quote(this string text)
+        {
+            return '"' + text + '"'; // Not L10N
         }
 
         /// <summary>

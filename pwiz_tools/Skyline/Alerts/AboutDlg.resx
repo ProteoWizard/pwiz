@@ -126,7 +126,7 @@
     <value>14, 201</value>
   </data>
   <data name="linkProteome.Size" type="System.Drawing.Size, System.Drawing">
-    <value>131, 13</value>
+    <value>55, 13</value>
   </data>
   <data name="linkProteome.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -467,7 +467,7 @@ http://www.zlib.net</value>
     <value>10</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-    <value>Copyright © 2008-2015 University of Washington, all rights reserved
+    <value>Copyright © 2008-2017 University of Washington, all rights reserved
 
 MacCoss Lab, Department of Genome Sciences, UW
 
