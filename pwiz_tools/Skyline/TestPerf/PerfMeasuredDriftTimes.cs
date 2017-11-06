@@ -170,7 +170,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 dlg.OkDialog();
             });
 
-            WaitForDocumentChangeLoaded(docChangedDriftTimePredictor);
+            WaitForDocumentChangeLoaded(docChangedDriftTimePredictor, WAIT_TIME*2);
         }  
     }
 }

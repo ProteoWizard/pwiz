@@ -378,6 +378,9 @@ namespace SkylineTester
 
         public void PrepareJumpTo()
         {
+            if (_jumpList == null)
+                return;
+
             var text = MainWindow.CommandShell.Text;
             int findCount = 0;
             foreach (var jumpItem in _jumpList)
