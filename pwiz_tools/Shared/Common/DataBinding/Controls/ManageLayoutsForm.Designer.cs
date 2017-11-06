@@ -29,95 +29,77 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ManageLayoutsForm));
             this.listViewLayouts = new pwiz.Common.DataBinding.Controls.ColumnListView();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.btnMakeDefault = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
-            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.SuspendLayout();
             // 
             // listViewLayouts
             // 
-            this.listViewLayouts.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.listViewLayouts, "listViewLayouts");
             this.listViewLayouts.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
             this.listViewLayouts.HideSelection = false;
-            this.listViewLayouts.Location = new System.Drawing.Point(12, 12);
             this.listViewLayouts.Name = "listViewLayouts";
             this.listViewLayouts.ShowItemToolTips = true;
-            this.listViewLayouts.Size = new System.Drawing.Size(358, 273);
             this.listViewLayouts.SmallImageList = this.imageList1;
-            this.listViewLayouts.TabIndex = 0;
             this.listViewLayouts.UseCompatibleStateImageBehavior = false;
             this.listViewLayouts.View = System.Windows.Forms.View.Details;
             this.listViewLayouts.SelectedIndexChanged += new System.EventHandler(this.listViewLayouts_SelectedIndexChanged);
             // 
+            // imageList1
+            // 
+            this.imageList1.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
+            resources.ApplyResources(this.imageList1, "imageList1");
+            this.imageList1.TransparentColor = System.Drawing.Color.Magenta;
+            // 
             // btnMakeDefault
             // 
-            this.btnMakeDefault.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnMakeDefault.Location = new System.Drawing.Point(376, 12);
+            resources.ApplyResources(this.btnMakeDefault, "btnMakeDefault");
             this.btnMakeDefault.Name = "btnMakeDefault";
-            this.btnMakeDefault.Size = new System.Drawing.Size(110, 23);
-            this.btnMakeDefault.TabIndex = 1;
-            this.btnMakeDefault.Text = "Make Default";
             this.btnMakeDefault.UseVisualStyleBackColor = true;
             this.btnMakeDefault.Click += new System.EventHandler(this.btnMakeDefault_Click);
             // 
             // btnDelete
             // 
-            this.btnDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnDelete.Location = new System.Drawing.Point(376, 41);
+            resources.ApplyResources(this.btnDelete, "btnDelete");
             this.btnDelete.Name = "btnDelete";
-            this.btnDelete.Size = new System.Drawing.Size(110, 23);
-            this.btnDelete.TabIndex = 2;
-            this.btnDelete.Text = "Delete";
             this.btnDelete.UseVisualStyleBackColor = true;
             this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(411, 291);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 3;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOk.Location = new System.Drawing.Point(330, 291);
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 4;
-            this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
-            // 
-            // imageList1
-            // 
-            this.imageList1.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
-            this.imageList1.ImageSize = new System.Drawing.Size(16, 16);
-            this.imageList1.TransparentColor = System.Drawing.Color.Magenta;
             // 
             // ManageLayoutsForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AcceptButton = this.btnOk;
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(498, 326);
+            this.CancelButton = this.btnCancel;
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnDelete);
             this.Controls.Add(this.btnMakeDefault);
             this.Controls.Add(this.listViewLayouts);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "ManageLayoutsForm";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            this.Text = "ManageLayoutsForm";
             this.ResumeLayout(false);
 
         }
