@@ -47,7 +47,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             var downloadsFolder = PathEx.GetDownloadsPath();
 
             TestFilesZipPaths = new [] { @"https://skyline.gs.washington.edu/tutorials/TrainedDriftTimePredictionTutorial.zip", 
-                @"https://chorusproject.org/anonymous/download/experiment/1955020616207225201\/perftests/Trained_Drift_Times_Tutorial.zip", // Note the backslash - form is url\resultantFile
+                @"https://skyline.gs.washington.edu/perftests/Trained_Drift_Times_Tutorial.zip", 
                 Path.Combine(downloadsFolder ,@"perftests\Trained_Drift_Times_Tutorial\"+BSA_Frag+".zip"), // Contained in the chorus download zip
                 Path.Combine(downloadsFolder, @"perftests\Trained_Drift_Times_Tutorial\"+Yeast_BSA+".zip") // Contained in the chorus download zip
             };
