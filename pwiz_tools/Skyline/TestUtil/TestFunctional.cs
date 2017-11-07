@@ -1373,8 +1373,8 @@ namespace pwiz.SkylineTestUtil
                 importResultsDlg.RadioAddNewChecked = true;
                 importResultsDlg.OptimizationName = ExportOptimize.CE;
                 importResultsDlg.NamedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(replicatesDirName).ToArray();
-                string prefix = TextUtil.GetCommonPrefix(importResultsDlg.NamedPathSets.Select(ns => ns.Key));
-                string suffix = TextUtil.GetCommonSuffix(importResultsDlg.NamedPathSets.Select(ns => ns.Key));
+                string prefix = importResultsDlg.NamedPathSets.Select(ns => ns.Key).GetCommonPrefix();
+                string suffix = importResultsDlg.NamedPathSets.Select(ns => ns.Key).GetCommonSuffix();
                 // Rename all the replicates to remove the specified prefix and/or suffix, so those dialogs don't pop up.
                 for (int i = 0; i < importResultsDlg.NamedPathSets.Length; i++)
                 {
@@ -1394,7 +1394,7 @@ namespace pwiz.SkylineTestUtil
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             RunUI(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFileReplicates(fileNames));
 
-            string prefix = TextUtil.GetCommonPrefix(fileNames.Select(f => f.GetFileName()));
+            string prefix = fileNames.Select(f => f.GetFileName()).GetCommonPrefix();
             if (prefix.Length < ImportResultsDlg.MIN_COMMON_PREFIX_LENGTH)
             {
                 OkDialog(importResultsDlg, importResultsDlg.OkDialog);
@@ -1402,7 +1402,7 @@ namespace pwiz.SkylineTestUtil
             else
             {
                 ImportResultsNameDlg importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg.OkDialog);
-                RunUI(importResultsNameDlg.YesDialog);
+                OkDialog(importResultsNameDlg, importResultsNameDlg.OkDialog);
             }
             WaitForCondition(waitForLoadSeconds * 1000,
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);

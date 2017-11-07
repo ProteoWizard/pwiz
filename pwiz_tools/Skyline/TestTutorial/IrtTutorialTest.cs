@@ -20,7 +20,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -709,7 +708,12 @@ namespace pwiz.SkylineTestTutorial
                 if (removeFix.HasValue)
                 {
                     RunDlg<ImportResultsNameDlg>(importResultsDlg.OkDialog, resultsNames =>
-                        resultsNames.OkDialog(removeFix.Value ? DialogResult.Yes : DialogResult.No));
+                    {
+                        if (removeFix.Value)
+                            resultsNames.YesDialog();
+                        else
+                            resultsNames.NoDialog();
+                    });
                 }
                 else
                 {

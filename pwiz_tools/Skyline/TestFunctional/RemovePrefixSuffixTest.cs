@@ -19,7 +19,6 @@
 
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Util;
@@ -97,7 +96,7 @@ namespace pwiz.SkylineTestFunctional
                     foundSuffix = removeSuffix.Suffix;
                     RunUI(() => removeSuffix.Suffix = foundSuffix.Substring(suffixLength.Value));
                 }
-                OkDialog(removeSuffix, () => removeSuffix.OkDialog(DialogResult.Yes));
+                OkDialog(removeSuffix, () => removeSuffix.YesDialog());
             }
             WaitForDocumentLoaded();
             Assert.AreEqual(expectedResult1, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[0].Name);

@@ -236,19 +236,19 @@ namespace pwiz.Skyline.FileUI
 
             if (NamedPathSets.Length > 1)
             {
-
-                string prefix = GetCommonPrefix(NamedPathSets.Select(ns => ns.Key));
-                string suffix = GetCommonSuffix(NamedPathSets.Select(ns => ns.Key));
+                var resultNames = NamedPathSets.Select(ns => ns.Key).ToArray();
+                string prefix = GetCommonPrefix(resultNames);
+                string suffix = GetCommonSuffix(resultNames);
                 if (!String.IsNullOrEmpty(prefix) || !String.IsNullOrEmpty(suffix))
                 {
-                    using (var dlgName = new ImportResultsNameDlg(prefix, suffix))
+                    using (var dlgName = new ImportResultsNameDlg(prefix, suffix, resultNames))
                     {
                         var result = dlgName.ShowDialog(this);
                         if (result == DialogResult.Cancel)
                         {
                             return;
                         }
-                        if (result == DialogResult.Yes)
+                        if (dlgName.IsRemove)
                         {
                             dlgName.ApplyNameChange(NamedPathSets);
                         }

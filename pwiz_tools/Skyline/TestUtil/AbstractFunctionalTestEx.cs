@@ -162,7 +162,12 @@ namespace pwiz.SkylineTestUtil
                 if (removeFix.HasValue)
                 {
                     RunDlg<ImportResultsNameDlg>(importResultsDlg.OkDialog, resultsNames =>
-                        resultsNames.OkDialog(removeFix.Value ? DialogResult.Yes : DialogResult.No));
+                    {
+                        if (removeFix.Value)
+                            resultsNames.YesDialog();
+                        else
+                            resultsNames.NoDialog();
+                    });
                 }
                 else
                 {

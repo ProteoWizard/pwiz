@@ -295,18 +295,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         var foundResults = ImportResultsControl.FoundResultsFiles;
                         if (foundResults.Count > 1)
                         {
-                            string prefix = ImportResultsDlg.GetCommonPrefix(foundResults.Select(f => f.Name));
-                            string suffix = ImportResultsDlg.GetCommonSuffix(foundResults.Select(f => f.Name));
+                            var resultNames = foundResults.Select(f => f.Name).ToArray();
+                            string prefix = ImportResultsDlg.GetCommonPrefix(resultNames);
+                            string suffix = ImportResultsDlg.GetCommonSuffix(resultNames);
                             if (!string.IsNullOrEmpty(prefix) || !string.IsNullOrEmpty(suffix))
                             {
-                                using (var dlgName = new ImportResultsNameDlg(prefix, suffix))
+                                using (var dlgName = new ImportResultsNameDlg(prefix, suffix, resultNames))
                                 {
                                     var result = dlgName.ShowDialog(this);
                                     if (result == DialogResult.Cancel)
                                     {
                                         return;
                                     }
-                                    else if (result == DialogResult.Yes)
+                                    else if (dlgName.IsRemove)
                                     {
                                         ImportResultsControl.FoundResultsFiles = ImportResultsControl.FoundResultsFiles.Select(f =>
                                             new ImportPeptideSearch.FoundResultsFile(dlgName.ApplyNameChange(f.Name), f.Path)).ToList();
