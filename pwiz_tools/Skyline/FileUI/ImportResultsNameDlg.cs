@@ -34,11 +34,11 @@ namespace pwiz.Skyline.FileUI
         private readonly string _suffixInitial;
         private readonly string[] _resultNames;
 
-        public ImportResultsNameDlg(string prefix, string suffix, string[] resultNames)
+        public ImportResultsNameDlg(string prefix, string suffix, IEnumerable<string> resultNames)
         {
             InitializeComponent();
 
-            _resultNames = resultNames;
+            _resultNames = resultNames.ToArray();
             textPrefix.Text = _prefixInitial = prefix;
             textPrefix.SelectionStart = textPrefix.Text.Length;
             textPrefix.SelectionLength = 0;

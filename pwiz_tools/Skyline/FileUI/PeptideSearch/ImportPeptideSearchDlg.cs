@@ -295,7 +295,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         var foundResults = ImportResultsControl.FoundResultsFiles;
                         if (foundResults.Count > 1)
                         {
-                            string[] resultNames = foundResults.Select(f => f.Name).ToArray();
+                            var resultNames = foundResults.Select(f => f.Name).ToList();
                             string prefix = ImportResultsDlg.GetCommonPrefix(resultNames);
                             string suffix = ImportResultsDlg.GetCommonSuffix(resultNames);
                             if (!string.IsNullOrEmpty(prefix) || !string.IsNullOrEmpty(suffix))
