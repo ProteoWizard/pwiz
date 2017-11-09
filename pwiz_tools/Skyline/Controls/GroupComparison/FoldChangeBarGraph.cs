@@ -29,6 +29,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Util;
 using ZedGraph;
 
@@ -181,7 +182,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 }
                 else
                 {
-                    label = PeptideGroupTreeNode.ProteinModalDisplayText(row.Protein.DocNode);
+                    label = ProteinMetadataManager.ProteinModalDisplayText(row.Protein.DocNode);
                 }
                 if (showMsLevel && row.MsLevel.HasValue)
                 {

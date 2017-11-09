@@ -25,6 +25,7 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -432,7 +433,7 @@ namespace pwiz.Skyline.Model
 
         public override string GetDisplayText(DisplaySettings settings)
         {
-            return PeptideGroupTreeNode.ProteinModalDisplayText(this);
+            return ProteinMetadataManager.ProteinModalDisplayText(this);
         }
 
         public static int CompareNames(PeptideGroupDocNode p1, PeptideGroupDocNode p2)

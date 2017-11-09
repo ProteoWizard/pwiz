@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             if (!string.IsNullOrEmpty(textPValue.Text) && !helper.ValidateDecimalTextBox(textPValue, 0.0, checkBoxLog.Checked ? (double?)null : 1.0, out pValueCutoff, checkBoxLog.Checked))
                 return;
 
-            Settings.Default.Log2FoldChangeCutoff = checkBoxLog.Checked ? foldChangeCutoff : ConvertBetweenLogs(foldChangeCutoff, true, 2);
+            Settings.Default.Log2FoldChangeCutoff = Math.Abs(checkBoxLog.Checked ? foldChangeCutoff : ConvertBetweenLogs(foldChangeCutoff, true, 2));
             Settings.Default.PValueCutoff = checkBoxLog.Checked ? pValueCutoff : ConvertBetweenLogs(pValueCutoff, true, 10, true);
             Settings.Default.FilterVolcanoPlotPoints = checkBoxFilter.Checked;
             Settings.Default.VolcanoPlotPropertiesLog = checkBoxLog.Checked;
@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var log = checkBoxLog.Checked;
             double foldChangeCutoff;
             if (double.TryParse(textFoldChange.Text, out foldChangeCutoff) && (log || foldChangeCutoff > 0.0))
-                Settings.Default.Log2FoldChangeCutoff = log ? foldChangeCutoff : ConvertBetweenLogs(foldChangeCutoff, true, 2);
+                Settings.Default.Log2FoldChangeCutoff = Math.Abs(log ? foldChangeCutoff : ConvertBetweenLogs(foldChangeCutoff, true, 2));
             else
                 Settings.Default.Log2FoldChangeCutoff = double.NaN;
             

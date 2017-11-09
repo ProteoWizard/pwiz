@@ -117,9 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="colorPickerDlg.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="buttonSave.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -176,102 +173,6 @@
   </data>
   <data name="&gt;&gt;buttonCancel.ZOrder" xml:space="preserve">
     <value>5</value>
-  </data>
-  <data name="dataGridViewColors.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <metadata name="colorCol.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colorCol.HeaderText" xml:space="preserve">
-    <value />
-  </data>
-  <data name="colorCol.Width" type="System.Int32, mscorlib">
-    <value>40</value>
-  </data>
-  <metadata name="rgbCol.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="rgbCol.HeaderText" xml:space="preserve">
-    <value>RGB</value>
-  </data>
-  <data name="rgbCol.MinimumWidth" type="System.Int32, mscorlib">
-    <value>100</value>
-  </data>
-  <metadata name="hexCol.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="hexCol.HeaderText" xml:space="preserve">
-    <value>HEX</value>
-  </data>
-  <data name="hexCol.MinimumWidth" type="System.Int32, mscorlib">
-    <value>100</value>
-  </data>
-  <metadata name="colBtn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colBtn.HeaderText" xml:space="preserve">
-    <value />
-  </data>
-  <data name="colBtn.MinimumWidth" type="System.Int32, mscorlib">
-    <value>20</value>
-  </data>
-  <data name="colBtn.Width" type="System.Int32, mscorlib">
-    <value>20</value>
-  </data>
-  <metadata name="bindingSource1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>147, 17</value>
-  </metadata>
-  <data name="dataGridViewColors.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 19</value>
-  </data>
-  <data name="dataGridViewColors.Size" type="System.Drawing.Size, System.Drawing">
-    <value>318, 200</value>
-  </data>
-  <data name="dataGridViewColors.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewColors.Name" xml:space="preserve">
-    <value>dataGridViewColors</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewColors.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewColors.Parent" xml:space="preserve">
-    <value>groupBoxCategory</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewColors.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="comboColorType.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="comboColorType.Items" xml:space="preserve">
-    <value>RGB</value>
-  </data>
-  <data name="comboColorType.Items1" xml:space="preserve">
-    <value>HEX</value>
-  </data>
-  <data name="comboColorType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 233</value>
-  </data>
-  <data name="comboColorType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>60, 21</value>
-  </data>
-  <data name="comboColorType.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;comboColorType.Name" xml:space="preserve">
-    <value>comboColorType</value>
-  </data>
-  <data name="&gt;&gt;comboColorType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboColorType.Parent" xml:space="preserve">
-    <value>groupBoxCategory</value>
-  </data>
-  <data name="&gt;&gt;comboColorType.ZOrder" xml:space="preserve">
-    <value>1</value>
   </data>
   <data name="comboBoxCategory.Items" xml:space="preserve">
     <value>Transitions</value>
@@ -335,6 +236,27 @@
   </data>
   <data name="&gt;&gt;lableColorCount.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="colorGrid1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 19</value>
+  </data>
+  <data name="colorGrid1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>318, 235</value>
+  </data>
+  <data name="colorGrid1.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;colorGrid1.Name" xml:space="preserve">
+    <value>colorGrid1</value>
+  </data>
+  <data name="&gt;&gt;colorGrid1.Type" xml:space="preserve">
+    <value>pwiz.Skyline.ToolsUI.StandardColorGrid, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;colorGrid1.Parent" xml:space="preserve">
+    <value>groupBoxCategory</value>
+  </data>
+  <data name="&gt;&gt;colorGrid1.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="groupBoxCategory.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 111</value>
@@ -462,42 +384,6 @@
   <data name="$this.Text" xml:space="preserve">
     <value>Edit Color Scheme</value>
   </data>
-  <data name="&gt;&gt;colorPickerDlg.Name" xml:space="preserve">
-    <value>colorPickerDlg</value>
-  </data>
-  <data name="&gt;&gt;colorPickerDlg.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ColorDialog, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;colorCol.Name" xml:space="preserve">
-    <value>colorCol</value>
-  </data>
-  <data name="&gt;&gt;colorCol.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;rgbCol.Name" xml:space="preserve">
-    <value>rgbCol</value>
-  </data>
-  <data name="&gt;&gt;rgbCol.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;hexCol.Name" xml:space="preserve">
-    <value>hexCol</value>
-  </data>
-  <data name="&gt;&gt;hexCol.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;colBtn.Name" xml:space="preserve">
-    <value>colBtn</value>
-  </data>
-  <data name="&gt;&gt;colBtn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewButtonColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;bindingSource1.Name" xml:space="preserve">
-    <value>bindingSource1</value>
-  </data>
-  <data name="&gt;&gt;bindingSource1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn1</value>
   </data>
@@ -520,6 +406,6 @@
     <value>EditCustomThemeDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

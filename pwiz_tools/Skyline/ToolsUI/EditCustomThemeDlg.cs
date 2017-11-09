@@ -21,19 +21,18 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.ToolsUI
 {
-    public partial class EditCustomThemeDlg : FormEx
+    public partial class EditCustomThemeDlg : FormEx, ColorGrid<RgbHexColor>.IColorGridOwner
     {
         private ColorScheme _newScheme;
         private readonly ColorScheme _oldScheme;
@@ -41,8 +40,8 @@ namespace pwiz.Skyline.ToolsUI
         private readonly ImmutableList<Color> DefaultSingletonColor = ImmutableList<Color>.Singleton(Color.Gray);
         private readonly string DefaultName = string.Empty;
         private readonly IEnumerable<ColorScheme> _existing;
-        private readonly BindingList<ColorRow> _colorRowBindingListTransition;
-        private readonly BindingList<ColorRow> _colorRowBindingListPrecursors;
+        private readonly BindingList<RgbHexColor> _colorRowBindingListTransition;
+        private readonly BindingList<RgbHexColor> _colorRowBindingListPrecursors;
         private readonly string _formatColorCount;
         private bool _updatingBindingLists;
 
@@ -50,12 +49,15 @@ namespace pwiz.Skyline.ToolsUI
         public EditCustomThemeDlg(ColorScheme scheme, IEnumerable<ColorScheme> existing)
         {
             InitializeComponent();
+
+            colorGrid1.Owner = this;
+            colorGrid1.AllowUserToOrderColumns = true;
+            colorGrid1.AllowUserToAddRows = true;
+
             _existing = existing;
             _formatColorCount = lableColorCount.Text;
-            colorPickerDlg.FullOpen = true;
-            _colorRowBindingListTransition = new BindingList<ColorRow>();
-            _colorRowBindingListPrecursors = new BindingList<ColorRow>();
-            colBtn.UseColumnTextForButtonValue = true;
+            _colorRowBindingListTransition = new BindingList<RgbHexColor>();
+            _colorRowBindingListPrecursors = new BindingList<RgbHexColor>();
             if (scheme == null) // Add
             {
                 Settings.Default.ColorSchemes.TryGetValue(Settings.Default.CurrentColorScheme, out _oldScheme);
@@ -71,9 +73,7 @@ namespace pwiz.Skyline.ToolsUI
                 textBoxName.Text = scheme.Name;
             }
             _isNewTheme = scheme == null;
-            comboColorType.SelectedIndex = 0;
             comboBoxCategory.SelectedIndex = 0;
-            bindingSource1.DataSource = GetCurrentBindingList();
             UpdateColorCount(_newScheme);
         }
 
@@ -85,12 +85,12 @@ namespace pwiz.Skyline.ToolsUI
                 _colorRowBindingListPrecursors.Clear();
                 foreach (var color in colorScheme.PrecursorColors)
                 {
-                    _colorRowBindingListPrecursors.Add(new ColorRow(color));
+                    _colorRowBindingListPrecursors.Add(new RgbHexColor(color));
                 }
                 _colorRowBindingListTransition.Clear();
                 foreach (var color in colorScheme.TransitionColors)
                 {
-                    _colorRowBindingListTransition.Add(new ColorRow(color));
+                    _colorRowBindingListTransition.Add(new RgbHexColor(color));
                 }
             }
             finally
@@ -108,7 +108,7 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        private IList<Color> ColorListFromRows(IList<ColorRow> colorRows)
+        private IList<Color> ColorListFromRows(IList<RgbHexColor> colorRows)
         {
             var colors = ImmutableList.ValueOf(colorRows.Select(row=>row.Color).Where(color => !color.IsEmpty));
             if (colors.Count == 0)
@@ -118,109 +118,9 @@ namespace pwiz.Skyline.ToolsUI
             return colors;
         }
 
-        private static string GetRgb(Color color)
-        {
-            return String.Format("{0}, {1}, {2}", color.R, color.G, color.B); // Not L10N
-        }
-        private static string GetHex(Color color)
-        {
-            return "#" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2"); // Not L10N
-        }
-
-        private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.ColumnIndex == colBtn.Index)
-            {
-                var rowIndex = e.RowIndex;
-                var oldColor = ((ColorRow)bindingSource1[rowIndex]).Color;
-                colorPickerDlg.Color = oldColor;
-                if (colorPickerDlg.ShowDialog() == DialogResult.OK)
-                {
-                    changeRowColor(rowIndex, colorPickerDlg.Color);
-                }
-            }
-        }
-
-        public void changeRowColor(int rowIndex, Color newColor)
-        {
-            if (rowIndex == dataGridViewColors.NewRowIndex)
-            {
-                bindingSource1.EndEdit();
-                dataGridViewColors.NotifyCurrentCellDirty(true);
-                dataGridViewColors.EndEdit();
-                dataGridViewColors.NotifyCurrentCellDirty(false);
-            }
-            bindingSource1[rowIndex] = new ColorRow(newColor);
-        }
-
-        private static Color? ParseHtmlColor(string value)
-        {
-            if (value.Length == 6 || value.Length == 3)
-                value = "#" + value; // Not L10N
-            Color color;
-            try
-            {
-                color = ColorTranslator.FromHtml(value);
-            }
-            catch
-            {
-                return null;
-            }
-            return color;
-        }
-
-        private static Color? ParseRgb(string value)
-        {
-            if (value == null)
-            {
-                return null;
-            }
-            else
-            {
-                var RGB = value.Split(',');
-                if (RGB.Length != 3)
-                    return null;
-                else
-                {
-                    bool isValid = true;
-                    foreach (var s in RGB)
-                    {
-                        try
-                        {
-                            var num = int.Parse(s);
-                            if (num < 0 || num > 255)
-                                isValid = false;
-                        }
-                        catch
-                        {
-                            isValid = false;
-                        }
-                    }
-                    if (isValid)
-                        return Color.FromArgb(int.Parse(RGB[0]), int.Parse(RGB[1]), int.Parse(RGB[2]));
-                    else
-                        return null;
-                }
-            }
-        }
-
-        private void comboColorType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (comboColorType.SelectedIndex == 0)
-            {
-                dataGridViewColors.Columns[hexCol.Index].Visible = false;
-                dataGridViewColors.Columns[rgbCol.Index].Visible = true;
-            }
-            else
-            {
-                dataGridViewColors.Columns[rgbCol.Index].Visible = false;
-                dataGridViewColors.Columns[hexCol.Index].Visible = true;
-            }
-        }
-
         private void comboBoxCategory_SelectedIndexChanged(object sender, EventArgs e)
         {
-            bindingSource1.DataSource = GetCurrentBindingList();
+            colorGrid1.UpdateBindingSource();
         }
 
         private ThemeCategory GetCurrentCategory()
@@ -263,114 +163,6 @@ namespace pwiz.Skyline.ToolsUI
             Program.MainWindow.UpdateGraphPanes();
         }
 
-        public class ColorRow
-        {
-            public ColorRow()
-            {
-                Color = Color.Empty;
-            }
-            public ColorRow(Color color)
-            {
-                Color = color;
-            }
-
-            public Color Color { get; set; }
-
-            public string Rgb
-            {
-                get
-                {
-                    if (Color == Color.Empty)
-                    {
-                        return string.Empty;
-                    }
-                    return GetRgb(Color);
-                }
-                set
-                {
-                    if (string.IsNullOrEmpty(value))
-                    {
-                        Color = Color.Empty;
-                        return;
-                    }
-                    
-                    var newColor = ParseRgb(value);
-                    if (newColor == null)
-                    {
-                        throw new FormatException();
-                    }
-                    Color = newColor.Value;
-                }
-            }
-
-            public string Hex
-            {
-                get
-                {
-                    if (Color == Color.Empty)
-                    {
-                        return string.Empty;
-                    }
-                    return GetHex(Color);
-                }
-                set
-                {
-                    if (string.IsNullOrEmpty(value))
-                    {
-                        Color = Color.Empty;
-                        return;
-                    }
-
-                    var newColor = ParseHtmlColor(value);
-                    if (!newColor.HasValue)
-                    {
-                        throw new FormatException();
-                    }
-                    Color = newColor.Value;
-                }
-            }
-        }
-
-        private void dataGridViewColors_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        {
-            if (e.ColumnIndex != colorCol.Index)
-                return;
-            var currentBindings = GetCurrentBindingList();
-            if (e.RowIndex >= 0 && e.RowIndex < currentBindings.Count)
-            {
-                var row = dataGridViewColors.Rows[e.RowIndex];
-                var colorRow = currentBindings[e.RowIndex];
-                var cell = row.Cells[e.ColumnIndex];
-                cell.Style.SelectionBackColor = cell.Style.SelectionForeColor = cell.Style.BackColor = colorRow.Color;
-            }
-        }
-
-        private BindingList<ColorRow> GetCurrentBindingList()
-        {
-            if (GetCurrentCategory() == ThemeCategory.precursors)
-                return _colorRowBindingListPrecursors;
-            else
-                return _colorRowBindingListTransition;
-        }
-
-        private void dataGridViewColors_DataError(object sender, DataGridViewDataErrorEventArgs e)
-        {
-            if (e.Exception is FormatException)
-            {
-                MessageDlg.Show(this, Resources.EditCustomThemeDlg_dataGridViewColors_DataError_Colors_must_be_entered_in_HEX_or_RGB_format_); 
-            }            
-        }
-
-        private void bindingSource1_ListChanged(object sender, ListChangedEventArgs e)
-        {
-            if (_updatingBindingLists)
-            {
-                return;
-            }
-            UpdateColorCount(NewScheme);
-            ColorScheme.ColorSchemeDemo = NewScheme;
-            Program.MainWindow.ChangeColorScheme();
-        }
 
         private void UpdateColorCount(ColorScheme scheme)
         {
@@ -386,48 +178,39 @@ namespace pwiz.Skyline.ToolsUI
             lableColorCount.Text = string.Format(_formatColorCount, ct);
         }
 
-        private void dataGridViewColors_KeyDown(object sender, KeyEventArgs e)
+        BindingList<RgbHexColor> ColorGrid<RgbHexColor>.IColorGridOwner.GetCurrentBindingList()
         {
-            if (e.KeyCode == Keys.V && e.Modifiers == Keys.Control)
-            {
-                DoPaste();
-                e.Handled = true;
-            }
+            if (GetCurrentCategory() == ThemeCategory.precursors)
+                return _colorRowBindingListPrecursors;
+            else
+                return _colorRowBindingListTransition;
         }
 
-        public void DoPaste()
+        public void OnListChanged(object sender, ListChangedEventArgs e)
         {
-            var clipboardText = ClipboardHelper.GetClipboardText(this);
-            if (clipboardText == null)
+            if (_updatingBindingLists)
             {
                 return;
             }
-            using (var reader = new StringReader(clipboardText))
-            {
-                string line;
-                while (null != (line = reader.ReadLine()))
-                {
-                    line = line.Trim();
-                    if (string.IsNullOrEmpty(line))
-                    {
-                        continue;
-                    }
-                    var color = ParseHtmlColor(line) ?? ParseRgb(line);
-                    if (color == null)
-                    {
-                        MessageDlg.Show(this, string.Format(Resources.EditCustomThemeDlg_DoPaste_Unable_to_parse_the_color___0____Use_HEX_or_RGB_format_, line));
-                        return;
-                    }
-                    var colorRow = new ColorRow(color.Value);
-                    bindingSource1.Insert(bindingSource1.Position, colorRow);
-                }
-            }
+            UpdateColorCount(NewScheme);
+            ColorScheme.ColorSchemeDemo = NewScheme;
+            Program.MainWindow.ChangeColorScheme();
         }
 
         // Testing functions below
         public DataGridView getGrid()
         {
-            return dataGridViewColors;
+            return colorGrid1.GetGrid();
+        }
+
+        public void DoPaste()
+        {
+            colorGrid1.DoPaste();
+        }
+
+        public void changeRowColor(int rowIndex, Color newColor)
+        {
+            colorGrid1.changeRowColor(rowIndex, newColor);
         }
 
         public void changeCateogry(ThemeCategory category)
@@ -438,8 +221,8 @@ namespace pwiz.Skyline.ToolsUI
                 comboBoxCategory.SelectedIndex = 1;
         }
 
-        public void changeToHex() { comboColorType.SelectedIndex = 1; }
-        public void changeToRGB() { comboColorType.SelectedIndex = 0; }
+        public void changeToHex() { colorGrid1.ChangeToHex(); }
+        public void changeToRGB() { colorGrid1.ChangeToRGB(); }
 
         public void save()
         {
@@ -455,7 +238,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public void setBindingPosition(int index)
         {
-            bindingSource1.Position = index;
+            colorGrid1.SetBindingPosition(index);
         }
     }
 }

@@ -16,9 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 
-namespace pwiz.Skyline.Controls.GroupComparison
+namespace pwiz.Skyline.Model.GroupComparison
 {
     public struct GroupIdentifier : IComparable
     {

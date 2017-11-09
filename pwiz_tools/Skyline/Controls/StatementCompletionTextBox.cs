@@ -27,9 +27,9 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.ProteomeDatabase.API;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
@@ -501,16 +501,16 @@ namespace pwiz.Skyline.Controls
             ProteinMatchTypes displayMatchTypes = ProteinMatchTypes.ALL;
             switch (SequenceTree.ProteinsDisplayMode)
             {
-                case ProteinDisplayMode.ByName:
+                case ProteinMetadataManager.ProteinDisplayMode.ByName:
                     displayMatchTypes = displayMatchTypes.Except(ProteinMatchType.name);
                     break;
-                case ProteinDisplayMode.ByAccession:
+                case ProteinMetadataManager.ProteinDisplayMode.ByAccession:
                     displayMatchTypes = displayMatchTypes.Except(ProteinMatchType.accession);
                     break;
-                case ProteinDisplayMode.ByGene:
+                case ProteinMetadataManager.ProteinDisplayMode.ByGene:
                     displayMatchTypes = displayMatchTypes.Except(ProteinMatchType.gene);
                     break;
-                case ProteinDisplayMode.ByPreferredName:
+                case ProteinMetadataManager.ProteinDisplayMode.ByPreferredName:
                     displayMatchTypes = displayMatchTypes.Except(ProteinMatchType.preferredName);
                     break;
             }
@@ -533,14 +533,14 @@ namespace pwiz.Skyline.Controls
                         // Show description, and any other fields we were searching on
                         if (match.AlternativeName != null)
                         {
-                            listItem.Text = PeptideGroupTreeNode.ProteinModalDisplayText(match.AlternativeName, Settings.Default.ShowPeptidesDisplayMode);
+                            listItem.Text = ProteinMetadataManager.ProteinModalDisplayText(match.AlternativeName, Settings.Default.ShowPeptidesDisplayMode);
                             listItem.Tag = new StatementCompletionItem {ProteinInfo = match.AlternativeName, SearchText = searchText};
                             StatementCompletionForm.AddDescription(listItem,
                                 match.AlternativeName.TextForMatchTypes(displayMatchTypes.Except(ProteinMatchType.name)), searchText);
                         }
                         else
                         {
-                            listItem.Text = PeptideGroupTreeNode.ProteinModalDisplayText(match.Protein.ProteinMetadata, Settings.Default.ShowPeptidesDisplayMode);
+                            listItem.Text = ProteinMetadataManager.ProteinModalDisplayText(match.Protein.ProteinMetadata, Settings.Default.ShowPeptidesDisplayMode);
                             listItem.Tag = new StatementCompletionItem { ProteinInfo = match.Protein.ProteinMetadata, SearchText = searchText };
                             StatementCompletionForm.AddDescription(listItem,
                                 match.Protein.ProteinMetadata.TextForMatchTypes(displayMatchTypes), searchText);
@@ -594,7 +594,7 @@ namespace pwiz.Skyline.Controls
                     }
                     var listItem = new ListViewItem
                                        {
-                                           Text = PeptideGroupTreeNode.ProteinModalDisplayText(mainName, Settings.Default.ShowPeptidesDisplayMode),
+                                           Text = ProteinMetadataManager.ProteinModalDisplayText(mainName, Settings.Default.ShowPeptidesDisplayMode),
                                            ImageIndex = (int) ImageId.protein,
                                            Tag = new StatementCompletionItem { ProteinInfo = proteinInfo, SearchText = searchText }
                                        };

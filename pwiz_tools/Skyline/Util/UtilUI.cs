@@ -268,6 +268,11 @@ namespace pwiz.Skyline.Util
             OpenLink(parent, GetSkylineShortLink(shortName));
         }
 
+        public static void OpenRegexDocLink(IWin32Window parent)
+        {
+            OpenLink(parent, "http://www.regular-expressions.info/reference.html"); // Not L10N            
+        }
+
         /// <summary>
         /// Shows a form with a link in it that allows a user to continue attempting failed link navigation
         /// </summary>

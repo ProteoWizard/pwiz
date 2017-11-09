@@ -57,10 +57,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
             set
             {
-                if (!string.IsNullOrEmpty(GroupComparisonName))
-                {
-                    throw new InvalidOperationException();
-                }
+                // TODO(tobiasr): ask nick why this might be a problem
+//                if (!string.IsNullOrEmpty(GroupComparisonName))
+//                {
+//                    throw new InvalidOperationException();
+//                }
                 lock (_lock)
                 {
                     if (Equals(GroupComparisonDef, value))
@@ -72,6 +73,26 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 FireModelChanged();
             }
+        }
+
+        public SrmDocument ApplyChangesToDocument(SrmDocument doc, GroupComparisonDef groupDef)
+        {
+            var groupComparisons = doc.Settings.DataSettings.GroupComparisonDefs.ToList();
+            int index =
+                groupComparisons.FindIndex(def => def.Name == GroupComparisonName);
+            if (index < 0)
+            {
+                groupComparisons.Add(groupDef);
+            }
+            else
+            {
+                groupComparisons[index] = groupDef;
+            }
+            doc =
+                doc.ChangeSettings(
+                    doc.Settings.ChangeDataSettings(
+                        doc.Settings.DataSettings.ChangeGroupComparisonDefs(groupComparisons)));
+            return doc;
         }
 
         public string GroupComparisonName { get; private set; }

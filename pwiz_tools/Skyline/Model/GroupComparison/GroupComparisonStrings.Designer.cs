@@ -61,6 +61,132 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Above.
+        /// </summary>
+        internal static string CreateMatchExpression_PopulateComboBoxes_Above {
+            get {
+                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_Above", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Above right cutoff.
+        /// </summary>
+        internal static string CreateMatchExpression_PopulateComboBoxes_Above_right_cutoff {
+            get {
+                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_Above_right_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Below.
+        /// </summary>
+        internal static string CreateMatchExpression_PopulateComboBoxes_Below {
+            get {
+                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_Below", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Below left cutoff.
+        /// </summary>
+        internal static string CreateMatchExpression_PopulateComboBoxes_Below_left_cutoff {
+            get {
+                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_Below_left_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecula Formula.
+        /// </summary>
+        internal static string CreateMatchExpression_PopulateComboBoxes_Molecula_Formula {
+            get {
+                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_Molecula_Formula", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Group Name.
+        /// </summary>
+        internal static string CreateMatchExpression_PopulateComboBoxes_Molecule_Group_Name {
+            get {
+                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_Molecule_Group_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        internal static string CreateMatchExpression_PopulateComboBoxes_None {
+            get {
+                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide Modified Sequence.
+        /// </summary>
+        internal static string CreateMatchExpression_PopulateComboBoxes_Peptide_Modified_Sequence {
+            get {
+                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_Peptide_Modified_Sequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide Molecule Name.
+        /// </summary>
+        internal static string CreateMatchExpression_PopulateComboBoxes_Peptide_Molecule_Name {
+            get {
+                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_Peptide_Molecule_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide Sequence.
+        /// </summary>
+        internal static string CreateMatchExpression_PopulateComboBoxes_Peptide_Sequence {
+            get {
+                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_Peptide_Sequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Accession.
+        /// </summary>
+        internal static string CreateMatchExpression_PopulateComboBoxes_Protein_Accession {
+            get {
+                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_Protein_Accession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Gene.
+        /// </summary>
+        internal static string CreateMatchExpression_PopulateComboBoxes_Protein_Gene {
+            get {
+                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_Protein_Gene", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Name.
+        /// </summary>
+        internal static string CreateMatchExpression_PopulateComboBoxes_Protein_Name {
+            get {
+                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_Protein_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein Preferred Name.
+        /// </summary>
+        internal static string CreateMatchExpression_PopulateComboBoxes_Protein_Preferred_Name {
+            get {
+                return ResourceManager.GetString("CreateMatchExpression_PopulateComboBoxes_Protein_Preferred_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There is already a group comparison named {0}..
         /// </summary>
         internal static string EditGroupComparisonDlg_btnOK_Click_There_is_already_a_group_comparison_named__0__ {
@@ -202,6 +328,15 @@ namespace pwiz.Skyline.Model.GroupComparison {
         internal static string FoldChangeRowTipProvider_RenderTip_Protein {
             get {
                 return ResourceManager.GetString("FoldChangeRowTipProvider_RenderTip_Protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Formatting....
+        /// </summary>
+        internal static string FoldChangeVolcanoPlot_BuildContextMenu_Formatting___ {
+            get {
+                return ResourceManager.GetString("FoldChangeVolcanoPlot_BuildContextMenu_Formatting___", resourceCulture);
             }
         }
         
@@ -458,6 +593,24 @@ namespace pwiz.Skyline.Model.GroupComparison {
         internal static string VolcanoPlot_VolcanoPlot_Volcano_Plot {
             get {
                 return ResourceManager.GetString("VolcanoPlot_VolcanoPlot_Volcano_Plot", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expression.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Expression {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Expression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Labeled.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Labeled {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Labeled", resourceCulture);
             }
         }
     }

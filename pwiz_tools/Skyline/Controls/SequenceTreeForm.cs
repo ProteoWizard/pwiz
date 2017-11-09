@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -81,16 +82,16 @@ namespace pwiz.Skyline.Controls
             string newTitle = null;
             switch (SequenceTree.ProteinsDisplayMode)
             {
-                case ProteinDisplayMode.ByName:
+                case ProteinMetadataManager.ProteinDisplayMode.ByName:
                     newTitle = _defaultTabText;
                     break;
-                case ProteinDisplayMode.ByAccession:
+                case ProteinMetadataManager.ProteinDisplayMode.ByAccession:
                     newTitle = Resources.SequenceTreeForm_UpdateTitle_Targets_by_Accession;
                     break;
-                case ProteinDisplayMode.ByPreferredName:
+                case ProteinMetadataManager.ProteinDisplayMode.ByPreferredName:
                     newTitle = Resources.SequenceTreeForm_UpdateTitle_Targets_by_Preferred_Name;
                     break;
-                case ProteinDisplayMode.ByGene:
+                case ProteinMetadataManager.ProteinDisplayMode.ByGene:
                     newTitle = Resources.SequenceTreeForm_UpdateTitle_Targets_by_Gene;
                     break;
             }

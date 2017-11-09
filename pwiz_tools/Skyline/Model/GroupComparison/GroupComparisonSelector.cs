@@ -18,7 +18,6 @@
  */
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Skyline.Controls.GroupComparison;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {

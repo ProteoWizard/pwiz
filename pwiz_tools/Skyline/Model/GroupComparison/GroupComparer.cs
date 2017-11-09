@@ -24,7 +24,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataAnalysis.FoldChange;
 using pwiz.Common.DataAnalysis.Matrices;
-using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Hibernate;
 

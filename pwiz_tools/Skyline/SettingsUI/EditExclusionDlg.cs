@@ -119,7 +119,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void linkRegex_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(this, "http://www.regular-expressions.info/reference.html"); // Not L10N
+            WebHelpers.OpenRegexDocLink(this);
         }
     }
 }

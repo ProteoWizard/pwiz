@@ -28,29 +28,19 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditCustomThemeDlg));
-            this.colorPickerDlg = new System.Windows.Forms.ColorDialog();
             this.buttonSave = new System.Windows.Forms.Button();
             this.buttonCancel = new System.Windows.Forms.Button();
-            this.dataGridViewColors = new pwiz.Common.Controls.CommonDataGridView();
-            this.colorCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.rgbCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.hexCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colBtn = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
-            this.comboColorType = new System.Windows.Forms.ComboBox();
             this.comboBoxCategory = new System.Windows.Forms.ComboBox();
             this.groupBoxCategory = new System.Windows.Forms.GroupBox();
             this.lableColorCount = new System.Windows.Forms.Label();
+            this.colorGrid1 = new pwiz.Skyline.ToolsUI.StandardColorGrid();
             this.textBoxName = new System.Windows.Forms.TextBox();
             this.labelName = new System.Windows.Forms.Label();
             this.labelCategory = new System.Windows.Forms.Label();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewColors)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
             this.groupBoxCategory.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -68,74 +58,6 @@
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
             // 
-            // dataGridViewColors
-            // 
-            this.dataGridViewColors.AllowUserToOrderColumns = true;
-            resources.ApplyResources(this.dataGridViewColors, "dataGridViewColors");
-            this.dataGridViewColors.AutoGenerateColumns = false;
-            this.dataGridViewColors.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
-            this.dataGridViewColors.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridViewColors.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colorCol,
-            this.rgbCol,
-            this.hexCol,
-            this.colBtn});
-            this.dataGridViewColors.DataSource = this.bindingSource1;
-            this.dataGridViewColors.Name = "dataGridViewColors";
-            this.dataGridViewColors.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellClick);
-            this.dataGridViewColors.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dataGridViewColors_CellFormatting);
-            this.dataGridViewColors.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridViewColors_DataError);
-            this.dataGridViewColors.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dataGridViewColors_KeyDown);
-            // 
-            // colorCol
-            // 
-            this.colorCol.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            resources.ApplyResources(this.colorCol, "colorCol");
-            this.colorCol.Name = "colorCol";
-            this.colorCol.ReadOnly = true;
-            this.colorCol.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.colorCol.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            // 
-            // rgbCol
-            // 
-            this.rgbCol.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.rgbCol.DataPropertyName = "Rgb";
-            resources.ApplyResources(this.rgbCol, "rgbCol");
-            this.rgbCol.Name = "rgbCol";
-            this.rgbCol.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.rgbCol.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            // 
-            // hexCol
-            // 
-            this.hexCol.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.hexCol.DataPropertyName = "Hex";
-            resources.ApplyResources(this.hexCol, "hexCol");
-            this.hexCol.Name = "hexCol";
-            // 
-            // colBtn
-            // 
-            this.colBtn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            resources.ApplyResources(this.colBtn, "colBtn");
-            this.colBtn.Name = "colBtn";
-            this.colBtn.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.colBtn.Text = "...";
-            // 
-            // bindingSource1
-            // 
-            this.bindingSource1.AllowNew = true;
-            this.bindingSource1.ListChanged += new System.ComponentModel.ListChangedEventHandler(this.bindingSource1_ListChanged);
-            // 
-            // comboColorType
-            // 
-            resources.ApplyResources(this.comboColorType, "comboColorType");
-            this.comboColorType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboColorType.FormattingEnabled = true;
-            this.comboColorType.Items.AddRange(new object[] {
-            resources.GetString("comboColorType.Items"),
-            resources.GetString("comboColorType.Items1")});
-            this.comboColorType.Name = "comboColorType";
-            this.comboColorType.SelectedIndexChanged += new System.EventHandler(this.comboColorType_SelectedIndexChanged);
-            // 
             // comboBoxCategory
             // 
             this.comboBoxCategory.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -151,8 +73,7 @@
             // 
             resources.ApplyResources(this.groupBoxCategory, "groupBoxCategory");
             this.groupBoxCategory.Controls.Add(this.lableColorCount);
-            this.groupBoxCategory.Controls.Add(this.comboColorType);
-            this.groupBoxCategory.Controls.Add(this.dataGridViewColors);
+            this.groupBoxCategory.Controls.Add(this.colorGrid1);
             this.groupBoxCategory.Name = "groupBoxCategory";
             this.groupBoxCategory.TabStop = false;
             // 
@@ -160,6 +81,14 @@
             // 
             resources.ApplyResources(this.lableColorCount, "lableColorCount");
             this.lableColorCount.Name = "lableColorCount";
+            // 
+            // colorGrid1
+            // 
+            this.colorGrid1.AllowUserToAddRows = true;
+            this.colorGrid1.AllowUserToOrderColumns = false;
+            resources.ApplyResources(this.colorGrid1, "colorGrid1");
+            this.colorGrid1.Name = "colorGrid1";
+            this.colorGrid1.OnListChanged += new System.ComponentModel.ListChangedEventHandler(this.OnListChanged);
             // 
             // textBoxName
             // 
@@ -212,8 +141,6 @@
             this.MinimizeBox = false;
             this.Name = "EditCustomThemeDlg";
             this.ShowIcon = false;
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewColors)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).EndInit();
             this.groupBoxCategory.ResumeLayout(false);
             this.groupBoxCategory.PerformLayout();
             this.ResumeLayout(false);
@@ -223,11 +150,8 @@
 
         #endregion
 
-        private System.Windows.Forms.ColorDialog colorPickerDlg;
         private System.Windows.Forms.Button buttonSave;
         private System.Windows.Forms.Button buttonCancel;
-        private System.Windows.Forms.DataGridView dataGridViewColors;
-        private System.Windows.Forms.ComboBox comboColorType;
         private System.Windows.Forms.ComboBox comboBoxCategory;
         private System.Windows.Forms.GroupBox groupBoxCategory;
         private System.Windows.Forms.TextBox textBoxName;
@@ -236,11 +160,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
-        private System.Windows.Forms.BindingSource bindingSource1;
         private System.Windows.Forms.Label lableColorCount;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colorCol;
-        private System.Windows.Forms.DataGridViewTextBoxColumn rgbCol;
-        private System.Windows.Forms.DataGridViewTextBoxColumn hexCol;
-        private System.Windows.Forms.DataGridViewButtonColumn colBtn;
+        private StandardColorGrid colorGrid1;
     }
 }

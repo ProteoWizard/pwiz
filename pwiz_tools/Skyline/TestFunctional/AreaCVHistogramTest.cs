@@ -283,7 +283,7 @@ namespace pwiz.SkylineTestFunctional
         private void WaitForHistogramBarCount(IAreaCVHistogramInfo histogramInfo, int expectedBars)
         {
             WaitForConditionUI(() => histogramInfo.Items == expectedBars,
-                string.Format("Waiting for {0} bars", expectedBars));
+                string.Format("Expecting {0} bars", expectedBars));
         }
 
         private static AreaCVGraphData.AreaCVGraphDataCache GetCache(SummaryGraphPane pane)

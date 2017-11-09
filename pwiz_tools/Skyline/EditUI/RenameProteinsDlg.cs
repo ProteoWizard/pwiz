@@ -25,6 +25,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -267,7 +268,7 @@ namespace pwiz.Skyline.EditUI
 
         // CONSIDER bspratt - wouldn't a button for restoring the original name be useful too?
 
-        private void UseAccessionOrPreferredNameorGene(ProteinDisplayMode mode)
+        private void UseAccessionOrPreferredNameorGene(ProteinMetadataManager.ProteinDisplayMode mode)
         {
             var dictNodeToNewName = new Dictionary<string, string>();
             foreach (var nodePepGroup in _document.MoleculeGroups)
@@ -278,13 +279,13 @@ namespace pwiz.Skyline.EditUI
                     string text = null;
                     switch (mode)
                     {
-                        case ProteinDisplayMode.ByAccession:
+                        case ProteinMetadataManager.ProteinDisplayMode.ByAccession:
                             text = nodePepGroup.ProteinMetadata.Accession;
                             break;
-                        case ProteinDisplayMode.ByPreferredName:
+                        case ProteinMetadataManager.ProteinDisplayMode.ByPreferredName:
                             text = nodePepGroup.ProteinMetadata.PreferredName;
                             break;
-                        case ProteinDisplayMode.ByGene:
+                        case ProteinMetadataManager.ProteinDisplayMode.ByGene:
                             text = nodePepGroup.ProteinMetadata.Gene;
                             break;
                     }
@@ -310,17 +311,17 @@ namespace pwiz.Skyline.EditUI
 
         private void Accession_Click(object sender, EventArgs e)
         {
-            UseAccessionOrPreferredNameorGene(ProteinDisplayMode.ByAccession);
+            UseAccessionOrPreferredNameorGene(ProteinMetadataManager.ProteinDisplayMode.ByAccession);
         }
 
         private void PreferredName_Click(object sender, EventArgs e)
         {
-            UseAccessionOrPreferredNameorGene(ProteinDisplayMode.ByPreferredName);
+            UseAccessionOrPreferredNameorGene(ProteinMetadataManager.ProteinDisplayMode.ByPreferredName);
         }
 
         private void Gene_Click(object sender, EventArgs e)
         {
-            UseAccessionOrPreferredNameorGene(ProteinDisplayMode.ByGene);
+            UseAccessionOrPreferredNameorGene(ProteinMetadataManager.ProteinDisplayMode.ByGene);
         }
 
 

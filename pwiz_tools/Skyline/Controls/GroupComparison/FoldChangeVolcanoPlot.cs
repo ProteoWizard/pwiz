@@ -35,6 +35,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -45,11 +46,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
     {
         private const int MAX_SELECTED = 100;
         private const float SELECTED_SIZE = 10.0f;
-        private const float OUT_SIZE = 9.0f;
-        private const float IN_SIZE = 8.0f;
+        private const float MATCHED_SIZE = 9.0f;
+        private const float OTHER_SIZE = 8.0f;
         private const double MIN_PVALUE = 1E-6;
-
-        private readonly FontSpec _font;
 
         private BindingListSource _bindingListSource;
         private SkylineWindow _skylineWindow;
@@ -60,13 +59,23 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private LineItem _minPValueLine;
 
         private readonly List<LineItem> _points;
-        private readonly List<Selection> _selections;
+        private readonly List<LabeledPoint> _labeledPoints;
 
         private FoldChangeBindingSource.FoldChangeRow _selectedRow;
 
         private NodeTip _tip;
         private RowFilter.ColumnFilter _absLog2FoldChangeFilter;
         private RowFilter.ColumnFilter _pValueFilter;
+
+        private GroupComparisonModel GroupComparisonModel
+        {
+            get { return FoldChangeBindingSource.GroupComparisonModel; }
+        }
+
+        private GroupComparisonDef GroupComparisonDef
+        {
+            get { return GroupComparisonModel.GroupComparisonDef; }
+        }
 
         public FoldChangeVolcanoPlot()
         {
@@ -91,9 +100,32 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.IsZoomOnMouseCenter = true;
 
             _points = new List<LineItem>();
-            _selections = new List<Selection>();
+            _labeledPoints = new List<LabeledPoint>();
+        }
 
-            _font = new FontSpec("Arial", 12.0f, Color.Red, false, false, false, Color.Empty, null, FillType.None) // Not L10N
+        public SrmDocument Document
+        {
+            get { return _skylineWindow != null ? _skylineWindow.DocumentUI : null; }
+        }
+
+        public bool AnyProteomic
+        {
+            get { return Document.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules; }
+        }
+
+        public bool AnyMolecules
+        {
+            get { return Document.DocumentType != SrmDocument.DOCUMENT_TYPE.proteomic; }
+        }
+
+        public bool PerProtein
+        {
+            get { return GroupComparisonDef.PerProtein; }
+        }
+
+        public static FontSpec CreateFontSpec(Color color)
+        {
+            return new FontSpec("Arial", 12.0f, color, false, false, false, Color.Empty, null, FillType.None)
             {
                 Border = { IsVisible = false }
             };
@@ -115,9 +147,24 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _minPValueLine[1].X = pane.XAxis.Scale.Max;
             }
 
-            foreach (var selection in _selections)
-                if (selection.Label != null)
-                    selection.Label.Location.Y = selection.Point.Y + SELECTED_SIZE / 2.0f / pane.Rect.Height * (pane.YAxis.Scale.Max - pane.YAxis.Scale.Min);
+            foreach (var labeledPoint in _labeledPoints)
+                if (labeledPoint.Label != null)
+                    labeledPoint.Label.Location.Y = labeledPoint.Point.Y + (labeledPoint.IsSelected ? SELECTED_SIZE : MATCHED_SIZE) / 2.0f / pane.Rect.Height * (pane.YAxis.Scale.Max - pane.YAxis.Scale.Min);
+        }
+
+        private class LabeledPoint
+        {
+            public LabeledPoint(PointPair point, TextObj label, bool isSelected)
+            {
+                Point = point;
+                Label = label;
+                IsSelected = isSelected;
+            }
+
+            public PointPair Point { get; private set; }
+            public TextObj Label { get; private set; }
+
+            public bool IsSelected { get; private set; }
         }
 
         private void GraphPane_AxisChangeEvent(GraphPane pane)
@@ -202,6 +249,23 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
         }
 
+        private class PropertiesCutoffSettings : CutoffSettings
+        {
+            public override double Log2FoldChangeCutoff
+            {
+                get { return Settings.Default.Log2FoldChangeCutoff; }
+                set { Settings.Default.Log2FoldChangeCutoff = value; } 
+            }
+
+            public override double PValueCutoff
+            {
+                get { return Settings.Default.PValueCutoff; }
+                set { Settings.Default.PValueCutoff = value; } 
+            }
+        }
+
+        public static CutoffSettings CutoffSettings = new PropertiesCutoffSettings();
+
         public static bool FoldChangCutoffValid
         {
             get { return !double.IsNaN(Settings.Default.Log2FoldChangeCutoff) && Settings.Default.Log2FoldChangeCutoff != 0.0; }
@@ -217,18 +281,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             get { return FoldChangCutoffValid || PValueCutoffValid; }
         }
 
-        private class Selection
-        {
-            public Selection(PointPair point, TextObj label)
-            {
-                Point = point;
-                Label = label;
-            }
-
-            public PointPair Point { get; private set; }
-            public TextObj Label { get; private set; }
-        }
-
         private void UpdateGraph()
         {
             if (!IsHandleCreated)
@@ -237,7 +289,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.GraphPane.GraphObjList.Clear();
             zedGraphControl.GraphPane.CurveList.Clear();
             _points.Clear();
-            _selections.Clear();
+            _labeledPoints.Clear();
             _foldChangeCutoffLine1 = _foldChangeCutoffLine2 = _minPValueLine = null;
 
             var rows = _bindingListSource.OfType<RowItem>()
@@ -246,8 +298,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 .ToArray();
 
             var selectedPoints = new PointPairList();
-            var outPoints = new PointPairList();
-            var inPoints = new PointPairList();
+            var otherPoints = new PointPairList();
 
             var count = 0;
 
@@ -261,26 +312,35 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 if (Settings.Default.GroupComparisonShowSelection && count < MAX_SELECTED && IsSelected(row))
                 {
                     selectedPoints.Add(point);
-                    var textObj = CreateSelectionLabel(point);
-                    _selections.Add(new Selection(point, textObj));
                     ++count;
-                }
-                else if ((PValueCutoffValid && pvalue <= Settings.Default.PValueCutoff) ||
-                         (FoldChangCutoffValid && row.FoldChangeResult.AbsLog2FoldChange <=
-                          Math.Abs(Settings.Default.Log2FoldChangeCutoff)))
-                {
-                    inPoints.Add(point);
                 }
                 else
                 {
-                    outPoints.Add(point);
+                    otherPoints.Add(point);
                 }
             }
 
-            // The order matters here, selected points should be highest in the zorder, followed by out points and in points
-            AddPoints(selectedPoints, Color.Red, SELECTED_SIZE);
-            AddPoints(outPoints, Color.Blue, OUT_SIZE);
-            AddPoints(inPoints, Color.Gray, IN_SIZE);
+            // The order matters here, selected points should be highest in the zorder, followed by matched points and other(unmatched) points
+            AddPoints(selectedPoints, Color.Red, SELECTED_SIZE, true, true);
+
+            foreach (var colorRow in GroupComparisonDef.ColorRows.Where(r => r.MatchExpression != null))
+            {
+                var row = colorRow;
+                var matchedPoints = otherPoints.Where(p =>
+                {
+                    var foldChangeRow = (FoldChangeBindingSource.FoldChangeRow) p.Tag;
+                    return row.MatchExpression.Matches(Document, foldChangeRow.Protein, foldChangeRow.Peptide,
+                        foldChangeRow.FoldChangeResult, CutoffSettings);
+                }).ToArray();
+
+                if (matchedPoints.Any())
+                {
+                    AddPoints(new PointPairList(matchedPoints), colorRow.Color, MATCHED_SIZE, row.Labeled);
+                    otherPoints = new PointPairList(otherPoints.Except(matchedPoints).ToArray());
+                }
+            }
+
+            AddPoints(otherPoints, Color.Gray, OTHER_SIZE, false);
 
             // The coordinates that depened on the axis scale dont matter here, the AxisChangeEvent will fix those
             // Insert after selected items, but before all other items
@@ -304,42 +364,54 @@ namespace pwiz.Skyline.Controls.GroupComparison
             zedGraphControl.Invalidate();
         }
 
-        private TextObj CreateSelectionLabel(PointPair point)
+
+
+        public static string GetRowProteinText(FoldChangeBindingSource.FoldChangeRow row, ProteinMetadataManager.ProteinDisplayMode proteinDisplayMode)
+        {
+            if (row.Protein != null)
+                return ProteinMetadataManager.ProteinModalDisplayText(row.Protein.DocNode.ProteinMetadata, proteinDisplayMode);
+
+            return null;
+        }
+
+        private static TextObj CreateLabel(PointPair point, Color color)
         {
             var row = point.Tag as FoldChangeBindingSource.FoldChangeRow;
             if (row == null)
                 return null;
 
-            string text;
-            if (row.Peptide != null)
-                text = row.Peptide.ModifiedSequence == null ? row.Peptide.ToString() : row.Peptide.ModifiedSequence.ToString();
-            else if (row.Protein != null)
-                text = PeptideGroupTreeNode.ProteinModalDisplayText(row.Protein.DocNode);
-            else
-                return null;
+            var text = MatchExpression.GetRowDisplayText(row.Protein, row.Peptide);
 
             var textObj = new TextObj(text, point.X, point.Y, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
             {
                 IsClippedToChartRect = true,
-                FontSpec = _font,
+                FontSpec = CreateFontSpec(color),
                 ZOrder = ZOrder.A_InFront
             };
-
-            zedGraphControl.GraphPane.GraphObjList.Add(textObj);
 
             return textObj;
         }
 
-        private void AddPoints(PointPairList points, Color color, float size)
+        private void AddPoints(PointPairList points, Color color, float size, bool labeled, bool selected = false)
         {
-            var inPointsLineItem = new LineItem(null, points, Color.Black, SymbolType.Circle)
+            var lineItem = new LineItem(null, points, Color.Black, SymbolType.Circle)
             {
                 Line = { IsVisible = false },
                 Symbol = { Border = { IsVisible = false }, Fill = new Fill(color), Size = size, IsAntiAlias = true }
             };
 
-            _points.Add(inPointsLineItem);
-            zedGraphControl.GraphPane.CurveList.Add(inPointsLineItem);
+            if (labeled)
+            {
+                foreach (var point in points)
+                {
+                    var label = CreateLabel(point, color);
+                    _labeledPoints.Add(new LabeledPoint(point, CreateLabel(point, color), selected));
+                    zedGraphControl.GraphPane.GraphObjList.Add(label);
+                }
+            }
+
+            _points.Add(lineItem);
+            zedGraphControl.GraphPane.CurveList.Add(lineItem);
         }
 
         private LineItem CreateAndInsert(int index, double fromX, double toX, double fromY, double toY)
@@ -524,16 +596,20 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return e.Button.HasFlag(MouseButtons.Left) && ClickSelectedRow();
         }
 
+        public static SkylineDocNode GetSkylineDocNodeFromRow(FoldChangeBindingSource.FoldChangeRow row)
+        {
+            if (row.Peptide != null)
+                return row.Peptide;
+            else
+                return row.Protein;
+        }
+
         public bool ClickSelectedRow()
         {
             if (_selectedRow == null)
                 return false;
 
-            SkylineDocNode docNode = null;
-            if (_selectedRow.Peptide != null)
-                docNode = _selectedRow.Peptide;
-            else if (_selectedRow.Protein != null)
-                docNode = _selectedRow.Protein;
+            var docNode = GetSkylineDocNodeFromRow(_selectedRow);
 
             if (docNode == null || ModifierKeys.HasFlag(Keys.Shift))
                 return false;
@@ -573,13 +649,50 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 menuStrip.Items.Insert(index++, new ToolStripSeparator());
                 menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Properties___, null, OnPropertiesClick));
-                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Selection, null, OnSelectionClick) { Checked = Settings.Default.GroupComparisonShowSelection });
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Formatting___, null, OnFormattingClick));
+                menuStrip.Items.Insert(index++, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Selection, null, OnSelectionClick)
+                    { Checked = Settings.Default.GroupComparisonShowSelection });
                 if (AnyCutoffSettingsValid)
                 {
                     menuStrip.Items.Insert(index++, new ToolStripSeparator());
                     menuStrip.Items.Insert(index, new ToolStripMenuItem(GroupComparisonStrings.FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs, null, OnRemoveBelowCutoffsClick));
                 }  
             }
+        }
+
+        private void OnFormattingClick(object o, EventArgs eventArgs)
+        {
+            ShowFormattingDialog();
+        }
+
+        public void ShowFormattingDialog()
+        {
+            var foldChangeRows = _bindingListSource.OfType<RowItem>()
+                .Select(rowItem => rowItem.Value)
+                .OfType<FoldChangeBindingSource.FoldChangeRow>()
+                .ToArray();
+
+            var backup = GroupComparisonDef.ColorRows.Select(r => (MatchRgbHexColor)r.Clone()).ToArray();
+            // This list will later be used as a BindingList, so we have to create a mutable clone
+            var copy = GroupComparisonDef.ColorRows.Select(r => (MatchRgbHexColor) r.Clone()).ToList();
+            using (var form = new VolcanoPlotFormattingDlg(this, copy, foldChangeRows,
+                rows =>
+                {
+                    EditGroupComparisonDlg.ChangeGroupComparisonDef(false, GroupComparisonModel, GroupComparisonDef.ChangeColorRows(rows));
+                    UpdateGraph();
+                }))
+            {
+                if (form.ShowDialog() == DialogResult.OK)
+                {
+                    EditGroupComparisonDlg.ChangeGroupComparisonDef(true, GroupComparisonModel, GroupComparisonDef);
+                }
+                else
+                {
+                    EditGroupComparisonDlg.ChangeGroupComparisonDef(false, GroupComparisonModel, GroupComparisonDef.ChangeColorRows(backup));
+                }
+
+                UpdateGraph();
+            }     
         }
 
         private void OnRemoveBelowCutoffsClick(object o, EventArgs eventArgs)
@@ -603,7 +716,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var pvalueCutoff = Math.Pow(10, -Settings.Default.PValueCutoff);
 
             var indices =
-                rows.Where(r => PValueCutoffValid && r.FoldChangeResult.AdjustedPValue > pvalueCutoff || FoldChangCutoffValid && r.FoldChangeResult.AbsLog2FoldChange < foldchangeCutoff)
+                rows.Where(r => PValueCutoffValid && r.FoldChangeResult.AdjustedPValue >= pvalueCutoff || FoldChangCutoffValid && r.FoldChangeResult.AbsLog2FoldChange <= foldchangeCutoff)
                     .Select(GetGlobalIndex)
                     .Distinct()
                     .ToArray();
@@ -774,10 +887,27 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             var index = 1 + ((FoldChangCutoffValid ? 2 : 0) + (PValueCutoffValid ? 1 : 0));
             var curveList = zedGraphControl.GraphPane.CurveList;
-            return new CurveCounts(curveList.Count, curveList[0].Points.Count,
-                curveList[index++].Points.Count,
-                curveList[index].Points.Count);
 
+            var selectedCount = curveList[0].Points.Count;
+            var outCount = 0;
+            var inCount = 0;
+
+            var otherPoints = curveList[index].Points;
+            for (var i = 0; i < otherPoints.Count; ++i)
+            {
+                var pair = otherPoints[i];
+                var row = (FoldChangeBindingSource.FoldChangeRow) pair.Tag;
+                var pvalue = -Math.Log10(Math.Max(MIN_PVALUE, row.FoldChangeResult.AdjustedPValue));
+
+                if ((!CutoffSettings.FoldChangeCutoffValid || row.FoldChangeResult.AbsLog2FoldChange > CutoffSettings.Log2FoldChangeCutoff) &&
+                    (!CutoffSettings.PValueCutoffValid || pvalue > CutoffSettings.PValueCutoff))
+                    ++outCount;
+                else
+                    ++inCount;
+            }
+
+            return new CurveCounts(curveList.Count, selectedCount,
+                outCount, inCount);
         }
             
         public class CurveCounts

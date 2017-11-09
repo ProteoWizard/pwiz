@@ -203,7 +203,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var curveCounts = plot.GetCurveCounts();
             Assert.AreEqual(showingBounds, FoldChangeVolcanoPlot.AnyCutoffSettingsValid);
-            Assert.AreEqual(showingBounds ? 6 : 3,  curveCounts.CurveCount);
+            Assert.AreEqual(showingBounds ? 5 : 2,  curveCounts.CurveCount);
             Assert.AreEqual(selectedCount, curveCounts.SelectedCount);
             Assert.AreEqual(outCount, curveCounts.OutCount);
             Assert.AreEqual(inCount, curveCounts.InCount);

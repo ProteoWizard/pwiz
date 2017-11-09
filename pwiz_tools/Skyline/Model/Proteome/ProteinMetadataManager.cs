@@ -305,5 +305,62 @@ namespace pwiz.Skyline.Model.Proteome
                 }
             }
         }
+
+        /// <summary>
+        /// helpful for the many places where user might prefer to think of a protein
+        /// in terms of something other than its name
+        /// </summary>
+        public enum ProteinDisplayMode
+        {
+            ByName,
+            ByAccession,
+            ByPreferredName,
+            ByGene
+        };
+
+        public static ProteinDisplayMode ProteinsDisplayMode(string displayProteinsMode)
+        {
+            return Helpers.ParseEnum(displayProteinsMode, ProteinDisplayMode.ByName);
+        }
+
+        public static string ProteinModalDisplayText(ProteinMetadata metadata, string displayProteinsMode)
+        {
+            return ProteinModalDisplayText(metadata, ProteinsDisplayMode(displayProteinsMode));
+        }
+
+        public static string ProteinModalDisplayText(PeptideGroupDocNode node)
+        {
+            return ProteinModalDisplayText(node.ProteinMetadata, Settings.Default.ShowPeptidesDisplayMode);
+        }
+
+        public static string ProteinModalDisplayText(ProteinMetadata metadata, ProteinDisplayMode displayProteinsMode)
+        {
+            switch (displayProteinsMode)
+            {
+                case ProteinDisplayMode.ByAccession:
+                case ProteinDisplayMode.ByPreferredName:
+                case ProteinDisplayMode.ByGene:
+                    break;
+                default:
+                    return metadata.Name;
+            }
+
+            // If the desired field is not populated because it's not yet searched, say so
+            if (metadata.NeedsSearch())
+                return Resources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details;
+
+            // If the desired field is not populated, return something like "<name: YAL01234>"
+            var failsafe = String.Format(Resources.PeptideGroupTreeNode_ProteinModalDisplayText__name___0__, metadata.Name);
+            switch (displayProteinsMode)
+            {
+                case ProteinDisplayMode.ByAccession:
+                    return metadata.Accession ?? failsafe;
+                case ProteinDisplayMode.ByPreferredName:
+                    return metadata.PreferredName ?? failsafe;
+                case ProteinDisplayMode.ByGene:
+                    return metadata.Gene ?? failsafe;
+            }
+            return failsafe;
+        }
     }
 }

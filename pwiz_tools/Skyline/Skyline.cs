@@ -2705,7 +2705,7 @@ namespace pwiz.Skyline
             FoldChangeGrid.ShowFoldChangeGrid(dockPanel, GetFloatingRectangleForNewWindow(), this, groupComparisonName);
         }
         
-        public void UpdateTargetsDisplayMode(ProteinDisplayMode mode)
+        public void UpdateTargetsDisplayMode(ProteinMetadataManager.ProteinDisplayMode mode)
         {
             Settings.Default.ShowPeptidesDisplayMode = mode.ToString();
             Settings.Default.ShowPeptides = true;
@@ -2717,34 +2717,34 @@ namespace pwiz.Skyline
 
         private void showTargetsByNameToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            UpdateTargetsDisplayMode(ProteinDisplayMode.ByName);
+            UpdateTargetsDisplayMode(ProteinMetadataManager.ProteinDisplayMode.ByName);
         }
 
         private void showTargetsByAccessionToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            UpdateTargetsDisplayMode(ProteinDisplayMode.ByAccession);
+            UpdateTargetsDisplayMode(ProteinMetadataManager.ProteinDisplayMode.ByAccession);
         }
 
         private void showTargetsByPreferredNameToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            UpdateTargetsDisplayMode(ProteinDisplayMode.ByPreferredName);
+            UpdateTargetsDisplayMode(ProteinMetadataManager.ProteinDisplayMode.ByPreferredName);
         }
 
         private void showTargetsByGeneToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            UpdateTargetsDisplayMode(ProteinDisplayMode.ByGene);
+            UpdateTargetsDisplayMode(ProteinMetadataManager.ProteinDisplayMode.ByGene);
         }
 
         private void peptidesMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             showTargetsByNameToolStripMenuItem.Checked =
-                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByName.ToString());
+                (Settings.Default.ShowPeptidesDisplayMode == ProteinMetadataManager.ProteinDisplayMode.ByName.ToString());
             showTargetsByAccessionToolStripMenuItem.Checked =
-                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByAccession.ToString());
+                (Settings.Default.ShowPeptidesDisplayMode == ProteinMetadataManager.ProteinDisplayMode.ByAccession.ToString());
             showTargetsByPreferredNameToolStripMenuItem.Checked =
-                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByPreferredName.ToString());
+                (Settings.Default.ShowPeptidesDisplayMode == ProteinMetadataManager.ProteinDisplayMode.ByPreferredName.ToString());
             showTargetsByGeneToolStripMenuItem.Checked =
-                (Settings.Default.ShowPeptidesDisplayMode == ProteinDisplayMode.ByGene.ToString());
+                (Settings.Default.ShowPeptidesDisplayMode == ProteinMetadataManager.ProteinDisplayMode.ByGene.ToString());
         }
 
         private void PerformSort(string title, Comparison<PeptideGroupDocNode> comparison)

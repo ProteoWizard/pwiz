@@ -305,12 +305,21 @@
     <Compile Include="Controls\Graphs\LineErrorBarItem.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Controls\GroupComparison\VolcanoPlotFormattingDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\VolcanoPlotFormattingDlg.Designer.cs">
+      <DependentUpon>VolcanoPlotFormattingDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\FormatSuggestion.cs" />
+    <Compile Include="Model\RgbHexColor.cs" />
+    <Compile Include="Model\GroupComparison\MatchExpression.cs" />
+    <Compile Include="Model\GroupComparison\MatchRgbHexColor.cs" />
     <Compile Include="Model\ModifiedSequence.cs" />
     <Compile Include="Controls\GroupComparison\FoldChangeRowTipProvider.cs" />
     <Compile Include="Controls\GroupComparison\FoldChangeVolcanoPlot.cs">
@@ -324,6 +333,24 @@
     </Compile>
     <Compile Include="Controls\GroupComparison\VolcanoPlotProperties.Designer.cs">
       <DependentUpon>VolcanoPlotProperties.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\ColorGrid.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\ColorGrid.Designer.cs">
+      <DependentUpon>ColorGrid.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\CreateMatchExpressionDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\CreateMatchExpressionDlg.Designer.cs">
+      <DependentUpon>CreateMatchExpressionDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\GroupComparison\RegexColorRowGrid.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\StandardColorGrid.cs">
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Util\AnnotationHelper.cs" />
     <Compile Include="Controls\Graphs\AreaCVGraphDataCache.cs" />
@@ -521,7 +548,7 @@
       <DependentUpon>GraphSpectrum.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\UniquePrefixGenerator.cs" />
-    <Compile Include="Controls\GroupComparison\GroupIdentifier.cs" />
+    <Compile Include="Model\GroupComparison\GroupIdentifier.cs" />
     <Compile Include="Controls\GroupComparison\GroupComparisonViewContext.cs" />
     <Compile Include="Controls\GroupComparison\MsStatsLogoForm.cs">
       <SubType>UserControl</SubType>
@@ -1857,6 +1884,9 @@
     <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.zh-CHS.resx">
       <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotFormattingDlg.resx">
+      <DependentUpon>VolcanoPlotFormattingDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotProperties.resx">
       <DependentUpon>VolcanoPlotProperties.cs</DependentUpon>
     </EmbeddedResource>
@@ -3056,6 +3086,9 @@
       <DependentUpon>Skyline.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\ColorGrid.resx">
+      <DependentUpon>ColorGrid.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ConfigureToolsDlg.ja.resx">
       <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -3065,6 +3098,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ConfigureToolsDlg.zh-CHS.resx">
       <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\CreateMatchExpressionDlg.resx">
+      <DependentUpon>CreateMatchExpressionDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditChorusAccountDlg.ja.resx">
       <DependentUpon>EditChorusAccountDlg.cs</DependentUpon>

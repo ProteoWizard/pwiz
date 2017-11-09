@@ -22,10 +22,10 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             int typeImageIndex = TypeImageIndex;
             if (typeImageIndex != ImageIndex)
                 ImageIndex = SelectedImageIndex = typeImageIndex;
-            string label = ProteinModalDisplayText((PeptideGroupDocNode) Model);
+            string label = ProteinMetadataManager.ProteinModalDisplayText((PeptideGroupDocNode) Model);
             if (!string.Equals(label, Text))
                 Text = label;
 
@@ -108,51 +108,6 @@ namespace pwiz.Skyline.Controls.SeqNode
         protected override void UpdateChildren(bool materialize)
         {
             UpdateNodes(SequenceTree, Nodes, DocNode.Children, materialize, PeptideTreeNode.CreateInstance);
-        }
-
-        public static ProteinDisplayMode ProteinsDisplayMode(string displayProteinsMode)
-        {
-            return Helpers.ParseEnum(displayProteinsMode, ProteinDisplayMode.ByName); 
-        }
-
-        public static string ProteinModalDisplayText(ProteinMetadata metadata, string displayProteinsMode)
-        {
-            return ProteinModalDisplayText(metadata, ProteinsDisplayMode(displayProteinsMode));
-        }
-
-        public static string ProteinModalDisplayText(PeptideGroupDocNode node)
-        {
-            return ProteinModalDisplayText(node.ProteinMetadata, Settings.Default.ShowPeptidesDisplayMode);
-        }
-
-        public static string ProteinModalDisplayText(ProteinMetadata metadata, ProteinDisplayMode displayProteinsMode)
-        {
-            switch (displayProteinsMode)
-            {
-                case ProteinDisplayMode.ByAccession:
-                case ProteinDisplayMode.ByPreferredName:
-                case ProteinDisplayMode.ByGene:
-                    break;
-                default:
-                    return metadata.Name;  
-            }
-
-            // If the desired field is not populated because it's not yet searched, say so
-            if (metadata.NeedsSearch())
-                return Resources.ProteinMetadataManager_LookupProteinMetadata_resolving_protein_details;
-
-            // If the desired field is not populated, return something like "<name: YAL01234>"
-            var failsafe = String.Format(Resources.PeptideGroupTreeNode_ProteinModalDisplayText__name___0__, metadata.Name);
-            switch (displayProteinsMode)
-            {
-                case ProteinDisplayMode.ByAccession:
-                    return metadata.Accession ?? failsafe;
-                case ProteinDisplayMode.ByPreferredName:
-                    return metadata.PreferredName ?? failsafe;
-                case ProteinDisplayMode.ByGene:
-                    return metadata.Gene ?? failsafe;
-            }
-            return failsafe;
         }
 
         #region IChildPicker Members

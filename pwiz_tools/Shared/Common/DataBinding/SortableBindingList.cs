@@ -21,6 +21,14 @@ namespace pwiz.Common.DataBinding
 
         #region Constructor
 
+        public SortableBindingList(List<T> list) : base(list)
+        {
+            /* Default to sorted columns */
+            _sortColumns = true;
+            /* Get shape (only get public properties marked browsable true) */
+            _shape = GetShape();
+        }
+
         public SortableBindingList()
         {
             /* Default to sorted columns */
