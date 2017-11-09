@@ -383,6 +383,11 @@ namespace sqlite3pp
         return sqlite3_bind_blob(stmt_, idx, value, n, fstatic ? SQLITE_STATIC : SQLITE_TRANSIENT);
     }
 
+    int statement::bind(int idx, const blob& value)
+    {
+        return bind(idx, value.bytes_, value.n_, value.fstatic_);
+    }
+
     int statement::bind(int idx)
     {
         return sqlite3_bind_null(stmt_, idx);

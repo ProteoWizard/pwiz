@@ -176,6 +176,8 @@ namespace seems
 
             msGraphControl.ContextMenuBuilder += new MSGraphControl.ContextMenuBuilderEventHandler( GraphForm_ContextMenuBuilder );
 
+            msGraphControl.GraphPane.YAxis.ScaleFormatEvent += YAxis_ScaleFormatEvent;
+
             ContextMenuStrip dummyMenu = new ContextMenuStrip();
             dummyMenu.Opening += new CancelEventHandler( foo_Opening );
             TabPageContextMenuStrip = dummyMenu;
@@ -268,6 +270,12 @@ namespace seems
         void GraphForm_SyncZoomPan( object sender, EventArgs e )
         {
             msGraphControl.IsSynchronizeXAxes = !msGraphControl.IsSynchronizeXAxes;
+            if (msGraphControl.IsSynchronizeXAxes)
+            {
+                msGraphControl.ZoomPane(msGraphControl.MasterPane.PaneList[0], 1, msGraphControl.GraphPane.Chart.Rect.Location, false);
+                msGraphControl.ApplyToAllPanes(msGraphControl.MasterPane.PaneList[0]);
+            }
+            Refresh();
         }
 
         void GraphForm_ShowDataProcessing (object sender, EventArgs e)
@@ -294,6 +302,7 @@ namespace seems
                     MSGraphPane pane = new MSGraphPane();
                     pane.Border.IsVisible = false;
                     pane.IsFontsScaled = false;
+                    pane.YAxis.ScaleFormatEvent += YAxis_ScaleFormatEvent;
                     mp.Add( pane );
                 }
                 //mp.SetLayout( msGraphControl.CreateGraphics(), paneLayout );
@@ -328,19 +337,21 @@ namespace seems
 
                 if( mp.PaneList.Count > 1 )
                 {
-                    //if( i < paneList.Count - 1 )
+                    if(msGraphControl.IsSynchronizeXAxes && i < paneList.Count - 1 )
                     {
                         pane.XAxis.Title.IsVisible = false;
                         pane.XAxis.Scale.IsVisible = false;
                         pane.Margin.Bottom = 0;
-                        pane.Margin.Top = 2;
-                    }/* else
+                        //pane.Margin.Top = 0;
+                    } else
                     {
+                        //pane.Margin.Top = 0;
                         pane.XAxis.Title.IsVisible = true;
                         pane.XAxis.Scale.IsVisible = true;
-                    }*/
-                    pane.YAxis.Title.IsVisible = false;
-                    pane.YAxis.Scale.IsVisible = false;
+                    }
+                    pane.YAxis.Title.IsVisible = true;
+                    pane.YAxis.Scale.IsVisible = true;
+                    pane.YAxis.Title.Text = String.Join(", ", logicalPane.Select(o => o.Title)) + "\n" + pane.YAxis.Title.Text.Split('\n').Last();
                     pane.YAxis.Scale.SetupScaleData( pane, pane.YAxis );
                 } else
                 {
@@ -451,6 +462,10 @@ namespace seems
             msGraphControl.Refresh();
         }
 
+        private string YAxis_ScaleFormatEvent(GraphPane pane, Axis axis, double val, int index)
+        {
+            return val.ToString("0.#e+0");
+        }
 
 		private Color[] overlayColors = new Color[]
 		{

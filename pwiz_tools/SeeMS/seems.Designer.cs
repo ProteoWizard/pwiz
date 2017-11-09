@@ -82,6 +82,7 @@ namespace seems
             this.annotationButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripPanel2 = new System.Windows.Forms.ToolStripPanel();
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
+            this.timeToMzHeatmapsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.toolStripPanel1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -196,6 +197,7 @@ namespace seems
             // viewToolStripMenuItem
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.timeToMzHeatmapsToolStripMenuItem,
             this.previewAsMzMLToolStripMenuItem,
             this.eventLogToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
@@ -205,7 +207,7 @@ namespace seems
             // previewAsMzMLToolStripMenuItem
             // 
             this.previewAsMzMLToolStripMenuItem.Name = "previewAsMzMLToolStripMenuItem";
-            this.previewAsMzMLToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.previewAsMzMLToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
             this.previewAsMzMLToolStripMenuItem.Text = "Preview as mzML";
             this.previewAsMzMLToolStripMenuItem.Visible = false;
             this.previewAsMzMLToolStripMenuItem.Click += new System.EventHandler(this.previewAsMzMLToolStripMenuItem_Click);
@@ -213,7 +215,7 @@ namespace seems
             // eventLogToolStripMenuItem
             // 
             this.eventLogToolStripMenuItem.Name = "eventLogToolStripMenuItem";
-            this.eventLogToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.eventLogToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
             this.eventLogToolStripMenuItem.Text = "Event Log";
             this.eventLogToolStripMenuItem.Click += new System.EventHandler(this.eventLogToolStripMenuItem_Click);
             // 
@@ -234,42 +236,42 @@ namespace seems
             // cascadeWindowMenuItem
             // 
             this.cascadeWindowMenuItem.Name = "cascadeWindowMenuItem";
-            this.cascadeWindowMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.cascadeWindowMenuItem.Size = new System.Drawing.Size(152, 22);
             this.cascadeWindowMenuItem.Text = "&Cascade";
             this.cascadeWindowMenuItem.Click += new System.EventHandler(this.cascadeWindowMenuItem_Click);
             // 
             // tileVerticalWindowMenuItem
             // 
             this.tileVerticalWindowMenuItem.Name = "tileVerticalWindowMenuItem";
-            this.tileVerticalWindowMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.tileVerticalWindowMenuItem.Size = new System.Drawing.Size(152, 22);
             this.tileVerticalWindowMenuItem.Text = "Tile &Vertical";
             this.tileVerticalWindowMenuItem.Click += new System.EventHandler(this.tileVerticalWindowMenuItem_Click);
             // 
             // tileHorizontalWindowMenuItem
             // 
             this.tileHorizontalWindowMenuItem.Name = "tileHorizontalWindowMenuItem";
-            this.tileHorizontalWindowMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.tileHorizontalWindowMenuItem.Size = new System.Drawing.Size(152, 22);
             this.tileHorizontalWindowMenuItem.Text = "Tile &Horizontal";
             this.tileHorizontalWindowMenuItem.Click += new System.EventHandler(this.tileHorizontalWindowMenuItem_Click);
             // 
             // arrangeIconsWindowMenuItem
             // 
             this.arrangeIconsWindowMenuItem.Name = "arrangeIconsWindowMenuItem";
-            this.arrangeIconsWindowMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.arrangeIconsWindowMenuItem.Size = new System.Drawing.Size(152, 22);
             this.arrangeIconsWindowMenuItem.Text = "&Arrange Icons";
             this.arrangeIconsWindowMenuItem.Click += new System.EventHandler(this.arrangeIconsWindowMenuItem_Click);
             // 
             // closeAllWindowMenuItem
             // 
             this.closeAllWindowMenuItem.Name = "closeAllWindowMenuItem";
-            this.closeAllWindowMenuItem.Size = new System.Drawing.Size(151, 22);
+            this.closeAllWindowMenuItem.Size = new System.Drawing.Size(152, 22);
             this.closeAllWindowMenuItem.Text = "Close All";
             this.closeAllWindowMenuItem.Click += new System.EventHandler(this.closeAllWindowMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(148, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
             // 
             // helpToolStripMenuItem1
             // 
@@ -364,6 +366,13 @@ namespace seems
             this.dockPanel.Size = new System.Drawing.Size(792, 495);
             this.dockPanel.TabIndex = 7;
             // 
+            // timeToMzHeatmapsToolStripMenuItem
+            // 
+            this.timeToMzHeatmapsToolStripMenuItem.Name = "timeToMzHeatmapsToolStripMenuItem";
+            this.timeToMzHeatmapsToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.timeToMzHeatmapsToolStripMenuItem.Text = "Time to m/z Heatmaps";
+            this.timeToMzHeatmapsToolStripMenuItem.Click += new System.EventHandler(this.timeToMzHeatmapsToolStripMenuItem_Click);
+            // 
             // seemsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -433,5 +442,6 @@ namespace seems
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripMenuItem eventLogToolStripMenuItem;
         private DigitalRune.Windows.Docking.DockPanel dockPanel;
+        private System.Windows.Forms.ToolStripMenuItem timeToMzHeatmapsToolStripMenuItem;
 	}
 }

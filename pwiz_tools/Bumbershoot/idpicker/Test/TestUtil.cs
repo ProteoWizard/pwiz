@@ -318,6 +318,7 @@ namespace Test
                 var comparer = new ComparisonForwarder<int>((a, b) => b.CompareTo(a));
                 var downgradeStatementMap = new SortedList<int, List<DowngradeInfo>>(comparer)
                 {
+                    // 18: swapping N/C channels for TMT reporter ions 127 and 129
                     {17, new List<DowngradeInfo> {new DowngradeInfo(null, "ProteinMetadata", "Hash")}},
                     {16, new List<DowngradeInfo> {new DowngradeInfo(null, "FilterHistory", "PrecursorMzTolerance")}},
                     //{15, "DROP TABLE IsobaricSampleMapping"},
@@ -397,7 +398,7 @@ namespace Test
         [TestCategory("Model")]
         public void TestSchemaUpdater()
         {
-            Assert.AreEqual(17, SchemaUpdater.CurrentSchemaRevision);
+            Assert.AreEqual(18, SchemaUpdater.CurrentSchemaRevision);
 
             var testModel = new TestModel() { TestContext = TestContext };
             TestModel.ClassInitialize(TestContext);
@@ -486,6 +487,24 @@ namespace Test
 
             Assert.AreEqual(Util.IsPathOnFixedDrive(Directory.GetCurrentDirectory()),
                             Util.IsPathOnFixedDrive(@"this/path/is/assumed/to/in/the/working/directory"));
+        }
+
+        [TestMethod]
+        [TestCategory("Utility")]
+        public void TestLinqExtensions()
+        {
+            IList<int> intList = new List<int>       { 6,  3,  4, 42, 123, 666};
+            IList<double> dblList = new List<double> {.1, .2, .3, .4,  .5,  .6};
+            intList.Sort(dblList);
+            Assert.IsTrue(intList.SequenceEqual(new List<int> {     3,  4,  6, 42, 123, 666 }));
+            Assert.IsTrue(dblList.SequenceEqual(new List<double> { .2, .3, .1, .4,  .5,  .6 }));
+
+            Assert.AreEqual(1, intList.BinarySearch(4));
+            Assert.AreEqual(~2, intList.BinarySearch(5));
+
+            Assert.AreEqual(5, intList.LowerBound(666));
+            Assert.AreEqual(6, intList.LowerBound(667));
+            Assert.AreEqual(4, intList.LowerBound(45));
         }
     }
 }

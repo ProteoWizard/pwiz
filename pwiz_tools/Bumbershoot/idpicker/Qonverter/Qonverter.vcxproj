@@ -57,6 +57,9 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <NMakePreprocessorDefinitions>_CPPUNWIND</NMakePreprocessorDefinitions>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(SolutionDir)..\..\..\..;$(SolutionDir)..\..\..\..\libraries\boost_aux;$(SolutionDir)..\..\..\..\libraries\boost_1_56_0;$(SolutionDir)..\..\..\..\libraries\SQLite;$(SolutionDir)..\..\freicore;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -75,9 +78,9 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;PWIZ_DOCTEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
@@ -111,10 +114,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CLI\Embedder.cpp" />
-    <ClCompile Include="CLI\Filter.cpp" />
-    <ClCompile Include="CLI\Merger.cpp" />
-    <ClCompile Include="CLI\SchemaUpdater.cpp" />
+    <ClCompile Include="CLI\Embedder.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;IDPICKER_NAMESPACE=NativeIDPicker;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="CLI\Filter.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;IDPICKER_NAMESPACE=NativeIDPicker;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="CLI\Merger.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;IDPICKER_NAMESPACE=NativeIDPicker;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="CLI\SchemaUpdater.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;IDPICKER_NAMESPACE=NativeIDPicker;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="ClusterReporter.cpp" />
     <ClCompile Include="CommandlineTest.cpp" />
     <ClCompile Include="CoreVersion.cpp" />
     <ClCompile Include="Embedder.cpp" />
@@ -127,14 +139,19 @@
     <ClCompile Include="idpQonvertVersion.cpp" />
     <ClCompile Include="idpQuery.cpp" />
     <ClCompile Include="idpQueryVersion.cpp" />
+    <ClCompile Include="IdpSqlExtensions.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="LoggerTest.cpp" />
     <ClCompile Include="Merger.cpp" />
     <ClCompile Include="MonteCarloQonverter.cpp" />
     <ClCompile Include="Parser.cpp" />
-    <ClCompile Include="CLI\Parser.cpp" />
+    <ClCompile Include="CLI\Parser.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;IDPICKER_NAMESPACE=NativeIDPicker;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="Qonverter.cpp" />
-    <ClCompile Include="CLI\Qonverter.cpp" />
+    <ClCompile Include="CLI\Qonverter.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;IDPICKER_NAMESPACE=NativeIDPicker;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="QonverterTest.cpp" />
     <ClCompile Include="SchemaUpdater.cpp" />
     <ClCompile Include="spline.cpp" />
@@ -156,6 +173,7 @@
     <ClInclude Include="idpQonvert.hpp" />
     <ClInclude Include="idpQonvertVersion.hpp" />
     <ClInclude Include="idpQueryVersion.hpp" />
+    <ClInclude Include="IdpSqlExtensions.hpp" />
     <ClInclude Include="Interpolator.hpp" />
     <ClInclude Include="Logger.hpp" />
     <ClInclude Include="Merger.hpp" />

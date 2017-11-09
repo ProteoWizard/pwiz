@@ -182,14 +182,14 @@ void parseAnalysis(const IdentDataFile& mzid, Analysis& analysis)
     cvParams.insert(cvParams.end(), sip.threshold.cvParams.begin(), sip.threshold.cvParams.end());
     userParams.insert(userParams.end(), sip.threshold.userParams.begin(), sip.threshold.userParams.end());
 
-    BOOST_FOREACH(const FilterPtr& filter, sip.databaseFilters)
+    for(const FilterPtr& filter : sip.databaseFilters)
     {
         cvParams.insert(cvParams.end(), filter->filterType.cvParams.begin(), filter->filterType.cvParams.end());
         cvParams.insert(cvParams.end(), filter->include.cvParams.begin(), filter->include.cvParams.end());
         cvParams.insert(cvParams.end(), filter->exclude.cvParams.begin(), filter->exclude.cvParams.end());
     }
 
-    BOOST_FOREACH(const CVParam& cvParam, cvParams)
+    for(const CVParam& cvParam : cvParams)
     {
         // value-less cvParams are keyed by their parent term;
         // e.g. "param: y ion" IS_A "ions series considered in search"
@@ -224,7 +224,7 @@ void parseAnalysis(const IdentDataFile& mzid, Analysis& analysis)
         analysis.parameters["DecoyPrefix"] = bal::trim_left_copy_if(decoyRegexp.value, bal::is_any_of("^"));
 
     // userParams are assumed to be uniquely keyed on name
-    BOOST_FOREACH(const UserParam& userParam, userParams)
+    for(const UserParam& userParam : userParams)
     {
         string name = userParam.name;
         if (bal::starts_with(name, "Config: "))
@@ -295,7 +295,7 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
     map<string, set<string> > differingParametersByAnalysisName;
 
     int iterationIndex = 0;
-    BOOST_FOREACH(const string& filepath, inputFilepaths)
+    for(const string& filepath : inputFilepaths)
     {
         ITERATION_UPDATE(ilr, iterationIndex++, inputFilepaths.size(), "finding distinct analyses");
 
@@ -312,7 +312,7 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
 
             // take the set difference of the current analysis' parameters with every same name analysis;
             // if the set difference is empty, the analysis is not distinct
-            BOOST_FOREACH(AnalysisPtr& otherAnalysis, sameNameAnalyses)
+            for(AnalysisPtr& otherAnalysis : sameNameAnalyses)
             {
                 map_diff(analysis->parameters, otherAnalysis->parameters, a_b, b_a);
 
@@ -345,21 +345,21 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
     }
 
     typedef pair<string, vector<AnalysisPtr> > SameNameAnalysesPair;
-    BOOST_FOREACH(const SameNameAnalysesPair& itr, sameNameAnalysesByName)
-    BOOST_FOREACH(const AnalysisPtr& analysis, itr.second)
+    for(const SameNameAnalysesPair& itr : sameNameAnalysesByName)
+    for(const AnalysisPtr& analysis : itr.second)
     {
         const set<string>& differingParameters = differingParametersByAnalysisName[analysis->name];
         // change the analysis names based on their values for the differing parameters
         if (!differingParameters.empty())
         {
             vector<string> differingParametersWithValues;
-            BOOST_FOREACH(const string& key, differingParameters)
+            for(const string& key : differingParameters)
                 if (!analysis->parameters[key].empty())
                     differingParametersWithValues.push_back(key + "=" + analysis->parameters[key]);
             analysis->name += " (" + bal::join(differingParametersWithValues, ", ") + ")";
         }
 
-        BOOST_FOREACH(const string& filepath, analysis->filepaths)
+        for(const string& filepath : analysis->filepaths)
             distinctAnalyses[filepath] = analysis;
     }
 }
@@ -538,14 +538,14 @@ struct ParserImpl
 
         sqlite3_int64 nextScoreId = 0;
 
-        BOOST_FOREACH(CVParam& cvParam, sii->cvParams)
+        for(CVParam& cvParam : sii->cvParams)
         {
             insertScoreName.binder() << ++nextScoreId << cvParam.name();
             insertScoreName.execute();
             insertScoreName.reset();
         }
 
-        BOOST_FOREACH(UserParam& userParam, sii->userParams)
+        for(UserParam& userParam : sii->userParams)
         {
             insertScoreName.binder() << ++nextScoreId << userParam.name;
             insertScoreName.execute();
@@ -588,7 +588,7 @@ struct ParserImpl
         int iterationIndex = 0;
         try
         {
-            BOOST_FOREACH(SpectrumIdentificationResultPtr& sir, sil.spectrumIdentificationResult)
+            for(SpectrumIdentificationResultPtr& sir : sil.spectrumIdentificationResult)
             {
                 ITERATION_UPDATE(ilr, iterationIndex++, sil.spectrumIdentificationResult.size(), "writing spectrum results");
 
@@ -612,7 +612,7 @@ struct ParserImpl
                 insertSpectrum.execute();
                 insertSpectrum.reset();
 
-                BOOST_FOREACH(SpectrumIdentificationItemPtr& sii, sir->spectrumIdentificationItem)
+                for(SpectrumIdentificationItemPtr& sii : sir->spectrumIdentificationItem)
                 {
                     if (!sii) throw runtime_error("[Parser::insertSpectrumResults] null spectrumIdentificationItem");
 
@@ -641,7 +641,7 @@ struct ParserImpl
                         bool hasDecoy = false;
                         bool hasTarget = false;
                         vector<PeptideEvidencePtr> decoyPeptideEvidence;
-                        BOOST_FOREACH(const PeptideEvidencePtr& pe, sii->peptideEvidencePtr)
+                        for(const PeptideEvidencePtr& pe : sii->peptideEvidencePtr)
                         {
                             if (!pe) throw runtime_error("[Parser::insertSpectrumResults] null peptideEvidencePtr");
                             if (!pe->dbSequencePtr) throw runtime_error("[Parser::insertSpectrumResults] null dbSequencePtr");
@@ -671,7 +671,7 @@ struct ParserImpl
                         set<shared_string> decoyPeptides;
 
                         // decoy proteins and peptide instances are inserted immediately
-                        BOOST_FOREACH(const PeptideEvidencePtr& pe, decoyPeptideEvidence)
+                        for(const PeptideEvidencePtr& pe : decoyPeptideEvidence)
                         {
                             // skip PeptideEvidence with invalid pre/post
                             if (!bal::is_any_of("-ABCDEFGHIKLMNPQRSTUVWYZ")(pe->pre) ||
@@ -719,7 +719,7 @@ struct ParserImpl
                     // build map of mod offset to total mod mass (in order to merge mods at the same offset)
                     typedef pair<double, double> MassPair;
                     map<int, MassPair> modMassByOffset;
-                    BOOST_FOREACH(ModificationPtr& mod, sii->peptidePtr->modification)
+                    for(ModificationPtr& mod : sii->peptidePtr->modification)
                     {
                         if (!mod) throw runtime_error("[Parser::insertSpectrumResults] null modification");
 
@@ -799,14 +799,14 @@ struct ParserImpl
 
                     sqlite3_int64 nextScoreId = 0;
 
-                    BOOST_FOREACH(const CVParam& cvParam, sii->cvParams)
+                    for(const CVParam& cvParam : sii->cvParams)
                     {
                         insertScore.binder() << nextPSMId << cvParam.value << ++nextScoreId;
                         insertScore.execute();
                         insertScore.reset();
                     }
 
-                    BOOST_FOREACH(const UserParam& userParam, sii->userParams)
+                    for(const UserParam& userParam : sii->userParams)
                     {
                         insertScore.binder() << nextPSMId << userParam.value << ++nextScoreId;
                         insertScore.execute();
@@ -916,7 +916,7 @@ vector<ProteinDatabaseTaskGroup> createTasksPerProteinDatabase(const vector<stri
 {
     // group input files by their protein database
     map<string, vector<string> > inputFilepathsByProteinDatabase;
-    BOOST_FOREACH(const string& inputFilepath, inputFilepaths)
+    for(const string& inputFilepath : inputFilepaths)
     {
         if (distinctAnalysisByFilepath.count(inputFilepath) == 0)
         {
@@ -951,7 +951,7 @@ vector<ProteinDatabaseTaskGroup> createTasksPerProteinDatabase(const vector<stri
         random_shuffle(inputFilepaths.begin(), inputFilepaths.end());
 
         int processorsUsed = 0;
-        BOOST_FOREACH(const string& inputFilepath, inputFilepaths)
+        for(const string& inputFilepath : inputFilepaths)
         {
             bfs::path outputFilepath = Parser::outputFilepath(inputFilepath);
             if (bfs::exists(outputFilepath))
@@ -1037,6 +1037,48 @@ void executeParserTask(ParserTaskPtr parserTask, ThreadStatus& status)
             //boost::mutex::scoped_lock ioLock(ioMutex);
             parserTask->mzid.reset(new IdentDataFile(inputFilepath, 0, ilr));
         }
+
+        try
+        {
+            // create parser instance
+            parserTask->parser.reset(new ParserImpl(inputFilepath,
+                                                    *parserTask->analysis,
+                                                    *parserTask->idpDb,
+                                                    *parserTask->mzid,
+                                                    ilr));
+
+            parserTask->parser->insertAnalysisMetadata();
+
+            try
+            {
+                IterationListener::Status tmpStatus = IterationListener::Status_Ok;
+                parserTask->parser->insertSpectrumResults(tmpStatus);
+                if (tmpStatus == IterationListener::Status_Cancel)
+                {
+                    status = tmpStatus;
+                    parserTask->mzid.reset();
+                    return;
+                }
+
+                status = IterationListener::Status_Ok;
+            }
+            catch (exception& e)
+            {
+                status = boost::copy_exception(runtime_error("[executeParserTask] error parsing spectrum results \"" + inputFilepath + "\": " + e.what()));
+            }
+            catch (...)
+            {
+                status = boost::copy_exception(runtime_error("[executeParserTask] unknown error parsing spectrum results \"" + inputFilepath + "\""));
+            }
+        }
+        catch (exception& e)
+        {
+            status = boost::copy_exception(runtime_error("[executeParserTask] error creating parser for \"" + inputFilepath + "\": " + e.what()));
+        }
+        catch (...)
+        {
+            status = boost::copy_exception(runtime_error("[executeParserTask] unknown error creating parser for \"" + inputFilepath + "\""));
+        }
     }
     catch (exception& e)
     {
@@ -1045,49 +1087,6 @@ void executeParserTask(ParserTaskPtr parserTask, ThreadStatus& status)
     catch (...)
     {
         status = boost::copy_exception(runtime_error("[executeParserTask] unknown error reading \"" + inputFilepath + "\""));
-    }
-
-    try
-    {
-        // create parser instance
-        parserTask->parser.reset(new ParserImpl(inputFilepath,
-                                                *parserTask->analysis,
-                                                *parserTask->idpDb,
-                                                *parserTask->mzid,
-                                                ilr));
-
-        parserTask->parser->insertAnalysisMetadata();
-
-    }
-    catch (exception& e)
-    {
-        status = boost::copy_exception(runtime_error("[executeParserTask] error creating parser for \"" + inputFilepath + "\": " + e.what()));
-    }
-    catch (...)
-    {
-        status = boost::copy_exception(runtime_error("[executeParserTask] unknown error creating parser for \"" + inputFilepath + "\""));
-    }
-
-    try
-    {
-        IterationListener::Status tmpStatus = IterationListener::Status_Ok;
-        parserTask->parser->insertSpectrumResults(tmpStatus);
-        if (tmpStatus == IterationListener::Status_Cancel)
-        {
-            status = tmpStatus;
-            parserTask->mzid.reset();
-            return;
-        }
-
-        status = IterationListener::Status_Ok;
-    }
-    catch (exception& e)
-    {
-        status = boost::copy_exception(runtime_error("[executeParserTask] error parsing spectrum results \"" + inputFilepath + "\": " + e.what()));
-    }
-    catch (...)
-    {
-        status = boost::copy_exception(runtime_error("[executeParserTask] unknown error parsing spectrum results \"" + inputFilepath + "\""));
     }
 
     parserTask->mzid.reset();
@@ -1173,7 +1172,7 @@ void executeProteinReaderTask(ProteinReaderTaskPtr proteinReaderTask, ThreadStat
                     lock.lock();
 
                     size_t maxQueueSize = 0;
-                    BOOST_FOREACH(const PeptideFinderTaskWeakPtr& taskPtr, proteinReaderTask->peptideFinderTasks)
+                    for(const PeptideFinderTaskWeakPtr& taskPtr : proteinReaderTask->peptideFinderTasks)
                     {
                         PeptideFinderTaskPtr task = taskPtr.lock();
                         maxQueueSize = max(maxQueueSize, task.get() ? task->proteinQueue.size() : 0);
@@ -1192,7 +1191,7 @@ void executeProteinReaderTask(ProteinReaderTaskPtr proteinReaderTask, ThreadStat
 
                 // lock is still locked
 
-                BOOST_FOREACH(const PeptideFinderTaskWeakPtr& taskPtr, proteinReaderTask->peptideFinderTasks)
+                for(const PeptideFinderTaskWeakPtr& taskPtr : proteinReaderTask->peptideFinderTasks)
                 {
                     PeptideFinderTaskPtr task = taskPtr.lock();
                     if (task.get() && !task->done)
@@ -1277,7 +1276,7 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
         map<size_t, sqlite3_int64> proteinIdByIndex;
 
         vector<shared_string> peptideBatch;
-        BOOST_FOREACH(const shared_string& peptide, peptides)
+        for(const shared_string& peptide : peptides)
         {
             peptideBatch.push_back(peptide);
 
@@ -1341,7 +1340,7 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
                     return;
                 }
 
-                BOOST_FOREACH(proteome::ProteinPtr& protein, proteinBatch)
+                for(proteome::ProteinPtr& protein : proteinBatch)
                 {
                     // skip decoy proteins
                     if (bal::istarts_with(protein->id, decoyPrefix))
@@ -1354,7 +1353,7 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
                     // if digestions were done independently, create a Digestion for each enzyme;
                     // else create a single Digestion using all enzymes together
                     if (parser.analysis.enzymes.independent)
-                        BOOST_FOREACH(const string& cleavageAgentRegex, cleavageAgentRegexes)
+                        for(const string& cleavageAgentRegex : cleavageAgentRegexes)
                             digestions.push_back(DigestionPtr(new proteome::Digestion(*protein, cleavageAgentRegex, digestionConfig)));
                     else
                         digestions.push_back(DigestionPtr(new proteome::Digestion(*protein, cleavageAgentRegexes, digestionConfig)));
@@ -1395,11 +1394,11 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
 
                     sqlite3_int64 curProteinId = itr->second;
 
-                    BOOST_FOREACH(const PeptideTrie::SearchResult& instance, peptideInstances)
+                    for(const PeptideTrie::SearchResult& instance : peptideInstances)
                     {
                         // find the highest terminal specificity for the peptide instance from all digestions
                         proteome::DigestedPeptide bestPeptide("A", 0, 0, false, false);
-                        BOOST_FOREACH(const DigestionPtr& digestion, digestions)
+                        for(const DigestionPtr& digestion : digestions)
                         {
                             proteome::DigestedPeptide peptide = digestion->find_first(*instance.keyword(), instance.offset());
                             if (peptide.specificTermini() > bestPeptide.specificTermini())
@@ -1637,7 +1636,7 @@ void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
     }
     
     // fatal error if an idpDB didn't get saved
-    BOOST_FOREACH(const string& inputFilepath, taskGroup.inputFilepaths)
+    for(const string& inputFilepath : taskGroup.inputFilepaths)
         if (!bfs::exists(Parser::outputFilepath(inputFilepath)))
             throw runtime_error("[executeTaskGroup] no database created for file \"" + inputFilepath + "\"");
 }
@@ -1674,7 +1673,7 @@ void Parser::parse(const vector<string>& inputFilepaths, int maxThreads, Iterati
     findDistinctAnalyses(inputFilepaths, distinctAnalysisByFilepath, skipSourceOnError, ilr);
 
     vector<ConstAnalysisPtr> distinctAnalyses;
-    BOOST_FOREACH(const DistinctAnalysisMap::value_type& nameAnalysisPair, distinctAnalysisByFilepath)
+    for(const DistinctAnalysisMap::value_type& nameAnalysisPair : distinctAnalysisByFilepath)
         if (find(distinctAnalyses.begin(), distinctAnalyses.end(), nameAnalysisPair.second) == distinctAnalyses.end())
             distinctAnalyses.push_back(nameAnalysisPair.second);
 
@@ -1690,7 +1689,7 @@ void Parser::parse(const vector<string>& inputFilepaths, int maxThreads, Iterati
         throw runtime_error("[Parser::parse()] no import settings handler set");
 
     map<string, ProteomeDataPtr> proteinDatabaseByFilepath;
-    BOOST_FOREACH(const ConstAnalysisPtr& analysis, distinctAnalyses)
+    for(const ConstAnalysisPtr& analysis : distinctAnalyses)
     {
         const string& proteinDatabaseFilepath = analysis->importSettings.proteinDatabaseFilepath;
         ProteomeDataPtr& proteomeDataPtr = proteinDatabaseByFilepath[proteinDatabaseFilepath];
@@ -1737,7 +1736,7 @@ void Parser::parse(const vector<string>& inputFilepaths, int maxThreads, Iterati
     for (int i=0; i < maxThreads; ++i)
         memoryDatabases.push_back(shared_ptr<sqlite::database>(new sqlite::database(":memory:", sqlite::no_mutex)));
 
-    BOOST_FOREACH(const ProteinDatabaseTaskGroup& taskGroup, taskGroups)
+    for(const ProteinDatabaseTaskGroup& taskGroup : taskGroups)
         executeTaskGroup(taskGroup, distinctAnalysisByFilepath, memoryDatabases, skipSourceOnError, ilr);
 }
 

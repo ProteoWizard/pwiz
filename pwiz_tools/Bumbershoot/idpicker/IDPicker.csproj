@@ -473,7 +473,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="SingleInstanceHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\SeeMS\seems.csproj">

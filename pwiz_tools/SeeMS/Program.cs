@@ -20,6 +20,7 @@
 //
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Diagnostics;
@@ -36,8 +37,6 @@ namespace seems
 	static class Program
 	{
 		static seemsForm MainForm;
-        static System.Threading.Mutex ipcMutex;
-        static BackgroundWorker ipcWorker;
 
 	    public const bool SimAsSpectra = false; // Read SIM scans as spectra.
 	    public const bool SrmAsSpectra = false; // Read SRM scans as spectra.
@@ -66,32 +65,6 @@ namespace seems
             foreach( ISpectrumSourceDeclaration ssd in ssdList )
                 scList.Add( a.GetSpectrumCollection( ssd.SpectrumCollectionId ) );*/
 
-            // create machine-global mutex (to allow only one SeeMS instance)
-            bool success;
-            ipcMutex = new Mutex( true, "seems unique instance", out success );
-            if( !success )
-            {
-                // send args to the existing instance
-                using( NamedPipeClientStream pipeClient =
-                    new NamedPipeClientStream( ".", "seems pipe", PipeDirection.Out ) )
-                {
-                    pipeClient.Connect();
-                    using( StreamWriter sw = new StreamWriter( pipeClient ) )
-                    {
-                        sw.WriteLine( args.Length );
-                        foreach( string arg in args )
-                            sw.WriteLine( arg );
-                        sw.Flush();
-                    }
-                    //pipeClient.WaitForPipeDrain();
-                }
-                return;
-            }
-
-            ipcWorker = new BackgroundWorker();
-            ipcWorker.DoWork += new DoWorkEventHandler( bgWorker_DoWork );
-            ipcWorker.RunWorkerAsync();
-
 			// Add the event handler for handling UI thread exceptions to the event.
 			Application.ThreadException += new ThreadExceptionEventHandler( UIThread_UnhandledException );
 
@@ -104,12 +77,24 @@ namespace seems
 			// Add the event handler for handling non-UI thread exceptions to the event. 
 			AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler( CurrentDomain_UnhandledException );
 
-            try
+
+            var singleInstanceHandler = new SingleInstanceHandler(Application.ExecutablePath) { Timeout = 200 };
+            singleInstanceHandler.Launching += (sender, e) =>
             {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+
+                var singleInstanceArgs = e.Args.ToArray();
+
                 MainForm = new seemsForm();
-                MainForm.ParseArgs(args);
+                MainForm.ParseArgs(singleInstanceArgs);
                 if (!MainForm.IsDisposed)
                     Application.Run(MainForm);
+            };
+
+            try
+            {
+                singleInstanceHandler.Connect(args);
             }
             catch (Exception e)
             {
@@ -122,30 +107,6 @@ namespace seems
                                 0, false);
             }
 		}
-
-        static void bgWorker_DoWork( object sender, DoWorkEventArgs e )
-        {
-            while( true )
-            {
-                using( NamedPipeServerStream pipeServer =
-                        new NamedPipeServerStream( "seems pipe", PipeDirection.In ) )
-                {
-                    pipeServer.WaitForConnection();
-
-                    // Read args from client instance.
-                    using( StreamReader sr = new StreamReader( pipeServer ) )
-                    {
-                        int length = Convert.ToInt32( sr.ReadLine() );
-                        string[] args = new string[length];
-                        for( int i = 0; i < length; ++i )
-                            args[i] = sr.ReadLine();
-                        MainForm.ParseArgs( args );
-                    }
-
-                    //pipeServer.Disconnect();
-                }
-            }
-        }
 
 		private static void UIThread_UnhandledException( object sender, ThreadExceptionEventArgs e )
 		{

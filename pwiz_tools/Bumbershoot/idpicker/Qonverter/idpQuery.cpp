@@ -366,7 +366,7 @@ ReporterIon TMT_ions[10] =
     { "131", 9, false, false }
 };
 ReporterIon tmt2plexIons[2] = { TMT_ions[0], TMT_ions[2] };
-ReporterIon tmt6plexIons[6] = { TMT_ions[0], TMT_ions[2], TMT_ions[4], TMT_ions[6], TMT_ions[8], TMT_ions[9] };
+ReporterIon tmt6plexIons[6] = { TMT_ions[0], TMT_ions[1], TMT_ions[4], TMT_ions[5], TMT_ions[8], TMT_ions[9] };
 ReporterIon tmt10plexIons[10] = { TMT_ions[0], TMT_ions[1], TMT_ions[2], TMT_ions[3], TMT_ions[4], TMT_ions[5], TMT_ions[6], TMT_ions[7], TMT_ions[8], TMT_ions[9] };
 
 

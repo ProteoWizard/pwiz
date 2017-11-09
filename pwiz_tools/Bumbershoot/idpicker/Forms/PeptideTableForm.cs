@@ -1170,7 +1170,7 @@ namespace IDPicker.Forms
                     if (quantitationMethods.Contains(QuantitationMethod.TMT10plex))
                         TMT_ReporterIonColumns.ForEach(o => columnsIrrelevantForGrouping.Remove(o));
                     else if (quantitationMethods.Contains(QuantitationMethod.TMT6plex))
-                        TMT_ReporterIonColumns.Where(o => new List<int> {0, 2, 4, 6, 8, 9}.Contains((int) o.Tag)).ForEach(o => columnsIrrelevantForGrouping.Remove(o));
+                        TMT_ReporterIonColumns.Where(o => new List<int> {0, 1, 4, 5, 8, 9}.Contains((int) o.Tag)).ForEach(o => columnsIrrelevantForGrouping.Remove(o));
                     else if (quantitationMethods.Contains(QuantitationMethod.TMT2plex))
                         TMT_ReporterIonColumns.Where(o => new List<int> {0, 2}.Contains((int) o.Tag)).ForEach(o => columnsIrrelevantForGrouping.Remove(o));
                 }

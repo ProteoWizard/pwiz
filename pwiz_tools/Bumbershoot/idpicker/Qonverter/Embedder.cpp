@@ -252,12 +252,12 @@ ReporterIon iTRAQ_masses[8] =
 // http://www.piercenet.com/instructions/2162457.pdf
 // Label  Mass        2plex  6plex  10plex   DeltaMassFromLastReporter
 // 126    126.12773   1      1      1
-// 127N   127.12476   0      0      1        0.9970
-// 127C   127.13108   1      1      1        0.0063
+// 127N   127.12476   0      1      1        0.9970
+// 127C   127.13108   1      0      1        0.0063
 // 128N   128.12811   0      0      1        0.9970
 // 128C   128.13443   0      1      1        0.0063
-// 129N   129.13147   0      0      1        0.9970
-// 129C   129.13779   0      1      1        0.0063
+// 129N   129.13147   0      1      1        0.9970
+// 129C   129.13779   0      0      1        0.0063
 // 130N   130.13482   0      0      1        0.9970
 // 130C   130.14114   0      1      1        0.0063
 // 131    131.13818   0      1      1        0.9970
@@ -332,7 +332,7 @@ void correctIsotopeImpurities(vector<SpectrumRow>& spectrumRows,
     {
         case QuantitationMethod::ITRAQ4plex: isotopeCorrectionFactorsPtr.reset(new const_matrix_ref(itraq4plexIsotopeCorrectionFactors, boost::extents[4][4])); break;
         case QuantitationMethod::ITRAQ8plex: isotopeCorrectionFactorsPtr.reset(new const_matrix_ref(itraq8plexIsotopeCorrectionFactors, boost::extents[8][4])); break;
-        case QuantitationMethod::TMT6plex: isotopeCorrectionFactorsPtr.reset(new const_matrix_ref(tmt6plexIsotopeCorrectionFactors, boost::extents[6][4])); break;
+        //case QuantitationMethod::TMT6plex: isotopeCorrectionFactorsPtr.reset(new const_matrix_ref(tmt6plexIsotopeCorrectionFactors, boost::extents[6][4])); break;
 
         case QuantitationMethod::TMT2plex: // TODO: get default values for these
         case QuantitationMethod::TMT10plex:
@@ -399,7 +399,7 @@ TEST_CASE("Isobaric quantitation isotope purity correction tests") {
     for (int i = 0; i < 8; ++i) itraq8plexIons.push_back(iTRAQ_masses[i]);
 
     tmt2plexIons += TMT_masses[0], TMT_masses[2];
-    tmt6plexIons += TMT_masses[0], TMT_masses[2], TMT_masses[4], TMT_masses[6], TMT_masses[8], TMT_masses[9];
+    tmt6plexIons += TMT_masses[0], TMT_masses[1], TMT_masses[4], TMT_masses[5], TMT_masses[8], TMT_masses[9];
     tmt10plexIons.assign(TMT_masses, TMT_masses + 10);
 
     SUBCASE("iTRAQ 4-plex") {
@@ -436,8 +436,10 @@ TEST_CASE("Isobaric quantitation isotope purity correction tests") {
         vector<double> totals{ 1, 0, 10, 0, 100, 0, 1000, 0, 100, 10 };
         correctIsotopeImpurities(rows, totals, tmt6plexIons, QuantitationMethod::TMT6plex, nullptr);
 
-        CHECK(rows[0].reporterIonIntensities == ~(vector<double> { 2.0233, 0, 20.4022, 0, 154.8343, 0, 926.218, 0, 123.94, 13.699 }));
-        CHECK(totals == ~(vector<double> { 2.0233, 0, 20.4022, 0, 154.8343, 0, 926.218, 0, 123.94, 13.699 }));
+        //CHECK(rows[0].reporterIonIntensities == ~(vector<double> { 2.0233, 20.4022, 0, 0, 154.8343, 926.218, 0, 0, 123.94, 13.699 }));
+        //CHECK(totals == ~(vector<double> { 2.0233, 20.4022, 0, 0, 154.8343, 926.218, 0, 0, 123.94, 13.699 }));
+        CHECK(rows[0].reporterIonIntensities == ~(vector<double> { 1, 0, 10, 0, 100, 0, 1000, 0, 100, 10 }));
+        CHECK(totals == ~(vector<double> { 1, 0, 10, 0, 100, 0, 1000, 0, 100, 10 }));
     }
 
     SUBCASE("TMT 2-plex") {
@@ -482,7 +484,7 @@ struct SpectrumList_Quantifier
         for (int i = 0; i < 8; ++i) itraq8plexIons.push_back(iTRAQ_masses[i]);
 
         tmt2plexIons += TMT_masses[0], TMT_masses[2];
-        tmt6plexIons += TMT_masses[0], TMT_masses[2], TMT_masses[4], TMT_masses[6], TMT_masses[8], TMT_masses[9];
+        tmt6plexIons += TMT_masses[0], TMT_masses[1], TMT_masses[4], TMT_masses[5], TMT_masses[8], TMT_masses[9];
         tmt10plexIons.assign(TMT_masses, TMT_masses+10);
 
         itraqReporterIonIntensities.resize(8);

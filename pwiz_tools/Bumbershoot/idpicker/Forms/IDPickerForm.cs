@@ -558,7 +558,7 @@ namespace IDPicker
 
             //BeginInvoke(new MethodInvoker(() => toolStripStatusLabel.Text = toolStripStatusLabel.Text = "Opening spectrum source: " + sourcePath));
 
-            manager.OpenFile(sourcePath, spectrum.NativeID, annotation, spectrumListFilters);
+            manager.OpenFile(sourcePath, new List<object> { spectrum.NativeID }, annotation, spectrumListFilters);
             manager.CurrentGraphForm.Focus();
             manager.CurrentGraphForm.Icon = Properties.Resources.SpectrumViewIcon;
 

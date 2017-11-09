@@ -69,7 +69,7 @@ namespace ZedGraph
 			}
 		}
 
-		private void ApplyToAllPanes( GraphPane primaryPane )
+		public void ApplyToAllPanes( GraphPane primaryPane )
 		{
 			foreach ( GraphPane pane in _masterPane._paneList )
 			{

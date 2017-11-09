@@ -41,7 +41,7 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 17;
+const int CURRENT_SCHEMA_REVISION = 18;
 
 namespace SchemaUpdater {
 
@@ -201,6 +201,62 @@ namespace {
         }
     }
 
+
+void update_17_to_18(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
+{
+    ITERATION_UPDATE(ilr, 17, CURRENT_SCHEMA_REVISION, "updating schema version")
+
+    sqlite::command cmd(db, "UPDATE SpectrumQuantitation SET TMT_ReporterIonIntensities = ? WHERE Id = ?");
+    sqlite::query q(db, "SELECT Id, TMT_ReporterIonIntensities FROM SpectrumQuantitation");
+
+    for(sqlite::query::rows row : q)
+    {
+        sqlite3_int64 id = row.get<sqlite3_int64>(0);
+        const void* blob = row.get<const void*>(1);
+        double* valueArray = reinterpret_cast<double*>(const_cast<void*>(blob));
+
+        if (row.column_bytes(1) / sizeof(double) != 10)
+            continue;
+
+        // swap channels 1/2 and 5/6
+        std::swap(*(valueArray + 1), *(valueArray + 2));
+        std::swap(*(valueArray + 5), *(valueArray + 6));
+
+        cmd.bind(1, reinterpret_cast<void*>(valueArray), 10 * sizeof(double));
+        cmd.bind(2, id);
+        cmd.execute();
+        cmd.reset();
+    }
+
+    //update_17_to_18(db, ilr, vacuumNeeded);
+}
+
+TEST_CASE("update_17_to_18") {
+    sqlite::database db(":memory:");
+    db.load_extension("IdpSqlExtensions");
+
+    db.execute("CREATE TABLE SpectrumQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC)");
+
+    sqlite::command insertTestValues(db, "INSERT INTO SpectrumQuantitation (Id, TMT_ReporterIonIntensities) VALUES (?, ?)");
+
+    vector<double> tmtValues { 126, 127.0, 127.1, 128.0, 128.1, 129.0, 129.1, 130.0, 130.1, 131 };
+    sqlite::statement::blob tmtBlob(tmtValues.data(), sizeof(double) * tmtValues.size());
+    insertTestValues.binder() << 1 << tmtBlob; insertTestValues.step(); insertTestValues.reset();
+    insertTestValues.binder() << 2 << tmtBlob; insertTestValues.step(); insertTestValues.reset();
+    insertTestValues.binder() << 3 << tmtBlob; insertTestValues.step(); insertTestValues.reset();
+
+    bool vacuumNeeded = false;
+    update_17_to_18(db, NULL, vacuumNeeded);
+
+    sqlite::query q(db, "SELECT TMT_ReporterIonIntensities FROM SpectrumQuantitation");
+    for (sqlite::query::rows row : q)
+    {
+        auto values = blobToDoubleArray(row, 10, 0);
+        CHECK(values == vector<double> { 126, 127.1, 127.0, 128.0, 128.1, 129.1, 129.0, 130.0, 130.1, 131 });
+    }
+}
+
+
 void update_16_to_17(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {
     ITERATION_UPDATE(ilr, 16, CURRENT_SCHEMA_REVISION, "updating schema version")
@@ -228,7 +284,7 @@ void update_16_to_17(sqlite::database& db, const IterationListenerRegistry* ilr,
         cmd.reset();
     }
 
-    //update_17_to_18(db, ilr, vacuumNeeded);
+    update_17_to_18(db, ilr, vacuumNeeded);
 }
 
 
@@ -792,11 +848,14 @@ bool update(sqlite3* idpDbConnection, const IterationListenerRegistry* ilr)
         update_15_to_16(db, ilr, vacuumNeeded);
     else if (schemaRevision == 16)
         update_16_to_17(db, ilr, vacuumNeeded);
+    else if (schemaRevision == 17)
+        update_17_to_18(db, ilr, vacuumNeeded);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +
                             "; the latest compatible revision is " +
-                            lexical_cast<string>(CURRENT_SCHEMA_REVISION));
+                            lexical_cast<string>(CURRENT_SCHEMA_REVISION) +
+                            "; you need a newer version of IDPicker to open this file");
     else
     {
         ITERATION_UPDATE(ilr, CURRENT_SCHEMA_REVISION-1, CURRENT_SCHEMA_REVISION, "schema is current; no update necessary")

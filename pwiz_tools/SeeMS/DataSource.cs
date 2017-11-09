@@ -140,6 +140,10 @@ namespace seems
                 simAsSpectra = Program.SimAsSpectra,
                 srmAsSpectra = Program.SrmAsSpectra
             };
+
+            if (!File.Exists(filepath))
+                throw new FileNotFoundException("Filepath not found: " + filepath, filepath);
+
             ReaderList.FullReaderList.read(filepath, msdList, readerConfig);
             msDataFile = msdList[0];
 			//msDataFile = new MSDataFile(filepath);
