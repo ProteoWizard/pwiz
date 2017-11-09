@@ -50,6 +50,23 @@ class PWIZ_API_DECL SpectrumList_PeakFilter : public msdata::SpectrumListWrapper
 	SpectrumDataFilterPtr filterFunctor_;
 };
 
+
+
+class PWIZ_API_DECL IsolationWindowFilter : public SpectrumDataFilter
+{
+    double defaultWindowWidth;
+    msdata::SpectrumListPtr spectrumList;
+    msdata::IsolationWindow window;
+
+    public:
+
+    IsolationWindowFilter(double defaultWindowWidth, const msdata::SpectrumListPtr& sl);
+    IsolationWindowFilter(double defaultWindowWidth, const msdata::IsolationWindow& window);
+
+    virtual void operator () (const pwiz::msdata::SpectrumPtr&) const;
+    virtual void describe(pwiz::msdata::ProcessingMethod&) const {}
+};
+
 } // namespace analysis 
 } // namespace pwiz
 

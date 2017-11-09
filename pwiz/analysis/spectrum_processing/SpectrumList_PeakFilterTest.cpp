@@ -19,6 +19,8 @@
 // limitations under the License.
 //
 
+#define PWIZ_DOCTEST_NO_MAIN
+
 #include "pwiz/data/msdata/MSData.hpp"
 #include "PrecursorMassFilter.hpp"
 #include "ThresholdFilter.hpp"
@@ -658,6 +660,108 @@ void testZeroSamplesFilter() {
 
 
 }
+
+void testIsolationWindowFilter()
+{
+    SpectrumListSimple* sl = new SpectrumListSimple;
+    SpectrumListPtr originalList(sl);
+
+    SpectrumPtr ms1_1(new Spectrum);
+    sl->spectra.push_back(ms1_1);
+
+    ms1_1->id = "scan=1";
+    ms1_1->index = 0;
+    ms1_1->setMZIntensityArrays(parseDoubleArray("1 2 3 4 5 6 7 8 9"),
+                                parseDoubleArray("0 1 0 0 0 5 3 0 1"),
+                                MS_number_of_detector_counts);
+    ms1_1->set(MS_MSn_spectrum);
+    ms1_1->set(MS_ms_level, 1);
+
+    SpectrumPtr ms2_1(new Spectrum);
+    sl->spectra.push_back(ms2_1);
+
+    ms2_1->id = "scan=2";
+    ms2_1->index = 1;
+    ms2_1->setMZIntensityArrays(parseDoubleArray("1 2 3 4 5 6 7 8 9"),
+                                parseDoubleArray("1 1 1 1 1 1 1 1 1"),
+                                MS_number_of_detector_counts);
+    ms2_1->set(MS_MSn_spectrum);
+    ms2_1->set(MS_ms_level, 2);
+    ms2_1->precursors.resize(1);
+    ms2_1->precursors[0].spectrumID = "scan=1";
+    ms2_1->precursors[0].isolationWindow.set(MS_isolation_window_target_m_z, 2);
+    ms2_1->precursors[0].isolationWindow.set(MS_isolation_window_lower_offset, 1);
+    ms2_1->precursors[0].isolationWindow.set(MS_isolation_window_upper_offset, 1);
+
+    SpectrumPtr ms2_2(new Spectrum);
+    sl->spectra.push_back(ms2_2);
+
+    ms2_2->id = "scan=3";
+    ms2_2->index = 2;
+    ms2_2->setMZIntensityArrays(parseDoubleArray("1 2 3 4 5 6 7 8 9"),
+                                parseDoubleArray("1 1 1 1 1 1 1 1 1"),
+                                MS_number_of_detector_counts);
+    ms2_2->set(MS_MSn_spectrum);
+    ms2_2->set(MS_ms_level, 2);
+    ms2_2->precursors.resize(1);
+    ms2_2->precursors[0].spectrumID = "scan=1";
+    ms2_2->precursors[0].isolationWindow.set(MS_isolation_window_target_m_z, 6);
+    ms2_2->precursors[0].isolationWindow.set(MS_isolation_window_lower_offset, 1);
+    ms2_2->precursors[0].isolationWindow.set(MS_isolation_window_upper_offset, 2);
+
+    SpectrumPtr ms1_2(new Spectrum);
+    sl->spectra.push_back(ms1_2);
+
+    ms1_2->id = "scan=4";
+    ms1_2->index = 3;
+    ms1_2->setMZIntensityArrays(parseDoubleArray("1 2 3 4 5 6 7 8 9"),
+                                parseDoubleArray("0 1 0 1 2 1 0 1 0"),
+                                MS_number_of_detector_counts);
+    ms1_2->set(MS_MSn_spectrum);
+    ms1_2->set(MS_ms_level, 1);
+
+    SpectrumPtr ms2_3(new Spectrum);
+    sl->spectra.push_back(ms2_3);
+
+    ms2_3->id = "scan=5";
+    ms2_3->index = 4;
+    ms2_3->setMZIntensityArrays(parseDoubleArray("1 2 3 4 5 6 7 8 9"),
+                                parseDoubleArray("1 1 1 1 1 1 1 1 1"),
+                                MS_number_of_detector_counts);
+    ms2_3->set(MS_MSn_spectrum);
+    ms2_3->set(MS_ms_level, 2);
+    ms2_3->precursors.resize(1);
+    ms2_3->precursors[0].spectrumID = "scan=4";
+    ms2_3->precursors[0].isolationWindow.set(MS_isolation_window_target_m_z, 4); // 2 3 4 5 6
+    ms2_3->precursors[0].isolationWindow.set(MS_isolation_window_lower_offset, 2);
+    ms2_3->precursors[0].isolationWindow.set(MS_isolation_window_upper_offset, 2);
+
+    SpectrumPtr ms2_4(new Spectrum);
+    sl->spectra.push_back(ms2_4);
+
+    ms2_4->id = "scan=6";
+    ms2_4->index = 5;
+    ms2_4->setMZIntensityArrays(parseDoubleArray("1 2 3 4 5 6 7 8 9"),
+                                parseDoubleArray("1 1 1 1 1 1 1 1 1"),
+                                MS_number_of_detector_counts);
+    ms2_4->set(MS_MSn_spectrum);
+    ms2_4->set(MS_ms_level, 2);
+    ms2_4->precursors.resize(1);
+    ms2_4->precursors[0].spectrumID = "scan=4";
+    ms2_4->precursors[0].isolationWindow.set(MS_isolation_window_target_m_z, 6); // 4 5 6 7 8 (test that overlapping windows work as expected)
+    ms2_4->precursors[0].isolationWindow.set(MS_isolation_window_lower_offset, 2);
+    ms2_4->precursors[0].isolationWindow.set(MS_isolation_window_upper_offset, 2);
+
+    SpectrumDataFilterPtr filterPtr(new IsolationWindowFilter(2, originalList));
+    SpectrumListPtr filteredList(new SpectrumList_PeakFilter(originalList, filterPtr));
+    SpectrumPtr s1 = filteredList->spectrum(0, true);
+    unit_assert_operator_equal(~parseDoubleArray("1 2 3 5 6 7 8"), s1->getMZArray()->data);
+    unit_assert_operator_equal(~parseDoubleArray("0 1 0 0 5 3 0"), s1->getIntensityArray()->data);
+
+    SpectrumPtr s2 = filteredList->spectrum(3, true);
+    unit_assert_operator_equal(~parseDoubleArray("2 3 4 5 6 7 8"), s2->getMZArray()->data);
+    unit_assert_operator_equal(~parseDoubleArray("1 0 1 2 1 0 1"), s2->getIntensityArray()->data);
+}
     
 
 void test()
@@ -667,6 +771,7 @@ void test()
     testDeisotoping();
     testMS2Denoising();
     testZeroSamplesFilter();
+    testIsolationWindowFilter();
 }
 
 int main(int argc, char* argv[])

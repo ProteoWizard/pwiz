@@ -158,6 +158,26 @@ public ref class ThresholdFilter : public SpectrumDataFilter
 };
 
 
+public ref class IsolationWindowFilter : public SpectrumDataFilter
+{
+public:
+
+    IsolationWindowFilter(double defaultWindowWidth_, SpectrumList^ spectrumList_)
+    {
+        SpectrumDataFilter::base_ =
+            new pwiz::analysis::SpectrumDataFilterPtr(
+                new pwiz::analysis::IsolationWindowFilter(defaultWindowWidth_, *spectrumList_->base_));
+    }
+
+    IsolationWindowFilter(double defaultWindowWidth_, IsolationWindow^ window)
+    {
+        SpectrumDataFilter::base_ =
+            new pwiz::analysis::SpectrumDataFilterPtr(
+                new pwiz::analysis::IsolationWindowFilter(defaultWindowWidth_, *window->base_));
+    }
+};
+
+
 } // namespace analysis 
 } // namespace CLI
 } // namespace pwiz
