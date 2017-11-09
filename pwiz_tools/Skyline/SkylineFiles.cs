@@ -1650,9 +1650,9 @@ namespace pwiz.Skyline
                 if (docNew == null)
                     return;
 
-                if (longWaitDlg.IsDocumentChanged(docCurrent))
+                if (!ReferenceEquals(Document, docCurrent))
                 {
-                    MessageDlg.Show(this, Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
+                    MessageDlg.ShowWithException(this, Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation, new DocumentChangedException(Document, docCurrent));
                     return;
                 }
             }
@@ -1679,7 +1679,7 @@ namespace pwiz.Skyline
             ModifyDocument(description, doc =>
             {
                 if (!ReferenceEquals(doc, docCurrent))
-                    throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
+                    throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation, new DocumentChangedException(doc, docCurrent));
                 if (matcher != null)
                 {
                     var pepModsNew = matcher.GetDocModifications(docNew);
@@ -1691,6 +1691,24 @@ namespace pwiz.Skyline
 
             if (selectPath != null)
                 SequenceTree.SelectedPath = selectPath;
+        }
+
+        /// <summary>
+        /// More diagnostic information to try to catch cause of failing tests
+        /// </summary>
+        public class DocumentChangedException : Exception
+        {
+            public DocumentChangedException(SrmDocument docNow, SrmDocument docOriginal)
+                : base(GetMessage(docNow, docOriginal))
+            {
+            }
+
+            private static string GetMessage(SrmDocument docNow, SrmDocument docOriginal)
+            {
+                return TextUtil.LineSeparate(string.Format("DocRevision: before = {0}, after = {1}", docNow.RevisionIndex, docOriginal.RevisionIndex),
+                    "Loaded before:", TextUtil.LineSeparate(docNow.NonLoadedStateDescriptions),
+                    "Loaded after:", TextUtil.LineSeparate(docOriginal.NonLoadedStateDescriptions));
+            }
         }
 
         public void InsertSmallMoleculeTransitionList(string csvText, string description)
