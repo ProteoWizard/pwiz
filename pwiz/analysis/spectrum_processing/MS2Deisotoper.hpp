@@ -57,7 +57,7 @@ struct PWIZ_API_DECL MS2Deisotoper : public SpectrumDataFilter
     };
 
     MS2Deisotoper(const MS2Deisotoper::Config params_) : params(params_) {}
-    virtual void operator () (const pwiz::msdata::SpectrumPtr) const;
+    virtual void operator () (const pwiz::msdata::SpectrumPtr&) const;
     virtual void describe(pwiz::msdata::ProcessingMethod&) const;
 
     const MS2Deisotoper::Config params;

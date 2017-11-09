@@ -34,7 +34,7 @@ namespace analysis {
 
 struct PWIZ_API_DECL SpectrumDataFilter
 {
-    virtual void operator () (const pwiz::msdata::SpectrumPtr) const = 0;
+    virtual void operator () (const pwiz::msdata::SpectrumPtr&) const = 0;
     virtual void describe(pwiz::msdata::ProcessingMethod&) const = 0;
     virtual ~SpectrumDataFilter() {}
 };
@@ -44,7 +44,7 @@ typedef boost::shared_ptr<SpectrumDataFilter> SpectrumDataFilterPtr;
 
 struct PWIZ_API_DECL ChromatogramDataFilter
 {
-    virtual void operator () (const pwiz::msdata::ChromatogramPtr) const = 0;
+    virtual void operator () (const pwiz::msdata::ChromatogramPtr&) const = 0;
     virtual void describe(pwiz::msdata::ProcessingMethod&) const = 0;
     virtual ~ChromatogramDataFilter() {}
 };

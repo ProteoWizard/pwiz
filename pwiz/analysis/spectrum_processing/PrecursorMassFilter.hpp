@@ -136,7 +136,7 @@ struct PWIZ_API_DECL PrecursorMassFilter : public SpectrumDataFilter
     };
 
     PrecursorMassFilter(const Config&);
-    virtual void operator () (const pwiz::msdata::SpectrumPtr) const;
+    virtual void operator () (const pwiz::msdata::SpectrumPtr&) const;
     virtual void describe(pwiz::msdata::ProcessingMethod&) const;
 
     const PrecursorMassFilter::Config params;

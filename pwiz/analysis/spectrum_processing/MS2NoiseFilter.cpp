@@ -90,9 +90,9 @@ struct FilterSpectrum
 
 void FilterSpectrum::RetrievePrecursorMass()
 {
-    BOOST_FOREACH(Precursor& precursor, spectrum->precursors)
+    for(Precursor& precursor : spectrum->precursors)
     {
-        BOOST_FOREACH(SelectedIon& selectedIon, precursor.selectedIons)
+        for(SelectedIon& selectedIon : precursor.selectedIons)
         {
             if (selectedIon.hasCVParam(MS_m_z))
             {
@@ -235,7 +235,7 @@ PWIZ_API_DECL void MS2NoiseFilter::describe(ProcessingMethod& method) const
     method.userParams.push_back(UserParam("allow more data below multiply charged precursor", lexical_cast<string>(params.relaxLowMass)));
 }
 
-PWIZ_API_DECL void MS2NoiseFilter::operator () (const SpectrumPtr spectrum) const
+PWIZ_API_DECL void MS2NoiseFilter::operator () (const SpectrumPtr& spectrum) const
 {
     if (spectrum->cvParam(MS_ms_level).valueAs<int>() > 1 &&
         spectrum->cvParam(MS_MSn_spectrum).empty() == false &&

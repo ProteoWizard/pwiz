@@ -86,7 +86,7 @@ struct PWIZ_API_DECL ThresholdFilter : public SpectrumDataFilter
                     ThresholdingOrientation orientation_ = Orientation_MostIntense,
                     const pwiz::util::IntegerSet& msLevelsToThreshold = pwiz::util::IntegerSet(1, INT_MAX));
 
-    virtual void operator () (const pwiz::msdata::SpectrumPtr) const;
+    virtual void operator () (const pwiz::msdata::SpectrumPtr&) const;
     virtual void describe(pwiz::msdata::ProcessingMethod&) const;
 
     const ThresholdingBy_Type byType;

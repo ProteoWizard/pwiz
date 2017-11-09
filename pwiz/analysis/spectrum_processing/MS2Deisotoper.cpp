@@ -66,9 +66,9 @@ vector<pair<double, int> > GetPrecursors(const SpectrumPtr spectrum)
 {
     vector<pair<double, int> > precursorList;
 
-    BOOST_FOREACH(Precursor& precursor, spectrum->precursors)
+    for(Precursor& precursor : spectrum->precursors)
     {
-        BOOST_FOREACH(SelectedIon& selectedIon, precursor.selectedIons)
+        for(SelectedIon& selectedIon : precursor.selectedIons)
         {
             double mz = 0;
             int charge = 0;
@@ -139,7 +139,7 @@ void FilterSpectrum::DeIsotopeLowRes()
     vector<indexValuePair> indexValuePairs;
 
     size_t ix = 0;
-    BOOST_FOREACH(double& intens, intensities_)
+    for(double& intens : intensities_)
     {
         indexValuePair p;
         p.index = ix++;
@@ -150,7 +150,7 @@ void FilterSpectrum::DeIsotopeLowRes()
     sort(indexValuePairs.begin(), indexValuePairs.end());
     
     int curIxValPair = 0;
-    BOOST_FOREACH(indexValuePair& ix, indexValuePairs)
+    for(indexValuePair& ix : indexValuePairs)
     {
         ++curIxValPair;
 
@@ -372,7 +372,7 @@ void MS2Deisotoper::describe(ProcessingMethod& method) const
     //method.userParams.push_back(UserParam("matching tolerance", lexical_cast<string>(params.matchingTolerance)));
 }
 
-void MS2Deisotoper::operator () (const SpectrumPtr spectrum) const
+void MS2Deisotoper::operator () (const SpectrumPtr& spectrum) const
 {
     if (spectrum->cvParam(MS_ms_level).valueAs<int>() > 1 &&
         spectrum->cvParam(MS_MSn_spectrum).empty() == false &&

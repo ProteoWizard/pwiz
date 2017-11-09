@@ -60,7 +60,7 @@ struct PWIZ_API_DECL MS2NoiseFilter : public SpectrumDataFilter
     };
 
     MS2NoiseFilter(const MS2NoiseFilter::Config params_) : params(params_) {}
-    virtual void operator () (const pwiz::msdata::SpectrumPtr) const;
+    virtual void operator () (const pwiz::msdata::SpectrumPtr&) const;
     virtual void describe(pwiz::msdata::ProcessingMethod&) const;
 
     const MS2NoiseFilter::Config params;

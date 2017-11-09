@@ -131,7 +131,7 @@ PWIZ_API_DECL void ThresholdFilter::describe(ProcessingMethod& method) const
     method.userParams.push_back(UserParam(name, lexical_cast<string>(threshold)));
 }
 
-PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr s) const
+PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr& s) const
 {
     if (!msLevelsToThreshold.contains(s->cvParam(MS_ms_level).valueAs<int>()))
         return;
