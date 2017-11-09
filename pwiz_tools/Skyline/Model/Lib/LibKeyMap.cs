@@ -131,7 +131,10 @@ namespace pwiz.Skyline.Model.Lib
 
             public override ICollection<TItem> Values
             {
-                get { return _libKeyMap; }
+                get
+                {
+                    return ReadOnlyList.Create(_libKeyMap.Count, i => _libKeyMap[_libKeyMap._index[i].OriginalIndex]);
+                }
             }
             public override bool TryGetValue(LibKey key, out TItem value)
             {
