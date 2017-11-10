@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.GroupComparison
     [XmlRoot(XML_ROOT)]
     public class MatchRgbHexColor : RgbHexColor, ICloneable
     {
-        public const string XML_ROOT = "format_detail";
+        public const string XML_ROOT = "format_detail"; // Not L10N
         private string _expression;
         private bool _labeled;
 

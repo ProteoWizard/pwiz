@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             var result = string.Join(" ", matchOptions); // Not L10N
 
             if (!string.IsNullOrWhiteSpace(RegExpr))
-                result += ": " + RegExpr;
+                result += ": " + RegExpr; // Not L10N
 
             return result;
         }

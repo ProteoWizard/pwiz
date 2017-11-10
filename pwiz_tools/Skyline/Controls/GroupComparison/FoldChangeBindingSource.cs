@@ -77,7 +77,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 {
                     try
                     {
-                        UpdateResults();
+                        if (0 < _referenceCount)
+                        {
+                            UpdateResults();
+                        }
                     }
                     catch (Exception e)
                     {

@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public static FontSpec CreateFontSpec(Color color)
         {
-            return new FontSpec("Arial", 12.0f, color, false, false, false, Color.Empty, null, FillType.None)
+            return new FontSpec("Arial", 12.0f, color, false, false, false, Color.Empty, null, FillType.None) // Not L10N
             {
                 Border = { IsVisible = false }
             };
@@ -281,6 +281,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             get { return FoldChangCutoffValid || PValueCutoffValid; }
         }
 
+        // ReSharper disable PossibleMultipleEnumeration
         private void UpdateGraph()
         {
             if (!IsHandleCreated)
@@ -363,8 +364,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             zedGraphControl.Invalidate();
         }
-
-
+        // ReSharper restore PossibleMultipleEnumeration
 
         public static string GetRowProteinText(FoldChangeBindingSource.FoldChangeRow row, ProteinMetadataManager.ProteinDisplayMode proteinDisplayMode)
         {
