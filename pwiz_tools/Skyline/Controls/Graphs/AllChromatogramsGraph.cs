@@ -181,7 +181,7 @@ namespace pwiz.Skyline.Controls.Graphs
             flowFileStatus.ScrollControlIntoView(SelectedControl);
             SelectedControl.Invalidate();
             graphChromatograms.IsCanceled = SelectedControl.IsCanceled;
-            if (SelectedControl.Error != null)
+            if (SelectedControl.Error != null || SelectedControl.Warning != null)
             {
                 textBoxError.Text = SelectedControl.GetErrorLog(cbMoreInfo.Checked);
                 ShowControl(panelError);
@@ -301,7 +301,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 foreach (FileProgressControl control in flowFileStatus.Controls)
                 {
-                    if (control.Error != null)
+                    if (control.Error != null || control.Warning != null)
                         return true;
                 }
                 return false;

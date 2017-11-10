@@ -426,7 +426,12 @@ namespace pwiz.Skyline.Model.Results
                 // All threads must complete scoring before we complete the first pass.
                 _chromDataSets.Wait();
                 doSecondPass = _retentionTimePredictor.CreateConversion();
-
+                if (!doSecondPass && listChromData.Any(data => null != data && !IsFirstPassPeptide(data)))
+                {
+                    _status = _status.ChangeWarningMessage(
+                        Resources.ChromCacheBuilder_Read_Unable_to_finish_importing_chromatograms_because_the_retention_time_predictor_linear_regression_failed_);
+                    _loader.UpdateProgress(_status);
+                }
                 // Let the provider know that it is now safe to use retention time prediction
                 if (provider.CompleteFirstPass() && doSecondPass)
                 {

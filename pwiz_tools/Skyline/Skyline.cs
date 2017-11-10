@@ -4673,7 +4673,7 @@ namespace pwiz.Skyline
 
         private void UpdateImportProgress(MultiProgressStatus multiStatus)
         {
-            bool showable = !multiStatus.IsFinal || multiStatus.IsError;
+            bool showable = !multiStatus.IsFinal || multiStatus.IsError || multiStatus.HasWarnings;
             buttonShowAllChromatograms.Visible = statusProgress.Visible = showable;
             if (ImportingResultsWindow == null && showable)
             {

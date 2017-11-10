@@ -126,6 +126,12 @@ namespace pwiz.Skyline.Model
 
         public bool IsComplete { get { return State == ProgressState.complete; } }
         public bool IsError { get { return State == ProgressState.error; } }
+
+        public bool HasWarnings
+        {
+            get { return ProgressList.Any(status => !string.IsNullOrEmpty(status.WarningMessage)); }
+        }
+
         public bool IsCanceled { get { return State == ProgressState.cancelled; } }
         public bool IsBegin { get { return State == ProgressState.begin; } }
 

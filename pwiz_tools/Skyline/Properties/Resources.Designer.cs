@@ -3469,6 +3469,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to finish importing chromatograms because the retention time predictor linear regression failed..
+        /// </summary>
+        public static string ChromCacheBuilder_Read_Unable_to_finish_importing_chromatograms_because_the_retention_time_predictor_linear_regression_failed_ {
+            get {
+                return ResourceManager.GetString("ChromCacheBuilder_Read_Unable_to_finish_importing_chromatograms_because_the_reten" +
+                        "tion_time_predictor_linear_regression_failed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Existing write threads: {0}.
         /// </summary>
         public static string ChromCacheBuilder_WriteLoop_Existing_write_threads___0_ {
@@ -11860,6 +11870,15 @@ namespace pwiz.Skyline.Properties {
         public static string FileProgressControl_SetStatus_Retry {
             get {
                 return ResourceManager.GetString("FileProgressControl_SetStatus_Retry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to warning.
+        /// </summary>
+        public static string FileProgressControl_SetStatus_warning {
+            get {
+                return ResourceManager.GetString("FileProgressControl_SetStatus_warning", resourceCulture);
             }
         }
         

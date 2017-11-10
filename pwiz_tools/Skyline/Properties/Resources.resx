@@ -9914,6 +9914,12 @@ Would you like to remove some or all of the prefix or suffix to shorten the name
   <data name="FormatSuggestion_Percent_Percent" xml:space="preserve">
     <value>Percent</value>
   </data>
+  <data name="ChromCacheBuilder_Read_Unable_to_finish_importing_chromatograms_because_the_retention_time_predictor_linear_regression_failed_" xml:space="preserve">
+    <value>Unable to finish importing chromatograms because the retention time predictor linear regression failed.</value>
+  </data>
+  <data name="FileProgressControl_SetStatus_warning" xml:space="preserve">
+    <value>warning</value>
+  </data>
   <data name="EditDriftTimePredictorDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks" xml:space="preserve">
     <value>Finding ion mobility values for peaks</value>
   </data>

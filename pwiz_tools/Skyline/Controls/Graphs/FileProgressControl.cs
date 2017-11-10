@@ -143,41 +143,44 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                         _errorLog.Insert(0, Error);
                         _errorExceptions.Insert(0, ExceptionUtil.GetStackTraceText(status.ErrorException, null, false));
-                        warningIcon.Visible = true;
+                        btnRetry.Text = Resources.FileProgressControl_SetStatus_Retry;
+                        btnRetry.Visible = true;
+                        ShowWarningIcon(Resources.FileProgressControl_SetStatus_failed);
+                    }
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(status.WarningMessage))
+                    {
+                        Warning = status.WarningMessage;
+                        ShowWarningIcon(Resources.FileProgressControl_SetStatus_warning);
+                    }
+                    if (status.IsCanceled)
+                    {
+                        IsCanceled = true;
                         progressBar.Visible = false;
                         labelPercent.Visible = false;
-                        labelStatus.Text = Resources.FileProgressControl_SetStatus_failed;
+                        labelStatus.Text = Resources.FileProgressControl_SetStatus_canceled;
                         labelStatus.Visible = true;
                         btnRetry.Text = Resources.FileProgressControl_SetStatus_Retry;
                         btnRetry.Visible = true;
-                        _backColor = _failColor;
+                        _backColor = _cancelColor;
                     }
-                }
-                else if (status.IsCanceled)
-                {
-                    IsCanceled = true;
-                    progressBar.Visible = false;
-                    labelPercent.Visible = false;
-                    labelStatus.Text = Resources.FileProgressControl_SetStatus_canceled;
-                    labelStatus.Visible = true;
-                    btnRetry.Text = Resources.FileProgressControl_SetStatus_Retry;
-                    btnRetry.Visible = true;
-                    _backColor = _cancelColor;
-                }
-                else if (status.IsComplete)
-                {
-                    Finish();
-                }
-                else if (status.PercentComplete > 0)
-                {
-                    progressBar.Visible = true;
-                    labelPercent.Visible = true;
-                    progressBar.Value = status.PercentComplete;
-                    labelPercent.Text = (status.PercentComplete/100.0).ToString("P0");  // Not L10N
-                    labelStatus.Visible = false;
-                    btnRetry.Text = Resources.FileProgressControl_SetStatus_Cancel;
-                    btnRetry.Visible = true;
-                    _backColor = _okColor;
+                    else if (status.IsComplete)
+                    {
+                        Finish();
+                    }
+                    else if (status.PercentComplete > 0)
+                    {
+                        progressBar.Visible = true;
+                        labelPercent.Visible = true;
+                        progressBar.Value = status.PercentComplete;
+                        labelPercent.Text = (status.PercentComplete / 100.0).ToString("P0"); // Not L10N
+                        labelStatus.Visible = false;
+                        btnRetry.Text = Resources.FileProgressControl_SetStatus_Cancel;
+                        btnRetry.Visible = true;
+                        _backColor = _okColor;
+                    }
                 }
                 Invalidate();
             }
@@ -185,6 +188,16 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // ignored
             }
+        }
+
+        private void ShowWarningIcon(string status)
+        {
+            warningIcon.Visible = true;
+            progressBar.Visible = false;
+            labelPercent.Visible = false;
+            labelStatus.Text = status;
+            labelStatus.Visible = true;
+            _backColor = _failColor;
         }
 
         public ChromatogramLoadingStatus Status { get; private set; }
@@ -209,10 +222,15 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public string Error { get; private set; }
+        public string Warning { get; private set; }
 
         public string GetErrorLog(bool showExceptions)
         {
             var sb = new StringBuilder();
+            if (!string.IsNullOrEmpty(Warning))
+            {
+                sb.AppendLine(Warning);
+            }
             if (_errorCount > 1)
                 sb.AppendFormat(Resources.FileProgressControl_GetErrorLog_, _errorCount);
             if (_errorCount > 3)
