@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.Proteome
             return IsNotLoadedExplained(document.Settings.PeptideSettings, GetBackgroundProteome(document), requireResolvedProteinMetadata) == null;
         }
 
-        private static string IsNotLoadedExplained(PeptideSettings settings, BackgroundProteome backgroundProteome, bool requireResolvedProteinMetadata)
+        public static string IsNotLoadedExplained(PeptideSettings settings, BackgroundProteome backgroundProteome, bool requireResolvedProteinMetadata)
         {
             if (backgroundProteome.IsNone)
             {

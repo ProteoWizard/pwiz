@@ -36,6 +36,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -128,16 +129,25 @@ namespace pwiz.SkylineTestTutorial
 
             // Wait a bit in case web access is turned on and backgroundProteome is actually resolving protein metadata
             int millis = (AllowInternetAccess ? 300 : 60) * 1000;
-            WaitForCondition(millis, () => !SkylineWindow.Document.Settings.PeptideSettings.BackgroundProteome.NeedsProteinMetadataSearch, "backgroundProteome.NeedsProteinMetadataSearch"); 
-            WaitForBackgroundProteomeLoaderCompleted();
-            WaitForProteinMetadataBackgroundLoaderCompleted();
+            WaitForCondition(millis, () =>
+                SkylineWindow.Document.Settings.HasBackgroundProteome &&
+                !SkylineWindow.Document.Settings.PeptideSettings.BackgroundProteome.NeedsProteinMetadataSearch,
+                "backgroundProteome.NeedsProteinMetadataSearch");
+
+            // Really truly fully loaded?
+            var allDescriptions = SkylineWindow.Document.NonLoadedStateDescriptionsFull.ToArray();
+            if (allDescriptions.Length > 0)
+                Assert.Fail(TextUtil.LineSeparate("Document not fully loaded:", TextUtil.LineSeparate(allDescriptions)));
+
+            // Should have been 3 changes: 1. peptide settings, 2. library load, 3. background proteome completion
+            AssertEx.IsDocumentState(SkylineWindow.Document, 3, 0, 0, 0, 0);
 
             // Pasting FASTA Sequences, p. 5
             RunUI(() => SetClipboardFileText(@"MethodEdit\FASTA\fasta.txt")); // Not L10N
 
             // New in v0.7 : Skyline asks about removing empty proteins.
-            using (new DocChangeLogger())
             using (new CheckDocumentState(35, 25, 25, 75, null, true))
+            using (new DocChangeLogger())
             {
                 var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(SkylineWindow.Paste);
                 RunUI(() => emptyProteinsDlg.IsKeepEmptyProteins = true);
@@ -264,8 +274,8 @@ namespace pwiz.SkylineTestTutorial
             WaitForProteinMetadataBackgroundLoaderCompleted(millis);
             
             // Inserting a Peptide List, p. 13
-            using (new DocChangeLogger())
             using (new CheckDocumentState(25, 70, 70, 338, null, true))
+            using (new DocChangeLogger())
             {
                 RunUI(() =>
                     {
@@ -445,7 +455,7 @@ namespace pwiz.SkylineTestTutorial
         private class DocChangeLogger : StackTraceLogger, IDisposable
         {
             public DocChangeLogger()
-                : base("SkylineWindow.ImportFastax")
+                : base("SkylineWindow.ImportFasta")
             {
                 SkylineWindow.LogChange = LogChange;
             }

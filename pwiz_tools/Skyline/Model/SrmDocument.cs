@@ -62,6 +62,7 @@ using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -565,6 +566,20 @@ namespace pwiz.Skyline.Model
                 if ((whyNot = IonMobilityLibraryManager.IsNotLoadedDocumentExplained(this)) != null)
                     yield return whyNot; // Not L10N
                 // BackgroundProteome?
+            }
+        }
+
+        public IEnumerable<string> NonLoadedStateDescriptionsFull
+        {
+            get
+            {
+                foreach (var desc in NonLoadedStateDescriptions)
+                    yield return desc;
+
+                string whyNot;
+                var pepSet = Settings.PeptideSettings;
+                if ((whyNot = BackgroundProteomeManager.IsNotLoadedExplained(pepSet, pepSet.BackgroundProteome, true)) != null)
+                    yield return whyNot;
             }
         }
 

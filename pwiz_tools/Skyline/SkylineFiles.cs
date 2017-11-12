@@ -1707,8 +1707,8 @@ namespace pwiz.Skyline
             {
                 // ReSharper disable NonLocalizedString
                 return TextUtil.LineSeparate(string.Format("DocRevision: before = {0}, after = {1}", docNow.RevisionIndex, docOriginal.RevisionIndex),
-                    "Loaded before:", TextUtil.LineSeparate(docNow.NonLoadedStateDescriptions),
-                    "Loaded after:", TextUtil.LineSeparate(docOriginal.NonLoadedStateDescriptions));
+                    "Loaded before:", TextUtil.LineSeparate(docNow.NonLoadedStateDescriptionsFull),
+                    "Loaded after:", TextUtil.LineSeparate(docOriginal.NonLoadedStateDescriptionsFull));
                 // ReSharper restore NonLocalizedString
             }
         }
