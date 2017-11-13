@@ -50,16 +50,25 @@ namespace pwiz.Skyline.Model
             List<Modification> explicitMods = new List<Modification>();
             if (null != docNode.ExplicitMods)
             {
+                var staticBaseMods = docNode.ExplicitMods.GetStaticBaseMods(labelType);
                 var labelMods = docNode.ExplicitMods.GetModifications(labelType);
-                if (labelMods != null)
+                var explicitLabelType = labelType;
+                if (labelMods == null && !labelType.IsLight)
                 {
-                    var monoMasses = docNode.ExplicitMods.GetModMasses(MassType.Monoisotopic, labelType);
-                    var avgMasses = docNode.ExplicitMods.GetModMasses(MassType.Average, labelType);
-                    foreach (var mod in labelMods)
+                    labelMods = docNode.ExplicitMods.GetModifications(IsotopeLabelType.light);
+                    explicitLabelType = IsotopeLabelType.light;
+                }
+                if (labelMods != null || staticBaseMods != null)
+                {
+                    IEnumerable<ExplicitMod> modsToAdd = (labelMods ?? Enumerable.Empty<ExplicitMod>())
+                        .Concat(staticBaseMods ?? Enumerable.Empty<ExplicitMod>());
+                    var monoMasses = docNode.ExplicitMods.GetModMasses(MassType.Monoisotopic, explicitLabelType);
+                    var avgMasses = docNode.ExplicitMods.GetModMasses(MassType.Average, explicitLabelType);
+                    foreach (var mod in modsToAdd)
                     {
                         explicitMods.Add(new Modification(mod, monoMasses[mod.IndexAA], avgMasses[mod.IndexAA]));
                     }
-                    includeStaticMods = docNode.ExplicitMods.IsVariableStaticMods;
+                    includeStaticMods = docNode.ExplicitMods.IsVariableStaticMods && staticBaseMods == null;
                 }
             }
 
@@ -68,7 +77,12 @@ namespace pwiz.Skyline.Model
                 var peptideModifications = settings.PeptideSettings.Modifications;
                 for (int i = 0; i < unmodifiedSequence.Length; i++)
                 {
-                    foreach (var staticMod in peptideModifications.GetModifications(labelType))
+                    IEnumerable<StaticMod> staticMods = peptideModifications.GetModifications(labelType);
+                    if (!labelType.IsLight)
+                    {
+                        staticMods = peptideModifications.GetModifications(IsotopeLabelType.light).Concat(staticMods);
+                    }
+                    foreach (var staticMod in staticMods)
                     {
                         if (staticMod.IsExplicit || staticMod.IsVariable)
                         {
@@ -95,6 +109,18 @@ namespace pwiz.Skyline.Model
                         var avgMass = staticMod.AverageMass ??
                                       SrmSettings.AverageMassCalc.GetAAModMass(unmodifiedSequence[i], i,
                                           unmodifiedSequence.Length);
+                        if (monoMass == 0 && avgMass == 0)
+                        {
+                            char aa = unmodifiedSequence[i];
+                            if ((staticMod.LabelAtoms & LabelAtoms.LabelsAA) != LabelAtoms.None && AminoAcid.IsAA(aa))
+                            {
+                                string heavyFormula = SequenceMassCalc.GetHeavyFormula(aa, staticMod.LabelAtoms);
+                                monoMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, heavyFormula,
+                                    SequenceMassCalc.MassPrecision);
+                                avgMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, heavyFormula,
+                                    SequenceMassCalc.MassPrecision);
+                            }
+                        }
                         explicitMods.Add(new Modification(new ExplicitMod(i, staticMod), monoMass, avgMass));
                     }
                 }

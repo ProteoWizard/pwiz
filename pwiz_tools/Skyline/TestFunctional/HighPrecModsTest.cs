@@ -88,6 +88,7 @@ namespace pwiz.SkylineTestFunctional
             modSequences = GetColumnValues(documentGrid.DataboundGridControl, propPathModSeqFullNames);
             AssertContainsModification(modSequences, TRIMETHYL, true);
             AssertContainsModification(modSequences, ACETYL, true);
+            AssertEx.VerifyModifiedSequences(SkylineWindow.Document);
         }
 
         private void Filter(DataboundGridControl databoundGridControl, PropertyPath propertyPath, string filterValue)

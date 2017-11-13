@@ -212,6 +212,7 @@ namespace pwiz.SkylineTestUtil
         public static void Serializable(SrmDocument doc)
         {
             Serializable(doc, DocumentCloned);
+            VerifyModifiedSequences(doc);
         }
 
         public static void Serializable<TObj>(TObj target, Action<TObj, TObj> validate, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)
@@ -244,32 +245,33 @@ namespace pwiz.SkylineTestUtil
             return target;
         }
 
+        /// <summary>
+        /// Verifies that for every peptide and precursor in the document, the
+        /// sequence that the class <see cref="ModifiedSequence" /> behaves
+        /// the same as <see cref="IPrecursorMassCalc"/>.
+        /// </summary>
         public static void VerifyModifiedSequences(SrmDocument doc)
         {
-            foreach (var peptide in doc.Molecules)
+            foreach (var peptide in doc.Peptides)
             {
                 var peptideModifiedSequence =
                     ModifiedSequence.GetModifiedSequence(doc.Settings, peptide, IsotopeLabelType.light);
-                if (peptideModifiedSequence != null)
+                Assert.IsNotNull(peptideModifiedSequence);
+                if (peptide.ModifiedSequenceDisplay != peptideModifiedSequence.ToString())
                 {
-                    if (peptide.ModifiedSequenceDisplay != peptideModifiedSequence.ToString())
-                    {
-                        Assert.AreEqual(peptide.ModifiedSequenceDisplay, peptideModifiedSequence.ToString());
-                    }
+                    Assert.AreEqual(peptide.ModifiedSequenceDisplay, peptideModifiedSequence.ToString());
                 }
                 foreach (var precursor in peptide.TransitionGroups)
                 {
                     var modifiedSequence = ModifiedSequence.GetModifiedSequence(doc.Settings, peptide,
                         precursor.TransitionGroup.LabelType);
-                    if (modifiedSequence != null)
+                    Assert.IsNotNull(modifiedSequence);
+                    var expectedModifiedSequence = doc.Settings.GetPrecursorCalc(
+                            precursor.TransitionGroup.LabelType, peptide.ExplicitMods)
+                        .GetModifiedSequence(peptide.Peptide.Target, true).ToString();
+                    if (expectedModifiedSequence != modifiedSequence.ToString())
                     {
-                        var expectedModifiedSequence = doc.Settings.GetPrecursorCalc(
-                                precursor.TransitionGroup.LabelType, peptide.ExplicitMods)
-                            .GetModifiedSequence(peptide.Peptide.Target, true).ToString();
-                        if (expectedModifiedSequence != modifiedSequence.ToString())
-                        {
-                            Assert.AreEqual(expectedModifiedSequence, modifiedSequence.ToString());
-                        }
+                        Assert.AreEqual(expectedModifiedSequence, modifiedSequence.ToString());
                     }
                 }
             }

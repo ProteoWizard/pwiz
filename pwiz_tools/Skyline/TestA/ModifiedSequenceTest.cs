@@ -1,0 +1,217 @@
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2017 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System.IO;
+using System.Xml.Serialization;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model;
+using pwiz.SkylineTestUtil;
+
+namespace pwiz.SkylineTestA
+{
+    [TestClass]
+    public class ModifiedSequenceTest : AbstractUnitTest
+    {
+        /// <summary>
+        /// Verifies that the peptide with the heavy form "C[+57]PEPTIDER[+10]" works correctly.
+        /// </summary>
+        [TestMethod]
+        public void TestLabeledPrecursorWithImplicitMod()
+        {
+            var doc = (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(new StringReader(DOC_CPETIDER));
+            AssertEx.VerifyModifiedSequences(doc);
+        }
+        const string DOC_CPETIDER = @"<srm_settings format_version='3.73' software_version='Skyline (64-bit) '>
+  <settings_summary name='Default'>
+    <peptide_settings>
+      <peptide_modifications max_variable_mods='3' max_neutral_losses='1'>
+        <static_modifications>
+          <static_modification name='Carbamidomethyl Cysteine' aminoacid='C' formula='C2H3ON' />
+        </static_modifications>
+        <heavy_modifications>
+          <static_modification name='Label:13C(6)15N(4) (R)' aminoacid='R' label_13C='true' label_15N='true' unimod_id='267' short_name='+10' />
+        </heavy_modifications>
+      </peptide_modifications>
+    </peptide_settings>
+  </settings_summary>
+  <peptide_list label_name='Library Peptides' websearch_status='X' auto_manage_children='false'>
+    <peptide auto_manage_children='false' sequence='CPEPTIDER' modified_sequence='C[+57.0]PEPTIDER' calc_neutral_pep_mass='1115.491724' num_missed_cleavages='0'>
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa='0' modification_name='Carbamidomethyl Cysteine' mass_diff='+57' />
+        </implicit_static_modifications>
+        <implicit_heavy_modifications>
+          <implicit_modification index_aa='8' modification_name='Label:13C(6)15N(4) (R)' mass_diff='+10' />
+        </implicit_heavy_modifications>
+      </implicit_modifications>
+      <precursor charge='2' calc_neutral_mass='1115.491724' precursor_mz='558.753138' collision_energy='27.583929' modified_sequence='C[+57.0]PEPTIDER'>
+        <transition fragment_type='a' fragment_ordinal='3' calc_neutral_mass='358.131091' product_charge='1' cleavage_aa='E' loss_neutral_mass='0'>
+          <precursor_mz>558.753138</precursor_mz>
+          <product_mz>359.138367</product_mz>
+          <collision_energy>27.583929</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge='2' isotope_label='heavy' calc_neutral_mass='1125.499993' precursor_mz='563.757272' collision_energy='27.583929' modified_sequence='C[+57.0]PEPTIDER[+10.0]'>
+        <transition fragment_type='a' fragment_ordinal='3' calc_neutral_mass='358.131091' product_charge='1' cleavage_aa='E' loss_neutral_mass='0'>
+          <precursor_mz>563.757272</precursor_mz>
+          <product_mz>359.138367</product_mz>
+          <collision_energy>27.583929</collision_energy>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+</srm_settings>";
+
+        /// <summary>
+        /// Verifies that the peptide "A[+56.0]R[+28.0]TK[+56.0]QTAR[+10.0]" works correctly.
+        /// Makes sure that the [+10.0] only gets applied to the Argenine that has the explicit modification on it.
+        /// </summary>
+        [TestMethod]
+        public void TestExplicitAndHeavyModifications()
+        {
+            var doc = (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(new StringReader(DOC_ARTKQTAR));
+            AssertEx.VerifyModifiedSequences(doc);
+        }
+
+        private const string DOC_ARTKQTAR = @"<srm_settings format_version='3.73' software_version='Skyline (64-bit) '>
+  <settings_summary name='Default'>
+    <peptide_settings>
+      <peptide_modifications max_variable_mods='3' max_neutral_losses='1'>
+        <static_modifications>
+          <static_modification name='Dimethyl (R)' aminoacid='R' variable='true' formula='C2H4' unimod_id='36' short_name='2Me' />
+          <static_modification name='PropionylNT' terminus='N' formula='C3H4O1' explicit_decl='true' />
+          <static_modification name='Propionylation' aminoacid='K' formula='C3H4O1' explicit_decl='true' />
+          <static_modification name='UbiqPropStub' aminoacid='K' formula='C7H10O3N2' explicit_decl='true' />
+          <static_modification name='Dimethyl' aminoacid='K' formula='C2H4' explicit_decl='true' />
+          <static_modification name='Acetyl' formula='C2O1H2' explicit_decl='true' />
+          <static_modification name='Trimethyl (K)' aminoacid='K' formula='H6C3' explicit_decl='true' />
+          <static_modification name='MethylPropionyl' aminoacid='K' formula='C4H6O' explicit_decl='true' />
+          <static_modification name='DoublePropionyl(NTK)' aminoacid='K' terminus='N' formula='C6H8O2' explicit_decl='true' />
+          <static_modification name='NTPropUbLys' aminoacid='K' terminus='N' formula='C10H14O4N2' explicit_decl='true' />
+          <static_modification name='PropionylNT_LysAc1' aminoacid='K' terminus='N' formula='C5H6O2' explicit_decl='true' />
+          <static_modification name='PropionylNT_LysMe1' aminoacid='K' terminus='N' formula='C7O2H10' explicit_decl='true' />
+          <static_modification name='PropionylNT_LysMe2' aminoacid='K' formula='C5H8O' explicit_decl='true' />
+          <static_modification name='PropionylNY_LysMe3' aminoacid='K' terminus='N' formula='C6H10O' explicit_decl='true' />
+          <static_modification name='Phospho' formula='PO3H1' explicit_decl='true' />
+          <static_modification name='PropionylPhospo' formula='PO4H5C3' explicit_decl='true' />
+        </static_modifications>
+        <heavy_modifications>
+          <static_modification name='Label:13C(6)15N(4) (R)' aminoacid='R' label_13C='true' label_15N='true' unimod_id='267' short_name='+10' />
+        </heavy_modifications>
+      </peptide_modifications>
+    </peptide_settings>
+  </settings_summary>
+  <peptide_list label_name='Library Peptides' websearch_status='X' auto_manage_children='false'>
+    <peptide auto_manage_children='false' sequence='ARTKQTAR' modified_sequence='A[+56.0]R[+28.0]TK[+56.0]QTAR' calc_neutral_pep_mass='1070.619642' num_missed_cleavages='1'>
+      <variable_modifications>
+        <variable_modification index_aa='0' modification_name='PropionylNT' mass_diff='+56' />
+        <variable_modification index_aa='1' modification_name='Dimethyl (R)' mass_diff='+28' />
+        <variable_modification index_aa='3' modification_name='Propionylation' mass_diff='+56' />
+      </variable_modifications>
+      <explicit_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa='7' modification_name='Label:13C(6)15N(4) (R)' mass_diff='+10' />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <precursor charge='2' calc_neutral_mass='1070.619642' precursor_mz='536.317097' collision_energy='26.305075' modified_sequence='A[+56.0]R[+28.0]TK[+56.0]QTAR'>
+        <transition fragment_type='y' fragment_ordinal='6' calc_neutral_mass='759.423902' product_charge='1' cleavage_aa='T' loss_neutral_mass='0'>
+          <precursor_mz>536.317097</precursor_mz>
+          <product_mz>760.431178</product_mz>
+        </transition>
+      </precursor>
+      <precursor charge='2' isotope_label='heavy' calc_neutral_mass='1080.627911' precursor_mz='541.321232' collision_energy='26.305075' modified_sequence='A[+56.0]R[+28.0]TK[+56.0]QTAR[+10.0]'>
+        <transition fragment_type='y' fragment_ordinal='6' calc_neutral_mass='769.432171' product_charge='1' cleavage_aa='T' loss_neutral_mass='0'>
+          <precursor_mz>541.321232</precursor_mz>
+          <product_mz>770.439447</product_mz>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+</srm_settings>";
+
+        /// <summary>
+        /// Tests that the peptide sequence "A[+56.0]GLQFPVGR[+10.0]" works.
+        /// </summary>
+        [TestMethod]
+        public void TestVariableAndExplicitHeavyMod()
+        {
+            var doc = (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(new StringReader(DOC_AGLQFPVGR));
+            AssertEx.VerifyModifiedSequences(doc);
+        }
+
+        private const string DOC_AGLQFPVGR = @"<srm_settings format_version='3.73' software_version='Skyline (64-bit) '>
+  <settings_summary name='Default'>
+    <peptide_settings>
+      <peptide_modifications max_variable_mods='3' max_neutral_losses='1'>
+        <static_modifications>
+          <static_modification name='Carbamidomethyl Cysteine' aminoacid='C' formula='C2H3ON' />
+          <static_modification name='PropionylNT' terminus='N' variable='true' formula='C3H4O1' />
+          <static_modification name='Dimethyl (R)' aminoacid='R' variable='true' formula='C2H4' unimod_id='36' short_name='2Me' />
+          <static_modification name='Propionylation' aminoacid='K' variable='true' formula='C3H4O1' />
+          <static_modification name='UbiqPropStub' aminoacid='K' variable='true' formula='C7H10O3N2' />
+          <static_modification name='Dimethyl' aminoacid='K' variable='true' formula='C2H4' />
+          <static_modification name='Trimethyl (K)' aminoacid='K' variable='true' formula='H6C3' />
+          <static_modification name='MethylPropionyl' aminoacid='K' variable='true' formula='C4H6O' />
+          <static_modification name='DoublePropionyl(NTK)' aminoacid='K' terminus='N' variable='true' formula='C6H8O2' />
+          <static_modification name='PropionylNT_LysMe1' aminoacid='K' terminus='N' variable='true' formula='C7O2H10' />
+          <static_modification name='NTPropUbLys' aminoacid='K' terminus='N' variable='true' formula='C10H14O4N2' />
+          <static_modification name='PropionylNT_LysMe2' aminoacid='K' variable='true' formula='C5H8O' />
+          <static_modification name='PropionylNT_LysAc1' aminoacid='K' terminus='N' variable='true' formula='C5H6O2' />
+          <static_modification name='PropionylNY_LysMe3' aminoacid='K' terminus='N' variable='true' formula='C6H10O' />
+        </static_modifications>
+        <heavy_modifications>
+          <static_modification name='Label:13C(6)15N(4) (R)' aminoacid='R' label_13C='true' label_15N='true' unimod_id='267' short_name='+10' />
+        </heavy_modifications>
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+    </transition_settings>
+    <data_settings document_guid='c6b7dd1f-54e5-415f-96c6-3d1912b6a171'>
+    </data_settings>
+  </settings_summary>
+  <peptide_list label_name='Library Peptides' websearch_status='X' auto_manage_children='false'>
+    <peptide auto_manage_children='false' sequence='AGLQFPVGR' modified_sequence='A[+56.0]GLQFPVGR' calc_neutral_pep_mass='999.550165' num_missed_cleavages='0'>
+      <variable_modifications>
+        <variable_modification index_aa='0' modification_name='PropionylNT' mass_diff='+56' />
+      </variable_modifications>
+      <implicit_modifications>
+        <implicit_heavy_modifications>
+          <implicit_modification index_aa='8' modification_name='Label:13C(6)15N(4) (R)' mass_diff='+10' />
+        </implicit_heavy_modifications>
+      </implicit_modifications>
+      <precursor charge='2' calc_neutral_mass='999.550165' precursor_mz='500.782359' collision_energy='24.279594' modified_sequence='A[+56.0]GLQFPVGR'>
+        <transition fragment_type='y' fragment_ordinal='6' calc_neutral_mass='702.381309' product_charge='1' cleavage_aa='Q' loss_neutral_mass='0'>
+          <precursor_mz>500.782359</precursor_mz>
+          <product_mz>703.388585</product_mz>
+          <collision_energy>24.279594</collision_energy>
+          <transition_lib_info rank='3' intensity='74.92' />
+        </transition>
+      </precursor>
+      <precursor charge='2' isotope_label='heavy' calc_neutral_mass='1009.558434' precursor_mz='505.786493' collision_energy='24.279594' modified_sequence='A[+56.0]GLQFPVGR[+10.0]'>
+        <transition fragment_type='y' fragment_ordinal='6' calc_neutral_mass='712.389578' product_charge='1' cleavage_aa='Q' loss_neutral_mass='0'>
+          <precursor_mz>505.786493</precursor_mz>
+          <product_mz>713.396854</product_mz>
+          <collision_energy>24.279594</collision_energy>
+          <transition_lib_info rank='3' intensity='74.92' />
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+</srm_settings>";
+    }
+}

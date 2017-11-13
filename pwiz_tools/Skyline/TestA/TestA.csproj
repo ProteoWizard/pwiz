@@ -167,6 +167,7 @@
     <Compile Include="MassCalcTest.cs" />
     <Compile Include="ModEquivalentTest.cs" />
     <Compile Include="ModificationMatcherTest.cs" />
+    <Compile Include="ModifiedSequenceTest.cs" />
     <Compile Include="MoreStatisticsTest.cs" />
     <Compile Include="MProphetScoringModelTest.cs" />
     <Compile Include="MQuestScoringTest.cs" />
