@@ -160,7 +160,7 @@ namespace pwiz.Skyline
 
         private void openContainingFolderMenuItem_Click(object sender, EventArgs e)
         {
-            string args = string.Format(@"/select, ""{0}""", DocumentFilePath);
+            string args = string.Format(@"/select, ""{0}""", DocumentFilePath); // Not L10N
             Process.Start("explorer.exe", args); // Not L10N
         }
 
