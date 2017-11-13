@@ -160,7 +160,8 @@ namespace pwiz.Skyline
 
         private void openContainingFolderMenuItem_Click(object sender, EventArgs e)
         {
-            Process.Start("explorer.exe", @"/select, " + DocumentFilePath); // Not L10N
+            string args = string.Format(@"/select, ""{0}""", DocumentFilePath);
+            Process.Start("explorer.exe", args); // Not L10N
         }
 
         private void openMenuItem_Click(object sender, EventArgs e)
@@ -1706,9 +1707,9 @@ namespace pwiz.Skyline
             private static string GetMessage(SrmDocument docNow, SrmDocument docOriginal)
             {
                 // ReSharper disable NonLocalizedString
-                return TextUtil.LineSeparate(string.Format("DocRevision: before = {0}, after = {1}", docNow.RevisionIndex, docOriginal.RevisionIndex),
-                    "Loaded before:", TextUtil.LineSeparate(docNow.NonLoadedStateDescriptionsFull),
-                    "Loaded after:", TextUtil.LineSeparate(docOriginal.NonLoadedStateDescriptionsFull));
+                return TextUtil.LineSeparate(string.Format("DocRevision: before = {0}, after = {1}", docOriginal.RevisionIndex, docNow.RevisionIndex),
+                    "Loaded before:", TextUtil.LineSeparate(docOriginal.NonLoadedStateDescriptionsFull),
+                    "Loaded after:", TextUtil.LineSeparate(docNow.NonLoadedStateDescriptionsFull));
                 // ReSharper restore NonLocalizedString
             }
         }
