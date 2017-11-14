@@ -230,7 +230,22 @@ namespace pwiz.SkylineTestA
 
             TestPentaneAdduct("[M+2H]", "C5H14", 2, coverage);
             TestPentaneAdduct("[M2C13+2H]", "C3C'2H14", 2, coverage); // Labeled
-            TestPentaneAdduct("[2M2C13+2H]", "C6C'4H26", 2, coverage); // Labeled, multiplied
+            TestPentaneAdduct("[2M2C13+2H]", "C6C'4H26", 2, coverage); // Labeled dimer
+            TestPentaneAdduct("[M2C13]", "C3C'2H12", 0, coverage); // Labeled no charge
+            TestPentaneAdduct("[2M2C13]", "C6C'4H24", 0, coverage); // Labeled, dimer, no charge
+            TestPentaneAdduct("[2M]", "C10H24", 0, coverage); // dimer no charge
+            TestPentaneAdduct("[2M2C13+3]", "C6C'4H24", 3, coverage); // Labeled, dimer, charge only
+            TestPentaneAdduct("[2M2C13]+3", "C6C'4H24", 3, coverage); // Labeled, dimer, charge only
+            TestPentaneAdduct("[2M2C13+++]", "C6C'4H24", 3, coverage); // Labeled, dimer, charge only
+            TestPentaneAdduct("[2M2C13]+++", "C6C'4H24", 3, coverage); // Labeled, dimer, charge only
+            TestPentaneAdduct("[2M+3]", "C10H24", 3, coverage); // dimer charge only
+            TestPentaneAdduct("[2M]+3", "C10H24", 3, coverage); // dimer charge only
+            TestPentaneAdduct("[2M+++]", "C10H24", 3, coverage); // dimer charge only
+            TestPentaneAdduct("[2M]+++", "C10H24", 3, coverage); // dimer charge only
+            TestPentaneAdduct("[2M2C13-3]", "C6C'4H24", -3, coverage); // Labeled, dimer, charge only
+            TestPentaneAdduct("[2M2C13---]", "C6C'4H24", -3, coverage); // Labeled, dimer, charge only
+            TestPentaneAdduct("[2M-3]", "C10H24", -3, coverage); // dimer charge only
+            TestPentaneAdduct("[2M---]", "C10H24", -3, coverage); // dimer charge only
             TestPentaneAdduct("[2M2C133H2+2H]", "C6C'4H20H'6", 2, coverage); // Labeled with some complexity, multiplied
             TestPentaneAdduct("M+H", "C5H13", 1, coverage);
             TestPentaneAdduct("M+", PENTANE, 1, coverage);
@@ -339,17 +354,29 @@ namespace pwiz.SkylineTestA
             // Test ability to describe isotope label by mass only
             var heavy = Adduct.FromStringAssumeProtonated("2M1.2345+H");
             mz = BioMassCalc.CalculateIonMz(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
-            Assert.AreEqual((2 * (massHectochlorin + 1.23456) + BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula("H")), mz, .001);
+            heavy = Adduct.FromStringAssumeProtonated("2M1.2345");
+            mz = BioMassCalc.CalculateIonMass(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
+            Assert.AreEqual(2 * (massHectochlorin + 1.23456), mz, .001);
+            heavy = Adduct.FromStringAssumeProtonated("M1.2345");
+            mz = BioMassCalc.CalculateIonMass(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
+            Assert.AreEqual(massHectochlorin + 1.23456, mz, .001);
             heavy = Adduct.FromStringAssumeProtonated("2M(-1.2345)+H");
             mz = BioMassCalc.CalculateIonMz(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
             Assert.AreEqual((2 * (massHectochlorin - 1.23456) + BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula("H")), mz, .001);
+            heavy = Adduct.FromStringAssumeProtonated("2M(-1.2345)");
+            mz = BioMassCalc.CalculateIonMass(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
+            Assert.AreEqual(2 * (massHectochlorin - 1.23456), mz, .001);
             heavy = Adduct.FromStringAssumeProtonated("2M(1.2345)+H");
             mz = BioMassCalc.CalculateIonMz(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
             Assert.AreEqual((2 * (massHectochlorin + 1.23456) + BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula("H")), mz, .001);
+            heavy = Adduct.FromStringAssumeProtonated("2M(1.2345)");
+            mz = BioMassCalc.CalculateIonMass(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
+            Assert.AreEqual(2 * (massHectochlorin + 1.23456), mz, .001);
 
             TestException(Hectochlorin, "M3Cl37+H"); // Trying to label more chlorines than exist in the molecule
             TestException(PENTANE, "M+foo+H"); // Unknown adduct
-            TestException(PENTANE, "M+H+"); // Trailing sign 
+            TestException(PENTANE, "M2Cl37H+H"); // nonsense label ("2Cl37H2" would make sense, but regular H doesn't belong)
+            TestException(PENTANE, "M+2H+"); // Trailing sign - we now understand this as a charge state declaration, but this one doesn't match described charge
             TestException(PENTANE, "[M-2H]3-"); // Declared charge doesn't match described charge
 
             // Test label stripping
@@ -362,6 +389,27 @@ namespace pwiz.SkylineTestA
             var adductDiff = Adduct.FromFormulaDiff("C6H27NO2Si2C'5", "C'5H11NO2", 3);
             Assert.AreEqual("[M+C6H16Si2]", adductDiff.AdductFormula);
             Assert.AreEqual(3, adductDiff.AdductCharge);
+
+            // Implied positive mode
+            TestPentaneAdduct("MH", "C5H13", 1, coverage); // implied pos mode seems to be fairly common in the wild
+            TestPentaneAdduct("MH+", "C5H13", 1, coverage); // implied pos mode seems to be fairly common in the wild
+            TestPentaneAdduct("MNH4", "C5H16N", 1, coverage); // implied pos mode seems to be fairly common in the wild
+            TestPentaneAdduct("MNH4+", "C5H16N", 1, coverage); // implied pos mode seems to be fairly common in the wild
+            TestPentaneAdduct("2MNH4+", "C10H28N", 1, coverage); // implied pos mode seems to be fairly common in the wild
+
+            // Explict charge states within the adduct
+            TestPentaneAdduct("[M+S+]", "C5H12S", 1, coverage); // We're trusting the user to declare charge
+            TestPentaneAdduct("[3M+S+]", "C15H36S", 1, coverage); // We're trusting the user to declare charge
+            TestPentaneAdduct("[M+S++]", "C5H12S", 2, coverage); // We're trusting the user to declare charge
+            TestPentaneAdduct("[MS+]", "C5H12S", 1, coverage); // We're trusting the user to declare charge
+            TestPentaneAdduct("[MS++]", "C5H12S", 2, coverage); // We're trusting the user to declare charge
+            TestPentaneAdduct("[M+S+2]", "C5H12S", 2, coverage); // We're trusting the user to declare charge
+            TestPentaneAdduct("[M+S]2+", "C5H12S", 2, coverage); // We're trusting the user to declare charge
+            TestPentaneAdduct("[M+S-]", "C5H12S", -1, coverage); // We're trusting the user to declare charge
+            TestPentaneAdduct("[M+S--]", "C5H12S", -2, coverage); // We're trusting the user to declare charge
+            TestPentaneAdduct("[M-3H-3]", "C5H9", -3, coverage); // We're trusting the user to declare charge
+            TestPentaneAdduct("[M+S-2]", "C5H12S", -2, coverage); // We're trusting the user to declare charge
+            TestPentaneAdduct("[M+S]2-", "C5H12S", -2, coverage); // We're trusting the user to declare charge
 
             // Did we test all the adducts we claim to support?
             foreach (var adducts in new[] { 

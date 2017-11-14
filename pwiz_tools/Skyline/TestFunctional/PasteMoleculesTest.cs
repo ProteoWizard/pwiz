@@ -455,7 +455,7 @@ namespace pwiz.SkylineTestFunctional
             pasteText =
                 "A,27-HC,C36H57N2O3,,1,135,1,light\r\n" + // No adduct, just charge
                 "A,27-HC,C36H57N2O3,[M+],1,130,1,light\r\n" + // Note this claims a charge with no protonation, thus not the same precursor as these others
-                "A,27-HC,C36H57N2O3,M+H,,181,1,light\r\n" +
+                "A,27-HC,C36H57N2O3,MH,,181,1,light\r\n" + // Note the implicit postive ion mode "MH"
                 "A,27-HC,C36H57N2O3[M+H],,,367,1,light\r\n" ;
             NewDocument();
             TestError(pasteText, String.Empty, columnOrderC);

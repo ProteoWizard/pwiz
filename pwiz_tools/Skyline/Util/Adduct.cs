@@ -124,6 +124,31 @@ namespace pwiz.Skyline.Util
                     // Accept a bare "M+Na", but put it in canonical form "[M+Na]"
                     input = "[" + input + "]"; // Not L10N
                 }
+
+                // Check for implied positive ion mode - we see "MH", "MH+", "MNH4+" etc in the wild
+                // Also watch for for label-only like  "[M2Cl37]"
+                var posNext = input.IndexOf('M') + 1; // Not L10N
+                if (posNext > 0)
+                {
+                    if (input[posNext] != '+' && input[posNext] != '-') 
+                    {
+                        // No leading + or - : is it because description starts with a label, or because + mode is implied?
+                        var labelEnd = FindLabelDescriptionEnd(input);
+                        if (labelEnd.HasValue) // Not L10N
+                        {
+                            if (input.LastIndexOfAny(new []{'+','-'}) < labelEnd.Value)
+                            {
+                                // Pure labeling - add a trailing + for parseability
+                                input = input.Replace("]", "+0]"); // Not L10N
+                            }
+                        }
+                        else if (input[posNext] != ']')  // Leave "[M]" or "[2M]" alone // Not L10N
+                        {
+                            // Implied positive mode
+                            input = input.Replace("M", "M+"); // Not L10N
+                        }
+                    }
+                }
                 ParseDescription(Description = input);
                 InitializeMasses();
             }
@@ -139,6 +164,51 @@ namespace pwiz.Skyline.Util
             SetHashCode(); // For fast GetHashCode()
         }
 
+        private static int? FindLabelDescriptionEnd(string input)
+        {
+            var posNext = input.IndexOf('M') + 1; // Not L10N
+            if (posNext > 0)
+            {
+                if (input[posNext] == '(')
+                {
+                    var close = input.LastIndexOf(')');
+                    if (close > posNext)
+                    {
+                        return close+1;
+                    }
+                }
+                else if (input[posNext] != '+' && input[posNext] != '-')
+                {
+                    // No leading + or - : is it because description starts with a label, or because + mode is implied?
+                    var limit = input.IndexOfAny(new[] { '+', '-', ']' });
+                    double test;
+                    if (double.TryParse(input.Substring(posNext, limit - posNext),
+                        NumberStyles.Float | NumberStyles.AllowThousands, NumberFormatInfo.InvariantInfo, out test))
+                    {
+                        return limit;  // Started with a mass label
+                    }
+                    while (posNext < limit)
+                    {
+                        if (char.IsDigit(input[posNext]))
+                        {
+                            posNext++;
+                        }
+                        else
+                        {
+                            var remain = input.Substring(posNext);
+                            if (DICT_ADDUCT_ISOTOPE_NICKNAMES.Keys.Any(k => remain.StartsWith(k)))
+                            {
+                                // It's at least trying to be an isotopic label
+                                return limit;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
         private static readonly Regex ADDUCT_OUTER_REGEX =
             new Regex(
                 @"\[?(?<multM>\d*)M(?<label>(\(.*\)|[^\+\-]*))?(?<adduct>[\+\-][^\]]*)(\](?<declaredChargeCount>\d*)(?<declaredChargeSign>[+-]*)?)?$", // Not L10N
@@ -147,12 +217,33 @@ namespace pwiz.Skyline.Util
             RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
         private static readonly Regex ADDUCT_ION_REGEX = new Regex(@"(?<multM>\d+)?(?<ion>[A-Z][a-z]?['\""]?)", // Not L10N
             RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
+        private static readonly Regex ADDUCT_NMER_ONLY_REGEX = new Regex(@"\[(?<multM>\d*)M\]$", // Not L10N
+            RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
+
+        private int? ParseChargeDeclaration(string adductOperations)
+        {
+            int parsedCharge;
+            int? result = null;
+            if (adductOperations.StartsWith("+") && adductOperations.Distinct().Count() == 1) // "[M+]" is legit, "[M+++]" etc is presumably also legit // Not L10N
+            {
+                result = adductOperations.Length;
+            }
+            else if (adductOperations.StartsWith("-") && adductOperations.Distinct().Count() == 1) // "[M-]", "[M---]" etc are presumably also legit // Not L10N
+            {
+                result = -adductOperations.Length;
+            }
+            else if (int.TryParse(adductOperations, out parsedCharge)) // "[M+2]", "[M-3]" etc
+            {
+                result = parsedCharge;
+            }
+            return result;
+        }
 
         private void ParseDescription(string input)
         {
             int? declaredCharge = null;
             int? calculatedCharge = null;
-            int parsedCharge;
+            IsotopeLabels = null;
             var match = ADDUCT_OUTER_REGEX.Match(input.Trim());
             var success = match.Success && (match.Groups.Count == 6);
 
@@ -185,12 +276,11 @@ namespace pwiz.Skyline.Util
 
                 // Read the "4Cl37" in "[2M4Cl37+..." if any such thing is there
                 // Also deal with more complex labels, eg 6C132N15 -> 6C'2N'
-                var label = match.Groups["label"].Value; // Not L10N
+                var label = match.Groups["label"].Value.Split(']')[0].Trim('(', ')'); // In case adduct had form like M(-1.2345)+H or [2M2Cl37]+3 // Not L10N
                 var hasIsotopeLabels = !string.IsNullOrEmpty(label);
                 if (hasIsotopeLabels)
                 {
                     double labelMass;
-                    label = label.Trim('(', ')'); // In case adduct had form like M(-1.2345)+H
                     if (double.TryParse(label, NumberStyles.Float, CultureInfo.InvariantCulture, out labelMass))
                     {
                         // Sometimes all we're given is a mass offset eg M1.002+2H
@@ -198,6 +288,15 @@ namespace pwiz.Skyline.Util
                     }
                     else
                     {
+                        // Verify that everything in the label can be understood as isotope counts
+                        var test = DICT_ADDUCT_ISOTOPE_NICKNAMES.Aggregate(label, (current, nickname) => current.Replace(nickname.Key, "\0")); //  2Cl373H2 -> "2\03\0" // Not L10N
+                        if (test.Any(t => !char.IsDigit(t) && t != '\0') || test[test.Length - 1] != '\0') // This will catch 2Cl373H -> "2\03H" or 2Cl373H23 -> "2\03\03"
+                        {
+                            var errmsg = string.Format(Resources.Adduct_ParseDescription_isotope_error,
+                                    match.Groups["label"].Value.Split(']')[0], input, string.Join(" ", DICT_ADDUCT_ISOTOPE_NICKNAMES.Keys)); // Not L10N
+                            throw new InvalidOperationException(errmsg);
+                        }
+
                         label = DICT_ADDUCT_ISOTOPE_NICKNAMES.Aggregate(label, (current, nickname) => current.Replace(nickname.Key, nickname.Value)); // eg Cl37 -> Cl'
                         // Problem: normal chemical formula for "6C132N15H" -> "6C'2NH'" would be "C'6N'15H"
                         var ionMatches = ADDUCT_ION_REGEX.Matches(label);
@@ -240,20 +339,31 @@ namespace pwiz.Skyline.Util
                     declaredCharge = (declaredCharge ?? 1)*
                                      (declaredChargeSignStr.Count(c => c == '+') - declaredChargeSignStr.Count(c => c == '-'));
                 }
-                if (adductOperations.StartsWith("+") && adductOperations.Distinct().Count() == 1) // "[M+]" is legit, "[M+++]" etc is presumably also legit // Not L10N
-                {
-                    calculatedCharge = adductOperations.Length;
-                }
-                else if (adductOperations.StartsWith("-") && adductOperations.Distinct().Count() == 1) // "[M-]", "[M---]" etc are presumably also legit // Not L10N
-                {
-                    calculatedCharge = -adductOperations.Length;
-                }
-                else if (int.TryParse(adductOperations, out parsedCharge)) // "[M+2]", "[M-3]" etc
+
+                // Check for M+, M--, M+3 etc
+                var parsedCharge = ParseChargeDeclaration(adductOperations);
+                if (parsedCharge.HasValue)
                 {
                     calculatedCharge = parsedCharge;
                 }
                 else
                 {
+                    // If trailing part of declaration is of form +2, -3, -- etc, treat it as an explicit charge as in "[M+H+]" or "[M+H+1]"
+                    var lastSign = Math.Max(adductOperations.LastIndexOf("-", StringComparison.Ordinal), adductOperations.LastIndexOf("+", StringComparison.Ordinal)); // Not L10N
+                    if (lastSign > -1 && (lastSign == adductOperations.Length-1 || adductOperations.Substring(lastSign+1).All(char.IsDigit)))
+                    {
+                        while (lastSign > 0 && adductOperations[lastSign - 1] == adductOperations[lastSign])
+                        {
+                            lastSign--;
+                        }
+                        parsedCharge = ParseChargeDeclaration(adductOperations.Substring(lastSign));
+                        if (parsedCharge.HasValue)
+                        {
+                            declaredCharge = parsedCharge;
+                            adductOperations = adductOperations.Substring(0, lastSign);
+                        }
+                    }
+
                     // Now parse each part of the "+Na-2H" in "[M+Na-2H]" if any such thing is there
                     var matches = ADDUCT_INNER_REGEX.Matches(adductOperations);
                     int remaining = matches.Count;
@@ -319,11 +429,20 @@ namespace pwiz.Skyline.Util
             }
             if (!success)
             {
-                if (Equals("[M]", input)) // Allow trivial charge free adduct  // Not L10N
+                // Allow charge free neutral like [M] or nmer like [3M]
+                match = ADDUCT_NMER_ONLY_REGEX.Match(input);
+                if (match.Success && match.Groups.Count == 2)
                 {
-                    MassMultiplier = 1;
+                    success = true;
+                    var massMultiplier = 1;
+                    var massMultiplierStr = match.Groups["multM"].Value; // Not L10N
+                    if (!string.IsNullOrEmpty(massMultiplierStr))
+                    {
+                        success = int.TryParse(massMultiplierStr, out massMultiplier);
+                    }
+                    MassMultiplier = massMultiplier;
                 }
-                else
+                if (!success)
                 {
                     throw new InvalidOperationException(
                         string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
@@ -651,6 +770,7 @@ namespace pwiz.Skyline.Util
 
         private int FindSignIndex(string formula)
         {
+            formula = formula.Split(']')[0]; // Ignore the "++" in "[M2Cl37]++"
             var closeNumericIsotopeDescription = formula.IndexOf(')');
             if (closeNumericIsotopeDescription > 0)
             {

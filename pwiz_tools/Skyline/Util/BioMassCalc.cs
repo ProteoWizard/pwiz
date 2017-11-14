@@ -513,6 +513,14 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// For test purposes
+        /// </summary>
+        public static double CalculateIonMass(TypedMass mass, Adduct adduct)
+        {
+            return adduct.ApplyToMass(mass);
+        }
+
+        /// <summary>
         /// For fixing up old custom ion formulas in which we artificially
         /// reduced the hydrogen count by one, in anticipation of our
         /// calculations adding it back in because they thought that was

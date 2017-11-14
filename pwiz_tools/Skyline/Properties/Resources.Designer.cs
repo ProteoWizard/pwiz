@@ -828,6 +828,18 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not parse isotopic label description &quot;{0}&quot; in adduct description &quot;{1}&quot;.
+        ///Isotopic labels in adduct descriptions should be in the form of isotope counts (e.g. &quot;2Cl37&quot; or &quot;2Cl374N15&quot;),
+        ///or a mass shift (e.g. &quot;1.234&quot; or &quot;(-1.234)&quot;).
+        ///Recognized isotopes include: {2}.
+        /// </summary>
+        public static string Adduct_ParseDescription_isotope_error {
+            get {
+                return ResourceManager.GetString("Adduct_ParseDescription_isotope_error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A tool requires Program:{0} Version:{1} and it is not specified with the --tool-program-macro and --tool-program-path commands. Tool Installation Canceled..
         /// </summary>
         public static string AddZipToolHelper_FindProgramPath_A_tool_requires_Program__0__Version__1__and_it_is_not_specified_with_the___tool_program_macro_and___tool_program_path_commands__Tool_Installation_Canceled_ {

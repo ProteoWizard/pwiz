@@ -9975,4 +9975,10 @@ Would you like to remove some or all of the prefix or suffix to shorten the name
   <data name="SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules" xml:space="preserve">
     <value>&amp;Molecules</value>
   </data>
+  <data name="Adduct_ParseDescription_isotope_error" xml:space="preserve">
+    <value>Could not parse isotopic label description "{0}" in adduct description "{1}".
+Isotopic labels in adduct descriptions should be in the form of isotope counts (e.g. "2Cl37" or "2Cl374N15"),
+or a mass shift (e.g. "1.234" or "(-1.234)").
+Recognized isotopes include: {2}</value>
+  </data>
 </root>
