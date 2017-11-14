@@ -25,7 +25,7 @@
 #include "Serializer_FASTA.hpp"
 #include "pwiz/data/common/Index.hpp"
 #include "pwiz/utility/misc/Std.hpp"
-#include "pwiz/utility/misc/SHA1Calculator.cpp"
+#include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/xpressive/xpressive_dynamic.hpp>
