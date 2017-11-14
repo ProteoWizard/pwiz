@@ -46,6 +46,59 @@ ostream* os_ = 0;
 string filenameBase_ = "temp.ProteomeDataFileTest";
 
 
+void validateReadIndexed(const ProteomeDataFile::WriteConfig& writeConfig,
+                         const DiffConfig diffConfig)
+{
+    if (os_) *os_ << "validateReadIndexed()\n" << endl;
+
+    string filename1 = filenameBase_ + "1.fasta";
+
+    // create ProteomeData object in memory
+    ProteomeData tiny;
+    examples::initializeTiny(tiny);
+
+    // write to file #1 (static)
+    ProteomeDataFile::write(tiny, filename1, writeConfig);
+
+    {
+        unit_assert(!bfs::exists(filename1 + ".index"));
+
+        Reader_FASTA::Config config;
+        config.indexed = true;
+        Reader_FASTA reader(config);
+
+        // read back into an ProteomeDataFile object
+        ProteomeDataFile pd1(filename1, reader);
+
+        unit_assert(bfs::exists(filename1));
+        unit_assert(bfs::exists(filename1 + ".index"));
+
+        // compare
+        Diff<ProteomeData, DiffConfig> diff(tiny, pd1, diffConfig);
+        if (diff && os_) *os_ << diff << endl;
+        unit_assert(!diff);
+
+        // read back into an ProteomeDataFile object, this time should be indexed
+        ProteomeDataFile pd2(filename1, reader);
+
+        // compare
+        diff(tiny, pd2);
+        if (diff && os_) *os_ << diff << endl;
+        unit_assert(!diff);
+
+        // now give the gzip read a workout
+        /*bio::filtering_istream tinyGZ(bio::gzip_compressor() | bio::file_descriptor_source(filename1));
+        bio::copy(tinyGZ, bio::file_descriptor_sink(filename1 + ".gz", ios::out | ios::binary));
+
+        ProteomeDataFile pd3(filename1 + ".gz", reader);
+
+        // compare
+        diff(tiny, pd3);
+        if (diff && os_) *os_ << diff << endl;
+        unit_assert(!diff);*/
+    }
+}
+
 void validateWriteRead(const ProteomeDataFile::WriteConfig& writeConfig,
                        const DiffConfig diffConfig)
 {
@@ -128,6 +181,9 @@ void test()
 
     // test FASTA with binary stream index
     validateWriteRead(writeConfig, diffConfig);
+
+    // test FASTA with pre-existing indexes
+    validateReadIndexed(writeConfig, diffConfig);
 
     // test FASTA with memory index
     writeConfig.indexed = false;

@@ -27,6 +27,7 @@
 #include "pwiz/data/common/BinaryIndexStream.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include <boost/iostreams/copy.hpp>
 
 
@@ -79,6 +80,34 @@ PWIZ_API_DECL string Reader_FASTA::identify(const string& uri, shared_ptr<istrea
 }
 
 
+namespace {
+    bool isIndexStale(const std::string& uri, const shared_ptr<iostream>& isPtr, int64_t& indexedFileSize, boost::optional<string>& indexedFileHash)
+    {
+        int64_t currentFileSize = bfs::file_size(uri);
+        indexedFileSize = currentFileSize;
+
+        // look for original size of the indexed file and SHA1 hash at the beginning of the file
+        int64_t originalFileSize = 0;
+        string originalHash(40, '0');
+
+        isPtr->seekg(0);
+        isPtr->read((char*)&originalFileSize, sizeof(int64_t));
+        isPtr->read(&originalHash[0], 40);
+        if (originalFileSize == currentFileSize || indexedFileHash)
+        {
+            // if sizes are equal, check hashes
+            SHA1Calculator sha1;
+            string currentHash = sha1.hashFile(uri);
+            indexedFileHash = currentHash;
+            if (currentHash == originalHash)
+                return false;
+        }
+
+        return true;
+    }
+}
+
+
 PWIZ_API_DECL void Reader_FASTA::read(const std::string& uri, shared_ptr<istream> uriStreamPtr, ProteomeData& result) const
 {
     result.id = uri;
@@ -91,42 +120,48 @@ PWIZ_API_DECL void Reader_FASTA::read(const std::string& uri, shared_ptr<istream
 
         // indexes smaller than 200mb are loaded entirely into memory
         boost::uintmax_t indexSize = bfs::file_size(uri + ".index");
-        if (indexSize > 0 && indexSize < 200000000)
+        if (indexSize > 0)
         {
-            stringstream* indexFileStream = new stringstream();
-            bio::copy(*isPtr, *indexFileStream);
-            isPtr.reset(indexFileStream);
+            if (indexSize < 200000000)
+            {
+                stringstream* indexFileStream = new stringstream();
+                bio::copy(*isPtr, *indexFileStream);
+                isPtr.reset(indexFileStream);
+            }
+
+            if (!!*isPtr)
+            {
+                boost::optional<string> currentFileHash = string(40, '0');
+                int64_t currentFileSize;
+                if (isIndexStale(uri, isPtr, currentFileSize, currentFileHash))
+                {
+                    // reset will close previous fstream then reopen as empty file
+                    isPtr.reset(new fstream((uri + ".index").c_str(), ios::in | ios::out | ios::binary | ios::trunc));
+                    isPtr->write((char*)&currentFileSize, sizeof(int64_t));
+                    isPtr->write(currentFileHash.get().c_str(), 40);
+                }
+            }
         }
 
         if (!*isPtr) // stream is unavailable or read only
         {
             isPtr.reset(new fstream((uri + ".index").c_str(), ios::in | ios::binary));
             bool canOpenReadOnly = !!*isPtr;
-            if (canOpenReadOnly)
-            {
-                // check that the index is up to date;
-                // if it isn't, a read only index is worthless
-                config.indexPtr.reset(new data::BinaryIndexStream(isPtr));
-                Serializer_FASTA serializer(config);
-                serializer.read(uriStreamPtr, result);
-                if (result.proteinListPtr->size() > 0)
-                    try
-                    {
-                        result.proteinListPtr->protein(0);
-                        return;
-                    }
-                    catch (exception&)
-                    {
-                        // TODO: log warning about stale read only index
-                        canOpenReadOnly = false;
-                    }
-            }
+            boost::optional<string> noHashNeeded;
+            int64_t currentFileSize;
+
+            // check that the index is up to date;
+            // if it isn't, a read only index is worthless
+            bool staleIndex = !canOpenReadOnly || isIndexStale(uri, isPtr, currentFileSize, noHashNeeded);
+
+            //if (staleIndex)
+            // TODO: log warning about stale read only index
 
             // TODO: try opening an index in other locations, e.g.:
             // * current working directory (may be read only)
             // * executing directory (may be read only)
             // * temp directory (pretty much guaranteed to be writable)
-            if (!canOpenReadOnly)
+            if (staleIndex)
             {
                 // fall back to in-memory index
                 config.indexPtr.reset(new data::MemoryIndex);

@@ -225,12 +225,18 @@ class BinaryIndexStream::Impl
     struct EntryIdLessThan { bool operator() (const Entry& lhs, const Entry& rhs) const {return lhs.id < rhs.id;} };
     struct EntryIndexLessThan { bool operator() (const Entry& lhs, const Entry& rhs) const {return lhs.index < rhs.index;} };
 
+    const size_t indexedMetadataHeaderSize_ = 40 + sizeof(int64_t);
+
     // the index structure:
     //
-    // stream length (if overwriting an existing index in the same stream, the existing index may be longer
+    // int64_t: indexed file size (if this changes, the index is stale)
+    //
+    // 40 bytes of ASCII text: indexed file SHA1 (if this changes, the index is stale)
+    //
+    // std::stream_offset: stream length (if overwriting an existing index in the same stream, the existing index may be longer
     // than the new index, so the length marks the correct end point)
     //
-    // size_t indicating maximum id length + 1 (all ids are padded with spaces to this length)
+    // uint64_t: maximum id length + 1 (all ids are padded with spaces to this length)
     //
     // a vector of index entries sorted by index (O(1) access)
     //
@@ -264,7 +270,7 @@ class BinaryIndexStream::Impl
             throw runtime_error("[BinaryIndexStream::ctor] Stream is null");
 
         isPtr_->clear();
-        isPtr_->seekg(0);
+        isPtr_->seekg(indexedMetadataHeaderSize_); // start reading after the hash and original file size
         isPtr_->read(reinterpret_cast<char*>(&streamLength_), sizeof(streamLength_));
         isPtr_->read(reinterpret_cast<char*>(&maxIdLength_), sizeof(maxIdLength_));
         if (*isPtr_)
@@ -286,16 +292,25 @@ class BinaryIndexStream::Impl
     virtual void create(std::vector<Entry>& entries)
     {
         isPtr_->clear();
-        isPtr_->seekp(0);
+
+        // if original file size and hash are missing, write dummy values
+        if (isPtr_->tellp() == stream_offset(0))
+            isPtr_->write(string(indexedMetadataHeaderSize_, 0).c_str(), indexedMetadataHeaderSize_);
+        else
+            isPtr_->seekp(indexedMetadataHeaderSize_); // start writing after the hash and original file size
+
         isPtr_->clear();
 
         size_ = entries.size();
 
         // determine max. id length
-        maxIdLength_ = 0;
-        BOOST_FOREACH(const Entry& entry, entries)
-            maxIdLength_ = std::max(maxIdLength_, (boost::uint64_t) entry.id.length());
-        ++maxIdLength_; // space-terminated
+        auto longestIdEntryItr = std::max_element(entries.begin(), entries.end(),
+            [](const Entry& lhs, const Entry& rhs) { return lhs.id.length() < rhs.id.length(); });
+        maxIdLength_ = longestIdEntryItr->id.length() + 1; // space-terminated
+
+        // sanity check
+        if (maxIdLength_ > 2000)
+            throw runtime_error("[BinaryIndexStream::create] creating index with huge ids (" + longestIdEntryItr->id + ") probably means ids are not being parsed correctly");
 
         // entry size depends on max. id length
         entrySize_ = maxIdLength_ + sizeof(streamLength_) + sizeof(maxIdLength_);
@@ -316,7 +331,7 @@ class BinaryIndexStream::Impl
         sort(entries.begin(), entries.end(), EntryIndexLessThan());
 
         // write entries sorted by index
-        BOOST_FOREACH(const Entry& entry, entries)
+        for(const Entry& entry : entries)
         {
             isPtr_->write(entry.id.c_str(), entry.id.length());
             isPtr_->write(padding.c_str(), maxIdLength_ - entry.id.length());
@@ -328,7 +343,7 @@ class BinaryIndexStream::Impl
         sort(entries.begin(), entries.end(), EntryIdLessThan());
 
         // write entries sorted by id
-        BOOST_FOREACH(const Entry& entry, entries)
+        for(const Entry& entry : entries)
         {
             isPtr_->write(entry.id.c_str(), entry.id.length());
             isPtr_->write(padding.c_str(), maxIdLength_ - entry.id.length());
@@ -353,8 +368,8 @@ class BinaryIndexStream::Impl
             return EntryPtr();
 
         EntryPtr entryPtr(new Entry); entryPtr->id = id;
-        const stream_offset indexBegin = sizeof(streamLength_) + sizeof(maxIdLength_) + entrySize_ * size_;
-        const stream_offset indexEnd = streamLength_;
+        const stream_offset indexBegin = indexedMetadataHeaderSize_ + sizeof(streamLength_) + sizeof(maxIdLength_) + entrySize_ * size_;
+        const stream_offset indexEnd = indexedMetadataHeaderSize_ + streamLength_;
       
         {
             boost::mutex::scoped_lock io_lock(io_mutex);
@@ -385,7 +400,7 @@ class BinaryIndexStream::Impl
             return EntryPtr();
 
         EntryPtr entryPtr(new Entry);
-        const stream_offset indexBegin = sizeof(streamLength_) + sizeof(maxIdLength_);
+        const stream_offset indexBegin = indexedMetadataHeaderSize_ + sizeof(streamLength_) + sizeof(maxIdLength_);
         const stream_offset entryOffset = indexBegin + index * entrySize_;
 
         {
