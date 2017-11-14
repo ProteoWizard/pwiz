@@ -79,11 +79,9 @@
             this.dataGridViewColors.Size = new System.Drawing.Size(318, 200);
             this.dataGridViewColors.TabIndex = 4;
             this.dataGridViewColors.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewColors_CellClick);
-            this.dataGridViewColors.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewColors_CellEndEdit);
             this.dataGridViewColors.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dataGridViewColors_CellFormatting);
             this.dataGridViewColors.CurrentCellDirtyStateChanged += new System.EventHandler(this.dataGridViewColors_CurrentCellDirtyStateChanged);
             this.dataGridViewColors.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridViewColors_DataError);
-            this.dataGridViewColors.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.dataGridViewColors_EditingControlShowing);
             this.dataGridViewColors.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dataGridViewColors_KeyDown);
             // 
             // colorCol

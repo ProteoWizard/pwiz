@@ -23,7 +23,6 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.ToolsUI;
@@ -92,24 +91,25 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void regexColorRowGrid1_OnCellClick(object sender, DataGridViewCellEventArgs e)
         {
-            var dataGridView = (DataGridView) sender;
             if (e.ColumnIndex == _createExprButtonIndex)
             {
                 using (var createMatchExpression = new CreateMatchExpressionDlg(this, _foldChangeRows, _bindingList[e.RowIndex]))
                 {
                     if (createMatchExpression.ShowDialog() == DialogResult.OK)
-                    {
-                        if (e.RowIndex == dataGridView.NewRowIndex)
-                        {
-                            regexColorRowGrid1.BindingSource.EndEdit();
-                            dataGridView.NotifyCurrentCellDirty(true);
-                            dataGridView.EndEdit();
-                            dataGridView.NotifyCurrentCellDirty(false);
-                        }
-
-                        _bindingList[e.RowIndex].Expression = createMatchExpression.GetCurrentMatchExpression().ToString();                    
-                    }
+                        _bindingList[e.RowIndex].Expression = createMatchExpression.GetCurrentMatchExpression().ToString();
+                    else
+                        return;
                 }
+            }
+
+            //If the color button was clicked, this has already been handled in the color grid
+            var dataGridView = (DataGridView) sender;
+            if (e.RowIndex == dataGridView.NewRowIndex && e.ColumnIndex != regexColorRowGrid1.ButtonColumnIndex)
+            {
+                regexColorRowGrid1.BindingSource.EndEdit();
+                dataGridView.NotifyCurrentCellDirty(true);
+                dataGridView.EndEdit();
+                dataGridView.NotifyCurrentCellDirty(false);
             }
         }
 
@@ -181,11 +181,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
                             foreColor = Color.Red;
                     }
 
-                    ((CommonDataGridView) sender)[e.ColumnIndex, e.RowIndex].Style.ForeColor = foreColor;
+                    ((DataGridView) sender)[e.ColumnIndex, e.RowIndex].Style.ForeColor = foreColor;
 
                 }
-                
-                _updateGraph(ResultList);
             }  
         }
 

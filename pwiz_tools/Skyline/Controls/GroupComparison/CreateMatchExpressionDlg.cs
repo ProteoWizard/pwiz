@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 {
                     AddComboBoxItems(matchComboBox,
                         new MatchOptionStringPair(MatchOption.PeptideSequence, GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Peptide_Sequence),
-                        new MatchOptionStringPair(MatchOption.PeptideSequence, GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Peptide_Modified_Sequence));
+                        new MatchOptionStringPair(MatchOption.PeptideModifiedSequence, GroupComparisonStrings.CreateMatchExpression_PopulateComboBoxes_Peptide_Modified_Sequence));
                 }
 
                 if (_volcanoPlot.AnyMolecules)

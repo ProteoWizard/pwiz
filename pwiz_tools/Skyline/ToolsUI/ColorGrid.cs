@@ -42,7 +42,7 @@ namespace pwiz.Skyline.ToolsUI
             comboColorType.SelectedIndex = 0;
         }
 
-        public Control CurrentEditingControl { get; private set; }
+        public int ButtonColumnIndex { get { return colBtn.Index; } }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public event KeyEventHandler OnDataGridKeyDown
@@ -187,7 +187,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void dataGridViewColors_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.ColumnIndex == colBtn.Index && e.RowIndex >= 0)
+            if (e.ColumnIndex == ButtonColumnIndex && e.RowIndex >= 0)
             {
                 var rowIndex = e.RowIndex;
                 var oldColor = ((T)bindingSource1[rowIndex]).Color;
@@ -205,16 +205,6 @@ namespace pwiz.Skyline.ToolsUI
             // https://stackoverflow.com/questions/5652957/what-event-catches-a-change-of-value-in-a-combobox-in-a-datagridviewcell
             if (!(dataGridViewColors.CurrentCell is DataGridViewTextBoxCell) && dataGridViewColors.IsCurrentCellDirty)
                 dataGridViewColors.CommitEdit(DataGridViewDataErrorContexts.Commit);
-        }
-
-        private void dataGridViewColors_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
-        {
-            CurrentEditingControl = e.Control;
-        }
-
-        private void dataGridViewColors_CellEndEdit(object sender, DataGridViewCellEventArgs e)
-        {
-            CurrentEditingControl = null;
         }
 
         private void comboColorType_SelectedIndexChanged(object sender, EventArgs e)
