@@ -206,6 +206,7 @@ namespace pwiz.Skyline.Model
                                     {
                                         tranGroupFound = true;
                                         var tranFound = false;
+                                        string errmsg = null;
                                         try
                                         {
                                             var tranNode = GetMoleculeTransition(document, row, pep.Peptide,
@@ -226,14 +227,22 @@ namespace pwiz.Skyline.Model
                                                 firstAdded = firstAdded ?? pathGroup;
                                             }
                                         }
-                                        catch (InvalidDataException e)
+                                        catch (InvalidDataException x)
+                                        {
+                                            errmsg = x.Message;
+                                        }
+                                        catch (InvalidOperationException x) // Adduct handling code can throw these
+                                        {
+                                            errmsg = x.Message;
+                                        }
+                                         if (errmsg != null)
                                         {
                                             // Some error we didn't catch in the basic checks
                                             ShowTransitionError(new PasteError
                                             {
                                                 Column = 0,
                                                 Line = row.Index,
-                                                Message = e.Message
+                                                Message = errmsg
                                             });
                                             return null;
                                         }
@@ -1178,8 +1187,15 @@ namespace pwiz.Skyline.Model
                     }
                     catch (InvalidDataException x)
                     {
-                        massOk = false;
                         massErrMsg = x.Message;
+                    }
+                    catch (InvalidOperationException x)  // Adduct handling code can throw these
+                    {
+                        massErrMsg = x.Message;
+                    }
+                    if (massErrMsg != null)
+                    {
+                        massOk = false;
                     }
                 }
                 else if (mz != 0 && !adduct.IsEmpty)
@@ -1320,6 +1336,7 @@ namespace pwiz.Skyline.Model
                 }
             }
             var group = new TransitionGroup(pep, adduct, isotopeLabelType);
+            string errmsg;
             try
             {
                 var tran = GetMoleculeTransition(document, row, pep, group, requireProductInfo);
@@ -1328,16 +1345,21 @@ namespace pwiz.Skyline.Model
                 return new TransitionGroupDocNode(group, document.Annotations, document.Settings, null,
                     null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] { tran }, true);
             }
-            catch (InvalidDataException e)
+            catch (InvalidDataException x)
             {
-                ShowTransitionError(new PasteError
-                {
-                    Column = INDEX_PRODUCT_MZ, // Don't actually know that mz was the issue, but at least it's the right row, and in the product columns
-                    Line = row.Index,
-                    Message = e.Message
-                });
-                return null;
+                errmsg = x.Message;
             }
+            catch (InvalidOperationException x) // Adduct handling code can throw these
+            {
+                errmsg = x.Message;
+            }
+            ShowTransitionError(new PasteError
+            {
+                Column = INDEX_PRODUCT_MZ, // Don't actually know that mz was the issue, but at least it's the right row, and in the product columns
+                Line = row.Index,
+                Message = errmsg
+            });
+            return null;
         }
 
         private TransitionDocNode GetMoleculeTransition(SrmDocument document, Row row, Peptide pep, TransitionGroup group, bool requireProductInfo)
