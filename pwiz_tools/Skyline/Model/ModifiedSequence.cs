@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Model
             }
             var unmodifiedSequence = docNode.Peptide.Sequence;
             bool includeStaticMods = true;
+            bool includeStaticHeavyMods = false;
             List<Modification> explicitMods = new List<Modification>();
             if (null != docNode.ExplicitMods)
             {
@@ -57,6 +58,7 @@ namespace pwiz.Skyline.Model
                 {
                     labelMods = docNode.ExplicitMods.GetModifications(IsotopeLabelType.light);
                     explicitLabelType = IsotopeLabelType.light;
+                    includeStaticHeavyMods = true;
                 }
                 if (labelMods != null || staticBaseMods != null)
                 {
@@ -72,13 +74,13 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            if (includeStaticMods)
+            if (includeStaticMods || includeStaticHeavyMods)
             {
                 var peptideModifications = settings.PeptideSettings.Modifications;
                 for (int i = 0; i < unmodifiedSequence.Length; i++)
                 {
                     IEnumerable<StaticMod> staticMods = peptideModifications.GetModifications(labelType);
-                    if (!labelType.IsLight)
+                    if (!labelType.IsLight && includeStaticMods)
                     {
                         staticMods = peptideModifications.GetModifications(IsotopeLabelType.light).Concat(staticMods);
                     }
