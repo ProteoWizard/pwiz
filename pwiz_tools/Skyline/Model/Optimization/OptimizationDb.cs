@@ -347,7 +347,7 @@ namespace pwiz.Skyline.Model.Optimization
                           .ChangePeptideIonTypes(new []{ IonType.y, IonType.b })) // TODO(bspratt) generalize to molecules?
                 .ChangeTransitionLibraries(libs => libs.ChangePick(TransitionLibraryPick.none))
                 );
-            var matcher = new ModificationMatcher { FormatProvider = NumberFormatInfo.InvariantInfo };
+            var matcher = new ModificationMatcher();
             matcher.CreateMatches(newDoc.Settings, peptideList, Settings.Default.StaticModList, Settings.Default.HeavyModList);
             FastaImporter importer = new FastaImporter(newDoc, matcher);
             string text = string.Format(">>{0}\r\n{1}", newDoc.GetPeptideGroupId(true), TextUtil.LineSeparate(peptideList)); // Not L10N

@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -30,8 +29,6 @@ namespace pwiz.Skyline.Model
 {
     public class ModificationMatcher : AbstractModificationMatcher
     {
-        public IFormatProvider FormatProvider { get; set; }
-
         private IEnumerator<string> _sequences;
 
         private const int DEFAULT_ROUNDING_DIGITS = 6;
@@ -115,7 +112,6 @@ namespace pwiz.Skyline.Model
                     string name = null;
                     double? mass = null;
                     int roundedTo = 0;
-                    double result;
                     // If passed in modification in UniMod notation, look up the id and find the name and mass
                     int uniModId;
                     if (TryGetIdFromUnimod(mod, out uniModId))
@@ -131,17 +127,18 @@ namespace pwiz.Skyline.Model
                         mass = staticMod.MonoisotopicMass;
                         roundedTo = DEFAULT_ROUNDING_DIGITS;
                     }
-                    else if (double.TryParse(mod, NumberStyles.Float, FormatProvider ?? NumberFormatInfo.CurrentInfo, out result))
+                    else 
                     {
-                        mass = result;
-                        int decPlace = mod.IndexOf(LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator,
-                            StringComparison.Ordinal);
-                        if (decPlace != -1)
-                            roundedTo = Math.Min(mod.Length - decPlace - 1, DEFAULT_ROUNDING_DIGITS);
-                    }
-                    else
-                    {
-                        name = mod;
+                        MassModification massModification = MassModification.Parse(mod);
+                        if (massModification != null)
+                        {
+                            mass = massModification.Mass;
+                            roundedTo = Math.Min(massModification.Precision, DEFAULT_ROUNDING_DIGITS);
+                        }
+                        else
+                        {
+                           name = mod;
+                        }
                     }
                     
                     if (mass.HasValue)

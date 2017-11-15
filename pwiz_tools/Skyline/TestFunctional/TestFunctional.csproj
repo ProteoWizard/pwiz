@@ -197,6 +197,7 @@
     <Compile Include="ImportIsolationSchemeTest.cs" />
     <Compile Include="ImportPeptideSearchTest.cs" />
     <Compile Include="ImportResultsCancelTest.cs" />
+    <Compile Include="ImportTransitionListTest.cs" />
     <Compile Include="InsertModTest.cs" />
     <Compile Include="InsertTest.cs" />
     <Compile Include="InstallToolsTest.cs" />
@@ -360,6 +361,7 @@
     <None Include="ImportIsolationSchemeTest.zip" />
     <None Include="ImportPeptideSearchTest.zip" />
     <None Include="ImportResultsCancelTest.zip" />
+    <None Include="ImportTransitionListTest.zip" />
     <None Include="InsertTest.zip" />
     <None Include="InstallToolsTest.zip" />
     <None Include="IonMobilityTest.zip" />
