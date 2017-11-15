@@ -717,6 +717,24 @@ namespace pwiz.Skyline.Util
             if (Equals(newCharge, AdductCharge))
                 return this;
 
+            if (AdductCharge == 0)
+            {
+                // Adduct doesn't have any cue for charge state, so append one: eg [M+S] => [M+S]+
+                var adductFormula = AdductFormula;
+                string sign;
+                if (Math.Abs(newCharge) < 3)
+                {
+                    // Use ++ or -- type notation
+                    sign = (newCharge > 0) ? plusses.Substring(0, newCharge) : minuses.Substring(0, -newCharge);
+                }
+                else
+                {
+                    // Use +4, -5 type notation
+                    sign = newCharge.ToString("+#;-#"); // Not L10N
+                }
+                return FromStringAssumeChargeOnly(adductFormula+sign);
+            }
+
             var formula = AdductFormula;
             var signIndex = FindSignIndex(formula); // Skip over any isotope description - might contain "-"
             if (signIndex > 0)

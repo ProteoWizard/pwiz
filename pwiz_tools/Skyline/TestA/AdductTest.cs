@@ -80,6 +80,7 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M+H"), Adduct.SINGLY_PROTONATED);
             Assert.AreEqual(Adduct.FromStringAssumeChargeOnly("M+H").AsFormula(), Adduct.SINGLY_PROTONATED.AsFormula()); // But the underlying chemistry is the same
 
+            Assert.AreEqual(Adduct.FromStringAssumeProtonated("[M+S]+"), Adduct.FromStringAssumeProtonated("M+S").ChangeCharge(1));
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M(-1.234)+2Na"), Adduct.FromStringAssumeProtonated("M(-1.234)+3Na").ChangeCharge(2));
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M1.234+2Na"), Adduct.FromStringAssumeProtonated("M1.234+3Na").ChangeCharge(2));
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M2Cl37-2Na"), Adduct.FromStringAssumeProtonated("M2Cl37+3Na").ChangeCharge(-2));

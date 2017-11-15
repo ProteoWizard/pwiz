@@ -498,8 +498,20 @@ namespace pwiz.SkylineTestFunctional
             docC = SkylineWindow.Document;
             Assert.AreEqual(1, docC.MoleculeGroupCount);
             Assert.AreEqual(1, docC.MoleculeCount);
-            Assert.AreEqual(2, docC.MoleculeTransitionGroupCount);  
+            Assert.AreEqual(2, docC.MoleculeTransitionGroupCount);
 
+            pasteText =
+                "C36H56N2O3,M+S,,181,,light\r\n"; // Adduct with unknown charge
+            NewDocument();
+            TestError(pasteText,
+                string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Cannot_derive_charge_from_adduct_description___0____Use_the_corresponding_Charge_column_to_set_this_explicitly__or_change_the_adduct_description_as_needed_, "[M+S]"),
+                columnOrderC);
+            pasteText =
+                "C36H56N2O3,M+S,1,181,1,light\r\n"; // Adduct with unknown charge, but charge provided seperately
+            NewDocument();
+            TestError(pasteText,
+                string.Empty,
+                columnOrderC);
         }
 
         private static SrmDocument NewDocument()

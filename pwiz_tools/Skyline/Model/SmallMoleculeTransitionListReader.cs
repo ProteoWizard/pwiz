@@ -437,7 +437,7 @@ namespace pwiz.Skyline.Model
             {
                 adduct = Adduct.NonProteomicProtonatedFromCharge(charge.Value);
             }
-            mzCalc = !adduct.IsEmpty ? adduct.MzFromNeutralMass(mass) : (double?) null;
+            mzCalc = adduct.AdductCharge != 0 ? adduct.MzFromNeutralMass(mass) : (double?) null;
             if (mzCalc.HasValue && tolerance >= (Math.Abs(mzCalc.Value - mz)))
             {
                 return charge;
@@ -1024,13 +1024,22 @@ namespace pwiz.Skyline.Model
                 }
                 if (charge.HasValue && charge.Value != adduct.AdductCharge)
                 {
-                    ShowTransitionError(new PasteError
+                    // Explict charge disagrees with adduct - is this because adduct charge is not recognized?
+                    if (adduct.AdductCharge == 0)
                     {
-                        Column = indexAdduct >=0 ? indexAdduct : indexFormula,
-                        Line = row.Index,
-                        Message = string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_, adductText, adduct.AdductCharge, charge.Value)
-                    });
-                    return null;
+                        // Update the adduct to contain the explicit charge
+                        adduct = adduct.ChangeCharge(charge.Value);
+                    }
+                    else
+                    {
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = indexAdduct >=0 ? indexAdduct : indexFormula,
+                            Line = row.Index,
+                            Message = string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_, adductText, adduct.AdductCharge, charge.Value)
+                        });
+                        return null;
+                    }
                 }
                 else
                 {
@@ -1222,6 +1231,20 @@ namespace pwiz.Skyline.Model
                         Resources
                             .EditCustomMoleculeDlg_OkDialog_Custom_molecules_must_have_a_mass_less_than_or_equal_to__0__,
                         CustomMolecule.MAX_MASS);
+                }
+            }
+            if (string.IsNullOrEmpty(errMessage))
+            {
+                if (!string.IsNullOrEmpty(adduct.AdductFormula) && adduct.AdductCharge == 0)
+                {
+                    // Adduct with unknown charge state
+                    errMessage =
+                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Cannot_derive_charge_from_adduct_description___0____Use_the_corresponding_Charge_column_to_set_this_explicitly__or_change_the_adduct_description_as_needed_, adduct.AdductFormula);
+                }
+                else
+                {
+                    // Don't just leave it blank
+                    errMessage = Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_unknown_error;
                 }
             }
             ShowTransitionError(new PasteError
