@@ -71,6 +71,7 @@ BlibMaker::BlibMaker(void)
     unknown_file_id = -1; // none entered yet
     ambiguityMessages_ = false;
     keepAmbiguous_ = false;
+    highPrecisionModifications_ = false;
 }
 
 BlibMaker::~BlibMaker(void)
