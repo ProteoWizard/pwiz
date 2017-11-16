@@ -66,27 +66,35 @@ namespace pwiz.SkylineTestUtil
         /// <param name="relativePathZip">A root project relative path to the ZIP file</param>
         /// <param name="directoryName">Name of directory to create in the test results</param>
         /// <param name="persistentFiles">List of files we'd like to extract in the ZIP file's directory for (re)use</param>
-        public TestFilesDir(TestContext testContext, string relativePathZip, string directoryName, string[] persistentFiles)
+        /// <param name="isExtractHere">If false then the zip base name is used as the destination directory</param>
+        public TestFilesDir(TestContext testContext, string relativePathZip, string directoryName, string[] persistentFiles, bool isExtractHere = false)
         {
             TestContext = testContext;
             string zipBaseName = Path.GetFileNameWithoutExtension(relativePathZip);
             if (zipBaseName == null)
                 Assert.Fail("Null zip base name");  // Resharper
-            directoryName = directoryName != null
-                ? Path.Combine(directoryName, zipBaseName)
-                : zipBaseName;
+            directoryName = GetExtractDir(directoryName, zipBaseName, false);   // Only persistent files can be extract here
             FullPath = TestContext.GetTestPath(directoryName);
             if (Directory.Exists(FullPath))
             {
                 Helpers.TryTwice(() => Directory.Delete(FullPath, true));
             }
-            // where to place persistent (usually large, expensive to extract) files if any>
+            // where to place persistent (usually large, expensive to extract) files if any
             PersistentFiles = persistentFiles;
-            PersistentFilesDir = Path.GetDirectoryName(relativePathZip);
-            PersistentFilesDir = PersistentFilesDir != null
-                ? Path.Combine(PersistentFilesDir, zipBaseName)
-                : zipBaseName;
+            PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
+
             TestContext.ExtractTestFiles(relativePathZip, FullPath, PersistentFiles, PersistentFilesDir);
+        }
+
+        private static string GetExtractDir(string directoryName, string zipBaseName, bool isExtractHere)
+        {
+            if (!isExtractHere)
+            {
+                directoryName = directoryName != null
+                    ? Path.Combine(directoryName, zipBaseName)
+                    : zipBaseName;
+            }
+            return directoryName;
         }
 
         public string FullPath { get; private set; }

@@ -342,21 +342,39 @@ namespace pwiz.SkylineTestUtil
 
         public static void ClickChromatogram(double x, double y, PaneKey? paneKey = null)
         {
-            var graphChromatogram = SkylineWindow.GraphChromatograms.First();
+            ClickChromatogram(null, x, y, paneKey);
+        }
+
+        public static void ClickChromatogram(string graphName, double x, double y, PaneKey? paneKey = null)
+        {
+            var graphChromatogram = GetGraphChrom(graphName);
             RunUI(() =>
             {
                 graphChromatogram.TestMouseMove(x, y, paneKey);
                 graphChromatogram.TestMouseDown(x, y, paneKey);
             });
             WaitForGraphs();
-            CheckFullScanSelection(x, y, paneKey);
+            CheckFullScanSelection(graphName, x, y, paneKey);
         }
 
         public static void CheckFullScanSelection(double x, double y, PaneKey? paneKey = null)
         {
-            var graphChromatogram = SkylineWindow.GraphChromatograms.First();
+            CheckFullScanSelection(null, x, y, paneKey);
+        }
+
+        public static void CheckFullScanSelection(string graphName, double x, double y, PaneKey? paneKey = null)
+        {
+            var graphChromatogram = GetGraphChrom(graphName);
             WaitForConditionUI(() => SkylineWindow.GraphFullScan != null && SkylineWindow.GraphFullScan.IsLoaded);
-            Assert.IsTrue(graphChromatogram.TestFullScanSelection(x, y, paneKey));
+            if (!graphChromatogram.TestFullScanSelection(x, y, paneKey))
+                Assert.IsTrue(graphChromatogram.TestFullScanSelection(x, y, paneKey));
+        }
+
+        private static GraphChromatogram GetGraphChrom(string graphName)
+        {
+            return graphName != null
+                ? SkylineWindow.GetGraphChrom(graphName)
+                : SkylineWindow.GraphChromatograms.First();
         }
 
         public void AddFastaToBackgroundProteome(BuildBackgroundProteomeDlg proteomeDlg, string fastaFile, int repeats)

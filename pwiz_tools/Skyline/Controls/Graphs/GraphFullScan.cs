@@ -868,6 +868,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return GraphPane.GeneralTransform(new PointF((float)x, (float)y), coordType);
         }
 
+        public string TitleText { get { return GraphPane.Title.Text; } }
         public double XAxisMin { get { return GraphPane.XAxis.Scale.Min; }}
         public double XAxisMax { get { return GraphPane.XAxis.Scale.Max; }}
         public double YAxisMin { get { return GraphPane.YAxis.Scale.Min; }}

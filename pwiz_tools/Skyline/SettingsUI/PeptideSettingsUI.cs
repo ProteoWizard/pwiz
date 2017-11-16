@@ -1250,6 +1250,12 @@ namespace pwiz.Skyline.SettingsUI
             set { _driverRT.Combo.SelectedItem = value; }
         }
 
+        public string SelectedDriftTimePredictor
+        {
+            get { return _driverDT.Combo.SelectedItem.ToString(); }
+            set { _driverDT.Combo.SelectedItem = value; }
+        }
+
         public string SelectedLabelTypeName
         {
             get { return _driverLabelType.SelectedName; }

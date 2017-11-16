@@ -40,13 +40,15 @@ namespace pwiz.SkylineTestUtil
     {
         private readonly SrmDocument _document;
         private readonly int? _revisionIncrement;
+        private readonly int _waitMillis;
         private readonly bool _waitForLoaded;
-        
-        public WaitDocumentChange(int? revisionIncrement = null, bool waitForLoaded = false)
+
+        public WaitDocumentChange(int? revisionIncrement = null, bool waitForLoaded = false, int millis = AbstractFunctionalTest.WAIT_TIME)
         {
             _document = Program.MainWindow.Document;
             _revisionIncrement = revisionIncrement;
             _waitForLoaded = waitForLoaded;
+            _waitMillis = millis;
         }
 
         protected int WaitRevision
@@ -66,7 +68,7 @@ namespace pwiz.SkylineTestUtil
             do
             {
                 newDocument = _waitForLoaded
-                    ? AbstractFunctionalTest.WaitForDocumentChangeLoaded(newDocument)
+                    ? AbstractFunctionalTest.WaitForDocumentChangeLoaded(newDocument, _waitMillis)
                     : AbstractFunctionalTest.WaitForDocumentChange(newDocument);
             }
             while (newDocument.RevisionIndex < revision);

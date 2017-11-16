@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestUtil
     public abstract class AbstractFunctionalTest : AbstractUnitTest
     {
         private const int SLEEP_INTERVAL = 100;
-        protected const int WAIT_TIME = 3 * 60 * 1000;    // 3 minutes (was 1 minute, but in code coverage testing that may be too impatient)
+        public const int WAIT_TIME = 3 * 60 * 1000;    // 3 minutes (was 1 minute, but in code coverage testing that may be too impatient)
 
         static AbstractFunctionalTest()
         {
@@ -872,7 +872,8 @@ namespace pwiz.SkylineTestUtil
                     TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
                     for (int i = 0; i < TestFilesZipPaths.Length; i++)
                     {
-                        TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName, TestFilesPersistent);
+                        TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
+                            TestFilesPersistent, IsExtractHere(i));
                     }
                 }
 

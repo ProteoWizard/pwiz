@@ -140,6 +140,16 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public string[] TestFilesPersistent { get; set; }
 
+        /// <summary>
+        /// One bool per TestFilesZipPaths indicating whether to unzip in the root directory (true) or a sub-directory (false or null)
+        /// </summary>
+        public bool[] TestFilesZipExtractHere { get; set; }
+
+        public bool IsExtractHere(int zipPathIndex)
+        {
+            return TestFilesZipExtractHere != null && TestFilesZipExtractHere[zipPathIndex];
+        }
+
         public string[] TestFilesZipPaths
         {
             get { return _testFilesZips; }

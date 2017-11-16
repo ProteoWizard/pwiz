@@ -1289,7 +1289,6 @@ namespace pwiz.Skyline
             }
         }
 
-
         IList<Adduct> GraphSpectrum.IStateProvider.ShowIonCharges(IEnumerable<Adduct> chargePriority)
         {
             return _graphSpectrumSettings.ShowIonCharges(chargePriority);
@@ -1314,7 +1313,13 @@ namespace pwiz.Skyline
             }
         }
 
-        public void ShowGraphFullScan(IScanProvider scanProvider, int transitionIndex, int scanIndex)
+        public void HideFullScanGraph()
+        {
+            if (_graphFullScan != null)
+                _graphFullScan.Hide();
+        }
+
+        private void ShowGraphFullScan(IScanProvider scanProvider, int transitionIndex, int scanIndex)
         {
             if (_graphFullScan != null)
             {
@@ -3396,7 +3401,12 @@ namespace pwiz.Skyline
 
         private void showRTLegendContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowRetentionTimesLegend = !Settings.Default.ShowRetentionTimesLegend;
+            ShowRTLegend(!Settings.Default.ShowRetentionTimesLegend);
+        }
+
+        public void ShowRTLegend(bool show)
+        {
+            Settings.Default.ShowRetentionTimesLegend = show;
             UpdateRetentionTimeGraph();
         }
 
@@ -4768,7 +4778,12 @@ namespace pwiz.Skyline
 
         private void showPeakAreaLegendContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowPeakAreaLegend = !Settings.Default.ShowPeakAreaLegend;
+            ShowPeakAreaLegend(!Settings.Default.ShowPeakAreaLegend);
+        }
+
+        public void ShowPeakAreaLegend(bool show)
+        {
+            Settings.Default.ShowPeakAreaLegend = show;
             UpdateSummaryGraphs();
         }
 

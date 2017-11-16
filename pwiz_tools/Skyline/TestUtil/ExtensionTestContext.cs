@@ -18,6 +18,7 @@
  */
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -69,20 +70,9 @@ namespace pwiz.SkylineTestUtil
                     {
                         foreach (ZipEntry zipEntry in zipFile)
                         {
-                            bool persist = false;
-                            if (persistentFiles != null)
-                            {
-                                foreach (var persistentFile in persistentFiles)
-                                {
-                                    if (zipEntry.FileName.Replace('\\', '/').Contains(persistentFile.Replace('\\', '/')))
-                                    {
-                                        zipEntry.Extract(persistentFilesDir, ExtractExistingFileAction.DoNotOverwrite);  // leave persistent files alone                        
-                                        persist = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (!persist)
+                            if (IsPersistent(persistentFiles, zipEntry.FileName))
+                                zipEntry.Extract(persistentFilesDir, ExtractExistingFileAction.DoNotOverwrite);  // leave persistent files alone                        
+                            else
                                 zipEntry.Extract(destDir, ExtractExistingFileAction.OverwriteSilently);
                         }
                     }
@@ -92,6 +82,11 @@ namespace pwiz.SkylineTestUtil
             {
                 throw new ApplicationException("Error reading test zip file: " + pathZip, ex);
             }
+        }
+
+        private static bool IsPersistent(string[] persistentFiles, string zipEntryFileName)
+        {
+            return persistentFiles != null && persistentFiles.Any(f => zipEntryFileName.Replace('\\', '/').Contains(f.Replace('\\', '/')));
         }
 
         public static bool CanImportThermoRaw
