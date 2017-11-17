@@ -180,47 +180,8 @@
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <metadata name="colFile.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="Points.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="Slope.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="Intercept.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="R.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="Result.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="dataGridView.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
-  </data>
-  <data name="dataGridView.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 73</value>
-  </data>
-  <data name="dataGridView.Size" type="System.Drawing.Size, System.Drawing">
-    <value>481, 179</value>
-  </data>
-  <data name="dataGridView.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;dataGridView.Name" xml:space="preserve">
-    <value>dataGridView</value>
-  </data>
-  <data name="&gt;&gt;dataGridView.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;dataGridView.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;dataGridView.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <metadata name="colFile.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -273,53 +234,29 @@
   <data name="Result.MinimumWidth" type="System.Int32, mscorlib">
     <value>50</value>
   </data>
-  <data name="panelKeep.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
+  <data name="dataGridView.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 73</value>
   </data>
-  <data name="&gt;&gt;labelKeep.Name" xml:space="preserve">
-    <value>labelKeep</value>
+  <data name="dataGridView.Size" type="System.Drawing.Size, System.Drawing">
+    <value>481, 106</value>
   </data>
-  <data name="&gt;&gt;labelKeep.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="dataGridView.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
   </data>
-  <data name="&gt;&gt;labelKeep.Parent" xml:space="preserve">
-    <value>panelKeep</value>
+  <data name="&gt;&gt;dataGridView.Name" xml:space="preserve">
+    <value>dataGridView</value>
   </data>
-  <data name="&gt;&gt;labelKeep.ZOrder" xml:space="preserve">
-    <value>0</value>
+  <data name="&gt;&gt;dataGridView.Type" xml:space="preserve">
+    <value>pwiz.Common.Controls.CommonDataGridView, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;listKeep.Name" xml:space="preserve">
-    <value>listKeep</value>
-  </data>
-  <data name="&gt;&gt;listKeep.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;listKeep.Parent" xml:space="preserve">
-    <value>panelKeep</value>
-  </data>
-  <data name="&gt;&gt;listKeep.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="panelKeep.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 392</value>
-  </data>
-  <data name="panelKeep.Size" type="System.Drawing.Size, System.Drawing">
-    <value>481, 134</value>
-  </data>
-  <data name="panelKeep.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;panelKeep.Name" xml:space="preserve">
-    <value>panelKeep</value>
-  </data>
-  <data name="&gt;&gt;panelKeep.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelKeep.Parent" xml:space="preserve">
+  <data name="&gt;&gt;dataGridView.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;panelKeep.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="&gt;&gt;dataGridView.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="panelKeep.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
   </data>
   <data name="labelKeep.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -359,7 +296,7 @@ and newer iRT values calculated from MS/MS scans ignored:</value>
     <value>7, 32</value>
   </data>
   <data name="listKeep.Size" type="System.Drawing.Size, System.Drawing">
-    <value>437, 82</value>
+    <value>437, 69</value>
   </data>
   <data name="listKeep.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -374,6 +311,27 @@ and newer iRT values calculated from MS/MS scans ignored:</value>
     <value>panelKeep</value>
   </data>
   <data name="&gt;&gt;listKeep.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="panelKeep.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 306</value>
+  </data>
+  <data name="panelKeep.Size" type="System.Drawing.Size, System.Drawing">
+    <value>481, 121</value>
+  </data>
+  <data name="panelKeep.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;panelKeep.Name" xml:space="preserve">
+    <value>panelKeep</value>
+  </data>
+  <data name="&gt;&gt;panelKeep.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelKeep.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelKeep.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="labelRunsFailed.AutoSize" type="System.Boolean, mscorlib">
@@ -469,51 +427,6 @@ and newer iRT values calculated from MS/MS scans ignored:</value>
   <data name="panelOverwrite.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
-  <data name="&gt;&gt;labelOverwrite.Name" xml:space="preserve">
-    <value>labelOverwrite</value>
-  </data>
-  <data name="&gt;&gt;labelOverwrite.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelOverwrite.Parent" xml:space="preserve">
-    <value>panelOverwrite</value>
-  </data>
-  <data name="&gt;&gt;labelOverwrite.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;listOverwrite.Name" xml:space="preserve">
-    <value>listOverwrite</value>
-  </data>
-  <data name="&gt;&gt;listOverwrite.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;listOverwrite.Parent" xml:space="preserve">
-    <value>panelOverwrite</value>
-  </data>
-  <data name="&gt;&gt;listOverwrite.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="panelOverwrite.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 258</value>
-  </data>
-  <data name="panelOverwrite.Size" type="System.Drawing.Size, System.Drawing">
-    <value>481, 134</value>
-  </data>
-  <data name="panelOverwrite.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;panelOverwrite.Name" xml:space="preserve">
-    <value>panelOverwrite</value>
-  </data>
-  <data name="&gt;&gt;panelOverwrite.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelOverwrite.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelOverwrite.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
   <data name="labelOverwrite.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -552,7 +465,7 @@ with iRT values calculated from chromatogram peaks:</value>
     <value>7, 32</value>
   </data>
   <data name="listOverwrite.Size" type="System.Drawing.Size, System.Drawing">
-    <value>437, 82</value>
+    <value>437, 69</value>
   </data>
   <data name="listOverwrite.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -569,101 +482,29 @@ with iRT values calculated from chromatogram peaks:</value>
   <data name="&gt;&gt;listOverwrite.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="panelExisting.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+  <data name="panelOverwrite.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 185</value>
   </data>
-  <data name="&gt;&gt;radioAverage.Name" xml:space="preserve">
-    <value>radioAverage</value>
+  <data name="panelOverwrite.Size" type="System.Drawing.Size, System.Drawing">
+    <value>481, 121</value>
   </data>
-  <data name="&gt;&gt;radioAverage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioAverage.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;radioAverage.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;radioReplace.Name" xml:space="preserve">
-    <value>radioReplace</value>
-  </data>
-  <data name="&gt;&gt;radioReplace.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioReplace.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;radioReplace.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;radioSkip.Name" xml:space="preserve">
-    <value>radioSkip</value>
-  </data>
-  <data name="&gt;&gt;radioSkip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioSkip.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;radioSkip.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;labelChoice.Name" xml:space="preserve">
-    <value>labelChoice</value>
-  </data>
-  <data name="&gt;&gt;labelChoice.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelChoice.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;labelChoice.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;labelExisting.Name" xml:space="preserve">
-    <value>labelExisting</value>
-  </data>
-  <data name="&gt;&gt;labelExisting.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelExisting.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;labelExisting.ZOrder" xml:space="preserve">
+  <data name="panelOverwrite.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="&gt;&gt;listExisting.Name" xml:space="preserve">
-    <value>listExisting</value>
+  <data name="&gt;&gt;panelOverwrite.Name" xml:space="preserve">
+    <value>panelOverwrite</value>
   </data>
-  <data name="&gt;&gt;listExisting.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;listExisting.Parent" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;listExisting.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="panelExisting.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 525</value>
-  </data>
-  <data name="panelExisting.Size" type="System.Drawing.Size, System.Drawing">
-    <value>481, 224</value>
-  </data>
-  <data name="panelExisting.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;panelExisting.Name" xml:space="preserve">
-    <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;panelExisting.Type" xml:space="preserve">
+  <data name="&gt;&gt;panelOverwrite.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panelExisting.Parent" xml:space="preserve">
+  <data name="&gt;&gt;panelOverwrite.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;panelExisting.ZOrder" xml:space="preserve">
-    <value>6</value>
+  <data name="&gt;&gt;panelOverwrite.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="panelExisting.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="radioAverage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -675,7 +516,7 @@ with iRT values calculated from chromatogram peaks:</value>
     <value>NoControl</value>
   </data>
   <data name="radioAverage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 200</value>
+    <value>11, 156</value>
   </data>
   <data name="radioAverage.Size" type="System.Drawing.Size, System.Drawing">
     <value>181, 17</value>
@@ -708,7 +549,7 @@ with iRT values calculated from chromatogram peaks:</value>
     <value>NoControl</value>
   </data>
   <data name="radioReplace.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 177</value>
+    <value>11, 133</value>
   </data>
   <data name="radioReplace.Size" type="System.Drawing.Size, System.Drawing">
     <value>137, 17</value>
@@ -741,7 +582,7 @@ with iRT values calculated from chromatogram peaks:</value>
     <value>NoControl</value>
   </data>
   <data name="radioSkip.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 153</value>
+    <value>11, 109</value>
   </data>
   <data name="radioSkip.Size" type="System.Drawing.Size, System.Drawing">
     <value>127, 17</value>
@@ -774,7 +615,7 @@ with iRT values calculated from chromatogram peaks:</value>
     <value>NoControl</value>
   </data>
   <data name="labelChoice.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 136</value>
+    <value>8, 92</value>
   </data>
   <data name="labelChoice.Size" type="System.Drawing.Size, System.Drawing">
     <value>258, 13</value>
@@ -834,7 +675,7 @@ with iRT values calculated from chromatogram peaks:</value>
     <value>7, 19</value>
   </data>
   <data name="listExisting.Size" type="System.Drawing.Size, System.Drawing">
-    <value>437, 108</value>
+    <value>437, 56</value>
   </data>
   <data name="listExisting.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -851,6 +692,27 @@ with iRT values calculated from chromatogram peaks:</value>
   <data name="&gt;&gt;listExisting.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <data name="panelExisting.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 427</value>
+  </data>
+  <data name="panelExisting.Size" type="System.Drawing.Size, System.Drawing">
+    <value>481, 180</value>
+  </data>
+  <data name="panelExisting.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;panelExisting.Name" xml:space="preserve">
+    <value>panelExisting</value>
+  </data>
+  <data name="&gt;&gt;panelExisting.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelExisting.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelExisting.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -858,7 +720,7 @@ with iRT values calculated from chromatogram peaks:</value>
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>584, 761</value>
+    <value>584, 613</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

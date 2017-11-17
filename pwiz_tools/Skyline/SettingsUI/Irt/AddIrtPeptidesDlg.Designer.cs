@@ -89,6 +89,7 @@
             this.Intercept,
             this.R,
             this.Result});
+            this.dataGridView.MaximumColumnCount = null;
             this.dataGridView.Name = "dataGridView";
             this.dataGridView.ReadOnly = true;
             this.dataGridView.RowHeadersVisible = false;
@@ -285,12 +286,12 @@
         private System.Windows.Forms.Panel panelKeep;
         private System.Windows.Forms.Label labelKeep;
         private System.Windows.Forms.ListBox listKeep;
-        private System.Windows.Forms.DataGridView dataGridView;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn Points;
         private System.Windows.Forms.DataGridViewTextBoxColumn Slope;
         private System.Windows.Forms.DataGridViewTextBoxColumn Intercept;
         private System.Windows.Forms.DataGridViewTextBoxColumn R;
         private System.Windows.Forms.DataGridViewLinkColumn Result;
+        private Common.Controls.CommonDataGridView dataGridView;
     }
 }
