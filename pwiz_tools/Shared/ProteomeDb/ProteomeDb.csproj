@@ -82,8 +82,8 @@
       <HintPath>..\Lib\NHibernate\Iesi.Collections.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="DotNetZip">
-      <HintPath>..\Lib\DotNetZip\DotNetZip.dll</HintPath>
+    <Reference Include="Ionic.Zip">
+      <HintPath>..\Lib\DotNetZip\Release\Ionic.Zip.dll</HintPath>
     </Reference>
     <Reference Include="NHibernate">
       <HintPath>..\Lib\NHibernate\NHibernate.dll</HintPath>
