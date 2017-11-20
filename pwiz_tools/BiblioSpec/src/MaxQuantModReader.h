@@ -190,6 +190,7 @@ private:
     STATE state_;
     int groupParams_;
     int rawIndex_;
+    bool haveReadFilenames_;
     
     string charBuf_;
 

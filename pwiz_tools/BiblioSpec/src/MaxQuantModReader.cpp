@@ -57,7 +57,7 @@ MaxQuantModReader::MaxQuantModReader(const char* xmlfilename,
                                      set<string>* fixedMods,
                                      vector<MaxQuantLabels>* labelBank) : SAXHandler(),
     modBank_(NULL), fixedMods_(fixedMods), labelBank_(labelBank), groupParams_(0),
-    rawIndex_(-1), state_(ROOT_STATE)
+    rawIndex_(-1), haveReadFilenames_(false), state_(ROOT_STATE)
 {
     this->setFileName(xmlfilename);
 }
@@ -113,7 +113,7 @@ void MaxQuantModReader::startElement(const XML_Char* name,
             charBuf_.clear();
             state_ = READING_FIXED_MODIFICATION;
         }
-        else if (isIElement("filePaths", name))
+        else if (!haveReadFilenames_ && (isIElement("filePaths", name) || isIElement("Filenames", name)))
         {
             state_ = FILEPATHS_TAG;
         }
@@ -185,8 +185,9 @@ void MaxQuantModReader::endElement(const XML_Char* name)
             fixedMods_->insert(charBuf_);
             state_ = FIXED_MODIFICATIONS_TAG;
         }
-        else if (isIElement("filePaths", name))
+        else if (isIElement("filePaths", name) || isIElement("Filenames", name))
         {
+            haveReadFilenames_ = true;
             state_ = ROOT_STATE;
         }
         else if (state_ == READING_FILEPATH)
