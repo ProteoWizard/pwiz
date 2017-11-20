@@ -104,9 +104,9 @@
     <Reference Include="Google.Protobuf">
       <HintPath>..\Shared\Lib\Google.Protobuf.dll</HintPath>
     </Reference>
-    <Reference Include="Ionic.Zip, Version=1.9.1.8, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
+    <Reference Include="DotNetZip">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Shared\Lib\DotNetZip\Release\Ionic.Zip.dll</HintPath>
+      <HintPath>..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
     </Reference>
     <Reference Include="Kajabity Tools">
       <HintPath>..\Shared\Lib\Kajabity Tools.dll</HintPath>

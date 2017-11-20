@@ -99,9 +99,9 @@
     <Reference Include="Excel.4.5">
       <HintPath>..\..\Shared\Lib\ExcelDataReader\Excel.4.5.dll</HintPath>
     </Reference>
-    <Reference Include="Ionic.Zip, Version=1.9.1.8, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
+    <Reference Include="DotNetZip">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\DotNetZip\Release\Ionic.Zip.dll</HintPath>
+      <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
