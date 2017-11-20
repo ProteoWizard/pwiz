@@ -16,29 +16,32 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public TransitionSettingsControl(SkylineWindow skylineWindow)
         {
             SkylineWindow = skylineWindow;
-            TransitionSettings settings = SkylineWindow.DocumentUI.Settings.TransitionSettings;
-
             InitializeComponent();
+            SetFields(SkylineWindow.DocumentUI.Settings.TransitionSettings);
+            PeptideIonTypes = PeptideIonTypes.Union(new[] { IonType.precursor, IonType.y }).ToArray(); // Add p, y if not already set
+        }
 
+        private SkylineWindow SkylineWindow { get; set; }
+
+        public void SetFields(TransitionSettings settings)
+        {
             PeptidePrecursorCharges = settings.Filter.PeptidePrecursorCharges.ToArray();
             PeptideIonCharges = settings.Filter.PeptideProductCharges.ToArray();
-            PeptideIonTypes = settings.Filter.PeptideIonTypes.Union(new[] { IonType.precursor, IonType.y }).ToArray(); // Add p, y if not already set
+            PeptideIonTypes = settings.Filter.PeptideIonTypes.ToArray();
             ExclusionUseDIAWindow = settings.Filter.ExclusionUseDIAWindow;
             IonMatchTolerance = settings.Libraries.IonMatchTolerance;
             MinIonCount = settings.Libraries.MinIonCount;
             IonCount = settings.Libraries.IonCount;
         }
 
-        private SkylineWindow SkylineWindow { get; set; }
-
         public Adduct[] PeptidePrecursorCharges
         {
-            set { txtPeptidePrecursorCharges.Text = value.ToArray().ToString(", "); } // Not L10N
+            set { txtPeptidePrecursorCharges.Text = value.ToString(", "); } // Not L10N
         }
 
         public Adduct[] PeptideIonCharges
         {
-            set { txtPrecursorIonCharges.Text = value.ToArray().ToString(", "); } // Not L10N
+            set { txtPrecursorIonCharges.Text = value.ToString(", "); } // Not L10N
         }
 
         public IonType[] PeptideIonTypes

@@ -28,6 +28,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -799,6 +800,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (!double.TryParse(tbxTimeAroundPrediction.Text, out retentionTimeFilterLength) || retentionTimeFilterLength < 0)
                 {
+                    MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_This_is_not_a_valid_number_of_minutes);
                     tbxTimeAroundPrediction.Focus();
                     return false;
                 }
@@ -927,6 +929,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public void ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow workflow)
         {
+            var settings = SkylineWindow.Document.Settings;
+
             // Reduce MS1 filtering groupbox
             int sepMS1FromMS2 = groupBoxMS2.Top - groupBoxMS1.Bottom;
             int sepMS2FromRT = groupBoxRetentionTimeToKeep.Top - groupBoxMS2.Bottom;
@@ -938,7 +942,7 @@ namespace pwiz.Skyline.SettingsUI
             if (workflow == ImportPeptideSearchDlg.Workflow.dda)
             {
                 // Set up precursor charges input
-                textPrecursorCharges.Text = SkylineWindow.Document.Settings.TransitionSettings.Filter.PeptidePrecursorCharges.ToArray().ToString(", "); // Not L10N
+                textPrecursorCharges.Text = settings.TransitionSettings.Filter.PeptidePrecursorCharges.ToArray().ToString(", "); // Not L10N
                 int precursorChargesTopDifference = lblPrecursorCharges.Top - groupBoxMS1.Top;
                 lblPrecursorCharges.Top = groupBoxMS1.Top;
                 textPrecursorCharges.Top -= precursorChargesTopDifference;
@@ -961,7 +965,16 @@ namespace pwiz.Skyline.SettingsUI
 
             // Select defaults
             PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
-            radioTimeAroundMs2Ids.Checked = true;
+            if (workflow == ImportPeptideSearchDlg.Workflow.dia &&
+                settings.PeptideSettings.Prediction.RetentionTime != null &&
+                settings.PeptideSettings.Prediction.RetentionTime.Calculator is RCalcIrt)
+            {
+                radioUseSchedulingWindow.Checked = true;
+            }
+            else
+            {
+                radioTimeAroundMs2Ids.Checked = true;
+            }
 
             if (workflow != ImportPeptideSearchDlg.Workflow.dda)
             {

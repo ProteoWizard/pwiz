@@ -413,6 +413,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsFalse(importPeptideSearchDlg.IsBackButtonVisible);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFilesModless);
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
@@ -422,10 +423,15 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+                Assert.IsFalse(importPeptideSearchDlg.IsBackButtonVisible);
                 importPeptideSearchDlg.ImportResultsControl.FoundResultsFiles = new List<ImportPeptideSearch.FoundResultsFile>
                 {
                     new ImportPeptideSearch.FoundResultsFile(MODLESS_BASE_NAME, SearchFilesModless.First())
                 };
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
@@ -435,6 +441,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.IsBackButtonVisible);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
             doc = WaitForDocumentChange(doc);
@@ -442,6 +449,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                Assert.IsTrue(importPeptideSearchDlg.IsBackButtonVisible);
                 Assert.IsTrue(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
                 Assert.AreEqual(Settings.Default.GetEnzymeByName("Trypsin"), importPeptideSearchDlg.ImportFastaControl.Enzyme);
                 Assert.AreEqual(0, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);

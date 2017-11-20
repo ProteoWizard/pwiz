@@ -65,6 +65,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.importFastaPage = new System.Windows.Forms.TabPage();
             this.importFASTATitlePanel = new System.Windows.Forms.Panel();
             this.lblFasta = new System.Windows.Forms.Label();
+            this.btnBack = new System.Windows.Forms.Button();
             this.wizardPagesImportPeptideSearch.SuspendLayout();
             this.buildSearchSpecLibPage.SuspendLayout();
             this.buildSpectralLibraryTitlePanel.SuspendLayout();
@@ -348,11 +349,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.lblFasta.ForeColor = System.Drawing.SystemColors.ControlText;
             this.lblFasta.Name = "lblFasta";
             // 
+            // btnBack
+            // 
+            resources.ApplyResources(this.btnBack, "btnBack");
+            this.btnBack.Name = "btnBack";
+            this.btnBack.UseVisualStyleBackColor = true;
+            this.btnBack.Click += new System.EventHandler(this.btnBack_Click);
+            // 
             // ImportPeptideSearchDlg
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.btnBack);
             this.Controls.Add(this.btnEarlyFinish);
             this.Controls.Add(this.wizardPagesImportPeptideSearch);
             this.Controls.Add(this.btnCancel);
@@ -420,6 +429,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.TabPage transitionSettingsUiPage;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button btnBack;
 
     }
 }
