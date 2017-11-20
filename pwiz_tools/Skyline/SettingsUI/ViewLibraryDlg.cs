@@ -1393,28 +1393,28 @@ namespace pwiz.Skyline.SettingsUI
 
         public static bool EnsureDigested(Control owner, BackgroundProteome backgroundProteome)
         {
-            using (var proteomeDb = backgroundProteome.OpenProteomeDb())
-            {
-                if (proteomeDb.IsDigested())
-                {
-                    return true;
-                }
-            }
-            String message = string.Format(
-                Resources.ViewLibraryDlg_EnsureDigested_The_background_proteome___0___is_in_an_older_format___In_order_to_be_able_to_efficiently_find_peptide_sequences__the_background_proteome_should_be_upgraded_to_the_latest_version___Do_you_want_to_upgrade_the_background_proteome_now_,
-                backgroundProteome.Name);
-            using (var alertDlg = new AlertDlg(message, MessageBoxButtons.YesNoCancel))
-            {
-                switch (alertDlg.ShowDialog(owner))
-                {
-                    case DialogResult.Cancel:
-                        return false;
-                    case DialogResult.No:
-                        return true;
-                }
-            }
             try
             {
+                using (var proteomeDb = backgroundProteome.OpenProteomeDb())
+                {
+                    if (proteomeDb.IsDigested())
+                    {
+                        return true;
+                    }
+                }
+                String message = string.Format(
+                    Resources.ViewLibraryDlg_EnsureDigested_The_background_proteome___0___is_in_an_older_format___In_order_to_be_able_to_efficiently_find_peptide_sequences__the_background_proteome_should_be_upgraded_to_the_latest_version___Do_you_want_to_upgrade_the_background_proteome_now_,
+                    backgroundProteome.Name);
+                using (var alertDlg = new AlertDlg(message, MessageBoxButtons.YesNoCancel))
+                {
+                    switch (alertDlg.ShowDialog(owner))
+                    {
+                        case DialogResult.Cancel:
+                            return false;
+                        case DialogResult.No:
+                            return true;
+                    }
+                }
                 using (var longWaitDlg = new LongWaitDlg())
                 {
                     bool finished = false;

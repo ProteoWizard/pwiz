@@ -126,7 +126,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override void ChangeSelection(int selectedIndex, IdentityPath identityPath)
         {
-            if (0 > selectedIndex || selectedIndex >= _replicateGroups.Count)
+            if (_replicateGroups == null || 0 > selectedIndex || selectedIndex >= _replicateGroups.Count)
                 return;
 
             var previousFile = SelectedGroup != null ? SelectedGroup.FileInfo : null;

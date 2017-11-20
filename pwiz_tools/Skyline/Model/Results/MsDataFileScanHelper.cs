@@ -302,7 +302,14 @@ namespace pwiz.Skyline.Model.Results
                         }
                         catch (Exception ex)
                         {
-                            _failureAction(ex);
+                            try
+                            {
+                                _failureAction(ex);
+                            }
+                            catch (Exception exFailure)
+                            {
+                                Program.ReportException(exFailure);
+                            }
                         }
                     }
 
