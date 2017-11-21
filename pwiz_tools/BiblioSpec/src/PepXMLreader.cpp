@@ -268,16 +268,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                                "%i which is beyond its length (%i).", 
                                pepSeq, modPosition-1, strlen(pepSeq));
        }
-       char aa = pepSeq[modPosition - 1];
-       curmod.deltaMass = modMass - aminoacidmass[(int)aa];
-       // If this modification mass was already specified earlier in the file, use that mass.
-       map<char, map<double, double> >::iterator itAaModMasses = aminoAcidModificationMasses.find(aa);
-       if (itAaModMasses != aminoAcidModificationMasses.end()) {
-           map<double, double>::iterator itMass = itAaModMasses->second.find(modMass);
-           if (itMass != itAaModMasses->second.end()) {
-               curmod.deltaMass = itMass->second;
-           }
-       }
+       
+       curmod.deltaMass = modMass - aminoacidmass[(int)pepSeq[modPosition-1]];
 
        mods.push_back(curmod);
    } else if((analysisType_ == PEPTIDE_PROPHET_ANALYSIS && isElement("peptideprophet_result", name)) ||
@@ -299,17 +291,6 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            // Reverse -10 log p transform
            pepProb = pow(10, pepProb / -10.0);
        }
-   } else if (isElement("aminoacid_modification", name)) {
-        const char* strAminoAcid = getAttrValue("aminoacid", attr);
-        const char* strMassDiff = getAttrValue("massdiff", attr);
-        const char* strMass = getAttrValue("mass", attr);
-        if (strlen(strAminoAcid) == 1) {
-            double massDiff = atof(strMassDiff);
-            double mass = atof(strMass);
-            if (massDiff != 0 && mass != 0) {
-                aminoAcidModificationMasses[strAminoAcid[0]][mass] = massDiff;
-            }
-        }
    }
    // mascot score is ??
 }

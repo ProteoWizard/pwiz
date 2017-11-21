@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
@@ -408,116 +407,6 @@ namespace pwiz.Skyline.Model.Lib
                 dictionary.Add(unmodifiedSequenceLast, new Range(iStartLast.Value, _allEntries.Count));
             }
             return dictionary;
-        }
-
-        /// <summary>
-        /// Return a set of library keys that are the most general of the ones found in this and that,
-        /// and which covers all of the keys.
-        /// <see cref="MostGeneralPeptideKey" />
-        /// </summary>
-        public IList<LibraryKey> MergeKeys(LibKeyIndex that)
-        {
-            var keysByUnmodifiedSequence = this.Select(item => item.LibraryKey)
-                .OfType<PeptideLibraryKey>()
-                .ToLookup(key => key.UnmodifiedSequence)
-                .ToDictionary(grouping=>grouping.Key, grouping=>grouping.ToArray());
-            var result = new List<LibraryKey>();
-            var nonPeptideKeySet = new HashSet<LibraryKey>();
-            foreach (var thatItem in that)
-            {
-                var thatPeptideKey = thatItem.LibraryKey as PeptideLibraryKey;
-                if (thatPeptideKey == null)
-                {
-                    result.Add(thatItem.LibraryKey);
-                    nonPeptideKeySet.Add(thatItem.LibraryKey);
-                    continue;
-                }
-                PeptideLibraryKey[] thisKeysWithUnmodSeq;
-                if (!keysByUnmodifiedSequence.TryGetValue(thatPeptideKey.UnmodifiedSequence, out thisKeysWithUnmodSeq))
-                {
-                    result.Add(thatPeptideKey);
-                    continue;
-                }
-                keysByUnmodifiedSequence[thatPeptideKey.UnmodifiedSequence] =
-                    MergePeptideLibraryKey(thisKeysWithUnmodSeq, thatPeptideKey).ToArray();
-            }
-            result.AddRange(this.Select(item=>item.LibraryKey).Where(key=>!(key is PeptideLibraryKey) && !nonPeptideKeySet.Contains(key)));
-            result.AddRange(keysByUnmodifiedSequence.SelectMany(entry=>entry.Value));
-            return result;
-        }
-
-        private IEnumerable<PeptideLibraryKey> MergePeptideLibraryKey(ICollection<PeptideLibraryKey> thisKeys, PeptideLibraryKey thatKey)
-        {
-            while (true)
-            {
-                PeptideLibraryKey mostGeneralKey = thatKey;
-                foreach (var thisKey in thisKeys)
-                {
-                    if (KeysMatch(thisKey, mostGeneralKey))
-                    {
-                        mostGeneralKey = MostGeneralPeptideKey(thisKey, mostGeneralKey);
-                    }
-                }
-                if (Equals(mostGeneralKey, thatKey))
-                {
-                    break;
-                }
-                thatKey = mostGeneralKey;
-            }
-            return new[] {thatKey}.Concat(thisKeys.Where(key => !KeysMatch(thatKey, key)));
-        }
-
-        /// <summary>
-        /// Given two keys that match each other (i.e. the modification masses are within the other's margin of error)
-        /// return a key which has the lower precision of the two.
-        /// For instance, if one key is C[+57.021464]PEPTIDER[+10] and the is C[+57.02]PEPTIDEK[10.0083],
-        /// the result be C[+57.02]PEPTIDER[+10].
-        /// </summary>
-        private PeptideLibraryKey MostGeneralPeptideKey(PeptideLibraryKey key1, PeptideLibraryKey key2)
-        {
-            Assume.AreEqual(key1.UnmodifiedSequence, key2.UnmodifiedSequence);
-            var mods1 = key1.GetModifications();
-            var mods2 = key2.GetModifications();
-            Assume.AreEqual(mods1.Count, mods2.Count);
-            var newMods = new List<KeyValuePair<int, string>>(mods1.Count);
-            for (int i = 0; i < mods1.Count; i++)
-            {
-                var mod1 = mods1[i];
-                var mod2 = mods2[i];
-                Assume.AreEqual(mod1.Key, mod2.Key);
-                if (mod1.Value == mod2.Value)
-                {
-                    newMods.Add(mod1);
-                    continue;
-                }
-                MassModification massMod1 = MassModification.Parse(mod1.Value);
-                MassModification massMod2 = MassModification.Parse(mod2.Value);
-                if (massMod1.Precision <= massMod2.Precision)
-                {
-                    newMods.Add(mod1);
-                }
-                else
-                {
-                    newMods.Add(mod2);
-                }
-            }
-            return new PeptideLibraryKey(MakeModifiedSequence(key1.UnmodifiedSequence, newMods), key1.Charge);
-        }
-
-        private string MakeModifiedSequence(string unmodifiedSequence, IEnumerable<KeyValuePair<int, string>> modifications)
-        {
-            StringBuilder modifiedSequence = new StringBuilder();
-            int ichUnmodified = 0;
-            foreach (var modification in modifications)
-            {
-                Assume.IsTrue(modification.Key >= ichUnmodified);
-                modifiedSequence.Append(unmodifiedSequence.Substring(ichUnmodified,
-                    modification.Key - ichUnmodified + 1));
-                ichUnmodified = modification.Key + 1;
-                modifiedSequence.Append(ModifiedSequence.Bracket(modification.Value));
-            }
-            modifiedSequence.Append(unmodifiedSequence.Substring(ichUnmodified));
-            return modifiedSequence.ToString();
         }
     }
 }

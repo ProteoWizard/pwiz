@@ -134,7 +134,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 // Define expected matched/unmatched modifications
                 var expectedMatched = new List<string> { "Acetyl (T)", "Carbamyl (K)", "GIST-Quat:2H(9) (N-term)" };
-                var expectedUnmatched = new List<string> { "R[+114.04293]" };
+                var expectedUnmatched = new List<string> { "R[+114.042927]" };
                 
                 // Verify matched/unmatched modifications
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);

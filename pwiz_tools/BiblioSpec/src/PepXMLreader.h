@@ -73,7 +73,6 @@ class PepXMLreader : public BuildParser{
   vector<SeqMod> mods;      ///< mods for the current spectrum being parsed
   vector<std::string> dirs;       ///< directories where spec files might be
   vector<std::string> extensions; ///< possible extensions of spec files (.mzXML)
-  map<char,map<double,double> > aminoAcidModificationMasses;
 
   char mzXMLFile[1024];
   

@@ -407,7 +407,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             return new TextSequence
                        {
                            Text = nodePep.IsProteomic
-                               ? calc.GetModifiedSequence(nodePep.Peptide.Target, SequenceModFormatType.mass_diff_narrow, false).Sequence
+                               ? calc.GetModifiedSequence(nodePep.Peptide.Target, SequenceModFormatType.mass_diff_narrow, false, true).Sequence
                                : nodePep.CustomMolecule.DisplayName,
                            Font = fonts.GetModFont(labelType),
                            Color = ModFontHolder.GetModColor(labelType)

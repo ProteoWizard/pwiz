@@ -345,10 +345,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public Target GetModifiedSequence(Target seq,
                                           IsotopeLabelType labelType,
                                           ExplicitMods mods,
-                                          SequenceModFormatType format = SequenceModFormatType.full_precision,
-                                          bool useExplicitModsOnly = false)
+                                          SequenceModFormatType format = SequenceModFormatType.mass_diff,
+                                          bool useExplicitModsOnly = false,
+                                          bool standardPrecision = true)
         {
-            return GetPrecursorCalc(labelType, mods).GetModifiedSequence(seq, format, useExplicitModsOnly);
+            return GetPrecursorCalc(labelType, mods).GetModifiedSequence(seq, format, useExplicitModsOnly, standardPrecision);
         }
 
         public Adduct GetModifiedAdduct(Adduct adduct, string neutralFormula,
@@ -1034,17 +1035,17 @@ namespace pwiz.Skyline.Model.DocSettings
             return times.ToArray();
         }
 
-        private IEnumerable<TypedSequence> GetTypedSequences(Target sequence, ExplicitMods mods, Adduct adduct, bool assumeProteomicWhenEmpty = false)
+        private IEnumerable<TypedSequence> GetTypedSequences(Target sequence, ExplicitMods mods, Adduct adduct, bool assumeProteomicWhenEmpty = false, bool standardPrecision = true)
         {
             if (adduct.IsProteomic || (assumeProteomicWhenEmpty && adduct.IsEmpty))
             {
                 var labelType = IsotopeLabelType.light;
-                var modifiedSequence = GetModifiedSequence(sequence, labelType, mods);
+                var modifiedSequence = GetModifiedSequence(sequence, labelType, mods, standardPrecision: standardPrecision);
                 yield return new TypedSequence(modifiedSequence, labelType, adduct);
 
                 foreach (var labelTypeHeavy in GetHeavyLabelTypes(mods))
                 {
-                    modifiedSequence = GetModifiedSequence(sequence, labelTypeHeavy, mods);
+                    modifiedSequence = GetModifiedSequence(sequence, labelTypeHeavy, mods, standardPrecision: standardPrecision);
                     yield return new TypedSequence(modifiedSequence, labelTypeHeavy, adduct);
                 }
             }
@@ -1884,7 +1885,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// <summary>
     /// Enum used to specify the representation of modifications in a sequence
     /// </summary>
-    public enum SequenceModFormatType { mass_diff, mass_diff_narrow, three_letter_code, full_precision }
+    public enum SequenceModFormatType { mass_diff, mass_diff_narrow, three_letter_code };
 
     public interface IPrecursorMassCalc
     {
@@ -1893,7 +1894,7 @@ namespace pwiz.Skyline.Model.DocSettings
         TypedMass GetPrecursorMass(CustomMolecule custom, TypedModifications mods, Adduct adductForIsotopeLabels, out string isotopicFormula);
         bool IsModified(Target seq);
         Target GetModifiedSequence(Target seq, bool narrow);
-        Target GetModifiedSequence(Target seq, SequenceModFormatType format, bool explicitModsOnly);
+        Target GetModifiedSequence(Target seq, SequenceModFormatType format, bool explicitModsOnly, bool standardPrecision);
         Target GetModifiedSequenceDisplay(Target seq);
         double GetAAModMass(char aa, int seqIndex, int seqLength);
         MassDistribution GetMzDistribution(Target target, Adduct adduct, IsotopeAbundances abundances);
