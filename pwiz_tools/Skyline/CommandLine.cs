@@ -261,6 +261,8 @@ namespace pwiz.Skyline
 
                 _skylineFile = saveFile;
             }
+
+            WaitForDocumentLoaded();
         }
 
         private void WaitForDocumentLoaded()
@@ -328,7 +330,6 @@ namespace pwiz.Skyline
                     return false;
             }
 
-            WaitForDocumentLoaded();
             return true;
         }
 
