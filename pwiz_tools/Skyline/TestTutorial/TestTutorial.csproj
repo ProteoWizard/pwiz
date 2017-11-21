@@ -94,9 +94,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
-    <Reference Include="Ionic.Zip">
+    <Reference Include="DotNetZip">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\DotNetZip\Release\Ionic.Zip.dll</HintPath>
+      <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
     </Reference>
     <Reference Include="log4net">
       <SpecificVersion>False</SpecificVersion>

@@ -103,7 +103,7 @@ namespace SkylineTester
                         "SkylineNightly.exe",
                         "SkylineNightly.pdb",
                         "Microsoft.Win32.TaskScheduler.dll",
-                        "Ionic.Zip.dll"
+                        "DotNetZip.dll"
                     };
                     foreach (var file in files)
                     {
