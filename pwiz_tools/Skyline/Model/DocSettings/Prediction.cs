@@ -3164,7 +3164,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return Math.Round(ionMobility.Value, 4);
         }
 
-        private ImmutableDictionary<LibKey, IonMobilityAndCCS> _measuredMobilityIons;
+        private LibKeyMap<IonMobilityAndCCS> _measuredMobilityIons;
         private ImmutableList<ChargeRegressionLine> _chargeRegressionLines;
 
         public IonMobilityPredictor(string name,
@@ -3203,10 +3203,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IDictionary<LibKey, IonMobilityAndCCS> MeasuredMobilityIons
         {
-            get { return _measuredMobilityIons; }
+            get { return _measuredMobilityIons == null ? null : _measuredMobilityIons.AsDictionary(); }
             private set 
             {
-                _measuredMobilityIons = (value == null) ? null : new ImmutableDictionary<LibKey, IonMobilityAndCCS>(value);
+                _measuredMobilityIons = LibKeyMap<IonMobilityAndCCS>.FromDictionary(value);
             }
         }
 
@@ -3254,7 +3254,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool IsUsable(MsDataFileImpl.eIonMobilityUnits units)
         {
             // We're usable if we have measured ion mobility values, or a CCS library
-            bool usable = (_measuredMobilityIons != null) && _measuredMobilityIons.Any(m => m.Value.IonMobility.Units == units);
+            bool usable = (_measuredMobilityIons != null) && _measuredMobilityIons.Any(m => m.IonMobility.Units == units);
             if (IonMobilityLibrary != null && !IonMobilityLibrary.IsNone)
             {
                 // If we have a CCS library, we need regressions, and the library itself needs to be ready
@@ -3278,7 +3278,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 measured = finder.FindIonMobilityPeaks(); // Returns null on cancel
             }
-            return ChangeMeasuredIonMobilityValues(measured);
+            return OverrideMeasuredIonMobilityValues(measured);
         }
 
         public IonMobilityPredictor ChangeMeasuredIonMobilityValues(IDictionary<LibKey, IonMobilityAndCCS> measured)
@@ -3286,6 +3286,20 @@ namespace pwiz.Skyline.Model.DocSettings
             if (measured != null && (MeasuredMobilityIons == null || !ArrayUtil.EqualsDeep(MeasuredMobilityIons, measured)))
                 return ChangeProp(ImClone(this), im => im.MeasuredMobilityIons = measured);
             return this;
+        }
+
+        public IonMobilityPredictor OverrideMeasuredIonMobilityValues(IDictionary<LibKey, IonMobilityAndCCS> newValues)
+        {
+            if (newValues == null || newValues.Count == 0)
+            {
+                return this;
+            }
+            var newLibKeyMap = LibKeyMap<IonMobilityAndCCS>.FromDictionary(newValues);
+            if (_measuredMobilityIons != null && _measuredMobilityIons.Count != 0)
+            {
+                newLibKeyMap = _measuredMobilityIons.OverrideWith(newLibKeyMap);
+            }
+            return ChangeProp(ImClone(this), im => im._measuredMobilityIons = newLibKeyMap);
         }
 
         public IonMobilityPredictor ChangeDriftTimeWindowWidthCalculator(IonMobilityWindowWidthCalculator prop)

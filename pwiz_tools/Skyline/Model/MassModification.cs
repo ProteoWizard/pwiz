@@ -27,11 +27,11 @@ namespace pwiz.Skyline.Model
     {
         /// <summary>
         /// The maximum precision that we look at for matching.
-        ///  Even if the library says that the mass of a modification is +57.0214635, 
-        /// we still want to match that to our Carbamidomethyl (C) 52.021464.
+        /// Even if the library says that the mass of a modification is +57.0214635, 
+        /// we still want to match that to our Carbamidomethyl (C) 57.021464.
         /// Also, we want their Sodium: 22.989769 to match our Sodium: 22.989767
         /// </summary>
-        public const int MAX_PRECISION = 5;
+        public const int MAX_PRECISION = 4;
 
         public MassModification(double mass, int precision)
         {

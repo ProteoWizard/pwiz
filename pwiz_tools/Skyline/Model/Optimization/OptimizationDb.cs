@@ -29,6 +29,7 @@ using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -330,7 +331,6 @@ namespace pwiz.Skyline.Model.Optimization
                     }
                 }
             }
-
             var peptideList = (from precursor in precursors
                                from charge in precursor.Value
                                select string.Format("{0}{1}", precursor.Key, Transition.GetChargeIndicator(Adduct.FromChargeProtonated(charge))) // Not L10N
@@ -355,20 +355,23 @@ namespace pwiz.Skyline.Model.Optimization
             int optimizationsUpdated = 0;
             foreach (PeptideDocNode nodePep in imported.Children)
             {
-                var sequence = newDoc.Settings.GetSourceTarget(nodePep);
                 foreach (var nodeGroup in nodePep.TransitionGroups)
                 {
                     var charge = nodeGroup.PrecursorAdduct;
+                    var libKeyToMatch = newDoc.Settings.GetSourceTarget(nodePep).GetLibKey(charge).LibraryKey;
                     foreach (var nodeTran in nodeGroup.Transitions)
                     {
                         double productMz = nodeTran.Mz;
                         foreach (var optimization in optimizations.Where(opt =>
                             string.IsNullOrEmpty(opt.Item1.FragmentIon) &&
                             opt.Item1.ProductAdduct.IsEmpty &&  
-                            Equals(opt.Item1.Target,sequence) &&
-                            Equals(opt.Item1.Adduct,charge) &&
                             Math.Abs(opt.Item2 - productMz) < 0.00001))
                         {
+                            var optLibKey = optimization.Item1.Target.GetLibKey(optimization.Item1.Adduct).LibraryKey;
+                            if (!LibKeyIndex.KeysMatch(optLibKey, libKeyToMatch))
+                            {
+                                continue;
+                            }
                             optimization.Item1.FragmentIon = nodeTran.FragmentIonName;
                             optimization.Item1.ProductAdduct = nodeTran.Transition.Adduct;
                             ++optimizationsUpdated;

@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model
             if (settings != null)
             {
                 var calcPre = settings.GetPrecursorCalc(IsotopeLabelType.light, ExplicitMods);
-                ModifiedTarget = calcPre.GetModifiedSequence(Peptide.Target, false);
+                ModifiedTarget = calcPre.GetModifiedSequence(Peptide.Target, SequenceModFormatType.full_precision, false);
                 ModifiedSequenceDisplay = calcPre.GetModifiedSequence(Peptide.Target, true).DisplayName;
             }
             else
@@ -473,7 +473,7 @@ namespace pwiz.Skyline.Model
                 return this; // Settings have no effect on custom ions
 
             var calcPre = settingsNew.GetPrecursorCalc(IsotopeLabelType.light, ExplicitMods);
-            var modifiedTarget = calcPre.GetModifiedSequence(Peptide.Target, false);
+            var modifiedTarget = calcPre.GetModifiedSequence(Peptide.Target, SequenceModFormatType.full_precision, false);
             string modifiedSequenceDisplay = calcPre.GetModifiedSequence(Peptide.Target, true).Sequence;
             if (Equals(modifiedTarget, ModifiedTarget) &&
                 String.Equals(modifiedSequenceDisplay, ModifiedSequenceDisplay))

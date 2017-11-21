@@ -64,7 +64,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
             var curatedDTs = document.Settings.PeptideSettings.Prediction.IonMobilityPredictor.MeasuredMobilityIons;
             var measuredDTs = new List<IDictionary<LibKey, IonMobilityAndCCS>>();
-            var precursors = document.MoleculePrecursorPairs.Select(p => p.NodePep.ModifiedTarget.GetLibKey(p.NodeGroup.PrecursorAdduct)).ToArray();
+            var precursors = new LibKeyIndex(document.MoleculePrecursorPairs.Select(
+                p => p.NodePep.ModifiedTarget.GetLibKey(p.NodeGroup.PrecursorAdduct).LibraryKey));
             for (var pass = 0; pass < 2; pass++)
             {
                 // Verify ability to extract predictions from raw data
@@ -90,7 +91,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var count = 0;
                 foreach (var key in curatedDTs.Keys)
                 {
-                    if (precursors.Contains(key))
+                    if (precursors.ItemsMatching(key.LibraryKey, true).Any())
                     {
                         count++;
                         Assert.AreNotEqual(curatedDTs[key].IonMobility.Mobility, measuredDTs[pass][key].IonMobility.Mobility, "measured drift time should differ somewhat for "+key);
@@ -122,7 +123,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var noChange = new List<LibKey>();
             foreach (var key in measuredDTs[0].Keys)
             {
-                if (precursors.Contains(key))
+                if (precursors.ItemsMatching(key, true).Any())
                 {
                     ccount++;
                     if (measuredDTs[0][key].GetHighEnergyDriftTimeMsec().Value == measuredDTs[1][key].GetHighEnergyDriftTimeMsec().Value)

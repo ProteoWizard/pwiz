@@ -712,7 +712,7 @@ namespace pwiz.Skyline.Model
                     customMolecule.AverageMass, customMolecule.Name);
             }
             // Collect information for converting libraries
-            var chargeAndModifiedSequence = new LibKey(masscalc.GetModifiedSequence(peptideTarget, false), precursorCharge);
+            var chargeAndModifiedSequence = new LibKey(masscalc.GetModifiedSequence(peptideTarget, SequenceModFormatType.full_precision, false), precursorCharge);
             if (smallMoleculeConversionPrecursorMap != null && !smallMoleculeConversionPrecursorMap.ContainsKey(chargeAndModifiedSequence))
             {
                 smallMoleculeConversionPrecursorMap.Add(chargeAndModifiedSequence, new LibKey(customMolecule.GetSmallMoleculeLibraryAttributes(), adduct));

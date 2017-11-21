@@ -597,23 +597,20 @@ static const char* getModMassFormat(double mass, bool highPrecision) {
         return "[%+.1f]";
     }
     double decimal = (mass - (int) mass);
-    int decimalInt = (int) round(decimal * 1000000);
-    if (decimalInt == (decimalInt / 100000) * 100000) {
+    int decimalInt = (int) round(decimal * 100000);
+    if (decimalInt == (decimalInt / 10000) * 10000) {
         return "[%+.1f]";
     }
-    if (decimalInt == (decimalInt / 10000) * 10000) {
+    if (decimalInt == (decimalInt / 1000) * 1000) {
         return "[%+.2f]";
     }
-    if (decimalInt == (decimalInt /1000) * 1000) {
+    if (decimalInt == (decimalInt /100) * 100) {
         return "[%+.3f]";
     }
-    if (decimalInt == (decimalInt /100) * 100) {
+    if (decimalInt == (decimalInt /10) * 10) {
         return "[%+.4f]";
     }
-    if (decimalInt == (decimalInt / 10) * 10) {
-        return "[%+.5f]";
-    }
-    return "[%+.6f]";
+    return "[%+.5f]";
 }
 
 string BlibBuilder::getModifiedSequenceWithPrecision(const char* unmodSeq,
