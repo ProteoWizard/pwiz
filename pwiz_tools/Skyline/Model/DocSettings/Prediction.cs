@@ -3274,7 +3274,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Overwrite any existing measurements with newly derived ones
             Dictionary<LibKey, IonMobilityAndCCS> measured;
-            using (var finder = new IonMobilityFinder(document, documentFilePath, this, progressMonitor))
+            using (var finder = new IonMobilityFinder(document, documentFilePath, progressMonitor))
             {
                 measured = finder.FindIonMobilityPeaks(); // Returns null on cancel
             }

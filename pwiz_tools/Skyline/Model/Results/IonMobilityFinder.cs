@@ -39,7 +39,6 @@ namespace pwiz.Skyline.Model.Results
     public class IonMobilityFinder : IDisposable
     {
         private MsDataFileScanHelper _msDataFileScanHelper;
-        private readonly IonMobilityPredictor _existing;
         private readonly string _documentFilePath;
         private readonly SrmDocument _document;
         private TransitionGroupDocNode _currentDisplayedTransitionGroupDocNode;
@@ -62,13 +61,11 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         /// <param name="document">The document to be inspected</param>
         /// <param name="documentFilePath">Aids in locating the raw files</param>
-        /// <param name="existing">If non-null, will be examined for any existing ion mobility measurements (which may be overwritten) </param>
         /// <param name="progressMonitor">Optional progress monitor for this potentially long operation</param>
-        public IonMobilityFinder(SrmDocument document, string documentFilePath, IonMobilityPredictor existing, IProgressMonitor progressMonitor)
+        public IonMobilityFinder(SrmDocument document, string documentFilePath, IProgressMonitor progressMonitor)
         {
             _document = document;
             _documentFilePath = documentFilePath;
-            _existing = existing;
             _currentDisplayedTransitionGroupDocNode = null;
             _progressMonitor = progressMonitor;
         }

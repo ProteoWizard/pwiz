@@ -287,7 +287,7 @@ namespace pwiz.Skyline.Model
             {
                 case SequenceModFormatType.full_precision:
                 {
-                    return "[" + MassModification.FromMass(massDiff) + "]";
+                    return "[" + MassModification.FromMass(massDiff) + "]"; // Not L10N
                 }
                 case SequenceModFormatType.mass_diff:
                 {
