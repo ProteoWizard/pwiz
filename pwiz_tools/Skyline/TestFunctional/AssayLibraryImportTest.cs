@@ -914,7 +914,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreSame(docModMatcher, SkylineWindow.Document);
 
             // When mods are unreadable, default to the approach of deducing modified state from precursor mz
-            const string textModifiedSeqExpected = "PVIC[+57.0]ATQM[+16.0]LESMTYNPR";
+            const string textModifiedSeqExpected = "PVIC[+57.0215]ATQM[+15.9949]LESMTYNPR";
             double precursorMz = 1013.9, productMz = 868.39;
             const string textModPrefixFormat = "PrecursorMz\tProductMz\tPeptideSequence\tProteinName\n{0}\t{1}\t";
             string textModPrefix = string.Format(textModPrefixFormat, precursorMz, productMz);
@@ -938,7 +938,7 @@ namespace pwiz.SkylineTestFunctional
             textModPrefix = string.Format(textModPrefixFormat, precursorMz, productMz + 16); // Add +16 to product which now contains the mod
             string textModSecond = textModPrefix + "PVIC[+" + string.Format("{0:F01}", 57) + "]ATQMLESM[+" + string.Format("{0:F01}", 16) + "]TYNPR\t1/YAL038W\n";
             RunUI(() => ClipboardEx.SetText(textModSecond));
-            RunUI(() => PasteOnePeptide("PVIC[+57.0]ATQMLESM[+16.0]TYNPR"));
+            RunUI(() => PasteOnePeptide("PVIC[+57.0215]ATQMLESM[+15.9949]TYNPR"));
 
 
             // Test a difficult case containing modifications of the same peptide at two different sites, make sure Skyline handles it correctly
@@ -963,8 +963,8 @@ namespace pwiz.SkylineTestFunctional
                 {
                     var peptides = SkylineWindow.DocumentUI.Peptides.ToList();
                     Assert.AreEqual(2, peptides.Count);
-                    Assert.AreEqual(peptides[0].ModifiedSequence, "AALIM[+16.0]QVLQLTADQIAMLPPEQR");
-                    Assert.AreEqual(peptides[1].ModifiedSequence, "AALIMQVLQLTADQIAM[+16.0]LPPEQR");
+                    Assert.AreEqual("AALIM[+15.9949]QVLQLTADQIAMLPPEQR", peptides[0].ModifiedSequence);
+                    Assert.AreEqual("AALIMQVLQLTADQIAM[+15.9949]LPPEQR", peptides[1].ModifiedSequence);
                     Assert.AreEqual(1, peptides[0].TransitionGroupCount);
                     Assert.AreEqual(1, peptides[1].TransitionGroupCount);
                     Assert.AreEqual(6, peptides[0].TransitionCount);

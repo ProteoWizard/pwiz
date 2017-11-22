@@ -27,6 +27,7 @@ namespace pwiz.Skyline.Model.DocSettings
 {
     public static class UniMod
     {
+        public const int UNIMOD_PRECISION = 6;
         public static Dictionary<string, StaticMod> DictStructuralModNames { get; private set; }
         public static Dictionary<string, StaticMod> DictHiddenStructuralModNames { get; private set; }
         public static Dictionary<string, StaticMod> DictIsotopeModNames { get; private set; }
@@ -283,10 +284,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (!_completed)
                 throw new InvalidOperationException(Resources.ModMassLookup_MatchModificationMass_Invalid_attempt_to_access_incomplete_MassLookup);
-            roundTo = Math.Min(roundTo, MassModification.MAX_PRECISION);
-            mass = Math.Round(mass, roundTo);
             var massLookup = _aaMassLookups[structural ? ToStructuralIndex(aa) : ToIsotopeIndex(aa)];
-            return massLookup != null ? massLookup.ClosestMatch(mass, roundTo, terminus, specific) : null;
+            return massLookup != null ? massLookup.ClosestMatch(new MassModification(mass, roundTo), terminus, specific) : null;
         }
 
         public void Complete()
@@ -342,51 +341,49 @@ namespace pwiz.Skyline.Model.DocSettings
             _listAllAAsMasses.Sort(MASS_COMPARER);
         }
 
-        public StaticMod ClosestMatch(double mass, int roundTo, ModTerminus? terminus, bool specific)
+        public StaticMod ClosestMatch(MassModification massModification, ModTerminus? terminus, bool specific)
         {
             return specific
-               ? ClosestMatchSpecific(mass, roundTo, terminus)
-               : ClosestMatchGeneral(mass, roundTo, terminus);
+               ? ClosestMatchSpecific(massModification, terminus)
+               : ClosestMatchGeneral(massModification, terminus);
         }
 
-        public StaticMod ClosestMatchSpecific(double mass, int roundTo, ModTerminus? terminus)
+        public StaticMod ClosestMatchSpecific(MassModification massModification, ModTerminus? terminus)
         {
             // Order of preference: matches that specific amino acids
-            StaticMod match = ClosestMatch(_listMasses, mass, roundTo);
+            StaticMod match = ClosestMatch(_listMasses, massModification);
             // Terminal matches
             if (match == null && terminus != null)
             {
-                match = ClosestMatch(terminus == ModTerminus.C ? _listCTerminalMasses : _listNTerminalMasses, mass,
-                                     roundTo);
+                match = ClosestMatch(terminus == ModTerminus.C ? _listCTerminalMasses : _listNTerminalMasses, massModification);
             }
             // Matches that apply to all amino acids
-            return match ?? ClosestMatch(_listAllAAsMasses, mass, roundTo);
+            return match ?? ClosestMatch(_listAllAAsMasses, massModification);
         }
 
-        public StaticMod ClosestMatchGeneral(double mass, int roundTo, ModTerminus? terminus)
+        public StaticMod ClosestMatchGeneral(MassModification massModification, ModTerminus? terminus)
         {
-            StaticMod match = ClosestMatch(_listAllAAsMasses, mass, roundTo);
+            StaticMod match = ClosestMatch(_listAllAAsMasses, massModification);
             if (match == null && terminus != null)
             {
-                match = ClosestMatch(terminus == ModTerminus.C ? _listCTerminalMasses : _listNTerminalMasses, mass,
-                                     roundTo);
+                match = ClosestMatch(terminus == ModTerminus.C ? _listCTerminalMasses : _listNTerminalMasses, massModification);
             }
-            return match ?? ClosestMatch(_listMasses, mass, roundTo);
+            return match ?? ClosestMatch(_listMasses, massModification);
         }
 
-        private static StaticMod ClosestMatch(List<KeyValuePair<double, StaticMod>> listSearch, double mass, int roundTo)
+        private static StaticMod ClosestMatch(List<KeyValuePair<double, StaticMod>> listSearch, MassModification massModification)
         {
             if (listSearch.Count == 0)
                 return null;
-            int i = listSearch.BinarySearch(new KeyValuePair<double, StaticMod>(mass, null), MASS_COMPARER);
+            int i = listSearch.BinarySearch(new KeyValuePair<double, StaticMod>(massModification.Mass, null), MASS_COMPARER);
             i = i < 0 ? ~i : i;
             var match = listSearch[i == listSearch.Count ? i - 1 : i];
-            if (Math.Round(match.Key, roundTo) == mass)
+            if (massModification.Matches(new MassModification(match.Key, UniMod.UNIMOD_PRECISION)))
                 return match.Value;
             if (i > 0)
             {
                 match = listSearch[i - 1];
-                if (Math.Round(match.Key, roundTo) == mass)
+                if (massModification.Matches(new MassModification(match.Key, UniMod.UNIMOD_PRECISION)))
                     return match.Value;
             }
             return null;

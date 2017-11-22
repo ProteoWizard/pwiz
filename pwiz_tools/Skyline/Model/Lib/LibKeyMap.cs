@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -33,9 +35,36 @@ namespace pwiz.Skyline.Model.Lib
             _index = new LibKeyIndex(keys);
         }
 
+        public static LibKeyMap<TItem> Create(IEnumerable<TItem> items, Func<TItem, LibraryKey> getKeyFunc)
+        {
+            var itemsList = ImmutableList.ValueOf(items);
+            return new LibKeyMap<TItem>(itemsList, itemsList.Select(getKeyFunc));
+        }
+
+        public static LibKeyMap<TItem> FromDictionary(IDictionary<LibKey, TItem> items)
+        {
+            if (items == null)
+            {
+                return null;
+            }
+            return new LibKeyMap<TItem>(ImmutableList.ValueOf(items.Values), items.Keys.Select(key=>key.LibraryKey));
+        }
+
         public override int Count
         {
             get { return _allItems.Count; }
+        }
+
+        public bool TryGetValue(Target target, out TItem item)
+        {
+            var libraryKey = new LibKey(target, Adduct.EMPTY).LibraryKey;
+            foreach (var matchingItem in ItemsMatching(libraryKey, false))
+            {
+                item = matchingItem;
+                return true;
+            }
+            item = default(TItem);
+            return false;
         }
 
         public int Length { get { return Count; } }
@@ -92,6 +121,22 @@ namespace pwiz.Skyline.Model.Lib
             }
             value = default(TItem);
             return false;
+        }
+
+        public LibKeyMap<TItem> OverrideWith(LibKeyMap<TItem> overrides)
+        {
+            var newKeys = _index.MergeKeys(overrides._index);
+            var newItems = ImmutableList.ValueOf(newKeys.Select(key =>
+            {
+                TItem item;
+                if (!overrides.TryGetValue(key, out item))
+                {
+                    bool b = TryGetValue(key, out item);
+                    Assume.IsTrue(b);
+                }
+                return item;
+            }));
+            return new LibKeyMap<TItem>(newItems, newKeys);
         }
 
         private class ItemIndexList : AbstractReadOnlyList<TItem>

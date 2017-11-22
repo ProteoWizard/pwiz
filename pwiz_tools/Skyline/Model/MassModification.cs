@@ -31,7 +31,10 @@ namespace pwiz.Skyline.Model
         /// we still want to match that to our Carbamidomethyl (C) 52.021464.
         /// Also, we want their Sodium: 22.989769 to match our Sodium: 22.989767
         /// </summary>
-        public const int MAX_PRECISION = 5;
+        public const int MAX_PRECISION_TO_MATCH = 4;
+
+        public const int MAX_PRECISION_TO_KEEP = 4;
+
 
         public MassModification(double mass, int precision)
         {
@@ -49,16 +52,18 @@ namespace pwiz.Skyline.Model
 
         public bool Matches(MassModification that)
         {
-            int minPrecision = Math.Min(Math.Min(Precision, that.Precision), MAX_PRECISION);
+            int minPrecision = Math.Min(Math.Min(Precision, that.Precision), MAX_PRECISION_TO_MATCH);
             double thisRound = Math.Round(Mass, minPrecision);
             double thatRound = Math.Round(that.Mass, minPrecision);
             if (Equals(thisRound, thatRound))
             {
                 return true;
             }
-            double minDifference = Math.Min(Math.Abs(Mass - thatRound), Math.Abs(that.Mass - thisRound)) * Pow10(minPrecision);
-            if (minDifference < .500001)
+            if (Math.Abs(Mass - that.Mass) < .0001)
             {
+                // Anytime two modifications are within .0001 of each other, that is also
+                // considered good enough since there are search results out there where
+                // the Cysteine modification differs at that point.
                 return true;
             }
             return false;
@@ -132,14 +137,14 @@ namespace pwiz.Skyline.Model
 
         public static int InferPrecision(double modMass)
         {
-            for (int precision = 1; precision < MAX_PRECISION; precision++)
+            for (int precision = 1; precision < MAX_PRECISION_TO_KEEP; precision++)
             {
                 if (Equals(modMass, Math.Round(modMass, precision)))
                 {
                     return precision;
                 }
             }
-            return MAX_PRECISION;
+            return MAX_PRECISION_TO_KEEP;
         }
 
         public static readonly ImmutableList<double> POWERS_OF_TEN 

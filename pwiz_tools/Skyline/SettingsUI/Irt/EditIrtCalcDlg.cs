@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using NHibernate;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -982,7 +983,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     return; // Canceled
 
                 var listPeptidesNew = irtAverages.DbIrtPeptides.ToList();
-                Dictionary<Target, int> dictLibraryIndices;
+                LibKeyMap<int> dictLibraryIndices;
                 List<Target> listChangedPeptides, listOverwritePeptides, listKeepPeptides;
                 GetPeptideLists(listPeptidesNew, out dictLibraryIndices, out listChangedPeptides, out listOverwritePeptides, out listKeepPeptides);
 
@@ -1106,16 +1107,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
 
             private void GetPeptideLists(IEnumerable<DbIrtPeptide> peptidesNew,
-                out Dictionary<Target, int> libraryIndices,
+                out LibKeyMap<int> libraryIndices,
                 out List<Target> changed, out List<Target> overwrite, out List<Target> keep)
             {
-                libraryIndices = new Dictionary<Target, int>();
-                for (var i = 0; i < Items.Count; i++)
-                {
-                    // Sometimes the last item can be empty with no sequence.
-                    if (Items[i].ModifiedTarget != null)
-                        libraryIndices.Add(Items[i].ModifiedTarget, i);
-                }
+                var targetIndexes = ImmutableList.ValueOf(Enumerable.Range(0, Items.Count)
+                    .Where(index => null != Items[index].ModifiedTarget));
+                libraryIndices = new LibKeyMap<int>(targetIndexes, targetIndexes.Select(i=>Items[i].ModifiedTarget.GetLibKey(Adduct.EMPTY).LibraryKey));
 
                 changed = new List<Target>();
                 overwrite = new List<Target>();

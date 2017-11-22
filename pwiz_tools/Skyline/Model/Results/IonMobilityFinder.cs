@@ -73,15 +73,16 @@ namespace pwiz.Skyline.Model.Results
             _progressMonitor = progressMonitor;
         }
 
+        /// <summary>
+        /// Looks through the result and finds ion mobility values.
+        /// Note that this method only returns new values that were found in results.
+        /// The returned dictionary should be merged with the existing values in
+        /// order to preserve those existing values.
+        /// </summary>
         public Dictionary<LibKey, IonMobilityAndCCS> FindIonMobilityPeaks()
         {
             // Overwrite any existing measurements with newly derived ones
             var measured = new Dictionary<LibKey, IonMobilityAndCCS>();
-            if (_existing != null && _existing.MeasuredMobilityIons != null)
-            {
-                foreach (var existingPair in _existing.MeasuredMobilityIons)
-                    measured.Add(existingPair.Key, existingPair.Value);
-            }
             if (_document.Settings.MeasuredResults == null)
                 return measured;
 

@@ -268,21 +268,21 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 string errMsgAll = string.Empty;
                 // A handful of peptides that really should have been trained on a clean sample
                 // CONSIDER: or are they multiple conformers? They have multiple hits with distinct IM in the pepXML
-                var expectedDiffs = new Dictionary<string, double>
+                var expectedDiffs = LibKeyMap<double>.FromDictionary(new Dictionary<LibKey, double>
                 {
-                    {"LC[+57.0]VLHEK++", 18.09 },
-                    {"EC[+57.0]C[+57.0]DKPLLEK+++", 7.0},
-                    {"SHC[+57.0]IAEVEK+++", 6.0},
-                    {"DDPHAC[+57.0]YSTVFDK++", 24.0}
-                };
+                    {new PeptideLibraryKey("LC[+57.0]VLHEK", 2), 18.09  },
+                    {new PeptideLibraryKey("EC[+57.0]C[+57.0]DKPLLEK", 3), 7.0},
+                    {new PeptideLibraryKey("SHC[+57.0]IAEVEK", 3), 6.0},
+                    {new PeptideLibraryKey("DDPHAC[+57.0]YSTVFDK", 2), 24.0}
+                }).AsDictionary();
                 foreach (var pair in doc1.PeptidePrecursorPairs)
                 {
                     string errMsg = string.Empty;
                     var key = new LibKey(pair.NodePep.ModifiedSequence, pair.NodeGroup.PrecursorAdduct);
                     double tolerCCS = 5;
-                    if (expectedDiffs.ContainsKey(key.ToString()))
+                    if (expectedDiffs.ContainsKey(key))
                     {
-                        tolerCCS = expectedDiffs[key.ToString()] + .1;
+                        tolerCCS = expectedDiffs[key] + .1;
                     }
                     if (!explicitDTs.ContainsKey(key))
                     {

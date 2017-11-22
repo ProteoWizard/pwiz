@@ -374,7 +374,9 @@ namespace pwiz.SkylineTestA
                 {
                     STR_NO_MODS, STR_MOD_BY_NAME, STR_CYS_AND_OXI, STR_HEAVY_15, STR_HEAVY_15_F, STR_HEAVY_15_NOT_ALL,
                     STR_CYS_OXI_PHOS,
-                    STR_MOD_BY_NAME_TERMINUS, STR_LIGHT_ONLY, STR_HEAVY_ONLY, STR_TERM_ONLY, STR_METOX_LONG_MASS,
+                    STR_MOD_BY_NAME_TERMINUS,
+                    STR_LIGHT_ONLY, 
+                    STR_HEAVY_ONLY, STR_TERM_ONLY, STR_METOX_LONG_MASS,
                     STR_AMMONIA_LOSS, STR_CYS_OXI_PHOS_CAP, STR_UNIMOD_LABEL, STR_UNIMOD_ALL, STR_UNIMOD_TERMINUS
                 };
         }   
