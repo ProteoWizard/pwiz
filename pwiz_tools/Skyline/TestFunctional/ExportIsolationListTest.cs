@@ -209,7 +209,9 @@ namespace pwiz.SkylineTestFunctional
                 conversionDecorator+"LVNELTEFAK (light)";
             var peptideB = AsSmallMoleculeMasses ? 
                 CustomMolecule.INVARIANT_NAME_DETAIL + " [1330.628231/1331.376801] (light)" :
-                conversionDecorator+"IKNLQS[+79.9663]LDPSH (light)";
+                SmallMoleculeTestMode == RefinementSettings.ConvertToSmallMoleculesMode.none ?
+                conversionDecorator+"IKNLQS[+79.9663]LDPSH (light)" : 
+                conversionDecorator+"IKNLQS[+80.0]LDPSH (light)";
             var polarity = AsSmallMoleculesNegative ? "Negative" : "Positive";
             var thermoQExactiveIsolationListExporter = new ThermoQExactiveIsolationListExporter(SkylineWindow.Document)
             {
