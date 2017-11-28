@@ -172,6 +172,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             PauseForScreenShot("Hover over BSA in water chromatogram - prtsc-paste-edit", 12);
 
             RestoreViewOnScreen(13);
+            WaitForGraphs();
             PauseForScreenShot("Full scan 2D MS1 graph", 13);
             {
                 const double clickTime1 = 41.06;
