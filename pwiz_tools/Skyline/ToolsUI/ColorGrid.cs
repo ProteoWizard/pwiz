@@ -42,6 +42,11 @@ namespace pwiz.Skyline.ToolsUI
             comboColorType.SelectedIndex = 0;
         }
 
+        public DataGridView DataGridView
+        {
+            get { return dataGridViewColors; }
+        }
+
         public int ButtonColumnIndex { get { return colBtn.Index; } }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]

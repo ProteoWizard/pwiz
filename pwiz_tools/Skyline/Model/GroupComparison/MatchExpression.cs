@@ -177,8 +177,6 @@ namespace pwiz.Skyline.Model.GroupComparison
             return IsRegexValid(RegExpr);
         }
 
-        // -----
-
         // We could just cast MatchOption to ProteinDisplayMode because the first 4 enum values correspond to eachother,
         // but this would break if any changes are made to the enums
         private static ProteinMetadataManager.ProteinDisplayMode MatchOptionToDisplayMode(MatchOption matchOption)
@@ -203,20 +201,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             var proteomic = protein.DocNode.IsProteomic;
 
             if (peptide != null)
-            {
-                if (proteomic)
-                {
-                    return peptide.ModifiedSequence == null
-                        ? peptide.ToString()
-                        : peptide.ModifiedSequence.ToString();
-                }
-
-                return peptide.MoleculeName;
-            }
+                return proteomic ? peptide.Sequence : peptide.MoleculeName;
             else
-            {
                 return proteomic ? ProteinMetadataManager.ProteinModalDisplayText(protein.DocNode) : protein.Name;
-            }
         }
 
         public static string GetProteinText(Protein protein, ProteinMetadataManager.ProteinDisplayMode proteinDisplayMode)

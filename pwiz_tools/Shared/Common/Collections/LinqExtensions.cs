@@ -152,7 +152,7 @@ namespace pwiz.Common.Collections
             else
             {
                 // iterate backwards to preserve index order
-                for (int last = index + count; last >= index; --last)
+                for (int last = index + count - 1; last >= index; --last)
                 {
                     list.RemoveAt(last);
                 }

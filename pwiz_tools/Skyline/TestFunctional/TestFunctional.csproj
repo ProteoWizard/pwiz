@@ -279,6 +279,7 @@
     <Compile Include="UniquePeptidesSettingsTest.cs" />
     <Compile Include="RunToRunRegressionTest.cs" />
     <Compile Include="UpgradeTest.cs" />
+    <Compile Include="VolcanoPlotFormattingTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">

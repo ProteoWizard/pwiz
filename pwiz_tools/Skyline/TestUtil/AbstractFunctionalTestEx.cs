@@ -30,9 +30,11 @@ using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
@@ -291,6 +293,81 @@ namespace pwiz.SkylineTestUtil
         {
             RunUI(() => { graph.UpdateUI(); });
             WaitForGraphs();
+        }
+
+        public int GetRowCount(FoldChangeGrid grid)
+        {
+            var count = -1;
+            RunUI(() => count = grid.DataboundGridControl.RowCount);
+            return count;
+        }
+
+        public void WaitForVolcanoPlotPointCount(FoldChangeGrid grid, int expected)
+        {
+            WaitForConditionUI(() => expected == grid.DataboundGridControl.RowCount && grid.DataboundGridControl.IsComplete,
+                string.Format("Expecting {0} points found {1}", expected, GetRowCount(grid)));
+        }
+
+        public GroupComparisonDef FindGroupComparison(string name)
+        {
+            GroupComparisonDef def = null;
+            RunUI(() =>
+            {
+                def = SkylineWindow.DocumentUI.Settings.DataSettings.GroupComparisonDefs.FirstOrDefault(g =>
+                    g.Name == name);
+            });
+
+            return def;
+        }
+
+        public GroupComparisonDef CreateGroupComparison(string name, string controlGroupAnnotation, string controlGroupValue, string compareValue)
+        {
+            var dialog = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
+
+            RunUI(() =>
+            {
+                dialog.TextBoxName.Text = name;
+                dialog.ComboControlAnnotation.SelectedItem = controlGroupAnnotation;
+            });
+
+            WaitForConditionUI(() => dialog.ComboControlValue.Items.Count > 0);
+
+            RunUI(() =>
+            {
+                dialog.ComboControlValue.SelectedItem = controlGroupValue;
+                dialog.ComboCaseValue.SelectedItem = compareValue;
+                dialog.RadioScopePerProtein.Checked = false;
+            });
+
+            OkDialog(dialog, dialog.OkDialog);
+
+            return FindGroupComparison(name);
+        }
+
+        public void ChangeGroupComparison(Control owner, string name, Action<EditGroupComparisonDlg> action)
+        {
+            GroupComparisonDef def = null;
+            RunDlg<EditGroupComparisonDlg>(() => def = Settings.Default.GroupComparisonDefList.EditItem(owner,
+                FindGroupComparison(name),
+                Settings.Default.GroupComparisonDefList, SkylineWindow), d =>
+            {
+                action(d);
+                d.OkDialog();
+            });
+
+            RunUI(() =>
+            {
+                int index = Settings.Default.GroupComparisonDefList.ToList().FindIndex(g => g.Name == name);
+                if (index >= 0)
+                {
+                    Settings.Default.GroupComparisonDefList[index] = def;
+                    SkylineWindow.ModifyDocument(Resources.SkylineWindow_AddGroupComparison_Add_Fold_Change,
+                        doc => doc.ChangeSettings(
+                            doc.Settings.ChangeDataSettings(
+                                doc.Settings.DataSettings.AddGroupComparisonDef(
+                                    def))));
+                }
+            });
         }
 
         public class Tool : IDisposable

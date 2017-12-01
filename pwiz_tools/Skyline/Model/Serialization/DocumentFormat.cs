@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_3_7 = new DocumentFormat(3.7); // Release format
         public static readonly DocumentFormat VERSION_3_71 = new DocumentFormat(3.71); // Adds EncyclopeDIA lib support
         public static readonly DocumentFormat VERSION_3_72 = new DocumentFormat(3.72); // Adds small molecule library support
-        public static readonly DocumentFormat VERSION_3_73 = new DocumentFormat(3.73); // Adds ion mobility units, including Bruker TIMS support
+        public static readonly DocumentFormat VERSION_3_73 = new DocumentFormat(3.73); // Adds ion mobility units, including Bruker TIMS support (and volcano plot formatting options)
         public static readonly DocumentFormat CURRENT = VERSION_3_73; 
 
 

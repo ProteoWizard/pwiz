@@ -328,11 +328,11 @@
     <Compile Include="Controls\GroupComparison\FoldChangeVolcanoPlot.Designer.cs">
       <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\GroupComparison\VolcanoPlotProperties.cs">
+    <Compile Include="Controls\GroupComparison\VolcanoPlotPropertiesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Controls\GroupComparison\VolcanoPlotProperties.Designer.cs">
-      <DependentUpon>VolcanoPlotProperties.cs</DependentUpon>
+    <Compile Include="Controls\GroupComparison\VolcanoPlotPropertiesDlg.Designer.cs">
+      <DependentUpon>VolcanoPlotPropertiesDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\ColorGrid.cs">
       <SubType>UserControl</SubType>
@@ -1887,8 +1887,8 @@
     <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotFormattingDlg.resx">
       <DependentUpon>VolcanoPlotFormattingDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotProperties.resx">
-      <DependentUpon>VolcanoPlotProperties.cs</DependentUpon>
+    <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotPropertiesDlg.resx">
+      <DependentUpon>VolcanoPlotPropertiesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
       <DependentUpon>ActionBoxControl.cs</DependentUpon>

@@ -30,12 +30,12 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -45,9 +45,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
     public partial class FoldChangeVolcanoPlot : FoldChangeForm, ITipDisplayer
     {
         private const int MAX_SELECTED = 100;
-        private const float SELECTED_SIZE = 10.0f;
-        private const float MATCHED_SIZE = 9.0f;
-        private const float OTHER_SIZE = 8.0f;
         private const double MIN_PVALUE = 1E-6;
 
         private BindingListSource _bindingListSource;
@@ -123,9 +120,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             get { return GroupComparisonDef.PerProtein; }
         }
 
-        public static FontSpec CreateFontSpec(Color color)
+        public static FontSpec CreateFontSpec(Color color, float size)
         {
-            return new FontSpec("Arial", 12.0f, color, false, false, false, Color.Empty, null, FillType.None) // Not L10N
+            return new FontSpec("Arial", size, color, false, false, false, Color.Empty, null, FillType.None) // Not L10N
             {
                 Border = { IsVisible = false }
             };
@@ -149,10 +146,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             foreach (var labeledPoint in _labeledPoints)
                 if (labeledPoint.Label != null)
-                    labeledPoint.Label.Location.Y = labeledPoint.Point.Y + (labeledPoint.IsSelected ? SELECTED_SIZE : MATCHED_SIZE) / 2.0f / pane.Rect.Height * (pane.YAxis.Scale.Max - pane.YAxis.Scale.Min);
+                    labeledPoint.Label.Location.Y = labeledPoint.Point.Y + labeledPoint.Label.FontSpec.Size / 2.0f /
+                                                    pane.Rect.Height * (pane.YAxis.Scale.Max - pane.YAxis.Scale.Min);
         }
 
-        private class LabeledPoint
+        public class LabeledPoint
         {
             public LabeledPoint(PointPair point, TextObj label, bool isSelected)
             {
@@ -281,6 +279,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             get { return FoldChangCutoffValid || PValueCutoffValid; }
         }
 
+        public static float PointSizeToFloat(PointSize pointSize)
+        {
+            //return 12.0f + 2.0f * ((int) pointSize - 2);
+            return ((GraphFontSize[]) GraphFontSize.FontSizes)[(int) pointSize].PointSize;
+        }
+
         // ReSharper disable PossibleMultipleEnumeration
         private void UpdateGraph()
         {
@@ -322,7 +326,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
 
             // The order matters here, selected points should be highest in the zorder, followed by matched points and other(unmatched) points
-            AddPoints(selectedPoints, Color.Red, SELECTED_SIZE, true, true);
+            AddPoints(selectedPoints, Color.Red, PointSizeToFloat(PointSize.large), true, PointSymbol.Circle, true);
 
             foreach (var colorRow in GroupComparisonDef.ColorRows.Where(r => r.MatchExpression != null))
             {
@@ -336,12 +340,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
                 if (matchedPoints.Any())
                 {
-                    AddPoints(new PointPairList(matchedPoints), colorRow.Color, MATCHED_SIZE, row.Labeled);
+                    AddPoints(new PointPairList(matchedPoints), colorRow.Color, PointSizeToFloat(row.PointSize), row.Labeled, row.PointSymbol);
                     otherPoints = new PointPairList(otherPoints.Except(matchedPoints).ToArray());
                 }
             }
 
-            AddPoints(otherPoints, Color.Gray, OTHER_SIZE, false);
+            AddPoints(otherPoints, Color.Gray, PointSizeToFloat(PointSize.small), false, PointSymbol.Circle);
 
             // The coordinates that depened on the axis scale dont matter here, the AxisChangeEvent will fix those
             // Insert after selected items, but before all other items
@@ -366,15 +370,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
         // ReSharper restore PossibleMultipleEnumeration
 
-        public static string GetRowProteinText(FoldChangeBindingSource.FoldChangeRow row, ProteinMetadataManager.ProteinDisplayMode proteinDisplayMode)
-        {
-            if (row.Protein != null)
-                return ProteinMetadataManager.ProteinModalDisplayText(row.Protein.DocNode.ProteinMetadata, proteinDisplayMode);
-
-            return null;
-        }
-
-        private static TextObj CreateLabel(PointPair point, Color color)
+        private static TextObj CreateLabel(PointPair point, Color color, float size)
         {
             var row = point.Tag as FoldChangeBindingSource.FoldChangeRow;
             if (row == null)
@@ -385,27 +381,73 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var textObj = new TextObj(text, point.X, point.Y, CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
             {
                 IsClippedToChartRect = true,
-                FontSpec = CreateFontSpec(color),
+                FontSpec = CreateFontSpec(color, size),
                 ZOrder = ZOrder.A_InFront
             };
 
             return textObj;
         }
 
-        private void AddPoints(PointPairList points, Color color, float size, bool labeled, bool selected = false)
+        public static SymbolType PointSymbolToSymbolType(PointSymbol symbol)
         {
-            var lineItem = new LineItem(null, points, Color.Black, SymbolType.Circle)
+            switch (symbol)
             {
-                Line = { IsVisible = false },
-                Symbol = { Border = { IsVisible = false }, Fill = new Fill(color), Size = size, IsAntiAlias = true }
-            };
+                case PointSymbol.Circle:
+                    return SymbolType.Circle;
+                case PointSymbol.Square:
+                    return SymbolType.Square;
+                case PointSymbol.Triangle:
+                    return SymbolType.Triangle;
+                case PointSymbol.TriangleDown:
+                    return SymbolType.TriangleDown;
+                case PointSymbol.Diamond:
+                    return SymbolType.Diamond;
+                case PointSymbol.XCross:
+                    return SymbolType.XCross;
+                case PointSymbol.Plus:
+                    return SymbolType.Plus;
+                case PointSymbol.Star:
+                    return SymbolType.Star;
+                default:
+                    return SymbolType.Circle;
+            }
+        }
+
+        private bool HasOutline(PointSymbol pointSymbol)
+        {
+            return pointSymbol == PointSymbol.Circle || pointSymbol == PointSymbol.Square ||
+                   pointSymbol == PointSymbol.Triangle || pointSymbol == PointSymbol.TriangleDown ||
+                   pointSymbol == PointSymbol.Diamond;
+        }
+
+        private void AddPoints(PointPairList points, Color color, float size, bool labeled, PointSymbol pointSymbol, bool selected = false)
+        {
+            var symbolType = PointSymbolToSymbolType(pointSymbol);
+
+            LineItem lineItem;
+            if (HasOutline(pointSymbol))
+            {
+                lineItem = new LineItem(null, points, Color.Black, symbolType)
+                {
+                    Line = { IsVisible = false },
+                    Symbol = { Border = { IsVisible = false }, Fill = new Fill(color), Size = size, IsAntiAlias = true}
+                };
+            }
+            else
+            {
+                lineItem = new LineItem(null, points, Color.Black, symbolType)
+                {
+                    Line = { IsVisible = false },
+                    Symbol = { Border = { IsVisible = true, Color = color }, Size = size, IsAntiAlias = true }
+                };
+            }
 
             if (labeled)
             {
                 foreach (var point in points)
                 {
-                    var label = CreateLabel(point, color);
-                    _labeledPoints.Add(new LabeledPoint(point, CreateLabel(point, color), selected));
+                    var label = CreateLabel(point, color, size);
+                    _labeledPoints.Add(new LabeledPoint(point, label, selected));
                     zedGraphControl.GraphPane.GraphObjList.Add(label);
                 }
             }
@@ -732,7 +774,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public void ShowProperties()
         {
-            using (var dlg = new VolcanoPlotProperties())
+            using (var dlg = new VolcanoPlotPropertiesDlg())
             {
                 dlg.ShowDialog();
             }
@@ -763,20 +805,39 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var absLog2FCExists = columns.Any(c => c.Name == "FoldChangeResult.AbsLog2FoldChange"); // Not L10N
             var pValueExists = columns.Any(c => c.Name == "FoldChangeResult.AdjustedPValue"); // Not L10N
 
+            bool foldChangeUpdate;
+            var foldChangeFilter = FindFoldChangeFilter(columnFilters, out foldChangeUpdate);
+
+            bool pValueUpdate;
+            var pValueFilter = FindPValueFilter(columnFilters, out pValueUpdate);
+
             if (filter)
             {
-                if ((FoldChangCutoffValid == absLog2FCExists && absLog2FCExists == FoldChangeFilterValid(columnFilters)) &&
-                    (pValueExists && PValueCutoffValid == PValueFilterValid(columnFilters)))
+                if (foldChangeFilter != null)
+                    _absLog2FoldChangeFilter = foldChangeFilter;
+
+                if (pValueFilter != null)
+                    _pValueFilter = pValueFilter;
+
+                if (FoldChangCutoffValid == (foldChangeFilter != null) &&
+                    PValueCutoffValid == (pValueFilter != null) && !foldChangeUpdate && !pValueUpdate)
+                {
                     return false;
+                }
             }
             else
             {
-                if (!absLog2FCExists && !FoldChangeFilterValid(columnFilters) && !PValueFilterValid(columnFilters))
+                if (_absLog2FoldChangeFilter == null && _pValueFilter == null)
+                {
                     return false;
+                }
             }
-        
+
+            var removeAbsLog2 = !filter && absLog2FCExists && _absLog2FoldChangeFilter != null;
+
             columnFilters.Remove(_absLog2FoldChangeFilter);
             columnFilters.Remove(_pValueFilter);
+            _absLog2FoldChangeFilter = _pValueFilter = null;
 
             if (AnyCutoffSettingsValid && filter)
             {
@@ -788,8 +849,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
                 if (missingColumns.Any())
                     SetColumns(_bindingListSource.ViewSpec.Columns.Concat(missingColumns));
-
-                _absLog2FoldChangeFilter = _pValueFilter = null;
 
                 columnFilters.Clear();
                 if (FoldChangCutoffValid)
@@ -808,32 +867,45 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
             else
             {
-                // Remove AbsLog2FoldChange column
-                SetColumns(columns.Except(columns.Where(c => c.Name == "FoldChangeResult.AbsLog2FoldChange"))); // Not L10N
+                if (removeAbsLog2)
+                {
+                    // Remove AbsLog2FoldChange column
+                    SetColumns(columns.Except(columns.Where(c => c.Name == "FoldChangeResult.AbsLog2FoldChange"))); // Not L10N 
+                }
             }
 
             _bindingListSource.RowFilter = _bindingListSource.RowFilter.SetColumnFilters(columnFilters);
             return true;
         }
 
-        private bool FoldChangeFilterValid(IList<RowFilter.ColumnFilter> filters)
+        private RowFilter.ColumnFilter FindFoldChangeFilter(IList<RowFilter.ColumnFilter> filters, out bool needsUpdate)
         {
-            return ContainsFilter(filters, new ColumnId("AbsLog2FoldChange"), // Not L10N
-                FilterOperations.OP_IS_GREATER_THAN, Settings.Default.Log2FoldChangeCutoff);
+            return CheckFilters(filters, new ColumnId("AbsLog2FoldChange"), FilterOperations.OP_IS_GREATER_THAN, // Not L10N
+                Settings.Default.Log2FoldChangeCutoff, out needsUpdate);
         }
 
-        private bool PValueFilterValid(IList<RowFilter.ColumnFilter> filters)
+        private RowFilter.ColumnFilter FindPValueFilter(IList<RowFilter.ColumnFilter> filters, out bool needsUpdate)
         {
-            return ContainsFilter(filters, new ColumnId("AdjustedPValue"), // Not L10N
-                FilterOperations.OP_IS_LESS_THAN, Math.Pow(10, -Settings.Default.PValueCutoff));
+            return CheckFilters(filters, new ColumnId("AdjustedPValue"), FilterOperations.OP_IS_LESS_THAN, // Not L10N
+                Math.Pow(10, -Settings.Default.PValueCutoff), out needsUpdate);
         }
 
-        // Returns true if the filter is found
-        bool ContainsFilter(IEnumerable<RowFilter.ColumnFilter> filters, ColumnId columnId, IFilterOperation filterOp, double operand)
+        RowFilter.ColumnFilter CheckFilters(IEnumerable<RowFilter.ColumnFilter> filters, ColumnId columnId, IFilterOperation filterOp, double operand, out bool needsUpdate)
         {
-            return filters.Contains(f => Equals(f.ColumnId, columnId) &&
-                                         ReferenceEquals(f.Predicate.FilterOperation, filterOp) &&
-                                         Equals(f.Predicate.GetOperandDisplayText(_bindingListSource.ViewInfo.DataSchema, typeof(double)), operand.ToString(CultureInfo.CurrentCulture)));
+           var filter = filters.FirstOrDefault(f => Equals(f.ColumnId, columnId) &&
+                                         ReferenceEquals(f.Predicate.FilterOperation, filterOp));
+
+            if (filter == null)
+            {
+                needsUpdate = false;
+                return null;
+            }
+
+            needsUpdate =
+                filter.Predicate.GetOperandDisplayText(_bindingListSource.ViewInfo.DataSchema, typeof(double)) !=
+                operand.ToString(CultureInfo.CurrentCulture);
+
+            return filter;
         }
 
         private void SetColumns(IEnumerable<ColumnSpec> columns)
@@ -883,16 +955,20 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return new Point((int)pt.X, (int)pt.Y);
         }
 
+        public int MatchedPointsStartIndex
+        {
+            get { return 1 + (FoldChangCutoffValid ? 2 : 0) + (PValueCutoffValid ? 1 : 0); }
+        }
+
         public CurveCounts GetCurveCounts()
         {
-            var index = 1 + ((FoldChangCutoffValid ? 2 : 0) + (PValueCutoffValid ? 1 : 0));
             var curveList = zedGraphControl.GraphPane.CurveList;
 
             var selectedCount = curveList[0].Points.Count;
             var outCount = 0;
             var inCount = 0;
 
-            var otherPoints = curveList[index].Points;
+            var otherPoints = curveList[MatchedPointsStartIndex].Points;
             for (var i = 0; i < otherPoints.Count; ++i)
             {
                 var pair = otherPoints[i];
@@ -908,6 +984,21 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             return new CurveCounts(curveList.Count, selectedCount,
                 outCount, inCount);
+        }
+
+        public List<LabeledPoint> LabeledPoints
+        {
+            get { return _labeledPoints; }
+        }
+
+        public GraphObjList GraphObjList
+        {
+            get { return zedGraphControl.GraphPane.GraphObjList; }
+        }
+
+        public CurveList CurveList
+        {
+            get { return zedGraphControl.GraphPane.CurveList; }
         }
             
         public class CurveCounts

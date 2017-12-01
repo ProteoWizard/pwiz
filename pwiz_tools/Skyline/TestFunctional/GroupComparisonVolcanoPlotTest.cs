@@ -154,13 +154,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(openForms.Any(f => f is FoldChangeGrid));
         }
 
-        private int GetRowCount(FoldChangeGrid grid)
-        {
-            var count = -1;
-            RunUI(() => count = grid.DataboundGridControl.RowCount);
-            return count;
-        }
-
         private int GetPeptideCount()
         {
             var count = -1;
@@ -168,11 +161,6 @@ namespace pwiz.SkylineTestFunctional
             return count;
         }
 
-        private void WaitForVolcanoPlotPointCount(FoldChangeGrid grid, int expected)
-        {
-            WaitForConditionUI(() => expected == grid.DataboundGridControl.RowCount && grid.DataboundGridControl.IsComplete,
-                string.Format("Expecting {0} points found {1}", expected, GetRowCount(grid)));
-        }
 
         private static void AssertSelectionCorrect(FoldChangeVolcanoPlot volcanoPlot, string selectedSequence, int totalSelected)
         {
@@ -209,31 +197,9 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(inCount, curveCounts.InCount);
         }
 
-        private static void CreateGroupComparison(string name, string controlGroupAnnotation, string controlGroupValue, string compareValue)
+        private static void OpenVolcanoPlotProperties(FoldChangeVolcanoPlot volcanoPlot, Action<VolcanoPlotPropertiesDlg> action)
         {
-            var dialog = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
-
-            RunUI(() =>
-            {
-                dialog.TextBoxName.Text = name;
-                dialog.ComboControlAnnotation.SelectedItem = controlGroupAnnotation;
-            });
-
-            WaitForConditionUI(() => dialog.ComboControlValue.Items.Count > 0);
-
-            RunUI(() =>
-            {
-                dialog.ComboControlValue.SelectedItem = controlGroupValue;
-                dialog.ComboCaseValue.SelectedItem = compareValue;
-                dialog.RadioScopePerProtein.Checked = false;
-            });
-
-            OkDialog(dialog, dialog.OkDialog);
-        }
-
-        private static void OpenVolcanoPlotProperties(FoldChangeVolcanoPlot volcanoPlot, Action<VolcanoPlotProperties> action)
-        {
-            RunDlg<VolcanoPlotProperties>(volcanoPlot.ShowProperties, d =>
+            RunDlg<VolcanoPlotPropertiesDlg>(volcanoPlot.ShowProperties, d =>
             {
                 action(d);
                 d.OkDialog();

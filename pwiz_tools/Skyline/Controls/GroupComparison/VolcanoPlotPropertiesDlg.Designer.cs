@@ -1,6 +1,6 @@
 ﻿namespace pwiz.Skyline.Controls.GroupComparison
 {
-    partial class VolcanoPlotProperties
+    partial class VolcanoPlotPropertiesDlg
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(VolcanoPlotProperties));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(VolcanoPlotPropertiesDlg));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
             this.textFoldChange = new System.Windows.Forms.TextBox();
@@ -122,7 +122,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "VolcanoPlotProperties";
+            this.Name = "VolcanoPlotPropertiesDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.VolcanoPlotProperties_FormClosing);

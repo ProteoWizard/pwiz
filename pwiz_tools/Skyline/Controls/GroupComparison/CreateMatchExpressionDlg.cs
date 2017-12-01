@@ -148,6 +148,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private static MatchOptionStringPair GetSelectedItem(ComboBox comboBox, IEnumerable<MatchOption> matchOptions)
         {
             var items = comboBox.Items.Cast<MatchOptionStringPair>().ToArray();
+            return GetMatchOptionStringPair(items, matchOptions);
+        }
+
+        public static MatchOptionStringPair GetMatchOptionStringPair(MatchOptionStringPair[] items,
+            IEnumerable<MatchOption> matchOptions)
+        {
 
             foreach (var m in matchOptions)
             {
@@ -159,7 +165,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return items[0]; // None
         }
 
-        private class MatchOptionStringPair
+        public class MatchOptionStringPair
         {
             public MatchOptionStringPair(MatchOption? matchOption, string displayString)
             {
@@ -173,6 +179,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
             // ReSharper disable once UnusedAutoPropertyAccessor.Local
             // ReSharper disable once MemberCanBePrivate.Local
             public string DisplayString { get; set; }
+        }
+
+        public void OkDialog()
+        {
+            DialogResult = DialogResult.OK;
         }
 
         public MatchExpression GetCurrentMatchExpression()
@@ -243,5 +254,53 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     : row.Peptide.IdentityPath);
             }
         }
+
+        #region Function Test Support
+
+        public string Expression
+        {
+            get { return expressionTextBox.Text; }
+            set { expressionTextBox.Text = value; }
+        }
+
+        public MatchOptionStringPair PValueSelectedItem
+        {
+            get { return (MatchOptionStringPair) pValueComboBox.SelectedItem; }
+            set { pValueComboBox.SelectedItem = value; }
+        }
+
+        public IEnumerable<MatchOptionStringPair> PValueItems
+        {
+            get { return pValueComboBox.Items.Cast<MatchOptionStringPair>(); }
+        }
+
+        public MatchOptionStringPair FoldChangeSelectedItem
+        {
+            get { return (MatchOptionStringPair)foldChangeComboBox.SelectedItem; }
+            set { foldChangeComboBox.SelectedItem = value; }
+        }
+
+        public IEnumerable<MatchOptionStringPair> FoldChangeItems
+        {
+            get { return foldChangeComboBox.Items.Cast<MatchOptionStringPair>(); }
+        }
+
+        public MatchOptionStringPair MatchSelectedItem
+        {
+            get { return (MatchOptionStringPair)matchComboBox.SelectedItem; }
+            set { matchComboBox.SelectedItem = value; }
+        }
+
+        public IEnumerable<MatchOptionStringPair> MatchItems
+        {
+            get { return matchComboBox.Items.Cast<MatchOptionStringPair>(); }
+        }
+
+        public IEnumerable<string> MatchingRows
+        {
+            get { return dataGridView1.Rows.OfType<DataGridViewRow>().Select(r => (string) r.Cells[0].Value); }
+        }
+
+        #endregion
     }
 }

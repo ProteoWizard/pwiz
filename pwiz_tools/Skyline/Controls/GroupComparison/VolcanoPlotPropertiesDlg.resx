@@ -415,7 +415,7 @@
     <value>Volcano Plot Properties</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>VolcanoPlotProperties</value>
+    <value>VolcanoPlotPropertiesDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>

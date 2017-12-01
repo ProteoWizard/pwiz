@@ -28,7 +28,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
-    public partial class VolcanoPlotProperties : FormEx
+    public partial class VolcanoPlotPropertiesDlg : FormEx
     {
         private readonly double _oldLog2FoldChangeCutoff;
         private readonly double _oldPValueCutoff;
@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private const string FORMAT = "0.######"; // Not L10N
 
-        public VolcanoPlotProperties()
+        public VolcanoPlotPropertiesDlg()
         {
             InitializeComponent();
 

@@ -2661,5 +2661,17 @@ namespace pwiz.Skyline.Properties {
                 this["AreaGraphDisplayType"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowAdvancedVolcanoPlotFormatting {
+            get {
+                return ((bool)(this["ShowAdvancedVolcanoPlotFormatting"]));
+            }
+            set {
+                this["ShowAdvancedVolcanoPlotFormatting"] = value;
+            }
+        }
     }
 }

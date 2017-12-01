@@ -25,27 +25,47 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
+    public enum PointSize
+    {
+        x_small,
+        small,
+        normal,
+        large,
+        x_large
+    };
+
+    public enum PointSymbol
+    {
+        Circle,
+        Square,
+        Triangle,
+        TriangleDown,
+        Diamond,
+        XCross,
+        Plus,
+        Star
+    }
+
     [XmlRoot(XML_ROOT)]
     public class MatchRgbHexColor : RgbHexColor, ICloneable
     {
         public const string XML_ROOT = "format_detail"; // Not L10N
         private string _expression;
         private bool _labeled;
+        private PointSymbol _pointSymbol;
+        private PointSize _pointSize;
 
-        public MatchRgbHexColor(string expression, bool labeled, Color color)
+        public MatchRgbHexColor(string expression, bool labeled, Color color, PointSymbol pointSymbol, PointSize pointSize)
             : base(color)
         {
             Expression = expression;
             Labeled = labeled;
-        }
-
-        public MatchRgbHexColor(string expression, bool labeled)
-            : this(expression, labeled, Color.Gray)
-        {
+            PointSymbol = pointSymbol;
+            PointSize = pointSize;
         }
 
         public MatchRgbHexColor()
-            : this("", false) // Not L10N
+            : this("", false, Color.Gray, PointSymbol.Circle, PointSize.normal) // Not L10N
         {
 
         }
@@ -88,6 +108,26 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
 
+        public PointSize PointSize
+        {
+            get { return _pointSize; }
+            set
+            {
+                _pointSize = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        public PointSymbol PointSymbol
+        {
+            get { return _pointSymbol; }
+            set
+            {
+                _pointSymbol = value;
+                NotifyPropertyChanged();
+            }
+        }
+
         public object Clone()
         {
             return MemberwiseClone();
@@ -95,7 +135,8 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         protected bool Equals(MatchRgbHexColor other)
         {
-            return base.Equals(other) && string.Equals(_expression, other._expression) && _labeled == other._labeled;
+            return base.Equals(other) && string.Equals(_expression, other._expression) && _labeled == other._labeled &&
+                   _pointSymbol == other._pointSymbol && _pointSize == other._pointSize;
         }
 
         public override bool Equals(object obj)
@@ -103,7 +144,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
-            return Equals((MatchRgbHexColor)obj);
+            return Equals((MatchRgbHexColor) obj);
         }
 
         public override int GetHashCode()
@@ -113,6 +154,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                 int hashCode = base.GetHashCode();
                 hashCode = (hashCode * 397) ^ (_expression != null ? _expression.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ _labeled.GetHashCode();
+                hashCode = (hashCode * 397) ^ (int) _pointSymbol;
+                hashCode = (hashCode * 397) ^ (int) _pointSize;
                 return hashCode;
             }
         }
@@ -123,7 +166,9 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             color,
             expr,
-            labeled
+            labeled,
+            symbol_type,
+            point_size
         }
 
         public static MatchRgbHexColor Deserialize(XmlReader reader)
@@ -136,6 +181,13 @@ namespace pwiz.Skyline.Model.GroupComparison
             Hex = reader.GetAttribute(ATTR.color);
             Expression = reader.GetAttribute(ATTR.expr);
             Labeled = reader.GetBoolAttribute(ATTR.labeled);
+
+            var symbol = reader.GetAttribute(ATTR.symbol_type);
+            PointSymbol = symbol == null ? PointSymbol.Circle : Helpers.ParseEnum(symbol, PointSymbol.Circle);
+
+            var pointSize = reader.GetAttribute(ATTR.point_size);
+            PointSize = pointSize == null ? PointSize.normal : Helpers.ParseEnum(pointSize, PointSize.normal);
+
             reader.Read();
         }
 
@@ -144,6 +196,8 @@ namespace pwiz.Skyline.Model.GroupComparison
             writer.WriteAttribute(ATTR.color, Hex);
             writer.WriteAttribute(ATTR.expr, Expression);
             writer.WriteAttribute(ATTR.labeled, Labeled);
+            writer.WriteAttribute(ATTR.symbol_type, PointSymbol.ToString());
+            writer.WriteAttribute(ATTR.point_size, PointSize.ToString());
         }
 
         #endregion

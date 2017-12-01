@@ -25,6 +25,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 
@@ -35,16 +36,22 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private readonly FoldChangeBindingSource.FoldChangeRow[] _foldChangeRows;
         private readonly Action<List<MatchRgbHexColor>> _updateGraph;
         private readonly BindingList<MatchRgbHexColor> _bindingList;
+
         private readonly int _expressionIndex;
         private readonly int _createExprButtonIndex;
 
-        public VolcanoPlotFormattingDlg(FoldChangeVolcanoPlot volcanoPlot, IList<MatchRgbHexColor> colorRows, FoldChangeBindingSource.FoldChangeRow[] foldChangeRows, Action<List<MatchRgbHexColor>> updateGraph)
+        private readonly DataGridViewComboBoxColumn _symbolCombo;
+        private readonly DataGridViewComboBoxColumn _pointSizeCombo;
+
+        public VolcanoPlotFormattingDlg(FoldChangeVolcanoPlot volcanoPlot, IList<MatchRgbHexColor> colorRows,
+            FoldChangeBindingSource.FoldChangeRow[] foldChangeRows, Action<List<MatchRgbHexColor>> updateGraph)
         {
             InitializeComponent();
 
             VolcanoPlot = volcanoPlot;
             _foldChangeRows = foldChangeRows;
             _updateGraph = updateGraph;
+
             _bindingList = new BindingList<MatchRgbHexColor>(colorRows);
             _bindingList.ListChanged += _bindingList_ListChanged;
 
@@ -52,14 +59,18 @@ namespace pwiz.Skyline.Controls.GroupComparison
             regexColorRowGrid1.AllowUserToAddRows = true;
 
             // Match Expression Textbox Column
-            var expressionColumn = CreateDataGridViewColumn<DataGridViewTextBoxColumn>(false, "Expression", // Not L10N: column name not header text
-                GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Expression, DataGridViewAutoSizeColumnMode.Fill);
+            var expressionColumn = CreateDataGridViewColumn<DataGridViewTextBoxColumn>(false,
+                "Expression", // Not L10N: column name not header text
+                GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Expression,
+                DataGridViewAutoSizeColumnMode.Fill);
             expressionColumn.Resizable = DataGridViewTriState.True;
             _expressionIndex = 0;
             regexColorRowGrid1.Columns.Insert(_expressionIndex, expressionColumn);
 
-            // Create Match Expression Button Column
-            var createExpressionBtn = CreateDataGridViewColumn<DataGridViewButtonColumn>(false, null, string.Empty, DataGridViewAutoSizeColumnMode.None);
+            // Match Expression Button Column
+            var createExpressionBtn =
+                CreateDataGridViewColumn<DataGridViewButtonColumn>(false, null, string.Empty,
+                    DataGridViewAutoSizeColumnMode.None);
             createExpressionBtn.Resizable = DataGridViewTriState.False;
             createExpressionBtn.Text = "..."; // Not L10N
             createExpressionBtn.UseColumnTextForButtonValue = true;
@@ -67,16 +78,102 @@ namespace pwiz.Skyline.Controls.GroupComparison
             _createExprButtonIndex = 1;
             regexColorRowGrid1.Columns.Insert(_createExprButtonIndex, createExpressionBtn);
 
+            // Symbol Combobox
+            _symbolCombo = CreateDataGridViewColumn<DataGridViewComboBoxColumn>(false,
+                "PointSymbol", // Not L10N: column name not header text
+                GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Symbol, DataGridViewAutoSizeColumnMode.DisplayedCells);
+            _symbolCombo.DisplayMember = "DisplayString"; // Not L10N
+            _symbolCombo.ValueMember = "PointSymbol"; // Not L10N
+            _symbolCombo.Items.AddRange(
+                new PointSymbolStringPair(PointSymbol.Circle,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Circle),
+                new PointSymbolStringPair(PointSymbol.Square,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Square),
+                new PointSymbolStringPair(PointSymbol.Triangle,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Triangle),
+                new PointSymbolStringPair(PointSymbol.TriangleDown,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_TriangleDown),
+                new PointSymbolStringPair(PointSymbol.Diamond,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Diamond),
+                new PointSymbolStringPair(PointSymbol.XCross,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Cross),
+                new PointSymbolStringPair(PointSymbol.Plus,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Plus),
+                new PointSymbolStringPair(PointSymbol.Star,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star)
+            );
+            regexColorRowGrid1.Columns.Insert(6, _symbolCombo);
+
+            // Size Combobox
+            _pointSizeCombo = CreateDataGridViewColumn<DataGridViewComboBoxColumn>(false,
+                "PointSize", // Not L10N: column name not header text
+                GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Size, DataGridViewAutoSizeColumnMode.DisplayedCells);
+            _pointSizeCombo.DisplayMember = "DisplayString"; // Not L10N
+            _pointSizeCombo.ValueMember = "PointSize"; // Not L10N
+            _pointSizeCombo.Items.AddRange(
+                new PointSizeStringPair(PointSize.x_small,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Small),
+                new PointSizeStringPair(PointSize.small,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Small),
+                new PointSizeStringPair(PointSize.normal,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Normal),
+                new PointSizeStringPair(PointSize.large,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Large),
+                new PointSizeStringPair(PointSize.x_large,
+                    GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Large));
+            regexColorRowGrid1.Columns.Insert(7, _pointSizeCombo);
+
             // Labeled Checkbox Column
-            var labeledColumn = CreateDataGridViewColumn<DataGridViewCheckBoxColumn>(false, "Labeled", // Not L10N: column name not header text
-                GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Labeled, DataGridViewAutoSizeColumnMode.AllCells);
+            var labeledColumn = CreateDataGridViewColumn<DataGridViewCheckBoxColumn>(false,
+                "Labeled", // Not L10N: column name not header text
+                GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Labeled,
+                DataGridViewAutoSizeColumnMode.AllCells);
             regexColorRowGrid1.Columns.Add(labeledColumn);
 
+            advancedCheckBox.Checked = Settings.Default.ShowAdvancedVolcanoPlotFormatting;
+            UpdateAdvancedColumns();
+
             regexColorRowGrid1.Owner = this;
+
+            SetExpressionMinimumWidth();
+        }
+
+        public class PointSizeStringPair
+        {
+            public PointSizeStringPair(PointSize pointSize, string displayString)
+            {
+                PointSize = pointSize;
+                DisplayString = displayString;
+            }
+
+            // These are actually used by the combo box
+            // ReSharper disable once MemberCanBePrivate.Local
+            public PointSize PointSize { get; set; }
+
+            // ReSharper disable once UnusedAutoPropertyAccessor.Local
+            // ReSharper disable once MemberCanBePrivate.Local
+            public string DisplayString { get; set; }
+        }
+
+        public class PointSymbolStringPair
+        {
+            public PointSymbolStringPair(PointSymbol pointSymbol, string displayString)
+            {
+                PointSymbol = pointSymbol;
+                DisplayString = displayString;
+            }
+
+            // These are actually used by the combo box
+            // ReSharper disable once MemberCanBePrivate.Local
+            public PointSymbol PointSymbol { get; set; }
+
+            // ReSharper disable once UnusedAutoPropertyAccessor.Local
+            // ReSharper disable once MemberCanBePrivate.Local
+            public string DisplayString { get; set; }
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
-        {    
+        {
             _bindingList.ListChanged -= _bindingList_ListChanged;
 
             base.OnHandleDestroyed(e);
@@ -84,8 +181,33 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public FoldChangeVolcanoPlot VolcanoPlot { get; private set; }
 
-        void _bindingList_ListChanged(object sender, ListChangedEventArgs e)
+        private void SetExpressionMinimumWidth()
         {
+            var grid = regexColorRowGrid1.DataGridView;
+
+            using (var g = grid.CreateGraphics())
+            {
+                var minimumWidth = 5.0f; // 5 is the default MinimumWidth
+
+                foreach (var row in _bindingList)
+                {
+                    var width = g.MeasureString(row.Expression, grid.Font).Width;
+                    minimumWidth = Math.Max(minimumWidth, width);
+                }
+
+                grid.Columns[_expressionIndex].MinimumWidth = (int)minimumWidth;
+            }
+        }
+
+        private void _bindingList_ListChanged(object sender, ListChangedEventArgs e)
+        {
+            if (e.ListChangedType == ListChangedType.ItemAdded || e.ListChangedType == ListChangedType.ItemDeleted ||
+                e.ListChangedType == ListChangedType.Reset ||
+                e.PropertyDescriptor.DisplayName == "Expression") // Not L10N
+            {
+                SetExpressionMinimumWidth();
+            }
+
             _updateGraph(ResultList);
         }
 
@@ -93,24 +215,51 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             if (e.ColumnIndex == _createExprButtonIndex)
             {
-                using (var createMatchExpression = new CreateMatchExpressionDlg(this, _foldChangeRows, _bindingList[e.RowIndex]))
+                ClickCreateExpression(e.RowIndex);
+            }
+            else
+            {
+                // If the color button was clicked, this has already been handled in the color grid
+                if (e.RowIndex == regexColorRowGrid1.DataGridView.NewRowIndex &&
+                    e.ColumnIndex != regexColorRowGrid1.ButtonColumnIndex)
+                    CommitCellChanges();
+            }
+        }
+
+        private void CommitCellChanges()
+        {
+            var dataGridView = regexColorRowGrid1.DataGridView;
+            regexColorRowGrid1.BindingSource.EndEdit();
+            dataGridView.NotifyCurrentCellDirty(true);
+            dataGridView.EndEdit();
+            dataGridView.NotifyCurrentCellDirty(false);
+        }
+
+
+        public void ClickCreateExpression(int row)
+        {
+            if (row >= 0 && row < regexColorRowGrid1.DataGridView.RowCount)
+            {
+                using (var createMatchExpression =
+                    new CreateMatchExpressionDlg(this, _foldChangeRows, _bindingList[row]))
                 {
                     if (createMatchExpression.ShowDialog() == DialogResult.OK)
-                        _bindingList[e.RowIndex].Expression = createMatchExpression.GetCurrentMatchExpression().ToString();
-                    else
-                        return;
+                    {
+                        _bindingList[row].Expression = createMatchExpression.GetCurrentMatchExpression().ToString();
+                        CommitCellChanges();
+                    }
                 }
             }
+        }
 
-            //If the color button was clicked, this has already been handled in the color grid
-            var dataGridView = (DataGridView) sender;
-            if (e.RowIndex == dataGridView.NewRowIndex && e.ColumnIndex != regexColorRowGrid1.ButtonColumnIndex)
-            {
-                regexColorRowGrid1.BindingSource.EndEdit();
-                dataGridView.NotifyCurrentCellDirty(true);
-                dataGridView.EndEdit();
-                dataGridView.NotifyCurrentCellDirty(false);
-            }
+        public void OkDialog()
+        {
+            DialogResult = DialogResult.OK;
+        }
+
+        public new void CancelDialog()
+        {
+            DialogResult = DialogResult.Cancel;
         }
 
         private static MatchOption DisplayModeToMatchOption(ProteinMetadataManager.ProteinDisplayMode displayMode)
@@ -163,28 +312,27 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void regexColorRowGrid1_OnCellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
+            if (e.RowIndex < 0)
+                return;
+
             if (e.ColumnIndex == _expressionIndex)
             {
-                if (e.RowIndex >= 0)
+                var grid = (DataGridView) sender;
+                var row = _bindingList[e.RowIndex];
+                var foreColor = Color.Black;
+
+                // If the MatchExpression is null, parsing failed, so we create a default expression where
+                // the regular expression is the Expression that failed to parse and the matchOptions are default ones (see GetDefaultMatchExpression)
+                if (row.MatchExpression == null)
                 {
-                    var row = _bindingList[e.RowIndex];
-
-                    var foreColor = Color.Black;
-
-                    // If the MatchExpression is null, parsing failed, so we create a default expression where
-                    // the regular expression is the Expression that failed to parse and the matchOptions are default ones (see GetDefaultMatchExpression)
-                    if (row.MatchExpression == null)
-                    {
-                        if (!row.InvalidMatchOptions && MatchExpression.IsRegexValid(row.Expression))
-                            row.Expression = GetDefaultMatchExpression(row.Expression).ToString();
-                        else
-                            foreColor = Color.Red;
-                    }
-
-                    ((DataGridView) sender)[e.ColumnIndex, e.RowIndex].Style.ForeColor = foreColor;
-
+                    if (!row.InvalidMatchOptions && MatchExpression.IsRegexValid(row.Expression))
+                        row.Expression = GetDefaultMatchExpression(row.Expression).ToString();
+                    else
+                        foreColor = Color.Red;
                 }
-            }  
+
+                grid[e.ColumnIndex, e.RowIndex].Style.ForeColor = foreColor;
+            }
         }
 
         public List<MatchRgbHexColor> ResultList
@@ -192,7 +340,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             get { return _bindingList.ToList(); }
         }
 
-        private T CreateDataGridViewColumn<T>(bool readOnly, string dataPropertyName, string headerText, DataGridViewAutoSizeColumnMode autoSizeMode) where T : DataGridViewColumn, new()
+        private T CreateDataGridViewColumn<T>(bool readOnly, string dataPropertyName, string headerText,
+            DataGridViewAutoSizeColumnMode autoSizeMode) where T : DataGridViewColumn, new()
         {
             var column = new T
             {
@@ -208,6 +357,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
         public BindingList<MatchRgbHexColor> GetCurrentBindingList()
         {
             return _bindingList;
+        }
+
+        private void UpdateAdvancedColumns()
+        {
+            _symbolCombo.Visible = _pointSizeCombo.Visible =
+                Settings.Default.ShowAdvancedVolcanoPlotFormatting = advancedCheckBox.Checked;
+        }
+
+        private void advancedCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateAdvancedColumns();
         }
     }
 }

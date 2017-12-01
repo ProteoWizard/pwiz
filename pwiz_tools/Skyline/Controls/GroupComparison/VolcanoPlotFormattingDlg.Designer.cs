@@ -32,7 +32,8 @@
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
-            this.regexColorRowGrid1 = new RegexColorRowGrid();
+            this.regexColorRowGrid1 = new pwiz.Skyline.Controls.GroupComparison.RegexColorRowGrid();
+            this.advancedCheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // button1
@@ -58,10 +59,18 @@
             this.regexColorRowGrid1.OnCellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.regexColorRowGrid1_OnCellValueChanged);
             this.regexColorRowGrid1.OnCellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.regexColorRowGrid1_OnCellClick);
             // 
+            // advancedCheckBox
+            // 
+            resources.ApplyResources(this.advancedCheckBox, "advancedCheckBox");
+            this.advancedCheckBox.Name = "advancedCheckBox";
+            this.advancedCheckBox.UseVisualStyleBackColor = true;
+            this.advancedCheckBox.CheckedChanged += new System.EventHandler(this.advancedCheckBox_CheckedChanged);
+            // 
             // VolcanoPlotFormattingDlg
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.advancedCheckBox);
             this.Controls.Add(this.regexColorRowGrid1);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
@@ -71,6 +80,7 @@
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -80,6 +90,7 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Button button2;
         private RegexColorRowGrid regexColorRowGrid1;
+        private System.Windows.Forms.CheckBox advancedCheckBox;
 
     }
 }
