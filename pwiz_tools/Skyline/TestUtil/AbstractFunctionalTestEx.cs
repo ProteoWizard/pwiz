@@ -424,6 +424,7 @@ namespace pwiz.SkylineTestUtil
 
         public static void ClickChromatogram(string graphName, double x, double y, PaneKey? paneKey = null)
         {
+            WaitForGraphs();
             var graphChromatogram = GetGraphChrom(graphName);
             RunUI(() =>
             {
