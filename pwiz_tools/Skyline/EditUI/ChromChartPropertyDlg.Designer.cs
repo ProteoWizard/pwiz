@@ -43,7 +43,6 @@
             this.cbRelative = new System.Windows.Forms.CheckBox();
             this.textMaxIntensity = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.cbShowOverlappingLabels = new System.Windows.Forms.CheckBox();
             this.cbShowMultiplePeptides = new System.Windows.Forms.CheckBox();
             this.textSizeComboBox = new System.Windows.Forms.ComboBox();
             this.groupBox1.SuspendLayout();
@@ -134,14 +133,6 @@
             resources.ApplyResources(this.label5, "label5");
             this.label5.Name = "label5";
             // 
-            // cbShowOverlappingLabels
-            // 
-            resources.ApplyResources(this.cbShowOverlappingLabels, "cbShowOverlappingLabels");
-            this.cbShowOverlappingLabels.Checked = true;
-            this.cbShowOverlappingLabels.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbShowOverlappingLabels.Name = "cbShowOverlappingLabels";
-            this.cbShowOverlappingLabels.UseVisualStyleBackColor = true;
-            // 
             // cbShowMultiplePeptides
             // 
             resources.ApplyResources(this.cbShowMultiplePeptides, "cbShowMultiplePeptides");
@@ -171,7 +162,6 @@
             this.CancelButton = this.btnCancel;
             this.Controls.Add(this.textSizeComboBox);
             this.Controls.Add(this.cbShowMultiplePeptides);
-            this.Controls.Add(this.cbShowOverlappingLabels);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textLineWidth);
@@ -204,7 +194,6 @@
         private System.Windows.Forms.TextBox textMaxIntensity;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.CheckBox cbRelative;
-        private System.Windows.Forms.CheckBox cbShowOverlappingLabels;
         private System.Windows.Forms.CheckBox cbShowMultiplePeptides;
         private System.Windows.Forms.TextBox textMinIntensity;
         private System.Windows.Forms.Label label4;

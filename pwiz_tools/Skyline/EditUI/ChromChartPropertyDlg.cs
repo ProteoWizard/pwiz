@@ -49,7 +49,6 @@ namespace pwiz.Skyline.EditUI
                 textMinIntensity.Text = Settings.Default.ChromatogramMinIntensity.ToString(LocalizationHelper.CurrentCulture);
             if (Settings.Default.ChromatogramMaxIntensity != 0)
                 textMaxIntensity.Text = Settings.Default.ChromatogramMaxIntensity.ToString(LocalizationHelper.CurrentCulture);
-            cbShowOverlappingLabels.Checked = Settings.Default.AllowLabelOverlap;
             cbShowMultiplePeptides.Checked = Settings.Default.AllowMultiplePeptideSelection;
         }
 
@@ -91,7 +90,6 @@ namespace pwiz.Skyline.EditUI
             Settings.Default.ChromatogramMaxIntensity = maxIntensity;
             if (maxIntensity != 0)
                 Settings.Default.LockYChrom = true;
-            Settings.Default.AllowLabelOverlap = cbShowOverlappingLabels.Checked;
             Settings.Default.AllowMultiplePeptideSelection = cbShowMultiplePeptides.Checked;
             DialogResult = DialogResult.OK;
         }
