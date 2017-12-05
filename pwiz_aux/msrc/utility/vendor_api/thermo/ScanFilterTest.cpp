@@ -296,7 +296,7 @@ const TestScanFilter testScanFilters[] =
      false, 0.0 },
 
     {"ITMS + c NSI d w sa Full ms2 375.01@etd66.67 [50.00-1890.00]",
-     "375.01", "66.67", "", "", "50", "1890", 0, 2, -1, -1,
+     "375.01", "66.67", "cid", "0", "50", "1890", 0, 2, -1, -1,
      ScanFilterMassAnalyzerType_ITMS, PolarityType_Positive, DataPointType_Centroid,
      IonizationType_NSI, AccurateMass_Unknown, ScanType_Full, false, static_cast<ActivationType>(ActivationType_ETD | ActivationType_CID),
      TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
@@ -304,6 +304,14 @@ const TestScanFilter testScanFilters[] =
      false, 0.0 },
 
     {"ITMS + c NSI d w sa Full ms2 375.01@etd66.67@hcd15.00 [50.00-1890.00]",
+     "375.01", "66.67", "hcd", "15", "50", "1890", 0, 2, -1, -1,
+     ScanFilterMassAnalyzerType_ITMS, PolarityType_Positive, DataPointType_Centroid,
+     IonizationType_NSI, AccurateMass_Unknown, ScanType_Full, false, static_cast<ActivationType>(ActivationType_ETD | ActivationType_HCD),
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     TriBool_Unknown, TriBool_True, TriBool_True, TriBool_True, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     false, 0.0 },
+
+     { "ITMS + c NSI d w sa Full ms2 375.01@etd66.67 375.01@hcd15.00 [50.00-1890.00]",
      "375.01", "66.67", "hcd", "15", "50", "1890", 0, 2, -1, -1,
      ScanFilterMassAnalyzerType_ITMS, PolarityType_Positive, DataPointType_Centroid,
      IonizationType_NSI, AccurateMass_Unknown, ScanType_Full, false, static_cast<ActivationType>(ActivationType_ETD | ActivationType_HCD),
