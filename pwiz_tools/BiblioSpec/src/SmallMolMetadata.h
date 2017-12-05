@@ -29,37 +29,73 @@
  * \brief Information peculiar to small molecules
  */
 struct SmallMolMetadata {
-  std::string inchiKey; ///< this is our baseline identifier
-  std::string precursorAdduct; ///< should agree with charge
-  std::string chemicalFormula; ///< formula without adduct
-  std::string moleculeName; ///< friendly name
-  std::string otherKeys; //< of form <idType:value>\t<idType:value> etc as in "CAS:58-08-2\tinchi:1S/C8H10N4O2/c1-10-4-9-6-5(10)7(13)12(3)8(14)11(6)2/h4H,1-3H3"
+    std::string inchiKey; ///< this is our baseline identifier
+    std::string precursorAdduct; ///< should agree with charge
+    std::string chemicalFormula; ///< formula without adduct
+    std::string moleculeName; ///< friendly name
+    std::string otherKeys; //< of form <idType:value>\t<idType:value> etc as in "CAS:58-08-2\tinchi:1S/C8H10N4O2/c1-10-4-9-6-5(10)7(13)12(3)8(14)11(6)2/h4H,1-3H3"
 
-  SmallMolMetadata(){};
+    SmallMolMetadata(){};
 
-  SmallMolMetadata(const SmallMolMetadata &rhs)
-  {
-      *this = rhs;
-  }
+    SmallMolMetadata(const SmallMolMetadata &rhs)
+    {
+        *this = rhs;
+    }
 
-  virtual ~SmallMolMetadata(){ };
+    virtual ~SmallMolMetadata(){ };
 
-  // Get a comma seperated list of column names with type decls
-  static const char *sql_col_decls() {  // This order matters - it's used for sorting
-      return "moleculeName VARCHAR(128), chemicalFormula VARCHAR(128), precursorAdduct VARCHAR(128), inchiKey VARCHAR(128), otherKeys VARCHAR(128)";
-  }
+    // Declare the various small molecule column names and their descriptions
+    // This order matters - it's used for sorting 
+    #define DEFINE_SQL_COLS_AND_COMMENTS const char *sql_cols[][2] = { \
+        { "moleculeName", "precursor molecule's name (not needed for peptides)" }, \
+        { "chemicalFormula", "precursor molecule's neutral formula (not needed for peptides)" }, \
+        { "precursorAdduct", "ionizing adduct e.g. [M+Na], [2M-H2O+2H] etc (not needed for peptides)" }, \
+        { "inchiKey", "molecular identifier for structure retrieval (not needed for peptides)" }, \
+        { "otherKeys", "alternative molecular identifiers for structure retrieval, tab separated name:value pairs e.g. cas:58-08-2\\thmdb:01847 (not needed for peptides)" }, \
+        { NULL, NULL } \
+    }
 
-  // Get a comma seperated list of column names without the type decls
-  static string sql_cols() { 
-      string result(sql_col_decls());
-      boost::replace_all(result, " VARCHAR(128)", "");
-      return result;
-  }
+    // Get a comma seperated list of column names with type decls and comments
+    static string sql_col_decls() { 
+        DEFINE_SQL_COLS_AND_COMMENTS;
+        string result = "";
+        vector<string> types = sql_col_types();
+        for (int i = 0; sql_cols[i][0] != NULL; i++)
+            result += string(sql_cols[i][0]) + " " + types[i] + ", -- " + string(sql_cols[i][1]) + "\n";
+        return result;
+    }
+
+    static vector<string> sql_col_names()
+    {
+        DEFINE_SQL_COLS_AND_COMMENTS;
+        vector<string> result;
+        for (int i = 0; sql_cols[i][0] != NULL; i++)
+            result.push_back(sql_cols[i][0]);
+        return result;
+    }
+
+    static string sql_col_names_csv()
+    {
+        DEFINE_SQL_COLS_AND_COMMENTS;
+        string result = "";
+        for (int i = 0; sql_cols[i][0] != NULL; i++)
+            result+= string(", ") + sql_cols[i][0];
+        return result;
+    }
+
+    static vector<string> sql_col_types()
+    {
+        DEFINE_SQL_COLS_AND_COMMENTS;
+        vector<string> result;
+        for (int i = 0; sql_cols[i][0] != NULL; i++)
+            result.push_back("VARCHAR(128)");
+        return result;
+    }
 
   SmallMolMetadata& operator= (const SmallMolMetadata& rhs)
   {
     inchiKey = rhs.inchiKey;
-	precursorAdduct = rhs.precursorAdduct;
+    precursorAdduct = rhs.precursorAdduct;
     chemicalFormula = rhs.chemicalFormula;
     moleculeName = rhs.moleculeName;
     otherKeys = rhs.otherKeys;
@@ -74,7 +110,7 @@ struct SmallMolMetadata {
 
   void clear(){
     inchiKey.clear();
-	precursorAdduct.clear();
+    precursorAdduct.clear();
     chemicalFormula.clear();
     moleculeName.clear();
     otherKeys.clear();

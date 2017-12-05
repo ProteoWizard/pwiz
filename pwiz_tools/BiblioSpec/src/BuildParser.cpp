@@ -52,8 +52,8 @@ BuildParser::BuildParser(BlibBuilder& maker,
     string stmt = "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
         "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobility, collisionalCrossSectionSqA, "
         "ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, fileID, specIDinFile, "
-        "score, scoreType, " + 
-        SmallMolMetadata::sql_cols() + 
+        "score, scoreType" + 
+        SmallMolMetadata::sql_col_names_csv() + 
         ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
     sqlite3_prepare(maker.getDb(), stmt.c_str(),
      -1, &insertSpectrumStmt_, NULL);

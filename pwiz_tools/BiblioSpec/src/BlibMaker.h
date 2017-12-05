@@ -49,7 +49,7 @@ class BlibMaker
     // integer values minorVersion, the minorVersion field has been taken
     // for use as a schemaVersion
 #define MAJOR_VERSION_CURRENT 0
-#define MINOR_VERSION_CURRENT 7 
+#define MINOR_VERSION_CURRENT 7
 
 #define MIN_VERSION_PEAK_ANNOT 7 // Version 7 adds peak annotations
 #define MIN_VERSION_IMS_UNITS  6 // Version 6 generalizes ion mobility to value, high energy offset, and type (currently drift time msec, and inverse reduced ion mobility Vsec/cm2)
@@ -57,6 +57,13 @@ class BlibMaker
 #define MIN_VERSION_CCS        4 // Version 4 adds collisional cross section, removes ion mobility type (which distinguished CCS vs DT as value type), supports drift time only
 #define MIN_VERSION_IMS_HEOFF  3 // Version 3 adds product ion mobility offset information for Waters Mse IMS
 #define MIN_VERSION_IMS        2 // Version 2 adds ion mobility information
+const char * version_history_comment =  // This gets written to the output db
+        "-- Version 7 adds peak annotations\n"
+        "-- Version 6 generalized ion mobility to value, high energy offset, and type (currently drift time msec, and inverse reduced ion mobility Vsec/cm2)\n"
+        "-- Version 5 added small molecule columns\n"
+        "-- Version 4 added collisional cross section for ion mobility, still supports drift time only\n"
+        "-- Version 3 added product ion mobility offset information for Waters Mse IMS\n"
+        "-- Version 2 added ion mobility information\n";
 
 public:
     BlibMaker(void);
@@ -105,8 +112,8 @@ protected:
     virtual int parseNextSwitch(int i, int argc, char* argv[]);
 
     virtual void attachAll() {}
-    virtual void createTables();
-    virtual void createTable(const char* tableName);
+    virtual void createTables(vector<string> &commands, bool execute); //  Generates all the "CREATE TABLE" commands and optionally executes them in the current open library.
+    virtual void createTable(const char* tableName, vector<string> &commands, bool execute); //Generates the SQLite commands to create and initialize the named table, and optionally execute them while doing so
     virtual void updateTables();
     virtual void updateLibInfo();
     

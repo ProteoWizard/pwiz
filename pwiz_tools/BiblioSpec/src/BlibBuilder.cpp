@@ -121,7 +121,8 @@ void BlibBuilder::usage()
         "   -i <library_id>   LSID library ID. Default uses file name.\n"
         "   -a <authority>    LSID authority. Default proteome.gs.washington.edu.\n"
         "   -x <filename>     Specify the path of XML modifications file for parsing MaxQuant files.\n"
-        "   -P <float>        Specify pusher interval for Waters final_fragment.csv files.\n";
+        "   -P <float>        Specify pusher interval for Waters final_fragment.csv files.\n"
+        "   -d [<filename>]   Document the .blib format by writing SQLite commands to a file, or stdout if no filename is given.\n";
 
     cerr << usage << endl;
     exit(1);

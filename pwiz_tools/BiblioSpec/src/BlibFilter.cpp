@@ -391,8 +391,7 @@ void BlibFilter::buildNonRedundantLib()
             {
                 // May contain small molecules
                 order_by = "peptideModSeq, moleculeName, chemicalFormula, inchiKey, otherKeys, precursorCharge, precursorAdduct" + optional_cols;
-                optional_cols += ", ";
-                optional_cols += SmallMolMetadata::sql_cols();
+                optional_cols += SmallMolMetadata::sql_col_names_csv();
                 if (tableVersion_ >= MIN_VERSION_IMS_UNITS)
                     optional_cols += ", ionMobilityType";
                 else
