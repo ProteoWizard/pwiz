@@ -2143,7 +2143,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 // build mz range parts to draw
                 var massH = _settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods).GetPrecursorMass(_pepInfo.Target);
-                _mz = SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorCharge));
+                _mz = SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
                 _mzRangePartsToDraw = GetMzRangeItemsToDraw(_mz);
             }
 

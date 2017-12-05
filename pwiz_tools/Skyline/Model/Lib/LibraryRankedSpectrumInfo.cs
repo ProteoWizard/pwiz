@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Model.Lib
                                     adducts = charges ?? rankCharges,
                                     types = types ?? rankTypes,
                                     matchAll = matchAll,
-                                    rankCharges = rankChargesArray,
+                                    rankCharges = rankChargesArray.Select(a => Math.Abs(a.AdductCharge)).ToArray(),
                                     rankTypes = rankTypesArray,
                                     // Precursor isotopes will not be included in MS/MS, if they will be filtered
                                     // from MS1
@@ -231,7 +231,7 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             // The one expensive sort is used to determine rank order
-            // by intensity.
+            // by intensity, or m/z in case of a tie.
             Array.Sort(arrayRMI, OrderIntensityDesc);
 
             RankedMI[] arrayResult = new RankedMI[ionMatchCount != -1 ? ionMatchCount : arrayRMI.Length];
@@ -404,7 +404,7 @@ namespace pwiz.Skyline.Model.Lib
             public IonTable<TypedMass> massesPredict { get; set; }
             public IEnumerable<Adduct> adducts { get; set; }
             public IEnumerable<IonType> types { get; set; }
-            public IEnumerable<Adduct> rankCharges { get; set; }
+            public IEnumerable<int> rankCharges { get; set; } // For ranking and display purposes, use abs value of charge, ignoring adduct content
             public IEnumerable<IonType> rankTypes { get; set; }
             public List<KnownFragment> knownFragments { get; set; } // For small molecule use, where we can't predict fragments
             public bool excludePrecursorIsotopes { get; set; }
@@ -702,7 +702,7 @@ namespace pwiz.Skyline.Model.Lib
                         if (!rp.matchAll || (rp.minMz <= ionMz && ionMz <= rp.maxMz &&
                                              rp.rankTypes.Contains(type) &&
                                              (!rp.rankLimit.HasValue || rp.Ranked < rp.rankLimit) &&
-                                             (rp.rankCharges.Contains(adduct) || type == IonType.precursor)))
+                                             (rp.rankCharges.Contains(Math.Abs(adduct.AdductCharge)) || type == IonType.precursor)))
                         {
                             Rank = rp.RankNext();
                             return true;
