@@ -49,6 +49,9 @@
             this.sToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cl37ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.br81ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.p32ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.s33ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.s34ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.clToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -128,7 +131,10 @@
             this.oToolStripMenuItem,
             this.o18ToolStripMenuItem,
             this.pToolStripMenuItem,
+            this.p32ToolStripMenuItem,
             this.sToolStripMenuItem,
+            this.s33ToolStripMenuItem,
+            this.s34ToolStripMenuItem,
             this.clToolStripMenuItem,
             this.cl37ToolStripMenuItem,
             this.brToolStripMenuItem,
@@ -221,6 +227,27 @@
             this.br81ToolStripMenuItem.Text = "81Br";
             this.br81ToolStripMenuItem.Click += new System.EventHandler(this.br81ToolStripMenuItem_Click);
             // 
+            // p32ToolStripMenuItem
+            // 
+            this.p32ToolStripMenuItem.Name = "p32ToolStripMenuItem";
+            this.p32ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.p32ToolStripMenuItem.Text = "32P";
+            this.p32ToolStripMenuItem.Click += new System.EventHandler(this.p32ToolStripMenuItem_Click);
+            // 
+            // s33ToolStripMenuItem
+            // 
+            this.s33ToolStripMenuItem.Name = "s33ToolStripMenuItem";
+            this.s33ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.s33ToolStripMenuItem.Text = "33S";
+            this.s33ToolStripMenuItem.Click += new System.EventHandler(this.s33ToolStripMenuItem_Click);
+            // 
+            // s34ToolStripMenuItem
+            // 
+            this.s34ToolStripMenuItem.Name = "s34ToolStripMenuItem";
+            this.s34ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.s34ToolStripMenuItem.Text = "34S";
+            this.s34ToolStripMenuItem.Click += new System.EventHandler(this.s34ToolStripMenuItem_Click);
+            // 
             // helpToolStripMenuItem
             // 
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
@@ -289,6 +316,9 @@
         private System.Windows.Forms.ToolStripMenuItem sToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cl37ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem br81ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem p32ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem s33ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem s34ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.ToolStripMenuItem clToolStripMenuItem;

@@ -238,7 +238,10 @@ namespace pwiz.Skyline.Util
         public const string O17 = "O\"";// Oxygen17
         public const string O18 = "O'"; // Oxygen18
         public const string P = "P";    // Phosphorus
+        public const string P32 = "P'";    // Phosphorus32 (radioisotope)
         public const string S = "S";    // Sulfur
+        public const string S34 = "S'";    // Sulfur34 (4.2% natural abundance)
+        public const string S33 = "S\"";    // Sulfur33 (0.75% natural abundance)
 // ReSharper disable InconsistentNaming
         public const string Se = "Se";  // Selenium
         public const string Li = "Li";  // Lithium
@@ -273,7 +276,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// A dictionary mapping heavy isotope symbols to their correspoding
         /// indices within the mass distributions of <see cref="IsotopeAbundances.Default"/>,
-        /// and default atom perent enrichment for <see cref="IsotopeEnrichmentItem"/>.
+        /// and default atom percent enrichment for <see cref="IsotopeEnrichmentItem"/>.
         /// </summary>
         private static readonly IDictionary<string, KeyValuePair<int, double>> DICT_SYMBOL_TO_ISOTOPE_INDEX =
             new Dictionary<string, KeyValuePair<int, double>>
@@ -285,6 +288,9 @@ namespace pwiz.Skyline.Util
                     { O18, new KeyValuePair<int, double>(2, 0.99) },
                     { Cl37, new KeyValuePair<int, double>(1, 0.99) },  // N.B. No idea if this is a realistic value
                     { Br81, new KeyValuePair<int, double>(1, 0.99) },  // N.B. No idea if this is a realistic value 
+                    { P32, new KeyValuePair<int, double>(1, 0.99) },  // N.B. No idea if this is a realistic value 
+                    { S33, new KeyValuePair<int, double>(1, 0.99) },  // N.B. No idea if this is a realistic value 
+                    { S34, new KeyValuePair<int, double>(2, 0.99) },  // N.B. No idea if this is a realistic value 
                 };
 
         public static IEnumerable<string> HeavySymbols { get { return DICT_SYMBOL_TO_ISOTOPE_INDEX.Keys; } }
@@ -383,12 +389,14 @@ namespace pwiz.Skyline.Util
             AddMass(C13, 13.0033548378, 13.0033548378); //NIST, Unimod=13.00335483
             AddMass(S, 31.9720707, 32.065); //Unimod
             AddMass(P, 30.973762, 30.973761); //Unimod
-
+            AddMass(P32, 31.973907274, 31.973907274); // Wikipedia and http://periodictable.com/Isotopes/015.32/index3.p.full.html using Wolfram
             AddMass(Se, 79.9165196, 78.96); //Unimod, Most abundant Se isotope is 80
             AddMass(Li, 7.016003, 6.941); //Unimod
             AddMass(F, 18.99840322, 18.9984032); //Unimod
             AddMass(Na, 22.9897677, 22.98977); //Unimod
             AddMass(S, 31.9720707, 32.065); //Unimod
+            AddMass(S33, 32.971458910, 32.971458910); // http://www.ciaaw.org/sulfur.htm
+            AddMass(S34, 33.9678670, 33.9678670); // http://www.ciaaw.org/sulfur.htm
             AddMass(Cl, 34.96885272, 35.453); //Unimod
             AddMass(Cl37, 36.965902602, 36.965902602); //NIST
             AddMass(K, 38.9637074, 39.0983); //Unimod
