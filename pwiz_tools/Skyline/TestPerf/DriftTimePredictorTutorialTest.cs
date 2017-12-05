@@ -18,6 +18,7 @@
  */
 
 
+using System;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -179,7 +180,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 var fullScanGraph = FindOpenForm<GraphFullScan>();
                 RunUI(() => fullScanGraph.SetSpectrum(false));
                 PauseForScreenShot("Full scan 3D MS1 graph", 13);
-                RunUI(() => Assert.IsTrue(fullScanGraph.TitleText.Contains(clickTime1.ToString(CultureInfo.CurrentCulture))));
+                ValidateClickTime(fullScanGraph, clickTime1);
 
                 RunUI(() => fullScanGraph.SetZoom(false));
                 PauseForScreenShot("Full scan unzoomed 3D MS1 graph", 14);
@@ -188,7 +189,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 RunUI(() => fullScanGraph.SetZoom(true));
                 ClickChromatogram(clickTime2, 5.8E+4, PaneKey.PRODUCTS);
                 PauseForScreenShot("Full scan 3D MS/MS graph", 15);
-                RunUI(() => Assert.IsTrue(fullScanGraph.TitleText.Contains(clickTime2.ToString(CultureInfo.CurrentCulture))));
+                ValidateClickTime(fullScanGraph, clickTime2);
 
                 RunUI(() => fullScanGraph.SetZoom(false));
                 PauseForScreenShot("Full scan unzoomed 3D MS/MS graph", 14);
@@ -196,7 +197,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 const double clickTime3 = 41.48;
                 ClickChromatogram(yeastReplicateName, clickTime3, 3.35E+4, PaneKey.PRODUCTS);
                 PauseForScreenShot("Interference full scan unzoomed 3D MS/MS graph", 15);
-                RunUI(() => Assert.IsTrue(fullScanGraph.TitleText.Contains(clickTime3.ToString(CultureInfo.CurrentCulture))));
+                ValidateClickTime(fullScanGraph, clickTime3);
 
                 RunUI(SkylineWindow.HideFullScanGraph);
             }
@@ -298,6 +299,13 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             WaitForDocumentChangeLoaded(docFiltered, 1000 * 60 * 60 * 5); // 5 minutes
 
             // TODO: Check peak ranks before and after
+        }
+
+        private static void ValidateClickTime(GraphFullScan fullScanGraph, double clickTime)
+        {
+            string clickTimeText = clickTime.ToString(CultureInfo.CurrentCulture);
+            RunUI(() => Assert.IsTrue(fullScanGraph.TitleText.Contains(clickTimeText),
+                String.Format("Full-scan graph title '{0}' does not contain '{1}'", fullScanGraph.TitleText, clickTimeText)));
         }
     }
 }
