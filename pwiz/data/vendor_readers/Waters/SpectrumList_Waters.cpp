@@ -453,8 +453,8 @@ SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) cons
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel) const { return SpectrumPtr(); }
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const { return SpectrumPtr(); }
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const { return SpectrumPtr(); }
-SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const { return SpectrumPtr(); }
-SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const { return SpectrumPtr(); }
+SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance, const pwiz::util::IntegerSet& msLevelsToCentroid) const { return SpectrumPtr(); }
+SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance, const pwiz::util::IntegerSet& msLevelsToCentroid) const { return SpectrumPtr(); }
 PWIZ_API_DECL pwiz::analysis::Spectrum3DPtr SpectrumList_Waters::spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const { return pwiz::analysis::Spectrum3DPtr(); }
 
 } // detail
