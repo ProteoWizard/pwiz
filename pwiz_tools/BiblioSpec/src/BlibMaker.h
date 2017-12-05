@@ -44,6 +44,20 @@ struct sqlite3_stmt;
 
 class BlibMaker
 {
+
+    // Due to original omission of a schema version number, and the unused
+    // integer values minorVersion, the minorVersion field has been taken
+    // for use as a schemaVersion
+#define MAJOR_VERSION_CURRENT 0
+#define MINOR_VERSION_CURRENT 7 
+
+#define MIN_VERSION_PEAK_ANNOT 7 // Version 7 adds peak annotations
+#define MIN_VERSION_IMS_UNITS  6 // Version 6 generalizes ion mobility to value, high energy offset, and type (currently drift time msec, and inverse reduced ion mobility Vsec/cm2)
+#define MIN_VERSION_SMALL_MOL  5 // Version 5 adds small molecule columns
+#define MIN_VERSION_CCS        4 // Version 4 adds collisional cross section, removes ion mobility type (which distinguished CCS vs DT as value type), supports drift time only
+#define MIN_VERSION_IMS_HEOFF  3 // Version 3 adds product ion mobility offset information for Waters Mse IMS
+#define MIN_VERSION_IMS        2 // Version 2 adds ion mobility information
+
 public:
     BlibMaker(void);
     virtual ~BlibMaker(void);
@@ -111,6 +125,7 @@ protected:
                          int tableVersion = 0);
     void transferModifications(const char* schemaTmp, int spectraID, int spectraTmpID);
     void transferPeaks(const char* schemaTmp, int spectraID, int spectraTmpID);
+    void transferPeakAnnotations(const char* schemaTmp, int spectraID, int spectraTmpID);
     void transferSpectrumFiles(const char* schmaTmp);
     void transferTable(const char* schemaTmp, const char* tableName);
 

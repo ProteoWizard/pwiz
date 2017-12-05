@@ -35,7 +35,8 @@ namespace pwiz.Skyline.Util.Extensions
 
         public static string GetString(this SQLiteDataReader reader, Enum columnName)
         {
-            return reader.GetString(reader.GetOrdinal(columnName));
+            var index = reader.GetOrdinal(columnName);
+            return reader.IsDBNull(index) ? null : reader.GetString(index);
         }
 
         public static double GetDouble(this SQLiteDataReader reader, Enum columnName)

@@ -51,6 +51,7 @@ namespace pwiz.Skyline.Util.Extensions
         public const char SEPARATOR_CSV = ','; // Not L10N
         public const char SEPARATOR_CSV_INTL = ';'; // International CSV for comma-decimal locales // Not L10N
         public const char SEPARATOR_TSV = '\t'; // Not L10N
+        public static readonly string SEPARATOR_TSV_STR = SEPARATOR_TSV.ToString(); 
         public const char SEPARATOR_SPACE = ' '; // Not L10N
 
         public const string EXCEL_NA = "#N/A"; // Not L10N
@@ -301,6 +302,105 @@ namespace pwiz.Skyline.Util.Extensions
         public static string SpaceSeparate(params string[] values)
         {
             return SpaceSeparate(values.AsEnumerable());
+        }
+
+        /// <summary>
+        /// Convert a collection of strings to a TSV line for serialization purposes,
+        /// watching out for tabs, CRLF, and existing escapes
+        /// </summary>
+        public static string ToEscapedTSV(IEnumerable<string> strings)
+        {
+            return string.Join(SEPARATOR_TSV_STR, strings.Select(s => s.EscapeTabAndCrLf()));
+        }
+
+        /// <summary>
+        /// Create a collection of strings from a TSV line for deserialization purposes,
+        /// watching out for tabs, CRLF, and existing escapes
+        /// </summary>
+        public static string[] FromEscapedTSV(this string str)
+        {
+            var strings = str.Split(SEPARATOR_TSV).Select(s => s.UnescapeTabAndCrLf());
+            return strings.ToArray();
+        }
+
+        /// <summary>
+        /// Convert tab and/or CRLF characters to printable form for serialization purposes
+        /// </summary>
+        public static string EscapeTabAndCrLf(this string str)
+        {
+            var sb = new StringBuilder();
+            var len = str.Length;
+            for (int pos = 0; pos < len; pos++)
+            {
+                var c = str[pos];
+                switch (c)
+                {
+                    case '\\': // Take care to preserve "c:\tmp" as "c:\\tmp" so it roundtrips properly
+                        sb.Append(c);
+                        sb.Append(c);
+                        break;
+                    case SEPARATOR_TSV:
+                        sb.Append('\\');
+                        sb.Append('t');
+                        break;
+                    case '\n': 
+                        sb.Append('\\');
+                        sb.Append('n');
+                        break;
+                    case '\r': 
+                        sb.Append('\\');
+                        sb.Append('r');
+                        break;
+                    default:
+                        sb.Append(c);
+                        break;
+                }
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Convert tab and/or CRLF characters from printable form for deserialization purposes
+        /// </summary>
+        public static string UnescapeTabAndCrLf(this string str)
+        {
+            var sb = new StringBuilder();
+            var len = str.Length;
+            for (int pos = 0; pos < len; pos++)
+            {
+                var c = str[pos];
+                if (c == '\\' && pos < (len-1))
+                {
+                    var cc = str[pos+1];
+                    switch (cc)
+                    {
+                        case '\\':
+                            sb.Append(c);
+                            pos++;
+                            break;
+                        case 't':
+                            sb.Append(SEPARATOR_TSV);
+                            pos++;
+                            break;
+                        case 'n':
+                            sb.Append('\n');
+                            pos++;
+                            break;
+                        case 'r':
+                            sb.Append('\r');
+                            pos++;
+                            break;
+                        default:
+                            sb.Append(c);
+                            break;
+                    }
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+            return sb.ToString();
         }
 
         /// <summary>

@@ -426,8 +426,8 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             var rowsLookup = rows.ToLookup(row => (int) (row[0]));
             foreach (var grouping in rowsLookup)
             {
-                var mis = ImmutableList.ValueOf(grouping.Select(row 
-                    => new SpectrumPeaksInfo.MI{Mz = Convert.ToDouble(row[1]), Intensity = Convert.ToSingle(row[2])}));
+                var mis = ImmutableList.ValueOf(grouping.Select(row
+                    => new SpectrumPeaksInfo.MI { Mz = Convert.ToDouble(row[1]), Intensity = Convert.ToSingle(row[2]) })); // TODO (bspratt) annotation?
                 allPeakAreas.Add(grouping.Key, mis);
             }
             return allPeakAreas;

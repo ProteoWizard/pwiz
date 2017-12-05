@@ -375,12 +375,16 @@ void BlibFilter::buildNonRedundantLib()
         if (tableColumnExists(redundantDbName_, "RefSpectra", "collisionalCrossSectionSqA")) {
             if (tableColumnExists(redundantDbName_, "RefSpectra", "ionMobilityHighEnergyOffset"))
             {
-                tableVersion_ = 6;
+                tableVersion_ = MIN_VERSION_IMS_UNITS;
                 optional_cols += ", ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset";
+                if (tableExists(redundantDbName_, "RefSpectraPeakAnnotations"))
+                {
+                    tableVersion_ = MIN_VERSION_PEAK_ANNOT;
+                }
             }
             else
             {
-                  tableVersion_ = 4;
+                tableVersion_ = MIN_VERSION_CCS;
                 optional_cols += ", driftTimeMsec, collisionalCrossSectionSqA, driftTimeHighEnergyOffsetMsec";
             }
             if (tableColumnExists(redundantDbName_, "RefSpectra", "inchiKey"))
@@ -389,10 +393,10 @@ void BlibFilter::buildNonRedundantLib()
                 order_by = "peptideModSeq, moleculeName, chemicalFormula, inchiKey, otherKeys, precursorCharge, precursorAdduct" + optional_cols;
                 optional_cols += ", ";
                 optional_cols += SmallMolMetadata::sql_cols();
-                if (tableVersion_ >= 6)
+                if (tableVersion_ >= MIN_VERSION_IMS_UNITS)
                     optional_cols += ", ionMobilityType";
                 else
-                    tableVersion_ = 5;
+                    tableVersion_ = MIN_VERSION_SMALL_MOL;
             }
         } else if (tableColumnExists(redundantDbName_, "RefSpectra", "ionMobilityValue")) {
             ++tableVersion_;

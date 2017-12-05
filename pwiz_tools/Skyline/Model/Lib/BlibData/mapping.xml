@@ -43,6 +43,10 @@
       <key column="RefSpectraId"/>
       <one-to-many class="DbModification"/>
     </bag>
+    <bag name="PeakAnnotations" cascade="save-update">
+      <key column="RefSpectraId"/>
+      <one-to-many class="DbRefSpectraPeakAnnotations"/>
+    </bag>
     <bag name="RetentionTimes" cascade="save-update">
       <key column="RefSpectraId"/>
       <one-to-many class="DbRetentionTimes"/>
@@ -97,5 +101,22 @@
       <generator class="native"/>
     </id>
     <property name="FileName" column="fileName"/>
+  </class>
+  <class name="DbRefSpectraPeakAnnotations" table="RefSpectraPeakAnnotations">
+    <id name="Id">
+      <column name="id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <many-to-one name="RefSpectra" column="RefSpectraID"/>
+    <property name="PeakIndex" column="peakIndex" not-null="true"/>
+    <property name="Name" column="name"/>  
+    <property name="Formula" column="formula"/> 
+    <property name="InchiKey" column="inchiKey"/> 
+    <property name="OtherKeys" column="otherKeys"/>  
+    <property name="Charge" column="charge"/> 
+    <property name="Adduct" column="adduct"/> 
+    <property name="Comment" column="comment"/> 
+    <property name="mzTheoretical" column="mzTheoretical" not-null="true"/>
+    <property name="mzObserved" column="mzObserved" not-null="true"/>
   </class>
 </hibernate-mapping>

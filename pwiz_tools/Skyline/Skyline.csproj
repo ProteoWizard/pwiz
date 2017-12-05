@@ -290,6 +290,7 @@
     <Compile Include="AlgLib\solvers.cs" />
     <Compile Include="AlgLib\specialfunctions.cs" />
     <Compile Include="AlgLib\statistics.cs" />
+    <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
     <Compile Include="Model\Lib\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
@@ -320,6 +321,7 @@
     <Compile Include="Model\RgbHexColor.cs" />
     <Compile Include="Model\GroupComparison\MatchExpression.cs" />
     <Compile Include="Model\GroupComparison\MatchRgbHexColor.cs" />
+    <Compile Include="Model\Lib\SpectrumPeakAnnotation.cs" />
     <Compile Include="Model\ModifiedSequence.cs" />
     <Compile Include="Controls\GroupComparison\FoldChangeRowTipProvider.cs" />
     <Compile Include="Controls\GroupComparison\FoldChangeVolcanoPlot.cs">

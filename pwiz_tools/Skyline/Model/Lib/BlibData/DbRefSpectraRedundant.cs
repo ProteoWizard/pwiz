@@ -46,6 +46,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         public virtual double? IonMobilityHighEnergyOffset { get; set; }
         public virtual double? CollisionalCrossSectionSqA { get; set; }
         public virtual DbRefSpectraRedundantPeaks Peaks { get; set; }
+        public virtual ICollection<DbRefSpectraPeakAnnotations> PeakAnnotations { get; set; }
         public virtual ICollection<DbModification> Modifications { get; set; }
         // Small molecule items
         public virtual string MoleculeName { get; set; }

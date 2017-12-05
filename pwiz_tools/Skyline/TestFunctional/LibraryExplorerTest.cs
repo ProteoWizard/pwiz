@@ -71,9 +71,10 @@ namespace pwiz.SkylineTestFunctional
                                                        new TestLibInfo(ANL_COMBINED, "ANL_combined.blib", ""),
                                                        new TestLibInfo(PHOSPHO_LIB, "phospho_30882_v2.blib", ""),
                                                        new TestLibInfo(YEAST, "Yeast_atlas.blib", ""),
+                                                       new TestLibInfo("LipidCreator", "lc_all.blib", "PE 12:0_12:0[M-H]"),
                                                        new TestLibInfo(SHIMADZU_MLB, "Small_Library-Positive-ions_CE-Merged.blib", "LSD[M+H]"), // Can be found in BiblioSpec test/output directory if update is needed
                                                        new TestLibInfo(NIST_SMALL_MOL+" Redundant", "SmallMolRedundant.msp", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]"),
-                                                       new TestLibInfo(NIST_SMALL_MOL, "SmallMol.msp", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]") 
+                                                       new TestLibInfo(NIST_SMALL_MOL, "SmallMol.msp", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]")
                                                    };
 
         private PeptideSettingsUI PeptideSettingsUI { get; set; }
@@ -106,6 +107,7 @@ namespace pwiz.SkylineTestFunctional
             SetUpTestLibraries();
             if (asSmallMolecules)
             {
+                TestSmallMoleculeFunctionality(4, false); // .blib with fragment annotations
                 TestSmallMoleculeFunctionality(2, true); // NIST with redundant entries
                 TestSmallMoleculeFunctionality(1, false); // NIST
                 TestSmallMoleculeFunctionality(3, false); // .blib
@@ -645,6 +647,7 @@ namespace pwiz.SkylineTestFunctional
             string libSelected = null;
             var libIndex = _testLibs.Length - index;
             bool isNIST = (index < 3);
+            bool isLipidCreator = (index == 4);
             if (expectError)
             {
                 var errWin = ShowDialog<MessageDlg>(() =>
@@ -694,7 +697,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Add all to document, expect to be asked if we want to add library to doc as well
             RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides, msgDlg => msgDlg.Btn1Click());
-            if (index==1)
+            if (isLipidCreator || index == 1)
             {
                 // Expect to be asked if we want to add peptides that don't match filter
                 var confirmMismatch = WaitForOpenForm<FilterMatchedPeptidesDlg>(); // Confirm adding peptides that don't match settings
@@ -707,9 +710,17 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => _viewLibUI.CancelDialog());
             WaitForClosedForm(_viewLibUI);
             if (isNIST)
-                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 74, 222, 666);
+            {
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 74, 222, 14358); // Was 666, from when we only took top N ranked by intensity then mz, but now we take that or all annotated
+            }
+            else if (isLipidCreator)
+            {
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 66, 66, 504);
+            }
             else
+            {
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 6, 18);
+            }
 
             RunUI(() =>
             {

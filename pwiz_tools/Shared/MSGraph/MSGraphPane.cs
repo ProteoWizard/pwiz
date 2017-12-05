@@ -334,7 +334,8 @@ namespace pwiz.MSGraph
 
                 PointPairList fullList = points.FullList;
                 List<int> maxIndexList = points.ScaledMaxIndexList;
-                for( int i = 0; i < maxIndexList.Count; ++i )
+                var annotationsPrioritized = new Dictionary<PointAnnotation, int>();
+                for (int i = 0; i < maxIndexList.Count; ++i)
                 {
                     if( maxIndexList[i] < 0 )
                         continue;
@@ -351,10 +352,14 @@ namespace pwiz.MSGraph
                     if( xAxisPixel - yPixel < 3 )
                         continue;
 
-                    PointAnnotation annotation = info.AnnotatePoint( pt );
-                    if( annotation == null )
-                        continue;
+                    PointAnnotation annotation = info.AnnotatePoint(pt);
+                    if (annotation != null)
+                        annotationsPrioritized.Add(annotation, i);
+                }
 
+                // Give the higher ranked point priority
+                foreach (var annotation in annotationsPrioritized.Keys.OrderBy(a => a.ZOrder ?? int.MaxValue))
+                {
                     if( annotation.ExtraAnnotation != null )
                     {
                         GraphObjList.Add( annotation.ExtraAnnotation );
@@ -366,6 +371,9 @@ namespace pwiz.MSGraph
 
                     float pointLabelWidth = labelLengthToWidthRatio * annotation.Label.Split('\n').Max(o => o.Length);
 
+                    var i = annotationsPrioritized[annotation];
+                    PointPair pt = fullList[maxIndexList[i]];
+                    float yPixel = yAxis.Scale.Transform(pt.Y);
                     double labelY = yAxis.Scale.ReverseTransform(yPixel - 5);
 
                     if (!AllowCurveOverlap)

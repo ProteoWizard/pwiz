@@ -417,7 +417,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
                 return false;
 
             var spec = spectra.First();
-            var mi = spec.Mzs.Select((t, i) => new SpectrumPeaksInfo.MI {Mz = spec.Mzs[i], Intensity = (float) spec.Intensities[i]});
+            var mi = spec.Mzs.Select((t, i) => new SpectrumPeaksInfo.MI { Mz = spec.Mzs[i], Intensity = (float)spec.Intensities[i] }); // CONSIDER(bspratt): annotation?
             spectrum = new SpectrumPeaksInfo(mi.ToArray());
             return true;
         }
@@ -428,7 +428,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
             if (spec == null)
                 return null;
 
-            var mi = spec.Mzs.Select((t, i) => new SpectrumPeaksInfo.MI {Mz = spec.Mzs[i], Intensity = (float) spec.Intensities[i]});
+            var mi = spec.Mzs.Select((t, i) => new SpectrumPeaksInfo.MI { Mz = spec.Mzs[i], Intensity = (float)spec.Intensities[i] }); // CONSIDER(bspratt): annotation?
             return new SpectrumPeaksInfo(mi.ToArray());
         }
 

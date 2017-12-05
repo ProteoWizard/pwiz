@@ -21,6 +21,7 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -70,10 +71,13 @@ namespace pwiz.SkylineTestUtil
         /// molecule representations before proceeding.
         /// Not to be confused with the "TestSmallMolecules"
         /// propery below, which just adds an extra small molecule node to all tests and leaves them otherwise unchanged.
+        /// Developers that want to see such tests execute within the IDE can add their machine name to the SmallMoleculeDevelopers
+        /// list below (partial matches suffice, so name carefully!)
         /// </summary>
+        private static string[] SmallMoleculeDevelopers = {"BSPRATT"}; 
         protected bool RunSmallMoleculeTestVersions
         {
-            get { return GetBoolValue("RunSmallMoleculeTestVersions", false); }
+            get { return GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
             set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value ? "true" : "false"; }
         }
 

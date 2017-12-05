@@ -445,8 +445,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                               charges,
                                                                               types,
                                                                               rankCharges,
-                                                                              rankTypes,
-                                                                              false);
+                                                                              rankTypes);
                             GraphItem = new SpectrumGraphItem(nodeGroup, transition, spectrumInfoR, spectrum.LibName)
                                 {
                                     ShowTypes = types,

@@ -17,14 +17,20 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using System.Xml;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
     public class CustomIon : CustomMolecule
     {
+        public static readonly CustomIon EMPTY = new CustomIon();
+
         public Adduct Adduct { get; private set; }
 
         /// <summary>
@@ -50,6 +56,11 @@ namespace pwiz.Skyline.Model
         {
         }
 
+        public CustomIon(SmallMoleculeLibraryAttributes mol, Adduct adduct, double? monoisotopicMass = null, double? averageMass = null)
+        : this(mol.ChemicalFormula, adduct,monoisotopicMass, averageMass, mol.MoleculeName)
+        {
+        }
+
         public CustomIon(string formula, Adduct adduct, TypedMass monoisotopicMass, TypedMass averageMass, string name)
             : base(formula, monoisotopicMass, averageMass, name)
         {
@@ -68,12 +79,23 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public new bool IsEmpty { get { return ReferenceEquals(this, EMPTY) || (Adduct.IsEmpty && base.IsEmpty); } }
+
         /// <summary>
         /// For serialization
         /// </summary>
         protected CustomIon()
         {
+            Adduct = Adduct.EMPTY;
         }
+
+        public CustomIon ChangeName(string name)
+        {
+            if (Equals(Name, name))
+                return this;
+            return new CustomIon(Formula, Adduct, MonoisotopicMass, AverageMass, name);
+        }
+
         public static CustomIon Deserialize(XmlReader reader)
         {
             var ion = new CustomIon();
@@ -92,6 +114,45 @@ namespace pwiz.Skyline.Model
                 var ionInfo = new IonInfo(NeutralFormula, Adduct);
                 return ionInfo.FormulaWithAdductApplied;
             }
+        }
+
+        public double MonoisotopicMassMz { get { return Adduct.MzFromNeutralMass(MonoisotopicMass, MassType.Monoisotopic); } }
+        public double AverageMassMz { get { return Adduct.MzFromNeutralMass(AverageMass, MassType.Average); } }
+
+        public new string ToSerializableString()
+        {
+            // Replace tab with something that XML parsers won't mess with
+            var tsv = ToTSV();
+            return AccessionNumbers.EscapeTabsForXML(tsv);
+        }
+        public new static CustomMolecule FromSerializableString(string val)
+        {
+            var tsv = MoleculeAccessionNumbers.UnescapeTabsForXML(val);
+            return FromTSV(tsv);
+        }
+
+        public new List<string> AsFields()
+        {
+            var list = base.AsFields() ?? new List<string>();
+            list.Add(Adduct.ToString());
+            return list;
+        }
+
+        public new string ToTSV()
+        {
+            return base.ToTSV() + TextUtil.SEPARATOR_TSV + Adduct;
+        }
+
+        public new static CustomIon FromTSV(string val)
+        {
+            var lastTab = val.LastIndexOf(TextUtil.SEPARATOR_TSV_STR, StringComparison.Ordinal);
+            var adduct = Adduct.FromStringAssumeChargeOnly(val.Substring(lastTab + 1));
+            var mol = CustomMolecule.FromTSV(val.Substring(0, lastTab));
+            if (adduct.IsEmpty && mol.IsEmpty)
+            {
+                return EMPTY;
+            }
+            return new CustomIon(mol, adduct);
         }
 
         public override string DisplayNameDetail { get { return Resources.CustomIon_DisplayName_Ion; } }

@@ -42,6 +42,8 @@ namespace pwiz.MSGraph
     {
         public string Label { get; set; }
 
+        public int? ZOrder { get; set; } // Used to make sure higher ranked peaks take display priority
+
         public GraphObj ExtraAnnotation { get; set; }
 
         public FontSpec FontSpec { get; set; }
@@ -51,6 +53,7 @@ namespace pwiz.MSGraph
             Label = string.Empty;
             ExtraAnnotation = null;
             FontSpec = new FontSpec();
+            ZOrder = null;
         }
 
         public PointAnnotation( string label )
@@ -58,13 +61,15 @@ namespace pwiz.MSGraph
             Label = label;
             ExtraAnnotation = null;
             FontSpec = new FontSpec();
+            ZOrder = null;
         }
 
-        public PointAnnotation( string label, FontSpec fontSpec )
+        public PointAnnotation(string label, FontSpec fontSpec, int? zOrder = null)
         {
             Label = label;
             ExtraAnnotation = null;
             FontSpec = fontSpec;
+            ZOrder = zOrder;
         }
     }
 

@@ -370,7 +370,8 @@ namespace pwiz.Skyline.Model.Lib
 
     public abstract class NistLibraryBase : CachedLibrary<NistSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 5;
+        // Version 6 adds peak annotations
+        private const int FORMAT_VERSION_CACHE = 6; 
 
         private static readonly Regex REGEX_BASENAME = new Regex(@"NIST_(.*)_v(\d+\.\d+)_(\d\d\d\d\-\d\d-\d\d)"); // Not L10N
 
@@ -704,10 +705,11 @@ namespace pwiz.Skyline.Model.Lib
                     int copies = ReadSize(stream);
                     int numPeaks = ReadSize(stream);
                     int compressedSize = ReadSize(stream);
+                    int annotationsSize = ReadSize(stream);
                     long location = PrimitiveArrays.ReadOneValue<long>(stream);
                     LibKey key = LibKey.Read(valueCache, stream);
                     libraryEntries[i] = new NistSpectrumInfo(key, tfRatio, rt, irt, totalIntensity,
-                                                              (ushort)copies, (ushort)numPeaks, compressedSize, location);
+                                                              (ushort)copies, (ushort)numPeaks, compressedSize, annotationsSize, location);
                 }
                 // Checksum = checksum.ChecksumValue;
                 SetLibraryEntries(libraryEntries);
@@ -927,7 +929,7 @@ namespace pwiz.Skyline.Model.Lib
                         ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Peak_count_for_MS_MS_spectrum_excedes_maximum__0__, ushort.MaxValue));
 
                     double totalIntensity = 0;
-
+                    var annotations = isPeptide ? null : new List<List<SpectrumPeakAnnotation>>(); // List of lists, as each peak may have multiple annotations
                     int mzBytes = sizeof(float)*numPeaks;
                     byte[] peaks = new byte[mzBytes*2];
                     for (int i = 0; i < numPeaks; i++)
@@ -943,8 +945,8 @@ namespace pwiz.Skyline.Model.Lib
 
                         // Parse out mass and intensity as quickly as possible, since
                         // this will be the most repeated parsing code.
-                        var sep = '\t'; // Not L10N
-                        int iTab1 = line.IndexOf('\t'); // Not L10N
+                        var sep = TextUtil.SEPARATOR_TSV; // Not L10N
+                        int iTab1 = line.IndexOf(sep); // Not L10N
                         if (iTab1 == -1) // Using space instead of tab, maybe?
                         {
                             sep = ' '; // Not L10N
@@ -966,10 +968,15 @@ namespace pwiz.Skyline.Model.Lib
                         string intensityField = line.Substring(iTab1, iTab2 - iTab1);
 
                         int offset = i*4;
-                        Array.Copy(BitConverter.GetBytes(float.Parse(mzField, CultureInfo.InvariantCulture)), 0, peaks, offset, 4);
+                        float mz = float.Parse(mzField, CultureInfo.InvariantCulture);
+                        Array.Copy(BitConverter.GetBytes(mz), 0, peaks, offset, 4);
                         float intensity = float.Parse(intensityField, CultureInfo.InvariantCulture);
                         Array.Copy(BitConverter.GetBytes(intensity), 0, peaks, mzBytes + offset, 4);
                         totalIntensity += intensity;
+                        if (!isPeptide)
+                        {
+                            ParseFragmentAnnotation(iTab2, annotations, i, line, adduct, charge, mz);
+                        }
                     }
                     // Peak list compression turns out to have a 4x impact on time to
                     // create the cache.  Using zero below turns it off, or 1 to turn
@@ -980,10 +987,16 @@ namespace pwiz.Skyline.Model.Lib
                     int lenCompressed = peaksCompressed.Length;
                     long location = outStream.Position;
                     outStream.Write(peaksCompressed, 0, lenCompressed);
-                    
+                    int lenAnnotations = 0;
+                    if (annotations != null && annotations.Any(a => a != null && !a.All(SpectrumPeakAnnotation.IsNullOrEmpty)))
+                    {
+                        var annotationsTSV = Encoding.UTF8.GetBytes(SpectrumPeakAnnotation.ToCacheFormat(annotations)); 
+                        lenAnnotations = annotationsTSV.Length;
+                        outStream.Write(annotationsTSV, 0, lenAnnotations);
+                    }
                     var key = isPeptide ? new LibKey(sequence, charge) : new LibKey(SmallMoleculeLibraryAttributes.Create(sequence, formula, inChiKey, CAS), adduct);
                     var info = new NistSpectrumInfo(key, tfRatio, rt, irt, Convert.ToSingle(totalIntensity),
-                                                    (ushort) copies, (ushort) numPeaks, lenCompressed, location);
+                                                    (ushort) copies, (ushort) numPeaks, lenCompressed, lenAnnotations, location);
                     if (!isPeptide)
                     {
                         // Keep an eye out for ambiguous keys, probably due to library containing multiple machine types etc
@@ -1023,8 +1036,9 @@ namespace pwiz.Skyline.Model.Lib
                     outStream.Write(BitConverter.GetBytes(info.TotalIntensity), 0, sizeof (float));
                     outStream.Write(BitConverter.GetBytes(info.Copies), 0, sizeof (int));
                     outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof (int));
-                    outStream.Write(BitConverter.GetBytes(info.CompressedSize), 0, sizeof (int));
-                    outStream.Write(BitConverter.GetBytes(info.Location), 0, sizeof (long));
+                    outStream.Write(BitConverter.GetBytes(info.CompressedSize), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(info.AnnotationsSize), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(info.Location), 0, sizeof(long));
                     info.Key.Write(outStream);
                 }
 
@@ -1057,7 +1071,54 @@ namespace pwiz.Skyline.Model.Lib
 
             return true;
         }
-    
+
+        private static void ParseFragmentAnnotation(int iTab2, List<List<SpectrumPeakAnnotation>> annotations, int i, string line, Adduct adduct, int charge,
+            float mz)
+        {
+            if (iTab2 == -1)
+            {
+                annotations[i] = null;
+            }
+            else
+            {
+                // Split, for example, "y7-18/-0.06 62/63 0.3" into name="y7-18/-0.06" and note="62/63 0.3"
+                var annot = line.Substring(iTab2).Trim();
+                if (annot.StartsWith("\"")) // Not L10N
+                {
+                    annot = annot.Substring(1);
+                }
+                if (annot.EndsWith("\"")) // Not L10N
+                {
+                    annot = annot.Substring(0, annot.Length - 1);
+                }
+                annot = annot.Trim();
+                var space = annot.IndexOf(" ", StringComparison.Ordinal); // Not L10N
+                if (space < 0)
+                {
+                    annotations.Add(null); // Interesting annotations have more than one part
+                }
+                else
+                {
+                    var name = annot.Substring(0, space).Trim();
+                    if (string.IsNullOrEmpty(name) || name.StartsWith("?")) // Not L10N
+                    {
+                        annotations.Add(null);
+                    }
+                    else
+                    {
+                        var note = annot.Substring(space + 1).Trim();
+                        var z = Adduct.IsNullOrEmpty(adduct) ? charge : adduct.AdductCharge;
+                        var fragment_adduct = z > 0 ? Adduct.M_PLUS : Adduct.M_MINUS;
+                        var ion = new CustomIon(null, fragment_adduct,
+                            fragment_adduct.MassFromMz(mz, MassType.Monoisotopic),
+                            fragment_adduct.MassFromMz(mz, MassType.Average),
+                            name);
+                        annotations.Add(new List<SpectrumPeakAnnotation> {SpectrumPeakAnnotation.Create(ion, note)});
+                    }
+                }
+            }
+        }
+
         private void ThrowIOException(long lineNum, string message)
         {
             throw new IOException(string.Format(Resources.NistLibraryBase_ThrowIOException__0__line__1__2__, FilePath,
@@ -1133,6 +1194,7 @@ namespace pwiz.Skyline.Model.Lib
         protected override SpectrumPeaksInfo.MI[] ReadSpectrum(NistSpectrumInfo info)
         {
             byte[] peaksCompressed = new byte[info.CompressedSize];
+            byte[] annotationsBytes = info.AnnotationsSize > 0 ? new byte[info.AnnotationsSize] : null;
             lock (ReadStream)
             {
                 try
@@ -1144,6 +1206,8 @@ namespace pwiz.Skyline.Model.Lib
 
                     // Single read to get all the peaks
                     if (fs.Read(peaksCompressed, 0, peaksCompressed.Length) < peaksCompressed.Length)
+                        throw new IOException(Resources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
+                    if (annotationsBytes != null && fs.Read(annotationsBytes, 0, info.AnnotationsSize) < info.AnnotationsSize)
                         throw new IOException(Resources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
                 }
                 catch (Exception)
@@ -1166,6 +1230,18 @@ namespace pwiz.Skyline.Model.Lib
                 int offset = i*4;
                 arrayMI[i].Mz = BitConverter.ToSingle(peaks, offset);
                 arrayMI[i].Intensity = BitConverter.ToSingle(peaks, mzBytes + offset);
+            }
+            if (annotationsBytes != null)
+            {
+                var annotations = SpectrumPeakAnnotation.FromCacheFormat(Encoding.UTF8.GetString(annotationsBytes));
+                if (annotations.Count != info.NumPeaks)
+                {
+                    throw new IOException(Resources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
+                }
+                for (int i = 0; i < info.NumPeaks; i++)
+                {
+                    arrayMI[i].Annotations =annotations[i];
+                }
             }
 
             return arrayMI;
@@ -1309,10 +1385,11 @@ namespace pwiz.Skyline.Model.Lib
         private readonly ushort _copies;
         private readonly ushort _numPeaks;
         private readonly int _compressedSize;
+        private readonly int _annotationsSize;
         private readonly long _location;
 
         public NistSpectrumInfo(LibKey key, float tfRatio, double? rt, double? irt, float totalIntensity,
-            ushort copies, ushort numPeaks, int compressedSize, long location)
+            ushort copies, ushort numPeaks, int compressedSize, int annotationsSize, long location)
         {
             _key = key;
             _totalIntensity = totalIntensity;
@@ -1322,6 +1399,7 @@ namespace pwiz.Skyline.Model.Lib
             _copies = copies;
             _numPeaks = numPeaks;
             _compressedSize = compressedSize;
+            _annotationsSize = annotationsSize;
             _location = location;
         }
 
@@ -1334,7 +1412,8 @@ namespace pwiz.Skyline.Model.Lib
         public float TotalIntensity { get { return _totalIntensity; } }
         public int Copies { get { return _copies; } }
         public int NumPeaks { get { return _numPeaks; } }
-        public int CompressedSize { get { return _compressedSize; }}
+        public int CompressedSize { get { return _compressedSize; } }
+        public int AnnotationsSize { get { return _annotationsSize; } }
         public long Location { get { return _location; } }
     }
 }

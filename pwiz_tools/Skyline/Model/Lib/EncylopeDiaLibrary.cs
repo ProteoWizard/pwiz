@@ -382,7 +382,7 @@ namespace pwiz.Skyline.Model.Lib
                                     UncompressEncyclopeDiaData((byte[])reader.GetValue(3), reader.GetInt32(2)), sizeof(float)));
                             return mzs
                                 .Select(
-                                    (mz, index) => new SpectrumPeaksInfo.MI { Mz = mz, Intensity = intensities[index], Quantitative = intensities[index] >= MIN_QUANTITATIVE_INTENSITY})
+                                    (mz, index) => new SpectrumPeaksInfo.MI { Mz = mz, Intensity = intensities[index], Quantitative = intensities[index] >= MIN_QUANTITATIVE_INTENSITY }) // CONSIDER(bspratt): annotation?
                                 .ToArray();
                         }
                         return null;

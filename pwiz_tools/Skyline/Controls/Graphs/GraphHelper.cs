@@ -364,7 +364,6 @@ namespace pwiz.Skyline.Controls.Graphs
             public List<PaneKey> GraphPaneKeys { get; private set; }
             public bool AllowSplitPanes { get; protected set; }
             public bool ShowLegend { get; protected set; }
-            public bool AllowLabelOverlap { get; protected set; }
             public MSGraphPane GetGraphPane(MSGraphControl graphControl, PaneKey graphPaneKey)
             {
                 if (!AllowSplitPanes)
@@ -430,7 +429,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 graphPane.Legend.IsVisible = ShowLegend;
                 graphPane.Title.IsVisible = true;
                 graphPane.Title.Text = null;
-                graphPane.AllowLabelOverlap = AllowLabelOverlap;
+                graphPane.AllowLabelOverlap = true; // Always allow labels to overlap - they're transparent so it's OK to do so
             }
         }
 
@@ -448,7 +447,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 AllowSplitPanes = settings.SplitChromatogramGraph;
                 ChromGraphItems = new List<KeyValuePair<PaneKey, ChromGraphItem>>();
                 ShowLegend = settings.ShowChromatogramLegend;
-                AllowLabelOverlap = settings.AllowLabelOverlap;
                 _proteinSelected = proteinSelected;
             }
             

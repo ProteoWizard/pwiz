@@ -285,16 +285,18 @@ int BlibBuilder::transferLibrary(int iLib,
     // does the incomming library have retentiontime, score, etc columns
     int tableVersion = 0;
     if (tableColumnExists(schemaTmp, "RefSpectra", "retentionTime")) {
-        if (tableColumnExists(schemaTmp, "RefSpectra", "ionMobilityHighEnergyOffset")) {
-            tableVersion = 6;
+        if (tableExists(schemaTmp, "RefSpectraPeakAnnotations")) {
+            tableVersion = MIN_VERSION_PEAK_ANNOT;
+        } else if (tableColumnExists(schemaTmp, "RefSpectra", "ionMobilityHighEnergyOffset")) {
+            tableVersion = MIN_VERSION_IMS_UNITS;
         } else if (tableColumnExists(schemaTmp, "RefSpectra", "moleculeName")) {
-            tableVersion = 5;
+            tableVersion = MIN_VERSION_SMALL_MOL;
         } else if (tableColumnExists(schemaTmp, "RefSpectra", "collisionalCrossSectionSqA")) {
-            tableVersion = 4;
+            tableVersion = MIN_VERSION_CCS;
         } else if (tableColumnExists(schemaTmp, "RefSpectra", "ionMobilityHighEnergyDriftTimeOffsetMsec")) { // As in Waters MsE IMS
-            tableVersion = 3;
+            tableVersion = MIN_VERSION_IMS_HEOFF;
         } else if (tableColumnExists(schemaTmp, "RefSpectra", "ionMobilityValue")) {
-            tableVersion = 2;
+            tableVersion = MIN_VERSION_IMS;
         } else {
             tableVersion = 1;
         }

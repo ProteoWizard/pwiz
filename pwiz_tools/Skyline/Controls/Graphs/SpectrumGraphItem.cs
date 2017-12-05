@@ -146,7 +146,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private static FontSpec CreateFontSpec(Color color, float size)
         {
-            return new FontSpec(FONT_FACE, size, color, false, false, false) { Border = { IsVisible = false } };
+            return new FontSpec(FONT_FACE, size, color, false, false, false) { Border = { IsVisible = false }, Fill = new Fill(Color.FromArgb(180, Color.White)) };
         }
 
         private FontSpec GetFontSpec(Color color, ref FontSpec fontSpec)
@@ -241,7 +241,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             if (rmi.MatchedIons.Any(mfi => IsMatch(mfi.PredictedMz)))
                 fontSpec = FONT_SPEC_SELECTED;
-            return new PointAnnotation(GetLabel(rmi), fontSpec);
+            return new PointAnnotation(GetLabel(rmi), fontSpec, rmi.Rank);
         }
 
         public IEnumerable<string> IonLabels

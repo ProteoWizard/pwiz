@@ -114,7 +114,11 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 13;  // v13 variable precision modifications
+        private const int FORMAT_VERSION_CACHE = 14; // V14 adds peak annotations
+        // V13 adds variable precision modifications
+        // v12 adds small molecule support
+        // v11 startTime and endTime in RetentionTimes table
+        // v10 changes ion mobility encoding
 
         public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu"; // Not L10N
 
@@ -448,6 +452,34 @@ namespace pwiz.Skyline.Model.Lib
             RefSpectraID,
             peakMZ,
             peakIntensity
+        }
+
+
+        // From BlibMaker.cpp:
+        // CREATE TABLE RefSpectraPeakAnnotations(RefSpectraID INTEGER, "
+        // "peakIndex INTEGER, "
+        // "name VARCHAR(256), "
+        // "formula VARCHAR(256), "
+        // "inchiKey VARCHAR(256), " // molecular identifier for structure retrieval
+        // "otherKeys VARCHAR(256), " // alternative molecular identifiers for structure retrieval (CAS or hmdb etc)
+        // "charge INTEGER, "
+        // "adduct VARCHAR(256), "
+        // "comment VARCHAR(256), "
+        // "mzTheoretical REAL, "
+        // "mzObserved REAL )",
+        private enum RefSpectraPeakAnnotations
+        {
+            RefSpectraID,
+            peakIndex,
+            name,
+            formula,
+            inchiKey,  // molecular identifier for structure retrieval (inChiKey or hmdb etc)
+            otherKeys, // alternative molecular identifiers for structure retrieval (inChiKey or hmdb etc)
+            charge,
+            adduct,
+            comment,
+            mzTheoretical,
+            mzObserved
         }
 
         // Note on ion mobility fields:
@@ -998,18 +1030,85 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     select.CommandText = "SELECT * FROM [RefSpectraPeaks] WHERE [RefSpectraID] = ?"; // Not L10N
                     select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
-
                     using (SQLiteDataReader reader = select.ExecuteReader())
                     {
                         if (reader.Read())
                         {
                             int numPeaks = info.NumPeaks;
-                            return ReadPeaks(reader, numPeaks);
+                            return ReadPeaks(reader, numPeaks, info.Id, _sqliteConnection);
                         }
                     }
                     return null;
                 }
             });
+        }
+
+        // Libraries may contain multiple annotations for a single observed mz
+        private class AnnotationsForObservedMz
+        {
+            public List<SpectrumPeakAnnotation> Annotations { get; private set; }
+            public double ObservedMz { get; private set; } // For sanity checking
+
+            public AnnotationsForObservedMz(double mz, List<SpectrumPeakAnnotation> annotations)
+            {
+                ObservedMz = mz;
+                Annotations = annotations;
+            }
+        }
+
+        // Create a dictionary of <peak index, <observedMz, annotations>> for a RefSpectraId
+        private Dictionary<int, AnnotationsForObservedMz> ReadPeakAnnotations(int refSpectraId, PooledSqliteConnection connection)
+        {
+            var resultDict = new Dictionary<int, AnnotationsForObservedMz>();
+            if (connection == null)
+            {
+                return resultDict;
+            }
+            // Read fragment annotations if any
+            try
+            {
+                // For small molecules, see if there are any peak annotations (for peptides, we can generate our own fragment info)
+                using (var select = connection.Connection.CreateCommand())
+                {
+                    select.CommandText = "SELECT * FROM [RefSpectraPeakAnnotations] WHERE [RefSpectraID] = ?"; // Not L10N
+                    select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)refSpectraId));
+                    using (SQLiteDataReader reader = @select.ExecuteReader())
+                    {
+                        // N.B. this code needs to track any changes to RefSpectraPeakAnnotations, which is to say changes in BlibMaker.cpp 
+                        while (reader.Read())
+                        {
+                            // var refSpectraID = reader.GetInt32(RefSpectraPeakAnnotations.RefSpectraID);
+                            var peakIndex = reader.GetInt32(RefSpectraPeakAnnotations.peakIndex);
+                            var fragname = reader.GetString(RefSpectraPeakAnnotations.name);
+                            var formula = reader.GetString(RefSpectraPeakAnnotations.formula);
+                            var inchkey = reader.GetString(RefSpectraPeakAnnotations.inchiKey);
+                            var otherKeys = reader.GetString(RefSpectraPeakAnnotations.otherKeys);
+                            var charge = reader.GetInt32(RefSpectraPeakAnnotations.charge);
+                            var adductString = reader.GetString(RefSpectraPeakAnnotations.adduct);
+                            var comment = reader.GetString(RefSpectraPeakAnnotations.comment);
+                            var mzTheoretical = reader.GetDouble(RefSpectraPeakAnnotations.mzTheoretical);
+                            var mzObserved = reader.GetDouble(RefSpectraPeakAnnotations.mzObserved);
+                            var molecule = SmallMoleculeLibraryAttributes.Create(fragname, formula, inchkey, otherKeys);
+                            var adduct = string.IsNullOrEmpty(adductString)
+                                ? Adduct.FromChargeNoMass(charge)
+                                : Adduct.FromStringAssumeChargeOnly(adductString);
+                            AnnotationsForObservedMz annotations;
+                            if (!resultDict.TryGetValue(peakIndex, out annotations))
+                            {
+                                resultDict.Add(peakIndex, annotations = new AnnotationsForObservedMz(mzObserved, new List<SpectrumPeakAnnotation>()));
+                            }
+                            var annotation = SpectrumPeakAnnotation.Create(molecule, adduct, comment, mzTheoretical);
+                            annotations.Annotations.Add(annotation);
+                        }
+                    }
+                }
+            }
+            // In case there is no RefSpectraPeakAnnotationss table
+            // CONSIDER: Could also be a failure to read the SQLite file
+            catch (SQLiteException)
+            {
+            }
+            return resultDict;
         }
 
         private SpectrumPeaksInfo.MI[] ReadRedundantSpectrum(int spectrumId)
@@ -1032,7 +1131,7 @@ namespace pwiz.Skyline.Model.Lib
                         if (reader.Read())
                         {
                             int numPeaks = reader.GetInt32(RefSpectra.numPeaks);
-                            return ReadPeaks(reader, numPeaks);
+                            return ReadPeaks(reader, numPeaks, spectrumId, _sqliteConnectionRedundant);
                         }
                     }
                 }
@@ -1047,7 +1146,7 @@ namespace pwiz.Skyline.Model.Lib
             return null;
         }
 
-        private static SpectrumPeaksInfo.MI[] ReadPeaks(SQLiteDataReader reader, int numPeaks)
+        private SpectrumPeaksInfo.MI[] ReadPeaks(SQLiteDataReader reader, int numPeaks, int refSpectraId, PooledSqliteConnection connection)
         {
             const int sizeMz = sizeof(double);
             const int sizeInten = sizeof(float);
@@ -1065,6 +1164,17 @@ namespace pwiz.Skyline.Model.Lib
             {
                 arrayMI[i].Intensity = BitConverter.ToSingle(peakIntens, i * sizeInten);
                 arrayMI[i].Mz = BitConverter.ToDouble(peakMz, i * sizeMz);
+            }
+
+            // Add peak annotations, if any
+            var dict = ReadPeakAnnotations(refSpectraId, connection);
+            foreach (var kvp in dict)
+            {
+                var peakIndex = kvp.Key;
+                var annotationWithObservedMz = kvp.Value;
+                Assume.AreEqual(annotationWithObservedMz.ObservedMz, arrayMI[peakIndex].Mz, 0.0000001,
+                    "trouble reading peak annotation: mzObserved disagrees with indexed peak mz"); // Not L10N
+                arrayMI[peakIndex].Annotations = annotationWithObservedMz.Annotations;
             }
 
             return arrayMI;
@@ -1378,14 +1488,18 @@ namespace pwiz.Skyline.Model.Lib
             if (i == -1)
                 return new SpectrumInfo[0];
 
+            var hasRetentionTimesTable = RetentionTimesPsmCount() != 0;
             var info = _libraryEntries[i];
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
-                select.CommandText =
+                select.CommandText = hasRetentionTimesTable
+                    ? "SELECT * " + // Not L10N
+                      "FROM [RetentionTimes] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[SpectrumSourceID] = s.[id] " + // Not L10N
+                      "WHERE t.[RefSpectraID] = ?": // Not L10N
                     "SELECT * " + // Not L10N
-                    "FROM [RetentionTimes] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[SpectrumSourceID] = s.[id] " + // Not L10N
-                    "WHERE t.[RefSpectraID] = ?"; // Not L10N
-                if (redundancy == LibraryRedundancy.best)
+                    "FROM [RefSpectra] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[FileID] = s.[id] " + // Not L10N
+                    "WHERE t.[id] = ?"; // Not L10N
+                if (hasRetentionTimesTable && redundancy == LibraryRedundancy.best)
                     select.CommandText += " AND t.[bestSpectrum] = 1"; // Not L10N
 
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
@@ -1432,9 +1546,9 @@ namespace pwiz.Skyline.Model.Lib
                     while (reader.Read())
                     {
                         string filePath = reader.GetString(iFilePath);
-                        int redundantId = reader.GetInt32(iRedundantId);
+                        int redundantId = iRedundantId < 0 ? -1 : reader.GetInt32(iRedundantId);
                         double retentionTime = reader.GetDouble(iRetentionTime);
-                        bool isBest = reader.GetInt16(iBestSpectrum) != 0;
+                        bool isBest = !hasRetentionTimesTable || reader.GetInt16(iBestSpectrum) != 0;
 
                         IonMobilityAndCCS ionMobilityInfo = IonMobilityAndCCS.EMPTY;
                         if (hasGeneralIonMobility)

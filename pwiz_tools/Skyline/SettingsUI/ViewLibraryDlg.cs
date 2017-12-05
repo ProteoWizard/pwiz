@@ -681,8 +681,7 @@ namespace pwiz.Skyline.SettingsUI
                                                                           charges,
                                                                           types,
                                                                           rankCharges,
-                                                                          rankTypes,
-                                                                          isSmallMoleculeItem); // Limit rank count for small molecules
+                                                                          rankTypes);
                         LibraryChromGroup libraryChromGroup = null;
                         if (_showChromatograms)
                         {
@@ -2120,6 +2119,7 @@ namespace pwiz.Skyline.SettingsUI
             private readonly LibKeyModificationMatcher _matcher;
             private readonly List<TextColor> _seqPartsToDraw;
             private readonly List<TextColor> _mzRangePartsToDraw;
+            private readonly List<KeyValuePair<string, string>> _smallMoleculePartsToDraw;
             private readonly SrmSettings _settings;
             private readonly double _mz;
 
@@ -2132,6 +2132,15 @@ namespace pwiz.Skyline.SettingsUI
                 GetPeptideInfo(_pepInfo, _matcher, out _settings, out transitionGroup, out mods);
                 // build seq parts to draw
                 _seqPartsToDraw = GetSequencePartsToDraw(mods);
+                // Get small molecule info if any
+                _smallMoleculePartsToDraw = null;
+                var smallMolInfo = _pepInfo.GetSmallMoleculeLibraryAttributes();
+                if (smallMolInfo != null && !smallMolInfo.IsEmpty)
+                {
+                    // Get a list of things like Name:caffeine, Formula:C8H10N4O2, InChIKey:RYYVLZVUVIJVGH-UHFFFAOYSA-N MoleculeIds: CAS:58-08-2\tKEGG:D00528
+                    _smallMoleculePartsToDraw = smallMolInfo.LocalizedKeyValuePairs;
+                }
+
                 // build mz range parts to draw
                 var massH = _settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods).GetPrecursorMass(_pepInfo.Target);
                 _mz = SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorCharge));
@@ -2154,6 +2163,16 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // Draw sequence
                     sizeSeq = DrawTextParts(g, 0, 0, _seqPartsToDraw, rt);
+
+                    // Draw small mol info
+                    if (_smallMoleculePartsToDraw != null)
+                    {
+                        foreach (var item in _smallMoleculePartsToDraw)
+                        {
+                            tableMz.AddDetailRow(item.Key, item.Value, rt);
+                        }
+                    }
+                    var heightSmallMol = tableMz.CalcDimensions(g).Height;
                     
                     // Draw mz
                     tableMz.AddDetailRow(Resources.PeptideTipProvider_RenderTip_Precursor_m_z, string.Format("{0:F04}", _mz), rt); // Not L10N
@@ -2162,7 +2181,7 @@ namespace pwiz.Skyline.SettingsUI
 
                     // Draw mz range out of bounds
                     if (_mzRangePartsToDraw.Count > 0)
-                        sizeMz.Width = DrawTextParts(g, sizeMz.Width, sizeSeq.Height, _mzRangePartsToDraw, rt).Width;
+                        sizeMz.Width = DrawTextParts(g, sizeMz.Width, sizeSeq.Height + heightSmallMol, _mzRangePartsToDraw, rt).Width;
 
                     if (draw)
                     {

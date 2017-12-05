@@ -17,10 +17,13 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA
@@ -102,6 +105,25 @@ namespace pwiz.SkylineTestA
                     Assert.AreSame(transitions[i + 3], transitionsNew[i - 9]);
                 }
             }
+            PeakAnnotationsTest();
+        }
+
+        private void PeakAnnotationsTest()
+        {
+            // Verify an operation that could break if SpectrumPeaksInfo.MI changes from struct to class
+            var existingAnnotations = new List<SpectrumPeakAnnotation>
+            {
+                SpectrumPeakAnnotation.Create(new CustomIon(new CustomMolecule("C12H5N6", "foo"), Adduct.M_MINUS), "commentFoo")
+            };
+            var existing = new SpectrumPeaksInfo.MI { Intensity = 111, Mz = 222, Annotations = existingAnnotations};
+            var combined = new List<SpectrumPeakAnnotation>();
+            foreach (var spectrumPeakAnnotation in existing.Annotations)
+            {
+                combined.Add(spectrumPeakAnnotation);
+            }
+            combined.Add(SpectrumPeakAnnotation.Create(new CustomIon(new CustomMolecule("C12H5N7", "bar"), Adduct.M_MINUS), "commentBar"));
+            var updated = existing.ChangeAnnotations(combined);
+            Assume.IsTrue(!Equals(existing, updated)); // This may fail if SpectrumPeaksInfo.MI changes from struct to class
         }
     }
 }

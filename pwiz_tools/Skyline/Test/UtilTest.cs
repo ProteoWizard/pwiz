@@ -47,6 +47,18 @@ namespace pwiz.SkylineTest
             Assert.AreEqual("Internal quotes", "Intern\"al quot\"es,9.7".ParseCsvFields()[0]);
             Assert.AreEqual("Multiple \"quote\" blocks",
                 "\"Mult\"iple \"\"\"quote\"\"\" bl\"ocks\",testing,#N/A".ParseCsvFields()[0]);
+
+            var testStr = "c:\\tmp\\foo\tbar\r\n\\r\\n";
+            var escaped = testStr.EscapeTabAndCrLf();
+            var escapedTwice = escaped.EscapeTabAndCrLf();
+            Assert.AreNotEqual(testStr, escaped);
+            Assert.AreEqual(testStr, escaped.UnescapeTabAndCrLf());
+            Assert.AreEqual(testStr, escapedTwice.UnescapeTabAndCrLf().UnescapeTabAndCrLf());
+            var testStrs = new[] { testStr, "c:\\tmp2\\foo2\tbar2\r\n" };
+            var escaped2 = TextUtil.ToEscapedTSV(testStrs);
+            var unescaped2 = escaped2.FromEscapedTSV();
+            for (int i =0; i < testStrs.Length; i++)
+                Assert.AreEqual(testStrs[i], unescaped2[i]);
         }
 
         private static void TestDsvFields(char punctuation, char separator)

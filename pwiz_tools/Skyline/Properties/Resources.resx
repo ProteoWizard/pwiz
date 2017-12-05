@@ -9990,4 +9990,16 @@ Recognized isotopes include: {2}</value>
   <data name="ImportPeptideSearchManager_LoadBackground_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document_" xml:space="preserve">
     <value>The current peak scoring model is incompatible with one or more peptides in the document.</value>
   </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Formula" xml:space="preserve">
+    <value>Formula</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey" xml:space="preserve">
+    <value>InChIKey</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs" xml:space="preserve">
+    <value>OtherIDs</value>
+  </data>
 </root>

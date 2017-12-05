@@ -46,6 +46,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         public virtual double Score { get; set; }
         public virtual ushort ScoreType { get; set; }
         public virtual DbRefSpectraPeaks Peaks { get; set; }
+        public virtual ICollection<DbRefSpectraPeakAnnotations> PeakAnnotations { get; set; }
         public virtual ICollection<DbModification> Modifications { get; set; }
         public virtual ICollection<DbRetentionTimes> RetentionTimes { get; set; }
 

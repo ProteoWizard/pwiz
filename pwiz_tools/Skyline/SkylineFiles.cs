@@ -1304,7 +1304,17 @@ namespace pwiz.Skyline
                     if (chromFileInfo != null)
                         chromFileName = chromFileInfo.FilePath.GetFileName();
                 }
-                mi.Add(new SpectrumPeaksInfo.MI { Mz = nodeTran.Mz, Intensity = chromInfo.Area, Quantitative = nodeTran.Quantitative});
+                List<SpectrumPeakAnnotation> annotations = null;
+                if (nodeTran.Transition.IsNonReporterCustomIon()) // CONSIDER(bspratt) include annotation for all non-peptide-fragment transitions?
+                {
+                    var smallMoleculeLibraryAttributes = nodeTran.Transition.CustomIon.GetSmallMoleculeLibraryAttributes();
+                    var ion = new CustomIon(smallMoleculeLibraryAttributes, nodeTran.Transition.Adduct, nodeTran.GetMoleculeMass());
+                    if (!string.IsNullOrEmpty(nodeTran.Annotations.Note))
+                    {
+                        annotations = new List<SpectrumPeakAnnotation> { SpectrumPeakAnnotation.Create(ion, nodeTran.Annotations.Note) };
+                    }
+                }
+                mi.Add(new SpectrumPeaksInfo.MI { Mz = nodeTran.Mz, Intensity = chromInfo.Area, Quantitative = nodeTran.Quantitative, Annotations = annotations});
                 if (chromInfo.Height > maxApex)
                 {
                     maxApex = chromInfo.Height;

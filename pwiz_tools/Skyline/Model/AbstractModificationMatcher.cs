@@ -447,7 +447,8 @@ namespace pwiz.Skyline.Model
         {
             if (!key.Target.IsProteomic)
             {
-                // Scan the spectral lib entry for top N ranked (for now, that's just by intensity with high mz as tie breaker) fragments, add those as mass-only fragments.
+                // Scan the spectral lib entry for top N ranked (for now, that's just by intensity with high mz as tie breaker) fragments, 
+                // add those as mass-only fragments, or with more detail if peak annotations are present.
                 foreach (var nodePep in peptide.CreateDocNodes(Settings, new MaxModFilter(0)))
                 {
                     SpectrumHeaderInfo libInfo;
@@ -460,42 +461,16 @@ namespace pwiz.Skyline.Model
                         if (Settings.PeptideSettings.Libraries.TryLoadSpectrum(key, out spectrum))
                         {
                             // Add fragment and precursor transitions as needed
-                            var transitions =
+                            var transitionDocNodes =
                                 Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.precursor)
                                     ? nodeGroupMatched.GetPrecursorChoices(Settings, null, true) // Gives list of precursors
                                     : new List<DocNode>();
 
                             if (Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom))
                             {
-                                // We don't know actual charge of fragments in the library, so just note + or -
-                                var fragmentCharge = key.Adduct.AdductCharge < 0 ? Adduct.M_MINUS : Adduct.M_PLUS;
-                                // Get list of possible transitions based on library spectrum
-                                var transitionsUnranked = new List<DocNode>();
-                                foreach (var peak in spectrum.Peaks)
-                                {
-                                    var monoisotopicMass = new TypedMass(peak.Mz, MassType.Monoisotopic);
-                                    var averageMass = new TypedMass(peak.Mz, MassType.Average);
-                                    var transition = new Transition(nodeGroupMatched.TransitionGroup, fragmentCharge, 0,
-                                        new CustomMolecule(monoisotopicMass, averageMass));
-                                    transitionsUnranked.Add(new TransitionDocNode(transition, Annotations.EMPTY, null, monoisotopicMass, 
-                                        TransitionDocNode.TransitionQuantInfo.DEFAULT, null));
-                                }
-                                var nodeGroupUnranked = (TransitionGroupDocNode)nodeGroupMatched.ChangeChildren(transitionsUnranked);
-                                // Filter again, retain only those with rank info
-                                SpectrumHeaderInfo groupLibInfo = null;
-                                var transitionRanks = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
-                                nodeGroupUnranked.GetLibraryInfo(Settings, null, true, ref groupLibInfo, transitionRanks);
-                                foreach (var ranked in transitionRanks)
-                                {
-                                    var monoisotopicMass = new TypedMass(ranked.Value.ObservedMz, MassType.Monoisotopic);
-                                    var averageMass = new TypedMass(ranked.Value.ObservedMz, MassType.Average);
-                                    var transition = new Transition(nodeGroupMatched.TransitionGroup, fragmentCharge, 0,
-                                        new CustomMolecule(monoisotopicMass, averageMass));
-                                    transitions.Add(new TransitionDocNode(transition, Annotations.EMPTY, null, monoisotopicMass, 
-                                        new TransitionDocNode.TransitionQuantInfo(null, new TransitionLibInfo(ranked.Value.Rank, ranked.Value.Intensity), true), null));
-                                }
+                                GetSmallMoleculeFragments(key, nodeGroupMatched, spectrum, transitionDocNodes);
                             }
-                            nodeGroupMatched = (TransitionGroupDocNode)nodeGroupMatched.ChangeChildren(transitions);
+                            nodeGroupMatched = (TransitionGroupDocNode)nodeGroupMatched.ChangeChildren(transitionDocNodes);
                             return (PeptideDocNode)nodePep.ChangeChildren(new List<DocNode>() { nodeGroupMatched });
                         }
                     }
@@ -504,6 +479,87 @@ namespace pwiz.Skyline.Model
                 return null;
             }
             return CreateDocNodeFromSettings(key.Target, peptide, diff, out nodeGroupMatched);
+        }
+
+        private void GetSmallMoleculeFragments(LibKey key, TransitionGroupDocNode nodeGroupMatched, SpectrumPeaksInfo spectrum,
+            IList<DocNode> transitionDocNodes)
+        {
+            // We usually don't know actual charge of fragments in the library, so just note + or - if
+            // there are no peak annotations containing that info
+            var fragmentCharge = key.Adduct.AdductCharge < 0 ? Adduct.M_MINUS : Adduct.M_PLUS;
+            // Get list of possible transitions based on library spectrum
+            var transitionsUnranked = new List<DocNode>();
+            foreach (var peak in spectrum.Peaks)
+            {
+                transitionsUnranked.Add(TransitionFromPeakAndAnnotations(key, nodeGroupMatched, fragmentCharge, peak, null));
+            }
+            var nodeGroupUnranked = (TransitionGroupDocNode) nodeGroupMatched.ChangeChildren(transitionsUnranked);
+            // Filter again, retain only those with rank info,  or at least an interesting name
+            SpectrumHeaderInfo groupLibInfo = null;
+            var transitionRanks = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
+            nodeGroupUnranked.GetLibraryInfo(Settings, null, true, ref groupLibInfo, transitionRanks);
+            foreach (var ranked in transitionRanks)
+            {
+                transitionDocNodes.Add(TransitionFromPeakAndAnnotations(key, nodeGroupMatched, fragmentCharge, ranked.Value.MI, ranked.Value.Rank));
+            }
+            // And add any unranked that have names to display
+            foreach (var unrankedT in nodeGroupUnranked.Transitions)
+            {
+                var unranked = unrankedT;
+                if (!string.IsNullOrEmpty(unranked.Transition.CustomIon.Name) &&
+                    !transitionDocNodes.Any(t => t is TransitionDocNode && unranked.Transition.Equivalent(((TransitionDocNode) t).Transition)))
+                {
+                    transitionDocNodes.Add(unranked);
+                }
+            }
+        }
+
+        private TransitionDocNode TransitionFromPeakAndAnnotations(LibKey key, TransitionGroupDocNode nodeGroup,
+            Adduct fragmentCharge, SpectrumPeaksInfo.MI peak, int? rank)
+        {
+            var charge = fragmentCharge;
+            var monoisotopicMass = charge.MassFromMz(peak.Mz, MassType.Monoisotopic);
+            var averageMass = charge.MassFromMz(peak.Mz, MassType.Average);
+            // Caution here - library peak (observed) mz may not exactly match (theoretical) mz of the annotation
+            ThrowIfAnnotationMzDisagrees(key, peak);
+
+            // In the case of multiple annotations, produce single transition for display in library explorer
+            var annotations = peak.GetAnnotationsEnumerator().ToArray();
+            var spectrumPeakAnnotationIon = peak.AnnotationsAggregateDescriptionIon;
+            var molecule = spectrumPeakAnnotationIon.Adduct.IsEmpty
+                ? new CustomMolecule(monoisotopicMass, averageMass)
+                : spectrumPeakAnnotationIon;
+            var note = (annotations.Length > 1) ? TextUtil.LineSeparate(annotations.Select(a => a.ToString())) : null;
+            var transition = new Transition(nodeGroup.TransitionGroup,
+                spectrumPeakAnnotationIon.Adduct.IsEmpty ? charge : spectrumPeakAnnotationIon.Adduct, 0, molecule);
+            return new TransitionDocNode(transition, Annotations.EMPTY.ChangeNote(note), null, monoisotopicMass,
+                rank.HasValue ?
+                    new TransitionDocNode.TransitionQuantInfo(null,
+                        new TransitionLibInfo(rank.Value, peak.Intensity), true) :
+                    TransitionDocNode.TransitionQuantInfo.DEFAULT, null);
+        }
+
+        private void ThrowIfAnnotationMzDisagrees(LibKey key, SpectrumPeaksInfo.MI peak)
+        {
+            foreach (var peakAnnotation in peak.GetAnnotationsEnumerator())
+            {
+                var charge = peakAnnotation.Ion.Adduct;
+                var monoisotopicMass = charge.MassFromMz(peak.Mz, MassType.Monoisotopic);
+                var averageMass = charge.MassFromMz(peak.Mz, MassType.Average);
+
+                if (!(peakAnnotation.Ion.MonoisotopicMass.Equals(monoisotopicMass,
+                          Settings.TransitionSettings.Instrument.MzMatchTolerance) ||
+                      peakAnnotation.Ion.AverageMass.Equals(averageMass,
+                          Settings.TransitionSettings.Instrument.MzMatchTolerance)))
+                {
+
+                    throw new InvalidDataException(string.Format(
+                        "annotated observed ({0}) and theoretical ({1}) masses differ for peak {2} of library entry {3} by more than the current instrument mz match tolerance of {4}", // Not L10N
+                        peak.Mz, peakAnnotation.Ion.MonoisotopicMassMz, peakAnnotation,
+                        key,
+                        Settings.TransitionSettings.Instrument.MzMatchTolerance));
+                }
+            }
         }
 
         public PeptideDocNode CreateDocNodeFromSettings(Target target, Peptide peptide, SrmSettingsDiff diff,

@@ -39,17 +39,6 @@ namespace BiblioSpec {
 
 static const char ERROR_GENERIC[] = "Unexpected failure.";
 
-// Due to original omission of a schema version number, and the unused
-// integer values minorVersion, the minorVersion field has been taken
-// for use as a schemaVersion
-#define MAJOR_VERSION_CURRENT 0
-#define MINOR_VERSION_CURRENT 6 // Version 6 generalizes ion mobility to value, high energy offset, and type (currently drift time msec, and inverse reduced ion mobility Vsec/cm2)
-                                // Version 5 adds small molecule columns
-                                // Version 4 adds collisional cross section, removes ion mobility type (which distinguished CCS vs DT as value type), supports drift time only
-                                // Version 3 adds product ion mobility offset information for Waters Mse IMS
-                                // Version 2 adds ion mobility information
-
-
 // SQLite uses 1.5K pages, and PRAGMA cache_size is specified in these pages
 //     see http://www.sqlite.org/pragma.html
 const int BlibMaker::pages_per_meg = (int) (1024.0 / 1.5);
@@ -177,6 +166,7 @@ void BlibMaker::init()
         sql_stmt("DROP INDEX idxPeptide", true);
         sql_stmt("DROP INDEX idxPeptideMod", true);
         sql_stmt("DROP INDEX idxRefIdPeaks", true);
+        sql_stmt("DROP INDEX idxRefIdPeakAnnotations", true);
         sql_stmt("DROP INDEX idxMoleculeName", true);
         sql_stmt("DROP INDEX idxInChiKey", true);
 
@@ -269,6 +259,7 @@ void BlibMaker::commit()
     sql_stmt("CREATE INDEX idxPeptide ON RefSpectra (peptideSeq, precursorCharge)");
     sql_stmt("CREATE INDEX idxPeptideMod ON RefSpectra (peptideModSeq, precursorCharge)");
     sql_stmt("CREATE INDEX idxRefIdPeaks ON RefSpectraPeaks (RefSpectraID)");
+    sql_stmt("CREATE INDEX idxRefIdPeakAnnotations ON RefSpectraPeakAnnotations (RefSpectraID)");
     sql_stmt("CREATE INDEX idxMoleculeName ON RefSpectra (moleculeName, precursorAdduct)");
     sql_stmt("CREATE INDEX idxInChiKey ON RefSpectra (inchiKey, precursorAdduct)");
 
@@ -346,12 +337,13 @@ void BlibMaker::createTables()
     sql_stmt(zSql);
 
     strncpy(zSql,
-           "CREATE TABLE RefSpectraPeaks(RefSpectraID INTEGER, "
-           "peakMZ BLOB, "
-           "peakIntensity BLOB)",
-           ZSQLBUFLEN);
+        "CREATE TABLE RefSpectraPeaks(RefSpectraID INTEGER, "
+        "peakMZ BLOB, "
+        "peakIntensity BLOB)",
+        ZSQLBUFLEN);
     sql_stmt(zSql);
 
+    createTable("RefSpectraPeakAnnotations");
     createTable("SpectrumSourceFiles");
     createTable("ScoreTypes");
     createTable("IonMobilityTypes");
@@ -386,7 +378,8 @@ void BlibMaker::createTable(const char* tableName){
                     i, scoreTypeToString((PSM_SCORE_TYPE)i), scoreTypeToProbabilityTypeString((PSM_SCORE_TYPE)i));
             sql_stmt(zSql);
         }
-    }     else if (strcmp(tableName, "IonMobilityTypes") == 0){
+    }
+    else if (strcmp(tableName, "IonMobilityTypes") == 0){
         // set key = enum value of score type; don't autoincrement
         strncpy(zSql,
             "CREATE TABLE IonMobilityTypes (id INTEGER PRIMARY KEY, "
@@ -400,6 +393,24 @@ void BlibMaker::createTable(const char* tableName){
                 i, ionMobilityTypeToString((IONMOBILITY_TYPE)i));
             sql_stmt(zSql);
         }
+    }
+    else if (strcmp(tableName, "RefSpectraPeakAnnotations") == 0){
+        strncpy(zSql,
+            "CREATE TABLE RefSpectraPeakAnnotations -- optional annotations for peaks in RefSpectra. There may be more than one annotation per peak, and not every peak in a RefSpectra has to be annotated.\n"
+            "(id INTEGER primary key autoincrement not null,\n"
+            "RefSpectraID INTEGER not null, -- the RefSpectra containing the peak being annotated\n"
+            "peakIndex INTEGER not null, -- index into the mz/intensity list for the RefSpectra\n"
+            "name VARCHAR(256), -- fragment molecule name\n"
+            "formula VARCHAR(256), -- fragment neutral chemical formula\n"
+            "inchiKey VARCHAR(256), -- fragment molecular identifier for structure retrieval\n"
+            "otherKeys VARCHAR(256), -- alternative molecular identifiers for fragment structure retrieval, tab separated e.g. cas:58-08-2\\thmdb:01847 \n"
+            "charge INTEGER, -- integer charge value, must agree with fragment adduct\n"
+            "adduct VARCHAR(256), -- fargment adduct description, can include neutral loss e.g. [M+H] or [M-H2O+] \n"
+            "comment VARCHAR(256), -- freetext comment\n"
+            "mzTheoretical REAL not null, -- calculated mz, should agree with formula and adduct if any\n"
+            "mzObserved REAL not null -- actual measured mz, should agree with the indexed mz found in the RefSpectra\n)",
+            ZSQLBUFLEN);
+        sql_stmt(zSql);
     } else {
         Verbosity::error("Cannot create '%s' table. Unknown name.",
                          tableName);
@@ -428,8 +439,12 @@ void BlibMaker::updateTables(){
     }
     
     // ScoreTypes table
-    if( !tableExists("main", "ScoreTypes") ){
+    if (!tableExists("main", "ScoreTypes")){
         createTable("ScoreTypes");
+    }
+
+    if (!tableExists("main", "RefSpectraPeakAnnotations")){
+        createTable("RefSpectraPeakAnnotations");
     }
 
     vector< pair<string, string> > newColumns;
@@ -747,6 +762,10 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
 
     transferPeaks(schemaTmp, spectraID, spectraTmpID);
     transferModifications(schemaTmp, spectraID, spectraTmpID);
+    if (tableVersion >= MIN_VERSION_PEAK_ANNOT)
+    {
+        transferPeakAnnotations(schemaTmp, spectraID, spectraTmpID);
+    }
     return spectraID;
 }
 
@@ -813,6 +832,44 @@ void BlibMaker::transferPeaks(const char* schemaTmp,
 
     if (rc != SQLITE_DONE)
         fail_sql(rc, zSql, NULL, "Failed importing peaks.");
+}
+
+void BlibMaker::transferPeakAnnotations(const char* schemaTmp,
+    int spectraID,
+    int spectraTmpID)
+{
+    const char *cols = "RefSpectraID, peakIndex, name, formula, inchiKey, otherKeys, charge, adduct, comment, mzTheoretical, mzObserved";
+    snprintf(zSql, ZSQLBUFLEN,
+        "SELECT %s "
+        "FROM %s.RefSpectraPeakAnnotations "
+        "WHERE RefSpectraID=%d "
+        "ORDER BY id", cols, schemaTmp, spectraTmpID);
+    smart_stmt pStmt;
+    int rc = sqlite3_prepare(db, zSql, -1, &pStmt, 0);
+
+    check_rc(rc, zSql, "Failed getting peak annotations.");
+
+    rc = sqlite3_step(pStmt);
+    while (rc == SQLITE_ROW) {
+        snprintf(zSql, ZSQLBUFLEN,
+            "INSERT INTO RefSpectraPeakAnnotations(%s) "
+            "VALUES(%d, %s,  %s,  %s, %s, %s, %d, %s,  %s,  %f,  %f)",
+            cols,
+            spectraID,
+            sqlite3_column_int(pStmt, 1),
+            sqlite3_column_text(pStmt, 2),
+            sqlite3_column_text(pStmt, 3),
+            sqlite3_column_text(pStmt, 4),
+            sqlite3_column_text(pStmt, 5),
+            sqlite3_column_int(pStmt, 6),
+            sqlite3_column_text(pStmt, 7),
+            sqlite3_column_text(pStmt, 8),
+            sqlite3_column_double(pStmt, 9),
+            sqlite3_column_double(pStmt, 10));
+        sql_stmt(zSql);
+
+        rc = sqlite3_step(pStmt);
+    }
 }
 
 int BlibMaker::getFileId(const string& file, double cutoffScore) {

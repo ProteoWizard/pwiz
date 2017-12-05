@@ -176,6 +176,11 @@ namespace pwiz.Skyline.Util
             return CompareTo(other) == 0;
         }
 
+        public bool Equals(TypedMass other, double tolerance)
+        {
+            return CompareTo(other) == 0 || Math.Abs(Value - other.Value) <= tolerance;
+        }
+
         public override int GetHashCode()
         {
             var result = Value.GetHashCode();

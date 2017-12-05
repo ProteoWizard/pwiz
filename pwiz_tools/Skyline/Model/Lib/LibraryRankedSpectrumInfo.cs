@@ -36,23 +36,22 @@ namespace pwiz.Skyline.Model.Lib
                                          IsotopeLabelType labelType, TransitionGroupDocNode group,
                                          SrmSettings settings, Target lookupSequence, ExplicitMods lookupMods,
                                          IEnumerable<Adduct> charges, IEnumerable<IonType> types,
-                                         IEnumerable<Adduct> rankCharges, IEnumerable<IonType> rankTypes,
-                                         bool limitRanks)
+                                         IEnumerable<Adduct> rankCharges, IEnumerable<IonType> rankTypes)
             : this(info, labelType, group, settings, lookupSequence, lookupMods,
-                   charges, types, rankCharges, rankTypes, limitRanks, false, true, -1)
+                   charges, types, rankCharges, rankTypes, false, true, -1)
         {
         }
 
         public LibraryRankedSpectrumInfo(SpectrumPeaksInfo info, IsotopeLabelType labelType,
                                          TransitionGroupDocNode group, SrmSettings settings, ExplicitMods lookupMods,
-                                         bool limitRanks, bool useFilter, int minPeaks)
+                                         bool useFilter, int minPeaks)
             : this(info, labelType, group, settings, group.Peptide.Target, lookupMods,
                    null, // charges
                    null, // types
                    // ReadOnlyCollection enumerators are too slow, and show under a profiler
                    group.IsCustomIon ? settings.TransitionSettings.Filter.SmallMoleculeFragmentAdducts.ToArray() : settings.TransitionSettings.Filter.PeptideProductCharges.ToArray(),
                    group.IsCustomIon ? settings.TransitionSettings.Filter.SmallMoleculeIonTypes.ToArray() : settings.TransitionSettings.Filter.PeptideIonTypes.ToArray(),
-                   limitRanks, useFilter, false, minPeaks)
+                   useFilter, false, minPeaks)
         {
         }
 
@@ -61,7 +60,6 @@ namespace pwiz.Skyline.Model.Lib
                                           Target lookupSequence, ExplicitMods lookupMods,
                                           IEnumerable<Adduct> charges, IEnumerable<IonType> types,
                                           IEnumerable<Adduct> rankCharges, IEnumerable<IonType> rankTypes,
-                                          bool limitRanks, // For small molecules - if true, cap the number of ranked ions
                                           bool useFilter, bool matchAll, int minPeaks)
         {
             LabelType = labelType;
@@ -81,6 +79,10 @@ namespace pwiz.Skyline.Model.Lib
                     types = GetRanked(rankTypesArray, isProteomic ? Transition.PEPTIDE_ION_TYPES : Transition.MOLECULE_ION_TYPES);
                 matchAll = true;
             }
+
+            bool limitRanks =
+                groupDocNode.IsCustomIon && // For small molecules, cap the number of ranked ions displayed if we don't have any peak metadata
+                groupDocNode.Transitions.Any(t => string.IsNullOrEmpty(t.FragmentIonName));
 
             RankParams rp = new RankParams
                                 {
@@ -253,6 +255,15 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
+            // Is this a theoretical library with no intensity variation? If so it can't be ranked.
+            // If it has any interesting peak annotations, pass those through
+            if (rp.Ranked == 0 && arrayRMI.All(rmi => rmi.Intensity == arrayRMI[0].Intensity))
+            {
+                // Pass through anything with an annotation as being of probable interest
+                arrayResult = arrayRMI.Where(rmi => rmi.HasAnnotations).ToArray();
+                ionMatchCount = -1;
+            }
+
             // If not enough ranked ions were found, fill the rest of the results array
             if (ionMatchCount != -1)
             {
@@ -371,6 +382,11 @@ namespace pwiz.Skyline.Model.Lib
             public string Name { get; set; }
             public Adduct Adduct { get; set; }
             public SignedMz Mz { get; set; }
+
+            public override string ToString()
+            {
+                return Mz + " " + (Name ?? string.Empty) + " " + Adduct; // Not L10N
+            }
         }
 
         public class RankParams
@@ -436,7 +452,10 @@ namespace pwiz.Skyline.Model.Lib
         {
             public override string ToString()
             {
-                return string.Format("i={0}, mz={1}", _mi.Intensity, _mi.Mz); // Not L10N
+                var annotation = !HasAnnotations ?
+                    string.Empty:
+                    string.Format(" ({0})", string.Join("/", _mi.Annotations.Where(a => !SpectrumPeakAnnotation.IsNullOrEmpty(a))).Select(a => a.ToString())); // Not L10N
+                return string.Format("i={0}, mz={1}{2}", _mi.Intensity, _mi.Mz, annotation); // Not L10N
             }
 
             private SpectrumPeaksInfo.MI _mi;
@@ -450,13 +469,29 @@ namespace pwiz.Skyline.Model.Lib
                 IndexMz = indexMz;
             }
 
+            public RankedMI ChangeAnnotations(List<SpectrumPeakAnnotation> newAnnotations)
+            {
+                var newMI = _mi.ChangeAnnotations(newAnnotations);
+                if (!Equals(_mi, newMI))
+                {
+                    return new RankedMI(newMI, IndexMz);
+                }
+                return this;
+            }
+
+
             public int Rank { get; private set; }
 
             public int IndexMz { get; private set; }
 
+            public SpectrumPeaksInfo.MI MI { get { return _mi; } }
             public float Intensity { get { return _mi.Intensity; } }
 
             public bool Quantitative { get { return _mi.Quantitative; } }
+
+            public bool HasAnnotations { get { return !(_mi.Annotations == null || _mi.Annotations.All(SpectrumPeakAnnotation.IsNullOrEmpty)); } }
+            public IList<SpectrumPeakAnnotation> Annotations { get { return _mi.Annotations; } }
+            public CustomIon AnnotationsAggregateDescriptionIon { get { return _mi.AnnotationsAggregateDescriptionIon; } } 
 
             public double ObservedMz { get { return _mi.Mz; } }
 

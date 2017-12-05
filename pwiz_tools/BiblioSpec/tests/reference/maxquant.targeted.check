@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:maxquant.targeted.blib	17	1	6
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:maxquant.targeted.blib	17	1	7
 id	RefSpectraID	position	mass
 1	1	1	42.010565
 2	1	2	57.021464

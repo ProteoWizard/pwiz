@@ -373,6 +373,7 @@
     <None Include="LibraryExplorerSpeedTest.zip" />
     <None Include="LibraryExplorerTest.zip" />
     <None Include="LibraryShareTest.zip" />
+    <None Include="LibraryShareTestPeakAnnotations.zip" />
     <None Include="LiveReportsErrorTest.sky.zip" />
     <None Include="LiveReportsFilterTest.zip" />
     <None Include="ManageLibraryRunsTest.zip" />

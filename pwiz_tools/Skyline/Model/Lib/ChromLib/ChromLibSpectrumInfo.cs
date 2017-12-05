@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             var mzs = PrimitiveArrays.Read<double>(stream, mzCount);
             var areas = PrimitiveArrays.Read<float>(stream, mzCount);
             var mzAreas = ImmutableList.ValueOf(Enumerable.Range(0, mzCount)
-                .Select(index => new SpectrumPeaksInfo.MI
+                .Select(index => new SpectrumPeaksInfo.MI // TODO (bspratt) annotation?
                     {
                         Mz = mzs[index],
                         Intensity = areas[index]

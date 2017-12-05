@@ -496,6 +496,10 @@ namespace pwiz.Skyline.Util
 
         public bool IsEmpty { get { return ReferenceEquals(this, EMPTY); } }
 
+        public static bool IsNullOrEmpty(Adduct adduct)
+        {
+            return adduct == null || adduct.IsEmpty;
+        }
         public bool HasIsotopeLabels { get { return (IsotopeLabelMass ?? 0) != 0 || (IsotopeLabels != null && IsotopeLabels.Count > 0); } } // Does the adduct description include isotopes, like "6Cl37" in "M6Cl37+2H"
 
 

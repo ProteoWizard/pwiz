@@ -2826,20 +2826,16 @@ namespace pwiz.Skyline.Model
                     if (libraries.TryLoadSpectrum(key, out spectrumInfo))
                     {
                         var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrumInfo, labelType,
-                            this, settings, mods, key.IsSmallMoleculeKey, useFilter, TransitionGroup.MAX_MATCHED_MSMS_PEAKS);
+                            this, settings, mods, useFilter, TransitionGroup.MAX_MATCHED_MSMS_PEAKS);
                         foreach (var rmi in spectrumInfoR.PeaksRanked)
                         {
                             var firstIon = rmi.MatchedIons.First();
-                            if (!transitionRanks.ContainsKey(firstIon.PredictedMz))
-                            {
-                                transitionRanks.Add(firstIon.PredictedMz, rmi);
-                            }
+                            AddRmiToTransitionRanks(transitionRanks, firstIon, rmi);
                             if (!useFilter)
                             {
                                 foreach (var otherIon in rmi.MatchedIons.Skip(1))
                                 {
-                                    if (!transitionRanks.ContainsKey(otherIon.PredictedMz))
-                                        transitionRanks.Add(otherIon.PredictedMz, rmi);
+                                    AddRmiToTransitionRanks(transitionRanks, otherIon, rmi);
                                 }
                             }
                         }
@@ -2849,6 +2845,23 @@ namespace pwiz.Skyline.Model
                 catch (IOException) {}
                 catch (UnauthorizedAccessException) {}
                 catch (ObjectDisposedException) {}
+            }
+        }
+
+        private static void AddRmiToTransitionRanks(Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, MatchedFragmentIon firstIon, LibraryRankedSpectrumInfo.RankedMI rmi)
+        {
+            LibraryRankedSpectrumInfo.RankedMI existing;
+            if (!transitionRanks.TryGetValue(firstIon.PredictedMz, out existing))
+            {
+                transitionRanks.Add(firstIon.PredictedMz, rmi);
+            }
+            else if (rmi.HasAnnotations)
+            {
+                // Combine annotations
+                var combined = new List<SpectrumPeakAnnotation>(existing.Annotations);
+                combined.AddRange(rmi.Annotations);
+                transitionRanks[firstIon.PredictedMz] = existing.ChangeAnnotations(combined);
+                Assume.AreNotEqual(existing, transitionRanks[firstIon.PredictedMz]); 
             }
         }
     }

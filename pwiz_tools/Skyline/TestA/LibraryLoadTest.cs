@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
@@ -39,12 +41,28 @@ namespace pwiz.SkylineTestA
         // Cannot find a way to use anything but a file with SQLite
         // public const string _bibliospecLiteLibPath = @"C:\Libraries\yeast.blib";
 
+        private List<SpectrumPeakAnnotation> MakeTestPeakAnnotation(Adduct adduct, float mz, string name, string note)
+        {
+            var ion = new CustomIon(null, adduct,
+                adduct.MassFromMz(mz, MassType.Monoisotopic),
+                adduct.MassFromMz(mz, MassType.Average),
+                name);
+            var annot = SpectrumPeakAnnotation.Create(ion, note);
+            return new List<SpectrumPeakAnnotation> {annot};
+        }
+
         [TestMethod]
         public void NistLoadLibrary()
         {
             var streamManager = new MemoryStreamManager();
             streamManager.TextFiles.Add(PATH_NIST_LIB, TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST);
             var loader = new TestLibraryLoader {StreamManager = streamManager};
+            var expectedFragmentAnnotations = new Dictionary<int, List<SpectrumPeakAnnotation>>
+            {
+                {3, MakeTestPeakAnnotation(Adduct.M_PLUS, 41.027f,"testfrag3", "85/86")},
+                {44, MakeTestPeakAnnotation(Adduct.M_PLUS, 128.070f, "testfrag_next_to_last", "83/86")},
+                {45, MakeTestPeakAnnotation(Adduct.M_PLUS, 146.081f, "testfrag_last", "85/86 note")},
+            };
 
             var librarySpec = new NistLibSpec("Yeast (NIST)", PATH_NIST_LIB);
 
@@ -63,9 +81,12 @@ namespace pwiz.SkylineTestA
             Array.Copy(cacheBytes, corruptedBytes, corruptedBytes.Length);
             streamManager.BinaryFiles[PATH_NIST_LIB_CACHE] = corruptedBytes;
 
+            // Check small molecule library with spectrum attributes
+            TestSpectrumPeakAnnotations(); // First, a quick low-level unit test of annotations handler class
             Library lib2 = librarySpec.LoadLibrary(loader);
             CheckLibrary(lib2, 100);
-            CheckLibrary(lib2, 46, KEYS_LIB_BICENE_NIST);
+            CheckLibrary(lib2, 46, KEYS_LIB_BICENE_NIST, expectedFragmentAnnotations);
+
 
             Assert.AreEqual(len, streamManager.BinaryFiles[PATH_NIST_LIB_CACHE].Length);
             Assert.IsTrue(lib1.IsSameLibrary(lib2));
@@ -120,6 +141,33 @@ namespace pwiz.SkylineTestA
             Assert.IsFalse(libNist.IsSameLibrary(libBiblioSpec));
         }
 
+        // Unit test of annotations handler class
+        private static void TestSpectrumPeakAnnotations()
+        {
+            var noNote = SpectrumPeakAnnotation.Create(new CustomIon(null, Adduct.FromChargeNoMass(-2), 100, 101, "noNote"), null);
+            var noName = SpectrumPeakAnnotation.Create(new CustomIon(null, Adduct.FromChargeNoMass(-2), 100, 101, null), "noted");
+            var fullIon = new CustomIon("C12H5O3", Adduct.FromStringAssumeChargeOnly("M-H2O+"), null, null, "full");
+            var full = SpectrumPeakAnnotation.Create(fullIon, "noted");
+            var fullToo = SpectrumPeakAnnotation.Create(fullIon, "noted");
+            var nameOnlyTab = SpectrumPeakAnnotation.Create(new CustomIon(null, Adduct.FromChargeNoMass(-2), 100, 101,"test\ttabs"), "noted"); // Check tab escape
+            var fullIonTabs = new CustomIon("C12H5", Adduct.FromChargeNoMass(-2), null, null, "full\ttabs");
+            var tabbedFull = SpectrumPeakAnnotation.Create(fullIonTabs, "noted\ttabs"); // Check tab escape
+            Assume.AreEqual(full, fullToo);
+            Assume.AreNotEqual(full, tabbedFull);
+            var tests = new List<List<SpectrumPeakAnnotation>>
+            {
+                new List<SpectrumPeakAnnotation> { noNote, noName, full},
+                new List<SpectrumPeakAnnotation> { fullToo, nameOnlyTab, tabbedFull}
+            };
+            var cached = SpectrumPeakAnnotation.ToCacheFormat(tests);
+            var roundtrip = SpectrumPeakAnnotation.FromCacheFormat(cached);
+            int i = 0;
+            foreach (var annotsPerPeak in tests)
+            {
+                Assume.IsTrue(CollectionUtil.EqualsDeep(annotsPerPeak, roundtrip[i++]));
+            }
+        }
+
         public static Library CreateBiblioFile(MemoryStreamManager streamManager, ILoadMonitor loader, string nistText)
         {
             return CreateLibraryFile(streamManager, loader, nistText,
@@ -143,7 +191,7 @@ namespace pwiz.SkylineTestA
             return libNist;
         }
 
-        private static void CheckLibrary(Library lib, int minPeaks, LibKey[] keys = null)
+        private static void CheckLibrary(Library lib, int minPeaks, LibKey[] keys = null, Dictionary<int, List<SpectrumPeakAnnotation>> fragmentAnnotations = null)
         {
             Assert.IsNotNull(lib);
             Assert.IsTrue(lib.IsLoaded);
@@ -154,6 +202,18 @@ namespace pwiz.SkylineTestA
                 SpectrumPeaksInfo peaksInfo;
                 Assert.IsTrue(lib.TryLoadSpectrum(key, out peaksInfo));
                 Assert.IsTrue(peaksInfo.Peaks.Length >= minPeaks);
+                if (fragmentAnnotations != null)
+                {
+                    for (var p = 0; p < peaksInfo.Peaks.Length; p++)
+                    {
+                        List<SpectrumPeakAnnotation> annotations;
+                        if (!fragmentAnnotations.TryGetValue(p, out annotations))
+                        {
+                            annotations = null;
+                        }
+                        Assume.IsTrue(CollectionUtil.EqualsDeep(annotations, peaksInfo.Peaks[p].Annotations), "did not find expected annotation in converted library");
+                    }
+                }
             }            
         }
 
@@ -808,10 +868,10 @@ namespace pwiz.SkylineTestA
             "CAS#: 150-25-4;  NIST#: 1108883\n" +
             "Comments: NIST Mass Spectrometry Data Center\n" +
             "Num Peaks: 46\n" +
-            "28.018 7.79 \"84/86\"\n" +
-            "29.039 5.19 \"85/86\"\n" +
-            "30.034 13.19 \"86/86\"\n" +
-            "41.027 5.00 \"85/86\"\n" +
+            "28.018 7.79 \"84/86\"\n" + // Annotation should be ignored - not multipart
+            "29.039 5.19 \"? 85/86\"\n" + // Annotation should be ignored - fragment unknown
+            "30.034 13.19 \"?i 86/86\"\n" + // Annotation should be ignored- fragment unknown
+            "41.027 5.00 \"testfrag3 85/86\"\n" + // Annotation should come back as name "testfrag3" and note "85/86"
             "42.035 9.39 \"86/86\"\n" +
             "44.050 23.48 \"86/86\"\n" +
             "45.034 430.17 \"86/86\"\n" +
@@ -852,7 +912,7 @@ namespace pwiz.SkylineTestA
             "118.159 9.39 \"53/86\"\n" +
             "118.184 18.88 \"86/86\"\n" +
             "118.217 6.09 \"86/86\"\n" +
-            "128.070 4.10 \"83/86\"\n" +
-            "146.081 4.90 \"85/86\"\n";
+            "128.070 4.10 \"testfrag_next_to_last 83/86 \"\n" +
+            "146.081 4.90 \"testfrag_last 85/86 note \"\n";
     }
 }

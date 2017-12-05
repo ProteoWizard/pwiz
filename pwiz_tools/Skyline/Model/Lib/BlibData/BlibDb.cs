@@ -243,10 +243,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 PeakMZ = MZsToBytes(peaksInfo.Peaks)
             };
 
+            refSpectra.PeakAnnotations = DbRefSpectraPeakAnnotations.Create(refSpectra, peaksInfo);
+
             refSpectra.RetentionTimes = new List<DbRetentionTimes>();
             if (spectrum.RetentionTimes != null && spectrum.RetentionTimes.Any())
             {
-                foreach (var rt in spectrum.RetentionTimes) // CONSIDER(bspratt) not ion mobility info here?
+                foreach (var rt in spectrum.RetentionTimes) 
                 {
                     if (string.IsNullOrEmpty(rt.SourceFile))
                         throw new InvalidDataException("Spectrum must have a source file"); // Not L10N
@@ -323,7 +325,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     libAuthority = BiblioSpecLiteLibrary.DEFAULT_AUTHORITY;
                 }
 
-                // We will have a RetentionTimes table if schemaVersion if 1 or greater.
+                // We may have a RetentionTimes table if schemaVersion if 1 or greater.
                 saveRetentionTimes = blibLib.SchemaVersion >= 1;
                 libraryRevision = blibLib.Revision;
                 schemaVersion = saveRetentionTimes ? DbLibInfo.SCHEMA_VERSION_CURRENT : blibLib.SchemaVersion;
@@ -639,7 +641,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                     PeakMZ = MZsToBytes(peaksInfo.Peaks)
                                 };
                 redundantSpectra.Peaks = peaks;
-
+                redundantSpectra.PeakAnnotations = DbRefSpectraPeakAnnotations.Create(refSpectra, peaksInfo);
                 sessionRedundant.Save(redundantSpectra);
             }
 
@@ -773,6 +775,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                        PeakIntensity = IntensitiesToBytes(peaksInfo.Peaks),
                                        PeakMZ = MZsToBytes(peaksInfo.Peaks)
                                    };
+
+            refSpectra.PeakAnnotations = DbRefSpectraPeakAnnotations.Create(refSpectra, peaksInfo);
 
             if (null != spectrum.IonMobilityInfo)
             {

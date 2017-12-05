@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -78,7 +79,7 @@ namespace pwiz.Skyline.Model
                 if (!string.IsNullOrEmpty(keysTSV))
                 {
                     // Pick apart a string like "CAS:58-08-2\tinchi:1S/C8H10N4O2/c1-10-4-9-6-5(10)7(13)12(3)8(14)11(6)2/h4H,1-3H3\tmykey:a:b:c:d"
-                    foreach (var kvp in keysTSV.Split('\t'))
+                    foreach (var kvp in keysTSV.Split(TextUtil.SEPARATOR_TSV))
                     {
                         var pair = kvp.Split(':');
                         if (pair.Length > 1)
@@ -158,13 +159,13 @@ namespace pwiz.Skyline.Model
         public string GetNonInChiKeys()
         {
             return AccessionNumbers != null && AccessionNumbers.Any() ?
-                string.Join("\t", AccessionNumbers.Where(k => k.Key != TagInChiKey).Select(kvp => string.Format("{0}:{1}", kvp.Key, kvp.Value))) : // Not L10N
+                AccessionNumbers.Where(k => k.Key != TagInChiKey).Select(kvp => string.Format("{0}:{1}", kvp.Key, kvp.Value)).ToDsvLine(TextUtil.SEPARATOR_TSV) : // Not L10N
                 null;
         }
 
         public string[] GetAllKeys()
         {
-            return ToString().Split('\t');
+            return ToString().Split(TextUtil.SEPARATOR_TSV);
         }
 
         public int CompareTo(MoleculeAccessionNumbers other)
@@ -205,7 +206,7 @@ namespace pwiz.Skyline.Model
                     if (AccessionNumbers.TryGetValue(key, out value) && !string.IsNullOrEmpty(value))
                     {
                         result += string.Format("{0}{1}:{2}", // Not L10N
-                            string.IsNullOrEmpty(result) ? string.Empty : "\t", key, value); // Not L10N
+                            string.IsNullOrEmpty(result) ? string.Empty : TextUtil.SEPARATOR_TSV_STR, key, value);
                     }
                 }
             }
@@ -224,15 +225,16 @@ namespace pwiz.Skyline.Model
                 newsep += "_"; // Not L10N Grow it until it's unique
             }
             // Encode the TSV, declaring the separator 
-            return string.Format("#{0}#{1}", newsep, tsv.Replace("\t", newsep)); // Not L10N
+            return string.Format("#{0}#{1}", newsep, tsv.Replace(TextUtil.SEPARATOR_TSV_STR, newsep)); // Not L10N
         }
 
         public static string UnescapeTabsForXML(string val)
         {
             if (string.IsNullOrEmpty(val))
                 return val;
+            // First thing in string will be the seperator, bounded by # on either end
             var sep = val.Split('#')[1];  // Not L10N
-            return val.Substring(sep.Length + 2).Replace(sep, "\t"); // Not L10N
+            return val.Substring(sep.Length + 2).Replace(sep, TextUtil.SEPARATOR_TSV_STR);
         }
 
         public string ToSerializableString()
@@ -259,7 +261,7 @@ namespace pwiz.Skyline.Model
         public const double MIN_MASS = MeasuredIon.MIN_REPORTER_MASS;
 
         /// <summary>
-        /// A simple object used to represent any molecule, possibly an ion
+        /// A simple object used to represent any molecule
         /// </summary>
         /// <param name="formula">The molecular formula of the molecule, possibly including an adduct description if subclassed as a CustomIon</param>
         /// <param name="monoisotopicMass">The monoisotopic mass of the molecule(can be calculated from formula)</param>
@@ -303,6 +305,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         protected CustomMolecule()
         {
+            AccessionNumbers = MoleculeAccessionNumbers.EMPTY;
         }
 
         /// <summary>
@@ -313,7 +316,7 @@ namespace pwiz.Skyline.Model
             get
             {
                 return AccessionNumbers.PrimaryAccessionValue ?? // InChiKey, or CAS, etc
-                       Name.Replace("\t", " "); // Tab is a reserved char in our lib cache scheme // Not L10N
+                       Name.Replace(TextUtil.SEPARATOR_TSV_STR, " "); // Tab is a reserved char in our lib cache scheme // Not L10N
             }
         }
         public string SecondaryEquivalenceKey { get { return UnlabeledFormula; } }
@@ -360,20 +363,24 @@ namespace pwiz.Skyline.Model
             var tsv = MoleculeAccessionNumbers.UnescapeTabsForXML(val);
             return FromTSV(tsv);
         }
+
+        public List<string> AsFields()
+        {
+            var massOrFormula = !string.IsNullOrEmpty(Formula) ?
+                Formula :
+                string.Format(CultureInfo.InvariantCulture, "{0:F09}/{1:F09}", MonoisotopicMass, AverageMass); // Not L10N
+            var parts = new[] { Name, massOrFormula, AccessionNumbers.ToString() };
+            return (parts.All(string.IsNullOrEmpty) ? new[] { InvariantName } : parts).ToList();
+        }
+
         public string ToTSV()
         {
-            var massOrFormula = !string.IsNullOrEmpty(Formula) ? 
-                Formula : 
-                string.Format(CultureInfo.InvariantCulture, "{0:F09}/{1:F09}", MonoisotopicMass, AverageMass); // Not L10N
-            var result  = string.Join("\t", Name, massOrFormula, AccessionNumbers.ToString()); // Not L10N
-            if (result.Equals("\t\t")) // Not L10N
-                result = InvariantName;
-            return result;
+            return TextUtil.ToEscapedTSV(AsFields());
         }
 
         public static CustomMolecule FromTSV(string val)
         {
-            var vals = val.Split('\t');
+            var vals = val.FromEscapedTSV();
             var name = vals.Length > 0 ? vals[0] : null;
             var formula = vals.Length > 1 ? vals[1] : null;
             // ReSharper disable PossibleNullReferenceException
@@ -690,7 +697,8 @@ namespace pwiz.Skyline.Model
                     result = AccessionNumbers.CompareTo(other.AccessionNumbers);
                     if (result == 0)
                     {
-                        result = MonoisotopicMass.CompareTo(other.MonoisotopicMass);
+                        result = MonoisotopicMass.Equals(other.MonoisotopicMass, 5E-10) ? // Allow for float vs double serialization effects
+                            0 : MonoisotopicMass.CompareTo(other.MonoisotopicMass);
                     }
                 }
             }

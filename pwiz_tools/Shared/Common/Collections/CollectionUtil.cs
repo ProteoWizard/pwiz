@@ -60,7 +60,14 @@ namespace pwiz.Common.Collections
                 (seed, keyValuePair) => seed ^ keyValuePair.GetHashCode()
             );
         }
-
+        public static bool EqualsDeep<TValue>(IList<TValue> list1, IList<TValue> list2)
+        {
+            if (list1 == null || list2 == null)
+            {
+                return (list2 == null) == (list1 == null);
+            }
+            return list1.SequenceEqual(list2);
+        }
         public static int GetHashCodeDeep<T>(IList<T> list)
         {
             return list.Aggregate(0, (seed, item) => seed*397 + SafeGetHashCode(item));

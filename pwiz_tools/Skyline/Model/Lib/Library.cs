@@ -1637,14 +1637,89 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        public IEnumerable<IEnumerable<SpectrumPeakAnnotation>> Annotations
+        {
+            get
+            {
+                foreach (var mi in Peaks)
+                    yield return mi.Annotations;
+            }
+        }
+
         public struct MI
         {
             private bool _notQuantitative;
+            private List<SpectrumPeakAnnotation> _annotations; // A peak may have multiple annotations
             public double Mz { get; set; }
             public float Intensity { get; set; }
             public bool Quantitative {
                 get { return !_notQuantitative; }
                 set { _notQuantitative = !value; }
+            }
+            public List<SpectrumPeakAnnotation> Annotations
+            {
+                get { return _annotations; } 
+                set { _annotations = value; }
+            }
+
+            public MI ChangeAnnotations(List<SpectrumPeakAnnotation> newAnnotations)
+            {
+                if (!CollectionUtil.EqualsDeep(newAnnotations, Annotations))
+                {
+                    // Because this is a struct, it does not need to be cloned
+                    // This operation will not affect the memory of the original object
+                    var result = this;
+                    result._annotations = newAnnotations;
+                    return result;
+                }
+                return this;
+            }
+
+            public SpectrumPeakAnnotation AnnotationsFirstOrDefault
+            {
+                get { return Annotations == null || Annotations.Count == 0 ? 
+                    SpectrumPeakAnnotation.EMPTY : 
+                    Annotations[0] ?? SpectrumPeakAnnotation.EMPTY; }
+            }
+
+            public IEnumerable<SpectrumPeakAnnotation> GetAnnotationsEnumerator()
+            {
+                if (Annotations == null || Annotations.Count == 0)
+                {
+                    yield return SpectrumPeakAnnotation.EMPTY;
+                }
+                else
+                {
+                    foreach (var spectrumPeakAnnotation in Annotations)
+                    {
+                        yield return spectrumPeakAnnotation ?? SpectrumPeakAnnotation.EMPTY;
+                    }
+                }
+            }
+
+            public CustomIon AnnotationsAggregateDescriptionIon
+            {
+                get
+                {
+                    if (Annotations != null)
+                    {
+                        var aggregateName = AnnotationsFirstOrDefault.Ion.Name ?? string.Empty;
+                        var nAnnotations = Annotations.Count;
+                        for (var i = 1; i < nAnnotations; i++)
+                        {
+                            var name = Annotations[i].Ion.Name;
+                            if (!string.IsNullOrEmpty(name))
+                            {
+                                aggregateName += "/" + name; // Not L10N
+                            }
+                        }
+                        if (!string.IsNullOrEmpty(aggregateName))
+                        {
+                            return AnnotationsFirstOrDefault.Ion.ChangeName(aggregateName);
+                        }
+                    }
+                    return AnnotationsFirstOrDefault.Ion;
+                }
             }
         }
     }
@@ -1746,6 +1821,31 @@ namespace pwiz.Skyline.Model.Lib
         public MoleculeAccessionNumbers CreateMoleculeID()
         {
             return new MoleculeAccessionNumbers(OtherKeys, InChiKey);
+        }
+
+        public List<KeyValuePair<string,string>> LocalizedKeyValuePairs
+        {
+            get
+            {
+                var smallMolLines = new List<KeyValuePair<string, string>>();
+                if (!string.IsNullOrEmpty(MoleculeName))
+                {
+                    smallMolLines.Add(new KeyValuePair<string, string> (Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name, MoleculeName));
+                }
+                if (!string.IsNullOrEmpty(ChemicalFormula))
+                {
+                    smallMolLines.Add(new KeyValuePair<string, string> (Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Formula, ChemicalFormula));
+                }
+                if (!string.IsNullOrEmpty(InChiKey))
+                {
+                    smallMolLines.Add(new KeyValuePair<string, string> (Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey, InChiKey));
+                }
+                if (!string.IsNullOrEmpty(OtherKeys))
+                {
+                    smallMolLines.Add(new KeyValuePair<string, string> (Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs, OtherKeys));
+                }
+                return smallMolLines;
+            }
         }
 
         public override bool Equals(object obj)
