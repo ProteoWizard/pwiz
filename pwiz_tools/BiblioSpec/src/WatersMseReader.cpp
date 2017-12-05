@@ -118,7 +118,7 @@ WatersMseReader::WatersMseReader(BlibBuilder& maker,
                 const vector<int>& functions = rawData->FunctionIndexList();
                 if (!functions.empty()) {
                     int function = functions.front();
-                    string transportRfStr = rawData->GetScanStat(function, 0, Waters::Lib::MassLynxRaw::MassLynxScanItem::TRANSPORT_RF);
+                    string transportRfStr = rawData->GetScanStat(function, 0, MassLynxScanItem::TRANSPORT_RF);
                     if (!transportRfStr.empty()) {
                         double transportRf = lexical_cast<double>(transportRfStr);
                         pusherInterval_ = 1000 / transportRf;
