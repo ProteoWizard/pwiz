@@ -52,7 +52,7 @@ rule vendor-api-requirements ( properties * )
     if <toolset>msvc in $(properties) &&
        ( <toolset-msvc:version>12.0 in $(properties) ||
          <toolset-msvc:version>12.0express in $(properties) ) &&
-       <runtime-debugging>off in $(properties) &&
+      # <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ masslynxraw-dll-location $(API_PATH) : $(properties) ] &&
 	   ! [ without-binary-msdata $(properties) ] &&
@@ -69,7 +69,7 @@ rule vendor-api-usage-requirements ( properties * )
     if <toolset>msvc in $(properties) &&
        ( <toolset-msvc:version>12.0 in $(properties) ||
          <toolset-msvc:version>12.0express in $(properties) ) &&
-       <runtime-debugging>off in $(properties) &&
+     #  <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ masslynxraw-dll-location $(API_PATH) : $(properties) ]  &&
 	   ! [ without-binary-msdata $(properties) ] &&

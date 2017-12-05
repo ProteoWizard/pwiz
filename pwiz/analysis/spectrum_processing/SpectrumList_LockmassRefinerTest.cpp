@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
         vector<string> rawpaths;
         parseArgs(args, rawpaths);
 
-        BOOST_FOREACH(const string& filepath, rawpaths)
+        for(const string& filepath : rawpaths)
         {
             if (bal::ends_with(filepath, "ATEHLSTLSEK_profile.raw"))
             {

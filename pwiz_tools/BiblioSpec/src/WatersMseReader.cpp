@@ -32,7 +32,7 @@
 #include "pwiz/utility/chemistry/Ion.hpp"
 
 #ifdef USE_WATERS_READER
-#include "pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxRaw.hpp"
+#include "pwiz_aux/msrc/utility/vendor_api/Waters/WatersRawFile.hpp"
 using namespace pwiz::vendor_api::Waters;
 #endif
 
@@ -118,10 +118,9 @@ WatersMseReader::WatersMseReader(BlibBuilder& maker,
                 const vector<int>& functions = rawData->FunctionIndexList();
                 if (!functions.empty()) {
                     int function = functions.front();
-                    const RawData::ExtendedScanStatsByName& extendedScanStatsByName = rawData->GetExtendedScanStats(function);
-                    RawData::ExtendedScanStatsByName::const_iterator transportRfItr = extendedScanStatsByName.find("Transport RF");
-                    if (transportRfItr != extendedScanStatsByName.end()) {
-                        double transportRf = boost::any_cast<short>(transportRfItr->second[0]);
+                    string transportRfStr = rawData->GetScanStat(function, 0, Waters::Lib::MassLynxRaw::TRANSPORT_RF);
+                    if (!transportRfStr.empty()) {
+                        double transportRf = lexical_cast<double>(transportRfStr);
                         pusherInterval_ = 1000 / transportRf;
                         Verbosity::debug("Pusher interval is %f.", pusherInterval_);
                     }

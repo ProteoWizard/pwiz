@@ -448,8 +448,8 @@ local revision-info =
                              $(PWIZ_ROOT_PATH)/pwiz_tools/MSConvertGUI
                              $(PWIZ_ROOT_PATH)/pwiz_tools/sld
                              $(PWIZ_ROOT_PATH)/scripts/wix
-                : *.?pp *.h *.jam *.cs *.manifest* *.wxs.template
-                : tar.excluded Version.cpp Resources.Designer.cs Settings.Designer.cs *DataSet.Designer.cs AssemblyInfo.*
+                : *.?pp *.h *.jam *.cs *.manifest.real *.manifest.dummy *.wxs.template
+                : tar.excluded Version.cpp Resources.Designer.cs Settings.Designer.cs *DataSet.Designer.cs AssemblyInfo.* _ReSharper.* baf2sql*.h timsdata*.h MassLynx*.h* cdtdefs.h compresseddatacluster.h LicenseKey.h
             ]
         : warn-on-missing
         #: print-revision-info
@@ -987,8 +987,7 @@ rule uimf-dll-location ( api-path : properties * )
 rule masslynxraw-dll-location ( api-path : properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) &&
-       <runtime-debugging>off
+    if <toolset>msvc in $(properties) 
     {
         if <toolset-msvc:version>12.0 in $(properties) ||
            <toolset-msvc:version>12.0express in $(properties)
