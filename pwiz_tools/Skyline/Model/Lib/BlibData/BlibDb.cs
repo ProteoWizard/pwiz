@@ -389,13 +389,21 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                             TransitionGroup group = nodeGroup.TransitionGroup;
                             var peptideSeq = nodePep.SourceUnmodifiedTarget;
-                            var peptideModSeq = nodePep.SourceModifiedTarget;
                             var precursorAdduct = group.PrecursorAdduct;
                             IsotopeLabelType labelType = nodeGroup.TransitionGroup.LabelType;
 
                             var smallMoleculeAttributes = nodePep.Peptide.GetSmallMoleculeLibraryAttributes();
-                            var libKey = nodeGroup.GetLibKey(nodePep);
-
+                            Target peptideModSeq;
+                            if (nodePep.IsProteomic)
+                            {
+                                var calcPre = document.Settings.GetPrecursorCalc(labelType, nodePep.SourceExplicitMods);
+                                peptideModSeq = calcPre.GetModifiedSequence(peptideSeq, SequenceModFormatType.full_precision, false);
+                            }
+                            else
+                            {
+                                peptideModSeq = nodePep.SourceModifiedTarget;
+                            }
+                            LibKey libKey = peptideModSeq.GetLibKey(nodeGroup.PrecursorAdduct);
                             var newLibKey = libKey;
 
                             if (convertingToSmallMolecules)
