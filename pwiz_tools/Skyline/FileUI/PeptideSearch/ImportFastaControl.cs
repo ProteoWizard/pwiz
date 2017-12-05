@@ -30,6 +30,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -124,6 +125,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return DecoyGenerationEnabled && double.TryParse(txtNumDecoys.Text, out numDecoys) ? (double?) numDecoys : null;
             }
             set { txtNumDecoys.Text = value.ToString(); }
+        }
+
+        public bool AutoTrain
+        {
+            get { return DecoyGenerationEnabled && cbAutoTrain.Checked; }
+            set { cbAutoTrain.Checked = value; }
         }
 
         private void browseFastaBtn_Click(object sender, EventArgs e)
@@ -335,6 +342,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 if (docNew == null)
                     return false;
 
+                if (AutoTrain)
+                    docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideIntegration(integration => integration.ChangeAutoTrain(true)));
+
                 SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Insert_FASTA, doc =>
                 {
                     if (!ReferenceEquals(doc, docCurrent))
@@ -362,7 +372,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void cbDecoyMethod_SelectedIndexChanged(object sender, EventArgs e)
         {
-            txtNumDecoys.Enabled = cbDecoyMethod.SelectedIndex != 0;
+            var decoys = cbDecoyMethod.SelectedIndex != 0;
+            txtNumDecoys.Enabled = decoys;
+            cbAutoTrain.Enabled = decoys;
+            if (!decoys)
+            {
+                cbAutoTrain.Checked = false;
+            }
         }
     }
 }

@@ -2697,15 +2697,32 @@ namespace pwiz.Skyline.Model.DocSettings
             PeakScoringModel = peakScoringModel ?? LegacyScoringModel.DEFAULT_UNTRAINED_MODEL;
         }
 
+        public bool AutoTrain { get; private set; }
         public PeakScoringModelSpec PeakScoringModel { get; private set; }
         public bool IsSerializable { get { return PeakScoringModel.IsTrained; } }
         public MProphetResultsHandler ResultsHandler { get; private set; }
+
+        public static bool AutoTrainCompleted(SrmDocument current, SrmDocument previous)
+        {
+            if (current == null || previous == null)
+                return false;
+                    
+            var curIntegration = current.Settings.PeptideSettings.Integration;
+            var prevIntegration = previous.Settings.PeptideSettings.Integration;
+        
+            return !curIntegration.AutoTrain && !Equals(curIntegration.PeakScoringModel, LegacyScoringModel.DEFAULT_UNTRAINED_MODEL) && prevIntegration.AutoTrain;
+        }
 
         #region Property change methods
 
         public PeptideIntegration ChangePeakScoringModel(PeakScoringModelSpec prop)
         {
             return ChangeProp(ImClone(this), im => im.PeakScoringModel = prop);
+        }
+
+        public PeptideIntegration ChangeAutoTrain(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.AutoTrain = prop);
         }
 
         /// <summary>
@@ -2724,6 +2741,11 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
 
         #region Implementation of IXmlSerializable
+
+        private enum ATTR
+        {
+            auto_train
+        }
 
         void IValidating.Validate()
         {
@@ -2748,6 +2770,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public void ReadXml(XmlReader reader)
         {
+            AutoTrain = reader.GetBoolAttribute(ATTR.auto_train);
+
             // Consume tag
             if (reader.IsEmptyElement)
                 reader.Read();
@@ -2765,6 +2789,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public void WriteXml(XmlWriter writer)
         {
             // Write child elements
+            writer.WriteAttribute(ATTR.auto_train, AutoTrain);
             if (IsSerializable)
             {
                 var helper = XmlUtil.FindHelper(PeakScoringModel, PEAK_SCORING_MODEL_SPEC_HELPERS);
@@ -2778,24 +2803,25 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region object overrides
 
-        public bool Equals(PeptideIntegration other)
+        private bool Equals(PeptideIntegration other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Equals(other.PeakScoringModel, PeakScoringModel);
+            return AutoTrain == other.AutoTrain && Equals(PeakScoringModel, other.PeakScoringModel);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (PeptideIntegration)) return false;
-            return Equals((PeptideIntegration) obj);
+            var other = obj as PeptideIntegration;
+            return other != null && Equals(other);
         }
 
         public override int GetHashCode()
         {
-            return PeakScoringModel.GetHashCode();
+            unchecked
+            {
+                return (AutoTrain.GetHashCode() * 397) ^ (PeakScoringModel != null ? PeakScoringModel.GetHashCode() : 0);
+            }
         }
 
         #endregion

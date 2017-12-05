@@ -46,6 +46,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.label5 = new System.Windows.Forms.Label();
             this.cbDecoyMethod = new System.Windows.Forms.ComboBox();
             this.panelDecoys = new System.Windows.Forms.Panel();
+            this.cbAutoTrain = new System.Windows.Forms.CheckBox();
             this.panelError.SuspendLayout();
             this.panelDecoys.SuspendLayout();
             this.SuspendLayout();
@@ -159,11 +160,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // panelDecoys
             // 
             resources.ApplyResources(this.panelDecoys, "panelDecoys");
+            this.panelDecoys.Controls.Add(this.cbAutoTrain);
             this.panelDecoys.Controls.Add(this.label5);
             this.panelDecoys.Controls.Add(this.txtNumDecoys);
             this.panelDecoys.Controls.Add(this.cbDecoyMethod);
             this.panelDecoys.Controls.Add(this.label4);
             this.panelDecoys.Name = "panelDecoys";
+            // 
+            // cbAutoTrain
+            // 
+            resources.ApplyResources(this.cbAutoTrain, "cbAutoTrain");
+            this.cbAutoTrain.Name = "cbAutoTrain";
+            this.cbAutoTrain.UseVisualStyleBackColor = true;
             // 
             // ImportFastaControl
             // 
@@ -208,5 +216,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private System.Windows.Forms.ComboBox cbDecoyMethod;
         private System.Windows.Forms.TextBox txtNumDecoys;
         private System.Windows.Forms.Panel panelDecoys;
+        private System.Windows.Forms.CheckBox cbAutoTrain;
     }
 }

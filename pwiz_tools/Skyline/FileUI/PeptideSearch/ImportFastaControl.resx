@@ -136,7 +136,7 @@
     <value>Both</value>
   </data>
   <data name="tbxFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>282, 249</value>
+    <value>282, 230</value>
   </data>
   <data name="tbxFasta.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -223,7 +223,7 @@
     <value>0</value>
   </data>
   <data name="panelError.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 335</value>
+    <value>14, 316</value>
   </data>
   <data name="panelError.Size" type="System.Drawing.Size, System.Drawing">
     <value>282, 35</value>
@@ -275,7 +275,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>panelDecoys</value>
   </data>
   <data name="&gt;&gt;txtNumDecoys.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="clearBtn.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -485,7 +485,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>panelDecoys</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -515,7 +515,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>panelDecoys</value>
   </data>
   <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="cbDecoyMethod.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 16</value>
@@ -536,16 +536,46 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>panelDecoys</value>
   </data>
   <data name="&gt;&gt;cbDecoyMethod.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="panelDecoys.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
+  <data name="cbAutoTrain.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbAutoTrain.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="cbAutoTrain.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 43</value>
+  </data>
+  <data name="cbAutoTrain.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 17</value>
+  </data>
+  <data name="cbAutoTrain.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="cbAutoTrain.Text" xml:space="preserve">
+    <value>Automatically train mProphet model</value>
+  </data>
+  <data name="&gt;&gt;cbAutoTrain.Name" xml:space="preserve">
+    <value>cbAutoTrain</value>
+  </data>
+  <data name="&gt;&gt;cbAutoTrain.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbAutoTrain.Parent" xml:space="preserve">
+    <value>panelDecoys</value>
+  </data>
+  <data name="&gt;&gt;cbAutoTrain.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="panelDecoys.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 376</value>
+    <value>14, 357</value>
   </data>
   <data name="panelDecoys.Size" type="System.Drawing.Size, System.Drawing">
-    <value>282, 40</value>
+    <value>282, 59</value>
   </data>
   <data name="panelDecoys.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>

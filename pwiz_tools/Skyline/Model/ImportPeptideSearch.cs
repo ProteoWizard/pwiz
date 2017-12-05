@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -452,6 +453,103 @@ namespace pwiz.Skyline.Model
             public bool HasMatches { get { return HasExactMatch && HasAlternateMatch; } }
             public bool HasExactMatch { get { return ExactMatch != null; } }
             public bool HasAlternateMatch { get { return AlternateMatch != null; } }
+        }
+    }
+
+    public class ImportPeptideSearchManager : BackgroundLoader, IFeatureScoreProvider
+    {
+        private SrmDocument _document;
+        private IList<IPeakFeatureCalculator> _cacheCalculators;
+        private PeakTransitionGroupFeatureSet _cachedFeatureScores;
+
+        public override void ClearCache()
+        {
+        }
+
+        protected override bool StateChanged(SrmDocument document, SrmDocument previous)
+        {
+            return document.Settings.PeptideSettings.Integration.AutoTrain;
+        }
+
+        protected override string IsNotLoadedExplained(SrmDocument document)
+        {
+            if (document.Settings.PeptideSettings.Integration.AutoTrain &&
+                document.Settings.HasResults && document.MeasuredResults.IsLoaded)
+            {
+                return "ImportPeptideSearchManager: Model not trained"; // Not L10N
+            }
+            return null;
+        }
+
+        protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
+        {
+            yield break;
+        }
+
+        protected override bool IsCanceled(IDocumentContainer container, object tag)
+        {
+            return false;
+        }
+
+        protected override bool LoadBackground(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
+        {
+            var loadMonitor = new LoadMonitor(this, container, container.Document);
+
+            IPeakScoringModel scoringModel = new MProphetPeakScoringModel(
+                Path.GetFileNameWithoutExtension(container.DocumentFilePath), null as LinearModelParams,
+                MProphetPeakScoringModel.GetDefaultCalculators(docCurrent), true);
+
+            var targetDecoyGenerator = new TargetDecoyGenerator(docCurrent, scoringModel, this, loadMonitor);
+
+            // Get scores for target and decoy groups.
+            List<IList<float[]>> targetTransitionGroups, decoyTransitionGroups;
+            targetDecoyGenerator.GetTransitionGroups(out targetTransitionGroups, out decoyTransitionGroups);
+            if (!decoyTransitionGroups.Any())
+                throw new InvalidDataException();
+
+            // Set intial weights based on previous model (with NaN's reset to 0)
+            var initialWeights = new double[scoringModel.PeakFeatureCalculators.Count];
+            // But then set to NaN the weights that have unknown values for this dataset
+            for (var i = 0; i < initialWeights.Length; ++i)
+            {
+                if (!targetDecoyGenerator.EligibleScores[i])
+                    initialWeights[i] = double.NaN;
+            }
+            var initialParams = new LinearModelParams(initialWeights);
+
+            // Train the model.
+            scoringModel = scoringModel.Train(targetTransitionGroups, decoyTransitionGroups, initialParams, null, scoringModel.UsesSecondBest, true, loadMonitor);
+
+            SrmDocument docNew;
+            do
+            {
+                docCurrent = container.Document;
+                docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideIntegration(i =>
+                    i.ChangeAutoTrain(false).ChangePeakScoringModel((PeakScoringModelSpec) scoringModel)));
+
+                // Reintegrate peaks
+                var resultsHandler = new MProphetResultsHandler(docNew, (PeakScoringModelSpec) scoringModel, _cachedFeatureScores);
+                resultsHandler.ScoreFeatures(loadMonitor);
+                if (resultsHandler.IsMissingScores())
+                    throw new InvalidDataException(Resources.ImportPeptideSearchManager_LoadBackground_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document_);
+                docNew = resultsHandler.ChangePeaks(loadMonitor);
+            }
+            while (!CompleteProcessing(container, docNew, docCurrent));
+
+            return true;
+        }
+
+        public PeakTransitionGroupFeatureSet GetFeatureScores(SrmDocument document, IPeakScoringModel scoringModel,
+            IProgressMonitor progressMonitor)
+        {
+            if (!ReferenceEquals(document, _document) ||
+                !ArrayUtil.EqualsDeep(_cacheCalculators, scoringModel.PeakFeatureCalculators))
+            {
+                _document = document;
+                _cacheCalculators = scoringModel.PeakFeatureCalculators;
+                _cachedFeatureScores = document.GetPeakFeatures(_cacheCalculators, progressMonitor);
+            }
+            return _cachedFeatureScores;
         }
     }
 }

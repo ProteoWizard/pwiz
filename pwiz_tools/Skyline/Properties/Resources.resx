@@ -9987,4 +9987,7 @@ Recognized isotopes include: {2}</value>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_unknown_error" xml:space="preserve">
     <value>unknown error</value>
   </data>
+  <data name="ImportPeptideSearchManager_LoadBackground_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document_" xml:space="preserve">
+    <value>The current peak scoring model is incompatible with one or more peptides in the document.</value>
+  </data>
 </root>

@@ -52,6 +52,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
             ParallelEx.For(0, FeatureCalculators.Count, i => EligibleScores[i] = IsValidCalculator(i));
         }
 
+        public TargetDecoyGenerator(SrmDocument document, IPeakScoringModel scoringModel, IFeatureScoreProvider scoreProvider, IProgressMonitor progressMonitor)
+            : this(scoringModel,
+                   scoreProvider != null
+                       ? scoreProvider.GetFeatureScores(document, scoringModel, progressMonitor)
+                       : document.GetPeakFeatures(scoringModel.PeakFeatureCalculators, progressMonitor))
+        {
+        }
+
         public int TargetCount { get { return _peakTransitionGroupFeaturesList.TargetCount; } }
         public int DecoyCount { get { return _peakTransitionGroupFeaturesList.DecoyCount; } }
         public PeakTransitionGroupFeatureSet PeakGroupFeatures { get { return _peakTransitionGroupFeaturesList; } }

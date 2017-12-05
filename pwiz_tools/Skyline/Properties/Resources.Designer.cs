@@ -13525,6 +13525,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The current peak scoring model is incompatible with one or more peptides in the document..
+        /// </summary>
+        public static string ImportPeptideSearchManager_LoadBackground_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchManager_LoadBackground_The_current_peak_scoring_model_is_incom" +
+                        "patible_with_one_or_more_peptides_in_the_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Import Peptide Search.
         /// </summary>
         public static string ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search {

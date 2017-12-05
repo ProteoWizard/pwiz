@@ -100,6 +100,7 @@ namespace pwiz.Skyline
         private readonly LibraryManager _libraryManager;
         private readonly LibraryBuildNotificationHandler _libraryBuildNotificationHandler;
         private readonly ChromatogramManager _chromatogramManager;
+        private readonly ImportPeptideSearchManager _importPeptideSearchManager;
 
         public event EventHandler<DocumentChangedEventArgs> DocumentChangedEvent;
         public event EventHandler<DocumentChangedEventArgs> DocumentUIChangedEvent;
@@ -161,6 +162,11 @@ namespace pwiz.Skyline
             _proteinMetadataManager = new ProteinMetadataManager();
             _proteinMetadataManager.ProgressUpdateEvent += UpdateProgress;
             _proteinMetadataManager.Register(this);
+            _importPeptideSearchManager = new ImportPeptideSearchManager();
+            _importPeptideSearchManager.ProgressUpdateEvent += UpdateProgress;
+            _importPeptideSearchManager.Register(this);
+
+            DocumentUIChangedEvent += ShowAutoTrainResults;
 
             checkForUpdatesMenuItem.Visible =
                 checkForUpdatesSeparator.Visible = ApplicationDeployment.IsNetworkDeployed;
@@ -370,6 +376,11 @@ namespace pwiz.Skyline
             get { return _ionMobilityLibraryManager; }
         }
 
+        public ImportPeptideSearchManager ImportPeptideSearchManager
+        {
+            get { return _importPeptideSearchManager; }
+        }
+
         private bool _useKeysOverride;
 
         public bool UseKeysOverride
@@ -509,6 +520,52 @@ namespace pwiz.Skyline
             UpdateNodeCountStatus();
 
             integrateAllMenuItem.Checked = settingsNew.TransitionSettings.Integration.IsIntegrateAll;
+        }
+
+        public void ShowAutoTrainResults(object sender, DocumentChangedEventArgs e)
+        {
+            if (!PeptideIntegration.AutoTrainCompleted(DocumentUI, e.DocumentPrevious))
+                return;
+
+            var model = DocumentUI.Settings.PeptideSettings.Integration.PeakScoringModel;
+            Settings.Default.PeakScoringModelList.Add(model);
+            var modelIndex = Settings.Default.PeakScoringModelList.IndexOf(model);
+            var newModel = Settings.Default.PeakScoringModelList.EditItem(this, model, Settings.Default.PeakScoringModelList, null);
+            if (newModel == null || model.Equals(newModel))
+                return;
+
+            Settings.Default.PeakScoringModelList[modelIndex] = newModel;
+            SrmDocument docCurrent, docNew;
+            do
+            {
+                docCurrent = DocumentUI;
+                docNew = docCurrent.ChangeSettings(docCurrent.Settings.ChangePeptideIntegration(i => i.ChangePeakScoringModel(newModel)));
+                var resultsHandler = new MProphetResultsHandler(docNew, newModel);
+                using (var longWaitDlg = new LongWaitDlg {Text = Resources.ReintegrateDlg_OkDialog_Reintegrating})
+                {
+                    try
+                    {
+                        longWaitDlg.PerformWork(this, 1000, pm =>
+                        {
+                            resultsHandler.ScoreFeatures(pm);
+                            if (resultsHandler.IsMissingScores())
+                                throw new InvalidDataException(Resources.ImportPeptideSearchManager_LoadBackground_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document_);
+                            docNew = resultsHandler.ChangePeaks(pm);
+                        });
+                        if (longWaitDlg.IsCanceled)
+                            return;
+                    }
+                    catch (Exception x)
+                    {
+                        var message = TextUtil.LineSeparate(
+                            string.Format(Resources.ReintegrateDlg_OkDialog_Failed_attempting_to_reintegrate_peaks_),
+                            x.Message);
+                        MessageDlg.ShowWithException(this, message, x);
+                        return;
+                    }
+                }
+                docNew = docNew.ChangeSettings(Document.Settings.ChangePeptideIntegration(i => i.ChangePeakScoringModel(newModel)));
+            } while (!SetDocument(docNew, docCurrent));
         }
 
         /// <summary>
@@ -878,6 +935,7 @@ namespace pwiz.Skyline
             _retentionTimeManager.ProgressUpdateEvent -= UpdateProgress;
             _ionMobilityLibraryManager.ProgressUpdateEvent -= UpdateProgress;
             _proteinMetadataManager.ProgressUpdateEvent -= UpdateProgress;
+            _importPeptideSearchManager.ProgressUpdateEvent -= UpdateProgress;
             
             DestroyAllChromatogramsGraph();
 
