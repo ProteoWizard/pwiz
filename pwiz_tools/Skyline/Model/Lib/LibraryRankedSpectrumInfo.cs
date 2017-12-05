@@ -118,12 +118,15 @@ namespace pwiz.Skyline.Model.Lib
                 rp.massPreMatch = calcMatch.GetPrecursorFragmentMass(rp.sequence);
                 // rp.massesMatch = calcMatch.GetFragmentIonMasses(rp.molecule); CONSIDER, for some molecule types someday?
                 // For small molecules we can't predict fragmentation, so just use those we have
+                // Older Resharper code inspection implementations insist on warning here
+                // Resharper disable PossibleMultipleEnumeration
                 var existing = groupDocNode.Transitions.Where(tran => tran.Transition.IsNonPrecursorNonReporterCustomIon()).Select(t => t.Transition.CustomIon.GetMass(MassType.Monoisotopic)).ToArray();
                 rp.massesMatch = new IonTable<TypedMass>(IonType.custom,  existing.Length);
                 for (var i = 0; i < existing.Length; i++)
                 {
                     rp.massesMatch[IonType.custom, i] = existing[i];
                 }
+                // Resharper restore PossibleMultipleEnumeration
                 rp.knownFragments = groupDocNode.Transitions.Where(tran => tran.Transition.IsNonPrecursorNonReporterCustomIon()).Select(t => 
                     new KnownFragment
                     {
