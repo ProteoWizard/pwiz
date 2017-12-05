@@ -130,11 +130,14 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsDocumentState(doc, null, 1, 4, 4, 4); // int revision, int groups, int peptides, int tranGroups, int transitions
             SpectrumPeaksInfo spectrum;
             IsotopeLabelType label;
+            // ReSharper disable PossibleNullReferenceException
             doc.Settings.TryLoadSpectrum(doc.Molecules.FirstOrDefault().Target, Adduct.FromStringAssumeChargeOnly("M+NH4"),
                 null, out label, out spectrum);
             Assume.IsTrue(spectrum.Annotations.Count() == 1);
-            Assume.IsTrue(spectrum.Annotations.FirstOrDefault().Count() == 1);
-            Assume.IsTrue(spectrum.Annotations.FirstOrDefault().FirstOrDefault().Ion.Name == "GP");
+            var spectrumPeakAnnotations = (spectrum.Annotations.FirstOrDefault() ?? new SpectrumPeakAnnotation[0]).ToArray();
+            Assume.IsTrue(spectrumPeakAnnotations.Length == 1);
+            Assume.IsTrue(spectrumPeakAnnotations.FirstOrDefault().Ion.Name == "GP");
+            // ReSharper restore PossibleNullReferenceException
         }
 
         private void ShareLibraryTest()
