@@ -239,8 +239,8 @@ namespace pwiz.Skyline.Model
 
         public static readonly DocumentFormat FORMAT_VERSION = DocumentFormat.CURRENT;
 
-        public const int MAX_PEPTIDE_COUNT = 100*1000;
-        public const int MAX_TRANSITION_COUNT = 10*MAX_PEPTIDE_COUNT; // Modern DIA experiments may often have 6 transitions per peptide + 3 precursor ions
+        public const int MAX_PEPTIDE_COUNT = 200 * 1000;
+        public const int MAX_TRANSITION_COUNT = 5 * 1000 * 1000;
 
         // Version of this document in deserialized XML
 

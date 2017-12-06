@@ -20,6 +20,7 @@
 using System.IO;
 using System.Reflection;
 
+// ReSharper disable NonLocalizedString
 namespace TestRunner
 {
     /// <summary>
@@ -27,15 +28,18 @@ namespace TestRunner
     /// </summary>
     public static class MemoryProfiler
     {
-        private const string PROFILER4_DLL = @"C:\Program Files\SciTech\NetMemProfiler4\Redist\MemProfiler2.dll";    // Not L10N
-        private const string PROFILER5_DLL = @"C:\Program Files\SciTech\NetMemProfiler5\Redist\MemProfiler2.dll";    // Not L10N
-        private const string PROFILER_TYPE = "SciTech.NetMemProfiler.MemProfiler";   // Not L10N
+        private const string PROFILER4_DLL = @"C:\Program Files\SciTech\NetMemProfiler4\Redist\MemProfiler2.dll";
+        private const string PROFILER5_DLL = @"C:\Program Files\SciTech\NetMemProfiler5\Redist\MemProfiler2.dll";
+        private const string PROFILER55_DLL =
+            @"C:\Program Files\SciTech\NetMemProfiler5\Redist\net20\SciTech.MemProfilerApi.dll";
+        private const string PROFILER_TYPE = "SciTech.NetMemProfiler.MemProfiler";
 
         private static readonly MethodInfo FULL_SNAP_SHOT;
 
         static MemoryProfiler()
         {
             var profilerDll =
+                File.Exists(PROFILER55_DLL) ? PROFILER55_DLL :
                 File.Exists(PROFILER5_DLL) ? PROFILER5_DLL :
                 File.Exists(PROFILER4_DLL) ? PROFILER4_DLL :
                 null;
@@ -43,9 +47,11 @@ namespace TestRunner
             {
                 var profilerAssembly = Assembly.LoadFrom(profilerDll);
                 var profiler = profilerAssembly.GetType(PROFILER_TYPE);
-                if (profiler != null && (bool) profiler.GetMethod("get_IsProfiling").Invoke(null, null))
+                if (profiler != null && (bool)profiler.GetMethod("get_IsProfiling").Invoke(null, null))
                 {
-                    FULL_SNAP_SHOT = profiler.GetMethod("FullSnapShot", new []{typeof(string)});
+                    FULL_SNAP_SHOT =
+                        profiler.GetMethod("FullSnapshot", new[] { typeof(string), typeof(bool) }) ??
+                        profiler.GetMethod("FullSnapShot", new[] { typeof(string) });
                 }
             }
         }
@@ -57,7 +63,14 @@ namespace TestRunner
         {
             if (FULL_SNAP_SHOT != null)
             {
-                FULL_SNAP_SHOT.Invoke(null, new object[]{name});
+                if (FULL_SNAP_SHOT.GetParameters().Length == 2)
+                {
+                    FULL_SNAP_SHOT.Invoke(null, new object[] { name, false });
+                }
+                else
+                {
+                    FULL_SNAP_SHOT.Invoke(null, new object[] { name });
+                }
             }
         }
     }
