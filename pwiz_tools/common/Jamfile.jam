@@ -36,7 +36,6 @@ lib pwiz_tools_common
         <library>../../pwiz/data/msdata//pwiz_data_msdata_examples
         <library>../../pwiz/analysis/passive//pwiz_analysis_passive_core
         <library>../../pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing
-        <library>../../pwiz/analysis/chromatogram_processing//pwiz_analysis_chromatogram_processing
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
 : # default-build
     : # usage-requirements
@@ -45,7 +44,6 @@ lib pwiz_tools_common
         <library>../../pwiz/data/msdata//pwiz_data_msdata_examples
         <library>../../pwiz/analysis/passive//pwiz_analysis_passive_core
         <library>../../pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing
-        <library>../../pwiz/analysis/chromatogram_processing//pwiz_analysis_chromatogram_processing
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
     ;
 

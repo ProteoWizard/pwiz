@@ -66,13 +66,37 @@ searched-lib pwiz_vendor_api_waters
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <conditional>@vendor-api-requirements
         <conditional>@msvc-requirement
-        #<runtime-debugging>on:<build>no
+        <runtime-debugging>on:<build>no
+        <toolset-msvc:version>9.0,<address-model>64:<build>no
+        <toolset-msvc:version>9.0express,<address-model>64:<build>no
+        <toolset-msvc:version>10.0,<secure-scl>on:<build>no
+        <toolset-msvc:version>10.0express,<secure-scl>on:<build>no
+        <library>pwiz_vendor_api_waters_ims
+    : # default-build
+    : # usage-requirements
+        <conditional>@vendor-api-usage-requirements
+        <library>pwiz_vendor_api_waters_ims
+    ;
+
+explicit pwiz_vendor_api_waters ;
+
+searched-lib pwiz_vendor_api_waters_ims
+    : # sources
+    : # requirements
+        <link>shared:<define>PWIZ_DYN_LINK
+        <name>cdt
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <conditional>@vendor-api-requirements
+        <conditional>@msvc-requirement
+        <runtime-debugging>on:<build>no
+        <toolset-msvc:version>9.0:<build>no
+        <toolset-msvc:version>9.0express:<build>no
+        <toolset-msvc:version>10.0,<secure-scl>on:<build>no
+        <toolset-msvc:version>10.0express,<secure-scl>on:<build>no
     : # default-build
     : # usage-requirements
         <conditional>@vendor-api-usage-requirements
     ;
-
-explicit pwiz_vendor_api_waters ;
 
 # a test utility, not a unit test
 exe RawDataTest

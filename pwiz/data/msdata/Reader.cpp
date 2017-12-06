@@ -44,7 +44,6 @@ Reader::Config::Config()
     , combineIonMobilitySpectra(false)
     , unknownInstrumentIsError(false)
     , adjustUnknownTimeZonesToHostTimeZone(true)
-    , iterationListenerRegistry(nullptr)
 {
 }
 
@@ -58,7 +57,6 @@ Reader::Config::Config(const Config& rhs)
     combineIonMobilitySpectra = rhs.combineIonMobilitySpectra;
     unknownInstrumentIsError = rhs.unknownInstrumentIsError;
     adjustUnknownTimeZonesToHostTimeZone = rhs.adjustUnknownTimeZonesToHostTimeZone;
-    iterationListenerRegistry = rhs.iterationListenerRegistry;
 }
 
 // default implementation; most Readers don't need to worry about multi-run input files

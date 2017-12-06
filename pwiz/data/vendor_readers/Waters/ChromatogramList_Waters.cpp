@@ -78,11 +78,6 @@ PWIZ_API_DECL size_t ChromatogramList_Waters::find(const string& id) const
 
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData) const
 {
-    return chromatogram(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata, 0.0, 0.0, 0.0);
-}
-
-PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const
-{
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Waters::createIndex, this));
     if (index>size_)
         throw runtime_error(("[ChromatogramList_Waters::chromatogram()] Bad index: " 
@@ -112,7 +107,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
         {
             map<double, double> fullFileTIC;
 
-            for(int function : rawdata_->FunctionIndexList())
+            BOOST_FOREACH(int function, rawdata_->FunctionIndexList())
             {
                 // add current function TIC to full file TIC
                 vector<float> times, intensities;
@@ -206,7 +201,7 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
     ie.chromatogramType = MS_TIC_chromatogram;
     idToIndexMap_[ie.id] = ie.index;
 
-    for(int function : rawdata_->FunctionIndexList())
+    BOOST_FOREACH(int function, rawdata_->FunctionIndexList())
     {
         int msLevel;
         CVID spectrumType;
@@ -225,7 +220,7 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
         //cout << "Time range: " << f1 << " - " << f2 << endl;
 
         vector<float> precursorMZs, productMZs, intensities;
-        rawdata_->ScanReader.ReadScan(function, 1, precursorMZs, intensities, productMZs);
+        rawdata_->ScanReader.readSpectrum(function, 1, precursorMZs, intensities, productMZs);
 
         if (spectrumType == MS_SRM_spectrum && productMZs.size() != precursorMZs.size())
             throw runtime_error("[ChromatogramList_Waters::createIndex] MRM function " + lexical_cast<string>(function+1) + " has mismatch between product m/z count (" + lexical_cast<string>(productMZs.size()) + ") and precursor m/z count (" + lexical_cast<string>(precursorMZs.size()) + ")");
@@ -289,7 +284,6 @@ size_t ChromatogramList_Waters::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_Waters::chromatogramIdentity(size_t index) const {return emptyIdentity;}
 size_t ChromatogramList_Waters::find(const std::string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
-ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const {return ChromatogramPtr();}
 
 } // detail
 } // msdata
