@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -186,14 +185,28 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(dd.ChangeIonFormula("-Na"), ddd);
             Assert.AreEqual(d.ChangeMassMultiplier(1).ChangeIonFormula("-Na"), ddd);
 
-            CheckLabel(BioMassCalc.Cl37, BioMassCalc.Cl);
-            CheckLabel(BioMassCalc.Br81, BioMassCalc.Br);
-            CheckLabel(BioMassCalc.S33, BioMassCalc.S);
-            CheckLabel(BioMassCalc.S34, BioMassCalc.S);
-            CheckLabel(BioMassCalc.P32, BioMassCalc.P);
-            CheckLabel(BioMassCalc.O17, BioMassCalc.O);
-            CheckLabel(BioMassCalc.O18, BioMassCalc.O);
-            CheckLabel(BioMassCalc.O18, BioMassCalc.O);
+            var labeled = Adduct.FromStringAssumeProtonated("[2M3C13-Na]");
+            var unlabeled = Adduct.FromStringAssumeProtonated("[2M-Na]");
+            var relabeled = Adduct.FromStringAssumeProtonated("[2M3Cl374H2-Na]");
+            var massNeutral = 5.6;
+            Assert.AreEqual(2 * (massNeutral + 3 * (BioMassCalc.MONOISOTOPIC.GetMass("C'") - BioMassCalc.MONOISOTOPIC.GetMass("C"))) - BioMassCalc.MONOISOTOPIC.GetMass("Na"),
+                labeled.ApplyToMass(new TypedMass(massNeutral, MassType.Monoisotopic)));
+            Assert.AreEqual(unlabeled, labeled.ChangeIsotopeLabels(null));
+            var labels = new Dictionary<string, int> {{"Cl37",3},{"H2",4}};
+            Assert.AreEqual(relabeled, labeled.ChangeIsotopeLabels(labels));
+            var labelsToo = new Dictionary<string, int> { { "Cl'", 3 }, { "H'", 4 } };
+            Assert.AreEqual(relabeled, unlabeled.ChangeIsotopeLabels(labelsToo));
+            var labelsAlso = new Dictionary<string, int> { { "Cl37", 3 }, { "H'", 4 } }; // Mixed
+            Assert.AreEqual(relabeled, unlabeled.ChangeIsotopeLabels(labelsAlso));
+            Assert.AreNotEqual(labeled, unlabeled.ChangeIsotopeLabels(labelsAlso));
+
+            Assert.AreEqual("Cl2Cl'3H5H'4N12", relabeled.ApplyIsotopeLabelsToFormula("Cl5H9N12")); // Replaces three of five Cl and four of nine H
+            var m100 = new TypedMass(100, MassType.Monoisotopic);
+            var mdiff = 2* (3*(BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Cl37) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.Cl)) +
+                            4*(BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H2) - BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H)));
+            Assert.AreEqual(m100+mdiff, relabeled.ApplyIsotopeLabelsToMass(m100), .005);  // Expect increase of 2*(3(Cl37-Cl)+4(H2-H))
+            var isotopeAsMass = Adduct.FromStringAssumeProtonated("[2M1.23-Na]");
+            Assert.AreEqual(102.46, isotopeAsMass.ApplyIsotopeLabelsToMass(m100), .005); // Expect increase of 2*1.23
 
             var tips = Adduct.Tips;
             foreach (var nickname in Adduct.DICT_ADDUCT_NICKNAMES)
@@ -205,39 +218,6 @@ namespace pwiz.SkylineTestA
                 Assert.IsTrue(tips.Contains(nickname.Key));
             }
         
-        }
-
-        private static void CheckLabel(string label, string unlabel)
-        {
-            var adductLabel = Adduct.DICT_ADDUCT_ISOTOPE_NICKNAMES.FirstOrDefault(x => x.Value == label).Key;
-            var labeled = Adduct.FromStringAssumeProtonated("[2M3C13-Na]");
-            var unlabeled = Adduct.FromStringAssumeProtonated("[2M-Na]");
-            var relabeled = Adduct.FromStringAssumeProtonated("[2M3Cl374H2-Na]".Replace("Cl37", adductLabel));
-            var massNeutral = 5.6;
-            Assert.AreEqual(
-                2 * (massNeutral + 3 * (BioMassCalc.MONOISOTOPIC.GetMass("C'") - BioMassCalc.MONOISOTOPIC.GetMass("C"))) -
-                BioMassCalc.MONOISOTOPIC.GetMass("Na"),
-                labeled.ApplyToMass(new TypedMass(massNeutral, MassType.Monoisotopic)));
-            Assert.AreEqual(unlabeled, labeled.ChangeIsotopeLabels(null));
-            var labels = new Dictionary<string, int> {{label, 3}, {"H2", 4}};
-            Assert.AreEqual(relabeled, labeled.ChangeIsotopeLabels(labels));
-            var labelsToo = new Dictionary<string, int> {{label, 3}, {"H'", 4}};
-            Assert.AreEqual(relabeled, unlabeled.ChangeIsotopeLabels(labelsToo));
-            var labelsAlso = new Dictionary<string, int> {{adductLabel, 3}, {"H'", 4}}; // Mixed
-            Assert.AreEqual(relabeled, unlabeled.ChangeIsotopeLabels(labelsAlso));
-            Assert.AreNotEqual(labeled, unlabeled.ChangeIsotopeLabels(labelsAlso));
-
-            Assert.AreEqual(Molecule.Parse("Cl2Cl'3H5H'4N12".Replace("Cl'", label).Replace("Cl", unlabel)),
-                Molecule.Parse(relabeled.ApplyIsotopeLabelsToFormula("Cl5H9N12".Replace("Cl", unlabel)))); // Replaces three of five Cl and four of nine H
-            var m100 = new TypedMass(100, MassType.Monoisotopic);
-            var mdiff = 2 * (3 * (BioMassCalc.MONOISOTOPIC.GetMass(label) -
-                                  BioMassCalc.MONOISOTOPIC.GetMass(unlabel)) +
-                             4 * (BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H2) -
-                                  BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H)));
-            Assert.AreEqual(m100 + mdiff, relabeled.ApplyIsotopeLabelsToMass(m100),
-                .005); // Expect increase of 2*(3(Cl37-Cl)+4(H2-H))
-            var isotopeAsMass = Adduct.FromStringAssumeProtonated("[2M1.23-Na]");
-            Assert.AreEqual(102.46, isotopeAsMass.ApplyIsotopeLabelsToMass(m100), .005); // Expect increase of 2*1.23
         }
 
 

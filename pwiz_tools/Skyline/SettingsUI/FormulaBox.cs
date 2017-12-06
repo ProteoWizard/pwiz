@@ -51,7 +51,7 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Reusable control for dealing with chemical formulas and their masses
         /// </summary>
-        /// <param name="isProteomic">if true, don't offer Cl, Br, or heavy P or heavy S in elements popup</param>
+        /// <param name="isProteomic">if true, don't offer Cl and Br in elements popup</param>
         /// <param name="labelFormulaText">Label text for the formula textedit control</param>
         /// <param name="labelAverageText">Label text for the average mass or m/z textedit control</param>
         /// <param name="labelMonoText">Label text for the monoisotopic mass or m/z textedit control</param>
@@ -63,10 +63,6 @@ namespace pwiz.Skyline.SettingsUI
             InitializeComponent();
             if (isProteomic)
             {
-                // Don't offer exotic atoms or isotopes
-                p32ToolStripMenuItem.Visible = 
-                    s33ToolStripMenuItem.Visible = 
-                       s34ToolStripMenuItem.Visible =
                 clToolStripMenuItem.Visible =
                     cl37ToolStripMenuItem.Visible =
                         brToolStripMenuItem.Visible =
@@ -466,21 +462,6 @@ namespace pwiz.Skyline.SettingsUI
         private void br81ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AddFormulaSymbol(BioMassCalc.Br81);
-        }
-
-        private void p32ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.P32);
-        }
-
-        private void s33ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.S33);
-        }
-
-        private void s34ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            AddFormulaSymbol(BioMassCalc.S34);
         }
 
         private void helpToolStripMenuItem_Click(object sender, EventArgs e)
