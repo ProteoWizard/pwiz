@@ -1376,6 +1376,12 @@ namespace pwiz.Skyline.Model
                 formulaHeavy = formulaHeavy.Replace(BioMassCalc.Cl, BioMassCalc.Cl37);
             if ((labelAtoms & LabelAtoms.Br81) != 0)
                 formulaHeavy = formulaHeavy.Replace(BioMassCalc.Br, BioMassCalc.Br81);
+            if ((labelAtoms & LabelAtoms.P32) != 0)
+                formulaHeavy = formulaHeavy.Replace(BioMassCalc.P, BioMassCalc.P32);
+            if ((labelAtoms & LabelAtoms.S33) != 0)
+                formulaHeavy = formulaHeavy.Replace(BioMassCalc.S, BioMassCalc.S33);
+            if ((labelAtoms & LabelAtoms.S34) != 0)
+                formulaHeavy = formulaHeavy.Replace(BioMassCalc.S, BioMassCalc.S34);
             return formulaHeavy;
         }
     }
