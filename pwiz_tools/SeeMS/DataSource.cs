@@ -141,7 +141,7 @@ namespace seems
                 srmAsSpectra = Program.SrmAsSpectra
             };
 
-            if (!File.Exists(filepath))
+            if (!File.Exists(filepath) && !Directory.Exists(filepath)) // Some mass spec "files" are really directory structures
                 throw new FileNotFoundException("Filepath not found: " + filepath, filepath);
 
             ReaderList.FullReaderList.read(filepath, msdList, readerConfig);
