@@ -182,6 +182,7 @@ namespace pwiz.Skyline.Model
             Assume.IsTrue(ReferenceEquals(groupDocNode.TransitionGroup, this));
             // Get necessary mass calculators and masses
             var calcFilterPre = settings.GetPrecursorCalc(IsotopeLabelType.light, mods);
+            var calcPredictPre = settings.TryGetPrecursorCalc(LabelType, mods) ?? calcFilterPre;
             var calcFilter = settings.GetFragmentCalc(IsotopeLabelType.light, mods);
             var calcPredict = settings.GetFragmentCalc(LabelType, mods);
 
@@ -266,7 +267,7 @@ namespace pwiz.Skyline.Model
             if (!useFilter || types.Contains(IonType.precursor))
             {
                 bool libraryFilter = (pick == TransitionLibraryPick.all || pick == TransitionLibraryPick.filter);
-                foreach (var nodeTran in GetPrecursorTransitions(settings, mods, calcFilterPre, calcPredict ?? calcFilter,
+                foreach (var nodeTran in GetPrecursorTransitions(settings, mods, calcPredictPre, calcPredict ?? calcFilter,
                     precursorMz, isotopeDist, potentialLosses, transitionRanks, libraryFilter, useFilter))
                 {
                     if (minMz <= nodeTran.Mz && nodeTran.Mz <= maxMz)
@@ -461,7 +462,7 @@ namespace pwiz.Skyline.Model
 
         public IEnumerable<TransitionDocNode> GetPrecursorTransitions(SrmSettings settings,
                                                              ExplicitMods mods,
-                                                             IPrecursorMassCalc calcFilterPre,
+                                                             IPrecursorMassCalc calcPredictPre,
                                                              IFragmentMassCalc calcPredict,
                                                              double precursorMz,
                                                              IsotopeDistInfo isotopeDist,
@@ -483,7 +484,7 @@ namespace pwiz.Skyline.Model
             bool precursorNoProducts = precursorMS1 && !fullScan.IsEnabledMsMs &&
                 ionTypes.Count == 1 && ionTypes[0] == IonType.precursor;
             var precursorMassPredict = precursorMS1
-                ? calcFilterPre.GetPrecursorMass(sequence)
+                ? calcPredictPre.GetPrecursorMass(sequence)
                 : calcPredict.GetPrecursorFragmentMass(sequence);
 
             foreach (var losses in CalcTransitionLosses(IonType.precursor, 0, massType, potentialLosses))

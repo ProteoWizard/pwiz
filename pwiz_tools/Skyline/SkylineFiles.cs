@@ -2233,7 +2233,7 @@ namespace pwiz.Skyline
                         string message = dlg.FileNames.Length == 1
                             ? string.Format(Resources.SkylineWindow_importDocumentMenuItem_Click_Failed_importing_file__0__1__, dlg.FileNames[0], x.Message)
                             : failedImportingFiles;
-                        MessageBox.Show(message);
+                        MessageDlg.ShowWithException(this, message, x);
                     }
                 }
             }
