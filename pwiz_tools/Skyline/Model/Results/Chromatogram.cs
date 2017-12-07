@@ -367,6 +367,15 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsLoaded { get { return !MSDataFileInfos.Contains(info => !info.FileWriteTime.HasValue); } }
 
+        public bool IsLoadedAndAvailable(MeasuredResults measuredResults)
+        {
+            if (!IsLoaded)
+            {
+                return false;
+            }
+            return MSDataFilePaths.All(measuredResults.IsCachedFile);
+        }
+
         public string IsLoadedExplained() // For test and debug purposes, gives a descriptive string for IsLoaded failure
         {
             return IsLoaded ? string.Empty : "No ChromFileInfo.FileWriteTime for " + string.Join(",", MSDataFileInfos.Where(info => !info.FileWriteTime.HasValue).Select(f => f.FilePath.GetFilePath())); // Not L10N

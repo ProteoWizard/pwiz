@@ -1153,7 +1153,7 @@ namespace pwiz.Skyline.Model
                                  // to be added from other files.  So this must be handled below.
                                  //(UserSetResults(resultOld) && setTranPrevious == null) ||
                                  // or this set of results is not yet loaded
-                                 !chromatograms.IsLoaded ||
+                                 !chromatograms.IsLoadedAndAvailable(measuredResults) ||
                                  // or not forcing a full recalc of all peaks, chromatograms have not
                                  // changed and the node has not otherwise changed yet.
                                  // (happens while loading results)
