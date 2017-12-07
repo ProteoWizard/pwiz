@@ -202,6 +202,10 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         while (reader.Read())
                         {
+                            if (loader.IsCanceled)
+                            {
+                                throw new OperationCanceledException();
+                            }
                             var libKey = Tuple.Create(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)));
                             // Tuple of filename, score, FileData
                             Dictionary<string, Tuple<double?, FileData>> dataByFilename;
