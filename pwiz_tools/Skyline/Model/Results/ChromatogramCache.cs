@@ -395,23 +395,39 @@ namespace pwiz.Skyline.Model.Results
             if (textIdIndex == -1)
                 return true;
             int textIdLen = entry.TextIdLen;
-            string compareText = nodePep.ModifiedTarget.ToSerializableString();
             if (nodePep.Peptide.IsCustomMolecule)
             {
-                var compareBytes = Encoding.UTF8.GetBytes(compareText);
-                if (textIdLen != compareBytes.Length)
-                    return false;
-                for (int i = 0; i < textIdLen; i++)
+                if (EqualTextIdBytes(nodePep.CustomMolecule.ToSerializableString(), textIdIndex, textIdLen))
                 {
-                    if (_textIdBytes[textIdIndex + i] != compareBytes[i])
-                        return false;
+                    return true;
                 }
+                // Older .skyd files used just the name of the molecule as the TextId.
+                // We can't rely on the formatversion in the .skyd, because of the way that .skyd files can get merged.
+                if (EqualTextIdBytes(nodePep.CustomMolecule.InvariantName, textIdIndex, textIdLen))
+                {
+                    return true;
+                }
+                return false;
             }
             else
             {
                 var key1 = new PeptideLibraryKey(nodePep.ModifiedSequence, 0);
                 var key2 = new PeptideLibraryKey(Encoding.ASCII.GetString(_textIdBytes, textIdIndex, textIdLen), 0);
                 return LibKeyIndex.KeysMatch(key1, key2);
+            }
+        }
+
+        private bool EqualTextIdBytes(string compareString, int textIdIndex, int textIdLen)
+        {
+            var compareBytes = Encoding.UTF8.GetBytes(compareString);
+            if (compareBytes.Length != textIdLen)
+            {
+                return false;
+            }
+            for (int i = 0; i < textIdLen; i++)
+            {
+                if (_textIdBytes[textIdIndex + i] != compareBytes[i])
+                    return false;
             }
             return true;
         }
