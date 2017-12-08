@@ -299,6 +299,8 @@ namespace pwiz.Skyline.Model
         {
             get
             {
+                if (Results == null)
+                    return null;
                 var statTimes = new Statistics(
                     from result in Results
                     from chromInfo in result.Where(chromInfo => !Equals(chromInfo, default(PeptideChromInfo)))
