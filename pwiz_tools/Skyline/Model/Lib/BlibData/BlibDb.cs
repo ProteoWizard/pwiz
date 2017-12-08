@@ -1054,8 +1054,15 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     (int) SrmDocument.Level.TransitionGroups);
             }
 
-            return document.ChangeSettingsNoDiff(settings.ChangePeptideLibraries(
-                lib => lib.ChangeLibraries(listLibrarySpecs, listLibraries)));
+            var peptideLibraries = settings.PeptideSettings.Libraries;
+            if (peptideLibraries.RankId != null &&
+                !listLibrarySpecs.Any(spec => spec.PeptideRankIds.Contains(peptideLibraries.RankId)))
+            {
+                peptideLibraries = pepLibraries.ChangeRankId(null);
+            }
+            peptideLibraries = peptideLibraries.ChangeLibraries(listLibrarySpecs, listLibraries);
+            return document.ChangeSettingsNoDiff(
+                settings.ChangePeptideSettings(settings.PeptideSettings.ChangeLibraries(peptideLibraries)));
         }
 
         private static string GetUniqueName(string name, HashSet<string> usedNames)
