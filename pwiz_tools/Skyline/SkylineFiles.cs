@@ -2793,11 +2793,41 @@ namespace pwiz.Skyline
 
             JToken folders;
             var folderPath = panoramaSavedUri.AbsolutePath;
+            var folderPathNoCtx = PanoramaServer.getFolderPath(server, panoramaSavedUri); // get folder path without the context path
             try
             {
-                folders = publishClient.GetInfoForFolders(server, folderPath.TrimEnd('/').TrimStart('/'));
+                folders = publishClient.GetInfoForFolders(server, folderPathNoCtx.TrimEnd('/').TrimStart('/'));
             }
-            catch (WebException)
+            catch (WebException ex)
+            {
+                // Handle this only for PanoramaWeb.  For the specific case where Skyline was upgraded
+                // to a version that does not assume the '/labkey' context path, BEFORE PanoramaWeb was
+                // re-configured to run as the ROOT webapp. In this case the panoramaSavedUri will contain '/labkey'
+                // but the server is no longer deployed at that context path.
+                if (!server.URI.Host.Contains("panoramaweb") || !folderPath.StartsWith("/labkey")) // Not L10N
+                {
+                    return false;
+                }
+
+                var response = ex.Response as HttpWebResponse;
+
+                if (response == null || response.StatusCode != HttpStatusCode.NotFound) // 404
+                {
+                    return false;
+                }
+
+                folderPathNoCtx = folderPath.Remove(0, "/labkey".Length); // Not L10N
+                try
+                {
+                    folders =
+                        publishClient.GetInfoForFolders(server, folderPathNoCtx.TrimEnd('/').TrimStart('/')); // Not L10N
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+            catch (PanoramaServerException)
             {
                 return false;
             }
@@ -2826,7 +2856,7 @@ namespace pwiz.Skyline
                 return false;
 
             var serverRelativePath = folders["path"].ToString() + '/'; // Not L10N
-            serverRelativePath = serverRelativePath.TrimStart('/');
+            serverRelativePath = serverRelativePath.TrimStart('/'); // Not L10N
             publishClient.UploadSharedZipFile(this, server, zipFilePath, serverRelativePath);
             return true; // success!
         }
