@@ -253,6 +253,38 @@ namespace pwiz.Skyline.Model.Lib
         {
             return ModifiedSequence + Transition.GetChargeIndicator(Adduct);
         }
+
+        /// <summary>
+        /// Change the format of all modifications so that they are in the Skyline 3.7
+        /// format of having one digit after the decimal.
+        /// </summary>
+        public PeptideLibraryKey FormatToOneDecimal()
+        {
+            if (!HasModifications)
+            {
+                return this;
+            }
+            StringBuilder newSequence = new StringBuilder();
+            int aaCount = 0;
+            foreach (var mod in GetModifications())
+            {
+                newSequence.Append(UnmodifiedSequence.Substring(aaCount, mod.Key + 1 - aaCount));
+                aaCount = mod.Key + 1;
+                var massModification = MassModification.Parse(mod.Value);
+                string newMod;
+                if (massModification == null)
+                {
+                    newMod = mod.Value;
+                }
+                else
+                {
+                    newMod = new MassModification(massModification.Mass, 1).ToString();
+                }
+                newSequence.Append(Model.ModifiedSequence.Bracket(newMod));
+            }
+            newSequence.Append(UnmodifiedSequence.Substring(aaCount));
+            return new PeptideLibraryKey(newSequence.ToString(), Charge);
+        }
     }
 
     public class MoleculeLibraryKey : LibraryKey

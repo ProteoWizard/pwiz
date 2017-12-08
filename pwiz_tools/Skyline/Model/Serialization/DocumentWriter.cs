@@ -26,6 +26,7 @@ using Google.Protobuf;
 using pwiz.ProteomeDatabase.API;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -227,7 +228,7 @@ namespace pwiz.Skyline.Model.Serialization
                 string sequence = peptide.Target.Sequence;
                 writer.WriteAttributeString(ATTR.sequence, sequence);
                 var modSeq = Settings.GetModifiedSequence(node);
-                writer.WriteAttributeString(ATTR.modified_sequence, modSeq.Sequence);
+                writer.WriteAttributeString(ATTR.modified_sequence, GetModifiedSequence(modSeq));
                 if (node.SourceKey != null)
                     writer.WriteAttributeString(ATTR.lookup_sequence, node.SourceKey.ModifiedSequence);
                 if (peptide.Begin.HasValue && peptide.End.HasValue)
@@ -281,6 +282,15 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteEndElement();
             }
             writer.WriteEndElement();
+        }
+
+        private string GetModifiedSequence(Target target)
+        {
+            if (DocumentFormat >= DocumentFormat.VERSION_3_73 || !target.IsProteomic)
+            {
+                return target.Sequence;
+            }
+            return new PeptideLibraryKey(target.Sequence, 0).FormatToOneDecimal().ModifiedSequence;
         }
 
         private void WriteLookupMods(XmlWriter writer, PeptideDocNode node)

@@ -21,8 +21,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -607,6 +609,9 @@ namespace pwiz.Skyline.Model.Results
             private readonly BlockedArrayList<ChromTransition> _transitions =
                 new BlockedArrayList<ChromTransition>(ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
             private readonly List<Type> _scoreTypes;
+            private readonly List<byte> _textIdBytes = new List<byte>();
+            private readonly IDictionary<ImmutableList<byte>, int> _textIdIndexes 
+                = new Dictionary<ImmutableList<byte>, int>();
 
             public Writer(ChromatogramCache chromatogramCache, CacheFormat cacheFormat, Stream outputStream, FileStream outputStreamScans, FileStream outputStreamPeaks, FileStream outputStreamScores)
             {
@@ -688,10 +693,23 @@ namespace pwiz.Skyline.Model.Results
                 byte[] pointsCompressed = pointsStream.ToArray().Compress(3);
                 int lenCompressed = pointsCompressed.Length;
                 _outputStream.Write(pointsCompressed, 0, lenCompressed);
-
+                int textIdIndex;
+                int textIdLen;
+                var newTextId = GetNewTextId(originalHeader);
+                if (newTextId == null)
+                {
+                    textIdIndex = -1;
+                    textIdLen = 0;
+                }
+                else
+                {
+                    textIdIndex = CalcTextIdOffset(newTextId);
+                    textIdLen = newTextId.Count;
+                }
+                
                 var header = new ChromGroupHeaderInfo(originalHeader.Precursor,
-                                                      originalHeader.TextIdIndex,
-                                                      originalHeader.TextIdLen,
+                                                      textIdIndex,
+                                                      textIdLen,
                                                       fileIndex,
                                                       _transitions.Count - startTransitionIndex,
                                                       startTransitionIndex,
@@ -725,10 +743,52 @@ namespace pwiz.Skyline.Model.Results
                                                _originalCache.CachedFiles,
                                                _chromGroupHeaderInfos,
                                                _transitions,
+                                               _textIdBytes,
                                                _scoreTypes,
                                                _scoreCount,
-                                               _peakCount,
-                                               _originalCache);
+                                               _peakCount);
+            }
+
+            public ImmutableList<byte> GetNewTextId(ChromGroupHeaderInfo chromGroupHeaderInfo)
+            {
+                byte[] textIdBytes = _originalCache.GetTextIdBytes(chromGroupHeaderInfo.TextIdIndex, chromGroupHeaderInfo.TextIdLen);
+                if (textIdBytes == null)
+                {
+                    return null;
+                }
+                const CacheFormatVersion versionNewTextId = CacheFormatVersion.Thirteen;
+                ImmutableList<byte> newTextId;
+                if (_originalCache.Version < versionNewTextId ||
+                    _cacheFormat.FormatVersion >= versionNewTextId)
+                {
+                    newTextId = ImmutableList.ValueOf(textIdBytes);
+                }
+                else
+                {
+                    if (textIdBytes[0] == '#')
+                    {
+                        newTextId = ImmutableList.ValueOf(textIdBytes);
+                    }
+                    else
+                    {
+                        var oldKey = new PeptideLibraryKey(Encoding.UTF8.GetString(textIdBytes), 0);
+                        var newKey = oldKey.FormatToOneDecimal();
+                        newTextId = ImmutableList.ValueOf(Encoding.UTF8.GetBytes(newKey.ModifiedSequence));
+                    }
+                }
+                return newTextId;
+            }
+
+            public int CalcTextIdOffset(ImmutableList<byte> textId)
+            {
+                int offset;
+                if (!_textIdIndexes.TryGetValue(textId, out offset))
+                {
+                    offset = _textIdBytes.Count;
+                    _textIdBytes.AddRange(textId);
+                    _textIdIndexes.Add(textId, offset);
+                }
+                return offset;
             }
         }
     }

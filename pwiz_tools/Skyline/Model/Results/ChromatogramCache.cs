@@ -1497,6 +1497,17 @@ namespace pwiz.Skyline.Model.Results
                 ImmutableList.ValueOf(chromGroupIndexes.Select(indexes=>indexes.ToArray())), 
                 libraryKeys);
         }
+
+        public byte[] GetTextIdBytes(int textIdOffset, int textIdLength)
+        {
+            if (textIdOffset == -1)
+            {
+                return null;
+            }
+            byte[] result = new byte[textIdLength];
+            Array.Copy(_textIdBytes, textIdOffset, result, 0, textIdLength);
+            return result;
+        }
     }
 
     public struct ChromKeyIndices
