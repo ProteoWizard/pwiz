@@ -28,7 +28,6 @@ using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
