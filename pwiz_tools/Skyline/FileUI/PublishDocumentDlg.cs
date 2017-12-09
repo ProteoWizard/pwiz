@@ -120,9 +120,16 @@ namespace pwiz.Skyline.FileUI
                 {
                     folders = PanoramaPublishClient.GetInfoForFolders(server, null);
                 }
-                catch (WebException)
+                catch (Exception ex)
                 {
-                    listErrorServers.Add(server);
+                    if (ex is WebException || ex is PanoramaServerException)
+                    {
+                        listErrorServers.Add(server);
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
                 listServerFolders.Add(new KeyValuePair<Server, JToken>(server, folders));
 

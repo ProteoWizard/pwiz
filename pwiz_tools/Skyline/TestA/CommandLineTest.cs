@@ -2046,7 +2046,7 @@ namespace pwiz.SkylineTestA
                 buffer.ToString()
                     .Contains(
                         string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__,
-                            serverUri.Host)));
+                            serverUri.AbsoluteUri)));
             buffer.Clear();
 
 
@@ -2058,7 +2058,7 @@ namespace pwiz.SkylineTestA
                 buffer.ToString()
                     .Contains(
                         string.Format(Resources.EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server,
-                            serverUri.Host)));
+                            serverUri.AbsoluteUri)));
             buffer.Clear();
 
 

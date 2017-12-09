@@ -106,7 +106,7 @@ namespace pwiz.Skyline.ToolsUI
 
             if (_existing.Contains(server => !ReferenceEquals(_server, server) && Equals(updatedUri, server.URI)))
             {
-                helper.ShowTextBoxError(textServerURL, Resources.EditServerDlg_OkDialog_The_server__0__already_exists_, uriServer.Host);
+                helper.ShowTextBoxError(textServerURL, Resources.EditServerDlg_OkDialog_The_server__0__already_exists_, uriServer.AbsoluteUri);
                 return;
             }
 

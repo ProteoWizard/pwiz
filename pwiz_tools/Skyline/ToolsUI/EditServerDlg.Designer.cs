@@ -34,10 +34,8 @@ namespace pwiz.Skyline.ToolsUI
             this.instructionLabel = new System.Windows.Forms.Label();
             this.InputPanel = new System.Windows.Forms.Panel();
             this.lblProjectInfo = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.textServerURL = new System.Windows.Forms.TextBox();
             this.textPassword = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
             this.lblPassword = new System.Windows.Forms.Label();
             this.lblUsername = new System.Windows.Forms.Label();
             this.textUsername = new System.Windows.Forms.TextBox();
@@ -73,10 +71,8 @@ namespace pwiz.Skyline.ToolsUI
             this.InputPanel.Controls.Add(this.lblProjectInfo);
             this.InputPanel.Controls.Add(this.btnCancel);
             this.InputPanel.Controls.Add(this.btnOK);
-            this.InputPanel.Controls.Add(this.label2);
             this.InputPanel.Controls.Add(this.textServerURL);
             this.InputPanel.Controls.Add(this.textPassword);
-            this.InputPanel.Controls.Add(this.label1);
             this.InputPanel.Controls.Add(this.lblPassword);
             this.InputPanel.Controls.Add(this.lblUsername);
             this.InputPanel.Controls.Add(this.textUsername);
@@ -86,11 +82,6 @@ namespace pwiz.Skyline.ToolsUI
             // 
             resources.ApplyResources(this.lblProjectInfo, "lblProjectInfo");
             this.lblProjectInfo.Name = "lblProjectInfo";
-            // 
-            // label2
-            // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
             // 
             // textServerURL
             // 
@@ -102,11 +93,6 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.textPassword, "textPassword");
             this.textPassword.Name = "textPassword";
             this.textPassword.UseSystemPasswordChar = true;
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
             // 
             // lblPassword
             // 
@@ -169,8 +155,6 @@ namespace pwiz.Skyline.ToolsUI
         internal System.Windows.Forms.TextBox textUsername;
         private System.Windows.Forms.Label lblPassword;
         private System.Windows.Forms.Label lblUsername;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Panel InputPanel;
         private System.Windows.Forms.Label instructionLabel;
         private System.Windows.Forms.Panel InstructionPanel;
