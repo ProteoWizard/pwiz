@@ -28,27 +28,44 @@ runQC <- function() {
 
 	raw <- read.csv(arguments[1])
 	
-	if( !is.element(c('DetectionQValue'), colnames(raw)) ){
-	    filter.qvalue <- FALSE
-	} else {
-	    filter.qvalue <- TRUE
+	filter.qvalue <- FALSE;
+	if( is.element(c('DetectionQValue'), colnames(raw))) {
+	  detectionQValues<-as.numeric(as.character(raw$DetectionQValue));
+	  if (!all(is.na(detectionQValues))) {
+	    # Replace internal standard NA values with 0
+	    detectionQValues[is.na(detectionQValues) & "" != raw$StandardType] <- 0;
+	    if (any(is.na(detectionQValues))) 
+	    {
+	      message("Some NA values were found in DetectionQValue column. No qvalue_cutoff will be applied.")
+	    }
+	    else
+	    {
+	      raw$DetectionQValue<-detectionQValues;
+	      filter.qvalue <- TRUE;
+	    }
+	  }
 	}
+	
+	## remove the rows for iRT peptides
+	raw <- SkylinetoMSstatsFormat(raw,
+	                              filter_with_Qvalue = filter.qvalue)
 
 	## remove the rows for iRT peptides
 	raw <- SkylinetoMSstatsFormat(raw,
 	                              filter_with_Qvalue = filter.qvalue)
 
 	## get standard protein name from StandardType column
+	## select 'global standard' but, after process, it becomes Normalization??
 	standardpepname <- ""
-	if(sum(unique(raw$StandardType) %in% "Global Standard") !=0 ){
-		standardpepname <- as.character(unique(raw[raw$StandardType == "Global Standard", "PeptideModifiedSequence"]))
+	if(sum(unique(raw$StandardType) %in% "Normalization") !=0 ){
+		standardpepname <- as.character(unique(raw[raw$StandardType == "Normalization", "PeptideSequence"]))
 	}
-
-
+  
 	## check result grid missing or not
 	countna<-apply(raw, 2, function(x) sum(is.na(x) | x == ""))
 	naname<-names(countna[countna != 0])
-	naname<-naname[-which(naname %in% c("StandardType", "Intensity", "Truncated"))]
+	naname<-naname[-which(naname %in% c("StandardType", "Intensity", "Truncated",
+	                                    "FragmentIon", "ProductCharge"))]
 
 	if(length(naname) != 0){
 		stop(message(paste("Some ", paste(naname, collapse=", "), " have no value. Please check \"Result Grid\" in View. \n", sep="")))
@@ -105,7 +122,7 @@ runQC <- function() {
 	inputremoveproteins <- arguments[5]
 
 
-	quantData <- try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname,  fillIncompleteRows=(inputmissingpeaks=="TRUE"), featureSubset=input_feature_selection, remove_proteins_with_interference=(inputremoveproteins=="TRUE"), summaryMethod = "TMP", censoredInt="0", skylineReport=TRUE))
+	quantData <- try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname,  fillIncompleteRows=(inputmissingpeaks=="TRUE"), featureSubset=input_feature_selection, remove_proteins_with_interference=(inputremoveproteins=="TRUE"), summaryMethod = "TMP", censoredInt="0"))
 
 	if (class(quantData) != "try-error") {
 
