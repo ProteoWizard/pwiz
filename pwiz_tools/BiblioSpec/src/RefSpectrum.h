@@ -33,7 +33,6 @@
 /********************************************************************
  * Since the library is now stored in sqlite3 format, there are some 
  * changes based on that.
- * $Id$
  ********************************************************************/
 
 #ifndef REFSPECTRUM_H
@@ -122,6 +121,12 @@ class RefSpectrum : public Spectrum
   string getAdduct() const;
   string getInchiKey() const;
   string getotherKeys() const;
+  
+  // Sets result string to a tab seperated concatenation of molecule name, formula,
+  // inchikey, otherkeys and adduct when this is non-proteomic (has no mods).
+  // Sets result empty otherwise.
+  void getSmallMoleculeIonID(string &result) const;
+
   // make this private and only allow decoys as copy of refs?
   // create null spectrum by doing a circular shift of peaks
   void circularShift(double deltaMz, bool shiftRawPeaks);
