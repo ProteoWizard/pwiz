@@ -142,12 +142,12 @@ namespace pwiz.Skyline.Model
 
        public string MonoisotopicMasses
         {
-            get { return Format(mods => FormatMassModification(mods, MassType.Monoisotopic)); }
+            get { return Format(mods => FormatMassModification(mods, MassType.Monoisotopic, true)); }
         }
 
         public string AverageMasses
         {
-            get { return Format(mods => FormatMassModification(mods, MassType.Average)); }
+            get { return Format(mods => FormatMassModification(mods, MassType.Average, true)); }
         }
 
         public string ThreeLetterCodes
@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Model
 
         public override string ToString()
         {
-            return Format(mods=>FormatMassModification(mods, _defaultMassType));
+            return Format(mods=>FormatMassModification(mods, _defaultMassType, false));
         }
 
         private string FormatModsIndividually(Func<Modification, string> modFormatter)
@@ -199,7 +199,7 @@ namespace pwiz.Skyline.Model
             return modification.ShortName;
         }
 
-        public static string FormatMassModification(IEnumerable<Modification> mods, MassType massType)
+        public static string FormatMassModification(IEnumerable<Modification> mods, MassType massType, bool fullPrecision)
         {
             double mass = 0;
             foreach (var mod in mods)
@@ -211,7 +211,8 @@ namespace pwiz.Skyline.Model
             {
                 return String.Empty;
             }
-            string strMod = Math.Round(mass, 1).ToString(CultureInfo.InvariantCulture);
+            int precision = fullPrecision ? MassModification.MAX_PRECISION_TO_KEEP : 1;
+            string strMod = Math.Round(mass, precision).ToString(CultureInfo.InvariantCulture);
             if (mass > 0)
             {
                 strMod = "+" + strMod; // Not L10N
