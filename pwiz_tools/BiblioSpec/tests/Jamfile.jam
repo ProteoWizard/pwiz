@@ -289,6 +289,10 @@ blib-test-filter filter : : output/zmerged.filtered.blib : zmerged.filtered.chec
 
 blib-test-filter filter-mobility : : output/mse-mobility.filtered.blib : mse-mobility.filtered.check : output/mse-mobility.blib : <dependency>mse-mobility ;
 
+# Test BlibFilter on a small molecule library
+
+blib-test-filter filter-ssl-small-mol : : output/ssl-small-mol.filtered.blib : ssl-small-mol.filtered.check : output/ssl-small-mol.blib : <dependency>ssl-small-mol ;
+
 
 #make output/filtered.existing.blib : inputs/empty : @common.copy : <location>. ;
 #run-if-exists ExecuteBlib.cpp : : BlibFilter inputs/existing.blib output/filtered.existing.blib : 

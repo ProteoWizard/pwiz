@@ -307,6 +307,37 @@ string RefSpectrum::getotherKeys() const
     return smallMolMetadata_.otherKeys;
 }
 
+// Sets result string to a tab seperated concatenation of molecule name, formula,
+// inchikey, otherkeys and adduct when this is non-proteomic (has no mods).
+// Sets result empty otherwise.
+void RefSpectrum::getSmallMoleculeIonID(string &result) const
+{
+    result = "";
+    if (!getMods().empty())
+        return; // Not a small molecule
+
+    std::vector<string> ids;
+    ids.push_back(getChemicalFormula());
+    ids.push_back(getMoleculeName());
+    ids.push_back(getInchiKey());
+    ids.push_back(getotherKeys());
+    ids.push_back(getAdduct());
+    bool hasID = false;
+    for (int i = 0; i < ids.size(); i++)
+    {
+        if (hasID |= !ids[i].empty())
+        {
+            break;
+        }
+    }
+    if (hasID)
+    {
+        for (int i = 0; i < ids.size(); i++)
+        {
+            result += ids[i] + "\t";
+        }
+    }
+}
 
 void printFirstLastPeaks(vector<PEAK_T>* peaks, int num){
     cerr << "First " << num << " peaks are" << endl;

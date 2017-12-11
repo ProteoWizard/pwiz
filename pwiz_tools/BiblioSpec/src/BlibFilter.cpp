@@ -532,6 +532,11 @@ void BlibFilter::buildNonRedundantLib()
         tmpRef->setScoreType(scoreTypeIndex > 0 ? sqlite3_column_int(pStmt, scoreTypeIndex) : 0);
         tmpRef->setScanNumber(scanNumberIndex>0 ? sqlite3_column_int(pStmt, scanNumberIndex) : 0); // NB this isn't necessarily an integer value column, but nobody seems to care
 
+        // If this is a small molecule, note that for change-check purposes
+        string smallMoleculeIonID;
+        tmpRef->getSmallMoleculeIonID(smallMoleculeIonID); 
+        pepModSeq += smallMoleculeIonID; // One or the other of pepModSeq or smallMoleculeIonID will be empty
+
         int numPeaks = sqlite3_column_int(pStmt, numPeaksIndex);
 
         // get peaks for this spectrum

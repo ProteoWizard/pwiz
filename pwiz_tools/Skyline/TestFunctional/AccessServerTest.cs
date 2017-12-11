@@ -86,28 +86,29 @@ namespace pwiz.SkylineTestFunctional
             Server = VALID_NON_PANORAMA_SERVER;
             CheckServerInfoFailure(1);
 
-            // Same server (subpage of server)
+            // We assume that the first component of the path element is the contex path where LabKey Server is deployed.
+            // Both VALID_PANORAMA_Server and VALID_PANORAMA_SERVER/libkey will be saved as two different servers.
             Server = VALID_PANORAMA_SERVER + "/libkey";
-            CheckServerInfoFailure(1);
+            CheckServerInfoSuccess(2);
 
             // Non-existent server
             Server = NON_EXISTENT_SERVER;
-            CheckServerInfoFailure(1);
+            CheckServerInfoFailure(2);
 
             // Unknown state server
             if (_testClient != null)
             {
                 Server = UNKNOWN_STATE_SERVER;
-                CheckServerInfoFailure(1);
+                CheckServerInfoFailure(2);
             }
 
             // Bad URI Format
             Server = "w ww.google.com";
-            CheckServerInfoFailure(1);
+            CheckServerInfoFailure(2);
 
             // No server given
             Server = " ";
-            CheckServerInfoFailure(1);
+            CheckServerInfoFailure(2);
 
             OkDialog(ToolOptionsDlg, ToolOptionsDlg.OkDialog);
 
@@ -143,6 +144,8 @@ namespace pwiz.SkylineTestFunctional
             // Document should be published even if an invalid version is returned by the server -- Success 
             ((TestPanoramaPublishClient)_testPublishClient).ServerSkydVersion = "NINE";
             CheckPublishSuccess(WRITE_TARGETED, true);
+
+            TestPanoramaServerUrls();
         }
 
         public void CheckPublishSuccess(string nodeSelection, bool expectingSavedUri)
@@ -228,6 +231,38 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(editServerDlg);
             WaitForClosedForm(editServerListDlg);
             Assert.AreEqual(serverCount, Settings.Default.ServerList.Count);
+        }
+
+        private void TestPanoramaServerUrls()
+        {
+            var PWEB = "panoramaweb.org";
+            var PWEB_FULL = "https://panoramaweb.org/";
+            var PWEB_LK = "panoramaweb.org/labkey";
+            var PWEB_LK_FULL = "https://panoramaweb.org/labkey/";
+
+            var serverUri = PanoramaUtil.ServerNameToUri(PWEB);
+            var pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
+            Assert.AreEqual(pServer.ServerUri.AbsoluteUri, PWEB_FULL);
+            Assert.IsFalse(pServer.RemoveContextPath());
+            Assert.IsTrue(pServer.AddLabKeyContextPath());
+            Assert.AreEqual(pServer.ServerUri.AbsoluteUri, PWEB_LK_FULL);
+
+            serverUri = PanoramaUtil.ServerNameToUri(PWEB_LK);
+            pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
+            Assert.AreEqual(pServer.ServerUri.AbsoluteUri, PWEB_LK_FULL);
+            Assert.IsFalse(pServer.AddLabKeyContextPath());
+            Assert.IsTrue(pServer.RemoveContextPath());
+            Assert.AreEqual(pServer.ServerUri.AbsoluteUri, PWEB_FULL);
+
+            serverUri = PanoramaUtil.ServerNameToUri(PWEB_LK);
+            pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
+            Assert.AreEqual(pServer.ServerUri, PWEB_LK_FULL);
+            Assert.IsTrue(pServer.Redirect(PWEB_FULL + PanoramaUtil.ENSURE_LOGIN_PATH,
+                PanoramaUtil.ENSURE_LOGIN_PATH));
+            Assert.AreEqual(pServer.ServerUri, PWEB_FULL);
+
+            Assert.IsFalse(pServer.Redirect("/labkey/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH)); // Need full URL
+            Assert.IsFalse(pServer.Redirect("http:/another.server/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH)); // Not the same host
         }
 
         private class TestPanoramaClient : IPanoramaClient
