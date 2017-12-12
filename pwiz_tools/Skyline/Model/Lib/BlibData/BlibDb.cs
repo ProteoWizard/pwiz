@@ -360,6 +360,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 libAuthority, libId, Guid.NewGuid(), libraryRevision, schemaVersion);
 
             var dictLibrary = new Dictionary<LibKey, BiblioLiteSpectrumInfo>();
+            var setRedundantSpectraIds = new HashSet<int>();
 
             // Hash table to store the database IDs of any source files in the library
             // Source file information is available only in Bibliospec libraries, schema version >= 1
@@ -497,7 +498,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                         redundantSession = OpenWriteSession_Redundant();
                                         redundantTransaction = redundantSession.BeginTransaction();
                                     }
-                                    SaveRedundantSpectra(redundantSession, redundantSpectraKeys, dictFilesRedundant, refSpectra, library);
+                                    SaveRedundantSpectra(redundantSession, redundantSpectraKeys, dictFilesRedundant, refSpectra, library, setRedundantSpectraIds);
                                     redundantSpectraCount += redundantSpectraKeys.Count;
                                 }
                             }
@@ -595,11 +596,16 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                                  IEnumerable<SpectrumKeyTime> redundantSpectraIds,
                                                  IDictionary<string, long> dictFiles,
                                                  DbRefSpectra refSpectra,
-                                                 Library library)
+                                                 Library library,
+                                                 ISet<int> savedSpectraIds)
         {
             foreach (var specLiteKey in redundantSpectraIds)
             {
                 if (specLiteKey.Key.RedundantId == 0)
+                {
+                    continue;
+                }
+                if (!savedSpectraIds.Add(specLiteKey.Key.RedundantId))
                 {
                     continue;
                 }
