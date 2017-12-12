@@ -90,13 +90,16 @@ int main(int argc, char** argv)
 
     // for multiple libs, put them in alphabetical order since we have no
     // guarantee how they will be passed to this
-    sort(libNames.begin(), libNames.end());
-
-    // create an empty file for the output database
-    if (!bfs::exists(libNames.back()))
+    if (libNames.size() > 0)
     {
-        bfs::create_directories(bfs::path(libNames.back()).parent_path());
-        ofstream(libNames.back().c_str());
+        sort(libNames.begin(), libNames.end());
+
+        // create an empty file for the output database
+        if (!bfs::exists(libNames.back()))
+        {
+            bfs::create_directories(bfs::path(libNames.back()).parent_path());
+            ofstream(libNames.back().c_str());
+        }
     }
 
     string libName; 

@@ -97,7 +97,7 @@ rule blib-test-build ( name : args * : output-name : reference-names + : inputs 
     run-if-exists ExecuteBlib.cpp
       : $(args) [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/$(inputs) ]
       : BlibBuild
-      : $(requirements) <conditional>@test-data
+      : <dependency>BlibBuild $(requirements) <conditional>@test-data
       : build-$(name) ;
     run-if-exists CompareLibraryContents.cpp $(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
       : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
@@ -115,7 +115,7 @@ rule blib-test-filter ( name : args * : output-name : reference-names + : inputs
     run-if-exists ExecuteBlib.cpp
       : $(args) [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/$(output-name) ]
       : BlibFilter
-      : $(requirements) <conditional>@test-data
+      : <dependency>BlibFilter $(requirements) <conditional>@test-data
       : build-$(name) ;
     run-if-exists CompareLibraryContents.cpp $(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
       : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
@@ -126,6 +126,24 @@ rule blib-test-filter ( name : args * : output-name : reference-names + : inputs
       : $(name) ;
 }
 
+rule blib-test-tables ( name : output-name : reference-names +  )
+{
+    local this_path = [ path.make $(THIS_PATH) ] ;
+    local this_path_native = [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/$(output-name) ] ;
+
+    run-if-exists ExecuteBlib.cpp
+      : -d_$(this_path_native)
+      : BlibBuild
+      : <dependency>BlibBuild
+      : build-$(name) ;
+    run-if-exists CompareTextFiles.cpp
+      : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
+      :
+      : <include>../src
+        <dependency>build-$(name)
+      : compare-$(name) ;
+}
+
 rule blib-test-to-ms2 ( name : args * : output-name : reference-names + : inputs * : requirements * )
 {
     local this_path = [ path.make $(THIS_PATH) ] ;
@@ -133,7 +151,7 @@ rule blib-test-to-ms2 ( name : args * : output-name : reference-names + : inputs
     run-if-exists ExecuteBlib.cpp
       : $(args) [ sequence.transform path.native : $(this_path)/$(inputs) $(this_path)/$(output-name) ]
       : BlibToMs2
-      : $(requirements) <conditional>@test-data
+      : <dependency>BlibToMs2 $(requirements) <conditional>@test-data
       : build-$(name) ;
     run-if-exists CompareTextFiles.cpp
       : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
@@ -151,7 +169,7 @@ rule blib-test-search ( name : args * : output-name : reference-names + : inputs
     run-if-exists ExecuteBlib.cpp
       : $(args) [ sequence.transform path.native : $(this_path)/$(inputs) ]
       : BlibSearch
-      : $(requirements) <conditional>@test-data
+      : <dependency>BlibSearch $(requirements) <conditional>@test-data
       : build-$(name) ;
     run-if-exists CompareTextFiles.cpp
       : [ sequence.transform path.native : $(this_path)/$(output-name) $(this_path)/reference/$(reference-names) ]
@@ -292,6 +310,10 @@ blib-test-filter filter-mobility : : output/mse-mobility.filtered.blib : mse-mob
 # Test BlibFilter on a small molecule library
 
 blib-test-filter filter-ssl-small-mol : : output/ssl-small-mol.filtered.blib : ssl-small-mol.filtered.check : output/ssl-small-mol.blib : <dependency>ssl-small-mol ;
+
+# Test self-describing -d option
+
+blib-test-tables tables : output/tables.txt : tables.check ;
 
 
 #make output/filtered.existing.blib : inputs/empty : @common.copy : <location>. ;
