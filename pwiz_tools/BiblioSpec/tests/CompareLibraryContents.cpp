@@ -304,10 +304,12 @@ int test (const vector<string>& args)
         lineNum++;
     }
 
-    if( lineNum < outputLines.size() )
+    if (lineNum < outputLines.size())
+    {
+        printObserved(outputLines, libName);
         throw runtime_error("Observed output has more lines (" + lexical_cast<string>(outputLines.size()) +
                             ") than expected (" + lexical_cast<string>(lineNum) + ")");
-
+        }
     cerr << "All output matches" << endl;
 
     return 0;
