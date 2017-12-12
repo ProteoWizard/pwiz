@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Util
 
             if (!string.IsNullOrEmpty(query))
             {
-                path = path + "?" + query;
+                path = path + "?" + query;  // Not L10N
             }
 
             return new Uri(serverUri, path);
@@ -1099,9 +1099,9 @@ namespace pwiz.Skyline.Util
 
         public bool RemoveContextPath()
         {
-            if (!ServerUri.AbsolutePath.Equals("/"))
+            if (!ServerUri.AbsolutePath.Equals("/"))  // Not L10N
             {
-                ServerUri = new UriBuilder(ServerUri){Path="/"}.Uri;
+                ServerUri = new UriBuilder(ServerUri){Path="/"}.Uri;  // Not L10N
                 return true;
             }
             return false;
@@ -1109,7 +1109,7 @@ namespace pwiz.Skyline.Util
 
         public bool AddLabKeyContextPath()
         {
-            if (ServerUri.AbsolutePath.Equals("/"))
+            if (ServerUri.AbsolutePath.Equals("/"))  // Not L10N
             {
                 ServerUri = new UriBuilder(ServerUri) { Path = PanoramaUtil.LABKEY_CTX }.Uri;
                 return true;
