@@ -313,7 +313,7 @@ blib-test-filter filter-ssl-small-mol : : output/ssl-small-mol.filtered.blib : s
 
 # Test self-describing -d option
 
-blib-test-tables tables : output/tables.txt : tables.check ;
+blib-test-tables tables : output/tables.txt : tables.check tables.skip-lines ;
 
 
 #make output/filtered.existing.blib : inputs/empty : @common.copy : <location>. ;

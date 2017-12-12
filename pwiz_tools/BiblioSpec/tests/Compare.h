@@ -94,8 +94,12 @@ double getField(int fieldIdx, const string& line,
     field = line.substr(start + 1, end - start - 1);
     finalStart = start + 1;
     finalEnd = end;
-
-    return atof(field.c_str());
+    const char *startp = field.c_str();
+    char *endp;
+    double result = strtod(startp, &endp);
+    if (endp == startp)
+        result = NAN; // Not a number
+    return result;
 }
 
 // account for Windows line endings
@@ -155,8 +159,12 @@ bool linesMatch(const string& expectedRaw,
         double observedField = getField(fieldIdx, observed,
             obsStart, obsEnd, parsedObserved);
 
-        if (parsedExpected.find(".") == string::npos)
+        if (isnan(observedField) || isnan(expectedField))
+        {
+            if (parsedExpected.compare(parsedObserved) != 0)
+                return false;
             continue; // Not a double, leave it alone
+        }
 
         // get absolute value of difference between the two
         double diff = expectedField - observedField;
