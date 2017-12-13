@@ -296,6 +296,7 @@
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
     <Compile Include="Model\MassModification.cs" />
+    <Compile Include="Model\Optimization\OptimizationDictionary.cs" />
     <Compile Include="Model\TargetMap.cs" />
     <Compile Include="Controls\Databinding\ChooseFormatDlg.cs">
       <SubType>Form</SubType>

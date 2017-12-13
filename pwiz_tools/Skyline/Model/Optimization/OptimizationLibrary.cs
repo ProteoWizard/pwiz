@@ -89,7 +89,8 @@ namespace pwiz.Skyline.Model.Optimization
 
                 // Calculate the minimal set of optimizations needed for this document
                 var persistOptimizations = new List<DbOptimization>();
-                var dictOptimizations = _database.GetOptimizations().ToDictionary(opt => opt.Key);
+                var dictOptimizations = new OptimizationDictionary(_database.GetOptimizations());
+                var persistedKeys = new HashSet<OptimizationKey>();
                 foreach (PeptideGroupDocNode seq in document.MoleculeGroups)
                 {
                     // Skip peptide groups with no transitions
@@ -106,12 +107,13 @@ namespace pwiz.Skyline.Model.Optimization
                                 foreach (var optType in Enum.GetValues(typeof(OptimizationType)).Cast<OptimizationType>())
                                 {
                                     var optimizationKey = new OptimizationKey(optType, modSeq, charge, transition.FragmentIonName, transition.Transition.Adduct);
-                                    DbOptimization dbOptimization;
-                                    if (dictOptimizations.TryGetValue(optimizationKey, out dbOptimization))
+                                    foreach (var dbOptimization in dictOptimizations.EntriesMatching(optimizationKey))
                                     {
-                                        persistOptimizations.Add(new DbOptimization(dbOptimization.Key, dbOptimization.Value));
-                                        // Only add once
-                                        dictOptimizations.Remove(optimizationKey);
+                                        if (persistedKeys.Add(dbOptimization.Key))
+                                        {
+                                            persistOptimizations.Add(dbOptimization);
+                                        }
+                                        break;
                                     }
                                 }
                             }
