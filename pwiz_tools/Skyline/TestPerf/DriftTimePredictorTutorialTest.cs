@@ -195,7 +195,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                 PauseForScreenShot("Full scan unzoomed 3D MS/MS graph", 14);
 
                 const double clickTime3 = 41.48;
-                ClickChromatogram(yeastReplicateName, clickTime3, 3.35E+4, PaneKey.PRODUCTS);
+                ClickChromatogram(yeastReplicateName, clickTime3, 3.14E+4, PaneKey.PRODUCTS);
                 PauseForScreenShot("Interference full scan unzoomed 3D MS/MS graph", 15);
                 ValidateClickTime(fullScanGraph, clickTime3);
 
