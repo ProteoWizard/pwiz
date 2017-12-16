@@ -199,7 +199,11 @@ namespace pwiz.SkylineTestTutorial
 
             TestRTResidualsSwitch();
 
-            RunDlg<EditRTDlg>(SkylineWindow.CreateRegression, editRTDlg => editRTDlg.OkDialog());
+            RunDlg<EditRTDlg>(SkylineWindow.CreateRegression, editRTDlg =>
+            {
+                Assert.AreEqual(146, editRTDlg.PeptideCount);
+                editRTDlg.OkDialog();
+            });
 
             RunUI(() => SkylineWindow.ShowGraphRetentionTime(false));
             RunUI(SkylineWindow.AutoZoomNone);
