@@ -130,20 +130,20 @@ namespace pwiz.SkylineTestTutorial
             // Wait a bit in case web access is turned on and backgroundProteome is actually resolving protein metadata
             int millis = (AllowInternetAccess ? 300 : 60) * 1000;
             WaitForConditionUI(millis, () =>
-                SkylineWindow.Document.Settings.HasBackgroundProteome &&
-                !SkylineWindow.Document.Settings.PeptideSettings.BackgroundProteome.NeedsProteinMetadataSearch,
+                SkylineWindow.DocumentUI.Settings.HasBackgroundProteome &&
+                !SkylineWindow.DocumentUI.Settings.PeptideSettings.BackgroundProteome.NeedsProteinMetadataSearch,
                 "backgroundProteome.NeedsProteinMetadataSearch");
 
             // FASTA paste will happen on the UI thread
             RunUI(() =>
             {
                 // Really truly fully loaded?
-                var allDescriptions = SkylineWindow.Document.NonLoadedStateDescriptionsFull.ToArray();
+                var allDescriptions = SkylineWindow.DocumentUI.NonLoadedStateDescriptionsFull.ToArray();
                 if (allDescriptions.Length > 0)
                     Assert.Fail(TextUtil.LineSeparate("Document not fully loaded:", TextUtil.LineSeparate(allDescriptions)));
 
                 // Should have been 3 changes: 1. peptide settings, 2. library load, 3. background proteome completion
-                AssertEx.IsDocumentState(SkylineWindow.Document, 3, 0, 0, 0, 0);
+                AssertEx.IsDocumentState(SkylineWindow.DocumentUI, 3, 0, 0, 0, 0);
             });
 
             // Pasting FASTA Sequences, p. 5

@@ -24,7 +24,6 @@ using System.Linq;
 using System.Threading;
 using NHibernate;
 using NHibernate.Exceptions;
-using pwiz.Common.Collections;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -60,7 +59,7 @@ namespace pwiz.Skyline.Model.Optimization
         private readonly ReaderWriterLock _databaseLock;
 
         private DateTime _modifiedTime;
-        private ImmutableDictionary<OptimizationKey, double> _dictLibrary;
+        private OptimizationDictionary _dictLibrary;
 
         public OptimizationDb(string path, ISessionFactory sessionFactory)
         {
@@ -148,28 +147,15 @@ namespace pwiz.Skyline.Model.Optimization
             return ChangeProp(ImClone(this), im => im.LoadOptimizations(newOptimizations));
         }
 
-        public IDictionary<OptimizationKey, double> DictLibrary
+        public OptimizationDictionary DictLibrary
         {
             get { return _dictLibrary; }
-            set { _dictLibrary = new ImmutableDictionary<OptimizationKey, double>(value); }
+            set { _dictLibrary = value; }
         }
 
         private void LoadOptimizations(IEnumerable<DbOptimization> optimizations)
         {
-            var dictLoad = new Dictionary<OptimizationKey, double>();
-
-            foreach (var optimization in optimizations)
-            {
-                try
-                {
-                    dictLoad.Add(optimization.Key, optimization.Value);
-                }
-                catch (ArgumentException)
-                {
-                }
-            }
-
-            DictLibrary = dictLoad;
+            DictLibrary = new OptimizationDictionary(optimizations);
         }
 
         #endregion
