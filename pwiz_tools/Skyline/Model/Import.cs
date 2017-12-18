@@ -114,10 +114,10 @@ namespace pwiz.Skyline.Model
                 {
                     if (!requireLibraryMatch)
                     {
-                        if (_countIons > SrmDocument.MAX_TRANSITION_COUNT)
+                        if (_countIons > SrmDocument.MaxTransitionCount)
                         {
                             throw new InvalidDataException(TextUtil.LineSeparate(string.Format(Resources.FastaImporter_Import_This_import_causes_the_document_to_contain_more_than__0_n0__transitions_in__1_n0__peptides_at_line__2_n0__,
-                                SrmDocument.MAX_TRANSITION_COUNT, _countPeptides, linesRead), Resources.FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_));
+                                SrmDocument.MaxTransitionCount, _countPeptides, linesRead), Resources.FastaImporter_Import_Check_your_settings_to_make_sure_you_are_using_a_library_and_restrictive_enough_transition_selection_));
                         }
                         else if (_countPeptides > SrmDocument.MAX_PEPTIDE_COUNT)
                         {
