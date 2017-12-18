@@ -242,7 +242,7 @@ namespace pwiz.Skyline.Model
         public const int MAX_PEPTIDE_COUNT = 200 * 1000;
         public const int MAX_TRANSITION_COUNT = 5 * 1000 * 1000;
 
-        public static readonly int _maxTransitionCount = Install.Is64Bit ? MAX_TRANSITION_COUNT : MAX_TRANSITION_COUNT/2;   // To keep from running out of memory on 32-bit
+        public static readonly int _maxTransitionCount = Install.Is64Bit ? MAX_TRANSITION_COUNT : MAX_TRANSITION_COUNT/5;   // To keep from running out of memory on 32-bit
 
         public static int MaxTransitionCount
         {
