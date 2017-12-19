@@ -889,7 +889,7 @@ namespace pwiz.Skyline.Model
                 var isotopeDistInfo = IsotopeDistInfo;
                 var libInfo = LibInfo;
                 Helpers.AssignIfEquals(ref isotopeDistInfo, existing.IsotopeDistInfo);
-                Helpers.AssignIfEquals(ref libInfo, LibInfo);
+                Helpers.AssignIfEquals(ref libInfo, existing.LibInfo);
                 return new TransitionQuantInfo(isotopeDistInfo, libInfo, existing.Quantititative);
             }
 

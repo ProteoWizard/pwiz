@@ -1201,8 +1201,24 @@ namespace pwiz.Skyline.Model
                     if (!measuredResults.TryLoadChromatogram(chromatograms, nodePep, this, mzMatchTolerance,
                             loadPoints, listChromGroupInfo, out temp))
                     {
+                        bool useOldResults = iResultOld != -1 && !chromatograms.IsLoadedAndAvailable(measuredResults);
+
                         for (int iTran = 0; iTran < Children.Count; iTran++)
-                            resultsCalc.AddTransitionChromInfo(iTran, null);
+                        {
+                            var nodeTran = (TransitionDocNode)Children[iTran];
+                            var results = default(ChromInfoList<TransitionChromInfo>);
+                            if (useOldResults)
+                            {
+                                if (nodeTran.HasResults && nodeTran.Results.Count > iResultOld)
+                                {
+                                    results = nodeTran.Results[iResultOld];
+                                }
+                            }
+                            if (results.IsEmpty)
+                                resultsCalc.AddTransitionChromInfo(iTran, null);
+                            else
+                                resultsCalc.AddTransitionChromInfo(iTran, results.ToArray());
+                        }
                     }
                     else
                     {

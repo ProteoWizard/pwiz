@@ -1065,7 +1065,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             {
                 peptideLibraries = pepLibraries.ChangeRankId(null);
             }
-            peptideLibraries = peptideLibraries.ChangeLibraries(listLibrarySpecs, listLibraries);
+            peptideLibraries = peptideLibraries.ChangeLibraries(listLibrarySpecs, listLibraries)
+                .ChangeDocumentLibrary(listLibrarySpecs.Any(spec => spec.IsDocumentLibrary));
             return document.ChangeSettingsNoDiff(
                 settings.ChangePeptideSettings(settings.PeptideSettings.ChangeLibraries(peptideLibraries)));
         }
