@@ -122,13 +122,14 @@ namespace SkylineTester
                         "MassLynxRaw.dll",
                         "cdt.dll",
                         "modifications.xml",
-                        "msparser.dll",
                         "quantitation_1.xsd",
                         "quantitation_2.xsd",
                         "unimod_2.xsd"
                     };
-                    // Locate BlibToMS2
                     var dir = Directory.GetCurrentDirectory();
+                    files.Add(dir.Contains("Debug") ? "msparserD.dll" : "msparser.dll");
+
+                    // Locate BlibToMS2
                     var parent = dir.IndexOf("Skyline\\", StringComparison.Ordinal);
                     if (parent > 0)
                     {
