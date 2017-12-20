@@ -112,6 +112,40 @@ namespace SkylineTester
                     }
                 }
 
+                else if ((String.Empty + Path.GetFileName(zipPath)).ToLower() == "bibliospec.zip")
+                {
+                    // Create a BiblioSpec distro
+                    var files = new List<string>
+                    {
+                        "BlibBuild.exe",
+                        "BlibFilter.exe",
+                        "MassLynxRaw.dll",
+                        "cdt.dll",
+                        "modifications.xml",
+                        "msparser.dll",
+                        "quantitation_1.xsd",
+                        "quantitation_2.xsd",
+                        "unimod_2.xsd"
+                    };
+                    // Locate BlibToMS2
+                    var dir = Directory.GetCurrentDirectory();
+                    var parent = dir.IndexOf("Skyline\\", StringComparison.Ordinal);
+                    if (parent > 0)
+                    {
+                        dir = dir.Substring(0, parent);
+                        var blib2ms2 = dir + "Shared\\BiblioSpec\\obj\\x64\\BlibToMs2.exe";
+                        if (File.Exists(blib2ms2)) // Don't worry about this for a 32 bit build, we don't distribute that
+                        {
+                            files.Add(blib2ms2);
+                        }
+                    }
+                    foreach (var file in files)
+                    {
+                        Console.WriteLine(file);
+                        zipFile.AddFile(file, string.Empty);
+                    }
+                }
+
                 else
                 {
                     // Add SkylineTester at top level of zip file.
