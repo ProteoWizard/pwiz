@@ -527,9 +527,21 @@ namespace pwiz.Skyline.SettingsUI
             AddFormulaSymbol(BioMassCalc.O18);
         }
 
+        private bool _inTextChanged;
         private void textFormula_TextChanged(object sender, EventArgs e)
         {
-            UpdateAverageAndMonoTextsForFormula();
+            if (!_inTextChanged)
+            {
+                try
+                {
+                    _inTextChanged = true;
+                    UpdateAverageAndMonoTextsForFormula();
+                }
+                finally
+                {
+                    _inTextChanged = false;
+                }
+            }
         }
 
         private void textMono_TextChanged(object sender, EventArgs e)
