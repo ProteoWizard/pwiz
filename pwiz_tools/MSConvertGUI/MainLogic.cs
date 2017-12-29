@@ -55,33 +55,39 @@ namespace MSConvertGUI
         {
             string runId = inputMsData.run.id;
 
-
-            // if necessary, adjust runId so it makes a suitable filename
-            if (String.IsNullOrEmpty(runId))
-                runId = Path.GetFileNameWithoutExtension(inputFilename) ?? string.Empty;
-            else
+            try
             {
-                string tempExtension = (Path.GetExtension(runId) ?? string.Empty).ToLower();
-                if (tempExtension == ".mzml" ||
-                    tempExtension == ".mzxml" ||
-                    tempExtension == ".xml" ||
-                    tempExtension == ".mgf" ||
-                    tempExtension == ".ms2" ||
-                    tempExtension == ".cms2")
-                    runId = Path.GetFileNameWithoutExtension(runId) ?? string.Empty;
+                // if necessary, adjust runId so it makes a suitable filename
+                if (String.IsNullOrEmpty(runId))
+                    runId = Path.GetFileNameWithoutExtension(inputFilename) ?? string.Empty;
+                else
+                {
+                    string tempExtension = (Path.GetExtension(runId) ?? string.Empty).ToLower();
+                    if (tempExtension == ".mzml" ||
+                        tempExtension == ".mzxml" ||
+                        tempExtension == ".xml" ||
+                        tempExtension == ".mgf" ||
+                        tempExtension == ".ms2" ||
+                        tempExtension == ".cms2")
+                        runId = Path.GetFileNameWithoutExtension(runId) ?? string.Empty;
+                }
+
+                // this list is for Windows; it's a superset of the POSIX list
+                const string illegalFilename = "\\/*:?<>|\"";
+                foreach (var t in illegalFilename)
+                    if (runId.Contains(t))
+                        runId = runId.Replace(t, '_');
+
+                var newFilename = runId + Extension;
+                var fullPath = Path.Combine(OutputPath, newFilename);
+                return fullPath;
             }
-
-            // this list is for Windows; it's a superset of the POSIX list
-            const string illegalFilename = "\\/*:?<>|\"";
-            foreach (var t in illegalFilename)
-                if (runId.Contains(t))
-                    runId = runId.Replace(t, '_');
-
-            var newFilename = runId + Extension;
-            var fullPath = Path.Combine(OutputPath, newFilename);
-            return fullPath;
+            catch(ArgumentException e)
+            {
+                throw new ArgumentException(String.Format("error generating output filename for input file '{0}' and output run id '{1}'", inputFilename, runId), e);
+            }
         }
-    } ;
+    }
 
     public class MainLogic : IterationListener
     {
