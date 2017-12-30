@@ -77,7 +77,7 @@ namespace Element {
 /// enumeration of the elements
 enum PWIZ_API_DECL Type
 {
-    C, H, O, N, S, P, _13C, _2H, _18O, _15N,
+    C, H, O, N, S, P, _13C, _2H, _18O, _15N, // Order matters: _15N is the end of the CHONSP entries
     He, Li, Be, B, F, Ne, 
     Na, Mg, Al, Si, Cl, Ar, K, Ca, 
     Sc, Ti, V, Cr, Mn, Fe, Co, Ni, Cu, Zn, 
@@ -89,7 +89,7 @@ enum PWIZ_API_DECL Type
     Tl, Pb, Bi, Po, At, Rn, Fr, Ra, Ac, Th, 
     Pa, U, Np, Pu, Am, Cm, Bk, Cf, Es, Fm, 
     Md, No, Lr, Rf, Db, Sg, Bh, Hs, Mt, Uun, 
-    Uuu, Uub, Uuq, Uuh
+    Uuu, Uub, Uuq, Uuh, _3H
 };
 
 

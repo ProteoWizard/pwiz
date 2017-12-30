@@ -52,6 +52,7 @@ struct PWIZ_API_DECL Element
     double atomicWeight;
     Isotope* isotopes;
     int isotopesSize;
+    const char* synonym; // As with "D" for "_2H"
 };
 
 
