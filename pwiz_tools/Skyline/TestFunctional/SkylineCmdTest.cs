@@ -39,24 +39,27 @@ namespace pwiz.SkylineTestFunctional
             // failure to start
             {
                 var process = Process.Start(GetProcessStartInfo("--invalidargument"));
-                Assert.IsNotNull(process);
-                Assert.IsTrue(process.WaitForExit(10000));
-                Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, process.ExitCode);
+                WaitForExit(process, Program.EXIT_CODE_FAILURE_TO_START);
             }
             // ran with errors
             {
                 var process = Process.Start(GetProcessStartInfo("\"--in=" + TestFilesDir.GetTestPath("invalidpath.sky") + "\""));
-                Assert.IsNotNull(process);
-                Assert.IsTrue(process.WaitForExit(10000));
-                Assert.AreEqual(Program.EXIT_CODE_RAN_WITH_ERRORS, process.ExitCode);
+                WaitForExit(process, Program.EXIT_CODE_RAN_WITH_ERRORS);
             }
             // success
             {
                 var process = Process.Start(GetProcessStartInfo("\"--in=" + TestFilesDir.GetTestPath("SkylineCmdTest.sky") + "\""));
-                Assert.IsNotNull(process);
-                Assert.IsTrue(process.WaitForExit(10000));
-                Assert.AreEqual(Program.EXIT_CODE_SUCCESS, process.ExitCode);
+                WaitForExit(process, Program.EXIT_CODE_SUCCESS);
             }
+        }
+
+        private const int EXIT_WAIT_TIME = 20 * 1000;   // 20 seconds
+
+        private static void WaitForExit(Process process, int exitCode)
+        {
+            Assert.IsNotNull(process);
+            Assert.IsTrue(process.WaitForExit(EXIT_WAIT_TIME), string.Format("SkylineCmd not exited in {0} seconds", EXIT_WAIT_TIME/1000));
+            Assert.AreEqual(exitCode, process.ExitCode);
         }
 
         private ProcessStartInfo GetProcessStartInfo(string arguments)
