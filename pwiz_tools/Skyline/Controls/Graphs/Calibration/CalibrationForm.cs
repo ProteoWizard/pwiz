@@ -179,6 +179,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             zedGraphControl.GraphPane.YAxis.Title.Text = curveFitter.GetYAxisTitle();
             CalibrationCurve = curveFitter.GetCalibrationCurve();
             double minX = double.MaxValue, maxX = double.MinValue;
+            double minY = double.MaxValue;
             _scatterPlots = new CurveList();
             foreach (var sampleType in SampleType.ListSampleTypes())
             {
@@ -198,8 +199,9 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         continue;
                     }
                     double? y = curveFitter.GetYValue(iReplicate);
+                    double? xCalculated = curveFitter.GetCalculatedXValue(CalibrationCurve, iReplicate);
                     double? x = curveFitter.GetSpecifiedXValue(iReplicate)
-                                ?? curveFitter.GetCalculatedXValue(CalibrationCurve, iReplicate);
+                                ?? xCalculated;
 
                     if (y.HasValue && x.HasValue)
                     {
@@ -216,7 +218,19 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         {
                             minX = Math.Min(minX, x.Value);
                         }
+                        if (!Options.LogPlot || y.Value > 0)
+                        {
+                            minY = Math.Min(minY, y.Value);
+                        }
                         maxX = Math.Max(maxX, x.Value);
+                        if (xCalculated.HasValue)
+                        {
+                            maxX = Math.Max(maxX, xCalculated.Value);
+                            if (!Options.LogPlot || xCalculated.Value > 0)
+                            {
+                                minX = Math.Min(minX, xCalculated.Value);
+                            }
+                        }
                     }
                 }
                 if (pointPairList.Any())
@@ -281,9 +295,28 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 double? xSelected = curveFitter.GetCalculatedXValue(CalibrationCurve, _skylineWindow.SelectedResultsIndex);
                 if (xSelected.HasValue && ySelected.HasValue)
                 {
-                    ArrowObj arrow = new ArrowObj(xSelected.Value, ySelected.Value, xSelected.Value,
-                        ySelected.Value) {Line = {Color = GraphSummary.ColorSelected}};
-                    zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
+                    var selectedLineColor = Color.FromArgb(128, GraphSummary.ColorSelected);
+                    var verticalLine = new LineObj(xSelected.Value, ySelected.Value, xSelected.Value, options.LogPlot ? minY : 0)
+                    {
+                        Line = { Color = selectedLineColor },
+                        Location = { CoordinateFrame = CoordType.AxisXYScale },
+                        ZOrder = ZOrder.E_BehindCurves,
+                        IsClippedToChartRect = true
+                    };
+                    zedGraphControl.GraphPane.GraphObjList.Add(verticalLine);
+                    double? xSpecified = curveFitter.GetSpecifiedXValue(_skylineWindow.SelectedResultsIndex);
+                    if (xSpecified.HasValue)
+                    {
+                        var horizontalLine = new LineObj(xSpecified.Value, ySelected.Value, xSelected.Value,
+                            ySelected.Value)
+                        {
+                            Line = {Color = selectedLineColor},
+                            Location = {CoordinateFrame = CoordType.AxisXYScale},
+                            ZOrder = ZOrder.E_BehindCurves,
+                            IsClippedToChartRect = true
+                        };
+                        zedGraphControl.GraphPane.GraphObjList.Add(horizontalLine);
+                    }
                 }
 
                 var quantificationResult = curveFitter.GetQuantificationResult(_skylineWindow.SelectedResultsIndex);
