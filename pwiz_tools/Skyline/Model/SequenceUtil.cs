@@ -989,7 +989,7 @@ namespace pwiz.Skyline.Model
             var isotopeDescriptionIsInAdduct = adductForIsotopeLabels.HasIsotopeLabels;
             if (!string.IsNullOrEmpty(mol.Formula) && typedMods != null && !isotopeDescriptionIsInAdduct)
             {
-                isotopicFormula = typedMods.LabelType.IsLight? mol.Formula : GetHeavyFormula(mol.Formula, typedMods.Modifications[0].LabelAtoms);
+                isotopicFormula = typedMods.LabelType.IsLight || !typedMods.Modifications.Any() ? mol.Formula : GetHeavyFormula(mol.Formula, typedMods.Modifications[0].LabelAtoms);
                 mass = massCalc.CalculateMassFromFormula(isotopicFormula);
             }
             else

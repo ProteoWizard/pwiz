@@ -64,6 +64,10 @@ namespace pwiz.Skyline.Model
                               bool autoManageChildren)
             : base(id, annotations, children, autoManageChildren)
         {
+            if (mods == null && !id.Target.IsProteomic)
+            {
+                mods = ExplicitMods.EMPTY; // Small molecules take label info from adducts, but a null value is problematic
+            }
             ExplicitMods = mods;
             SourceKey = sourceKey;
             GlobalStandardType = standardType;
@@ -169,7 +173,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public ExplicitMods SourceExplicitMods { get { return SourceKey != null ? SourceKey.ExplicitMods : ExplicitMods; } }
 
-        public bool HasExplicitMods { get { return ExplicitMods != null; } }
+        public bool HasExplicitMods { get { return !ExplicitMods.IsNullOrEmpty(ExplicitMods); } } // Small molecules will have a dummy ExplicitMods but never use it
 
         public bool HasVariableMods { get { return HasExplicitMods && ExplicitMods.IsVariableStaticMods; } }
 

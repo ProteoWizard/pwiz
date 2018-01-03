@@ -131,6 +131,15 @@ namespace pwiz.SkylineTestFunctional
             BuildLibraryError("truncated.pep.XML", null);
             BuildLibraryError("no_such_file.pep.XML", null, "Failed to open");
             BuildLibraryError("missing_mzxml.pep.XML", null, "Could not find spectrum file");
+
+            // Check for proper handling of labeled addducts in small molecule files 
+            // (formerly this would throw on a null object, fixed with the use of ExplicitMods.EMPTY)
+            BuildLibraryValid("heavy_adduct.ssl", true, false, false, 1);
+            // Make sure explorer handles this adduct type
+            var viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+            RunUI(() => Assume.IsTrue(viewLibUI.GraphItem.IonLabels.Any()));
+            RunUI(viewLibUI.CancelDialog);
+
             // Barbara added code to ProteoWizard to rebuild a missing or invalid mzXML index
             // BuildLibraryError("bad_mzxml.pep.XML", "<index> not found");
             BuildLibraryValid(TestFilesDir.GetTestPath("library_errors"), new[] { "bad_mzxml.pep.XML" }, false, false, false, 1);
