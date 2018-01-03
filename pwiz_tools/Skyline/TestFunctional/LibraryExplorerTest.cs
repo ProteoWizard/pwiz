@@ -71,6 +71,7 @@ namespace pwiz.SkylineTestFunctional
                                                        new TestLibInfo(ANL_COMBINED, "ANL_combined.blib", ""),
                                                        new TestLibInfo(PHOSPHO_LIB, "phospho_30882_v2.blib", ""),
                                                        new TestLibInfo(YEAST, "Yeast_atlas.blib", ""),
+                                                       new TestLibInfo("BadFormula", "bad_formula.blib", ""),
                                                        new TestLibInfo("LipidCreator", "lc_all.blib", "PE 12:0_12:0[M-H]"),
                                                        new TestLibInfo(SHIMADZU_MLB, "Small_Library-Positive-ions_CE-Merged.blib", "LSD[M+H]"), // Can be found in BiblioSpec test/output directory if update is needed
                                                        new TestLibInfo(NIST_SMALL_MOL+" Redundant", "SmallMolRedundant.msp", ".alpha.-Helical Corticotropin Releasing Factor (9-41)[M+4H]"),
@@ -107,10 +108,11 @@ namespace pwiz.SkylineTestFunctional
             SetUpTestLibraries();
             if (asSmallMolecules)
             {
-                TestSmallMoleculeFunctionality(4, false); // .blib with fragment annotations
-                TestSmallMoleculeFunctionality(2, true); // NIST with redundant entries
-                TestSmallMoleculeFunctionality(1, false); // NIST
-                TestSmallMoleculeFunctionality(3, false); // .blib
+                TestSmallMoleculeFunctionality(5, Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__); // .blib with bogus formula entry
+                TestSmallMoleculeFunctionality(4); // .blib with fragment annotations
+                TestSmallMoleculeFunctionality(2, Resources.NistLibraryBase_CreateCache_); // NIST with redundant entries
+                TestSmallMoleculeFunctionality(1); // NIST
+                TestSmallMoleculeFunctionality(3); // .blib
             }
             else
             {
@@ -635,7 +637,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => _viewLibUI.IsUpdateComplete);
         }
 
-        private void TestSmallMoleculeFunctionality(int index, bool expectError)
+        private void TestSmallMoleculeFunctionality(int index, string expectError = null)
         {
 
             // Launch the Library Explorer dialog
@@ -648,7 +650,7 @@ namespace pwiz.SkylineTestFunctional
             var libIndex = _testLibs.Length - index;
             bool isNIST = (index < 3);
             bool isLipidCreator = (index == 4);
-            if (expectError)
+            if (expectError != null)
             {
                 var errWin = ShowDialog<MessageDlg>(() =>
                 {
@@ -656,7 +658,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.IsNotNull(libComboBox);
                     libComboBox.SelectedIndex = libIndex;
                 });
-                AssertEx.AreComparableStrings(Resources.NistLibraryBase_CreateCache_, errWin.Message);
+                AssertEx.AreComparableStrings(expectError, errWin.Message);
                 errWin.OkDialog();
                 RunUI(() => _viewLibUI.CancelDialog());
                 WaitForClosedForm(_viewLibUI);

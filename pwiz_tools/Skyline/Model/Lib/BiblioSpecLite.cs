@@ -948,13 +948,19 @@ namespace pwiz.Skyline.Model.Lib
             catch (InvalidDataException x)
             {
                 if (!cached)
+                {
+                    x = new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath), x);
                     loader.UpdateProgress(status.ChangeErrorException(x));
+                }
                 return false;
             }
             catch (IOException x)
             {
                 if (!cached)
+                {
+                    x = new IOException(string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath), x);
                     loader.UpdateProgress(status.ChangeErrorException(x));
+                }
                 return false;
             }
             catch (Exception x)
