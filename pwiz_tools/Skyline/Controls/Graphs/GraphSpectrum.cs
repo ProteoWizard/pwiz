@@ -945,7 +945,8 @@ namespace pwiz.Skyline.Controls.Graphs
             foreach (var charge in charges)
             {
                 // Priority ordered
-                foreach(var adduct in adducts.Where(p => charge == Math.Abs(p.AdductCharge)))
+                var z = charge; // Avoid a (spurious?) AccessToForEachVariableInClosure in some versions of ReSharper
+                foreach(var adduct in adducts.Where(a => z == Math.Abs(a.AdductCharge)))
                 {
                     if (i == 0)
                         AddItem(result, adduct, ShowCharge1);
