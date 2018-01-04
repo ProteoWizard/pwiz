@@ -2140,11 +2140,23 @@ namespace pwiz.Skyline.SettingsUI
                     // Get a list of things like Name:caffeine, Formula:C8H10N4O2, InChIKey:RYYVLZVUVIJVGH-UHFFFAOYSA-N MoleculeIds: CAS:58-08-2\tKEGG:D00528
                     _smallMoleculePartsToDraw = smallMolInfo.LocalizedKeyValuePairs;
                 }
-
-                // build mz range parts to draw
-                var massH = _settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods).GetPrecursorMass(_pepInfo.Target);
-                _mz = SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
-                _mzRangePartsToDraw = GetMzRangeItemsToDraw(_mz);
+                if (_pepInfo.Target != null)
+                {
+                    // build mz range parts to draw
+                    var massH = _settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
+                        .GetPrecursorMass(_pepInfo.Target);
+                    _mz = SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
+                    _mzRangePartsToDraw = GetMzRangeItemsToDraw(_mz);
+                }
+                else
+                {
+                    _mzRangePartsToDraw = new List<TextColor>();
+                    var precursorKey = _pepInfo.Key.LibraryKey as PrecursorLibraryKey;
+                    if (precursorKey != null)
+                    {
+                        _mz = precursorKey.Mz;
+                    }
+                }
             }
 
             public bool HasTip

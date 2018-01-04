@@ -188,7 +188,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private static SequenceMassCalc GetBaseCalc(IsotopeLabelType labelType,
             ExplicitMods mods, IList<TypedMassCalc> massCalcs)
         {
-            if (mods == null)
+            if (ExplicitMods.IsNullOrEmpty(mods))
                 return null;
 
             var calcLightImplicit = massCalcs[0].MassCalc;
@@ -275,7 +275,12 @@ namespace pwiz.Skyline.Model.DocSettings
                     return null;
                 return new ExplicitSequenceMassCalc(mods, massCalcBase, labelType);
             }
-            return GetMassCalc(labelType, _precursorMassCalcs);
+            var result = GetMassCalc(labelType, _precursorMassCalcs);
+            if (result == null && ReferenceEquals(mods, ExplicitMods.EMPTY))
+            {
+                result = GetMassCalc(IsotopeLabelType.light, _precursorMassCalcs); // Small molecules
+            }
+            return result;
         }
 
         public TypedMass GetPrecursorMass(IsotopeLabelType labelType, Target seq, ExplicitMods mods)
@@ -285,7 +290,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public TypedMass GetPrecursorMass(IsotopeLabelType labelType, CustomMolecule mol, TypedModifications mods, Adduct adductForIsotopeLabels, out string isotopicFormula)
         {
-            return GetPrecursorCalc(labelType, null).GetPrecursorMass(mol, mods, adductForIsotopeLabels, out isotopicFormula);
+            return GetPrecursorCalc(labelType, ExplicitMods.EMPTY).GetPrecursorMass(mol, mods, adductForIsotopeLabels, out isotopicFormula);
         }
 
         public IFragmentMassCalc GetFragmentCalc(IsotopeLabelType labelType, ExplicitMods mods)
@@ -301,7 +306,12 @@ namespace pwiz.Skyline.Model.DocSettings
                     return null;
                 return new ExplicitSequenceMassCalc(mods, massCalcBase, labelType);
             }
-            return GetMassCalc(labelType, _fragmentMassCalcs);
+            var result = GetMassCalc(labelType, _fragmentMassCalcs);
+            if (result == null && ReferenceEquals(mods, ExplicitMods.EMPTY))
+            {
+                result = GetMassCalc(IsotopeLabelType.light, _fragmentMassCalcs); // Small molecules
+            }
+            return result;
         }
 
         /// <summary>

@@ -1168,23 +1168,6 @@ namespace pwiz.Skyline.Model.Serialization
                     var ionString = precursorAdduct.ApplyToFormula(neutralFormula);
                     var moleculeWithAdduct = precursorAdduct.ApplyToFormula(peptide.CustomMolecule.Formula);
                     Assume.IsTrue(Equals(ionString, moleculeWithAdduct), "Expected precursor ion formula to match parent molecule with adduct applied");  // Not L10N
-                    if (DocumentMayContainMoleculesWithEmbeddedIons && !typedMods.LabelType.IsLight)
-                    {
-                        // Do we actually need to embed isotope info in the adduct, or is it handled by typedMods.LabelType?
-                        try
-                        {
-                            string isotopicFormula;
-                            Settings.GetPrecursorMass(typedMods.LabelType, peptide.CustomMolecule, typedMods, precursorAdduct.Unlabeled, out isotopicFormula);
-                            if (Molecule.AreEquivalentFormulas(moleculeWithAdduct, precursorAdduct.Unlabeled.ApplyToFormula(isotopicFormula)))
-                            {
-                                precursorAdduct = precursorAdduct.Unlabeled; // No need to be explicit about labels in the adduct
-                            }
-                        }
-                        catch (InvalidDataException)
-                        {
-                            // Didn't find a precursor calculator for that isotope label type, so keep any isotopes in adduct
-                        }
-                    }
                 }
                 else if (DocumentMayContainMoleculesWithEmbeddedIons && !typedMods.LabelType.IsLight && string.IsNullOrEmpty(peptide.CustomMolecule.Formula))
                 {

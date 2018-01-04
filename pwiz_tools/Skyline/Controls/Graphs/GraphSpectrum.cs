@@ -927,27 +927,40 @@ namespace pwiz.Skyline.Controls.Graphs
             return types;
         }
 
-        // TODO(bspratt) how does this work with negative mode data?
+        // Decide which adducts to show based on absolute charge state
         public IList<Adduct> ShowIonCharges(IEnumerable<Adduct> chargePriority)
         {
-            var charges = new List<Adduct>();
+            var result = new List<Adduct>();
+            var charges = new List<int>();
+            var adducts = chargePriority.ToArray();
+            foreach (var adduct in adducts)
+            {
+                var z = Math.Abs(adduct.AdductCharge);
+                if (!charges.Contains(z))
+                {
+                    charges.Add(z);
+                }
+            }
             int i = 0;
-            foreach (var charge in chargePriority)
+            foreach (var charge in charges)
             {
                 // Priority ordered
-                if (i == 0)
-                    AddItem(charges, charge, ShowCharge1);
-                else if (i == 1)
-                    AddItem(charges, charge, ShowCharge2);
-                else if (i == 2)
-                    AddItem(charges, charge, ShowCharge3);
-                else if (i == 3)
-                    AddItem(charges, charge, ShowCharge4);
-                else
-                    break;
+                foreach(var adduct in adducts.Where(p => charge == Math.Abs(p.AdductCharge)))
+                {
+                    if (i == 0)
+                        AddItem(result, adduct, ShowCharge1);
+                    else if (i == 1)
+                        AddItem(result, adduct, ShowCharge2);
+                    else if (i == 2)
+                        AddItem(result, adduct, ShowCharge3);
+                    else if (i == 3)
+                        AddItem(result, adduct, ShowCharge4);
+                    else
+                        break;
+                }
                 i++;
             }
-            return charges;
+            return result;
         }
 
         private static void AddItem<TItem>(ICollection<TItem> items, TItem item, bool add)

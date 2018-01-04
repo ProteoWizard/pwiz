@@ -805,6 +805,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
     public sealed class ExplicitMods : Immutable
     {
+        public static readonly ExplicitMods EMPTY = new ExplicitMods(null, null, null); // Used for small molecules, which get label info from adducts instead of mods
+        public static bool IsNullOrEmpty(ExplicitMods mods)
+        {
+            return mods == null || ReferenceEquals(mods, EMPTY);
+        }
+
         private ImmutableList<TypedExplicitModifications> _modifications;
 
         /// <summary>
@@ -825,7 +831,10 @@ namespace pwiz.Skyline.Model.DocSettings
                     IsotopeLabelType.light, staticMods));
             }
             // Add isotope mods
-            modifications.AddRange(heavyMods);
+            if (heavyMods != null)
+            {
+                modifications.AddRange(heavyMods);
+            }
             _modifications = MakeReadOnly(modifications.ToArray());
         }
 
@@ -1171,7 +1180,10 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 int result = _modifications.GetHashCodeDeep();
-                result = (result*397) ^ Peptide.Target.GetHashCode();
+                if (Peptide != null)
+                {
+                    result = (result*397) ^ Peptide.Target.GetHashCode();
+                }
                 return result;
             }
         }

@@ -734,7 +734,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public Target Target { get; set; }
         public double RetentionTime { get; set; }
-        public string Sequence { get { return Target.ToString(); } }
+        public string Sequence { get { return Target == null ? string.Empty : Target.ToString(); } }
 
         public static string ValidateSequence(Target sequence)
         {
