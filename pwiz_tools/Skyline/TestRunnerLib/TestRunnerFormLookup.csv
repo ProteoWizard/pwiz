@@ -38,6 +38,7 @@ CreateIrtCalculatorDlg,TestAssayLibraryImport
 CreateMatchExpressionDlg,TestVolcanoPlotFormatting
 DefineAnnotationDlg,TestAnnotations
 DiaIsolationWindowsGraphForm,TestIsolationScheme
+DocumentationViewer,TestStandardType
 DocumentGridForm,TestReportSummary
 DocumentSettingsDlg,TestAnnotations
 EditCEDlg,TestOptimization

@@ -249,6 +249,9 @@ namespace pwiz.SkylineTestFunctional
             var exportReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
             var editReportListDlg = ShowDialog<ManageViewsForm>(exportReportDlg.EditList);
             var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddView);
+            var documentationViewer = ShowDialog<DocumentationViewer>(viewEditor.ShowColumnDocumentation);
+            Assert.IsNotNull(documentationViewer);
+            OkDialog(documentationViewer, documentationViewer.Close);
 
             var columnsToAdd = new[]
                     {

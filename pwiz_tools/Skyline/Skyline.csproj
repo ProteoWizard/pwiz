@@ -290,6 +290,16 @@
     <Compile Include="AlgLib\solvers.cs" />
     <Compile Include="AlgLib\specialfunctions.cs" />
     <Compile Include="AlgLib\statistics.cs" />
+    <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ColumnCaptions.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ColumnToolTips.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
     <Compile Include="Model\Lib\ViewLibraryPepInfoList.cs" />
@@ -312,11 +322,6 @@
     </Compile>
     <Compile Include="Controls\GroupComparison\VolcanoPlotFormattingDlg.Designer.cs">
       <DependentUpon>VolcanoPlotFormattingDlg.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\FormatSuggestion.cs" />
     <Compile Include="Model\RgbHexColor.cs" />
@@ -883,11 +888,6 @@
     <Compile Include="Model\Databinding\DocumentGridViewContext.cs" />
     <Compile Include="Model\Databinding\Entities\Chromatogram.cs" />
     <Compile Include="Model\Databinding\Entities\ChromatogramGroup.cs" />
-    <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ColumnToolTips.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\Databinding\EditDescription.cs" />
     <Compile Include="Model\Databinding\Entities\MultiResult.cs" />
     <Compile Include="Model\Databinding\Entities\Peptide.cs" />
@@ -2422,9 +2422,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.ja.resx" />
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>ColumnToolTips.Designer.cs</LastGenOutput>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
+      <LastGenOutput>ColumnToolTips.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.zh-CHS.resx">
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
