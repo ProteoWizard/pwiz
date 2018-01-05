@@ -640,8 +640,7 @@ namespace pwiz.Skyline.Model.Irt
         {
             get
             {
-                return (int) Math.Round(Math.Max(RCalcIrt.MIN_PEPTIDES_COUNT,
-                    TimesFiltered.Length * RCalcIrt.MIN_PEPTIDES_PERCENT));
+                return RCalcIrt.MinStandardCount(TimesFiltered.Length);
             }
         }
 
