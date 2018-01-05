@@ -1117,6 +1117,21 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        // Convert an ordered list of adducts to a list of their unique absolute 
+        // charge values, ordered by first appearance 
+        public static IList<int> OrderedAbsoluteChargeValues(IEnumerable<Adduct> adducts)
+        {
+            var charges = new List<int>();
+            foreach (var charge in adducts.Select(a => Math.Abs(a.AdductCharge)))
+            {
+                if (!charges.Contains(charge)) // We're looking at abs charge, not adduct per se
+                {
+                    charges.Add(charge);
+                }
+            }
+            return charges;
+        }
+
         public Dictionary<string, int> ApplyToMolecule(IDictionary<string, int> molecule)
         {
             var resultDict = new Dictionary<string, int>();

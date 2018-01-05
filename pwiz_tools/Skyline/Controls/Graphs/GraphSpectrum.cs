@@ -58,7 +58,11 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             TreeNodeMS SelectedNode { get; }
             IList<IonType> ShowIonTypes(bool isProteomic);
-            IList<Adduct> ShowIonCharges(IEnumerable<Adduct> chargePriority);
+
+            // N.B. we're interested in the absolute value of charge here, so output list 
+            // may be shorter than input list
+            // CONSIDER(bspratt): we may want finer per-adduct control for small molecule use
+            IList<int> ShowIonCharges(IEnumerable<Adduct> adductPriority);
 
             void BuildSpectrumMenu(bool isProteomic, ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip);
         }
@@ -75,9 +79,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 return isProteomic ? new[] { IonType.y } :  new[] { IonType.custom }; 
             }
 
-            public IList<Adduct> ShowIonCharges(IEnumerable<Adduct> chargePriority)
+            public IList<int> ShowIonCharges(IEnumerable<Adduct> adductPriority)
             {
-                return chargePriority.ToList();
+                return Adduct.OrderedAbsoluteChargeValues(adductPriority).ToList();
             }
 
             public void BuildSpectrumMenu(bool isProteomic, ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
@@ -415,12 +419,13 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             IsotopeLabelType typeInfo = spectrum.LabelType;
                             var types = _stateProvider.ShowIonTypes(group.IsProteomic);
-                            var adducts = group.IsProteomic ?
+                            var adducts = (group.IsProteomic ?
                                 Transition.DEFAULT_PEPTIDE_LIBRARY_CHARGES :
-                                nodeGroup.InUseAdducts;
+                                nodeGroup.InUseAdducts).ToArray();
                             var charges = _stateProvider.ShowIonCharges(adducts);
                             var rankTypes = group.IsProteomic ? settings.TransitionSettings.Filter.PeptideIonTypes : settings.TransitionSettings.Filter.SmallMoleculeIonTypes;
-                            var rankCharges =  group.IsProteomic ? settings.TransitionSettings.Filter.PeptideProductCharges : settings.TransitionSettings.Filter.SmallMoleculeFragmentAdducts;
+                            var rankAdducts = group.IsProteomic ? settings.TransitionSettings.Filter.PeptideProductCharges : settings.TransitionSettings.Filter.SmallMoleculeFragmentAdducts;
+                            var rankCharges = Adduct.OrderedAbsoluteChargeValues(rankAdducts);
                             // Make sure the types and charges in the settings are at the head
                             // of these lists to give them top priority, and get rankings correct.
                             int i = 0;
@@ -430,11 +435,16 @@ namespace pwiz.Skyline.Controls.Graphs
                                     types.Insert(i++, type);
                             }
                             i = 0;
+                            var showAdducts = new List<Adduct>();
                             foreach (var charge in rankCharges)
                             {
                                 if (charges.Remove(charge))
                                     charges.Insert(i++, charge);
+                                // NB for all adducts we just look at abs value of charge
+                                // CONSIDER(bspratt): we may want finer per-adduct control for small molecule use
+                                showAdducts.AddRange(adducts.Where(a => charge == Math.Abs(a.AdductCharge)));
                             }
+                            showAdducts.AddRange(adducts.Where(a => charges.Contains(Math.Abs(a.AdductCharge)) && !showAdducts.Contains(a)));
                             SpectrumPeaksInfo spectrumInfo = spectrum.SpectrumPeaksInfo;
                             var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrumInfo,
                                                                               typeInfo,
@@ -442,9 +452,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                               settings,
                                                                               lookupSequence,
                                                                               lookupMods,
-                                                                              charges,
+                                                                              showAdducts,
                                                                               types,
-                                                                              rankCharges,
+                                                                              rankAdducts,
                                                                               rankTypes);
                             GraphItem = new SpectrumGraphItem(nodeGroup, transition, spectrumInfoR, spectrum.LibName)
                                 {
@@ -927,40 +937,29 @@ namespace pwiz.Skyline.Controls.Graphs
             return types;
         }
 
-        // Decide which adducts to show based on absolute charge state
-        public IList<Adduct> ShowIonCharges(IEnumerable<Adduct> chargePriority)
+        // NB for all adducts we just look at abs value of charge
+        // CONSIDER(bspratt): we may want finer per-adduct control for small molecule use
+        public IList<int> ShowIonCharges(IEnumerable<Adduct> adductPriority)
         {
-            var result = new List<Adduct>();
+            var chargePriority = Adduct.OrderedAbsoluteChargeValues(adductPriority);
             var charges = new List<int>();
-            var adducts = chargePriority.ToArray();
-            foreach (var adduct in adducts)
-            {
-                var z = Math.Abs(adduct.AdductCharge);
-                if (!charges.Contains(z))
-                {
-                    charges.Add(z);
-                }
-            }
             int i = 0;
-            foreach (var charge in charges)
+            foreach (var charge in chargePriority)
             {
                 // Priority ordered
-                foreach(var adduct in adducts.Where(p => charge == Math.Abs(p.AdductCharge)))
-                {
-                    if (i == 0)
-                        AddItem(result, adduct, ShowCharge1);
-                    else if (i == 1)
-                        AddItem(result, adduct, ShowCharge2);
-                    else if (i == 2)
-                        AddItem(result, adduct, ShowCharge3);
-                    else if (i == 3)
-                        AddItem(result, adduct, ShowCharge4);
-                    else
-                        break;
-                }
+                if (i == 0)
+                    AddItem(charges, charge, ShowCharge1);
+                else if (i == 1)
+                    AddItem(charges, charge, ShowCharge2);
+                else if (i == 2)
+                    AddItem(charges, charge, ShowCharge3);
+                else if (i == 3)
+                    AddItem(charges, charge, ShowCharge4);
+                else
+                    break;
                 i++;
             }
-            return result;
+            return charges;
         }
 
         private static void AddItem<TItem>(ICollection<TItem> items, TItem item, bool add)

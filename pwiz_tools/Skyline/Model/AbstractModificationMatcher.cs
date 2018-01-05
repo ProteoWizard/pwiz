@@ -521,7 +521,6 @@ namespace pwiz.Skyline.Model
             var monoisotopicMass = charge.MassFromMz(peak.Mz, MassType.Monoisotopic);
             var averageMass = charge.MassFromMz(peak.Mz, MassType.Average);
             // Caution here - library peak (observed) mz may not exactly match (theoretical) mz of the annotation
-            ThrowIfAnnotationMzDisagrees(key, peak);
 
             // In the case of multiple annotations, produce single transition for display in library explorer
             var annotations = peak.GetAnnotationsEnumerator().ToArray();
@@ -530,6 +529,18 @@ namespace pwiz.Skyline.Model
                 ? new CustomMolecule(monoisotopicMass, averageMass)
                 : spectrumPeakAnnotationIon;
             var note = (annotations.Length > 1) ? TextUtil.LineSeparate(annotations.Select(a => a.ToString())) : null;
+            var noteIfAnnotationMzDisagrees = NoteIfAnnotationMzDisagrees(key, peak);
+            if (noteIfAnnotationMzDisagrees != null)
+            {
+                if (note == null)
+                {
+                    note = noteIfAnnotationMzDisagrees;
+                }
+                else
+                {
+                    note = TextUtil.LineSeparate(note, noteIfAnnotationMzDisagrees);
+                }
+            }
             var transition = new Transition(nodeGroup.TransitionGroup,
                 spectrumPeakAnnotationIon.Adduct.IsEmpty ? charge : spectrumPeakAnnotationIon.Adduct, 0, molecule);
             return new TransitionDocNode(transition, Annotations.EMPTY.ChangeNote(note), null, monoisotopicMass,
@@ -539,7 +550,7 @@ namespace pwiz.Skyline.Model
                     TransitionDocNode.TransitionQuantInfo.DEFAULT, null);
         }
 
-        private void ThrowIfAnnotationMzDisagrees(LibKey key, SpectrumPeaksInfo.MI peak)
+        private string NoteIfAnnotationMzDisagrees(LibKey key, SpectrumPeaksInfo.MI peak)
         {
             foreach (var peakAnnotation in peak.GetAnnotationsEnumerator())
             {
@@ -553,13 +564,14 @@ namespace pwiz.Skyline.Model
                           Settings.TransitionSettings.Instrument.MzMatchTolerance)))
                 {
 
-                    throw new InvalidDataException(string.Format(
+                    return string.Format(
                         "annotated observed ({0}) and theoretical ({1}) masses differ for peak {2} of library entry {3} by more than the current instrument mz match tolerance of {4}", // Not L10N
                         peak.Mz, peakAnnotation.Ion.MonoisotopicMassMz, peakAnnotation,
                         key,
-                        Settings.TransitionSettings.Instrument.MzMatchTolerance));
+                        Settings.TransitionSettings.Instrument.MzMatchTolerance);
                 }
             }
+            return null;
         }
 
         public PeptideDocNode CreateDocNodeFromSettings(Target target, Peptide peptide, SrmSettingsDiff diff,
