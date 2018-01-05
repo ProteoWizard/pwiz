@@ -1449,6 +1449,7 @@ namespace pwiz.Skyline.Model
                     n => !SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.ContainsKey(n)).ToList();
             if (badHeaders.Any())
             {
+                badHeaders.Add(string.Empty); // Add an empty line for more whitespace
                 throw new LineColNumberedIoException(
                     string.Format(
                         Resources.SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_,
