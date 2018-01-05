@@ -76,10 +76,12 @@ namespace pwiz.Skyline.Model.Lib
                 else
                 {
                     // Check our calculated value against provided theoretical value, allowing quite a lot of wiggle (not everybody is using the same precision out there)
-                    var delta = .005;
-                    Assume.AreEqual(ion.MonoisotopicMassMz, mzTheoretical.Value, delta, 
-                        string.Format("SpectrumPeakAnnotation: mzTheoretical ({0} and mzActual {1} disagree by more than {2}", // Not L10N
-                          mzTheoretical, ion.MonoisotopicMassMz, delta));
+                    var delta = .5; // Generous error for sanity check
+                    if (Math.Abs(ion.MonoisotopicMassMz - mzTheoretical.Value) > delta)
+                    {
+                        Assume.Fail(string.Format("SpectrumPeakAnnotation: mzTheoretical {0} and mzActual {1} disagree by more than {2} in {3} {4}", // Not L10N
+                          mzTheoretical, ion.MonoisotopicMassMz, delta, ion, comment??string.Empty));
+                    }
                 }
             }
             return ion.IsEmpty && string.IsNullOrEmpty(comment) ? 
