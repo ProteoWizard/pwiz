@@ -135,7 +135,7 @@
   </data>
   <data name="CalculatedConcentration">
     <value>アナライト濃度は、以下のいずれかによって計算されます：  
-1. 校正曲線を使用する（[ペプチド設定] > [定量] に[回帰式に合わせる]が指定されている場合）  
+1. 校正曲線を使用する（[ペプチド設定] &gt; [定量] に[回帰式に合わせる]が指定されている場合）  
 2. 内標準（またはサロゲート）に対する比率を使用し、内標準物質の濃度を乗じる</value>
   </data>
   <data name="CalibrationCurve">
@@ -212,6 +212,9 @@
   </data>
   <data name="ErrorMessage">
     <value>この値の計算中にエラーが発生した場合のエラーメッセージのテキストです。</value>
+  </data>
+  <data name="ExcludeFromCalibration">
+    <value>繰り返し測定結果をペプチドの校正曲線計算から除外すべきか。</value>
   </data>
   <data name="ExplicitCollisionEnergy">
     <value>ターゲットのSRMメソッドまたはトランジションリストで使用することが望まれる衝突エネルギーです。他のすべてのモデルと最適化されたライブラリの値を無効にします。</value>
@@ -436,7 +439,7 @@
     <value>絶対定量とグループ比較のために、特定の分子で使用する正規化のメソッドを無効にします。</value>
   </data>
   <data name="NormalizedArea">
-    <value>そのペプチド/分子に指定された「正規化メソッド」または  [設定] > [ペプチド設定] > [定量化]で指定される正規化メソッドを使用したペプチド/分子の強度の正規化によって取得される値です。</value>
+    <value>そのペプチド/分子に指定された「正規化メソッド」または  [設定] &gt; [ペプチド設定] &gt; [定量化]で指定される正規化メソッドを使用したペプチド/分子の強度の正規化によって取得される値です。</value>
   </data>
   <data name="OptCollisionEnergy">
     <value>衝突エネルギーの最適化がされている場合には、OptStepに該当する衝突エネルギーの値</value>
@@ -487,7 +490,10 @@
     <value>ペプチド</value>
   </data>
   <data name="PeptideSequence">
-    <value> ペプチドのアミノ酸のシークエンスです。</value>
+    <value>ペプチドのアミノ酸シークエンスです。</value>
+  </data>
+  <data name="PeptideSequenceLength">
+    <value>ペプチドシークエンスのアミノ酸数です。</value>
   </data>
   <data name="PointCount">
     <value>曲線のフィッティングで使用されたデータポイント数です。</value>
@@ -581,6 +587,9 @@
   </data>
   <data name="Quantification">
     <value>アナライトを定量するための校正曲線や正規化メソッドの使用に関連する値。</value>
+  </data>
+  <data name="Quantitative">
+    <value>ペプチドを定量化する際にトランジションのピーク面積を含めるべきか。</value>
   </data>
   <data name="Range">
     <value>範囲</value>
@@ -754,18 +763,45 @@ Double Blank（ダブルブランク）</value>
     <value>値</value>
   </data>
   <data name="CollisionalCrossSection">
-    <value>イオン移動度をオングストロームの二乗で表したものです。通常はドリフト時間に変換され、イオン移動度質量スペクトルからのクロマトグラムの抽出に使用されます。</value>
+    <value>イオン移動度をオングストロームの二乗で表したものです。通常は適切な単位（ドリフト時間、inverseK0など）に変換され、イオン移動度質量スペクトルからのクロマトグラムの抽出に使用されます。</value>
   </data>
   <data name="DriftTimeFragment">
-    <value>フラグメントイオンのイオン移動度のドリフト時間（ミリ秒）です。エネルギー衝突が増えるため、通常は移動が速くなります。</value>
+    <value>フラグメントイオンのイオン移動度ドリフト時間（ミリ秒）です。エネルギー衝突が増えるため、通常は移動が速くなります。（上位互換性専用：推奨される用語はIonMobilityFragmentとIonMobilityUnitsです。）</value>
   </data>
   <data name="DriftTimeMS1">
-    <value>プリカーサーイオンのイオン移動度のドリフト時間（ミリ秒）です。エネルギーが低いため、通常はフラグメントイオンよりも移動が少し遅くなります。</value>
+    <value>プリカーサーイオンのイオン移動度ドリフト時間（ミリ秒）です。エネルギーが低いため、通常はフラグメントイオンよりも少し長めになります。（上位互換性専用：推奨される用語はIonMobilityMS1とIonMobilityUnitsです。）</value>
   </data>
   <data name="DriftTimeWindow">
-    <value>クロマトグラムの抽出で使用するイオン移動度のドリフト時間の幅（ミリ秒）</value>
+    <value>クロマトグラムの抽出で使用するイオン移動度ドリフト時間幅（ミリ秒）です。（上位互換性専用：推奨される用語はIonMobilityWindowとIonMobilityUnitsです。）</value>
   </data>
   <data name="ExplicitCollisionalCrossSection">
-    <value>イオン移動度質量スペクトルからのクロマトグラムの抽出に使用され、ドリフト時間に変換するために望まれる衝突断面積（オングストロームの二乗の単位）です。他のすべてのモデル値を無効にします。</value>
+    <value>イオン移動度質量スペクトルからのクロマトグラムの抽出に使用され、イオン移動度に変換するために望まれる衝突断面積（オングストロームの二乗の単位）です。他のすべてのモデル値を無効にします。 </value>
+  </data>
+  <data name="IonMobilityFragment">
+    <value>フラグメントイオンのクロマトグラム抽出に使用するイオン移動度フィルタウィンドウの中心です。エネルギー衝突が増えるため、フラグメントイオンの移動が速くなり、プリカーサーイオンの値とは異なることがあります。</value>
+  </data>
+  <data name="IonMobilityMS1">
+    <value>プリカーサーイオンのクロマトグラムの抽出に使用するイオン移動度フィルタウィンドウの中心です。</value>
+  </data>
+  <data name="IonMobilityWindow">
+    <value>クロマトグラムの抽出に使用するイオン移動度フィルタウィンドウの幅です。</value>
+  </data>
+  <data name="IonMobilityUnits">
+    <value>クロマトグラムの抽出に使用するイオン移動度の単位です。</value>
+  </data>
+  <data name="CAS" xml:space="preserve">
+    <value>標準分子ID</value>
+  </data>
+  <data name="HMDB" xml:space="preserve">
+    <value>標準分子ID</value>
+  </data>
+  <data name="InChI" xml:space="preserve">
+    <value>標準分子ID</value>
+  </data>
+  <data name="InChiKey" xml:space="preserve">
+    <value>標準分子ID</value>
+  </data>
+  <data name="SMILES" xml:space="preserve">
+    <value>標準分子ID</value>
   </data>
 </root>

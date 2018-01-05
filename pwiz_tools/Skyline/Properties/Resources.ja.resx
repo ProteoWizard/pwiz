@@ -730,6 +730,9 @@
   <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_not_matching_the_current_filter_settings" xml:space="preserve">
     <value>1個のペプチドが現在のフィルタ設定に一致しません。</value>
   </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_molecule_not_matching_the_current_filter_settings" xml:space="preserve">
+    <value>現在のフィルタ設定に一致しない分子が1個あります。</value>
+  </data>
   <data name="UniquePeptidesDlg_LaunchPeptideProteinsQuery_" xml:space="preserve">
     <value>{0}
 （遺伝子：{1}）</value>
@@ -775,6 +778,9 @@
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__peptides__2__precursors_and__3__transitions_to_the_document" xml:space="preserve">
     <value>この操作により、{0} {1}個のペプチド、{2}個のプリカーサー、{3}個のトランジションがドキュメントに追加されます。</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_This_operation_will_add__0__1__molecules__2__precursors_and__3__transitions_to_the_document" xml:space="preserve">
+    <value>この操作により{0} {1}個の分子、{2}個のプリカーサーイオンおよび{3}個のトランジションがドキュメントに追加されます。</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Error__triggered_acquistion_requires_a_spectral_library_or_imported_results_in_order_to_rank_transitions_" xml:space="preserve">
     <value>エラー：トランジションをランクするために、トリガーされた取得には、スペクトルライブラリまたはインポートされた結果が必要です。</value>
@@ -1646,6 +1652,9 @@
   <data name="ViewLibraryDlg_AddAllPeptides_Matching_Peptides" xml:space="preserve">
     <value>一致するペプチド</value>
   </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Matching_Molecules" xml:space="preserve">
+    <value>一致する分子</value>
+  </data>
   <data name="ImportSkyrHelper_ResolveImportConflicts_Resolving_conflicts_by_skipping_" xml:space="preserve">
     <value>スキップして競合を解決中。</value>
   </data>
@@ -2259,8 +2268,8 @@
   <data name="ExportMethodDlg_OkDialog_You_have_only_rough_tune_optimized_compensation_voltages_" xml:space="preserve">
     <value>最適補償電圧は粗調整しかされていません。</value>
   </data>
-  <data name="PasteDlg_UpdateMoleculeType_Precursor_Ion_Formula" xml:space="preserve">
-    <value>プリカーサーイオン公式</value>
+  <data name="PasteDlg_UpdateMoleculeType_Precursor_Formula" xml:space="preserve">
+    <value>プリカーサーイオンの式</value>
   </data>
   <data name="Peptide" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\peptide.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -2312,6 +2321,9 @@
   </data>
   <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_peptide_does_not_match_the_current_filter_settings" xml:space="preserve">
     <value>このペプチドは現在のフィルタ設定に一致しません。</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_molecule_does_not_match_the_current_filter_settings" xml:space="preserve">
+    <value>この分子は現在のフィルタ設定に一致していません。</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist" xml:space="preserve">
     <value>テンプレートファイル{0}がありません。</value>
@@ -3294,6 +3306,9 @@
   <data name="PeptideLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\peptidelib.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="MoleculeLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\moleculelib.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="ChorusSession_TOP_LEVEL_ITEMS_Public_Projects" xml:space="preserve">
     <value>公開プロジェクト</value>
   </data>
@@ -3540,9 +3555,6 @@
   </data>
   <data name="EditLabelTypeListDlg_OkDialog_The_label_name__0__may_not_be_used_more_than_once" xml:space="preserve">
     <value>標識名「{0}」は一度しか使用できません。</value>
-  </data>
-  <data name="PeptideSettingsUI_ValidateNewSettings_The_file__1__may_not_be_a_valid_proteome_file" xml:space="preserve">
-    <value>ファイル{1}は有効なプロテオームファイルではない可能性があります。</value>
   </data>
   <data name="BuildLibraryDlg_AddInputFiles_The_file__0__is_not_a_valid_library_input_file" xml:space="preserve">
     <value>ファイル{0}は有効なライブラリ入力ファイルではありません。</value>
@@ -4125,6 +4137,9 @@
   <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_not_matching_the_current_filter_settings" xml:space="preserve">
     <value>{0}個のペプチドが現在のフィルタ設定に一致しません。</value>
   </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__molecules_not_matching_the_current_filter_settings" xml:space="preserve">
+    <value>現在のフィルタ設定に一致しない分子が{0}個あります。</value>
+  </data>
   <data name="AnnotationDef_AnnotationTarget_Replicates" xml:space="preserve">
     <value>繰り返し測定</value>
   </data>
@@ -4208,6 +4223,9 @@
   </data>
   <data name="ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides" xml:space="preserve">
     <value>ライブラリペプチド</value>
+  </data>
+  <data name="ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Molecules" xml:space="preserve">
+    <value>ライブラリ分子</value>
   </data>
   <data name="PeptideModifications_DoValidate_Maximum_neutral_losses__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>最大ニュートラルロス数{0}は{1}と{2}の間でなければなりません</value>
@@ -6542,7 +6560,7 @@
     <value>消化設定を変更</value>
   </data>
   <data name="CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Cannot_import_measured_ion_mobility_for_sequence__0___no_collisional_cross_section_conversion_parameters_were_provided_for_charge_state__1__" xml:space="preserve">
-    <value>シークエンス{0}に対する測定ドリフト時間をインポートすることができません：電荷状態{1}に対する衝突断面積変換パラメータが提供されていません。</value>
+    <value>シークエンス{0}用に測定されたイオン移動度をインポートできません。荷電状態{1}に対する衝突断面積変換パラメータが提供されていません。</value>
   </data>
   <data name="ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist" xml:space="preserve">
     <value>ファイル{0}は存在しません。</value>
@@ -6585,6 +6603,9 @@
   </data>
   <data name="MessageBoxHelper_ValidateDecimalListTextBox__0__must_contain_a_comma_separated_list_of_decimal_values_from__1__to__2__" xml:space="preserve">
     <value>{0}は、カンマで区切られた{1}から{2}までの十進数を含む値のリストを含まなければなりません。</value>
+  </data>
+  <data name="MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_adducts_or_integers_describing_charge_states_with_absolute_values_from__1__to__2__" xml:space="preserve">
+    <value>{0}は、{1}～{2}の絶対値で荷電状態を表記する付加イオンまたは整数値のカンマ区切りのリストを含む必要があります。</value>
   </data>
   <data name="ChorusSession_TOP_LEVEL_ITEMS_Shared_Experiments" xml:space="preserve">
     <value>共有実験</value>
@@ -7239,9 +7260,6 @@
   </data>
   <data name="PeptideGroupTreeNode_ChildUndoHeading__0__" xml:space="preserve">
     <value>{0}個のペプチド</value>
-  </data>
-  <data name="PivotReportDlg_OkDialog_The_report__0__already_exists" xml:space="preserve">
-    <value>レポート「{0}」は既に存在しています。</value>
   </data>
   <data name="SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_does_not_contain_any_Skyline_documents" xml:space="preserve">
     <value>zipファイルは共有ファイルではありません。ファイルにはSkylineドキュメントが含まれていません。</value>
@@ -8505,8 +8523,8 @@
   <data name="PasteDlg_Description_Insert_protein_list" xml:space="preserve">
     <value>タンパク質リストを挿入</value>
   </data>
-  <data name="PasteDlg_UpdateMoleculeType_Product_Ion_Formula" xml:space="preserve">
-    <value>プロダクトイオン公式</value>
+  <data name="PasteDlg_UpdateMoleculeType_Product_Formula" xml:space="preserve">
+    <value>プロダクトイオン式</value>
   </data>
   <data name="TransitionLibraries_DoValidate_Library_ion_count_value__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>ライブラリイオン数値{0}は{1}と{2}の間でなければなりません。</value>
@@ -8637,6 +8655,9 @@
   </data>
   <data name="ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings" xml:space="preserve">
     <value>現在のドキュメント設定に一致するペプチド</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings" xml:space="preserve">
+    <value>分子を現在のドキュメント設定に一致させています</value>
   </data>
   <data name="SkylineWindow_CheckRetentionTimeFilter_NoPredictionAlgorithm" xml:space="preserve">
     <value>トランジション設定フルスキャン保持時間フィルタは予測保持時間を使用するように設定されていますが、予測アルゴリズムが指定されていません。
@@ -8783,8 +8804,8 @@
   <data name="SequenceMassCalc_NormalizeModifiedSequence_The_modification__0__is_not_valid___Expected_a_numeric_delta_mass_" xml:space="preserve">
     <value>修飾{0}が有効ではありません。期待された数値誤差質量。</value>
   </data>
-  <data name="EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_charge_and_label_type_already_exists_" xml:space="preserve">
-    <value>その電荷および標識タイプを持つプリカーサーはすでに存在します。</value>
+  <data name="EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_adduct_and_label_type_already_exists_" xml:space="preserve">
+    <value>その付加イオンと標識タイプを持つプリカーサーイオンは既に存在します。</value>
   </data>
   <data name="SkylineWindow_FindIonMobilityLibrary_Find_Ion_Mobility_Library" xml:space="preserve">
     <value>イオン移動度ライブラリを検索</value>
@@ -9078,15 +9099,15 @@
   <data name="IonInfo_AdductTips_" xml:space="preserve">
     <value>付加イオン：
  
- イオン式中に、事実上の表記基準となっている表記法（http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator）に則った付加イオンの表記が含まれている場合があります。
-（例：「C47H51NO14[M+IsoProp+H]」） 
+イオン式中に、事実上の表記基準となっている表記法（http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator）に則った付加イオンの表記が含まれている場合があります（例：「C47H51NO14[M+IsoProp+H]」）。
 
+イオン電荷のみが分かっている場合（フラグメントではそのケースが多い）、電荷のみの付加イオン（「[M+]」 (z=1)、「[M-]」 (z=-1)、「[M+3]」 (z=3)など）が使用されます。
 
 乗数（例：「[2M+K]」の「2」）と同位体標識（例：「[M2Cl37+H]」の「2Cl37」）の表記はサポートされています。
- 
- 
 
-認識された付加イオンの成分は、通常の化学記号と{0}で表記されます。荷電状態はこれらの付加イオン成分から推測されます：{1}</value>
+認識された付加イオンの成分は、通常の化学記号と{0}で表記されます。
+
+荷電状態はこれらの付加イオン成分から推測されます：{1}</value>
   </data>
   <data name="FormulaBox_helpToolStripMenuItem_Click_Formula_Help" xml:space="preserve">
     <value>式のヘルプ</value>
@@ -9266,7 +9287,7 @@
     <value>測定済み</value>
   </data>
   <data name="AddIrtPeptidesDlg_dataGridView_CellContentClick_iRT" xml:space="preserve">
-    <value>iRT(&amp;R)</value>
+    <value>iRT</value>
   </data>
   <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success" xml:space="preserve">
     <value>成功</value>
@@ -9297,6 +9318,12 @@
   </data>
   <data name="ViewLibraryDlg_EnsureDigested_The_background_proteome___0___is_in_an_older_format___In_order_to_be_able_to_efficiently_find_peptide_sequences__the_background_proteome_should_be_upgraded_to_the_latest_version___Do_you_want_to_upgrade_the_background_proteome_now_" xml:space="preserve">
     <value>バックグラウンドプロテオーム「{0}」が旧形式になっています。効率よくペプチドシークエンスを見つけるには、バックグラウンドプロテオームを最新版にアップグレードしてください。今すぐバックグラウンドプロテオームをアップグレードしますか？</value>
+  </data>
+  <data name="MessageBoxHelper_ValidateAdductListTextBox__0__must_contain_a_comma_separated_list_of_adducts_or_integers_describing_charge_states_with_absolute_value_from__1__to__2__" xml:space="preserve">
+    <value>{0}は、{1}～{2}の絶対値で荷電状態を表記する付加イオンまたは整数値のカンマ区切りのリストを含む必要があります。</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg_Addu_ct_for__0__" xml:space="preserve">
+    <value>{0}の付加イオン(&amp;C)：</value>
   </data>
   <data name="ViewLibraryDlg_EnsureDigested_Copying_database" xml:space="preserve">
     <value>データベースをコピーしています</value>
@@ -9442,8 +9469,8 @@
   <data name="ColorSchemeList_GetDefaults_Distinct" xml:space="preserve">
     <value>クリア</value>
   </data>
-  <data name="ColorSchemeList_GetDefaults_Colorblind_friendly" xml:space="preserve">
-    <value>ハイコントラスト</value>
+  <data name="ColorSchemeList_GetDefaults_High_contrast" xml:space="preserve">
+    <value>高コントラスト</value>
   </data>
   <data name="EditCustomThemeDlg_buttonSave_Click_The_color_scheme___0___already_exists_" xml:space="preserve">
     <value>{0}」というカラースキームが既に存在しています。</value>
@@ -9489,5 +9516,476 @@
   </data>
   <data name="SkylineWindow_ImportResults_Add_missing_iRT_standard_peptides_to_your_document_or_change_the_retention_time_predictor_" xml:space="preserve">
     <value>欠損iRT標準ペプチドをドキュメントに追加するか、保持時間予測を変更します。</value>
+  </data>
+  <data name="EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library" xml:space="preserve">
+    <value>EncyclopeDIAライブラリ</value>
+  </data>
+  <data name="EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries" xml:space="preserve">
+    <value>EncyclopeDIAライブラリ</value>
+  </data>
+  <data name="PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_time_" xml:space="preserve">
+    <value>{1}行目の値「{0}」は有効な時間ではありません。</value>
+  </data>
+  <data name="ComparePeakPickingDlg_ClickGridViewItem_Unable_to_find_the_peptide__0__with_charge_state__1_" xml:space="preserve">
+    <value>荷電状態が{1}であるペプチド{0}が見つかりません</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__Observed_FPR____0__" xml:space="preserve">
+    <value>繰り返し測定の比較（観測されたFPR &lt; {0}）</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph_Replicate_Comparison__q_value____0__" xml:space="preserve">
+    <value>繰り返し測定の比較（Q値 &lt; {0}）</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph__0__significance_threshold" xml:space="preserve">
+    <value>{0}有意性閾値</value>
+  </data>
+  <data name="ComparePeakPickingDlg_UpdateGraph__0__observed_false_positive_rate" xml:space="preserve">
+    <value>{0}観測された偽陽性率</value>
+  </data>
+  <data name="ComparePeakPickingDlg_checkObserved_CheckedChanged_Observed_FPR_" xml:space="preserve">
+    <value>観測されたFPR：</value>
+  </data>
+  <data name="ComparePeakPickingDlg_checkObserved_CheckedChanged_Q_value_cutoff_" xml:space="preserve">
+    <value>Q値カットオフ：</value>
+  </data>
+  <data name="Replicate_Name_There_is_already_a_replicate_named___0___" xml:space="preserve">
+    <value>「{0}」という名前の繰り返し測定が既にあります。</value>
+  </data>
+  <data name="PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_a_score_annotation_for_peptide__0__of_file__1_" xml:space="preserve">
+    <value>ファイル{1}のペプチド{0}のスコア注釈を読み取ることができません</value>
+  </data>
+  <data name="ComparePeakPickingDlg_RefreshDocument_Refresh__0_" xml:space="preserve">
+    <value>{0}の更新</value>
+  </data>
+  <data name="SkylineViewContext_DeleteDocNodes_Delete_items" xml:space="preserve">
+    <value>アイテムを削除</value>
+  </data>
+  <data name="DocumentGridViewContext_Delete_Are_you_sure_you_want_to_delete_these__0___1__" xml:space="preserve">
+    <value>本当にこれら{0}個の{1}を削除してもよろしいですか？</value>
+    <comment>Example: Are you sure you want to delete these 27 proteins?</comment>
+  </data>
+  <data name="DocumentGridViewContext_Delete_Are_you_sure_you_want_to_delete_the__0____1___" xml:space="preserve">
+    <value>本当に{0}「{1}」を削除してもよろしいですか？</value>
+    <comment>Example: Are you sure you want to delete the protein 'ALDH'?</comment>
+  </data>
+  <data name="Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_peptide___0___" xml:space="preserve">
+    <value>本当にペプチド「{0}」を削除してもよろしいですか？</value>
+    <comment>Example: Are you sure you want to delete the peptide 'ELVIS'?</comment>
+  </data>
+  <data name="Peptide_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__peptides_" xml:space="preserve">
+    <value>本当にこれら{0}個のペプチドを削除してもよろしいですか？</value>
+    <comment>Example: Are you sure you want to delete these 47 peptides?</comment>
+  </data>
+  <data name="Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_precursor___0___" xml:space="preserve">
+    <value>本当にプリカーサーイオン「{0}」を削除してもよろしいですか？</value>
+    <comment>Example: Are you sure you want to delete the precursor '734++'?</comment>
+  </data>
+  <data name="Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__precursors_" xml:space="preserve">
+    <value>本当にこれら{0}個のプリカーサーイオンを削除してもよろしいですか？</value>
+    <comment>Example: Are you sure you want to delete these 17 precursors?</comment>
+  </data>
+  <data name="Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_protein___0___" xml:space="preserve">
+    <value>本当にタンパク質「{0}」を削除してもよろしいですか？</value>
+    <comment>Example: Are you sure you want to delete the protein 'ALDH'?</comment>
+  </data>
+  <data name="Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__proteins_" xml:space="preserve">
+    <value>本当にこれら{0}個のタンパク質を削除してもよろしいですか？</value>
+    <comment>Example: Are you sure you want to delete these 7 proteins?</comment>
+  </data>
+  <data name="SkylineDocNode_GetGenericDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__things_" xml:space="preserve">
+    <value>本当にこれら{0}個の項目を削除してもよろしいですか？</value>
+    <comment>Example: Are you sure you want to delete these 21 things?</comment>
+  </data>
+  <data name="Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_the_transition___0___" xml:space="preserve">
+    <value>本当にトランジション「{0}」を削除してもよろしいですか？</value>
+    <comment>Example: Are you sure you want to delete the transition 'y7++'?</comment>
+  </data>
+  <data name="Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__transitions_" xml:space="preserve">
+    <value>本当に{0}個のトランジションを削除してもよろしいですか？</value>
+    <comment>Example: Are you sure you want to delete these 18 transitions?</comment>
+  </data>
+  <data name="SkylineVersion_V3_7_Skyline_3_7" xml:space="preserve">
+    <value>Skyline 3.7</value>
+  </data>
+  <data name="SkylineWindow_importAssayLibraryMenuItem_Click_Import_Assay_Library" xml:space="preserve">
+    <value>アッセイライブラリのインポート</value>
+  </data>
+  <data name="SkylineWindow_importAssayLibraryMenuItem_Click_Assay_Library" xml:space="preserve">
+    <value>アッセイライブラリ</value>
+  </data>
+  <data name="SkylineWindow_ImportAssayLibrary_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created__Overwrite_" xml:space="preserve">
+    <value>作成するドキュメントライブラリと同じ名前「{0}」のライブラリが既に存在します。上書きしますか？</value>
+  </data>
+  <data name="SkylineWindow_ImportAssayLibrary_You_must_save_the_Skyline_document_in_order_to_import_an_assay_library_" xml:space="preserve">
+    <value>アッセイライブラリをインポートするには、Skylineドキュメントを保存する必要があります。</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_The_file_does_not_contain_iRTs__Valid_column_names_for_iRTs_are_" xml:space="preserve">
+    <value>このファイルにはiRTが含まれていません。iRTの有効な列名は次の通りです：</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_The_file_does_not_contain_intensities__Valid_column_names_for_intensities_are_" xml:space="preserve">
+    <value>このファイルには強度が含まれていません。強度の有効な列名は次の通りです：</value>
+  </data>
+  <data name="ChooseIrtStandardPeptides_ImportTextFile_Import_Transition_List__iRT_standards_" xml:space="preserve">
+    <value>トランジションリストのインポート（iRT標準）</value>
+  </data>
+  <data name="ChooseIrtStandardPeptides_ImportTextFile_Transition_List" xml:space="preserve">
+    <value>トランジションリスト</value>
+  </data>
+  <data name="ChooseIrtStandardPeptides_OkDialog_Transition_list_field_must_contain_a_path_to_a_valid_file_" xml:space="preserve">
+    <value>トランジションリストフィールドには、必ず有効なファイルへのパスを含めてください。</value>
+  </data>
+  <data name="ChooseIrtStandardPeptidesDlg_OkDialog_Please_select_a_protein_containing_the_list_of_standard_peptides_for_the_iRT_calculator_" xml:space="preserve">
+    <value>iRTカルキュレータの標準ペプチドリストを含むタンパク質を選択してください。</value>
+  </data>
+  <data name="AreaCVHistogramGraphPane_AddLabels_Not_enough_data" xml:space="preserve">
+    <value>データが不足しています</value>
+  </data>
+  <data name="AreaCVHistogramGraphPane_UpdateGraph_Frequency" xml:space="preserve">
+    <value>頻度</value>
+  </data>
+  <data name="AreaCVHistogramGraphPane_UpdateGraph_CV" xml:space="preserve">
+    <value>CV</value>
+  </data>
+  <data name="AreaCVHistogram2DGraphPane_UpdateGraph_Median___0_" xml:space="preserve">
+    <value>中央値：{0}</value>
+  </data>
+  <data name="AreaCVHistogram2DGraphPane_UpdateGraph_CV" xml:space="preserve">
+    <value>CV</value>
+  </data>
+  <data name="GraphSummary_UpdateToolbar_All" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="SkylineWindow_AddGroupByMenuItems_All_Replicates" xml:space="preserve">
+    <value>すべての繰り返し測定</value>
+  </data>
+  <data name="AnnotationHelper_GetReplicateIndicices_False" xml:space="preserve">
+    <value>False</value>
+  </data>
+  <data name="AnnotationHelper_GetReplicateIndicices_True" xml:space="preserve">
+    <value>True</value>
+  </data>
+  <data name="AreaCVHistogram2DGraphPane_Draw_Not_enough_data" xml:space="preserve">
+    <value>データが不足しています</value>
+  </data>
+  <data name="AreaCvToolbarProperties_btnOk_Click_Invalid_Q_value_entered" xml:space="preserve">
+    <value>入力されたQ値が無効です</value>
+  </data>
+  <data name="AreaCvToolbarProperties_btnOk_Click_Invalid_CV_cutoff_entered" xml:space="preserve">
+    <value>入力されたCVカットオフが無効です</value>
+  </data>
+  <data name="AreaCvToolbarProperties_btnOk_Click_Invalid_maximum_frequency_entered" xml:space="preserve">
+    <value>入力された最大頻度が無効です</value>
+  </data>
+  <data name="AreaCVToolbarProperties_btnOk_Click_Invalid_minimum_log_10_area_entered" xml:space="preserve">
+    <value>入力された最小Log10面積は無効です</value>
+  </data>
+  <data name="AreaCVToolbarProperties_btnOk_Click_Invalid_maximum_log_10_area_entered" xml:space="preserve">
+    <value>入力された最大Log10面積は無効です</value>
+  </data>
+  <data name="AreaCVToolbarProperties_btnOk_Click_The_maximum_log10_area_has_to_be_greater_than_the_minimum_log10_area" xml:space="preserve">
+    <value>最大Log10面積は、最小Log10面積より大きい必要があります。</value>
+  </data>
+  <data name="SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets" xml:space="preserve">
+    <value>ターゲット</value>
+  </data>
+  <data name="AreaCvHistogram2DGraphPane_UpdateGraph_Log10_Mean_Area" xml:space="preserve">
+    <value>Log10平均面積</value>
+  </data>
+  <data name="AreaCVToolbarProperties_btnOk_Click_Invalid_maximum_CV_entered" xml:space="preserve">
+    <value>入力された最大CVが無効です</value>
+  </data>
+  <data name="SkylineWindow_UpdateAreaPointsTypeMenuItems_Targets_at__0___FDR" xml:space="preserve">
+    <value>{0}% FDRにおけるターゲット</value>
+  </data>
+  <data name="AreaCVToolbar_UpdateUI_Global_standards" xml:space="preserve">
+    <value>グローバル標準</value>
+  </data>
+  <data name="AreaCVToolbar_UpdateUI_Medians" xml:space="preserve">
+    <value>中央値</value>
+  </data>
+  <data name="AreaCVToolbar_UpdateUI_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="AreaCVHistogramGraphPane_AddLabels_Median___0_" xml:space="preserve">
+    <value>中央値：{0}</value>
+  </data>
+  <data name="AreaCVHistogramGraphPane_UpdateGraph_Below__0____1_" xml:space="preserve">
+    <value>{0}未満：{1}</value>
+  </data>
+  <data name="EditCustomMoleculeDlg_EditCustomMoleculeDlg_Chemi_cal_formula_" xml:space="preserve">
+    <value>化学式(&amp;C)：</value>
+  </data>
+  <data name="TransitionFilter_SmallMoleculePrecursorAdducts_Small_molecule_precursor_adducts" xml:space="preserve">
+    <value>小分子プリカーサー付加イオン</value>
+  </data>
+  <data name="CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_" xml:space="preserve">
+    <value>カスタム分子には、必ず式を指定するか、有効なモノアイソトピック質量と平均質量を指定する必要があります。</value>
+  </data>
+  <data name="CustomMolecule_DisplayName_Molecule" xml:space="preserve">
+    <value>分子</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_InChiKey_" xml:space="preserve">
+    <value>{0}は有効なInChiKeyではありません。</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_HMDB_identifier_" xml:space="preserve">
+    <value>{0}は有効なHMDB識別子ではありません。</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_InChI_identifier_" xml:space="preserve">
+    <value>{0}は有効なInChI識別子ではありません。</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_CAS_registry_number_" xml:space="preserve">
+    <value>{0}は有効なCAS登録番号ではありません。</value>
+  </data>
+  <data name="SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor" xml:space="preserve">
+    <value>小分子とプリカーサーを追加</value>
+  </data>
+  <data name="RefinementSettings_ConvertToSmallMolecules_Converted_To_Small_Molecules" xml:space="preserve">
+    <value>小分子への変換</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_" xml:space="preserve">
+    <value>小分子は化学式ならびに少なくとも1つの名前、InChiKeyまたは他のキー（HMDBなど）によって定義されます</value>
+  </data>
+  <data name="ValidatingIonMobilityPeptide_ValidateAdduct_A_valid_adduct_description__e_g____M_H____must_be_provided_" xml:space="preserve">
+    <value>有効な付加イオンの表記（例：「[M+H]」）を入力する必要があります。</value>
+  </data>
+  <data name="TransitionSettingsUI_OkDialog_Small_molecule_ion_types_must_contain_a_comma_separated_list_of_ion_types__Valid_types_are__f___for_fragment__and_or__p___for_precursor_" xml:space="preserve">
+    <value>小分子のイオンタイプには、イオンタイプをカンマで区切ったリストが含まれている必要があります。有効なタイプには「f」（フラグメント）と「p」（プリカーサー）があります。</value>
+  </data>
+  <data name="ViewLibraryDlg_UpdateStatusArea_Molecules__0__through__1__of__2__total_" xml:space="preserve">
+    <value>分子{0}から{1}の合計{2}です。</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_Filter_Molecules" xml:space="preserve">
+    <value>分子をフィルタ</value>
+  </data>
+  <data name="FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_Include_all_molecules" xml:space="preserve">
+    <value>すべての分子を含める</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_molecule_adduct" xml:space="preserve">
+    <value>分子+付加イオン</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_peptide_charge" xml:space="preserve">
+    <value>ペプチド+電荷</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_" xml:space="preserve">
+    <value>インポートされたライブラリには、1つまたは複数の{0}ペア用の複数エントリが含まれています。  これはライブラリに装置タイプや衝突エネルギーなど複数パラメータが 含まれているがSkylineのキーは{0}のみであるためで、 これらのエントリは曖昧です。 ライブラリは、Skylineにインポートする前に必要に応じてフィルタしてください。  {0}のペアがあり、次の複数のエントリから構成されています： {1}</value>
+  </data>
+  <data name="CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_of__1__" xml:space="preserve">
+    <value>カスタム分子{0}の質量は{1}の最大値を上回っています。</value>
+  </data>
+  <data name="CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_is_less_than_the_minimum_of__1__" xml:space="preserve">
+    <value>カスタム分子{0}の質量は{1}の最小値を下回っています。</value>
+  </data>
+  <data name="Ions_fragments" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Ions_fragments.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="AreaCVHistogramGraphPane_AddLabels_Calculating____" xml:space="preserve">
+    <value>計算中...</value>
+  </data>
+  <data name="HistogramHelper_CreateAndShowFindResults_Only_showing__0___1__peptides" xml:space="preserve">
+    <value>{0}/{1}ペプチドのみを表示しています</value>
+  </data>
+  <data name="PeptideAnnotationPairFinder_GetDisplayText__0__CV_in__1_" xml:space="preserve">
+    <value>{1}内の{0} CV</value>
+  </data>
+  <data name="PeptideAnnotationPairFinder_GetDisplayText__0__CV" xml:space="preserve">
+    <value>{0} CV</value>
+  </data>
+  <data name="PeptideAnnotationPairFinder_DisplayName_Peptides" xml:space="preserve">
+    <value>ペプチド</value>
+  </data>
+  <data name="AreaCVHistogram2DGraphPane_UpdateGraph_Calculating____" xml:space="preserve">
+    <value>計算中...</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys_per_target_" xml:space="preserve">
+    <value>ターゲット毎に有効な負数でないデコイ数を入力してください。</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated_when_using_reversed_decoys_" xml:space="preserve">
+    <value>反転したデコイを使用する際、ターゲット毎に最大1個のデコイを生成できます。</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_Importing_the_FASTA_did_not_create_any_target_proteins_" xml:space="preserve">
+    <value>FASTAをインポートしても、ターゲットタンパク質は作成されませんでした。</value>
+  </data>
+  <data name="TransitionLibraries_DoValidate_Library_min_ion_count_value__0__must_be_between__1__and__2__" xml:space="preserve">
+    <value>ライブラリの最小イオン数値{0}は{1}～{2}でなければなりません。</value>
+  </data>
+  <data name="TransitionLibraries_DoValidate_Library_ion_count_value__0__must_not_be_less_than_min_ion_count_value__1__" xml:space="preserve">
+    <value>ライブラリのイオン数値{0}は、最小イオン数値{1}未満であってはなりません。</value>
+  </data>
+  <data name="Extensions_CustomToString_Replicate_Comparison" xml:space="preserve">
+    <value>繰り返し測定の比較</value>
+  </data>
+  <data name="Extensions_CustomToString_Peptide_Comparison" xml:space="preserve">
+    <value>ペプチドの比較</value>
+  </data>
+  <data name="Extensions_CustomToString_Score_To_Run_Regression" xml:space="preserve">
+    <value>スコア-ラン回帰</value>
+  </data>
+  <data name="Extensions_CustomToString_Run_To_Run_Regression" xml:space="preserve">
+    <value>ラン-ラン回帰</value>
+  </data>
+  <data name="Extensions_CustomToString_Histogram" xml:space="preserve">
+    <value>ヒストグラム</value>
+  </data>
+  <data name="Extensions_CustomToString__2D_Histogram" xml:space="preserve">
+    <value>2Dヒストグラム</value>
+  </data>
+  <data name="Extensions_CustomToString_Scheduling" xml:space="preserve">
+    <value>スケジュール</value>
+  </data>
+  <data name="PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_" xml:space="preserve">
+    <value>ファイル{0}が欠損しています。</value>
+  </data>
+  <data name="TransitionSettingsUI_PopulateAdductMenu_More" xml:space="preserve">
+    <value>詳細</value>
+  </data>
+  <data name="TransitionSettingsUI_PopulateAdductMenu_Adducts_plusplusplus" xml:space="preserve">
+    <value>付加イオン+++</value>
+  </data>
+  <data name="TransitionSettingsUI_PopulateAdductMenu_Adducts_minusminusminus" xml:space="preserve">
+    <value>付加イオン---</value>
+  </data>
+  <data name="MProphetPeakScoringModel_CalculateWeights_Insufficient_target_peaks___0__with__1__decoys__detected_at__2___FDR_to_continue_training_" xml:space="preserve">
+    <value>{2}% FDRで検出されたターゲットピーク数（{1}のデコイがある{0}）は、トレーニング続行には不十分です。</value>
+  </data>
+  <data name="MProphetPeakScoringModel_CalculateWeights_Insufficient_decoy_peaks___0__with__1__targets__to_continue_training_" xml:space="preserve">
+    <value>デコイピーク（{1}のターゲットがある{0}）は、トレーニング続行には不十分です。</value>
+  </data>
+  <data name="Data_ToString__0__points" xml:space="preserve">
+    <value>{0}ポイント</value>
+  </data>
+  <data name="SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_" xml:space="preserve">
+    <value>ドキュメントが操作の途中で変更されました。</value>
+  </data>
+  <data name="ImportResultsNameDlg_OkDialog_The_text__0__is_not_a_suffix_of_the_files_chosen" xml:space="preserve">
+    <value>テキスト「{0}」は選択したファイルのサフィックスではありません。</value>
+  </data>
+  <data name="ImportResultsNameDlg_CommonSuffix" xml:space="preserve">
+    <value>選択したファイルには共通サフィックスがあります。このサフィックスの一部または全部を削除して、Skylineで使用する名前を短くしますか？</value>
+  </data>
+  <data name="ImportResultsNameDlg_CommonPrefix_and_Suffix" xml:space="preserve">
+    <value>選択したファイルには共通のプリフィックスとサフィックスがあります。プリフィックスまたはサフィックスの一部または全部を削除して、Skylineで使用する名前を短くしますか？</value>
+  </data>
+  <data name="MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than__1__" xml:space="preserve">
+    <value>{0}は{1}よりも大きくなければなりません。</value>
+  </data>
+  <data name="MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than__1__" xml:space="preserve">
+    <value>{0}は{1}よりも小さくなければなりません。</value>
+  </data>
+  <data name="FoldChangeForm_BuildContextMenu_Grid" xml:space="preserve">
+    <value>グリッド</value>
+  </data>
+  <data name="FoldChangeForm_BuildContextMenu_Bar_Graph" xml:space="preserve">
+    <value>棒グラフ</value>
+  </data>
+  <data name="FoldChangeForm_BuildContextMenu_Volcano_Plot" xml:space="preserve">
+    <value>ボルケーノプロット</value>
+  </data>
+  <data name="FoldChangeForm_BuildContextMenu_Settings" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="ViewLibraryDlg_EnsureDigested_An_error_occurred_while_trying_to_process_the_file__0__" xml:space="preserve">
+    <value>ファイル{0}の処理試行中にエラーが発生しました。</value>
+  </data>
+  <data name="UniquePeptidesDlg_AddProteinRowsToGrid_Adding_rows_to_grid_" xml:space="preserve">
+    <value>行をグリッドに追加しています。</value>
+  </data>
+  <data name="SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff" xml:space="preserve">
+    <value>CVカットオフを上回るペプチドを削除</value>
+  </data>
+  <data name="FormatSuggestion_FullPrecision_Full_Precision" xml:space="preserve">
+    <value>最大精度</value>
+  </data>
+  <data name="FormatSuggestion_Scientific_Scientific" xml:space="preserve">
+    <value>科学的</value>
+  </data>
+  <data name="FormatSuggestion_Integer_Integer" xml:space="preserve">
+    <value>整数</value>
+  </data>
+  <data name="FormatSuggestion_Percent_Percent" xml:space="preserve">
+    <value>%</value>
+  </data>
+  <data name="ChromCacheBuilder_Read_Unable_to_finish_importing_chromatograms_because_the_retention_time_predictor_linear_regression_failed_" xml:space="preserve">
+    <value>保持時間予測の線形回帰に失敗したため、クロマトグラムのインポートを完了できません。</value>
+  </data>
+  <data name="FileProgressControl_SetStatus_warning" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="EditDriftTimePredictorDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks" xml:space="preserve">
+    <value>ピークに対するイオン移動度値を検索中です</value>
+  </data>
+  <data name="IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_provide_a_filename_for_the_library_" xml:space="preserve">
+    <value>イオン移動ライブラリを使用するイオン移動度予測にはライブラリに対するファイル名を入力しなければなりません。</value>
+  </data>
+  <data name="IonMobilityPredictor_Validate_Ion_mobility_predictors_using_an_ion_mobility_library_must_include_per_charge_regression_values_" xml:space="preserve">
+    <value>イオン移動ライブラリを使用するイオン移動度予測には電荷毎の回帰値を含まなければなりません。</value>
+  </data>
+  <data name="PasteDlg_btnTransitionListHelp_Click_Supported_values_for__0__are___1_" xml:space="preserve">
+    <value>{0}のサポートされる値には次があります：{1}</value>
+    <comment>{1} is a comma seprated list of supported ion mobility units</comment>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_" xml:space="preserve">
+    <value>イオン移動度値{0}が無効です</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_high_energy_offset_value__0_" xml:space="preserve">
+    <value>イオン移動度の高エネルギーオフセット値{0}が無効です</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Missing_ion_mobility_units" xml:space="preserve">
+    <value>イオン移動度の単位が欠損しています</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility" xml:space="preserve">
+    <value>指定されたイオン移動度</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units" xml:space="preserve">
+    <value>指定されたイオン移動度の単位</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset" xml:space="preserve">
+    <value>指定されたイオン移動度の高エネルギーオフセット</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_units_value__0___accepted_values_are__1__" xml:space="preserve">
+    <value>イオン移動度の単位値{0}が無効です（受け入れられる値は{1}です）</value>
+  </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_" xml:space="preserve">
+    <value>1/K0 (Vs/cm^2)</value>
+  </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_" xml:space="preserve">
+    <value>ドリフト時間(ms)</value>
+  </data>
+  <data name="IonMobilityFilter_IonMobilityUnitsL10NString_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_or_MS_MS_filtering_must_be_enabled_in_order_to_import_a_peptide_search_" xml:space="preserve">
+    <value>ペプチド検索をインポートするには、フルスキャンMS1かMS/MSフィルタを有効にする必要があります。</value>
+  </data>
+  <data name="PeptidesPerProteinDlg_UpdateRemaining_Calculating___" xml:space="preserve">
+    <value>計算中...</value>
+  </data>
+  <data name="SkylineWindow_expandAllMenuItem_DropDownOpening__Lists" xml:space="preserve">
+    <value>リスト(&amp;L)</value>
+  </data>
+  <data name="SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules" xml:space="preserve">
+    <value>分子(&amp;M)</value>
+  </data>
+  <data name="Adduct_ParseDescription_isotope_error" xml:space="preserve">
+    <value>付加イオンの表記「{1}」内の同位体標識の表記「{0}」を構文解析できませんでした。付加イオンの表記内の同位体標識は、同位体数の形式（例：「2Cl37」または「2Cl374N15」）か、  質量シフト（例：「1.234」または「（-1.234）」）の形式にしてください。認識された同位体には次が含まれます：{2}</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Cannot_derive_charge_from_adduct_description___0____Use_the_corresponding_Charge_column_to_set_this_explicitly__or_change_the_adduct_description_as_needed_" xml:space="preserve">
+    <value>付加イオンの表記「{0}」から電荷を計算できません。これを明確に設定するには対応する電荷列を使用するか、必要に応じて付加イオンの表記を変更します。</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_unknown_error" xml:space="preserve">
+    <value>不明なエラー</value>
+  </data>
+  <data name="ImportPeptideSearchManager_LoadBackground_The_current_peak_scoring_model_is_incompatible_with_one_or_more_peptides_in_the_document_" xml:space="preserve">
+    <value>現在のピークスコアモデルは、ドキュメント内の1つ以上のペプチドと互換性がありません。</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Name" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Formula" xml:space="preserve">
+    <value>公式</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey" xml:space="preserve">
+    <value>InChIKey</value>
+  </data>
+  <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs" xml:space="preserve">
+    <value>OtherIDs</value>
   </data>
 </root>

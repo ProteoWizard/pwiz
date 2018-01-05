@@ -134,7 +134,7 @@
     <value>True</value>
   </metadata>
   <data name="dataGridViewTextBoxColumn2.HeaderText" xml:space="preserve">
-    <value>行</value>
+    <value>線</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dataGridViewTextBoxColumn2.Width" type="System.Int32, mscorlib">
