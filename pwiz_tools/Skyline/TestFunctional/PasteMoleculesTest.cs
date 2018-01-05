@@ -914,7 +914,7 @@ namespace pwiz.SkylineTestFunctional
                     Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
             })),
                 string.Format(Resources.SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_,
-                    TextUtil.LineSeparate(new[] { "grommet", "labbel"}),
+                    TextUtil.LineSeparate(new[] { "grommet", "labbel", string.Empty }),
                     TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys)));
             // This should still be close enough to correct that we can tell that's what the user was going for
             Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2));
@@ -942,7 +942,7 @@ namespace pwiz.SkylineTestFunctional
                         Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
                 })),
                 string.Format(Resources.SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_,
-                    nearly,
+                    TextUtil.LineSeparate(new[] { nearly, string.Empty }),
                     TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys)));
             // This should still be close enough to correct that we can tell that's what the user was going for
             Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV4));
