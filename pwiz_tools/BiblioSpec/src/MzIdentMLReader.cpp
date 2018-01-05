@@ -345,6 +345,16 @@ bool MzIdentMLReader::stringToScan(const string& name, PSM* psm) {
             return true;
         }
     }
+
+    // check for <scan>.<scan>
+    boost::split(parts, name, boost::is_any_of("."));
+    for (size_t i = 0; i < parts.size() - 1; i++) {
+        if (parts[i] == parts[i+1] && parts[i].find_first_not_of("0123456789") == string::npos) {
+            psm->specKey = atoi(parts[i].c_str());
+            return true;
+        }
+    }
+
     return false;
 }
 
