@@ -433,7 +433,7 @@ void BlibMaker::createTable(const char* tableName, vector<string> &commands, boo
             "inchiKey VARCHAR(256), -- fragment molecular identifier for structure retrieval\n"
             "otherKeys VARCHAR(256), -- alternative molecular identifiers for fragment structure retrieval, tab separated e.g. cas:58-08-2\\thmdb:01847 \n"
             "charge INTEGER, -- integer charge value, must agree with fragment adduct\n"
-            "adduct VARCHAR(256), -- fargment adduct description, can include neutral loss e.g. [M+H] or [M-H2O+] \n"
+            "adduct VARCHAR(256), -- fragment adduct description, can include neutral loss e.g. [M+H] or [M-H2O+] \n"
             "comment VARCHAR(256), -- freetext comment\n"
             "mzTheoretical REAL not null, -- calculated mz, should agree with formula and adduct if any\n"
             "mzObserved REAL not null -- actual measured mz, should agree with the indexed mz found in the RefSpectra\n)",

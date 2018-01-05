@@ -66,7 +66,7 @@ formula VARCHAR(256), -- fragment neutral chemical formula
 inchiKey VARCHAR(256), -- fragment molecular identifier for structure retrieval
 otherKeys VARCHAR(256), -- alternative molecular identifiers for fragment structure retrieval, tab separated e.g. cas:58-08-2\thmdb:01847 
 charge INTEGER, -- integer charge value, must agree with fragment adduct
-adduct VARCHAR(256), -- fargment adduct description, can include neutral loss e.g. [M+H] or [M-H2O+] 
+adduct VARCHAR(256), -- fragment adduct description, can include neutral loss e.g. [M+H] or [M-H2O+] 
 comment VARCHAR(256), -- freetext comment
 mzTheoretical REAL not null, -- calculated mz, should agree with formula and adduct if any
 mzObserved REAL not null -- actual measured mz, should agree with the indexed mz found in the RefSpectra
