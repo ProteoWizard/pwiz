@@ -607,7 +607,7 @@
     <value>True</value>
   </data>
   <data name="labelTh.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 8.25pt, style=Italic</value>
+    <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
   <data name="labelTh.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>

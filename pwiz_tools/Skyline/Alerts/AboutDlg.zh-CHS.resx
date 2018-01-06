@@ -126,7 +126,7 @@
     <value>14, 201</value>
   </data>
   <data name="linkProteome.Size" type="System.Drawing.Size, System.Drawing">
-    <value>131, 13</value>
+    <value>55, 13</value>
   </data>
   <data name="linkProteome.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -284,7 +284,7 @@ Json.NET
 http://james.newtonking.com
 
 JetBrains Software
-开发工具： ReSharper、dotTrace 和 dotCover
+开发工具：ReSharper、dotTrace 和 dotCover
 http://www.jetbrains.com/index.html
 
 Matrix Science
@@ -359,7 +359,7 @@ http://www.zlib.net</value>
     <value>6</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Software Dependency Credits：</value>
+    <value>Software Dependency Credits:</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -467,7 +467,7 @@ http://www.zlib.net</value>
     <value>10</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-    <value>© 2008-2015 年 华盛顿大学版权所有，保留所有权利
+    <value>© 2008-2018 年 华盛顿大学版权所有，保留所有权利
 
 MacCoss实验室, 基因组科学系, 华盛顿大学
 

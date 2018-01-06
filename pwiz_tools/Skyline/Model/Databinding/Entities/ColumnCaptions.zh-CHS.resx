@@ -141,6 +141,9 @@
   <data name="AverageMassErrorPPM">
     <value>平均质量误差 PPM</value>
   </data>
+  <data name="AverageMasses">
+    <value>平均质量</value>
+  </data>
   <data name="AverageMeasuredRetentionTime">
     <value>平均检测到的保留时间</value>
   </data>
@@ -161,6 +164,30 @@
   </data>
   <data name="CalibrationCurve">
     <value>校准曲线</value>
+  </data>
+  <data name="Chromatogram">
+    <value>色谱图</value>
+  </data>
+  <data name="ChromatogramExtractionWidth">
+    <value>色谱图提取宽度</value>
+  </data>
+  <data name="ChromatogramIonMobility">
+    <value>色谱图离子迁移</value>
+  </data>
+  <data name="ChromatogramIonMobilityExtractionWidth">
+    <value>色谱图离子迁移提取宽度</value>
+  </data>
+  <data name="ChromatogramIonMobilityUnits">
+    <value>色谱图离子迁移单位</value>
+  </data>
+  <data name="ChromatogramPrecursorMz">
+    <value>色谱图母离子质荷比</value>
+  </data>
+  <data name="ChromatogramProductMz">
+    <value>色谱图子离子质荷比</value>
+  </data>
+  <data name="ChromatogramSource">
+    <value>色谱图源</value>
   </data>
   <data name="CleavageAa">
     <value>剪切 Aa</value>
@@ -234,6 +261,9 @@
   <data name="EstimatedValue">
     <value>预估值</value>
   </data>
+  <data name="ExcludeFromCalibration">
+    <value>从校准中排除</value>
+  </data>
   <data name="FileIndex">
     <value>文件索引</value>
   </data>
@@ -258,6 +288,7 @@
   <data name="FragmentIonType">
     <value>片段离子类型</value>
   </data>
+  <data name="FullNames"><value>全名</value></data>
   <data name="FullScanFilterWidth">
     <value>全扫描过滤器宽度</value>
   </data>
@@ -276,11 +307,29 @@
   <data name="Identified">
     <value>已确认的</value>
   </data>
+  <data name="Intensities">
+    <value>强度</value>
+  </data>
   <data name="Intercept">
     <value>截距</value>
   </data>
   <data name="InternalStandardConcentration">
     <value>内标浓度</value>
+  </data>
+  <data name="InterpolatedData">
+    <value>内插数据</value>
+  </data>
+  <data name="InterpolatedIntensities">
+    <value>内插强度</value>
+  </data>
+  <data name="InterpolatedMassErrors">
+    <value>内插质量误差</value>
+  </data>
+  <data name="InterpolatedNumberOfPoints">
+    <value>内插点数量</value>
+  </data>
+  <data name="InterpolatedTimes">
+    <value>内插时间</value>
   </data>
   <data name="IsDecoy">
     <value>是诱饵</value>
@@ -341,6 +390,9 @@
   </data>
   <data name="MassErrorPPM">
     <value>质量误差 PPM</value>
+  </data>
+  <data name="MassErrors">
+    <value>质量误差</value>
   </data>
   <data name="Max">
     <value>最大</value>
@@ -420,9 +472,15 @@
   <data name="ModifiedSequence">
     <value>修饰序列</value>
   </data>
+  <data name="ModifiedSequenceAverageMasses"><value>修饰序列平均质量</value></data>
+  <data name="ModifiedSequenceFullNames"><value>修饰序列全名</value></data>
+  <data name="ModifiedSequenceMonoisotopicMasses"><value>修饰序列单一同位素质量</value></data>
+  <data name="ModifiedSequenceThreeLetterCodes"><value>修饰序列三字母代码</value></data>
+  <data name="ModifiedSequenceUnimodIds"><value>修饰序列 Unimod ID</value></data>
   <data name="ModifiedTime">
     <value>修饰时间</value>
   </data>
+  <data name="MonoisotopicMasses"><value>单一同位素质量</value></data>
   <data name="MsLevel">
     <value>MS 级别</value>
   </data>
@@ -434,6 +492,9 @@
   </data>
   <data name="NormalizedArea">
     <value>校准后面积</value>
+  </data>
+  <data name="NumberOfPoints">
+    <value>点数</value>
   </data>
   <data name="OptCollisionEnergy">
     <value>最优碰撞能量</value>
@@ -462,6 +523,11 @@
   <data name="PeptideModifiedSequence">
     <value>肽段修饰序列</value>
   </data>
+  <data name="PeptideModifiedSequenceAverageMasses"><value>肽段修饰序列平均质量</value></data>
+  <data name="PeptideModifiedSequenceFullNames"><value>肽段修饰序列全名</value></data>
+  <data name="PeptideModifiedSequenceMonoisotopicMasses"><value>肽段修饰序列单一同位素质量</value></data>
+  <data name="PeptideModifiedSequenceThreeLetterCodes"><value>肽段修饰序列三字母代码</value></data>
+  <data name="PeptideModifiedSequenceUnimodIds"><value>肽段修饰序列 Unimod ID</value></data>
   <data name="PeptideNote">
     <value>肽段注释</value>
   </data>
@@ -485,6 +551,9 @@
   </data>
   <data name="PeptideSequence">
     <value>肽段序列</value>
+  </data>
+  <data name="PeptideSequenceLength">
+    <value>肽段序列长度</value>
   </data>
   <data name="PointCount">
     <value>计数点</value>
@@ -591,6 +660,9 @@
   <data name="Quantification">
     <value>定量</value>
   </data>
+  <data name="Quantitative">
+    <value>定量</value>
+  </data>
   <data name="Range">
     <value>范围</value>
   </data>
@@ -605,6 +677,21 @@
   </data>
   <data name="RatioToStandard">
     <value>相对于标准品比率</value>
+  </data>
+  <data name="RawData">
+    <value>原始数据</value>
+  </data>
+  <data name="RawIntensities">
+    <value>原始强度</value>
+  </data>
+  <data name="RawMassErrors">
+    <value>原始质量误差</value>
+  </data>
+  <data name="RawNumberOfPoints">
+    <value>原始点数</value>
+  </data>
+  <data name="RawTimes">
+    <value>原始时间</value>
   </data>
   <data name="Replicate">
     <value>重复测定</value>
@@ -693,11 +780,15 @@
   <data name="StdevTotalAreaRatio">
     <value>总面积比标准偏差</value>
   </data>
+  <data name="ThreeLetterCodes"><value>三字母代码</value></data>
   <data name="TicArea">
     <value>总离子电流面积</value>
   </data>
   <data name="TotalArea">
     <value>总面积</value>
+  </data>
+  <data name="Times">
+    <value>时间</value>
   </data>
   <data name="TotalAreaFragment">
     <value>片段总面积</value>
@@ -753,6 +844,7 @@
   <data name="TValue">
     <value>T 值</value>
   </data>
+  <data name="UnimodIds"><value>Unimod ID</value></data>
   <data name="UserSetPeak">
     <value>用户设定峰</value>
   </data>
@@ -788,6 +880,27 @@
   </data>
   <data name="ExplicitDriftTimeMsec">
     <value>明确的漂移时间毫秒</value>
+  </data>
+  <data name="ExplicitIonMobility">
+    <value>明示离子迁移</value>
+  </data>
+  <data name="ExplicitIonMobilityHighEnergyOffset">
+    <value>明示离子迁移高能偏置</value>
+  </data>
+  <data name="ExplicitIonMobilityUnits">
+    <value>明示离子迁移单位</value>
+  </data>
+  <data name="IonMobilityFragment">
+    <value>离子迁移片段</value>
+  </data>
+  <data name="IonMobilityMS1">
+    <value>离子迁移 MS1</value>
+  </data>
+  <data name="IonMobilityWindow">
+    <value>离子迁移窗口</value>
+  </data>
+  <data name="IonMobilityUnits">
+    <value>离子迁移单位</value>
   </data>
   <data name="ExplicitGlobalStandardArea">
     <value>明确的全局标准面积</value>
@@ -839,5 +952,26 @@
   </data>
   <data name="DriftTimeWindow">
     <value>漂移时间窗口</value>
+  </data>
+  <data name="CAS">
+    <value>CAS（化学文摘社）</value>
+  </data>
+  <data name="InChiKey">
+    <value>InChiKey（国际化合物标识键）</value>
+  </data>
+  <data name="InChI">
+    <value>InChI（国际化合物标识）</value>
+  </data>
+  <data name="HMDB">
+    <value>HMDB（人类代谢组学数据库）</value>
+  </data>
+  <data name="SMILES">
+    <value>SMILES（简化分子线性输入规范）</value>
+  </data>
+  <data name="AbsFoldChange">
+    <value>绝对倍数变化</value>
+  </data>
+  <data name="AbsLog2FoldChange">
+    <value>绝对对数 2 倍变化</value>
   </data>
 </root>

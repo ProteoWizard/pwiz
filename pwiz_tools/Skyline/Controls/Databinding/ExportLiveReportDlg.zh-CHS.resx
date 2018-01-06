@@ -190,7 +190,7 @@
     <value>7, 324</value>
   </data>
   <data name="comboLanguage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>257, 21</value>
+    <value>274, 21</value>
   </data>
   <data name="comboLanguage.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -250,10 +250,10 @@
     <value>NoControl</value>
   </data>
   <data name="btnPreview.Location" type="System.Drawing.Point, System.Drawing">
-    <value>271, 22</value>
+    <value>288, 22</value>
   </data>
   <data name="btnPreview.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 23</value>
+    <value>75, 23</value>
   </data>
   <data name="btnPreview.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -280,10 +280,10 @@
     <value>NoControl</value>
   </data>
   <data name="btnEdit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>271, 51</value>
+    <value>288, 51</value>
   </data>
   <data name="btnEdit.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 23</value>
+    <value>75, 23</value>
   </data>
   <data name="btnEdit.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -352,7 +352,7 @@
     <value>0</value>
   </data>
   <data name="treeView1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>257, 283</value>
+    <value>274, 283</value>
   </data>
   <data name="treeView1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>

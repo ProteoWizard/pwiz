@@ -358,7 +358,7 @@
     <value>True</value>
   </data>
   <data name="checkBoxShowStartup.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial, 9pt, style=Italic</value>
+    <value>Arial, 9pt</value>
   </data>
   <data name="checkBoxShowStartup.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>

@@ -435,11 +435,65 @@
   <data name="&gt;&gt;cb13C.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="cb37Cl.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cb37Cl.Location" type="System.Drawing.Point, System.Drawing">
+    <value>293, 10</value>
+  </data>
+  <data name="cb37Cl.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 17</value>
+  </data>
+  <data name="cb37Cl.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="cb37Cl.Text" xml:space="preserve">
+    <value>37Cl</value>
+  </data>
+  <data name="&gt;&gt;cb37Cl.Name" xml:space="preserve">
+    <value>cb37Cl</value>
+  </data>
+  <data name="&gt;&gt;cb37Cl.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cb37Cl.Parent" xml:space="preserve">
+    <value>panelAtoms</value>
+  </data>
+  <data name="&gt;&gt;cb37Cl.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="cb81Br.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cb81Br.Location" type="System.Drawing.Point, System.Drawing">
+    <value>240, 10</value>
+  </data>
+  <data name="cb81Br.Size" type="System.Drawing.Size, System.Drawing">
+    <value>60, 17</value>
+  </data>
+  <data name="cb81Br.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="cb81Br.Text" xml:space="preserve">
+    <value>81Br</value>
+  </data>
+  <data name="&gt;&gt;cb81Br.Name" xml:space="preserve">
+    <value>cb81Br</value>
+  </data>
+  <data name="&gt;&gt;cb81Br.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cb81Br.Parent" xml:space="preserve">
+    <value>panelAtoms</value>
+  </data>
+  <data name="&gt;&gt;cb81Br.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
   <data name="panelAtoms.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 149</value>
   </data>
   <data name="panelAtoms.Size" type="System.Drawing.Size, System.Drawing">
-    <value>287, 36</value>
+    <value>387, 36</value>
   </data>
   <data name="panelAtoms.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>

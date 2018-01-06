@@ -100,11 +100,12 @@
 	</resheader>
 
   <data name="Accuracy">
-    <value>在重复测定中指定的分析物浓度与计算浓度比</value>
+    <value>在重复测定中指定的分析物浓度与计算浓度比
+</value>
   </data>
   <data name="AcquiredTime">
-    <value>质谱仪上一次开始获取此
-重复测定数据的时间和日期。或者，如果文件通过 1.1 之前的版本导入，则为 #N/A。</value>
+    <value>质谱仪上一次开始获取此重复测定数据的时间
+和日期。或者，如果文件通过 1.1 之前的版本导入，则为 #N/A。</value>
   </data>
   <data name="AnalyteConcentration">
     <value>加入外部或质量控制标准的已知量的分析物。</value>
@@ -122,14 +123,14 @@
 并显示在重离子对上。</value>
   </data>
   <data name="AverageMassErrorPPM">
-    <value>平均质量误差百万分率</value>
+    <value>平均质量误差 PPM</value>
   </data>
   <data name="AverageMeasuredRetentionTime">
     <value>所有重复测定结果中该肽段的平均保留时间</value>
   </data>
   <data name="Background">
-    <value>由积分边界形成的矩形面积，以及基线和垂直于积分边界与
-离子对峰的
+    <value>由积分边界形成的矩形面积，以及
+基线和垂直于积分边界与离子对峰的
 色谱图之间的最小交点强度的线。</value>
   </data>
   <data name="BeginPos">
@@ -153,8 +154,8 @@
     <value>校正曲线，其使用样品类型为“标准”并标明“分析物浓度”的重复测定计算。</value>
   </data>
   <data name="CleavageAa">
-    <value>在肽断裂后（C-末端）肽中的特异
-性氨基酸残基。（例如 P、M、S、T 等。）</value>
+    <value>在肽断裂后（C-末端）肽中的特异性
+氨基酸残基。（例如 P、M、S、T 等。）</value>
   </data>
   <data name="CollisionEnergy">
     <value>根据仪器/厂商特定的 Skyline 内的预设碰撞能量方程
@@ -164,9 +165,9 @@
     <value>重复测定的“分析物浓度”所乘的值，以获得特定肽或分子的特定浓度。</value>
   </data>
   <data name="CountTruncated">
-    <value>在采集时间区间的任意一端（即该端的强度大于高于其他范围的
-整个峰高的 1%），集成峰与边界的
-母离子的离子对数量。</value>
+    <value>在采集时间区间的任意一端
+（即该端的强度大于高于其他范围的整个峰高的 1%），
+集成峰与边界的母离子的离子对数量。</value>
   </data>
   <data name="Cv">
     <value>变异系数</value>
@@ -182,8 +183,8 @@
     <value>离子对面积比值的变异系数 (CV)。</value>
   </data>
   <data name="CvBestRetentionTime">
-    <value>母离子最佳保留时间值的
-变异系数 (CV)。</value>
+    <value>母离子最佳保留时间值
+的变异系数 (CV)。</value>
   </data>
   <data name="CvFwhm">
     <value>离子对 Fwhm（峰宽）值的变异系数 (CV)</value>
@@ -193,7 +194,7 @@
 变异系数 (CV)。</value>
   </data>
   <data name="CvMaxHeight">
-    <value>变异系数最大高度</value>
+    <value>最大高度的变异系数</value>
   </data>
   <data name="CvRetentionTime">
     <value>离子对保留时间值的变异系数 (CV)。</value>
@@ -233,6 +234,9 @@
   </data>
   <data name="ErrorMessage">
     <value>在尝试计算该值时出现的错误消息正文（如有）。</value>
+  </data>
+  <data name="ExcludeFromCalibration">
+    <value>是否应从肽的校准曲线计算中排除重复测定的结果。</value>
   </data>
   <data name="ExplicitCollisionEnergy">
     <value>用于目标的 SRM 方法或离子对清单确切所需的碰撞能量，覆盖所有模型或优化库值。</value>
@@ -330,21 +334,21 @@
   <data name="IsotopeDistRank">
     <value>排名系基于预测同位素分布的所有同位素峰中的同位素分布比例，
 在用户界面中显示为“(irank #)”。
-目前仅适用于从高分辨率 MS1 扫描中过滤的
-母离子离子对。</value>
+目前仅适用于从高分辨率 MS1 扫描中过滤
+的母离子离子对。</value>
   </data>
   <data name="IsotopeDotProduct">
-    <value>上文所述的点积计算，但在母离子的单个母离子（M、M+1、M+2 等）
-峰面积与预测的同位素分布强度之间；
+    <value>上文所述的点积计算，但在母离子的单个母离子
+（M、M+1、M+2 等）峰面积与预测的同位素分布强度之间；
 或如果离子对不是母离子同位素，则为 #N/A；
 或色谱图非提取自高分辨率 MS1 数据。</value>
   </data>
   <data name="IsotopeLabelType">
-    <value>
-与母离子（轻标/重标）相关的标签类型名称，</value>
+    <value>与母离子（轻标/重标）相关的签记类型名称，
+表明应用了哪些同位素修饰</value>
   </data>
   <data name="Key">
-    <value>表明应用了哪些同位素修饰检索表</value>
+    <value>关键</value>
   </data>
   <data name="LibraryDotProduct">
     <value>母离子的单个离子对峰面积与匹配的串联质谱谱图库谱图
@@ -352,7 +356,7 @@
 其中 dotp 是上文所述的值，
 又称归一化谱图对比角度）；或者如果母离子没有匹配的
 库谱图或离子对少于 4 个，则为 #N/A。这是用于
-方法调整的 35 个可用值。当存在 6 个或更多离子对时，
+方法调整的 35 个有用值。当存在 6 个或更多离子对时，
 效果最佳。</value>
   </data>
   <data name="LibraryIntensity">
@@ -393,7 +397,7 @@
     <value>质量误差百万分率</value>
   </data>
   <data name="Max">
-    <value>最高</value>
+    <value>最大</value>
   </data>
   <data name="MaxBestRetentionTime">
     <value>母离子最佳保留时间值的最大值</value>
@@ -407,7 +411,7 @@
 全宽 (FWHM)。</value>
   </data>
   <data name="MaxHeight">
-    <value>最大高度</value>
+    <value>高度最大值</value>
   </data>
   <data name="MaxRetentionTime">
     <value>离子对保留时间值最大值。</value>
@@ -465,11 +469,11 @@
     <value>肽序列中缺失酶剪切位点的数量</value>
   </data>
   <data name="ModifiedSequence">
-    <value>包括任何氨基酸修饰（如半胱氨酸烷
-基化）的肽序列。（例如： AGLC[+57]QTFVYGGC[+57]R）</value>
+    <value>包括任何氨基酸修饰
+（如半胱氨酸烷基化）的肽序列。（例如：AGLC[+57]QTFVYGGC[+57]R）</value>
   </data>
   <data name="ModifiedTime">
-    <value>原始质谱数据文件在磁盘上修改的最后
+    <value>原始质谱仪文件在磁盘上修改的最后
 时间和日期</value>
   </data>
   <data name="MoleculeFormula">
@@ -488,31 +492,31 @@
     <value>覆盖与该特定分子一起使用的归一化方法，进行绝对定量和组间比较。</value>
   </data>
   <data name="NormalizedArea">
-    <value>根据明示的肽/分子“归一化方法”或在“设定 &gt; 肽设定 &gt; 定量”中指定的归一化方法，
+    <value>根据明示的肽/分子“归一化方法”或在“设定 &gt; 肽设定 &gt; 定量”中指定的归一化方法:
     归一化肽/分子强度而得的值</value>
   </data>
   <data name="OptCollisionEnergy">
-    <value>当正在进行碰撞能量优化时，与优化步骤
-对应的碰撞能量值</value>
+    <value>当正在进行碰撞能量优化时，
+与优化步骤对应的碰撞能量值</value>
   </data>
   <data name="OptCompensationVoltage">
     <value>当正在进行补偿电压优化时，与优化步骤对应的离子迁移过滤的补偿电压值</value>
   </data>
   <data name="OptDeclusteringPotential">
-    <value>当正在进行去簇电压优化时，与优化步骤
-对应的去簇电压值</value>
+    <value>当正在进行去簇电压优化时，
+与优化步骤对应的去簇电压值</value>
   </data>
   <data name="OptStep">
-    <value>
-
-指明与正在优化的参数的默认值所距离的优化步骤值，</value>
+    <value>指明与正在优化的参数的默认值所距离的优化步骤值，
+预设参数值或者当重复测定中未
+进行优化时的值为 0。</value>
   </data>
   <data name="PeakRank">
-    <value>预设参数值或者当重复测定中
-未进行优化时的值为 0。基于该离子对在相同母离子的所有其他离子对中的面积</value>
+    <value>基于该离子对在相同母离子的所有其他离子对中的面积
+进行的排名。</value>
   </data>
   <data name="PeakRankByLevel">
-    <value>进行的排名在特定重复测定中按质谱级别排名的峰面积（即 MS1 和串联质谱分开排名）</value>
+    <value>在特定重复测定中按质谱级别排名的峰面积（即 MS1 和串联质谱分开排名）</value>
   </data>
   <data name="Peptide">
     <value>肽</value>
@@ -547,7 +551,10 @@
     <value>肽段</value>
   </data>
   <data name="PeptideSequence">
-    <value> 肽段的氨基酸序列。</value>
+    <value>肽段的氨基酸序列。</value>
+  </data>
+  <data name="PeptideSequenceLength">
+    <value>肽段序列中的氨基酸计数。</value>
   </data>
   <data name="PointCount">
     <value>在曲线拟合中使用的数据点数。</value>
@@ -569,13 +576,13 @@
 自由文字注释</value>
   </data>
   <data name="PrecursorPeakFoundRatio">
-    <value>所测量峰中的离子对与肽中离子对
-总数的比。肽树视图中的峰值指示符对
-应于绿色 = 1.0（集成所有离子对），橙色 &gt;= 0.5，红色 &lt; 0.5。</value>
+    <value>所测量峰中的离子对与肽中
+离子对总数的比。肽树视图中的峰值指示符
+对应于绿色 = 1.0（集成所有离子对），橙色 &gt;= 0.5，红色 &lt; 0.5。</value>
   </data>
   <data name="PrecursorReplicateNote">
-    <value>与使用结果网格的母离子结果集相关的自由
-文字注释。</value>
+    <value>与使用结果网格的母离子结果集
+相关的自由文字注释。</value>
   </data>
   <data name="PrecursorResult">
     <value>母离子结果（单个）</value>
@@ -593,12 +600,12 @@
     <value>每次重复测定运行的肽保留时间。</value>
   </data>
   <data name="PredictedRetentionTime">
-    <value>由一组测量结果和保留时间计算器（目前仅可以使用
-SSRCalc 3.0）之间的保留时间回归预测的保留时间；
+    <value>由一组测量结果和保留时间计算器
+（目前仅可以使用 SSRCalc 3.0）之间的保留时间回归预测的保留时间；
 或如果未分配保留时间回归，则为 #N/A。</value>
   </data>
   <data name="PreviousAa">
-    <value>前一个氨基酸</value>
+    <value>上一个 Aa</value>
   </data>
   <data name="ProductCharge">
     <value>子离子电荷 (z)。</value>
@@ -620,9 +627,9 @@ SSRCalc 3.0）之间的保留时间回归预测的保留时间；
     <value>蛋白质检索号</value>
   </data>
   <data name="ProteinDescription">
-    <value>在通过公共 FASTA 序列将蛋白质导入 Skyline 时，
-该蛋白质的描述会被提供。若将光标悬浮在肽树视图中的蛋白质名称，
-也会看到蛋白质描述。</value>
+    <value>在通过公共 FASTA 序列文件将蛋白质导入 Skyline 时，
+会提供该蛋白质的描述。若将光标悬浮在
+肽树视图中的蛋白质名称，也会看到蛋白质描述。</value>
   </data>
   <data name="ProteinGene">
     <value>蛋白质基因</value>
@@ -642,12 +649,12 @@ SSRCalc 3.0）之间的保留时间回归预测的保留时间；
     <value>蛋白质</value>
   </data>
   <data name="ProteinSequence">
-    <value>在通过公共 FASTA 序列将蛋白质导入 Skyline 时，
+    <value>在通过公共 FASTA 序列文件将蛋白质导入 Skyline 时，
 可以存取全部蛋白质序列。若将光标悬浮在
 肽树视图中的蛋白质名称，也会看到蛋白质序列。</value>
   </data>
   <data name="ProteinSpecies">
-    <value>蛋白质种类</value>
+    <value>蛋白质物种</value>
   </data>
   <data name="QuadraticCoefficient">
     <value>二次回归中 x 平方项的系数。</value>
@@ -655,17 +662,20 @@ SSRCalc 3.0）之间的保留时间回归预测的保留时间；
   <data name="Quantification">
     <value>与使用校正曲线或归一化方法量化分析相关的值。</value>
   </data>
+  <data name="Quantitative">
+    <value>定量肽时是否应该包含离子对的峰面积。</value>
+  </data>
   <data name="Range">
-    <value>区间</value>
+    <value>范围</value>
   </data>
   <data name="RangeBestRetentionTime">
-    <value>最大最佳保留时间和最小最佳保留时间
-之间的差异，可用于测定所测量的保留时间的
+    <value>最大最佳保留时间和最小最佳保留时间之间的
+差异，可用于测定所测量的保留时间的
 漂移范围。</value>
   </data>
   <data name="RangeRetentionTime">
-    <value>最大保留时间和最小保留时间
-之间的差异，可用于测定所测量的保留时间的
+    <value>最大保留时间和最小保留时间之间的差异，
+可用于测定所测量的保留时间的
 漂移范围。</value>
   </data>
   <data name="RatioDotProduct">
@@ -702,19 +712,19 @@ SSRCalc 3.0）之间的保留时间回归预测的保留时间；
     <value>离子对峰的最大强度所对应的的保留时间。</value>
   </data>
   <data name="RetentionTimeCalculatorScore">
-    <value>在使用保留得分计算器时（例如 SSRCalc 或 iRT 得分），
-该当前计算器的肽原始得分
+    <value>在使用保留得分计算器时
+（例如 SSRCalc 或 iRT 得分），该当前计算器的肽原始得分
     </value>
   </data>
   <data name="RSquared">
     <value>测定系数</value>
   </data>
   <data name="SampleName">
-    <value>当数据导入自多样品 WIFF 文件时的样品名称，
-或其他文件类型的文件名。</value>
+    <value>当数据导入自多样品 WIFF 文件时的
+样品名称，或其他文件类型的文件名。</value>
   </data>
   <data name="SampleType">
-    <value>样品类型。 以下一种： 
+    <value>样品类型。 以下一种：
       未知（正在测量的样品）
       标准（含校正曲线中使用的已知量的分析物的外标）
       质量控制（含有要验证校正的已知量分析物）
@@ -766,8 +776,8 @@ SSRCalc 3.0）之间的保留时间回归预测的保留时间；
     <value>归一化总面积的标准偏差</value>
   </data>
   <data name="StdevTotalAreaRatio">
-    <value>母离子总面积归一
-化值的标准偏差。</value>
+    <value>母离子总面积归一化值的标准
+偏差。</value>
   </data>
   <data name="TicArea">
     <value>总离子电流在整个运行中的积分。</value>
@@ -792,8 +802,8 @@ SSRCalc 3.0）之间的保留时间回归预测的保留时间；
 并显示在重标母离子上。</value>
   </data>
   <data name="TotalBackground">
-    <value>特定母离子的所有单个离子对的背景值
-总和</value>
+    <value>特定母离子的所有单个离子对的
+背景值总和</value>
   </data>
   <data name="TotalBackgroundFragment">
     <value>片段总背景</value>
@@ -811,12 +821,12 @@ SSRCalc 3.0）之间的保留时间回归预测的保留时间；
     <value>若是诱饵离子对，则成立</value>
   </data>
   <data name="TransitionNote">
-    <value>点击“编辑”菜单中的“编辑注释”后显示的与离子对相关的自由
-文字注释</value>
+    <value>点击“编辑”菜单中的“编辑注释”后显示的与离子对相关的
+自由文字注释</value>
   </data>
   <data name="TransitionReplicateNote">
-    <value>与使用结果网格的离子对结果集相关的自由
-文字注释。</value>
+    <value>与使用结果网格的离子对结果集
+相关的自由文字注释。</value>
   </data>
   <data name="TransitionResult">
     <value>离子对结果（单个）</value>
@@ -845,18 +855,45 @@ SSRCalc 3.0）之间的保留时间回归预测的保留时间；
     <value>值</value>
   </data>
   <data name="CollisionalCrossSection">
-    <value>以平方埃为单位的离子迁移率测量值，通常会转换为漂移时间，并用于从离子迁移率质谱中提取色谱图。</value>
+    <value>以平方埃为单位的离子迁移测量值，通常会转换为适当的单位（例如漂移时间，inverseK0），并用于从离子迁移质谱中提取色谱图。</value>
   </data>
   <data name="DriftTimeFragment">
-    <value>片段离子的离子迁移率漂移时间（以毫秒为单位），通常因能量碰撞更多而移动更快</value>
+    <value>片段离子的离子迁移漂移时间（以毫秒为单位），通常因能量碰撞更多而移动更快。（仅用于向后相容：离子迁移片段和离子迁移单位是首选术语。）</value>
   </data>
   <data name="DriftTimeMS1">
-    <value>母离子的离子迁移率漂移时间（以毫秒为单位），通常因能量较少而比片段离子移动稍慢</value>
+    <value>母离子的离子迁移漂移时间（以毫秒为单位），通常因能量较少而比片段离子移动稍慢。（仅用于向后相容：离子迁移MS1 和离子迁移单位是首选术语。）</value>
   </data>
   <data name="DriftTimeWindow">
-    <value>在色谱图提取中使用的离子迁移率漂移时间窗口（以毫秒为单位）</value>
+    <value>在色谱图提取中使用的离子迁移漂移时间窗口（以毫秒为单位）。（仅用于向后相容：离子迁移窗口和离子迁移单位是首选术语。）</value>
   </data>
   <data name="ExplicitCollisionalCrossSection">
-    <value>待转换为漂移时间且用于从离子迁移率质谱中提取色谱图确切所需的碰撞横截面（以平方埃为单位），覆盖所有模型值。</value>
+    <value>待转换为离子迁移且用于从离子迁移质谱中提取色谱图确切所需的碰撞横截面（以平方埃为单位），覆盖所有模型值。</value>
+  </data>
+  <data name="IonMobilityFragment">
+    <value>在片段离子色谱图提取中使用的离子迁移过滤器窗口的中心。这可能不同于母离子的值，因为片段离子可能由于能量碰撞更多而移动得更快，</value>
+  </data>
+  <data name="IonMobilityMS1">
+    <value>在母离子色谱图提取中使用的离子迁移过滤器窗口的中心。</value>
+  </data>
+  <data name="IonMobilityWindow">
+    <value>在色谱图提取中使用的离子迁移过滤器窗口的宽度。</value>
+  </data>
+  <data name="IonMobilityUnits">
+    <value>在色谱图提取中使用的离子迁移的单位。</value>
+  </data>
+  <data name="CAS" xml:space="preserve">
+    <value>标准化分子标识符</value>
+  </data>
+  <data name="HMDB" xml:space="preserve">
+    <value>标准化分子标识符</value>
+  </data>
+  <data name="InChI" xml:space="preserve">
+    <value>标准化分子标识符</value>
+  </data>
+  <data name="InChiKey" xml:space="preserve">
+    <value>标准化分子标识符</value>
+  </data>
+  <data name="SMILES" xml:space="preserve">
+    <value>标准化分子标识符</value>
   </data>
 </root>

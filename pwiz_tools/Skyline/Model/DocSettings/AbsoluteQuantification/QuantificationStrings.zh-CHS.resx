@@ -183,7 +183,7 @@
     <value>y = {0} x^2 + {1} x + {2}</value>
   </data>
   <data name="CalibrationCurve_ToString_Slope___0__Intercept___1_" xml:space="preserve">
-    <value>斜率： {0} 截距：{1}</value>
+    <value>斜率：{0} 截距：{1}</value>
   </data>
   <data name="CalibrationCurve_ToString_Slope___0_" xml:space="preserve">
     <value>斜率：{0}</value>
@@ -238,5 +238,8 @@
   </data>
   <data name="CalibrationForm_MakeExcludeStandardMenuItem_Exclude_Standard" xml:space="preserve">
     <value>排除标准</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_The_selected_peptide_is_no_longer_part_of_the_Skyline_document_" xml:space="preserve">
+    <value>选定的肽不再是 Skyline 文档的一部分。</value>
   </data>
 </root>
