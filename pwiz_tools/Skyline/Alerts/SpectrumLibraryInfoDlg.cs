@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Alerts
 
                 const int maxDisplayRows = 10;
                 dataGridViewHeight = Math.Min(libraryGridView.Rows.Count, maxDisplayRows) * libraryGridView.Rows[0].Height +
-                                    libraryGridView.ColumnHeadersHeight;
+                                    libraryGridView.ColumnHeadersHeight + libraryGridView.Rows[0].Height/2;
             }
             else
             {

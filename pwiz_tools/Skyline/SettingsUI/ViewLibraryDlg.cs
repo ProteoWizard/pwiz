@@ -654,7 +654,7 @@ namespace pwiz.Skyline.SettingsUI
                         ExplicitMods mods;
                         var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
                         GetPeptideInfo(pepInfo, _matcher, out settings, out transitionGroupDocNode, out mods);
-                        var showAdducts = isSmallMoleculeItem ?  transitionGroupDocNode.InUseAdducts : Transition.DEFAULT_PEPTIDE_LIBRARY_CHARGES;
+                        var showAdducts = (isSmallMoleculeItem ?  transitionGroupDocNode.InUseAdducts : Transition.DEFAULT_PEPTIDE_LIBRARY_CHARGES).ToList();
                         var charges = ShowIonCharges(showAdducts);
 
                         // Make sure the types and charges in the settings are at the head
@@ -666,11 +666,15 @@ namespace pwiz.Skyline.SettingsUI
                                 types.Insert(i++, type);
                         }
                         i = 0;
-                        foreach (var charge in rankCharges)
+                        var adducts = new List<Adduct>();
+                        var absoluteChargeValues = Adduct.OrderedAbsoluteChargeValues(rankCharges);
+                        foreach (var charge in absoluteChargeValues)
                         {
                             if (charges.Remove(charge))
                                 charges.Insert(i++, charge);
+                            adducts.AddRange(showAdducts.Where(a => charge == Math.Abs(a.AdductCharge)));
                         }
+                        adducts.AddRange(showAdducts.Where(a => charges.Contains(Math.Abs(a.AdductCharge)) && !adducts.Contains(a))); // And the unranked charges as well
 
                         var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrum,
                                                                           transitionGroupDocNode.TransitionGroup.LabelType,
@@ -678,7 +682,7 @@ namespace pwiz.Skyline.SettingsUI
                                                                           settings,
                                                                           transitionGroupDocNode.Peptide.Target,
                                                                           mods,
-                                                                          charges,
+                                                                          adducts,
                                                                           types,
                                                                           rankCharges,
                                                                           rankTypes);
@@ -845,7 +849,9 @@ namespace pwiz.Skyline.SettingsUI
             return GraphSettings.ShowIonTypes(isProteomic); 
         }
 
-        public IList<Adduct> ShowIonCharges(IEnumerable<Adduct> chargePriority)
+        // N.B. we're interested in the absolute value of charge here, so output list may be shorter than input list
+        // CONSIDER(bspratt): will we want finer grained (full adduct sense) control for small molecule libs?
+        public IList<int> ShowIonCharges(IEnumerable<Adduct> chargePriority)
         {
             return GraphSettings.ShowIonCharges(chargePriority); 
         }

@@ -219,6 +219,9 @@
   <data name="filterBtn.Size" type="System.Drawing.Size, System.Drawing">
     <value>23, 22</value>
   </data>
+  <data name="filterBtn.ToolTipText" xml:space="preserve">
+    <value>イオン移動度をフィルタ</value>
+  </data>
   <data name="lblScanId.Size" type="System.Drawing.Size, System.Drawing">
     <value>13, 22</value>
   </data>

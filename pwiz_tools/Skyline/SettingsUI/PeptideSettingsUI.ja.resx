@@ -1068,6 +1068,12 @@ W = 2T/R</value>
   <data name="cbUseSpectralLibraryDriftTimes.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
   </data>
+  <data name="cbUseSpectralLibraryDriftTimes.Text" xml:space="preserve">
+    <value>存在する場合にはスペクトルライブラリのイオン移動度値を使用(&amp;S)</value>
+  </data>
+  <data name="cbUseSpectralLibraryDriftTimes.ToolTip" xml:space="preserve">
+    <value>これを選択すると、読み込まれたスペクトルライブラリのイオン移動度値がクロマトグラム抽出に使用されます。</value>
+  </data>
   <data name="&gt;&gt;cbUseSpectralLibraryDriftTimes.Name" xml:space="preserve">
     <value>cbUseSpectralLibraryDriftTimes</value>
   </data>
@@ -1540,6 +1546,9 @@ W = 2T/R</value>
   </data>
   <data name="label19.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
+  </data>
+  <data name="label19.Text" xml:space="preserve">
+    <value>イオン移動度予測(&amp;I)：</value>
   </data>
   <data name="&gt;&gt;label19.Name" xml:space="preserve">
     <value>label19</value>

@@ -71,6 +71,7 @@ namespace pwiz.SkylineTestFunctional
                                                        new TestLibInfo(ANL_COMBINED, "ANL_combined.blib", ""),
                                                        new TestLibInfo(PHOSPHO_LIB, "phospho_30882_v2.blib", ""),
                                                        new TestLibInfo(YEAST, "Yeast_atlas.blib", ""),
+                                                       new TestLibInfo("sketchyPeakAnnotations", "sketchyPeakAnnotations.blib", "Glc06Reduced[M-H]"),
                                                        new TestLibInfo("BadFormula", "bad_formula.blib", ""),
                                                        new TestLibInfo("LipidCreator", "lc_all.blib", "PE 12:0_12:0[M-H]"),
                                                        new TestLibInfo(SHIMADZU_MLB, "Small_Library-Positive-ions_CE-Merged.blib", "LSD[M+H]"), // Can be found in BiblioSpec test/output directory if update is needed
@@ -108,11 +109,12 @@ namespace pwiz.SkylineTestFunctional
             SetUpTestLibraries();
             if (asSmallMolecules)
             {
-                TestSmallMoleculeFunctionality(5, Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__); // .blib with bogus formula entry
-                TestSmallMoleculeFunctionality(4); // .blib with fragment annotations
-                TestSmallMoleculeFunctionality(2, Resources.NistLibraryBase_CreateCache_); // NIST with redundant entries
-                TestSmallMoleculeFunctionality(1); // NIST
-                TestSmallMoleculeFunctionality(3); // .blib
+                TestSmallMoleculeFunctionality(6, 2, null, 3); // .blib with wonky fragment annotations
+                TestSmallMoleculeFunctionality(5, 0, Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__); // .blib with bogus formula entry
+                TestSmallMoleculeFunctionality(4, 5); // .blib with fragment annotations
+                TestSmallMoleculeFunctionality(2, 57, Resources.NistLibraryBase_CreateCache_); // NIST with redundant entries
+                TestSmallMoleculeFunctionality(1, 57); // NIST
+                TestSmallMoleculeFunctionality(3, 3); // .blib
             }
             else
             {
@@ -637,7 +639,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => _viewLibUI.IsUpdateComplete);
         }
 
-        private void TestSmallMoleculeFunctionality(int index, string expectError = null)
+        private void TestSmallMoleculeFunctionality(int index, int expectedIonLabelCount1, string expectError = null, int? expectedIonLabelCount2 = null)
         {
 
             // Launch the Library Explorer dialog
@@ -650,6 +652,7 @@ namespace pwiz.SkylineTestFunctional
             var libIndex = _testLibs.Length - index;
             bool isNIST = (index < 3);
             bool isLipidCreator = (index == 4);
+            bool isSketchyFragmentAnnotations = (index == 6);
             if (expectError != null)
             {
                 var errWin = ShowDialog<MessageDlg>(() =>
@@ -696,10 +699,18 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.AreEqual(_testLibs[libIndex].UniquePeptide, selPeptide.AnnotatedDisplayText);
             Assert.AreEqual(1, pepsCount);
-
+            // Verify operation of charge state buttons CONSIDER(bspratt): we probably want adduct-level control eventually
+            RunUI(() =>
+            {
+                _viewLibUI.GraphSettings.ShowCharge2 = false;
+                Assert.AreEqual(expectedIonLabelCount1, _viewLibUI.GraphItem.IonLabels.Count(l => !string.IsNullOrEmpty(l)));
+                _viewLibUI.GraphSettings.ShowCharge2 = true;
+                Assert.AreEqual(expectedIonLabelCount2 ?? expectedIonLabelCount1, _viewLibUI.GraphItem.IonLabels.Count(l => !string.IsNullOrEmpty(l)));
+                _viewLibUI.GraphSettings.ShowCharge2 = false;
+            });
             // Add all to document, expect to be asked if we want to add library to doc as well
             RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides, msgDlg => msgDlg.Btn1Click());
-            if (isLipidCreator || index == 1)
+            if (isLipidCreator || isSketchyFragmentAnnotations || index == 1)
             {
                 // Expect to be asked if we want to add peptides that don't match filter
                 var confirmMismatch = WaitForOpenForm<FilterMatchedPeptidesDlg>(); // Confirm adding peptides that don't match settings
@@ -718,6 +729,11 @@ namespace pwiz.SkylineTestFunctional
             else if (isLipidCreator)
             {
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 66, 66, 504);
+            }
+            else if (isSketchyFragmentAnnotations)
+            {
+                AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 5, 15);
+                Assume.IsTrue(SkylineWindow.Document.MoleculeTransitions.ToArray()[7].Annotations.Note.Contains("masses differ"));
             }
             else
             {

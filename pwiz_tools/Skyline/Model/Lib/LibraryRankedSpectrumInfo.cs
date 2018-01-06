@@ -702,7 +702,7 @@ namespace pwiz.Skyline.Model.Lib
                         if (!rp.matchAll || (rp.minMz <= ionMz && ionMz <= rp.maxMz &&
                                              rp.rankTypes.Contains(type) &&
                                              (!rp.rankLimit.HasValue || rp.Ranked < rp.rankLimit) &&
-                                             (rp.rankCharges.Contains(Math.Abs(adduct.AdductCharge)) || type == IonType.precursor)))
+                                             (rp.rankCharges.Contains(Math.Abs(adduct.AdductCharge)) || type == IonType.precursor))) // CONSIDER(bspratt) we may eventually want adduct-level control for small molecules, not just abs charge
                         {
                             Rank = rp.RankNext();
                             return true;

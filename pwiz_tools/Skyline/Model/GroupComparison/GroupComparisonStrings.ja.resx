@@ -1,76 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
-		Microsoft ResX Schema
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
 
-		Version 1.3
-
-		The primary goals of this format is to allow a simple XML format 
-		that is mostly human readable. The generation and parsing of the 
-		various data types are done through the TypeConverter classes 
-		associated with the data types.
-
-		Example:
-
-		... ado.net/XML headers & schema ...
-		<resheader name="resmimetype">text/microsoft-resx</resheader>
-		<resheader name="version">1.3</resheader>
-		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
-		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-		<data name="Name1">this is my long string</data>
-		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
-		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-			[base64 mime encoded serialized .NET Framework object]
-		</data>
-		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-			[base64 mime encoded string representing a byte array form of the .NET Framework object]
-		</data>
-
-		There are any number of "resheader" rows that contain simple 
-		name/value pairs.
-
-		Each data row contains a name, and value. The row also contains a 
-		type or mimetype. Type corresponds to a .NET class that support 
-		text/value conversion through the TypeConverter architecture. 
-		Classes that don't support this are serialized and stored with the 
-		mimetype set.
-
-		The mimetype is used for serialized objects, and tells the 
-		ResXResourceReader how to depersist the object. This is currently not 
-		extensible. For a given mimetype the value must be set accordingly:
-
-		Note - application/x-microsoft.net.object.binary.base64 is the format 
-		that the ResXResourceWriter will generate, however the reader can 
-		read any of the formats listed below.
-
-		mimetype: application/x-microsoft.net.object.binary.base64
-		value   : The object must be serialized with 
-			: System.Serialization.Formatters.Binary.BinaryFormatter
-			: and then encoded with base64 encoding.
-
-		mimetype: application/x-microsoft.net.object.soap.base64
-		value   : The object must be serialized with 
-			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
-			: and then encoded with base64 encoding.
-
-		mimetype: application/x-microsoft.net.object.bytearray.base64
-		value   : The object must be serialized into a byte array 
-			: using a System.ComponentModel.TypeConverter
-			: and then encoded with base64 encoding.
-	-->
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
                 <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
                 <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
               <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
               <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
@@ -89,13 +109,13 @@
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
-    <value>1.3</value>
+    <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="FoldChangeOptionsUi_UpdateSettings_Elapsed_time___0_" xml:space="preserve">
     <value>経過時間：{0}</value>
@@ -194,5 +214,137 @@
   </data>
   <data name="SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish" xml:space="preserve">
     <value>Tukeyの中央値完全化</value>
+  </data>
+  <data name="FoldChangeBarGraph_GetTitle_Bar_Graph" xml:space="preserve">
+    <value>棒グラフ</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Selection" xml:space="preserve">
+    <value>選択</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_GetTitle_Volcano_Plot" xml:space="preserve">
+    <value>ボルケーノプロット</value>
+  </data>
+  <data name="FoldChangeRowTipProvider_RenderTip_Peptide" xml:space="preserve">
+    <value>ペプチド</value>
+  </data>
+  <data name="FoldChangeRowTipProvider_RenderTip_Protein" xml:space="preserve">
+    <value>タンパク質</value>
+  </data>
+  <data name="FoldChangeRowTipProvider_RenderTip_Fold_Change" xml:space="preserve">
+    <value>倍率変化</value>
+  </data>
+  <data name="FoldChangeRowTipProvider_RenderTip_P_Value" xml:space="preserve">
+    <value>p値</value>
+  </data>
+  <data name="FoldChange_Log2_Fold_Change_" xml:space="preserve">
+    <value>Log2（倍率変化）</value>
+  </data>
+  <data name="FoldChange__Log10_P_Value_" xml:space="preserve">
+    <value>-Log10(p値)</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Properties___" xml:space="preserve">
+    <value>プロパティ...</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs" xml:space="preserve">
+    <value>カットオフより下を削除</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs" xml:space="preserve">
+    <value>カットオフより下のペプチドを削除</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_None" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Name" xml:space="preserve">
+    <value>タンパク質名</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Accession" xml:space="preserve">
+    <value>タンパク質アクセッション</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Preferred_Name" xml:space="preserve">
+    <value>タンパク質の推奨名</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Gene" xml:space="preserve">
+    <value>タンパク質遺伝子</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Molecule_Name" xml:space="preserve">
+    <value>ペプチド分子名</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Below_left_cutoff" xml:space="preserve">
+    <value>左下カットオフ</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Above_right_cutoff" xml:space="preserve">
+    <value>右上カットオフ</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Below" xml:space="preserve">
+    <value>より下</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Above" xml:space="preserve">
+    <value>より上</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Modified_Sequence" xml:space="preserve">
+    <value>ペプチド修飾シークエンス</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Sequence" xml:space="preserve">
+    <value>ペプチドシークエンス</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Formatting___" xml:space="preserve">
+    <value>フォーマット中...</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Expression" xml:space="preserve">
+    <value>表現</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Labeled" xml:space="preserve">
+    <value>標識付き</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Molecula_Formula" xml:space="preserve">
+    <value>分子式</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Molecule_Group_Name" xml:space="preserve">
+    <value>分子集団名</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Size" xml:space="preserve">
+    <value>サイズ</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Symbol" xml:space="preserve">
+    <value>記号</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Small" xml:space="preserve">
+    <value>極小</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Small" xml:space="preserve">
+    <value>小</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Normal" xml:space="preserve">
+    <value>標準</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Large" xml:space="preserve">
+    <value>大</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Large" xml:space="preserve">
+    <value>極大</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Square" xml:space="preserve">
+    <value>四角形</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Diamond" xml:space="preserve">
+    <value>菱形</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Triangle" xml:space="preserve">
+    <value>三角形</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Circle" xml:space="preserve">
+    <value>円形</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_TriangleDown" xml:space="preserve">
+    <value>逆三角形</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Cross" xml:space="preserve">
+    <value>丸に×</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Plus" xml:space="preserve">
+    <value>プラス記号</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star" xml:space="preserve">
+    <value>星形</value>
   </data>
 </root>

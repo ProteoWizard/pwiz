@@ -148,7 +148,7 @@
     <value>dataGridView1</value>
   </data>
   <data name="&gt;&gt;dataGridView1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Common.Controls.CommonDataGridView, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridView1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -175,7 +175,7 @@
     <value>233, 6</value>
   </data>
   <data name="uniqueProteinsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>117, 22</value>
   </data>
   <data name="uniqueProteinsToolStripMenuItem.Text" xml:space="preserve">
     <value>タンパク質</value>
@@ -184,7 +184,7 @@
     <value>バックグラウンドプロテオームにおいて2つ以上のタンパク質で見つかったペプチドを全て除外します</value>
   </data>
   <data name="uniqueGenesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>117, 22</value>
   </data>
   <data name="uniqueGenesToolStripMenuItem.Text" xml:space="preserve">
     <value>遺伝子</value>
@@ -193,7 +193,7 @@
     <value>バックグラウンドプロテオームにおいて2つ以上の遺伝子にコードされるタンパク質で見つかったペプチドを除外します</value>
   </data>
   <data name="uniqueSpeciesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>117, 22</value>
   </data>
   <data name="uniqueSpeciesToolStripMenuItem.Text" xml:space="preserve">
     <value>種</value>

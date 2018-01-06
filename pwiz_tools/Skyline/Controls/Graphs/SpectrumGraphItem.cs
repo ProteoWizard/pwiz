@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public int PeaksMatchedCount { get { return SpectrumInfo.PeaksMatched.Count(); } }
         public int PeaksRankedCount { get { return SpectrumInfo.PeaksRanked.Count(); } }
         public ICollection<IonType> ShowTypes { get; set; }
-        public ICollection<Adduct> ShowCharges { get; set; }
+        public ICollection<int> ShowCharges { get; set; } // List of absolute charge values to display CONSIDER(bspratt): may want finer per-adduct control for small mol use
         public bool ShowRanks { get; set; }
         public bool ShowMz { get; set; }
         public bool ShowObservedMz { get; set; }
@@ -232,8 +232,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 case IonType.z: fontSpec = FONT_SPEC_Z; break;
                 case IonType.custom:
                     {
-                    if (rmi.Rank == 0)
-                        return null; // Small molecule fragments - only annotate if ranked
+                    if (rmi.Rank == 0 && !rmi.HasAnnotations)
+                        return null; // Small molecule fragments - only force annotation if ranked
                     fontSpec = FONT_SPEC_OTHER_IONS;
                     }
                     break;
@@ -323,8 +323,9 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool IsVisibleIon(MatchedFragmentIon mfi)
         {
             // Show precursor ions when they are supposed to be shown, regardless of charge
+            // N.B. for fragments, we look at abs value of charge. CONSIDER(bspratt): for small mol libs we may want finer per-adduct control
             return mfi.Ordinal > 0 && ShowTypes.Contains(mfi.IonType) &&
-                (mfi.IonType == IonType.precursor || ShowCharges.Contains(mfi.Charge));
+                (mfi.IonType == IonType.precursor || ShowCharges.Contains(Math.Abs(mfi.Charge.AdductCharge)));
         }
     }
 

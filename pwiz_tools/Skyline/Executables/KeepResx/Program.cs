@@ -36,6 +36,7 @@ namespace KeepResx
         private static readonly string[][] findReplace =
         {
             new[] {"<?xml version='1.0' encoding='UTF-8'?>", "<?xml version=\"1.0\" encoding=\"utf-8\"?>" },
+            new[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<?xml version=\"1.0\" encoding=\"utf-8\"?>" },
             new[] {"<xsd:schema xmlns=\"\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:msdata=\"urn:schemas-microsoft-com:xml-msdata\" id=\"root\">",
                 "<xsd:schema id=\"root\" xmlns=\"\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:msdata=\"urn:schemas-microsoft-com:xml-msdata\">"},
             new[] {"\"/>", "\" />"},
@@ -64,7 +65,7 @@ namespace KeepResx
         /// <summary>
         /// Replace strings in findeReplace list if true
         /// </summary>
-        private static bool DoFindReplace { get { return false; } }
+        private static bool DoFindReplace { get { return true; } }
 
         static void Main(string[] args)
         {

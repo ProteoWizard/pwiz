@@ -1289,9 +1289,11 @@ namespace pwiz.Skyline
             }
         }
 
-        IList<Adduct> GraphSpectrum.IStateProvider.ShowIonCharges(IEnumerable<Adduct> chargePriority)
+        // N.B. we're interested in the absolute value of charge here, so output list may be shorter than input list
+        // CONSIDER(bspratt): we may want finer adduct-level control for small molecule use
+        IList<int> GraphSpectrum.IStateProvider.ShowIonCharges(IEnumerable<Adduct> adductPriority)
         {
-            return _graphSpectrumSettings.ShowIonCharges(chargePriority);
+            return _graphSpectrumSettings.ShowIonCharges(adductPriority);
         }
 
         private void CheckIonCharges(IEnumerable<Adduct> charges, bool check)

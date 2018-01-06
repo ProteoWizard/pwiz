@@ -123,7 +123,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="tbxFasta.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 89</value>
+    <value>14, 80</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tbxFasta.MaxLength" type="System.Int32, mscorlib">
@@ -136,7 +136,7 @@
     <value>Both</value>
   </data>
   <data name="tbxFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>282, 292</value>
+    <value>282, 230</value>
   </data>
   <data name="tbxFasta.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -160,13 +160,13 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tbxFasta.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="browseFastaBtn.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
   <data name="browseFastaBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>302, 87</value>
+    <value>303, 80</value>
   </data>
   <data name="browseFastaBtn.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -187,7 +187,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;browseFastaBtn.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="panelError.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
@@ -223,7 +223,7 @@
     <value>0</value>
   </data>
   <data name="panelError.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 387</value>
+    <value>14, 316</value>
   </data>
   <data name="panelError.Size" type="System.Drawing.Size, System.Drawing">
     <value>282, 35</value>
@@ -244,13 +244,43 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelError.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
+  </data>
+  <data name="txtNumDecoys.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="txtNumDecoys.Location" type="System.Drawing.Point, System.Drawing">
+    <value>185, 17</value>
+  </data>
+  <data name="txtNumDecoys.Size" type="System.Drawing.Size, System.Drawing">
+    <value>44, 20</value>
+  </data>
+  <data name="txtNumDecoys.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="txtNumDecoys.Text" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="txtNumDecoys.ToolTip" xml:space="preserve">
+    <value>追加するペプチドの数を掛けます。0.5や2.5のように小数であってもかまいません。</value>
+  </data>
+  <data name="&gt;&gt;txtNumDecoys.Name" xml:space="preserve">
+    <value>txtNumDecoys</value>
+  </data>
+  <data name="&gt;&gt;txtNumDecoys.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;txtNumDecoys.Parent" xml:space="preserve">
+    <value>panelDecoys</value>
+  </data>
+  <data name="&gt;&gt;txtNumDecoys.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="clearBtn.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
   <data name="clearBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>302, 116</value>
+    <value>302, 109</value>
   </data>
   <data name="clearBtn.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -271,13 +301,13 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;clearBtn.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="label1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 57</value>
+    <value>11, 48</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
     <value>363, 29</value>
@@ -298,7 +328,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -325,7 +355,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="cbMissedCleavages.Items" xml:space="preserve">
     <value>0</value>
@@ -376,7 +406,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMissedCleavages.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -403,7 +433,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="comboEnzyme.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 16</value>
@@ -424,6 +454,141 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboEnzyme.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label4.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
+    <value>182, 0</value>
+  </data>
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>94, 13</value>
+  </data>
+  <data name="label4.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>ターゲット毎のデコイ：</value>
+  </data>
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+    <value>panelDecoys</value>
+  </data>
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label5.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-3, 0</value>
+  </data>
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
+    <value>132, 13</value>
+  </data>
+  <data name="label5.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>デコイ生成法：</value>
+  </data>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+    <value>panelDecoys</value>
+  </data>
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="cbDecoyMethod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 16</value>
+  </data>
+  <data name="cbDecoyMethod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 21</value>
+  </data>
+  <data name="cbDecoyMethod.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;cbDecoyMethod.Name" xml:space="preserve">
+    <value>cbDecoyMethod</value>
+  </data>
+  <data name="&gt;&gt;cbDecoyMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbDecoyMethod.Parent" xml:space="preserve">
+    <value>panelDecoys</value>
+  </data>
+  <data name="&gt;&gt;cbDecoyMethod.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="panelDecoys.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="cbAutoTrain.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbAutoTrain.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="cbAutoTrain.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 43</value>
+  </data>
+  <data name="cbAutoTrain.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 17</value>
+  </data>
+  <data name="cbAutoTrain.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="cbAutoTrain.Text" xml:space="preserve">
+    <value>mProphetモデルを自動的にトレーニングする</value>
+  </data>
+  <data name="&gt;&gt;cbAutoTrain.Name" xml:space="preserve">
+    <value>cbAutoTrain</value>
+  </data>
+  <data name="&gt;&gt;cbAutoTrain.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbAutoTrain.Parent" xml:space="preserve">
+    <value>panelDecoys</value>
+  </data>
+  <data name="&gt;&gt;cbAutoTrain.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="panelDecoys.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 357</value>
+  </data>
+  <data name="panelDecoys.Size" type="System.Drawing.Size, System.Drawing">
+    <value>282, 59</value>
+  </data>
+  <data name="panelDecoys.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;panelDecoys.Name" xml:space="preserve">
+    <value>panelDecoys</value>
+  </data>
+  <data name="&gt;&gt;panelDecoys.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelDecoys.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelDecoys.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

@@ -73,18 +73,23 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 object nearestObject;
                 int index;
-                if (FindNearestObject(e.Location, g, out nearestObject, out index) && nearestObject is LineItem)
+                if (FindNearestObject(e.Location, g, out nearestObject, out index))
                 {
-                    _selectedData = (AreaCVGraphData.CVData)((List<object>)((LineItem) nearestObject).Tag)[index];
-                    sender.Cursor = Cursors.Hand;
-                    return true;
+                    var lineItem = nearestObject as LineItem;
+                    if (lineItem != null)
+                    {
+                        var objectList = lineItem.Tag as List<object>;
+                        if (objectList != null)
+                        {
+                            _selectedData = (AreaCVGraphData.CVData)objectList[index];
+                            sender.Cursor = Cursors.Hand;
+                            return true;
+                        }
+                    }
                 }
-                else
-                {
-                    _selectedData = null;
-                    sender.Cursor = Cursors.Cross;
-                    return base.HandleMouseMoveEvent(sender, e);
-                }
+                _selectedData = null;
+                sender.Cursor = Cursors.Cross;
+                return base.HandleMouseMoveEvent(sender, e);
             }
         }
 

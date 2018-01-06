@@ -1178,8 +1178,11 @@ namespace pwiz.Skyline.Model.Lib
             {
                 var peakIndex = kvp.Key;
                 var annotationWithObservedMz = kvp.Value;
-                Assume.AreEqual(annotationWithObservedMz.ObservedMz, arrayMI[peakIndex].Mz, 0.0000001,
-                    "trouble reading peak annotation: mzObserved disagrees with indexed peak mz"); // Not L10N
+                if (Math.Abs(annotationWithObservedMz.ObservedMz-arrayMI[peakIndex].Mz) > 0.0000001)
+                {
+                    Assume.Fail(string.Format("trouble reading peak annotation: mzObserved {0} disagrees with indexed peak mz {1}", // Not L10N
+                            annotationWithObservedMz.ObservedMz, arrayMI[peakIndex].Mz));
+                }
                 arrayMI[peakIndex].Annotations = annotationWithObservedMz.Annotations;
             }
 

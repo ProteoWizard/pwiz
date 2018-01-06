@@ -9778,7 +9778,7 @@ Here are the {0} pairs with multiple entries:
 {1}</value>
   </data>
   <data name="CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_of__1__" xml:space="preserve">
-    <value>The mass {0} of the custom molecule exceeeds the maximum of {1}.</value>
+    <value>The mass {0} of the custom molecule exceeds the maximum of {1}.</value>
   </data>
   <data name="CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_is_less_than_the_minimum_of__1__" xml:space="preserve">
     <value>The mass {0} of the custom molecule is less than the minimum of {1}.</value>

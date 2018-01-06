@@ -141,6 +141,9 @@
   <data name="AverageMassErrorPPM">
     <value>平均質量誤差PPM</value>
   </data>
+  <data name="AverageMasses">
+    <value>平均質量</value>
+  </data>
   <data name="AverageMeasuredRetentionTime">
     <value>平均測定保持時間</value>
   </data>
@@ -161,6 +164,30 @@
   </data>
   <data name="CalibrationCurve">
     <value>校正曲線</value>
+  </data>
+  <data name="Chromatogram">
+    <value>クロマトグラム</value>
+  </data>
+  <data name="ChromatogramExtractionWidth">
+    <value>クロマトグラムの抽出幅</value>
+  </data>
+  <data name="ChromatogramIonMobility">
+    <value>クロマトグラムイオン移動度</value>
+  </data>
+  <data name="ChromatogramIonMobilityExtractionWidth">
+    <value>クロマトグラムイオン移動度の抽出幅</value>
+  </data>
+  <data name="ChromatogramIonMobilityUnits">
+    <value>クロマトグラムイオン移動度の単位</value>
+  </data>
+  <data name="ChromatogramPrecursorMz">
+    <value>クロマトグラムのプリカーサーイオンM/Z</value>
+  </data>
+  <data name="ChromatogramProductMz">
+    <value>クロマトグラムのプロダクトイオンM/Z</value>
+  </data>
+  <data name="ChromatogramSource">
+    <value>クロマトグラムソース</value>
   </data>
   <data name="CleavageAa">
     <value>開裂Aa</value>
@@ -234,6 +261,9 @@
   <data name="EstimatedValue">
     <value>推定値</value>
   </data>
+  <data name="ExcludeFromCalibration">
+    <value>校正から除外</value>
+  </data>
   <data name="FileIndex">
     <value>ファイルインデックス</value>
   </data>
@@ -258,6 +288,9 @@
   <data name="FragmentIonType">
     <value>断片イオンタイプ</value>
   </data>
+  <data name="FullNames">
+    <value>フルネーム</value>
+  </data>
   <data name="FullScanFilterWidth">
     <value>フルスキャンフィルタ幅</value>
   </data>
@@ -276,11 +309,29 @@
   <data name="Identified">
     <value>同定済み</value>
   </data>
+  <data name="Intensities">
+    <value>強度</value>
+  </data>
   <data name="Intercept">
     <value>切片</value>
   </data>
   <data name="InternalStandardConcentration">
     <value>内部標準濃度</value>
+  </data>
+  <data name="InterpolatedData">
+    <value>補間されたデータ</value>
+  </data>
+  <data name="InterpolatedIntensities">
+    <value>補間された強度</value>
+  </data>
+  <data name="InterpolatedMassErrors">
+    <value>補間された質量誤差</value>
+  </data>
+  <data name="InterpolatedNumberOfPoints">
+    <value>補間されたポイント数</value>
+  </data>
+  <data name="InterpolatedTimes">
+    <value>補間された時間</value>
   </data>
   <data name="IsDecoy">
     <value>同位体デコイ</value>
@@ -341,6 +392,9 @@
   </data>
   <data name="MassErrorPPM">
     <value>質量誤差PPM</value>
+  </data>
+  <data name="MassErrors">
+    <value>質量誤差</value>
   </data>
   <data name="Max">
     <value>最大</value>
@@ -420,8 +474,26 @@
   <data name="ModifiedSequence">
     <value>修飾シークエンス</value>
   </data>
+  <data name="ModifiedSequenceAverageMasses">
+    <value>修飾シークエンスの平均質量</value>
+  </data>
+  <data name="ModifiedSequenceFullNames">
+    <value>修飾シークエンスのフルネーム</value>
+  </data>
+  <data name="ModifiedSequenceMonoisotopicMasses">
+    <value>修飾シークエンスのモノアイソトピック質量</value>
+  </data>
+  <data name="ModifiedSequenceThreeLetterCodes">
+    <value>修飾シークエンスの3文字コード</value>
+  </data>
+  <data name="ModifiedSequenceUnimodIds">
+    <value>修飾シークエンスのUnimod Id</value>
+  </data>
   <data name="ModifiedTime">
     <value>修飾時間</value>
+  </data>
+  <data name="MonoisotopicMasses">
+    <value>モノアイソトピック質量</value>
   </data>
   <data name="MsLevel">
     <value>MSレベル</value>
@@ -434,6 +506,9 @@
   </data>
   <data name="NormalizedArea">
     <value>正規化面積</value>
+  </data>
+  <data name="NumberOfPoints">
+    <value>ポイント数</value>
   </data>
   <data name="OptCollisionEnergy">
     <value>最適衝突エネルギー</value>
@@ -462,6 +537,21 @@
   <data name="PeptideModifiedSequence">
     <value>ペプチド修飾シークエンス</value>
   </data>
+  <data name="PeptideModifiedSequenceAverageMasses">
+    <value>ペプチド修飾シークエンスの平均質量</value>
+  </data>
+  <data name="PeptideModifiedSequenceFullNames">
+    <value>ペプチド修飾シークエンスのフルネーム</value>
+  </data>
+  <data name="PeptideModifiedSequenceMonoisotopicMasses">
+    <value>ペプチド修飾シークエンスのモノアイソトピック質量</value>
+  </data>
+  <data name="PeptideModifiedSequenceThreeLetterCodes">
+    <value>ペプチド修飾シークエンスの3文字コード</value>
+  </data>
+  <data name="PeptideModifiedSequenceUnimodIds">
+    <value>ペプチド修飾シークエンスのUnimod Id</value>
+  </data>
   <data name="PeptideNote">
     <value>ペプチドメモ</value>
   </data>
@@ -485,6 +575,9 @@
   </data>
   <data name="PeptideSequence">
     <value>ペプチドシークエンス</value>
+  </data>
+  <data name="PeptideSequenceLength">
+    <value>ペプチドシーケンス長</value>
   </data>
   <data name="PointCount">
     <value>点数</value>
@@ -591,6 +684,9 @@
   <data name="Quantification">
     <value>定量化</value>
   </data>
+  <data name="Quantitative">
+    <value>定量</value>
+  </data>
   <data name="Range">
     <value>範囲</value>
   </data>
@@ -605,6 +701,21 @@
   </data>
   <data name="RatioToStandard">
     <value>標準に対する比率</value>
+  </data>
+  <data name="RawData">
+    <value>生データ</value>
+  </data>
+  <data name="RawIntensities">
+    <value>生データ強度</value>
+  </data>
+  <data name="RawMassErrors">
+    <value>生データ質量誤差</value>
+  </data>
+  <data name="RawNumberOfPoints">
+    <value>生データポイント数</value>
+  </data>
+  <data name="RawTimes">
+    <value>生データ時間</value>
   </data>
   <data name="Replicate">
     <value>繰り返し測定</value>
@@ -693,11 +804,17 @@
   <data name="StdevTotalAreaRatio">
     <value>Stdev総面積比</value>
   </data>
+  <data name="ThreeLetterCodes">
+    <value>3文字コード</value>
+  </data>
   <data name="TicArea">
     <value>総イオン電流領域</value>
   </data>
   <data name="TotalArea">
     <value>総面積</value>
+  </data>
+  <data name="Times">
+    <value>時間</value>
   </data>
   <data name="TotalAreaFragment">
     <value>総面積断片</value>
@@ -753,6 +870,9 @@
   <data name="TValue">
     <value>T-値</value>
   </data>
+  <data name="UnimodIds">
+    <value>Unimod Id</value>
+  </data>
   <data name="UserSetPeak">
     <value>ユーザーセットピーク</value>
   </data>
@@ -788,6 +908,27 @@
   </data>
   <data name="ExplicitDriftTimeMsec">
     <value>明示的ドリフト時間ミリ秒</value>
+  </data>
+  <data name="ExplicitIonMobility">
+    <value>指定イオン移動度</value>
+  </data>
+  <data name="ExplicitIonMobilityHighEnergyOffset">
+    <value>指定イオン移動度の高エネルギーオフセット</value>
+  </data>
+  <data name="ExplicitIonMobilityUnits">
+    <value>指定イオン移動度単位</value>
+  </data>
+  <data name="IonMobilityFragment">
+    <value>イオン移動度のフラグメント</value>
+  </data>
+  <data name="IonMobilityMS1">
+    <value>イオン移動度のMS1</value>
+  </data>
+  <data name="IonMobilityWindow">
+    <value>イオン移動度ウィンドウ</value>
+  </data>
+  <data name="IonMobilityUnits">
+    <value>イオン移動度の単位</value>
   </data>
   <data name="ExplicitGlobalStandardArea">
     <value>明示的グローバル標準領域</value>
@@ -839,5 +980,26 @@
   </data>
   <data name="DriftTimeWindow">
     <value>ドリフト時間ウィンドウ</value>
+  </data>
+  <data name="CAS">
+    <value>CAS</value>
+  </data>
+  <data name="InChiKey">
+    <value>InChiKey</value>
+  </data>
+  <data name="InChI">
+    <value>InChI</value>
+  </data>
+  <data name="HMDB">
+    <value>HMDB</value>
+  </data>
+  <data name="SMILES">
+    <value>SMILES</value>
+  </data>
+  <data name="AbsFoldChange">
+    <value>絶対倍率変化</value>
+  </data>
+  <data name="AbsLog2FoldChange">
+    <value>絶対Log2倍率変化</value>
   </data>
 </root>
