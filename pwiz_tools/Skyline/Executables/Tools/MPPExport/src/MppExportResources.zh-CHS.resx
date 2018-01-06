@@ -112,7 +112,7 @@
     <value>输出文件</value>
   </data>
   <data name="Program_ParseCsv_Location__" xml:space="preserve">
-    <value>位置： </value>
+    <value>位置：</value>
   </data>
   <data name="Program_ParseCsv_File_saved_successfully_" xml:space="preserve">
     <value>成功保存文件。</value>

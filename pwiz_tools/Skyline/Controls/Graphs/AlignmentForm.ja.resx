@@ -148,7 +148,7 @@
     <value>0</value>
   </data>
   <data name="comboAlignAgainst.Location" type="System.Drawing.Point, System.Drawing">
-    <value>136, 70</value>
+    <value>170, 70</value>
   </data>
   <data name="comboAlignAgainst.Size" type="System.Drawing.Size, System.Drawing">
     <value>307, 21</value>

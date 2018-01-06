@@ -1045,7 +1045,7 @@ MS/MS谱图库。</value>
     <value>12</value>
   </data>
   <data name="textSpectralLibraryDriftTimesResolvingPower.ToolTip" xml:space="preserve">
-    <value>确定谱图库中漂移时间的匹配容忍度（漂移时间以毫秒为单位测量）： 
+    <value>确定谱图库中漂移时间的匹配容忍度（漂移时间以毫秒为单位测量）：
 对于在漂移时间“T”的分辨力“R”来说，中心在 T的漂移时间匹配窗口宽度
 “W”= 2T/R</value>
   </data>
@@ -1075,6 +1075,12 @@ MS/MS谱图库。</value>
   </data>
   <data name="cbUseSpectralLibraryDriftTimes.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
+  </data>
+  <data name="cbUseSpectralLibraryDriftTimes.Text" xml:space="preserve">
+    <value>在可用时使用谱图库离子迁移值(&amp;S)</value>
+  </data>
+  <data name="cbUseSpectralLibraryDriftTimes.ToolTip" xml:space="preserve">
+    <value>如选中，则任何加载的谱图库中的离子迁移值都将用于色谱图提取。</value>
   </data>
   <data name="&gt;&gt;cbUseSpectralLibraryDriftTimes.Name" xml:space="preserve">
     <value>cbUseSpectralLibraryDriftTimes</value>
@@ -1136,7 +1142,7 @@ MS/MS谱图库。</value>
     <value>17</value>
   </data>
   <data name="textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip" xml:space="preserve">
-    <value>确定漂移时间匹配容忍度（漂移时间以毫秒为单位测量），其中： 
+    <value>确定漂移时间匹配容忍度（漂移时间以毫秒为单位测量），其中：
 dtMax = 测量的最大漂移时间
 W0 = 在 0 漂移时间时的宽度
 Wmax = 在 dtMax 时的宽度
@@ -1166,7 +1172,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>15</value>
   </data>
   <data name="textSpectralLibraryDriftTimesWidthAtDt0.ToolTip" xml:space="preserve">
-    <value>确定漂移时间匹配容忍度（漂移时间以毫秒为单位测量），其中： 
+    <value>确定漂移时间匹配容忍度（漂移时间以毫秒为单位测量），其中：
 dtMax = 测量的最大漂移时间
 W0 = 在 0 漂移时间时的宽度
 Wmax = 在 dtMax 时的宽度
@@ -1548,6 +1554,9 @@ W = (W0 + T*(Wmax-W0)/dtMax)
   </data>
   <data name="label19.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
+  </data>
+  <data name="label19.Text" xml:space="preserve">
+    <value>离子迁移预测器(&amp;I)：</value>
   </data>
   <data name="&gt;&gt;label19.Name" xml:space="preserve">
     <value>label19</value>

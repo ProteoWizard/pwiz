@@ -1714,6 +1714,9 @@
     <EmbeddedResource Include="Alerts\PeptidesPerProteinDlg.resx">
       <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\PeptidesPerProteinDlg.zh-CHS.resx">
+      <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ReportErrorDlg.ja.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -1758,6 +1761,9 @@
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.resx">
       <DependentUpon>ChooseFormatDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.zh-CHS.resx">
+      <DependentUpon>ChooseFormatDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AreaCVToolbar.ja.resx">
       <DependentUpon>AreaCVToolbar.cs</DependentUpon>
     </EmbeddedResource>
@@ -1789,17 +1795,22 @@
       <DependentUpon>DataboundGridForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\Databinding\EditGroupComparisonDlg.zh-CHS.resx" />
     <EmbeddedResource Include="Controls\Graphs\AllChromatogramsGraph.ja.resx">
       <DependentUpon>AllChromatogramsGraph.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AllChromatogramsGraph.zh-CHS.resx">
       <DependentUpon>AllChromatogramsGraph.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AreaCVToolbar.zh-CHS.resx">
+      <DependentUpon>AreaCVToolbar.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AreaCVToolbarProperties.ja.resx">
       <DependentUpon>AreaCVToolbarProperties.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AreaCVToolbarProperties.resx">
+      <DependentUpon>AreaCVToolbarProperties.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\AreaCVToolbarProperties.zh-CHS.resx">
       <DependentUpon>AreaCVToolbarProperties.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AsyncChromatogramsGraph2.ja.resx">
@@ -1845,7 +1856,13 @@
       <DependentUpon>RunToRunRegressionToolbar.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Graphs\RunToRunRegressionToolbar.zh-CHS.resx">
+      <DependentUpon>RunToRunRegressionToolbar.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\CreateMatchExpressionDlg.ja.resx">
+      <DependentUpon>CreateMatchExpressionDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\CreateMatchExpressionDlg.zh-CHS.resx">
       <DependentUpon>CreateMatchExpressionDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.ja.resx">
@@ -1899,6 +1916,9 @@
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeVolcanoPlot.resx">
       <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\FoldChangeVolcanoPlot.zh-CHS.resx">
+      <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\MsStatsLogoForm.ja.resx">
       <DependentUpon>MsStatsLogoForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -1914,10 +1934,16 @@
     <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotFormattingDlg.resx">
       <DependentUpon>VolcanoPlotFormattingDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotFormattingDlg.zh-CHS.resx">
+      <DependentUpon>VolcanoPlotFormattingDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotPropertiesDlg.ja.resx">
       <DependentUpon>VolcanoPlotPropertiesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotPropertiesDlg.resx">
+      <DependentUpon>VolcanoPlotPropertiesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\GroupComparison\VolcanoPlotPropertiesDlg.zh-CHS.resx">
       <DependentUpon>VolcanoPlotPropertiesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
@@ -2007,6 +2033,9 @@
     <EmbeddedResource Include="FileUI\ChooseIrtStandardPeptidesDlg.ja.resx">
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ChooseIrtStandardPeptidesDlg.zh-CHS.resx">
+      <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\CreateIrtCalculatorDlg.ja.resx">
       <DependentUpon>CreateIrtCalculatorDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2029,6 +2058,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportResultsLockMassDlg.zh-CHS.resx">
       <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportTransitionListErrorDlg.ja.resx">
       <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
@@ -2762,6 +2792,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditIsolationSchemeDlg.zh-CHS.resx">
       <DependentUpon>EditIsolationSchemeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditIsotopeEnrichmentDlg.ja.resx">
       <DependentUpon>EditIsotopeEnrichmentDlg.cs</DependentUpon>
@@ -2826,6 +2857,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\FullScanSettingsControl.zh-CHS.resx">
       <DependentUpon>FullScanSettingsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\IonMobility\ImportIonMobilityFromSpectralLibraryDlg.zh-CHS.resx">
       <DependentUpon>ImportIonMobilityFromSpectralLibraryDlg.cs</DependentUpon>
@@ -3124,6 +3156,9 @@
       <DependentUpon>ColorGrid.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ColorGrid.resx">
+      <DependentUpon>ColorGrid.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\ColorGrid.zh-CHS.resx">
       <DependentUpon>ColorGrid.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\ConfigureToolsDlg.ja.resx">

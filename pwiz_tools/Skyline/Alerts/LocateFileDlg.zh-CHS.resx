@@ -259,7 +259,7 @@
     <value>4</value>
   </data>
   <data name="btnFindPath.Text" xml:space="preserve">
-    <value>…</value>
+    <value>...</value>
   </data>
   <data name="&gt;&gt;btnFindPath.Name" xml:space="preserve">
     <value>btnFindPath</value>

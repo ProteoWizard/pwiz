@@ -739,7 +739,7 @@
     <value>True</value>
   </data>
   <data name="labelPrecursorTh.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 8.25pt, style=Italic</value>
+    <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
   <data name="labelPrecursorTh.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -1015,7 +1015,7 @@
     <value>True</value>
   </data>
   <data name="labelProductTh.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 8.25pt, style=Italic</value>
+    <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
   <data name="labelProductTh.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
