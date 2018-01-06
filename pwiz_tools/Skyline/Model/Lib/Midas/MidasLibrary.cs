@@ -625,18 +625,26 @@ namespace pwiz.Skyline.Model.Lib.Midas
                 {
                     monitor.UpdateProgress(progress.ChangePercentComplete(i*percentResultsFiles/resultsFiles.Length));
 
-                    var sampleIndex = resultsFile.GetSampleIndex();
                     var filePath = resultsFile.GetFilePath();
-                    using (var msd = new MsDataFileImpl(filePath, sampleIndex == -1 ? 0 : sampleIndex, resultsFile.GetLockMassParameters(), requireVendorCentroidedMS2: true))
+                    if (File.Exists(filePath))
                     {
-                        if (ChromatogramDataProvider.HasChromatogramData(msd) && SpectraChromDataProvider.HasSpectrumData(msd))
+                        var sampleIndex = resultsFile.GetSampleIndex();
+                        using (var msd = new MsDataFileImpl(filePath, sampleIndex == -1 ? 0 : sampleIndex, resultsFile.GetLockMassParameters(), requireVendorCentroidedMS2: true))
                         {
-                            var chromPrecursors = ReadChromPrecursorsFromMsd(msd, monitor).ToList();
-                            newSpectra.AddRange(ReadDbSpectraFromMsd(msd, monitor));
-                            MatchSpectraToChrom(newSpectra, chromPrecursors, monitor);
+                            if (ChromatogramDataProvider.HasChromatogramData(msd) && SpectraChromDataProvider.HasSpectrumData(msd))
+                            {
+                                var chromPrecursors = ReadChromPrecursorsFromMsd(msd, monitor).ToList();
+                                newSpectra.AddRange(ReadDbSpectraFromMsd(msd, monitor));
+                                MatchSpectraToChrom(newSpectra, chromPrecursors, monitor);
+                            }
                         }
+
+                        MatchSpectraToPeptides(newSpectra, doc, monitor);
                     }
-                    MatchSpectraToPeptides(newSpectra, doc, monitor);
+                    else
+                    {
+                        failedFiles.Add(resultsFile);
+                    }
                 }
                 catch (Exception x)
                 {
