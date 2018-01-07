@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Properties;
 using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
@@ -54,52 +55,52 @@ namespace pwiz.SkylineTestFunctional
             new AreaCVGraphDataStatistics(104, 104, 3.6500000000000004, 7.95, 124, 1.5, 0, 4, 0.091041128301750027, 0.13629032258064522, 0.83064516129032262),
         };
 
-        private static readonly string[][] HISTOGRAM_FINDRESULTS = 
+        private static readonly string[] HISTOGRAM_FINDRESULTS = 
         {
-            new[] { "K.DFATVYVDAVK.D [35, 45]", "14% CV in D102" },
-            new[] { "R.ASGIIDTLFQDR.F [181, 192]", "14% CV in D102" },
-            new[] { "R.HTNNGMICLTSLLR.I [279, 292]", "14% CV in D102" },
-            new[] { "K.ENSSNILDNLLSR.M [802, 814]", "14% CV in D102" },
-            new[] { "R.ALIHCLHMS.- [436, 444]", "14% CV in D102" },
-            new[] { "R.LTHGDFTWTTK.K [90, 100]", "14% CV in D102" },
-            new[] { "K.YGLDLGSLLVR.L [1066, 1076]", "14% CV in D102" },
-            new[] { "K.AGSWQITMK.G [258, 266]", "14% CV in D102" },
-            new[] { "TLNSINIAVFSK", "14% CV in D102" },
-            new[] { "ENEGTYYGPDGR", "14% CV in D102" },
-            new[] { "ENLSPPLGECLLER", "14% CV in D102" },
-            new[] { "ELLDSYIDGR", "14% CV in D102" },
-            new[] { "EEPSADALLPIDCR", "14% CV in D102" },
-            new[] { "AIEDYVNEFSAR", "14% CV in D102" },
-            new[] { "MHPELGSFYDSR", "14% CV in D102" },
-            new[] { "VTSAAFPSPIEK", "14% CV in D102" },
-            new[] { "AEQGAYLGPLPYK", "14% CV in D102" },
-            new[] { "TDEDVPSGPPR", "14% CV in D102" },
-            new[] { "ETGLMAFTNLK", "14% CV in D102" },
-            new[] { "LQTEGDGIYTLNSEK", "14% CV in D102" },
+            "K.DFATVYVDAVK.D [35, 45]",
+            "R.ASGIIDTLFQDR.F [181, 192]",
+            "R.HTNNGMICLTSLLR.I [279, 292]",
+            "K.ENSSNILDNLLSR.M [802, 814]",
+            "R.ALIHCLHMS.- [436, 444]",
+            "R.LTHGDFTWTTK.K [90, 100]",
+            "K.YGLDLGSLLVR.L [1066, 1076]",
+            "K.AGSWQITMK.G [258, 266]",
+            "TLNSINIAVFSK",
+            "ENEGTYYGPDGR",
+            "ENLSPPLGECLLER",
+            "ELLDSYIDGR",
+            "EEPSADALLPIDCR",
+            "AIEDYVNEFSAR",
+            "MHPELGSFYDSR",
+            "VTSAAFPSPIEK",
+            "AEQGAYLGPLPYK",
+            "TDEDVPSGPPR",
+            "ETGLMAFTNLK",
+            "LQTEGDGIYTLNSEK",
         };
 
-        private static readonly string[][] HISTOGRAM2D_FINDRESULTS = 
+        private static readonly string[] HISTOGRAM2D_FINDRESULTS = 
         {
-            new[] { "K.DFATVYVDAVK.D [35, 45]", "14% CV in D102" },
-            new[] { "R.ASGIIDTLFQDR.F [181, 192]", "14% CV in D102" },
-            new[] { "R.HTNNGMICLTSLLR.I [279, 292]", "14% CV in D102" },
-            new[] { "K.ENSSNILDNLLSR.M [802, 814]", "14% CV in D102" },
-            new[] { "R.ALIHCLHMS.- [436, 444]", "14% CV in D102" },
-            new[] { "R.LTHGDFTWTTK.K [90, 100]", "14% CV in D102" },
-            new[] { "K.YGLDLGSLLVR.L [1066, 1076]", "14% CV in D102" },
-            new[] { "K.AGSWQITMK.G [258, 266]", "14% CV in D102" },
-            new[] { "TLNSINIAVFSK", "14% CV in D102" },
-            new[] { "ENEGTYYGPDGR", "14% CV in D102" },
-            new[] { "ENLSPPLGECLLER", "14% CV in D102" },
-            new[] { "ELLDSYIDGR", "14% CV in D102" },
-            new[] { "EEPSADALLPIDCR", "14% CV in D102" },
-            new[] { "AIEDYVNEFSAR", "14% CV in D102" },
-            new[] { "MHPELGSFYDSR", "14% CV in D102" },
-            new[] { "VTSAAFPSPIEK", "14% CV in D102" },
-            new[] { "AEQGAYLGPLPYK", "14% CV in D102" },
-            new[] { "TDEDVPSGPPR", "14% CV in D102" },
-            new[] { "ETGLMAFTNLK", "14% CV in D102" },
-            new[] { "LQTEGDGIYTLNSEK", "14% CV in D102" },
+            "K.DFATVYVDAVK.D [35, 45]",
+            "R.ASGIIDTLFQDR.F [181, 192]",
+            "R.HTNNGMICLTSLLR.I [279, 292]",
+            "K.ENSSNILDNLLSR.M [802, 814]",
+            "R.ALIHCLHMS.- [436, 444]",
+            "R.LTHGDFTWTTK.K [90, 100]",
+            "K.YGLDLGSLLVR.L [1066, 1076]",
+            "K.AGSWQITMK.G [258, 266]",
+            "TLNSINIAVFSK",
+            "ENEGTYYGPDGR",
+            "ENLSPPLGECLLER",
+            "ELLDSYIDGR",
+            "EEPSADALLPIDCR",
+            "AIEDYVNEFSAR",
+            "MHPELGSFYDSR",
+            "VTSAAFPSPIEK",
+            "AEQGAYLGPLPYK",
+            "TDEDVPSGPPR",
+            "ETGLMAFTNLK",
+            "LQTEGDGIYTLNSEK",
         };
 
         private static int GetItemsAboveCutoff(int statsIndex)
@@ -205,7 +206,7 @@ namespace pwiz.SkylineTestFunctional
             CollectionAssert.AreEqual(annotations,
                 new[]
                 {
-                    "All",
+                    Resources.GraphSummary_UpdateToolbar_All,
                     "D102", "D103", "D108", "D138", "D154", "D172", "D196",
                     "H146", "H147", "H148", "H159", "H160", "H161", "H162"
                 });
@@ -250,9 +251,9 @@ namespace pwiz.SkylineTestFunctional
                 // Verify that the peptides are displayed correctly in the find results window
                 string[][] expected = null;
                 if (typeof(T) == typeof(AreaCVHistogramGraphPane))
-                    expected = HISTOGRAM_FINDRESULTS;
+                    expected = GetExpected(HISTOGRAM_FINDRESULTS);
                 else if (typeof(T) == typeof(AreaCVHistogram2DGraphPane))
-                    expected = HISTOGRAM2D_FINDRESULTS;
+                    expected = GetExpected(HISTOGRAM2D_FINDRESULTS);
                 else
                     Assert.Fail("T not a Histogram graph pane");
 
@@ -278,6 +279,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.medians));
             WaitForGraphs();
             AssertDataCorrect(pane, statsStartIndex++);
+        }
+
+        private string[][] GetExpected(string[] foundText)
+        {
+            return foundText.Select(t => new[] {t, PeptideAnnotationPairFinder.GetDisplayText(0.14, "D102")}).ToArray();
         }
 
         private void WaitForHistogramBarCount(IAreaCVHistogramInfo histogramInfo, int expectedBars)
