@@ -9433,8 +9433,8 @@
   <data name="CompactFormatOption_ONLY_FOR_LARGE_FILES_Only_for_large_files" xml:space="preserve">
     <value>大きなファイルのみ</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for___exp_polarity__It_must_be_one_of_the_following___1_" xml:space="preserve">
-    <value>エラー:「{0}」は--exp-polarityに有効な値ではありません。値は以下のいずれかである必要があります：{1}</value>
+  <data name="CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_" xml:space="preserve">
+    <value>エラー:「{0}」は{1}に有効な値ではありません。値は以下のいずれかである必要があります：{2}</value>
   </data>
   <data name="LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor" xml:space="preserve">
     <value>保持時間予測を追加</value>

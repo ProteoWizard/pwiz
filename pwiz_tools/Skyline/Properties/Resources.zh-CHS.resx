@@ -9433,8 +9433,8 @@
   <data name="CompactFormatOption_ONLY_FOR_LARGE_FILES_Only_for_large_files" xml:space="preserve">
     <value>仅适合大文件</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for___exp_polarity__It_must_be_one_of_the_following___1_" xml:space="preserve">
-    <value>错误：“{0}”不是“--exp-极性”的有效值。必须是以下一种：{1}</value>
+  <data name="CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_" xml:space="preserve">
+    <value>错误：“{0}”不是“{1}”的有效值。必须是以下一种：{2}</value>
   </data>
   <data name="LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor" xml:space="preserve">
     <value>添加保留时间预测器</value>

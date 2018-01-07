@@ -4195,12 +4195,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: &quot;{0}&quot; is not a valid value for --exp-polarity. It must be one of the following: {1}.
+        ///   Looks up a localized string similar to Error: &quot;{0}&quot; is not a valid value for {1}. It must be one of the following: {2}.
         /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for___exp_polarity__It_must_be_one_of_the_following___1_ {
+        public static string CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_ {
             get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for___exp_polarit" +
-                        "y__It_must_be_one_of_the_following___1_", resourceCulture);
+                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_" +
+                        "be_one_of_the_following___2_", resourceCulture);
             }
         }
         
@@ -7275,7 +7275,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The mass {0} of the custom molecule exceeeds the maximum of {1}..
+        ///   Looks up a localized string similar to The mass {0} of the custom molecule exceeds the maximum of {1}..
         /// </summary>
         public static string CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_of__1__ {
             get {
