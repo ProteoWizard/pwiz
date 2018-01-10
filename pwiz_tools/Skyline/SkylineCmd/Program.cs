@@ -32,7 +32,7 @@ namespace pwiz.SkylineCmd
             string dirPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
             try
             {
-                assembly = Assembly.LoadFrom(Path.Combine(dirPath, "Skyline-daily.exe")); // Not L10N
+                assembly = Assembly.LoadFrom(Path.Combine(dirPath, "Skyline-daily.exe")); // Not L10N : Keep -daily
             }
             catch (Exception e1)
             {

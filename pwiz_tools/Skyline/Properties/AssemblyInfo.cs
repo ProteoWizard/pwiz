@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("University of Washington")]
 [assembly: AssemblyProduct("Skyline")]
-[assembly: AssemblyCopyright("Copyright © University of Washington 2008-2017")]
+[assembly: AssemblyCopyright("Copyright © University of Washington 2008-2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

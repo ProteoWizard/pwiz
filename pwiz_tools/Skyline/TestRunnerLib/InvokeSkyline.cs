@@ -10,7 +10,7 @@ namespace TestRunnerLib
 
         public InvokeSkyline()
         {
-            var skylinePath = GetAssemblyPath("Skyline-daily.exe");
+            var skylinePath = GetAssemblyPath("Skyline-daily.exe"); // Keep -daily
             if (!File.Exists(skylinePath))
                 skylinePath = GetAssemblyPath("Skyline.exe");
             var skylineAssembly = Assembly.LoadFrom(skylinePath);
