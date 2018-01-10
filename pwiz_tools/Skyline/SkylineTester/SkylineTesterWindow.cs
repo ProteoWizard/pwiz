@@ -593,7 +593,7 @@ namespace SkylineTester
             for (int i = 0; i < buildDirs.Length; i++)
             {
                 if (!File.Exists(Path.Combine(buildDirs[i], "Skyline.exe")) &&
-                    !File.Exists(Path.Combine(buildDirs[i], "Skyline-daily.exe")))
+                    !File.Exists(Path.Combine(buildDirs[i], "Skyline-daily.exe")))  // Keep -daily
                 {
                     buildDirs[i] = null;
                 }

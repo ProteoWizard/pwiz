@@ -250,7 +250,7 @@
     <value>colorGrid1</value>
   </data>
   <data name="&gt;&gt;colorGrid1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.ToolsUI.StandardColorGrid, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.ToolsUI.StandardColorGrid, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;colorGrid1.Parent" xml:space="preserve">
     <value>groupBoxCategory</value>

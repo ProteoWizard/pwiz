@@ -368,7 +368,7 @@ namespace pwiz.Skyline
                 bool is64 = Environment.Is64BitOperatingSystem;
                 string shorNameInstall = Install.Type == Install.InstallType.release
                     ? (is64 ? "skyline64" : "skyline32") // Not L10N
-                    : (is64 ? "skyline-daily64" : "skyline-daily32"); // Not L10N
+                    : (is64 ? "skyline-daily64" : "skyline-daily32"); // Not L10N : Keep -daily
 
                 WebHelpers.OpenSkylineShortLink(null, shorNameInstall);
             }
