@@ -1826,6 +1826,8 @@ namespace pwiz.Skyline
                 librarySpec = new SpectrastSpec(name, path);
             else if (Equals(ext, MidasLibSpec.EXT))
                 librarySpec = new MidasLibSpec(name, path);
+            else if (Equals(ext, EncyclopeDiaSpec.EXT))
+                librarySpec = new EncyclopeDiaSpec(name, path);
             else
             {
                 _out.WriteLine(Resources.CommandLine_SetLibrary_Error__The_file__0__is_not_a_supported_spectral_library_file_format_, path);
