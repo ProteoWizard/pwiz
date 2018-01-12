@@ -379,7 +379,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private void InsertAllGroupsAndPointPairLists(string[] uniqueGroupNames, int docNodeCount)
             {
-                var uniqueGroups = uniqueGroupNames.Select(n => new ReplicateGroup(n, ReplicateIndexSet.Singleton(_document.MeasuredResults.Chromatograms.IndexOf(c => c.Name == n)), null, true));
+                var uniqueGroups = uniqueGroupNames.Select(n => new ReplicateGroup(n,
+                    ReplicateIndexSet.OfValues(ReplicateGroups.Where(r => r.GroupName == n).SelectMany(r => r.ReplicateIndexes)),
+                    null, true));
+
                 var newGroups = ReplicateGroups.ToList();
                 foreach (var group in uniqueGroups)
                 {
