@@ -2531,7 +2531,7 @@ namespace pwiz.Skyline.Model.Results
         {
             foreach (var chromatogramInfo in listInfo)
             {
-                if (chromatogramInfo == null)
+                if (chromatogramInfo == null || ReferenceEquals(this, chromatogramInfo))
                 {
                     continue;
                 }
