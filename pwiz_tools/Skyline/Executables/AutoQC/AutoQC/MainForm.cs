@@ -589,7 +589,7 @@ namespace AutoQC
         {
             RunUI(() =>
             {
-                var lvi = listViewConfigs.FindItemWithText(configRunner.GetConfigName());
+                var lvi = listViewConfigs.FindItemWithText(configRunner.GetConfigName(), false, 0, false); // Do not allow partial match
 
                 if (lvi == null) return;
 

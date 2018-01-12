@@ -334,7 +334,7 @@ namespace AutoQC
             // even after the connection is re-established.
             try
             {
-                if (TryConnect(DateTime.Now)) return;
+                TryConnect(DateTime.Now);
             }
             catch (FileWatcherException)
             {
