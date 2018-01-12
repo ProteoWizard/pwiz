@@ -74,7 +74,6 @@ namespace AutoQC
         {
             writer.WriteStartElement("autoqc_config");
             writer.WriteAttribute(ATTR.name, Name);
-            writer.WriteAttribute(ATTR.is_enabled, IsEnabled);
             writer.WriteAttributeIfString(ATTR.user, User);
             writer.WriteAttributeIfString(ATTR.created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
             writer.WriteAttributeIfString(ATTR.modified, Modified.ToShortDateString() + " " + Modified.ToShortTimeString());

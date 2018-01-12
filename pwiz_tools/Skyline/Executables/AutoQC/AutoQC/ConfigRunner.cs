@@ -201,9 +201,15 @@ namespace AutoQC
             {
                 ChangeStatus(RunnerStatus.Starting);
 
+                var originalPanoramaUrl = Config.PanoramaSettings.PanoramaServerUrl;
                 Config.MainSettings.ValidateSettings();
 
                 Config.PanoramaSettings.ValidateSettings();
+
+                if (Config.PanoramaSettings.PublishToPanorama && !originalPanoramaUrl.Equals(Config.PanoramaSettings.PanoramaServerUrl))
+                {
+                   _uiControl.UpdatePanoramaServerUrl(Config);
+                }
 
                 // Thread.Sleep(2000);
 
@@ -256,13 +262,13 @@ namespace AutoQC
             }
             catch (FileWatcherException x)
             {
-                var err = new StringBuilder(string.Format("There was an error looking for files for configuration \"{0}\"",
+                var err = new StringBuilder(string.Format("There was an error looking for files for configuration \"{0}\".",
                     Config.Name));
 
                 LogException(x, err.ToString());
                 ChangeStatus(RunnerStatus.Error);
 
-                err.AppendLine().AppendLine().Append(x);
+                err.AppendLine().AppendLine().Append(x.Message);
                 _uiControl.DisplayError("File Watcher Error", err.ToString());   
             }
             catch (Exception x)
@@ -279,7 +285,7 @@ namespace AutoQC
             var inWait = false;
             while (true)
             {
-                if (_worker.CancellationPending)
+            if (_worker.CancellationPending)
                 {
                     e.Result = CANCELLED;
                     break;

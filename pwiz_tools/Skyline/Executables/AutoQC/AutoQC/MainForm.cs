@@ -34,7 +34,6 @@ namespace AutoQC
 {
     public partial class MainForm : Form, IMainUiControl
     {
-        // private Dictionary<string, AutoQcConfig> _configurationsMap;
         private Dictionary<string, ConfigRunner> _configRunners;
 
         private readonly ListViewColumnSorter columnSorter;
@@ -410,7 +409,6 @@ namespace AutoQC
             if (configRunner == null)
                 return null;
             configRunner.Config.IsEnabled = enabled;
-            Settings.Default.Save();
             return configRunner;
         }
 
@@ -734,6 +732,15 @@ namespace AutoQC
             AddConfiguration(newConfig, index);
         }
 
+        public void UpdatePanoramaServerUrl(AutoQcConfig config)
+        {
+            var configList = Settings.Default.ConfigList;
+            if (configList.Contains(config))
+            {
+                Settings.Default.Save();
+            }
+        }
+
         public AutoQcConfig GetConfig(string name)
         {
             ConfigRunner configRunner;
@@ -981,6 +988,7 @@ namespace AutoQC
         void ChangeConfigUiStatus(ConfigRunner configRunner);
         void AddConfiguration(AutoQcConfig config);
         void UpdateConfiguration(AutoQcConfig oldConfig, AutoQcConfig newConfig);
+        void UpdatePanoramaServerUrl(AutoQcConfig config);
         AutoQcConfig GetConfig(string name);
         void LogToUi(string text, bool scrollToEnd = true, bool trim = true);
         void LogErrorToUi(string text, bool scrollToEnd = true, bool trim = true);

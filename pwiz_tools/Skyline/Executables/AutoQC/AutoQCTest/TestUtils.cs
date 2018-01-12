@@ -145,6 +145,11 @@ namespace AutoQCTest
             throw new NotImplementedException();
         }
 
+        public void UpdatePanoramaServerUrl(AutoQcConfig config)
+        {
+            throw new NotImplementedException();
+        }
+
         public AutoQcConfig GetConfig(string name)
         {
             throw new NotImplementedException();

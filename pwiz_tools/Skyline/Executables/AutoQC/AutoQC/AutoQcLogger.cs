@@ -71,6 +71,7 @@ namespace AutoQC
                         using (var writer = new StreamWriter(fs))
                         {
                             writer.WriteLine(dateAndMessage);
+                            // Program.LogInfo(message); // TODO debug
                         }
                     }
                 }
@@ -198,12 +199,12 @@ namespace AutoQC
                 line = string.Format(line, args);
             }
 
+            Program.LogError(line);
+
             if (_mainUi != null)
             {
                 _mainUi.LogErrorToUi(GetDate() + line);
             }
-
-            Program.LogError(line);
         }
 
         public string GetFile()
