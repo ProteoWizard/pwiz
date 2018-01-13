@@ -109,7 +109,7 @@ void TSVReader::parseHeader() {
     }
 
     // check that all required columns were in the file
-    for (vector<TSVColumnTranslator>::const_iterator i = targetColumns_.begin(); i != targetColumns_.end(); i++) {
+    for (vector<TSVColumnTranslator>::iterator i = targetColumns_.begin(); i != targetColumns_.end(); i++) {
         if (i->position_ < 0) {
             if (i->name_ != "m_score") {
                 throw BlibException(false, "Did not find required column '%s'", i->name_.c_str());
@@ -119,7 +119,7 @@ void TSVReader::parseHeader() {
                         "Did not find required column '%s'. You may set the cut-off score to 0 to "
                         "force building the library without scores.", i->name_.c_str());
                 } else {
-                    vector<TSVColumnTranslator>::const_iterator tmp = i - 1;
+                    vector<TSVColumnTranslator>::iterator tmp = i - 1;
                     targetColumns_.erase(i);
                     i = tmp;
                 }
