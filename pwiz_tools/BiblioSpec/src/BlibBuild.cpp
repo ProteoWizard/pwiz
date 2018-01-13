@@ -165,12 +165,13 @@ int main(int argc, char* argv[])
             } else if (has_extension(result_file, ".proxl.xml")) {
                 ProxlXmlReader proxlReader(builder, result_file, progress_cptr);
                 success = proxlReader.parseFile();
-            }
-            else if (has_extension(result_file, ".mlb")) {
+            } else if (has_extension(result_file, ".mlb")) {
                 ShimadzuMLBReader mlbReader(builder, result_file, progress_cptr);
                 success = mlbReader.parseFile();
-            }
-            else {
+            } else if (has_extension(result_file, ".tsv")) {
+                TSVReader tsvReader(builder, result_file, progress_cptr);
+                success = tsvReader.parseFile();
+            } else {
                 // shouldn't get to here b/c cmd line parsing checks, but...
                 Verbosity::error("Unknown input file type '%s'.", result_file);
             }

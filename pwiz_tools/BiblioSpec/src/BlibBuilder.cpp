@@ -99,7 +99,8 @@ static vector<string> supportedTypes = {
     "final_fragment.csv",
     ".proxl.xml",
     ".ssl",
-    ".mlb"
+    ".mlb",
+    ".tsv"
 };
 
 void BlibBuilder::usage()

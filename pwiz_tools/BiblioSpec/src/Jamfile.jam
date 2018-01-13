@@ -143,6 +143,8 @@ lib blibbuild
     SQTversion.cpp
     SslReader.cpp
     TandemNativeParser.cpp
+    TSVReader.cpp
+    UnimodParser.cpp
     WatersMseReader.cpp
   : # requirements
     <link>static
@@ -150,12 +152,14 @@ lib blibbuild
     <conditional>@waters-define
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
     <dependency>modifications.xml
+    <dependency>unimod.xml
   : # default-build
   : # usage-requirements
     <conditional>@mascot-api-usage-requirements
     <conditional>@waters-api-usage-requirements
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
     <dependency>modifications.xml
+    <dependency>unimod.xml
  ;
 
 lib blib
@@ -283,6 +287,8 @@ make quantitation_2.xsd : ./quantitation_2.xsd : @common.copy ;
 # required file for running BlibBuild with MaxQuant support
 make modifications.xml : ./modifications.xml : @common.copy ;
 
+make unimod.xml : ./unimod.xml : @common.copy ;
+
 install install
     : BlibBuild BlibFilter BlibSearch BlibToMs2
     : <conditional>@install-type
@@ -300,7 +306,8 @@ rule install-msparser-requirements ( properties * )
         local result = <source>./unimod_2.xsd
             <source>./quantitation_1.xsd
 			<source>./quantitation_2.xsd
-			<source>./modifications.xml ;
+			<source>./modifications.xml
+            <source>./unimod.xml ;
 			
         if <toolset>msvc in $(properties)
         {

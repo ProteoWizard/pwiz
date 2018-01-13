@@ -42,6 +42,7 @@
 #include "WatersMseReader.h"
 #include "ProxlXmlReader.h"
 #include "ShimadzuMLBReader.h"
+#include "TSVReader.h"
 /*
  * Local Variables:
  * mode: c
