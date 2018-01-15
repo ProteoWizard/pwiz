@@ -123,7 +123,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>568, 693</value>
+    <value>318, 535</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -151,7 +151,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>460, 693</value>
+    <value>237, 535</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -608,7 +608,7 @@ DPを使用します。（AB装置のみ）</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabGeneral.Size" type="System.Drawing.Size, System.Drawing">
-    <value>644, 639</value>
+    <value>373, 489</value>
   </data>
   <data name="tabGeneral.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1426,7 +1426,7 @@ DPを使用します。（AB装置のみ）</value>
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>644, 639</value>
+    <value>373, 489</value>
   </data>
   <data name="tabFilter.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1815,7 +1815,7 @@ MS/MSスペクトルライブラリピークに基づいてトランジション
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabLibrary.Size" type="System.Drawing.Size, System.Drawing">
-    <value>644, 639</value>
+    <value>373, 489</value>
   </data>
   <data name="tabLibrary.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -2380,7 +2380,7 @@ MS/MSスペクトルライブラリピークに基づいてトランジション
     <value>4, 22</value>
   </data>
   <data name="tabInstrument.Size" type="System.Drawing.Size, System.Drawing">
-    <value>644, 639</value>
+    <value>373, 489</value>
   </data>
   <data name="tabInstrument.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -2407,7 +2407,7 @@ MS/MSスペクトルライブラリピークに基づいてトランジション
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabFullScan.Size" type="System.Drawing.Size, System.Drawing">
-    <value>644, 639</value>
+    <value>373, 489</value>
   </data>
   <data name="tabFullScan.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -2431,7 +2431,7 @@ MS/MSスペクトルライブラリピークに基づいてトランジション
     <value>12, 12</value>
   </data>
   <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>371, 515</value>
+    <value>381, 515</value>
   </data>
   <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -2482,7 +2482,7 @@ MS/MSスペクトルライブラリピークに基づいてトランジション
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>395, 570</value>
+    <value>405, 570</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
