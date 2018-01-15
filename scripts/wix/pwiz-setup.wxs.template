@@ -321,6 +321,11 @@
 <!-- Water DLLs -->
 <Component Feature="MainFeature"><File Id="_MassLynxRaw.dll" Name="MassLynxRaw.dll" Source="msvc-release\MassLynxRaw.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_cdt.dll" Name="cdt.dll" Source="msvc-release\cdt.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_IdentityModel.dll" Name="IdentityModel.dll" Source="msvc-release\IdentityModel.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Newtonsoft.Json.dll" Name="Newtonsoft.Json.dll" Source="msvc-release\Newtonsoft.Json.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_System.Runtime.Caching.Generic.dll" Name="System.Runtime.Caching.Generic.dll" Source="msvc-release\System.Runtime.Caching.Generic.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_ParallelExtensionsExtras.dll" Name="ParallelExtensionsExtras.dll" Source="msvc-release\ParallelExtensionsExtras.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_unifi-protobuf-net.dll" Name="unifi-protobuf-net.dll" Source="msvc-release\unifi-protobuf-net.dll" KeyPath="yes"/></Component>
 
                   
 <!-- UIMF DLLs -->

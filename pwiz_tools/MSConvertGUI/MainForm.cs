@@ -138,6 +138,9 @@ namespace MSConvertGUI
 
             ValidateNumpress(); // make sure numpress settings are reasonable
 
+            networkResourceComboBox.DisplayMember = "DisplayName";
+            networkResourceComboBox.Items.Insert(0, placeholder);
+            networkResourceComboBox.SelectedItem = placeholder;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -145,6 +148,65 @@ namespace MSConvertGUI
             // don't let running jobs prevent the process from exiting
             Process.GetCurrentProcess().Kill();
         }
+
+        class DummyComboBoxItem
+        {
+            public string DisplayName
+            {
+                get
+                {
+                    return "Browse network resource...";
+                }
+            }
+        }
+        private DummyComboBoxItem placeholder = new DummyComboBoxItem();
+
+        private void networkResourceComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (networkResourceComboBox.SelectedItem == null) return;
+            if (networkResourceComboBox.SelectedItem == placeholder) return;
+            
+            if (networkResourceComboBox.SelectedItem.ToString() == "UNIFI")
+            {
+                var browser = new UnifiBrowserForm();
+                if (browser.ShowDialog() == DialogResult.OK)
+                {
+                    var selectedDataSources = browser.SelectedSampleResults.ToList();
+                    if (selectedDataSources.Count == 1)
+                        setFileBoxText(selectedDataSources[0]);
+                    else if (selectedDataSources.Count > 1)
+                    {
+                        foreach (string dataSource in selectedDataSources)
+                            FileListBox.Items.Add(dataSource);
+
+                        /*if (String.IsNullOrEmpty(OutputBox.Text) ||
+                            !Directory.Exists(OutputBox.Text))
+                            OutputBox.Text = Path.GetDirectoryName(selectedDataSources[0]);*/
+
+                        RemoveFileButton.Enabled = FileListBox.Items.Count > 0;
+                    }
+                }
+            }
+
+            networkResourceComboBox.Items.Add(placeholder);
+            networkResourceComboBox.SelectedItem = placeholder;
+        }
+
+        private void networkResourceComboBox_DropDown(object sender, EventArgs e)
+        {
+            networkResourceComboBox.Items.Remove(placeholder);
+        }
+
+        private void networkResourceComboBox_Leave(object sender, EventArgs e)
+        {
+            //this covers user aborting the selection (by clicking away or choosing the system null drop down option)
+            //The control may not immedietly change, but if the user clicks anywhere else it will reset
+            if (networkResourceComboBox.SelectedItem != placeholder)
+            {
+                if (!networkResourceComboBox.Items.Contains(placeholder)) networkResourceComboBox.Items.Add(placeholder);
+                networkResourceComboBox.SelectedItem = placeholder;
+            }
+        }    
 
         private void FilterBox_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -194,9 +256,15 @@ namespace MSConvertGUI
             }
         }
 
+        private bool IsNetworkSource(string path)
+        {
+            return path.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) ||
+                   path.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
+        }
+
         private bool IsValidSource(string filepath)
         {
-            return (File.Exists(filepath) || Directory.Exists(filepath)) &&
+            return (File.Exists(filepath) || Directory.Exists(filepath) || IsNetworkSource(filepath)) &&
                    !FileListBox.Items.Contains(filepath) &&
                    !String.IsNullOrEmpty(ReaderList.FullReaderList.identify(filepath));
         }
@@ -210,7 +278,7 @@ namespace MSConvertGUI
         {
             if (IsValidSource(FileBox.Text))
             {
-                if (String.IsNullOrEmpty(OutputBox.Text))
+                if (String.IsNullOrEmpty(OutputBox.Text) && !IsNetworkSource(FileBox.Text))
                     OutputBox.Text = Path.GetDirectoryName(FileBox.Text);
                 // update the set-defaults button
                 SetDefaultsDataType = ReaderList.FullReaderList.identify(FileBox.Text);

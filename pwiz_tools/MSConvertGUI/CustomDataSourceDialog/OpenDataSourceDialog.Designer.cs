@@ -65,10 +65,10 @@ namespace CustomDataSourceDialog
             this.ViewControl = new System.Windows.Forms.PictureBox();
             this.EffectPanel = new System.Windows.Forms.Panel();
             this.FolderViewList = new System.Windows.Forms.ListView();
-            this.SourceName = new System.Windows.Forms.ColumnHeader();
-            this.SourceSize = new System.Windows.Forms.ColumnHeader();
-            this.SourceType = new System.Windows.Forms.ColumnHeader();
-            this.DateModified = new System.Windows.Forms.ColumnHeader();
+            this.SourceName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.SourceSize = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.SourceType = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.DateModified = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.VertSplit = new System.Windows.Forms.SplitContainer();
             this.TopSplit = new System.Windows.Forms.SplitContainer();
             this.SearchButton = new System.Windows.Forms.PictureBox();
@@ -77,22 +77,24 @@ namespace CustomDataSourceDialog
             this.ForwardPicture = new System.Windows.Forms.PictureBox();
             this.BackPicture = new System.Windows.Forms.PictureBox();
             this.MenuPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize) (this.ViewControl)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ViewControl)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.VertSplit)).BeginInit();
             this.VertSplit.Panel1.SuspendLayout();
             this.VertSplit.Panel2.SuspendLayout();
             this.VertSplit.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.TopSplit)).BeginInit();
             this.TopSplit.Panel1.SuspendLayout();
             this.TopSplit.Panel2.SuspendLayout();
             this.TopSplit.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize) (this.SearchButton)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize) (this.ArrowPicture)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize) (this.ForwardPicture)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize) (this.BackPicture)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.SearchButton)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ArrowPicture)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ForwardPicture)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.BackPicture)).BeginInit();
             this.SuspendLayout();
             // 
             // cancelButton
             // 
-            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.cancelButton.Location = new System.Drawing.Point(674, 475);
             this.cancelButton.Name = "cancelButton";
@@ -103,7 +105,7 @@ namespace CustomDataSourceDialog
             // 
             // openButton
             // 
-            this.openButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.openButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.openButton.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.openButton.Location = new System.Drawing.Point(674, 449);
             this.openButton.Name = "openButton";
@@ -114,7 +116,7 @@ namespace CustomDataSourceDialog
             // 
             // label1
             // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(12, 479);
             this.label1.Name = "label1";
@@ -125,8 +127,8 @@ namespace CustomDataSourceDialog
             // 
             // sourceTypeComboBox
             // 
-            this.sourceTypeComboBox.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.sourceTypeComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.sourceTypeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.sourceTypeComboBox.FormattingEnabled = true;
             this.sourceTypeComboBox.Location = new System.Drawing.Point(102, 475);
@@ -137,7 +139,7 @@ namespace CustomDataSourceDialog
             // 
             // labelSourcePath
             // 
-            this.labelSourcePath.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.labelSourcePath.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelSourcePath.AutoSize = true;
             this.labelSourcePath.Location = new System.Drawing.Point(12, 453);
             this.labelSourcePath.Name = "labelSourcePath";
@@ -148,8 +150,8 @@ namespace CustomDataSourceDialog
             // 
             // sourcePathTextBox
             // 
-            this.sourcePathTextBox.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.sourcePathTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.sourcePathTextBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
             this.sourcePathTextBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this.sourcePathTextBox.Location = new System.Drawing.Point(102, 449);
@@ -160,7 +162,7 @@ namespace CustomDataSourceDialog
             // 
             // FolderListIcons
             // 
-            this.FolderListIcons.ImageStream = ((System.Windows.Forms.ImageListStreamer) (resources.GetObject("FolderListIcons.ImageStream")));
+            this.FolderListIcons.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("FolderListIcons.ImageStream")));
             this.FolderListIcons.TransparentColor = System.Drawing.Color.Transparent;
             this.FolderListIcons.Images.SetKeyName(0, "RecentDocuments.png");
             this.FolderListIcons.Images.SetKeyName(1, "Desktop.png");
@@ -176,10 +178,10 @@ namespace CustomDataSourceDialog
             // 
             // SearchBox
             // 
-            this.SearchBox.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.SearchBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.SearchBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.SearchBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.SearchBox.ForeColor = System.Drawing.SystemColors.GrayText;
             this.SearchBox.Location = new System.Drawing.Point(0, 0);
             this.SearchBox.Name = "SearchBox";
@@ -187,9 +189,9 @@ namespace CustomDataSourceDialog
             this.SearchBox.TabIndex = 31;
             this.SearchBox.Text = "Search";
             this.SearchBox.TextChanged += new System.EventHandler(this.SearchBox_TextChanged);
-            this.SearchBox.Leave += new System.EventHandler(this.SearchBox_Leave);
-            this.SearchBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SearchBox_KeyPress);
             this.SearchBox.Enter += new System.EventHandler(this.SearchBox_Enter);
+            this.SearchBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.SearchBox_KeyPress);
+            this.SearchBox.Leave += new System.EventHandler(this.SearchBox_Leave);
             // 
             // FileTree
             // 
@@ -218,8 +220,8 @@ namespace CustomDataSourceDialog
             // 
             // MenuPanel
             // 
-            this.MenuPanel.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.MenuPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.MenuPanel.BackColor = System.Drawing.SystemColors.ControlDark;
             this.MenuPanel.Controls.Add(this.ViewControl);
             this.MenuPanel.Controls.Add(this.EffectPanel);
@@ -230,9 +232,9 @@ namespace CustomDataSourceDialog
             // 
             // ViewControl
             // 
-            this.ViewControl.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.ViewControl.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.ViewControl.ErrorImage = null;
-            this.ViewControl.Image = ((System.Drawing.Image) (resources.GetObject("ViewControl.Image")));
+            this.ViewControl.Image = ((System.Drawing.Image)(resources.GetObject("ViewControl.Image")));
             this.ViewControl.InitialImage = null;
             this.ViewControl.Location = new System.Drawing.Point(689, 3);
             this.ViewControl.Name = "ViewControl";
@@ -240,13 +242,13 @@ namespace CustomDataSourceDialog
             this.ViewControl.TabIndex = 42;
             this.ViewControl.TabStop = false;
             this.ViewControl.Tag = "Details";
-            this.ViewControl.MouseLeave += new System.EventHandler(this.ViewControl_MouseLeave);
             this.ViewControl.Click += new System.EventHandler(this.ViewControl_Click);
             this.ViewControl.MouseEnter += new System.EventHandler(this.ViewControl_MouseEnter);
+            this.ViewControl.MouseLeave += new System.EventHandler(this.ViewControl_MouseLeave);
             // 
             // EffectPanel
             // 
-            this.EffectPanel.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.EffectPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.EffectPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.EffectPanel.Location = new System.Drawing.Point(687, 1);
             this.EffectPanel.Name = "EffectPanel";
@@ -270,9 +272,9 @@ namespace CustomDataSourceDialog
             this.FolderViewList.TabIndex = 24;
             this.FolderViewList.UseCompatibleStateImageBehavior = false;
             this.FolderViewList.View = System.Windows.Forms.View.Details;
-            this.FolderViewList.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.FolderViewList_MouseDoubleClick);
             this.FolderViewList.SelectedIndexChanged += new System.EventHandler(this.FolderViewList_SelectedIndexChanged);
             this.FolderViewList.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.FolderViewList_KeyPress);
+            this.FolderViewList.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.FolderViewList_MouseDoubleClick);
             // 
             // SourceName
             // 
@@ -295,9 +297,9 @@ namespace CustomDataSourceDialog
             // 
             // VertSplit
             // 
-            this.VertSplit.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.VertSplit.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.VertSplit.Location = new System.Drawing.Point(10, 65);
             this.VertSplit.Name = "VertSplit";
             // 
@@ -315,8 +317,8 @@ namespace CustomDataSourceDialog
             // 
             // TopSplit
             // 
-            this.TopSplit.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.TopSplit.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.TopSplit.Location = new System.Drawing.Point(82, 9);
             this.TopSplit.Name = "TopSplit";
             // 
@@ -335,23 +337,23 @@ namespace CustomDataSourceDialog
             // 
             // SearchButton
             // 
-            this.SearchButton.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.SearchButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.SearchButton.Image = global::CustomDataSourceDialog.Properties.Resources.SearchButton;
             this.SearchButton.Location = new System.Drawing.Point(150, 1);
             this.SearchButton.Name = "SearchButton";
             this.SearchButton.Size = new System.Drawing.Size(20, 19);
             this.SearchButton.TabIndex = 32;
             this.SearchButton.TabStop = false;
-            this.SearchButton.MouseLeave += new System.EventHandler(this.SearchButton_MouseLeave);
             this.SearchButton.Click += new System.EventHandler(this.SearchButton_Click);
             this.SearchButton.MouseEnter += new System.EventHandler(this.SearchButton_MouseEnter);
+            this.SearchButton.MouseLeave += new System.EventHandler(this.SearchButton_MouseLeave);
             // 
             // textBox1
             // 
-            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBox1.ForeColor = System.Drawing.SystemColors.GrayText;
             this.textBox1.Location = new System.Drawing.Point(150, 0);
             this.textBox1.Name = "textBox1";
@@ -361,21 +363,21 @@ namespace CustomDataSourceDialog
             // ArrowPicture
             // 
             this.ArrowPicture.ErrorImage = null;
-            this.ArrowPicture.Image = ((System.Drawing.Image) (resources.GetObject("ArrowPicture.Image")));
+            this.ArrowPicture.Image = ((System.Drawing.Image)(resources.GetObject("ArrowPicture.Image")));
             this.ArrowPicture.InitialImage = null;
             this.ArrowPicture.Location = new System.Drawing.Point(68, 6);
             this.ArrowPicture.Name = "ArrowPicture";
             this.ArrowPicture.Size = new System.Drawing.Size(11, 30);
             this.ArrowPicture.TabIndex = 39;
             this.ArrowPicture.TabStop = false;
-            this.ArrowPicture.MouseLeave += new System.EventHandler(this.ArrowPicture_MouseLeave);
             this.ArrowPicture.Click += new System.EventHandler(this.ArrowPicture_Click);
             this.ArrowPicture.MouseEnter += new System.EventHandler(this.ArrowPicture_MouseEnter);
+            this.ArrowPicture.MouseLeave += new System.EventHandler(this.ArrowPicture_MouseLeave);
             // 
             // ForwardPicture
             // 
             this.ForwardPicture.ErrorImage = null;
-            this.ForwardPicture.Image = ((System.Drawing.Image) (resources.GetObject("ForwardPicture.Image")));
+            this.ForwardPicture.Image = ((System.Drawing.Image)(resources.GetObject("ForwardPicture.Image")));
             this.ForwardPicture.InitialImage = null;
             this.ForwardPicture.Location = new System.Drawing.Point(40, 6);
             this.ForwardPicture.Name = "ForwardPicture";
@@ -383,14 +385,14 @@ namespace CustomDataSourceDialog
             this.ForwardPicture.TabIndex = 38;
             this.ForwardPicture.TabStop = false;
             this.ForwardPicture.Tag = "Faded";
-            this.ForwardPicture.MouseLeave += new System.EventHandler(this.ForwardPicture_MouseLeave);
             this.ForwardPicture.Click += new System.EventHandler(this.ForwardPicture_Click);
             this.ForwardPicture.MouseEnter += new System.EventHandler(this.ForwardPicture_MouseEnter);
+            this.ForwardPicture.MouseLeave += new System.EventHandler(this.ForwardPicture_MouseLeave);
             // 
             // BackPicture
             // 
             this.BackPicture.ErrorImage = null;
-            this.BackPicture.Image = ((System.Drawing.Image) (resources.GetObject("BackPicture.Image")));
+            this.BackPicture.Image = ((System.Drawing.Image)(resources.GetObject("BackPicture.Image")));
             this.BackPicture.InitialImage = null;
             this.BackPicture.Location = new System.Drawing.Point(10, 6);
             this.BackPicture.Name = "BackPicture";
@@ -398,9 +400,9 @@ namespace CustomDataSourceDialog
             this.BackPicture.TabIndex = 37;
             this.BackPicture.TabStop = false;
             this.BackPicture.Tag = "Faded";
-            this.BackPicture.MouseLeave += new System.EventHandler(this.BackPicture_MouseLeave);
             this.BackPicture.Click += new System.EventHandler(this.BackPicture_Click);
             this.BackPicture.MouseEnter += new System.EventHandler(this.BackPicture_MouseEnter);
+            this.BackPicture.MouseLeave += new System.EventHandler(this.BackPicture_MouseLeave);
             // 
             // OpenDataSourceDialog
             // 
@@ -422,21 +424,23 @@ namespace CustomDataSourceDialog
             this.MinimumSize = new System.Drawing.Size(500, 300);
             this.Name = "OpenDataSourceDialog";
             this.Text = "Open Data Source";
-            this.Load += new System.EventHandler(this.OpenDataSourceDialogue_Load);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OpenDataSourceDialogue_FormClosing);
+            this.Load += new System.EventHandler(this.OpenDataSourceDialogue_Load);
             this.MenuPanel.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize) (this.ViewControl)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ViewControl)).EndInit();
             this.VertSplit.Panel1.ResumeLayout(false);
             this.VertSplit.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.VertSplit)).EndInit();
             this.VertSplit.ResumeLayout(false);
             this.TopSplit.Panel1.ResumeLayout(false);
             this.TopSplit.Panel2.ResumeLayout(false);
             this.TopSplit.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.TopSplit)).EndInit();
             this.TopSplit.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize) (this.SearchButton)).EndInit();
-            ((System.ComponentModel.ISupportInitialize) (this.ArrowPicture)).EndInit();
-            ((System.ComponentModel.ISupportInitialize) (this.ForwardPicture)).EndInit();
-            ((System.ComponentModel.ISupportInitialize) (this.BackPicture)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.SearchButton)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ArrowPicture)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ForwardPicture)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.BackPicture)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -456,7 +460,6 @@ namespace CustomDataSourceDialog
         private System.Windows.Forms.PictureBox BackPicture;
         private System.Windows.Forms.PictureBox ArrowPicture;
         private System.Windows.Forms.PictureBox ForwardPicture;
-        private System.Windows.Forms.ImageList FolderListIcons;
         private System.Windows.Forms.Panel MenuPanel;
         private System.Windows.Forms.ListView FolderViewList;
         private System.Windows.Forms.ColumnHeader SourceName;
@@ -469,5 +472,6 @@ namespace CustomDataSourceDialog
         private System.Windows.Forms.Panel EffectPanel;
         private System.Windows.Forms.PictureBox SearchButton;
         private System.Windows.Forms.TextBox textBox1;
+        internal System.Windows.Forms.ImageList FolderListIcons;
     }
 }

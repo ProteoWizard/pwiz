@@ -121,6 +121,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, DetailLevel
 
     if (spectrum.retentionTime > 0)
         scan.set(MS_scan_start_time, spectrum.retentionTime, UO_minute);
+
+    if (spectrum.driftTime > 0)
+        scan.set(MS_ion_mobility_drift_time, spectrum.driftTime, UO_millisecond);
+
     /*scan.set(MS_preset_scan_configuration, msExperiment->getExperimentNumber());*/
 
     int msLevel = 1;//spectrum->getMSLevel();
