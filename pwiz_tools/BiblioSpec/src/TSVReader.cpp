@@ -209,7 +209,7 @@ void TSVReader::storeLine(const TSVLine& line) {
     }
 }
 
-bool TSVReader::parseSequence(string seq, string* outSeq, vector<SeqMod>* outMods) {
+bool TSVReader::parseSequence(const string& seq, string* outSeq, vector<SeqMod>* outMods) {
     if (outSeq != NULL) {
         outSeq->clear();
     }
@@ -217,18 +217,19 @@ bool TSVReader::parseSequence(string seq, string* outSeq, vector<SeqMod>* outMod
         outMods->clear();
     }
 
-    const string searchString = "(UniMod:";
+    string seqUpper = to_upper_copy<string>(seq);
+    const string searchString = "(UNIMOD:";
     size_t i;
-    while ((i = seq.find(searchString)) != string::npos) {
+    while ((i = seqUpper.find(searchString)) != string::npos) {
         size_t j = i + searchString.length();
-        size_t k = seq.find(')', j + 1);
+        size_t k = seqUpper.find(')', j + 1);
         if (k == string::npos) {
             Verbosity::error("Invalid sequence '%s' on line %d", seq.c_str(), lineNum_);
             return false;
         }
         int id;
         try {
-            id = lexical_cast<int>(seq.substr(j, k - j));
+            id = lexical_cast<int>(seqUpper.substr(j, k - j));
         } catch (bad_lexical_cast&) {
             Verbosity::error("Non-numeric modification ID in sequence '%s' on line %d", seq.c_str(), lineNum_);
             return false;
@@ -237,7 +238,7 @@ bool TSVReader::parseSequence(string seq, string* outSeq, vector<SeqMod>* outMod
             Verbosity::error("Unknown modification ID %d in sequence '%s' on line '%d'", id, seq.c_str(), lineNum_);
             return false;
         }
-        seq.erase(i, k - i + 1);
+        seqUpper.erase(i, k - i + 1);
         if (outMods != NULL) {
             // the SeqMod's position is equal to the index after the modified AA, since it is 1-based
             outMods->push_back(SeqMod(i, unimod_.getModMass(id)));
@@ -245,7 +246,7 @@ bool TSVReader::parseSequence(string seq, string* outSeq, vector<SeqMod>* outMod
     }
 
     if (outSeq != NULL) {
-        *outSeq = seq;
+        *outSeq = seqUpper;
     }
     return true;
 }

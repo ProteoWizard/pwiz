@@ -135,7 +135,7 @@ private:
         std::vector<TSVColumnTranslator>& v);
     void collectPsms();
     void storeLine(const TSVLine& line);
-    bool parseSequence(std::string seq, std::string* outSeq, std::vector<SeqMod>* outMods);
+    bool parseSequence(const std::string& seq, std::string* outSeq, std::vector<SeqMod>* outMods);
     bool parsePeaks(
         const std::string& peakArea,
         const std::string& fragmentAnnotation,
