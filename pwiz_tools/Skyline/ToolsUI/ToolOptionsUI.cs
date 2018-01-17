@@ -21,6 +21,8 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.Themes;
@@ -138,7 +140,39 @@ namespace pwiz.Skyline.ToolsUI
                 return DisplayName;
             }
         }
-        #region For Testing
+
+        // ReSharper disable InconsistentNaming
+        public enum TABS { Panorama, Chorus, Language, Miscellaneous, Display }
+        // ReSharper restore InconsistentNaming
+
+        public class PanoramaTab : IFormView { }
+        public class ChorusTab : IFormView { }
+        public class LanguageTab : IFormView { }
+        public class MiscellaneousTab : IFormView { }
+        public class DisplayTab : IFormView { }
+
+        private static readonly IFormView[] TAB_PAGES =
+        {
+            new PanoramaTab(), new ChorusTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab(),
+        };
+
+        #region Functional testing support
+
+        public IFormView ShowingFormView
+        {
+            get
+            {
+                int selectedIndex = 0;
+                Invoke(new Action(() => selectedIndex = tabControl.SelectedIndex));
+                return TAB_PAGES[selectedIndex];
+            }
+        }
+
+        public TABS SelectedTab
+        {
+            get { return (TABS)tabControl.SelectedIndex; }
+            set { tabControl.SelectedIndex = (int)value; }
+        }
 
         public bool PowerOfTenCheckBox
         {
@@ -167,6 +201,23 @@ namespace pwiz.Skyline.ToolsUI
         public SettingsListComboDriver<ColorScheme> getColorDrive()
         {
             return _driverColorSchemes;
+        }
+
+        private void btnResetSettings_Click(object sender, EventArgs e)
+        {
+            ResetAllSettings();
+        }
+
+        public void ResetAllSettings()
+        {
+            if (MultiButtonMsgDlg.Show(this,
+                    string.Format(
+                        Resources
+                            .ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_,
+                        Program.Name), MultiButtonMsgDlg.BUTTON_OK) == DialogResult.OK)
+            {
+                Settings.Default.Reset();
+            }
         }
     }
 }

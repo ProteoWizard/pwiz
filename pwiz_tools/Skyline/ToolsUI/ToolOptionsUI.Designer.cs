@@ -51,6 +51,7 @@ namespace pwiz.Skyline.ToolsUI
             this.powerOfTenCheckBox = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
+            this.btnResetSettings = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
             this.tabChorus.SuspendLayout();
@@ -147,6 +148,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // tabMisc
             // 
+            this.tabMisc.Controls.Add(this.btnResetSettings);
             this.tabMisc.Controls.Add(this.comboCompactFormatOption);
             this.tabMisc.Controls.Add(this.lblCompactDocumentFormat);
             this.tabMisc.Controls.Add(this.checkBoxShowWizard);
@@ -214,6 +216,13 @@ namespace pwiz.Skyline.ToolsUI
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
             // 
+            // btnResetSettings
+            // 
+            resources.ApplyResources(this.btnResetSettings, "btnResetSettings");
+            this.btnResetSettings.Name = "btnResetSettings";
+            this.btnResetSettings.UseVisualStyleBackColor = true;
+            this.btnResetSettings.Click += new System.EventHandler(this.btnResetSettings_Click);
+            // 
             // ToolOptionsUI
             // 
             this.AcceptButton = this.btnOK;
@@ -265,5 +274,6 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Label lblCompactDocumentFormat;
         private System.Windows.Forms.ComboBox comboColorScheme;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button btnResetSettings;
     }
 }

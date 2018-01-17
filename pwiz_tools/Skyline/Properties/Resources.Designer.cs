@@ -27554,6 +27554,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to clear all saved settings? This will immediately return {0} to its original configuration and cannot be undone..
+        /// </summary>
+        public static string ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_ {
+            get {
+                return ResourceManager.GetString("ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_set" +
+                        "tings__This_will_immediately_return__0__to_its_original_configuration_and_cannot" +
+                        "_be_undone_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Default ({0}).
         /// </summary>
         public static string ToolOptionsUI_ToolOptionsUI_Default___0__ {
