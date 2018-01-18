@@ -93,7 +93,7 @@ ArgT parseKeyValuePair(string& args, const string& tokenName, const ArgT& defaul
                     try
                     {
                         valueStr = args.substr(valueIndex, nextTokenIndex - valueIndex);
-                        ArgT value = lexical_cast<ArgT>(valueStr.c_str(), valueStr.length());
+                        ArgT value = lexical_cast<ArgT>(valueStr);
                         args.erase(keyIndex, nextTokenIndex - keyIndex);
                         return value;
                     }
@@ -722,7 +722,7 @@ SpectrumListPtr filterCreator_mzRefine(const MSData& msd, const string& arg, pwi
     }
     // expand the filenames by globbing to handle wildcards
     vector<string> files;
-    BOOST_FOREACH(const bfs::path& filename, globbedFilenames)
+    for(const bfs::path& filename : globbedFilenames)
         files.push_back(filename.string());
 
     IntegerSet msLevelsToRefine;
@@ -733,7 +733,7 @@ SpectrumListPtr filterCreator_mzRefine(const MSData& msd, const string& arg, pwi
     vector<string> possibleDataFiles;
     string lastSourceFile;
 
-    BOOST_FOREACH(const SourceFilePtr& sf, msd.fileDescription.sourceFilePtrs)
+    for(const SourceFilePtr& sf : msd.fileDescription.sourceFilePtrs)
     {
         lastSourceFile = sf->name;
     }
@@ -745,9 +745,9 @@ SpectrumListPtr filterCreator_mzRefine(const MSData& msd, const string& arg, pwi
 
     // Search for a file that matches the MSData file name, then search for one matching the dataset if not found.
     // Load identfiles, and look at mzid.DataCollection.Inputs.SpectraData.name?
-    BOOST_FOREACH(string &dataFile, possibleDataFiles)
+    for(string &dataFile : possibleDataFiles)
     {
-        BOOST_FOREACH(string &file, files)
+        for(string &file : files)
         {
             if (file.find(dataFile) != string::npos)
             {
@@ -777,13 +777,13 @@ SpectrumListPtr filterCreator_lockmassRefiner(const MSData& msd, const string& c
 
     string arg = carg;
     double lockmassMz = parseKeyValuePair<double>(arg, mzToken, 0);
-    double lockmassMzNegIons = parseKeyValuePair<double>(arg, mzNegIonsToken, lockmassMz); // Optional
+    double lockmassMzNegIons = parseKeyValuePair<double>(arg, mzNegIonsToken, 0); // Optional
     double lockmassTolerance = parseKeyValuePair<double>(arg, toleranceToken, 1.0);
     bal::trim(arg);
     if (!arg.empty())
         throw runtime_error("[lockmassRefiner] unhandled text remaining in argument string: \"" + arg + "\"");
 
-    if (lockmassMz <= 0 || lockmassTolerance <= 0 || lockmassMzNegIons <= 0)
+    if ((lockmassMz <= 0 && lockmassMzNegIons <= 0) || lockmassTolerance <= 0)
     {
         cerr << "lockmassMz and lockmassTolerance must be positive real numbers" << endl;
         return SpectrumListPtr();

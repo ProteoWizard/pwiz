@@ -193,6 +193,19 @@ void testWrapChargeState()
 }
 
 
+void testWrapChargeStatePredictor()
+{
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+
+        SpectrumListFactory::wrap(msd, "chargeStatePredictor overrideExistingCharge=false maxMultipleCharge=3 minMultipleCharge=2 singleChargeFractionTIC=0.9 maxKnownCharge=4 makeMS2=true");
+        unit_assert_operator_equal(5, sl->size());
+    }
+}
+
+
 void testWrapDefaultArrayLength()
 {
     // test that the minimum length is 1 (due to 0 being the "unset" value)
@@ -624,6 +637,7 @@ void test()
     testWrapMZWindow();
     testWrapMSLevel();
     testWrapChargeState();
+    testWrapChargeStatePredictor();
     testWrapDefaultArrayLength();
     testWrapActivation();
     testWrapMassAnalyzer();
