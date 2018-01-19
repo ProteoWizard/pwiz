@@ -712,7 +712,7 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
             alternate_cols = "driftTimeMsec, collisionalCrossSectionSqA, driftTimeHighEnergyOffsetMsec, '1'"; // DriftTime is only ionmobility type from this era
             if (tableVersion == MIN_VERSION_SMALL_MOL)
             {
-                alternate_cols += SmallMolMetadata::sql_col_names_csv() + ", null, null";
+                alternate_cols += SmallMolMetadata::sql_col_names_csv();
             }
         }
         else if (tableVersion >= MIN_VERSION_IMS_UNITS)
@@ -721,8 +721,6 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
             alternate_cols += SmallMolMetadata::sql_col_names_csv();
             if (tableVersion >= MIN_VERSION_RT_BOUNDS) {
                 alternate_cols += ", startTime, endTime";
-            } else {
-                alternate_cols += ", null, null";
             }
         }
         else
@@ -785,13 +783,27 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
             copies, newFileID, alternate_cols.c_str(), schemaTmp, spectraTmpID);
         sql_stmt(zSql);
     }
-    else
+    else if (tableVersion == MIN_VERSION_RT_BOUNDS)
     {
         snprintf(zSql, ZSQLBUFLEN,
             "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
             "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType%s, "
             "startTime, endTime, retentionTime, specIDinFile, score, scoreType) "
+            "SELECT peptideSeq, precursorMZ, precursorCharge, "
+            "peptideModSeq, prevAA, nextAA, %d, numPeaks, %d, %s "
+            "FROM %s.RefSpectra WHERE id = %d",
+            SmallMolMetadata::sql_col_names_csv().c_str(),
+            copies, newFileID, alternate_cols.c_str(), schemaTmp, spectraTmpID);
+        sql_stmt(zSql);
+    }
+    else
+    {
+        snprintf(zSql, ZSQLBUFLEN,
+            "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
+            "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
+            "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType%s, "
+            "retentionTime, specIDinFile, score, scoreType) "
             "SELECT peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, %d, numPeaks, %d, %s "
             "FROM %s.RefSpectra WHERE id = %d",

@@ -294,7 +294,7 @@ blib-test-build mascot_tims : -o : output/mascot_tims.blib : mascot_tims.check :
 
 # Test OpenSWATH tsv file
 
-blib-test-build openswath : -o : output/openswath.blib : openswath.check zbuild.skip-lines : inputs/openswath_test.tsv ;
+blib-test-build openswath : -o : output/openswath.blib : openswath.check openswath.skip-lines : inputs/openswath_test.tsv ;
 
 # we expect this one to fail, with the error message 'ERROR: Failure reading TIMS ion mobility value ":0.78079097398941"', so args are "-e 0.78079097398941"
 blib-test-build mascot_tims_bad : -e_0.78079097398941 -o : output/mascot_tims_bad.blib : mascot_tims_bad.check : inputs/mascot_tims_bad.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
