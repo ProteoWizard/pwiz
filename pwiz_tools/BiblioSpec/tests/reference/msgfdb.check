@@ -1,14 +1,14 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:msgfdb.blib	2	1	7
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:msgfdb.blib	2	1	8
 id	RefSpectraID	position	mass
 1	1	5	57.021496
 2	1	9	57.021496
 3	1	18	57.021496
 4	1	25	57.021496
 5	1	29	57.021496
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	TPDTCPLFCDFYNPHGGCEWHYQPCGAPCLK	947.137390136719	4	TPDTC[+57.0]PLFC[+57.0]DFYNPHGGC[+57.0]EWHYQPC[+57.0]GAPC[+57.0]LK	-	-	1	754	0.0	0.0	0.0	0	43.262615	N/A	N/A	N/A	N/A	N/A	1	controllerType=0 controllerNumber=1 scan=8182	0.0	15
-2	LHNLNSNWFPEGSKPFIYQEVIDLGGEPIK	1147.91418457031	3	LHNLNSNWFPEGSKPFIYQEVIDLGGEPIK	-	-	1	588	0.0	0.0	0.0	0	57.361115	N/A	N/A	N/A	N/A	N/A	1	controllerType=0 controllerNumber=1 scan=10906	0.0	15
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	TPDTCPLFCDFYNPHGGCEWHYQPCGAPCLK	947.137390136719	4	TPDTC[+57.0]PLFC[+57.0]DFYNPHGGC[+57.0]EWHYQPC[+57.0]GAPC[+57.0]LK	-	-	1	754	0.0	0.0	0.0	0	43.262615	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	controllerType=0 controllerNumber=1 scan=8182	0.0	15
+2	LHNLNSNWFPEGSKPFIYQEVIDLGGEPIK	1147.91418457031	3	LHNLNSNWFPEGSKPFIYQEVIDLGGEPIK	-	-	1	588	0.0	0.0	0.0	0	57.361115	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	controllerType=0 controllerNumber=1 scan=10906	0.0	15
 id	fileName	cutoffScore
 1	/BiblioSpec/tests/inputs/ms-gfdb.mzML	-1.0
 id	scoreType	probabilityType

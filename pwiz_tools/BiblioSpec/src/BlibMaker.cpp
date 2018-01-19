@@ -339,7 +339,9 @@ void BlibMaker::createTables(vector<string> &commands, bool execute)
            "collisionalCrossSectionSqA REAL, -- precursor CCS in square Angstroms for ion mobility, if known\n"
            "ionMobilityHighEnergyOffset REAL, -- ion mobility value increment for fragments (see ionMobilityType for units)\n"
            "ionMobilityType TINYINT, -- ion mobility units (required if ionMobility is used, see IonMobilityTypes table for key)\n"
-           "retentionTime REAL, -- chromatographic retention time in minutes, if known\n";
+           "retentionTime REAL, -- chromatographic retention time in minutes, if known\n"
+           "startTime REAL, -- start retention time in minutes, if known\n"
+           "endTime REAL, -- end retention time in minutes, if known\n";
     cols += SmallMolMetadata::sql_col_decls();
     cols += "fileID INTEGER, -- index into SpectrumSourceFiles table for source file information\n"
            "SpecIDinFile VARCHAR(256), -- original spectrum label, id, or description in source file\n"
@@ -486,6 +488,8 @@ void BlibMaker::updateTables(){
 
     vector< pair<string, string> > newColumns;
     newColumns.push_back(make_pair("retentionTime", "REAL"));
+    newColumns.push_back(make_pair("startTime", "REAL"));
+    newColumns.push_back(make_pair("endTime", "REAL"));
     newColumns.push_back(make_pair("fileID", "INTEGER"));
     newColumns.push_back(make_pair("SpecIDinFile", "VARCHAR(256)"));
     newColumns.push_back(make_pair("score", "REAL"));
@@ -708,13 +712,18 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
             alternate_cols = "driftTimeMsec, collisionalCrossSectionSqA, driftTimeHighEnergyOffsetMsec, '1'"; // DriftTime is only ionmobility type from this era
             if (tableVersion == MIN_VERSION_SMALL_MOL)
             {
-                alternate_cols += SmallMolMetadata::sql_col_names_csv();
+                alternate_cols += SmallMolMetadata::sql_col_names_csv() + ", null, null";
             }
         }
         else if (tableVersion >= MIN_VERSION_IMS_UNITS)
         {
             alternate_cols = "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType";
             alternate_cols += SmallMolMetadata::sql_col_names_csv();
+            if (tableVersion >= MIN_VERSION_RT_BOUNDS) {
+                alternate_cols += ", startTime, endTime";
+            } else {
+                alternate_cols += ", null, null";
+            }
         }
         else
             alternate_cols = "'0', '0', '0', '0', '', '', '', '', ''"; // Handle missing ion mobility and small molecule info
@@ -782,7 +791,7 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
             "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
             "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType%s, "
-            "retentionTime, specIDinFile, score, scoreType) "
+            "startTime, endTime, retentionTime, specIDinFile, score, scoreType) "
             "SELECT peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, %d, numPeaks, %d, %s "
             "FROM %s.RefSpectra WHERE id = %d",

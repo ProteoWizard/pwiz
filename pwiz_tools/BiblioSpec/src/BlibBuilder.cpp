@@ -287,7 +287,9 @@ int BlibBuilder::transferLibrary(int iLib,
     // does the incomming library have retentiontime, score, etc columns
     int tableVersion = 0;
     if (tableColumnExists(schemaTmp, "RefSpectra", "retentionTime")) {
-        if (tableExists(schemaTmp, "RefSpectraPeakAnnotations")) {
+        if (tableColumnExists(schemaTmp, "RefSpectra", "startTime")) {
+            tableVersion = MIN_VERSION_RT_BOUNDS;
+        } else if (tableExists(schemaTmp, "RefSpectraPeakAnnotations")) {
             tableVersion = MIN_VERSION_PEAK_ANNOT;
         } else if (tableColumnExists(schemaTmp, "RefSpectra", "ionMobilityHighEnergyOffset")) {
             tableVersion = MIN_VERSION_IMS_UNITS;

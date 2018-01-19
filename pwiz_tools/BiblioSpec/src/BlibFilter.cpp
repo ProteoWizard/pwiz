@@ -294,6 +294,8 @@ void BlibFilter::init(){
            "ionMobilityHighEnergyOffset REAL, "
            "ionMobilityType TINYINT, "
            "retentionTime REAL, "
+           "startTime REAL, "
+           "endTime REAL, "
            "bestSpectrum INTEGER, " // boolean
            "FOREIGN KEY(RefSpectraID) REFERENCES RefSpectra(id) )" );
     sql_stmt(zSql);
@@ -377,8 +379,10 @@ void BlibFilter::buildNonRedundantLib()
             {
                 tableVersion_ = MIN_VERSION_IMS_UNITS;
                 optional_cols += ", ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset";
-                if (tableExists(redundantDbName_, "RefSpectraPeakAnnotations"))
-                {
+                if (tableColumnExists(redundantDbName_, "RefSpectra", "startTime")) {
+                    tableVersion_ = MIN_VERSION_RT_BOUNDS;
+                    optional_cols += ", startTime, endTime";
+                } else if (tableExists(redundantDbName_, "RefSpectraPeakAnnotations")) {
                     tableVersion_ = MIN_VERSION_PEAK_ANNOT;
                 }
             }
@@ -460,6 +464,8 @@ void BlibFilter::buildNonRedundantLib()
     int scoreTypeIndex = columns["scoreType"];
     int scanNumberIndex = columns["SpecIDinFile"];
     int retentionTimeIndex = columns["retentionTime"];
+    int startTimeIndex = columns["startTime"];
+    int endTimeIndex = columns["endTime"];
     int numPeaksIndex = columns["numPeaks"];
 
     // setup for getting peak data
@@ -521,6 +527,11 @@ void BlibFilter::buildNonRedundantLib()
         } else {
             tmpRef->setIonMobility(0, IONMOBILITY_NONE);
             tmpRef->setCollisionalCrossSection(0);
+        }
+
+        if (startTimeIndex > 0 && endTimeIndex > 0) {
+            tmpRef->setStartTime(sqlite3_column_double(pStmt, startTimeIndex));
+            tmpRef->setEndTime(sqlite3_column_double(pStmt, endTimeIndex));
         }
 
         tmpRef->setIonMobilityHighEnergyOffset(highEnergyOffsetIndex > 0 ? sqlite3_column_double(pStmt, highEnergyOffsetIndex) : 0);
@@ -808,11 +819,13 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon)
     for(int i = 0; i < num_spec; i++){
         // if( oneIon.at(i)->getRetentionTime() == 0){ continue; }
         int specIdRedundant = oneIon.at(i)->getLibSpecID();
+        double startTime = oneIon.at(i)->getStartTime();
+        double endTime = oneIon.at(i)->getEndTime();
         snprintf(zSql, ZSQLBUFLEN, 
                 "INSERT INTO RetentionTimes (RefSpectraID, RedundantRefSpectraID, "
                 "SpectrumSourceID, ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, "
-                "retentionTime, bestSpectrum) "
-                "VALUES (%d, %d, %d, %f, %f, %f, %d, %f, %d)",
+                "retentionTime, startTime, endTime, bestSpectrum) "
+                "VALUES (%d, %d, %d, %f, %f, %f, %d, %f, %s, %s, %d)",
                 specID,
                 specIdRedundant,
                 getNewFileId(redundantDbName_, specIdRedundant),  // All files should exist by now
@@ -821,6 +834,8 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon)
                 oneIon.at(i)->getIonMobilityHighEnergyOffset(),
                 (int)oneIon.at(i)->getIonMobilityType(),
                 oneIon.at(i)->getRetentionTime(),
+                startTime != 0 && endTime != 0 ? boost::lexical_cast<string>(startTime).c_str() : "null",
+                startTime != 0 && endTime != 0 ? boost::lexical_cast<string>(endTime).c_str() : "null",
                 i == bestIndex ? 1 : 0);
         sql_stmt(zSql);
     }

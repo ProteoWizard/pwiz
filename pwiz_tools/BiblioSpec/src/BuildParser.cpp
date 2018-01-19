@@ -51,10 +51,10 @@ BuildParser::BuildParser(BlibBuilder& maker,
 
     string stmt = "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
         "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobility, collisionalCrossSectionSqA, "
-        "ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, fileID, specIDinFile, "
-        "score, scoreType" + 
+        "ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, startTime, endTime, fileID, "
+        "specIDinFile, score, scoreType" + 
         SmallMolMetadata::sql_col_names_csv() + 
-        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
+        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
     sqlite3_prepare(maker.getDb(), stmt.c_str(),
      -1, &insertSpectrumStmt_, NULL);
 
@@ -419,6 +419,13 @@ void BuildParser::insertSpectrum(PSM* psm,
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.getIonMobilityHighEnergyOffset());
     sqlite3_bind_int(insertSpectrumStmt_, field++, (int)curSpectrum.ionMobilityType);
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.retentionTime);
+    if (curSpectrum.startTime != 0 && curSpectrum.endTime != 0) {
+        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.startTime);
+        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.endTime);
+    } else {
+        sqlite3_bind_null(insertSpectrumStmt_, field++);
+        sqlite3_bind_null(insertSpectrumStmt_, field++);
+    }
     sqlite3_bind_int(insertSpectrumStmt_, field++, fileId);
     sqlite3_bind_text(insertSpectrumStmt_, field++, specIdStr.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_double(insertSpectrumStmt_, field++, psm->score);

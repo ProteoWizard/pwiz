@@ -52,6 +52,9 @@ TSVReader::TSVReader(BlibBuilder& maker,
     targetColumns_.push_back(TSVColumnTranslator("aggr_Peak_Area", TSVLine::insertPeakArea));
     targetColumns_.push_back(TSVColumnTranslator("aggr_Fragment_Annotation", TSVLine::insertFragmentAnnotation));
     targetColumns_.push_back(TSVColumnTranslator("m_score", TSVLine::insertScore));
+
+    optionalColumns_.push_back(TSVColumnTranslator("leftWidth", TSVLine::insertLeftWidth));
+    optionalColumns_.push_back(TSVColumnTranslator("rightWidth", TSVLine::insertRightWidth));
 }
 
 TSVReader::~TSVReader() {
@@ -99,10 +102,22 @@ void TSVReader::parseHeader() {
     // get the column index of each required column
     int colNumber = 0;
     for (LineParser::iterator i = parser.begin(); i != parser.end(); i++) {
+        bool found = false;
         for (vector<TSVColumnTranslator>::iterator j = targetColumns_.begin(); j != targetColumns_.end(); j++) {
             if (iequals(*i, j->name_)) {
+                found = true;
                 j->position_ = colNumber;
                 break;
+            }
+        }
+        if (!found) {
+            for (vector<TSVColumnTranslator>::iterator j = optionalColumns_.begin(); j != optionalColumns_.end(); j++) {
+                if (iequals(*i, j->name_)) {
+                    found = true;
+                    j->position_ = colNumber;
+                    targetColumns_.push_back(*j);
+                    break;
+                }
             }
         }
         colNumber++;
@@ -195,6 +210,8 @@ void TSVReader::storeLine(const TSVLine& line) {
     }
     psm->charge = line.charge;
     psm->mz = line.mz;
+    psm->leftWidth = line.leftWidth;
+    psm->rightWidth = line.rightWidth;
     psm->score = line.score;
     if (!parsePeaks(line.peakArea, line.fragmentAnnotation, &(psm->mzs), &(psm->intensities))) {
         delete psm;
@@ -376,6 +393,8 @@ bool TSVReader::calcIonMz(
 bool TSVReader::getSpectrum(PSM* psm, SPEC_ID_TYPE findBy, SpecData& returnData, bool getPeaks) {
     returnData.id = psm->specKey;
     returnData.retentionTime = ((TSVPSM*)psm)->rt;
+    returnData.startTime = ((TSVPSM*)psm)->leftWidth;
+    returnData.endTime = ((TSVPSM*)psm)->rightWidth;
     returnData.mz = ((TSVPSM*)psm)->mz;
     returnData.numPeaks = ((TSVPSM*)psm)->mzs.size();
 

@@ -29,15 +29,19 @@ namespace BiblioSpec {
 struct TSVPSM : PSM {
     double rt;
     double mz;
+    double leftWidth;
+    double rightWidth;
     vector<double> mzs;
     vector<double> intensities;
 
-    TSVPSM() : PSM(), rt(0), mz(0) {}
+    TSVPSM() : PSM(), rt(0), mz(0), leftWidth(0), rightWidth(0) {}
 
     void clear() {
         PSM::clear();
         rt = 0;
         mz = 0;
+        leftWidth = 0;
+        rightWidth = 0;
         vector<double>().swap(mzs);
         vector<double>().swap(intensities);
     }
@@ -52,11 +56,13 @@ public:
     int charge;
     double mz;
     bool decoy;
+    double leftWidth;
+    double rightWidth;
     std::string peakArea;
     std::string fragmentAnnotation;
     double score;
 
-    TSVLine() : rt(0), charge(0), mz(0), decoy(false), score(0) {}
+    TSVLine() : rt(0), charge(0), mz(0), decoy(false), leftWidth(0), rightWidth(0), score(0) {}
 
     static void insertFilename(TSVLine& line, const std::string& value) {
         line.filename = value;
@@ -75,6 +81,12 @@ public:
     }
     static void insertDecoy(TSVLine& line, const std::string& value) {
         line.decoy = value == "1" ? true : false;
+    }
+    static void insertLeftWidth(TSVLine& line, const std::string& value) {
+        line.leftWidth = value.empty() ? 0 : lexical_cast<double>(value) / 60;
+    }
+    static void insertRightWidth(TSVLine& line, const std::string& value) {
+        line.rightWidth = value.empty() ? 0 : lexical_cast<double>(value) / 60;
     }
     static void insertPeakArea(TSVLine& line, const std::string& value) {
         line.peakArea = value;
@@ -128,6 +140,7 @@ private:
     int lineNum_;
     map< std::string, vector<TSVPSM*> > fileMap_; // store psms by filename
     vector<TSVColumnTranslator> targetColumns_; // columns to extract
+    vector<TSVColumnTranslator> optionalColumns_; // columns to extract
 
     void parseHeader();
     std::vector<TSVColumnTranslator>::iterator findColumn(

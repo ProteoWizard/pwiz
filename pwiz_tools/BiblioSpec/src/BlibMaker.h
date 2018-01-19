@@ -49,8 +49,9 @@ class BlibMaker
     // integer values minorVersion, the minorVersion field has been taken
     // for use as a schemaVersion
 #define MAJOR_VERSION_CURRENT 0
-#define MINOR_VERSION_CURRENT 7
+#define MINOR_VERSION_CURRENT 8
 
+#define MIN_VERSION_RT_BOUNDS  8 // Version 8 adds startTime and endTime
 #define MIN_VERSION_PEAK_ANNOT 7 // Version 7 adds peak annotations
 #define MIN_VERSION_IMS_UNITS  6 // Version 6 generalizes ion mobility to value, high energy offset, and type (currently drift time msec, and inverse reduced ion mobility Vsec/cm2)
 #define MIN_VERSION_SMALL_MOL  5 // Version 5 adds small molecule columns
