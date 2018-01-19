@@ -975,7 +975,6 @@ double basis_matrix_tmp ( int left, int n, double mbasis[], int ndata,
   int first;
   int i;
   int j;
-  double temp;
   double tm;
   double *tvec;
   double yval;
@@ -5685,6 +5684,8 @@ double spline_overhauser_uni_val ( int ndata, double tdata[], double ydata[],
     yval = basis_matrix_tmp ( left, 3, mbasis, ndata, tdata, ydata, tval );
 
   }
+  else
+      throw std::runtime_error("[SPLINE_OVERHAUSER_UNI_VAL]- left value invalid");
 
   delete [] mbasis;
 

@@ -48,6 +48,9 @@ namespace IDPicker.Forms
 
         public class AggregateRow : Row
         {
+            protected static readonly iTRAQArrayUserType itraqArrayType = new iTRAQArrayUserType();
+            protected static readonly TMTArrayUserType tmtArrayType = new TMTArrayUserType();
+
             public int Spectra { get; private set; }
             public int DistinctMatches { get; private set; }
             public int DistinctPeptides { get; private set; }
@@ -107,10 +110,10 @@ namespace IDPicker.Forms
                 lock (session)
                 {
                     basicColumns = session.CreateQuery(AggregateRow.Selection +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(pep.iTRAQ_ReporterIonIntensities)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(pep.TMT_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.iTRAQ_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.TMT_ReporterIonIntensities)" +
                                                        ", pep.PeptideGroup " +
-                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
+                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein, DataFilter.PeptideSpectrumMatchToSpectrum) +
                                                        "GROUP BY pep.PeptideGroup").List<object[]>();
 
                     // these columns are not affected by the view filter
@@ -128,8 +131,8 @@ namespace IDPicker.Forms
                 : base(basicColumns, detailedColumns, dataFilter)
             {
                 int column = AggregateRow.ColumnCount - 1;
-                iTRAQ_ReporterIonIntensities = (double[])itraqArrayType.Assemble((byte[])basicColumns[++column], null);
-                TMT_ReporterIonIntensities = (double[])tmtArrayType.Assemble((byte[])basicColumns[++column], null);
+                iTRAQ_ReporterIonIntensities = (double[]) itraqArrayType.Assemble((byte[]) basicColumns[++column], null);
+                TMT_ReporterIonIntensities = (double[]) tmtArrayType.Assemble((byte[]) basicColumns[++column], null);
                 PeptideGroup = Convert.ToInt32(basicColumns[++column]);
             }
             #endregion
@@ -146,10 +149,10 @@ namespace IDPicker.Forms
                 lock (session)
                 {
                     basicColumns = session.CreateQuery(AggregateRow.Selection +
-                                                       ", psm.Peptide.iTRAQ_ReporterIonIntensities" +
-                                                       ", psm.Peptide.TMT_ReporterIonIntensities" +
+                                                       ", " + RollupSQL + "(s.iTRAQ_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.TMT_ReporterIonIntensities)" +
                                                        ", psm.Peptide " +
-                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
+                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein, DataFilter.PeptideSpectrumMatchToSpectrum) +
                                                        "GROUP BY psm.Peptide.id").List<object[]>();
 
                     // these columns are not affected by the view filter
@@ -167,8 +170,8 @@ namespace IDPicker.Forms
                 : base(basicColumns, detailedColumns, dataFilter)
             {
                 int column = AggregateRow.ColumnCount - 1;
-                iTRAQ_ReporterIonIntensities = (double[])basicColumns[++column];
-                TMT_ReporterIonIntensities = (double[])basicColumns[++column];
+                iTRAQ_ReporterIonIntensities = (double[]) itraqArrayType.Assemble((byte[]) basicColumns[++column], null);
+                TMT_ReporterIonIntensities = (double[]) tmtArrayType.Assemble((byte[]) basicColumns[++column], null);
                 Peptide = (DataModel.Peptide)basicColumns[++column];
             }
             #endregion
@@ -176,9 +179,6 @@ namespace IDPicker.Forms
 
         public class DistinctMatchRow : AggregateRow
         {
-            private static readonly iTRAQArrayUserType itraqArrayType = new iTRAQArrayUserType();
-            private static readonly TMTArrayUserType tmtArrayType = new TMTArrayUserType();
-
             public Peptide Peptide { get; private set; }
             public DistinctMatchKey DistinctMatch { get; private set; }
             public PeptideSpectrumMatch PeptideSpectrumMatch { get; private set; }
@@ -190,8 +190,8 @@ namespace IDPicker.Forms
                 lock (session)
                 {
                     basicColumns = session.CreateQuery(AggregateRow.Selection +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.iTRAQ_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.TMT_ReporterIonIntensities)" +
                                                        ", psm.Peptide, psm, psm.DistinctMatchKey, psm.DistinctMatchId " +
                                                        dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein, DataFilter.PeptideSpectrumMatchToSpectrum) +
                                                        "GROUP BY psm.DistinctMatchId").List<object[]>();
@@ -329,8 +329,8 @@ namespace IDPicker.Forms
             if (pivot.Text.Contains("Spectra")) valueColumn = "COUNT(DISTINCT psm.Spectrum.id)";
             else if (pivot.Text.Contains("Matches")) valueColumn = "COUNT(DISTINCT psm.DistinctMatchId)";
             else if (pivot.Text.Contains("Peptides")) valueColumn = "COUNT(DISTINCT psm.Peptide.id)";
-            else if (pivot.Text.Contains("iTRAQ")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)";
-            else if (pivot.Text.Contains("TMT")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)";
+            else if (pivot.Text.Contains("iTRAQ")) valueColumn = Row.RollupSQL + "(s.iTRAQ_ReporterIonIntensities)";
+            else if (pivot.Text.Contains("TMT")) valueColumn = Row.RollupSQL + "(s.TMT_ReporterIonIntensities)";
             else if (pivot.Text.Contains("MS1")) valueColumn = "DISTINCT_SUM(xic.PeakIntensity)";
             else throw new ArgumentException("unable to handle pivot column " + pivot.Text);
 

@@ -93,8 +93,7 @@ TotalCounts::TotalCounts(sqlite3* idpDbConnection)
                                                  "ORDER BY IsDecoy\n");
     {
         vector<int> peptideLevelDecoys;
-        int i = 0;
-        BOOST_FOREACH(sqlite::query::rows queryRow, peptideLevelDecoysQuery)
+        for(sqlite::query::rows queryRow : peptideLevelDecoysQuery)
             peptideLevelDecoys.push_back(queryRow.get<int>(0));
 
         // without both targets and decoys, FDR can't be calculated
@@ -120,8 +119,7 @@ TotalCounts::TotalCounts(sqlite3* idpDbConnection)
                                                   "ORDER BY IsDecoy");
     {
         vector<int> spectrumLevelDecoys;
-        int i = 0;
-        BOOST_FOREACH(sqlite::query::rows queryRow, spectrumLevelDecoysQuery)
+        for(sqlite::query::rows queryRow : spectrumLevelDecoysQuery)
             spectrumLevelDecoys.push_back(queryRow.get<int>(0));
 
         // without both targets and decoys, FDR can't be calculated

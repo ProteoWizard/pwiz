@@ -557,6 +557,7 @@ namespace IDPicker.DataModel
             catch(Exception e)
             {
                 OnFilteringProgress(new FilteringProgressEventArgs("", 0, 0, e));
+                throw e;
             }
         }
 

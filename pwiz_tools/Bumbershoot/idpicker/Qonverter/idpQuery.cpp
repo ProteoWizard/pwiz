@@ -106,6 +106,7 @@ typedef pair<string, int> SqlColumn;
 BOOST_ENUM_VALUES(QuantitationRollupMethod, const char*, \
         (Invalid)("") \
         (Sum)("DISTINCT_DOUBLE_ARRAY_SUM") \
+        (Mean)("DISTINCT_DOUBLE_ARRAY_MEAN") \
         (Tukey)("DISTINCT_DOUBLE_ARRAY_TUKEY_BIWEIGHT_AVERAGE") \
         (TukeyLog)("DISTINCT_DOUBLE_ARRAY_TUKEY_BIWEIGHT_LOG_AVERAGE") \
     );
@@ -173,7 +174,7 @@ SqlColumn getSqlColumn(ProteinColumn column)
 
         case ProteinColumn::Invalid: return make_pair("", 0);
         case ProteinColumn::Accession: return make_pair("GROUP_CONCAT(DISTINCT pro.Accession)", SQLITE_TEXT);
-        case ProteinColumn::GeneId: return make_pair("GROUP_CONCAT(DISTINCT pro.GeneId)", SQLITE_TEXT);
+        case ProteinColumn::GeneId: return make_pair("SORT_UNMAPPED_LAST(GROUP_CONCAT(DISTINCT pro.GeneId))", SQLITE_TEXT);
         case ProteinColumn::GeneGroup: return make_pair("pro.GeneGroup", SQLITE_INTEGER);
         case ProteinColumn::IsDecoy: return make_pair("pro.IsDecoy", SQLITE_INTEGER);
         case ProteinColumn::Cluster: return make_pair("pro.Cluster", SQLITE_INTEGER);
@@ -234,7 +235,7 @@ SqlColumn getSqlColumn(PeptideColumn column)
         case PeptideColumn::ProteinCount: return make_pair("COUNT(DISTINCT pro.Id)", SQLITE_INTEGER);
         case PeptideColumn::ProteinGroupCount: return make_pair("COUNT(DISTINCT pro.ProteinGroup)", SQLITE_INTEGER);
         case PeptideColumn::ProteinAccessions: return make_pair("GROUP_CONCAT(DISTINCT pro.Accession)", SQLITE_TEXT);
-        case PeptideColumn::GeneIds: return make_pair("GROUP_CONCAT(DISTINCT pro.GeneId)", SQLITE_TEXT);
+        case PeptideColumn::GeneIds: return make_pair("SORT_UNMAPPED_LAST(GROUP_CONCAT(DISTINCT pro.GeneId))", SQLITE_TEXT);
         case PeptideColumn::GeneGroups: return make_pair("GROUP_CONCAT(DISTINCT pro.GeneGroup)", SQLITE_TEXT);
         case PeptideColumn::IsDecoy: return make_pair("pro.IsDecoy", SQLITE_INTEGER);
         case PeptideColumn::Cluster: return make_pair("pro.Cluster", SQLITE_INTEGER);

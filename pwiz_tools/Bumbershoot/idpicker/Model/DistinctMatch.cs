@@ -114,7 +114,7 @@ namespace IDPicker.DataModel
         public DistinctMatchKey (Peptide peptide, PeptideSpectrumMatch psm, DistinctMatchFormat format, string key, long? id)
         {
             Peptide = peptide;
-            Key = key;
+            Key = key.Replace(",", Properties.Settings.Default.GroupConcatSeparator);
             Format = format;
             Id = id;
 
@@ -179,7 +179,7 @@ namespace IDPicker.DataModel
             if (Format.AreModificationsDistinct && tokens.Length > modsIndex)
             {
                 var modifications = tokens[modsIndex].Split(' ').Last()
-                                                     .Split(',')
+                                                     .Split(Properties.Settings.Default.GroupConcatSeparator[0])
                                                      .Select(o => o.Split('@'))
                                                      .Select(o => new { Offset = Convert.ToInt32(o[1]), DeltaMass = Convert.ToDouble(o[0], CultureInfo.InvariantCulture) })
                                                      .OrderByDescending(o => o.Offset);

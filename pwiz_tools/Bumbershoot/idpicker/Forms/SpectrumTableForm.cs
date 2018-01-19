@@ -357,8 +357,8 @@ namespace IDPicker.Forms
                 if (!String.IsNullOrEmpty(modificationString) && modificationString.Contains('@'))
                 {
                     // build modified sequence
-                    var modifications = modificationString.Split(' ').Last()
-                                                          .Split(',')
+                    var modifications = modificationString.Split(' ').Last().Replace(",", Properties.Settings.Default.GroupConcatSeparator)
+                                                          .Split(Properties.Settings.Default.GroupConcatSeparator[0])
                                                           .Select(o => o.Split('@'))
                                                           .Select(o => new { Offset = Convert.ToInt32(o[1]), DeltaMass = Convert.ToDouble(o[0]) })
                                                           .OrderByDescending(o => o.Offset);

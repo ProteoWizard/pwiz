@@ -402,6 +402,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="ProgressMonitor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings.cs" />
     <EmbeddedResource Include="Forms\AddPathDialog.resx">
       <DependentUpon>AddPathDialog.cs</DependentUpon>
     </EmbeddedResource>
@@ -506,6 +507,10 @@
     <ProjectReference Include="Model\Model.csproj">
       <Project>{723405E1-1EE4-4978-9470-0B1F28B1A215}</Project>
       <Name>Model</Name>
+    </ProjectReference>
+    <ProjectReference Include="PureControls\PureControls.csproj">
+      <Project>{4b39a2a4-fb21-418d-9226-7d18dae81180}</Project>
+      <Name>PureControls</Name>
     </ProjectReference>
     <ProjectReference Include="Util\STL_Containers\STL_Containers.csproj">
       <Project>{D6BD694C-FF6E-4962-A05D-59ACD6CBD6A3}</Project>

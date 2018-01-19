@@ -118,6 +118,8 @@ namespace IDPicker.Forms
             this.embedGeneMetadataWarningCheckBox = new System.Windows.Forms.CheckBox();
             this.groupSeparatorTextBox = new System.Windows.Forms.TextBox();
             this.label18 = new System.Windows.Forms.Label();
+            this.label19 = new System.Windows.Forms.Label();
+            this.quantitationRollupMethodComboBox = new System.Windows.Forms.ComboBox();
             label5 = new System.Windows.Forms.Label();
             lblMinDistinctPeptides = new System.Windows.Forms.Label();
             label8 = new System.Windows.Forms.Label();
@@ -191,7 +193,7 @@ namespace IDPicker.Forms
             this.gbSearchPaths.Controls.Add(this.searchPathsTabControl);
             this.gbSearchPaths.Location = new System.Drawing.Point(292, 12);
             this.gbSearchPaths.Name = "gbSearchPaths";
-            this.gbSearchPaths.Size = new System.Drawing.Size(490, 627);
+            this.gbSearchPaths.Size = new System.Drawing.Size(490, 647);
             this.gbSearchPaths.TabIndex = 112;
             this.gbSearchPaths.TabStop = false;
             this.gbSearchPaths.Text = "Search Paths";
@@ -255,7 +257,7 @@ namespace IDPicker.Forms
             this.searchPathsTabControl.Location = new System.Drawing.Point(17, 20);
             this.searchPathsTabControl.Name = "searchPathsTabControl";
             this.searchPathsTabControl.SelectedIndex = 0;
-            this.searchPathsTabControl.Size = new System.Drawing.Size(377, 595);
+            this.searchPathsTabControl.Size = new System.Drawing.Size(377, 615);
             this.searchPathsTabControl.TabIndex = 107;
             this.searchPathsTabControl.SelectedIndexChanged += new System.EventHandler(this.lbSearchPaths_SelectedIndexChanged);
             // 
@@ -268,7 +270,7 @@ namespace IDPicker.Forms
             this.tabFastaFilepaths.Location = new System.Drawing.Point(4, 22);
             this.tabFastaFilepaths.Name = "tabFastaFilepaths";
             this.tabFastaFilepaths.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFastaFilepaths.Size = new System.Drawing.Size(369, 569);
+            this.tabFastaFilepaths.Size = new System.Drawing.Size(369, 589);
             this.tabFastaFilepaths.TabIndex = 2;
             this.tabFastaFilepaths.Text = "FASTA";
             this.tabFastaFilepaths.UseVisualStyleBackColor = true;
@@ -295,7 +297,7 @@ namespace IDPicker.Forms
             this.lbFastaPaths.Location = new System.Drawing.Point(10, 22);
             this.lbFastaPaths.Name = "lbFastaPaths";
             this.lbFastaPaths.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.lbFastaPaths.Size = new System.Drawing.Size(363, 541);
+            this.lbFastaPaths.Size = new System.Drawing.Size(363, 561);
             this.lbFastaPaths.TabIndex = 49;
             // 
             // tabSourceSearchPaths
@@ -307,7 +309,7 @@ namespace IDPicker.Forms
             this.tabSourceSearchPaths.Location = new System.Drawing.Point(4, 22);
             this.tabSourceSearchPaths.Name = "tabSourceSearchPaths";
             this.tabSourceSearchPaths.Padding = new System.Windows.Forms.Padding(3);
-            this.tabSourceSearchPaths.Size = new System.Drawing.Size(369, 569);
+            this.tabSourceSearchPaths.Size = new System.Drawing.Size(369, 589);
             this.tabSourceSearchPaths.TabIndex = 1;
             this.tabSourceSearchPaths.Text = "Source";
             this.tabSourceSearchPaths.UseVisualStyleBackColor = true;
@@ -343,7 +345,7 @@ namespace IDPicker.Forms
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnCancel.Location = new System.Drawing.Point(707, 645);
+            this.btnCancel.Location = new System.Drawing.Point(707, 669);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 114;
@@ -355,7 +357,7 @@ namespace IDPicker.Forms
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOk.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnOk.Location = new System.Drawing.Point(626, 645);
+            this.btnOk.Location = new System.Drawing.Point(626, 669);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 113;
@@ -671,7 +673,7 @@ namespace IDPicker.Forms
             // qonverterSettingsButton
             // 
             this.qonverterSettingsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.qonverterSettingsButton.Location = new System.Drawing.Point(12, 645);
+            this.qonverterSettingsButton.Location = new System.Drawing.Point(12, 669);
             this.qonverterSettingsButton.Name = "qonverterSettingsButton";
             this.qonverterSettingsButton.Size = new System.Drawing.Size(115, 23);
             this.qonverterSettingsButton.TabIndex = 135;
@@ -797,7 +799,7 @@ namespace IDPicker.Forms
             // 
             this.sourceExtensionsTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.sourceExtensionsTextBox.Location = new System.Drawing.Point(229, 647);
+            this.sourceExtensionsTextBox.Location = new System.Drawing.Point(229, 671);
             this.sourceExtensionsTextBox.Name = "sourceExtensionsTextBox";
             this.sourceExtensionsTextBox.Size = new System.Drawing.Size(380, 20);
             this.sourceExtensionsTextBox.TabIndex = 137;
@@ -806,7 +808,7 @@ namespace IDPicker.Forms
             // 
             this.label10.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(133, 650);
+            this.label10.Location = new System.Drawing.Point(133, 674);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(97, 13);
             this.label10.TabIndex = 138;
@@ -958,11 +960,37 @@ namespace IDPicker.Forms
             this.label18.TabIndex = 143;
             this.label18.Text = "Group separator:";
             // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(15, 641);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(133, 13);
+            this.label19.TabIndex = 144;
+            this.label19.Text = "Quantitation rollup method:";
+            // 
+            // quantitationRollupMethodComboBox
+            // 
+            this.quantitationRollupMethodComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.quantitationRollupMethodComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.quantitationRollupMethodComboBox.FormattingEnabled = true;
+            this.quantitationRollupMethodComboBox.Items.AddRange(new object[] {
+            "Sum",
+            "Mean",
+            "Tukey Biweight",
+            "Tukey Log Biweight"});
+            this.quantitationRollupMethodComboBox.Location = new System.Drawing.Point(154, 638);
+            this.quantitationRollupMethodComboBox.Name = "quantitationRollupMethodComboBox";
+            this.quantitationRollupMethodComboBox.Size = new System.Drawing.Size(132, 21);
+            this.quantitationRollupMethodComboBox.TabIndex = 147;
+            // 
             // DefaultSettingsManagerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(794, 672);
+            this.ClientSize = new System.Drawing.Size(794, 696);
+            this.Controls.Add(this.quantitationRollupMethodComboBox);
+            this.Controls.Add(this.label19);
             this.Controls.Add(this.groupSeparatorTextBox);
             this.Controls.Add(this.label18);
             this.Controls.Add(this.embedGeneMetadataWarningCheckBox);
@@ -1069,5 +1097,7 @@ namespace IDPicker.Forms
         public System.Windows.Forms.ComboBox maxPrecursorMzToleranceUnitsComboBox;
         private System.Windows.Forms.TextBox groupSeparatorTextBox;
         private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.Label label19;
+        public System.Windows.Forms.ComboBox quantitationRollupMethodComboBox;
     }
 }

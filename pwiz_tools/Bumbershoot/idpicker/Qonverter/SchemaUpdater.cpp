@@ -201,6 +201,27 @@ namespace {
         }
     }
 
+    TEST_CASE("SortUnmappedLast tests") {
+
+        sqlite::database db(":memory:");
+        db.load_extension("IdpSqlExtensions");
+
+        IDPicker::setGroupConcatSeparator(",");
+
+        CHECK("Bar,Baz,Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Foo,Baz,Bar')").begin()->get<string>(0));
+        CHECK("Bar,Baz,Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Foo,Bar,Baz')").begin()->get<string>(0));
+        CHECK("Bar,Baz,Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Bar,Baz,Foo')").begin()->get<string>(0));
+
+        CHECK("Bar,Foo,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Foo,Bar,Unmapped_Foo')").begin()->get<string>(0));
+        CHECK("Bar,Foo,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Foo,Unmapped_Foo,Bar')").begin()->get<string>(0));
+        CHECK("Bar,Foo,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Unmapped_Foo,Bar,Foo')").begin()->get<string>(0));
+        CHECK("Bar,Foo,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Unmapped_Foo,Foo,Bar')").begin()->get<string>(0));
+
+        CHECK("Bar,Unmapped_Baz,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Bar,Unmapped_Baz,Unmapped_Foo')").begin()->get<string>(0));
+        CHECK("Bar,Unmapped_Baz,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Unmapped_Baz,Bar,Unmapped_Foo')").begin()->get<string>(0));
+        CHECK("Bar,Unmapped_Baz,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Unmapped_Baz,Unmapped_Foo,Bar')").begin()->get<string>(0));
+        CHECK("Bar,Unmapped_Baz,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Unmapped_Foo,Unmapped_Baz,Bar')").begin()->get<string>(0));
+    }
 
 void update_17_to_18(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {

@@ -32,9 +32,17 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Security.Permissions;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace IDPicker.Controls
 {
+    [ClassInterface(ClassInterfaceType.AutoDispatch)]
+    [ComplexBindingProperties("DataSource", "DataMember")]
+    [ComVisible(true)]
+    [DefaultEvent("CellContentClick")]
+    [Designer("System.Windows.Forms.Design.DataGridViewDesigner, System.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")]
+    [Docking(DockingBehavior.Ask)]
+    [Editor("System.Windows.Forms.Design.DataGridViewComponentEditor, System.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", typeof(ComponentEditor))]
     public class AutomationDataGridView : PreviewDataGridView, IRawElementProviderFragmentRoot, IGridProvider, ISelectionProvider, ITableProvider
     {
         public const int WM_GETOBJECT = 0x3D;       // Windows Message GetObject

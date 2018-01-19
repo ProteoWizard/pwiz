@@ -87,7 +87,7 @@ struct Interpolator
         {
             newX.push_back(newX.back() + minSampleSize);
             newY.push_back(0);
-            int left = i-1;
+            //int left = i-1;
             //spline_cubic_val2(_size, &x[0], newX.back(), &left, &y[0], _ypp.get(), &newY.back(), &ypval, &yppval);
             spline_pchip_val(_size, &x[0], &y[0], _ypp.get(), 1, &newX.back(), &newY.back());
         }

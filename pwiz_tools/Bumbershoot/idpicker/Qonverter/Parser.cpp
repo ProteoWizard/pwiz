@@ -322,8 +322,8 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
                     break;
                 }
 
-                BOOST_FOREACH_FIELD((const string& key)(const string& value), a_b) differingParametersByAnalysisName[otherAnalysis->name].insert(key);
-                BOOST_FOREACH_FIELD((const string& key)(const string& value), b_a) differingParametersByAnalysisName[otherAnalysis->name].insert(key);
+                BOOST_FOREACH_FIELD((const string& key)(const string& value), a_b) differingParametersByAnalysisName[otherAnalysis->name].insert(key), value;
+                BOOST_FOREACH_FIELD((const string& key)(const string& value), b_a) differingParametersByAnalysisName[otherAnalysis->name].insert(key), value;
             }
 
             if (!sameAnalysis.get())

@@ -157,8 +157,8 @@ namespace IDPicker.Forms
                                                        ", pro" +
                                                        ", COUNT(DISTINCT pro.id)" +
                                                        ", AVG(pro.Coverage)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.iTRAQ_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.TMT_ReporterIonIntensities)" +
                                                        ", DISTINCT_GROUP_CONCAT(ROUND_TO_INTEGER(mod.MonoMassDelta) || '@' || pm.Site || PARENS(pi.Offset+pm.Offset+1))" +
                                                        ", pro.ProteinGroup" +
                                                        dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
@@ -207,8 +207,8 @@ namespace IDPicker.Forms
                 lock (session)
                 {
                     basicColumns = session.CreateQuery(AggregateRow.Selection +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.iTRAQ_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.TMT_ReporterIonIntensities)" +
                                                        ", DISTINCT_GROUP_CONCAT(ROUND_TO_INTEGER(mod.MonoMassDelta) || '@' || pm.Site || PARENS(pi.Offset+pm.Offset+1))" +
                                                        ", pro" +
                                                        dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
@@ -269,13 +269,13 @@ namespace IDPicker.Forms
                 lock (session)
                 {
                     basicColumns = session.CreateQuery(AggregateRow.Selection +
-                                                       ", DISTINCT_GROUP_CONCAT(pro.GeneId)" +
+                                                       ", SORT_UNMAPPED_LAST(DISTINCT_GROUP_CONCAT(pro.GeneId))" +
                                                        ", pro" +
                                                        ", COUNT(DISTINCT pro.GeneId)" +
                                                        ", COUNT(DISTINCT pro.Id)" +
                                                        ", AVG(pro.Coverage)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.iTRAQ_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.TMT_ReporterIonIntensities)" +
                                                        ", pro.GeneGroup" +
                                                        dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
                                                                                          DataFilter.ProteinToSpectrum) +
@@ -323,8 +323,8 @@ namespace IDPicker.Forms
                 {
                     basicColumns = session.CreateQuery(AggregateRow.Selection +
                                                        ", COUNT(DISTINCT pro.Id)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.iTRAQ_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.TMT_ReporterIonIntensities)" +
                                                        ", pro" +
                                                        dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
                                                                                          DataFilter.ProteinToSpectrum) +
@@ -497,8 +497,8 @@ namespace IDPicker.Forms
             if (pivot.Text.Contains("Spectra")) valueColumn = "COUNT(DISTINCT psm.Spectrum.id)";
             else if (pivot.Text.Contains("Matches")) valueColumn = "COUNT(DISTINCT psm.DistinctMatchId)";
             else if (pivot.Text.Contains("Peptides")) valueColumn = "COUNT(DISTINCT psm.Peptide.id)";
-            else if (pivot.Text.Contains("iTRAQ")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)";
-            else if (pivot.Text.Contains("TMT")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)";
+            else if (pivot.Text.Contains("iTRAQ")) valueColumn = Row.RollupSQL + "(s.iTRAQ_ReporterIonIntensities)";
+            else if (pivot.Text.Contains("TMT")) valueColumn = Row.RollupSQL + "(s.TMT_ReporterIonIntensities)";
             else if (pivot.Text.Contains("MS1")) valueColumn = "DISTINCT_SUM(xic.PeakIntensity)";
             else throw new ArgumentException("unable to handle pivot column " + pivot.Text);
 

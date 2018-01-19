@@ -762,7 +762,6 @@ struct Merger::Impl
     {
         if (!skipPeptideMismatchCheck)
         {
-            cout << "checking some shit!" << endl;
             execute(db, mismatchedPeptideMappingSql % mergeSourceDatabase);
             if (sqlite3pp::query(db, "SELECT COUNT(*) FROM NewPeptideProteinMapping new, OldPeptideProteinMapping old WHERE new.Peptide = old.Peptide AND new.AccessionCount != old.AccessionCount").begin()->get<sqlite3_int64>(0) > 0)
             {
@@ -771,7 +770,6 @@ struct Merger::Impl
                                                           ", (SELECT GROUP_CONCAT(DISTINCT Accession) FROM merged.Protein pro, PeptideInstance pi WHERE OldId=pi.Peptide AND pi.Protein=pro.Id) AS OldAccessions"
                                                           " FROM NewPeptideProteinMapping new, OldPeptideProteinMapping old WHERE new.Peptide = old.Peptide AND new.AccessionCount != old.AccessionCount GROUP BY new.Peptide");
                 sqlite3pp::query mismatchedPeptideDetails(db, (mismatchedPeptideDetailsSql % mergeSourceDatabase).str().c_str());
-                int i = 10;
                 stringstream errorMsg("the same peptide maps to different sets of proteins (which is not allowed); this can be caused by merging idpDBs that were imported with different protein databases, or merging after applying 'Crop Assembly'; for example:\n");
                 errorMsg << "Peptide\tNewAccessions\tOldAccessions\n";
                 for (sqlite3pp::query::rows row : mismatchedPeptideDetails)
