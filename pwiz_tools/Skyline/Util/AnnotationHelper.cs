@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Util
             {
                 case AnnotationDef.AnnotationType.text:
                 case AnnotationDef.AnnotationType.number:
-                    return settings.MeasuredResults.Chromatograms
+                    return settings.MeasuredResults == null ? new string[0] : settings.MeasuredResults.Chromatograms
                         .Select(c => c.Annotations.GetAnnotation(group)).Distinct().Where(s => s != null).ToArray();
                 case AnnotationDef.AnnotationType.value_list:
                     return annotation.Items.ToArray();
