@@ -39,6 +39,7 @@ rule vendor-reader-libraries ( properties * )
     libraries += <library>$(vendor_reader_path)/Shimadzu//pwiz_reader_shimadzu ;
     libraries += <library>$(vendor_reader_path)/Thermo//pwiz_reader_thermo ;
     libraries += <library>$(vendor_reader_path)/UIMF//pwiz_reader_uimf ;
+    libraries += <library>$(vendor_reader_path)/UNIFI//pwiz_reader_unifi ;
     libraries += <library>$(vendor_reader_path)/Waters//pwiz_reader_waters ;
     return $(libraries) ;
 }
@@ -60,4 +61,5 @@ build-project-if-exists Bruker ;
 build-project-if-exists Shimadzu ;
 build-project-if-exists Thermo ;
 build-project-if-exists UIMF ;
+build-project-if-exists UNIFI ;
 build-project-if-exists Waters ;
