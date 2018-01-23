@@ -82,6 +82,19 @@ void ToStdVector(cli::array<managed_value_type>^ managedArray, std::vector<nativ
 
 
 template<typename managed_value_type, typename native_value_type>
+void ToStdVector(cli::array<managed_value_type>^ managedArray, int sourceIndex, std::vector<native_value_type>& stdVector, int destinationIndex, int count)
+{
+    stdVector.clear();
+    if (managedArray->Length > 0)
+    {
+        cli::pin_ptr<managed_value_type> pin = &managedArray[sourceIndex];
+        native_value_type* begin = (native_value_type*)pin;
+        stdVector.assign(begin + destinationIndex, begin + destinationIndex + count);
+    }
+}
+
+
+template<typename managed_value_type, typename native_value_type>
 void ToStdVector(System::Collections::Generic::IList<managed_value_type>^ managedList, std::vector<native_value_type>& stdVector)
 {
     stdVector.clear();
