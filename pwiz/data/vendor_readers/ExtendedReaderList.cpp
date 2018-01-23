@@ -31,6 +31,7 @@
 #include "Shimadzu/Reader_Shimadzu.hpp"
 #include "Thermo/Reader_Thermo.hpp"
 #include "UIMF/Reader_UIMF.hpp"
+#include "UNIFI/Reader_UNIFI.hpp"
 #include "Waters/Reader_Waters.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
@@ -48,6 +49,7 @@ PWIZ_API_DECL ExtendedReaderList::ExtendedReaderList()
     push_back(ReaderPtr(new Reader_Shimadzu));
     push_back(ReaderPtr(new Reader_Thermo));
     push_back(ReaderPtr(new Reader_UIMF));
+    push_back(ReaderPtr(new Reader_UNIFI));
     push_back(ReaderPtr(new Reader_Waters));
 }
 
