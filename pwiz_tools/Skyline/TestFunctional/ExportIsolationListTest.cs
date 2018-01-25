@@ -210,7 +210,7 @@ namespace pwiz.SkylineTestFunctional
             var peptideB = AsSmallMoleculeMasses ? 
                 CustomMolecule.INVARIANT_NAME_DETAIL + " [1330.628231/1331.376801] (light)" :
                 SmallMoleculeTestMode == RefinementSettings.ConvertToSmallMoleculesMode.none ?
-                conversionDecorator+"IKNLQS[+79.9663]LDPSH (light)" : 
+                conversionDecorator+"IKNLQS[+79.966331]LDPSH (light)" : 
                 conversionDecorator+"IKNLQS[+80.0]LDPSH (light)";
             var polarity = AsSmallMoleculesNegative ? "Negative" : "Positive";
             var thermoQExactiveIsolationListExporter = new ThermoQExactiveIsolationListExporter(SkylineWindow.Document)
