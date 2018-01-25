@@ -180,7 +180,7 @@ namespace pwiz.Skyline.SettingsUI
             comboRegressionFit.SelectedItem = _peptideSettings.Quantification.RegressionFit;
             comboQuantMsLevel.SelectedIndex = Math.Max(0, _quantMsLevels.IndexOf(_peptideSettings.Quantification.MsLevel));
             tbxQuantUnits.Text = _peptideSettings.Quantification.Units;
-
+            cbxPiecewiseLod.Checked = _peptideSettings.Quantification.UsePiecewiseLod;
             UpdateLibraryDriftPeakWidthControls();
         }
 
@@ -482,7 +482,8 @@ namespace pwiz.Skyline.SettingsUI
                 .ChangeRegressionWeighting(comboWeighting.SelectedItem as RegressionWeighting)
                 .ChangeRegressionFit(comboRegressionFit.SelectedItem as RegressionFit)
                 .ChangeMsLevel(_quantMsLevels[comboQuantMsLevel.SelectedIndex])
-                .ChangeUnits(tbxQuantUnits.Text);
+                .ChangeUnits(tbxQuantUnits.Text)
+                .ChangeUsePiecewiseLod(cbxPiecewiseLod.Checked);
 
             return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome)
                     .ChangeAbsoluteQuantification(quantification);

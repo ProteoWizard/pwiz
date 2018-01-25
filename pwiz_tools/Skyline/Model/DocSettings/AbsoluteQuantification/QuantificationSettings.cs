@@ -77,6 +77,13 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.Units = string.IsNullOrEmpty(units) ? null : units);
         }
 
+        public bool UsePiecewiseLod { get; private set; }
+
+        public QuantificationSettings ChangeUsePiecewiseLod(bool usePiecewiseLod)
+        {
+            return ChangeProp(ImClone(this), im => im.UsePiecewiseLod = usePiecewiseLod);
+        }
+
         #region Equality Members
 
         protected bool Equals(QuantificationSettings other)
@@ -85,7 +92,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                    Equals(RegressionFit, other.RegressionFit) && 
                    Equals(NormalizationMethod, other.NormalizationMethod) &&
                    Equals(MsLevel, other.MsLevel) &&
-                   Equals(Units, other.Units);
+                   Equals(Units, other.Units) &&
+                   Equals(UsePiecewiseLod, other.UsePiecewiseLod);
         }
 
         public override bool Equals(object obj)
@@ -105,6 +113,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 hashCode = (hashCode*397) ^ NormalizationMethod.GetHashCode();
                 hashCode = (hashCode*397) ^ MsLevel.GetHashCode();
                 hashCode = (hashCode*397) ^ (Units == null ? 0 : Units.GetHashCode());
+                hashCode = (hashCode*397) ^ UsePiecewiseLod.GetHashCode();
                 return hashCode;
             }
         }
@@ -118,7 +127,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             fit,
             normalization,
             ms_level,
-            units
+            units,
+            piecewise_lod,
         }
         XmlSchema IXmlSerializable.GetSchema()
         {
@@ -136,6 +146,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             NormalizationMethod = NormalizationMethod.FromName(reader.GetAttribute(Attr.normalization));
             MsLevel = reader.GetNullableIntAttribute(Attr.ms_level);
             Units = reader.GetAttribute(Attr.units);
+            UsePiecewiseLod = reader.GetBoolAttribute(Attr.piecewise_lod, false);
             bool empty = reader.IsEmptyElement;
             reader.Read();
             if (!empty)
@@ -160,6 +171,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
             writer.WriteAttributeNullable(Attr.ms_level, MsLevel);
             writer.WriteAttributeIfString(Attr.units, Units);
+            writer.WriteAttribute(Attr.piecewise_lod, UsePiecewiseLod, false);
         }
 
         public static QuantificationSettings Deserialize(XmlReader reader)

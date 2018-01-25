@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 if (minX <= maxX)
                 {
                     int interpolatedLinePointCount = 100;
-                    if (!options.LogPlot)
+                    if (!options.LogPlot && !CalibrationCurve.TurningPoint.HasValue)
                     {
                         if (regressionFit == RegressionFit.LINEAR_THROUGH_ZERO)
                         {
@@ -295,8 +295,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 double? xSelected = curveFitter.GetCalculatedXValue(CalibrationCurve, _skylineWindow.SelectedResultsIndex);
                 if (xSelected.HasValue && ySelected.HasValue)
                 {
+                    ArrowObj arrow = new ArrowObj(xSelected.Value, ySelected.Value, xSelected.Value,
+                        ySelected.Value) { Line = { Color = GraphSummary.ColorSelected } };
+                    zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
                     var selectedLineColor = Color.FromArgb(128, GraphSummary.ColorSelected);
-                    var verticalLine = new LineObj(xSelected.Value, ySelected.Value, xSelected.Value, options.LogPlot ? minY : 0)
+                    var verticalLine = new LineObj(xSelected.Value, ySelected.Value, xSelected.Value, options.LogPlot ? double.MinValue : 0)
                     {
                         Line = { Color = selectedLineColor },
                         Location = { CoordinateFrame = CoordType.AxisXYScale },

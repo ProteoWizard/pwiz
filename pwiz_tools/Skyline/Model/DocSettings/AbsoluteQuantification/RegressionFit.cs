@@ -38,6 +38,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static readonly RegressionFit QUADRATIC = new RegressionFit("quadratic", // Not L10N
             () => QuantificationStrings.RegressionFit_QUADRATIC_Quadratic, QuadraticFit);
 
+        public static readonly RegressionFit TWO_PIECE_LINEAR = new RegressionFit("two_piece_linear", // Not L10N
+            () => "Two piece linear", LinearFit);
         public static readonly ImmutableList<RegressionFit> All = ImmutableList<RegressionFit>.ValueOf(new[]
         {
             NONE, LINEAR_THROUGH_ZERO, LINEAR, QUADRATIC

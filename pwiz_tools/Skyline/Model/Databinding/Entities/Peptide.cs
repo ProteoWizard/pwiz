@@ -375,6 +375,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        
+
         public PeptideQuantifier GetPeptideQuantifier()
         {
             var quantifier = PeptideQuantifier.GetPeptideQuantifier(()=>DataSchema.GetReplicateSummaries().GetNormalizationData(), 
