@@ -1043,6 +1043,25 @@ namespace pwiz.Skyline.Model.Serialization
             return list.ToArray();
         }
 
+        // Deal with implied protonation in older documents when it's not the usual "peptide is actually precursor" case
+        private bool IonFormulaIsImplicitProtonGainOrLoss(bool ionFormulaHasAdduct, ref string ionFormula, Peptide peptide)
+        {
+            if (!ionFormulaHasAdduct &&
+                ionFormula.Contains(BioMassCalc.H) &&
+                peptide.CustomMolecule.Formula.Contains(BioMassCalc.H))
+            {
+                // Possibly first seen precursor in XML was altered or inserted by user -  e.g. "peptide" formula is the protonated form, 
+                // but the first precursor in the XML is deprotonated so formulae differ by 2H
+                // Also, precursor might have labels built in, make sure those don't end up in the neutral molecule
+                var peptideFormulaDict = Molecule.Parse(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(peptide.CustomMolecule.Formula));
+                ionFormula = BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(ionFormula);
+                var precursorFormulaDict = Molecule.Parse(ionFormula);
+                // Ion and molecule formulae should differ in H count only
+                return peptideFormulaDict.Difference(precursorFormulaDict).All(kvp => kvp.Value == 0 || kvp.Key.Equals(BioMassCalc.H));
+            }
+            return false;
+        }
+
         // Read the first-seen transition group and try to discern the actual neutral formula of the molecule
         // Needed since we actually stored the precursor description rather than the molecule description in v3.71 and earlier
         private Peptide HandlePre372CustomIonTransitionGroups(XmlReader reader, Peptide peptide, ref double massShift)
@@ -1076,9 +1095,15 @@ namespace pwiz.Skyline.Model.Serialization
                         {
                             // The "peptide" formula is actually the protonated precursor ion formula, work back to a neutral formula
                             var possiblyLabeledMolecule = new CustomMolecule(ionFormula, peptide.CustomMolecule.Name);
-                            var newFormula = Molecule.AdjustElementCount(possiblyLabeledMolecule.UnlabeledFormula, "H", -precursorCharge); // Not L10N
+                            var newFormula = Molecule.AdjustElementCount(possiblyLabeledMolecule.UnlabeledFormula, BioMassCalc.H, -precursorCharge);
                             peptide = new Peptide(new CustomMolecule(newFormula, peptide.CustomMolecule.Name));
                         }
+                    }
+                    else if (IonFormulaIsImplicitProtonGainOrLoss(ionFormulaHasAdduct, ref ionFormula, peptide))
+                    {
+                        // Implied protonation that's not the usual "peptide is actually precursor" case
+                        var newFormula = Molecule.AdjustElementCount(ionFormula, BioMassCalc.H, -precursorCharge); // From (de)protonated formula to neutral
+                        peptide = new Peptide(new CustomMolecule(newFormula, peptide.CustomMolecule.Name));
                     }
                 }
                 if (string.IsNullOrEmpty(ionFormula))

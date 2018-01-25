@@ -71,8 +71,9 @@ namespace pwiz.Skyline.Controls.Graphs
             if (index == 0)
             {
                 Program.MainWindow.SetAreaCVAnnotation(null, false);
-                toolStripNumericDetections.NumericUpDownControl.Maximum = _graphSummary.DocumentUIContainer.DocumentUI
-                    .MeasuredResults.Chromatograms.Count;
+                var results = _graphSummary.DocumentUIContainer.DocumentUI.MeasuredResults;
+                toolStripNumericDetections.NumericUpDownControl.Maximum =
+                    results != null ? results.Chromatograms.Count : 0;
             }
             else
             {

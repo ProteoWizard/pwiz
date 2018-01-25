@@ -113,8 +113,11 @@ namespace pwiz.Skyline.FileUI
 
         public string ApplyNameChange(string name)
         {
-            int lenRemaining = name.Length - Prefix.Length - Suffix.Length;
-            return name.Substring(Prefix.Length, lenRemaining);
+            if (name.StartsWith(Prefix))
+                name = name.Substring(Prefix.Length);
+            if (name.EndsWith(Suffix))
+                name = name.Substring(0, name.Length - Suffix.Length);
+            return name;
         }
 
         public void OkDialog()

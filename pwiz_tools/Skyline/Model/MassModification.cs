@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public const int MAX_PRECISION_TO_MATCH = 4;
 
-        public const int MAX_PRECISION_TO_KEEP = 4;
+        public const int MAX_PRECISION_TO_KEEP = 6;
 
 
         public MassModification(double mass, int precision)
