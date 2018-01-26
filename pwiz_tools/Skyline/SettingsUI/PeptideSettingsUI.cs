@@ -180,7 +180,12 @@ namespace pwiz.Skyline.SettingsUI
             comboRegressionFit.SelectedItem = _peptideSettings.Quantification.RegressionFit;
             comboQuantMsLevel.SelectedIndex = Math.Max(0, _quantMsLevels.IndexOf(_peptideSettings.Quantification.MsLevel));
             tbxQuantUnits.Text = _peptideSettings.Quantification.Units;
-            cbxPiecewiseLod.Checked = _peptideSettings.Quantification.UsePiecewiseLod;
+
+            comboLodMethod.Items.AddRange(LodCalculation.ALL.Cast<object>().ToArray());
+            comboLodMethod.SelectedItem = _peptideSettings.Quantification.LodCalculation;
+            tbxMaxLoqBias.Text = _peptideSettings.Quantification.MaxLoqBias.ToString();
+            tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
+
             UpdateLibraryDriftPeakWidthControls();
         }
 
@@ -483,7 +488,25 @@ namespace pwiz.Skyline.SettingsUI
                 .ChangeRegressionFit(comboRegressionFit.SelectedItem as RegressionFit)
                 .ChangeMsLevel(_quantMsLevels[comboQuantMsLevel.SelectedIndex])
                 .ChangeUnits(tbxQuantUnits.Text)
-                .ChangeUsePiecewiseLod(cbxPiecewiseLod.Checked);
+                .ChangeLodCalculation(comboLodMethod.SelectedItem as LodCalculation);
+            if (!string.IsNullOrEmpty(tbxMaxLoqBias.Text.Trim()))
+            {
+                double maxLoqBias;
+                if (!helper.ValidateDecimalTextBox(tbxMaxLoqBias, 0, null, out maxLoqBias))
+                {
+                    return null;
+                }
+                quantification = quantification.ChangeMaxLoqBias(maxLoqBias);
+            }
+            if (!string.IsNullOrEmpty(tbxMaxLoqCv.Text.Trim()))
+            {
+                double maxLoqCv;
+                if (!helper.ValidateDecimalTextBox(tbxMaxLoqCv, 0, null, out maxLoqCv))
+                {
+                    return null;
+                }
+                quantification = quantification.ChangeMaxLoqCv(maxLoqCv);
+            }
 
             return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome)
                     .ChangeAbsoluteQuantification(quantification);

@@ -109,6 +109,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
 
         public CalibrationCurve CalibrationCurve { get; private set; }
+        public FiguresOfMerit FiguresOfMerit { get; private set; }
 
         private void DisplayCalibrationCurve()
         {
@@ -118,6 +119,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             zedGraphControl.GraphPane.Legend.IsVisible = options.ShowLegend;
             _scatterPlots = null;
             CalibrationCurve = null;
+            FiguresOfMerit = FiguresOfMerit.EMPTY;
             SrmDocument document = DocumentUiContainer.DocumentUI;
             if (!document.Settings.HasResults)
             {
@@ -178,6 +180,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             zedGraphControl.GraphPane.XAxis.Title.Text = curveFitter.GetXAxisTitle();
             zedGraphControl.GraphPane.YAxis.Title.Text = curveFitter.GetYAxisTitle();
             CalibrationCurve = curveFitter.GetCalibrationCurve();
+            FiguresOfMerit = curveFitter.GetFiguresOfMerit(CalibrationCurve);
             double minX = double.MaxValue, maxX = double.MinValue;
             double minY = double.MaxValue;
             _scatterPlots = new CurveList();
@@ -286,6 +289,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 {
                     labelLines.Add(string.Format("{0}: {1}", // Not L10N
                         QuantificationStrings.Weighting, curveFitter.QuantificationSettings.RegressionWeighting));
+                }
+                string strFiguresOfMerit = FiguresOfMerit.ToString();
+                if (!string.IsNullOrEmpty(strFiguresOfMerit))
+                {
+                    labelLines.Add(strFiguresOfMerit);
                 }
             }
 

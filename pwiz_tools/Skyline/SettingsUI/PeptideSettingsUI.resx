@@ -2254,14 +2254,38 @@ W = (W0 + T*(Wmax-W0)/dtMax)
   <data name="&gt;&gt;tabIntegration.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <data name="groupBoxFiguresOfMerit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="tbxMaxLoqBias.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 33</value>
+  </data>
+  <data name="tbxMaxLoqBias.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="tbxMaxLoqBias.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxLoqBias.Name" xml:space="preserve">
+    <value>tbxMaxLoqBias</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxLoqBias.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxLoqBias.Parent" xml:space="preserve">
+    <value>groupBoxFiguresOfMerit</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxLoqBias.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="comboLodMethod.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 327</value>
+    <value>6, 73</value>
   </data>
   <data name="comboLodMethod.Size" type="System.Drawing.Size, System.Drawing">
     <value>121, 21</value>
   </data>
   <data name="comboLodMethod.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;comboLodMethod.Name" xml:space="preserve">
     <value>comboLodMethod</value>
@@ -2270,22 +2294,22 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboLodMethod.Parent" xml:space="preserve">
-    <value>tabQuantification</value>
+    <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;comboLodMethod.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="lblCaclulateLodBy.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblCaclulateLodBy.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 311</value>
+    <value>3, 57</value>
   </data>
   <data name="lblCaclulateLodBy.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 13</value>
   </data>
   <data name="lblCaclulateLodBy.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
+    <value>6</value>
   </data>
   <data name="lblCaclulateLodBy.Text" xml:space="preserve">
     <value>Calculate LOD by:</value>
@@ -2297,148 +2321,22 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblCaclulateLodBy.Parent" xml:space="preserve">
-    <value>tabQuantification</value>
+    <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblCaclulateLodBy.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="lblMaxLoqCvPct.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblMaxLoqCvPct.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="lblMaxLoqCvPct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>290, 280</value>
-  </data>
-  <data name="lblMaxLoqCvPct.Size" type="System.Drawing.Size, System.Drawing">
-    <value>15, 13</value>
-  </data>
-  <data name="lblMaxLoqCvPct.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="lblMaxLoqCvPct.Text" xml:space="preserve">
-    <value>%</value>
-  </data>
-  <data name="&gt;&gt;lblMaxLoqCvPct.Name" xml:space="preserve">
-    <value>lblMaxLoqCvPct</value>
-  </data>
-  <data name="&gt;&gt;lblMaxLoqCvPct.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblMaxLoqCvPct.Parent" xml:space="preserve">
-    <value>tabQuantification</value>
-  </data>
-  <data name="&gt;&gt;lblMaxLoqCvPct.ZOrder" xml:space="preserve">
     <value>2</value>
-  </data>
-  <data name="textBox2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>184, 277</value>
-  </data>
-  <data name="textBox2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
-  </data>
-  <data name="textBox2.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="&gt;&gt;textBox2.Name" xml:space="preserve">
-    <value>textBox2</value>
-  </data>
-  <data name="&gt;&gt;textBox2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textBox2.Parent" xml:space="preserve">
-    <value>tabQuantification</value>
-  </data>
-  <data name="&gt;&gt;textBox2.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="lblMaxLoqCv.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblMaxLoqCv.Location" type="System.Drawing.Point, System.Drawing">
-    <value>181, 261</value>
-  </data>
-  <data name="lblMaxLoqCv.Size" type="System.Drawing.Size, System.Drawing">
-    <value>72, 13</value>
-  </data>
-  <data name="lblMaxLoqCv.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name="lblMaxLoqCv.Text" xml:space="preserve">
-    <value>Max LOQ CV:</value>
-  </data>
-  <data name="&gt;&gt;lblMaxLoqCv.Name" xml:space="preserve">
-    <value>lblMaxLoqCv</value>
-  </data>
-  <data name="&gt;&gt;lblMaxLoqCv.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblMaxLoqCv.Parent" xml:space="preserve">
-    <value>tabQuantification</value>
-  </data>
-  <data name="&gt;&gt;lblMaxLoqCv.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="lblMaxLoqBiasPct.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblMaxLoqBiasPct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>134, 280</value>
-  </data>
-  <data name="lblMaxLoqBiasPct.Size" type="System.Drawing.Size, System.Drawing">
-    <value>15, 13</value>
-  </data>
-  <data name="lblMaxLoqBiasPct.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="lblMaxLoqBiasPct.Text" xml:space="preserve">
-    <value>%</value>
-  </data>
-  <data name="&gt;&gt;lblMaxLoqBiasPct.Name" xml:space="preserve">
-    <value>lblMaxLoqBiasPct</value>
-  </data>
-  <data name="&gt;&gt;lblMaxLoqBiasPct.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblMaxLoqBiasPct.Parent" xml:space="preserve">
-    <value>tabQuantification</value>
-  </data>
-  <data name="&gt;&gt;lblMaxLoqBiasPct.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="textBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 277</value>
-  </data>
-  <data name="textBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
-  </data>
-  <data name="textBox1.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="&gt;&gt;textBox1.Name" xml:space="preserve">
-    <value>textBox1</value>
-  </data>
-  <data name="&gt;&gt;textBox1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textBox1.Parent" xml:space="preserve">
-    <value>tabQuantification</value>
-  </data>
-  <data name="&gt;&gt;textBox1.ZOrder" xml:space="preserve">
-    <value>6</value>
   </data>
   <data name="lblMaxLoqBias.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblMaxLoqBias.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 261</value>
+    <value>3, 17</value>
   </data>
   <data name="lblMaxLoqBias.Size" type="System.Drawing.Size, System.Drawing">
     <value>77, 13</value>
   </data>
   <data name="lblMaxLoqBias.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>0</value>
   </data>
   <data name="lblMaxLoqBias.Text" xml:space="preserve">
     <value>Max LOQ bias:</value>
@@ -2450,10 +2348,139 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqBias.Parent" xml:space="preserve">
-    <value>tabQuantification</value>
+    <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqBias.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="lblMaxLoqBiasPct.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMaxLoqBiasPct.Location" type="System.Drawing.Point, System.Drawing">
+    <value>112, 36</value>
+  </data>
+  <data name="lblMaxLoqBiasPct.Size" type="System.Drawing.Size, System.Drawing">
+    <value>15, 13</value>
+  </data>
+  <data name="lblMaxLoqBiasPct.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="lblMaxLoqBiasPct.Text" xml:space="preserve">
+    <value>%</value>
+  </data>
+  <data name="&gt;&gt;lblMaxLoqBiasPct.Name" xml:space="preserve">
+    <value>lblMaxLoqBiasPct</value>
+  </data>
+  <data name="&gt;&gt;lblMaxLoqBiasPct.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMaxLoqBiasPct.Parent" xml:space="preserve">
+    <value>groupBoxFiguresOfMerit</value>
+  </data>
+  <data name="&gt;&gt;lblMaxLoqBiasPct.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="lblMaxLoqCvPct.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMaxLoqCvPct.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblMaxLoqCvPct.Location" type="System.Drawing.Point, System.Drawing">
+    <value>261, 33</value>
+  </data>
+  <data name="lblMaxLoqCvPct.Size" type="System.Drawing.Size, System.Drawing">
+    <value>15, 13</value>
+  </data>
+  <data name="lblMaxLoqCvPct.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="lblMaxLoqCvPct.Text" xml:space="preserve">
+    <value>%</value>
+  </data>
+  <data name="&gt;&gt;lblMaxLoqCvPct.Name" xml:space="preserve">
+    <value>lblMaxLoqCvPct</value>
+  </data>
+  <data name="&gt;&gt;lblMaxLoqCvPct.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMaxLoqCvPct.Parent" xml:space="preserve">
+    <value>groupBoxFiguresOfMerit</value>
+  </data>
+  <data name="&gt;&gt;lblMaxLoqCvPct.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="tbxMaxLoqCv.Location" type="System.Drawing.Point, System.Drawing">
+    <value>155, 30</value>
+  </data>
+  <data name="tbxMaxLoqCv.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="tbxMaxLoqCv.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxLoqCv.Name" xml:space="preserve">
+    <value>tbxMaxLoqCv</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxLoqCv.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxLoqCv.Parent" xml:space="preserve">
+    <value>groupBoxFiguresOfMerit</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxLoqCv.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="lblMaxLoqCv.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMaxLoqCv.Location" type="System.Drawing.Point, System.Drawing">
+    <value>152, 14</value>
+  </data>
+  <data name="lblMaxLoqCv.Size" type="System.Drawing.Size, System.Drawing">
+    <value>72, 13</value>
+  </data>
+  <data name="lblMaxLoqCv.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="lblMaxLoqCv.Text" xml:space="preserve">
+    <value>Max LOQ CV:</value>
+  </data>
+  <data name="&gt;&gt;lblMaxLoqCv.Name" xml:space="preserve">
+    <value>lblMaxLoqCv</value>
+  </data>
+  <data name="&gt;&gt;lblMaxLoqCv.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMaxLoqCv.Parent" xml:space="preserve">
+    <value>groupBoxFiguresOfMerit</value>
+  </data>
+  <data name="&gt;&gt;lblMaxLoqCv.ZOrder" xml:space="preserve">
     <value>7</value>
+  </data>
+  <data name="groupBoxFiguresOfMerit.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 252</value>
+  </data>
+  <data name="groupBoxFiguresOfMerit.Size" type="System.Drawing.Size, System.Drawing">
+    <value>340, 100</value>
+  </data>
+  <data name="groupBoxFiguresOfMerit.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="groupBoxFiguresOfMerit.Text" xml:space="preserve">
+    <value>Figures of merit</value>
+  </data>
+  <data name="&gt;&gt;groupBoxFiguresOfMerit.Name" xml:space="preserve">
+    <value>groupBoxFiguresOfMerit</value>
+  </data>
+  <data name="&gt;&gt;groupBoxFiguresOfMerit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxFiguresOfMerit.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;groupBoxFiguresOfMerit.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="tbxQuantUnits.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 226</value>
@@ -2474,7 +2501,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;tbxQuantUnits.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>1</value>
   </data>
   <data name="lblQuantUnits.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2504,7 +2531,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblQuantUnits.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>2</value>
   </data>
   <data name="comboQuantMsLevel.Items" xml:space="preserve">
     <value>All</value>
@@ -2534,7 +2561,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboQuantMsLevel.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>3</value>
   </data>
   <data name="lblMsLevel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2561,7 +2588,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblMsLevel.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>4</value>
   </data>
   <data name="comboNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 86</value>
@@ -2582,7 +2609,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>5</value>
   </data>
   <data name="lblNormalizationMethod.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2609,7 +2636,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>6</value>
   </data>
   <data name="comboRegressionFit.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -2630,7 +2657,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboRegressionFit.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>7</value>
   </data>
   <data name="lblRegressionFit.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2657,7 +2684,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblRegressionFit.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>8</value>
   </data>
   <data name="comboWeighting.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 126</value>
@@ -2678,7 +2705,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboWeighting.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>9</value>
   </data>
   <data name="lblRegressionWeighting.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2705,7 +2732,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblRegressionWeighting.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>10</value>
   </data>
   <data name="tabQuantification.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>

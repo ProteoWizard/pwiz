@@ -113,6 +113,15 @@ namespace pwiz.Skyline.SettingsUI
             this.tabIntegration = new System.Windows.Forms.TabPage();
             this.label36 = new System.Windows.Forms.Label();
             this.tabQuantification = new System.Windows.Forms.TabPage();
+            this.groupBoxFiguresOfMerit = new System.Windows.Forms.GroupBox();
+            this.tbxMaxLoqBias = new System.Windows.Forms.TextBox();
+            this.comboLodMethod = new System.Windows.Forms.ComboBox();
+            this.lblCaclulateLodBy = new System.Windows.Forms.Label();
+            this.lblMaxLoqBias = new System.Windows.Forms.Label();
+            this.lblMaxLoqBiasPct = new System.Windows.Forms.Label();
+            this.lblMaxLoqCvPct = new System.Windows.Forms.Label();
+            this.tbxMaxLoqCv = new System.Windows.Forms.TextBox();
+            this.lblMaxLoqCv = new System.Windows.Forms.Label();
             this.tbxQuantUnits = new System.Windows.Forms.TextBox();
             this.lblQuantUnits = new System.Windows.Forms.Label();
             this.comboQuantMsLevel = new System.Windows.Forms.ComboBox();
@@ -131,14 +140,6 @@ namespace pwiz.Skyline.SettingsUI
             this.addIonMobilityLibraryContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editIonMobilityLibraryCurrentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editIonMobilityLibraryListContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.lblMaxLoqBias = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.lblMaxLoqBiasPct = new System.Windows.Forms.Label();
-            this.lblMaxLoqCv = new System.Windows.Forms.Label();
-            this.textBox2 = new System.Windows.Forms.TextBox();
-            this.lblMaxLoqCvPct = new System.Windows.Forms.Label();
-            this.lblCaclulateLodBy = new System.Windows.Forms.Label();
-            this.comboLodMethod = new System.Windows.Forms.ComboBox();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
             this.tabPrediction.SuspendLayout();
@@ -148,6 +149,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabModifications.SuspendLayout();
             this.tabIntegration.SuspendLayout();
             this.tabQuantification.SuspendLayout();
+            this.groupBoxFiguresOfMerit.SuspendLayout();
             this.contextMenuCalculator.SuspendLayout();
             this.contextMenuIonMobilityLibraries.SuspendLayout();
             this.SuspendLayout();
@@ -764,14 +766,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabQuantification
             // 
-            this.tabQuantification.Controls.Add(this.comboLodMethod);
-            this.tabQuantification.Controls.Add(this.lblCaclulateLodBy);
-            this.tabQuantification.Controls.Add(this.lblMaxLoqCvPct);
-            this.tabQuantification.Controls.Add(this.textBox2);
-            this.tabQuantification.Controls.Add(this.lblMaxLoqCv);
-            this.tabQuantification.Controls.Add(this.lblMaxLoqBiasPct);
-            this.tabQuantification.Controls.Add(this.textBox1);
-            this.tabQuantification.Controls.Add(this.lblMaxLoqBias);
+            this.tabQuantification.Controls.Add(this.groupBoxFiguresOfMerit);
             this.tabQuantification.Controls.Add(this.tbxQuantUnits);
             this.tabQuantification.Controls.Add(this.lblQuantUnits);
             this.tabQuantification.Controls.Add(this.comboQuantMsLevel);
@@ -785,6 +780,62 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.tabQuantification, "tabQuantification");
             this.tabQuantification.Name = "tabQuantification";
             this.tabQuantification.UseVisualStyleBackColor = true;
+            // 
+            // groupBoxFiguresOfMerit
+            // 
+            resources.ApplyResources(this.groupBoxFiguresOfMerit, "groupBoxFiguresOfMerit");
+            this.groupBoxFiguresOfMerit.Controls.Add(this.tbxMaxLoqBias);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.comboLodMethod);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.lblCaclulateLodBy);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.lblMaxLoqBias);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.lblMaxLoqBiasPct);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.lblMaxLoqCvPct);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.tbxMaxLoqCv);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.lblMaxLoqCv);
+            this.groupBoxFiguresOfMerit.Name = "groupBoxFiguresOfMerit";
+            this.groupBoxFiguresOfMerit.TabStop = false;
+            // 
+            // tbxMaxLoqBias
+            // 
+            resources.ApplyResources(this.tbxMaxLoqBias, "tbxMaxLoqBias");
+            this.tbxMaxLoqBias.Name = "tbxMaxLoqBias";
+            // 
+            // comboLodMethod
+            // 
+            this.comboLodMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboLodMethod.FormattingEnabled = true;
+            resources.ApplyResources(this.comboLodMethod, "comboLodMethod");
+            this.comboLodMethod.Name = "comboLodMethod";
+            // 
+            // lblCaclulateLodBy
+            // 
+            resources.ApplyResources(this.lblCaclulateLodBy, "lblCaclulateLodBy");
+            this.lblCaclulateLodBy.Name = "lblCaclulateLodBy";
+            // 
+            // lblMaxLoqBias
+            // 
+            resources.ApplyResources(this.lblMaxLoqBias, "lblMaxLoqBias");
+            this.lblMaxLoqBias.Name = "lblMaxLoqBias";
+            // 
+            // lblMaxLoqBiasPct
+            // 
+            resources.ApplyResources(this.lblMaxLoqBiasPct, "lblMaxLoqBiasPct");
+            this.lblMaxLoqBiasPct.Name = "lblMaxLoqBiasPct";
+            // 
+            // lblMaxLoqCvPct
+            // 
+            resources.ApplyResources(this.lblMaxLoqCvPct, "lblMaxLoqCvPct");
+            this.lblMaxLoqCvPct.Name = "lblMaxLoqCvPct";
+            // 
+            // tbxMaxLoqCv
+            // 
+            resources.ApplyResources(this.tbxMaxLoqCv, "tbxMaxLoqCv");
+            this.tbxMaxLoqCv.Name = "tbxMaxLoqCv";
+            // 
+            // lblMaxLoqCv
+            // 
+            resources.ApplyResources(this.lblMaxLoqCv, "lblMaxLoqCv");
+            this.lblMaxLoqCv.Name = "lblMaxLoqCv";
             // 
             // tbxQuantUnits
             // 
@@ -902,47 +953,6 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.editIonMobilityLibraryListContextMenuItem, "editIonMobilityLibraryListContextMenuItem");
             this.editIonMobilityLibraryListContextMenuItem.Click += new System.EventHandler(this.editIonMobilityLibraryListContextMenuItem_Click);
             // 
-            // lblMaxLoqBias
-            // 
-            resources.ApplyResources(this.lblMaxLoqBias, "lblMaxLoqBias");
-            this.lblMaxLoqBias.Name = "lblMaxLoqBias";
-            // 
-            // textBox1
-            // 
-            resources.ApplyResources(this.textBox1, "textBox1");
-            this.textBox1.Name = "textBox1";
-            // 
-            // lblMaxLoqBiasPct
-            // 
-            resources.ApplyResources(this.lblMaxLoqBiasPct, "lblMaxLoqBiasPct");
-            this.lblMaxLoqBiasPct.Name = "lblMaxLoqBiasPct";
-            // 
-            // lblMaxLoqCv
-            // 
-            resources.ApplyResources(this.lblMaxLoqCv, "lblMaxLoqCv");
-            this.lblMaxLoqCv.Name = "lblMaxLoqCv";
-            // 
-            // textBox2
-            // 
-            resources.ApplyResources(this.textBox2, "textBox2");
-            this.textBox2.Name = "textBox2";
-            // 
-            // lblMaxLoqCvPct
-            // 
-            resources.ApplyResources(this.lblMaxLoqCvPct, "lblMaxLoqCvPct");
-            this.lblMaxLoqCvPct.Name = "lblMaxLoqCvPct";
-            // 
-            // lblCaclulateLodBy
-            // 
-            resources.ApplyResources(this.lblCaclulateLodBy, "lblCaclulateLodBy");
-            this.lblCaclulateLodBy.Name = "lblCaclulateLodBy";
-            // 
-            // comboLodMethod
-            // 
-            this.comboLodMethod.FormattingEnabled = true;
-            resources.ApplyResources(this.comboLodMethod, "comboLodMethod");
-            this.comboLodMethod.Name = "comboLodMethod";
-            // 
             // PeptideSettingsUI
             // 
             this.AcceptButton = this.btnOk;
@@ -974,6 +984,8 @@ namespace pwiz.Skyline.SettingsUI
             this.tabIntegration.PerformLayout();
             this.tabQuantification.ResumeLayout(false);
             this.tabQuantification.PerformLayout();
+            this.groupBoxFiguresOfMerit.ResumeLayout(false);
+            this.groupBoxFiguresOfMerit.PerformLayout();
             this.contextMenuCalculator.ResumeLayout(false);
             this.contextMenuIonMobilityLibraries.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -1083,11 +1095,12 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnFilter;
         private System.Windows.Forms.Label lblCaclulateLodBy;
         private System.Windows.Forms.Label lblMaxLoqCvPct;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox tbxMaxLoqCv;
         private System.Windows.Forms.Label lblMaxLoqCv;
         private System.Windows.Forms.Label lblMaxLoqBiasPct;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox tbxMaxLoqBias;
         private System.Windows.Forms.Label lblMaxLoqBias;
         private System.Windows.Forms.ComboBox comboLodMethod;
+        private System.Windows.Forms.GroupBox groupBoxFiguresOfMerit;
     }
 }

@@ -20,7 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.DataAnalysis;
+using MathNet.Numerics.Statistics;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
@@ -212,6 +212,81 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return FindBestLodForPoints(weightedPoints);
         }
 
+        public FiguresOfMerit GetFiguresOfMerit(CalibrationCurve calibrationCurve)
+        {
+            var figuresOfMerit = FiguresOfMerit.EMPTY;
+            if (calibrationCurve != null)
+            {
+                figuresOfMerit = figuresOfMerit.ChangeLimitOfDetection(
+                    QuantificationSettings.LodCalculation.CalculateLod(calibrationCurve, this));
+            }
+            figuresOfMerit = figuresOfMerit.ChangeLimitOfQuantification(GetLimitOfQuantification(calibrationCurve));
+            if (!FiguresOfMerit.EMPTY.Equals(figuresOfMerit))
+            {
+                figuresOfMerit = figuresOfMerit.ChangeUnits(QuantificationSettings.Units);
+            }
+            return figuresOfMerit;
+        }
+
+        public double? GetLimitOfQuantification(CalibrationCurve calibrationCurve)
+        {
+            if (!QuantificationSettings.MaxLoqBias.HasValue && !QuantificationSettings.MaxLoqCv.HasValue)
+            {
+                return null;
+            }
+            var concentrationReplicateLookup = GetStandardConcentrations().ToLookup(entry=>entry.Value, entry=>entry.Key);
+            foreach (var concentrationReplicate in concentrationReplicateLookup.OrderBy(grouping=>grouping.Key))
+            {
+                var peakAreas = new List<double>();
+                foreach (var replicateIndex in concentrationReplicate)
+                {
+                    double? peakArea = GetNormalizedPeakArea(replicateIndex);
+                    if (peakArea.HasValue)
+                    {
+                        peakAreas.Add(peakArea.Value);
+                    }
+                }
+                if (QuantificationSettings.MaxLoqCv.HasValue)
+                {
+                    double cv = peakAreas.StandardDeviation() / peakAreas.Mean();
+                    if (double.IsNaN(cv) || double.IsInfinity(cv))
+                    {
+                        continue;
+                    }
+                    if (cv * 100 > QuantificationSettings.MaxLoqCv)
+                    {
+                        continue;
+                    }
+                }
+                if (QuantificationSettings.MaxLoqBias.HasValue)
+                {
+                    if (calibrationCurve == null)
+                    {
+                        continue;
+                    }
+                    double meanPeakArea = peakAreas.Mean();
+                    double? backCalculatedConcentration =
+                        GetConcentrationFromXValue(calibrationCurve.GetFittedX(meanPeakArea));
+                    if (!backCalculatedConcentration.HasValue)
+                    {
+                        continue;
+                    }
+                    double bias = (concentrationReplicate.Key - backCalculatedConcentration.Value) /
+                                  concentrationReplicate.Key;
+                    if (double.IsNaN(bias) || double.IsInfinity(bias))
+                    {
+                        continue;
+                    }
+                    if (Math.Abs(bias * 10) > QuantificationSettings.MaxLoqBias.Value)
+                    {
+                        continue;
+                    }
+                }
+                return concentrationReplicate.Key;
+            }
+            return null;
+        }
+
         private CalibrationCurve GetCalibrationCurveFromPoints(IList<WeightedPoint> points)
         {
             return QuantificationSettings.RegressionFit.Fit(points);
@@ -219,67 +294,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         private CalibrationCurve FindBestLodForPoints(IList<WeightedPoint> weightedPoints)
         {
-            if (!QuantificationSettings.UsePiecewiseLod)
-            {
-                return GetCalibrationCurveFromPoints(weightedPoints);
-            }
-            double? bestLod = null;
-            double bestScore = double.MaxValue;
-            var xValues = weightedPoints.Select(pt => pt.X).Distinct().OrderBy(x => x).ToArray();
-            for (int i = 0; i < xValues.Length - 1; i++)
-            {
-                var simplexConstant = new NelderMeadSimplex.SimplexConstant((xValues[i] + xValues[i + 1]) / 2,
-                    (xValues[i + 1] - xValues[i]) / 4);
-                var regressionResult = NelderMeadSimplex.Regress(new[] { simplexConstant }, 0, 10,
-                    constants => LodObjectiveFunction(constants[0], weightedPoints));
-                if (regressionResult.ErrorValue < bestScore)
-                {
-                    bestLod = regressionResult.Constants[0];
-                    bestScore = regressionResult.ErrorValue;
-                }
-            }
-            if (!bestLod.HasValue)
-            {
-                return new CalibrationCurve().ChangePointCount(weightedPoints.Count);
-            }
-            return GetCalibrationCurveWithLod(bestLod.Value, weightedPoints);
-        }
-
-        /// <summary>
-        /// Optimization function used when doing NelderMeadSimplex to find the best Limit of Detection.
-        /// </summary>
-        private double LodObjectiveFunction(double lod, IList<WeightedPoint> weightedPoints)
-        {
-            CalibrationCurve calibrationCurve = GetCalibrationCurveWithLod(lod, weightedPoints);
-            if (calibrationCurve == null || !calibrationCurve.LimitOfDetection.HasValue)
-            {
-                return double.MaxValue;
-            }
-            double totalDelta = 0;
-            double totalWeight = 0;
-            foreach (var pt in weightedPoints)
-            {
-                double delta = pt.Y - calibrationCurve.GetY(pt.X).Value;
-                totalWeight += pt.Weight;
-                totalDelta = pt.Weight * delta * delta;
-            }
-            return totalDelta / totalWeight;
-        }
-
-
-        private CalibrationCurve GetCalibrationCurveWithLod(double lod, IList<WeightedPoint> weightedPoints)
-        {
-            var linearPoints = weightedPoints.Select(pt => pt.X > lod ? pt : new WeightedPoint(lod, pt.Y, pt.Weight)).ToArray();
-            if (linearPoints.Select(p => p.X).Distinct().Count() <= 1)
-            {
-                return null;
-            }
-            var linearCalibrationCurve = GetCalibrationCurveFromPoints(linearPoints);
-            if (!string.IsNullOrEmpty(linearCalibrationCurve.ErrorMessage))
-            {
-                return null;
-            }
-            return linearCalibrationCurve.ChangeLimitOfDetection(lod);
+            return GetCalibrationCurveFromPoints(weightedPoints);
         }
 
         public string GetXAxisTitle()
@@ -338,10 +353,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return null;
             }
-            double? xValue = GetCalculatedXValue(calibrationCurve, replicateIndex);
+            return GetConcentrationFromXValue(GetCalculatedXValue(calibrationCurve, replicateIndex));
+        }
+
+        public double? GetConcentrationFromXValue(double? xValue)
+        {
             if (HasExternalStandards() && HasInternalStandardConcentration())
             {
-                return xValue*PeptideQuantifier.PeptideDocNode.InternalStandardConcentration;
+                return xValue * PeptideQuantifier.PeptideDocNode.InternalStandardConcentration;
             }
             return xValue;
         }
