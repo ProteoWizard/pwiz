@@ -93,6 +93,7 @@ namespace pwiz.Skyline.Model
         public ProteinSpecType AcceptProteinType { get; set; }
         public bool AcceptModified { get; set; }
         public bool RemoveRepeatedPeptides { get; set; }
+        public bool RemoveMissingLibrary { get; set; }
         public int? MinPrecursorsPerPeptide { get; set; }
         public int? MinTransitionsPepPrecursor { get; set; }
         public IsotopeLabelType RefineLabelType { get; set; }
@@ -269,6 +270,11 @@ namespace pwiz.Skyline.Model
                 List<Adduct> acceptedCharges = null;
                 if (acceptedPeptides != null &&
                     !acceptedPeptides.TryGetValue(AcceptModified ? nodePep.ModifiedTarget : nodePep.Target, out acceptedCharges))
+                {
+                    continue;
+                }
+
+                if (RemoveMissingLibrary && !nodePep.HasLibInfo)
                 {
                     continue;
                 }

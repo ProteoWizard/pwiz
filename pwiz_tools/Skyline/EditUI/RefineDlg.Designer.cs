@@ -32,6 +32,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RefineDlg));
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDocument = new System.Windows.Forms.TabPage();
+            this.cbRemovePeptidesMissingLibrary = new System.Windows.Forms.CheckBox();
             this.cbAutoTransitions = new System.Windows.Forms.CheckBox();
             this.cbAutoPrecursors = new System.Windows.Forms.CheckBox();
             this.cbAutoPeptides = new System.Windows.Forms.CheckBox();
@@ -87,6 +88,7 @@
             // 
             // tabDocument
             // 
+            this.tabDocument.Controls.Add(this.cbRemovePeptidesMissingLibrary);
             this.tabDocument.Controls.Add(this.cbAutoTransitions);
             this.tabDocument.Controls.Add(this.cbAutoPrecursors);
             this.tabDocument.Controls.Add(this.cbAutoPeptides);
@@ -103,6 +105,13 @@
             resources.ApplyResources(this.tabDocument, "tabDocument");
             this.tabDocument.Name = "tabDocument";
             this.tabDocument.UseVisualStyleBackColor = true;
+            // 
+            // cbRemovePeptidesMissingLibrary
+            // 
+            resources.ApplyResources(this.cbRemovePeptidesMissingLibrary, "cbRemovePeptidesMissingLibrary");
+            this.cbRemovePeptidesMissingLibrary.Name = "cbRemovePeptidesMissingLibrary";
+            this.helpTip.SetToolTip(this.cbRemovePeptidesMissingLibrary, resources.GetString("cbRemovePeptidesMissingLibrary.ToolTip"));
+            this.cbRemovePeptidesMissingLibrary.UseVisualStyleBackColor = true;
             // 
             // cbAutoTransitions
             // 
@@ -422,5 +431,6 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.TextBox textMinIdotProduct;
         private System.Windows.Forms.Label labelMinIdotProduct;
+        private System.Windows.Forms.CheckBox cbRemovePeptidesMissingLibrary;
     }
 }
