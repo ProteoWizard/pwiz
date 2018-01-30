@@ -320,6 +320,9 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
   <data name="ExplicitSLens">
     <value>The exact desired SLens value (Thermo instruments only) to be used in SRM methods or transitions lists for a target.</value>
   </data>
+  <data name="FiguresOfMerit">
+    <value>The limits of detection and quantification for the peptide or molecule. The method for calculating these quantities can be chosen on the Quantification tab of the Peptide Settings.</value>
+  </data>
   <data name="FileIndex">
     <value>File Index</value>
   </data>
@@ -464,6 +467,14 @@ precursors of a protein.</value>
   <data name="LibraryType">
     <value>The type of MS/MS spectral library (BiblioSpec, GPM, NIST), if a MS/MS
 spectral library spectrum is associated with the precursor ion.</value>
+  </data>
+  <data name="LimitOfDetection">
+    <value> The lower concentration limit at which the analyte can be reliably distinguished from a blank.
+      The options about for calculating the lower limit of detection can be specified on the Quantification tab of the Peptide Settings.</value>
+  </data>
+  <data name="LimitOfQuantification">
+    <value>The lower concentration limit where the analyte is said to be quantifiable.
+The options for determining this value can be specified on the Quantification tab of the Peptide Settings.</value>
   </data>
   <data name="LinearFit">
     <value>The result of doing the linear regression to determine the fold change.</value>
@@ -1026,6 +1037,9 @@ using the Results Grid.</value>
     <value>True if the integrated a peak has a boundary at either end of the acquisition
 time range, where intensity at the end is greater than 1% of the entire peak height
 higher than the other extent.</value>
+  </data>
+  <data name="TurningPoint">
+    <value>For bilinear regressions, the X-coordinate where the two lines intersect.</value>
   </data>
   <data name="TValue">
     <value>The estimated value of the linear fit by the standard error.</value>

@@ -162,18 +162,29 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsNull(calibrationCurve.Intercept);
                         Assert.IsNotNull(calibrationCurve.Slope);
                         Assert.IsNull(calibrationCurve.QuadraticCoefficient);
+                        Assert.IsNull(calibrationCurve.TurningPoint);
                     }
                     else if (quant.RegressionFit == RegressionFit.LINEAR)
                     {
                         Assert.IsNotNull(calibrationCurve.Intercept);
                         Assert.IsNotNull(calibrationCurve.Slope);
                         Assert.IsNull(calibrationCurve.QuadraticCoefficient);
+                        Assert.IsNull(calibrationCurve.TurningPoint);
                     }
-                    else
+                    else if (quant.RegressionFit == RegressionFit.BILINEAR)
                     {
                         Assert.IsNotNull(calibrationCurve.Intercept);
                         Assert.IsNotNull(calibrationCurve.Slope);
+                        Assert.IsNull(calibrationCurve.QuadraticCoefficient);
+                        Assert.IsNotNull(calibrationCurve.TurningPoint);
+                    }
+                    else
+                    {
+                        Assert.AreEqual(RegressionFit.QUADRATIC, quant.RegressionFit);
+                        Assert.IsNotNull(calibrationCurve.Intercept);
+                        Assert.IsNotNull(calibrationCurve.Slope);
                         Assert.IsNotNull(calibrationCurve.QuadraticCoefficient);
+                        Assert.IsNull(calibrationCurve.TurningPoint);
                     }
                 }
             }

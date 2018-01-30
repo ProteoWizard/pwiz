@@ -731,6 +731,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The limits of detection and quantification for the peptide or molecule. The method for calculating these quantities can be chosen on the Quantification tab of the Peptide Settings..
+        /// </summary>
+        public static string FiguresOfMerit {
+            get {
+                return ResourceManager.GetString("FiguresOfMerit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to File Index.
         /// </summary>
         public static string FileIndex {
@@ -1175,6 +1184,26 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string LibraryType {
             get {
                 return ResourceManager.GetString("LibraryType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  The lower concentration limit at which the analyte can be reliably distinguished from a blank.
+        ///      The options about for calculating the lower limit of detection can be specified on the Quantification tab of the Peptide Settings..
+        /// </summary>
+        public static string LimitOfDetection {
+            get {
+                return ResourceManager.GetString("LimitOfDetection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The lower concentration limit where the analyte is said to be quantifiable.
+        ///The options for determining this value can be specified on the Quantification tab of the Peptide Settings..
+        /// </summary>
+        public static string LimitOfQuantification {
+            get {
+                return ResourceManager.GetString("LimitOfQuantification", resourceCulture);
             }
         }
         
@@ -2766,6 +2795,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Truncated {
             get {
                 return ResourceManager.GetString("Truncated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to For bilinear regressions, the X-coordinate where the two lines intersect..
+        /// </summary>
+        public static string TurningPoint {
+            get {
+                return ResourceManager.GetString("TurningPoint", resourceCulture);
             }
         }
         

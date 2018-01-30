@@ -709,6 +709,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Figures Of Merit.
+        /// </summary>
+        public static string FiguresOfMerit {
+            get {
+                return ResourceManager.GetString("FiguresOfMerit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to File Index.
         /// </summary>
         public static string FileIndex {
@@ -1128,6 +1137,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string LibraryType {
             get {
                 return ResourceManager.GetString("LibraryType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limit Of Detection.
+        /// </summary>
+        public static string LimitOfDetection {
+            get {
+                return ResourceManager.GetString("LimitOfDetection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limit Of Quantification.
+        /// </summary>
+        public static string LimitOfQuantification {
+            get {
+                return ResourceManager.GetString("LimitOfQuantification", resourceCulture);
             }
         }
         
@@ -2667,6 +2694,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Truncated {
             get {
                 return ResourceManager.GetString("Truncated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turning Point.
+        /// </summary>
+        public static string TurningPoint {
+            get {
+                return ResourceManager.GetString("TurningPoint", resourceCulture);
             }
         }
         

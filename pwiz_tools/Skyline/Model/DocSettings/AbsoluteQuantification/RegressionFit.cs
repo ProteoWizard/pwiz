@@ -39,11 +39,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static readonly RegressionFit QUADRATIC = new RegressionFit("quadratic", // Not L10N
             () => QuantificationStrings.RegressionFit_QUADRATIC_Quadratic, QuadraticFit);
 
-        public static readonly RegressionFit TWO_PIECE_LINEAR = new RegressionFit("two_piece_linear", // Not L10N
-            () => "Two piece linear", TwoPieceLinearFit);
+        public static readonly RegressionFit BILINEAR = new RegressionFit("bilinear", // Not L10N
+            () => "Bilinear", BilinearFit);
         public static readonly ImmutableList<RegressionFit> All = ImmutableList<RegressionFit>.ValueOf(new[]
         {
-            NONE, LINEAR_THROUGH_ZERO, LINEAR, TWO_PIECE_LINEAR, QUADRATIC
+            NONE, LINEAR_THROUGH_ZERO, LINEAR, BILINEAR, QUADRATIC
         });
 
         private readonly Func<String> _getLabelFunc;
@@ -156,8 +156,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
             return All.FirstOrDefault(fit => fit.Name == name) ?? LINEAR;
         }
-        #region TwoPieceLinearFit
-        public static CalibrationCurve TwoPieceLinearFit(IList<WeightedPoint> weightedPoints)
+        #region BilinearFit
+        public static CalibrationCurve BilinearFit(IList<WeightedPoint> weightedPoints)
         {
             double? bestLod = null;
             double bestScore = double.MaxValue;
@@ -176,7 +176,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
             if (!bestLod.HasValue)
             {
-                return new CalibrationCurve().ChangePointCount(weightedPoints.Count);
+                return LinearFit(weightedPoints);
             }
             return GetCalibrationCurveWithLod(bestLod.Value, weightedPoints);
         }
