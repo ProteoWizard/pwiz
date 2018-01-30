@@ -142,6 +142,7 @@ namespace pwiz.Skyline.EditUI
             }
             bool removeDuplicatePeptides = cbRemoveDuplicatePeptides.Checked;
             bool removeRepeatedPeptides = cbRemoveRepeatedPeptides.Checked;
+            bool removeMissingLibrary = cbRemovePeptidesMissingLibrary.Checked;
 
             IsotopeLabelType refineLabelType = RefineLabelType;
 
@@ -232,6 +233,7 @@ namespace pwiz.Skyline.EditUI
                                          MinPeptidesPerProtein = minPeptidesPerProtein,
                                          RemoveRepeatedPeptides = removeRepeatedPeptides,
                                          RemoveDuplicatePeptides = removeDuplicatePeptides,
+                                         RemoveMissingLibrary = removeMissingLibrary,
                                          MinTransitionsPepPrecursor = minTransitionsPerPrecursor,
                                          RefineLabelType = refineLabelType,
                                          AddLabelType = addLabelType,
