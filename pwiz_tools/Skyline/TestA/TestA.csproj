@@ -147,6 +147,7 @@
     <Compile Include="CommandLineMProphetTest.cs" />
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="CommandLineImportTest.cs" />
+    <Compile Include="CommandLineWiffTest.cs" />
     <Compile Include="DecoysTest.cs" />
     <Compile Include="DigestionTest.cs" />
     <Compile Include="DocLoadLibraryTest.cs" />
@@ -262,6 +263,7 @@
     <None Include="CommandLineImportTest.zip" />
     <None Include="CommandLineMProphetTest.zip" />
     <None Include="CommandLineTest.zip" />
+    <None Include="CommandLineWiffTest.zip" />
     <None Include="DocLoadLibraryTest.zip" />
     <EmbeddedResource Include="DocumentSerializerTest.sky" />
     <EmbeddedResource Include="explicit-losses.sky" />
