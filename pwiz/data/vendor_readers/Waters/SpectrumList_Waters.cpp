@@ -363,11 +363,14 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
             scanTimeToFunctionAndBlockMap_.reserve(scanCount);
 
             for (int i = 0; i < scanCount; ++i)
+            {
                 scanTimeToFunctionAndBlockMap_[scanStats[i].rt * 60].push_back(make_pair(function, i));
+                functionAndScanByRetentionTime.insert(make_pair(scanStats[i].rt, make_pair(function, i)));
+            }
         }
         else
         {
-            for (int i=0; i < scanCount; ++i)
+            for (int i = 0; i < scanCount; ++i)
                 functionAndScanByRetentionTime.insert(make_pair(scanStats[i].rt, make_pair(function, i)));
         }
     }
@@ -375,41 +378,41 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
     typedef pair<int, int> FunctionScanPair;
     BOOST_FOREACH_FIELD((double rt)(const FunctionScanPair& functionScanPair), functionAndScanByRetentionTime)
     {
-        index_.push_back(IndexEntry());
-        IndexEntry& ie = index_.back();
-        ie.function = functionScanPair.first;
-        ie.process = 0;
-        ie.block = -1; // block < 0 is not ion mobility
-        ie.scan = functionScanPair.second;
-        ie.index = index_.size() - 1;
-
-        std::back_insert_iterator<std::string> sink(ie.id);
-        generate(sink,
-                 "function=" << int_ << " process=" << int_ << " scan=" << int_,
-                 (ie.function + 1), ie.process, (ie.scan + 1));
-        idToIndexMap_[ie.id] = ie.index;
-    }
-
-    BOOST_FOREACH_FIELD((double rt)(const vector<FunctionScanPair>& functionBlockPairs), scanTimeToFunctionAndBlockMap_)
-    {
-        BOOST_FOREACH(const FunctionScanPair& functionBlockPair, functionBlockPairs)
+        if (rawdata_->IonMobilityByFunctionIndex()[functionScanPair.first])
         {
             for (int j = 0; j < numScansInBlock; ++j)
             {
                 index_.push_back(IndexEntry());
                 IndexEntry& ie = index_.back();
-                ie.function = functionBlockPair.first;
+                ie.function = functionScanPair.first;
                 ie.process = 0;
-                ie.block = functionBlockPair.second;
+                ie.block = functionScanPair.second;
                 ie.scan = j;
                 ie.index = index_.size() - 1;
 
                 std::back_insert_iterator<std::string> sink(ie.id);
                 generate(sink,
-                         "function=" << int_ << " process=" << int_ << " scan=" << int_,
-                         (ie.function + 1), ie.process, ((numScansInBlock*ie.block) + ie.scan + 1));
+                    "function=" << int_ << " process=" << int_ << " scan=" << int_,
+                    (ie.function + 1), ie.process, ((numScansInBlock*ie.block) + ie.scan + 1));
                 idToIndexMap_[ie.id] = ie.index;
             }
+        }
+        else
+        {
+            index_.push_back(IndexEntry());
+            IndexEntry& ie = index_.back();
+            ie.function = functionScanPair.first;
+            ie.process = 0;
+            ie.block = -1; // block < 0 is not ion mobility
+            ie.scan = functionScanPair.second;
+            ie.index = index_.size() - 1;
+
+            std::back_insert_iterator<std::string> sink(ie.id);
+            generate(sink,
+                "function=" << int_ << " process=" << int_ << " scan=" << int_,
+                (ie.function + 1), ie.process, (ie.scan + 1));
+            idToIndexMap_[ie.id] = ie.index;
+            rt = 0; // suppress warning
         }
     }
 
