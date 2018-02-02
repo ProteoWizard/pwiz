@@ -249,6 +249,11 @@ namespace pwiz.Common.Chemistry
         }
 
         // Handle formulae which may contain subtractions, as is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
+        public static T ParseExpression(String formula)
+        {
+            return new T { Dictionary = ImmutableSortedList.FromValues(ParseExpressionToDictionary(formula)) };
+        }
+
         public static Dictionary<String, int> ParseExpressionToDictionary(string expression)
         {
             var parts = expression.Split('-');
@@ -329,9 +334,9 @@ namespace pwiz.Common.Chemistry
             {
                 return true;
             }
-            // Consider C2C'4H5 to be same as H5C'4C2
-            var left = Parse(formulaLeft);
-            var right = Parse(formulaRight);
+            // Consider C2C'4H5 to be same as H5C'4C2, or "C10H30Si5O5H-CH4" same as "C9H26O5Si5", etc
+            var left = ParseExpression(formulaLeft);
+            var right = ParseExpression(formulaRight);
             return left.Difference(right).All(atom => atom.Value == 0);
         }
 
