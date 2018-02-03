@@ -60,6 +60,9 @@ struct UnimodData : public boost::singleton<UnimodData>
         brickFormulaByTitle["NeuAc"] = Formula("C11 H17 N1 O8");
         brickFormulaByTitle["NeuGc"] = Formula("C11 H17 N1 O9");
         brickFormulaByTitle["Pent"] = Formula("C5 H8 O4");
+        brickFormulaByTitle["Water"] = Formula("H2 O1");
+        brickFormulaByTitle["Phos"] = Formula("H1 P1 O3");
+        brickFormulaByTitle["Sulf"] = Formula("S1 O3");
         brickFormulaByTitle["Hep"] = Formula("C7 H12 O6");
         brickFormulaByTitle["Me"] = Formula("C1 H2");
 

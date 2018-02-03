@@ -143,7 +143,7 @@ void test()
    
     unit_assert(obo.filename == filename);    
     unit_assert(obo.header.size() == 5); 
-    unit_assert(obo.prefix == "MS");
+    unit_assert(obo.prefixes.count("MS") > 0);
     unit_assert(obo.terms.size() == 12); // including obsolete terms
 
     set<Term>::const_iterator term = obo.terms.begin();
