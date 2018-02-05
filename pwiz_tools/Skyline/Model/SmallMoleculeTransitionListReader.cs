@@ -68,6 +68,8 @@ namespace pwiz.Skyline.Model
 
             public void UpdateCell(int col, object value)
             {
+                if (col < 0)
+                    return;
                 while (_cells.Count < col)
                 {
                     _cells.Add(null);
