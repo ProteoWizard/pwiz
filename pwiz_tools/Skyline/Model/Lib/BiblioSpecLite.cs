@@ -596,8 +596,6 @@ namespace pwiz.Skyline.Model.Lib
                         if (!reader.Read())
                             throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_CreateCache_Unable_to_get_a_valid_count_of_spectra_in_the_library__0__, FilePath));
                         rows = reader.GetInt32(0);
-                        if (rows == 0)
-                            throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_CreateCache_No_spectra_were_found_in_the_library__0__, FilePath));
                     }
                 }
 

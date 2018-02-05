@@ -72,6 +72,9 @@ namespace pwiz.SkylineTestA
 
         private void TestAdductOperators()
         {
+            // Test some underlying formula handling for fanciful user-supplied values
+            Assert.IsTrue(Molecule.AreEquivalentFormulas("C10H30Si5O5H-CH4", "C9H27O5Si5"));
+
             // There is a difference between a proteomic adduct and non proteomic, primarily in how they display
             Assert.AreEqual(Adduct.FromStringAssumeChargeOnly("M+H"), Adduct.M_PLUS_H);
             Assert.AreEqual(Adduct.FromStringAssumeProtonatedNonProteomic("1"), Adduct.M_PLUS_H);
