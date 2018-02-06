@@ -574,7 +574,7 @@ namespace CommonTest
 
             public override Stream GetWebResponseStream(string url, int timeout)
             {
-                // should look something like "http://www.uniprot.xyzpdq/uniprot/?query=(P04638+OR+SGD:S000005768+OR+CAB02319.1)&format=tab&columns=id,genes,organism,length,entry name,protein names,reviewed"
+                // should look something like "https://www.uniprot.xyzpdq/uniprot/?query=(P04638+OR+SGD_S000005768+OR+CAB02319.1)&format=tab&columns=id,genes,organism,length,entry name,protein names,reviewed"
                 var searches = url.Split('(')[1].Split(')')[0].Split('+').Where(s => !Equals(s, "OR")).ToArray();
                 var sb = new StringBuilder();
                 if (url.Contains(".org")) // watch for deliberately malformed url in tests Not L10N
@@ -642,14 +642,14 @@ namespace CommonTest
                         }
                     }
                     // Possibly SGDID
-                    if (keyword.StartsWith("SGD%3AS"))
+                    if (keyword.StartsWith(WebEnabledFastaImporter.UNIPROTKB_PREFIX_SGD))
                     {
                         foreach (var test in _tests)
                         {
                             foreach (var expectedResult in test.ExpectedResults)
                             {
-                                if (expectedResult.Protein.Description.Contains(keyword.Replace("SGD%3AS","SGD:S")) ||
-                                    expectedResult.Protein.Description.Contains(keyword.Replace("SGD%3AS", "SGDID:S")))
+                                if (expectedResult.Protein.Description.Contains(keyword.Replace(WebEnabledFastaImporter.UNIPROTKB_PREFIX_SGD, "SGD:S")) ||
+                                    expectedResult.Protein.Description.Contains(keyword.Replace(WebEnabledFastaImporter.UNIPROTKB_PREFIX_SGD, "SGDID:S")))
                                 {
                                     return expectedResult;
                                 }

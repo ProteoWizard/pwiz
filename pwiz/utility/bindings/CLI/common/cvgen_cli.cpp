@@ -124,7 +124,7 @@ size_t enumValue(const Term& term, size_t index)
 }
 
 
-void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& outputDir)
+void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& outputDir, map<string, int>& enumMultiplierByPrefix)
 {
     string filename = basename + ".hpp";
     bfs::path filenameFullPath = outputDir / filename;
@@ -166,14 +166,14 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
             string eName = enumName(term);
             if (enumNames.count(eName) > 1)
             {
-                eName += "_" + lexical_cast<string>(enumValue(term, obo-obos.begin()));
+                eName += "_" + lexical_cast<string>(enumValue(term, enumMultiplierByPrefix[term.prefix]));
             }
 
             os << ",\n\n"
                << "    /// <summary>" << term.name << ": " << term.def << "</summary>\n"
-               << "    " << eName << " = " << enumValue(term, obo-obos.begin());
+               << "    " << eName << " = " << enumValue(term, enumMultiplierByPrefix[term.prefix]);
 
-            if (obo->prefix == "MS") // add synonyms for PSI-MS only
+            if (term.prefix == "MS") // add synonyms for PSI-MS only
             {
                 BOOST_FOREACH(const string& synonym, term.exactSynonyms)
                 {
@@ -398,7 +398,8 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "const char* oboPrefixes_[] =\n"
           "{\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
-        os << "    \"" << obo->prefix << "\",\n";
+    for (auto prefix : obo->prefixes)
+        os << "    \"" << prefix << "\",\n";
     os << "};\n\n\n";
 
     os << "const size_t oboPrefixesSize_ = sizeof(oboPrefixes_)/sizeof(const char*);\n\n\n"
@@ -487,9 +488,9 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 }
 
 
-void generateFiles(const vector<OBO>& obos, const string& basename, const bfs::path& outputDir)
+void generateFiles(const vector<OBO>& obos, const string& basename, const bfs::path& outputDir, map<string, int>& enumMultiplierByPrefix)
 {
-    writeHpp(obos, basename, outputDir);
+    writeHpp(obos, basename, outputDir, enumMultiplierByPrefix);
     //writeCpp(obos, basename, outputDir);
 }
 
@@ -508,10 +509,18 @@ int main(int argc, char* argv[])
         bfs::path exeDir(bfs::path(argv[0]).branch_path());
 
         vector<OBO> obos;
-        for (int i=1; i<argc; i++)
+        map<string, int> enumMultiplierByPrefix;
+        for (int i = 1; i < argc; i++)
+        {
             obos.push_back(OBO(argv[i]));
+            for (auto prefix : obos.back().prefixes)
+            {
+                int multiplier = enumMultiplierByPrefix.size();
+                enumMultiplierByPrefix[prefix] = multiplier;
+            }
+        }
 
-        generateFiles(obos, "cv", exeDir);
+        generateFiles(obos, "cv", exeDir, enumMultiplierByPrefix);
 
         return 0;
     }

@@ -77,7 +77,7 @@ struct PWIZ_API_DECL OBO
 {
     std::string filename;
     std::vector<std::string> header;
-    std::string prefix; // e.g. "MS", "UO"
+    std::set<std::string> prefixes; // e.g. "MS", "UO"
     std::set<Term> terms;
 
     OBO(){}

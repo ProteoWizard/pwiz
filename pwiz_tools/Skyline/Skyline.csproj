@@ -3979,9 +3979,6 @@
       <DependentUpon>EditLibraryDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Hibernate\mapping.xml">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Comment.bmp" />
     <EmbeddedResource Include="Resources\PeakBlank.bmp" />
     <EmbeddedResource Include="Resources\Copy.bmp" />
@@ -4052,7 +4049,9 @@
     <EmbeddedResource Include="Resources\PeptideStandardLib.bmp" />
     <EmbeddedResource Include="Resources\RedXTransparentBackground.bmp" />
     <EmbeddedResource Include="Model\Irt\mapping.xml" />
-    <EmbeddedResource Include="Model\Lib\BlibData\mapping_redundant.xml" />
+    <EmbeddedResource Include="Model\Lib\BlibData\mapping_redundant.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Calculator.bmp" />
     <EmbeddedResource Include="Resources\FragmentDecoy.bmp" />
     <EmbeddedResource Include="Resources\PeptideDecoy.bmp" />

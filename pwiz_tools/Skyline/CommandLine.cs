@@ -304,15 +304,15 @@ namespace pwiz.Skyline
                 var listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>();
                 if (!string.IsNullOrEmpty(commandArgs.ReplicateName))
                 {
-                    var files = commandArgs.ReplicateFile.ToArray();
+                    var files = commandArgs.ReplicateFile.SelectMany(DataSourceUtil.ListSubPaths).ToArray();
                     listNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(commandArgs.ReplicateName, files));
                 }
                 else
                 {
-                    foreach (var dataFile in commandArgs.ReplicateFile)
+                    foreach (var dataFile in commandArgs.ReplicateFile.SelectMany(DataSourceUtil.ListSubPaths))
                     {
                         listNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(
-                            dataFile.GetFileNameWithoutExtension(),
+                            dataFile.GetSampleName() ?? dataFile.GetFileNameWithoutExtension(),
                             new[] {dataFile}));
                     }
                 }

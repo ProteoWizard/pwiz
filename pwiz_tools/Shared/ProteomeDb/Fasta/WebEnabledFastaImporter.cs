@@ -447,6 +447,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         public const char GENINFO_TAG = 'G'; // search on entrez, but seperate out GI number searches
         public const char ENTREZ_TAG = 'E';
         public const char UNIPROTKB_TAG = 'U';
+        public const string UNIPROTKB_PREFIX_SGD = "SGD_S"; // formerly "SGD:S", but Uniprot search behavior has changed // Not L10N
         public const char SEARCHDONE_TAG = 'X'; // to note searches which have been completed
 
         private const string STANDARD_REGEX_OUTPUT_FORMAT = "name:${name}\ndescription:${description}\naccession:${accession}\npreferredname:${preferredname}\ngene:${gene}\nspecies:${species}\nsearchterm:"; // Not L10N
@@ -537,7 +538,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             public virtual string ConstructUniprotURL(IEnumerable<string> searches)
             {
                return ConstructURL(searches, 
-                   "http://www.uniprot.org/uniprot/?query=({0})&format=tab&columns=id,genes,organism,length,entry name,protein names,reviewed",  // Not L10N
+                   "https://www.uniprot.org/uniprot/?query=({0})&format=tab&columns=id,genes,organism,length,entry name,protein names,reviewed",  // Not L10N
                    "+OR+"); // Not L10N
             }
 
@@ -636,7 +637,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                 new FastaRegExSearchtermPair(
                     @"Pick out 'SGDID:S000028729' (or SGD:S...)) from >YAL019W-A YAL019W-A SGDID:S000028729, Chr I from 114250-114819, Genome Release 64-2-1, Dubious ORF, 'Dubious open reading frame; unlikely to encode a functional protein, based on available experimental and comparative sequence data; partially overlaps ORF ATS1/YAL020C'", // Not L10N
                     @"^(?<name>[^\s]+)(?<description>(.*?((SGD\:S|SGDID\:S)(?<sgd>([0-9]+))[^\s]*)).*)", // Not L10N
-                    STANDARD_REGEX_OUTPUT_FORMAT + UNIPROTKB_TAG + "SGD:S${sgd}"), // will attempt to lookup on Uniprot // Not L10N
+                    STANDARD_REGEX_OUTPUT_FORMAT + UNIPROTKB_TAG + UNIPROTKB_PREFIX_SGD + "${sgd}"), // will attempt to lookup on Uniprot // Not L10N
 
                 new FastaRegExSearchtermPair(@" and a fallback for everything else, like  '>name description'", // Not L10N
                     @"^(?<name>[^\s]+)"+MATCH_DESCRIPTION_WITH_OPTIONAL_OS_AND_GN+"?",  // Not L10N
