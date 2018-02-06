@@ -191,6 +191,7 @@ namespace pwiz.Skyline.FileUI
             panelThermoRt.Top = panelThermoColumns.Top - (int)(panelThermoRt.Height*0.8);
             panelAbSciexTOF.Top = textDwellTime.Top + (textDwellTime.Height - panelAbSciexTOF.Height)/2;
             panelTriggered.Top = textDwellTime.Top + (textDwellTime.Height - panelTriggered.Height)/2;
+            panelTuneColumns.Top = comboTargetType.Top + (comboTargetType.Height - panelTuneColumns.Height)/2;
             panelSciexTune.Top = labelOptimizing.Top;
             panelWaters.Top = labelDwellTime.Top - panelWaters.Height;
 
@@ -539,6 +540,11 @@ namespace pwiz.Skyline.FileUI
             cbSlens.Visible = cbSlens.Enabled =
                 InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
                 InstrumentType == ExportInstrumentType.THERMO;  // TODO bspratt is this specific enough?
+        }
+
+        private void UpdateThermoTuneControls()
+        {
+            panelTuneColumns.Visible = InstrumentType == ExportInstrumentType.THERMO_FUSION;
         }
 
         private void UpdateMaxTransitions()
@@ -987,6 +993,7 @@ namespace pwiz.Skyline.FileUI
             _exportProperties.AddEnergyRamp = panelThermoColumns.Visible && cbEnergyRamp.Checked;
             _exportProperties.UseSlens = cbSlens.Checked;
             _exportProperties.AddTriggerReference = panelThermoColumns.Visible && cbTriggerRefColumns.Checked;
+            _exportProperties.Tune3 = panelTuneColumns.Visible && cbTune3.Checked;
 
             _exportProperties.ExportMultiQuant = panelAbSciexTOF.Visible && cbExportMultiQuant.Checked;
 
@@ -1421,6 +1428,7 @@ namespace pwiz.Skyline.FileUI
             UpdateWatersControls();
             UpdateThermoRtControls(targetType);
             UpdateThermoSLensControl(targetType);
+            UpdateThermoTuneControls();
             UpdateMaxLabel(standard);
         }
 
