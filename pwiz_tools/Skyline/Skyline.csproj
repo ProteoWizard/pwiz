@@ -143,6 +143,7 @@
       <HintPath>..\Shared\Lib\NHibernate\NHibernate.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -300,6 +301,15 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
+    <Compile Include="Controls\AuditLog\AuditLogForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\AuditLog\AuditLogForm.Designer.cs">
+      <DependentUpon>AuditLogForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\DocSettings\AuditLogRow.cs" />
+    <Compile Include="Model\DocSettings\PropertyDiff.cs" />
+    <Compile Include="Model\DocSettings\Reflector.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
     <Compile Include="Model\Lib\ViewLibraryPepInfoList.cs" />

@@ -254,6 +254,7 @@
     <Compile Include="DataBinding\Controls\ViewColumn.cs" />
     <Compile Include="DataBinding\DataFormat.cs" />
     <Compile Include="DataBinding\DataSchema.cs" />
+    <Compile Include="DataBinding\DiffAttribute.cs" />
     <Compile Include="DataBinding\DisplayColumn.cs" />
     <Compile Include="DataBinding\Documentation\DocumentationGenerator.cs" />
     <Compile Include="DataBinding\DsvWriter.cs" />

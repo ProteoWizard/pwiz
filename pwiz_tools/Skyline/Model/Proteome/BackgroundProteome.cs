@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.DataBinding;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -45,6 +46,18 @@ namespace pwiz.Skyline.Model.Proteome
             private bool? _needsProteinMetadataSearch;
             private Dictionary<Target, DigestionPeptideStats> _peptideUniquenessDict;
             private string _enzymeNameForPeptideUniquenessDictDigest;
+
+            [Diff]
+            public bool? NeedsProteinMetadataSearch
+            {
+                get { return _needsProteinMetadataSearch; }
+            }
+
+            [Diff]
+            public string EnzymeNameForPeptideUniquenessDictDigest
+            {
+                get { return _enzymeNameForPeptideUniquenessDictDigest; }
+            }
 
 
             public BackgroundProteomeMetadataCache(BackgroundProteome b)
@@ -366,10 +379,12 @@ namespace pwiz.Skyline.Model.Proteome
         /// <summary>
         /// True if the database file does not exist
         /// </summary>
+        [Diff]
         public bool DatabaseInvalid { get; private set; }
         /// <summary>
         /// True if we have checked whether the database file exists
         /// </summary>
+        [Diff]
         public bool DatabaseValidated { get; private set; }
 
         public BackgroundProteomeSpec BackgroundProteomeSpec

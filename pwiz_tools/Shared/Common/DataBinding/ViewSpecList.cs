@@ -47,8 +47,10 @@ namespace pwiz.Common.DataBinding
             ViewSpecs = ImmutableList.ValueOfOrEmpty(viewSpecs);
             ViewLayouts = ImmutableList.ValueOfOrEmpty(viewLayouts);
         }
-        
+
+        [DiffParent]
         public ImmutableList<ViewSpec> ViewSpecs { get;private set; }
+        [DiffParent]
         public ImmutableList<ViewLayoutList> ViewLayouts { get; private set; }
 
         public ViewSpecList FilterRowSources(ICollection<string> rowSources)

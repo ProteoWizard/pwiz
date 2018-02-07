@@ -55,6 +55,13 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttribute(ATTR.format_version, SkylineVersion.SrmDocumentVersion);
             writer.WriteAttribute(ATTR.software_version, SkylineVersion.InvariantVersionName);
 
+            writer.WriteStartElement(EL.audit_log);
+            foreach (var row in Document.AuditLog)
+            {
+                writer.WriteElement(row);
+            }
+            writer.WriteEndElement();
+
             writer.WriteElement(Settings);
             foreach (PeptideGroupDocNode nodeGroup in Document.Children)
             {

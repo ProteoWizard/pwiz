@@ -49,20 +49,25 @@ namespace pwiz.Skyline.Model.DocSettings
             ViewSpecList = ViewSpecList.EMPTY;
         }
 
+        [DiffParent]
         public ImmutableList<AnnotationDef> AnnotationDefs
         {
             get { return _annotationDefs; }
         }
 
+        [DiffParent]
         public ImmutableList<GroupComparisonDef> GroupComparisonDefs
         {
             get { return _groupComparisonDefs;}
         }
 
+        [DiffParent]
         public ViewSpecList ViewSpecList { get; private set; }
 
+        [Diff]
         public Uri PanoramaPublishUri { get; private set; }
 
+        [Diff]
         public string DocumentGuid { get; private set; }
 
         #region Property change methods

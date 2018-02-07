@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -321,8 +322,10 @@ namespace pwiz.Skyline.Model
         }
         public string SecondaryEquivalenceKey { get { return UnlabeledFormula; } }
 
+        [Diff]
         public string Name { get; protected set; }
 
+        [Diff]
         public string Formula // The molecular formula - may contain isotopes
         {
             get { return _formula; }
@@ -336,8 +339,10 @@ namespace pwiz.Skyline.Model
 
         public string UnlabeledFormula { get; private set; } // Formula with any heavy isotopes translated to light
 
+        [Diff]
         public MoleculeAccessionNumbers AccessionNumbers { get; private set; } // InChiKey, CAS, etc to match blib, (see pwiz_tools\BiblioSpec\src\SmallMolMetadata.h)
 
+        [Diff]
         public TypedMass MonoisotopicMass { get; private set; }
         public TypedMass AverageMass { get; private set; }
 

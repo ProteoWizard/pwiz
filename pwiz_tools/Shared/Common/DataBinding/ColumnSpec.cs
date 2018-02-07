@@ -48,36 +48,44 @@ namespace pwiz.Common.DataBinding
             SortDirection = that.SortDirection;
             Total = that.Total;
         }
+
+        [Diff]
         public string Name { get; private set; }
         public ColumnSpec SetName(string value)
         {
             return new ColumnSpec(this){Name = value};
         }
+        [Diff]
         public string Caption { get; private set; }
         public ColumnSpec SetCaption(string value)
         {
             return new ColumnSpec(this){Caption = value};
         }
+        [Diff]
         public string Format { get; private set; }
         public ColumnSpec SetFormat(string value)
         {
             return new ColumnSpec(this){Format = value};
         }
+        [Diff]
         public bool Hidden { get; private set; }
         public ColumnSpec SetHidden(bool value)
         {
             return new ColumnSpec(this) {Hidden = value};
         }
+        [Diff]
         public int? SortIndex { get; private set; }
         public ColumnSpec SetSortIndex(int? value)
         {
             return new ColumnSpec(this){SortIndex = value};
         }
+        [Diff]
         public ListSortDirection? SortDirection { get; private set; }
         public ColumnSpec SetSortDirection(ListSortDirection? value)
         {
             return new ColumnSpec(this){SortDirection = value};
         }
+        [Diff]
         public TotalOperation Total { get; private set; }
         public TotalOperation TotalOperation { get { return Total; } }
 
@@ -221,6 +229,7 @@ namespace pwiz.Common.DataBinding
             Column = that.Column;
             Predicate = that.Predicate;
         }
+        [Diff]
         public string Column { get; private set; }
         public FilterSpec SetColumn(string column)
         {
@@ -231,6 +240,7 @@ namespace pwiz.Common.DataBinding
         {
             return SetColumn(columnId.ToString());
         }
+        [DiffParent]
         public FilterPredicate Predicate { get; private set; }
 
         public FilterSpec SetPredicate(FilterPredicate predicate)
@@ -300,11 +310,13 @@ namespace pwiz.Common.DataBinding
             Columns = ImmutableList.Empty<ColumnSpec>();
             Filters = ImmutableList.Empty<FilterSpec>();
         }
+        [Diff]
         public string Name { get; private set; }
         public ViewSpec SetName(string value)
         {
             return ChangeProp(ImClone(this), im=>im.Name = value);
         }
+        [Diff]
         public string RowSource { get; private set; }
 
         public ViewSpec SetRowSource(string value)
@@ -318,17 +330,20 @@ namespace pwiz.Common.DataBinding
         }
 
 
+        [DiffParent]
         public ImmutableList<ColumnSpec> Columns { get; private set; }
         public ViewSpec SetColumns(IEnumerable<ColumnSpec> value)
         {
             return ChangeProp(ImClone(this), im => im.Columns = ImmutableList.ValueOf(value));
         }
+        [DiffParent]
         public ImmutableList<FilterSpec> Filters { get; private set; }
         public ViewSpec SetFilters(IEnumerable<FilterSpec> value)
         {
             return ChangeProp(ImClone(this), im => im.Filters = ImmutableList.ValueOf(value));
         }
         public string SublistName { get; private set; }
+        [Diff]
         public PropertyPath SublistId
         {
             get { return PropertyPath.Parse(SublistName); }

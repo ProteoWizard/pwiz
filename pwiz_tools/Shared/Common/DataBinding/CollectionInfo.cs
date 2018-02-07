@@ -30,6 +30,7 @@ namespace pwiz.Common.DataBinding
         Type KeyType { get; }
         bool IsDictionary { get; }
         object GetItemFromKey(object collection, object key);
+        object GetItemValueFromKey(object collection, object key);
         IEnumerable GetKeys(object collection);
         IEnumerable GetItems(object collection);
     }
@@ -126,6 +127,19 @@ namespace pwiz.Common.DataBinding
                 return null;
             }
 
+            public object GetItemValueFromKey(object collection, object key)
+            {
+                var item = GetItemFromKey(collection, key);
+                if (item == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return ((KeyValuePair<TKey, TValue>) item).Value;
+                }
+            }
+
             public IEnumerable GetKeys(object collection)
             {
                 if (null == collection)
@@ -171,6 +185,11 @@ namespace pwiz.Common.DataBinding
                     return null;
                 }
                 return list[index.Value];
+            }
+
+            public object GetItemValueFromKey(object collection, object key)
+            {
+                return GetItemFromKey(collection, key);
             }
 
             public IEnumerable GetKeys(object collection)

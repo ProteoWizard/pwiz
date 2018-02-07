@@ -1068,13 +1068,13 @@
     <value>Graph</value>
   </data>
   <data name="barAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>96, 22</value>
   </data>
   <data name="barAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
     <value>Bar</value>
   </data>
   <data name="lineAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>96, 22</value>
   </data>
   <data name="lineAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
     <value>Line</value>
@@ -1311,7 +1311,7 @@
     <value>206, 6</value>
   </data>
   <data name="contextMenuPeakAreas.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 434</value>
+    <value>210, 412</value>
   </data>
   <data name="&gt;&gt;contextMenuPeakAreas.Name" xml:space="preserve">
     <value>contextMenuPeakAreas</value>
@@ -2918,6 +2918,15 @@
   </data>
   <data name="documentGridMenuItem.Text" xml:space="preserve">
     <value>&amp;Document Grid</value>
+  </data>
+  <data name="auditLogMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Alt+4</value>
+  </data>
+  <data name="auditLogMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="auditLogMenuItem.Text" xml:space="preserve">
+    <value>Audit &amp;Log</value>
   </data>
   <data name="toolStripSeparator36.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
@@ -5824,6 +5833,12 @@
     <value>documentGridMenuItem</value>
   </data>
   <data name="&gt;&gt;documentGridMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;auditLogMenuItem.Name" xml:space="preserve">
+    <value>auditLogMenuItem</value>
+  </data>
+  <data name="&gt;&gt;auditLogMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator36.Name" xml:space="preserve">

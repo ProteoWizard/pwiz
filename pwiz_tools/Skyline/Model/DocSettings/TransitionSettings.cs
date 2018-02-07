@@ -27,6 +27,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
@@ -56,6 +57,7 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
+        [DiffParent]
         public TransitionPrediction Prediction { get; private set; }
 
         public TransitionFilter Filter { get; private set; }
@@ -323,18 +325,25 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
+        [Diff]
         public MassType PrecursorMassType { get; private set; }
 
+        [Diff]
         public MassType FragmentMassType { get; private set; }
 
+        [DiffParent]
         public CollisionEnergyRegression CollisionEnergy { get; private set; }
 
+        [DiffParent]
         public DeclusteringPotentialRegression DeclusteringPotential { get; private set; }
 
-        public CompensationVoltageParameters CompensationVoltage { get; private set; } 
+        [DiffParent]
+        public CompensationVoltageParameters CompensationVoltage { get; private set; }
 
-        public OptimizationLibrary OptimizedLibrary { get; set; }
+        [DiffParent]
+        public OptimizationLibrary OptimizedLibrary { get; set; } // Uses fields instead of properties.
 
+        [Diff]
         public OptimizedMethodType OptimizedMethodType { get; private set; }
 
         /// <summary>

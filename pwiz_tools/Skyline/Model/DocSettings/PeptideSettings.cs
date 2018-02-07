@@ -26,6 +26,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -70,22 +71,31 @@ namespace pwiz.Skyline.Model.DocSettings
             Quantification = QuantificationSettings.DEFAULT;
         }
 
+        [DiffParent]
         public Enzyme Enzyme { get; private set; }
 
+        [DiffParent]
         public DigestSettings DigestSettings { get; private set; }
 
-        public BackgroundProteome BackgroundProteome { get; private set; }
+        [DiffParent]
+        public BackgroundProteome BackgroundProteome { get; private set; } //TODO: add attribute to cache, but cache is private and threadsafe
 
+        [DiffParent]
         public PeptidePrediction Prediction { get; private set; }
-
+        //------------------------------------------------------------
+        [DiffParent]
         public PeptideFilter Filter { get; private set; }
 
+        [DiffParent]
         public PeptideLibraries Libraries { get; private set; }
 
+        [DiffParent]
         public PeptideModifications Modifications { get; private set; }
 
+        [DiffParent]
         public PeptideIntegration Integration { get; private set; }
 
+        [DiffParent]
         public QuantificationSettings Quantification { get; private set; }
 
         #region Property change methods
@@ -305,16 +315,22 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
+        [DiffParent]
         public RetentionTimeRegression RetentionTime { get; private set; }
 
+        [DiffParent]
         public IonMobilityPredictor IonMobilityPredictor { get; private set; }
 
+        [Diff]
         public bool UseMeasuredRTs { get; private set; }
 
+        [Diff]
         public double? MeasuredRTWindow { get; private set; }
 
+        [Diff]
         public bool UseLibraryIonMobilityValues { get; private set; }
 
+        [DiffParent]
         public IonMobilityWindowWidthCalculator LibraryIonMobilityWindowWidthCalculator { get; private set; }
 
         public LibraryIonMobilityInfo LibraryIonMobilityInfo { get; private set; }

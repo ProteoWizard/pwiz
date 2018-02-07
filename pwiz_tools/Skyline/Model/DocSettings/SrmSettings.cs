@@ -26,6 +26,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -74,10 +75,13 @@ namespace pwiz.Skyline.Model.DocSettings
             CreateFragmentMassCalcs();
         }
 
+        //[DiffAttributeParent]
         public PeptideSettings PeptideSettings { get; private set; }
 
+        [DiffParent]
         public TransitionSettings TransitionSettings { get; private set; }
 
+        [DiffParent]
         public DataSettings DataSettings { get; private set; }
 
         public MeasuredResults MeasuredResults { get; private set; }

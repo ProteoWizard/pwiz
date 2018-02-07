@@ -35,6 +35,8 @@ using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
 using log4net;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Alerts;
@@ -59,12 +61,16 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.AuditLog;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using DataFormats = System.Windows.Forms.DataFormats;
 using Timer = System.Windows.Forms.Timer;
 
 namespace pwiz.Skyline
@@ -635,7 +641,9 @@ namespace pwiz.Skyline
                 using (var undo = BeginUndo(description, undoState))
                 {
                     if (ModifyDocumentInner(act, onModifying, onModified))
+                    {
                         undo.Commit();
+                    }   
                 }
             }
             catch (IdentityNotFoundException)
@@ -675,6 +683,13 @@ namespace pwiz.Skyline
                 if (ReferenceEquals(docOriginal, docNew))
                     return false;
 
+                var diffs = Reflector<SrmSettings>.CreateDiff(docOriginal.Settings, docNew.Settings);
+                if (diffs.Any())
+                {
+                    var newDoc = docNew;
+                    diffs.SelectMany(d => d.CreateRows()).ForEach(r => newDoc.WriteAuditLog(r));
+                }
+                
                 // And mark the document as changed by the user.
                 docNew = docNew.IncrementUserRevisionIndex();
 
@@ -5037,6 +5052,17 @@ namespace pwiz.Skyline
                 collapseProteinsMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Lists;
                 collapsePeptidesMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules;
             }
+        }
+
+        public void ShowAuditLog()
+        {
+            var form = AuditLogForm.MakeAuditLogForm(this);
+            form.Show(dockPanel);
+        }
+
+        private void auditLogMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowAuditLog();
         }
     }
 }

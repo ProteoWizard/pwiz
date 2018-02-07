@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.IonMobility;
@@ -115,14 +116,29 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
+        [DiffParent]
+        public ImmutableSortedList<int, RegressionLine> ListFileIdToConversion
+        {
+            get { return _listFileIdToConversion; }
+        }
+
+        [Diff]
+        public bool IsMissingStandardPeptides
+        {
+            get { return _isMissingStandardPeptides; }
+        }
+
+        [DiffParent]
         public RetentionScoreCalculatorSpec Calculator
         {
             get { return _calculator; }
             private set { _calculator = value; }
         }
 
+        [Diff]
         public double TimeWindow { get; private set; }
 
+        [Diff]
         public IRegressionFunction Conversion { get; private set; }
 
         public bool IsUsable { get { return Conversion != null && Calculator.IsUsable; } }
@@ -134,6 +150,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return _dictStandardPeptides != null && _dictStandardPeptides.ContainsKey(nodePep.Peptide.GlobalIndex);
         }
 
+        [DiffParent]
         public IList<MeasuredRetentionTime> PeptideTimes
         {
             get { return _peptidesTimes; }
@@ -1242,8 +1259,11 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
+        [DiffParent]
         public Target PeptideSequence { get; private set; }
+        [Diff]
         public double RetentionTime { get; private set; }
+
         public bool IsStandard { get; private set; }
 
         #region Implementation of IXmlSerializable
@@ -1383,6 +1403,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
+        [Diff]
         public ChargeRegressionLine[] Conversions
         {
             get { return _conversions; }
@@ -1714,6 +1735,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// Represents a regression line that applies to a transition with
     /// a specific charge state.
     /// </summary>
+    [XmlRoot("charge_regression_line")]
     public sealed class ChargeRegressionLine : IXmlSerializable, IComparable<ChargeRegressionLine>, IRegressionFunction
     {
         public ChargeRegressionLine(int charge, double slope, double intercept)
@@ -1722,8 +1744,10 @@ namespace pwiz.Skyline.Model.DocSettings
             RegressionLine = new RegressionLine(slope, intercept);
         }
 
+        [Diff]
         public int Charge { get; private set; }
 
+        [Diff]
         public RegressionLine RegressionLine { get; private set; }
 
         public double Slope { get { return RegressionLine.Slope; } }
@@ -1798,6 +1822,12 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
 
         #region object overrides
+
+        public override string ToString()
+        {
+            return string.Format("Charge: {0} Slope: {1} Intercept: {2}", Charge, RegressionLine.Slope,
+                RegressionLine.Intercept);
+        }
 
         public bool Equals(ChargeRegressionLine obj)
         {
@@ -1898,16 +1928,23 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MIN_STEP_COUNT = 1;
         public const int MAX_STEP_COUNT = 10;
 
+        [Diff]
         public virtual Tuning TuneLevel { get { return Tuning.none; } }
         public CompensationVoltageRegressionRough RegressionRough { get; private set; }
         public CompensationVoltageRegressionMedium RegressionMedium { get; private set; }
         public CompensationVoltageRegressionFine RegressionFine { get; private set; }
 
+        [Diff]
         public double MinCov { get; protected set; }
+        [Diff]
         public double MaxCov { get; protected set; }
+        [Diff]
         public int StepCountRough { get; protected set; }
+        [Diff]
         public int StepCountMedium { get; protected set; }
+        [Diff]
         public int StepCountFine { get; protected set; }
+
         public double StepSizeRough { get { return (MaxCov - MinCov)/(StepCountRough*2); } }
         public double StepSizeMedium { get { return StepSizeRough / (StepCountMedium + 1); } }
         public double StepSizeFine { get { return StepSizeMedium / (StepCountFine + 1); } }
@@ -2171,6 +2208,7 @@ namespace pwiz.Skyline.Model.DocSettings
             RegressionLine = new RegressionLine(slope, intercept);
         }
 
+        [DiffParent]
         public RegressionLine RegressionLine { get; private set; }
 
         public double Slope { get { return RegressionLine.Slope; } }
@@ -2266,12 +2304,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public abstract OptimizationType OptType { get; }
 
+        [Diff]
         public virtual double StepSize
         {
             get { return _stepSize; }
             protected set { _stepSize = value; }
         }
 
+        [Diff]
         public virtual int StepCount
         {
             get { return _stepCount; }
@@ -2614,9 +2654,11 @@ namespace pwiz.Skyline.Model.DocSettings
             Intercept = intercept;
         }
 
+        [Diff]
         // XML Serializable properties
         public double Slope { get; private set; }
 
+        [Diff]
         public double Intercept { get; private set; }
 
         /// <summary>
@@ -2772,8 +2814,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ionMobilityValue.HasValue || collisionalCrossSectionSqA.HasValue ? new IonMobilityAndCCS(ionMobilityValue, collisionalCrossSectionSqA, highEnergyIonMobilityValueOffset) : EMPTY;
         }
 
+        [Diff]
         public IonMobilityValue IonMobility { get; private set; }
-        public double? CollisionalCrossSectionSqA { get; private set; } 
+        [Diff]
+        public double? CollisionalCrossSectionSqA { get; private set; }
+        [Diff]
         public double HighEnergyIonMobilityValueOffset { get; private set; } // As in Waters MSe, where product ions fly a bit faster due to added kinetic energy
 
         public double? GetHighEnergyDriftTimeMsec()
@@ -3089,13 +3134,17 @@ namespace pwiz.Skyline.Model.DocSettings
             linear_range      // Waters SONAR etc
         };
 
+        [Diff]
         public IonMobilityPeakWidthType PeakWidthMode { get; private set; }
 
         // For Water-style (SONAR) linear peak width calcs
+        [Diff]
         public double PeakWidthAtIonMobilityValueZero { get; private set; }
+        [Diff]
         public double PeakWidthAtIonMobilityValueMax { get; private set; }
 
         // For Agilent-style resolving power peak width calcs
+        [Diff]
         public double ResolvingPower { get; private set; }
 
 
@@ -3186,9 +3235,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static readonly IonMobilityPredictor EMPTY = new IonMobilityPredictor();  // For test purposes
 
+        [Diff]
         public IonMobilityLibrarySpec IonMobilityLibrary { get; private set; }
 
-        public IonMobilityWindowWidthCalculator WindowWidthCalculator;
+        [DiffParent]
+        public IonMobilityWindowWidthCalculator WindowWidthCalculator { get; set; }
 
         public IonMobilityAndCCS GetMeasuredIonMobility(LibKey chargedPeptide)
         {
@@ -3201,6 +3252,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return IonMobilityAndCCS.EMPTY;
         }
 
+        [DiffParent]
         public IDictionary<LibKey, IonMobilityAndCCS> MeasuredMobilityIons
         {
             get { return _measuredMobilityIons == null ? null : _measuredMobilityIons.AsDictionary(); }
@@ -3211,6 +3263,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
 
+        [DiffParent]
         public IList<ChargeRegressionLine> ChargeRegressionLines
         {
             get { return _chargeRegressionLines; }

@@ -23,6 +23,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -63,6 +64,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
+        [Diff]
         public string Name { get; private set; }
 
         public virtual string GetKey()

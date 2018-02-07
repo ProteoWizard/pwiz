@@ -24,6 +24,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -58,8 +59,10 @@ namespace pwiz.Skyline.Model.DocSettings
         private AnnotationDef()
         {
         }
-        
+
+        [Diff]
         public AnnotationTargetSet AnnotationTargets { get; private set; }
+        [Diff]
         public AnnotationType Type { get { return _type; } private set { _type = value; } }
         public Type ValueType
         {
@@ -77,6 +80,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        [Diff]
         public ImmutableList<String> Items
         {
             get { return _items; }

@@ -403,6 +403,27 @@ namespace pwiz.Skyline.Util.Extensions
             return sb.ToString();
         }
 
+        public static string ToCRLF(this string str)
+        {
+            var sb = new StringBuilder();
+            var len = str.Length;
+            for (var pos = 0; pos < len; pos++)
+            {
+                var c = str[pos];
+                if (c == '\n' && (pos == 0 || str[pos - 1] != '\r'))
+                {
+                    sb.Append('\r');
+                    sb.Append('\n');
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+
+            return sb.ToString();
+        }
+
         /// <summary>
         /// Returns a filter string suitable for a common file dialog (e.g. "CSV (Comma delimited) (*.csv)|*.csv")
         /// </summary>

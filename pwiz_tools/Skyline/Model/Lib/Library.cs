@@ -26,6 +26,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -2191,6 +2192,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        [Diff]
         public LibraryKey LibraryKey { get; private set; }
 
         public LibKey(double precursorMz,

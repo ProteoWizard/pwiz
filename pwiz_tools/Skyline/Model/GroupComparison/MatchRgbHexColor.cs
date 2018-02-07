@@ -21,6 +21,7 @@ using System;
 using System.Drawing;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.GroupComparison
@@ -76,6 +77,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         // as a regular expression, so we set a flag if there is something wrong with the match options.
         public bool InvalidMatchOptions { get; private set; }
 
+        [Diff]
         public string Expression
         {
             get { return _expression; }
@@ -98,6 +100,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
 
+        [Diff]
         public bool Labeled
         {
             get { return _labeled; }
@@ -108,6 +111,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
 
+        [Diff]
         public PointSize PointSize
         {
             get { return _pointSize; }
@@ -118,6 +122,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
 
+        [Diff]
         public PointSymbol PointSymbol
         {
             get { return _pointSymbol; }

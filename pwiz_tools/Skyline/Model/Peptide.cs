@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -716,8 +717,10 @@ namespace pwiz.Skyline.Model
             Molecule = new CustomMolecule(molecule);
         }
 
+        [Diff]
         public string Sequence { get; private set; }
 
+        [DiffParent]
         public CustomMolecule Molecule { get; private set; }
         public bool IsProteomic { get { return Molecule == null; } }
         

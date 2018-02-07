@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -42,6 +43,7 @@ namespace pwiz.Skyline.Model.Optimization
             DatabasePath = databasePath;
         }
 
+        [Diff]
         public string DatabasePath { get; private set; }
 
         public bool IsNone

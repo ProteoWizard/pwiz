@@ -52,8 +52,10 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -255,14 +257,16 @@ namespace pwiz.Skyline.Model
             : base(new SrmDocumentId(), Annotations.EMPTY, new PeptideGroupDocNode[0], false)
         {
             FormatVersion = DocumentFormat.CURRENT;
+            AuditLog = new List<AuditLogRow>();
             Settings = settings;
             SetDocumentType(); // Note proteomic vs small molecule vs mixed (as we're empty, will be set to proteomic)
         }
 
-        private SrmDocument(SrmDocument doc, SrmSettings settings, Action<SrmDocument> changeProps = null)
+        private SrmDocument(SrmDocument doc, SrmSettings settings, List<AuditLogRow> auditLog, Action<SrmDocument> changeProps = null)
             : base(doc.Id, Annotations.EMPTY, doc.Children, false)
         {
             FormatVersion = doc.FormatVersion;
+            AuditLog = auditLog;
             RevisionIndex = doc.RevisionIndex;
             UserRevisionIndex = doc.UserRevisionIndex;
             Settings = settings;
@@ -308,6 +312,8 @@ namespace pwiz.Skyline.Model
         }
 
         public DocumentFormat FormatVersion { get; private set; }
+
+        public List<AuditLogRow> AuditLog { get; private set; }
 
         /// <summary>
         /// Monotonically increasing index, incremented each time a modified
@@ -518,6 +524,11 @@ namespace pwiz.Skyline.Model
             {
                 return false;
            }
+        }
+
+        public void WriteAuditLog(AuditLogRow row)
+        {
+            AuditLog.Add(row);
         }
 
         private HashSet<Target> GetRetentionTimeStandardsOrThrow()
@@ -877,7 +888,7 @@ namespace pwiz.Skyline.Model
         /// <returns>A new document revision</returns>
         public SrmDocument ChangeSettingsNoDiff(SrmSettings settingsNew)
         {
-            return new SrmDocument(this, settingsNew, doc =>
+            return new SrmDocument(this, settingsNew, AuditLog, doc =>
             {
                 doc.RevisionIndex++;
                 doc.IsProteinMetadataPending = doc.CalcIsProteinMetadataPending();
@@ -1029,7 +1040,7 @@ namespace pwiz.Skyline.Model
                 if (ArrayUtil.ReferencesEqual(childrenNew, Children))
                     return ChangeSettingsNoDiff(settingsNew);
 
-                return (SrmDocument)new SrmDocument(this, settingsNew).ChangeChildren(childrenNew);
+                return (SrmDocument)new SrmDocument(this, settingsNew, AuditLog).ChangeChildren(childrenNew);
             }
         }
 
@@ -1946,6 +1957,7 @@ namespace pwiz.Skyline.Model
             var documentReader = new DocumentReader();
             documentReader.ReadXml(reader);
             FormatVersion = documentReader.FormatVersion;
+            AuditLog = documentReader.AuditLog;
             Settings = documentReader.Settings;
 
             if (documentReader.Children == null)
