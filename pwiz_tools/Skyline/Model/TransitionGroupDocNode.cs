@@ -714,15 +714,7 @@ namespace pwiz.Skyline.Model
             IPrecursorMassCalc calc;
             if (IsCustomIon)
             {
-                var labelTypeForCalc = labelType;
-                if (string.IsNullOrEmpty(CustomMolecule.Formula))
-                {
-                    labelTypeForCalc = labelType = IsotopeLabelType.light; // Don't worry about isotopes if we don't know the formula
-                }
-                else if (adduct.HasIsotopeLabels)
-                {
-                    labelTypeForCalc = IsotopeLabelType.light; // Don't need to look up the isotope, it's embedded in the adduct description
-                }
+                var labelTypeForCalc =  IsotopeLabelType.light; // Don't need to look up the isotope, if we have one it's embedded in the adduct description
                 calc = settings.GetPrecursorCalc(labelTypeForCalc, mods);
                 var typedMods = settings.PeptideSettings.Modifications.GetModificationsByName(labelType.Name);
                 mass = calc.GetPrecursorMass(CustomMolecule, typedMods, adduct, out isotopicFormula); // Mass including effect of isotopes (incl. any adduct isotopes M<isotopes>+<atoms>), but not the adduct atoms (M+<atoms>) themselves
