@@ -66,6 +66,7 @@ namespace MSConvertGUI
             this.sampleResultTextBox = new System.Windows.Forms.TextBox();
             this.connectButton = new System.Windows.Forms.Button();
             this.treeViewImageList = new System.Windows.Forms.ImageList(this.components);
+            this.Analysis = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             ((System.ComponentModel.ISupportInitialize)(this.VertSplit)).BeginInit();
             this.VertSplit.Panel1.SuspendLayout();
             this.VertSplit.Panel2.SuspendLayout();
@@ -106,6 +107,7 @@ namespace MSConvertGUI
             // 
             this.FolderViewList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.SourceName,
+            this.Analysis,
             this.SourceSize,
             this.SourceType,
             this.DateModified});
@@ -113,9 +115,11 @@ namespace MSConvertGUI
             this.FolderViewList.Location = new System.Drawing.Point(0, 0);
             this.FolderViewList.Name = "FolderViewList";
             this.FolderViewList.Size = new System.Drawing.Size(626, 549);
+            this.FolderViewList.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.FolderViewList.TabIndex = 24;
             this.FolderViewList.UseCompatibleStateImageBehavior = false;
             this.FolderViewList.View = System.Windows.Forms.View.Details;
+            this.FolderViewList.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.FolderViewList_ColumnClick);
             this.FolderViewList.SelectedIndexChanged += new System.EventHandler(this.FolderViewList_SelectedIndexChanged);
             this.FolderViewList.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.FolderViewList_MouseDoubleClick);
             // 
@@ -156,7 +160,7 @@ namespace MSConvertGUI
             this.serverLocationTextBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this.serverLocationTextBox.Location = new System.Drawing.Point(102, 5);
             this.serverLocationTextBox.Name = "serverLocationTextBox";
-            this.serverLocationTextBox.Size = new System.Drawing.Size(757, 20);
+            this.serverLocationTextBox.Size = new System.Drawing.Size(732, 20);
             this.serverLocationTextBox.TabIndex = 45;
             // 
             // cancelButton
@@ -206,9 +210,9 @@ namespace MSConvertGUI
             // connectButton
             // 
             this.connectButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.connectButton.Location = new System.Drawing.Point(865, 5);
+            this.connectButton.Location = new System.Drawing.Point(840, 5);
             this.connectButton.Name = "connectButton";
-            this.connectButton.Size = new System.Drawing.Size(66, 21);
+            this.connectButton.Size = new System.Drawing.Size(91, 21);
             this.connectButton.TabIndex = 51;
             this.connectButton.Text = "&Connect";
             this.connectButton.UseVisualStyleBackColor = true;
@@ -220,6 +224,11 @@ namespace MSConvertGUI
             this.treeViewImageList.Images.SetKeyName(0, "MyNetworkPlaces.png");
             this.treeViewImageList.Images.SetKeyName(1, "folder.png");
             this.treeViewImageList.Images.SetKeyName(2, "DataProcessing.png");
+            // 
+            // Analysis
+            // 
+            this.Analysis.Text = "Analysis";
+            this.Analysis.Width = 200;
             // 
             // UnifiBrowserForm
             // 
@@ -262,6 +271,7 @@ namespace MSConvertGUI
         private System.Windows.Forms.TextBox sampleResultTextBox;
         private System.Windows.Forms.Button connectButton;
         private System.Windows.Forms.ImageList treeViewImageList;
+        private System.Windows.Forms.ColumnHeader Analysis;
 
     }
 }

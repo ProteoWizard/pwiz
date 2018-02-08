@@ -45,14 +45,16 @@ namespace MSConvertGUI
         private string _outputFolder;
         private string _options;
         private List<MainLogic> _tasksRunningList;
+        private Map<string, UnifiBrowserForm.Credentials> _unifiCredentialsByUrl;
 
-        public ProgressForm(IEnumerable<string> filesToProcess, string outputFolder, string options)
+        public ProgressForm(IEnumerable<string> filesToProcess, string outputFolder, string options, Map<string, UnifiBrowserForm.Credentials> unifiCredentialsByUrl)
         {
             InitializeComponent();
             _filesToProcess = filesToProcess;
             _outputFolder = outputFolder;
             _options = options;
             _tasksRunningList = new List<MainLogic>();
+            _unifiCredentialsByUrl = unifiCredentialsByUrl;
         }
 
         internal void UpdatePercentage(int result, int maxValue, JobInfo info)
@@ -155,7 +157,11 @@ namespace MSConvertGUI
                 _tasksRunningList.Add(runProgram);
                 info.workProcess = runProgram;
 
-                var config = runProgram.ParseCommandLine(_outputFolder, (item + "|" + _options).Trim('|'));
+                string workItem = item;
+                if (MainForm.IsNetworkSource(item))
+                    workItem = _unifiCredentialsByUrl[item].GetUrlWithAuthentication(item);
+
+                var config = runProgram.ParseCommandLine(_outputFolder, (workItem + "|" + _options).Trim('|'));
                 runProgram.QueueWork(config);
             }
 

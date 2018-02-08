@@ -38,11 +38,17 @@ namespace MSConvertGUI
             InitializeComponent();
             base.AcceptButton = okButton;
             base.CancelButton = cancelButton;
+            advancedOptionLabelPanel.Visible = advancedOptionPanel.Visible = false;
         }
 
         private void okButton_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void advancedCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            advancedOptionLabelPanel.Visible = advancedOptionPanel.Visible = advancedCheckbox.Checked;
         }
     }
 }

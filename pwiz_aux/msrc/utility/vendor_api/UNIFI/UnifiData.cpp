@@ -399,10 +399,27 @@ class UnifiData::Impl
     {
         try
         {
+            Uri^ temp;
             if (bal::starts_with(sampleResultUrl, "http://") || bal::starts_with(sampleResultUrl, "https://"))
-                _sampleResultUrl = gcnew Uri(ToSystemString(sampleResultUrl));
+                temp = gcnew Uri(ToSystemString(sampleResultUrl));
             else
-                _sampleResultUrl = gcnew Uri(ToSystemString("https://" + sampleResultUrl));
+                temp = gcnew Uri(ToSystemString("https://" + sampleResultUrl));
+
+            auto queryVars = System::Web::HttpUtility::ParseQueryString(temp->Query);
+            if (queryVars->Count > 0)
+            {
+                _identityServerUrl = gcnew Uri(queryVars[L"identity"]);
+                _clientScope = queryVars[L"scope"];
+                _clientSecret = queryVars[L"secret"];
+            }
+            else
+            {
+
+                _identityServerUrl = gcnew Uri(System::String::Format("{0}://{1}@{2}:50333", temp->Scheme, temp->UserInfo, temp->Host));
+                _clientScope = L"unifi";
+                _clientSecret = L"secret";
+            }
+            _sampleResultUrl = gcnew Uri(temp->GetLeftPart(UriPartial::Path));
 
             auto webRequestHandler = gcnew System::Net::Http::WebRequestHandler();
             webRequestHandler->UnsafeAuthenticatedConnectionSharing = true;
@@ -433,8 +450,7 @@ class UnifiData::Impl
     friend class UnifiData;
 
     private:
-    const string identityServerBaseAddress = "https://unifiapi.waters.com:50333/identity";
-    const string tokenEndpoint = identityServerBaseAddress + "/connect/token";
+    System::String^ tokenEndpoint() { return System::Uri(_identityServerUrl, L"/identity/connect/token").ToString(); }
 
     /// returns JSON describing the sampleResult, for example:
     //{
@@ -654,6 +670,9 @@ class UnifiData::Impl
     System::String^ binsToDriftTimesEndPoint() { return _sampleResultUrl + "/spectra/mass.mse/convertbintodrifttime"; }
 
     gcroot<Uri^> _sampleResultUrl;
+    gcroot<Uri^> _identityServerUrl;
+    gcroot<System::String^> _clientScope;
+    gcroot<System::String^> _clientSecret;
     gcroot<System::String^> _accessToken;
     gcroot<HttpClient^> _httpClient;
     gcroot<ParallelDownloadQueue^> _queue;
@@ -716,9 +735,9 @@ class UnifiData::Impl
         fields->Add(IdentityModel::OidcConstants::TokenRequest::GrantType, IdentityModel::OidcConstants::GrantTypes::Password);
         fields->Add(IdentityModel::OidcConstants::TokenRequest::UserName, username);
         fields->Add(IdentityModel::OidcConstants::TokenRequest::Password, password);
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::Scope, "unifi");
+        fields->Add(IdentityModel::OidcConstants::TokenRequest::Scope, _clientScope);
 
-        auto tokenClient = gcnew TokenClient(ToSystemString(tokenEndpoint), "resourceownerclient", "secret", IdentityModel::Client::AuthenticationStyle::BasicAuthentication);
+        auto tokenClient = gcnew TokenClient(tokenEndpoint(), "resourceownerclient", _clientSecret, IdentityModel::Client::AuthenticationStyle::BasicAuthentication);
         TokenResponse^ response = tokenClient->RequestAsync(fields, System::Threading::CancellationToken::None)->Result;
         if (response->IsError)
             throw user_error("authentication error: incorrect username or password? (" + ToStdString(response->Error) + ")");
