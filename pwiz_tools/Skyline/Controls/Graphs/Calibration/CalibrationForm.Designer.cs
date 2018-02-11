@@ -43,7 +43,10 @@
             // zedGraphControl
             // 
             resources.ApplyResources(this.zedGraphControl, "zedGraphControl");
+            this.zedGraphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
+            this.zedGraphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
             this.zedGraphControl.IsShowCopyMessage = false;
+            this.zedGraphControl.IsZoomOnMouseCenter = true;
             this.zedGraphControl.Name = "zedGraphControl";
             this.zedGraphControl.ScrollGrace = 0D;
             this.zedGraphControl.ScrollMaxX = 0D;

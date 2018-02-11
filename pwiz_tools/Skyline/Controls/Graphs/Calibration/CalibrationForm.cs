@@ -51,6 +51,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             zedGraphControl.GraphPane.Legend.IsVisible = false;
             zedGraphControl.GraphPane.Title.Text = null;
             zedGraphControl.GraphPane.Title.FontSpec.Size = 12f;
+            zedGraphControl.GraphPane.IsFontsScaled = false;
             zedGraphControl.GraphPane.XAxis.MajorTic.IsOpposite = false;
             zedGraphControl.GraphPane.XAxis.MinorTic.IsOpposite = false;
             zedGraphControl.GraphPane.YAxis.MajorTic.IsOpposite = false;
@@ -295,10 +296,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 double? xSelected = curveFitter.GetCalculatedXValue(CalibrationCurve, _skylineWindow.SelectedResultsIndex);
                 if (xSelected.HasValue && ySelected.HasValue)
                 {
+                    const float selectedLineWidth = 2;
                     var selectedLineColor = Color.FromArgb(128, GraphSummary.ColorSelected);
                     var verticalLine = new LineObj(xSelected.Value, ySelected.Value, xSelected.Value, options.LogPlot ? minY : 0)
                     {
-                        Line = { Color = selectedLineColor },
+                        Line = { Color = selectedLineColor, Width = selectedLineWidth },
                         Location = { CoordinateFrame = CoordType.AxisXYScale },
                         ZOrder = ZOrder.E_BehindCurves,
                         IsClippedToChartRect = true
@@ -310,8 +312,8 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         var horizontalLine = new LineObj(xSpecified.Value, ySelected.Value, xSelected.Value,
                             ySelected.Value)
                         {
-                            Line = {Color = selectedLineColor},
-                            Location = {CoordinateFrame = CoordType.AxisXYScale},
+                            Line = { Color = selectedLineColor, Width = selectedLineWidth },
+                            Location = { CoordinateFrame = CoordType.AxisXYScale },
                             ZOrder = ZOrder.E_BehindCurves,
                             IsClippedToChartRect = true
                         };
