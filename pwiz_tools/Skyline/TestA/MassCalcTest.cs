@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
@@ -188,6 +189,32 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(Molecule.Parse("C12H9S2P0").ToString(), Molecule.Parse("C12H9S2").ToString()); // P0 is weird
             Assert.AreEqual(Molecule.Parse("C12H9S2P1").ToString(), Molecule.Parse("C12H9S2P").ToString()); // P1 is weird
             Assert.AreEqual(Molecule.Parse("C12H9S0P").ToString(), Molecule.Parse("C12H9P").ToString()); // S0 is weird, and not at end
+        }
+
+        [TestMethod]
+        public void TestTokenizeFormula()
+        {
+            CollectionAssert.AreEqual(new[] {"C'", "6", "Cl", "2", "C", "H", "4", "-", "H", "24", "O"},
+                SequenceMassCalc.TokenizeFormula("C'6Cl2CH4-H24O").ToArray());
+            // Test garbage characters before an element name.
+            CollectionAssert.AreEqual(new[] {"x", "y", "z", "Element"},
+                SequenceMassCalc.TokenizeFormula("xyzElement").ToArray());
+        }
+
+        [TestMethod]
+        public void TestGetHeavyFormula()
+        {
+            Assert.AreEqual("C'O2", SequenceMassCalc.GetHeavyFormula("CO2", LabelAtoms.C13));
+            Assert.AreEqual("C'O2", SequenceMassCalc.GetHeavyFormula("C'O2", LabelAtoms.C13));
+            Assert.AreEqual("C'", SequenceMassCalc.GetHeavyFormula("C", LabelAtoms.C13));
+            Assert.AreEqual("N'", SequenceMassCalc.GetHeavyFormula("N", LabelAtoms.N15));
+            Assert.AreEqual("O'", SequenceMassCalc.GetHeavyFormula("O", LabelAtoms.O18));
+            Assert.AreEqual("H'", SequenceMassCalc.GetHeavyFormula("H", LabelAtoms.H2));
+            Assert.AreEqual("Cl'", SequenceMassCalc.GetHeavyFormula("Cl", LabelAtoms.Cl37));
+            Assert.AreEqual("Br'", SequenceMassCalc.GetHeavyFormula("Br", LabelAtoms.Br81));
+            Assert.AreEqual("P'", SequenceMassCalc.GetHeavyFormula("P", LabelAtoms.P32));
+            Assert.AreEqual("S\"", SequenceMassCalc.GetHeavyFormula("S", LabelAtoms.S33));
+            Assert.AreEqual("S'", SequenceMassCalc.GetHeavyFormula("S", LabelAtoms.S34));
         }
     }
 }
