@@ -678,9 +678,10 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         foreach (var l in m.LabelNames)
                         {
-                            if (!dict.ContainsKey(l))
+                            string formulaStripped = BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(l);
+                            if (!dict.ContainsKey(formulaStripped))
                             {
-                                dict.Add(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(l), l);
+                                dict.Add(formulaStripped, l);
                             }
                         }
                     }
