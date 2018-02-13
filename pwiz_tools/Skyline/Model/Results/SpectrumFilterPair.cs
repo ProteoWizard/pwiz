@@ -186,6 +186,7 @@ namespace pwiz.Skyline.Model.Results
             float[] massErrors = highAcc ? new float[targetCount] : null;
             double[] meanErrors = highAcc ? new double[targetCount] : null;
 
+            int spectrumCount = 0;
             int rtCount = 0;
             double lastRT = 0;
             foreach (var spectrum in spectra)
@@ -204,6 +205,7 @@ namespace pwiz.Skyline.Model.Results
                 // Filter on scan polarity
                 if (Q1.IsNegative != spectrum.NegativeCharge)
                     continue;
+                spectrumCount++;
 
                 // Filter on ion mobility, if any
                 if (!ContainsIonMobilityValue(spectrum.IonMobility, useDriftTimeHighEnergyOffset))
@@ -283,6 +285,10 @@ namespace pwiz.Skyline.Model.Results
                         meanErrors[targetIndex] = meanError;
                 }
                 
+            }
+            if (spectrumCount == 0)
+            {
+                return null;
             }
             if (meanErrors != null)
             {
