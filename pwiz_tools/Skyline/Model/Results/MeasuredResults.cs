@@ -657,26 +657,14 @@ namespace pwiz.Skyline.Model.Results
                     // For small molecules we will likely have to select from several chromInfos all with same Q1>Q3,
                     // so we examine peaks for match with explicitRT if provided
                     bool multiMatch = chromatogram.OptimizationFunction != null;
-                    double errRT;
-                    int tranMatch = chromInfo.MatchTransitions(nodePep, nodeGroup, tolerance, multiMatch, out errRT);
+                    int tranMatch = chromInfo.MatchTransitions(nodePep, nodeGroup, tolerance, multiMatch);
                     // CONSIDER: This is pretty tricky code, and we are currently favoring
                     //           peak proximity to explicit retention time over number of matching
                     //           transitions.
-                    if (tranMatch >= maxTranMatch  || errRT < minErrRT)
+                    if (tranMatch >= maxTranMatch)
                     {
                         if (ReferenceEquals(listChrom, EMPTY_GROUP_INFOS))
                             listChrom = new List<ChromatogramGroupInfo>();
-                        if (errRT < minErrRT)
-                        {
-                            // This is the closest peak we've found to the explicit RT
-                            listChrom.Clear();
-                            minErrRT = errRT;
-                        }  
-                        else if (errRT > minErrRT)
-                        {
-                            // This is not the closest peak we've found to the explicit RT, skip it
-                            continue;
-                        }
                         // If new maximum, clear anything collected at the previous maximum
                         if (tranMatch > maxTranMatch)
                             listChrom.Clear();
@@ -692,27 +680,7 @@ namespace pwiz.Skyline.Model.Results
 
             // If more than one value was found, make a final pass to ensure that there
             // is only one precursor match per file.
-            if (listChrom.Count > 1)
-            {
-                var precursorMz = nodeGroup.PrecursorMz;
-                var listChromFinal = new List<ChromatogramGroupInfo>();
-                foreach (var chromInfo in listChrom)
-                {
-                    // Polarity matching should have happened in the TryLoad
-                    Assume.IsTrue(chromInfo.PrecursorMz.IsNegative == precursorMz.IsNegative);
-                    var filePath = chromInfo.FilePath;
-                    int fileIndex = listChromFinal.IndexOf(info => Equals(filePath, info.FilePath));
-                    if (fileIndex == -1)
-                        listChromFinal.Add(chromInfo);
-                    // Use the entry with the m/z closest to the target
-                    else if (Math.Abs(precursorMz - chromInfo.PrecursorMz) <
-                             Math.Abs(precursorMz - listChromFinal[fileIndex].PrecursorMz))
-                    {
-                        listChromFinal[fileIndex] = chromInfo;
-                    }
-                }
-                listChrom = listChromFinal;
-            }
+            listChrom = EnsureOneMatchPerFile(nodePep, nodeGroup, tolerance, listChrom);
             if (listChromBuffer != null)
             {
                 listChromBuffer.Clear();
@@ -725,6 +693,53 @@ namespace pwiz.Skyline.Model.Results
                     ? EMPTY_GROUP_INFOS : listChrom.ToArray();
             }
             return listChrom.Count > 0;
+        }
+
+        private IList<ChromatogramGroupInfo> EnsureOneMatchPerFile(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, float tolerance, IList<ChromatogramGroupInfo> listChrom)
+        {
+            if (listChrom.Count <= 1)
+            {
+                return listChrom;
+            }
+            var lookupByFilePath = listChrom.ToLookup(chrom => chrom.FilePath);
+            if (lookupByFilePath.Count == listChrom.Count)
+            {
+                return listChrom;
+            }
+            var listChromFinal = new List<ChromatogramGroupInfo>();
+            double precursorMz = nodeGroup.PrecursorMz;
+            foreach (var grouping in listChrom.ToLookup(chrom => chrom.FilePath))
+            {
+                if (grouping.Count() == 1)
+                {
+                    listChromFinal.Add(grouping.First());
+                    continue;
+                }
+                ChromatogramGroupInfo chromGroupBest = null;
+                double? rtErrorBest = null;
+                foreach (var chromGroup in grouping)
+                {
+                    
+                    if (chromGroupBest == null || Math.Abs(precursorMz - chromGroup.PrecursorMz) <
+                        Math.Abs(precursorMz - chromGroupBest.PrecursorMz))
+                    {
+                        chromGroupBest = chromGroup;
+                        rtErrorBest = chromGroup.GetRetentionTimeError(nodePep, nodeGroup, tolerance);
+                        continue;
+                    }
+                    if (Equals(chromGroupBest.PrecursorMz, chromGroup.PrecursorMz))
+                    {
+                        double? rtError = chromGroup.GetRetentionTimeError(nodePep, nodeGroup, tolerance);
+                        if (rtError.HasValue && rtErrorBest.HasValue && rtError < rtErrorBest)
+                        {
+                            chromGroupBest = chromGroup;
+                            rtErrorBest = rtError;
+                        }
+                    }
+                }
+                listChromFinal.Add(chromGroupBest);
+            }
+            return listChromFinal;
         }
 
         public bool ContainsChromatogram(string name)
