@@ -59,12 +59,9 @@ FragmentationMode translateScanMode(int scanMode)
     {
         default:
         case 1:
-            return FragmentationMode_CID;
-            //return FragmentationMode_Unknown;
+            return FragmentationMode_Unknown;
 
-        case 2:
-        case 8:
-            return FragmentationMode_CID;
+        case 2: return FragmentationMode_CID;
 
         case 4:
         case 5:
@@ -99,7 +96,6 @@ ScanMode:
 2 = MS/MS
 4 = in-source CID
 5 = broadband CID
-8 = PASEF?
 255 = unknown
 
 AcquisitionMode:
@@ -151,7 +147,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     size_t count = sqlite::query(db, "SELECT COUNT(*) FROM Frames").begin()->get<sqlite3_int64>(0);
     frames_.reserve(count);
 
-    sqlite::query q(db, "SELECT f.Id, Time, Polarity, ScanMode, MsMsType, MaxIntensity, SummedIntensities, NumScans, NumPeaks, "
+    sqlite::query q(db, "SELECT f.Id, Time, Polarity, ScanMode, MsMsType, TimsId, MaxIntensity, SummedIntensities, NumScans, NumPeaks, "
                         "Parent, TriggerMass, IsolationWidth, PrecursorCharge, CollisionEnergy "
                         "FROM Frames f "
                         "LEFT JOIN FrameMsMsInfo info ON f.Id=info.Frame "
@@ -172,10 +168,10 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         {
             case 0: msLevel = 1; break;
             case 2: msLevel = 2; break;
-            case 8: msLevel = 2; break;
             default: throw runtime_error("Unhandled msmsType: " + lexical_cast<string>(msmsType));
         }
 
+        int64_t timsId = row.get<sqlite3_int64>(++idx);
         double bpi = row.get<double>(++idx);
         double tic = row.get<double>(++idx);
         int numScans = row.get<int>(++idx);
@@ -193,7 +189,8 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                                            msLevel, rt,
                                            mzAcqRangeLower, mzAcqRangeUpper,
                                            tic, bpi,
-                                           polarity, scanMode, numScans,
+                                           polarity, scanMode,
+                                           timsId, numScans,
                                            parentId, precursorMz,
                                            isolationWidth, precursorCharge));
         for (int i=0; i < numScans; ++i)
@@ -233,13 +230,14 @@ TimsFrame::TimsFrame(TimsBinaryDataPtr storage, int64_t frameId,
                      int msLevel, double rt,
                      double startMz, double endMz,
                      double tic, double bpi,
-                     IonPolarity polarity, int scanMode, int numScans,
+                     IonPolarity polarity, int scanMode,
+                     int64_t timsId, int numScans,
                      const optional<uint64_t>& parentId,
                      const optional<double>& precursorMz,
                      const optional<double>& isolationWidth,
                      const optional<int>& precursorCharge)
     : frameId_(frameId), msLevel_(msLevel), rt_(rt), parentId_(parentId), tic_(tic), bpi_(bpi),
-      numScans_(numScans),
+      timsId_(timsId), numScans_(numScans),
       polarity_(polarity), scanRange_(startMz, endMz),
       precursorMz_(precursorMz), scanMode_(scanMode),
       isolationWidth_(isolationWidth), chargeState_(precursorCharge),
@@ -259,14 +257,14 @@ TimsSpectrum::TimsSpectrum(const TimsFramePtr& framePtr, int scanIndex)
 
 bool TimsSpectrum::hasLineData() const { return getLineDataSize() > 0; }
 bool TimsSpectrum::hasProfileData() const { return false; }
-size_t TimsSpectrum::getLineDataSize() const { return framePtr_->storage_->readScans(framePtr_->frameId_, scanIndex_, scanIndex_ +1).getNbrPeaks(0); }
+size_t TimsSpectrum::getLineDataSize() const { return framePtr_->storage_->readScans(framePtr_->timsId_, scanIndex_, scanIndex_ +1).getNbrPeaks(0); }
 size_t TimsSpectrum::getProfileDataSize() const { return 0; }
 
 void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const
 {
     const auto& frame = *framePtr_;
     auto& storage = *frame.storage_;
-    const auto& frameProxy = storage.readScans(frame.frameId_, scanIndex_, scanIndex_ + 1);
+    const auto& frameProxy = storage.readScans(frame.timsId_, scanIndex_, scanIndex_ + 1);
     auto mzIndices = frameProxy.getScanX(0);
     vector<double> mzIndicesAsDoubles(mzIndices.size());
     for (size_t i = 0; i < mzIndicesAsDoubles.size(); ++i)
