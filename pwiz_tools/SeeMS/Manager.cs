@@ -693,9 +693,11 @@ namespace seems
             if (OnLoadDataSourceProgress(String.Format("Loading first 100 spectra from {0}...", managedDataSource.Source.Name), 0))
                 return;
 
+            var preloadedSpectraIndices = new Set<int>(source.Spectra.Select(o => o.Index));
+
             for (int i = 0; i < Math.Min(100, sl.size()); ++i)
             {
-                if (source.Spectra.Any(o => o.Index == i)) // skip preloaded spectra
+                if (preloadedSpectraIndices.Contains(i)) // skip preloaded spectra
                     continue;
 
                 MassSpectrum spectrum = managedDataSource.GetMassSpectrum(i);
@@ -726,7 +728,7 @@ namespace seems
             spectrumListForm.BeginBulkLoad();
             for (int i = 100; i < sl.size(); ++i)
             {
-                if (source.Spectra.Any(o => o.Index == i)) // skip preloaded spectra
+                if (preloadedSpectraIndices.Contains(i)) // skip preloaded spectra
                     continue;
 
                 if (((i + 1) % 1000) == 0 || (i + 1) == sl.size())
