@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model
     public class CustomMolecule : IValidating, IComparable<CustomMolecule>
     {
         private string _formula;
-        public const double MAX_MASS = 100000;
+        public const double MAX_MASS = 160000;
         public const double MIN_MASS = MeasuredIon.MIN_REPORTER_MASS;
 
         /// <summary>
