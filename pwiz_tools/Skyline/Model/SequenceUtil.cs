@@ -1361,28 +1361,102 @@ namespace pwiz.Skyline.Model
             return GetHeavyFormula(formula, labelAtoms) + " - " + formula; // Not L10N
         }
 
+        private static readonly ImmutableList<Tuple<LabelAtoms, string, string>> 
+            ALL_LABEL_SUBSTITUTIONS = ImmutableList.ValueOf(new[]
+        {
+            Tuple.Create(LabelAtoms.C13, BioMassCalc.C, BioMassCalc.C13),
+            Tuple.Create(LabelAtoms.N15, BioMassCalc.N, BioMassCalc.N15),
+            Tuple.Create(LabelAtoms.O18, BioMassCalc.O, BioMassCalc.O18),
+            Tuple.Create(LabelAtoms.H2, BioMassCalc.H, BioMassCalc.H2),
+            Tuple.Create(LabelAtoms.Cl37, BioMassCalc.Cl, BioMassCalc.Cl37),
+            Tuple.Create(LabelAtoms.Br81, BioMassCalc.Br, BioMassCalc.Br81),
+            Tuple.Create(LabelAtoms.P32, BioMassCalc.P, BioMassCalc.P32),
+            Tuple.Create(LabelAtoms.S33, BioMassCalc.S, BioMassCalc.S33),
+            Tuple.Create(LabelAtoms.S34, BioMassCalc.S, BioMassCalc.S34)
+        });
         public static string GetHeavyFormula(string formula, LabelAtoms labelAtoms)
         {
-            var formulaHeavy = formula;
-            if ((labelAtoms & LabelAtoms.C13) != 0)
-                formulaHeavy = formulaHeavy.Replace(BioMassCalc.C, BioMassCalc.C13);
-            if ((labelAtoms & LabelAtoms.N15) != 0)
-                formulaHeavy = formulaHeavy.Replace(BioMassCalc.N, BioMassCalc.N15);
-            if ((labelAtoms & LabelAtoms.O18) != 0)
-                formulaHeavy = formulaHeavy.Replace(BioMassCalc.O, BioMassCalc.O18);
-            if ((labelAtoms & LabelAtoms.H2) != 0)
-                formulaHeavy = formulaHeavy.Replace(BioMassCalc.H, BioMassCalc.H2);
-            if ((labelAtoms & LabelAtoms.Cl37) != 0)
-                formulaHeavy = formulaHeavy.Replace(BioMassCalc.Cl, BioMassCalc.Cl37);
-            if ((labelAtoms & LabelAtoms.Br81) != 0)
-                formulaHeavy = formulaHeavy.Replace(BioMassCalc.Br, BioMassCalc.Br81);
-            if ((labelAtoms & LabelAtoms.P32) != 0)
-                formulaHeavy = formulaHeavy.Replace(BioMassCalc.P, BioMassCalc.P32);
-            if ((labelAtoms & LabelAtoms.S33) != 0)
-                formulaHeavy = formulaHeavy.Replace(BioMassCalc.S, BioMassCalc.S33);
-            if ((labelAtoms & LabelAtoms.S34) != 0)
-                formulaHeavy = formulaHeavy.Replace(BioMassCalc.S, BioMassCalc.S34);
-            return formulaHeavy;
+            if (labelAtoms == LabelAtoms.None)
+            {
+                return formula;
+            }
+            var subsitutions = ALL_LABEL_SUBSTITUTIONS
+                .Where(tuple => (tuple.Item1 & labelAtoms) != 0).ToArray();
+            StringBuilder result = new StringBuilder();
+            foreach (var symbol in TokenizeFormula(formula))
+            {
+                var subTuple = subsitutions.FirstOrDefault(tuple => tuple.Item2 == symbol);
+                if (subTuple == null)
+                {
+                    result.Append(symbol);
+                }
+                else
+                {
+                    result.Append(subTuple.Item3);
+                }
+            }
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// Split a formula up into its individual tokens.
+        /// A token is one of an element name, an integer, or the special characters space and minus sign.
+        /// </summary>
+        public static IEnumerable<string> TokenizeFormula(string formula)
+        {
+            int? ichElementStart = null;
+            int? ichCountStart = null;
+            for (int ich = 0; ich < formula.Length; ich++)
+            {
+                char ch = formula[ich];
+                bool isDigit = ch >= '0' && ch <= '9';
+                bool isElementNameStart = ch >= 'A' && ch <= 'Z';
+                bool isSpecial = ch == '-' || ch == ' ';
+                if (isDigit && ichCountStart.HasValue)
+                {
+                    continue;
+                }
+                if (!isDigit && !isSpecial && !isElementNameStart)
+                {
+                    // any other character is considered part of an element name, unless
+                    if (ichElementStart.HasValue)
+                    {
+                        continue;
+                    }
+                    // characters before the start of an element name are garbage, but we preserve them
+                    isSpecial = true;
+                }
+                if (ichElementStart.HasValue)
+                {
+                    yield return formula.Substring(ichElementStart.Value, ich - ichElementStart.Value);
+                    ichElementStart = null;
+                }
+                if (ichCountStart.HasValue)
+                {
+                    yield return formula.Substring(ichCountStart.Value, ich - ichCountStart.Value);
+                    ichCountStart = null;
+                }
+                if (isDigit)
+                {
+                    ichCountStart = ich;
+                }
+                if (isElementNameStart)
+                {
+                    ichElementStart = ich;
+                }
+                if (isSpecial)
+                {
+                    yield return new string(ch, 1);
+                }
+            }
+            if (ichElementStart.HasValue)
+            {
+                yield return formula.Substring(ichElementStart.Value);
+            }
+            if (ichCountStart.HasValue)
+            {
+                yield return formula.Substring(ichCountStart.Value);
+            }
         }
     }
 

@@ -36,26 +36,42 @@ namespace MSConvertGUI
 {
     public partial class UnifiBrowserForm : Form
     {
-        private const string IdentityServerBaseAddress = "https://unifiapi.waters.com:50333/identity";
-        private const string AuthorizeEndpoint = IdentityServerBaseAddress + "/connect/authorize";
-        private const string LogoutEndpoint = IdentityServerBaseAddress + "/connect/endsession";
-        private const string TokenEndpoint = IdentityServerBaseAddress + "/connect/token";
-        private const string UserInfoEndpoint = IdentityServerBaseAddress + "/connect/userinfo";
-        private const string IdentityTokenValidationEndpoint = IdentityServerBaseAddress + "/connect/identitytokenvalidation";
-        private const string TokenRevocationEndpoint = IdentityServerBaseAddress + "/connect/revocation";
+        public class Credentials
+        {
+            public string Username { get; set; }
+            public string Password { get; set; }
+            public string IdentityServer { get; set; }
+            public string ClientScope { get; set; }
+            public string ClientSecret { get; set; }
 
-        //private const string Host = "unifiapi.waters.com:50034";
+            public string GetUrlWithAuthentication(string url)
+            {
+                return url.Replace("://", String.Format("://{0}:{1}@", Username, Password)) +
+                       String.Format("?identity={0}&scope={1}&secret={2}", IdentityServer, ClientScope, ClientSecret) ;
+            }
+        }
+
+        private string IdentityServerBasePath { get { return SelectedCredentials.IdentityServer + "/identity"; } }
+        private string AuthorizeEndpoint { get { return IdentityServerBasePath + "/connect/authorize"; } }
+        private string LogoutEndpoint { get { return IdentityServerBasePath + "/connect/endsession"; } }
+        private string TokenEndpoint { get { return IdentityServerBasePath + "/connect/token"; } }
+        private string UserInfoEndpoint { get { return IdentityServerBasePath + "/connect/userinfo"; } }
+        private string IdentityTokenValidationEndpoint { get { return IdentityServerBasePath + "/connect/identitytokenvalidation"; } }
+        private string TokenRevocationEndpoint { get { return IdentityServerBasePath + "/connect/revocation"; } }
+
         private const string BasePath = "/unifi/v1";
 
         private string _accessToken;
-        private string _username, _password;
         private ImageList _nodeImages;
         private HttpClient _httpClient;
         private Dictionary<string, TreeNode> _nodeById;
+        private ListViewColumnSorter _sorter;
 
+        public string SelectedHost { get { return serverLocationTextBox.Text; } }
+        public Credentials SelectedCredentials { get; private set; }
         public IEnumerable<string> SelectedSampleResults;
 
-        public UnifiBrowserForm()
+        public UnifiBrowserForm(string defaultUrl = null, Credentials defaultCredentials = null)
         {
             InitializeComponent();
 
@@ -69,17 +85,24 @@ namespace MSConvertGUI
             FolderViewList.LargeImageList = FolderViewList.SmallImageList = treeViewImageList;
             FolderViewList.Columns.Remove(SourceSize);
 
+            FolderViewList.ListViewItemSorter = _sorter = new ListViewColumnSorter();
+            _sorter.Order = SortOrder.Ascending;
+            _sorter.SortColumn = 0;
+
             _httpClient = new HttpClient();
 
             openButton.Enabled = false;
+
+            serverLocationTextBox.Text = defaultUrl ?? "unifiapi.waters.com:50034";
+            SelectedCredentials = defaultCredentials;
         }
 
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
 
-            serverLocationTextBox.Text = "unifiapi.waters.com:50034";
-            connectButton.PerformClick();
+            if (serverLocationTextBox.Text.Length > 0)
+                connectButton.PerformClick();
         }
 
         JObject GetJsonFromEndpoint(string endpoint)
@@ -123,60 +146,100 @@ namespace MSConvertGUI
             }
         }
 
-        void connectButton_Click(object sender, EventArgs e)
+        void connect()
         {
-            try
-            {
-                while (true)
-                {
-                    var loginForm = new LoginForm() { StartPosition = FormStartPosition.CenterParent };
-                    if (loginForm.ShowDialog(this) == DialogResult.Cancel)
-                        return;
-                    _username = loginForm.usernameTextBox.Text;
-                    _password = loginForm.passwordTextBox.Text;
-
-                    TokenClient client = new TokenClient(TokenEndpoint, "resourceownerclient", "secret");
-                    TokenResponse response = client.RequestResourceOwnerPasswordAsync(_username, _password, "unifi").Result;
-                    if (response.IsError)
-                    {
-                        if (MessageBox.Show(this, "Username or password are not correct!", "Error", MessageBoxButtons.RetryCancel) == DialogResult.Cancel)
-                            return;
-                    }
-                    else
-                    {
-                        _accessToken = response.AccessToken;
-                        _httpClient.SetBearerToken(_accessToken);
-                        _httpClient.DefaultRequestHeaders.Remove("Accept");
-                        _httpClient.DefaultRequestHeaders.Add("Accept", "application/json;odata.metadata=minimal");
-                        break;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                MessageBox.Show(this, "Server is not available", "Login Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-
             string url = serverLocationTextBox.Text;
             if (!url.StartsWith("http"))
                 url = "https://" + url;
             if (!url.EndsWith(BasePath))
                 url += BasePath;
-            serverLocationTextBox.Text = url;
-            serverLocationTextBox.ReadOnly = true;
+            string host = new Uri(url).Host;
+
+            while (true)
+            {
+                try
+                {
+                    if (SelectedCredentials != null)
+                    {
+                        TokenClient client = new TokenClient(TokenEndpoint, "resourceownerclient", SelectedCredentials.ClientSecret);
+                        TokenResponse response = client.RequestResourceOwnerPasswordAsync(SelectedCredentials.Username, SelectedCredentials.Password, SelectedCredentials.ClientScope).Result;
+                        if (response.IsError)
+                        {
+                            if (MessageBox.Show(this, "Username or password are not correct!", "Error", MessageBoxButtons.RetryCancel) == DialogResult.Cancel)
+                                return;
+                        }
+                        else
+                        {
+                            _accessToken = response.AccessToken;
+                            _httpClient.SetBearerToken(_accessToken);
+                            _httpClient.DefaultRequestHeaders.Remove("Accept");
+                            _httpClient.DefaultRequestHeaders.Add("Accept", "application/json;odata.metadata=minimal");
+                            break;
+                        }
+                    }
+
+                    var loginForm = new LoginForm() { StartPosition = FormStartPosition.CenterParent };
+                    if (SelectedCredentials != null)
+                    {
+                        loginForm.usernameTextBox.Text = SelectedCredentials.Username;
+                        loginForm.passwordTextBox.Text = SelectedCredentials.Password;
+                        loginForm.identityServerTextBox.Text = SelectedCredentials.IdentityServer.Replace(host, "<HostURL>");
+                        loginForm.clientScopeTextBox.Text = SelectedCredentials.ClientScope;
+                        loginForm.clientSecretTextBox.Text = SelectedCredentials.ClientSecret;
+                    }
+                    if (loginForm.ShowDialog(this) == DialogResult.Cancel)
+                        return;
+
+                    SelectedCredentials = new Credentials
+                    {
+                        Username = loginForm.usernameTextBox.Text,
+                        Password = loginForm.passwordTextBox.Text,
+                        IdentityServer = loginForm.identityServerTextBox.Text.Replace("<HostURL>", host),
+                        ClientScope = loginForm.clientScopeTextBox.Text,
+                        ClientSecret = loginForm.clientSecretTextBox.Text
+                    };
+                    if (!SelectedCredentials.IdentityServer.StartsWith("http"))
+                        SelectedCredentials.IdentityServer = "https://" + SelectedCredentials.IdentityServer;
+                }
+                catch (Exception ex)
+                {
+                    if (MessageBox.Show(this, "Failed to connect to identity server:\r\n" + ex.ToString(), "Error", MessageBoxButtons.RetryCancel) == DialogResult.Cancel)
+                        return;
+                    SelectedCredentials = null;
+                }
+            }
 
             FileTree.Nodes.Clear();
-            FileTree.Nodes.Add("host", new Uri(url).Host, 0);
+            FileTree.Nodes.Add("host", host, 0);
             GetFolders();
             FileTree.ExpandAll();
+
+            serverLocationTextBox.Text = url;
+            serverLocationTextBox.ReadOnly = true;
+            connectButton.Text = "Disconnect";
+        }
+
+        void disconnect()
+        {
+            FileTree.Nodes.Clear();
+            FolderViewList.Items.Clear();
+            serverLocationTextBox.ReadOnly = false;
+            connectButton.Text = "Connect";
+        }
+
+        void connectButton_Click(object sender, EventArgs e)
+        {
+            if (serverLocationTextBox.ReadOnly)
+                disconnect();
+            else
+                connect();
         }
 
         void openButton_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.OK;
 
-            SelectedSampleResults = FolderViewList.SelectedItems.Cast<ListViewItem>().Select(o => serverLocationTextBox.Text.Replace("://", String.Format("://{0}:{1}@", _username, _password)) + (o.Tag as string));
+            SelectedSampleResults = FolderViewList.SelectedItems.Cast<ListViewItem>().Select(o => serverLocationTextBox.Text + (o.Tag as string));
         }
 
         void cancelButton_Click(object sender, EventArgs e)
@@ -211,7 +274,12 @@ namespace MSConvertGUI
                     var id = item.Property("id").Value.ToString();
                     var created = item.Property("createdAt").Value.ToString();
 
-                    FolderViewList.Items.Add(new ListViewItem(new string[] { name, type, created }, 2) { Tag = String.Format("/sampleresults({0})", id) });
+                    JObject analysis = (GetJsonFromEndpoint(String.Format("/sampleresults({0})/analyses", id))["value"] as JArray).FirstOrDefault() as JObject;
+                    string analysisName = "unknown";
+                    if (analysis != null)
+                        analysisName = analysis.Property("name").Value.ToString();
+
+                    FolderViewList.Items.Add(new ListViewItem(new string[] { name, analysisName, type, created }, 2) { Tag = String.Format("/sampleresults({0})", id) });
                 }
             }
         }
@@ -226,6 +294,17 @@ namespace MSConvertGUI
         private void FolderViewList_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             openButton_Click(sender, e);
+        }
+
+        private SortOrder toggleSort(SortOrder o) { return o == SortOrder.Descending ? SortOrder.Ascending : SortOrder.Descending; }
+
+        private void FolderViewList_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            if (e.Column == _sorter.SortColumn)
+                _sorter.Order = toggleSort(_sorter.Order);
+            else
+                _sorter.SortColumn = e.Column;
+            FolderViewList.Sort();
         }
     }
 }

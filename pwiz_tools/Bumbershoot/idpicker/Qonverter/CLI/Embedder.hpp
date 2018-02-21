@@ -115,6 +115,12 @@ static void EmbedScanTime(String^ idpDbFilepath,
                           IDictionary<int, QuantitationConfiguration^>^ quantitationMethodBySource,
                           pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
+/// adds a mapping of source group to sample names; the sample names are in ascending order of isobaric quantitation channel reporter ion mass
+static void EmbedIsobaricSampleMapping(String^ idpDbFilepath, IDictionary<String^, IList<String^>^>^ isobaricSampleMap);
+
+/// retrieves the mapping of source group to sample names; the sample names are in ascending order of isobaric quantitation channel reporter ion mass
+static IDictionary<String^, IList<String^>^>^ GetIsobaricSampleMapping(String^ idpDbFilepath);
+
 /// checks whether the given idpDB has embedded gene metadata (although it may not necessarily be the most up-to-date)
 static bool HasGeneMetadata(String^ idpDbFilepath);
 

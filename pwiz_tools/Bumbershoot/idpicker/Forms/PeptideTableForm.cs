@@ -98,9 +98,6 @@ namespace IDPicker.Forms
 
         public class PeptideGroupRow : AggregateRow
         {
-            private static readonly iTRAQArrayUserType itraqArrayType = new iTRAQArrayUserType();
-            private static readonly TMTArrayUserType tmtArrayType = new TMTArrayUserType();
-
             public int PeptideGroup { get; private set; }
 
             public static IList<PeptideGroupRow> GetRows (NHibernate.ISession session, DataFilter dataFilter)
@@ -836,6 +833,7 @@ namespace IDPicker.Forms
                 return;
 
             var sourceNames = sourceById.Select(o => o.Value.Name);
+            var isobaricSampleMapping = Embedder.GetIsobaricSampleMapping(session.Connection.GetDataSource());
 
             if (statsBySpectrumSource != null)
             foreach (long sourceId in statsBySpectrumSource.Keys)
@@ -907,11 +905,20 @@ namespace IDPicker.Forms
                 if (checkedPivots.Any(o => o.Text.Contains("Group") && (o.Text.Contains("TMT") || o.Text.Contains("iTRAQ"))))
                 {
                     var quantColumns = checkedPivots.Any(o => o.Text.Contains("TMT")) ? TMT_ReporterIonColumns : iTRAQ_ReporterIonColumns;
+                    var sampleNames = isobaricSampleMapping.ContainsKey(groupName.TrimEnd('/')) ? isobaricSampleMapping[groupName.TrimEnd('/')] : null;
 
+                    int sampleMapIndex = 0;
                     for (int i = 0; i < quantColumns.Count; ++i)
                     {
+                        string sampleName = groupName;
+                        if (quantColumns[i].Visible && sampleNames != null)
+                        {
+                            sampleName = sampleNames[sampleMapIndex];
+                            ++sampleMapIndex;
+                        }
+
                         DataGridViewColumn newColumn = quantColumns[i].Clone() as DataGridViewColumn;
-                        newColumn.HeaderText = String.Format("{0} ({1})", groupName, newColumn.HeaderText);
+                        newColumn.HeaderText = String.Format("{0} ({1})", sampleName, newColumn.HeaderText);
                         newColumn.Tag = new Pair<bool, Map<long, PivotData>>(true, statsBySpectrumSourceGroup[groupId]);
                         newColumn.DataPropertyName = i.ToString();
                         newColumn.Name = "pivotQuantColumn" + i.ToString();

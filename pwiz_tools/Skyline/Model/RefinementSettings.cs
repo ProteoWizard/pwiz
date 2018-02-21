@@ -329,7 +329,7 @@ namespace pwiz.Skyline.Model
                         // Record repeated peptides for removing duplicate peptides later
                         if (repeatedPeptides != null)
                             repeatedPeptides.Add(identity);
-                        continue;                        
+                        continue;
                     }
                     // Record all peptides seen
                     includedPeptides.Add(identity);

@@ -711,6 +711,8 @@ namespace IDPicker.Forms
 
         public event EventHandler<ViewFilterEventArgs> SpectrumViewFilter;
         public event EventHandler<SpectrumViewVisualizeEventArgs> SpectrumViewVisualize;
+        public event EventHandler SourceGroupingChanged;
+        public event EventHandler IsobaricMappingChanged;
 
         private TotalCounts totalCounts, basicTotalCounts;
         private Dictionary<DataFilterKey, List<Row>> rowsBySource, basicRowsBySource;
@@ -788,6 +790,14 @@ namespace IDPicker.Forms
             };
             editSourceGroupsButton.Click += editGroupsButton_Click;
             toolStrip.Items.Add(editSourceGroupsButton);
+
+            var editIsobaricSampleMappingButton = new ToolStripButton()
+            {
+                Text = "Isobaric Sample Mapping",
+                Alignment = ToolStripItemAlignment.Right
+            };
+            editIsobaricSampleMappingButton.Click += editMappingButton_Click;
+            toolStrip.Items.Add(editIsobaricSampleMappingButton);
 
             pivotSetupButton.Visible = false;
 
@@ -1453,11 +1463,26 @@ namespace IDPicker.Forms
                     basicRowsBySource = rowsBySource;
 
                     SetData(session, viewFilter);
-                    //(this.ParentForm as IDPickerForm).ApplyBasicFilter();
-                }
-                //TODO- Find a better way of doing this
-            }
 
+                    if (SourceGroupingChanged != null)
+                        SourceGroupingChanged(this, EventArgs.Empty);
+                }
+                //TODO- Find a better way of doing this (i.e. need to refresh protein and peptide tables too if they are pivoted)
+            }
+        }
+
+        private void editMappingButton_Click(object sender, EventArgs e)
+        {
+            if (session != null)
+            {
+                var imf = new IsobaricMappingForm(session.SessionFactory);
+
+                if (imf.ShowDialog() != DialogResult.OK)
+                    return;
+
+                if (IsobaricMappingChanged != null)
+                    IsobaricMappingChanged(this, EventArgs.Empty);
+            }
         }
 
         private void groupingSetupControl_GroupingChanging(object sender, GroupingChangingEventArgs<GroupBy> e)

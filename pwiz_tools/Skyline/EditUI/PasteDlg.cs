@@ -177,6 +177,7 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
             tbxError.BackColor = Color.Red;
+            tbxError.ForeColor = Color.White;
             tbxError.Text = pasteError.Message;
             // Useful for debugging if this hangs in a test - it appears in the timeout report  
             // ReSharper disable LocalizableElement
@@ -190,6 +191,7 @@ namespace pwiz.Skyline.EditUI
             panelError.Visible = true;
             tbxError.Text = Resources.PasteDlg_ShowNoErrors_No_errors;
             tbxError.BackColor = Color.LightGreen;
+            tbxError.ForeColor = Color.Black;
             Text = Description;  // Clear any error info
         }
 

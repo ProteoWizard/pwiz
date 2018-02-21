@@ -207,6 +207,7 @@ namespace IDPicker
 
             spectrumTableForm.SpectrumViewFilter += handleViewFilter;
             spectrumTableForm.SpectrumViewVisualize += spectrumTableForm_SpectrumViewVisualize;
+            spectrumTableForm.IsobaricMappingChanged += spectrumTableForm_IsobaricMappingChanged;
             spectrumTableForm.FinishedSetData += handleFinishedSetData;
             spectrumTableForm.StartingSetData += handleStartingSetData;
             proteinTableForm.ProteinViewFilter += handleViewFilter;
@@ -624,6 +625,14 @@ namespace IDPicker
             form.FormClosed += (s, e2) => formSession.Dispose();
         }
         #endregion
+
+        void spectrumTableForm_IsobaricMappingChanged(object sender, EventArgs e)
+        {
+            proteinTableForm.ClearData(true);
+            peptideTableForm.ClearData(true);
+            proteinTableForm.SetData(session, viewFilter);
+            peptideTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
+        }
 
         void handleViewFilter(object sender, ViewFilterEventArgs e)
         {

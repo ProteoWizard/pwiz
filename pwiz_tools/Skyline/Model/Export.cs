@@ -360,6 +360,7 @@ namespace pwiz.Skyline.Model
         public virtual bool AddTriggerReference { get; set; }
         public virtual double RunLength { get; set; }
         public virtual bool FullScans { get; set; }
+        public virtual bool Tune3 { get; set; }
 
         public virtual bool Ms1Scan { get; set; }
         public virtual bool InclusionList { get; set; }
@@ -693,6 +694,7 @@ namespace pwiz.Skyline.Model
         {
             var exporter = InitExporter(new ThermoFusionIsolationListExporter(document));
             exporter.UseSlens = UseSlens;
+            exporter.Tune3 = Tune3;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
             return exporter;
@@ -3070,6 +3072,9 @@ namespace pwiz.Skyline.Model
         public const double NARROW_NCE = 27.0;
         public const double WIDE_NCE = 30.0;
 
+        public bool Tune3 { get; set; }
+        public bool Tune3Columns { get { return IsolationList && Tune3; } }
+
         public ThermoFusionMassListExporter(SrmDocument document)
             : base(document)
         {
@@ -3083,7 +3088,9 @@ namespace pwiz.Skyline.Model
 
         public string GetHeader(char fieldSeparator)
         {
-            var hdr = "m/z,z,t start (min),t end (min),CID Collision Energy (%)";  // Not L10N
+            var hdr = !Tune3Columns
+                ? "m/z,z,t start (min),t end (min),CID Collision Energy (%)" // Not L10N
+                : "Compound,Formula,Adduct,m/z,z,t start (min),t stop (min),CID Collision Energy (%)"; // Not L10N
             if (UseSlens)
                 hdr += ",S-lens";  // Not L10N
             return hdr.Replace(',', fieldSeparator); // Not L10N
@@ -3136,18 +3143,25 @@ namespace pwiz.Skyline.Model
                 }
             }
             string collisionEnergy = (wideWindowDia ? WIDE_NCE : NARROW_NCE).ToString(CultureInfo);
+            var writeColumns = new List<string> {precursorMz, z, start, end, collisionEnergy};
+            if (Tune3Columns)
+            {
+                writeColumns.InsertRange(0, new []
+                {
+                    string.Format("{0} ({1})", // Not L10N
+                        nodePep.Peptide.IsCustomMolecule ? nodeTranGroup.CustomMolecule.InvariantName : Document.Settings.GetModifiedSequence(nodePep).Sequence,
+                        nodeTranGroup.TransitionGroup.LabelType),
+                    string.Empty,
+                    string.Empty
+                });
+            }
             if (UseSlens)
             {
-                var slens =
-                    (nodeTranGroup.ExplicitValues.SLens ?? DEFAULT_SLENS).ToString(
-                        CultureInfo);
-                Write(writer, precursorMz, z, start, end, collisionEnergy, slens);
+                var slens = (nodeTranGroup.ExplicitValues.SLens ?? DEFAULT_SLENS).ToString(CultureInfo);
+                writeColumns.Add(slens);
             }
-            else
-            {
-            Write(writer, precursorMz, z, start, end, collisionEnergy);
+            Write(writer, writeColumns.ToArray());
         }
-    }
     }
 
     public class ThermoFusionIsolationListExporter : ThermoFusionMassListExporter
