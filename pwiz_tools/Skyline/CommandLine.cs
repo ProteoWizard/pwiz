@@ -1151,13 +1151,16 @@ namespace pwiz.Skyline
             }
 
             _out.WriteLine(Resources.CommandLine_ImportResultsFile_Adding_results___);
-
-            // Hack for un-readable RAW files from Thermo instruments.
-            if(!CanReadFile(replicateFile))
+            var targetSkyd = ChromatogramCache.PartPathForName(_skylineFile, replicateFile);
+            if (!File.Exists(targetSkyd))
             {
-                _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, replicateFile);
-                return true;
-            }
+                // Hack for un-readable RAW files from Thermo instruments.
+                if (!CanReadFile(replicateFile))
+                {
+                    _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, replicateFile);
+                    return true;
+                }  
+            } 
 
             if (disableJoining)
                 _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeIsResultsJoiningDisabled(true));

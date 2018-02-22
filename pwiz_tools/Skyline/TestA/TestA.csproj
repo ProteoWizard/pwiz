@@ -145,6 +145,7 @@
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
     <Compile Include="CommandLineMProphetTest.cs" />
+    <Compile Include="CommandLineNoJoinTest.cs" />
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="CommandLineImportTest.cs" />
     <Compile Include="CommandLineWiffTest.cs" />
@@ -262,6 +263,7 @@
     <None Include="CommandLineAssayImportTest.zip" />
     <None Include="CommandLineImportTest.zip" />
     <None Include="CommandLineMProphetTest.zip" />
+    <None Include="CommandLineNoJoinTest.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="CommandLineWiffTest.zip" />
     <None Include="DocLoadLibraryTest.zip" />
