@@ -39,6 +39,10 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void TestCommandLineNoJoin()
         {
+            if (!ExtensionTestContext.CanImportWatersRaw)
+            {
+                return;
+            }
             var testFilesDir = new TestFilesDir(TestContext, @"TestA\CommandLineNoJoinTest.zip");
             string inDocPath = testFilesDir.GetTestPath("test.sky");
             string rawFileRoot = testFilesDir.GetTestPath("RawFiles");
