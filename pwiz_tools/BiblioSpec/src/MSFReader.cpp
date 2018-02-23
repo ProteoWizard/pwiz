@@ -310,6 +310,7 @@ namespace BiblioSpec
         }
 
         // set result count and statement (PeptideID, SpectrumID, unmodified sequence, q-value[, WorkflowID, SpectrumFileName])
+        PSM_SCORE_TYPE scoreType = PERCOLATOR_QVALUE;
         if (!filtered_ && versionLess(2, 2)) {
             if (!hasQValues()) {
                 statement = getStmt("SELECT PeptideID, SpectrumID, Sequence, '0' FROM Peptides");
@@ -331,7 +332,14 @@ namespace BiblioSpec
             if (!hasQValues()) {
                 qValueCol = "'0'";
             } else {
-                qValueCol = columnExists(msfFile_, "TargetPsms", "PercolatorqValue") ? "PercolatorqValue" : "qValue";
+                if (columnExists(msfFile_, "TargetPsms", "PercolatorqValue")) {
+                    qValueCol = "PercolatorqValue";
+                } else if (columnExists(msfFile_, "TargetPsms", "qValue")) {
+                    qValueCol = "qValue";
+                } else if (columnExists(msfFile_, "TargetPsms", "ExpectationValue")) {
+                    qValueCol = "ExpectationValue";
+                    scoreType = MASCOT_IONS_SCORE;
+                }
                 qValueWhere = " WHERE " + qValueCol + " <= " + lexical_cast<string>(getScoreThreshold(SQT));
             }
             statement = getStmt(
@@ -435,7 +443,6 @@ namespace BiblioSpec
             }
 
             // score
-            PSM_SCORE_TYPE scoreType = PERCOLATOR_QVALUE;
             map< PSM_SCORE_TYPE, vector<PSM*> >& scoreMap = fileMapAccess->second;
             map< PSM_SCORE_TYPE, vector<PSM*> >::iterator scoreMapAccess = scoreMap.find(scoreType);
             if (scoreMapAccess == scoreMap.end()) {
@@ -514,7 +521,8 @@ namespace BiblioSpec
 
         if (filtered_ || !versionLess(2, 2)) {
             return columnExists(msfFile_, "TargetPsms", "PercolatorqValue") ||
-                   columnExists(msfFile_, "TargetPsms", "qValue");
+                   columnExists(msfFile_, "TargetPsms", "qValue") ||
+                   columnExists(msfFile_, "TargetPsms", "ExpectationValue");
         }
 
          statement = getStmt(
