@@ -40,7 +40,9 @@ class PWIZ_API_DECL ChromatogramListWrapper : public msdata::ChromatogramList
     public:
 
     ChromatogramListWrapper(const msdata::ChromatogramListPtr& inner)
-    :   inner_(inner)
+        : inner_(inner),
+          dp_(inner->dataProcessingPtr().get() ? new msdata::DataProcessing(*inner->dataProcessingPtr())
+                                               : new msdata::DataProcessing("pwiz_Chromatogram_Processing"))
     {
         if (!inner.get()) throw std::runtime_error("[ChromatogramListWrapper] Null ChromatogramListPtr.");
     }
@@ -51,11 +53,14 @@ class PWIZ_API_DECL ChromatogramListWrapper : public msdata::ChromatogramList
     virtual bool empty() const {return inner_->empty();}
     virtual const msdata::ChromatogramIdentity& chromatogramIdentity(size_t index) const {return inner_->chromatogramIdentity(index);} 
     virtual size_t find(const std::string& id) const {return inner_->find(id);}
-    virtual msdata::ChromatogramPtr chromatogram(size_t index, bool getBinaryData = false) const {return inner_->chromatogram(index, getBinaryData);}
+    virtual msdata::ChromatogramPtr chromatogram(size_t index, bool getBinaryData = false) const { return inner_->chromatogram(index, getBinaryData); }
+
+    virtual const boost::shared_ptr<const msdata::DataProcessing> dataProcessingPtr() const { return dp_; }
 
     protected:
 
     msdata::ChromatogramListPtr inner_;
+    msdata::DataProcessingPtr dp_;
 };
 
 
