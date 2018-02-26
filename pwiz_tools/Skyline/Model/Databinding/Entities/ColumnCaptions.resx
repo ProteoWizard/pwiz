@@ -726,6 +726,9 @@
   <data name="RSquared">
     <value>R Squared</value>
   </data>
+  <data name="SampleDilutionFactor">
+    <value>Sample Dilution Factor</value>
+  </data>
   <data name="SampleName">
     <value>Sample Name</value>
   </data>

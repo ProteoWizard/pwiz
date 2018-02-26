@@ -892,6 +892,10 @@ retention score calculator, if one is used (e.g. SSRCalc or iRT score)
   <data name="RSquared">
     <value>Coefficient of determination</value>
   </data>
+  <data name="SampleDilutionFactor">
+    <value>The amount by which the sample was diluted before being analyzed. 
+External standards typically have a dilution factor of 1, and unknown samples may have been diluted by a factor greater than 1 in order to bring them into the quantifiable range for the instrument.</value>
+  </data>
   <data name="SampleName">
     <value>The sample name, if the data was imported from a multi-sample WIFF
 file, or the file name again for other file types.</value>

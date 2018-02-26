@@ -164,6 +164,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public double SampleDilutionFactor
+        {
+            get { return ChromatogramSet.SampleDilutionFactor; }
+            set { ChangeChromatogramSet(EditDescription.SetColumn("SampleDilutionFactor", value), // Not L10N
+                ChromatogramSet.ChangeDilutionFactor(value));}
+        }
+
         protected bool Equals(Replicate other)
         {
             return Equals(DataSchema, other.DataSchema) &&
