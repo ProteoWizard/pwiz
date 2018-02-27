@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override string Heading
         {
-            get { return Resources.PeptideTreeNode_Heading_Title; }
+            get { return  DocNode.IsProteomic ? Resources.PeptideTreeNode_Heading_Title : Resources.PeptideTreeNode_Heading_Title_Molecule; }
         }
 
         public override string ChildHeading
@@ -623,6 +623,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         public static bool HasPeptideTip(PeptideDocNode nodePep, SrmSettings settings)
         {
             return nodePep.IsDecoy ||
+                   !nodePep.IsProteomic ||
                    nodePep.Peptide.Begin.HasValue ||
                    nodePep.Rank.HasValue ||
                    nodePep.Note != null ||
@@ -664,6 +665,10 @@ namespace pwiz.Skyline.Controls.SeqNode
                     table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, nodePep.CustomMolecule.Formula, rt);
                     table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Neutral_Mass,
                         nodePep.CustomMolecule.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType).ToString(LocalizationHelper.CurrentCulture), rt);
+                    foreach (var id in nodePep.CustomMolecule.AccessionNumbers.AccessionNumbers)
+                    {
+                        table.AddDetailRow(id.Key, id.Value, rt); // Show InChiKey etc as available
+                    }
                     size = table.CalcDimensions(g);
                     table.Draw(g);
                     return new Size((int)Math.Round(size.Width + 2), (int)Math.Round(size.Height + 2));
