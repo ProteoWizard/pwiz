@@ -91,6 +91,25 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide("FLSSPFAVAEVFTGIVGK",              139.70), // Not L10N
             });
 
+        public static readonly IrtStandard RTBEADS = new IrtStandard("RTBEADS (iRT-C18)", "RTBEADS.sky", // Not L10N
+            new[]
+            {
+                MakePeptide("NLAVQAQGK",      -19.05), // Not L10N
+                MakePeptide("FIPEGSQGR",      -11.11), // Not L10N
+                MakePeptide("FGQTPVQEGR",      -6.03), // Not L10N
+                MakePeptide("ELALGQDGR",        0.95), // Not L10N
+                MakePeptide("TGLQTLSSEK",       4.13), // Not L10N
+                MakePeptide("AGIPNNQVLGK",     12.22), // Not L10N
+                MakePeptide("ALDVIQAGGK",      13.81), // Not L10N
+                MakePeptide("ALVQIVGK",        24.60), // Not L10N
+                MakePeptide("NGFSIQVR",        30.48), // Not L10N
+                MakePeptide("EGQLTPLIK",       33.97), // Not L10N
+                MakePeptide("FQSVFTVTGR",      47.78), // Not L10N
+                MakePeptide("SGIPDNAFQSFGR",   54.60), // Not L10N
+                MakePeptide("AGFLEQIGAPQAALR", 71.90), // Not L10N
+                MakePeptide("TGQSSLVPALTDFVR", 93.17), // Not L10N
+            });
+
         public static readonly IrtStandard SCIEX = new IrtStandard("SCIEX PepCalMix (iRT-C18)", "Sciex.sky", // Not L10N
             new[] {
                 MakePeptide("AETSELHTSLK",        -9.99), // Not L10N
@@ -283,7 +302,7 @@ namespace pwiz.Skyline.Model.Irt
             });
 
         public static readonly ImmutableList<IrtStandard> ALL = ImmutableList.ValueOf(new[] {
-            NULL, BIOGNOSYS_10, BIOGNOSYS_11, PIERCE, REPLICAL, SCIEX, SIGMA, APOA1, CIRT_SHORT
+            NULL, BIOGNOSYS_10, BIOGNOSYS_11, PIERCE, REPLICAL, RTBEADS, SCIEX, SIGMA, APOA1, CIRT_SHORT
         });
 
         /// <summary>

@@ -2581,6 +2581,7 @@
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Sciex.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\RePLiCal.sky" />
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\Biognosys10.sky" />
+    <EmbeddedResource Include="Model\Irt\StandardsDocuments\RTBEADS.sky" />
     <None Include="ProtocolBuffers\ChromatogramGroupData.proto" />
     <None Include="ProtocolBuffers\SkylineDocument.proto" />
     <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
