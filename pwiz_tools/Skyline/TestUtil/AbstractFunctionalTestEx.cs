@@ -240,7 +240,7 @@ namespace pwiz.SkylineTestUtil
             return documentGrid.FindColumn(PropertyPath.Parse(colName));
         }
 
-        public void EnableDocumentGridColumns(DocumentGridForm documentGrid, string viewName, int expectedRows, string[] colNames)
+        public void EnableDocumentGridColumns(DocumentGridForm documentGrid, string viewName, int expectedRows, string[] colNames, string newViewName = null)
         {
             RunUI(() => documentGrid.ChooseView(viewName));
             WaitForCondition(() => (documentGrid.RowCount == expectedRows)); // Let it initialize
@@ -254,7 +254,7 @@ namespace pwiz.SkylineTestUtil
                             Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(PropertyPath.Parse(colName)));
                             viewEditor.ChooseColumnsTab.AddSelectedColumn();
                         }
-                        viewEditor.ViewName = viewName;
+                        viewEditor.ViewName = newViewName ?? viewName;
                         viewEditor.OkDialog();
                     });
             }

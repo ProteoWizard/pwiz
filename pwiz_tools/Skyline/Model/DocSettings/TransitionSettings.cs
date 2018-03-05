@@ -946,8 +946,8 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteElements(MeasuredIons);
         }
 
-        private const string PRECURSOR_ION_CHAR = "p"; // Not L10N
-        private const string SMALL_MOLECULE_FRAGMENT_CHAR = "f"; // Not L10N
+        public const string PRECURSOR_ION_CHAR = "p"; // Not L10N
+        public const string SMALL_MOLECULE_FRAGMENT_CHAR = "f"; // Not L10N
 
         public static string ToStringSmallMoleculeIonTypes(IList<IonType> ionTypes, bool spaces)
         {

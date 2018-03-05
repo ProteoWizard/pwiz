@@ -31,20 +31,25 @@ using Excel;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Controls;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -204,6 +209,78 @@ namespace pwiz.SkylineTestUtil
         protected static void ActivateReplicate(string name)
         {
             RunUI(() => SkylineWindow.ActivateReplicate(name));
+        }
+
+        protected void ChangePeakBounds(string chromName,
+            double startDisplayTime,
+            double endDisplayTime)
+        {
+            Assert.IsTrue(startDisplayTime < endDisplayTime,
+                string.Format("Start time {0} must be less than end time {1}.", startDisplayTime, endDisplayTime));
+
+            ActivateReplicate(chromName);
+
+            WaitForGraphs();
+
+            RunUIWithDocumentWait(() => // adjust integration
+            {
+                var graphChrom = SkylineWindow.GetGraphChrom(chromName);
+
+                var nodeGroupTree = SkylineWindow.SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
+                IdentityPath pathGroup;
+                if (nodeGroupTree != null)
+                    pathGroup = nodeGroupTree.Path;
+                else
+                {
+                    var nodePepTree = SkylineWindow.SequenceTree.GetNodeOfType<PeptideTreeNode>();
+                    pathGroup = new IdentityPath(nodePepTree.Path, nodePepTree.ChildDocNodes[0].Id);
+                }
+                var listChanges = new List<ChangedPeakBoundsEventArgs>
+                {
+                    new ChangedPeakBoundsEventArgs(pathGroup,
+                        null,
+                        graphChrom.NameSet,
+                        graphChrom.ChromGroupInfos[0].FilePath,
+                        graphChrom.GraphItems.First().GetNearestDisplayTime(startDisplayTime),
+                        graphChrom.GraphItems.First().GetNearestDisplayTime(endDisplayTime),
+                        PeakIdentification.ALIGNED,
+                        PeakBoundsChangeType.both)
+                };
+                graphChrom.SimulateChangedPeakBounds(listChanges);
+            });
+            WaitForGraphs();
+        }
+
+        private void RunUIWithDocumentWait(Action act)
+        {
+            var doc = SkylineWindow.Document;
+            RunUI(act);
+            WaitForDocumentChange(doc); // make sure the action changes the document
+        }
+
+        protected void SetDocumentGridSampleTypesAndConcentrations(IDictionary<string, Tuple<SampleType, double?>> sampleTypes)
+        {
+            RunUI(() => SkylineWindow.ShowDocumentGrid(true));
+            var documentGrid = FindOpenForm<DocumentGridForm>();
+            RunUI(() => documentGrid.DataboundGridControl.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates));
+            WaitForCondition(() => documentGrid.IsComplete);
+            RunUI(() =>
+            {
+                var colReplicate = documentGrid.FindColumn(PropertyPath.Root);
+                var colSampleType = documentGrid.FindColumn(PropertyPath.Root.Property("SampleType"));
+                var colConcentration = documentGrid.FindColumn(PropertyPath.Root.Property("AnalyteConcentration"));
+                for (int iRow = 0; iRow < documentGrid.RowCount; iRow++)
+                {
+                    var row = documentGrid.DataGridView.Rows[iRow];
+                    var replicateName = row.Cells[colReplicate.Index].Value.ToString();
+                    Tuple<SampleType, double?> tuple;
+                    if (sampleTypes.TryGetValue(replicateName, out tuple))
+                    {
+                        row.Cells[colSampleType.Index].Value = tuple.Item1;
+                        row.Cells[colConcentration.Index].Value = tuple.Item2;
+                    }
+                }
+            });
         }
 
         /// <summary>

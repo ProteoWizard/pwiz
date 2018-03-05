@@ -164,6 +164,10 @@
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj">
+      <Project>{26cfd1ff-f4f7-4f66-b5b4-e686bdb9b34e}</Project>
+      <Name>MSGraph</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">
       <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
       <Name>ProteomeDb</Name>
