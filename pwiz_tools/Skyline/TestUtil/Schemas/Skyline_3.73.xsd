@@ -1710,6 +1710,13 @@
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="predicted_retention_time" type="xs:double"/>
+        <xs:attribute name="exclude_from_calibration" type="xs:boolean">
+          <xs:annotation>
+            <xs:documentation>
+              When true, the sample file is not to be used in calibration calculations.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

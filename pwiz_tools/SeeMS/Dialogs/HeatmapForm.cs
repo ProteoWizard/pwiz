@@ -333,7 +333,7 @@ namespace seems
 
             var g = msGraphControl.CreateGraphics();
             msGraphControl.MasterPane.PaneList.Clear();
-            int numColumns = ionMobilityBinsByMsLevelAndScanTime.Count(o => o.IsNullOrEmpty()); // skip empty MS levels (e.g. files with only MS2)
+            int numColumns = ionMobilityBinsByMsLevelAndScanTime.Count(o => !o.IsNullOrEmpty()); // skip empty MS levels (e.g. files with only MS2)
             var rowCounts = new int[2] {numColumns, numColumns};
             msGraphControl.MasterPane.SetLayout(g, true, rowCounts, new float[2] {0.25f, 0.75f});
 

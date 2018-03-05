@@ -656,6 +656,12 @@ namespace pwiz.Skyline.FileUI
             set { radioAddExisting.Checked = value; }
         }
 
+        public bool RadioCreateMultipleChecked
+        {
+            get { return radioCreateMultiple.Checked; }
+            set { radioCreateMultiple.Checked = value; }
+        }
+
         public bool RadioCreateMultipleMultiChecked
         {
             get { return radioCreateMultipleMulti.Checked; }

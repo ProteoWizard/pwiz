@@ -212,27 +212,7 @@ namespace pwiz.SkylineTestFunctional
                     {"QC3__VIFonly", new Tuple<SampleType, double?>(SampleType.QC, null)},
                     {"QC4__VIFonly", new Tuple<SampleType, double?>(SampleType.QC, null)},
                 };
-            RunUI(()=>SkylineWindow.ShowDocumentGrid(true));
-            var documentGrid = FindOpenForm<DocumentGridForm>();
-            RunUI(() => documentGrid.DataboundGridControl.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates));
-            WaitForCondition(() => documentGrid.IsComplete);
-            RunUI(() =>
-            {
-                var colReplicate = documentGrid.FindColumn(PropertyPath.Root);
-                var colSampleType = documentGrid.FindColumn(PropertyPath.Root.Property("SampleType"));
-                var colConcentration = documentGrid.FindColumn(PropertyPath.Root.Property("AnalyteConcentration"));
-                for (int iRow = 0; iRow < documentGrid.RowCount; iRow++)
-                {
-                    var row = documentGrid.DataGridView.Rows[iRow];
-                    var replicateName = row.Cells[colReplicate.Index].Value.ToString();
-                    Tuple<SampleType, double?> tuple;
-                    if (sampleTypes.TryGetValue(replicateName, out tuple))
-                    {
-                        row.Cells[colSampleType.Index].Value = tuple.Item1;
-                        row.Cells[colConcentration.Index].Value = tuple.Item2;
-                    }
-                }
-            });
+            SetDocumentGridSampleTypesAndConcentrations(sampleTypes);
         }
 
         public static IEnumerable<QuantificationSettings> ListAllQuantificationSettings()

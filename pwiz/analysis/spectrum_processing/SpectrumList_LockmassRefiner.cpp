@@ -84,7 +84,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_LockmassRefiner::spectrum(size_t index, b
 
     detail::SpectrumList_Waters* waters = dynamic_cast<detail::SpectrumList_Waters*>(&*inner_);
     if (waters)
-        s = waters->spectrum(index, getBinaryData, mzPositiveScans_, mzNegativeScans_, tolerance_);
+        s = waters->spectrum(index, getBinaryData, mzPositiveScans_, mzNegativeScans_, tolerance_, pwiz::util::IntegerSet());
     else
         s = inner_->spectrum(index, true);
 

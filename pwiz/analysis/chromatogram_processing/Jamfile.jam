@@ -31,15 +31,16 @@ lib pwiz_analysis_chromatogram_processing
     : # sources  
         ChromatogramList_SavitzkyGolaySmoother.cpp
         ChromatogramList_XICGenerator.cpp
+        ChromatogramList_Filter.cpp
+        ChromatogramList_LockmassRefiner.cpp
+        ChromatogramListFactory.cpp
     : # requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers
-        <library>../../analysis/peakdetect//pwiz_analysis_peakdetect
     : # default-build
     : # usage-requirements
         <library>../../data/msdata//pwiz_data_msdata
         <library>../../data/vendor_readers//pwiz_data_vendor_readers
-        <library>../../analysis/peakdetect//pwiz_analysis_peakdetect
     ;
 
 
@@ -50,5 +51,14 @@ lib pwiz_analysis_chromatogram_processing
 
 unit-test-if-exists ChromatogramListWrapperTest : ChromatogramListWrapperTest.cpp pwiz_analysis_chromatogram_processing ;
 unit-test-if-exists SavitzkyGolaySmootherTest : SavitzkyGolaySmootherTest.cpp pwiz_analysis_chromatogram_processing ;
+unit-test-if-exists ChromatogramList_FilterTest : ChromatogramList_FilterTest.cpp pwiz_analysis_chromatogram_processing ../../data/msdata//pwiz_data_msdata_examples ;
+unit-test-if-exists ChromatogramListFactoryTest : ChromatogramListFactoryTest.cpp pwiz_analysis_chromatogram_processing ../../data/msdata//pwiz_data_msdata_examples ;
 
-
+import path ;
+run-if-exists ChromatogramList_LockmassRefinerTest.cpp pwiz_analysis_chromatogram_processing $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
+    : [ path.native $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/091204_NFDM_008.raw ] # args
+    : # input-files
+    : <vendor-api-support>off:<build>no <runtime-debugging>on:<build>no # requirements
+    : ChromatogramList_LockmassRefinerTest # target name
+    : # default-build
+    ;

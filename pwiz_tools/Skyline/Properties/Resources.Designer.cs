@@ -19490,11 +19490,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} Molecules.
+        /// </summary>
+        public static string PeptideGroupTreeNode_ChildHeading__0__Molecules {
+            get {
+                return ResourceManager.GetString("PeptideGroupTreeNode_ChildHeading__0__Molecules", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} peptides.
         /// </summary>
         public static string PeptideGroupTreeNode_ChildUndoHeading__0__ {
             get {
                 return ResourceManager.GetString("PeptideGroupTreeNode_ChildUndoHeading__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} molecules.
+        /// </summary>
+        public static string PeptideGroupTreeNode_ChildUndoHeading__0__molecules {
+            get {
+                return ResourceManager.GetString("PeptideGroupTreeNode_ChildUndoHeading__0__molecules", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule Group.
+        /// </summary>
+        public static string PeptideGroupTreeNode_Heading_Molecule_Group {
+            get {
+                return ResourceManager.GetString("PeptideGroupTreeNode_Heading_Molecule_Group", resourceCulture);
             }
         }
         
@@ -19985,6 +20012,15 @@ namespace pwiz.Skyline.Properties {
         public static string PeptideTreeNode_Heading_Title {
             get {
                 return ResourceManager.GetString("PeptideTreeNode_Heading_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Molecule.
+        /// </summary>
+        public static string PeptideTreeNode_Heading_Title_Molecule {
+            get {
+                return ResourceManager.GetString("PeptideTreeNode_Heading_Title_Molecule", resourceCulture);
             }
         }
         
@@ -23007,6 +23043,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineVersion_V3_7_Skyline_3_7 {
             get {
                 return ResourceManager.GetString("SkylineVersion_V3_7_Skyline_3_7", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline 4.1.
+        /// </summary>
+        public static string SkylineVersion_V4_1_Skyline_4_1 {
+            get {
+                return ResourceManager.GetString("SkylineVersion_V4_1_Skyline_4_1", resourceCulture);
             }
         }
         

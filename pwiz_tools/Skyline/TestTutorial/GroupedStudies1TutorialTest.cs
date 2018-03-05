@@ -42,7 +42,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -1342,53 +1341,6 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsNotNull(nodeGroupAfter.Results[resultsIndex]);
                 Assert.IsFalse(nodeGroupAfter.Results[resultsIndex][0].Area.HasValue);
             });
-        }
-
-        private void ChangePeakBounds(string chromName,
-                                       double startDisplayTime,
-                                       double endDisplayTime)
-        {
-            Assert.IsTrue(startDisplayTime < endDisplayTime,
-                string.Format("Start time {0} must be less than end time {1}.", startDisplayTime, endDisplayTime));
-
-            ActivateReplicate(chromName);
-
-            WaitForGraphs();
-
-            RunUIWithDocumentWait(() => // adjust integration
-            {
-                var graphChrom = SkylineWindow.GetGraphChrom(chromName);
-
-                var nodeGroupTree = SkylineWindow.SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-                IdentityPath pathGroup;
-                if (nodeGroupTree != null)
-                    pathGroup = nodeGroupTree.Path;
-                else
-                {
-                    var nodePepTree = SkylineWindow.SequenceTree.GetNodeOfType<PeptideTreeNode>();
-                    pathGroup = new IdentityPath(nodePepTree.Path, nodePepTree.ChildDocNodes[0].Id);
-                }
-                var listChanges = new List<ChangedPeakBoundsEventArgs>
-                {
-                    new ChangedPeakBoundsEventArgs(pathGroup,
-                        null,
-                        graphChrom.NameSet,
-                        graphChrom.ChromGroupInfos[0].FilePath,
-                        graphChrom.GraphItems.First().GetNearestDisplayTime(startDisplayTime),
-                        graphChrom.GraphItems.First().GetNearestDisplayTime(endDisplayTime),
-                        PeakIdentification.ALIGNED,
-                        PeakBoundsChangeType.both)
-                };
-                graphChrom.SimulateChangedPeakBounds(listChanges);
-            });
-            WaitForGraphs();
-        }
-
-        private void RunUIWithDocumentWait(Action act)
-        {
-            var doc = SkylineWindow.Document;
-            RunUI(act);
-            WaitForDocumentChange(doc); // make sure the action changes the document
         }
 
         private void SimpleGroupComparisons()

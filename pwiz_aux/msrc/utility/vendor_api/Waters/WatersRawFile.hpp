@@ -1,5 +1,5 @@
 //
-// $Id$
+// $Id: WatersRawFile.hpp 11611 2017-12-05 17:00:21Z chambm $
 //
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
@@ -24,24 +24,28 @@
 #include "pwiz/utility/misc/Exception.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Once.hpp"
+#include "pwiz/utility/misc/IterationListener.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/any.hpp>
-#include <boost/foreach.hpp>
+#include <boost/range/adaptor/map.hpp>
+
 #include <boost/bind.hpp>
 #include <vector>
 #include <map>
 #include <iostream>
 #include <fstream>
 
-#include "MassLynxRawDataFile.h"
-#include "MassLynxRawReader.h"
-#include "MassLynxRawScanReader.h"
-#include "MassLynxRawChromatogramReader.h"
-#include "MassLynxRawInfo.h"
-#include "MassLynxRawScanStatsReader.h"
-#include "MassLynxRawLockMass.h"
-#include "cdtdefs.h"
-#include "compresseddatacluster.h"
+//#include "MassLynxRawDataFile.h"
+#include "MassLynxRawReader.hpp"
+#include "MassLynxRawScanReader.hpp"
+#include "MassLynxRawChromatogramReader.hpp"
+#include "MassLynxRawInfoReader.hpp"
+//#include "MassLynxRawScanStatsReader.h"
+#include "MassLynxLockMassProcessor.hpp"
+#include "MassLynxRawProcessor.hpp"
+#include "MassLynxParameters.hpp"
+//#include "cdtdefs.h"
+//#include "compresseddatacluster.h"
 
 namespace pwiz {
 namespace vendor_api {
@@ -58,14 +62,40 @@ using namespace pwiz::util;
 using namespace ::Waters::Lib::MassLynxRaw;
 
 
+class MassLynxRawProcessorWithProgress : public MassLynxRawProcessor
+{
+    IterationListenerRegistry* ilr_;
+    int numSpectra_;
+    int lastSpectrum_;
+
+    public:
+    MassLynxRawProcessorWithProgress(const string& rawpath, IterationListenerRegistry* ilr = nullptr) : ilr_(ilr), numSpectra_(100), lastSpectrum_(0)
+    {
+        SetRawPath(rawpath);
+    }
+
+    void SetNumSpectra(int numSpectra) { numSpectra_ = numSpectra; }
+
+    virtual void Progress(const int& percent) override
+    {
+        if (ilr_ != nullptr)
+        {
+            // must loop through every spectrum because listeners might only respond to every nth iteration (e.g. 100, 200, 300)
+            int currentSpectrum_ = (int) floor(percent / 100.0 * numSpectra_);
+            for (int i = lastSpectrum_; i <= currentSpectrum_; ++i)
+                ilr_->broadcastUpdateMessage(IterationListener::UpdateMessage(i, numSpectra_, "running MassLynx centroider for all spectra"));
+            lastSpectrum_ = currentSpectrum_;
+        }
+    }
+};
+
+
 struct PWIZ_API_DECL RawData
 {
     mutable MassLynxRawReader Reader;
     MassLynxRawInfo Info;
     MassLynxRawScanReader ScanReader;
     MassLynxRawChromatogramReader ChromatogramReader;
-
-    typedef map<string, vector<boost::any> > ExtendedScanStatsByName;
 
     struct CachedCompressedDataCluster : public MassLynxRawScanReader
     {
@@ -79,39 +109,43 @@ struct PWIZ_API_DECL RawData
     size_t FunctionCount() const {return functionIndexList.size();}
     size_t LastFunctionIndex() const {return lastFunctionIndex_; }
 
-    RawData(const string& rawpath)
+    RawData(const string& rawpath, IterationListenerRegistry* ilr = nullptr)
         : Reader(rawpath),
           Info(Reader),
           ScanReader(Reader),
           ChromatogramReader(Reader),
-          LockMass(Reader),
+          PeakPicker(rawpath, ilr),
           rawpath_(rawpath),
-          scanStatsInitialized(init_once_flag_proxy)
+          numSpectra_(0)
     {
+        LockMass.SetRawReader(Reader);
+
         // Count the number of _FUNC[0-9]{3}.DAT files, starting with _FUNC001.DAT
         // For functions over 100, the names become _FUNC0100.DAT
         // Keep track of the maximum function number
         string functionPathmask = rawpath + "/_FUNC*.DAT";
         vector<bfs::path> functionFilepaths;
         expand_pathmask(functionPathmask, functionFilepaths);
+        map<int, bfs::path> functionFilepathByNumber;
         for (size_t i=0; i < functionFilepaths.size(); ++i)
         {
             string fileName = BFS_STRING(functionFilepaths[i].filename());
             size_t number = lexical_cast<size_t>(bal::trim_left_copy_if(fileName.substr(5, fileName.length() - 9), bal::is_any_of("0")));
             functionIndexList.push_back(number-1); // 0-based
+            functionFilepathByNumber[number-1] = functionFilepaths[i];
+            numSpectra_ += Info.GetScansInFunction(number-1);
         }
         sort(functionIndexList.begin(), functionIndexList.end()); // just in case filesystem returns them out of natural order
         lastFunctionIndex_ = functionIndexList.back();
+        PeakPicker.SetNumSpectra(numSpectra_);
 
-        ionMobilityByFunctionIndex.resize(lastFunctionIndex_+1, false);
-        CompressedDataCluster tmpCDC;
-        for (size_t i=0; i < functionIndexList.size(); ++i)
+        ionMobilityByFunctionIndex.resize(lastFunctionIndex_ + 1, false);
+        for (auto& itr : functionFilepathByNumber)
         {
-            tmpCDC.Initialise(rawpath.c_str(), functionIndexList[i] + 1); // 1-based
-            ionMobilityByFunctionIndex[i] = tmpCDC.isInitialised();
-            if (tmpCDC.isInitialised())
+            ionMobilityByFunctionIndex[itr.first] = bfs::exists(itr.second.replace_extension(".cdt"));
+            if (ionMobilityByFunctionIndex[itr.first])
             {
-                shared_ptr<CachedCompressedDataCluster>& cdc = cdcByFunction[i];
+                shared_ptr<CachedCompressedDataCluster>& cdc = cdcByFunction[itr.first];
                 cdc.reset(new CachedCompressedDataCluster(Reader));
             }
         }
@@ -126,45 +160,79 @@ struct PWIZ_API_DECL RawData
         if (!cdc)
             throw std::runtime_error("[MassLynxRaw::GetCompressedDataClusterForBlock] function " + lexical_cast<string>(functionIndex + 1) + " does not have ion mobility data");
 
-        //if (cdc->currentBlock != blockIndex)
-        //{
-        //    cdc->loadDataBlock(blockIndex);
-        //    cdc->currentBlock = blockIndex;
-        //}
-
         return *cdc;
     }
 
-    double GetDriftTime(int functionIndex, int blockIndex, int scanIndex) const
+    double GetDriftTime(int functionIndex, int driftBin) const
     {
-        boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
-        const ExtendedScanStatsByName& extendedScanStatsByName = extendedScanStatsByFunction[functionIndex];
-        ExtendedScanStatsByName::const_iterator transportRFItr = extendedScanStatsByName.find("Transport RF");
-        if (transportRFItr != extendedScanStatsByName.end())
+        return Info.GetDriftTime(functionIndex, driftBin);
+    }
+    
+    /* e.g.
+    Accurate Mass Diagnostic Flags:
+    Accurate Mass Flag: 0
+    Collision Energy: 0
+    Course Laser Control: 0
+    FAIMS Compensation Voltage: 0
+    Fine Laser Control: 0
+    Laser Aim X Position: 0
+    Laser Aim Y Position: 0
+    Laser Repetition Rate: 0
+    Linear Detector Voltage: 0
+    Linear Sensitivity: 0
+    LockMass Correction: 0
+    Number Shots Performed: 0
+    Number Shots Summed: 0
+    PSD Factor: 0
+    PSD Major Step: 0
+    PSD Minor Step: 0
+    Reference Scan: 0
+    Reflectron Detector Voltage: 0
+    Reflectron Length: 0
+    Reflectron Length Alt: 0
+    Reflectron Lens Voltage: 0
+    Reflectron Path Length: 0
+    Reflectron Path Length Alt: 0
+    Reflectron Sensitivity: 0
+    Reflectron Voltage: 0
+    Sample Plate Voltage: 0
+    Sampling Cone Voltage: 0
+    Segment Number: 0
+    Segment Type: 0
+    Set Mass: 0
+    Source Region 1: 0
+    Source Region 2: 0
+    TFM Well: 0
+    TIC A Trace: 0
+    TIC B Trace: 0
+    Temperature Coefficient: 0
+    Temperature Correction: 0
+    Transport RF: 0
+    Use LockMass Correction: 0
+    Use Temperature Correction: 0
+    */
+    string GetScanStat(int functionIndex, int scanIndex, MassLynxScanItem statIndex) const
+    {
+        try
         {
-            double transportRF = boost::any_cast<short>(transportRFItr->second[std::min(transportRFItr->second.size()-1, (size_t) blockIndex)]);
-            double pusherInterval = 1000 / transportRF;
-            return scanIndex * pusherInterval; // 0-based, to match PLGS _final_fragment.csv bin values
+            return Info.GetScanItem(functionIndex, scanIndex, statIndex);
         }
-        return 0.0;
+        catch (MassLynxRawException&)
+        {
+            return "";
+        }
     }
 
-    const MSScanStats& GetScanStats(int functionIndex, int scanIndex) const
+    template <typename T>
+    T GetScanStat(int functionIndex, int scanIndex, MassLynxScanItem statIndex) const
     {
-        boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
-        return scanStatsByFunction[functionIndex][scanIndex];
-    }
+        string value = GetScanStat(functionIndex, scanIndex, statIndex);
+        if (value.empty())
+            throw runtime_error("[MassLynxRaw::GetScanStat] scan stat " + Info.GetScanItemString(statIndex) +
+                                " for spectrum " + lexical_cast<string>(functionIndex+1) + ".0." + lexical_cast<string>(scanIndex+1) +
+                                " does not have a value but is assumed to have one (report this as a bug)");
 
-    const vector<MSScanStats>& GetAllScanStatsForFunction(int functionIndex) const
-    {
-        boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
-        return scanStatsByFunction[functionIndex];
-    }
-
-    const ExtendedScanStatsByName& GetExtendedScanStats(int functionIndex) const
-    {
-        boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
-        return extendedScanStatsByFunction[functionIndex];
+        return lexical_cast<T>(value);
     }
 
     const string& GetHeaderProp(const string& name) const
@@ -175,20 +243,42 @@ struct PWIZ_API_DECL RawData
         return findItr->second;
     }
 
+    void Centroid() const
+    {
+        string centroidPath = rawpath_ + "\\centroid.raw";
+        if (!bfs::exists(centroidPath))
+            PeakPicker.Centroid(centroidPath);
+
+        if (!centroidRaw_)
+        {
+            try
+            {
+                centroidRaw_.reset(new RawData(centroidPath));
+            }
+            catch (MassLynxRawException&)
+            {
+                bfs::remove_all(centroidPath);
+                PeakPicker.Centroid(centroidPath);
+                centroidRaw_.reset(new RawData(centroidPath));
+            }
+        }
+    }
+
+    boost::shared_ptr<RawData> CentroidRawDataFile() const
+    {
+        return centroidRaw_;
+    }
+
     bool LockMassCanBeApplied() const
     {
-        bool canBeApplied;
-        LockMass.CanApplyLockMassCorrection(canBeApplied);
-        return canBeApplied;
+        return Info.CanLockMassCorrect();
     }
 
     bool LockMassIsApplied() const
     {
         if (!LockMassCanBeApplied())
             return false;
-        bool isApplied;
-        LockMass.GetLockMassCorrectionApplied(isApplied);
-        return isApplied;
+        return Info.IsLockMassCorrected();
     }
 
     bool ApplyLockMass(double mz, double tolerance)
@@ -213,7 +303,11 @@ struct PWIZ_API_DECL RawData
         }
 
         // apply new values
-        LockMass.UpdateLockMassCorrection(newMz, newTolerance);
+        
+        MassLynxParameters parms;
+        parms.Set("mass", newMz);
+        parms.Set("tolerance", newTolerance);
+        LockMass.LockMassCorrect(parms.ToJSON());
         return true;
     }
 
@@ -226,19 +320,18 @@ struct PWIZ_API_DECL RawData
     }
 
     private:
-    MassLynxRawLockMass LockMass;
+    MassLynxLockMassProcessor LockMass;
+    mutable MassLynxRawProcessorWithProgress PeakPicker;
+    mutable boost::shared_ptr<RawData> centroidRaw_;
 
     string rawpath_, empty_;
     vector<int> functionIndexList;
     size_t lastFunctionIndex_;
     vector<bool> ionMobilityByFunctionIndex;
     map<string, string> headerProps;
+    int numSpectra_; // not separated by ion mobility
 
     mutable map<int, shared_ptr<CachedCompressedDataCluster> > cdcByFunction;
-
-    mutable once_flag_proxy scanStatsInitialized;
-    mutable vector<vector<MSScanStats>> scanStatsByFunction;
-    mutable vector<ExtendedScanStatsByName> extendedScanStatsByFunction;
 
     void initHeaderProps(const string& rawpath)
     {
@@ -260,70 +353,6 @@ struct PWIZ_API_DECL RawData
             headerProps[name] = value;
             //std::cout << name << " = " << value << std::endl;
         }
-    }
-
-    void initScanStats() const
-    {
-        try
-        {
-            MassLynxRawScanStatsReader statsReader(Reader);
-
-            scanStatsByFunction.resize(lastFunctionIndex_+1);
-            extendedScanStatsByFunction.resize(lastFunctionIndex_+1);
-
-            BOOST_FOREACH(int function, functionIndexList)
-            {
-                statsReader.readScanStats(function, scanStatsByFunction[function]);
-
-                ExtendedScanStatsByName& extendedScanStatsMap = extendedScanStatsByFunction[function];
-
-                vector<ExtendedStatsType> extendedStatsTypes;
-                statsReader.getExtendedStatsTypes(function, extendedStatsTypes);
-                for (size_t i=0; i < extendedStatsTypes.size(); ++i)
-                {
-                    ExtendedStatsType& type = extendedStatsTypes[i];
-                    if(type.name.empty())
-                        continue;
-
-                    //std::cout << extendedStatsTypes[i].name << " " << extendedStatsTypes[i].typeCode << std::endl;
-                    switch (type.typeCode)
-                    {
-                        case Waters::CHAR: fillExtendedStatsByName<char>(statsReader, function, type, extendedScanStatsMap); break;
-                        case SHORT_INT: fillExtendedStatsByName<short>(statsReader, function, type, extendedScanStatsMap); break;
-                        case LONG_INT: fillExtendedStatsByName<int>(statsReader, function, type, extendedScanStatsMap); break;
-                        case SINGLE_FLOAT: fillExtendedStatsByName<float>(statsReader, function, type, extendedScanStatsMap); break;
-                        case DOUBLE_FLOAT: fillExtendedStatsByName<double>(statsReader, function, type, extendedScanStatsMap); break;
-
-                        case STRING:
-                        default:
-                            throw std::runtime_error("cannot handle string extended stats");
-                    }
-                }
-            }
-        }
-        catch (std::exception& e)
-        {
-            // TODO: log error (can't propogate from inside call_once)
-            std::cerr << "[MassLynxRaw::initScanStats] " << e.what() << std::endl;
-        }
-        catch (...)
-        {
-            // TODO: log error (can't propogate from inside call_once)
-            std::cerr << "[MassLynxRaw::initScanStats] caught unknown exception" << std::endl;
-        }
-    }
-
-    template <typename T>
-    inline void fillExtendedStatsByName(const MassLynxRawScanStatsReader& statsReader, int function, const ExtendedStatsType& type, ExtendedScanStatsByName& statsMap) const
-    {
-        std::pair<ExtendedScanStatsByName::iterator, bool> insertResult =
-            statsMap.insert(std::make_pair(type.name, vector<boost::any>()));
-        vector<boost::any>& statsVector = insertResult.first->second;
-
-        vector<T> stats;
-        statsReader.getExtendedStatsField<T>(function, type, stats);
-        for (size_t i=0; i < stats.size(); ++i)
-            statsVector.push_back(stats[i]);
     }
 };
 
@@ -367,7 +396,7 @@ enum PWIZ_API_DECL PwizFunctionType
 };
 
 
-inline PwizFunctionType WatersToPwizFunctionType(FunctionType functionType)
+inline PwizFunctionType WatersToPwizFunctionType(int functionType)
 {
     return (PwizFunctionType) functionType;
 }
@@ -388,10 +417,30 @@ enum PWIZ_API_DECL PwizIonizationType
     IonizationType_Count
 };
 
+enum IonMode {
+    IM_EIP = 0,
+    IM_EIM,
+    IM_CIP,
+    IM_CIM,
+    IM_FBP,
+    IM_FBM,
+    IM_TSP,
+    IM_TSM,
+    IM_ESP,
+    IM_ESM,
+    IM_AIP,
+    IM_AIM,
+    IM_LDP,
+    IM_LDM,
+    IM_FIP,
+    IM_FIM,
+    IM_GENERIC
+};
 
-inline PwizIonizationType WatersToPwizIonizationType(IonMode ionMode)
+
+inline PwizIonizationType WatersToPwizIonizationType(int ionMode)
 {
-    switch (ionMode)
+    switch ((IonMode) ionMode)
     {
         case IM_GENERIC: return IonizationType_Generic;
         default: return (PwizIonizationType) (int(ionMode) / 2);
@@ -408,9 +457,9 @@ enum PWIZ_API_DECL PwizPolarityType
 };
 
 
-inline PwizPolarityType WatersToPwizPolarityType(IonMode ionMode)
+inline PwizPolarityType WatersToPwizPolarityType(int ionMode)
 {
-    switch (ionMode)
+    switch ((IonMode) ionMode)
     {
         case IM_EIP: case IM_CIP: case IM_FBP: case IM_TSP:
         case IM_ESP: case IM_AIP: case IM_LDP: case IM_FIP:

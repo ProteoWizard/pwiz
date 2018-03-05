@@ -59,20 +59,24 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             get 
             {
+                if (DocNode.IsNonProteomic)
+                {
+                    return Resources.PeptideGroupTreeNode_Heading_Molecule_Group;
+                }
                 return Model.Id is FastaSequence
                     ? Resources.PeptideGroupTreeNode_Heading_Protein
                     : Resources.PeptideGroupTreeNode_Heading_Peptide_List;
             }
         }
 
-        public override string ChildHeading  // TODO(bspratt) distinguish Molecule from Peptide
+        public override string ChildHeading
         {
-            get { return string.Format(Resources.PeptideGroupTreeNode_ChildHeading__0__, Text); }
+            get { return string.Format(DocNode.IsNonProteomic ? Resources.PeptideGroupTreeNode_ChildHeading__0__Molecules : Resources.PeptideGroupTreeNode_ChildHeading__0__, Text); }
         }
 
-        public override string ChildUndoHeading // TODO(bspratt) distinguish Molecule from Peptide
+        public override string ChildUndoHeading
         {
-            get { return string.Format(Resources.PeptideGroupTreeNode_ChildUndoHeading__0__, Text); }
+            get { return string.Format(DocNode.IsNonProteomic ? Resources.PeptideGroupTreeNode_ChildUndoHeading__0__molecules : Resources.PeptideGroupTreeNode_ChildUndoHeading__0__, Text); }
         }
 
         protected override void OnModelChanged()

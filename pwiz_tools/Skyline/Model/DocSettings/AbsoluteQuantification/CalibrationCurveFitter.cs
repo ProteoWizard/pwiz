@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return null;
             }
             double concentrationMultiplier = PeptideQuantifier.PeptideDocNode.ConcentrationMultiplier.GetValueOrDefault(1.0);
-            return chromatogramSet.AnalyteConcentration*concentrationMultiplier;
+            return chromatogramSet.AnalyteConcentration*concentrationMultiplier/chromatogramSet.SampleDilutionFactor;
         }
 
         public IDictionary<int, double> GetStandardConcentrations()
@@ -353,16 +353,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return null;
             }
-            return GetConcentrationFromXValue(GetCalculatedXValue(calibrationCurve, replicateIndex));
-        }
-
-        public double? GetConcentrationFromXValue(double? xValue)
-        {
+            double? xValue = GetCalculatedXValue(calibrationCurve, replicateIndex) * GetDilutionFactor(replicateIndex);
             if (HasExternalStandards() && HasInternalStandardConcentration())
             {
                 return xValue * PeptideQuantifier.PeptideDocNode.InternalStandardConcentration;
             }
             return xValue;
+        }
+
+        public double GetDilutionFactor(int replicateIndex)
+        {
+            return SrmSettings.MeasuredResults.Chromatograms[replicateIndex].SampleDilutionFactor;
         }
 
         public bool IsExcluded(int replicateIndex)

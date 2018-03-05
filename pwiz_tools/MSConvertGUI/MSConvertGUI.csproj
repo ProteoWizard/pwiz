@@ -16,7 +16,7 @@
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
     <BaseIntermediateOutputPath>..\..\build-nt-x86\obj\</BaseIntermediateOutputPath>
     <PwizBuildPath>$(BaseIntermediateOutputPath)\..</PwizBuildPath>

@@ -89,14 +89,19 @@ int main(int argc, char* argv[])
         vector<string> rawpaths;
         parseArgs(args, rawpaths);
 
-        BOOST_FOREACH(const string& filepath, rawpaths)
+        int tests = 0;
+        for(const string& filepath : rawpaths)
         {
             if (bal::ends_with(filepath, "ATEHLSTLSEK_profile.raw"))
             {
+                ++tests;
                 test(filepath, 684.3469, 0.1);
                 test(filepath, 0, 0.1);
             }
         }
+
+        if (tests == 0)
+            throw runtime_error("did not run any tests");
     }
     catch (exception& e)
     {

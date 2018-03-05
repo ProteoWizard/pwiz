@@ -708,6 +708,13 @@ namespace pwiz.Skyline.SettingsUI
             set { tabControl1.SelectedIndex = (int)value; }
         }
 
+        // Chooses between "Peptides" and "Small Molecules" filter sub-tab
+        public int SelectedPeptidesSmallMolsSubTab
+        {
+            get { return tabControlPeptidesSmallMols.SelectedIndex; }
+            set { tabControlPeptidesSmallMols.SelectedIndex = value; }
+        }
+
         public MassType PrecursorMassType
         {
             get
@@ -765,6 +772,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return textSmallMoleculePrecursorAdducts.Text; }
             set { textSmallMoleculePrecursorAdducts.Text = value; }
+        }
+
+        public string SmallMoleculeFragmentAdducts
+        {
+            get { return textSmallMoleculeFragmentAdducts.Text; }
+            set { textSmallMoleculeFragmentAdducts.Text = value; }
         }
 
         public string SmallMoleculeFragmentTypes
@@ -832,6 +845,12 @@ namespace pwiz.Skyline.SettingsUI
             set { comboDeclusterPotential.SelectedItem = value; }
         }
 
+        public string OptimizationLibraryName
+        {
+            get { return comboOptimizationLibrary.SelectedItem.ToString(); }
+            set { comboOptimizationLibrary.SelectedItem = value; }
+        }
+
         public CompensationVoltageParameters RegressionCOV
         {
             get { return _driverCoV.SelectedItem; }
@@ -853,6 +872,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             CheckDisposed();
             _driverCE.EditList();
+        }
+
+        public void EditCECurrent()
+        {
+            CheckDisposed();
+            _driverCE.EditCurrent();
         }
 
         public void AddToCEList()
@@ -961,16 +986,16 @@ namespace pwiz.Skyline.SettingsUI
             set { FullScanSettingsControl.Peaks = value; }
         }
 
-        public double MinTime
+        public double? MinTime
         {
-            get { return double.Parse(textMinTime.Text); }
-            set { textMinTime.Text = value.ToString(CultureInfo.CurrentCulture); }
+            get { return string.IsNullOrEmpty(textMinTime.Text) ? (double?)null : double.Parse(textMinTime.Text); }
+            set { textMinTime.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
 
-        public double MaxTime
+        public double? MaxTime
         {
-            get { return double.Parse(textMaxTime.Text); }
-            set { textMaxTime.Text = value.ToString(CultureInfo.CurrentCulture); }
+            get { return string.IsNullOrEmpty(textMaxTime.Text) ? (double?)null : double.Parse(textMaxTime.Text); }
+            set { textMaxTime.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
 
         public int MaxInclusions

@@ -10005,4 +10005,19 @@ Recognized isotopes include: {2}</value>
   <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
     <value>Are you sure you want to clear all saved settings? This will immediately return {0} to its original configuration and cannot be undone.</value>
   </data>
+  <data name="SkylineVersion_V4_1_Skyline_4_1" xml:space="preserve">
+    <value>Skyline 4.1</value>
+  </data>
+  <data name="PeptideGroupTreeNode_ChildHeading__0__Molecules" xml:space="preserve">
+    <value>{0} Molecules</value>
+  </data>
+  <data name="PeptideGroupTreeNode_ChildUndoHeading__0__molecules" xml:space="preserve">
+    <value>{0} molecules</value>
+  </data>
+  <data name="PeptideGroupTreeNode_Heading_Molecule_Group" xml:space="preserve">
+    <value>Molecule Group</value>
+  </data>
+  <data name="PeptideTreeNode_Heading_Title_Molecule" xml:space="preserve">
+    <value>Molecule</value>
+  </data>
 </root>
