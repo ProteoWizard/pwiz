@@ -4572,8 +4572,8 @@ If you prefer you can choose to report anonymously.</value>
   <data name="MQuestDefaultIntensityCorrelationCalc_Name_Default_dotp_or_idotp" xml:space="preserve">
     <value>Default dotp or idotp</value>
   </data>
-  <data name="StartPage_PopulateWizardPanel_Import_DIA_DDA_Peptide_Search" xml:space="preserve">
-    <value>Import DIA+DDA Peptide Search</value>
+  <data name="StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search" xml:space="preserve">
+    <value>Import DIA Peptide Search</value>
   </data>
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
     <value>The document must contain targets for which to export features.</value>
@@ -10019,5 +10019,8 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="PeptideTreeNode_Heading_Title_Molecule" xml:space="preserve">
     <value>Molecule</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_" xml:space="preserve">
+    <value>Cannot build library from OpenSWATH results mixed with results from other tools.</value>
   </data>
 </root>

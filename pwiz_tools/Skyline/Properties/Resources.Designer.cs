@@ -13456,6 +13456,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot build library from OpenSWATH results mixed with results from other tools..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed" +
+                        "_with_results_from_other_tools_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Finish.
         /// </summary>
         public static string ImportPeptideSearchDlg_NextPage_Finish {
@@ -26732,11 +26742,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Import DIA+DDA Peptide Search.
+        ///   Looks up a localized string similar to Import DIA Peptide Search.
         /// </summary>
-        public static string StartPage_PopulateWizardPanel_Import_DIA_DDA_Peptide_Search {
+        public static string StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search {
             get {
-                return ResourceManager.GetString("StartPage_PopulateWizardPanel_Import_DIA_DDA_Peptide_Search", resourceCulture);
+                return ResourceManager.GetString("StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search", resourceCulture);
             }
         }
         
