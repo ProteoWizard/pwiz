@@ -48,6 +48,8 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
             // IsPauseForScreenShots = true;
 
+            ForceMzml = true; // Prefer mzML as being the more efficient download
+
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculesMethodDevAndCEOptimization.pdf";
 
             TestFilesZipPaths = new[]

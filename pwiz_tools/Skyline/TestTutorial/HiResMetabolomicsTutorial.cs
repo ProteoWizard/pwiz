@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestTutorial
            // IsPauseForScreenShots = true;
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics.pdf";
-            //ForceMzml = true; // If you run into an apparent threading problem with Thermo
+            ForceMzml = true; // Prefer mzML as being the more efficient download
 
             TestFilesZipPaths = new[]
             {
@@ -252,6 +252,12 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsTrue(string.IsNullOrEmpty(msg), msg);
                 RestoreViewOnScreen(9);
                 var documentGrid = FindOpenForm<DocumentGridForm>();
+                if (documentGrid == null)
+                {
+                    // When running offscreen, can't depend on RestoreViewOnScreen to open document grid
+                    RunUI(() => SkylineWindow.ShowDocumentGrid(true));
+                    documentGrid = FindOpenForm<DocumentGridForm>();
+                }
                 RunUI(() => documentGrid.ChooseView(Resources.Resources_ReportSpecList_GetDefaults_Peptide_Quantification));
                 PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 9);
 
