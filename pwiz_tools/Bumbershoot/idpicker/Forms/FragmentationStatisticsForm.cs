@@ -68,7 +68,7 @@ namespace IDPicker.Forms
                 var mods = new Dictionary<int, List<double>>();
                 if (!String.IsNullOrEmpty((string) queryRow[3]))
                 {
-                    var offsetMassDeltaPairs = ((string) queryRow[3]).Split(',');
+                    var offsetMassDeltaPairs = ((string) queryRow[3]).Split(Properties.Settings.Default.GroupConcatSeparator[0]);
                     foreach (var pair in offsetMassDeltaPairs)
                     {
                         var offsetAndMassDelta = pair.Split(':');
@@ -173,7 +173,7 @@ namespace IDPicker.Forms
 
         private DataFilter viewFilter; // what the user has filtered on
         private DataFilter dataFilter; // how this view is filtered (i.e. never on its own rows)
-        private DataFilter basicDataFilter; // the basic filter without the user filtering on rows
+        //private DataFilter basicDataFilter; // the basic filter without the user filtering on rows
 
         private DockableForm percentTicGraphForm, percentPeakCountGraphForm;
         private DockableForm meanMzErrorGraphForm;
@@ -572,7 +572,7 @@ namespace IDPicker.Forms
         {
             if (clearBasicFilter)
             {
-                basicDataFilter = null;
+                //basicDataFilter = null;
                 Controls.OfType<Control>().ForEach(o => o.Enabled = false);
             }
 
@@ -725,7 +725,7 @@ namespace IDPicker.Forms
             if (spectrumFiltersDirty)
             {
                 spectrumFiltersDirty = false;
-                basicDataFilter = null; // force refresh
+                //basicDataFilter = null; // force refresh
                 SetData(session, viewFilter);
             }
         }

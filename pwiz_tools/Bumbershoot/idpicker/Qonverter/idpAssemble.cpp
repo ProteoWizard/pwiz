@@ -468,6 +468,7 @@ int main(int argc, const char* argv[])
                    "                   [-IsobaricSampleMapping <mapping.tsv>]\n"
                    "                   [-SummarizeSources <boolean>]\n"
                    "                   [-SkipPeptideMismatchCheck <boolean>]\n"
+                   "                   [-DropFiltersOnly <boolean>]\n"
                    "                   [-LogLevel <Error|Warning|BriefInfo|VerboseInfo|DebugInfo>]\n"
                    "                   [-LogFilepath <filepath to log to>]\n"
                    "                   [-cpus <max thread count>]\n"
@@ -509,6 +510,7 @@ int main(int argc, const char* argv[])
     int maxThreads = 8;
     string batchFile;
     bool summarizeSources = false;
+    bool dropFiltersOnly = false;
     MessageSeverity logLevel = MessageSeverity::BriefInfo;
 
     boost::log::formatter fmt = expr::stream << expr::attr<MessageSeverity::domain, severity_tag>("Severity") << expr::smessage;
@@ -572,6 +574,8 @@ int main(int argc, const char* argv[])
             summarizeSources = lexical_cast<bool>(args[++i]);
         else if (args[i] == "-SkipPeptideMismatchCheck")
             skipPeptideMismatchCheck = lexical_cast<bool>(args[++i]);
+        else if (args[i] == "-DropFiltersOnly")
+            dropFiltersOnly = lexical_cast<bool>(args[++i]);
         else if (args[i] == "-LogLevel")
             parse(logLevel, args[++i]);
         else if (args[i] == "-LogFilepath")
@@ -633,7 +637,7 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-    if (mergeSourceFilepaths.size() > 1 && mergeTargetFilepath.empty())
+    if (!dropFiltersOnly && mergeSourceFilepaths.size() > 1 && mergeTargetFilepath.empty())
     {
         BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "more than one idpDB file was given as input but no merge target filepath was given.\n\n" << usage << endl;
         return 1;
@@ -641,13 +645,13 @@ int main(int argc, const char* argv[])
 
     if (!assembleTextFilepath.empty() && !bfs::exists(assembleTextFilepath))
     {
-        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "the assembly file specified by AssignSourceHierarchy does not exist." << endl;
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "the assembly file specified by AssignSourceHierarchy does not exist.\n\n" << endl;
         return 1;
     }
 
     if (!isobaricSampleMappingFilepath.empty() && !bfs::exists(isobaricSampleMappingFilepath))
     {
-        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "the isobaric sample mapping file specified by IsobaricSampleMapping does not exist." << endl;
+        BOOST_LOG_SEV(logSource::get(), MessageSeverity::Error) << "the isobaric sample mapping file specified by IsobaricSampleMapping does not exist.\n\n" << endl;
         return 1;
     }
 
@@ -659,6 +663,13 @@ int main(int argc, const char* argv[])
 
     try
     {
+        if (dropFiltersOnly)
+        {
+            for (const auto& sourceFilepath : mergeSourceFilepaths)
+                Qonverter::dropFilters(sourceFilepath);
+            return 0;
+        }
+
         if (mergeSourceFilepaths.size() > 1)
         {
             BOOST_LOG_SEV(logSource::get(), MessageSeverity::BriefInfo) << "Merging " << mergeSourceFilepaths.size() << " files to: " << mergeTargetFilepath << endl;

@@ -189,7 +189,7 @@ namespace IDPicker.Forms
                 var mods = new Dictionary<int, List<double>>();
                 if (!String.IsNullOrEmpty((string)queryRow[6]))
                 {
-                    var offsetMassDeltaPairs = ((string)queryRow[6]).Split(',');
+                    var offsetMassDeltaPairs = ((string)queryRow[6]).Split(Properties.Settings.Default.GroupConcatSeparator[0]);
                     foreach (var pair in offsetMassDeltaPairs)
                     {
                         var offsetAndMassDelta = pair.Split(':');
@@ -230,7 +230,7 @@ namespace IDPicker.Forms
             public PsmIdRow(object queryRow)
             {
                 PsmIds = new Set<long>();
-                var psmIds = ((string)queryRow).Split(',');
+                var psmIds = ((string)queryRow).Split(Properties.Settings.Default.GroupConcatSeparator[0]);
                 foreach (var psmId in psmIds)
                 {
                     PsmIds.Add(Convert.ToInt64(psmId));

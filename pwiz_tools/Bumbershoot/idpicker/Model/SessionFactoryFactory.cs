@@ -110,6 +110,7 @@ namespace IDPicker.DataModel
                 RegisterFunction("distinct_sum", new DistinctSum());
                 RegisterFunction("distinct_double_array_sum", new StandardSQLFunction("distinct_double_array_sum", NHibernateUtil.BinaryBlob));
                 RegisterFunction("distinct_double_array_mean", new StandardSQLFunction("distinct_double_array_mean", NHibernateUtil.BinaryBlob));
+                RegisterFunction("distinct_double_array_median", new StandardSQLFunction("distinct_double_array_median", NHibernateUtil.BinaryBlob));
                 RegisterFunction("distinct_double_array_tukey_biweight_average", new StandardSQLFunction("distinct_double_array_tukey_biweight_average", NHibernateUtil.BinaryBlob));
                 RegisterFunction("distinct_double_array_tukey_biweight_log_average", new StandardSQLFunction("distinct_double_array_tukey_biweight_log_average", NHibernateUtil.BinaryBlob));
                 RegisterFunction("parens", new Parens());

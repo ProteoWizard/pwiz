@@ -35,6 +35,7 @@ namespace IDPicker
         Invalid = 0,
         Sum,
         Mean,
+        Median,
         Tukey,
         TukeyLog
     }

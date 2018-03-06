@@ -29,12 +29,16 @@
 #include "IdpSqlExtensions.hpp"
 #include "boost/crc.hpp"
 #include "boost/range/algorithm/sort.hpp"
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/framework/accumulator_set.hpp>
+#include "../../freicore/percentile.hpp"
 #include "sqlite3ext.h" /* Do not use <sqlite3.h>! */
 #include "sqlite3pp.h"
 SQLITE_EXTENSION_INIT1
 
 using namespace pwiz::util;
 namespace sqlite = sqlite3pp;
+namespace accs = boost::accumulators;
 
 
 namespace {
@@ -116,40 +120,7 @@ namespace {
 
         static void Step(sqlite3_context* context, int numValues, sqlite3_value** values)
         {
-            void* aggContext = sqlite3_aggregate_context(context, sizeof(MyType*));
-            if (aggContext == NULL)
-                throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
-
-            MyType** ppThis = static_cast<MyType**>(aggContext);
-            MyType*& pThis = *ppThis;
-
-            if (numValues > 1 || values[0] == NULL)
-                return;
-
-            int arrayByteCount = sqlite3_value_bytes(values[0]);
-            int arrayLength = arrayByteCount / 8;
-            const char* arrayBytes = static_cast<const char*>(sqlite3_value_blob(values[0]));
-            if (arrayBytes == NULL)
-                return;
-
-            if (arrayByteCount % 8 > 0)
-                throw runtime_error("distinct_double_array_sum only works with BLOBs of double precision floats");
-
-            if (pThis == NULL)
-                pThis = new DistinctDoubleArrayMean(arrayLength);
-            else
-                pThis->crc32.reset();
-
-            // if the arrayId was already in the set, ignore its values
-            pThis->crc32.process_bytes(arrayBytes, arrayByteCount);
-            int arrayId = pThis->crc32.checksum();
-            if (!pThis->arrayIds.insert(arrayId).second)
-                return;
-
-            const double* arrayValues = reinterpret_cast<const double*>(arrayBytes);
-
-            for (int i = 0; i < arrayLength; ++i)
-                pThis->result[i] += arrayValues[i];
+            DistinctDoubleArraySum::Step(context, numValues, values);
         }
 
         static void Final(sqlite3_context* context)
@@ -170,6 +141,79 @@ namespace {
                     r /= pThis->arrayIds.size();
 
             sqlite3_result_blob(context, pThis->result.empty() ? NULL : &pThis->result[0], pThis->result.size() * sizeof(double), SQLITE_TRANSIENT);
+
+            delete pThis;
+        }
+    };
+
+    struct DistinctDoubleArrayMedian
+    {
+        typedef DistinctDoubleArrayMedian MyType;
+        typedef accs::accumulator_set<double, accs::stats<accs::tag::percentile> > MedianAccumulator;
+        set<int> arrayIds;
+        vector<MedianAccumulator> medianAccumulators;
+        boost::crc_32_type crc32;
+
+        DistinctDoubleArrayMedian(int arrayLength) : medianAccumulators((size_t)arrayLength) {}
+
+        static void Step(sqlite3_context* context, int numValues, sqlite3_value** values)
+        {
+            void* aggContext = sqlite3_aggregate_context(context, sizeof(MyType*));
+            if (aggContext == NULL)
+                throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
+
+            MyType** ppThis = static_cast<MyType**>(aggContext);
+            MyType*& pThis = *ppThis;
+
+            if (numValues > 1 || values[0] == NULL)
+                return;
+
+            int arrayByteCount = sqlite3_value_bytes(values[0]);
+            int arrayLength = arrayByteCount / 8;
+            const char* arrayBytes = static_cast<const char*>(sqlite3_value_blob(values[0]));
+            if (arrayBytes == NULL)
+                return;
+
+            if (arrayByteCount % 8 > 0)
+                throw runtime_error("distinct_double_array_sum only works with BLOBs of double precision floats");
+
+            if (pThis == NULL)
+                pThis = new DistinctDoubleArrayMedian(arrayLength);
+            else
+                pThis->crc32.reset();
+
+            // if the arrayId was already in the set, ignore its values
+            pThis->crc32.process_bytes(arrayBytes, arrayByteCount);
+            int arrayId = pThis->crc32.checksum();
+            if (!pThis->arrayIds.insert(arrayId).second)
+                return;
+
+            const double* arrayValues = reinterpret_cast<const double*>(arrayBytes);
+
+            for (int i = 0; i < arrayLength; ++i)
+                (pThis->medianAccumulators[i])(arrayValues[i]);
+        }
+
+        static void Final(sqlite3_context* context)
+        {
+            void* aggContext = sqlite3_aggregate_context(context, 0);
+            if (aggContext == NULL)
+                throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
+
+            MyType** ppThis = static_cast<MyType**>(aggContext);
+            MyType*& pThis = *ppThis;
+
+            if (pThis == NULL)
+                pThis = new DistinctDoubleArrayMedian(0);
+
+            // divide sum by number of elements
+            vector<double> result;
+            result.reserve(pThis->medianAccumulators.size());
+            if (!pThis->medianAccumulators.empty())
+                for (auto& acc : pThis->medianAccumulators)
+                    result.push_back(accs::percentile(acc, accs::percentile_number = 50));
+
+            sqlite3_result_blob(context, result.empty() ? NULL : &result[0], result.size() * sizeof(double), SQLITE_TRANSIENT);
 
             delete pThis;
         }
@@ -540,6 +584,7 @@ PWIZ_API_DECL int sqlite3_idpsqlextensions_init(sqlite3 *idpDbConnection, char *
 
     rc += sqlite3_create_function(idpDbConnection, "distinct_double_array_sum", -1, SQLITE_ANY, 0, NULL, &DistinctDoubleArraySum::Step, &DistinctDoubleArraySum::Final);
     rc += sqlite3_create_function(idpDbConnection, "distinct_double_array_mean", -1, SQLITE_ANY, 0, NULL, &DistinctDoubleArrayMean::Step, &DistinctDoubleArrayMean::Final);
+    rc += sqlite3_create_function(idpDbConnection, "distinct_double_array_median", -1, SQLITE_ANY, 0, NULL, &DistinctDoubleArrayMedian::Step, &DistinctDoubleArrayMedian::Final);
 
     rc += sqlite3_create_function(idpDbConnection, "distinct_double_array_tukey_biweight_average", -1, SQLITE_ANY, 0, NULL, &DistinctTukeyBiweightAverage::Step, &DistinctTukeyBiweightAverage::Final);
 

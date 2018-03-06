@@ -107,6 +107,7 @@ BOOST_ENUM_VALUES(QuantitationRollupMethod, const char*, \
         (Invalid)("") \
         (Sum)("DISTINCT_DOUBLE_ARRAY_SUM") \
         (Mean)("DISTINCT_DOUBLE_ARRAY_MEAN") \
+        (Median)("DISTINCT_DOUBLE_ARRAY_MEDIAN") \
         (Tukey)("DISTINCT_DOUBLE_ARRAY_TUKEY_BIWEIGHT_AVERAGE") \
         (TukeyLog)("DISTINCT_DOUBLE_ARRAY_TUKEY_BIWEIGHT_LOG_AVERAGE") \
     );

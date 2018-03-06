@@ -977,6 +977,7 @@ namespace IDPicker.Forms
             this.quantitationRollupMethodComboBox.Items.AddRange(new object[] {
             "Sum",
             "Mean",
+            "Median",
             "Tukey Biweight",
             "Tukey Log Biweight"});
             this.quantitationRollupMethodComboBox.Location = new System.Drawing.Point(154, 638);
