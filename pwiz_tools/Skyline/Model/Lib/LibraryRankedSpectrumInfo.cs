@@ -262,9 +262,13 @@ namespace pwiz.Skyline.Model.Lib
             // If it has any interesting peak annotations, pass those through
             if (rp.Ranked == 0 && arrayRMI.All(rmi => rmi.Intensity == arrayRMI[0].Intensity))
             {
-                // Pass through anything with an annotation as being of probable interest
-                arrayResult = arrayRMI.Where(rmi => rmi.HasAnnotations).ToArray();
-                ionMatchCount = -1;
+                // Only do this if we have been asked to limit the ions matched, and there are any annotations
+                if (ionMatchCount != -1 && arrayRMI.Any(rmi => rmi.HasAnnotations))
+                {
+                    // Pass through anything with an annotation as being of probable interest
+                    arrayResult = arrayRMI.Where(rmi => rmi.HasAnnotations).ToArray();
+                    ionMatchCount = -1;
+                }
             }
 
             // If not enough ranked ions were found, fill the rest of the results array

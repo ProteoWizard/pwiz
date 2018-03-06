@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
@@ -197,7 +198,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     // From the "entries" table, read all of the peptides that were actually found
                     cmd.CommandText =
-                        "SELECT PeptideModSeq, PrecursorCharge, SourceFile, Score, RTInSeconds, RTInSecondsStart, RTInSecondsStop, CorrelationArray, CorrelationEncodedLength FROM entries"; // Not L10N
+                        "SELECT PeptideModSeq, PrecursorCharge, SourceFile, Score, RTInSeconds, RTInSecondsStart, RTInSecondsStop FROM entries"; // Not L10N
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -220,11 +221,7 @@ namespace pwiz.Skyline.Model.Lib
                             {
                                 continue;
                             }
-                            float[] correlationArray = PrimitiveArrays.FromBytes<float>(PrimitiveArrays.ReverseBytesInBlocks(
-                                UncompressEncyclopeDiaData((byte[])reader.GetValue(7), reader.GetInt32(8)), sizeof(float)));
-                            // Use the sum of the correlationArray as the score (negative since lower scores are better).
-                            // TODO(nicksh): when searleb fixes it so the "Score" column has non-zero values, use the "Score" column instead
-                            double score = correlationArray.Sum();
+                            double score = -reader.GetDouble(3);
                             dataByFilename.Add(fileName, Tuple.Create((double?) score,
                                 new FileData(reader.GetDouble(4)/60,
                                     new PeakBounds(reader.GetDouble(5)/60, reader.GetDouble(6)/60))));
@@ -366,33 +363,115 @@ namespace pwiz.Skyline.Model.Lib
             }
             return _pooledSqliteConnection.ExecuteWithConnection(connection =>
             {
-                using (var cmd = new SQLiteCommand(connection))
+                HashSet<double> mzs = new HashSet<double>();
+                List<SpectrumPeaksInfo.MI> spectrum = new List<SpectrumPeaksInfo.MI>();
+                // First read all of the quantifiable transitions from the PeptideQuants table.
+                var peptideQuantSpectrum = ReadSpectrumFromPeptideQuants(connection, info);
+                if (peptideQuantSpectrum != null)
                 {
-                    cmd.CommandText =
-                        "SELECT MassEncodedLength, MassArray, IntensityEncodedLength, IntensityArray FROM entries WHERE PrecursorCharge = ? AND PeptideModSeq = ? AND SourceFile = ?"; // Not L10N
-                    cmd.Parameters.Add(new SQLiteParameter(DbType.Int32) { Value = info.Key.Charge });
-                    cmd.Parameters.Add(new SQLiteParameter(DbType.String) { Value = info.PeptideModSeq });
-                    cmd.Parameters.Add(new SQLiteParameter(DbType.String) { Value = _sourceFiles[sourceFileId] });
-                    using (var reader = cmd.ExecuteReader())
+                    foreach (var mi in peptideQuantSpectrum)
                     {
-                        if (reader.Read())
+                        if (mzs.Add(mi.Mz))
                         {
-                            double[] mzs = PrimitiveArrays.FromBytes<double>(
-                                PrimitiveArrays.ReverseBytesInBlocks(
-                                    UncompressEncyclopeDiaData((byte[])reader.GetValue(1), reader.GetInt32(0)),
-                                    sizeof(double)));
-                            float[] intensities =
-                                PrimitiveArrays.FromBytes<float>(PrimitiveArrays.ReverseBytesInBlocks(
-                                    UncompressEncyclopeDiaData((byte[])reader.GetValue(3), reader.GetInt32(2)), sizeof(float)));
-                            return mzs
-                                .Select(
-                                    (mz, index) => new SpectrumPeaksInfo.MI { Mz = mz, Intensity = intensities[index], Quantitative = intensities[index] >= MIN_QUANTITATIVE_INTENSITY }) // CONSIDER(bspratt): annotation?
-                                .ToArray();
+                            spectrum.Add(mi);
                         }
-                        return null;
                     }
                 }
+                // Then read the spectrum for the specific file
+                var entriesSpectrum = ReadSpectrumFromEntriesTable(connection, info, sourceFileId);
+                foreach (var mi in entriesSpectrum)
+                {
+                    if (mzs.Add(mi.Mz))
+                    {
+                        var miToAdd = mi;
+                        if (peptideQuantSpectrum != null)
+                        {
+                            // If we successfully read from the PeptideQuants table, then the
+                            // rest of the mzs we find in the entries table are non-quantitative.
+                            miToAdd.Quantitative = false;
+                        }
+                        else
+                        {
+                            // If we were unable to read from the PeptideQuants table, then 
+                            // the non-quantitative transitions are the ones with really low intensity.
+                            miToAdd.Quantitative = miToAdd.Intensity >= MIN_QUANTITATIVE_INTENSITY;
+                        }
+                        spectrum.Add(miToAdd);
+                    }
+                }
+                return spectrum.ToArray();
             });
+        }
+
+        private IEnumerable<SpectrumPeaksInfo.MI> ReadSpectrumFromPeptideQuants(SQLiteConnection connection, ElibSpectrumInfo info)
+        {
+            using (var cmd = new SQLiteCommand(connection))
+            {
+                cmd.CommandText = "SELECT QuantIonMassLength, QuantIonMassArray, QuantIonIntensityLength, QuantIonIntensityArray FROM peptidequants WHERE PrecursorCharge = ? AND PeptideModSeq = ?";
+                cmd.Parameters.Add(new SQLiteParameter(DbType.Int32) { Value = info.Key.Charge });
+                cmd.Parameters.Add(new SQLiteParameter(DbType.String) { Value = info.PeptideModSeq });
+                SQLiteDataReader reader;
+                try
+                {
+                    reader = cmd.ExecuteReader();
+                }
+                catch (DbException)
+                {
+                    // Older .elib files do not have these columns, so just return null
+                    return null;
+                }
+                using (reader)
+                {
+                    if (!reader.Read())
+                    {
+                        // None of the transitions are considered Quantifiable.
+                        return new SpectrumPeaksInfo.MI[0];
+                    }
+                    double[] mzs = PrimitiveArrays.FromBytes<double>(
+                        PrimitiveArrays.ReverseBytesInBlocks(
+                            UncompressEncyclopeDiaData((byte[])reader.GetValue(1), reader.GetInt32(0)),
+                            sizeof(double)));
+                    float[] intensities =
+                        PrimitiveArrays.FromBytes<float>(PrimitiveArrays.ReverseBytesInBlocks(
+                            UncompressEncyclopeDiaData((byte[])reader.GetValue(3), reader.GetInt32(2)), sizeof(float)));
+                    return mzs.Select(
+                        (mz, index) => new SpectrumPeaksInfo.MI { Mz = mz, Intensity = intensities[index]});
+                }
+            }
+        }
+
+        private IEnumerable<SpectrumPeaksInfo.MI> ReadSpectrumFromEntriesTable(SQLiteConnection connection, ElibSpectrumInfo info,
+            int sourceFileId)
+        {
+            using (var cmd = new SQLiteCommand(connection))
+            {
+                cmd.CommandText =
+                    "SELECT MassEncodedLength, MassArray, IntensityEncodedLength, IntensityArray FROM entries WHERE PrecursorCharge = ? AND PeptideModSeq = ? AND SourceFile = ?"; // Not L10N
+                cmd.Parameters.Add(new SQLiteParameter(DbType.Int32) {Value = info.Key.Charge});
+                cmd.Parameters.Add(new SQLiteParameter(DbType.String) {Value = info.PeptideModSeq});
+                cmd.Parameters.Add(new SQLiteParameter(DbType.String) {Value = _sourceFiles[sourceFileId]});
+                using (var reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        double[] mzs = PrimitiveArrays.FromBytes<double>(
+                            PrimitiveArrays.ReverseBytesInBlocks(
+                                UncompressEncyclopeDiaData((byte[]) reader.GetValue(1), reader.GetInt32(0)),
+                                sizeof(double)));
+                        float[] intensities =
+                            PrimitiveArrays.FromBytes<float>(PrimitiveArrays.ReverseBytesInBlocks(
+                                UncompressEncyclopeDiaData((byte[]) reader.GetValue(3), reader.GetInt32(2)),
+                                sizeof(float)));
+                        return mzs.Select((mz, index) => new SpectrumPeaksInfo.MI
+                                {
+                                    Mz = mz,
+                                    Intensity = intensities[index],
+                                }) // CONSIDER(bspratt): annotation?
+                            .ToArray();
+                    }
+                    return null;
+                }
+            }
         }
 
         /// <summary>
