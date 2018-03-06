@@ -346,14 +346,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             return GetNormalizedPeakArea(replicateIndex);
         }
-
         public double? GetCalculatedConcentration(CalibrationCurve calibrationCurve, int replicateIndex)
         {
             if (!HasExternalStandards() && !HasInternalStandardConcentration())
             {
                 return null;
             }
-            double? xValue = GetCalculatedXValue(calibrationCurve, replicateIndex) * GetDilutionFactor(replicateIndex);
+            return GetConcentrationFromXValue(GetCalculatedXValue(calibrationCurve, replicateIndex) * GetDilutionFactor(replicateIndex));
+        }
+
+        public double? GetConcentrationFromXValue(double? xValue)
+        {
             if (HasExternalStandards() && HasInternalStandardConcentration())
             {
                 return xValue * PeptideQuantifier.PeptideDocNode.InternalStandardConcentration;

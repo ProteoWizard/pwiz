@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 
@@ -12,7 +10,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
     {
         public static readonly LodCalculation NONE = new LodCalculation("none", ()=>"None", (curve, fitter)=>null);
         public static readonly LodCalculation TURNING_POINT = new LodCalculation(
-            "turning_point", ()=>"Turning Point", CalculateLodFromTurningPoint);
+            "turning_point", ()=>"Bilinear Turning Point", CalculateLodFromTurningPoint);
         public static readonly LodCalculation BLANK_PLUS_2SD = new LodCalculation(
             "blank_plus_2_sd", ()=>"Blank plus 2 * SD",
             (curve, fitter)=>BlankPlusSdMultiple(curve, fitter, 2.0));

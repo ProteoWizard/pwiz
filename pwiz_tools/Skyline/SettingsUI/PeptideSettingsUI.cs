@@ -1435,6 +1435,37 @@ namespace pwiz.Skyline.SettingsUI
             set { tbxQuantUnits.Text = value; }
         }
 
+        public double? QuantMaxLoqBias
+        {
+            get {
+                if (tbxMaxLoqBias.Text.Trim().Length == 0)
+                {
+                    return null;
+                }
+                return double.Parse(tbxMaxLoqBias.Text.Trim());
+            }
+            set { tbxMaxLoqBias.Text = value.ToString(); }
+        }
+
+        public double? QuantMaxLoqCv
+        {
+            get
+            {
+                if (tbxMaxLoqCv.Text.Trim().Length == 0)
+                {
+                    return null;
+                }
+                return double.Parse(tbxMaxLoqCv.Text.Trim());
+            }
+            set { tbxMaxLoqCv.Text = value.ToString(); }
+        }
+
+        public LodCalculation QuantLodMethod
+        {
+            get { return comboLodMethod.SelectedItem as LodCalculation; }
+            set { comboLodMethod.SelectedItem = value; }
+        }
+
         #endregion
 
         public sealed class LabelTypeComboDriver

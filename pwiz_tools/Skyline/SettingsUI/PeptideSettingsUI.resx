@@ -2465,7 +2465,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>340, 100</value>
   </data>
   <data name="groupBoxFiguresOfMerit.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>0</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Text" xml:space="preserve">
     <value>Figures of merit</value>
@@ -2489,7 +2489,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>100, 20</value>
   </data>
   <data name="tbxQuantUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="&gt;&gt;tbxQuantUnits.Name" xml:space="preserve">
     <value>tbxQuantUnits</value>
@@ -2516,7 +2516,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>31, 13</value>
   </data>
   <data name="lblQuantUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="lblQuantUnits.Text" xml:space="preserve">
     <value>&amp;Units</value>
@@ -2549,7 +2549,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>127, 21</value>
   </data>
   <data name="comboQuantMsLevel.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="&gt;&gt;comboQuantMsLevel.Name" xml:space="preserve">
     <value>comboQuantMsLevel</value>
@@ -2573,7 +2573,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>48, 13</value>
   </data>
   <data name="lblMsLevel.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="lblMsLevel.Text" xml:space="preserve">
     <value>MS &amp;level</value>
@@ -2693,7 +2693,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>127, 21</value>
   </data>
   <data name="comboWeighting.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;comboWeighting.Name" xml:space="preserve">
     <value>comboWeighting</value>
@@ -2717,7 +2717,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>111, 13</value>
   </data>
   <data name="lblRegressionWeighting.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="lblRegressionWeighting.Text" xml:space="preserve">
     <value>Regression &amp;weighting:</value>

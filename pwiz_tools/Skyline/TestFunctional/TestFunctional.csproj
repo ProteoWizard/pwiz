@@ -178,6 +178,7 @@
     <Compile Include="ExportDiaListTest.cs" />
     <Compile Include="ExportSmallMolSpectralLibraryTest.cs" />
     <Compile Include="ExportSpectralLibraryTest.cs" />
+    <Compile Include="FiguresOfMeritTest.cs" />
     <Compile Include="FilterMzTest.cs" />
     <Compile Include="FindColumnTest.cs" />
     <Compile Include="FullScanGraphTest.cs" />
@@ -353,6 +354,7 @@
     <None Include="ExportIsolationListTest.zip" />
     <None Include="ExportMethodDialogTest.zip" />
     <None Include="ExportSpectralLibraryTest.zip" />
+    <None Include="FiguresOfMeritTest.zip" />
     <None Include="FilterMzTest.zip" />
     <None Include="FullScanIdTest.zip" />
     <None Include="GroupComparisonPivotEditorTest.zip" />
