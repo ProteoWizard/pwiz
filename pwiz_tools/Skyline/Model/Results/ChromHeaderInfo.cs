@@ -2174,11 +2174,10 @@ namespace pwiz.Skyline.Model.Results
         }
 
         // ReSharper disable SuggestBaseTypeForParameter
-        public virtual int MatchTransitions(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, float tolerance, bool multiMatch, out double errRT)
+        public virtual int MatchTransitions(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, float tolerance, bool multiMatch)
         // ReSharper restore SuggestBaseTypeForParameter
         {
             int match = 0;
-            errRT = double.MaxValue;
             ExplicitRetentionTimeInfo explicitRT = null;
             if (nodePep != null && nodePep.ExplicitRetentionTime != null)
             {
@@ -2188,21 +2187,18 @@ namespace pwiz.Skyline.Model.Results
 
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
-                double transitionErrRT;
-                int countMatches = CountTransitionMatches(nodeTran, tolerance, explicitRT, out transitionErrRT);
+                int countMatches = CountTransitionMatches(nodeTran, tolerance, explicitRT);
                 if (countMatches > 0)
                 {
                     match += multiMatch ? countMatches : 1;
-                    errRT = Math.Min(errRT, transitionErrRT);
                 }
             }
             return match;
         }
 
-        public int CountTransitionMatches(TransitionDocNode nodeTran, float tolerance, ExplicitRetentionTimeInfo explicitRT, out double errRT)
+        public int CountTransitionMatches(TransitionDocNode nodeTran, float tolerance, ExplicitRetentionTimeInfo explicitRT)
         {
             int countMatches = 0;
-            errRT = Double.MaxValue;
             if (explicitRT != null && Header.IsNotIncludedTime(explicitRT.RetentionTime))
                 return 0;
 
@@ -2211,15 +2207,6 @@ namespace pwiz.Skyline.Model.Results
                 if (nodeTran.Mz.CompareTolerant(GetProductLocal(transitionNum), tolerance) == 0)
                 {
                     countMatches++;
-                    if (explicitRT != null)
-                    {
-                        // How well does explicit retention time match the best peak for this transition?
-                        if (BestPeakIndex != -1)
-                        {
-                            var peak = GetTransitionPeak(transitionNum, BestPeakIndex);
-                            errRT = Math.Abs(explicitRT.RetentionTime - peak.RetentionTime);
-                        }
-                    }
                 }
             }
             return countMatches;
