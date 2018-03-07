@@ -1272,7 +1272,7 @@ namespace pwiz.Skyline.Model
                                 PeakFeatureStatistics reintegratePeak = reintegratePeaks != null ? reintegratePeaks[j] : null;
 
                                 chromGroupInfo.GetAllTransitionInfo(nodeTran.Mz,
-                                    mzMatchTolerance, chromatograms.OptimizationFunction, listChromInfo);
+                                    mzMatchTolerance, chromatograms.OptimizationFunction, listChromInfo, TransformChrom.interpolated);
 
                                 // Always add the right number of steps to the list, no matter
                                 // how many entries were returned.
@@ -2504,7 +2504,7 @@ namespace pwiz.Skyline.Model
             var listChromInfo = new List<ChromatogramInfo>();
             foreach (TransitionDocNode nodeTran in Children)
             {
-                chromGroupInfo.GetAllTransitionInfo(nodeTran.Mz, (float)mzMatchTolerance, regression, listChromInfo);
+                chromGroupInfo.GetAllTransitionInfo(nodeTran.Mz, (float)mzMatchTolerance, regression, listChromInfo, TransformChrom.interpolated);
                 // Shouldn't need to update a transition with no chrom info
                 if (listChromInfo.Count == 0)
                     listChildrenNew.Add(nodeTran.RemovePeak(indexSet, fileId, userSet));
@@ -2579,7 +2579,7 @@ namespace pwiz.Skyline.Model
                         }
                     }
                 }
-                chromGroupInfo.GetAllTransitionInfo(nodeTran.Mz, (float)mzMatchTolerance, regression, listChromInfo);
+                chromGroupInfo.GetAllTransitionInfo(nodeTran.Mz, (float)mzMatchTolerance, regression, listChromInfo, TransformChrom.interpolated);
 
                 // Shouldn't need to update a transition with no chrom info
                 // Also if startTime is null, remove the peak
