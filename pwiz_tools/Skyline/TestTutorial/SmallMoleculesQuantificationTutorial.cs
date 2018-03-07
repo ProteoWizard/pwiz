@@ -320,7 +320,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => documentGrid.ChooseView(Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results));
                 WaitForConditionUI(() => documentGrid.ColumnCount > 6);
                 RunUI(() => {
-                    var colReplicate = documentGrid.FindColumn(PropertyPath.Parse("Results!*.Value.ResultFile.Replicate.Name"));
+                    var colReplicate = documentGrid.FindColumn(PropertyPath.Parse("Results!*.Value.ResultFile.Replicate"));
                     documentGrid.DataGridView.Sort(colReplicate, ListSortDirection.Ascending);
                 });
 
