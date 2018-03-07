@@ -407,7 +407,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             using (var cmd = new SQLiteCommand(connection))
             {
-                cmd.CommandText = "SELECT QuantIonMassLength, QuantIonMassArray, QuantIonIntensityLength, QuantIonIntensityArray FROM peptidequants WHERE PrecursorCharge = ? AND PeptideModSeq = ?"; // Not L10
+                cmd.CommandText = "SELECT QuantIonMassLength, QuantIonMassArray, QuantIonIntensityLength, QuantIonIntensityArray FROM peptidequants WHERE PrecursorCharge = ? AND PeptideModSeq = ?"; // Not L10N
                 cmd.Parameters.Add(new SQLiteParameter(DbType.Int32) { Value = info.Key.Charge });
                 cmd.Parameters.Add(new SQLiteParameter(DbType.String) { Value = info.PeptideModSeq });
                 SQLiteDataReader reader;
