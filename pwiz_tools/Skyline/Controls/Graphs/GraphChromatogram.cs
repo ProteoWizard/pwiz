@@ -1238,7 +1238,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     chromGroupInfo.GetAllTransitionInfo(nodeTranSelected.Mz,
                         mzMatchTolerance,
                         chromatograms.OptimizationFunction,
-                        listChromInfo);
+                        listChromInfo, TransformChrom.raw);
                     arrayChromInfo = listChromInfo.ToArray();
 
                     if (chromatograms.OptimizationFunction != null)
@@ -1671,7 +1671,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 chromGroupInfo.GetAllTransitionInfo(nodeTran.Mz,
                     mzMatchTolerance,
                     chromatograms.OptimizationFunction,
-                    listChromInfo);
+                    listChromInfo, TransformChrom.raw);
                 var infos = listChromInfo.ToArray();
                 if (infos.Length == 0)
                     continue;

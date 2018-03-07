@@ -2113,19 +2113,19 @@ namespace pwiz.Skyline.Model.Results
                        : null;
         }
 
-        public ChromatogramInfo[] GetAllTransitionInfo(SignedMz productMz, float tolerance, OptimizableRegression regression)
+        public ChromatogramInfo[] GetAllTransitionInfo(SignedMz productMz, float tolerance, OptimizableRegression regression, TransformChrom transform)
         {
             var listChromInfo = new List<ChromatogramInfo>();
-            GetAllTransitionInfo(productMz, tolerance, regression, listChromInfo);
+            GetAllTransitionInfo(productMz, tolerance, regression, listChromInfo, transform);
             return listChromInfo.ToArray();
         }
 
-        public void GetAllTransitionInfo(SignedMz productMz, float tolerance, OptimizableRegression regression, List<ChromatogramInfo> listChromInfo)
+        public void GetAllTransitionInfo(SignedMz productMz, float tolerance, OptimizableRegression regression, List<ChromatogramInfo> listChromInfo, TransformChrom transform)
         {
             listChromInfo.Clear();
             if (regression == null)
             {
-                var info = GetTransitionInfo(productMz, tolerance);
+                var info = GetTransitionInfo(productMz, tolerance, transform);
                 if (info != null)
                     listChromInfo.Add(info);
                 return;
@@ -2534,12 +2534,15 @@ namespace pwiz.Skyline.Model.Results
                     Interpolate();
                     break;
                 case TransformChrom.craw2d:
+                    Interpolate();
                     Crawdad2DTransform();
                     break;
                 case TransformChrom.craw1d:
+                    Interpolate();
                     Crawdad1DTransform();
                     break;
                 case TransformChrom.savitzky_golay:
+                    Interpolate();
                     SavitzkyGolaySmooth();
                     break;
             }

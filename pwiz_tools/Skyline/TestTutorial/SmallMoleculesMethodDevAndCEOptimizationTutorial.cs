@@ -147,6 +147,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<ExportMethodDlg>("Exporting 2 minute method", 5);
 
                 OkDialog(exportMethodDlg2, exportMethodDlg2.CancelDialog);
+                WaitForClosedForm(exportMethodDlg2);
 
 
                 // Export transition list
@@ -159,13 +160,8 @@ namespace pwiz.SkylineTestTutorial
                     exportTransitionList.OptimizeType = ExportOptimize.NONE;
                 });
                 PauseForScreenShot<ExportMethodDlg>("Exporting transition list", 6);
-                RunUI(() =>
-                {
-                    exportTransitionList.SetTemplateFile(GetTestPath("VerifyETemplate.exp"));
-                });
                 OkDialog(exportTransitionList, exportTransitionList.CancelDialog);
-
-
+                WaitForClosedForm(exportTransitionList);
 
                 using (new WaitDocumentChange(1, true))
                 {
@@ -283,6 +279,7 @@ namespace pwiz.SkylineTestTutorial
                 });
                 PauseForScreenShot<SchedulingOptionsDlg>("Exporting scheduled transition list - choose replicate", 12);
                 OkDialog(schedulingOptionsDlg, schedulingOptionsDlg.OkDialog);
+                WaitForClosedForm(exportTransitionList2);
 
                 using (new WaitDocumentChange(1, true))
                 {
@@ -447,6 +444,7 @@ namespace pwiz.SkylineTestTutorial
                 var schedDlg = ShowDialog<SchedulingOptionsDlg>(() => exportTransitionList3.OkDialog(GetTestPath("TL_CE_Opt")));
                 PauseForScreenShot<SchedulingOptionsDlg>("Scheduling", 19);
                 RunUI(schedDlg.OkDialog);
+                WaitForClosedForm(exportTransitionList3);
 
                 // Import CE optimization runs
                 using (new WaitDocumentChange(1, true))

@@ -793,7 +793,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private bool UpdateFilter(bool filter)
         {
-            if (!IsHandleCreated)
+            if (!IsHandleCreated || _bindingListSource == null)
                 return false;
 
             if (!_bindingListSource.IsComplete)
