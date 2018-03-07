@@ -19942,6 +19942,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to In order to use the &apos;Bilinear turning point&apos; method of LOD calculation, &apos;Regression fit&apos; must be set to &apos;Bilinear&apos;..
+        /// </summary>
+        public static string PeptideSettingsUI_ValidateNewSettings_In_order_to_use_the__Bilinear_turning_point__method_of_LOD_calculation___Regression_fit__must_be_set_to__Bilinear__ {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_ValidateNewSettings_In_order_to_use_the__Bilinear_turning_point" +
+                        "__method_of_LOD_calculation___Regression_fit__must_be_set_to__Bilinear__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The file {0} is missing..
         /// </summary>
         public static string PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_ {
@@ -21035,6 +21045,15 @@ namespace pwiz.Skyline.Properties {
         public static string Regression_slope {
             get {
                 return ResourceManager.GetString("Regression_slope", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bilinear.
+        /// </summary>
+        public static string RegressionFit_BILINEAR_Bilinear {
+            get {
+                return ResourceManager.GetString("RegressionFit_BILINEAR_Bilinear", resourceCulture);
             }
         }
         

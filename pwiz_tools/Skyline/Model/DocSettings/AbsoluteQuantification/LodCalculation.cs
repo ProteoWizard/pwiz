@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2018 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics.Statistics;
@@ -8,14 +26,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
     public class LodCalculation
     {
-        public static readonly LodCalculation NONE = new LodCalculation("none", ()=>"None", (curve, fitter)=>null);
-        public static readonly LodCalculation TURNING_POINT = new LodCalculation(
-            "turning_point", ()=>"Bilinear Turning Point", CalculateLodFromTurningPoint);
-        public static readonly LodCalculation BLANK_PLUS_2SD = new LodCalculation(
-            "blank_plus_2_sd", ()=>"Blank plus 2 * SD",
+        public static readonly LodCalculation NONE = new LodCalculation("none", // Not L10N
+            () => QuantificationStrings.LodCalculation_NONE_None, (curve, fitter) => null);
+        public static readonly LodCalculation TURNING_POINT = new LodCalculation("turning_point", // Not L10N
+            () => QuantificationStrings.LodCalculation_TURNING_POINT_Bilinear_turning_point, CalculateLodFromTurningPoint);
+        public static readonly LodCalculation BLANK_PLUS_2SD = new LodCalculation("blank_plus_2_sd", // Not L10N
+            () => QuantificationStrings.LodCalculation_BLANK_PLUS_2SD_Blank_plus_2___SD,
             (curve, fitter)=>BlankPlusSdMultiple(curve, fitter, 2.0));
-        public static readonly LodCalculation BLANK_PLUS_3SD = new LodCalculation(
-            "blank_plus_3_sd", ()=>"Blank plus 3 * SD",
+        public static readonly LodCalculation BLANK_PLUS_3SD = new LodCalculation("blank_plus_3_sd", // Not L10N
+            () => QuantificationStrings.LodCalculation_BLANK_PLUS_3SD_Blank_plus_3___SD,
             (curve, fitter)=>BlankPlusSdMultiple(curve, fitter, 3.0));
 
         public static readonly ImmutableList<LodCalculation> ALL = ImmutableList.ValueOf(new[]

@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             () => QuantificationStrings.RegressionFit_QUADRATIC_Quadratic, QuadraticFit);
 
         public static readonly RegressionFit BILINEAR = new RegressionFit("bilinear", // Not L10N
-            () => "Bilinear", BilinearFit);
+            () => QuantificationStrings.RegressionFit_BILINEAR_Bilinear, BilinearFit);
         public static readonly ImmutableList<RegressionFit> All = ImmutableList<RegressionFit>.ValueOf(new[]
         {
             NONE, LINEAR_THROUGH_ZERO, LINEAR, BILINEAR, QUADRATIC

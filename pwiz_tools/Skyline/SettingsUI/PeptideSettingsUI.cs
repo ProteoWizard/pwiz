@@ -489,6 +489,13 @@ namespace pwiz.Skyline.SettingsUI
                 .ChangeMsLevel(_quantMsLevels[comboQuantMsLevel.SelectedIndex])
                 .ChangeUnits(tbxQuantUnits.Text)
                 .ChangeLodCalculation(comboLodMethod.SelectedItem as LodCalculation);
+            if (Equals(quantification.LodCalculation, LodCalculation.TURNING_POINT) &&
+                !Equals(quantification.RegressionFit, RegressionFit.BILINEAR))
+            {
+                MessageDlg.Show(this, Resources.PeptideSettingsUI_ValidateNewSettings_In_order_to_use_the__Bilinear_turning_point__method_of_LOD_calculation___Regression_fit__must_be_set_to__Bilinear__);
+                comboLodMethod.Focus();
+                return null;
+            }
             if (!string.IsNullOrEmpty(tbxMaxLoqBias.Text.Trim()))
             {
                 double maxLoqBias;
@@ -1806,6 +1813,5 @@ namespace pwiz.Skyline.SettingsUI
             cbLinear.Checked = checkedState;
             UpdateLibraryDriftPeakWidthControls();
         }
-
     }
 }

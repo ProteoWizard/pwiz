@@ -359,6 +359,60 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to LOD: .
+        /// </summary>
+        public static string FiguresOfMerit_ToString_LOD__ {
+            get {
+                return ResourceManager.GetString("FiguresOfMerit_ToString_LOD__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LOQ: .
+        /// </summary>
+        public static string FiguresOfMerit_ToString_LOQ__ {
+            get {
+                return ResourceManager.GetString("FiguresOfMerit_ToString_LOQ__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Blank plus 2 * SD.
+        /// </summary>
+        public static string LodCalculation_BLANK_PLUS_2SD_Blank_plus_2___SD {
+            get {
+                return ResourceManager.GetString("LodCalculation_BLANK_PLUS_2SD_Blank_plus_2___SD", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Blank plus 3 * SD.
+        /// </summary>
+        public static string LodCalculation_BLANK_PLUS_3SD_Blank_plus_3___SD {
+            get {
+                return ResourceManager.GetString("LodCalculation_BLANK_PLUS_3SD_Blank_plus_3___SD", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string LodCalculation_NONE_None {
+            get {
+                return ResourceManager.GetString("LodCalculation_NONE_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bilinear turning point.
+        /// </summary>
+        public static string LodCalculation_TURNING_POINT_Bilinear_turning_point {
+            get {
+                return ResourceManager.GetString("LodCalculation_TURNING_POINT_Bilinear_turning_point", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Normalized Intensity.
         /// </summary>
         public static string Normalized_Intensity {
@@ -373,6 +427,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         public static string QuantificationResult_ToString_Normalized_Area___0_ {
             get {
                 return ResourceManager.GetString("QuantificationResult_ToString_Normalized_Area___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bilinear.
+        /// </summary>
+        public static string RegressionFit_BILINEAR_Bilinear {
+            get {
+                return ResourceManager.GetString("RegressionFit_BILINEAR_Bilinear", resourceCulture);
             }
         }
         

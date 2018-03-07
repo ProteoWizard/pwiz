@@ -2258,7 +2258,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>Top, Left, Right</value>
   </data>
   <data name="tbxMaxLoqBias.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 33</value>
+    <value>12, 45</value>
   </data>
   <data name="tbxMaxLoqBias.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
@@ -2279,10 +2279,10 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>0</value>
   </data>
   <data name="comboLodMethod.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 73</value>
+    <value>12, 95</value>
   </data>
   <data name="comboLodMethod.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
+    <value>133, 21</value>
   </data>
   <data name="comboLodMethod.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -2303,7 +2303,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>True</value>
   </data>
   <data name="lblCaclulateLodBy.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 57</value>
+    <value>9, 79</value>
   </data>
   <data name="lblCaclulateLodBy.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 13</value>
@@ -2330,7 +2330,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>True</value>
   </data>
   <data name="lblMaxLoqBias.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 17</value>
+    <value>9, 27</value>
   </data>
   <data name="lblMaxLoqBias.Size" type="System.Drawing.Size, System.Drawing">
     <value>77, 13</value>
@@ -2357,7 +2357,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>True</value>
   </data>
   <data name="lblMaxLoqBiasPct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>112, 36</value>
+    <value>112, 48</value>
   </data>
   <data name="lblMaxLoqBiasPct.Size" type="System.Drawing.Size, System.Drawing">
     <value>15, 13</value>
@@ -2387,7 +2387,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>NoControl</value>
   </data>
   <data name="lblMaxLoqCvPct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>261, 33</value>
+    <value>261, 48</value>
   </data>
   <data name="lblMaxLoqCvPct.Size" type="System.Drawing.Size, System.Drawing">
     <value>15, 13</value>
@@ -2411,7 +2411,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>5</value>
   </data>
   <data name="tbxMaxLoqCv.Location" type="System.Drawing.Point, System.Drawing">
-    <value>155, 30</value>
+    <value>155, 45</value>
   </data>
   <data name="tbxMaxLoqCv.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
@@ -2435,7 +2435,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>True</value>
   </data>
   <data name="lblMaxLoqCv.Location" type="System.Drawing.Point, System.Drawing">
-    <value>152, 14</value>
+    <value>152, 27</value>
   </data>
   <data name="lblMaxLoqCv.Size" type="System.Drawing.Size, System.Drawing">
     <value>72, 13</value>
@@ -2459,10 +2459,10 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>7</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 252</value>
+    <value>16, 281</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Size" type="System.Drawing.Size, System.Drawing">
-    <value>340, 100</value>
+    <value>327, 137</value>
   </data>
   <data name="groupBoxFiguresOfMerit.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>

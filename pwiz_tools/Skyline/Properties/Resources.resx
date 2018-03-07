@@ -10023,4 +10023,10 @@ Recognized isotopes include: {2}</value>
   <data name="ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_" xml:space="preserve">
     <value>Cannot build library from OpenSWATH results mixed with results from other tools.</value>
   </data>
+  <data name="PeptideSettingsUI_ValidateNewSettings_In_order_to_use_the__Bilinear_turning_point__method_of_LOD_calculation___Regression_fit__must_be_set_to__Bilinear__" xml:space="preserve">
+    <value>In order to use the 'Bilinear turning point' method of LOD calculation, 'Regression fit' must be set to 'Bilinear'.</value>
+  </data>
+  <data name="RegressionFit_BILINEAR_Bilinear" xml:space="preserve">
+    <value>Bilinear</value>
+  </data>
 </root>
