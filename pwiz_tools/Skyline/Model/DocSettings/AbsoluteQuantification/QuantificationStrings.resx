@@ -267,4 +267,10 @@
     <value>Blank plus 3 * SD</value>
     <comment>This says "median value of the blank replicates plus 3 times their standard deviation"</comment>
   </data>
+  <data name="CalibrationCurve_ToString_Intercept___0_" xml:space="preserve">
+    <value>Intercept: {0}</value>
+  </data>
+  <data name="CalibrationCurve_ToString_Turning_Point___0_" xml:space="preserve">
+    <value>Turning Point: {0}</value>
+  </data>
 </root>

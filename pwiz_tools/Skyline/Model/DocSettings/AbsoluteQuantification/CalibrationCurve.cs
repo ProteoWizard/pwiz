@@ -149,12 +149,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     Slope.Value.ToString(Formats.CalibrationCurve)));
                 if (Intercept.HasValue)
                 {
-                    parts.Add(string.Format("Intercept: {0}", Intercept));
+                    parts.Add(string.Format(QuantificationStrings.CalibrationCurve_ToString_Intercept___0_, Intercept));
                 }
             }
             if (TurningPoint.HasValue)
             {
-                parts.Add(string.Format("TurningPoint: {0}", TurningPoint));
+                parts.Add(string.Format(QuantificationStrings.CalibrationCurve_ToString_Turning_Point___0_, TurningPoint));
             }
             return TextUtil.SpaceSeparate(parts);
         }

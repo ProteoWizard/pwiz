@@ -56,6 +56,7 @@ namespace pwiz.SkylineTestFunctional
                 documentGrid.ChooseView("FiguresOfMerit");
             });
             var calibrationForm = ShowDialog<CalibrationForm>(()=>SkylineWindow.ShowCalibrationForm());
+            Assert.IsNotNull(calibrationForm);
             var results = new List<Tuple<FiguresOfMeritOptions, ModifiedSequence, FiguresOfMerit>>();
             int count = 0;
             foreach (var options in EnumerateFiguresOfMeritOptions().OrderBy(x=>random.Next()))
@@ -110,6 +111,7 @@ namespace pwiz.SkylineTestFunctional
                         var identityPath = new IdentityPath(group.Id, peptide.Id);
                         var peptideEntity = new Skyline.Model.Databinding.Entities.Peptide(dataSchema, identityPath);
                         ValidateFiguresOfMerit(options, peptideEntity.FiguresOfMerit);
+                        results.Add(Tuple.Create(options, peptideEntity.ModifiedSequence, peptideEntity.FiguresOfMerit));
                         if (doFullTest)
                         {
                             RunUI(()=>SkylineWindow.SelectedPath = identityPath);
@@ -210,22 +212,18 @@ namespace pwiz.SkylineTestFunctional
         private void CompareLoq(FiguresOfMeritOptions options1, FiguresOfMerit result1, FiguresOfMeritOptions options2,
             FiguresOfMerit result2)
         {
-            if (!options1.MaxLoqBias.HasValue && !options1.MaxLoqCv.HasValue)
+            if (options1.MaxLoqCv.HasValue != options2.MaxLoqCv.HasValue)
             {
                 return;
             }
-            // We only care about cases where options1 is stricter than options2
-            if (options1.MaxLoqBias.GetValueOrDefault(double.MaxValue) <= options2.MaxLoqBias.GetValueOrDefault(double.MaxValue))
+            if (options1.MaxLoqBias.HasValue != options2.MaxLoqBias.HasValue)
             {
                 return;
             }
-            if (options1.MaxLoqCv.GetValueOrDefault(Double.MaxValue) <=
-                Math.Min(options2.MaxLoqBias.GetValueOrDefault(double.MaxValue),
-                    options2.MaxLoqCv.GetValueOrDefault(double.MaxValue)))
+            if (options1.MaxLoqCv < options2.MaxLoqCv || options1.MaxLoqBias < options2.MaxLoqBias)
             {
                 return;
             }
-
             // we have determined that options1 is more lenient than options2
             Assert.IsTrue(result1.LimitOfQuantification.GetValueOrDefault(double.MaxValue) 
                 <= result2.LimitOfQuantification.GetValueOrDefault(double.MaxValue));

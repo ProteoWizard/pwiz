@@ -106,6 +106,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Intercept: {0}.
+        /// </summary>
+        public static string CalibrationCurve_ToString_Intercept___0_ {
+            get {
+                return ResourceManager.GetString("CalibrationCurve_ToString_Intercept___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Slope: {0}.
         /// </summary>
         public static string CalibrationCurve_ToString_Slope___0_ {
@@ -120,6 +129,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         public static string CalibrationCurve_ToString_Slope___0__Intercept___1_ {
             get {
                 return ResourceManager.GetString("CalibrationCurve_ToString_Slope___0__Intercept___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Turning Point: {0}.
+        /// </summary>
+        public static string CalibrationCurve_ToString_Turning_Point___0_ {
+            get {
+                return ResourceManager.GetString("CalibrationCurve_ToString_Turning_Point___0_", resourceCulture);
             }
         }
         

@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Util.Extensions;
@@ -29,7 +30,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
     {
         public static FiguresOfMerit EMPTY = new FiguresOfMerit();
 
+        [Format(Formats.CalibrationCurve)]
         public double? LimitOfDetection { get; private set; }
+        [Format(Formats.CalibrationCurve)]
         public double? LimitOfQuantification { get; private set; }
         [Browsable(false)]
         public string Units { get; private set; }
