@@ -63,17 +63,22 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
     scoreThreshold_ = getScoreThreshold(MASCOT);
 
     // create the results objects
-    ms_results_ = 
-        new ms_peptidesummary(*ms_file_, 
-                              ms_mascotresults::MSRES_DUPE_REMOVE_NONE, 
-                              0, // get all results and filter later 
-                              0, // get all ranks 
-                              0, // no unigene index file
-                              0, // ignoreIonsScoreBelow 
-                              0, // min peptide length
-                              0, // singleHit 
-                       ms_peptidesummary::MSPEPSUM_NO_PROTEIN_GROUPING |
-                       ms_peptidesummary::MSPEPSUM_USE_HOMOLOGY_THRESH); 
+    unsigned int flags = ms_mascotresults::MSRES_DUPE_REMOVE_NONE;
+    unsigned int flags2 = ms_peptidesummary::MSPEPSUM_USE_HOMOLOGY_THRESH |
+                          ms_peptidesummary::MSPEPSUM_NO_PROTEIN_GROUPING;
+    if (ms_file_->isErrorTolerant()) {
+        flags |= ms_peptidesummary::MSRES_INTEGRATED_ERR_TOL;
+        flags2 &= ~ms_peptidesummary::MSPEPSUM_NO_PROTEIN_GROUPING; // this flag does not work with error tolerant searches
+    }
+    ms_results_ = new ms_peptidesummary(*ms_file_, 
+                                        flags,
+                                        0, // get all results and filter later
+                                        0, // get all ranks
+                                        0, // no unigene index file
+                                        0, // ignoreIonsScoreBelow
+                                        0, // min peptide length
+                                        0, // singleHit
+                                        flags2);
 
     // register the name with BuildParser, but don't try to open it
     this->setSpecFileName(datFileName, false);
