@@ -1189,6 +1189,7 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="quantitative" type="xs:boolean" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

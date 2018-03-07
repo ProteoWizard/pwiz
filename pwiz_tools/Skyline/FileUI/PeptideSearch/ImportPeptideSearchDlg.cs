@@ -155,6 +155,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private bool _transitionSettingsChanged;
         private bool _fullScanSettingsChanged;
 
+        public bool HasPeakBoundaries { get; private set; }
+
         public BuildPeptideSearchLibraryControl BuildPepSearchLibControl { get; private set; }
         public ImportFastaControl ImportFastaControl { get; private set; }
         public TransitionSettingsControl TransitionSettingsControl { get; private set; }
@@ -222,6 +224,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 case Pages.spectra_page:
                     {
+                        HasPeakBoundaries = BuildPepSearchLibControl.SearchFilenames.All(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV));
+                        if (BuildPepSearchLibControl.SearchFilenames.Any(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV)) && !HasPeakBoundaries)
+                        {
+                            MessageDlg.Show(this, Resources.ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_);
+                            return;
+                        }
+
                         var eCancel = new CancelEventArgs();
                         if (!BuildPepSearchLibControl.BuildPeptideSearchLibrary(eCancel))
                         {
@@ -243,7 +252,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         // The next page is going to be the chromatograms page.
                         var oldImportResultsControl = (ImportResultsControl) ImportResultsControl;
 
-                        if (WorkflowType != Workflow.dia)
+                        if (WorkflowType != Workflow.dia || HasPeakBoundaries)
                         {
                             oldImportResultsControl.InitializeChromatogramsPage(SkylineWindow.DocumentUI);
 
@@ -276,7 +285,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                         // Decoy options enabled only for DIA
                         ImportFastaControl.RequirePrecursorTransition = WorkflowType != Workflow.dia;
-                        ImportFastaControl.DecoyGenerationEnabled = WorkflowType == Workflow.dia;
+                        ImportFastaControl.DecoyGenerationEnabled = WorkflowType == Workflow.dia && !HasPeakBoundaries;
                     }
                     break;
 

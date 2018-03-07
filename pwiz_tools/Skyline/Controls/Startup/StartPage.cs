@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateWizardPanel_Import_DIA_DDA_Peptide_Search,
+                    Caption = Resources.StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search,
                     Icon = Resources.WizardPeptideSearchDIA,
                     EventAction = () => Import(ActionImport.DataType.peptide_search_dia),
                     Description =

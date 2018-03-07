@@ -742,7 +742,7 @@ namespace IDPicker.Forms
                 var pwizMods = Peptide.modifications();
                 if (!String.IsNullOrEmpty((string)queryRow[6]))
                 {
-                    var IdMassDeltaAndOffsetTriplets = ((string)queryRow[6]).Split(',');
+                    var IdMassDeltaAndOffsetTriplets = ((string)queryRow[6]).Split(Properties.Settings.Default.GroupConcatSeparator[0]);
                     foreach (var triplet in IdMassDeltaAndOffsetTriplets)
                     {
                         var tokens = triplet.Split(':');

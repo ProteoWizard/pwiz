@@ -288,7 +288,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         // ReSharper disable PossibleMultipleEnumeration
         private void UpdateGraph()
         {
-            if (!IsHandleCreated)
+            if (!IsHandleCreated || _bindingListSource == null)
                 return;
             
             zedGraphControl.GraphPane.GraphObjList.Clear();

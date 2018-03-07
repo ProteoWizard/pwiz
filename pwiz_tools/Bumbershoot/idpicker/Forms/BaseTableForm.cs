@@ -218,6 +218,7 @@ namespace IDPicker.Forms
                 {
                     case QuantitationRollupMethod.Sum: return "DISTINCT_DOUBLE_ARRAY_SUM";
                     case QuantitationRollupMethod.Mean: return "DISTINCT_DOUBLE_ARRAY_MEAN";
+                    case QuantitationRollupMethod.Median: return "DISTINCT_DOUBLE_ARRAY_MEDIAN";
                     case QuantitationRollupMethod.Tukey: return "DISTINCT_DOUBLE_ARRAY_TUKEY_BIWEIGHT_AVERAGE";
                     case QuantitationRollupMethod.TukeyLog: return "DISTINCT_DOUBLE_ARRAY_TUKEY_BIWEIGHT_LOG_AVERAGE";
                     default:

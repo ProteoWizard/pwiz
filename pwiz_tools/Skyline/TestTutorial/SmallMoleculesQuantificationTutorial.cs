@@ -55,6 +55,7 @@ namespace pwiz.SkylineTestTutorial
             //IsPauseForScreenShots = true;
 
             LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculesQuantification.pdf";
+            ForceMzml = true; // Prefer mzML as being the more efficient download
 
             TestFilesZipPaths = new[]
             {
@@ -68,7 +69,7 @@ namespace pwiz.SkylineTestTutorial
 
         private string GetTestPath(string relativePath = null)
         {
-            string folderSmallMolecule = UseRawFiles ? "SmallMoleculeQuantification" : "SmallMoleculeQuantificationMzml";
+            string folderSmallMolecule = UseRawFiles ? "SmallMoleculeQuantification" : "SmallMoleculeQuantification_mzML";
             string fullRelativePath = relativePath != null ? Path.Combine(folderSmallMolecule, relativePath) : folderSmallMolecule;
             return TestFilesDirs[0].GetTestPath(fullRelativePath);
         }

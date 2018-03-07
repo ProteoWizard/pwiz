@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.Lib
         // ReSharper disable NonLocalizedString
         public const string EXT_PEP_XML = ".pep.xml";
         public const string EXT_PEP_XML_ONE_DOT = ".pepXML";
-        public const string EXI_MZID = ".mzid";
+        public const string EXT_MZID = ".mzid";
         public const string EXT_IDP_XML = ".idpXML";
         public const string EXT_SQT = ".sqt";
         public const string EXT_DAT = ".dat";

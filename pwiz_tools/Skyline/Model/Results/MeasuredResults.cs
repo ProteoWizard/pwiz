@@ -625,7 +625,6 @@ namespace pwiz.Skyline.Model.Results
             // In small molecule SRM, it's not at all unusual to have the same Q1>Q3
             // pair repeatedly, at different retention times, so we use explicit RT to disambiguate if available
             int maxTranMatch = 1;
-            var minErrRT = double.MaxValue;
 
             IList<ChromatogramGroupInfo> listChrom = EMPTY_GROUP_INFOS;
             foreach (var cache in CachesEx)
@@ -643,7 +642,7 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var chromInfo in info)
                 {
                     // Short-circuit further processing for common case in label free data
-                    if (_cacheFinal != null && info.Count == 1 && minErrRT == double.MaxValue)
+                    if (_cacheFinal != null && info.Count == 1)
                     {
                         if (loadPoints)
                             info[0].ReadChromatogram(cache);
@@ -657,26 +656,14 @@ namespace pwiz.Skyline.Model.Results
                     // For small molecules we will likely have to select from several chromInfos all with same Q1>Q3,
                     // so we examine peaks for match with explicitRT if provided
                     bool multiMatch = chromatogram.OptimizationFunction != null;
-                    double errRT;
-                    int tranMatch = chromInfo.MatchTransitions(nodePep, nodeGroup, tolerance, multiMatch, out errRT);
+                    int tranMatch = chromInfo.MatchTransitions(nodePep, nodeGroup, tolerance, multiMatch);
                     // CONSIDER: This is pretty tricky code, and we are currently favoring
                     //           peak proximity to explicit retention time over number of matching
                     //           transitions.
-                    if (tranMatch >= maxTranMatch  || errRT < minErrRT)
+                    if (tranMatch >= maxTranMatch)
                     {
                         if (ReferenceEquals(listChrom, EMPTY_GROUP_INFOS))
                             listChrom = new List<ChromatogramGroupInfo>();
-                        if (errRT < minErrRT)
-                        {
-                            // This is the closest peak we've found to the explicit RT
-                            listChrom.Clear();
-                            minErrRT = errRT;
-                        }  
-                        else if (errRT > minErrRT)
-                        {
-                            // This is not the closest peak we've found to the explicit RT, skip it
-                            continue;
-                        }
                         // If new maximum, clear anything collected at the previous maximum
                         if (tranMatch > maxTranMatch)
                             listChrom.Clear();
