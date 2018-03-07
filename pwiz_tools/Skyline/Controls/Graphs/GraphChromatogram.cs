@@ -339,6 +339,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var measuredResults = DocumentUI.Settings.MeasuredResults;
                 scanProvider = new ScanProvider(_documentContainer.DocumentFilePath, FilePath,
                     chromatogramGroupInfo.Source, chromatogramGroupInfo.Times, transitions.ToArray(),
+                    measuredResults,
                     () => measuredResults.LoadMSDataFileScanIds(FilePath));
             }
             else

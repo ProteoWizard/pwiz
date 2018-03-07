@@ -277,6 +277,7 @@ namespace pwiz.Skyline.Model.Results
                 scanProvider = new ScanProvider(_documentFilePath,
                     filePath,
                     chromSource, times, transitions.ToArray(),
+                    _document.Settings.MeasuredResults,
                     () => _document.Settings.MeasuredResults.LoadMSDataFileScanIds(filePath));
             }
             else

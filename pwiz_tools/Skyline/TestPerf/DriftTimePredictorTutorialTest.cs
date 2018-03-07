@@ -270,16 +270,15 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
             PauseForScreenShot("Yeast chromatogram and RTs - prtsc-paste-edit", 22);
 
-            // TODO (Nicksh): This no longer works. Clicking the point goes to the wrong retention time
-//            {
-//                const double clickTime = 42.21;
-//                ClickChromatogram(yeastReplicateName, clickTime, 2.904E+4, PaneKey.PRODUCTS);
-//                var fullScanGraph = FindOpenForm<GraphFullScan>();
-//                RunUI(() => fullScanGraph.SetZoom(true));
-//                PauseForScreenShot("Full-scan graph zoomed", 23);
-//                RunUI(() => Assert.IsTrue(fullScanGraph.TitleText.Contains(clickTime.ToString(CultureInfo.CurrentCulture))));
-//                RunUI(SkylineWindow.HideFullScanGraph);
-//            }
+            {
+                const double clickTime = 42.20;
+                ClickChromatogram(yeastReplicateName, clickTime, 2.904E+4, PaneKey.PRODUCTS);
+                var fullScanGraph = FindOpenForm<GraphFullScan>();
+                RunUI(() => fullScanGraph.SetZoom(true));
+                PauseForScreenShot("Full-scan graph zoomed", 23);
+                RunUI(() => Assert.IsTrue(fullScanGraph.TitleText.Contains(clickTime.ToString(CultureInfo.CurrentCulture))));
+                RunUI(SkylineWindow.HideFullScanGraph);
+            }
 
             FindNode("FKDLGEEHFK");
 

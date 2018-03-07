@@ -60,16 +60,17 @@ namespace pwiz.Skyline.Model.Results
         private MsDataFileImpl _dataFile;
         private MsDataFileScanIds _msDataFileScanIds; // Indexed container of MsDataFileImpl ids
         private Func<MsDataFileScanIds> _getMsDataFileScanIds;
+        private WeakReference<MeasuredResults> _measuredResultsReference;
 
         public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, ChromSource source,
-            IList<float> times, TransitionFullScanInfo[] transitions, Func<MsDataFileScanIds> getMsDataFileScanIds)
+            IList<float> times, TransitionFullScanInfo[] transitions, MeasuredResults measuredResults, Func<MsDataFileScanIds> getMsDataFileScanIds)
         {
             DocFilePath = docFilePath;
             DataFilePath = dataFilePath;
             Source = source;
             Times = times;
             Transitions = transitions;
-
+            _measuredResultsReference = new WeakReference<MeasuredResults>(measuredResults);
             _getMsDataFileScanIds = getMsDataFileScanIds;
         }
 
@@ -99,6 +100,16 @@ namespace pwiz.Skyline.Model.Results
             var scanProvider = other as ScanProvider;
             if (scanProvider == null)
                 return false;
+            MeasuredResults thisMeasuredResults, otherMeasuredResults;
+            if (!_measuredResultsReference.TryGetTarget(out thisMeasuredResults) ||
+                !scanProvider._measuredResultsReference.TryGetTarget(out otherMeasuredResults))
+            {
+                return false;
+            }
+            if (!ReferenceEquals(thisMeasuredResults, otherMeasuredResults))
+            {
+                return false;
+            }
             _dataFile = scanProvider._dataFile;
             _msDataFileScanIds = scanProvider._msDataFileScanIds;
             _getMsDataFileScanIds = scanProvider._getMsDataFileScanIds;
