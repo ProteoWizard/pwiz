@@ -32,7 +32,7 @@
 
 
 using boost::optional;
-using timsdata::TimsBinaryData;
+typedef timsdata::TimsData TimsBinaryData;
 
 
 namespace pwiz {
@@ -49,8 +49,7 @@ struct PWIZ_API_DECL TimsFrame
               int msLevel, double rt,
               double startMz, double endMz,
               double tic, double bpi,
-              IonPolarity polarity, int scanMode,
-              int64_t timsId, int numScans,
+              IonPolarity polarity, int scanMode, int numScans,
               const optional<uint64_t>& parentId,
               const optional<double>& precursorMz,
               const optional<double>& isolationWidth,
@@ -66,7 +65,6 @@ struct PWIZ_API_DECL TimsFrame
     optional<uint64_t> parentId_;
     double tic_;
     double bpi_;
-    int64_t timsId_;
     int numScans_;
 
     IonPolarity polarity_;
