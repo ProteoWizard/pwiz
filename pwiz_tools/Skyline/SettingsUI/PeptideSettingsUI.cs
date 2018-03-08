@@ -181,6 +181,11 @@ namespace pwiz.Skyline.SettingsUI
             comboQuantMsLevel.SelectedIndex = Math.Max(0, _quantMsLevels.IndexOf(_peptideSettings.Quantification.MsLevel));
             tbxQuantUnits.Text = _peptideSettings.Quantification.Units;
 
+            comboLodMethod.Items.AddRange(LodCalculation.ALL.Cast<object>().ToArray());
+            comboLodMethod.SelectedItem = _peptideSettings.Quantification.LodCalculation;
+            tbxMaxLoqBias.Text = _peptideSettings.Quantification.MaxLoqBias.ToString();
+            tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
+
             UpdateLibraryDriftPeakWidthControls();
         }
 
@@ -482,7 +487,33 @@ namespace pwiz.Skyline.SettingsUI
                 .ChangeRegressionWeighting(comboWeighting.SelectedItem as RegressionWeighting)
                 .ChangeRegressionFit(comboRegressionFit.SelectedItem as RegressionFit)
                 .ChangeMsLevel(_quantMsLevels[comboQuantMsLevel.SelectedIndex])
-                .ChangeUnits(tbxQuantUnits.Text);
+                .ChangeUnits(tbxQuantUnits.Text)
+                .ChangeLodCalculation(comboLodMethod.SelectedItem as LodCalculation);
+            if (Equals(quantification.LodCalculation, LodCalculation.TURNING_POINT) &&
+                !Equals(quantification.RegressionFit, RegressionFit.BILINEAR))
+            {
+                MessageDlg.Show(this, Resources.PeptideSettingsUI_ValidateNewSettings_In_order_to_use_the__Bilinear_turning_point__method_of_LOD_calculation___Regression_fit__must_be_set_to__Bilinear__);
+                comboLodMethod.Focus();
+                return null;
+            }
+            if (!string.IsNullOrEmpty(tbxMaxLoqBias.Text.Trim()))
+            {
+                double maxLoqBias;
+                if (!helper.ValidateDecimalTextBox(tbxMaxLoqBias, 0, null, out maxLoqBias))
+                {
+                    return null;
+                }
+                quantification = quantification.ChangeMaxLoqBias(maxLoqBias);
+            }
+            if (!string.IsNullOrEmpty(tbxMaxLoqCv.Text.Trim()))
+            {
+                double maxLoqCv;
+                if (!helper.ValidateDecimalTextBox(tbxMaxLoqCv, 0, null, out maxLoqCv))
+                {
+                    return null;
+                }
+                quantification = quantification.ChangeMaxLoqCv(maxLoqCv);
+            }
 
             return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome)
                     .ChangeAbsoluteQuantification(quantification);
@@ -1411,6 +1442,37 @@ namespace pwiz.Skyline.SettingsUI
             set { tbxQuantUnits.Text = value; }
         }
 
+        public double? QuantMaxLoqBias
+        {
+            get {
+                if (tbxMaxLoqBias.Text.Trim().Length == 0)
+                {
+                    return null;
+                }
+                return double.Parse(tbxMaxLoqBias.Text.Trim());
+            }
+            set { tbxMaxLoqBias.Text = value.ToString(); }
+        }
+
+        public double? QuantMaxLoqCv
+        {
+            get
+            {
+                if (tbxMaxLoqCv.Text.Trim().Length == 0)
+                {
+                    return null;
+                }
+                return double.Parse(tbxMaxLoqCv.Text.Trim());
+            }
+            set { tbxMaxLoqCv.Text = value.ToString(); }
+        }
+
+        public LodCalculation QuantLodMethod
+        {
+            get { return comboLodMethod.SelectedItem as LodCalculation; }
+            set { comboLodMethod.SelectedItem = value; }
+        }
+
         #endregion
 
         public sealed class LabelTypeComboDriver
@@ -1751,6 +1813,5 @@ namespace pwiz.Skyline.SettingsUI
             cbLinear.Checked = checkedState;
             UpdateLibraryDriftPeakWidthControls();
         }
-
     }
 }

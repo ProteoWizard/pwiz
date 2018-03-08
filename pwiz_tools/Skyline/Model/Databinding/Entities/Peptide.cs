@@ -375,6 +375,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public FiguresOfMerit FiguresOfMerit
+        {
+            get
+            {
+                CalibrationCurveFitter calibrationCurveFitter = GetCalibrationCurveFitter();
+                var calibrationCurve = calibrationCurveFitter.GetCalibrationCurve();
+                return calibrationCurveFitter.GetFiguresOfMerit(calibrationCurve);
+            }
+        }
+
         public PeptideQuantifier GetPeptideQuantifier()
         {
             var quantifier = PeptideQuantifier.GetPeptideQuantifier(()=>DataSchema.GetReplicateSummaries().GetNormalizationData(), 

@@ -110,6 +110,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
 
         public CalibrationCurve CalibrationCurve { get; private set; }
+        public FiguresOfMerit FiguresOfMerit { get; private set; }
 
         private void DisplayCalibrationCurve()
         {
@@ -119,6 +120,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             zedGraphControl.GraphPane.Legend.IsVisible = options.ShowLegend;
             _scatterPlots = null;
             CalibrationCurve = null;
+            FiguresOfMerit = FiguresOfMerit.EMPTY;
             SrmDocument document = DocumentUiContainer.DocumentUI;
             if (!document.Settings.HasResults)
             {
@@ -179,6 +181,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             zedGraphControl.GraphPane.XAxis.Title.Text = curveFitter.GetXAxisTitle();
             zedGraphControl.GraphPane.YAxis.Title.Text = curveFitter.GetYAxisTitle();
             CalibrationCurve = curveFitter.GetCalibrationCurve();
+            FiguresOfMerit = curveFitter.GetFiguresOfMerit(CalibrationCurve);
             double minX = double.MaxValue, maxX = double.MinValue;
             double minY = double.MaxValue;
             _scatterPlots = new CurveList();
@@ -258,7 +261,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 if (minX <= maxX)
                 {
                     int interpolatedLinePointCount = 100;
-                    if (!options.LogPlot)
+                    if (!options.LogPlot && !CalibrationCurve.TurningPoint.HasValue)
                     {
                         if (regressionFit == RegressionFit.LINEAR_THROUGH_ZERO)
                         {
@@ -288,6 +291,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     labelLines.Add(string.Format("{0}: {1}", // Not L10N
                         QuantificationStrings.Weighting, curveFitter.QuantificationSettings.RegressionWeighting));
                 }
+                string strFiguresOfMerit = FiguresOfMerit.ToString();
+                if (!string.IsNullOrEmpty(strFiguresOfMerit))
+                {
+                    labelLines.Add(strFiguresOfMerit);
+                }
             }
 
             if (options.ShowSelection)
@@ -297,8 +305,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 if (xSelected.HasValue && ySelected.HasValue)
                 {
                     const float selectedLineWidth = 2;
+                    ArrowObj arrow = new ArrowObj(xSelected.Value, ySelected.Value, xSelected.Value,
+                        ySelected.Value) { Line = { Color = GraphSummary.ColorSelected } };
+                    zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
                     var selectedLineColor = Color.FromArgb(128, GraphSummary.ColorSelected);
-                    var verticalLine = new LineObj(xSelected.Value, ySelected.Value, xSelected.Value, options.LogPlot ? minY : 0)
+                    var verticalLine = new LineObj(xSelected.Value, ySelected.Value, xSelected.Value, options.LogPlot ? double.MinValue : 0)
                     {
                         Line = { Color = selectedLineColor, Width = selectedLineWidth },
                         Location = { CoordinateFrame = CoordType.AxisXYScale },

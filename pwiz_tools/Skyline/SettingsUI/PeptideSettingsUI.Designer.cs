@@ -113,16 +113,25 @@ namespace pwiz.Skyline.SettingsUI
             this.tabIntegration = new System.Windows.Forms.TabPage();
             this.label36 = new System.Windows.Forms.Label();
             this.tabQuantification = new System.Windows.Forms.TabPage();
+            this.groupBoxFiguresOfMerit = new System.Windows.Forms.GroupBox();
+            this.tbxMaxLoqBias = new System.Windows.Forms.TextBox();
+            this.comboLodMethod = new System.Windows.Forms.ComboBox();
+            this.lblCaclulateLodBy = new System.Windows.Forms.Label();
+            this.lblMaxLoqBias = new System.Windows.Forms.Label();
+            this.lblMaxLoqBiasPct = new System.Windows.Forms.Label();
+            this.lblMaxLoqCvPct = new System.Windows.Forms.Label();
+            this.tbxMaxLoqCv = new System.Windows.Forms.TextBox();
+            this.lblMaxLoqCv = new System.Windows.Forms.Label();
             this.tbxQuantUnits = new System.Windows.Forms.TextBox();
             this.lblQuantUnits = new System.Windows.Forms.Label();
             this.comboQuantMsLevel = new System.Windows.Forms.ComboBox();
-            this.label23 = new System.Windows.Forms.Label();
+            this.lblMsLevel = new System.Windows.Forms.Label();
             this.comboNormalizationMethod = new System.Windows.Forms.ComboBox();
-            this.label20 = new System.Windows.Forms.Label();
+            this.lblNormalizationMethod = new System.Windows.Forms.Label();
             this.comboRegressionFit = new System.Windows.Forms.ComboBox();
-            this.label22 = new System.Windows.Forms.Label();
+            this.lblRegressionFit = new System.Windows.Forms.Label();
             this.comboWeighting = new System.Windows.Forms.ComboBox();
-            this.label21 = new System.Windows.Forms.Label();
+            this.lblRegressionWeighting = new System.Windows.Forms.Label();
             this.contextMenuCalculator = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.addCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editCalculatorCurrentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -140,6 +149,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabModifications.SuspendLayout();
             this.tabIntegration.SuspendLayout();
             this.tabQuantification.SuspendLayout();
+            this.groupBoxFiguresOfMerit.SuspendLayout();
             this.contextMenuCalculator.SuspendLayout();
             this.contextMenuIonMobilityLibraries.SuspendLayout();
             this.SuspendLayout();
@@ -756,19 +766,76 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabQuantification
             // 
+            this.tabQuantification.Controls.Add(this.groupBoxFiguresOfMerit);
             this.tabQuantification.Controls.Add(this.tbxQuantUnits);
             this.tabQuantification.Controls.Add(this.lblQuantUnits);
             this.tabQuantification.Controls.Add(this.comboQuantMsLevel);
-            this.tabQuantification.Controls.Add(this.label23);
+            this.tabQuantification.Controls.Add(this.lblMsLevel);
             this.tabQuantification.Controls.Add(this.comboNormalizationMethod);
-            this.tabQuantification.Controls.Add(this.label20);
+            this.tabQuantification.Controls.Add(this.lblNormalizationMethod);
             this.tabQuantification.Controls.Add(this.comboRegressionFit);
-            this.tabQuantification.Controls.Add(this.label22);
+            this.tabQuantification.Controls.Add(this.lblRegressionFit);
             this.tabQuantification.Controls.Add(this.comboWeighting);
-            this.tabQuantification.Controls.Add(this.label21);
+            this.tabQuantification.Controls.Add(this.lblRegressionWeighting);
             resources.ApplyResources(this.tabQuantification, "tabQuantification");
             this.tabQuantification.Name = "tabQuantification";
             this.tabQuantification.UseVisualStyleBackColor = true;
+            // 
+            // groupBoxFiguresOfMerit
+            // 
+            resources.ApplyResources(this.groupBoxFiguresOfMerit, "groupBoxFiguresOfMerit");
+            this.groupBoxFiguresOfMerit.Controls.Add(this.tbxMaxLoqBias);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.comboLodMethod);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.lblCaclulateLodBy);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.lblMaxLoqBias);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.lblMaxLoqBiasPct);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.lblMaxLoqCvPct);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.tbxMaxLoqCv);
+            this.groupBoxFiguresOfMerit.Controls.Add(this.lblMaxLoqCv);
+            this.groupBoxFiguresOfMerit.Name = "groupBoxFiguresOfMerit";
+            this.groupBoxFiguresOfMerit.TabStop = false;
+            // 
+            // tbxMaxLoqBias
+            // 
+            resources.ApplyResources(this.tbxMaxLoqBias, "tbxMaxLoqBias");
+            this.tbxMaxLoqBias.Name = "tbxMaxLoqBias";
+            // 
+            // comboLodMethod
+            // 
+            this.comboLodMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboLodMethod.FormattingEnabled = true;
+            resources.ApplyResources(this.comboLodMethod, "comboLodMethod");
+            this.comboLodMethod.Name = "comboLodMethod";
+            // 
+            // lblCaclulateLodBy
+            // 
+            resources.ApplyResources(this.lblCaclulateLodBy, "lblCaclulateLodBy");
+            this.lblCaclulateLodBy.Name = "lblCaclulateLodBy";
+            // 
+            // lblMaxLoqBias
+            // 
+            resources.ApplyResources(this.lblMaxLoqBias, "lblMaxLoqBias");
+            this.lblMaxLoqBias.Name = "lblMaxLoqBias";
+            // 
+            // lblMaxLoqBiasPct
+            // 
+            resources.ApplyResources(this.lblMaxLoqBiasPct, "lblMaxLoqBiasPct");
+            this.lblMaxLoqBiasPct.Name = "lblMaxLoqBiasPct";
+            // 
+            // lblMaxLoqCvPct
+            // 
+            resources.ApplyResources(this.lblMaxLoqCvPct, "lblMaxLoqCvPct");
+            this.lblMaxLoqCvPct.Name = "lblMaxLoqCvPct";
+            // 
+            // tbxMaxLoqCv
+            // 
+            resources.ApplyResources(this.tbxMaxLoqCv, "tbxMaxLoqCv");
+            this.tbxMaxLoqCv.Name = "tbxMaxLoqCv";
+            // 
+            // lblMaxLoqCv
+            // 
+            resources.ApplyResources(this.lblMaxLoqCv, "lblMaxLoqCv");
+            this.lblMaxLoqCv.Name = "lblMaxLoqCv";
             // 
             // tbxQuantUnits
             // 
@@ -791,10 +858,10 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.comboQuantMsLevel, "comboQuantMsLevel");
             this.comboQuantMsLevel.Name = "comboQuantMsLevel";
             // 
-            // label23
+            // lblMsLevel
             // 
-            resources.ApplyResources(this.label23, "label23");
-            this.label23.Name = "label23";
+            resources.ApplyResources(this.lblMsLevel, "lblMsLevel");
+            this.lblMsLevel.Name = "lblMsLevel";
             // 
             // comboNormalizationMethod
             // 
@@ -803,10 +870,10 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.comboNormalizationMethod, "comboNormalizationMethod");
             this.comboNormalizationMethod.Name = "comboNormalizationMethod";
             // 
-            // label20
+            // lblNormalizationMethod
             // 
-            resources.ApplyResources(this.label20, "label20");
-            this.label20.Name = "label20";
+            resources.ApplyResources(this.lblNormalizationMethod, "lblNormalizationMethod");
+            this.lblNormalizationMethod.Name = "lblNormalizationMethod";
             // 
             // comboRegressionFit
             // 
@@ -815,10 +882,10 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.comboRegressionFit, "comboRegressionFit");
             this.comboRegressionFit.Name = "comboRegressionFit";
             // 
-            // label22
+            // lblRegressionFit
             // 
-            resources.ApplyResources(this.label22, "label22");
-            this.label22.Name = "label22";
+            resources.ApplyResources(this.lblRegressionFit, "lblRegressionFit");
+            this.lblRegressionFit.Name = "lblRegressionFit";
             // 
             // comboWeighting
             // 
@@ -827,10 +894,10 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.comboWeighting, "comboWeighting");
             this.comboWeighting.Name = "comboWeighting";
             // 
-            // label21
+            // lblRegressionWeighting
             // 
-            resources.ApplyResources(this.label21, "label21");
-            this.label21.Name = "label21";
+            resources.ApplyResources(this.lblRegressionWeighting, "lblRegressionWeighting");
+            this.lblRegressionWeighting.Name = "lblRegressionWeighting";
             // 
             // contextMenuCalculator
             // 
@@ -917,6 +984,8 @@ namespace pwiz.Skyline.SettingsUI
             this.tabIntegration.PerformLayout();
             this.tabQuantification.ResumeLayout(false);
             this.tabQuantification.PerformLayout();
+            this.groupBoxFiguresOfMerit.ResumeLayout(false);
+            this.groupBoxFiguresOfMerit.PerformLayout();
             this.contextMenuCalculator.ResumeLayout(false);
             this.contextMenuIonMobilityLibraries.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -1005,13 +1074,13 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label labelResolvingPower;
         private System.Windows.Forms.TabPage tabQuantification;
         private System.Windows.Forms.ComboBox comboWeighting;
-        private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.Label lblRegressionWeighting;
         private System.Windows.Forms.ComboBox comboRegressionFit;
-        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.Label lblRegressionFit;
         private System.Windows.Forms.ComboBox comboNormalizationMethod;
-        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.Label lblNormalizationMethod;
         private System.Windows.Forms.ComboBox comboQuantMsLevel;
-        private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.Label lblMsLevel;
         private System.Windows.Forms.TextBox tbxQuantUnits;
         private System.Windows.Forms.Label lblQuantUnits;
         private System.Windows.Forms.Label labelPeptideUniquenessConstraint;
@@ -1024,5 +1093,14 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label labelWidthAtDt0Units;
         private System.Windows.Forms.Label labelWidthAtDtMaxUnits;
         private System.Windows.Forms.Button btnFilter;
+        private System.Windows.Forms.Label lblCaclulateLodBy;
+        private System.Windows.Forms.Label lblMaxLoqCvPct;
+        private System.Windows.Forms.TextBox tbxMaxLoqCv;
+        private System.Windows.Forms.Label lblMaxLoqCv;
+        private System.Windows.Forms.Label lblMaxLoqBiasPct;
+        private System.Windows.Forms.TextBox tbxMaxLoqBias;
+        private System.Windows.Forms.Label lblMaxLoqBias;
+        private System.Windows.Forms.ComboBox comboLodMethod;
+        private System.Windows.Forms.GroupBox groupBoxFiguresOfMerit;
     }
 }

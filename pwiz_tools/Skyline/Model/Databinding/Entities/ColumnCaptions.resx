@@ -264,6 +264,9 @@
   <data name="ExcludeFromCalibration">
     <value>Exclude From Calibration</value>
   </data>
+  <data name="FiguresOfMerit">
+    <value>Figures Of Merit</value>
+  </data>
   <data name="FileIndex">
     <value>File Index</value>
   </data>
@@ -375,6 +378,12 @@
   </data>
   <data name="LibraryType">
     <value>Library Type</value>
+  </data>
+  <data name="LimitOfDetection">
+    <value>Limit Of Detection</value>
+  </data>
+  <data name="LimitOfQuantification">
+    <value>Limit Of Quantification</value>
   </data>
   <data name="LinearFit">
     <value>Linear Fit</value>
@@ -843,6 +852,9 @@
   </data>
   <data name="Truncated">
     <value>Truncated</value>
+  </data>
+  <data name="TurningPoint">
+    <value>Turning Point</value>
   </data>
   <data name="TValue">
     <value>T-Value</value>

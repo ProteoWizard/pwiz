@@ -352,6 +352,9 @@
           <xs:attribute name="normalization" type="xs:string" />
           <xs:attribute name="units" type="xs:string" />
           <xs:attribute name="ms_level" type="xs:integer" />
+          <xs:attribute name="lod_calculation" type="xs:string" />
+          <xs:attribute name="max_loq_bias" type="xs:double" />
+          <xs:attribute name="max_loq_cv" type="xs:double" />
         </xs:complexType>
       </xs:element>
     </xs:sequence>
