@@ -171,6 +171,9 @@ int main(int argc, char* argv[])
             } else if (has_extension(result_file, ".tsv")) {
                 TSVReader tsvReader(builder, result_file, progress_cptr);
                 success = tsvReader.parseFile();
+            } else if (has_extension(result_file, ".osw")) {
+                OSWReader oswReader(builder, result_file, progress_cptr);
+                success = oswReader.parseFile();
             } else {
                 // shouldn't get to here b/c cmd line parsing checks, but...
                 Verbosity::error("Unknown input file type '%s'.", result_file);

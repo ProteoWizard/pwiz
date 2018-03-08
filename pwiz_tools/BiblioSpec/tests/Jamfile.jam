@@ -292,9 +292,10 @@ blib-test-build mascot-distiller-and-title : -o : output/mascot-distiller-1.blib
 blib-test-build mascot-distiller-from-file : -o : output/mascot-distiller-2.blib : mascot-distiller-2.check : inputs/F007401b.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 blib-test-build mascot_tims : -o : output/mascot_tims.blib : mascot_tims.check : inputs/mascot_tims.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 
-# Test OpenSWATH tsv file
+# Test OpenSWATH files
 
 blib-test-build openswath : -o : output/openswath.blib : openswath.check openswath.skip-lines : inputs/openswath_test.tsv ;
+blib-test-build openswath-osw : -o : output/openswath-osw.blib : openswath-osw.check openswath.skip-lines : inputs/test.osw ;
 
 # we expect this one to fail, with the error message 'ERROR: Failure reading TIMS ion mobility value ":0.78079097398941"', so args are "-e 0.78079097398941"
 blib-test-build mascot_tims_bad : -e_0.78079097398941 -o : output/mascot_tims_bad.blib : mascot_tims_bad.check : inputs/mascot_tims_bad.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;

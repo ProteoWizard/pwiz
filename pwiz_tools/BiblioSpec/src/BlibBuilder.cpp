@@ -100,7 +100,8 @@ static vector<string> supportedTypes = {
     ".proxl.xml",
     ".ssl",
     ".mlb",
-    ".tsv"
+    ".tsv",
+    ".osw"
 };
 
 void BlibBuilder::usage()

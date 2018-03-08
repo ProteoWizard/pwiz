@@ -17,7 +17,7 @@
 //
 
 /**
- * The MaxQuantReader parses the PSMs from the msms.txt tab delimited file
+ * The TSVReader parses the PSMs from the tab delimited file
  * and stores each record. Records are grouped by file. Spectra are then
  * retrieved from the spectrum files. 
  */
@@ -175,16 +175,16 @@ void TSVReader::collectPsms() {
                 continue;
             }
         } catch (BlibException& e) {
-            throw BlibException(false, "%s caught at line %d, column %d", 
+            throw BlibException(false, "%s caught at line %d, column %d",
                                 e.what(), lineNum_, col + 1);
         } catch (std::exception& e) {
-            throw BlibException(false, "%s caught at line %d, column %d", 
+            throw BlibException(false, "%s caught at line %d, column %d",
                                 e.what(), lineNum_, col + 1);
         } catch (string& s) {
-            throw BlibException(false, "%s caught at line %d, column %d", 
+            throw BlibException(false, "%s caught at line %d, column %d",
                                 s.c_str(), lineNum_, col + 1);
         } catch (...) {
-            throw BlibException(false, "%s caught at line %d, column %d", 
+            throw BlibException(false, "%s caught at line %d, column %d",
                                 "Unknown exception", lineNum_, col + 1);
         }
         storeLine(line);
@@ -204,7 +204,7 @@ void TSVReader::storeLine(const TSVLine& line) {
     TSVPSM* psm = new TSVPSM();
     psm->specKey = lineNum_;
     psm->rt = line.rt;
-    if (!parseSequence(line.sequence, &(psm->unmodSeq), &(psm->mods))) {
+    if (!parseSequence(unimod_, line.sequence, &(psm->unmodSeq), &(psm->mods), &lineNum_)) {
         delete psm;
         return;
     }
@@ -226,7 +226,13 @@ void TSVReader::storeLine(const TSVLine& line) {
     }
 }
 
-bool TSVReader::parseSequence(const string& seq, string* outSeq, vector<SeqMod>* outMods) {
+bool TSVReader::parseSequence(
+    const UnimodParser& unimod,
+    const string& seq,
+    string* outSeq,
+    vector<SeqMod>* outMods,
+    int* line
+) {
     if (outSeq != NULL) {
         outSeq->clear();
     }
@@ -235,30 +241,45 @@ bool TSVReader::parseSequence(const string& seq, string* outSeq, vector<SeqMod>*
     }
 
     string seqUpper = to_upper_copy<string>(seq);
+    if (!seqUpper.empty() && seqUpper[0] == '.') {
+        seqUpper = seqUpper.substr(1);
+    }
     const string searchString = "(UNIMOD:";
     size_t i;
     while ((i = seqUpper.find(searchString)) != string::npos) {
         size_t j = i + searchString.length();
         size_t k = seqUpper.find(')', j + 1);
         if (k == string::npos) {
-            Verbosity::error("Invalid sequence '%s' on line %d", seq.c_str(), lineNum_);
+            if (line) {
+                Verbosity::error("Invalid sequence '%s' on line %d", seq.c_str(), *line);
+            } else {
+                Verbosity::error("Invalid sequence '%s'", seq.c_str());
+            }
             return false;
         }
         int id;
         try {
             id = lexical_cast<int>(seqUpper.substr(j, k - j));
         } catch (bad_lexical_cast&) {
-            Verbosity::error("Non-numeric modification ID in sequence '%s' on line %d", seq.c_str(), lineNum_);
+            if (line) {
+                Verbosity::error("Non-numeric modification ID in sequence '%s' on line %d", seq.c_str(), *line);
+            } else {
+                Verbosity::error("Non-numeric modification ID in sequence '%s'", seq.c_str());
+            }
             return false;
         }
-        if (!unimod_.hasMod(id)) {
-            Verbosity::error("Unknown modification ID %d in sequence '%s' on line '%d'", id, seq.c_str(), lineNum_);
+        if (!unimod.hasMod(id)) {
+            if (line) {
+                Verbosity::error("Unknown modification ID %d in sequence '%s' on line '%d'", id, seq.c_str(), *line);
+            } else {
+                Verbosity::error("Unknown modification ID %d in sequence '%s'", id, seq.c_str());
+            }
             return false;
         }
         seqUpper.erase(i, k - i + 1);
         if (outMods != NULL) {
             // the SeqMod's position is equal to the index after the modified AA, since it is 1-based
-            outMods->push_back(SeqMod(i, unimod_.getModMass(id)));
+            outMods->push_back(SeqMod(std::max((size_t)1, i), unimod.getModMass(id)));
         }
     }
 
@@ -309,7 +330,7 @@ bool TSVReader::parsePeaks(
         split(parts2, *i, is_any_of("_"));
         string seq;
         vector<SeqMod> mods;
-        if (parts2.size() != 5 || parts2[1].length() < 2 || !parseSequence(parts2[3], &seq, &mods)) {
+        if (parts2.size() != 5 || parts2[1].length() < 2 || !parseSequence(unimod_, parts2[3], &seq, &mods, &lineNum_)) {
             Verbosity::error("Unexpected format for fragment annotations on line %d: %s", lineNum_, i->c_str());
             return false;
         }
@@ -403,7 +424,7 @@ bool TSVReader::getSpectrum(PSM* psm, SPEC_ID_TYPE findBy, SpecData& returnData,
         returnData.intensities = new float[returnData.numPeaks];
         for (int i = 0; i < returnData.numPeaks; i++) {
             returnData.mzs[i] = ((TSVPSM*)psm)->mzs[i];
-            returnData.intensities[i] = (float)((TSVPSM*)psm)->intensities[i];  
+            returnData.intensities[i] = (float)((TSVPSM*)psm)->intensities[i];
         }
     } else {
         returnData.mzs = NULL;

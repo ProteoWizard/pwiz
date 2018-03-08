@@ -43,6 +43,7 @@
 #include "ProxlXmlReader.h"
 #include "ShimadzuMLBReader.h"
 #include "TSVReader.h"
+#include "OSWReader.h"
 /*
  * Local Variables:
  * mode: c

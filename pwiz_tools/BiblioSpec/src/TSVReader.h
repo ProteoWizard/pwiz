@@ -130,6 +130,12 @@ public:
     virtual bool getSpectrum(int, SpecData&, SPEC_ID_TYPE, bool);
     virtual bool getSpectrum(std::string, SpecData&, bool);
     virtual bool getNextSpectrum(SpecData&, bool);
+
+    static bool parseSequence(const UnimodParser& unimod, 
+                              const std::string& seq,
+                              std::string* outSeq,
+                              std::vector<SeqMod>* outMods,
+                              int* line = NULL);
     
 private:
     std::string tsvName_;
@@ -148,7 +154,6 @@ private:
         std::vector<TSVColumnTranslator>& v);
     void collectPsms();
     void storeLine(const TSVLine& line);
-    bool parseSequence(const std::string& seq, std::string* outSeq, std::vector<SeqMod>* outMods);
     bool parsePeaks(
         const std::string& peakArea,
         const std::string& fragmentAnnotation,
