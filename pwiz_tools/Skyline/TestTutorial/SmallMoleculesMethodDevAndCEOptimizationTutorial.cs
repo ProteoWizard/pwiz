@@ -55,8 +55,8 @@ namespace pwiz.SkylineTestTutorial
             TestFilesZipPaths = new[]
             {
                 (UseRawFiles
-                   ? @"https://skyline.gs.washington.edu/tutorials/SmallMoleculeMethodDevAndCEOptimization.zip"
-                   : @"https://skyline.gs.washington.edu/tutorials/SmallMoleculeMethodDevAndCEOptimization_mzML.zip"),
+                   ? @"https://skyline.gs.washington.edu/tutorials/SmallMolMethodCE.zip"
+                   : @"https://skyline.gs.washington.edu/tutorials/SmallMolMethodCE_mzML.zip"),
                 @"TestTutorial\SmallMoleculesMethodDevAndCEOptimizationViews.zip"
             };
             RunFunctionalTest();
@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestTutorial
 
         private string GetTestPath(string relativePath = null)
         {
-            string folderSmallMolecule = UseRawFiles ? "SmallMoleculeMethodDevAndCEOptimization" : "SmallMoleculeMethodDevAndCEOptimization_mzML";
+            string folderSmallMolecule = UseRawFiles ? "SmallMolMethodCE" : "SmallMolMethodCE_mzML";
             string fullRelativePath = relativePath != null ? Path.Combine(folderSmallMolecule, relativePath) : folderSmallMolecule;
             return TestFilesDirs[0].GetTestPath(fullRelativePath);
         }
