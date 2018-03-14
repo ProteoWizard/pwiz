@@ -64,9 +64,7 @@ path-constant QUAMETER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Bumbershoot/quameter 
 # set version info (used for tarball filenames)
 import generate-version ;
 local version-file = $(application-name:L)Version.cpp ;
-local revision-info = [ generate-version.cpp $(QUAMETER_PATH)/$(version-file) : freicore $(application-name:L) : $(MAJOR) : $(MINOR) :
-                                             [ path.glob $(QUAMETER_PATH) : *.?pp *.h Jamfile.jam : $(version-file) ] :
-                                             warn-on-missing ] ;
+local revision-info = [ generate-version.cpp $(QUAMETER_PATH)/$(version-file) : freicore $(application-name:L) : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) ] ;
 
 # revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
 

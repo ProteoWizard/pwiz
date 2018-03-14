@@ -72,9 +72,7 @@ path-constant MYRIMATCH_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Bumbershoot/myrimatc
 # set version info (used for tarball filenames)
 import generate-version ;
 local version-file = $(application-name:L)Version.cpp ;
-local revision-info = [ generate-version.cpp $(MYRIMATCH_PATH)/$(version-file) : freicore $(application-name:L) : $(MAJOR) : $(MINOR) :
-                                             [ path.glob $(MYRIMATCH_PATH) : *.?pp *.h Jamfile.jam : $(version-file) ] :
-                                             warn-on-missing ] ;
+local revision-info = [ generate-version.cpp $(MYRIMATCH_PATH)/$(version-file) : freicore $(application-name:L) : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) ] ;
 
 # revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
 

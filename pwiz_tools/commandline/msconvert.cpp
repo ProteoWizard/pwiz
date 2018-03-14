@@ -435,8 +435,6 @@ Config parseCommandLine(int argc, char** argv)
           << "support@proteowizard.org\n"
           << "\n"
           << "ProteoWizard release: " << pwiz::Version::str() << " (" << pwiz::Version::LastModified() << ")" << endl
-          << "ProteoWizard MSData: " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")" << endl
-          << "ProteoWizard Analysis: " << pwiz::analysis::Version::str() << " (" << pwiz::analysis::Version::LastModified() << ")" << endl
           << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
     if ((argc <= 1) || detailedHelp)
@@ -935,8 +933,6 @@ int main(int argc, char* argv[])
          << "Attach the command output and this version information in your report:\n"
          << "\n"
          << "ProteoWizard release: " << pwiz::Version::str() << " (" << pwiz::Version::LastModified() << ")" << endl
-         << "ProteoWizard MSData: " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")" << endl
-         << "ProteoWizard Analysis: " << pwiz::analysis::Version::str() << " (" << pwiz::analysis::Version::LastModified() << ")" << endl
          << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
     return 1;

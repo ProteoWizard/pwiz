@@ -376,112 +376,42 @@ alias svm : $(PWIZ_LIBRARIES_PATH)/libsvm-3.0//svm ;
 
 modules.poke : BOOST_BUILD_PATH : [ modules.peek : BOOST_BUILD_PATH ] $(PWIZ_LIBRARIES_PATH) ;
 
-# get version info (used for tarball filenames)
-import svnrev ;
-import generate-version ;
+# YMMDD in UTC where Y is number of years since 2016, optionally suffixed with HH (hour)
+rule MAKE_BUILD_TIMESTAMP ( with-hour ? )
+{
+    local utc = [ modules.peek : JAMDATE ] ;
+    local y = [ MATCH "([0-9][0-9][0-9][0-9])-" : $(utc) ] ;
+    y = [ CALC $(y) - 2016 ] ;
+    local d ;
+    if $(with-hour)
+    {
+        d = $(y) [ MATCH "[0-9][0-9][0-9][0-9]-([0-9][0-9])-([0-9][0-9]) ([0-9][0-9])" : $(utc) ] ;
+    }
+    else
+    {
+        d = $(y) [ MATCH "[0-9][0-9][0-9][0-9]-([0-9][0-9])-([0-9][0-9])" : $(utc) ] ;
+    }
+    return $(d:J=) ;
+}
 
 constant PWIZ_MAJOR : 3 ;
 constant PWIZ_MINOR : 0 ;
+constant PWIZ_BUILD_TIMESTAMP : [ MAKE_BUILD_TIMESTAMP ] ;
+constant PWIZ_GIT_REV : [ MATCH "([a-f0-9]*)" : [ SHELL "git rev-parse --short HEAD" ] ] ;
 
-generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/msdata/Version.cpp : pwiz msdata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
-    [ path.glob $(PWIZ_ROOT_PATH)/pwiz/data/msdata
-                $(PWIZ_ROOT_PATH)/pwiz/utility/misc
-                $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/ABI
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/ABI/T2D
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Bruker
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Shimadzu
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Thermo
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/UIMF
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/UNIFI
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Agilent
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Shimadzu
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/thermo
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UIMF
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UNIFI
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters
-       : *.?pp *.h Jamfile.jam *.manifest* : Version.cpp
-    ] ;
-
-generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/analysis/Version.cpp : pwiz analysis : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
-    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz/analysis
-                     $(PWIZ_ROOT_PATH)/pwiz/utility/math
-                     $(PWIZ_ROOT_PATH)/pwiz/utility/misc
-                     $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml
-        : *.?pp Jamfile.jam : Version.cpp
-    ] ;
-
-generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/identdata/Version.cpp : pwiz identdata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
-    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz/data/identdata
-                     $(PWIZ_ROOT_PATH)/pwiz/utility/misc
-                     $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml
-        : *.?pp Jamfile.jam : Version.cpp
-    ] ;
-
-generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/tradata/Version.cpp : pwiz tradata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
-    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz/data/tradata
-                     $(PWIZ_ROOT_PATH)/pwiz/utility/misc
-                     $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml
-        : *.?pp Jamfile.jam : Version.cpp
-    ] ;
-
-generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/proteome/Version.cpp : pwiz proteome : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
-    [ path.glob $(PWIZ_ROOT_PATH)/pwiz/data/proteome : *.?pp Jamfile.jam : Version.cpp ] ;
-
-# TODO: collecting global revision info should use revision info that's already been collected;
-# TODO: especially for things like SeeMS which have some MSVC-generated files that aren't versioned
-local revision-info =
-    [ generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/Version.cpp : pwiz : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
-            $(PWIZ_ROOT_PATH)/Jamroot.jam
-            [ path.glob $(PWIZ_ROOT_PATH)/libraries : *.jam ]
-            [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz
-                             $(PWIZ_ROOT_PATH)/pwiz_aux/msrc
-                             $(PWIZ_ROOT_PATH)/pwiz_tools/commandline
-                             $(PWIZ_ROOT_PATH)/pwiz_tools/common
-                             $(PWIZ_ROOT_PATH)/pwiz_tools/examples
-                             $(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS
-                             $(PWIZ_ROOT_PATH)/pwiz_tools/MSConvertGUI
-                             $(PWIZ_ROOT_PATH)/pwiz_tools/sld
-                             $(PWIZ_ROOT_PATH)/scripts/wix
-                : *.?pp *.h *.jam *.cs *.manifest.real *.manifest.dummy *.wxs.template
-                : tar.excluded Version.cpp Resources.Designer.cs Settings.Designer.cs *DataSet.Designer.cs AssemblyInfo.* _ReSharper.* baf2sql*.h timsdata*.h MassLynx*.h* cdtdefs.h compresseddatacluster.h LicenseKey.h
-            ]
-        : warn-on-missing
-        #: print-revision-info
-    ] ;
-
-# revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
-
-local year = $(revision-info[2]) ;
-local month = $(revision-info[3]) ;
-local day = $(revision-info[4]) ;
-
-constant PWIZ_SVNREV : $(revision-info[1]) ;
-constant PWIZ_SVNREVDATE : "(last committed change: $(year)-$(month)-$(day))" ;
-
-import numbers ;
-if [ numbers.less 32000 $(PWIZ_SVNREV) ] 
-{
-    errors.error "out of range SVN revision $(PWIZ_SVNREV)." ;
-}
-
-version-tag = $(PWIZ_MAJOR) $(PWIZ_MINOR) $(PWIZ_SVNREV) ;
-
-if $(revision-info[5]) > 0
-{
-    version-tag += "modified" ;
-    echo NOTICE: WORKING COPY HAS $(revision-info[5]) MODIFIED FILES. ;
-}
+version-tag = $(PWIZ_MAJOR) $(PWIZ_MINOR) $(PWIZ_BUILD_TIMESTAMP) $(PWIZ_GIT_REV) ;
 
 constant PWIZ_VERSION_TAG : $(version-tag:J=.) ;
 
-echo ProteoWizard $(version-tag:J=.) $(PWIZ_SVNREVDATE:J=) $(PLATFORM) $(PROCESSOR_ARCHITECTURE) ;
+echo ProteoWizard $(version-tag:J=.) $(PLATFORM) $(PROCESSOR_ARCHITECTURE) ;
 
+import generate-version ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/msdata/Version.cpp : pwiz msdata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/analysis/Version.cpp : pwiz analysis : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/identdata/Version.cpp : pwiz identdata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/tradata/Version.cpp : pwiz tradata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/proteome/Version.cpp : pwiz proteome : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/Version.cpp : pwiz : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) ;
 
 # create a VERSION file which can be used by TC to parse the canonical pwiz version
 make VERSION : : @make_VERSION : <location>$(PWIZ_BUILD_PATH) ;

@@ -51,9 +51,6 @@ namespace myrimatch
         if( g_pid == 0 )
         {
           cout << "MyriMatch " << Version::str() << " (" << Version::LastModified() << ")\n" <<
-                  "FreiCore " << freicore::Version::str() << " (" << freicore::Version::LastModified() << ")\n" <<
-                  "ProteoWizard MSData " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")\n" <<
-                  "ProteoWizard Proteome " << pwiz::proteome::Version::str() << " (" << pwiz::proteome::Version::LastModified() << ")\n" <<
                     MYRIMATCH_LICENSE << endl;
         }
         

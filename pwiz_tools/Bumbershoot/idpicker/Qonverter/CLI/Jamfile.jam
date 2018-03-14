@@ -22,18 +22,14 @@
 # Contributor(s):
 #
 
-import modules path svnrev ;
+import modules path generate-version ;
 
 if [ modules.peek : NT ]
 {
 
 path-constant THIS_PATH : . ;
 
-generate-AssemblyInfo.cpp $(THIS_PATH)\\AssemblyInfo.cpp :
-    [ path.glob $(THIS_PATH) : Qonverter.?pp Parser.?pp Merger.cpp Filter.cpp SchemaUpdater.cpp TotalCounts.cpp Embedder.cpp Jamfile.jam ]
-    [ path.glob $(THIS_PATH)/.. : Qonverter.?pp Parser.?pp Merger.cpp Filter.cpp SchemaUpdater.cpp TotalCounts.cpp Embedder.cpp Jamfile.jam ]
-    : : : "IDPicker" "Calculates Q values for peptide identifications in target-decoy database searches." $(COMPANY_AND_PRODUCT) ;
-RESCAN ;
+generate-version.AssemblyInfo.cpp $(THIS_PATH)\\AssemblyInfo.cpp : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : "IDPicker" "Calculates Q values for peptide identifications in target-decoy database searches." $(COMPANY_AND_PRODUCT) ;
 
 # separate library needed because native code uses the native IDPICKER_NAMESPACE
 lib NativeQonverter

@@ -81,9 +81,7 @@ RunTimeConfig* g_rtConfig;
 
 int InitProcess( argList_t& args )
 {
-    cout << "IDPickerQonvert " << idpQonvert::Version::str() << " (" << idpQonvert::Version::LastModified() << ")\n" <<
-            "IDPickerCore " << IDPicker::Version::str() << " (" << IDPicker::Version::LastModified() << ")\n" <<
-            "FreiCore " << freicore::Version::str() << " (" << freicore::Version::LastModified() << ")\n" << endl;
+    cout << "IDPickerQonvert " << idpQonvert::Version::str() << " (" << idpQonvert::Version::LastModified() << ")\n" << endl;
 
     string usage = "Usage: " + lexical_cast<string>(bfs::path(args[0]).filename()) + " [optional arguments] <analyzed data filemask> [<another filemask> ...]\n"
                     "Optional arguments:\n"
