@@ -12,8 +12,8 @@ REM "fc.exe": compares two files. Error level will be greater than 0 if files ar
 pushd %~dp0
 if not exist tmp mkdir tmp
 .\protoc.exe --csharp_out=tmp *.proto
-FOR /R tmp %%F in (*) DO (
-	fc.exe tmp\%%~nF%%~xF GeneratedCode\%%~nF%%~xF > nul
+FOR /R tmp %%F in (*.cs) DO (
+	fc.exe tmp\%%~nF%%~xF GeneratedCode\%%~nF%%~xF > nul 2> nul
 	if ERRORLEVEL 1 COPY tmp\%%~nF%%~xF GeneratedCode\%%~nF%%~xF
 )
 popd
