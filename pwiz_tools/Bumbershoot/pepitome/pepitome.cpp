@@ -56,9 +56,6 @@ namespace pepitome
     int InitProcess( argList_t& args )
     {
         cout << "Pepitome " << Version::str() << " (" << Version::LastModified() << ")\n" <<
-                "FreiCore " << freicore::Version::str() << " (" << freicore::Version::LastModified() << ")\n" <<
-                "ProteoWizard MSData " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")\n" <<
-                "ProteoWizard Proteome " << pwiz::proteome::Version::str() << " (" << pwiz::proteome::Version::LastModified() << ")\n" <<
                 PEPITOME_LICENSE << endl;
             
         string usage = "Usage: " + lexical_cast<string>(bfs::path(args[0]).filename()) + " [optional arguments] <input spectra filemask 1> [input spectra filemask 2] ...\n"

@@ -215,7 +215,8 @@ local revision-info = [ generate-AssemblyInfo.cs GUI/Properties/AssemblyInfo.cs 
                          #*.html
                          #*.vdproj
       : DirecTag build-*-* ]
-    : warn-on-missing : : "GUI/Properties" "Implements ScanRanker's shared logic." $(COMPANY_AND_PRODUCT) ] ;
+    #: warn-on-missing 
+    : : "GUI/Properties" "Implements ScanRanker's shared logic." $(COMPANY_AND_PRODUCT) ] ;
 
 # revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
 

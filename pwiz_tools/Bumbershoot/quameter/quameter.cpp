@@ -354,9 +354,6 @@ namespace quameter
     int InitProcess( argList_t& args )
     {
         cout << "Quameter " << Version::str() << " (" << Version::LastModified() << ")\n" <<
-                "FreiCore " << freicore::Version::str() << " (" << freicore::Version::LastModified() << ")\n" <<
-                "ProteoWizard MSData " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")\n" <<
-                "ProteoWizard Proteome " << pwiz::proteome::Version::str() << " (" << pwiz::proteome::Version::LastModified() << ")\n" <<
                 QUAMETER_LICENSE << endl;
 
         string usage = "Usage: " + lexical_cast<string>(bfs::path(args[0]).filename()) + " [optional arguments] <results filemask 1> [results filemask 2] ...\n"

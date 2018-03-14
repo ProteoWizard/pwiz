@@ -448,8 +448,7 @@ void summarizeAssembly(const string& filepath, bool summarizeSources)
 
 int main(int argc, const char* argv[])
 {
-    cout << "IDPickerAssemble " << idpAssemble::Version::str() << " (" << idpAssemble::Version::LastModified() << ")\n" <<
-            "IDPickerCore " << IDPicker::Version::str() << " (" << IDPicker::Version::LastModified() << ")\n"  << endl;
+    cout << "IDPickerAssemble " << idpAssemble::Version::str() << " (" << idpAssemble::Version::LastModified() << ")\n" << endl;
 
     string usage = "IDPAssemble is a command-line tool for merging and filtering idpDB files. You can also assign a source group hierarchy.\n"
                    "\n"
