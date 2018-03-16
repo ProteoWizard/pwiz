@@ -376,23 +376,57 @@ alias svm : $(PWIZ_LIBRARIES_PATH)/libsvm-3.0//svm ;
 
 modules.poke : BOOST_BUILD_PATH : [ modules.peek : BOOST_BUILD_PATH ] $(PWIZ_LIBRARIES_PATH) ;
 
-# YMMDD in UTC where Y is number of years since 2016, optionally suffixed with HH (hour)
-rule MAKE_BUILD_TIMESTAMP ( with-hour ? )
+import numbers ;
+
+rule is_leap_year ( year )
 {
-    local utc = [ modules.peek : JAMDATE ] ;
-    local y = [ MATCH "([0-9][0-9][0-9][0-9])-" : $(utc) ] ;
-    y = [ CALC $(y) - 2016 ] ;
-    local d ;
-    if $(with-hour)
+    if [ CALC $(year) % 100 ] = 0
     {
-        d = $(y) [ MATCH "[0-9][0-9][0-9][0-9]-([0-9][0-9])-([0-9][0-9]) ([0-9][0-9])" : $(utc) ] ;
+        if [ CALC $(year) % 400 ] = 0 { return 1 ; }
+        else { return 0 ; }
     }
     else
     {
-        d = $(y) [ MATCH "[0-9][0-9][0-9][0-9]-([0-9][0-9])-([0-9][0-9])" : $(utc) ] ;
+        if [ CALC $(year) % 4 ] = 0 { return 1 ; }
+        else { return 0 ; }
     }
+}
+
+# given year, month, day return day of year
+# Astronomical Algorithms, Jean Meeus, 2d ed, 1998, chap 7
+rule day_of_year ( Y M D )
+{
+    local K ;
+    if [ is_leap_year $(Y) ] = 1 { K = 1 ; }
+    else { K = 2 ; }
+    local a = [ CALC 275 * $(M) ] ;
+    local b = [ CALC $(M) + 9 ] ;
+    local c = [ CALC $(b) / 12 ] ;
+    local d = [ CALC $(K) * $(c) ] ;
+    local e = [ CALC $(a) / 9 ] ;
+    local f = [ CALC $(e) - $(d) ] ;
+    local g = [ CALC $(f) + $(D) ] ;
+    local N = [ CALC $(g) - 30 ] ;
+    if [ numbers.less $(N) 100 ]
+    {
+        N = "0" $(N) ;
+        return $(N:J=) ;
+    }
+    else
+    {
+        return $(N) ;
+    }
+}
+
+# YMMDD in UTC where Y is number of years since 2016, optionally suffixed with HH (hour)
+rule MAKE_BUILD_TIMESTAMP ( )
+{
+    local utc = [ modules.peek : JAMDATE ] ;
+    local ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : $(utc) ] ;
+    local d = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd[0]) ] [ day_of_year $(ymd) ] ;
     return $(d:J=) ;
 }
+
 
 constant PWIZ_MAJOR : 3 ;
 constant PWIZ_MINOR : 0 ;
