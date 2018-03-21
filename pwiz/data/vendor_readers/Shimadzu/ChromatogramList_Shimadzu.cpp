@@ -153,7 +153,7 @@ PWIZ_API_DECL void ChromatogramList_Shimadzu::createIndex() const
 
     const set<SRMTransition>& transitions = rawfile_->getTransitions();
 
-    BOOST_FOREACH(const SRMTransition& transition, transitions)
+    for (const SRMTransition& transition : transitions)
     {
         index_.push_back(IndexEntry());
         IndexEntry& ci = index_.back();

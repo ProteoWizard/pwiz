@@ -29,6 +29,7 @@
 #include <vector>
 #include <set>
 #include <boost/shared_ptr.hpp>
+#include <boost/date_time.hpp>
 
 
 namespace pwiz {
@@ -38,6 +39,12 @@ namespace Shimadzu {
 
 struct PWIZ_API_DECL TimeRange { double start, end; };
 
+PWIZ_API_DECL enum Polarity
+{
+    Positive = 0,
+    Negative = 1,
+    Undefined = 2
+};
 
 struct PWIZ_API_DECL SRMTransition
 {
@@ -68,6 +75,34 @@ struct PWIZ_API_DECL Chromatogram
 typedef boost::shared_ptr<Chromatogram> ChromatogramPtr;
 
 
+struct PWIZ_API_DECL Spectrum
+{
+    virtual double getScanTime() const = 0;
+    virtual int getMSLevel() const = 0;
+    virtual Polarity getPolarity() const = 0;
+
+    virtual double getSumY() const = 0;
+    virtual double getBasePeakX() const = 0;
+    virtual double getBasePeakY() const = 0;
+    virtual double getMinX() const = 0;
+    virtual double getMaxX() const = 0;
+
+    virtual bool getHasIsolationInfo() const = 0;
+    virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const = 0;
+
+    virtual bool getHasPrecursorInfo() const = 0;
+    virtual void getPrecursorInfo(double& selectedMz, double& intensity, int& charge) const = 0;
+
+    virtual int getTotalDataPoints(bool doCentroid = false) const = 0;
+    virtual void getProfileArrays(std::vector<double>& x, std::vector<double>& y) const = 0;
+    virtual void getCentroidArrays(std::vector<double>& x, std::vector<double>& y) const = 0;
+
+    virtual ~Spectrum() {}
+};
+
+typedef boost::shared_ptr<Spectrum> SpectrumPtr;
+
+
 class PWIZ_API_DECL ShimadzuReader
 {
 public:
@@ -77,10 +112,15 @@ public:
     //virtual std::string getVersion() const = 0;
     //virtual DeviceType getDeviceType() const = 0;
     //virtual std::string getDeviceName(DeviceType deviceType) const = 0;
-    //virtual boost::local_time::local_date_time getAcquisitionTime() const = 0;
+    virtual boost::local_time::local_date_time getAnalysisDate(bool adjustToHostTime) const = 0;
 
     virtual const std::set<SRMTransition>& getTransitions() const = 0;
     virtual ChromatogramPtr getChromatogram(const SRMTransition& transition) const = 0;
+
+    //virtual ChromatogramPtr getTIC() const = 0;
+
+    virtual int getScanCount() const = 0;
+    virtual SpectrumPtr getSpectrum(int scanNumber) const = 0;
 
     virtual ~ShimadzuReader() {}
 };
