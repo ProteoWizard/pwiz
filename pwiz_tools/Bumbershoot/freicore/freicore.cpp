@@ -22,23 +22,9 @@
 
 #include "stdafx.h"
 #include "freicore.h"
-#include "svnrev.hpp"
 
 namespace freicore
 {
-
-    int Version::Major()                {return 1;}
-    int Version::Minor()                {return 6;}
-    int Version::Revision()             {return SVN_REV;}
-    string Version::LastModified()      {return SVN_REVDATE;}
-    string Version::str()               
-    {
-        std::ostringstream v;
-        v << Major() << "." << Minor() << "." << Revision();
-        return v.str();
-    }
-
-
     void GetHostname( char* buf, int len )
     {
     #ifdef WIN32
