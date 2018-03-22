@@ -23,9 +23,9 @@
 -->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
    <Product Id="{ProductGuid}"
-            Name="ProteoWizard {version} $(var.AddressModel)-bit"
+            Name="ProteoWizard {numeric-version} $(var.AddressModel)-bit"
             Language="1033"
-            Version="{version}"
+            Version="{numeric-version}"
             Manufacturer="ProteoWizard"
             UpgradeCode="$(var.AddressModel)4795C6-012A-49B7-A47F-E46E164D3689">
 
@@ -143,6 +143,9 @@
             
             <Merge Id="CRT12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_CRT_x64.msm" DiskId="1" />
             <Merge Id="MFC12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_MFC_x64.msm" DiskId="1" />
+            
+            <Merge Id="CRT14" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC140_CRT_x64.msm" DiskId="1" />
+            <Merge Id="OMP14" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC140_OpenMP_x64.msm" DiskId="1" />
          <?else?>
             <Merge Id="CRT9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_CRT_x86.msm" DiskId="1" />
             <Merge Id="MFC9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_MFC_x86.msm" DiskId="1" />
@@ -157,10 +160,13 @@
             
             <Merge Id="CRT12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_CRT_x86.msm" DiskId="1" />
             <Merge Id="MFC12" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC120_MFC_x86.msm" DiskId="1" />
+            
+            <Merge Id="CRT14" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC140_CRT_x86.msm" DiskId="1" />
+            <Merge Id="OMP14" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC140_OpenMP_x86.msm" DiskId="1" />
          <?endif?>
 
          <Directory Id="ProgramMenuFolder">
-            <Directory Id="ProteoWizardStartMenuFolder" Name="ProteoWizard {version} $(var.AddressModel)-bit" />
+            <Directory Id="ProteoWizardStartMenuFolder" Name="ProteoWizard {numeric-version} $(var.AddressModel)-bit" />
          </Directory>
 
          <Directory Id="$(var.ProgramFilesFolder)" Name="PFiles">
@@ -355,7 +361,7 @@
          </Directory>
       </Directory>
 
-      <Feature Id="MainFeature" Title="ProteoWizard {version} $(var.AddressModel)-bit" Level="1">
+      <Feature Id="MainFeature" Title="ProteoWizard {numeric-version} $(var.AddressModel)-bit" Level="1">
          <MergeRef Id="CRT9" />
          <MergeRef Id="MFC9" />
          <MergeRef Id="CRT9_policy" />
@@ -366,6 +372,8 @@
          <MergeRef Id="OMP11" />
          <MergeRef Id="CRT12" />
          <MergeRef Id="MFC12" />
+         <MergeRef Id="CRT14" />
+         <MergeRef Id="OMP14" />
       </Feature>
    </Product>
 </Wix>

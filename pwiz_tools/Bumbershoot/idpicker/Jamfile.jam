@@ -67,8 +67,9 @@ generate-version.rc $(IDPICKER_PATH)/Resources/Resources.rc : $(MAJOR) : $(MINOR
     : "IDPicker" "IDPicker" $(COMPANY_AND_PRODUCT)
     : IDPicker.ico IDPickerDatabase.ico IDPickerInputFile.ico
       BlankIcon.ico PeptideViewIcon.ico ProteinViewIcon.ico SpectrumViewIcon.ico ;
-
-constant version-tag : $(MAJOR) $(MINOR) $(PWIZ_BUILD_TIMESTAMP) ;
+      
+constant numeric-version-tag : $(MAJOR) $(MINOR) $(PWIZ_BUILD_TIMESTAMP) ;
+constant version-tag : $(numeric-version-tag) $(PWIZ_GIT_REV) ;
 
 # create an IDPICKER_VERSION file which can be used by TC to parse the canonical IDPicker version
 make IDPICKER_VERSION : : @make_IDPICKER_VERSION : <location>$(PWIZ_BUILD_PATH) ;

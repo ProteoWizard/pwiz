@@ -59,7 +59,7 @@ actions msbuild_deploy
     IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
     echo Building SetupDeployProject...
     msbuild $(THIS_PATH)/SetupDeployProject.csproj /p:Configuration=Release;Platform=AnyCPU;$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
-    $(OUTPUT_PATH)SetupDeployProject.exe "$(THIS_PATH)/Deploy.wxs.template" "$(LOCATION)" $(version-tag:J=.) $(ADDRESS_MODEL)
+    $(OUTPUT_PATH)SetupDeployProject.exe "$(THIS_PATH)/Deploy.wxs.template" "$(LOCATION)" $(version-tag:J=.) $(numeric-version-tag:J=.) $(ADDRESS_MODEL)
     pushd $(PWIZ_BUILD_PATH)
     "%WIX%\bin\candle.exe" $(ARTIFACT_NAME).wxs -nologo -arch $(ARCH) -dAddressModel=$(ADDRESS_MODEL) -dToolset=$(TOOLSET)
     "%WIX%\bin\light.exe" $(ARTIFACT_NAME).wixObj -nologo -ext WixUIExtension -ext WixNetFxExtension -cultures:en-us

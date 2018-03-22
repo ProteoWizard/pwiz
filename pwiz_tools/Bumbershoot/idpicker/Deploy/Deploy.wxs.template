@@ -2,9 +2,9 @@
 <!-- $Id$ -->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
    <Product Id="{ProductGuid}"
-            Name="IDPicker {version} $(var.AddressModel)-bit"
+            Name="IDPicker {numeric-version} $(var.AddressModel)-bit"
             Language="1033"
-            Version="{version}"
+            Version="{numeric-version}"
             Manufacturer="Bumbershoot"
             UpgradeCode="644795C6-012A-49B7-A47F-E46E164D3689">
 
@@ -79,7 +79,7 @@
             <Directory Id="APPLICATIONROOTDIRECTORY" Name="IDPicker {version} $(var.AddressModel)-bit">
               <Component Feature="MainFeature" Id="MainComponent">
                 <File Id="IDPicker.exe" Name="IDPicker.exe" Source="msvc-release\IDPicker.exe" KeyPath="yes" Checksum="yes" />
-                <Shortcut Id="MainShortcut" Directory="ProgramMenuFolder" Name="IDPicker {version} $(var.AddressModel)-bit" WorkingDirectory="APPLICATIONROOTDIRECTORY" Icon="idpDB_Icon.exe" IconIndex="-101" Advertise="yes" />
+                <Shortcut Id="MainShortcut" Directory="ProgramMenuFolder" Name="IDPicker {numeric-version} $(var.AddressModel)-bit" WorkingDirectory="APPLICATIONROOTDIRECTORY" Icon="idpDB_Icon.exe" IconIndex="-101" Advertise="yes" />
     
                 <ProgId Id="idpDB_ProgId" Description="IDPicker database" Icon="idpDB_Icon.exe" IconIndex="-102" Advertise="yes">
                   <Extension Id="idpDB" Advertise="yes">
@@ -277,7 +277,7 @@
         </Directory>
         </Directory>
 
-        <Feature Id="MainFeature" Title="IDPicker {version} $(var.AddressModel)-bit" Level="1">
+        <Feature Id="MainFeature" Title="IDPicker {numeric-version} $(var.AddressModel)-bit" Level="1">
           <MergeRef Id="CRT9" />
           <MergeRef Id="MFC9" />
           <MergeRef Id="CRT9_policy" />
