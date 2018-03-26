@@ -880,7 +880,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override bool ContainsAny(Target target)
         {
-            return LibraryEntriesWithSequence(target).Any();
+            return _libraryEntries.ItemsWithUnmodifiedSequence(target).Any();
         }
 
         public override bool Contains(LibKey key)
@@ -1060,7 +1060,7 @@ namespace pwiz.Skyline.Model.Lib
 
         protected IEnumerable<TInfo> LibraryEntriesWithSequence(Target target)
         {
-            return _libraryEntries.ItemsWithUnmodifiedSequence(target);
+            return _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY).LibraryKey, false);
         }
 
         // ReSharper disable PossibleMultipleEnumeration
