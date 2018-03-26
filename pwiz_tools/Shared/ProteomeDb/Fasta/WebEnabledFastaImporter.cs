@@ -33,6 +33,7 @@ using System.Xml;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.ProteomeDatabase.DataModel;
+using pwiz.ProteomeDatabase.Properties;
 
 namespace pwiz.ProteomeDatabase.Fasta
 {
@@ -225,8 +226,10 @@ namespace pwiz.ProteomeDatabase.Fasta
         public IEnumerable<DbProtein> Import(TextReader reader)
         {
             string line;
+            int lineNumber = 0;
             while ((line = reader.ReadLine()) != null)
             {
+                lineNumber++;
                 if (line.StartsWith(">")) // Not L10N
                 {
                     DbProtein protein = EndProtein();
@@ -243,7 +246,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                 }
                 else
                 {
-                    _curSequence.Append(ParseSequenceLine(line));
+                    string sequenceLine = ParseSequenceLine(line);
+                    ValidateProteinSequence(sequenceLine, lineNumber);
+                    _curSequence.Append(sequenceLine);
                 }
             }
             DbProtein lastProtein = EndProtein();
@@ -1512,6 +1517,30 @@ namespace pwiz.ProteomeDatabase.Fasta
                 break; // No need for retry
             }
             return lookupCount;
+        }
+        public static void ValidateProteinSequence(string sequence, int lineNumber)
+        {
+            for (int i = 0; i < sequence.Length; i++)
+            {
+                var ch = sequence[i];
+                if (!IsValidProteinSequenceChar(ch))
+                {
+                    throw new InvalidDataException(string.Format(Resources.WebEnabledFastaImporter_ValidateProteinSequence_A_protein_sequence_cannot_contain_the_character___0___at_line__1_,
+                        ch, lineNumber));
+                }
+            }
+        }
+        public static bool IsValidProteinSequenceChar(char ch)
+        {
+            if (ch >= 'A' && ch <= 'Z')
+            {
+                return true;
+            }
+            if (ch == '*' || ch == '-')
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

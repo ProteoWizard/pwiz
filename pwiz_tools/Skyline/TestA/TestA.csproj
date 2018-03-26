@@ -219,6 +219,7 @@
     <Compile Include="ExplicitLossTest.cs" />
     <Compile Include="SmallMoleculesMzOnlyTest.cs" />
     <Compile Include="VariableModTest.cs" />
+    <Compile Include="WebEnabledFastaImporterTest.cs" />
     <Compile Include="XmlValidationTest.cs" />
   </ItemGroup>
   <ItemGroup>
