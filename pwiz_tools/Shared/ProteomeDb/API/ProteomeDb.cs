@@ -593,14 +593,15 @@ namespace pwiz.ProteomeDatabase.API
         private bool DigestProteins(IDbConnection connection, IDictionary<String, ProtIdNames> protSequences, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
             progressMonitor.UpdateProgress(status = status.ChangeMessage(Resources.ProteomeDb_DigestProteins_Analyzing_protein_sequences));
-            Dictionary<String, List<long>> subsequenceProteinIds = new Dictionary<string, List<long>>();
+            Dictionary<String, byte[]> subsequenceProteinIds = new Dictionary<string, byte[]>();
             foreach (var entry in protSequences)
             {
                 if (progressMonitor.IsCanceled)
                 {
                     return false;
                 }
-                int id = (int) entry.Value.Id;
+                long id = entry.Value.Id;
+                byte[] idBytes = DbSubsequence.ProteinIdsToBytes(new[] {id});
                 String proteinSequence = entry.Key;
                 HashSet<string> subsequences = new HashSet<string>();
                 for (int ich = 0; ich < proteinSequence.Length - MIN_SEQUENCE_LENGTH; ich++)
@@ -609,13 +610,18 @@ namespace pwiz.ProteomeDatabase.API
                         Math.Min(proteinSequence.Length - ich, MAX_SEQUENCE_LENGTH));
                     if (subsequences.Add(subsequence))
                     {
-                        List<long> ids;
-                        if (!subsequenceProteinIds.TryGetValue(subsequence, out ids))
+                        byte[] idListBytes;
+                        if (!subsequenceProteinIds.TryGetValue(subsequence, out idListBytes))
                         {
-                            ids = new List<long>();
-                            subsequenceProteinIds.Add(subsequence, ids);
+                            subsequenceProteinIds.Add(subsequence, idBytes);
                         }
-                        ids.Add(id);
+                        else
+                        {
+                            var bytesNew = new byte[idListBytes.Length + idBytes.Length];
+                            Array.Copy(idListBytes, 0, bytesNew, 0, idListBytes.Length);
+                            Array.Copy(idBytes, 0, bytesNew, idListBytes.Length, idBytes.Length);
+                            subsequenceProteinIds[subsequence] = bytesNew;
+                        }
                     }
                 }
             }
@@ -624,8 +630,8 @@ namespace pwiz.ProteomeDatabase.API
                 cmd.CommandText = "DELETE FROM ProteomeDbSubsequence"; // Not L10N
                 cmd.ExecuteNonQuery();
             }
-            var tuples = subsequenceProteinIds.Select(entry => Tuple.Create(entry.Key, entry.Value)).ToArray();
-            Array.Sort(tuples, (t1, t2) => StringComparer.Ordinal.Compare(t1.Item1, t2.Item1));
+            var tuples = subsequenceProteinIds.ToArray();
+            Array.Sort(tuples, (t1, t2) => StringComparer.Ordinal.Compare(t1.Key, t2.Key));
             using (var insertCommand = connection.CreateCommand())
             {
                 insertCommand.CommandText = "INSERT INTO ProteomeDbSubsequence (Sequence, ProteinIdBytes) VALUES(?,?)"; // Not L10N
@@ -640,10 +646,10 @@ namespace pwiz.ProteomeDatabase.API
                     }
                     var tuple = tuples[iTuple];
                     // Now write to db
-                    DbSubsequence dbSubsequence = new DbSubsequence()
+                    DbSubsequence dbSubsequence = new DbSubsequence
                     {
-                        Sequence = tuple.Item1,
-                        ProteinIds = tuple.Item2.ToArray()
+                        Sequence = tuple.Key,
+                        ProteinIdBytes = tuple.Value
                     };
                     ((SQLiteParameter) insertCommand.Parameters[0]).Value = dbSubsequence.Sequence;
                     ((SQLiteParameter) insertCommand.Parameters[1]).Value = dbSubsequence.ProteinIdBytes;
