@@ -457,12 +457,6 @@ namespace pwiz.SkylineTestFunctional
                 originalStepsFine = covSettings.StepsFine;
             });
             Assert.IsTrue(originalMin < originalMax);
-            SetCoVParameters(covSettings, -1, originalMax, originalStepsRough, originalStepsMedium, originalStepsFine);
-            var errorMin = ShowDialog<MessageDlg>(covSettings.OkDialog);
-            OkDialog(errorMin, errorMin.OkDialog);
-            SetCoVParameters(covSettings, originalMin, -1, originalStepsRough, originalStepsMedium, originalStepsFine);
-            var errorMax = ShowDialog<MessageDlg>(covSettings.OkDialog);
-            OkDialog(errorMax, errorMax.OkDialog);
             SetCoVParameters(covSettings, originalMax, originalMin, originalStepsRough, originalStepsMedium, originalStepsFine);
             var errorMinMax = ShowDialog<MessageDlg>(covSettings.OkDialog);
             Assert.AreEqual(Resources.EditCoVDlg_btnOk_Click_Maximum_compensation_voltage_cannot_be_less_than_minimum_compensation_volatage_, errorMinMax.Message);
