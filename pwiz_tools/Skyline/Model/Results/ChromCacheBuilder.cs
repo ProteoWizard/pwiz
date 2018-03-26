@@ -398,6 +398,10 @@ namespace pwiz.Skyline.Model.Results
                 _document.Settings.PeptideSettings.Modifications.InternalStandardTypes);
 
             var listChromData = CalcPeptideChromDataSets(provider, listMzPrecursors, setInternalStandards);
+            for (int i = 0; i < listChromData.Count; i++)
+            {
+                listChromData[i].IndexInFile = i;
+            }
 
             var listProviderIds = new List<IList<int>>(listChromData.Where(IsFirstPassPeptide).Select(c => c.ProviderIds.ToArray()));
             var doSecondPass = true;
@@ -1298,13 +1302,13 @@ namespace pwiz.Skyline.Model.Results
                 if (_fs.Stream == null)
                     throw new InvalidDataException(
                         Resources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
-                WriteChromDataSet(chromDataSet, dictScoresToIndex, saveRawTimes, chromDataSets.IsProcessedScans);
+                WriteChromDataSet(chromDataSets.IndexInFile, chromDataSet, dictScoresToIndex, saveRawTimes, chromDataSets.IsProcessedScans);
             }
         }
 
-        private void WriteChromDataSet(ChromDataSet chromDataSet, Dictionary<IList<float>, int> dictScoresToIndex, bool saveRawTimes, bool isProcessedScans)
+        private void WriteChromDataSet(int indexInFile, ChromDataSet chromDataSet, Dictionary<IList<float>, int> dictScoresToIndex, bool saveRawTimes, bool isProcessedScans)
         {
-                long location = _fs.Stream.Position;
+            long location = _fs.Stream.Position;
             var groupOfTimeIntensities = chromDataSet.ToGroupOfTimeIntensities(saveRawTimes);
                 // Write the raw chromatogram points
             MemoryStream pointsMemoryStream = new MemoryStream();
@@ -1420,7 +1424,7 @@ namespace pwiz.Skyline.Model.Results
                 CacheFormat.ChromPeakSerializer().WriteItems(_fsPeaks.FileStream, chromData.Peaks);
                 }
 
-                _listGroups.Add(header);
+                _listGroups.Add(new ChromGroupHeaderEntry(indexInFile, header));
             }
         }
 

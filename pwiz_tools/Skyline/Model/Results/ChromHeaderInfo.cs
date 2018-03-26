@@ -461,11 +461,7 @@ namespace pwiz.Skyline.Model.Results
             int keyCompare = Precursor.CompareTo(info.Precursor);
             if (keyCompare != 0)
                 return keyCompare;
-            keyCompare = FileIndex - info.FileIndex;
-            if (keyCompare != 0)
-                return keyCompare;
-            // For sort stability include the file location
-            return Comparer<long>.Default.Compare(LocationPoints, info.LocationPoints);
+            return FileIndex - info.FileIndex;
         }
 
         #region Fast file I/O
@@ -559,6 +555,30 @@ namespace pwiz.Skyline.Model.Results
         }
     }
 
+    /// <summary>
+    /// Holds a ChromGroupHeaderInfo, and also remembers an index to disambiguate
+    /// when two ChromGroupHeaderInfo's compare the same.
+    /// </summary>
+    public struct ChromGroupHeaderEntry : IComparable<ChromGroupHeaderEntry>
+    {
+        public ChromGroupHeaderEntry(int index, ChromGroupHeaderInfo chromGroupHeaderInfo) : this()
+        {
+            Index = index;
+            ChromGroupHeaderInfo = chromGroupHeaderInfo;
+        }
+
+        public int Index { get; private set; }
+        public ChromGroupHeaderInfo ChromGroupHeaderInfo { get; private set; }
+        public int CompareTo(ChromGroupHeaderEntry other)
+        {
+            int result = ChromGroupHeaderInfo.CompareTo(other.ChromGroupHeaderInfo);
+            if (result == 0)
+            {
+                result = Index.CompareTo(other.Index);
+            }
+            return result;
+        }
+    }
 
     public struct ChromTransition4
     {

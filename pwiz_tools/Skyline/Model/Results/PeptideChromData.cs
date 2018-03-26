@@ -90,6 +90,8 @@ namespace pwiz.Skyline.Model.Results
             get { return DataSets.Count > 0 ? DataSets[0].FirstKey : ChromKey.EMPTY; }
         }
 
+        public int IndexInFile { get; set; }
+
         private IEnumerable<IEnumerable<ChromDataSet>> ComparableDataSets
         {
             get
