@@ -2827,7 +2827,11 @@ namespace pwiz.Skyline
             if (setReimport.Count == 0)
                 return;
 
-            new LongOperationRunner {JobTitle = Resources.SkylineWindow_ReimportChromatograms_Reimporting_chromatograms}
+            new LongOperationRunner
+                {
+                    ParentControl = this,
+                    JobTitle = Resources.SkylineWindow_ReimportChromatograms_Reimporting_chromatograms
+                }
                 .Run(longWaitBroker =>
                 {
                     // Remove all replicates to be re-imported
