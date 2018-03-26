@@ -1298,8 +1298,8 @@ namespace pwiz.Skyline.Util
                     else if (unlabelCount < 0)
                     {
                         throw new InvalidOperationException(
-                            string.Format("Adduct description \"{0}\" calls for more labeled {1} than are found in the molecule",
-                                this, pair.Key));
+                            string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_,
+                                this, pair.Key, Molecule.FromDict(molecule)));
                     }
                     int exist;
                     if (resultDict.TryGetValue(isotope.Key, out exist))
