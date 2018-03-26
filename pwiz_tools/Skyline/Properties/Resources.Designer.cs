@@ -11942,6 +11942,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Access Denied: unable to create a file in the folder &quot;{0}&quot;. Adjust the folder write permissions or retry the operation after moving or copying files to a different folder..
+        /// </summary>
+        public static string FileStreamManager_GetTempFileName_Access_Denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_permissions_or_retry_the_operation_after_moving_or_copying_files_to_a_different_folder_ {
+            get {
+                return ResourceManager.GetString("FileStreamManager_GetTempFileName_Access_Denied__unable_to_create_a_file_in_the_f" +
+                        "older___0____Adjust_the_folder_write_permissions_or_retry_the_operation_after_mo" +
+                        "ving_or_copying_files_to_a_different_folder_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Win32 Error: {0}.
         /// </summary>
         public static string FileStreamManager_GetTempFileName_Win32_Error__0__ {

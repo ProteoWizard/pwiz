@@ -773,7 +773,15 @@ namespace pwiz.Skyline.Util
             uint result = GetTempFileName(basePath, prefix, unique, sb);
             if (result == 0)
             {
-                throw new IOException(string.Format(Resources.FileStreamManager_GetTempFileName_Win32_Error__0__, Marshal.GetLastWin32Error()));
+                var lastWin32Error = Marshal.GetLastWin32Error();
+                if (lastWin32Error == 5)
+                {
+                    throw new IOException(string.Format(Resources.FileStreamManager_GetTempFileName_Access_Denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_permissions_or_retry_the_operation_after_moving_or_copying_files_to_a_different_folder_, basePath));
+                }
+                else
+                {
+                    throw new IOException(string.Format(Resources.FileStreamManager_GetTempFileName_Win32_Error__0__, lastWin32Error));
+                }
             }
 
             return sb.ToString();
