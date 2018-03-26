@@ -908,7 +908,7 @@ namespace pwiz.Skyline.Model.Lib
             return -1;
         }
 
-        protected void SetLibraryEntries(IEnumerable<TInfo> entries)
+        protected virtual void SetLibraryEntries(IEnumerable<TInfo> entries)
         {
             var entryList = ImmutableList.ValueOf(entries);
 
