@@ -23,8 +23,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
@@ -749,7 +751,22 @@ namespace pwiz.SkylineTestFunctional
             const double expectedOffset2 = -1.1039;
             Assert.AreEqual(expectedDT2, result[key2].IonMobility.Mobility.Value, .001);
             Assert.AreEqual(expectedOffset2, result[key2].HighEnergyIonMobilityValueOffset, .001);  // High energy offset
+            var doc2 = WaitForDocumentLoaded();
+
+            // Reimport with these new settings, then export a spectral library and verify it got IMS data
+            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
+            {
+                var chromatograms = doc2.Settings.MeasuredResults.Chromatograms;
+                dlg.SelectedChromatograms = new[] { chromatograms[0] };
+                dlg.ReimportResults();
+                dlg.OkDialog();
+            });
             WaitForDocumentLoaded();
+            var progress = new SilentProgressMonitor();
+            var exported = testFilesDir.GetTestPath("export.blib");
+            Skyline.SkylineWindow.ExportSpectralLibrary(SkylineWindow.DocumentFilePath, SkylineWindow.Document, exported, progress);
+            var refSpectra = GetRefSpectra(exported);
+            Assert.IsTrue(refSpectra.All(r => (r.IonMobility??0) > 0));
 
             // Verify exception handling by deleting the msdata file
             File.Delete(testFilesDir.GetTestPath(@"..\BlibDriftTimeTest\ID12692_01_UCA168_3727_040714.mz5"));

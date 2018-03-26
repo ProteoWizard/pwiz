@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -47,6 +48,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Find;
+using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -1520,6 +1522,76 @@ namespace pwiz.SkylineTestUtil
                     OkDialog(importResultsNameDlg, importResultsNameDlg.NoDialog);
             }
             WaitForDocumentChange(doc);
+        }
+
+        #endregion
+
+        #region Spectral library test helpers
+
+        public static IList<DbRefSpectra> GetRefSpectra(string filename)
+        {
+            using (var connection = new SQLiteConnection(string.Format("Data Source='{0}';Version=3", filename)))
+            {
+                connection.Open();
+                return GetRefSpectra(connection);
+            }
+        }
+
+        private static double? ParseNullable(SQLiteDataReader reader, int ordinal)
+        {
+            if (ordinal < 0)
+                return null;
+            var str = reader[ordinal].ToString();
+            if (string.IsNullOrEmpty(str))
+                return null;
+            return double.Parse(str);
+        }
+
+        public static IList<DbRefSpectra> GetRefSpectra(SQLiteConnection connection)
+        {
+            var list = new List<DbRefSpectra>();
+            using (var select = new SQLiteCommand(connection) {CommandText = "SELECT * FROM RefSpectra"})
+            using (var reader = @select.ExecuteReader())
+            {
+                var iAdduct = reader.GetOrdinal("precursorAdduct");
+                var iIonMobility = reader.GetOrdinal("ionMobility");
+                var iCCS = reader.GetOrdinal("collisionalCrossSectionSqA");
+                while (reader.Read())
+                {
+                    list.Add(new DbRefSpectra
+                    {
+                        PeptideSeq = reader["peptideSeq"].ToString(),
+                        PeptideModSeq = reader["peptideModSeq"].ToString(),
+                        PrecursorCharge = int.Parse(reader["precursorCharge"].ToString()),
+                        PrecursorAdduct = iAdduct < 0 ? string.Empty : reader[iAdduct].ToString(),
+                        PrecursorMZ = double.Parse(reader["precursorMZ"].ToString()),
+                        RetentionTime = double.Parse(reader["retentionTime"].ToString()),
+                        IonMobility = ParseNullable(reader, iIonMobility),
+                        CollisionalCrossSectionSqA = ParseNullable(reader, iCCS),
+                        NumPeaks = ushort.Parse(reader["numPeaks"].ToString())
+                    });
+                }
+                return list;
+            }
+        }
+
+        public static void CheckRefSpectra(IList<DbRefSpectra> spectra, string peptideSeq, string peptideModSeq, int precursorCharge, double precursorMz, ushort numPeaks, double rT, IonMobilityAndCCS im = null)
+        {
+            for (var i = 0; i < spectra.Count; i++)
+            {
+                var spectrum = spectra[i];
+                if (spectrum.PeptideSeq.Equals(peptideSeq) &&
+                    spectrum.PeptideModSeq.Equals(peptideModSeq) &&
+                    spectrum.PrecursorCharge.Equals(precursorCharge) &&
+                    Math.Abs((spectrum.RetentionTime ?? 0) - rT) < 0.001 &&
+                    Math.Abs(spectrum.PrecursorMZ - precursorMz) < 0.001 &&
+                    spectrum.NumPeaks.Equals(numPeaks))
+                {
+                    spectra.RemoveAt(i);
+                    return;
+                }
+            }
+            Assert.Fail("{0} [{1}], precursor charge {2}, precursor m/z {3}, RT {4} with {5} peaks not found", peptideSeq, peptideModSeq, precursorCharge, precursorMz, rT, numPeaks);
         }
 
         #endregion

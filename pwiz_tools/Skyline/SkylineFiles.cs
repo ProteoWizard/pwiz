@@ -1286,6 +1286,13 @@ namespace pwiz.Skyline
             var mi = new List<SpectrumPeaksInfo.MI>();
             var rt = 0.0;
             var im = IonMobilityAndCCS.EMPTY;
+            var imGroup = TransitionGroupIonMobilityInfo.EMPTY; // CCS may be available only at group level
+            var groupChromInfos = nodeTranGroup.GetSafeChromInfo(replicateIndex);
+            if (!groupChromInfos.IsEmpty)
+            {
+                var chromInfo = groupChromInfos.First(info => info.OptimizationStep == 0);
+                imGroup = chromInfo.IonMobilityInfo;
+            }
             var maxApex = float.MinValue;
             string chromFileName = null;
             foreach (var nodeTran in nodeTranGroup.Transitions)
@@ -1319,7 +1326,7 @@ namespace pwiz.Skyline
                 {
                     maxApex = chromInfo.Height;
                     rt = chromInfo.RetentionTime;
-                    im = IonMobilityAndCCS.GetIonMobilityAndCCS(chromInfo.IonMobility.IonMobility, chromInfo.IonMobility.CollisionalCrossSectionSqA, 0);
+                    im = IonMobilityAndCCS.GetIonMobilityAndCCS(chromInfo.IonMobility.IonMobility, chromInfo.IonMobility.CollisionalCrossSectionSqA ?? imGroup.CollisionalCrossSection, 0);
                 }
             }
             if (chromFileName == null)
@@ -1333,11 +1340,19 @@ namespace pwiz.Skyline
                     Key = key,
                     PrecursorMz = nodeTranGroup.PrecursorMz,
                     SpectrumPeaks = new SpectrumPeaksInfo(mi.ToArray()),
-                    RetentionTimes = new List<SpectrumMzInfo.IonMobilityAndRT>()
+                    RetentionTimes = new List<SpectrumMzInfo.IonMobilityAndRT>(),
+                    IonMobility = im,
+                    RetentionTime = rt
                 };
                 spectra[key] = spectrumMzInfo;
             }
-            spectrumMzInfo.RetentionTimes.Add(new SpectrumMzInfo.IonMobilityAndRT(chromFileName, im, rt, replicateIndex == nodePep.BestResult));
+            var isBest = replicateIndex == nodePep.BestResult;
+            if (isBest)
+            {
+                spectrumMzInfo.IonMobility = im;
+                spectrumMzInfo.RetentionTime = rt;
+            }
+            spectrumMzInfo.RetentionTimes.Add(new SpectrumMzInfo.IonMobilityAndRT(chromFileName, im, rt, isBest));
         }
 
         private void exportReportMenuItem_Click(object sender, EventArgs e)
