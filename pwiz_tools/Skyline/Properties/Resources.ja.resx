@@ -9072,9 +9072,6 @@
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_" xml:space="preserve">
     <value>付加物の{0}電荷{1}が、宣言済みの電荷{2}と一致しません</value>
   </data>
-  <data name="BioMassCalc_ApplyAdductToFormula_Adduct_description___0___calls_for_more_labeled__1__than_are_found_in_the_molecule" xml:space="preserve">
-    <value>付加物の説明「{0}」は、分子で見つかったものよりさらに標識{1}が必要です</value>
-  </data>
   <data name="BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__" xml:space="preserve">
     <value>付加物の説明「{1}」にある記号「{0}」は未知です</value>
   </data>

@@ -9072,9 +9072,6 @@ Here are the last 3 errors:
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_" xml:space="preserve">
     <value>Adduct {0} charge {1} does not agree with declared charge {2}</value>
   </data>
-  <data name="BioMassCalc_ApplyAdductToFormula_Adduct_description___0___calls_for_more_labeled__1__than_are_found_in_the_molecule" xml:space="preserve">
-    <value>Adduct description "{0}" calls for more labeled {1} than are found in the molecule</value>
-  </data>
   <data name="BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__" xml:space="preserve">
     <value>Unknown symbol "{0}" in adduct description "{1}"</value>
   </data>
@@ -10028,5 +10025,11 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="RegressionFit_BILINEAR_Bilinear" xml:space="preserve">
     <value>Bilinear</value>
+  </data>
+  <data name="Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_" xml:space="preserve">
+    <value>Adduct "{0}" calls for removing more {1} atoms than are found in the molecule {2}</value>
+  </data>
+  <data name="Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_" xml:space="preserve">
+    <value>Adduct "{0}" calls for labeling more {1} atoms than are found in the molecule {2}</value>
   </data>
 </root>

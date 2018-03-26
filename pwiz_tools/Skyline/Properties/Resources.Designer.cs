@@ -828,6 +828,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adduct &quot;{0}&quot; calls for labeling more {1} atoms than are found in the molecule {2}.
+        /// </summary>
+        public static string Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_ {
+            get {
+                return ResourceManager.GetString("Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_fo" +
+                        "und_in_the_molecule__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adduct &quot;{0}&quot; calls for removing more {1} atoms than are found in the molecule {2}.
+        /// </summary>
+        public static string Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_ {
+            get {
+                return ResourceManager.GetString("Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_fo" +
+                        "und_in_the_molecule__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not parse isotopic label description &quot;{0}&quot; in adduct description &quot;{1}&quot;.
         ///Isotopic labels in adduct descriptions should be in the form of isotope counts (e.g. &quot;2Cl37&quot; or &quot;2Cl374N15&quot;),
         ///or a mass shift (e.g. &quot;1.234&quot; or &quot;(-1.234)&quot;).
@@ -2191,16 +2211,6 @@ namespace pwiz.Skyline.Properties {
         public static string BiblioSpecLiteSpec_FILTER_BLIB_BiblioSpec_Library {
             get {
                 return ResourceManager.GetString("BiblioSpecLiteSpec_FILTER_BLIB_BiblioSpec_Library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Adduct description &quot;{0}&quot; calls for more labeled {1} than are found in the molecule.
-        /// </summary>
-        public static string BioMassCalc_ApplyAdductToFormula_Adduct_description___0___calls_for_more_labeled__1__than_are_found_in_the_molecule {
-            get {
-                return ResourceManager.GetString("BioMassCalc_ApplyAdductToFormula_Adduct_description___0___calls_for_more_labeled_" +
-                        "_1__than_are_found_in_the_molecule", resourceCulture);
             }
         }
         

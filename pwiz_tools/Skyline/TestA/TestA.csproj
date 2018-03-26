@@ -313,7 +313,9 @@
     <EmbeddedResource Include="Results\MultiLabel.sky" />
     <EmbeddedResource Include="Study7.sky" />
     <None Include="ExportMethodShimadzuTest.zip" />
-    <EmbeddedResource Include="SmallMoleculesMzOnly_3-7.sky" />
+    <EmbeddedResource Include="SmallMoleculesMzOnly_3-7.sky">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <None Include="XmlValidationTest.zip" />
   </ItemGroup>
   <ItemGroup>

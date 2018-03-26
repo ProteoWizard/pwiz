@@ -648,7 +648,48 @@ namespace pwiz.Skyline.Util
             var l = Molecule.Parse(left.Trim());
             var r = Molecule.Parse(right.Trim());
             var adductFormula = l.Difference(r).ToString();
-            return new Adduct("[M+" + adductFormula + "]", ADDUCT_TYPE.non_proteomic) { AdductCharge = charge }; // Not L10N
+            if (string.IsNullOrEmpty(adductFormula))
+            {
+                return FromChargeNoMass(charge);
+            }
+            var sign = adductFormula.StartsWith("-") ? string.Empty : "+"; // Not L10N
+            var signZ = charge < 0 ? "-" : "+"; // Not L10N
+            // Emit something like [M-C4H]2-"
+            return new Adduct(string.Format("[M{0}{1}]{2}{3}", sign, adductFormula, Math.Abs(charge), signZ), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge }; // Not L10N
+        }
+
+        public static Adduct ProtonatedFromFormulaDiff(string left, string right, int charge)
+        {
+            // Take adduct as the difference between two chemical formulas, assuming that H is for protonation
+            var l = Molecule.Parse(left.Trim());
+            var r = Molecule.Parse(right.Trim());
+            var d = l.Difference(r);
+
+            if (d.Values.All(count => count == 0))
+            {
+                return NonProteomicProtonatedFromCharge(charge); // No difference in formulas, try straight protonation
+            }
+
+            // Any difference in H can be used as explanation for charge
+            int nH;
+            if (d.TryGetValue(BioMassCalc.H, out nH) && nH != 0)
+            {
+                d = d.SetElementCount(BioMassCalc.H, Math.Max(0, nH - charge));
+            }
+
+            var adductFormula = d.ToString();
+
+            if (string.IsNullOrEmpty(adductFormula))
+            {
+                return NonProteomicProtonatedFromCharge(charge); // The entire formula difference was protonation
+            }
+            var sign = adductFormula.StartsWith("-") ? string.Empty : "+"; // Not L10N
+            // Emit something like [M-C4+H3] or [M+Cl-H]
+            if (Math.Abs(charge) > 1)
+            {
+                return new Adduct(string.Format("[M{0}{1}{2:+#;-#}H]", sign, adductFormula, charge), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge }; // Not L10N
+            }
+            return new Adduct(string.Format("[M{0}{1}{2}H]", sign, adductFormula, charge>0?"+":"-"), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge }; // Not L10N
         }
 
         /// <summary>
@@ -695,7 +736,7 @@ namespace pwiz.Skyline.Util
             if ((isotopes==null || isotopes.Count==0) && !HasIsotopeLabels)
             {
                 return this;
-            }
+            } 
             return ChangeIsotopeLabels(
                 isotopes == null || isotopes.Count == 0 ? string.Empty : isotopes.Aggregate(string.Empty,
                         (current, pair) => current + string.Format(CultureInfo.InvariantCulture, "{0}{1}", // Not L10N
@@ -705,13 +746,19 @@ namespace pwiz.Skyline.Util
         }
 
         // Sometimes all we know is that two analytes have same name but different masses - describe isotope label as a mass
-        public Adduct ChangeIsotopeLabels(double value)
+        public Adduct ChangeIsotopeLabels(double value, int? precision = null)
         {
+            var format = ".0########".Substring(0, Math.Min(1 + (precision ?? 5), 10)); // Not L10N
+            var valStr =  value.ToString(format, CultureInfo.InvariantCulture); // Not L10N
+            if (valStr.Equals(".0")) // Not L10N
+            {
+                value = 0;
+            }
             if (value < 0)
             {
-                return ChangeIsotopeLabels(string.Format("({0})", value.ToString(".0####", CultureInfo.InvariantCulture))); // Not L10N
+                return ChangeIsotopeLabels(string.Format("({0})", valStr)); // Not L10N
             }
-            return ChangeIsotopeLabels(value==0 ? string.Empty : value.ToString(".0####", CultureInfo.InvariantCulture)); // Not L10N
+            return ChangeIsotopeLabels(value==0 ? string.Empty :  valStr); // Not L10N
         }
 
         // Change the charge multiplier if possible
@@ -1150,35 +1197,13 @@ namespace pwiz.Skyline.Util
                 Unlabeled.ApplyToMolecule(molecule, resultDict);
                 return;
             }
-            // Deal with any mass multipler (the 2 in "[2M+Na]") or labeling (the "4Cl37" in "[M4Cl37+2H]")
+            // Deal with any mass multipler (the 2 in "[2M+Na]")
             foreach (var pair in molecule)
             {
-                KeyValuePair<string, int> isotope;
-                if (IsotopeLabels != null && 
-                    IsotopeLabels.TryGetValue(pair.Key, out isotope))
-                {
-                    // If label is "2Cl37" and molecule is CH4Cl5 then result is CH4Cl3Cl'2
-                    var unlabelCount = pair.Value - isotope.Value;
-                    if (unlabelCount > 0)
-                    {
-                        resultDict.Add(pair.Key, MassMultiplier * unlabelCount);
-                    }
-                    else if (unlabelCount < 0)
-                    {
-                        throw new InvalidOperationException(
-                            string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Adduct_description___0___calls_for_more_labeled__1__than_are_found_in_the_molecule,
-                                this, pair.Key));
-                    }
-                    int exist;
-                    molecule.TryGetValue(isotope.Key, out exist);
-                    resultDict.Add(isotope.Key, exist + (MassMultiplier * isotope.Value));
-                }
-                else
-                {
-                    resultDict.Add(pair.Key, MassMultiplier * pair.Value);
-                }
+                resultDict.Add(pair.Key, MassMultiplier * pair.Value);
             }
 
+            // Add in the "Na" of [M+Na] (or remove the 4H in [M-4H])
             foreach (var pair in Composition)
             {
                 int count;
@@ -1189,6 +1214,50 @@ namespace pwiz.Skyline.Util
                 else
                 {
                     resultDict.Add(pair);
+                }
+                if (resultDict[pair.Key] < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
+                {
+                    throw new InvalidOperationException(
+                        string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
+                            this, pair.Key, Molecule.FromDict(molecule)));
+                }
+            }
+
+            // Deal with labeling (the "4Cl37" in "[M4Cl37+2H]")
+            // N.B. in "[2M4Cl37+2H]" we'd replace 8 Cl rather than 4
+            if (IsotopeLabels != null && IsotopeLabels.Count > 0)
+            {
+                var unlabeled = resultDict.ToArray();
+                foreach (var unlabeledSymbolAndCount in unlabeled)
+                {
+                    KeyValuePair<string, int> isotopeSymbolAndCount;
+                    var unlabeledSymbol = unlabeledSymbolAndCount.Key;
+                    if (IsotopeLabels.TryGetValue(unlabeledSymbol, out isotopeSymbolAndCount))
+                    {
+                        // If label is "2Cl37" and molecule is CH4Cl5 then result is CH4Cl3Cl'2
+                        var isotopeSymbol = isotopeSymbolAndCount.Key;
+                        var isotopeCount = MassMultiplier * isotopeSymbolAndCount.Value;
+                        var unlabeledCount = unlabeledSymbolAndCount.Value - isotopeCount;
+                        if (unlabeledCount >= 0)
+                        {
+                            resultDict[unlabeledSymbol] = unlabeledCount; // Number of remaining non-label atoms
+                        }
+                        else if (unlabeledCount < 0) // Can't remove that which is not there
+                        {
+                            throw new InvalidOperationException(
+                                string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_,
+                                    this, unlabeledSymbol, Molecule.FromDict(molecule)));
+                        }
+                        int exist;
+                        if (resultDict.TryGetValue(isotopeSymbol, out exist))
+                        {
+                            resultDict[isotopeSymbol] = exist + isotopeCount;
+                        }
+                        else
+                        {
+                            resultDict.Add(isotopeSymbol, isotopeCount);
+                        }
+                    }
                 }
             }
         }
@@ -1229,7 +1298,7 @@ namespace pwiz.Skyline.Util
                     else if (unlabelCount < 0)
                     {
                         throw new InvalidOperationException(
-                            string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Adduct_description___0___calls_for_more_labeled__1__than_are_found_in_the_molecule,
+                            string.Format("Adduct description \"{0}\" calls for more labeled {1} than are found in the molecule",
                                 this, pair.Key));
                     }
                     int exist;

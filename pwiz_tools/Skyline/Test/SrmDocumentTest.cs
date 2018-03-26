@@ -135,14 +135,19 @@ namespace pwiz.SkylineTest
             AssertEx.ValidatesAgainstSchema(docText);
             var doc = AssertEx.Deserialize<SrmDocument>(docText);
             AssertEx.IsDocumentState(doc, null, 1, 1, 1, 2);
-            var neutralMassMolecule = 58.992724; 
-            var neutralMassTransition = 55.0;
-            var transition = new CustomIon(null, Adduct.M_PLUS_H, new TypedMass(neutralMassMolecule-BioMassCalc.MassElectron, MassType.Monoisotopic), new TypedMass(neutralMassMolecule-BioMassCalc.MassElectron, MassType.Average), "molecule");
-            var transition2 = new CustomIon(null, Adduct.M_PLUS_H, new TypedMass(neutralMassTransition, MassType.Monoisotopic), new TypedMass(neutralMassTransition, MassType.Average), "molecule fragment");
-            var precursor = new CustomMolecule(new TypedMass(neutralMassMolecule-BioMassCalc.MassElectron, MassType.Monoisotopic), new TypedMass(neutralMassMolecule-BioMassCalc.MassElectron, MassType.Average), "molecule");
-            Assert.AreEqual(BioMassCalc.CalculateIonMz(precursor.GetMass(MassType.Monoisotopic), Adduct.M_PLUS_H), doc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz, 1E-5);
-            Assert.AreEqual(BioMassCalc.CalculateIonMz(transition.GetMass(MassType.Monoisotopic), Adduct.M_PLUS_H), doc.MoleculeTransitions.ElementAt(0).Mz, 1E-5);
-            Assert.AreEqual(BioMassCalc.CalculateIonMz(transition2.GetMass(MassType.Monoisotopic), Adduct.M_PLUS), doc.MoleculeTransitions.ElementAt(1).Mz, 1E-5);
+            var mzPrecursor = 59.999451; // As declared in XML
+            var mzFragment = 54.999451;  // As declared in XML
+            var mzToler = 0.0000005;
+            var precursorAdduct = Adduct.M_PLUS_H;
+            var neutralMassMolecule = precursorAdduct.MassFromMz(mzPrecursor, MassType.Monoisotopic);
+            var fragmentAdduct = Adduct.M_PLUS;
+            var neutralMassTransition = fragmentAdduct.MassFromMz(mzFragment, MassType.Monoisotopic);
+            var transition = new CustomIon(null, precursorAdduct, new TypedMass(neutralMassMolecule, MassType.Monoisotopic), new TypedMass(neutralMassMolecule, MassType.Average), "molecule");
+            var transition2 = new CustomIon(null, fragmentAdduct, new TypedMass(neutralMassTransition, MassType.Monoisotopic), new TypedMass(neutralMassTransition, MassType.Average), "molecule fragment");
+            var precursor = new CustomMolecule(new TypedMass(neutralMassMolecule, MassType.Monoisotopic), new TypedMass(neutralMassMolecule, MassType.Average), "molecule");
+            Assert.AreEqual(BioMassCalc.CalculateIonMz(precursor.GetMass(MassType.Monoisotopic), precursorAdduct), doc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz, 1E-5);
+            Assert.AreEqual(BioMassCalc.CalculateIonMz(transition.GetMass(MassType.Monoisotopic), precursorAdduct), doc.MoleculeTransitions.ElementAt(0).Mz, 1E-5);
+            Assert.AreEqual(BioMassCalc.CalculateIonMz(transition2.GetMass(MassType.Monoisotopic), fragmentAdduct), doc.MoleculeTransitions.ElementAt(1).Mz, 1E-5);
             Assert.IsTrue(doc.Molecules.ElementAt(0).Peptide.IsCustomMolecule);
             Assert.AreEqual(4.704984, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy);
             Assert.AreEqual(4.8, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CompensationVoltage);
@@ -156,15 +161,15 @@ namespace pwiz.SkylineTest
             if (doc.FormatVersion.CompareTo(DocumentFormat.VERSION_3_61) >= 0)
                 Assert.AreEqual(345.6, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionalCrossSectionSqA.Value, 1E-12);
             Assert.IsTrue(doc.MoleculeTransitions.ElementAt(0).Transition.IsCustom());
-            Assert.AreEqual(transition, doc.MoleculeTransitions.ElementAt(0).Transition.CustomIon);
-            Assert.AreEqual(transition2, doc.MoleculeTransitions.ElementAt(1).Transition.CustomIon);
-            Assert.AreEqual(precursor, doc.Molecules.ElementAt(0).CustomMolecule);
+            Assert.AreEqual(transition.MonoisotopicMassMz, doc.MoleculeTransitions.ElementAt(0).Transition.CustomIon.MonoisotopicMassMz, mzToler);
+            Assert.AreEqual(transition2.MonoisotopicMassMz, doc.MoleculeTransitions.ElementAt(1).Transition.CustomIon.MonoisotopicMassMz, mzToler);
             Assert.AreEqual(1, doc.MoleculeTransitionGroups.ElementAt(0).TransitionGroup.PrecursorAdduct.AdductCharge);
             Assert.AreEqual("[M+H]", doc.MoleculeTransitionGroups.ElementAt(0).TransitionGroup.PrecursorAdduct.AdductFormula);
             Assert.AreEqual("[M+H]", doc.MoleculeTransitionGroups.ElementAt(0).TransitionGroup.PrecursorAdduct.AsFormulaOrSignedInt());
             Assert.AreEqual(1, doc.MoleculeTransitions.ElementAt(0).Transition.Charge);
             AssertEx.ValidatesAgainstSchema(doc);
             AssertEx.Serializable(doc); // Round trip
+            AssertEx.ValidatesAgainstSchema(doc); // Make sure any manipulations are still valid for schema
         }
 
         /// <summary>
