@@ -301,6 +301,7 @@ namespace pwiz.Skyline.Model
             {
                 DocumentType = DOCUMENT_TYPE.proteomic;
             }
+            Settings = UpdateHasHeavyModifications(Settings);
         }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { 
@@ -712,7 +713,6 @@ namespace pwiz.Skyline.Model
 
             // Note document contents type: proteomic, small molecule, or mixed (empty reports as proteomic)
             docClone.SetDocumentType();
-
             // If this document has associated results, update the results
             // for any peptides that have changed.
             if (!Settings.HasResults)
@@ -877,7 +877,7 @@ namespace pwiz.Skyline.Model
         /// <returns>A new document revision</returns>
         public SrmDocument ChangeSettingsNoDiff(SrmSettings settingsNew)
         {
-            return new SrmDocument(this, settingsNew, doc =>
+            return new SrmDocument(this, UpdateHasHeavyModifications(settingsNew), doc =>
             {
                 doc.RevisionIndex++;
                 doc.IsProteinMetadataPending = doc.CalcIsProteinMetadataPending();
@@ -906,6 +906,7 @@ namespace pwiz.Skyline.Model
         /// <returns>A new document revision</returns>
         private SrmDocument ChangeSettingsInternal(SrmSettings settingsNew, SrmSettingsChangeMonitor progressMonitor = null)
         {
+            settingsNew = UpdateHasHeavyModifications(settingsNew);
             // First figure out what changed.
             SrmSettingsDiff diff = new SrmSettingsDiff(Settings, settingsNew);
             if (progressMonitor != null)
@@ -1031,6 +1032,30 @@ namespace pwiz.Skyline.Model
 
                 return (SrmDocument)new SrmDocument(this, settingsNew).ChangeChildren(childrenNew);
             }
+        }
+
+        private SrmSettings UpdateHasHeavyModifications(SrmSettings settings)
+        {
+            bool hasHeavyModifications = settings.PeptideSettings.Modifications.GetHeavyModifications()
+                .Any(mods => mods.Modifications.Count > 0);
+            if (!hasHeavyModifications && DocumentType != DOCUMENT_TYPE.proteomic)
+            {
+                foreach (var molecule in Molecules)
+                {
+                    if (molecule.TransitionGroups.Any(group =>
+                        !ReferenceEquals(group.TransitionGroup.LabelType, IsotopeLabelType.light)))
+                    {
+                        hasHeavyModifications = true;
+                        break;
+                    }
+                }
+            }
+            if (hasHeavyModifications == settings.PeptideSettings.Modifications.HasHeavyModifications)
+            {
+                return settings;
+            }
+            return settings.ChangePeptideSettings(settings.PeptideSettings.ChangeModifications(
+                settings.PeptideSettings.Modifications.ChangeHasHeavyModifications(hasHeavyModifications)));
         }
 
         public SrmDocument ImportDocumentXml(TextReader reader,

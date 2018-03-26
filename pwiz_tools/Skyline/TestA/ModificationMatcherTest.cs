@@ -217,7 +217,8 @@ namespace pwiz.SkylineTestA
             var docNew0 = new SrmDocument(settingsMultiLabel).AddPeptideGroups(new[] { new PeptideGroupDocNode(new PeptideGroup(), 
                 "PepGroup1", "", new[] {MATCHER.GetModifiedNode(STR_HEAVY_15_F)})}, true, null, out firstAdded, out nextAdded);
             var settingsNew = MATCHER.GetDocModifications(docNew0);
-            Assert.AreEqual(settingsMultiLabel.PeptideSettings.Modifications, settingsNew);
+            Assert.AreEqual(settingsMultiLabel.PeptideSettings.Modifications.ChangeHasHeavyModifications(false), 
+                settingsNew.ChangeHasHeavyModifications(false));
 
             // Finding specific modifications.
             // If only specific AA modified, try for most specific modification.

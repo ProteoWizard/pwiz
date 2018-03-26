@@ -1422,10 +1422,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    select typedMod.LabelType;
         }
 
-        public bool HasHeavyModifications
-        {
-            get { return GetHeavyModifications().Contains(mods => mods.Modifications.Count > 0); }
-        }
+        public bool HasHeavyModifications { get; private set; }
 
         public bool HasHeavyImplicitModifications
         {
@@ -1565,6 +1562,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 return this;
 
             return ChangeProp(ImClone(this), im => im._modifications = MakeReadOnly(modifications));
+        }
+
+        public PeptideModifications ChangeHasHeavyModifications(bool hasHeavyModifications)
+        {
+            return ChangeProp(ImClone(this), im => im.HasHeavyModifications = hasHeavyModifications);
         }
 
         private static TypedModifications DeclareExplicitMods(SrmDocument doc,
@@ -1866,7 +1868,8 @@ namespace pwiz.Skyline.Model.DocSettings
             return obj.MaxVariableMods == MaxVariableMods &&
                    obj.MaxNeutralLosses == MaxNeutralLosses &&
                    ArrayUtil.EqualsDeep(obj.InternalStandardTypes, InternalStandardTypes) &&
-                   ArrayUtil.EqualsDeep(obj._modifications, _modifications);
+                   ArrayUtil.EqualsDeep(obj._modifications, _modifications) &&
+                   HasHeavyModifications == obj.HasHeavyModifications;
         }
 
         public override bool Equals(object obj)
@@ -1885,6 +1888,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result * 397) ^ MaxNeutralLosses.GetHashCode();
                 result = (result * 397) ^ InternalStandardTypes.GetHashCodeDeep();
                 result = (result * 397) ^ _modifications.GetHashCodeDeep();
+                result = (result * 397) ^ HasHeavyModifications.GetHashCode();
                 return result;
             }
         }
