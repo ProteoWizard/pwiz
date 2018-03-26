@@ -113,7 +113,6 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HiResMetabolomicsTutorial.cs" />
     <Compile Include="SmallMoleculesMethodDevAndCEOptimizationTutorial.cs" />
     <Compile Include="SmallMoleculesQuantificationTutorial.cs" />
     <Compile Include="SmallMoleculesTutorial.cs" />
@@ -202,7 +201,6 @@
     <None Include="DiaViews.zip" />
     <None Include="ExistingExperimentsViews.zip" />
     <None Include="GroupedStudies1Views.zip" />
-    <None Include="HiResMetabolomicsViews.zip" />
     <None Include="IrtViews.zip" />
     <None Include="MethodEditCSVs.zip" />
     <None Include="MethodEditViews.zip" />

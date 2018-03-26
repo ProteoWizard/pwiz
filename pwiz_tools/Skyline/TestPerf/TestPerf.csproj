@@ -135,6 +135,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AreaCVHistogramQValueAndRatioTest.cs" />
+    <Compile Include="HiResMetabolomicsTutorial.cs" />
     <Compile Include="ImportMassOnlyMoleculesTest.cs" />
     <Compile Include="DriftTimePredictorTutorialTest.cs" />
     <Compile Include="PeakSortingTest.cs" />
@@ -224,6 +225,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="DriftTimePredictorViews.zip" />
+    <None Include="HiResMetabolomicsViews.zip" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
