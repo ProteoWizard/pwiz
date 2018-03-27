@@ -277,6 +277,9 @@ project pwiz
         # also, catch(...) will catch SEH exceptions with this on
         <toolset>msvc:<asynch-exceptions>on
 
+        # avoid deprecation warnings
+        <define>BOOST_NO_AUTO_PTR
+
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows
         <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
