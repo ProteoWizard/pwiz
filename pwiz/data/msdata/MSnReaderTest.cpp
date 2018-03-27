@@ -216,16 +216,11 @@ int main(int argc, char* argv[])
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
 
-        std::string buildparent(argv[0]);
-        size_t pos = buildparent.find("build");
-        if (string::npos==pos)
-        {
-            buildparent = __FILE__; // nonstandard build, maybe?  try using source file name
-            // something like \ProteoWizard\pwiz\pwiz\data\msdata\RAMPAdapterTest.cpp
-            pos = buildparent.rfind("pwiz");
-        }
-        buildparent.resize(pos);
-        bfs::path example_data_dir = buildparent + "example_data/";
+        std::string srcparent(__FILE__);
+        size_t pos = srcparent.find((bfs::path("pwiz") / "data").string());
+        srcparent.resize(pos);
+
+        bfs::path example_data_dir = srcparent + "example_data/";
         test(example_data_dir, 1);
         test(example_data_dir, 2);
 

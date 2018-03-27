@@ -241,19 +241,13 @@ void test(const string& filename)
     unit_assert(!strcmp(instrument.detector, "electron multiplier"));
 }
 
-static void test_mzML_1_0(const char *test_app_name) {
-	// depending on where you invoke bjam from, test_app_name will have name like...
-	// ..\build\pwiz\data\msdata\gcc-mingw-3.4.5\release\link-static\runtime-link-static\threading-multi\RAMPAdapterTest.exe
-	// build\pwiz\data\msdata\gcc-mingw-3.4.5\release\link-static\runtime-link-static\threading-multi\RAMPAdapterTest.exe
-	std::string buildparent(test_app_name);
-	size_t pos = buildparent.find("build");
-    if (pos == std::string::npos) {
-        buildparent = __FILE__; // nonstandard build, maybe?  try using source file name
-        // something like \ProteoWizard\pwiz\pwiz\data\msdata\RAMPAdapterTest.cpp
-        pos = buildparent.rfind("pwiz");
-    }
-	buildparent.resize(pos);
-	std::string example_data_dir = buildparent + "example_data/";
+static void test_mzML_1_0() {
+
+    std::string srcparent(__FILE__);
+    size_t pos = srcparent.find((bfs::path("pwiz") / "data").string());
+    srcparent.resize(pos);
+
+	std::string example_data_dir = srcparent + "example_data/";
 	RAMPAdapter adapter_1_0(example_data_dir + "tiny.pwiz.1.0.mzML");
     const char *testfiles[2] = {"tiny.pwiz.1.1.mzML","tiny.pwiz.mzXML"};
     for (int tf=2;tf--;) { // test mzML 1.0 vs mzML 1.1 and mzXML
@@ -303,7 +297,7 @@ int main(int argc, char* argv[])
         boost::filesystem::remove(filename);
         boost::filesystem::remove(gzfilename);
 		// and make sure we're still good with older files
-		test_mzML_1_0(argv[0]); // passing in app name as it contains our path
+		test_mzML_1_0();
         
     }
     catch (exception& e)
