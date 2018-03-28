@@ -309,6 +309,13 @@ project pwiz
         # set standard to C++11
         <toolset>gcc:<cxxflags>-std=c++11
 
+        # avoid warnings like concept_check.hpp ... warning: unused typedef 'boost_concept_check'
+        <toolset>clang:<cxxflags>-Wno-unused-local-typedef
+
+        # avoid C++1x deprecation warnings
+        <toolset>gcc:<cxxflags>-Wno-deprecated-declarations
+        <toolset>clang:<cxxflags>-Wno-deprecated-declarations
+
         $(PREDEF_CHECKS)
         
         # special Cygwin gcc-3.4.4 hack
