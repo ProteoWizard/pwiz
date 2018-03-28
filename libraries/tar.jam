@@ -385,7 +385,7 @@ rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : t
     include-patterns ?= "" ;
 
     # HACK: try to be compatible with "tar" implementations that demand the "--wildcards" option
-    if $(tar-binary-filepath:D=) = "tar" && ( ! $(.os:L) = "darwin" ) ||
+    if $(tar-binary-filepath:D=) = "tar" && ! ( $(.os:L) = "darwin" ) ||
        $(tar-binary-filepath:D=) = "gnutar"
     {
         include-patterns = "--wildcards $(include-patterns)" ;
