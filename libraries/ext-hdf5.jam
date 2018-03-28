@@ -168,7 +168,7 @@ rule hdf5-requirements ( properties * )
         return <source>$(HDF5_SRC)/src/H5FDdirect.c
                <define>$(.posix_build_defines)
                <define>_POSIX_SOURCE
-               <cflags>-std=c99 ;
+               <toolset>gcc:<cflags>-std=c99 ;
     }
 }
 
