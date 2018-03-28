@@ -34,18 +34,20 @@ rule init ( tar-binary-filepath ? )
     if ! $(tar-binary-filepath)
     {
         tar-extra-args = "" ;
+        tar-extra-extract-args = "" ;
         if [ os.on-windows ]
         {
             tar-binary-filepath = bsdtar.exe ;
         }
         else if $(.os:L) = "macosx" || $(.os:L) = "darwin"
         {
-            tar-binary-filepath = gnutar ;
+            tar-binary-filepath = tar ;
         }
         else
         {
             tar-binary-filepath = tar ;
             tar-extra-args = "--ignore-failed-read" ;
+            tar-extra-extract-args = "--wildcards" ;
         }
     }
 
@@ -384,14 +386,8 @@ rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : t
     include-patterns = $(include-patterns:J=" ") ;
     include-patterns ?= "" ;
 
-    # HACK: try to be compatible with "tar" implementations that demand the "--wildcards" option
-    if $(tar-binary-filepath:D=) = "tar"
-    {
-        include-patterns = "--wildcards $(include-patterns)" ;
-    }
-
     ECHO "tar.list $(tar-filepath:D=)" ;
-    local tar-list = [ SPLIT_BY_CHARACTERS [ SHELL "\"$(tar-binary-filepath)\" -tf \"$(tar-filepath)\" $(include-patterns)" ] : \n ] ;
+    local tar-list = [ SPLIT_BY_CHARACTERS [ SHELL "\"$(tar-binary-filepath)\" $(tar-extra-extract-args) -tf \"$(tar-filepath)\" $(include-patterns)" ] : \n ] ;
 
     local args = [ modules.peek : ARGV ] ;
     if --clean in $(args) && $(tar-filepath) in $(args) ||
@@ -468,8 +464,8 @@ rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : t
         {
             ECHO "tar.extract $(tar-filepath:D=): $(include-patterns)" ;
             if ! [ path.exists $(target-location) ] { SHELL "$(MKDIR) \"$(target-location)\"" ; }
-            #echo "cd \"$(target-location)\" $(CS) \"$(tar-binary-filepath)\" -xf \"$(tar-filepath)\" $(include-patterns)" ;
-            SHELL "cd \"$(target-location)\" $(CS) \"$(tar-binary-filepath)\" -xf \"$(tar-filepath)\" $(include-patterns)" ;
+            #echo "cd \"$(target-location)\" $(CS) \"$(tar-binary-filepath)\" $(tar-extra-extract-args) -xf \"$(tar-filepath)\" $(include-patterns)" ;
+            SHELL "cd \"$(target-location)\" $(CS) \"$(tar-binary-filepath)\" $(tar-extra-extract-args) -xf \"$(tar-filepath)\" $(include-patterns)" ;
             RESCAN ;
             if ! [ path.exists $(target-location)/$(tar-list[-1]) ]
             {
