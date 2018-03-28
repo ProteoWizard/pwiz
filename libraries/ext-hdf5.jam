@@ -165,10 +165,14 @@ rule hdf5-requirements ( properties * )
     }
     else
     {
-        return <source>$(HDF5_SRC)/src/H5FDdirect.c
-               <define>$(.posix_build_defines)
-               <define>_POSIX_SOURCE
-               <cflags>-std=c99 ;
+        local result = <source>$(HDF5_SRC)/src/H5FDdirect.c
+                       <define>$(.posix_build_defines)
+                       <define>_POSIX_SOURCE ;
+        if <toolset>gcc in $(properties)
+        {
+            result += <cflags>-std=c99 ;
+        }
+        return $(result) ;
     }
 }
 
