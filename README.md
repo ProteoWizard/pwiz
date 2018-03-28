@@ -18,15 +18,19 @@ Core code and libraries are under the Apache open source license; the vendor lib
 * open source license suitable for both academic and commercial projects (Apache v2)
 
 ## Official build status
-------- | ----------------
-Windows | [![Windows status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/bt83.svg?label=VS%202013)]
-Linux   | [![Linux status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/bt17.svg?label=GCC%204.9)]
-        
+
+| OS      | Status |
+| ------- | ------ |
+| Windows | ![Windows status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/bt83.svg?label=VS%202013) |
+| Linux   | ![Linux status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/bt17.svg?label=GCC%204.9) |
+
+Click [here](http://proteowizard.sourceforge.net/downloads.shtml) to visit the official download page.
+
 ### Unofficial toolsets
-OS      | Toolset | Status
-------- | ----------------
-Windows | VS2013  | [![VS2013 status](https://img.shields.io/appveyor/ci/chambm/pwiz.svg)] |
-Linux   | GCC 5   | [![GCC5 status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/2)]
-Linux   | GCC 6   | [![GCC6 status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/3)]
-Linux   | GCC 7   | [![GCC7 status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/4)]
-OS X    | GCC 4.9 | [![OSX status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/9)]
+| OS      | Toolset | Status |
+| ------- | ------- | ------ |
+| Windows | VS2013  | ![VS2013 status](https://img.shields.io/appveyor/ci/chambm/pwiz.svg) |
+| Linux   | GCC 5   | ![GCC5 status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/2) |
+| Linux   | GCC 6   | ![GCC6 status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/3) |
+| Linux   | GCC 7   | ![GCC7 status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/4) |
+| OS X    | GCC 4.9 | ![OSX status](https://travis-matrix-badges.herokuapp.com/repos/ProteoWizard/pwiz/branches/master/9) |
