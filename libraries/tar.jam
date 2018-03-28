@@ -26,7 +26,7 @@ feature.feature tar-source : : free incidental ;
 project.initialize $(__name__) ;
 project tar ;
 
-local .os = [ modules.peek : OS ] ;
+.os = [ modules.peek : OS ] ;
 
 rule init ( tar-binary-filepath ? )
 {
@@ -385,8 +385,7 @@ rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : t
     include-patterns ?= "" ;
 
     # HACK: try to be compatible with "tar" implementations that demand the "--wildcards" option
-    if $(tar-binary-filepath:D=) = "tar" && ! ( $(.os:L) = "darwin" ) ||
-       $(tar-binary-filepath:D=) = "gnutar"
+    if $(tar-binary-filepath:D=) = "tar"
     {
         include-patterns = "--wildcards $(include-patterns)" ;
     }

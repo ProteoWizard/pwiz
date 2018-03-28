@@ -24,7 +24,7 @@
 
 #include "WhittakerSmoother.hpp"
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include "pwiz/utility/math/MatrixInverse.hpp"
