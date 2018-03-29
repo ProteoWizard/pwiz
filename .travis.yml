@@ -101,8 +101,8 @@ matrix:
 
     - os: osx
       osx_image: xcode8.3
-      env:
-        - MATRIX_EVAL="TOOLSET=gcc-4.9"
+#      env:
+#        - MATRIX_EVAL="TOOLSET=gcc-4.9"
 
 #    - os: osx
 #      osx_image: xcode8
