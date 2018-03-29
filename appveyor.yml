@@ -1,0 +1,23 @@
+version: '{build}.{branch}'
+clone_depth: 1
+build_script:
+- ps: '& .\quickbuild.bat address-model=64 --i-agree-to-the-vendor-licenses -j2 --abbreviate-paths pwiz executables toolset=msvc-12.0'
+test: off
+
+skip_commits:
+  files:
+    - README.md
+    - .travis.yml
+    - .gitignore
+    - pwiz_tools/Bumbershoot/**
+    - pwiz_tools/BiblioSpec/**
+    - pwiz_tools/Skyline/**
+    - pwiz_tools/Topograph/**
+
+notifications:
+- provider: Webhook
+  url: https://webhooks.gitter.im/e/23b73cbedd68b1381ac3
+  method: POST
+  on_build_success: false
+  on_build_failure: true
+  on_build_status_changed: true
