@@ -268,7 +268,7 @@ project pwiz
         <include>$(zlib_src)
 
         <toolset>gcc,<link>shared:<runtime-link>shared
-        <toolset>darwin,<link>shared:<runtime-link>shared
+        <toolset>darwin:<runtime-link>shared
 
         # any module which links with .NET (either dynamically or statically) must use the shared runtime
         <toolset>msvc:<runtime-link>shared
