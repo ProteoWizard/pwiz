@@ -311,6 +311,7 @@ project pwiz
 
         # avoid warnings like concept_check.hpp ... warning: unused typedef 'boost_concept_check'
         <toolset>clang:<cxxflags>-Wno-unused-local-typedef
+        <toolset>darwin:<cxxflags>-Wno-unused-local-typedef
 
         # avoid C++1x deprecation warnings
         <toolset>gcc:<cxxflags>-Wno-deprecated-declarations
