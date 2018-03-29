@@ -15,7 +15,7 @@ matrix:
           packages:
             - g++-4.9
       env:
-         - MATRIX_EVAL="TOOLSET=gcc-4.9"
+         - MATRIX_EVAL="TOOLSET=toolset=gcc-4.9"
 
     # works on Precise and Trusty
     - os: linux
@@ -26,7 +26,7 @@ matrix:
           packages:
             - g++-5
       env:
-         - MATRIX_EVAL="TOOLSET=gcc-5"
+         - MATRIX_EVAL="TOOLSET=toolset=gcc-5"
 
     # works on Precise and Trusty
     - os: linux
@@ -37,7 +37,7 @@ matrix:
           packages:
             - g++-6
       env:
-        - MATRIX_EVAL="TOOLSET=gcc-6"
+        - MATRIX_EVAL="TOOLSET=toolset=gcc-6"
 
     # works on Precise and Trusty
     - os: linux
@@ -48,7 +48,7 @@ matrix:
           packages:
             - g++-7
       env:
-        - MATRIX_EVAL="TOOLSET=gcc-7"
+        - MATRIX_EVAL="TOOLSET=toolset=gcc-7"
 
     #
     # Clang
@@ -64,7 +64,7 @@ matrix:
           packages:
             - clang-3.6
       env:
-        - MATRIX_EVAL="TOOLSET=clang-3.6"
+        - MATRIX_EVAL="TOOLSET=toolset=clang-3.6"
 
     # works on Trusty
     - os: linux
@@ -75,7 +75,7 @@ matrix:
           packages:
             - clang-3.9
       env:
-        - MATRIX_EVAL="TOOLSET=clang-3.9"
+        - MATRIX_EVAL="TOOLSET=toolset=clang-3.9"
 
     # works on Trusty
     - os: linux
@@ -86,7 +86,7 @@ matrix:
           packages:
             - clang-4.0
       env:
-        - MATRIX_EVAL="TOOLSET=clang-4.0"
+        - MATRIX_EVAL="TOOLSET=toolset=clang-4.0"
 
     # works on Trusty
     - os: linux
@@ -97,32 +97,32 @@ matrix:
           packages:
             - clang-5.0
       env:
-        - MATRIX_EVAL="TOOLSET=clang-5.0"
+        - MATRIX_EVAL="TOOLSET=toolset=clang-5.0"
 
     - os: osx
       osx_image: xcode8.3
 #      env:
-#        - MATRIX_EVAL="TOOLSET=gcc-4.9"
+#        - MATRIX_EVAL="TOOLSET=toolset=gcc-4.9"
 
 #    - os: osx
 #      osx_image: xcode8
 #      env:
-#        - MATRIX_EVAL="brew install gcc5 && TOOLSET=gcc-5"
+#        - MATRIX_EVAL="brew install gcc5 && TOOLSET=toolset=gcc-5"
 
 #    - os: osx
 #      osx_image: xcode8
 #      env:
-#        - MATRIX_EVAL="brew install gcc6 && TOOLSET=gcc-6"
+#        - MATRIX_EVAL="brew install gcc6 && TOOLSET=toolset=gcc-6"
 
 #    - os: osx
 #      osx_image: xcode8
 #      env:
-#        - MATRIX_EVAL="brew install gcc && TOOLSET=gcc-7"
+#        - MATRIX_EVAL="brew install gcc && TOOLSET=toolset=gcc-7"
 
 before_install:
     - eval "${MATRIX_EVAL}"
 
-script: ./quickbuild.sh --abbreviate-paths -j2 pwiz toolset=$TOOLSET
+script: ./quickbuild.sh --abbreviate-paths -j2 pwiz $TOOLSET
 
 notifications:
   webhooks:
