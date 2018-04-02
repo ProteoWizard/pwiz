@@ -50,7 +50,7 @@ namespace SkylineTester
         public const string DocumentationLink =
             "https://skyline.gs.washington.edu/labkey/wiki/home/development/page.view?name=SkylineTesterDoc";
 
-        public string Subversion { get; private set; }
+        public string Git { get; private set; }
         public string Devenv { get; private set; }
         public string RootDir { get; private set; }
         public string Exe { get; private set; }

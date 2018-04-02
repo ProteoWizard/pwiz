@@ -55,9 +55,11 @@ namespace SkylineNightly
         private const string LABKEY_RELEASE_URL = "https://skyline.ms/labkey/testresults/home/development/Release%20Branch/post.view?";
         private const string LABKEY_RELEASE_PERF_URL = "https://skyline.ms/labkey/testresults/home/development/Release%20Branch%20Performance%20Tests/post.view?";
         private const string LABKEY_INTEGRATION_URL = "https://skyline.ms/labkey/testresults/home/development/Integration/post.view";
+        
+        private const string GIT_MASTER_URL = "https://github.com/ProteoWizard/pwiz";
 
-        // Current integration branch is for run-up to Merck teaching session
-        private const string SVN_INTEGRATION_BRANCH_URL = "https://svn.code.sf.net/p/proteowizard/code/branches/work/20171019_merck_daily";
+        // Current integration branch
+        private const string GIT_INTEGRATION_BRANCH_URL = GIT_MASTER_URL+"/tree/Skyline/work/20180125_FiguresOfMerit";
 
         private DateTime _startTime;
         public string LogFileName { get; private set; }
@@ -285,17 +287,24 @@ namespace SkylineNightly
 
             // Now figure out which branch we're working in - there's a file in the downloaded SkylineTester zip that tells us.
             string branchUrl = null;
-            var lines = File.ReadAllLines(Path.Combine(_skylineTesterDir, "SkylineTester Files", "SVN_info.txt"));
-            if (lines[1].Contains("branches"))
+            var branchLine = File.ReadAllLines(Path.Combine(_skylineTesterDir, "SkylineTester Files", "Version.cpp")).FirstOrDefault(l => l.Contains("Version::Branch"));
+            if (!string.IsNullOrEmpty(branchLine))
             {
-                // Looks like  $URL: https://svn.code.sf.net/p/proteowizard/code/branches/skyline_3_5/SVN_info.txt $
-                branchUrl =
-                    lines[1].Split(new[] {"URL: "}, StringSplitOptions.None)[1].Split(new[] {"/SVN_info"},StringSplitOptions.None)[0];
+                // Looks like std::string Version::Branch()   {return "skyline_9_7";}
+                var branch = branchLine.Split(new[] { "\"" }, StringSplitOptions.None)[1];
+                if (branch.Equals("master"))
+                {
+                    branchUrl = GIT_MASTER_URL;
+                }
+                else
+                {
+                    branchUrl = GIT_MASTER_URL + "/tree/" + branch;
+                }
             }
             // Or if we are running the integration build, then we use the trunk SkylineTester, but have it build the branch TestRunner.exe
             else if (_runMode == RunMode.integration)
             {
-                branchUrl = SVN_INTEGRATION_BRANCH_URL;
+                branchUrl = GIT_INTEGRATION_BRANCH_URL;
             }
 
             // Create ".skytr" file to execute nightly build in SkylineTester.
@@ -466,7 +475,7 @@ namespace SkylineNightly
             ParseLeaks(log);
 
             var hasPerftests = log.Contains("# Perf tests");
-            var isIntegration = log.Contains(SVN_INTEGRATION_BRANCH_URL);
+            var isIntegration = log.Contains(GIT_INTEGRATION_BRANCH_URL);
             var isTrunk = !isIntegration && !log.Contains("Testing branch at");
 
             var machineName = Environment.MachineName;
@@ -479,15 +488,13 @@ namespace SkylineNightly
             }
 
             // See if we can parse revision info from the log
-            int? revisionInfo = null;
+            string revisionInfo = null;
             // Checked out revision 9708.
-            var reRevision = new Regex(@"\nChecked out revision (\d+)\.\r\n", RegexOptions.Compiled); // As in "Checked out revision 9708."
+            var reRevision = new Regex(@"\nChecked out revision (.*)\.\r\n", RegexOptions.Compiled); // As in "Checked out revision 9708."
             var revMatch = reRevision.Match(log);
             if (revMatch.Success)
             {
-                int r;
-                if (int.TryParse(revMatch.Groups[1].Value, out r))
-                    revisionInfo = r;
+                revisionInfo = revMatch.Groups[1].Value;
             }
 
             _nightly["id"] = machineName;
@@ -604,8 +611,8 @@ namespace SkylineNightly
 
         private string ParseBuildRoot(string log)
         {
-            // Look for:  > "C:\Program Files (x86)\Subversion\bin\svn.exe" checkout "https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz" "C:\Nightly\SkylineTesterForNightly_trunk\pwiz"
-            var brPattern = new Regex(@".*"".*svn\.exe"" checkout "".*"" ""(.*)""", RegexOptions.Compiled);
+            // Look for:  > "C:\Program Files\Git\cmd\git.exe" clone "https://github.com/ProteoWizard/pwiz" "C:\Nightly\SkylineTesterForNightly_trunk\pwiz"
+            var brPattern = new Regex(@".*"".*git\.exe"" clone "".*"" ""(.*)""", RegexOptions.Compiled);
             var match = brPattern.Match(log);
             if (!match.Success)
             {
@@ -746,43 +753,41 @@ namespace SkylineNightly
                 : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), nightlyDir);
         }
 
-        private int GetRevision(string pwizDir)
+        private static string GitCommand(string workingdir, string cmd)
         {
-            int revision = 0;
-            try
+            var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            var exe = Path.Combine(programFiles, @"Git\cmd\git.exe");
+            Process git = new Process
             {
-                var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-                var subversion = Path.Combine(programFiles, @"Subversion\bin\svn.exe");
-
-                Process svn = new Process
+                StartInfo =
                 {
-                    StartInfo =
-                    {
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        FileName = subversion,
-                        Arguments = @"info " + pwizDir,
-                        CreateNoWindow = true
-                    }
-                };
-                svn.Start();
-                string svnOutput = svn.StandardOutput.ReadToEnd();
-                svn.WaitForExit();
-                var revisionString = Regex.Match(svnOutput, @".*Revision: (\d+)").Groups[1].Value;
-                revision = int.Parse(revisionString);
-            }
-            // ReSharper disable once EmptyGeneralCatchClause
-            catch
-            {
-            }
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    FileName = exe,
+                    WorkingDirectory = workingdir,
+                    Arguments = cmd,
+                    CreateNoWindow = true
+                }
+            };
+            git.Start();
+            var gitOutput = git.StandardOutput.ReadToEnd();
+            git.WaitForExit();
+            return gitOutput;
+        }
 
+        private string GetRevision(string pwizDir)
+        {
+
+            var revisionCount = GitCommand(pwizDir, @"rev-list --count head");
+            var revisionHash = GitCommand(pwizDir, @"rev-parse --short HEAD");
+            var revision = revisionCount + " (" + revisionHash + ")";
             return revision;
         }
 
         /// <summary>
         /// Delete a file or directory, with quite a lot of retry on the expectation that 
-        /// it's probably the TortoiseSVN windows explorer icon plugin getting in your way
+        /// it's probably the TortoiseGit windows explorer icon plugin getting in your way
         /// </summary>
         private void Delete(string fileOrDir)
         {
@@ -799,7 +804,7 @@ namespace SkylineNightly
                         throw;
                     Log("Retrying failed delete of " + fileOrDir + ": " + ex.Message);
                     var random = new Random();
-                    Thread.Sleep(1000 + random.Next(0, 5000)); // A little stutter-step to avoid unlucky sync with TortoiseSVN icon update
+                    Thread.Sleep(1000 + random.Next(0, 5000)); // A little stutter-step to avoid unlucky sync with TortoiseGit icon update
                 }
             }
         }

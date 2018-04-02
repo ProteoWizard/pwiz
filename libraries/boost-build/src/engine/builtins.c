@@ -530,6 +530,12 @@ LIST * builtin_calc( FRAME * frame, int flags )
         result_value = lhs_value + rhs_value;
     else if ( !strcmp( "-", op ) )
         result_value = lhs_value - rhs_value;
+    else if (!strcmp( "%", op ) )
+        result_value = lhs_value % rhs_value;
+    else if (!strcmp( "/", op ) )
+        result_value = lhs_value / rhs_value;
+    else if (!strcmp( "*", op ) )
+        result_value = lhs_value * rhs_value;
     else
         return L0;
 

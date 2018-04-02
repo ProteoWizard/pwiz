@@ -58,7 +58,7 @@ ECHO
 #
 #   --without-binary-msdata Build with support for mass spec text formats only
 #                           (mzML, mzXML, MGF, etc - no binary formats
-#                           like mz5 or vendor-specifics)
+#                           like mz5 or vendor-specifics )
 #
 #   There are some aliases to build commonly used subsets of pwiz:
 #
@@ -268,7 +268,7 @@ project pwiz
         <include>$(zlib_src)
 
         <toolset>gcc,<link>shared:<runtime-link>shared
-        <toolset>darwin,<link>shared:<runtime-link>shared
+        <toolset>darwin:<runtime-link>shared
 
         # any module which links with .NET (either dynamically or statically) must use the shared runtime
         <toolset>msvc:<runtime-link>shared
@@ -276,6 +276,9 @@ project pwiz
         # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
         # also, catch(...) will catch SEH exceptions with this on
         <toolset>msvc:<asynch-exceptions>on
+
+        # avoid deprecation warnings
+        <define>BOOST_NO_AUTO_PTR
 
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows
@@ -305,6 +308,14 @@ project pwiz
 
         # set standard to C++11
         <toolset>gcc:<cxxflags>-std=c++11
+
+        # avoid warnings like concept_check.hpp ... warning: unused typedef 'boost_concept_check'
+        <toolset>clang:<cxxflags>-Wno-unused-local-typedef
+        <toolset>darwin:<cxxflags>-Wno-unused-local-typedef
+
+        # avoid C++1x deprecation warnings
+        <toolset>gcc:<cxxflags>-Wno-deprecated-declarations
+        <toolset>clang:<cxxflags>-Wno-deprecated-declarations
 
         $(PREDEF_CHECKS)
         
@@ -376,112 +387,79 @@ alias svm : $(PWIZ_LIBRARIES_PATH)/libsvm-3.0//svm ;
 
 modules.poke : BOOST_BUILD_PATH : [ modules.peek : BOOST_BUILD_PATH ] $(PWIZ_LIBRARIES_PATH) ;
 
-# get version info (used for tarball filenames)
-import svnrev ;
-import generate-version ;
+import numbers ;
+
+rule is_leap_year ( year )
+{
+    if [ CALC $(year) % 100 ] = 0
+    {
+        if [ CALC $(year) % 400 ] = 0 { return 1 ; }
+        else { return 0 ; }
+    }
+    else
+    {
+        if [ CALC $(year) % 4 ] = 0 { return 1 ; }
+        else { return 0 ; }
+    }
+}
+
+# given year, month, day return day of year
+# Astronomical Algorithms, Jean Meeus, 2d ed, 1998, chap 7
+rule day_of_year ( Y M D )
+{
+    local K ;
+    if [ is_leap_year $(Y) ] = 1 { K = 1 ; }
+    else { K = 2 ; }
+    local a = [ CALC 275 * $(M) ] ;
+    local b = [ CALC $(M) + 9 ] ;
+    local c = [ CALC $(b) / 12 ] ;
+    local d = [ CALC $(K) * $(c) ] ;
+    local e = [ CALC $(a) / 9 ] ;
+    local f = [ CALC $(e) - $(d) ] ;
+    local g = [ CALC $(f) + $(D) ] ;
+    local N = [ CALC $(g) - 30 ] ;
+    if [ numbers.less $(N) 100 ]
+    {
+        N = "0" $(N) ;
+        return $(N:J=) ;
+    }
+    else
+    {
+        return $(N) ;
+    }
+}
+
+# YMMDD in UTC where Y is number of years since 2016, optionally suffixed with HH (hour)
+rule MAKE_BUILD_TIMESTAMP ( )
+{
+    local utc = [ modules.peek : JAMDATE ] ;
+    local ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : $(utc) ] ;
+    local d = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd[0]) ] [ day_of_year $(ymd) ] ;
+    return $(d:J=) ;
+}
+
 
 constant PWIZ_MAJOR : 3 ;
 constant PWIZ_MINOR : 0 ;
+constant PWIZ_BUILD_TIMESTAMP : [ MAKE_BUILD_TIMESTAMP ] ;
+constant PWIZ_GIT_REV : [ MATCH "([a-f0-9]*)" : [ SHELL "git rev-parse --short HEAD" ] ] ;
+constant PWIZ_GIT_BRANCH : [ MATCH "\\* ([^\r\n]*)" : [ SHELL "git branch" ] ] ;
 
-generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/msdata/Version.cpp : pwiz msdata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
-    [ path.glob $(PWIZ_ROOT_PATH)/pwiz/data/msdata
-                $(PWIZ_ROOT_PATH)/pwiz/utility/misc
-                $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/ABI
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/ABI/T2D
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Bruker
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Shimadzu
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Thermo
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/UIMF
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/UNIFI
-                $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Agilent
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Shimadzu
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/thermo
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UIMF
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UNIFI
-                $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters
-       : *.?pp *.h Jamfile.jam *.manifest* : Version.cpp
-    ] ;
+numeric-version-tag = $(PWIZ_MAJOR) $(PWIZ_MINOR) $(PWIZ_BUILD_TIMESTAMP) ;
+version-tag = $(numeric-version-tag) $(PWIZ_GIT_REV) ;
 
-generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/analysis/Version.cpp : pwiz analysis : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
-    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz/analysis
-                     $(PWIZ_ROOT_PATH)/pwiz/utility/math
-                     $(PWIZ_ROOT_PATH)/pwiz/utility/misc
-                     $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml
-        : *.?pp Jamfile.jam : Version.cpp
-    ] ;
-
-generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/identdata/Version.cpp : pwiz identdata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
-    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz/data/identdata
-                     $(PWIZ_ROOT_PATH)/pwiz/utility/misc
-                     $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml
-        : *.?pp Jamfile.jam : Version.cpp
-    ] ;
-
-generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/tradata/Version.cpp : pwiz tradata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
-    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz/data/tradata
-                     $(PWIZ_ROOT_PATH)/pwiz/utility/misc
-                     $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml
-        : *.?pp Jamfile.jam : Version.cpp
-    ] ;
-
-generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/proteome/Version.cpp : pwiz proteome : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
-    [ path.glob $(PWIZ_ROOT_PATH)/pwiz/data/proteome : *.?pp Jamfile.jam : Version.cpp ] ;
-
-# TODO: collecting global revision info should use revision info that's already been collected;
-# TODO: especially for things like SeeMS which have some MSVC-generated files that aren't versioned
-local revision-info =
-    [ generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/Version.cpp : pwiz : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
-            $(PWIZ_ROOT_PATH)/Jamroot.jam
-            [ path.glob $(PWIZ_ROOT_PATH)/libraries : *.jam ]
-            [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz
-                             $(PWIZ_ROOT_PATH)/pwiz_aux/msrc
-                             $(PWIZ_ROOT_PATH)/pwiz_tools/commandline
-                             $(PWIZ_ROOT_PATH)/pwiz_tools/common
-                             $(PWIZ_ROOT_PATH)/pwiz_tools/examples
-                             $(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS
-                             $(PWIZ_ROOT_PATH)/pwiz_tools/MSConvertGUI
-                             $(PWIZ_ROOT_PATH)/pwiz_tools/sld
-                             $(PWIZ_ROOT_PATH)/scripts/wix
-                : *.?pp *.h *.jam *.cs *.manifest* *.wxs.template
-                : tar.excluded Version.cpp Resources.Designer.cs Settings.Designer.cs *DataSet.Designer.cs AssemblyInfo.*
-            ]
-        : warn-on-missing
-        #: print-revision-info
-    ] ;
-
-# revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
-
-local year = $(revision-info[2]) ;
-local month = $(revision-info[3]) ;
-local day = $(revision-info[4]) ;
-
-constant PWIZ_SVNREV : $(revision-info[1]) ;
-constant PWIZ_SVNREVDATE : "(last committed change: $(year)-$(month)-$(day))" ;
-
-import numbers ;
-if [ numbers.less 32000 $(PWIZ_SVNREV) ] 
-{
-    errors.error "out of range SVN revision $(PWIZ_SVNREV)." ;
-}
-
-version-tag = $(PWIZ_MAJOR) $(PWIZ_MINOR) $(PWIZ_SVNREV) ;
-
-if $(revision-info[5]) > 0
-{
-    version-tag += "modified" ;
-    echo NOTICE: WORKING COPY HAS $(revision-info[5]) MODIFIED FILES. ;
-}
-
+constant PWIZ_NUMERIC_VERSION_TAG : $(numeric-version-tag:J=.) ;
 constant PWIZ_VERSION_TAG : $(version-tag:J=.) ;
 
-echo ProteoWizard $(version-tag:J=.) $(PWIZ_SVNREVDATE:J=) $(PLATFORM) $(PROCESSOR_ARCHITECTURE) ;
+echo ProteoWizard $(version-tag:J=.) $(PLATFORM) $(PROCESSOR_ARCHITECTURE) ;
 
+import generate-version ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/msdata/Version.cpp : pwiz msdata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/analysis/Version.cpp : pwiz analysis : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/identdata/Version.cpp : pwiz identdata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/tradata/Version.cpp : pwiz tradata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/proteome/Version.cpp : pwiz proteome : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/Version.cpp : pwiz : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
 
 # create a VERSION file which can be used by TC to parse the canonical pwiz version
 make VERSION : : @make_VERSION : <location>$(PWIZ_BUILD_PATH) ;
@@ -889,7 +867,7 @@ rule unifi-dll-location ( api-path : properties * )
     # .NET 4.5 DLLs should work for anything .NET 4 or greater (hopefully); there's no Boost.Build property for .NET version
     local result = $(api-path) ;
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
-       [ path.exists $(result)\\IdentityModel.dll ]
+       [ path.exists $(result)\\unifi-protobuf-net.dll ]
     {
         return $(result) ;
     }
@@ -987,8 +965,7 @@ rule uimf-dll-location ( api-path : properties * )
 rule masslynxraw-dll-location ( api-path : properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) &&
-       <runtime-debugging>off
+    if <toolset>msvc in $(properties) 
     {
         if <toolset-msvc:version>12.0 in $(properties) ||
            <toolset-msvc:version>12.0express in $(properties)
@@ -1383,7 +1360,13 @@ This source tree is a subset of the full pwiz source tree.
 
 .no-v =
     exclude:vendor_readers/*/*.bat
-    exclude:vendor_api
+    exclude:vendor_api/ABI
+    exclude:vendor_api/Agilent
+    exclude:vendor_api/Bruker
+    exclude:vendor_api/Shimadzu
+    exclude:vendor_api/thermo
+    exclude:vendor_api/UIMF
+    exclude:vendor_api/Waters
     exclude:vendor_api_*.7z
 ;
 

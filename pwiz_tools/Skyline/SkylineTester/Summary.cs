@@ -29,7 +29,7 @@ namespace SkylineTester
         public class Run
         {
             public DateTime Date;
-            public int Revision;
+            public string Revision;
             public int RunMinutes;
             public int TestsRun;
             public int Failures;
@@ -102,7 +102,7 @@ namespace SkylineTester
                             run.Date = DateTime.Parse(element.Value, CultureInfo.InvariantCulture);
                             break;
                         case "revision":
-                            run.Revision = int.Parse(element.Value, CultureInfo.InvariantCulture);
+                            run.Revision = element.Value;
                             break;
                         case "runminutes":
                             run.RunMinutes = int.Parse(element.Value, CultureInfo.InvariantCulture);
