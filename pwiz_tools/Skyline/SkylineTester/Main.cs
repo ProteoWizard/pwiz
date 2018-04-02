@@ -349,7 +349,7 @@ namespace SkylineTester
         public void AddRun(Summary.Run run, ComboBox combo)
         {
             var text = run.Date.ToString("M/d  h:mm tt");
-            if (run.Revision > 0)
+            if (!string.IsNullOrEmpty(run.Revision))
                 text += "    (rev. " + run.Revision + ")";
             combo.Items.Insert(0, text);
         }
@@ -502,9 +502,9 @@ namespace SkylineTester
             {
                 GetBuildPrerequisites();
 
-                if (Subversion == null)
+                if (Git == null)
                 {
-                    MessageBox.Show("Subversion is required to build Skyline.  You can install it from http://sourceforge.net/projects/win32svn/");
+                    MessageBox.Show("Git.exe is required to build Skyline.  You can install it from https://gitforwindows.org/");
                     return false;
                 }
 
@@ -521,12 +521,13 @@ namespace SkylineTester
         public void GetBuildPrerequisites()
         {
             // Try to find where subversion is available.
-            var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            Subversion = Path.Combine(programFiles, @"Subversion\bin\svn.exe");
-            if (!File.Exists(Subversion))
-                Subversion = null;
+            var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            Git = Path.Combine(programFiles, @"Git\cmd\git.exe");
+            if (!File.Exists(Git))
+                Git = null;
 
             // Find Visual Studio, if available.
+            programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
             Devenv = Path.Combine(programFiles, @"Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe");
             if (!File.Exists(Devenv))
                 Devenv = null;

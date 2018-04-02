@@ -38,7 +38,7 @@ namespace SkylineTester
 
         private Timer _updateTimer;
         private Timer _stopTimer;
-        private int _revision;
+        private string _revision;
         private SkylineTesterWindow.BuildDirs _saveSelectedBuild; 
         private readonly List<string> _labels = new List<string>();
         private readonly List<string> _findTest = new List<string>();
@@ -282,7 +282,7 @@ namespace SkylineTester
                 : 64;
             var architectureList = new[] {_architecture};
             var branchUrl = MainWindow.NightlyBuildTrunk.Checked
-                ? @"https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz"
+                ? @"https://github.com/ProteoWizard/pwiz"
                 : MainWindow.NightlyBranchUrl.Text;
             var buildRoot = Path.Combine(MainWindow.GetNightlyBuildRoot(), "pwiz");
             TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList, true, false, false); // Just build Skyline.exe without testing it - that's about to happen anyway
@@ -523,33 +523,19 @@ namespace SkylineTester
             return null;
         }
 
-        private int GetRevision(bool nuke)
+        private string GetRevision(bool nuke)
         {
-            // Get current SVN revision info.
-            int revision = 0;
+            // Get current git revision info.
+            string revision = String.Empty;
             try
             {
                 var buildRoot = MainWindow.GetBuildRoot();
                 var target = (Directory.Exists(buildRoot) && !nuke)
                     ? buildRoot
                     : TabBuild.GetBranchUrl();
-                Process svn = new Process
-                {
-                    StartInfo =
-                    {
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        FileName = MainWindow.Subversion,
-                        Arguments = @"info " + target,
-                        CreateNoWindow = true
-                    }
-                };
-                svn.Start();
-                string svnOutput = svn.StandardOutput.ReadToEnd();
-                svn.WaitForExit();
-                var revisionString = Regex.Match(svnOutput, @".*Revision: (\d+)").Groups[1].Value;
-                revision = int.Parse(revisionString);
+                var revisionCount = GitCommand(target, @"rev-list --count head");
+                var revisionHash = GitCommand(target, @"rev-parse --short HEAD");
+                revision = revisionCount + " (" + revisionHash + ")";
             }
 // ReSharper disable once EmptyGeneralCatchClause
             catch
@@ -557,6 +543,27 @@ namespace SkylineTester
             }
 
             return revision;
+        }
+
+        private static string GitCommand(string workingdir, string cmd)
+        {
+            Process git = new Process
+            {
+                StartInfo =
+                {
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    FileName = MainWindow.Git,
+                    WorkingDirectory = workingdir,
+                    Arguments = cmd,
+                    CreateNoWindow = true
+                }
+            };
+            git.Start();
+            var gitOutput = git.StandardOutput.ReadToEnd();
+            git.WaitForExit();
+            return gitOutput;
         }
 
         public void RunDateChanged()
