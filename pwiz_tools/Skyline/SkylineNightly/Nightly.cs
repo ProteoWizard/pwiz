@@ -43,7 +43,7 @@ namespace SkylineNightly
 
         private const string TEAM_CITY_BUILD_URL = "https://teamcity.labkey.org/viewType.html?buildTypeId={0}";
         private const string TEAM_CITY_ZIP_URL = "https://teamcity.labkey.org/repository/download/{0}/{1}:id/SkylineTester.zip";
-        private const string TEAM_CITY_BUILD_TYPE_64 = "bt209";
+        private const string TEAM_CITY_BUILD_TYPE_64 = "ProteoWizard_WindowsX8664msvcProfessionalGh";
         private const string TEAM_CITY_BUILD_TYPE_RELEASE_64 = "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional";
         private const string TEAM_CITY_BUILD_TYPE_32 = "bt19";
         private const string TEAM_CITY_BUILD_TYPE = TEAM_CITY_BUILD_TYPE_64;
@@ -59,7 +59,7 @@ namespace SkylineNightly
         private const string GIT_MASTER_URL = "https://github.com/ProteoWizard/pwiz";
 
         // Current integration branch
-        private const string GIT_INTEGRATION_BRANCH_URL = GIT_MASTER_URL+"/tree/Skyline/work/20180125_FiguresOfMerit";
+        private const string GIT_INTEGRATION_BRANCH_URL = GIT_MASTER_URL; // +"/tree/Skyline/work/20180125_FiguresOfMerit";
 
         private DateTime _startTime;
         public string LogFileName { get; private set; }
@@ -328,7 +328,7 @@ namespace SkylineNightly
                     skylineTester.GetChild("nightlyDuration").Set(((int)_duration.TotalHours).ToString());
                     skylineTester.GetChild("nightlyRepeat").Set(_runMode == RunMode.stress ? "100" : "1");
                     skylineTester.GetChild("nightlyRandomize").Set(_runMode == RunMode.stress ? "true" : "false");
-                    if (!string.IsNullOrEmpty(branchUrl) && !branchUrl.Contains("trunk"))
+                    if (!string.IsNullOrEmpty(branchUrl) && branchUrl.Contains("tree"))
                     {
                         skylineTester.GetChild("nightlyBuildTrunk").Set("false");
                         skylineTester.GetChild("nightlyBranch").Set("true");

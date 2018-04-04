@@ -88,6 +88,8 @@ namespace SkylineNightly
 
             Settings.Default.Save();
 
+            try
+            {
             // Create new scheduled task to run the nightly build.
             using (var ts = new TaskService())
             {
@@ -134,6 +136,11 @@ namespace SkylineNightly
                     // Register the task in the root folder
                     ts.RootFolder.RegisterTaskDefinition(Nightly.NightlyTaskNameWithUser, td);
                 }
+            }
+            }
+            catch (UnauthorizedAccessException exception)
+            {
+                MessageBox.Show(string.Format("You need to run as Administrator to schedule a new task.\n\n {0}", exception));
             }
 
             Close();
