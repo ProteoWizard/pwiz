@@ -1,2 +1,0 @@
-This file is automatically updated by SVN to contain the branch path for itself.  It's used as part of the Skyline automated test system, and possibly elsewhere.  Please don't mess with it.
-$URL$

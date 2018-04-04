@@ -102,7 +102,7 @@ namespace SkylineTester
         public static string GetBranchUrl()
         {
             return MainWindow.BuildTrunk.Checked
-                ? @"https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz"
+                ? @"https://github.com/ProteoWizard/pwiz"
                 : MainWindow.BranchUrl.Text;
         }
 
@@ -117,7 +117,7 @@ namespace SkylineTester
             var commandShell = MainWindow.CommandShell;
             var branchParts = branchUrl.Split('/');
             var branchName = "Skyline ({0}/{1})".With(branchParts[branchParts.Length - 2], branchParts[branchParts.Length - 1]);
-            var subversion = MainWindow.Subversion;
+            var git = MainWindow.Git;
 
             var architectureList = string.Join("- and ", architectures);
             commandShell.Add("# Build {0} {1}-bit...", branchName, architectureList);
@@ -134,8 +134,7 @@ namespace SkylineTester
                 {
                     commandShell.Add("#@ Updating Build directory...\n");
                     commandShell.Add("# Updating Build directory...");
-                    commandShell.Add("{0} cleanup {1}", subversion.Quote(), buildRoot.Quote());
-                    commandShell.Add("{0} update {1}", subversion.Quote(), buildRoot.Quote());
+                    commandShell.Add("cd {0} && {1} pull", buildRoot.Quote(), git.Quote());
                 }
             }
 
@@ -151,7 +150,7 @@ namespace SkylineTester
             {
                 commandShell.Add("#@ Checking out {0} source files...\n", branchName);
                 commandShell.Add("# Checking out {0} source files...", branchName);
-                commandShell.Add("{0} checkout {1} {2}", subversion.Quote(), branchUrl.Quote(), buildRoot.Quote());
+                commandShell.Add("{0} clone {1} {2}", git.Quote(), branchUrl.Quote(), buildRoot.Quote());
             }
 
             commandShell.Add("# Building Skyline...");

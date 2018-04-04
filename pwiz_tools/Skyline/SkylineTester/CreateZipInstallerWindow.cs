@@ -191,7 +191,7 @@ namespace SkylineTester
                     }
 
                     // Add the file that we use to determine which branch this is from
-                    AddFile(Path.Combine(solutionDirectory,"..\\..\\SVN_info.txt"), zipFile);
+                    AddFile(Path.Combine(solutionDirectory,"..\\..\\pwiz\\Version.cpp"), zipFile);
 
                     // Add unit testing DLL.
                     var unitTestingDll = Path.Combine(

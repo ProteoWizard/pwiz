@@ -27,7 +27,7 @@ else
 
 
 # rule for generating a Version.cpp file
-rule cpp ( filepath ? : namespaces * : major : minor : timestamp : last-commit-hash )
+rule cpp ( filepath ? : namespaces * : major : minor : timestamp : last-commit-hash : branch )
 {
     # default filepath is "Version.cpp" in the current directory
     filepath ?= Version.cpp ;
@@ -86,6 +86,7 @@ int Version::Major()                {return $(major);}
 int Version::Minor()                {return $(minor);}
 int Version::Revision()             {return $(timestamp);}
 std::string Version::LastModified()   {return \"$(last-commit-hash)\";}
+std::string Version::Branch()   {return \"$(branch)\";}
 std::string Version::str()
 {
 	std::ostringstream v;
