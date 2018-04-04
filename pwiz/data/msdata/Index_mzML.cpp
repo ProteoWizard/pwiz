@@ -267,7 +267,9 @@ class HandlerIndexCreator : public SAXParser::Handler
       chromatogramCount_(chromatogramCount),
       chromatogramIndex_(chromatogramIndex),
       legacyIdRefToNativeId(&legacyIdRefToNativeId)
-    {}
+    {
+        version = schemaVersion_;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -286,7 +288,7 @@ class HandlerIndexCreator : public SAXParser::Handler
             if (version == 1)
             {
                 string idRef, nativeID;
-                getAttribute(attributes, "idRef", idRef);
+                getAttribute(attributes, "id", idRef);
                 getAttribute(attributes, "nativeID", nativeID);
                 if (nativeID.empty())
                     si->id = idRef;
