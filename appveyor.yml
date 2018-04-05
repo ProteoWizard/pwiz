@@ -1,8 +1,8 @@
 version: '{build}.{branch}'
 clone_depth: 1
-build_script:
-- ps: '& .\quickbuild.bat address-model=64 --i-agree-to-the-vendor-licenses -j2 --abbreviate-paths pwiz executables toolset=msvc-12.0'
-test: off
+build_script: >-
+    & .\scripts\misc\tcbuild-apps.bat 64 --i-agree-to-the-vendor-licenses -j2 pwiz_tools\Skyline pwiz_tools\Topograph toolset=msvc-12.0
+    & .\quickbuild.bat address-model=64 --i-agree-to-the-vendor-licenses -j2 --abbreviate-paths pwiz executables toolset=msvc-12.0
 
 skip_commits:
   files:
