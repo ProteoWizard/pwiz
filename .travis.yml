@@ -13,39 +13,6 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-4.9
-      env:
-         - MATRIX_EVAL="TOOLSET=toolset=gcc-4.9"
-
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-5
-      env:
-         - MATRIX_EVAL="TOOLSET=toolset=gcc-5"
-
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-6
-      env:
-        - MATRIX_EVAL="TOOLSET=toolset=gcc-6"
-
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
             - g++-7
       env:
         - MATRIX_EVAL="TOOLSET=toolset=gcc-7"
@@ -65,28 +32,6 @@ matrix:
             - clang-3.6
       env:
         - MATRIX_EVAL="TOOLSET=toolset=clang-3.6"
-
-    # works on Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-3.9
-          packages:
-            - clang-3.9
-      env:
-        - MATRIX_EVAL="TOOLSET=toolset=clang-3.9"
-
-    # works on Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-4.0
-          packages:
-            - clang-4.0
-      env:
-        - MATRIX_EVAL="TOOLSET=toolset=clang-4.0"
 
     # works on Trusty
     - os: linux
