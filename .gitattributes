@@ -1,8 +1,5 @@
 #  .gitattributes for pwiz
 
-# Set the default behavior, in case people don't have core.autocrlf set.
-* text=auto
-
 # Don't change line endings on potentially indexed mass spec data
 *.mzml binary
 *.mzxml binary
