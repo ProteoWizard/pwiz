@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
         {
             cout << "Usage: mscat filename\n"
                  << "Write spectrum and chromatogram data as text to console.\n\n"
-                 << "http://proteowizard.sourceforge.net\n"
+                 << "https://github.com/ProteoWizard\n"
                  << "support@proteowizard.org\n";
             return 1;
         }

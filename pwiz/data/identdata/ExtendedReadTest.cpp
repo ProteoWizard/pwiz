@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
                 cout << argv[i] << endl;
         }
 
-        cout << "\nhttp://proteowizard.sourceforge.net\n"
+        cout << "\nhttps://github.com/ProteoWizard\n"
              << "support@proteowizard.org\n";
 
     }

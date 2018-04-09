@@ -304,7 +304,7 @@ int main(int argc, char* argv[])
                  << "  --acceptZeroLengthSpectra (skip expensive checking for empty spectra when opening a file)\n"
                  << "  --ignoreZeroIntensityPoints (read profile data exactly as the vendor provides, even if there are no flanking zero points)\n"
                  << "  --reverse (iterate backwards)\n\n"
-                 << "http://proteowizard.sourceforge.net\n"
+                 << "https://github.com/ProteoWizard\n"
                  << "support@proteowizard.org\n";
 
             if (argv[1] == string("--help"))

@@ -141,7 +141,7 @@ Config parseCommandLine(int argc, const char* argv[])
           << endl
 
           << "Questions, comments, and bug reports:\n"
-          << "http://proteowizard.sourceforge.net\n"
+          << "https://github.com/ProteoWizard\n"
           << "support@proteowizard.org\n"
           << "\n"
           << "ProteoWizard release: " << pwiz::Version::str() << " (" << pwiz::Version::LastModified() << ")" << endl
