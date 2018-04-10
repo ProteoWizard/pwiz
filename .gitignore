@@ -370,8 +370,6 @@ ASALocalRun/
 /libraries/libpng*
 /libraries/zlib*
 Version.cpp
-Reader*Test.data
-LicenseKey.h
 /pwiz_tools/BiblioSpec/tests/inputs
 /pwiz_tools/BiblioSpec/tests/output
 /pwiz_tools/SeeMS/**/AssemblyInfo.cs
@@ -381,32 +379,12 @@ LicenseKey.h
 /pwiz_tools/Bumbershoot/**/AssemblyInfo.cs
 /pwiz_tools/Bumbershoot/idpicker/Resources/Resources.*
 
-# files generated during build tests
-/Enolase_repeats_AQv1.4.2.试验.wiff.scan
-/pwiz/analysis/spectrum_processing/SpectrumList_MZRefinerTest.data/JD_06232014_sample4_C.mzRefinement.tsv
-
 # Files that get extracted from vendor reader distros
-/pwiz_aux/msrc/utility/vendor_api/Waters/vc12_x64
-/pwiz_aux/msrc/utility/vendor_api/Waters/vc12_x86
-/pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxLockMassProcessor.hpp
-/pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxParameters.hpp
-/pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxRawAnalogReader.hpp
-/pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxRawChromatogramReader.hpp
-/pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxRawDataFile.h
-/pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxRawDefs.h
-/pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxRawInfoReader.hpp
-/pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxRawProcessor.hpp
-/pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxRawReader.hpp
-/pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxRawScanReader.hpp
-/pwiz_aux/msrc/utility/vendor_api/Agilent/EULA.MHDAC
-/pwiz_aux/msrc/utility/vendor_api/Shimadzu/EULA.SFCS
-/pwiz_aux/msrc/utility/vendor_api/thermo/EULA.MSFileReader
-/pwiz_aux/msrc/utility/vendor_api/Bruker/baf2sql_c.h
-/pwiz_aux/msrc/utility/vendor_api/Bruker/baf2sql_cpp.h
-/pwiz_aux/msrc/utility/vendor_api/Bruker/include/c/timsdata.h
-/pwiz_aux/msrc/utility/vendor_api/Bruker/schema.h
-/pwiz_aux/msrc/utility/vendor_api/Bruker/timsdata_cpp (2).h
-/pwiz_aux/msrc/utility/vendor_api/Bruker/timsdata_cpp.h
+Reader*Test.data
+/pwiz_aux/msrc/utility/vendor_api/*/EULA.*
+/pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h
+/pwiz_aux/msrc/utility/vendor_api/Bruker/**/*.h
+/pwiz_aux/msrc/utility/vendor_api/Waters/MassLynx*.h*
 
 # Skyline generated files
 /pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/ChromatogramGroupData.cs

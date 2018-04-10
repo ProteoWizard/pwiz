@@ -123,6 +123,8 @@ void testShift(const bfs::path& datadir)
     verifyPrecursorInfo(*msd.run.spectrumListPtr->spectrum(470), epsilon, 838.96963, 838.97257);
     verifyScanInfo(*msd.run.spectrumListPtr->spectrum(551, true), epsilon, 1048.55384, 155.08147, 1321.68186, 50, 368.19235, 104, 941.97253);
     verifyPrecursorInfo(*msd.run.spectrumListPtr->spectrum(551), epsilon, 739.70141, 740.03206);
+
+    bfs::remove(datadir / "JD_06232014_sample4_C.mzRefinement.tsv");
 }
 
 
