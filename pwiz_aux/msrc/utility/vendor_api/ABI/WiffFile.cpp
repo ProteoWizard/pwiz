@@ -133,6 +133,7 @@ struct ExperimentImpl : public Experiment
     gcroot<MSExperiment^> msExperiment;
     int sample, period, experiment;
 
+    ExperimentType experimentType;
     size_t simCount;
     size_t transitionCount;
 
@@ -397,14 +398,14 @@ ExperimentPtr WiffFileImpl::getExperiment(int sample, int period, int experiment
 
 
 ExperimentImpl::ExperimentImpl(const WiffFileImpl* wifffile, int sample, int period, int experiment)
-: wifffile_(wifffile), sample(sample), period(period), experiment(experiment), transitionCount(0), initializedTIC_(false), initializedBPC_(false)
+: wifffile_(wifffile), sample(sample), period(period), experiment(experiment), transitionCount(0), simCount(0), initializedTIC_(false), initializedBPC_(false)
 {
     try
     {
         wifffile_->setExperiment(sample, period, experiment);
         msExperiment = wifffile_->msSample->GetMSExperiment(experiment-1);
 
-        auto experimentType = (ExperimentType)msExperiment->Details->ExperimentType;
+        experimentType = (ExperimentType) msExperiment->Details->ExperimentType;
         if (experimentType == MRM)
             transitionCount = msExperiment->Details->MassRangeInfo->Length;
         else if (experimentType == SIM)
@@ -477,6 +478,9 @@ void ExperimentImpl::getSIM(size_t index, Target& target) const
 {
     try
     {
+        if (experimentType != SIM)
+            return;
+
         if (index >= simCount)
             throw std::out_of_range("[Experiment::getSIM()] index out of range");
 
@@ -503,6 +507,9 @@ void ExperimentImpl::getSRM(size_t index, Target& target) const
 {
     try
     {
+        if (experimentType != MRM)
+            return;
+
         if (index >= transitionCount)
             throw std::out_of_range("[Experiment::getSRM()] index out of range");
 
