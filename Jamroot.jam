@@ -58,7 +58,7 @@ ECHO
 #
 #   --without-binary-msdata Build with support for mass spec text formats only
 #                           (mzML, mzXML, MGF, etc - no binary formats
-#                           like mz5 or vendor-specifics )
+#                           like mz5 or vendor-specifics)
 #
 #   There are some aliases to build commonly used subsets of pwiz:
 #
