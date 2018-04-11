@@ -465,6 +465,19 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
     try
     {
         bfs::remove_all(newRawPath); // remove the copy of the RAW file with non-ASCII characters
+
+        // special case for wiff files with accompanying .scan files
+        if (bal::iequals(rawpathPath.extension().string(), ".wiff"))
+        {
+            bfs::path wiffscanPath(rawpathPath);
+            wiffscanPath.replace_extension(".wiff.scan");
+            if (bfs::exists(wiffscanPath))
+            {
+                bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
+                newWiffscanPath.replace_extension(unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".wiff.scan"));
+                bfs::remove(newWiffscanPath);
+            }
+        }
     }
     catch (bfs::filesystem_error& e)
     {

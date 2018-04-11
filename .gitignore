@@ -370,8 +370,6 @@ ASALocalRun/
 /libraries/libpng*
 /libraries/zlib*
 Version.cpp
-Reader*Test.data
-LicenseKey.h
 /pwiz_tools/BiblioSpec/tests/inputs
 /pwiz_tools/BiblioSpec/tests/output
 /pwiz_tools/SeeMS/**/AssemblyInfo.cs
@@ -380,3 +378,16 @@ LicenseKey.h
 /pwiz_tools/Bumbershoot/**/AssemblyInfo.cpp
 /pwiz_tools/Bumbershoot/**/AssemblyInfo.cs
 /pwiz_tools/Bumbershoot/idpicker/Resources/Resources.*
+
+# Files that get extracted from vendor reader distros
+Reader*Test.data
+/pwiz_aux/msrc/utility/vendor_api/*/EULA.*
+/pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h
+/pwiz_aux/msrc/utility/vendor_api/Bruker/**/*.h
+/pwiz_aux/msrc/utility/vendor_api/Waters/MassLynx*.h*
+
+# Skyline generated files
+/pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/ChromatogramGroupData.cs
+/pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/SkylineDocument.cs
+/pwiz_tools/Skyline/ProtocolBuffers/tmp/ChromatogramGroupData.cs
+/pwiz_tools/Skyline/ProtocolBuffers/tmp/SkylineDocument.cs
