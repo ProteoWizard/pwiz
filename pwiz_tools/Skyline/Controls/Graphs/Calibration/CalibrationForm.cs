@@ -261,7 +261,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 if (minX <= maxX)
                 {
                     int interpolatedLinePointCount = 100;
-                    if (!options.LogPlot && !CalibrationCurve.TurningPoint.HasValue)
+                    if (!options.LogPlot)
                     {
                         if (regressionFit == RegressionFit.LINEAR_THROUGH_ZERO)
                         {
@@ -272,7 +272,17 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                             interpolatedLinePointCount = 2;
                         }
                     }
-                    LineItem interpolatedLine = CreateInterpolatedLine(CalibrationCurve, minX, maxX,
+                    double[] xValues;
+                    if (CalibrationCurve.TurningPoint.HasValue)
+                    {
+                        xValues = new[] {minX, CalibrationCurve.TurningPoint.Value, maxX};
+                    }
+                    else
+                    {
+                        xValues = new[] {minX, maxX};
+                    }
+                    Array.Sort(xValues);
+                    LineItem interpolatedLine = CreateInterpolatedLine(CalibrationCurve, xValues,
                         interpolatedLinePointCount, Options.LogPlot);
                     if (null != interpolatedLine)
                     {
@@ -539,24 +549,29 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             UpdateUI(false);
         }
 
-        private LineItem CreateInterpolatedLine(CalibrationCurve calibrationCurve, double minX, double maxX, int pointCount, bool logPlot)
+        private LineItem CreateInterpolatedLine(CalibrationCurve calibrationCurve, double[] xValues, int pointCount, bool logPlot)
         {
             PointPairList pointPairList = new PointPairList();
-            for (int i = 0; i < pointCount; i++)
+            for (int iRange = 0; iRange < xValues.Length - 1; iRange++)
             {
-                double x;
-                if (logPlot)
+                double minX = xValues[iRange];
+                double maxX = xValues[iRange + 1];
+                for (int i = 0; i < pointCount; i++)
                 {
-                    x = Math.Exp((Math.Log(minX)*(pointCount - 1 - i) + Math.Log(maxX)*i)/(pointCount - 1));
-                }
-                else
-                {
-                    x = (minX*(pointCount - 1 - i) + maxX*i)/(pointCount - 1);
-                }
-                double? y = calibrationCurve.GetY(x);
-                if (y.HasValue)
-                {
-                    pointPairList.Add(x, y.Value);
+                    double x;
+                    if (logPlot)
+                    {
+                        x = Math.Exp((Math.Log(minX) * (pointCount - 1 - i) + Math.Log(maxX) * i) / (pointCount - 1));
+                    }
+                    else
+                    {
+                        x = (minX * (pointCount - 1 - i) + maxX * i) / (pointCount - 1);
+                    }
+                    double? y = calibrationCurve.GetY(x);
+                    if (y.HasValue)
+                    {
+                        pointPairList.Add(x, y.Value);
+                    }
                 }
             }
             if (!pointPairList.Any())
