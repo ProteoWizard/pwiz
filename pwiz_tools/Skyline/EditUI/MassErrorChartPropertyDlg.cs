@@ -23,10 +23,11 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class MassErrorChartPropertyDlg : Form
+    public partial class MassErrorChartPropertyDlg : FormEx
     {
         public MassErrorChartPropertyDlg()
         {

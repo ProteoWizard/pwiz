@@ -17,13 +17,13 @@
  * limitations under the License.
  */
 using System.Linq;
-using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
-    public partial class ChooseFormatDlg : Form
+    public partial class ChooseFormatDlg : FormEx
     {
         private bool _inChangeText;
         public ChooseFormatDlg(DataSchemaLocalizer dataSchemaLocalizer)

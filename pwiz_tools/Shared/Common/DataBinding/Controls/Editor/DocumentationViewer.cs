@@ -18,10 +18,11 @@
  */
 using System;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 
 namespace pwiz.Common.DataBinding.Controls.Editor
 {
-    public partial class DocumentationViewer : Form
+    public partial class DocumentationViewer : CommonFormEx
     {
         public DocumentationViewer()
         {

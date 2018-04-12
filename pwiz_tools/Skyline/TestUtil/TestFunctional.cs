@@ -493,6 +493,13 @@ namespace pwiz.SkylineTestUtil
                     Assert.IsNotNull(_formLookup.GetTest(formType),
                         formType + " must be added to TestRunnerLib\\TestRunnerFormLookup.csv");
 
+                    // Make sure that the form inherits from one of the FormEx variants, so
+                    // that it will properly respect the OffScreen flag.
+                    Assert.IsTrue(typeof(FormEx).IsAssignableFrom(typeof(TDlg))
+                                  || typeof(CommonFormEx).IsAssignableFrom(typeof(TDlg))
+                                  || typeof(DockableFormEx).IsAssignableFrom(typeof(TDlg)),
+                        "{0} should inherit from FormEx, CommonFormEx, or DockableFormEx", formType);
+
                     if (Program.PauseForms != null && Program.PauseForms.Remove(formType))
                     {
                         var formSeen = new FormSeen();

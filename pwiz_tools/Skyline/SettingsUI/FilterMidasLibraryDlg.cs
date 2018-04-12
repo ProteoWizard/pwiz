@@ -30,7 +30,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class FilterMidasLibraryDlg : Form
+    public partial class FilterMidasLibraryDlg : FormEx
     {
         public FilterMidasLibraryDlg(string docPath, MidasLibSpec libSpec, IEnumerable<LibrarySpec> libSpecs)
         {

@@ -19,11 +19,12 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding.Controls
 {
-    public partial class NameLayoutForm : Form
+    public partial class NameLayoutForm : CommonFormEx
     {
         private HashSet<string> _existingNames;
         public NameLayoutForm(IViewContext viewContext, HashSet<string> existing)

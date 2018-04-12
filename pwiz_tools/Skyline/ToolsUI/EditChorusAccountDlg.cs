@@ -25,10 +25,11 @@ using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.ToolsUI
 {
-    public partial class EditChorusAccountDlg : Form
+    public partial class EditChorusAccountDlg : FormEx
     {
         private readonly ChorusAccount _originalAccount;
         private readonly IList<ChorusAccount> _existing;
