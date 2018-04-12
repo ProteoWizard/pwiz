@@ -5591,9 +5591,6 @@
   <data name="ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>このタンパク質にはシークエンスがありません</value>
   </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_" xml:space="preserve">
-    <value>{0}という名前のドリフト時間予測が既に存在しています。</value>
-  </data>
   <data name="CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_" xml:space="preserve">
     <value>エラー： 正規表現の適用後に繰り返し測定名'{0}'が重複しています。</value>
   </data>

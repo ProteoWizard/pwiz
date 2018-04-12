@@ -126,6 +126,24 @@ namespace pwiz.Skyline.Model
                     requireProductInfo = true; // Product list is not completely empty, or not just precursors
                     break;
                 }
+                // More expensive check to see whether calculated precursor mz matches any declared product mz
+                var precursor = ReadPrecursorOrProductColumns(document, row, true); // Get precursor values
+                if (precursor != null)
+                {
+                    try
+                    {
+                        var product = ReadPrecursorOrProductColumns(document, row, false); // Get product values, if available
+                        if (product != null && (Math.Abs(precursor.Mz.Value - product.Mz.Value) > MzMatchTolerance))
+                        {
+                            requireProductInfo = true; // Product list is not completely empty, or not just precursors
+                            break;
+                        }
+                    }
+                    catch (LineColNumberedIoException)
+                    {
+                        break;  // No product info to be had
+                    }
+                }
             }
             string defaultPepGroupName = null;
             // For each row in the grid, add to or begin MoleculeGroup|Molecule|TransitionList tree

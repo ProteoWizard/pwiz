@@ -1618,7 +1618,10 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Read tag attributes
             Target = Target.FromSerializableString(reader.GetAttribute(ATTR.modified_sequence)); // CONSIDER(bspratt): different attribute for small molecule?
-            Charge = Adduct.FromStringAssumeProtonated(reader.GetAttribute(ATTR.charge));
+            var adductOrCharge = reader.GetAttribute(ATTR.charge); // May be a bare number or an adduct description
+            Charge = Target.IsProteomic 
+                ? Adduct.FromStringAssumeProtonated(adductOrCharge)
+                : Adduct.FromStringAssumeProtonatedNonProteomic(adductOrCharge);
             var ionMobilityValue = reader.GetNullableDoubleAttribute(ATTR.drift_time);
             if (ionMobilityValue.HasValue)
             {
@@ -1651,7 +1654,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Write tag attributes
             writer.WriteAttribute(ATTR.modified_sequence, Target.ToSerializableString()); // CONSIDER(bspratt): different attribute for small molecule?
-            writer.WriteAttribute(ATTR.charge, Charge);
+            writer.WriteAttribute(ATTR.charge, Target.IsProteomic ? Charge.ToString() : Charge.AdductFormula);
             if (IonMobilityInfo.IonMobility.Units != MsDataFileImpl.eIonMobilityUnits.none)
             {
                 writer.WriteAttributeNullable(ATTR.ion_mobility, IonMobilityInfo.IonMobility.Mobility);
