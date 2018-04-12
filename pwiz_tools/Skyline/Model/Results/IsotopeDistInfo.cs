@@ -303,6 +303,11 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public override string ToString() // For debugging convenience
+        {
+            return string.Format("r={0} p={1}", Rank, Proportion); // Not L10N
+        }
+
         #endregion
     }
 }
