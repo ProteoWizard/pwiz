@@ -242,18 +242,41 @@ namespace pwiz.Common.DataBinding
             }
             public override bool IsValidFor(DataSchema dataSchema, Type columnType)
             {
-                return typeof (string) == dataSchema.GetWrappedValueType(columnType);
+                var type = dataSchema.GetWrappedValueType(columnType);
+                if (typeof(IFormattable).IsAssignableFrom(type))
+                {
+                    return false;
+                }
+                if (type.IsPrimitive)
+                {
+                    return false;
+                }
+                return true;
             }
 
             public override bool Matches(DataSchema dataSchema, Type columnType, object columnValue, object operandValue)
             {
                 DataSchemaLocalizer dataSchemaLocalizer = dataSchema.DataSchemaLocalizer;
-                String strColumnValue = (string) Convert.ChangeType(columnValue, typeof (string), dataSchemaLocalizer.FormatProvider);
-                String strOperandValue = (string) Convert.ChangeType(operandValue, typeof(string), dataSchemaLocalizer.FormatProvider);
+                String strColumnValue = ValueToString(dataSchemaLocalizer, columnValue);
+                String strOperandValue = ValueToString(dataSchemaLocalizer, operandValue);
                 return StringMatches(strColumnValue, strOperandValue);
             }
 
             public abstract bool StringMatches(string columnValue, string operandValue);
+
+            protected string ValueToString(DataSchemaLocalizer dataSchemaLocalizer, object value)
+            {
+                if (value == null)
+                {
+                    return string.Empty;
+                }
+                var formattable = value as IFormattable;
+                if (formattable != null)
+                {
+                    return formattable.ToString(null, dataSchemaLocalizer.FormatProvider);
+                }
+                return value.ToString();
+            }
         }
 
         class OpContains : StringFilterOperation

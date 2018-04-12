@@ -81,9 +81,10 @@ namespace CommonTest.DataBinding
             VerifyFilterCount(uris, FilterOperations.OP_EQUALS, "urn:two", 1);
             VerifyFilterCount(uris, FilterOperations.OP_NOT_EQUALS, "urn:two", 2);
             VerifyFilterCount(uris, FilterOperations.OP_EQUALS, "invaliduri", 0);
-            Assert.IsFalse(IsValidForType<Uri>(FilterOperations.OP_STARTS_WITH));
-            Assert.IsFalse(IsValidForType<Uri>(FilterOperations.OP_CONTAINS));
-            Assert.IsFalse(IsValidForType<Uri>(FilterOperations.OP_NOT_CONTAINS));
+            VerifyFilterCount(uris, FilterOperations.OP_STARTS_WITH, "urn:t", 2);
+            VerifyFilterCount(uris, FilterOperations.OP_NOT_STARTS_WITH, "urn:t", 1);
+            VerifyFilterCount(uris, FilterOperations.OP_CONTAINS, "o", 2);
+            VerifyFilterCount(uris, FilterOperations.OP_NOT_CONTAINS, "o", 1);
             Assert.IsFalse(IsValidForType<Uri>(FilterOperations.OP_IS_LESS_THAN));
             Assert.IsFalse(IsValidForType<Uri>(FilterOperations.OP_IS_LESS_THAN_OR_EQUAL));
             Assert.IsFalse(IsValidForType<Uri>(FilterOperations.OP_IS_GREATER_THAN));
@@ -109,6 +110,8 @@ namespace CommonTest.DataBinding
             VerifyFilterCountStructs(dates, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL, "1969-07-20", 2);
             Assert.IsFalse(IsValidForType<DateTime>(FilterOperations.OP_STARTS_WITH));
             Assert.IsFalse(IsValidForType<DateTime>(FilterOperations.OP_CONTAINS));
+            Assert.IsFalse(IsValidForType<DateTime>(FilterOperations.OP_NOT_STARTS_WITH));
+            Assert.IsFalse(IsValidForType<DateTime>(FilterOperations.OP_NOT_CONTAINS));
             Assert.IsNull(GetOperandError<DateTime>("1969-07-20"));
             Assert.IsNotNull(GetOperandError<DateTime>("invalid date"));
         }
@@ -164,7 +167,10 @@ namespace CommonTest.DataBinding
             Assert.AreEqual(expectedCount, ApplyFilter(filterOperation, operand, nullableItems).Count);
             var itemsWithNulls = nullableItems.Concat(nulls);
             int nullCount;
-            if (filterOperation == FilterOperations.OP_IS_BLANK || filterOperation == FilterOperations.OP_NOT_EQUALS)
+            if (filterOperation == FilterOperations.OP_IS_BLANK 
+                || filterOperation == FilterOperations.OP_NOT_EQUALS 
+                || filterOperation == FilterOperations.OP_NOT_CONTAINS
+                || filterOperation == FilterOperations.OP_NOT_STARTS_WITH)
             {
                 nullCount = nulls.Count;
             }
