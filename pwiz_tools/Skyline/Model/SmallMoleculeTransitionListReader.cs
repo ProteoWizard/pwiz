@@ -127,12 +127,12 @@ namespace pwiz.Skyline.Model
                     break;
                 }
                 // More expensive check to see whether calculated precursor mz matches any declared product mz
-                var precursor = ReadPrecursorOrProductColumns(document, row, true); // Get precursor values
+                var precursor = ReadPrecursorOrProductColumns(document, row, null); // Get precursor values
                 if (precursor != null)
                 {
                     try
                     {
-                        var product = ReadPrecursorOrProductColumns(document, row, false); // Get product values, if available
+                        var product = ReadPrecursorOrProductColumns(document, row, precursor); // Get product values, if available
                         if (product != null && (Math.Abs(precursor.Mz.Value - product.Mz.Value) > MzMatchTolerance))
                         {
                             requireProductInfo = true; // Product list is not completely empty, or not just precursors
@@ -141,7 +141,7 @@ namespace pwiz.Skyline.Model
                     }
                     catch (LineColNumberedIoException)
                     {
-                        break;  // No product info to be had
+                        // No product info to be had in this line (so this is a precursor) but there may be others, keep looking
                     }
                 }
             }
@@ -149,10 +149,10 @@ namespace pwiz.Skyline.Model
             // For each row in the grid, add to or begin MoleculeGroup|Molecule|TransitionList tree
             foreach (var row in Rows)
             {
-                var precursor = ReadPrecursorOrProductColumns(document, row, true); // Get molecule values
+                var precursor = ReadPrecursorOrProductColumns(document, row, null); // Get molecule values
                 if (precursor == null)
                     return null;
-                if (requireProductInfo && ReadPrecursorOrProductColumns(document, row, false) == null)
+                if (requireProductInfo && ReadPrecursorOrProductColumns(document, row, precursor) == null)
                 {
                     return null;
                 }
@@ -545,6 +545,14 @@ namespace pwiz.Skyline.Model
                 MoleculeAccessionNumbers = accessionNumbers;
             }
 
+            public ParsedIonInfo ChangeNote(string note)
+            {
+                return ChangeProp(ImClone(this), im =>
+                {
+                    im.Note = note;
+                });
+            }
+
             public CustomMolecule ToCustomMolecule()
             {
                 return new CustomMolecule(Formula, MonoMass, AverageMass, Name ?? string.Empty,
@@ -723,8 +731,10 @@ namespace pwiz.Skyline.Model
         //  mz and charge
         private ParsedIonInfo ReadPrecursorOrProductColumns(SrmDocument document,
             Row row,
-            bool getPrecursorColumns)
+            ParsedIonInfo precursorInfo)
         {
+
+            var getPrecursorColumns = precursorInfo == null;
             int indexName = getPrecursorColumns ? INDEX_MOLECULE_NAME : INDEX_PRODUCT_NAME;
             int indexFormula = getPrecursorColumns ? INDEX_MOLECULE_FORMULA : INDEX_PRODUCT_FORMULA;
             int indexAdduct = getPrecursorColumns ? INDEX_MOLECULE_ADDUCT : INDEX_PRODUCT_ADDUCT;
@@ -1098,6 +1108,12 @@ namespace pwiz.Skyline.Model
                 countValues++;
             if (NullForEmpty(formula) != null)
                 countValues++;
+            if (countValues == 0 && !getPrecursorColumns &&
+                (string.IsNullOrEmpty(name) || Equals(precursorInfo.Name, name)))
+            {
+                // No product info found in this row, assume that this is a precursor declaration
+                return precursorInfo.ChangeNote(note);
+            }
             if (countValues >= 2) // Do we have at least 2 of charge, mz, formula?
             {
                 TypedMass monoMass;
@@ -1301,7 +1317,7 @@ namespace pwiz.Skyline.Model
             ParsedIonInfo parsedIonInfo;
             try
             {
-                parsedIonInfo = ReadPrecursorOrProductColumns(document, row, true); // Re-read the precursor columns
+                parsedIonInfo = ReadPrecursorOrProductColumns(document, row, null); // Re-read the precursor columns
                 if (parsedIonInfo == null)
                     return null; // Some failure, but exception was already handled
                 // Identify items with same formula and different adducts
@@ -1348,7 +1364,7 @@ namespace pwiz.Skyline.Model
 
         private TransitionGroupDocNode GetMoleculeTransitionGroup(SrmDocument document, Row row, Peptide pep, bool requireProductInfo)
         {
-            var moleculeInfo = ReadPrecursorOrProductColumns(document, row, true); // Re-read the precursor columns
+            var moleculeInfo = ReadPrecursorOrProductColumns(document, row, null); // Re-read the precursor columns
             if (moleculeInfo == null)
             {
                 return null; // Some parsing error, user has already been notified
@@ -1412,7 +1428,8 @@ namespace pwiz.Skyline.Model
 
         private TransitionDocNode GetMoleculeTransition(SrmDocument document, Row row, Peptide pep, TransitionGroup group, bool requireProductInfo)
         {
-            var ion = ReadPrecursorOrProductColumns(document, row, !requireProductInfo); // Re-read the product columns, or copy precursor
+            var precursorIon = ReadPrecursorOrProductColumns(document, row, null); // Re-read the precursor columns
+            var ion = requireProductInfo ? ReadPrecursorOrProductColumns(document, row, precursorIon) : precursorIon; // Re-read the product columns, or copy precursor
             if (requireProductInfo && ion == null)
             {
                 return null;

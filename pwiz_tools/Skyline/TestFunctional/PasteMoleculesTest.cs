@@ -1019,6 +1019,21 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
                 Assert.AreEqual(4, pastedDoc.MoleculeCount);
             }
+
+            // Check handling of transition list where precursor is indicated by leaving product columns empty
+            var textCSV7 =
+                "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Explicit Retention Time,Collisional Cross Section (sq A),Product m/z,Product Charge\n" +
+                "Lipid,L1,C41H74NO8P,[M+H],6.75,273.41,,\n" +
+                "Lipid,L1,C41H74NO8P,[M+H],6.75,273.41,263.2371,1\n" +
+                "Lipid,L2,C42H82NO8P,[M+Na],7.3,288.89,,\n" +
+                "Lipid,L2,C42H82NO8P,[M+Na],7.3,288.89,184.0785,1\n";
+            NewDocument();
+            RunUI(() =>
+            {
+                SetClipboardText(textCSV7);
+                SkylineWindow.Paste();
+            });
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);
         }
 
         private void TestLabelsNoFormulas()
