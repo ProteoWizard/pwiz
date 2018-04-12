@@ -2375,9 +2375,13 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public ChromatogramInfo(float[] times, float[] intensities)
+        public ChromatogramInfo(TimeIntensities timeIntensities)
         {
-            TimeIntensities = new TimeIntensities(times, intensities, null, null);
+            TimeIntensities = timeIntensities;
+        }
+
+        public ChromatogramInfo(float[] times, float[] intensities) : this(new TimeIntensities(times, intensities, null, null))
+        {
         }
 
         public ChromatogramGroupInfo GroupInfo { get { return _groupInfo; } }

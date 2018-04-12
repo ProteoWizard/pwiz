@@ -117,6 +117,7 @@ namespace pwiz.Skyline
             this.productsTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.singleTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.totalTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.deconvoluteContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorTran = new System.Windows.Forms.ToolStripSeparator();
             this.basePeakContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ticContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -420,6 +421,7 @@ namespace pwiz.Skyline
             this.productsTranMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.singleTranMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.totalTranMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.deconvoluteMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorTranMain = new System.Windows.Forms.ToolStripSeparator();
             this.basePeakMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ticMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1114,6 +1116,7 @@ namespace pwiz.Skyline
             this.productsTranContextMenuItem,
             this.singleTranContextMenuItem,
             this.totalTranContextMenuItem,
+            this.deconvoluteContextMenuItem,
             this.toolStripSeparatorTran,
             this.basePeakContextMenuItem,
             this.ticContextMenuItem,
@@ -1154,6 +1157,12 @@ namespace pwiz.Skyline
             this.totalTranContextMenuItem.Name = "totalTranContextMenuItem";
             resources.ApplyResources(this.totalTranContextMenuItem, "totalTranContextMenuItem");
             this.totalTranContextMenuItem.Click += new System.EventHandler(this.totalTranMenuItem_Click);
+            // 
+            // deconvoluteContextMenuItem
+            // 
+            this.deconvoluteContextMenuItem.Name = "deconvoluteContextMenuItem";
+            resources.ApplyResources(this.deconvoluteContextMenuItem, "deconvoluteContextMenuItem");
+            this.deconvoluteContextMenuItem.Click += new System.EventHandler(this.deconvoluteMenuItem_Click);
             // 
             // toolStripSeparatorTran
             // 
@@ -3270,6 +3279,7 @@ namespace pwiz.Skyline
             this.productsTranMenuItem,
             this.singleTranMenuItem,
             this.totalTranMenuItem,
+            this.deconvoluteMenuItem,
             this.toolStripSeparatorTranMain,
             this.basePeakMenuItem,
             this.ticMenuItem,
@@ -3310,6 +3320,12 @@ namespace pwiz.Skyline
             this.totalTranMenuItem.Name = "totalTranMenuItem";
             resources.ApplyResources(this.totalTranMenuItem, "totalTranMenuItem");
             this.totalTranMenuItem.Click += new System.EventHandler(this.totalTranMenuItem_Click);
+            // 
+            // deconvoluteMenuItem
+            // 
+            this.deconvoluteMenuItem.Name = "deconvoluteMenuItem";
+            resources.ApplyResources(this.deconvoluteMenuItem, "deconvoluteMenuItem");
+            this.deconvoluteMenuItem.Click += new System.EventHandler(this.deconvoluteMenuItem_Click);
             // 
             // toolStripSeparatorTranMain
             // 
@@ -4521,6 +4537,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem linearRegressionContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem kernelDensityEstimationContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loessContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem deconvoluteContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem deconvoluteMenuItem;
         private System.Windows.Forms.ToolStripMenuItem integrationToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem applyPeakAllToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem applyPeakSubsequentToolStripMenuItem;

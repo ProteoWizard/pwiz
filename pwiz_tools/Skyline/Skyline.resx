@@ -6228,4 +6228,12 @@
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
+  <data name="deconvoluteContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 22</value>
+
+  </data>
+  <data name="deconvoluteContextMenuItem.Text" xml:space="preserve">
+    <value>Deconvolute</value>
+  </data>
+
 </root>

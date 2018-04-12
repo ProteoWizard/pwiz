@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum AutoZoomChrom { none, peak, window, both }
 
-    public enum DisplayTypeChrom { single, precursors, products, all, total, base_peak, tic }
+    public enum DisplayTypeChrom { single, precursors, products, all, total, deconvoluted_precursors, base_peak, tic }
 
     public partial class GraphChromatogram : DockableFormEx, IGraphContainer
     {
@@ -138,6 +138,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return DisplayType == DisplayTypeChrom.single; }
         }
+
+        public static bool DeconvolutePrecursors { get; set; }
 
         public static IEnumerable<TransitionDocNode> GetDisplayTransitions(TransitionGroupDocNode nodeGroup,
                                                                            DisplayTypeChrom displayType)
@@ -913,8 +915,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         multipleGroupsPerPane = nodeGroups.Length > 1;
                     }
 
+                    if (DisplayType == DisplayTypeChrom.deconvoluted_precursors)
+                    {
+                        DisplayDeconvoluted(settings, chromatograms, nodePeps, ref bestStartTime, ref bestEndTime);
+                    }
                     // If displaying multiple groups or the total of a single group
-                    if (multipleGroupsPerPane || DisplayType == DisplayTypeChrom.total)
+                    else if (multipleGroupsPerPane || DisplayType == DisplayTypeChrom.total)
                     {
                         int countLabelTypes = settings.PeptideSettings.Modifications.CountLabelTypes;
                         DisplayTotals(timeRegressionFunction, chromatograms, mzMatchTolerance, 
@@ -1998,6 +2004,81 @@ namespace pwiz.Skyline.Controls.Graphs
                     var graphPaneKey = new PaneKey(nodeGroup);
                     _graphHelper.AddChromatogram(graphPaneKey, graphItem);
                 }
+            }
+        }
+
+        private void DisplayDeconvoluted(SrmSettings settings, ChromatogramSet chromatogramSet, PeptideDocNode[] peptideDocNodes,
+        ref double bestStartTime,
+        ref double bestEndTime)
+        {
+            List<double> scores = new List<double>();
+            var deconvoluted = DeconvolutedChromatograms.Deconvolute(settings, ChromGroupInfos, peptideDocNodes, _nodeGroups, scores);
+            int iCharge = -1;
+            int countLabelTypes = settings.PeptideSettings.Modifications.CountLabelTypes;
+            Adduct charge = null;
+
+            for (int i = 0; i < _nodeGroups.Length; i++)
+            {
+                TransitionChromInfo tranPeakInfo = null; 
+                var nodeGroup = _nodeGroups[i];
+                var chromGroupInfo = ChromGroupInfos[i];
+                if (chromGroupInfo == null)
+                {
+                    continue;
+                }
+                var fileId = chromatogramSet.FindFile(chromGroupInfo.FilePath);
+                foreach (var nodeTran in nodeGroup.Transitions)
+                {
+                    var transitionChromInfo = GetTransitionChromInfo(nodeTran, _chromIndex, fileId, 0);
+                    if (transitionChromInfo == null)
+                        continue;
+                    if (tranPeakInfo == null || transitionChromInfo.Height > tranPeakInfo.Height)
+                    {
+                        tranPeakInfo = transitionChromInfo;
+                    }
+                    // Adjust best peak window used to zoom the graph to the best peak
+                    AddBestPeakTimes(transitionChromInfo, ref bestStartTime, ref bestEndTime);
+                }
+                var timeIntensities = deconvoluted[i];
+                var chromatogramInfo = new ChromatogramInfo(chromGroupInfo, 0);
+                chromatogramInfo.TimeIntensities = timeIntensities;
+                bool[] annotatePeak = new bool[chromatogramInfo.NumPeaks];
+                for (int j = 0; j < annotatePeak.Length; j++)
+                {
+                    var peak = chromatogramInfo.GetPeak(j);
+                    if (peak.EndTime < bestStartTime || peak.StartTime > bestEndTime)
+                    {
+                        annotatePeak[j] = true;
+                    }
+                }
+                int iColor = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
+                Color color = COLORS_GROUPS[iColor % COLORS_GROUPS.Count];
+
+                var graphItem = new ChromGraphItem(nodeGroup,
+                    null,
+                    chromatogramInfo,
+                    tranPeakInfo,
+                    null,
+                    annotatePeak,
+                    null,
+                    0,
+                    true,
+                    false,
+                    null,
+                    0,
+                    color,
+                    FontSize,
+                    LineWidth);
+                var graphPaneKey = new PaneKey(nodeGroup);
+                _graphHelper.AddChromatogram(graphPaneKey, graphItem);
+
+                var timeIntensitiesScore = new TimeIntensities(timeIntensities.Times, timeIntensities.Intensities.Zip(scores, 
+                    (intensity,score)=>(float)(intensity * score)), null, null);
+                var graphItemScore = new ChromGraphItem(nodeGroup, null, new ChromatogramInfo(timeIntensitiesScore),
+                    null, null, new bool[0], null, 0, true, false, null, 0, Color.Transparent, FontSize, LineWidth);
+                var scoreLine = (LineItem) _graphHelper.AddChromatogram(graphPaneKey, graphItemScore);
+                scoreLine.Line.Fill = new Fill(Color.FromArgb(30, color));
+                scoreLine.Label.IsVisible = false;
             }
         }
 

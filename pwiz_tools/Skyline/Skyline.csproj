@@ -1225,6 +1225,7 @@
     <Compile Include="Model\RetentionTimes\LinearAligner.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Model\Results\DeconvolutedChromatograms.cs" />
     <Compile Include="Model\Results\TimeIntensitiesGroup.cs" />
     <Compile Include="Model\Results\MsDataFileScanHelper.cs" />
     <Compile Include="Model\Results\MsDataFileScanIds.cs" />

@@ -1620,6 +1620,7 @@ namespace pwiz.Skyline
                     productsTranContextMenuItem,
                     singleTranContextMenuItem,
                     totalTranContextMenuItem,
+                    deconvoluteContextMenuItem,
                     toolStripSeparatorTran,
                     basePeakContextMenuItem,
                     ticContextMenuItem,
@@ -1851,6 +1852,8 @@ namespace pwiz.Skyline
                 (displayType == DisplayTypeChrom.all);
             totalTranMenuItem.Checked = totalTranContextMenuItem.Checked =
                 (displayType == DisplayTypeChrom.total);
+            deconvoluteMenuItem.CheckOnClick = deconvoluteContextMenuItem.Checked =
+                (displayType == DisplayTypeChrom.deconvoluted_precursors);
             basePeakMenuItem.Checked = basePeakContextMenuItem.Checked =
                 (displayType == DisplayTypeChrom.base_peak);
             ticMenuItem.Checked = ticContextMenuItem.Checked =
@@ -2185,6 +2188,12 @@ namespace pwiz.Skyline
         {
             SetDisplayTypeChrom(DisplayTypeChrom.tic);
         }
+
+        private void deconvoluteMenuItem_Click(object sender, EventArgs e)
+        {
+            SetDisplayTypeChrom(DisplayTypeChrom.deconvoluted_precursors);
+        }
+
 
         public void SetDisplayTypeChrom(DisplayTypeChrom displayType)
         {
