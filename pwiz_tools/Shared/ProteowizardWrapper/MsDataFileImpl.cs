@@ -473,8 +473,6 @@ namespace pwiz.ProteowizardWrapper
             {
                 if (_spectrumList == null)
                 {
-                    // CONSIDER(bspratt): there is no acceptable wrapping order when both centroiding and lockmass are needed at the same time 
-                    // (For now, this can't happen in practice, as Waters offers no centroiding, but someday this may force pwiz API rework)
                     var centroidLevel = new List<int>();
                     _spectrumList = _msDataFile.run.spectrumList;
                     bool hasSrmSpectra = HasSrmSpectraInList(_spectrumList);
@@ -495,6 +493,7 @@ namespace pwiz.ProteowizardWrapper
                     _lockmassFunction = null;
                     if (_lockmassParameters != null && !_lockmassParameters.IsEmpty  && _spectrumList != null)
                     {
+                        // N.B. it's OK for lockmass wrapper to wrap centroiding wrapper, but not vice versa.
                         _spectrumList = new SpectrumList_LockmassRefiner(_spectrumList,
                             _lockmassParameters.LockmassPositive ?? 0,
                             _lockmassParameters.LockmassNegative ?? 0,
@@ -811,10 +810,11 @@ namespace pwiz.ProteowizardWrapper
                     var ionMobility = GetIonMobility(spectrum);
                     if (!ionMobility.HasValue)
                     {
-                        if (IsWatersLockmassSpectrum(GetSpectrum(spectrum, i)))
+                        // Assume that if first few regular scans are without IM info, they are all without IM info
+                        if (i < 20 || IsWatersLockmassSpectrum(GetSpectrum(spectrum, i)))
                             continue;  // In SONAR data, lockmass scan without IM info doesn't mean there's no IM info
                         if (!maxIonMobility.HasValue)
-                            return null; // Assume that if first regular scan is without IM info, they are all
+                            return null; 
                     }
                     if (!maxIonMobility.HasValue)
                     {
