@@ -148,6 +148,8 @@ namespace pwiz.Skyline.Util.Extensions
         /// <summary>
         /// Splits a line of text in delimiter-separated value format into an array of fields.
         /// The function correctly handles quotation marks.
+        /// (N.B. our quotation mark handling now differs from the (March 2018) behavior of Excel and Google Spreadsheets
+        /// when dealing with somewhat absurd uses of quotes as found in our tests, but that seems to be OK for  general use.
         /// </summary>
         /// <param name="line">The line to be split into fields</param>
         /// <param name="separator">The separator being used</param>
@@ -157,22 +159,51 @@ namespace pwiz.Skyline.Util.Extensions
             var listFields = new List<string>();
             var sbField = new StringBuilder();
             bool inQuotes = false;
-            char chLast = '\0';  // Not L10N
-            foreach (char ch in line)
+            for (var chIndex = 0; chIndex < line.Length; chIndex++)
             {
+                var ch = line[chIndex];
                 if (inQuotes)
                 {
                     if (ch == '"')  // Not L10N
-                        inQuotes = false;
+                    {
+                        // Is this the closing quote, or is this an escaped quote?
+                        if (chIndex + 1 < line.Length && line[chIndex + 1] == '"')
+                        {
+                            sbField.Append(ch); // Treat "" as an escaped quote
+                            chIndex++; // Consume both quotes
+                        }
+                        else
+                        {
+                            inQuotes = false;
+                        }
+                    }
                     else
+                    {
                         sbField.Append(ch);
+                    }
                 }
                 else if (ch == '"')  // Not L10N
                 {
-                    inQuotes = true;
-                    // Add quote character, for "" inside quotes
-                    if (chLast == '"')  // Not L10N
-                        sbField.Append(ch);
+                    if (sbField.Length == 0) // Quote at start of field is special case
+                    {
+                        inQuotes = true;
+                    }
+                    else
+                    {
+                        if (chIndex + 1 < line.Length && line[chIndex + 1] == '"') 
+                        {
+                            sbField.Append(ch); // Treat "" as an escaped quote
+                            chIndex++; // Consume both quotes
+                        }
+                        else
+                        {
+                            // N.B. we effectively ignore a bare quote in an unquoted string. 
+                            // This is technically an undefined behavior, so that's probably OK.
+                            // Excel and Google sheets treat it as a literal quote, but that 
+                            // would be a change in our established behavior
+                            inQuotes = true;
+                        }
+                    }
                 }
                 else if (ch == separator)
                 {
@@ -183,7 +214,6 @@ namespace pwiz.Skyline.Util.Extensions
                 {
                     sbField.Append(ch);
                 }
-                chLast = ch;
             }
             listFields.Add(sbField.ToString());
             return listFields.ToArray();
