@@ -192,7 +192,7 @@ namespace pwiz.Skyline.Model.Serialization
         private static Annotations ReadAnnotations(XmlReader reader, StringPool stringPool)
         {
             string note = null;
-            int color = 0;
+            int color = Annotations.EMPTY.ColorIndex;
             var annotations = new Dictionary<string, string>();
             
             if (reader.IsStartElement(EL.note))

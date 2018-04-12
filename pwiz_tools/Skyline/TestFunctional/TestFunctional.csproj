@@ -156,6 +156,7 @@
     <Compile Include="ChorusFunctionalTest.cs" />
     <Compile Include="ChromGraphTransformTest.cs" />
     <Compile Include="ChromUITest.cs" />
+    <Compile Include="ImportAnnotationsTest.cs" />
     <Compile Include="ClearAllSettingsTest.cs" />
     <Compile Include="DocumentGridClipboardOperationsTest.cs" />
     <Compile Include="DocumentReportTest.cs" />
@@ -361,6 +362,7 @@
     <None Include="GroupComparisonPivotEditorTest.zip" />
     <None Include="GroupComparisonTest.zip" />
     <None Include="HighPrecModsTest.zip" />
+    <None Include="ImportAnnotationsTest.zip" />
     <None Include="ImportDocTest.zip" />
     <None Include="ImportFailureTest.zip" />
     <None Include="ImportIsolationSchemeTest.zip" />

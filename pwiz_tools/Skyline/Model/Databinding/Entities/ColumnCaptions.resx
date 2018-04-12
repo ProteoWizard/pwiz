@@ -529,6 +529,9 @@
   <data name="PeptideDocumentLocation">
     <value>Peptide Document Location</value>
   </data>
+  <data name="PeptideLocator">
+    <value>Peptide Locator</value>
+  </data>
   <data name="PeptideModifiedSequence">
     <value>Peptide Modified Sequence</value>
   </data>
@@ -548,6 +551,9 @@
   </data>
   <data name="PeptideResultDocumentLocation">
     <value>Peptide Result Document Location</value>
+  </data>
+  <data name="PeptideResultLocator">
+    <value>Peptide Result Locator</value>
   </data>
   <data name="PeptideResults">
     <value>Peptide Results</value>
@@ -576,6 +582,9 @@
   <data name="PrecursorCharge">
     <value>Precursor Charge</value>
   </data>
+  <data name="PrecursorLocator">
+    <value>Precursor Locator</value>
+  </data>
   <data name="PrecursorMz">
     <value>Precursor Mz</value>
   </data>
@@ -599,6 +608,9 @@
   </data>
   <data name="PrecursorResult">
     <value>Precursor Result</value>
+  </data>
+  <data name="PrecursorResultLocator">
+    <value>Precursor Result Locator</value>
   </data>
   <data name="PrecursorResults">
     <value>Precursor Results</value>
@@ -641,6 +653,9 @@
   </data>
   <data name="ProteinGene">
     <value>Protein Gene</value>
+  </data>
+  <data name="ProteinLocator">
+    <value>Protein Locator</value>
   </data>
   <data name="ProteinName">
     <value>Protein Name</value>
@@ -711,6 +726,9 @@
   <data name="ReplicateIndex">
     <value>Replicate Index</value>
   </data>
+  <data name="ReplicateLocator">
+    <value>Replicate Locator</value>
+  </data>
   <data name="ReplicateName">
     <value>Replicate Name</value>
   </data>
@@ -722,6 +740,9 @@
   </data>
   <data name="ResultFile">
     <value>Result File</value>
+  </data>
+  <data name="ResultFileLocator">
+    <value>Result File Locator</value>
   </data>
   <data name="Results">
     <value>Results</value>
@@ -832,6 +853,9 @@
   <data name="TransitionIsDecoy">
     <value>Transition Is Decoy</value>
   </data>
+  <data name="TransitionLocator">
+    <value>Transition Locator</value>
+  </data>
   <data name="TransitionNote">
     <value>Transition Note</value>
   </data>
@@ -840,6 +864,9 @@
   </data>
   <data name="TransitionResult">
     <value>Transition Result</value>
+  </data>
+  <data name="TransitionResultLocator">
+    <value>Transition Result Locator</value>
   </data>
   <data name="TransitionResults">
     <value>Transition Results</value>

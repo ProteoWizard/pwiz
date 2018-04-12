@@ -40,6 +40,7 @@ using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Esp;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
@@ -3083,6 +3084,110 @@ namespace pwiz.Skyline
             using (var dlg = new ExportChorusRequestDlg(DocumentUI, Path.GetFileNameWithoutExtension(DocumentFilePath)))
             {
                 dlg.ShowDialog(this);
+            }
+        }
+
+        private void exportAnnotationsMenuItem_Click(object sender, EventArgs e)
+        {
+            string strSaveFileName = string.Empty;
+            if (!string.IsNullOrEmpty(DocumentFilePath))
+            {
+                strSaveFileName = Path.GetFileNameWithoutExtension(DocumentFilePath);
+            }
+            strSaveFileName += "Annotations.csv"; // Not L10N
+
+            using (var dlg = new SaveFileDialog
+            {
+                FileName = strSaveFileName,
+                DefaultExt = TextUtil.EXT_CSV,
+                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV),
+                InitialDirectory = Settings.Default.ExportDirectory,
+                OverwritePrompt = true,
+            })
+            {
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                {
+                    return;
+                }
+                ExportAnnotations(dlg.FileName);
+            }
+        }
+
+        public void ExportAnnotations(string filename)
+        {
+            try
+            {
+                var documentAnnotations = new DocumentAnnotations(Document);
+                using (var longWaitDlg = new LongWaitDlg(this))
+                {
+                    longWaitDlg.PerformWork(this, 1000, broker =>
+                    {
+                        using (var fileSaver = new FileSaver(filename))
+                        {
+                            documentAnnotations.WriteAnnotationsToFile(broker.CancellationToken, fileSaver.SafeName);
+                            fileSaver.Commit();
+                        }
+                    });
+                }
+            }
+            catch (Exception e)
+            {
+                MessageDlg.ShowException(this, e);
+            }
+        }
+
+        public void ImportAnnotations(string filename)
+        {
+            try
+            {
+                lock (GetDocumentChangeLock())
+                {
+                    var originalDocument = Document;
+                    SrmDocument newDocument = null;
+                    using (var longWaitDlg = new LongWaitDlg(this))
+                    {
+                        longWaitDlg.PerformWork(this, 1000, broker =>
+                        {
+                            var documentAnnotations = new DocumentAnnotations(originalDocument);
+                            newDocument =
+                                documentAnnotations.ReadAnnotationsFromFile(broker.CancellationToken, filename);
+                        });
+                    }
+                    if (newDocument != null)
+                    {
+                        ModifyDocument(Resources.SkylineWindow_ImportAnnotations_Import_Annotations, doc =>
+                        {
+                            if (!ReferenceEquals(doc, originalDocument))
+                            {
+                                throw new ApplicationException(Resources
+                                    .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
+                            }
+                            return newDocument;
+                        });
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageDlg.ShowException(this, exception);
+            }
+        }
+
+
+        private void importAnnotationsMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new OpenFileDialog
+            {
+                DefaultExt = TextUtil.EXT_CSV,
+                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV),
+                InitialDirectory = Settings.Default.ExportDirectory,
+            })
+            {
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                {
+                    return;
+                }
+                ImportAnnotations(dlg.FileName);
             }
         }
 

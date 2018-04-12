@@ -649,6 +649,10 @@ same precursor.</value>
   <data name="PeptideDocumentLocation">
     <value>Unique identifier of the peptide within the Skyline document. This can be used when writing external tools which call back into Skyline to change the selection, etc.</value>
   </data>
+  <data name="PeptideLocator">
+    <value>Unique identifier of the peptide within the Skyline document. This will always start with "Molecule:", and usually ends with the peptide modified sequence or molecule name.</value>
+    <comment>Do not translate "Molecule:"</comment>
+  </data>
   <data name="PeptideModifiedSequence">
     <value>Amino acid sequence annotated with only structural
 modification delta masses (e.g. AC[+57]GR).</value>
@@ -680,6 +684,10 @@ Edit menu</value>
   </data>
   <data name="PeptideResultDocumentLocation">
     <value>Unique identifier of the Peptide Result within the document. This can be used when writing interactive external tools.</value>
+  </data>
+  <data name="PeptideResultLocator">
+    <value>Unique identifier of the Peptide Result within the document. This will begin with "MoleculeResult:" and will contain the peptide modified sequence and the replicate name.</value>
+    <comment>Do not translate "MoleculeResult:"</comment>
   </data>
   <data name="PeptideResults">
     <value>Peptide Results</value>
@@ -719,6 +727,10 @@ Edit menu</value>
   <data name="PrecursorIonName">
     <value>The name of the precursor.</value>
   </data>
+  <data name="PrecursorLocator">
+    <value>Unique identifier of the precursor within the document. This will begin with "Precursor:" and usually ends with the precursor's label type followed by its adduct.</value>
+    <comment>Do not translate "Precursor:"</comment>
+  </data>
   <data name="PrecursorNeutralFormula">
     <value>The formula of the precursor ion. This is deprecated and "PrecursorIonFomula" should be used instead.</value>
   </data>
@@ -743,6 +755,10 @@ using the Results Grid.</value>
   </data>
   <data name="PrecursorResult">
     <value>Precursor Result</value>
+  </data>
+  <data name="PrecursorResultLocator">
+    <value>Unique identifier of the precursor result within the document. This begins with "PrecursorResult:" and usually ends with the replicate name but may have additional attributes for the optimization step and result file.</value>
+    <comment>Do not translate "PrecursorResult:".</comment>
   </data>
   <data name="PrecursorResults">
     <value>Precursor Results</value>
@@ -799,6 +815,10 @@ also when you hover over the protein name in the peptide tree view.</value>
   </data>
   <data name="ProteinGene">
     <value>Protein Gene</value>
+  </data>
+  <data name="ProteinLocator">
+    <value>Unique identifier of the protein within the document. This begins with "MoleculeGroup:" and usually ends with the protein name but may have additional attributes if the protein name is not unique within the document.</value>
+    <comment>Do not translate "MoleculeGroup:".</comment>
   </data>
   <data name="ProteinName">
     <value>Protein Name as defined or entered into Skyline (in some cases in
@@ -877,6 +897,10 @@ measured.</value>
   <data name="ReplicateIndex">
     <value>Replicate Index</value>
   </data>
+  <data name="ReplicateLocator">
+    <value>Unique identifier of the replicate within the document. This is always "Replicate:/" followed by the name of the replicate.</value>
+    <comment>Do not translate "Replicate:/".</comment>
+  </data>
   <data name="ReplicateName">
     <value>The replicate name assigned to the data during import.</value>
   </data>
@@ -888,6 +912,11 @@ measured.</value>
   </data>
   <data name="ResultFile">
     <value>Result File</value>
+  </data>
+  <data name="ResultFileLocator">
+    <value>Unique identifier of the result file within the document. This begins with "ResultFile:/" followed by the replicate name. 
+This usually ends with the result filename, but may have additional attributes such as the full path if the filename is not unique within the replicate.</value>
+    <comment>Do not translate "ResultFile:/".</comment>
   </data>
   <data name="Results">
     <value>Results</value>
@@ -1017,6 +1046,10 @@ particular precursor</value>
   <data name="TransitionIsDecoy">
     <value>True if this is a decoy transition</value>
   </data>
+  <data name="TransitionLocator">
+    <value>Unique identifier of the transition within the document. This begins with "Transition:".</value>
+    <comment>Do not translate "Transition:"</comment>
+  </data>
   <data name="TransitionNote">
     <value>A free text note associated with the transition by clicking Edit Note on
 the Edit menu</value>
@@ -1027,6 +1060,10 @@ using the Results Grid.</value>
   </data>
   <data name="TransitionResult">
     <value>Transition Result</value>
+  </data>
+  <data name="TransitionResultLocator">
+    <value>Unique identifier of the transition result within the document. This begins with "TransitionResult:" and usually ends with the replicate name, but may have additional attributes for the optimization step and result file.</value>
+    <comment>Do not translate "TransitionResult:".</comment>
   </data>
   <data name="TransitionResults">
     <value>Transition Results</value>

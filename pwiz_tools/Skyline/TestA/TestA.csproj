@@ -144,6 +144,7 @@
     <Compile Include="AnnotationUnitTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
+    <Compile Include="CommandLineImportAnnotationsTest.cs" />
     <Compile Include="CommandLineMProphetTest.cs" />
     <Compile Include="CommandLineNoJoinTest.cs" />
     <Compile Include="CommandLineTest.cs" />
@@ -151,6 +152,7 @@
     <Compile Include="CommandLineWiffTest.cs" />
     <Compile Include="DecoysTest.cs" />
     <Compile Include="DigestionTest.cs" />
+    <Compile Include="ElementLocatorTest.cs" />
     <Compile Include="DocLoadLibraryTest.cs" />
     <Compile Include="DocumentSerializerTest.cs" />
     <Compile Include="EspTest.cs" />
@@ -262,6 +264,7 @@
   <ItemGroup>
     <None Include="ChromatogramExporterTest.zip" />
     <None Include="CommandLineAssayImportTest.zip" />
+    <None Include="CommandLineImportAnnotationsTest.zip" />
     <None Include="CommandLineImportTest.zip" />
     <None Include="CommandLineMProphetTest.zip" />
     <None Include="CommandLineNoJoinTest.zip" />

@@ -23,6 +23,7 @@ using System.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
@@ -94,6 +95,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public ResultFile ResultFile { get { return GetResultFile(); } }
 
+        [Obsolete]
         [InvariantDisplayName("PeptideResultDocumentLocation")]
         public DocumentLocation DocumentLocation
         {
@@ -139,6 +141,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             CalibrationCurveFitter curveFitter = Peptide.GetCalibrationCurveFitter();
             return curveFitter.GetQuantificationResult(ResultFile.Replicate.ReplicateIndex);
+        }
+
+        public override ElementRef GetElementRef()
+        {
+            return MoleculeResultRef.PROTOTYPE.ChangeChromInfo(ResultFile.Replicate.ChromatogramSet, ChromInfo)
+                .ChangeParent(Peptide.GetElementRef());
+        }
+
+        [InvariantDisplayName("PeptideResultLocator")]
+        public string Locator
+        {
+            get { return GetLocator(); }
         }
     }
 }

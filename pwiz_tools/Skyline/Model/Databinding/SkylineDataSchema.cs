@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using SkylineTool;
@@ -42,6 +43,7 @@ namespace pwiz.Skyline.Model.Databinding
             = new HashSet<IDocumentChangeListener>();
         private readonly CachedValue<ImmutableSortedList<ResultKey, Replicate>> _replicates;
         private readonly CachedValue<IDictionary<ResultFileKey, ResultFile>> _resultFiles;
+        private readonly CachedValue<ElementRefs> _elementRefCache;
 
         private SrmDocument _batchChangesOriginalDocument;
 
@@ -51,8 +53,10 @@ namespace pwiz.Skyline.Model.Databinding
             _documentContainer = documentContainer;
             _document = _documentContainer.Document;
             ChromDataCache = new ChromDataCache();
+
             _replicates = CachedValue.Create(this, CreateReplicateList);
             _resultFiles = CachedValue.Create(this, CreateResultFileList);
+            _elementRefCache = CachedValue.Create(this, () => new ElementRefs(Document));
         }
 
         protected override bool IsScalar(Type type)
@@ -197,6 +201,7 @@ namespace pwiz.Skyline.Model.Databinding
         }
 
         public ChromDataCache ChromDataCache { get; private set; }
+        public ElementRefs ElementRefs { get { return _elementRefCache.Value; } }
 
         public override PropertyDescriptor GetPropertyDescriptor(Type type, string name)
         {

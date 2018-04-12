@@ -1705,6 +1705,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unique identifier of the peptide within the Skyline document. This will always start with &quot;Molecule:&quot;, and usually ends with the peptide modified sequence or molecule name..
+        /// </summary>
+        public static string PeptideLocator {
+            get {
+                return ResourceManager.GetString("PeptideLocator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Amino acid sequence annotated with only structural
         ///modification delta masses (e.g. AC[+57]GR)..
         /// </summary>
@@ -1793,6 +1802,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PeptideResultDocumentLocation {
             get {
                 return ResourceManager.GetString("PeptideResultDocumentLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unique identifier of the Peptide Result within the document. This will begin with &quot;MoleculeResult:&quot; and will contain the peptide modified sequence and the replicate name..
+        /// </summary>
+        public static string PeptideResultLocator {
+            get {
+                return ResourceManager.GetString("PeptideResultLocator", resourceCulture);
             }
         }
         
@@ -1907,6 +1925,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unique identifier of the precursor within the document. This will begin with &quot;Precursor:&quot; and usually ends with the precursor&apos;s label type followed by its adduct..
+        /// </summary>
+        public static string PrecursorLocator {
+            get {
+                return ResourceManager.GetString("PrecursorLocator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The mass to charge ratio (m/z) of the precursor ion..
         /// </summary>
         public static string PrecursorMz {
@@ -1970,6 +1997,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PrecursorResult {
             get {
                 return ResourceManager.GetString("PrecursorResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unique identifier of the precursor result within the document. This begins with &quot;PrecursorResult:&quot; and usually ends with the replicate name but may have additional attributes for the optimization step and result file..
+        /// </summary>
+        public static string PrecursorResultLocator {
+            get {
+                return ResourceManager.GetString("PrecursorResultLocator", resourceCulture);
             }
         }
         
@@ -2128,6 +2164,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ProteinGene {
             get {
                 return ResourceManager.GetString("ProteinGene", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unique identifier of the protein within the document. This begins with &quot;MoleculeGroup:&quot; and usually ends with the protein name but may have additional attributes if the protein name is not unique within the document..
+        /// </summary>
+        public static string ProteinLocator {
+            get {
+                return ResourceManager.GetString("ProteinLocator", resourceCulture);
             }
         }
         
@@ -2347,6 +2392,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unique identifier of the replicate within the document. This is always &quot;Replicate:/&quot; followed by the name of the replicate..
+        /// </summary>
+        public static string ReplicateLocator {
+            get {
+                return ResourceManager.GetString("ReplicateLocator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The replicate name assigned to the data during import..
         /// </summary>
         public static string ReplicateName {
@@ -2379,6 +2433,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ResultFile {
             get {
                 return ResourceManager.GetString("ResultFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unique identifier of the result file within the document. This begins with &quot;ResultFile:/&quot; followed by the replicate name. 
+        ///This usually ends with the result filename, but may have additional attributes such as the full path if the filename is not unique within the replicate..
+        /// </summary>
+        public static string ResultFileLocator {
+            get {
+                return ResourceManager.GetString("ResultFileLocator", resourceCulture);
             }
         }
         
@@ -2417,6 +2481,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string RSquared {
             get {
                 return ResourceManager.GetString("RSquared", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The amount by which the sample was diluted before being analyzed. 
+        ///External standards typically have a dilution factor of 1, and unknown samples may have been diluted by a factor greater than 1 in order to bring them into the quantifiable range for the instrument..
+        /// </summary>
+        public static string SampleDilutionFactor {
+            get {
+                return ResourceManager.GetString("SampleDilutionFactor", resourceCulture);
             }
         }
         
@@ -2732,6 +2806,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unique identifier of the transition within the document. This begins with &quot;Transition:&quot;..
+        /// </summary>
+        public static string TransitionLocator {
+            get {
+                return ResourceManager.GetString("TransitionLocator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A free text note associated with the transition by clicking Edit Note on
         ///the Edit menu.
         /// </summary>
@@ -2757,6 +2840,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string TransitionResult {
             get {
                 return ResourceManager.GetString("TransitionResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unique identifier of the transition result within the document. This begins with &quot;TransitionResult:&quot; and usually ends with the replicate name, but may have additional attributes for the optimization step and result file..
+        /// </summary>
+        public static string TransitionResultLocator {
+            get {
+                return ResourceManager.GetString("TransitionResultLocator", resourceCulture);
             }
         }
         

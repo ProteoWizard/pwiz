@@ -23,6 +23,7 @@ using System.Globalization;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -252,6 +253,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             return string.Format(Resources.Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__transitions_, nodeCount);
         }
+
+        [InvariantDisplayName("TransitionLocator")]
+        public string Locator { get { return GetLocator(); } }
+
+        protected override NodeRef NodeRefPrototype
+        {
+            get { return TransitionRef.PROTOTYPE; }
+        }
     }
 
     public class TransitionResultSummary : SkylineObject
@@ -332,5 +341,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             return string.Format("RT: {0} Area: {1}", RetentionTime, Area); // Not L10N?
         }
+
     }
 }

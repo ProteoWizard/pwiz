@@ -59,6 +59,7 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
@@ -5036,6 +5037,54 @@ namespace pwiz.Skyline
             {
                 collapseProteinsMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Lists;
                 collapsePeptidesMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules;
+            }
+        }
+
+        public void SelectElement(ElementRef elementRef)
+        {
+            var document = Document;
+            var measuredResults = document.Settings.MeasuredResults;
+            var resultFileRef = elementRef as ResultFileRef;
+            if (resultFileRef != null)
+            {
+                elementRef = resultFileRef.Parent;
+            }
+            var replicateRef = elementRef as ReplicateRef;
+            if (replicateRef != null)
+            {
+                if (measuredResults == null)
+                {
+                    return;
+                }
+                var index = measuredResults.Chromatograms.IndexOf(chromSet => chromSet.Name == replicateRef.Name);
+                if (index >= 0)
+                {
+                    SelectedResultsIndex = index;
+                }
+                return;
+            }
+            var bookmark = new Bookmark();
+            var resultRef = elementRef as ResultRef;
+            if (resultRef != null)
+            {
+                var chromFileInfo = resultRef.FindChromFileInfo(document);
+                if (chromFileInfo != null)
+                {
+                    bookmark = bookmark.ChangeChromFileInfoId(chromFileInfo.FileId)
+                        .ChangeOptStep(resultRef.OptimizationStep);
+                }
+                elementRef = elementRef.Parent;
+            }
+            var nodeRef = elementRef as NodeRef;
+            if (nodeRef != null)
+            {
+                var identityPath = nodeRef.ToIdentityPath(document);
+                if (identityPath == null)
+                {
+                    return;
+                }
+                bookmark = bookmark.ChangeIdentityPath(identityPath);
+                NavigateToBookmark(bookmark);
             }
         }
     }

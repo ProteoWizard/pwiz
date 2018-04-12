@@ -10032,7 +10032,43 @@ Recognized isotopes include: {2}</value>
   <data name="Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_" xml:space="preserve">
     <value>Adduct "{0}" calls for labeling more {1} atoms than are found in the molecule {2}</value>
   </data>
+  <data name="DocumentAnnotations_ElementNotFoundException_Could_not_find_element___0___" xml:space="preserve">
+    <value>Could not find element '{0}'.</value>
+    <comment>"element" just means a generic thing that is in a Skyline document. Could be a peptide, result file, etc.</comment>
+  </data>
+  <data name="DocumentAnnotations_AnnotationDoesNotApplyException_Annotation___0___does_not_apply_to_element___1___" xml:space="preserve">
+    <value>Annotation '{0}' does not apply to element '{1}'.</value>
+    <comment>"element" just means a generic thing that is in a Skyline document. Could be a peptide, result file, etc.</comment>
+  </data>
+  <data name="ElementLocator_Parse__0__is_not_a_valid_element_locator_" xml:space="preserve">
+    <value>{0} is not a valid element locator.</value>
+    <comment>"element" just means a generic thing that is in a Skyline document. Could be a peptide, result file, etc.</comment>
+  </data>
+  <data name="ElementLocator_UnexpectedException__0__was_unexpected_in___1___at_position__2__" xml:space="preserve">
+    <value>{0} was unexpected in '{1}' at position {2}.</value>
+  </data>
+  <data name="ElementLocator_ReadQuotedString_End_of_text" xml:space="preserve">
+    <value>End of text</value>
+  </data>
+  <data name="DocumentAnnotations_AnnotationsNotSupported_The_element___0___cannot_have_annotations_" xml:space="preserve">
+    <value>The element '{0}' cannot have annotations.</value>
+  </data>
   <data name="FileStreamManager_GetTempFileName_Access_Denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_permissions_or_retry_the_operation_after_moving_or_copying_files_to_a_different_folder_" xml:space="preserve">
     <value>Access Denied: unable to create a file in the folder "{0}". Adjust the folder write permissions or retry the operation after moving or copying files to a different folder.</value>
+  </data>
+  <data name="SkylineWindow_ImportAnnotations_Import_Annotations" xml:space="preserve">
+    <value>Import Annotations</value>
+  </data>
+  <data name="CommandLine_ImportAnnotations_Failed_while_reading_annotations_" xml:space="preserve">
+    <value>Failed while reading annotations.</value>
+  </data>
+  <data name="Columns_Columns_Unrecognized_column___0__" xml:space="preserve">
+    <value>Unrecognized column '{0}'</value>
+  </data>
+  <data name="Columns_Columns_Duplicate_column___0__" xml:space="preserve">
+    <value>Duplicate column '{0}'</value>
+  </data>
+  <data name="Columns_Columns_Missing_column___0__" xml:space="preserve">
+    <value>Missing column '{0}'</value>
   </data>
 </root>

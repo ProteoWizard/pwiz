@@ -33,6 +33,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -261,6 +262,11 @@ namespace pwiz.Skyline
                     return false;
             }
 
+            if (!ImportAnnotations(commandArgs))
+            {
+                return false;
+            }
+
             if (commandArgs.Saving)
             {
                 var saveFile = commandArgs.SaveFile ?? _skylineFile;
@@ -343,6 +349,26 @@ namespace pwiz.Skyline
             }
 
             return true;
+        }
+
+        private bool ImportAnnotations(CommandArgs commandArgs)
+        {
+            if (string.IsNullOrEmpty(commandArgs.ImportAnnotations))
+            {
+                return true;
+            }
+            try
+            {
+                var documentAnnotations = new DocumentAnnotations(_doc);
+                _doc = documentAnnotations.ReadAnnotationsFromFile(CancellationToken.None, commandArgs.ImportAnnotations);
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_ImportAnnotations_Failed_while_reading_annotations_);
+                _out.WriteLine(x.Message);
+                return false;
+            }
         }
 
         private void PerformExportOperations(CommandArgs commandArgs)

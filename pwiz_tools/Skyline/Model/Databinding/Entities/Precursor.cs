@@ -25,6 +25,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -479,6 +480,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             return string.Format(Resources.Precursor_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__precursors_, nodeCount);
         }
+
+        [InvariantDisplayName("PrecursorLocator")]
+        public string Locator { get { return GetLocator(); } }
+
+        protected override NodeRef NodeRefPrototype
+        {
+            get { return PrecursorRef.PROTOTYPE; }
+        }
     }
 
     public class PrecursorResultSummary : SkylineObject
@@ -569,5 +578,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             return string.Format("RT: {0} Area: {1}", BestRetentionTime, TotalArea); // Not L10N?
         }
+
     }
 }

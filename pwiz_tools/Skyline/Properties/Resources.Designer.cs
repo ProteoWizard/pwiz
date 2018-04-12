@@ -4021,6 +4021,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Duplicate column &apos;{0}&apos;.
+        /// </summary>
+        public static string Columns_Columns_Duplicate_column___0__ {
+            get {
+                return ResourceManager.GetString("Columns_Columns_Duplicate_column___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing column &apos;{0}&apos;.
+        /// </summary>
+        public static string Columns_Columns_Missing_column___0__ {
+            get {
+                return ResourceManager.GetString("Columns_Columns_Missing_column___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unrecognized column &apos;{0}&apos;.
+        /// </summary>
+        public static string Columns_Columns_Unrecognized_column___0__ {
+            get {
+                return ResourceManager.GetString("Columns_Columns_Unrecognized_column___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to find table for {0}.
         /// </summary>
         public static string ColumnSet_GetColumnInfos_Unable_to_find_table_for__0_ {
@@ -5158,6 +5185,15 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_GetDataSources_Error__No_data_sources_found_in_directory__0__ {
             get {
                 return ResourceManager.GetString("CommandLine_GetDataSources_Error__No_data_sources_found_in_directory__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed while reading annotations..
+        /// </summary>
+        public static string CommandLine_ImportAnnotations_Failed_while_reading_annotations_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportAnnotations_Failed_while_reading_annotations_", resourceCulture);
             }
         }
         
@@ -7830,6 +7866,35 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Annotation &apos;{0}&apos; does not apply to element &apos;{1}&apos;..
+        /// </summary>
+        public static string DocumentAnnotations_AnnotationDoesNotApplyException_Annotation___0___does_not_apply_to_element___1___ {
+            get {
+                return ResourceManager.GetString("DocumentAnnotations_AnnotationDoesNotApplyException_Annotation___0___does_not_app" +
+                        "ly_to_element___1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The element &apos;{0}&apos; cannot have annotations..
+        /// </summary>
+        public static string DocumentAnnotations_AnnotationsNotSupported_The_element___0___cannot_have_annotations_ {
+            get {
+                return ResourceManager.GetString("DocumentAnnotations_AnnotationsNotSupported_The_element___0___cannot_have_annotat" +
+                        "ions_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not find element &apos;{0}&apos;..
+        /// </summary>
+        public static string DocumentAnnotations_ElementNotFoundException_Could_not_find_element___0___ {
+            get {
+                return ResourceManager.GetString("DocumentAnnotations_ElementNotFoundException_Could_not_find_element___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Edit Report.
         /// </summary>
         public static string DocumentGridViewContext_CreateViewEditor_Edit_Report {
@@ -10259,6 +10324,33 @@ namespace pwiz.Skyline.Properties {
         public static string EditStaticModDlg_UpdateListAvailableMods_Show_common {
             get {
                 return ResourceManager.GetString("EditStaticModDlg_UpdateListAvailableMods_Show_common", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is not a valid element locator..
+        /// </summary>
+        public static string ElementLocator_Parse__0__is_not_a_valid_element_locator_ {
+            get {
+                return ResourceManager.GetString("ElementLocator_Parse__0__is_not_a_valid_element_locator_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to End of text.
+        /// </summary>
+        public static string ElementLocator_ReadQuotedString_End_of_text {
+            get {
+                return ResourceManager.GetString("ElementLocator_ReadQuotedString_End_of_text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} was unexpected in &apos;{1}&apos; at position {2}..
+        /// </summary>
+        public static string ElementLocator_UnexpectedException__0__was_unexpected_in___1___at_position__2__ {
+            get {
+                return ResourceManager.GetString("ElementLocator_UnexpectedException__0__was_unexpected_in___1___at_position__2__", resourceCulture);
             }
         }
         
@@ -23875,6 +23967,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import Annotations.
+        /// </summary>
+        public static string SkylineWindow_ImportAnnotations_Import_Annotations {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportAnnotations_Import_Annotations", resourceCulture);
             }
         }
         

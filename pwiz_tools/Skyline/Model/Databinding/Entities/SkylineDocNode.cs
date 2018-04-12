@@ -25,6 +25,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
@@ -143,6 +144,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             return string.Format(Resources.SkylineDocNode_GetGenericDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__things_, nodeCount);
         }
+
+        protected abstract NodeRef NodeRefPrototype { get; }
     }
 
     public abstract class SkylineDocNode<TDocNode> : SkylineDocNode where TDocNode : DocNode
@@ -197,6 +200,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override string ToString()
         {
             return DocNode.ToString();
+        }
+
+        public sealed override ElementRef GetElementRef()
+        {
+            return DataSchema.ElementRefs.GetNodeRef(IdentityPath);
         }
     }
 }

@@ -23,6 +23,7 @@ using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Databinding.Collections;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -151,6 +152,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public ResultFileKey ToFileKey()
         {
             return new ResultFileKey(Replicate.ReplicateIndex, ChromFileInfoId, OptimizationStep);
+        }
+
+        [InvariantDisplayName("ResultFileLocator")]
+        public string Locator
+        {
+            get { return GetLocator(); }
+        }
+
+        public override ElementRef GetElementRef()
+        {
+            var sibling = ResultFileRef.PROTOTYPE.ChangeParent(Replicate.GetElementRef());
+            int fileIndex = Replicate.ChromatogramSet.IndexOfId(ChromFileInfoId);
+            return sibling.ListChildrenOfParent(SrmDocument).Skip(fileIndex).FirstOrDefault();
         }
     }
 }

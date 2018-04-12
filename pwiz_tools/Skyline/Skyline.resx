@@ -1068,13 +1068,13 @@
     <value>Graph</value>
   </data>
   <data name="barAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>96, 22</value>
   </data>
   <data name="barAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
     <value>Bar</value>
   </data>
   <data name="lineAreaGraphDisplayTypeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 22</value>
+    <value>96, 22</value>
   </data>
   <data name="lineAreaGraphDisplayTypeMenuItem.Text" xml:space="preserve">
     <value>Line</value>
@@ -1311,7 +1311,7 @@
     <value>206, 6</value>
   </data>
   <data name="contextMenuPeakAreas.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 434</value>
+    <value>210, 412</value>
   </data>
   <data name="&gt;&gt;contextMenuPeakAreas.Name" xml:space="preserve">
     <value>contextMenuPeakAreas</value>
@@ -1707,6 +1707,12 @@
   <data name="importDocumentMenuItem.Text" xml:space="preserve">
     <value>&amp;Document...</value>
   </data>
+  <data name="importAnnotationsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>170, 22</value>
+  </data>
+  <data name="importAnnotationsMenuItem.Text" xml:space="preserve">
+    <value>Annotations...</value>
+  </data>
   <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 22</value>
   </data>
@@ -1775,6 +1781,12 @@
   </data>
   <data name="chorusRequestToolStripMenuItem.Text" xml:space="preserve">
     <value>Chorus Request...</value>
+  </data>
+  <data name="exportAnnotationsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>183, 22</value>
+  </data>
+  <data name="exportAnnotationsMenuItem.Text" xml:space="preserve">
+    <value>Annotations...</value>
   </data>
   <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 22</value>
@@ -4782,6 +4794,12 @@
   <data name="&gt;&gt;importDocumentMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;importAnnotationsMenuItem.Name" xml:space="preserve">
+    <value>importAnnotationsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;importAnnotationsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;exportToolStripMenuItem.Name" xml:space="preserve">
     <value>exportToolStripMenuItem</value>
   </data>
@@ -4852,6 +4870,12 @@
     <value>chorusRequestToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;chorusRequestToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;exportAnnotationsMenuItem.Name" xml:space="preserve">
+    <value>exportAnnotationsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;exportAnnotationsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;mruBeforeToolStripSeparator.Name" xml:space="preserve">
@@ -6202,6 +6226,6 @@
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

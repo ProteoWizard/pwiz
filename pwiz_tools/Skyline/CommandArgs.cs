@@ -87,6 +87,10 @@ namespace pwiz.Skyline
         public const string ARG_DECOYS_ADD_VALUE_SHUFFLE = "shuffle"; // Not L10N
         public const string ARG_DECOYS_ADD_VALUE_REVERSE = "reverse"; // Not L10N
 
+        // Annotations
+        public const string ARG_IMPORT_ANNOTATIONS = "import-annotations"; // Not L10N
+        public string ImportAnnotations { get; private set; }
+        
         public string AddDecoysType { get; private set; }
         public int? AddDecoysCount { get; private set; }
         public bool DiscardDecoys { get; private set; }
@@ -1006,6 +1010,12 @@ namespace pwiz.Skyline
                 else if (IsNameValue(pair, ARG_IMPORT_LOCKMASS_TOLERANCE))
                 {
                     LockmassTolerance = ParseDouble(pair.Value, ARG_IMPORT_LOCKMASS_TOLERANCE);
+                    RequiresSkylineDocument = true;
+                }
+
+                else if (IsNameValue(pair, ARG_IMPORT_ANNOTATIONS))
+                {
+                    ImportAnnotations = pair.Value;
                     RequiresSkylineDocument = true;
                 }
 

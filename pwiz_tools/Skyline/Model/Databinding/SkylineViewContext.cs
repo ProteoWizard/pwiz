@@ -418,7 +418,8 @@ namespace pwiz.Skyline.Model.Databinding
             }
             else
             {
-                var columnsToRemove = new HashSet<PropertyPath>();
+                var columnsToRemove = new HashSet<PropertyPath> 
+                    {PropertyPath.Root.Property("Locator")};
                 bool addRoot = false;
                 bool docHasCustomIons = ((SkylineDataSchema)columnDescriptor.DataSchema).Document.CustomIonCount != 0;
                 bool docHasOnlyCustomIons = docHasCustomIons && ((SkylineDataSchema)columnDescriptor.DataSchema).Document.PeptideCount == 0;

@@ -23,6 +23,7 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -153,5 +154,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             return string.Format(Resources.Protein_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__proteins_, nodeCount);
         }
+
+        protected override NodeRef NodeRefPrototype
+        {
+            get { return MoleculeGroupRef.PROTOTYPE; }
+        }
+
+        [InvariantDisplayName("ProteinLocator")]
+        public string Locator { get { return GetLocator(); } }
     }
 }

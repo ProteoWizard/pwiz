@@ -207,5 +207,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return _peptideResult = _peptideResult ?? new PeptideResult(Precursor.Peptide, GetResultFile()); }
         }
+
+        [InvariantDisplayName("PrecursorResultLocator")]
+        public string Locator { get { return GetLocator(); } }
     }
 }

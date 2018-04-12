@@ -25,6 +25,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
@@ -188,6 +189,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override int GetHashCode()
         {
             return DataSchema.GetHashCode() * 397 ^ ReplicateIndex;
+        }
+
+        [InvariantDisplayName("ReplicateLocator")]
+        public string Locator { get { return GetLocator(); }}
+
+        public override ElementRef GetElementRef()
+        {
+            return ReplicateRef.PROTOTYPE.ChangeName(ChromatogramSet.Name);
         }
     }
 }

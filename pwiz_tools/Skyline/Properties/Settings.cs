@@ -1115,7 +1115,15 @@ namespace pwiz.Skyline.Properties
         [UserScopedSetting]
         public bool EnableChorus
         {
-            get { return true; } // Not L10N
+            get
+            {
+                var value = this["EnableChorus"]; // Not L10N
+                if (value == null)
+                {
+                    return false;
+                }
+                return (bool) value;
+            } // Not L10N
             set { this["EnableChorus"] = value; }   // Not L10N
         }
 
