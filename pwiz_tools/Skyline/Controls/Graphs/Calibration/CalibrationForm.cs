@@ -206,7 +206,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     double? xCalculated = curveFitter.GetCalculatedXValue(CalibrationCurve, iReplicate);
                     double? x = curveFitter.GetSpecifiedXValue(iReplicate)
                                 ?? xCalculated;
-
                     if (y.HasValue && x.HasValue)
                     {
                         PointPair point = new PointPair(x.Value, y.Value) {Tag = iReplicate};
@@ -217,6 +216,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         else
                         {
                             pointPairList.Add(point);
+                        }
+                        if (double.IsNaN(x.Value) || double.IsInfinity(x.Value)
+                            || double.IsNaN(y.Value) || double.IsInfinity(y.Value))
+                        {
+                            continue;
                         }
                         if (!Options.LogPlot || x.Value > 0)
                         {

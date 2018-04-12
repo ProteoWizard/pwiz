@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
     {
         public CalibrationCurveOptions()
         {
-            DisplaySampleTypes = new[] {SampleType.STANDARD.Name, SampleType.QC.Name, SampleType.UNKNOWN.Name};
+            DisplaySampleTypes = new[] { SampleType.STANDARD.Name, SampleType.BLANK.Name, SampleType.QC.Name, SampleType.UNKNOWN.Name };
             ShowLegend = true;
             ShowSelection = true;
         }
