@@ -423,7 +423,7 @@ namespace pwiz.Skyline.Model
         }
 
         private static int? ValidateFormulaWithMz(SrmDocument document, ref string moleculeFormula, Adduct adduct,
-            double mz, int? charge, out TypedMass monoMass, out TypedMass averageMass, out double? mzCalc)
+            TypedMass mz, int? charge, out TypedMass monoMass, out TypedMass averageMass, out double? mzCalc)
         {
             // Is the ion's formula the old style where user expected us to add a hydrogen?
             var tolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
@@ -431,7 +431,7 @@ namespace pwiz.Skyline.Model
             var ion = new CustomIon(moleculeFormula);
             monoMass = ion.GetMass(MassType.Monoisotopic);
             averageMass = ion.GetMass(MassType.Average);
-            var mass = (document.Settings.TransitionSettings.Prediction.FragmentMassType.IsMonoisotopic())
+            var mass = mz.IsMonoIsotopic()
                 ? monoMass
                 : averageMass;
             // Does given charge, if any, agree with mass and mz?
@@ -476,14 +476,13 @@ namespace pwiz.Skyline.Model
             return charge;
         }
 
-        private double ValidateFormulaWithCharge(SrmDocument document, string moleculeFormula, Adduct adduct,
+        private TypedMass ValidateFormulaWithCharge(MassType massType, string moleculeFormula, Adduct adduct,
             out TypedMass monoMass, out TypedMass averageMass)
         {
-            var massType = document.Settings.TransitionSettings.Prediction.PrecursorMassType;
             var ion = new CustomMolecule(moleculeFormula);
             monoMass = ion.GetMass(MassType.Monoisotopic);
             averageMass = ion.GetMass(MassType.Average);
-            return adduct.MzFromNeutralMass(massType.IsMonoisotopic() ? monoMass : averageMass, massType);
+            return new TypedMass(adduct.MzFromNeutralMass(massType.IsMonoisotopic() ? monoMass : averageMass, massType), massType); // m/z is not actually a mass, of course, but mono vs avg is interesting
         }
 
         public static string NullForEmpty(string str)
@@ -497,7 +496,7 @@ namespace pwiz.Skyline.Model
         {
             public string Name { get; private set; }
             public string Note { get; private set; }
-            public double Mz { get; private set; }
+            public TypedMass Mz { get; private set; } // Not actually a mass, of course, but useful to know if its based on mono vs avg mass
             public Adduct Adduct { get; private set; }
             public TypedMass MonoMass { get; private set; }
             public TypedMass AverageMass { get; private set; }
@@ -506,7 +505,9 @@ namespace pwiz.Skyline.Model
             public ExplicitTransitionGroupValues ExplicitTransitionGroupValues { get; private set; }
             public MoleculeAccessionNumbers MoleculeAccessionNumbers { get; private set; } // InChiKey, CAS etc
 
-            public ParsedIonInfo(string name, string formula, Adduct adduct, double mz, TypedMass monoMass,
+            public ParsedIonInfo(string name, string formula, Adduct adduct, 
+                TypedMass mz, // Not actually a mass, of course, but still useful to know if based on Mono or Average mass
+                TypedMass monoMass,
                 TypedMass averageMass,
                 IsotopeLabelType isotopeLabelType,
                 ExplicitRetentionTimeInfo explicitRetentionTime,
@@ -718,16 +719,20 @@ namespace pwiz.Skyline.Model
             // TODO(bspratt) use CAS or HMDB etc lookup to fill in missing inchikey - and use any to fill in formula
             var moleculeID = ReadMoleculeAccessionNumberColumns(row); 
             IsotopeLabelType isotopeLabelType = null;
-            double mz;
             bool badMz = false;
-            if (!row.GetCellAsDouble(indexMz, out mz))
+            var mzType = getPrecursorColumns 
+                ? document.Settings.TransitionSettings.Prediction.PrecursorMassType
+                : document.Settings.TransitionSettings.Prediction.FragmentMassType;
+            double mzParsed;
+            if (!row.GetCellAsDouble(indexMz, out mzParsed))
             {
                 if (!String.IsNullOrEmpty(row.GetCell(indexMz)))
                 {
                     badMz = true;
                 }
-                mz = 0;
+                mzParsed = 0;
             }
+            var mz = new TypedMass(mzParsed, mzType); // mz is not actually a mass, of course, but we want to track mass type it was calculated from
             if ((mz < 0) || badMz)
             {
                 ShowTransitionError(new PasteError
@@ -1188,7 +1193,7 @@ namespace pwiz.Skyline.Model
                                 adduct = Adduct.FromChargeProtonated(charge);
                             }
                             // Get the mass from the formula, and mz from that and adduct
-                            mz = ValidateFormulaWithCharge(document, formula, adduct, out monoMass, out averageMmass);
+                            mz = ValidateFormulaWithCharge(mzType, formula, adduct, out monoMass, out averageMmass);
                             massOk = !((monoMass >= CustomMolecule.MAX_MASS || averageMmass >= CustomMolecule.MAX_MASS)) &&
                                      !(massTooLow = (monoMass < CustomMolecule.MIN_MASS || averageMmass < CustomMolecule.MIN_MASS));
                             row.UpdateCell(indexMz, mz);
@@ -1389,9 +1394,6 @@ namespace pwiz.Skyline.Model
 
         private TransitionDocNode GetMoleculeTransition(SrmDocument document, Row row, Peptide pep, TransitionGroup group, bool requireProductInfo)
         {
-            var massType =
-                document.Settings.TransitionSettings.Prediction.FragmentMassType;
-
             var ion = ReadPrecursorOrProductColumns(document, row, !requireProductInfo); // Re-read the product columns, or copy precursor
             if (requireProductInfo && ion == null)
             {
@@ -1404,6 +1406,9 @@ namespace pwiz.Skyline.Model
                            Math.Abs(customMolecule.AverageMass.Value - group.PrecursorAdduct.ApplyIsotopeLabelsToMass(pep.CustomMolecule.AverageMass)) <= MzMatchTolerance) // Same mass, must be a precursor transition
                 ? IonType.precursor
                 : IonType.custom;
+            var massType = (ionType == IonType.precursor)
+                 ? document.Settings.TransitionSettings.Prediction.PrecursorMassType
+                 : document.Settings.TransitionSettings.Prediction.FragmentMassType;
             if (ionType == IonType.precursor)
             {
                 customMolecule = pep.CustomMolecule; // Some mz-only lists will give precursor mz as double, and product mz as int, even though they're meant to be the same thing

@@ -860,6 +860,33 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(trans.Annotations.Note, "macrobrew");
             }
 
+            // Load a document whose settings call for different mass type for precursors and fragments
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("mixed_mass_types.sky")));
+            docOrig = SkylineWindow.Document;
+            var pasteDlg5 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var columnOrder5 = new[]
+            {
+                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+            };
+            RunUI(() =>
+            {
+                pasteDlg5.IsMolecule = true;
+                pasteDlg5.SetSmallMoleculeColumns(columnOrder5.ToList());
+            });
+            WaitForConditionUI(() => pasteDlg5.GetUsableColumnCount() == columnOrder5.ToList().Count);
+            const string precursorOnly = "15xT\tC150H197N30O103P14\t-3";
+            SetClipboardText(precursorOnly);
+            RunUI(pasteDlg5.PasteTransitions);
+            OkDialog(pasteDlg5, pasteDlg5.OkDialog);
+            pastedDoc = WaitForDocumentChange(docOrig);
+            Assume.AreEqual(pastedDoc.MoleculePrecursorPairs.First().NodeGroup.PrecursorMz,
+                pastedDoc.MoleculeTransitions.First().Mz);
+            Assume.AreEqual(pastedDoc.MoleculePrecursorPairs.First().NodeGroup.PrecursorMzMassType,
+                pastedDoc.MoleculeTransitions.First().MzMassType);
+            Assume.AreEqual(MassType.Average, pastedDoc.MoleculeTransitions.First().MzMassType);
+
             NewDocument();
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
         }
