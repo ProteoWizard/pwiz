@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -110,6 +111,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         var identityPath = new IdentityPath(group.Id, peptide.Id);
                         var peptideEntity = new Skyline.Model.Databinding.Entities.Peptide(dataSchema, identityPath);
+                        VerifyFiguresOfMeritValues(options, peptideEntity);
                         ValidateFiguresOfMerit(options, peptideEntity.FiguresOfMerit);
                         results.Add(Tuple.Create(options, peptideEntity.ModifiedSequence, peptideEntity.FiguresOfMerit));
                         if (doFullTest)
@@ -203,6 +205,72 @@ namespace pwiz.SkylineTestFunctional
                     Assert.IsNull(figuresOfMerit.LimitOfDetection);
                 }
             }
+        }
+
+        private void VerifyFiguresOfMeritValues(FiguresOfMeritOptions options,
+            Skyline.Model.Databinding.Entities.Peptide peptideEntity)
+        {
+            double? expectedLoq = GetLoq(options, peptideEntity);
+            var actualLoq = peptideEntity.FiguresOfMerit.LimitOfQuantification;
+            if (expectedLoq != actualLoq)
+            {
+                Assert.AreEqual(expectedLoq, actualLoq);
+            }
+        }
+
+        private double? GetLoq(FiguresOfMeritOptions options, Skyline.Model.Databinding.Entities.Peptide peptideEntity)
+        {
+            var peptideResults = peptideEntity.Results.Values
+                .Where(result => Equals(result.ResultFile.Replicate.SampleType, SampleType.STANDARD)
+                                 && result.ResultFile.Replicate.AnalyteConcentration.HasValue)
+                .ToLookup(result => result.ResultFile.Replicate.AnalyteConcentration.Value);
+            if (!options.MaxLoqBias.HasValue && !options.MaxLoqCv.HasValue)
+            {
+                return null;
+            }
+            var calibrationCurve = peptideEntity.CalibrationCurve.Value;
+            var concentrationMultiplier = peptideEntity.ConcentrationMultiplier.GetValueOrDefault(1);
+            foreach (var grouping in peptideResults.OrderBy(g => g.Key))
+            {
+                if (options.MaxLoqBias.HasValue)
+                {
+                    var areas = grouping
+                        .Select(peptideResult => peptideResult.Quantification.Value.NormalizedArea)
+                        .Where(area => area.HasValue).Cast<double>().ToArray();
+                    if (areas.Length == 0)
+                    {
+                        continue;
+                    }
+                    var meanArea = areas.Average();
+                    var backCalculatedConcentration = calibrationCurve.GetFittedX(meanArea);
+                    if (!backCalculatedConcentration.HasValue)
+                    {
+                        continue;
+                    }
+                    var expectedConcentration = grouping.Key * concentrationMultiplier;
+                    var error = Math.Abs(1.0 - backCalculatedConcentration.Value / expectedConcentration) * 100;
+                    if (error > options.MaxLoqBias)
+                    {
+                        continue;
+                    }
+                }
+                if (options.MaxLoqCv.HasValue)
+                {
+                    var stats = new Statistics(grouping.Select(peptideResult =>
+                        peptideResult.Quantification.Value.NormalizedArea).OfType<double>());
+                    if (stats.Length <= 1)
+                    {
+                        continue;
+                    }
+                    var cv = stats.StdDev() / stats.Mean();
+                    if (double.IsNaN(cv) || cv * 100 > options.MaxLoqCv.Value)
+                    {
+                        continue;
+                    }
+                }
+                return grouping.Key * concentrationMultiplier;
+            }
+            return null;
         }
 
         /// <summary>

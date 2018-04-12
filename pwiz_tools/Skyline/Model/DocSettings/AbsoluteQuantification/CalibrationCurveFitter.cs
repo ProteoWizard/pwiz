@@ -277,7 +277,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     {
                         continue;
                     }
-                    if (Math.Abs(bias * 10) > QuantificationSettings.MaxLoqBias.Value)
+                    if (Math.Abs(bias * 100) > QuantificationSettings.MaxLoqBias.Value)
                     {
                         continue;
                     }
