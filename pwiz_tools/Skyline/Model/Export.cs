@@ -1026,7 +1026,8 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.Write("S-lens"); // Not L10N
             }
-
+            writer.Write(FieldSeparator);
+            writer.Write("FAIMS CV (V)"); // Not L10N
             writer.WriteLine();
         }
 
@@ -1128,6 +1129,11 @@ namespace pwiz.Skyline.Model
             {
                 writer.Write(FieldSeparator);
                 writer.Write((nodeTranGroup.ExplicitValues.SLens ?? DEFAULT_SLENS).ToString(CultureInfo));
+            }
+            writer.Write(FieldSeparator);
+            if (Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null)
+            {
+                writer.Write(GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step));
             }
             writer.WriteLine();
         }

@@ -187,6 +187,7 @@ namespace pwiz.Skyline.FileUI
             cbExportEdcMass.Checked = Settings.Default.ExportEdcMass;
             textPrimaryCount.Text = Settings.Default.PrimaryTransitionCount.ToString(LocalizationHelper.CurrentCulture);
             // Reposition from design layout
+            cbSlens.Top = textMaxTransitions.Bottom;
             panelThermoColumns.Top = labelDwellTime.Top;
             panelThermoRt.Top = panelThermoColumns.Top - (int)(panelThermoRt.Height*0.8);
             panelAbSciexTOF.Top = textDwellTime.Top + (textDwellTime.Height - panelAbSciexTOF.Height)/2;
@@ -503,7 +504,8 @@ namespace pwiz.Skyline.FileUI
         private void UpdateCovControls()
         {
             bool covInList = comboOptimizing.Items.Contains(ExportOptimize.COV);
-            bool canOptimizeCov = InstrumentType.Contains("SCIEX") && _document.Settings.TransitionSettings.Prediction.CompensationVoltage != null; // Not L10N
+            bool canOptimizeCov = _document.Settings.TransitionSettings.Prediction.CompensationVoltage != null &&
+                (InstrumentType.Contains("SCIEX") || InstrumentType.Equals(ExportInstrumentType.THERMO_QUANTIVA)); // Not L10N
             if (covInList && !canOptimizeCov)
             {
                 if (comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.COV))
