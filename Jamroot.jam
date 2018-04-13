@@ -74,7 +74,7 @@ ECHO
 #   Or to build a particular item of that subset, such as a test,
 # you could add (note the double slashes!) :
 #
-#   pwiz/data/msdata//MSDataFileTest
+#   pwiz/data/msdata//MSDataFileTest 
 #
 ; # end of our own help text
 }
