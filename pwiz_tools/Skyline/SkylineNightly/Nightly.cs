@@ -413,8 +413,8 @@ namespace SkylineNightly
             {
                 client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
                 var branchType = ((mode == RunMode.release) || (mode == RunMode.release_perf))
-                    ? "Skyline/skyline"
-                    : "master";
+                    ? "skyline_" // N.B. this assumes TC branch specification is set to something like "+:refs/heads/Skyline/(skyline_4_1)"
+                    : "master"; // N.B. this assumes TC branch spec is set as "+:refs/heads/(master)"
                 var buildPageUrl = string.Format(TEAM_CITY_BUILD_URL, TEAM_CITY_BUILD_TYPE);
                 Log("Download Team City build page");
                 var buildStatusPage = client.DownloadString(buildPageUrl);
