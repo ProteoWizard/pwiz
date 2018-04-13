@@ -49,6 +49,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Util.Extensions;
 
@@ -1051,6 +1052,26 @@ namespace pwiz.Skyline.Properties
                 this["AnnotationDefList"] = value; // Not L10N
             }
         }
+
+        [UserScopedSetting]
+        public ListDefList ListDefList
+        {
+            get
+            {
+                var list = (ListDefList) this["ListDefList"]; // Not L10N
+                if (list == null)
+                {
+                    list = new ListDefList();
+                    ListDefList = list;
+                }
+                return list;
+            }
+            set
+            {
+                this["ListDefList"] = value; // Not L10N
+            }
+        }
+
 
         [UserScopedSetting]
         public GroupComparisonDefList GroupComparisonDefList

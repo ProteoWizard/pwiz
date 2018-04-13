@@ -24,11 +24,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Model.Databinding.Collections
 {
-    public abstract class SkylineObjectList<TKey, TItem> : AbstractRowSource where TItem : SkylineObject
+    public abstract class SkylineObjectList<TKey, TItem> : AbstractRowSource
     {
         private IDocumentChangeListener _documentChangeListener;
         protected IDictionary<TKey, int> _keyIndexes 
