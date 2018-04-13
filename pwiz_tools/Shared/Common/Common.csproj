@@ -176,7 +176,9 @@
     <Compile Include="DataBinding\Controls\ManageLayoutsForm.Designer.cs">
       <DependentUpon>ManageLayoutsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataBinding\Controls\NameLayoutForm.cs" />
+    <Compile Include="DataBinding\Controls\NameLayoutForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="DataBinding\Controls\NameLayoutForm.Designer.cs">
       <DependentUpon>NameLayoutForm.cs</DependentUpon>
     </Compile>
@@ -278,6 +280,7 @@
     <Compile Include="DataBinding\IViewTransformer.cs" />
     <Compile Include="DataBinding\Layout\TransformStack.cs" />
     <Compile Include="DataBinding\Layout\ViewLayoutList.cs" />
+    <Compile Include="DataBinding\NewRowHandler.cs" />
     <Compile Include="DataBinding\PivotKey.cs" />
     <Compile Include="DataBinding\Layout\PivotSpec.cs" />
     <Compile Include="DataBinding\PropertyPath.cs" />

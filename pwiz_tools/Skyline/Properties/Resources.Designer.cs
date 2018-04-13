@@ -8435,24 +8435,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adduct.
-        /// </summary>
-        public static string EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Adduct {
-            get {
-                return ResourceManager.GetString("EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Adduct", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Molecule.
-        /// </summary>
-        public static string EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Molecule {
-            get {
-                return ResourceManager.GetString("EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Molecule", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Finding ion mobility values for peaks.
         /// </summary>
         public static string EditDriftTimePredictorDlg_GetDriftTimesFromResults_Finding_ion_mobility_values_for_peaks {
@@ -8463,12 +8445,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An ion mobility predictor with the name {0} already exists..
+        ///   Looks up a localized string similar to A drift time predictor with the name {0} already exists..
         /// </summary>
-        public static string EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_ {
+        public static string EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_ {
             get {
-                return ResourceManager.GetString("EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__al" +
-                        "ready_exists_", resourceCulture);
+                return ResourceManager.GetString("EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__alrea" +
+                        "dy_exists_", resourceCulture);
             }
         }
         
@@ -21439,7 +21421,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There is already a replicate named &apos;{0}&apos;..
+        ///   Looks up a localized string similar to There is already areplicate named &apos;{0}&apos;..
         /// </summary>
         public static string Replicate_Name_There_is_already_a_replicate_named___0___ {
             get {
