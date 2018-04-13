@@ -5591,6 +5591,9 @@ If you prefer you can choose to report anonymously.</value>
   <data name="ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>There is no sequence for this protein</value>
   </data>
+  <data name="EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_" xml:space="preserve">
+    <value>A drift time predictor with the name {0} already exists.</value>
+  </data>
   <data name="CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_" xml:space="preserve">
     <value>Error: Duplicate replicate name '{0}' after applying regular expression.</value>
   </data>
@@ -9542,7 +9545,7 @@ If your transition list format combines formulas and adducts in a single column 
     <value>Q value cutoff:</value>
   </data>
   <data name="Replicate_Name_There_is_already_a_replicate_named___0___" xml:space="preserve">
-    <value>There is already a replicate named '{0}'.</value>
+    <value>There is already areplicate named '{0}'.</value>
   </data>
   <data name="PeakBoundsMatch_PeakBoundsMatch_Unable_to_read_a_score_annotation_for_peptide__0__of_file__1_" xml:space="preserve">
     <value>Unable to read a score annotation for peptide {0} of file {1}</value>
@@ -10067,14 +10070,5 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="Columns_Columns_Missing_column___0__" xml:space="preserve">
     <value>Missing column '{0}'</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_" xml:space="preserve">
-    <value>An ion mobility predictor with the name {0} already exists.</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Molecule" xml:space="preserve">
-    <value>Molecule</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Adduct" xml:space="preserve">
-    <value>Adduct</value>
   </data>
 </root>

@@ -2910,6 +2910,18 @@
   <data name="groupComparisonsMenuItem.Text" xml:space="preserve">
     <value>Gro&amp;up Comparisons</value>
   </data>
+  <data name="defineNewListToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>165, 22</value>
+  </data>
+  <data name="defineNewListToolStripMenuItem.Text" xml:space="preserve">
+    <value>Define New List...</value>
+  </data>
+  <data name="listsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>183, 22</value>
+  </data>
+  <data name="listsMenuItem.Text" xml:space="preserve">
+    <value>Lists</value>
+  </data>
   <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -5838,6 +5850,12 @@
   <data name="&gt;&gt;editGroupComparisonListMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;listsMenuItem.Name" xml:space="preserve">
+    <value>listsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;listsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;resultsGridMenuItem.Name" xml:space="preserve">
     <value>resultsGridMenuItem</value>
   </data>
@@ -6220,6 +6238,12 @@
     <value>massErrorlogScaleContextMenuItem</value>
   </data>
   <data name="&gt;&gt;massErrorlogScaleContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;defineNewListToolStripMenuItem.Name" xml:space="preserve">
+    <value>defineNewListToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;defineNewListToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

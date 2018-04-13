@@ -210,6 +210,7 @@
     <Compile Include="LibraryBuildShareTest.cs" />
     <Compile Include="LibraryExplorerSpeedTest.cs" />
     <Compile Include="LibraryExplorerTest.cs" />
+    <Compile Include="ListDesignerTest.cs" />
     <Compile Include="LiveReportsErrorTest.cs" />
     <Compile Include="LiveReportsFilterTest.cs" />
     <Compile Include="LongWaitTest.cs" />

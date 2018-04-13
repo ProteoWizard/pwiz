@@ -583,6 +583,7 @@
           <xs:attribute name="name" type="xs:string" use="required"/>
           <xs:attribute name="targets" type="annotation_target_type"/>
           <xs:attribute name="type" type="data_settings_annotation_type"/>
+          <xs:attribute name="lookup" type="xs:string" />
         </xs:complexType>
       </xs:element>
       <xs:element name="group_comparison" minOccurs="0" maxOccurs="unbounded">
@@ -610,6 +611,29 @@
           <xs:attribute name="summarization_method" type="xs:string"/>
           <xs:attribute name="confidence_level" type="xs:double"/>
           <xs:attribute name="per_protein" type="xs:boolean"/>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="list_data" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="list_def">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="annotation" minOccurs="0" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:attribute name="name" type="xs:string" use="required"/>
+                      <xs:attribute name="type" type="data_settings_annotation_type"/>
+                      <xs:attribute name="lookup" type="xs:string" />
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+                <xs:attribute name="display_property" type="xs:string"/>
+                <xs:attribute name="id_property" type="xs:string"/>
+                <xs:attribute name="name" type="xs:string" use="required"/>
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="column" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="views" minOccurs="0">
