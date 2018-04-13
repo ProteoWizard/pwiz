@@ -18,7 +18,7 @@ matchPaths = \
     "pwiz_tools/Shared/.*"
 ]
 
-changed_files = subprocess.check_output("git whatchanged --name-only --pretty="" origin..HEAD").decode(sys.stdout.encoding) 
+changed_files = subprocess.check_output("git whatchanged --name-only --pretty="" master..HEAD").decode(sys.stdout.encoding) 
 changed_files = changed_files.splitlines()
 pathsPattern = "(?:" + ")|(?:".join(matchPaths) + ")"
 
