@@ -15,7 +15,6 @@ namespace pwiz.Skyline.Model.Databinding
             }
             ValueMember = "Value"; // Not L10N
             DisplayMember = "Key"; // Not L10N
-            DisplayStyleForCurrentCellOnly = true;
             FlatStyle = FlatStyle.Flat;
         }
     }

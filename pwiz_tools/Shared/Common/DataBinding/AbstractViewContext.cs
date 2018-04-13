@@ -587,6 +587,7 @@ namespace pwiz.Common.DataBinding
         public virtual bool DeleteEnabled
         {
             get { return false; }
+            
         }
         public virtual void Delete()
         {

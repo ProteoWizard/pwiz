@@ -131,7 +131,6 @@
     <Compile Include="Collections\ReadOnlyList.cs" />
     <Compile Include="Collections\StructSerializer.cs" />
     <Compile Include="Collections\UniqueList.cs" />
-    <Compile Include="SystemUtil\CommonException.cs" />
     <Compile Include="SystemUtil\ValueCache.cs" />
     <Compile Include="Collections\ValueSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -145,7 +144,6 @@
     <Compile Include="SystemUtil\FormUtil.cs" />
     <Compile Include="SystemUtil\Immutable.cs" />
     <Compile Include="SystemUtil\IProgressMonitor.cs" />
-    <Compile Include="SystemUtil\DynamicTypeDefiner.cs" />
     <Compile Include="SystemUtil\LocalizationHelper.cs" />
     <Compile Include="SystemUtil\MustDispose.cs" />
     <Compile Include="SystemUtil\PathEx.cs" />

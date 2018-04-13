@@ -461,7 +461,6 @@ namespace pwiz.Skyline
             this.groupComparisonsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addGroupComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editGroupComparisonListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.listsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resultsGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.documentGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
@@ -527,7 +526,6 @@ namespace pwiz.Skyline
             this.massErorrRetentionTimeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorMassToChargContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorlogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.defineNewListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -2952,7 +2950,6 @@ namespace pwiz.Skyline
             this.massErrorsMenuItem,
             this.calibrationCurveMenuItem,
             this.groupComparisonsMenuItem,
-            this.listsMenuItem,
             this.resultsGridMenuItem,
             this.documentGridMenuItem,
             this.toolStripSeparator36,
@@ -3588,14 +3585,6 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.editGroupComparisonListMenuItem, "editGroupComparisonListMenuItem");
             this.editGroupComparisonListMenuItem.Click += new System.EventHandler(this.editGroupComparisonListMenuItem_Click);
             // 
-            // listsMenuItem
-            // 
-            this.listsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.defineNewListToolStripMenuItem});
-            this.listsMenuItem.Name = "listsMenuItem";
-            resources.ApplyResources(this.listsMenuItem, "listsMenuItem");
-            this.listsMenuItem.DropDownOpening += new System.EventHandler(this.listsMenuItem_DropDownOpening);
-            // 
             // resultsGridMenuItem
             // 
             resources.ApplyResources(this.resultsGridMenuItem, "resultsGridMenuItem");
@@ -4042,11 +4031,6 @@ namespace pwiz.Skyline
             this.massErrorlogScaleContextMenuItem.Name = "massErrorlogScaleContextMenuItem";
             resources.ApplyResources(this.massErrorlogScaleContextMenuItem, "massErrorlogScaleContextMenuItem");
             this.massErrorlogScaleContextMenuItem.Click += new System.EventHandler(this.massErrorlogScaleContextMenuItem_Click);
-            // 
-            // defineNewListToolStripMenuItem
-            // 
-            this.defineNewListToolStripMenuItem.Name = "defineNewListToolStripMenuItem";
-            resources.ApplyResources(this.defineNewListToolStripMenuItem, "defineNewListToolStripMenuItem");
             // 
             // SkylineWindow
             // 
@@ -4569,8 +4553,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem originalPeakMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeAboveCVCutoffToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator57;
-        private System.Windows.Forms.ToolStripMenuItem listsMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem defineNewListToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem graphTypeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem barAreaGraphDisplayTypeMenuItem;
         private System.Windows.Forms.ToolStripMenuItem lineAreaGraphDisplayTypeMenuItem;

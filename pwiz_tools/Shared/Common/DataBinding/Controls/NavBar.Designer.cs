@@ -40,6 +40,7 @@
             this.bindingNavigatorMoveNextItem = new System.Windows.Forms.ToolStripButton();
             this.bindingNavigatorMoveLastItem = new System.Windows.Forms.ToolStripButton();
             this.bindingNavigatorSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.bindingNavigatorAddNewItem = new System.Windows.Forms.ToolStripButton();
             this.navBarDeleteItem = new System.Windows.Forms.ToolStripButton();
             this.navBarButtonExport = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
@@ -112,6 +113,12 @@
             this.bindingNavigatorSeparator2.Name = "bindingNavigatorSeparator2";
             resources.ApplyResources(this.bindingNavigatorSeparator2, "bindingNavigatorSeparator2");
             // 
+            // bindingNavigatorAddNewItem
+            // 
+            this.bindingNavigatorAddNewItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.bindingNavigatorAddNewItem, "bindingNavigatorAddNewItem");
+            this.bindingNavigatorAddNewItem.Name = "bindingNavigatorAddNewItem";
+            // 
             // navBarDeleteItem
             // 
             this.navBarDeleteItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
@@ -164,7 +171,7 @@
             // 
             // bindingNavigator1
             // 
-            this.bindingNavigator1.AddNewItem = null;
+            this.bindingNavigator1.AddNewItem = this.bindingNavigatorAddNewItem;
             this.bindingNavigator1.CountItem = this.bindingNavigatorCountItem;
             this.bindingNavigator1.DeleteItem = null;
             this.bindingNavigator1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
@@ -180,6 +187,7 @@
             this.bindingNavigatorMoveNextItem,
             this.bindingNavigatorMoveLastItem,
             this.bindingNavigatorSeparator2,
+            this.bindingNavigatorAddNewItem,
             this.navBarDeleteItem,
             this.toolStripSeparator3,
             this.navBarButtonCopyAll,
@@ -244,6 +252,7 @@
         private System.Windows.Forms.ToolStripButton bindingNavigatorMoveNextItem;
         private System.Windows.Forms.ToolStripButton bindingNavigatorMoveLastItem;
         private System.Windows.Forms.ToolStripSeparator bindingNavigatorSeparator2;
+        private System.Windows.Forms.ToolStripButton bindingNavigatorAddNewItem;
         private System.Windows.Forms.ToolStripButton navBarDeleteItem;
         private System.Windows.Forms.ToolStripButton navBarButtonExport;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;

@@ -1431,14 +1431,6 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 mainViewSpecList = mainViewSpecList.ReplaceView(viewSpec.Name, viewSpec);
             }
-            foreach (var listData in DataSettings.Lists)
-            {
-                var listDef = listData.DeleteAllRows();
-                if (!defSet.ListDefList.Contains(listDef))
-                {
-                    defSet.ListDefList.SetValue(listDef);
-                }
-            }
             defSet.PersistedViews.SetViewSpecList(PersistedViews.MainGroup.Id, mainViewSpecList);
             if (!PeptideSettings.BackgroundProteome.IsNone)
             {

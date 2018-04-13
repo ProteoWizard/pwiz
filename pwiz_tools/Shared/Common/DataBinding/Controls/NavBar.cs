@@ -113,6 +113,7 @@ namespace pwiz.Common.DataBinding.Controls
         void BindingSourceOnCurrentChanged(object sender, EventArgs e)
         {
             navBarDeleteItem.Visible = navBarDeleteItem.Enabled = ViewContext.DeleteEnabled;
+            bindingNavigatorAddNewItem.Visible = BindingListSource.AllowNew;
         }
 
         void RefreshUi()
@@ -588,11 +589,6 @@ namespace pwiz.Common.DataBinding.Controls
         private void btnGroupTotal_DropDownOpening(object sender, EventArgs e)
         {
             UpdateGroupTotalDropdown();
-        }
-
-        private void bindingNavigatorAddNewItem_Click(object sender, EventArgs e)
-        {
-            BindingListSource.AddNew();
         }
     }
 }

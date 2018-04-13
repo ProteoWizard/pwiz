@@ -29,24 +29,14 @@ namespace pwiz.Skyline.Model.Databinding
 {
     public class AnnotationPropertyDescriptor : PropertyDescriptor
     {
-        private bool _isValid;
-        
-        public AnnotationPropertyDescriptor(SkylineDataSchema dataSchema, AnnotationDef annotationDef, bool isValid) 
-            : this(dataSchema, annotationDef, GetAttributes(annotationDef))
+        private readonly bool _isValid;
+        public AnnotationPropertyDescriptor(AnnotationDef annotationDef, bool isValid) 
+            : base(AnnotationDef.ANNOTATION_PREFIX + annotationDef.Name, GetAttributes(annotationDef))
         {
+            AnnotationDef = annotationDef;
             _isValid = isValid;
         }
 
-        protected AnnotationPropertyDescriptor(SkylineDataSchema dataSchema, AnnotationDef annotationDef,
-            Attribute[] attributes)
-            : base(AnnotationDef.ANNOTATION_PREFIX + annotationDef.Name, attributes)
-        {
-            SkylineDataSchema = dataSchema;
-            AnnotationDef = annotationDef;
-            _isValid = true;
-        }
-
-        public SkylineDataSchema SkylineDataSchema { get; private set; }
         public AnnotationDef AnnotationDef { get; private set; }
         public override bool CanResetValue(object component)
         {
@@ -101,14 +91,14 @@ namespace pwiz.Skyline.Model.Databinding
             get { return _isValid ? AnnotationDef.ValueType : typeof(object); }
         }
 
-        public static Attribute[] GetAttributes(AnnotationDef annotationDef)
+        private static Attribute[] GetAttributes(AnnotationDef annotationDef)
         {
-            var attributes = new List<Attribute> { new DisplayNameAttribute(annotationDef.Name) };
+            var attributes = new List<Attribute> {new DisplayNameAttribute(annotationDef.Name)};
             if (annotationDef.Type == AnnotationDef.AnnotationType.number)
             {
-                attributes.Add(new FormatAttribute { NullValue = TextUtil.EXCEL_NA });
+                attributes.Add(new FormatAttribute {NullValue = TextUtil.EXCEL_NA});
             }
-            else if (annotationDef.Type == AnnotationDef.AnnotationType.true_false)
+            if (annotationDef.Type == AnnotationDef.AnnotationType.true_false)
             {
                 attributes.Add(new DataGridViewColumnTypeAttribute(typeof(DataGridViewCheckBoxColumn)));
             }

@@ -35,11 +35,6 @@ namespace pwiz.Skyline.SettingsUI
             this.label1 = new System.Windows.Forms.Label();
             this.btnEditAnnotationList = new System.Windows.Forms.Button();
             this.checkedListBoxAnnotations = new System.Windows.Forms.CheckedListBox();
-            this.tabPageLists = new System.Windows.Forms.TabPage();
-            this.btnEditList = new System.Windows.Forms.Button();
-            this.btnAddList = new System.Windows.Forms.Button();
-            this.btnManageLists = new System.Windows.Forms.Button();
-            this.checkedListBoxLists = new System.Windows.Forms.CheckedListBox();
             this.tabPageGroupComparisons = new System.Windows.Forms.TabPage();
             this.btnAddGroupComparison = new System.Windows.Forms.Button();
             this.btnEditGroupComparisonList = new System.Windows.Forms.Button();
@@ -51,7 +46,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnOK = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
             this.tabPageAnnotations.SuspendLayout();
-            this.tabPageLists.SuspendLayout();
             this.tabPageGroupComparisons.SuspendLayout();
             this.tabPageReports.SuspendLayout();
             this.SuspendLayout();
@@ -60,7 +54,6 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.tabControl, "tabControl");
             this.tabControl.Controls.Add(this.tabPageAnnotations);
-            this.tabControl.Controls.Add(this.tabPageLists);
             this.tabControl.Controls.Add(this.tabPageGroupComparisons);
             this.tabControl.Controls.Add(this.tabPageReports);
             this.tabControl.Name = "tabControl";
@@ -101,44 +94,6 @@ namespace pwiz.Skyline.SettingsUI
             this.checkedListBoxAnnotations.CheckOnClick = true;
             this.checkedListBoxAnnotations.FormattingEnabled = true;
             this.checkedListBoxAnnotations.Name = "checkedListBoxAnnotations";
-            // 
-            // tabPageLists
-            // 
-            this.tabPageLists.Controls.Add(this.btnEditList);
-            this.tabPageLists.Controls.Add(this.btnAddList);
-            this.tabPageLists.Controls.Add(this.btnManageLists);
-            this.tabPageLists.Controls.Add(this.checkedListBoxLists);
-            resources.ApplyResources(this.tabPageLists, "tabPageLists");
-            this.tabPageLists.Name = "tabPageLists";
-            this.tabPageLists.UseVisualStyleBackColor = true;
-            // 
-            // btnEditList
-            // 
-            resources.ApplyResources(this.btnEditList, "btnEditList");
-            this.btnEditList.Name = "btnEditList";
-            this.btnEditList.UseVisualStyleBackColor = true;
-            this.btnEditList.Click += new System.EventHandler(this.btnEditList_Click);
-            // 
-            // btnAddList
-            // 
-            resources.ApplyResources(this.btnAddList, "btnAddList");
-            this.btnAddList.Name = "btnAddList";
-            this.btnAddList.UseVisualStyleBackColor = true;
-            this.btnAddList.Click += new System.EventHandler(this.btnAddList_Click);
-            // 
-            // btnManageLists
-            // 
-            resources.ApplyResources(this.btnManageLists, "btnManageLists");
-            this.btnManageLists.Name = "btnManageLists";
-            this.btnManageLists.UseVisualStyleBackColor = true;
-            this.btnManageLists.Click += new System.EventHandler(this.btnManageLists_Click);
-            // 
-            // checkedListBoxLists
-            // 
-            resources.ApplyResources(this.checkedListBoxLists, "checkedListBoxLists");
-            this.checkedListBoxLists.FormattingEnabled = true;
-            this.checkedListBoxLists.Name = "checkedListBoxLists";
-            this.checkedListBoxLists.SelectedIndexChanged += new System.EventHandler(this.checkedListBoxLists_SelectedIndexChanged);
             // 
             // tabPageGroupComparisons
             // 
@@ -224,7 +179,6 @@ namespace pwiz.Skyline.SettingsUI
             this.ShowInTaskbar = false;
             this.tabControl.ResumeLayout(false);
             this.tabPageAnnotations.ResumeLayout(false);
-            this.tabPageLists.ResumeLayout(false);
             this.tabPageGroupComparisons.ResumeLayout(false);
             this.tabPageReports.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -248,10 +202,5 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.TabPage tabPageReports;
         private Common.DataBinding.Controls.Editor.ChooseViewsControl chooseViewsControl;
         private System.Windows.Forms.Label labelReports;
-        private System.Windows.Forms.TabPage tabPageLists;
-        private System.Windows.Forms.Button btnAddList;
-        private System.Windows.Forms.Button btnManageLists;
-        private System.Windows.Forms.CheckedListBox checkedListBoxLists;
-        private System.Windows.Forms.Button btnEditList;
     }
 }

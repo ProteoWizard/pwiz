@@ -29,7 +29,6 @@ namespace pwiz.Skyline.Model.Databinding
     /// </summary>
     public class EditDescription
     {
-        private string _message;
         public EditDescription(IColumnCaption columnCaption, object value)
         {
             ColumnCaption = columnCaption;
@@ -54,20 +53,11 @@ namespace pwiz.Skyline.Model.Databinding
             return new EditDescription(new ColumnCaption(column), value);
         }
 
-        public static EditDescription Message(string message)
-        {
-            return new EditDescription(null, null) {_message = message};
-        }
-
         public IColumnCaption ColumnCaption { get; private set; }
         public object Value { get; private set; }
 
         public string GetUndoText(DataSchemaLocalizer dataSchemaLocalizer)
         {
-            if (_message != null)
-            {
-                return _message;
-            }
             string fullMessage = string.Format(Resources.EditDescription_GetUndoText_Set__0__to___1__,
                 ColumnCaption.GetCaption(dataSchemaLocalizer), Value);
             return TruncateLongMessage(fullMessage);

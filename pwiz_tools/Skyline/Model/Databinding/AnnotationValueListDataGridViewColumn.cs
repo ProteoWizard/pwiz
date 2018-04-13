@@ -16,25 +16,55 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 
 namespace pwiz.Skyline.Model.Databinding
 {
-    public class AnnotationValueListDataGridViewColumn : BoundComboBoxColumn
+    public class AnnotationValueListDataGridViewColumn : DataGridViewComboBoxColumn
     {
-        protected override object[] GetDropdownItems()
+        protected override void OnDataGridViewChanged()
         {
-            var annotationPropertyDescriptor = ColumnPropertyDescriptor.DisplayColumn.ColumnDescriptor.ReflectedPropertyDescriptor as AnnotationPropertyDescriptor;
-            if (annotationPropertyDescriptor == null)
+            base.OnDataGridViewChanged();
+            var items = GetDropdownItems() ?? new string[0];
+            if (items.SequenceEqual(Items.Cast<object>()))
+            {
+                return;
+            }
+            Items.Clear();
+            foreach (var item in items)
+            {
+                Items.Add(item);
+            }
+            FlatStyle = FlatStyle.Flat;
+        }
+
+        private IList<string> GetDropdownItems()
+        {
+            if (null == DataGridView || null == DataPropertyName)
             {
                 return null;
             }
-            return GetDropdownItems(annotationPropertyDescriptor);
-        }
-
-        protected virtual string[] GetDropdownItems(AnnotationPropertyDescriptor annotationPropertyDescriptor)
-        {
-            return new[] { string.Empty }.Concat(annotationPropertyDescriptor.AnnotationDef.Items).ToArray();
+            var bindingSource = DataGridView.DataSource as BindingSource;
+            if (null == bindingSource)
+            {
+                return null;
+            }
+            var columnPropertyDescriptor = bindingSource.GetItemProperties(null)[DataPropertyName] as ColumnPropertyDescriptor;
+            if (null == columnPropertyDescriptor)
+            {
+                return null;
+            }
+            var annotationPropertyDescriptor =
+                columnPropertyDescriptor.DisplayColumn.ColumnDescriptor.ReflectedPropertyDescriptor as
+                    AnnotationPropertyDescriptor;
+            if (null == annotationPropertyDescriptor)
+            {
+                return null;
+            }
+            return new[]{string.Empty}.Concat(annotationPropertyDescriptor.AnnotationDef.Items).ToArray();
         }
     }
 }
