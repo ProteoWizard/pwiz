@@ -290,7 +290,7 @@ namespace SkylineNightly
             var branchLine = File.ReadAllLines(Path.Combine(_skylineTesterDir, "SkylineTester Files", "Version.cpp")).FirstOrDefault(l => l.Contains("Version::Branch"));
             if (!string.IsNullOrEmpty(branchLine))
             {
-                // Looks like std::string Version::Branch()   {return "skyline_9_7";}
+                // Looks like std::string Version::Branch()   {return "Skyline/skyline_9_7";}
                 var branch = branchLine.Split(new[] { "\"" }, StringSplitOptions.None)[1];
                 if (branch.Equals("master"))
                 {
