@@ -416,7 +416,7 @@ namespace SkylineNightly
                     ? "skyline_" // N.B. this assumes TC branch specification is set to something like "+:refs/heads/Skyline/(skyline_4_1)"
                     : "master"; // N.B. this assumes TC branch spec is set as "+:refs/heads/(master)"
                 var buildPageUrl = string.Format(TEAM_CITY_BUILD_URL, TEAM_CITY_BUILD_TYPE);
-                Log("Download Team City build page");
+                Log("Download Team City build page as " + buildPageUrl);
                 var buildStatusPage = client.DownloadString(buildPageUrl);
                 // Multiple branches may be built under the same config, locate the one we want
                 var builds = buildStatusPage.Split(new []{@"class=""branchName"">"}, StringSplitOptions.None);
@@ -429,7 +429,7 @@ namespace SkylineNightly
                         {
                             string id = match.Groups[1].Value;
                             string zipFileLink = string.Format(TEAM_CITY_ZIP_URL, TEAM_CITY_BUILD_TYPE, id);
-                            Log("Download SkylineTester zip file");
+                            Log("Download SkylineTester zip file as " + zipFileLink);
                             client.DownloadFile(zipFileLink, skylineTesterZip);
                             return;
                         }
