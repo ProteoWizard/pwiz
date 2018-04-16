@@ -40,6 +40,7 @@
             this.linkPeptideAtlas = new System.Windows.Forms.LinkLabel();
             this.linkNIST = new System.Windows.Forms.LinkLabel();
             this.linkGPM = new System.Windows.Forms.LinkLabel();
+            this.cbxUseExplicitPeakBounds = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // textName
@@ -110,12 +111,21 @@
             this.linkGPM.TabStop = true;
             this.linkGPM.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkGPM_LinkClicked);
             // 
+            // cbxUseExplicitPeakBounds
+            // 
+            resources.ApplyResources(this.cbxUseExplicitPeakBounds, "cbxUseExplicitPeakBounds");
+            this.cbxUseExplicitPeakBounds.Checked = true;
+            this.cbxUseExplicitPeakBounds.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbxUseExplicitPeakBounds.Name = "cbxUseExplicitPeakBounds";
+            this.cbxUseExplicitPeakBounds.UseVisualStyleBackColor = true;
+            // 
             // EditLibraryDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.cbxUseExplicitPeakBounds);
             this.Controls.Add(this.linkGPM);
             this.Controls.Add(this.linkNIST);
             this.Controls.Add(this.linkPeptideAtlas);
@@ -150,5 +160,6 @@
         private System.Windows.Forms.LinkLabel linkPeptideAtlas;
         private System.Windows.Forms.LinkLabel linkNIST;
         private System.Windows.Forms.LinkLabel linkGPM;
+        private System.Windows.Forms.CheckBox cbxUseExplicitPeakBounds;
     }
 }

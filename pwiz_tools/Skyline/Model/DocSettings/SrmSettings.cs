@@ -888,9 +888,9 @@ namespace pwiz.Skyline.Model.DocSettings
         /// This method just returns the first peak boundary in any library.
         /// In theory, a library should only have one peak boundary for any peptide.
         /// </summary>
-        public PeakBounds GetExplicitPeakBounds(PeptideDocNode nodePep, MsDataFileUri filePath)
+        public ExplicitPeakBounds GetExplicitPeakBounds(PeptideDocNode nodePep, MsDataFileUri filePath)
         {
-            if (nodePep == null || !nodePep.IsProteomic)
+            if (nodePep == null)
             {
                 return null;
             }
@@ -898,7 +898,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 .Select(typedSequence => typedSequence.ModifiedSequence).ToArray();
             foreach (var library in PeptideSettings.Libraries.Libraries)
             {
-                if (library == null)
+                if (library == null || !library.UseExplicitPeakBounds)
                 {
                     continue;
                 }

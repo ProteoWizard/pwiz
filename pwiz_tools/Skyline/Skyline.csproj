@@ -310,6 +310,7 @@
     <Compile Include="Model\DocSettings\AbsoluteQuantification\FiguresOfMerit.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\LodCalculation.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
+    <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
     <Compile Include="Model\Lib\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
@@ -2726,6 +2727,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditDPDlg.zh-CHS.resx">
       <DependentUpon>EditDPDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditLibraryDlg.fr.resx">
+      <DependentUpon>EditLibraryDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditOptimizationLibraryDlg.ja.resx">
       <DependentUpon>EditOptimizationLibraryDlg.cs</DependentUpon>

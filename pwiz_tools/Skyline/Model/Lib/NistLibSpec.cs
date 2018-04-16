@@ -320,9 +320,9 @@ namespace pwiz.Skyline.Model.Lib
             return new NistSpectrumHeaderInfo(Name, info.TFRatio, info.RT, info.iRT, info.TotalIntensity, info.Copies);
         }
 
-        public override LibrarySpec CreateSpec(string path)
+        protected override LibrarySpec CreateSpec()
         {
-            return new NistLibSpec(Name, path);
+            return new NistLibSpec(Name, FilePath);
         }
 
         public override string SpecFilter

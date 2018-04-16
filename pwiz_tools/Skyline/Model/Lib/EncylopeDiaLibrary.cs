@@ -28,7 +28,6 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
-using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.ChromLib;
@@ -90,7 +89,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("elib_library")]
     public sealed class EncyclopeDiaLibrary : CachedLibrary<EncyclopeDiaLibrary.ElibSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 2;
+        private const int FORMAT_VERSION_CACHE = 3;
         private const double MIN_QUANTITATIVE_INTENSITY = 1.0;
         private ImmutableList<string> _sourceFiles;
         private readonly PooledSqliteConnection _pooledSqliteConnection;
@@ -130,9 +129,9 @@ namespace pwiz.Skyline.Model.Lib
             return 0;
         }
 
-        public override LibrarySpec CreateSpec(string path)
+        protected override LibrarySpec CreateSpec()
         {
-            return new EncyclopeDiaSpec(Name, path);
+            return new EncyclopeDiaSpec(Name, FilePath);
         }
 
         public override bool IsSameLibrary(Library library)
@@ -224,7 +223,7 @@ namespace pwiz.Skyline.Model.Lib
                             double score = -reader.GetDouble(3);
                             dataByFilename.Add(fileName, Tuple.Create((double?) score,
                                 new FileData(reader.GetDouble(4)/60,
-                                    new PeakBounds(reader.GetDouble(5)/60, reader.GetDouble(6)/60))));
+                                    new ExplicitPeakBounds(reader.GetDouble(5)/60, reader.GetDouble(6)/60, score))));
                         }
                     }
                     // Also, read the PeptideQuants table in order to get peak boundaries for any peptide&sourcefiles that were
@@ -250,7 +249,7 @@ namespace pwiz.Skyline.Model.Lib
                             }
                             dataByFilename.Add(fileName,
                                 Tuple.Create((double?) null,
-                                    new FileData(null, new PeakBounds(reader.GetDouble(3)/60, reader.GetDouble(4)/60))));
+                                    new FileData(null, new ExplicitPeakBounds(reader.GetDouble(3)/60, reader.GetDouble(4)/60, ExplicitPeakBounds.UNKNOWN_SCORE))));
                         }
                     }
                 }
@@ -502,7 +501,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        public override PeakBounds GetExplicitPeakBounds(MsDataFileUri filePath, IEnumerable<Target> peptideSequences)
+        public override ExplicitPeakBounds GetExplicitPeakBounds(MsDataFileUri filePath, IEnumerable<Target> peptideSequences)
         {
             int fileId = FindFileInList(filePath, _sourceFiles);
             if (fileId < 0)
@@ -721,6 +720,7 @@ namespace pwiz.Skyline.Model.Lib
                     PrimitiveArrays.WriteOneValue(stream, peakBoundEntry.Key);
                     PrimitiveArrays.WriteOneValue(stream, peakBoundEntry.Value.PeakBounds.StartTime);
                     PrimitiveArrays.WriteOneValue(stream, peakBoundEntry.Value.PeakBounds.EndTime);
+                    PrimitiveArrays.WriteOneValue(stream, peakBoundEntry.Value.PeakBounds.Score);
                     if (peakBoundEntry.Value.ApexTime.HasValue)
                     {
                         PrimitiveArrays.WriteOneValue<byte>(stream, 1);
@@ -747,6 +747,7 @@ namespace pwiz.Skyline.Model.Lib
                     var fileId = PrimitiveArrays.ReadOneValue<int>(stream);
                     var startTime = PrimitiveArrays.ReadOneValue<double>(stream);
                     var endTime = PrimitiveArrays.ReadOneValue<double>(stream);
+                    var score = PrimitiveArrays.ReadOneValue<double>(stream);
                     byte bHasApexTime = PrimitiveArrays.ReadOneValue<byte>(stream);
                     double? apexTime;
                     if (bHasApexTime == 0)
@@ -757,20 +758,20 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         apexTime = PrimitiveArrays.ReadOneValue<double>(stream);
                     }
-                    peakBounds.Add(new KeyValuePair<int, FileData>(fileId, new FileData(apexTime, new PeakBounds(startTime, endTime))));
+                    peakBounds.Add(new KeyValuePair<int, FileData>(fileId, new FileData(apexTime, new ExplicitPeakBounds(startTime, endTime, score))));
                 }
                 return new ElibSpectrumInfo(peptideModSeq, charge, bestFileId, peakBounds);
             }
         }
         public class FileData
         {
-            public FileData(double? apexTime, PeakBounds peakBounds)
+            public FileData(double? apexTime, ExplicitPeakBounds peakBounds)
             {
                 ApexTime = apexTime;
                 PeakBounds = peakBounds;
             }
             public double? ApexTime { get; private set; }
-            public PeakBounds PeakBounds { get; private set; }
+            public ExplicitPeakBounds PeakBounds { get; private set; }
         }
 
         private class ElibSpectrumKey
