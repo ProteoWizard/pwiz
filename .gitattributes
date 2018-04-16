@@ -1,0 +1,5 @@
+#  .gitattributes for pwiz
+
+# Don't change line endings on potentially indexed mass spec data
+*.mzml binary
+*.mzxml binary
