@@ -290,7 +290,7 @@ namespace SkylineNightly
             var branchLine = File.ReadAllLines(Path.Combine(_skylineTesterDir, "SkylineTester Files", "Version.cpp")).FirstOrDefault(l => l.Contains("Version::Branch"));
             if (!string.IsNullOrEmpty(branchLine))
             {
-                // Looks like std::string Version::Branch()   {return "skyline_9_7";}
+                // Looks like std::string Version::Branch()   {return "Skyline/skyline_9_7";}
                 var branch = branchLine.Split(new[] { "\"" }, StringSplitOptions.None)[1];
                 if (branch.Equals("master"))
                 {
@@ -413,10 +413,10 @@ namespace SkylineNightly
             {
                 client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
                 var branchType = ((mode == RunMode.release) || (mode == RunMode.release_perf))
-                    ? "Skyline/skyline"
-                    : "master";
+                    ? "skyline_" // N.B. this assumes TC branch specification is set to something like "+:refs/heads/Skyline/(skyline_4_1)"
+                    : "master"; // N.B. this assumes TC branch spec is set as "+:refs/heads/(master)"
                 var buildPageUrl = string.Format(TEAM_CITY_BUILD_URL, TEAM_CITY_BUILD_TYPE);
-                Log("Download Team City build page");
+                Log("Download Team City build page as " + buildPageUrl);
                 var buildStatusPage = client.DownloadString(buildPageUrl);
                 // Multiple branches may be built under the same config, locate the one we want
                 var builds = buildStatusPage.Split(new []{@"class=""branchName"">"}, StringSplitOptions.None);
@@ -429,7 +429,7 @@ namespace SkylineNightly
                         {
                             string id = match.Groups[1].Value;
                             string zipFileLink = string.Format(TEAM_CITY_ZIP_URL, TEAM_CITY_BUILD_TYPE, id);
-                            Log("Download SkylineTester zip file");
+                            Log("Download SkylineTester zip file as " + zipFileLink);
                             client.DownloadFile(zipFileLink, skylineTesterZip);
                             return;
                         }
