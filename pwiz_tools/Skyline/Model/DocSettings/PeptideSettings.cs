@@ -2262,10 +2262,6 @@ namespace pwiz.Skyline.Model.DocSettings
                                       {
                                           im.Libraries = new Library[prop.Count];
                                       }
-                                      else
-                                      {
-                                          
-                                      }
                                   });
         }        
 
