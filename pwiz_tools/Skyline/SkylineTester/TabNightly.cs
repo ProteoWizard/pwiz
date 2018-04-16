@@ -525,17 +525,19 @@ namespace SkylineTester
 
         private string GetRevision(bool nuke)
         {
-            // Get current git revision info.
+            // Get current git revision info in form of git hash.
             string revision = String.Empty;
             try
             {
-                var buildRoot = MainWindow.GetBuildRoot();
-                var target = (Directory.Exists(buildRoot) && !nuke)
-                    ? buildRoot
-                    : TabBuild.GetBranchUrl();
-                var revisionCount = GitCommand(target, @"rev-list --count head");
-                var revisionHash = GitCommand(target, @"rev-parse --short HEAD");
-                revision = revisionCount + " (" + revisionHash + ")";
+                var buildRoot = MainWindow.GetBuildRoot()+"\\pwiz";
+                if (Directory.Exists(buildRoot) && !nuke)
+                {
+                    revision = GitCommand(buildRoot, @"rev-parse HEAD"); // Commit hash for local repo
+                }
+                else
+                {
+                    revision = GitCommand(".", @"ls-remote -h " + TabBuild.GetBranchUrl()).Split(' ', '\t')[0]; // Commit hash for github repo
+                }
             }
 // ReSharper disable once EmptyGeneralCatchClause
             catch
