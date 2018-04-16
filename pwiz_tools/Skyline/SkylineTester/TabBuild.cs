@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -99,10 +100,15 @@ namespace SkylineTester
             return architectures;
         }
 
+        public static string GetMasterUrl()
+        {
+            return @"https://github.com/ProteoWizard/pwiz";
+        }
+
         public static string GetBranchUrl()
         {
             return MainWindow.BuildTrunk.Checked
-                ? @"https://github.com/ProteoWizard/pwiz"
+                ? GetMasterUrl()
                 : MainWindow.BranchUrl.Text;
         }
 
@@ -116,7 +122,9 @@ namespace SkylineTester
         {
             var commandShell = MainWindow.CommandShell;
             var branchParts = branchUrl.Split('/');
-            var branchName = "Skyline ({0}/{1})".With(branchParts[branchParts.Length - 2], branchParts[branchParts.Length - 1]);
+            var branchName = branchParts[branchParts.Length - 1].Equals("pwiz")
+                ? "Skyline (master)"
+                : "Skyline ({0}/{1})".With(branchParts[branchParts.Length - 2], branchParts[branchParts.Length - 1]);
             var git = MainWindow.Git;
 
             var architectureList = string.Join("- and ", architectures);
@@ -134,7 +142,8 @@ namespace SkylineTester
                 {
                     commandShell.Add("#@ Updating Build directory...\n");
                     commandShell.Add("# Updating Build directory...");
-                    commandShell.Add("cd {0} && {1} pull", buildRoot.Quote(), git.Quote());
+                    commandShell.Add("cd {0}", buildRoot.Quote());
+                    commandShell.Add("{0} pull", git.Quote());
                 }
             }
 
@@ -150,7 +159,15 @@ namespace SkylineTester
             {
                 commandShell.Add("#@ Checking out {0} source files...\n", branchName);
                 commandShell.Add("# Checking out {0} source files...", branchName);
-                commandShell.Add("{0} clone {1} {2}", git.Quote(), branchUrl.Quote(), buildRoot.Quote());
+                if (branchName.Contains("master"))
+                {
+                    commandShell.Add("{0} clone {1} {2}", git.Quote(), branchUrl.Quote(), buildRoot.Quote());
+                }
+                else
+                {
+                    var branch = branchUrl.Split(new[] {"tree/"}, StringSplitOptions.None)[1];
+                    commandShell.Add("{0} clone {1} -b {2} {3}", git.Quote(), GetMasterUrl().Quote(), branch.Quote(), buildRoot.Quote());
+                }
             }
 
             commandShell.Add("# Building Skyline...");
