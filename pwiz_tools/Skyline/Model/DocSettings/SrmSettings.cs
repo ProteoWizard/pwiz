@@ -1549,6 +1549,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 librarySpecs[iSpec] = findLibrarySpec(library, null);
                 if (librarySpecs[iSpec] == null)
                     return null;    // Canceled
+                librarySpecs[iSpec] = librarySpecs[iSpec]
+                    .ChangeUseExplicitPeakBounds(library.UseExplicitPeakBounds);
                 if (librarySpecs[iSpec].FilePath == null)
                 {
                     // Disconnect the libraries, if not canceled, but no path

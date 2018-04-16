@@ -324,7 +324,6 @@ namespace pwiz.Skyline
         private SrmDocument ConnectDocument(IWin32Window parent, SrmDocument document, string path)
         {
             document = ConnectLibrarySpecs(parent, document, path);
-            document = CopyLibraryProperties(document);
             if (document != null)
                 document = ConnectBackgroundProteome(parent, document, path);
             if (document != null)
@@ -334,35 +333,6 @@ namespace pwiz.Skyline
             if (document != null)
                 document = ConnectIonMobilityLibrary(parent, document, path);
             return document;
-        }
-
-        /// <summary>
-        /// Updates the "AnyExplicitPeakBounds" property on the LibrarySpecs so they
-        /// match the Library
-        /// </summary>
-        private SrmDocument CopyLibraryProperties(SrmDocument document)
-        {
-            var libraries = document.Settings.PeptideSettings.Libraries;
-            LibrarySpec[] newLibrarySpecs = libraries.LibrarySpecs.ToArray();
-            for (int i = 0; i < libraries.Libraries.Count; i++)
-            {
-                var library = libraries.Libraries[i];
-                if (library == null)
-                {
-                    continue;
-                }
-                var librarySpec = libraries.LibrarySpecs[i];
-                if (librarySpec == null)
-                {
-                    continue;
-                }
-                librarySpec = librarySpec
-                    .ChangeUseExplicitPeakBounds(library.UseExplicitPeakBounds);
-                newLibrarySpecs[i] = librarySpec;
-            }
-            return document.ChangeSettingsNoDiff(document.Settings.ChangePeptideSettings(
-                document.Settings.PeptideSettings.ChangeLibraries(
-                    libraries.ChangeLibrarySpecs(newLibrarySpecs))));
         }
 
         private SrmDocument ConnectLibrarySpecs(IWin32Window parent, SrmDocument document, string documentPath)
