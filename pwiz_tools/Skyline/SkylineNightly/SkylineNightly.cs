@@ -140,7 +140,7 @@ namespace SkylineNightly
             }
             catch (UnauthorizedAccessException exception)
             {
-                MessageBox.Show(string.Format("You need to run as Administrator to schedule a new task.\n\n {0}", exception));
+                MessageBox.Show(string.Format("You need to run as Administrator to schedule a new task.\n\n {0}", exception)); // Not L10N
             }
 
             Close();
