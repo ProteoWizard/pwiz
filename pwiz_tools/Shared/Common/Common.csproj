@@ -129,6 +129,7 @@
     <Compile Include="Database\NHibernate\SessionFactoryFactory.cs" />
     <Compile Include="Database\NHibernate\SessionWithLock.cs" />
     <Compile Include="Database\NHibernate\StatelessSessionWithLock.cs" />
+    <Compile Include="Database\SqliteOperations.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />
     <Compile Include="DataBinding\AggregateOperation.cs" />
     <Compile Include="DataBinding\Attributes\AdvancedAttribute.cs" />
@@ -176,7 +177,9 @@
     <Compile Include="DataBinding\Controls\ManageLayoutsForm.Designer.cs">
       <DependentUpon>ManageLayoutsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataBinding\Controls\NameLayoutForm.cs" />
+    <Compile Include="DataBinding\Controls\NameLayoutForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="DataBinding\Controls\NameLayoutForm.Designer.cs">
       <DependentUpon>NameLayoutForm.cs</DependentUpon>
     </Compile>
