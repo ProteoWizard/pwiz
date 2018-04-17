@@ -2728,9 +2728,6 @@
     <EmbeddedResource Include="SettingsUI\EditDPDlg.zh-CHS.resx">
       <DependentUpon>EditDPDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\EditLibraryDlg.fr.resx">
-      <DependentUpon>EditLibraryDlg.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditOptimizationLibraryDlg.ja.resx">
       <DependentUpon>EditOptimizationLibraryDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
