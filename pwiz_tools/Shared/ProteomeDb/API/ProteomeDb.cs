@@ -117,7 +117,7 @@ namespace pwiz.ProteomeDatabase.API
         private void ReadVersion(ISession session)
         {
             // do we even have a version? 0th-gen protdb doesn't have this.
-            if (!SqliteOperations.TableExists(session.Connection, "ProteomeDbSchemaVersion"))
+            if (!SqliteOperations.TableExists(session.Connection, "ProteomeDbSchemaVersion")) // Not L10N
             {
                 _schemaVersionMajor = SCHEMA_VERSION_MAJOR_0; // an ancient, unversioned file
                 _schemaVersionMinor = SCHEMA_VERSION_MINOR_0; // an ancient, unversioned file
@@ -442,7 +442,7 @@ namespace pwiz.ProteomeDatabase.API
 
         internal static bool CheckHasSubsequenceTable(IDbConnection connection)
         {
-            return SqliteOperations.TableExists(connection, "ProteomeDbSubsequence");
+            return SqliteOperations.TableExists(connection, "ProteomeDbSubsequence"); // Not L10N
         }
 
         private bool? _hasSubsequencesTable;

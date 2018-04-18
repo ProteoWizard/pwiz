@@ -1648,7 +1648,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private bool HasRedundanModificationsTable()
         {
-            return SqliteOperations.TableExists(_sqliteConnectionRedundant.Connection, "Modifications");
+            return SqliteOperations.TableExists(_sqliteConnectionRedundant.Connection, "Modifications"); // Not L10N
         }
 
         public void DeleteDataFiles(string[] filenames, IProgressMonitor monitor)
