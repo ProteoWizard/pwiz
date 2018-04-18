@@ -28,6 +28,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
+using pwiz.Common.Database;
 using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -1068,49 +1069,45 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return resultDict;
             }
-            // Read fragment annotations if any
-            try
+            if (!SqliteOperations.TableExists(connection.Connection, "RefSpectraPeakAnnotations")) // Not L10N
             {
-                // For small molecules, see if there are any peak annotations (for peptides, we can generate our own fragment info)
-                using (var select = connection.Connection.CreateCommand())
+                return resultDict;
+            }
+            // Read fragment annotations if any
+            // For small molecules, see if there are any peak annotations (for peptides, we can generate our own fragment info)
+            using (var select = connection.Connection.CreateCommand())
+            {
+                select.CommandText = "SELECT * FROM [RefSpectraPeakAnnotations] WHERE [RefSpectraID] = ?"; // Not L10N
+                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)refSpectraId));
+                using (SQLiteDataReader reader = @select.ExecuteReader())
                 {
-                    select.CommandText = "SELECT * FROM [RefSpectraPeakAnnotations] WHERE [RefSpectraID] = ?"; // Not L10N
-                    select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)refSpectraId));
-                    using (SQLiteDataReader reader = @select.ExecuteReader())
+                    // N.B. this code needs to track any changes to RefSpectraPeakAnnotations, which is to say changes in BlibMaker.cpp 
+                    while (reader.Read())
                     {
-                        // N.B. this code needs to track any changes to RefSpectraPeakAnnotations, which is to say changes in BlibMaker.cpp 
-                        while (reader.Read())
+                        // var refSpectraID = reader.GetInt32(RefSpectraPeakAnnotations.RefSpectraID);
+                        var peakIndex = reader.GetInt32(RefSpectraPeakAnnotations.peakIndex);
+                        var fragname = reader.GetString(RefSpectraPeakAnnotations.name);
+                        var formula = reader.GetString(RefSpectraPeakAnnotations.formula);
+                        var inchkey = reader.GetString(RefSpectraPeakAnnotations.inchiKey);
+                        var otherKeys = reader.GetString(RefSpectraPeakAnnotations.otherKeys);
+                        var charge = reader.GetInt32(RefSpectraPeakAnnotations.charge);
+                        var adductString = reader.GetString(RefSpectraPeakAnnotations.adduct);
+                        var comment = reader.GetString(RefSpectraPeakAnnotations.comment);
+                        var mzTheoretical = reader.GetDouble(RefSpectraPeakAnnotations.mzTheoretical);
+                        var mzObserved = reader.GetDouble(RefSpectraPeakAnnotations.mzObserved);
+                        var molecule = SmallMoleculeLibraryAttributes.Create(fragname, formula, inchkey, otherKeys);
+                        var adduct = string.IsNullOrEmpty(adductString)
+                            ? Adduct.FromChargeNoMass(charge)
+                            : Adduct.FromStringAssumeChargeOnly(adductString);
+                        AnnotationsForObservedMz annotations;
+                        if (!resultDict.TryGetValue(peakIndex, out annotations))
                         {
-                            // var refSpectraID = reader.GetInt32(RefSpectraPeakAnnotations.RefSpectraID);
-                            var peakIndex = reader.GetInt32(RefSpectraPeakAnnotations.peakIndex);
-                            var fragname = reader.GetString(RefSpectraPeakAnnotations.name);
-                            var formula = reader.GetString(RefSpectraPeakAnnotations.formula);
-                            var inchkey = reader.GetString(RefSpectraPeakAnnotations.inchiKey);
-                            var otherKeys = reader.GetString(RefSpectraPeakAnnotations.otherKeys);
-                            var charge = reader.GetInt32(RefSpectraPeakAnnotations.charge);
-                            var adductString = reader.GetString(RefSpectraPeakAnnotations.adduct);
-                            var comment = reader.GetString(RefSpectraPeakAnnotations.comment);
-                            var mzTheoretical = reader.GetDouble(RefSpectraPeakAnnotations.mzTheoretical);
-                            var mzObserved = reader.GetDouble(RefSpectraPeakAnnotations.mzObserved);
-                            var molecule = SmallMoleculeLibraryAttributes.Create(fragname, formula, inchkey, otherKeys);
-                            var adduct = string.IsNullOrEmpty(adductString)
-                                ? Adduct.FromChargeNoMass(charge)
-                                : Adduct.FromStringAssumeChargeOnly(adductString);
-                            AnnotationsForObservedMz annotations;
-                            if (!resultDict.TryGetValue(peakIndex, out annotations))
-                            {
-                                resultDict.Add(peakIndex, annotations = new AnnotationsForObservedMz(mzObserved, new List<SpectrumPeakAnnotation>()));
-                            }
-                            var annotation = SpectrumPeakAnnotation.Create(molecule, adduct, comment, mzTheoretical);
-                            annotations.Annotations.Add(annotation);
+                            resultDict.Add(peakIndex, annotations = new AnnotationsForObservedMz(mzObserved, new List<SpectrumPeakAnnotation>()));
                         }
+                        var annotation = SpectrumPeakAnnotation.Create(molecule, adduct, comment, mzTheoretical);
+                        annotations.Annotations.Add(annotation);
                     }
                 }
-            }
-            // In case there is no RefSpectraPeakAnnotationss table
-            // CONSIDER: Could also be a failure to read the SQLite file
-            catch (SQLiteException)
-            {
             }
             return resultDict;
         }
@@ -1651,24 +1648,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private bool HasRedundanModificationsTable()
         {
-            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnectionRedundant.Connection))
-            {
-                select.CommandText = "SELECT count(*) FROM [sqlite_master] WHERE type='table' AND name='Modifications'"; // Not L10N
-
-                try
-                {
-                    using (SQLiteDataReader reader = select.ExecuteReader())
-                    {
-                        reader.Read();
-                        int modTableCount = reader.GetInt32(0);
-                        return modTableCount > 0;
-                    }
-                }
-                catch (SQLiteException)
-                {
-                    return false;
-                }
-            }
+            return SqliteOperations.TableExists(_sqliteConnectionRedundant.Connection, "Modifications"); // Not L10N
         }
 
         public void DeleteDataFiles(string[] filenames, IProgressMonitor monitor)
