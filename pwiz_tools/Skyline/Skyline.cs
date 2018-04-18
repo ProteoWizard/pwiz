@@ -1605,7 +1605,10 @@ namespace pwiz.Skyline
                 }
                 foreach (var removeParams in listRemoveParams)
                 {
-                    if (doc.FindNode(removeParams.ParentPath) != null)
+                    var nodeParent = doc.FindNode(removeParams.ParentPath);
+                    if (nodeParent is TransitionGroupDocNode)
+                        doc = (SrmDocument) doc.RemoveAllSynched(removeParams.ParentPath.Parent, removeParams.ParentPath.Child, removeParams.RemoveIds);
+                    else if (nodeParent != null)
                         doc = (SrmDocument) doc.RemoveAll(removeParams.ParentPath, removeParams.RemoveIds);
                 }
                 return doc;
