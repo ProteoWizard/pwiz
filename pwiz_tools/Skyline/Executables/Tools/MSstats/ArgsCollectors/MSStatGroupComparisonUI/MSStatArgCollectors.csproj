@@ -46,7 +46,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BaseArgsCollector.cs" />
     <Compile Include="GroupComparisonUI.cs">
       <SubType>Form</SubType>
     </Compile>
