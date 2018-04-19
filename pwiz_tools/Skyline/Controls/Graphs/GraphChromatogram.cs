@@ -1193,7 +1193,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                true,
                                                null,
                                                0,
-                                               COLORS_GROUPS[(int)extractor],
+                                               COLORS_GROUPS[(int)extractor % COLORS_GROUPS.Count],
                                                FontSize,
                                                LineWidth);
             _graphHelper.AddChromatogram(new PaneKey(nodeGroup), graphItem);

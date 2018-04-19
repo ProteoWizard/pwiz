@@ -111,10 +111,10 @@ lib Qonverter
 import path ;
 import generate-version ;
 
-generate-version.cpp $(IDPICKER_PATH)/Qonverter/CoreVersion.cpp : IDPicker : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) ;
-generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpQonvertVersion.cpp : idpQonvert : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)  ;
-generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpAssembleVersion.cpp : idpAssemble : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) ;
-generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpQueryVersion.cpp : idpQuery : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) ;
+generate-version.cpp $(IDPICKER_PATH)/Qonverter/CoreVersion.cpp : IDPicker : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpQonvertVersion.cpp : idpQonvert : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpAssembleVersion.cpp : idpAssemble : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpQueryVersion.cpp : idpQuery : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
 
 obj CoreVersion : CoreVersion.cpp ;
 

@@ -2608,6 +2608,36 @@ namespace pwiz.Skyline.Model
             return ChangeChildrenChecked(listChildrenNew);
         }
 
+        protected override DocNodeParent SynchRemovals(DocNodeParent siblingBefore, DocNodeParent siblingAfter)
+        {
+            var nodeGroupBefore = (TransitionGroupDocNode)siblingBefore;
+            var nodeGroupSynch = (TransitionGroupDocNode)siblingAfter;
+
+            // Only synchronize groups with the same adduct, ignoring any isotopes specified in the adducts for match purposes.
+            if (!TransitionGroup.PrecursorAdduct.Unlabeled.Equals(nodeGroupSynch.TransitionGroup.PrecursorAdduct.Unlabeled))
+                return this;
+
+            // Start with the current node as the default
+            var nodeResult = this;
+
+            // Use same auto-manage setting
+            if (AutoManageChildren != nodeGroupSynch.AutoManageChildren)
+            {
+                nodeResult = (TransitionGroupDocNode) nodeResult.ChangeAutoManageChildren(
+                    nodeGroupSynch.AutoManageChildren);
+            }
+
+            var childrenRemoved = nodeGroupBefore.Transitions.Where(c => !nodeGroupSynch.Children.Contains(c)).ToList();
+            var childrenNew = new List<DocNode>();
+            foreach (TransitionDocNode nodeTran in Transitions)
+            {
+                var tranKey = nodeTran.Key(this);
+                if (!childrenRemoved.Contains(t => t.Key(nodeGroupBefore).Equivalent(tranKey)))
+                    childrenNew.Add(nodeTran);
+            }
+            return (TransitionGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
+        }
+
         protected override DocNodeParent SynchChildren(SrmSettings settings, DocNodeParent parent, DocNodeParent sibling)
         {
             var nodePep = (PeptideDocNode)parent;
