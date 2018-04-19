@@ -97,7 +97,7 @@ void MaxQuantReader::initTargetColumns()
                                                       MaxQuantLine::insertLabelingState));
 
     // columns that can are useful but not required
-    optionalColumns_.push_back("Labeling State");
+    optionalColumns_.insert("Labeling State");
 }
 
 /**
@@ -358,20 +358,14 @@ void MaxQuantReader::parseHeader(string& line)
         if (targetColumns_[i].position_ < 0)
         {
             // check if it was optional
-            bool wasOptional = false;
-            for (vector<string>::iterator iter = optionalColumns_.begin();
-                 iter != optionalColumns_.end();
-                 ++iter)
+            set<string>::iterator j = optionalColumns_.find(targetColumns_[i].name_);
+            if (j != optionalColumns_.end())
             {
-                if (targetColumns_[i].name_ == *iter)
-                {
-                    optionalColumns_.erase(iter);
-                    targetColumns_.erase(targetColumns_.begin() + i);
-                    wasOptional = true;
-                    break;
-                }
+                optionalColumns_.erase(j);
+                targetColumns_.erase(targetColumns_.begin() + i);
+                break;
             }
-            if (!wasOptional)
+            else
             {
                 throw BlibException(false, "Did not find required column '%s'.",
                                     targetColumns_[i].name_.c_str());
@@ -629,13 +623,18 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
 void MaxQuantReader::addLabelModsToVector(vector<SeqMod>& v, const string& rawFile,
                                           const string& sequence, int labelingState)
 {
+    const MaxQuantLabels* labels = MaxQuantLabels::findLabels(labelBank_, rawFile);
     if (labelingState < 0)
     {
-        return;
+        if (labels == NULL || labels->labelingStates.size() != 1 ||
+            optionalColumns_.find("Labeling State") != optionalColumns_.end())
+        {
+            return;
+        }
+        labelingState = 0; // if labeling state column is missing and there is only 1, assume it is correct
     }
 
     // get fixed modifications by position
-    const MaxQuantLabels* labels = MaxQuantLabels::findLabels(labelBank_, rawFile);
     if (labels == NULL)
     {
         throw BlibException(false, "Required raw file '%s' was not found in mqpar file.", rawFile.c_str());
