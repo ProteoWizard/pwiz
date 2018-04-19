@@ -1713,10 +1713,7 @@ namespace pwiz.Skyline.Model
                     throw new IdentityNotFoundException(groupPath.Child);
                 var lookupSequence = nodePep.SourceUnmodifiedTarget;
                 var lookupMods = nodePep.SourceExplicitMods;
-                IsotopeLabelType labelType;
-                double[] retentionTimes;
-                Settings.TryGetRetentionTimes(lookupSequence, nodeGroup.TransitionGroup.PrecursorAdduct, lookupMods,
-                                              filePath, out labelType, out retentionTimes);
+                double[] retentionTimes = Settings.GetRetentionTimes(lookupSequence, lookupMods, filePath).ToArray();
                 if(ContainsTime(retentionTimes, startTime.Value, endTime.Value))
                 {
                     identified = PeakIdentification.TRUE;

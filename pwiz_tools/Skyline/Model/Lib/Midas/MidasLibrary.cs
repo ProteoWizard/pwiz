@@ -367,11 +367,24 @@ namespace pwiz.Skyline.Model.Lib.Midas
                 min <= spectrum.RetentionTime && spectrum.RetentionTime <= max);
         }
 
-        public IEnumerable<DbSpectrum> GetSpectraByPeptide(MsDataFileUri file, string sequence, int charge)
+        public IEnumerable<DbSpectrum> GetSpectraByPeptide(MsDataFileUri file, string sequence, int? charge)
         {
-            return GetSpectraByFile(file).Where(spectrum =>
-                !string.IsNullOrWhiteSpace(spectrum.DocumentPeptide) && spectrum.DocumentPeptide.Equals(sequence) &&
-                spectrum.DocumentPrecursorCharge.HasValue && spectrum.DocumentPrecursorCharge.Equals(charge));
+            foreach (var spectrum in GetSpectraByFile(file))
+            {
+                if (string.IsNullOrWhiteSpace(spectrum.DocumentPeptide))
+                {
+                    continue;
+                }
+                if (!spectrum.DocumentPeptide.Equals(sequence))
+                {
+                    continue;
+                }
+                if (charge.HasValue && charge != spectrum.DocumentPrecursorCharge)
+                {
+                    continue;
+                }
+                yield return spectrum;
+            }
         }
 
         public override bool Contains(LibKey key)
@@ -432,26 +445,10 @@ namespace pwiz.Skyline.Model.Lib.Midas
             return new SpectrumPeaksInfo(mi.ToArray());
         }
 
-        public override bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
+        public override IEnumerable<double> GetRetentionTimesWithSequences(MsDataFileUri filePath, IEnumerable<Target> peptideSequences, ref int? fileIndex)
         {
-            retentionTimes = null;
-            DbSpectrum[] spectra;
-            if (!key.IsPrecursorKey)
-            {
-                spectra = GetSpectraByPeptide(filePath, key.Sequence, key.Charge).ToArray();
-            }
-            else
-            {
-                spectra = GetSpectraByPrecursor(filePath, key.PrecursorMz.GetValueOrDefault()).ToArray();
-                var keyRt = key.RetentionTime;
-                if (keyRt.HasValue)
-                    spectra = spectra.Where(s => Equals(keyRt.Value, s.RetentionTime)).ToArray();
-            }
-            if (!spectra.Any())
-                return false;
-
-            retentionTimes = spectra.Select(s => s.RetentionTime).ToArray();
-            return true;
+            return peptideSequences.SelectMany(p => GetSpectraByPeptide(filePath, p.Sequence, null))
+                .Select(spectrum => spectrum.RetentionTime);
         }
 
         public override bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes)

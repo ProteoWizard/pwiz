@@ -595,37 +595,11 @@ namespace pwiz.Skyline.Model.Lib
             return true;
         }
 
-        public override bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
-        {
-            retentionTimes = null;
-            int i = FindEntry(key);
-            if (i < 0)
-            {
-                return false;
-            }
-            int fileId = FindFileInList(filePath, _sourceFiles);
-            if (fileId < 0)
-            {
-                return false;
-            }
-            var entry = _libraryEntries[i];
-            FileData fileData;
-            if (!entry.FileDatas.TryGetValue(fileId, out fileData))
-            {
-                return false;
-            }
-            if (!fileData.ApexTime.HasValue)
-            {
-                return false;
-            }
-            retentionTimes = new[] {fileData.ApexTime.Value};
-            return true;
-        }
-
-        public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<Target> peptideSequences, ref int? iFile)
+        public override IEnumerable<double> GetRetentionTimesWithSequences(
+            MsDataFileUri path, IEnumerable<Target> peptideSequences, ref int? iFile)
         {
             if (!iFile.HasValue)
-                iFile = FindFileInList(MsDataFileUri.Parse(filePath), _sourceFiles);
+                iFile = FindFileInList(path, _sourceFiles);
             if (iFile.Value < 0)
             {
                 return new double[0];

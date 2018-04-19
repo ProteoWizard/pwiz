@@ -1187,19 +1187,6 @@ namespace pwiz.Skyline.Model.Lib
             return arrayMI;
         }
 
-        public override bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
-        {
-            int i = FindEntry(key);
-            int j = FindSource(filePath);
-            if (i != -1 && j != -1)
-            {
-                retentionTimes = _libraryEntries[i].RetentionTimesByFileId.GetTimes(_librarySourceFiles[j].Id);
-                return true;
-            }
-
-            return base.TryGetRetentionTimes(key, filePath, out retentionTimes);
-        }
-
         public override PeakBounds GetExplicitPeakBounds(MsDataFileUri filePath, IEnumerable<Target> peptideSequences)
         {
             int iFile = FindSource(filePath);
@@ -1251,10 +1238,10 @@ namespace pwiz.Skyline.Model.Lib
             return base.TryGetRetentionTimes(filePath, out retentionTimes);
         }
 
-        public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<Target> peptideSequences, ref int? iFile)
+        public override IEnumerable<double> GetRetentionTimesWithSequences(MsDataFileUri filePath, IEnumerable<Target> peptideSequences, ref int? iFile)
         {
             if (!iFile.HasValue)
-                iFile = FindSource(MsDataFileUri.Parse(filePath));
+                iFile = FindSource(filePath);
             if (iFile.Value < 0)
             {
                 return new double[0];

@@ -638,16 +638,6 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         /// <summary>
-        /// Attempts to get retention time information for a specific
-        /// (sequence, charge) pair and file.
-        /// </summary>
-        /// <param name="key">A sequence, charge pair</param>
-        /// <param name="filePath">A file for which the retention information is requested</param>
-        /// <param name="retentionTimes">A list of retention times, if successful</param>
-        /// <returns>True if retention time information was retrieved successfully</returns>
-        public abstract bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes);
-
-        /// <summary>
         /// Attempts to get retention time information for all of the
         /// (sequence, charge) pairs identified from a specific file.
         /// </summary>
@@ -681,7 +671,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <returns>True if iRT information was retrieved successfully</returns>
         public abstract bool TryGetIrts(out LibraryRetentionTimes retentionTimes);
 
-        public virtual IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<Target> peptideSequences, ref int? fileIndex)
+        public virtual IEnumerable<double> GetRetentionTimesWithSequences(MsDataFileUri filePath, IEnumerable<Target> peptideSequences, ref int? fileIndex)
         {
             return new double[0];
         }
@@ -966,13 +956,6 @@ namespace pwiz.Skyline.Model.Lib
         protected virtual LibraryChromGroup ReadChromatogram(TInfo info)
         {
             return null;
-        }
-
-        public override bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
-        {
-            // By default, no retention time information is available
-            retentionTimes = null;
-            return false;
         }
 
         public override bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes)
