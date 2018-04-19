@@ -34,6 +34,7 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -45,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseArgsCollector.cs" />
     <Compile Include="GroupComparisonUI.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -69,7 +71,6 @@
     <Compile Include="SampleSizeUI.Designer.cs">
       <DependentUpon>SampleSizeUI.cs</DependentUpon>
     </Compile>
-    <Compile Include="Text.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="GroupComparisonUI.ja.resx">
