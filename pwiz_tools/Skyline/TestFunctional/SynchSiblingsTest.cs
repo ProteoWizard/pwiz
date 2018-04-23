@@ -43,9 +43,8 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Test CE optimization.  Creates optimization transition lists,
-        /// imports optimization data, shows graphs, recalculates linear equations,
-        /// and exports optimized method.
+        /// Test operations on transitions with matching labeled reference transitions
+        /// to make sure they stay synchronized.
         /// </summary>
         protected override void DoTest()
         {
@@ -98,6 +97,37 @@ namespace pwiz.SkylineTestFunctional
 
             VerifySynchronized(SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes);
             Assert.AreEqual(8, SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes.Count);
+
+            // Test synchronization of deletions
+            SelectNode(SrmDocument.Level.Transitions, 0);
+            RunUI(SkylineWindow.EditDelete);
+            VerifySynchronized(SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes);
+            Assert.AreEqual(7, SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes.Count);
+            RunUI(() => SkylineWindow.SequenceTree.KeysOverride = Keys.Shift);
+            SelectNode(SrmDocument.Level.Transitions, 1);
+            RunUI(() => SkylineWindow.SequenceTree.KeysOverride = Keys.None);
+            RunUI(SkylineWindow.EditDelete);
+            VerifySynchronized(SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes);
+            Assert.AreEqual(5, SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes.Count);
+            SelectNode(SrmDocument.Level.Transitions, 0);
+            RunUI(() =>
+            {
+                SkylineWindow.SequenceTree.KeysOverride = Keys.Control;
+                SkylineWindow.SequenceTree.SelectedNode =
+                    SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[1].Nodes[0];
+                SkylineWindow.SequenceTree.SelectedNode =
+                    SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[1].Nodes[1];
+                SkylineWindow.SequenceTree.SelectedNode =
+                    SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[2].Nodes[4];
+                SkylineWindow.SequenceTree.KeysOverride = Keys.None;
+            });
+            RunUI(SkylineWindow.EditDelete);
+            VerifySynchronized(SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes);
+            Assert.AreEqual(2, SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes.Count);
+
+            // Restore state before the deletions
+            RunUI(() => SkylineWindow.UndoRestore(2));
+            SelectNode(SrmDocument.Level.TransitionGroups, 0);
 
             // Uncheck one transition without synchronizing
             var pickList1 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);

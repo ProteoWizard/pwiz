@@ -1091,6 +1091,59 @@ namespace pwiz.Skyline.Model
             return traversal.Traverse(parent, descendentsRemove, RemoveAll, ids => parent.RemoveAll(ids));
         }
 
+        private class SynchedRemoveInfo
+        {
+            public SynchedRemoveInfo(Identity childId, ICollection<int> descendentsRemove)
+            {
+                ChildId = childId;
+                DescendentsRemove = descendentsRemove;
+            }
+
+            public Identity ChildId { get; private set; }
+            public ICollection<int> DescendentsRemove { get; private set; }
+        }
+
+        public DocNodeParent RemoveAllSynched(IdentityPath path, Identity childId, ICollection<int> descendentsRemove)
+        {
+            return RemoveAllSynched(this, new IdentityPathTraversal(path), new SynchedRemoveInfo(childId, descendentsRemove));
+        }
+
+        private static DocNodeParent RemoveAllSynched(DocNodeParent parent, IdentityPathTraversal traversal, SynchedRemoveInfo removeInfo)
+        {
+            return traversal.Traverse(parent, removeInfo, RemoveAllSynched, parent.RemoveAllSynched);
+        }
+
+        private DocNodeParent RemoveAllSynched(SynchedRemoveInfo removeInfo)
+        {
+            var childChanged = (DocNodeParent)FindNode(removeInfo.ChildId);
+            if (childChanged == null)
+                throw new IdentityNotFoundException(removeInfo.ChildId);
+            var childNew = childChanged.RemoveAll(removeInfo.DescendentsRemove);
+            // If no children removed, then return this parent node unchanged
+            if (childChanged.Children.Count == childNew.Children.Count)
+                return this;
+
+            List<DocNode> childrenNew = new List<DocNode>();
+            foreach (DocNodeParent child in Children)
+            {
+                if (ReferenceEquals(child, childChanged))
+                    childrenNew.Add(childNew);
+                else
+                    childrenNew.Add(child.SynchRemovals(childChanged, childNew));
+            }
+
+            return ChangeChildren(childrenNew);
+        }
+
+        /// <summary>
+        /// Called to synchronize removed children of a node with one of its siblings.  By
+        /// default, no action is taken.
+        /// </summary>
+        protected virtual DocNodeParent SynchRemovals(DocNodeParent siblingBefore, DocNodeParent siblingAfter)
+        {
+            return this;
+        }
+
         /// <summary>
         /// Removes all nodes that are not listed in a set to preserve, or which
         /// contain a node that is listed in the set to preserve.  Preserved nodes

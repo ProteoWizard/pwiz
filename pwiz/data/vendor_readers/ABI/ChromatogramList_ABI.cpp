@@ -195,6 +195,42 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
             }
         }
         break;
+
+        case MS_SIM_chromatogram:
+        {
+            ExperimentPtr experiment = ie.experiment;
+            pwiz::vendor_api::ABI::Target target;
+            experiment->getSIM(ie.transition, target);
+
+            // TODO: move to global scan settings or leave out entirely?
+            result->userParams.push_back(UserParam("MS_dwell_time", lexical_cast<string>(target.dwellTime /* milliseconds->seconds */ / 1000.0), "xs:float"));
+
+            result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ie.q1, MS_m_z);
+            //result->precursor.isolationWindow.set(MS_isolation_window_lower_offset, ie.q1, MS_m_z);
+            //result->precursor.isolationWindow.set(MS_isolation_window_upper_offset, ie.q1, MS_m_z);
+            result->precursor.activation.set(MS_CID);
+            result->precursor.activation.set(MS_collision_energy, target.collisionEnergy, UO_electronvolt);
+            result->precursor.activation.userParams.push_back(UserParam("MS_declustering_potential", lexical_cast<string>(target.declusteringPotential), "xs:float"));
+
+            CVID polarityType = ABI::translate(experiment->getPolarity());
+            if (polarityType != CVID_Unknown)
+                result->set(polarityType);
+
+            result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
+
+            vector<double> times, intensities;
+            experiment->getSIC(ie.transition, times, intensities);
+            result->defaultArrayLength = times.size();
+
+            if (getBinaryData)
+            {
+                BinaryDataArrayPtr timeArray = result->getTimeArray();
+                BinaryDataArrayPtr intensityArray = result->getIntensityArray();
+                std::swap(timeArray->data, times);
+                std::swap(intensityArray->data, intensities);
+            }
+        }
+        break;
     }
 
     return result;
@@ -245,6 +281,32 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
                        " period=" << ie.period <<
                        " experiment=" << ie.experiment->getExperimentNumber() <<
                        " transition=" << ie.transition;
+                ie.id = oss.str();
+                idToIndexMap_[ie.id] = ie.index;
+            }
+
+            for (int iiii = 0; iiii < (int)msExperiment->getSIMSize(); ++iiii)
+            {
+                msExperiment->getSIM(iiii, target);
+
+                index_.push_back(IndexEntry());
+                IndexEntry& ie = index_.back();
+                ie.chromatogramType = MS_SIM_chromatogram;
+                ie.q1 = target.Q1;
+                ie.q3 = 0;
+                ie.sample = sample;
+                ie.period = ii;
+                ie.experiment = msExperiment;
+                ie.transition = iiii;
+                ie.index = index_.size() - 1;
+
+                std::ostringstream oss;
+                oss << polarityStringForFilter(ABI::translate(ie.experiment->getPolarity())) <<
+                    "SIM SIC Q1=" << ie.q1 <<
+                    " sample=" << ie.sample <<
+                    " period=" << ie.period <<
+                    " experiment=" << ie.experiment->getExperimentNumber() <<
+                    " transition=" << ie.transition;
                 ie.id = oss.str();
                 idToIndexMap_[ie.id] = ie.index;
             }

@@ -1389,6 +1389,39 @@ and base name as the Analyst acquisition method.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelTuneColumns.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="cbWriteCoV.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbWriteCoV.Location" type="System.Drawing.Point, System.Drawing">
+    <value>799, 385</value>
+  </data>
+  <data name="cbWriteCoV.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
+  </data>
+  <data name="cbWriteCoV.Size" type="System.Drawing.Size, System.Drawing">
+    <value>234, 38</value>
+  </data>
+  <data name="cbWriteCoV.TabIndex" type="System.Int32, mscorlib">
+    <value>28</value>
+  </data>
+  <data name="cbWriteCoV.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="cbWriteCoV.Text" xml:space="preserve">
+    <value>Write FAIMS CV values</value>
+  </data>
+  <data name="&gt;&gt;cbWriteCoV.Name" xml:space="preserve">
+    <value>cbWriteCoV</value>
+  </data>
+  <data name="&gt;&gt;cbWriteCoV.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbWriteCoV.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbWriteCoV.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
