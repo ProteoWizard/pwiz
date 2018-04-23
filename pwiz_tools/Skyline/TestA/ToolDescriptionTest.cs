@@ -33,17 +33,18 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void TestFindArgsCollectorMethod()
         {
-            Assert.IsNotNull(ToolDescription.FindArgsCollectorMethod(typeof(DifferentArguments)));
+            var toolDescription = new ToolDescription("ToolTitle", string.Empty, string.Empty);
+            Assert.IsNotNull(toolDescription.FindArgsCollectorMethod(typeof(DifferentArguments)));
             AssertEx.ThrowsException<ToolExecutionException>(() =>
-                ToolDescription.FindArgsCollectorMethod(typeof(NoMethod)));
+                toolDescription.FindArgsCollectorMethod(typeof(NoMethod)));
             AssertEx.ThrowsException<ToolExecutionException>(() =>
-                ToolDescription.FindArgsCollectorMethod(typeof(AmbiguousMethod)));
-            Assert.IsNotNull(ToolDescription.FindArgsCollectorMethod(typeof(ReportAsString)));
-            var reportAsStringOrReader = ToolDescription.FindArgsCollectorMethod(typeof(ReportAsStringOrReader));
+                toolDescription.FindArgsCollectorMethod(typeof(AmbiguousMethod)));
+            Assert.IsNotNull(toolDescription.FindArgsCollectorMethod(typeof(ReportAsString)));
+            var reportAsStringOrReader = toolDescription.FindArgsCollectorMethod(typeof(ReportAsStringOrReader));
             Assert.IsNotNull(reportAsStringOrReader);
             CollectionAssert.AreEqual(new[]{typeof(IWin32Window), typeof(TextReader), typeof(string[])}, 
                 reportAsStringOrReader.GetParameters().Select(p=>p.ParameterType).ToArray());
-            Assert.AreEqual("CollectArgsReader", ToolDescription.FindArgsCollectorMethod(typeof(WithCollectArgsReader)).Name);
+            Assert.AreEqual("CollectArgsReader", toolDescription.FindArgsCollectorMethod(typeof(WithCollectArgsReader)).Name);
         }
 
         // No such method: should throw exception

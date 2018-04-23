@@ -529,11 +529,19 @@ namespace pwiz.Skyline.Model.Tools
                 throw new ToolExecutionException(string.Format("The method '{0}' expects the wrong number of arguments.",
                     methodInfo.Name));
             }
-            bool passReportAsString = parameterInfos[1].ParameterType == typeof(string);
-            object[] collectorArgs = new object[]
+            object reportArgument;
+            if (parameterInfos[1].ParameterType == typeof(string))
+            {
+                reportArgument = reportReader == null ? null : reportReader.ReadToEnd();
+            }
+            else
+            {
+                reportArgument = reportReader;
+            }
+            object[] collectorArgs =
             {
                 parent,
-                passReportAsString ? (object) reportReader.ReadToEnd() : reportReader,
+                reportArgument,
                 oldArgs != null ? CommandLine.ParseArgs(oldArgs) : null
             };
             object answer;
@@ -595,7 +603,7 @@ namespace pwiz.Skyline.Model.Tools
             return true;
         }
 
-        public static MethodInfo FindArgsCollectorMethod(Type type)
+        public MethodInfo FindArgsCollectorMethod(Type type)
         {
             // ReSharper disable NonLocalizedString
             var textReaderArgs = new[] { typeof(IWin32Window), typeof(TextReader), typeof(string[]) };
@@ -607,24 +615,27 @@ namespace pwiz.Skyline.Model.Tools
             {
                 return methodInfo;
             }
-            Exception cause = null;
+            Exception innerException = null;
             try
             {
                 methodInfo = type.GetMethod("CollectArgs");
             }
             catch (Exception e)
             {
-                cause = e;
+                innerException = e;
             }
             // ReSharper restore NonLocalizedString
             if (methodInfo != null)
             {
                 return methodInfo;
             }
-            string message = string.Format(
-                Resources.ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___,
-                type.Name);
-            throw new ToolExecutionException(message, cause);
+
+            throw new ToolExecutionException(
+                TextUtil.LineSeparate(
+                    string.Format(Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error__it_returned_the_message_,
+                        Title),
+                    Resources
+                        .ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___), innerException);
         }
 
         private static MethodInfo SafeGetMethod(Type type, string methodName, Type[] args)
@@ -846,6 +857,7 @@ namespace pwiz.Skyline.Model.Tools
         /// <param name="reportTitle">Title of the reportSpec to make a report from.</param>
         /// <param name="toolTitle">Title of tool for exception error message.</param>
         /// <param name="progressMonitor">Progress monitor.</param>
+        /// <param name="writer">TextWriter that the report should be written to.</param>
         /// <returns> Returns a string representation of the ReportTitle report, or throws an error that the reportSpec no longer exist. </returns>
         public static void GetReport(SrmDocument doc, string reportTitle, string toolTitle, IProgressMonitor progressMonitor, TextWriter writer)
         {
