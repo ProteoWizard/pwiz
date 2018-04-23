@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Results
         private static readonly SpectrumProductFilter[] EMPTY_FILTERS = new SpectrumProductFilter[0];
 
         public SpectrumFilterPair(PrecursorTextId precursorTextId, Color peptideColor, int id, double? minTime, double? maxTime,
-            double? minIonMobilityValue, double? maxIonMobilityValue, IonMobilityAndCCS ionMobilityInfo, bool highAccQ1, bool highAccQ3)
+            double highEnergyIonMobilityValueOffset, bool highAccQ1, bool highAccQ3)
         {
             Id = id;
             ModifiedSequence = precursorTextId.Target;
@@ -43,9 +43,10 @@ namespace pwiz.Skyline.Model.Results
             Extractor = precursorTextId.Extractor;
             MinTime = minTime;
             MaxTime = maxTime;
-            MinIonMobilityValue = minIonMobilityValue;
-            MaxIonMobilityValue = maxIonMobilityValue;
-            IonMobilityInfo = ionMobilityInfo ?? IonMobilityAndCCS.EMPTY;
+            IonMobilityInfo = precursorTextId.IonMobility;
+            HighEnergyIonMobilityValueOffset = highEnergyIonMobilityValueOffset;
+            MinIonMobilityValue = IonMobilityInfo.IsEmpty ? null : IonMobilityInfo.IonMobility.Mobility - (IonMobilityInfo.IonMobilityExtractionWindowWidth??0)/2;
+            MaxIonMobilityValue = IonMobilityInfo.IsEmpty ? null : MinIonMobilityValue + (IonMobilityInfo.IonMobilityExtractionWindowWidth ?? 0);
             HighAccQ1 = highAccQ1;
             HighAccQ3 = highAccQ3;
 
@@ -105,7 +106,8 @@ namespace pwiz.Skyline.Model.Results
         public double? MaxTime { get; private set; }
         private double? MinIonMobilityValue { get; set; }
         private double? MaxIonMobilityValue { get; set; }
-        private IonMobilityAndCCS IonMobilityInfo { get; set; }
+        private double HighEnergyIonMobilityValueOffset { get; set; }
+        private IonMobilityFilter IonMobilityInfo { get; set; }
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
         public SpectrumProductFilter[] Ms2ProductFilters { get; set; }
@@ -447,7 +449,7 @@ namespace pwiz.Skyline.Model.Results
                 docFilterPair.DriftTime = (MinIonMobilityValue.Value + MaxIonMobilityValue.Value)/2;
                 if (ChromSource.fragment == chromSource) // Use high energy offset for fragments
                 {
-                    docFilterPair.DriftTime += IonMobilityInfo.HighEnergyIonMobilityValueOffset;
+                    docFilterPair.DriftTime += HighEnergyIonMobilityValueOffset;
                 }
                 docFilterPair.DriftTimeSpecified = true;
                 docFilterPair.DriftTimeWindow = MaxIonMobilityValue.Value - MinIonMobilityValue.Value;
@@ -469,11 +471,17 @@ namespace pwiz.Skyline.Model.Results
             return docFilterPair;
         }
 
+        public bool HasIonMobilityFAIMS()
+        {
+            return IonMobilityInfo.HasIonMobilityValue && 
+                   IonMobilityInfo.IonMobility.Units == MsDataFileImpl.eIonMobilityUnits.compensation_V;
+        }
+
         public bool ContainsIonMobilityValue(IonMobilityValue ionMobility, bool highEnergy)
         {
             if (!ionMobility.HasValue)
                 return true; // It doesn't NOT have the ion mobility, since there isn't one
-            double offset = highEnergy ? IonMobilityInfo.HighEnergyIonMobilityValueOffset : 0;
+            double offset = highEnergy ? HighEnergyIonMobilityValueOffset : 0;
             return (!MinIonMobilityValue.HasValue || MinIonMobilityValue.Value+offset <= ionMobility.Mobility) &&
                 (!MaxIonMobilityValue.HasValue || MaxIonMobilityValue.Value+offset >= ionMobility.Mobility);
         }
@@ -483,7 +491,7 @@ namespace pwiz.Skyline.Model.Results
             if (MinIonMobilityValue.HasValue && MaxIonMobilityValue.HasValue)
             {
                 // High energy (product ion) scans may have a faster ion mobility, as in Waters MsE
-                double offset = highEnergy ? IonMobilityInfo.HighEnergyIonMobilityValueOffset : 0;
+                double offset = highEnergy ? HighEnergyIonMobilityValueOffset : 0;
                 var width = MaxIonMobilityValue.Value - MinIonMobilityValue.Value;
                 var center = offset + MinIonMobilityValue.Value + 0.5*width;
                 return IonMobilityFilter.GetIonMobilityFilter(IonMobilityValue.GetIonMobilityValue(center, IonMobilityInfo.IonMobility.Units), width, IonMobilityInfo.CollisionalCrossSectionSqA);

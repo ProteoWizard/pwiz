@@ -2903,6 +2903,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     return Resources.IonMobilityFilter_IonMobilityUnitsString__1_K0__Vs_cm_2_;
                 case MsDataFileImpl.eIonMobilityUnits.drift_time_msec:
                     return Resources.IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_;
+                case MsDataFileImpl.eIonMobilityUnits.compensation_V:
+                    return Resources.IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_;
                 case MsDataFileImpl.eIonMobilityUnits.none:
                     return Resources.IonMobilityFilter_IonMobilityUnitsL10NString_None;
                 default:
@@ -2992,6 +2994,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     break;
                 case MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
                     ionMobilityAbbrev = "irim"; // Not L10N
+                    break;
+                case MsDataFileImpl.eIonMobilityUnits.compensation_V:
+                    ionMobilityAbbrev = "cv"; // Not L10N
                     break;
             }
             return string.Format("{2}{0:F04}/w{1:F04}", IonMobility.Mobility, IonMobilityExtractionWindowWidth, ionMobilityAbbrev); // Not L10N

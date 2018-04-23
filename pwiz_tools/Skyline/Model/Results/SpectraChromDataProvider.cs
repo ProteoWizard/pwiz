@@ -283,6 +283,12 @@ namespace pwiz.Skyline.Model.Results
                     var dataSpectrum = _spectra.CurrentSpectrum;
                     var spectra = _spectra.CurrentSpectra;
 
+                    // Ignore this spectrum if FAIMS CV is not interesting
+                    if (!_filter.PassesFilterFAIMS(dataSpectrum))
+                    {
+                        continue;
+                    }
+
                     float rt = _spectra.CurrentTime;
                     if (_allChromData != null)
                         _allChromData.CurrentTime = rt;
@@ -1379,7 +1385,7 @@ namespace pwiz.Skyline.Model.Results
             ChromExtractor extractor = spectrum.Extractor;
             int ionScanCount = spectrum.ProductFilters.Length;
             ChromDataCollector collector;
-            var key = new PrecursorTextId(precursorMz, target, extractor);
+            var key = new PrecursorTextId(precursorMz, ionMobility, target, extractor);
             int index = spectrum.FilterIndex;
             while (PrecursorCollectorMap.Count <= index)
                 PrecursorCollectorMap.Add(null);

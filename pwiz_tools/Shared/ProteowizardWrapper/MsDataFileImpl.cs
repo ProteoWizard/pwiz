@@ -438,6 +438,7 @@ namespace pwiz.ProteowizardWrapper
             none,
             drift_time_msec,
             inverse_K0_Vsec_per_cm2,
+            compensation_V
         }
 
         public eIonMobilityUnits IonMobilityUnits
@@ -452,6 +453,8 @@ namespace pwiz.ProteowizardWrapper
                         return eIonMobilityUnits.drift_time_msec;
                     case SpectrumList_IonMobility.eIonMobilityUnits.inverse_reduced_ion_mobility_Vsec_per_cm2:
                         return eIonMobilityUnits.inverse_K0_Vsec_per_cm2;
+                    case SpectrumList_IonMobility.eIonMobilityUnits.compensation_V:
+                        return eIonMobilityUnits.compensation_V;
                     default:
                         throw new InvalidDataException(string.Format("unknown ion mobility type {0}", _ionMobilityUnits)); // Not L10N
                 }
@@ -820,7 +823,7 @@ namespace pwiz.ProteowizardWrapper
                     {
                         maxIonMobility = ionMobility.Mobility;
                     }
-                    else if (ionMobility.Mobility < maxIonMobility.Value)
+                    else if (Math.Abs(ionMobility.Mobility??-1) < Math.Abs(maxIonMobility.Value))
                     {
                         break;  // We've cycled 
                     }
@@ -955,6 +958,15 @@ namespace pwiz.ProteowizardWrapper
                         return IonMobilityValue.EMPTY;
                     }
                     value = irim.value;
+                    return IonMobilityValue.GetIonMobilityValue(value, expectedUnits);
+
+                case eIonMobilityUnits.compensation_V:
+                    var faims = spectrum.cvParam(CVID.MS_FAIMS_compensation_voltage);
+                    if (faims.empty())
+                    {
+                        return IonMobilityValue.EMPTY;
+                    }
+                    value = faims.value;
                     return IonMobilityValue.GetIonMobilityValue(value, expectedUnits);
 
                 default:
@@ -1297,6 +1309,8 @@ namespace pwiz.ProteowizardWrapper
                     return "msec"; // Not L10N
                 case MsDataFileImpl.eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
                     return "Vs/cm^2"; // Not L10N
+                case MsDataFileImpl.eIonMobilityUnits.compensation_V:
+                    return "V"; // Not L10N
             }
             return "unknown ion mobility type"; // Not L10N
         }

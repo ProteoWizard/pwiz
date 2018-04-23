@@ -29,6 +29,7 @@
 #include "pwiz/data/vendor_readers/Agilent/SpectrumList_Agilent.hpp"
 #include "pwiz/data/vendor_readers/Bruker/SpectrumList_Bruker.hpp"
 #include "pwiz/data/vendor_readers/Waters/SpectrumList_Waters.hpp"
+#include "pwiz/data/vendor_readers/Thermo/SpectrumList_Thermo.hpp"
 
 
 namespace pwiz {
@@ -62,6 +63,14 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
             units_ = eIonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2;
         }
     }
+    else if (dynamic_cast<detail::SpectrumList_Thermo*>(&*inner) != NULL)
+    {
+        if ((dynamic_cast<detail::SpectrumList_Thermo*>(&*inner))->hasIonMobility())
+        {
+            equipment_ = eIonMobilityEquipment::ThermoFAIMS;
+            units_ = eIonMobilityUnits::compensation_V;
+        }
+    }
     else // reading an mzML conversion?
     {
         try
@@ -76,6 +85,8 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(const msdata::SpectrumListPtr
                     units_ = eIonMobilityUnits::drift_time_msec;
                 else if (scan.hasCVParam(CVID::MS_inverse_reduced_ion_mobility))
                     units_ = eIonMobilityUnits::inverse_reduced_ion_mobility_Vsec_per_cm2;
+                else if (scan.hasCVParam(CVID::MS_FAIMS_compensation_voltage))
+                    units_ = eIonMobilityUnits::compensation_V;
                 else if (!scan.userParam("drift time").empty()) // Oldest known mzML drift time style
                     units_ = eIonMobilityUnits::drift_time_msec;
             }
