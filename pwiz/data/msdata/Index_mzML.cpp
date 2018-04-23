@@ -265,8 +265,11 @@ class HandlerIndexCreator : public SAXParser::Handler
     : spectrumCount_(spectrumCount),
       spectrumIndex_(spectrumIndex),
       chromatogramCount_(chromatogramCount),
-      chromatogramIndex_(chromatogramIndex)
-    {}
+      chromatogramIndex_(chromatogramIndex),
+      legacyIdRefToNativeId(&legacyIdRefToNativeId)
+    {
+        version = schemaVersion_;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -280,6 +283,29 @@ class HandlerIndexCreator : public SAXParser::Handler
 
             getAttribute(attributes, "id", si->id);
             getAttribute(attributes, "spotID", si->spotID);
+
+            // mzML 1.0
+            if (version == 1)
+            {
+                string idRef, nativeID;
+                getAttribute(attributes, "id", idRef);
+                getAttribute(attributes, "nativeID", nativeID);
+                if (nativeID.empty())
+                    si->id = idRef;
+                else
+                {
+                    try
+                    {
+                        lexical_cast<int>(nativeID);
+                        si->id = "scan=" + nativeID;
+                    }
+                    catch (exception&)
+                    {
+                        si->id = nativeID;
+                    }
+                    (*legacyIdRefToNativeId)[idRef] = si->id;
+                }
+            }
 
             si->index = spectrumCount_;
             si->sourceFilePosition = position;
@@ -310,6 +336,7 @@ class HandlerIndexCreator : public SAXParser::Handler
     vector<SpectrumIdentityFromXML>& spectrumIndex_;
     size_t& chromatogramCount_;
     vector<ChromatogramIdentity>& chromatogramIndex_;
+    map<string, string>* legacyIdRefToNativeId;
 };
 
 } // namespace
