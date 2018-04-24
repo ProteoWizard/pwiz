@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
@@ -143,7 +144,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public void SetExplicitPeakBounds(PeakBounds peakBounds)
+        public void SetExplicitPeakBounds(ExplicitPeakBounds peakBounds)
         {
             Finder = Crawdads.NewCrawdadPeakFinder();
             Finder.SetChromatogram(Times, Intensities);
