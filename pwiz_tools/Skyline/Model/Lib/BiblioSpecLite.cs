@@ -29,7 +29,6 @@ using System.Xml.Serialization;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.Database;
-using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
