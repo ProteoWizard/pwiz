@@ -11101,6 +11101,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You are missing compensation voltages for the following:.
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_You_are_missing_compensation_voltages_for_the_following_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_You_are_missing_compensation_voltages_for_the_following_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You are missing fine tune optimized compensation voltages..
         /// </summary>
         public static string ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_ {
@@ -11127,6 +11137,17 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_You_are_missing_medium_tune_optimized_compensation_volta" +
                         "ges_for_the_following_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You can set explicit compensation voltages for these, or add their values to a document optimization library in Transition Settings under the Prediction tab..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_You_can_set_explicit_compensation_voltages_for_these__or_add_their_values_to_a_document_optimization_library_in_Transition_Settings_under_the_Prediction_tab_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_You_can_set_explicit_compensation_voltages_for_these__or" +
+                        "_add_their_values_to_a_document_optimization_library_in_Transition_Settings_unde" +
+                        "r_the_Prediction_tab_", resourceCulture);
             }
         }
         
