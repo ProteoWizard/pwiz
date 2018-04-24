@@ -253,6 +253,7 @@ namespace pwiz.Skyline.Model.Lib
                         }
                     }
                 }
+                // ReSharper disable PossibleMultipleEnumeration
                 var sourceFiles = libKeySourceFileDatas
                     .SelectMany(entry => entry.Value.Keys)
                     .Distinct()
@@ -264,6 +265,7 @@ namespace pwiz.Skyline.Model.Lib
                     libKeySourceFileDatas.Select(entry => MakeSpectrumInfo(entry.Key.Item1, entry.Key.Item2, entry.Value, sourceFileIds));
                 SetLibraryEntries(spectrumInfos);
                 _sourceFiles = ImmutableList.ValueOf(sourceFiles);
+                // ReSharper restore PossibleMultipleEnumeration
                 loader.UpdateProgress(status.Complete());
                 return true;
             }

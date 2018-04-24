@@ -26,7 +26,6 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
-using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
