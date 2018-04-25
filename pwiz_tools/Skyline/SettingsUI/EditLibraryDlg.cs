@@ -59,11 +59,13 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     textName.Text = string.Empty;
                     textPath.Text = string.Empty;
+                    cbxUseExplicitPeakBounds.Checked = true;
                 }
                 else
                 {
                     textName.Text = _librarySpec.Name;
                     textPath.Text = _librarySpec.FilePath;
+                    cbxUseExplicitPeakBounds.Checked = _librarySpec.UseExplicitPeakBounds;
                 }                
             }
         }
@@ -123,6 +125,7 @@ namespace pwiz.Skyline.SettingsUI
                 textPath.Focus();
                 return;
             }
+            librarySpec = librarySpec.ChangeUseExplicitPeakBounds(cbxUseExplicitPeakBounds.Checked);
             if (librarySpec is ChromatogramLibrarySpec)
             {
                 using (var longWait = new LongWaitDlg{ Text = Resources.EditLibraryDlg_OkDialog_Loading_chromatogram_library })
@@ -258,6 +261,7 @@ namespace pwiz.Skyline.SettingsUI
             set { textPath.Text = value; }
         }
 
+        public CheckBox CbxUseExplicitPeakBounds { get { return cbxUseExplicitPeakBounds; } }
         #endregion
     }
 }
