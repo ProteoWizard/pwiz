@@ -2267,6 +2267,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 if (Settings.Default.ShowUnalignedPeptideIdTimes)
                 {
+                    // ReSharper disable PossibleMultipleEnumeration
                     var precursorMzs = nodeGroupsArray.Select(nodeGroup => nodeGroup.PrecursorMz).ToArray();
                     var listTimes = new List<double>(settings.GetRetentionTimesNotAlignedTo(FilePath, lookupSequence, lookupMods, precursorMzs));
                     if (listTimes.Count > 0)
@@ -2275,6 +2276,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         Array.Sort(sortedTimes);
                         chromGraphPrimary.UnalignedRetentionMsMs = sortedTimes;
                     }
+                    // ReSharper restore PossibleMultipleEnumeration
                 }
             }
         }
