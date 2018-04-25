@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:morpheus.blib	9	1	8
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:morpheus.blib	9	1	9
 id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
 1	NDAADLGAAGGMGGMGGMGGMM	964.877990722656	2	NDAADLGAAGGMGGMGGMGGMM	-	-	1	478	0.0	0.0	0.0	0	31.09855	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	test-morpheus.4.4.2	0.0	14
