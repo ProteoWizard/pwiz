@@ -26,7 +26,6 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
-using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
@@ -264,7 +263,16 @@ namespace pwiz.Skyline.Model.Lib
             {
                 Library library;
                 if (_loadedLibraries.TryGetValue(spec.Name, out library))
-                    return library;
+                {
+                    if (Equals(spec, library.CreateSpec(library.FileNameHint)))
+                    {
+                        return library;
+                    }
+                    else
+                    {
+                        _loadedLibraries.Remove(spec.Name);
+                    }
+                }
                 // If the library has not yet been loaded, then create a new lock
                 // for everyone to wait on until the library has been loaded.
                 if (!_loadingLibraries.TryGetValue(spec.Name, out loadLock))
@@ -321,6 +329,25 @@ namespace pwiz.Skyline.Model.Lib
                 foreach (var spec in specs)
                 {
                     _loadedLibraries.Remove(spec.Name);
+                }
+            }
+        }
+
+        public void UnloadChangedLibraries(IEnumerable<LibrarySpec> specs)
+        {
+            lock (_loadedLibraries)
+            {
+                foreach (var spec in specs)
+                {
+                    Library library;
+                    if (_loadedLibraries.TryGetValue(spec.Name, out library))
+                    {
+                        var specCompare = library.CreateSpec(library.FileNameHint);
+                        if (!Equals(spec, specCompare))
+                        {
+                            _loadedLibraries.Remove(spec.Name);
+                        }
+                    }
                 }
             }
         }
@@ -502,6 +529,7 @@ namespace pwiz.Skyline.Model.Lib
         protected Library(LibrarySpec spec) : base(spec.Name)
         {
             FileNameHint = Path.GetFileName(spec.FilePath);
+            UseExplicitPeakBounds = spec.UseExplicitPeakBounds;
         }
 
         /// <summary>
@@ -511,13 +539,21 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public string FileNameHint { get; private set; }
 
+        public bool UseExplicitPeakBounds { get; private set; }
+
         /// <summary>
         /// Creates the appropriate library spec for this library, given a path
         /// to the library.
         /// </summary>
         /// <param name="path">Path to the library file on disk</param>
         /// <returns>A new <see cref="LibrarySpec"/></returns>
-        public abstract LibrarySpec CreateSpec(string path);
+        public virtual LibrarySpec CreateSpec(string path)
+        {
+            return CreateSpec().ChangeFilePath(path)
+                .ChangeUseExplicitPeakBounds(UseExplicitPeakBounds);
+        }
+        
+        protected abstract LibrarySpec CreateSpec();
 
         /// <summary>
         /// Returns the filter string to be used for finding a library of this type.
@@ -659,7 +695,7 @@ namespace pwiz.Skyline.Model.Lib
         /// If an explicit peak boundary has been set for any of the peptide sequences, then return 
         /// that peak boundary.
         /// </summary>
-        public virtual PeakBounds GetExplicitPeakBounds(MsDataFileUri filePath, IEnumerable<Target> peptideSequences)
+        public virtual ExplicitPeakBounds GetExplicitPeakBounds(MsDataFileUri filePath, IEnumerable<Target> peptideSequences)
         {
             return null;
         }
@@ -813,6 +849,30 @@ namespace pwiz.Skyline.Model.Lib
 
         #endregion
 
+        protected bool Equals(Library other)
+        {
+            return base.Equals(other) && string.Equals(FileNameHint, other.FileNameHint) && UseExplicitPeakBounds == other.UseExplicitPeakBounds;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((Library) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = base.GetHashCode();
+                hashCode = (hashCode * 397) ^ (FileNameHint != null ? FileNameHint.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ UseExplicitPeakBounds.GetHashCode();
+                return hashCode;
+            }
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>
@@ -824,7 +884,8 @@ namespace pwiz.Skyline.Model.Lib
 
         private enum ATTR
         {
-            file_name_hint
+            file_name_hint,
+            use_explicit_peak_bounds
         }
 
         public override void ReadXml(XmlReader reader)
@@ -832,6 +893,7 @@ namespace pwiz.Skyline.Model.Lib
             // Read tag attributes
             base.ReadXml(reader);
             FileNameHint = reader.GetAttribute(ATTR.file_name_hint);
+            UseExplicitPeakBounds = reader.GetBoolAttribute(ATTR.use_explicit_peak_bounds, true);
         }
 
         public override void WriteXml(XmlWriter writer)
@@ -839,6 +901,7 @@ namespace pwiz.Skyline.Model.Lib
             // Write tag attributes
             base.WriteXml(writer);
             writer.WriteAttributeIfString(ATTR.file_name_hint, FileNameHint);
+            writer.WriteAttribute(ATTR.use_explicit_peak_bounds, UseExplicitPeakBounds, true);
         }
 
         #endregion
@@ -1319,6 +1382,7 @@ namespace pwiz.Skyline.Model.Lib
             : base(name)
         {
             FilePath = path;
+            UseExplicitPeakBounds = true;
         }
 
         public string FilePath { get; private set; }
@@ -1344,6 +1408,9 @@ namespace pwiz.Skyline.Model.Lib
 
         public abstract IEnumerable<PeptideRankId> PeptideRankIds { get; }
 
+        public bool UseExplicitPeakBounds { get; private set; }
+
+
         #region Property change methods
 
         public LibrarySpec ChangeFilePath(string prop)
@@ -1359,7 +1426,12 @@ namespace pwiz.Skyline.Model.Lib
         public LibrarySpec ChangeDocumentLibrary(bool prop)
         {
             return ChangeProp(ImClone(this), im => im.IsDocumentLibrary = prop).ChangeDocumentLocal(prop);
-        }        
+        }
+
+        public LibrarySpec ChangeUseExplicitPeakBounds(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.UseExplicitPeakBounds = prop);
+        }
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -1373,7 +1445,8 @@ namespace pwiz.Skyline.Model.Lib
 
         private enum ATTR
         {
-            file_path
+            file_path,
+            use_explicit_peak_bounds
         }
 
         public override void ReadXml(XmlReader reader)
@@ -1381,6 +1454,7 @@ namespace pwiz.Skyline.Model.Lib
             // Read tag attributes
             base.ReadXml(reader);
             FilePath = reader.GetAttribute(ATTR.file_path);
+            UseExplicitPeakBounds = reader.GetBoolAttribute(ATTR.use_explicit_peak_bounds, true);
             // Consume tag
             reader.Read();
         }
@@ -1396,6 +1470,7 @@ namespace pwiz.Skyline.Model.Lib
             // Write tag attributes
             base.WriteXml(writer);
             writer.WriteAttributeString(ATTR.file_path, FilePath);
+            writer.WriteAttribute(ATTR.use_explicit_peak_bounds, UseExplicitPeakBounds, true);
         }
 
         #endregion
@@ -1409,7 +1484,8 @@ namespace pwiz.Skyline.Model.Lib
             return base.Equals(other) &&
                 Equals(other.FilePath, FilePath) &&
                 other.IsDocumentLocal.Equals(IsDocumentLocal) &&
-                other.IsDocumentLibrary.Equals(IsDocumentLibrary);
+                other.IsDocumentLibrary.Equals(IsDocumentLibrary) &&
+                other.UseExplicitPeakBounds.Equals(UseExplicitPeakBounds);
         }
 
         public override bool Equals(object obj)

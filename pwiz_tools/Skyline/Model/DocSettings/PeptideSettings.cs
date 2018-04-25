@@ -2261,7 +2261,9 @@ namespace pwiz.Skyline.Model.DocSettings
                                       // Keep the libraries array in synch, reloading all libraries, if necessary.
                                       // CONSIDER: Loop checking name matching?
                                       if (im.Libraries.Count != prop.Count)
+                                      {
                                           im.Libraries = new Library[prop.Count];
+                                      }
                                   });
         }        
 

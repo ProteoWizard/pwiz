@@ -26,7 +26,6 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
-using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
@@ -878,9 +877,9 @@ namespace pwiz.Skyline.Model.DocSettings
         /// This method just returns the first peak boundary in any library.
         /// In theory, a library should only have one peak boundary for any peptide.
         /// </summary>
-        public PeakBounds GetExplicitPeakBounds(PeptideDocNode nodePep, MsDataFileUri filePath)
+        public ExplicitPeakBounds GetExplicitPeakBounds(PeptideDocNode nodePep, MsDataFileUri filePath)
         {
-            if (nodePep == null || !nodePep.IsProteomic)
+            if (nodePep == null)
             {
                 return null;
             }
@@ -888,7 +887,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 .Select(typedSequence => typedSequence.ModifiedSequence).ToArray();
             foreach (var library in PeptideSettings.Libraries.Libraries)
             {
-                if (library == null)
+                if (library == null || !library.UseExplicitPeakBounds)
                 {
                     continue;
                 }
@@ -1539,6 +1538,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 librarySpecs[iSpec] = findLibrarySpec(library, null);
                 if (librarySpecs[iSpec] == null)
                     return null;    // Canceled
+                librarySpecs[iSpec] = librarySpecs[iSpec]
+                    .ChangeUseExplicitPeakBounds(library.UseExplicitPeakBounds);
                 if (librarySpecs[iSpec].FilePath == null)
                 {
                     // Disconnect the libraries, if not canceled, but no path

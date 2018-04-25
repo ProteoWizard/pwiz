@@ -199,9 +199,9 @@ namespace pwiz.Skyline.Model.Lib
         {
         }
 
-        public override LibrarySpec CreateSpec(string path)
+        protected override LibrarySpec CreateSpec()
         {
-            return new BiblioSpecLibSpec(Name, path);
+            return new BiblioSpecLibSpec(Name, FilePath);
         }
 
         public override string SpecFilter

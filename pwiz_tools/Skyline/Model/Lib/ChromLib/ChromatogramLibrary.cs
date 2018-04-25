@@ -146,9 +146,9 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             }
         }
 
-        public override LibrarySpec CreateSpec(string path)
+        protected override LibrarySpec CreateSpec()
         {
-            return new ChromatogramLibrarySpec(Name, path);
+            return new ChromatogramLibrarySpec(Name, FilePath);
         }
 
         public override string SpecFilter

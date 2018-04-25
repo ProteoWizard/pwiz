@@ -78,9 +78,9 @@ namespace pwiz.Skyline.Model.Lib.Midas
             FilePath = spec.FilePath;
         }
 
-        public override LibrarySpec CreateSpec(string path)
+        protected override LibrarySpec CreateSpec()
         {
-            return new MidasLibSpec(Name, path);
+            return new MidasLibSpec(Name, FilePath);
         }
 
         public override string SpecFilter
