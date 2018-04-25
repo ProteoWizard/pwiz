@@ -413,14 +413,10 @@ namespace pwiz.Skyline.Model.Tools
                         TextBoxStreamWriterHelper boxStreamWriterHelper = textWriter as TextBoxStreamWriterHelper;
                         if (boxStreamWriterHelper == null)
                         {
-                            p.OutputDataReceived += (sender, dataReceivedEventArgs) => textWriter.WriteLine(p.Id +
-                                                                                                            ">" +
-                                                                                                            dataReceivedEventArgs
-                                                                                                                .Data); // Not L10N
-                            p.ErrorDataReceived += (sender, dataReceivedEventArgs) => textWriter.WriteLine(p.Id +
-                                                                                                           ">" +
-                                                                                                           dataReceivedEventArgs
-                                                                                                               .Data); // Not L10N
+                            p.OutputDataReceived += (sender, dataReceivedEventArgs)
+                                => textWriter.WriteLine(p.Id + ">" + dataReceivedEventArgs.Data); // Not L10N
+                            p.ErrorDataReceived += (sender, dataReceivedEventArgs)
+                                => textWriter.WriteLine(p.Id + ">" + dataReceivedEventArgs.Data); // Not L10N
                         }
                         else
                         {
@@ -526,8 +522,9 @@ namespace pwiz.Skyline.Model.Tools
             var parameterInfos = methodInfo.GetParameters();
             if (parameterInfos.Length != 3)
             {
-                throw new ToolExecutionException(string.Format("The method '{0}' expects the wrong number of arguments.",
-                    methodInfo.Name));
+                throw new ToolExecutionException(
+                    string.Format(Resources.ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_method___1___has_the_wrong_signature_,
+                    Title, methodInfo.Name));
             }
             object reportArgument;
             if (parameterInfos[1].ParameterType == typeof(string))
