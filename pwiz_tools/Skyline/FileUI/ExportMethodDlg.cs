@@ -188,6 +188,7 @@ namespace pwiz.Skyline.FileUI
             textPrimaryCount.Text = Settings.Default.PrimaryTransitionCount.ToString(LocalizationHelper.CurrentCulture);
             // Reposition from design layout
             cbSlens.Top = textMaxTransitions.Bottom;
+            cbWriteCoV.Top = cbSlens.Bottom;
             panelThermoColumns.Top = labelDwellTime.Top;
             panelThermoRt.Top = panelThermoColumns.Top - (int)(panelThermoRt.Height*0.8);
             panelAbSciexTOF.Top = textDwellTime.Top + (textDwellTime.Height - panelAbSciexTOF.Height)/2;
@@ -437,6 +438,12 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public bool WriteCompensationVoltages
+        {
+            get { return _exportProperties.WriteCompensationVoltages; }
+            set { _exportProperties.WriteCompensationVoltages = cbWriteCoV.Checked = value; }
+        }
+
         public ExportPolarity PolarityFilter
         {
             get { return _exportProperties.PolarityFilter; }
@@ -542,6 +549,17 @@ namespace pwiz.Skyline.FileUI
             cbSlens.Visible = cbSlens.Enabled =
                 InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
                 InstrumentType == ExportInstrumentType.THERMO;  // TODO bspratt is this specific enough?
+        }
+
+        private void UpdateThermoFaimsCvControl()
+        {
+            cbWriteCoV.Visible = cbWriteCoV.Enabled = InstrumentType == ExportInstrumentType.THERMO_QUANTIVA;
+            var optimizing = comboOptimizing.SelectedItem;
+            if (optimizing != null && Equals(optimizing.ToString(), ExportOptimize.COV))
+            {
+                cbWriteCoV.Checked = true;
+                cbWriteCoV.Enabled = false;
+            }
         }
 
         private void UpdateThermoTuneControls()
@@ -802,54 +820,69 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            if (documentExport.Settings.TransitionSettings.Prediction.CompensationVoltage != null &&
-                !Equals(comboOptimizing.SelectedItem.ToString(), ExportOptimize.COV))
+            var covPrediction = documentExport.Settings.TransitionSettings.Prediction.CompensationVoltage != null;
+            var writeFaims = cbWriteCoV.Visible && cbWriteCoV.Checked;
+            if ((covPrediction || writeFaims) && !Equals(comboOptimizing.SelectedItem.ToString(), ExportOptimize.COV))
             {
                 // Show warning if we don't have results for the highest tune level
-                var highestCoV = documentExport.HighestCompensationVoltageTuning();
                 string message = null;
-                switch (highestCoV)
+                if (!writeFaims)
                 {
-                    case CompensationVoltageParameters.Tuning.fine:
-                        {
-                            var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
-                            if (missing.Any())
+                    var highestCoV = documentExport.HighestCompensationVoltageTuning();
+                    switch (highestCoV)
+                    {
+                        case CompensationVoltageParameters.Tuning.fine:
                             {
-                                message = TextUtil.LineSeparate(
-                                    Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_for_the_following_,
-                                    TextUtil.LineSeparate(missing));
+                                var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
+                                if (missing.Any())
+                                {
+                                    message = TextUtil.LineSeparate(
+                                        Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_for_the_following_,
+                                        TextUtil.LineSeparate(missing));
+                                }
+                                break;
                             }
-                            break;
-                        }
-                    case CompensationVoltageParameters.Tuning.medium:
-                        {
-                            message = Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_;
-                            var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
-                            if (missing.Any())
+                        case CompensationVoltageParameters.Tuning.medium:
                             {
-                                message = TextUtil.LineSeparate(message,
-                                    Resources.ExportMethodDlg_OkDialog_You_are_missing_medium_tune_optimized_compensation_voltages_for_the_following_,
-                                    TextUtil.LineSeparate(missing));
+                                message = Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_;
+                                var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
+                                if (missing.Any())
+                                {
+                                    message = TextUtil.LineSeparate(message,
+                                        Resources.ExportMethodDlg_OkDialog_You_are_missing_medium_tune_optimized_compensation_voltages_for_the_following_,
+                                        TextUtil.LineSeparate(missing));
+                                }
+                                break;
                             }
-                            break;
-                        }
-                    case CompensationVoltageParameters.Tuning.rough:
-                        {
-                            message = Resources.ExportMethodDlg_OkDialog_You_have_only_rough_tune_optimized_compensation_voltages_;
-                            var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
-                            if (missing.Any())
+                        case CompensationVoltageParameters.Tuning.rough:
                             {
-                                message = TextUtil.LineSeparate(message,
-                                    Resources.ExportMethodDlg_OkDialog_You_are_missing_any_optimized_compensation_voltages_for_the_following_,
-                                    TextUtil.LineSeparate(missing));
+                                message = Resources.ExportMethodDlg_OkDialog_You_have_only_rough_tune_optimized_compensation_voltages_;
+                                var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
+                                if (missing.Any())
+                                {
+                                    message = TextUtil.LineSeparate(message,
+                                        Resources.ExportMethodDlg_OkDialog_You_are_missing_any_optimized_compensation_voltages_for_the_following_,
+                                        TextUtil.LineSeparate(missing));
+                                }
+                                break;
                             }
-                            break;
-                        }
-                    case CompensationVoltageParameters.Tuning.none:
-                        {
-                            message = Resources.ExportMethodDlg_OkDialog_Your_document_does_not_contain_compensation_voltage_results__but_compensation_voltage_is_set_under_transition_settings_;
-                            break;
-                        }
+                        case CompensationVoltageParameters.Tuning.none:
+                            {
+                                message = Resources.ExportMethodDlg_OkDialog_Your_document_does_not_contain_compensation_voltage_results__but_compensation_voltage_is_set_under_transition_settings_;
+                                break;
+                            }
+                    }
+                }
+                else
+                {
+                    var missing = documentExport.GetMissingCompensationVoltages(CompensationVoltageParameters.Tuning.fine).ToArray();
+                    if (missing.Any())
+                    {
+                        message = TextUtil.LineSeparate(
+                            Resources.ExportMethodDlg_OkDialog_You_are_missing_compensation_voltages_for_the_following_,
+                            TextUtil.LineSeparate(missing),
+                            Resources.ExportMethodDlg_OkDialog_You_can_set_explicit_compensation_voltages_for_these__or_add_their_values_to_a_document_optimization_library_in_Transition_Settings_under_the_Prediction_tab_);
+                    }
                 }
 
                 if (message != null)
@@ -994,6 +1027,7 @@ namespace pwiz.Skyline.FileUI
             _exportProperties.FullScans = _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
             _exportProperties.AddEnergyRamp = panelThermoColumns.Visible && cbEnergyRamp.Checked;
             _exportProperties.UseSlens = cbSlens.Checked;
+            _exportProperties.WriteCompensationVoltages = cbWriteCoV.Checked;
             _exportProperties.AddTriggerReference = panelThermoColumns.Visible && cbTriggerRefColumns.Checked;
             _exportProperties.Tune3 = panelTuneColumns.Visible && cbTune3.Checked;
 
@@ -1430,6 +1464,7 @@ namespace pwiz.Skyline.FileUI
             UpdateWatersControls();
             UpdateThermoRtControls(targetType);
             UpdateThermoSLensControl(targetType);
+            UpdateThermoFaimsCvControl();
             UpdateThermoTuneControls();
             UpdateMaxLabel(standard);
         }
@@ -1752,6 +1787,7 @@ namespace pwiz.Skyline.FileUI
         {
             CalcMethodCount();
             panelSciexTune.Visible = comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.COV);
+            UpdateThermoFaimsCvControl();
         }
 
         private void cbIgnoreProteins_CheckedChanged(object sender, EventArgs e)

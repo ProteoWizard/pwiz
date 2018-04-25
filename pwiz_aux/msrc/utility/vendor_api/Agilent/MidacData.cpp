@@ -242,12 +242,12 @@ bool MidacDataImpl::canConvertDriftTimeAndCCS() const
 
 double MidacDataImpl::driftTimeToCCS(double driftTimeInMilliseconds, double mz, int charge) const
 {
-    try { return imsCcsReader_->CcsFromDriftTime(driftTimeInMilliseconds, mz, charge); } CATCH_AND_FORWARD
+    try { return imsCcsReader_->CcsFromDriftTime(driftTimeInMilliseconds, mz, abs(charge)); } CATCH_AND_FORWARD
 }
 
 double MidacDataImpl::ccsToDriftTime(double ccs, double mz, int charge) const
 {
-    try { return imsCcsReader_->DriftTimeFromCcs(ccs, mz, charge); } CATCH_AND_FORWARD
+    try { return imsCcsReader_->DriftTimeFromCcs(ccs, mz, abs(charge)); } CATCH_AND_FORWARD
 }
 
 ScanRecordPtr MidacDataImpl::getScanRecord(int rowNumber) const

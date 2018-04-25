@@ -809,20 +809,62 @@ namespace pwiz.Skyline.Model
             return Document.GetOptimizedDeclusteringPotential(nodePep, nodeGroup, nodeTran);
         }
 
-        protected double GetCompensationVoltage(PeptideDocNode nodePep,
+        protected double? GetCompensationVoltage(PeptideDocNode nodePep,
                                                 TransitionGroupDocNode nodeGroup,
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            double? explicitCV = nodeGroup.ExplicitValues.CompensationVoltage;
-            if (explicitCV.HasValue)
-            {
-                return step == 0 ? explicitCV.Value : 0;  // No optimizing of explicit values
-            }
             var prediction = Document.Settings.TransitionSettings.Prediction;
-            return ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType) || prediction.OptimizedMethodType == OptimizedMethodType.None
-                ? Document.GetCompensationVoltage(nodePep, nodeGroup, step, CompensationVoltageParameters.GetTuneLevel(OptimizeType))
-                : Document.GetOptimizedCompensationVoltage(nodePep, nodeGroup);
+            var tuneLevel = CompensationVoltageParameters.GetTuneLevel(OptimizeType);
+            // Check for explicit value
+            var cov = nodeGroup.ExplicitValues.CompensationVoltage;
+            if (cov.HasValue)
+            {
+                // If optimizing use explicit value as center of optimization
+                var covPrediction = prediction.CompensationVoltage;
+                double stepSize;
+                switch (tuneLevel)
+                {
+                    case CompensationVoltageParameters.Tuning.fine:
+                        stepSize = covPrediction.StepSizeFine;
+                        break;
+                    case CompensationVoltageParameters.Tuning.medium:
+                        stepSize = covPrediction.StepSizeMedium;
+                        break;
+                    case CompensationVoltageParameters.Tuning.rough:
+                        stepSize = covPrediction.StepSizeRough;
+                        break;
+                    default:
+                        return cov.Value; // not optimizing
+                }
+                return cov.Value + stepSize * step;
+            }
+            // If optimizing, get the appropriate value for the current tune level
+            if (ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType))
+            {
+                return Document.GetCompensationVoltage(nodePep, nodeGroup, step, tuneLevel);
+            }
+            // If ignoring values in the document return an empty value
+            if (prediction.OptimizedMethodType == OptimizedMethodType.None)
+            {
+                return null;
+            }
+
+            // Otherwise, try to get optimized values at various tune levels descending in level
+            if ((cov = Document.GetOptimizedCompensationVoltage(nodePep, nodeGroup, CompensationVoltageParameters.Tuning.fine)).HasValue)
+            {
+                return cov.Value;
+            }
+            else if ((cov = Document.GetOptimizedCompensationVoltage(nodePep, nodeGroup, CompensationVoltageParameters.Tuning.medium)).HasValue)
+            {
+                return cov.Value;
+            }
+            else if ((cov = Document.GetOptimizedCompensationVoltage(nodePep, nodeGroup, CompensationVoltageParameters.Tuning.rough)).HasValue)
+            {
+                return cov.Value;
+            }
+
+            return null;
         }
 
         protected int? GetRank(TransitionGroupDocNode nodeGroup,
