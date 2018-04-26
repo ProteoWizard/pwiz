@@ -109,8 +109,9 @@ bool OSWReader::parseFile() {
             curPSM_->score = sqlite3_column_double(stmt, 11);
             curPSM_->specName = featureId;
             if (sqlite3_column_type(stmt, 6) == SQLITE_TEXT) {
+                string proteinString = boost::lexical_cast<string>(sqlite3_column_text(stmt, 6));
                 vector<string> proteinNames;
-                boost::split(proteinNames, boost::lexical_cast<string>(sqlite3_column_text(stmt, 6)), boost::is_any_of(";"));
+                boost::split(proteinNames, proteinString, boost::is_any_of(";"));
                 for (vector<string>::const_iterator i = proteinNames.begin(); i != proteinNames.end(); i++) {
                     map<string, Protein>::const_iterator j = proteins.find(*i);
                     if (j != proteins.end()) {
