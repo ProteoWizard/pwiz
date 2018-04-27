@@ -927,6 +927,7 @@ class UnifiData::Impl
 
             result.driftTime = 0;
             result.arrayLength = spectrum->Masses->Length;
+            result.energyLevel = (logicalIndex % 2) == 0 ? Low : High;
 
             if (getBinaryData && result.arrayLength > 0)
             {
@@ -934,7 +935,8 @@ class UnifiData::Impl
                 ToStdVector(spectrum->Intensities, result.intensityArray);
 
                 // for IMS data, we must sort all the points from the drift scans
-                /*std::vector<std::size_t> p(result.mzArray.size());
+                /* NOTE: keeping this code for future support of --combineIonMobilitySpectra
+                std::vector<std::size_t> p(result.mzArray.size());
                 std::iota(p.begin(), p.end(), 0);
                 std::sort(p.begin(), p.end(), [&](std::size_t i, std::size_t j) { return result.mzArray[i] < result.mzArray[j]; });
 
@@ -993,6 +995,7 @@ class UnifiData::Impl
             int driftScanIndex = logicalIndex % 200;
             result.driftTime = _binToDriftTime[driftScanIndex];
             result.arrayLength = spectrum->ScanSize[driftScanIndex];
+            result.energyLevel = (networkIndexFromLogicalIndex(logicalIndex) % 2) == 0 ? Low : High;
 
             if (getBinaryData && result.arrayLength > 0)
             {

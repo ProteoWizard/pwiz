@@ -22,5 +22,17 @@ namespace MSConvertGUI.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastUsedUnifiUrl {
+            get {
+                return ((string)(this["LastUsedUnifiUrl"]));
+            }
+            set {
+                this["LastUsedUnifiUrl"] = value;
+            }
+        }
     }
 }
