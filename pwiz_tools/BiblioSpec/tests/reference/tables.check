@@ -16,7 +16,7 @@ minorVersion INTEGER -- Version 7 adds peak annotations
 -- Version 2 added ion mobility information
 )
 
-INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Thu Jan 18 14:47:34 2018',-1,0,8)
+INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Wed Apr 25 16:44:25 2018',-1,0,9)
 
 CREATE TABLE RefSpectra ( -- spectrum metadata - actual mz/intensity pairs in RefSpectraPeaks
 id INTEGER primary key autoincrement not null, -- lookup key for RefSpectraPeaks
@@ -57,6 +57,16 @@ CREATE TABLE RefSpectraPeaks( -- mz and intensity values
 RefSpectraID INTEGER, -- ID of the RefSpectra containing these peaks
 peakMZ BLOB, -- mz values encoded as little-endian 64 bit doubles, length is determined by the numPeaks value in the corresponding RefSpectra. Usually zlib-compressed if compressed size is less than original size.
 peakIntensity BLOB -- mz values encoded as little-endian 32 bit floats, length is determined by the numPeaks value in the corresponding RefSpectra.  Usually zlib-compressed if compressed size is less than original size.
+)
+
+CREATE TABLE Proteins -- protein information for RefSpectra.
+(id INTEGER primary key autoincrement not null,
+accession VARCHAR(200) -- protein accession number
+)
+
+CREATE TABLE RefSpectraProteins -- mapping of proteins between RefSpectra and Proteins tables.
+(RefSpectraId INTEGER not null, -- the RefSpectra being mapped to a protein
+ProteinId INTEGER not null -- the Protein for the RefSpectra
 )
 
 CREATE TABLE RefSpectraPeakAnnotations -- optional annotations for peaks in RefSpectra. There may be more than one annotation per peak, and not every peak in a RefSpectra has to be annotated.

@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:perc-bracket.blib	1	1	8
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:perc-bracket.blib	1	1	9
 id	RefSpectraID	position	mass
 1	1	2	160.160004
 2	1	12	15.9949

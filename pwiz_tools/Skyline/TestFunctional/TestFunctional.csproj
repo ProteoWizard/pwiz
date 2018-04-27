@@ -156,6 +156,7 @@
     <Compile Include="ChorusFunctionalTest.cs" />
     <Compile Include="ChromGraphTransformTest.cs" />
     <Compile Include="ChromUITest.cs" />
+    <Compile Include="ExplicitPeakScoreTest.cs" />
     <Compile Include="ImportAnnotationsTest.cs" />
     <Compile Include="ClearAllSettingsTest.cs" />
     <Compile Include="DocumentGridClipboardOperationsTest.cs" />
@@ -351,6 +352,7 @@
     <None Include="EditNoteTest.zip" />
     <None Include="EncyclopeDiaTest.zip" />
     <None Include="ExplicitPeakBoundsTest.zip" />
+    <None Include="ExplicitPeakScoreTest.zip" />
     <None Include="ExplicitRTTest.zip" />
     <None Include="ExportChromatogramTest.zip" />
     <None Include="ExportIsolationListTest.zip" />

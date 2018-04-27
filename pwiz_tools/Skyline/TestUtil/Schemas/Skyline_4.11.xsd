@@ -1522,10 +1522,12 @@
   <xs:complexType name="lib_spec_type">
     <xs:attribute name="name" use="required"/>
     <xs:attribute name="file_path" use="required"/>
+    <xs:attribute name="use_explicit_peak_bounds" type="xs:boolean"/>
   </xs:complexType>
   <xs:complexType name="lib_type">
     <xs:attribute name="name" type="xs:string"/>
     <xs:attribute name="file_name_hint" type="xs:string"/>
+    <xs:attribute name="use_explicit_peak_bounds" type="xs:boolean"/>
   </xs:complexType>
   <xs:complexType name="spectrum_header_info_type">
     <xs:attribute name="library_name"/>

@@ -105,8 +105,12 @@ struct ExperimentImpl : public Experiment
     virtual int getPeriodNumber() const {return period;}
     virtual int getExperimentNumber() const {return experiment;}
 
+    virtual size_t getSIMSize() const;
+    virtual void getSIM(size_t index, Target& target) const;
+
     virtual size_t getSRMSize() const;
     virtual void getSRM(size_t index, Target& target) const;
+
     virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities) const;
     virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities,
                         double& basePeakX, double& basePeakY) const;
@@ -129,7 +133,10 @@ struct ExperimentImpl : public Experiment
     gcroot<MSExperiment^> msExperiment;
     int sample, period, experiment;
 
+    ExperimentType experimentType;
+    size_t simCount;
     size_t transitionCount;
+
     typedef map<pair<double, double>, pair<int, int> > TransitionParametersMap;
     TransitionParametersMap transitionParametersMap;
 
@@ -391,15 +398,18 @@ ExperimentPtr WiffFileImpl::getExperiment(int sample, int period, int experiment
 
 
 ExperimentImpl::ExperimentImpl(const WiffFileImpl* wifffile, int sample, int period, int experiment)
-: wifffile_(wifffile), sample(sample), period(period), experiment(experiment), transitionCount(0), initializedTIC_(false), initializedBPC_(false)
+: wifffile_(wifffile), sample(sample), period(period), experiment(experiment), transitionCount(0), simCount(0), initializedTIC_(false), initializedBPC_(false)
 {
     try
     {
         wifffile_->setExperiment(sample, period, experiment);
         msExperiment = wifffile_->msSample->GetMSExperiment(experiment-1);
 
-        if ((ExperimentType) msExperiment->Details->ExperimentType == MRM)
+        experimentType = (ExperimentType) msExperiment->Details->ExperimentType;
+        if (experimentType == MRM)
             transitionCount = msExperiment->Details->MassRangeInfo->Length;
+        else if (experimentType == SIM)
+            simCount = msExperiment->Details->MassRangeInfo->Length;
 
         /*for (int i=0; i < msExperiment->MRMTransitions->Count; ++i)
         {
@@ -459,6 +469,35 @@ void ExperimentImpl::initializeBPC() const
     CATCH_AND_FORWARD
 }
 
+size_t ExperimentImpl::getSIMSize() const
+{
+    try {return simCount;} CATCH_AND_FORWARD
+}
+
+void ExperimentImpl::getSIM(size_t index, Target& target) const
+{
+    try
+    {
+        if (experimentType != SIM)
+            return;
+
+        if (index >= simCount)
+            throw std::out_of_range("[Experiment::getSIM()] index out of range");
+
+        SIMMassRange^ transition = (SIMMassRange^) msExperiment->Details->MassRangeInfo[index];
+
+        target.type = TargetType_SIM;
+        target.Q1 = transition->Mass;
+        target.dwellTime = transition->DwellTime;
+        // TODO: store RTWindow?
+
+        // TODO: use NaN to indicate these values should be considered missing?
+        target.collisionEnergy = 0;
+        target.declusteringPotential = 0;
+    }
+    CATCH_AND_FORWARD
+}
+
 size_t ExperimentImpl::getSRMSize() const
 {
     try {return transitionCount;} CATCH_AND_FORWARD
@@ -468,6 +507,9 @@ void ExperimentImpl::getSRM(size_t index, Target& target) const
 {
     try
     {
+        if (experimentType != MRM)
+            return;
+
         if (index >= transitionCount)
             throw std::out_of_range("[Experiment::getSRM()] index out of range");
 
@@ -508,7 +550,7 @@ void ExperimentImpl::getSIC(size_t index, std::vector<double>& times, std::vecto
 {
     try
     {
-        if (index >= transitionCount)
+        if (index >= transitionCount && index >= simCount)
             throw std::out_of_range("[Experiment::getSIC()] index out of range");
 
         ExtractedIonChromatogramSettings^ option = gcnew ExtractedIonChromatogramSettings(index);

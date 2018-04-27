@@ -508,8 +508,7 @@ namespace BuildAnalystFullScanMethod
 
             // Get the TOF mass range from the template
             var tofPropertiesTemplate = (ITOFProperties)prodIonExperiment;
-           
-            
+
             short s;
 
             //Get initial source parameters from the template
@@ -561,6 +560,8 @@ namespace BuildAnalystFullScanMethod
                 }
 
                 var experiment = (Experiment) period.CreateExperiment(out j);
+                experiment.Q1ResolutionFlag = prodIonExperiment.Q1ResolutionFlag;
+
                 precursorsToExperimentIndex.Add(transition.PrecursorMz, j);
                 transition.ExperimentIndex = IsPrecursorTypeTransition(transition) ? 0 : j;
                 experiment.InitExperiment();
