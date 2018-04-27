@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:ssl-small-mol.blib	3	1	8
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:ssl-small-mol.blib	3	1	9
 id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
 1	N/A	717.07	3	N/A	-	-	1	109	0.0	0.0	0.0	0	20.0	N/A	N/A	Caffeine	C8H10N4O2	[M+3H]3+	RYYVLZVUVIJVGH-UHFFFAOYSA-N	N/A	1	136	0.0	0

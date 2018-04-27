@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:pep-proph.blib	43	1	8
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:pep-proph.blib	43	1	9
 id	RefSpectraID	position	mass
 1	1	5	16.0
 2	4	5	16.0

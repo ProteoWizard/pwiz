@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:pride.xcorr.blib	5	1	8
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:pride.xcorr.blib	5	1	9
 id	RefSpectraID	position	mass
 1	1	10	57.021464
 2	2	10	57.021464

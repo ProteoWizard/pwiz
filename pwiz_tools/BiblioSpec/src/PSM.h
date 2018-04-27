@@ -29,6 +29,7 @@
  * information.
  */
 
+#include <set>
 #include <vector>
 #include "boost/lexical_cast.hpp"
 #include "SmallMolMetadata.h"
@@ -53,6 +54,12 @@ struct SeqMod{
   : position(pos), deltaMass(mass) {};
 };
 
+struct Protein {
+  std::string accession;
+  Protein() {}
+  Protein(const std::string& s): accession(s) {}
+};
+
 /**
  * \struct PSM
  * \brief A Peptide Spectrum Match (PSM) is a data type to hold
@@ -71,6 +78,7 @@ struct PSM{
   int specIndex;   ///< the index of a spectrum in its file
   double score;    ///< score associated with this paring of spec and seq
   std::string specName; ///< the parentFileName attribute from the scanOrigin element
+  std::set<const Protein*> proteins;
 
   // Small molecule stuff
   SmallMolMetadata smallMolMetadata;
@@ -98,6 +106,7 @@ struct PSM{
     score = rhs.score;
     specName = rhs.specName;
     smallMolMetadata = rhs.smallMolMetadata;
+    proteins = rhs.proteins;
     return *this;
   }
 
@@ -111,6 +120,7 @@ struct PSM{
     score = 0;
     specName.clear();
     smallMolMetadata.clear();
+    proteins.clear();
   };
 
   bool IsCompleteEnough() const
