@@ -363,6 +363,8 @@ void BlibMaker::createTables(vector<string> &commands, bool execute)
         "peakIntensity BLOB -- mz values encoded as little-endian 32 bit floats, length is determined by the numPeaks value in the corresponding RefSpectra.  Usually zlib-compressed if compressed size is less than original size.\n"
         ")");
 
+    createTable("Proteins", commands, false);
+    createTable("RefSpectraProteins", commands, false);
     createTable("RefSpectraPeakAnnotations", commands, false);
     createTable("SpectrumSourceFiles", commands, false);
     createTable("ScoreTypes", commands, false);
@@ -441,6 +443,16 @@ void BlibMaker::createTable(const char* tableName, vector<string> &commands, boo
             "mzObserved REAL not null -- actual measured mz, should agree with the indexed mz found in the RefSpectra\n)",
             ZSQLBUFLEN);
         commands.push_back(zSql);
+    } else if (strcmp(tableName, "Proteins") == 0) {
+        commands.push_back(
+            "CREATE TABLE Proteins -- protein information for RefSpectra.\n"
+            "(id INTEGER primary key autoincrement not null,\n"
+            "accession VARCHAR(200) -- protein accession number\n)");
+    } else if (strcmp(tableName, "RefSpectraProteins") == 0) {
+        commands.push_back(
+            "CREATE TABLE RefSpectraProteins -- mapping of proteins between RefSpectra and Proteins tables.\n"
+            "(RefSpectraId INTEGER not null, -- the RefSpectra being mapped to a protein\n"
+            "ProteinId INTEGER not null -- the Protein for the RefSpectra\n)");
     } else {
         Verbosity::error("Cannot create '%s' table. Unknown name.",
                          tableName);
@@ -484,6 +496,14 @@ void BlibMaker::updateTables(){
 
     if (!tableExists("main", "RefSpectraPeakAnnotations")){
         createTable("RefSpectraPeakAnnotations", commands, true);
+    }
+
+    if (!tableExists("main", "Proteins")) {
+        createTable("Proteins", commands, true);
+    }
+
+    if (!tableExists("main", "RefSpectraProteins")) {
+        createTable("RefSpectraProteins", commands, true);
     }
 
     vector< pair<string, string> > newColumns;
@@ -641,6 +661,17 @@ void BlibMaker::transferSpectrumFiles(const char* schemaTmp){ //i.e. db name
     }
 }
 
+void BlibMaker::transferProteins(const char* schemaTmp) {
+    // first check to see if the incoming library has spectrum source files
+    if (!tableExists(schemaTmp, "Proteins")) {
+        return;
+    }
+
+    snprintf(zSql, ZSQLBUFLEN,
+        "INSERT INTO main.Proteins (id, accession) SELECT id, accession FROM %s.Proteins", schemaTmp);
+    sql_stmt(zSql);
+}
+
 /**
  * In preparation for transfering spectra from one library to another,
  * get what will be the fileID for the new library.  Look up the
@@ -783,7 +814,7 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
             copies, newFileID, alternate_cols.c_str(), schemaTmp, spectraTmpID);
         sql_stmt(zSql);
     }
-    else if (tableVersion == MIN_VERSION_RT_BOUNDS)
+    else if (tableVersion >= MIN_VERSION_RT_BOUNDS)
     {
         snprintf(zSql, ZSQLBUFLEN,
             "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
@@ -816,9 +847,11 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
 
     transferPeaks(schemaTmp, spectraID, spectraTmpID);
     transferModifications(schemaTmp, spectraID, spectraTmpID);
-    if (tableVersion >= MIN_VERSION_PEAK_ANNOT)
-    {
+    if (tableVersion >= MIN_VERSION_PEAK_ANNOT) {
         transferPeakAnnotations(schemaTmp, spectraID, spectraTmpID);
+    }
+    if (tableVersion >= MIN_VERSION_PROTEINS) {
+        transferRefSpectraProteins(schemaTmp, spectraID, spectraTmpID);
     }
     return spectraID;
 }
@@ -924,6 +957,14 @@ void BlibMaker::transferPeakAnnotations(const char* schemaTmp,
 
         rc = sqlite3_step(pStmt);
     }
+}
+
+void BlibMaker::transferRefSpectraProteins(const char* schemaTmp, int spectraID, int spectraTmpID) {
+    snprintf(zSql, ZSQLBUFLEN,
+        "INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) "
+        "SELECT %d, ProteinId FROM %s.RefSpectraProteins WHERE RefSpectraId = %d",
+        spectraID, schemaTmp, spectraTmpID);
+    sql_stmt(zSql);
 }
 
 int BlibMaker::getFileId(const string& file, double cutoffScore) {
