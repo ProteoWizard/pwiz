@@ -36,18 +36,18 @@ MaxQuantModReader::MaxQuantModReader(const char* xmlfilename,
    
     elementMasses_ = map<string, double>();
 
-    elementMasses_["H"] = 1.00782503521;
-    elementMasses_["O"] = 15.9949146221;
-    elementMasses_["C"] = 12.0000000;
-    elementMasses_["N"] = 14.0030740052;
-    elementMasses_["P"] = 30.97376151;
-    elementMasses_["S"] = 31.97207069;
-    elementMasses_["Na"] = 22.98976966;
+    elementMasses_["H"] = 1.0078246;
+    elementMasses_["O"] = 15.9949141;
+    elementMasses_["C"] = 12.0;
+    elementMasses_["N"] = 14.0030732;
+    elementMasses_["P"] = 30.973762;
+    elementMasses_["S"] = 31.97207;
+    elementMasses_["Na"] = 22.989767;
     // heavy masses
-    elementMasses_["Hx"] = 2.01355321270;
+    elementMasses_["Hx"] = 2.0141021;
     elementMasses_["Ox"] = 16.9991322;
-    elementMasses_["Cx"] = elementMasses_["13C"] = 13.0033548378;
-    elementMasses_["Nx"] = 15.0001088984;
+    elementMasses_["Cx"] = elementMasses_["13C"] = 13.0033554;
+    elementMasses_["Nx"] = 15.0001088;
 }
 
 /**
