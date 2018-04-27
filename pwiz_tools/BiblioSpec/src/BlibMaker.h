@@ -49,8 +49,9 @@ class BlibMaker
     // integer values minorVersion, the minorVersion field has been taken
     // for use as a schemaVersion
 #define MAJOR_VERSION_CURRENT 0
-#define MINOR_VERSION_CURRENT 8
+#define MINOR_VERSION_CURRENT 9
 
+#define MIN_VERSION_PROTEINS   9 // Version 9 adds Proteins and RefSpectraProteins tables
 #define MIN_VERSION_RT_BOUNDS  8 // Version 8 adds startTime and endTime
 #define MIN_VERSION_PEAK_ANNOT 7 // Version 7 adds peak annotations
 #define MIN_VERSION_IMS_UNITS  6 // Version 6 generalizes ion mobility to value, high energy offset, and type (currently drift time msec, and inverse reduced ion mobility Vsec/cm2)
@@ -134,7 +135,9 @@ protected:
     void transferModifications(const char* schemaTmp, int spectraID, int spectraTmpID);
     void transferPeaks(const char* schemaTmp, int spectraID, int spectraTmpID);
     void transferPeakAnnotations(const char* schemaTmp, int spectraID, int spectraTmpID);
+    void transferRefSpectraProteins(const char* schemaTmp, int spectraID, int spectraTmpID);
     void transferSpectrumFiles(const char* schmaTmp);
+    void transferProteins(const char* schemaTmp);
     void transferTable(const char* schemaTmp, const char* tableName);
 
     int getSpectrumCount(const char* schemaName = NULL);
