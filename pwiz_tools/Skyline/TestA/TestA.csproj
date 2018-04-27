@@ -142,6 +142,7 @@
   <ItemGroup>
     <Compile Include="AdductTest.cs" />
     <Compile Include="AnnotationUnitTest.cs" />
+    <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
     <Compile Include="CommandLineImportAnnotationsTest.cs" />

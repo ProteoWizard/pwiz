@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 var simplexConstant = new NelderMeadSimplex.SimplexConstant((xValues[i] + xValues[i + 1]) / 2,
                     (xValues[i + 1] - xValues[i]) / 4);
-                var regressionResult = NelderMeadSimplex.Regress(new[] { simplexConstant }, 0, 10,
+                var regressionResult = NelderMeadSimplex.Regress(new[] { simplexConstant }, 0, 50,
                     constants => LodObjectiveFunction(constants[0], weightedPoints));
                 if (regressionResult.ErrorValue < bestScore)
                 {
@@ -212,7 +212,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 double delta = pt.Y - calibrationCurve.GetY(pt.X).Value;
                 totalWeight += pt.Weight;
-                totalDelta = pt.Weight * delta * delta;
+                totalDelta += pt.Weight * delta * delta;
             }
             return totalDelta / totalWeight;
         }
