@@ -27264,6 +27264,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error running the installed tool {0}. The method &apos;{1}&apos; has the wrong signature..
+        /// </summary>
+        public static string ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_method___1___has_the_wrong_signature_ {
+            get {
+                return ResourceManager.GetString("ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_metho" +
+                        "d___1___has_the_wrong_signature_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find any CollectArgs method to call on class &apos;{0}&apos;..
+        /// </summary>
+        public static string ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___ {
+            get {
+                return ResourceManager.GetString("ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_" +
+                        "call_on_class___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error running the installed tool {0}. It seems to have an error in one of its files. Please reinstall the tool and try again.
         /// </summary>
         public static string ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again {
