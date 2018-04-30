@@ -192,6 +192,10 @@
     </NativeReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Shared\Common\CommonUtil.csproj">
+      <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
+      <Name>CommonUtil</Name>
+    </ProjectReference>
     <ProjectReference Include="CustomDataSourceDialog\CustomDataSourceDialog.csproj">
       <Project>{6B7B0771-4D09-469F-AEFA-00E4FA06D017}</Project>
       <Name>CustomDataSourceDialog</Name>

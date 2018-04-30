@@ -28,9 +28,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using System.Net.Http;
 using IdentityModel.Client;
+using pwiz.Common.SystemUtil;
 
 namespace MSConvertGUI
 {
@@ -48,6 +50,21 @@ namespace MSConvertGUI
             {
                 return url.Replace("://", String.Format("://{0}:{1}@", Username, Password)) +
                        String.Format("?identity={0}&scope={1}&secret={2}", IdentityServer, ClientScope, ClientSecret) ;
+            }
+
+            public static Tuple<string, Credentials> ParseUrlWithAuthentication(string url)
+            {
+                var uri = new Uri(url);
+                var credentials = new Credentials();
+                if (uri.UserInfo.Contains(':'))
+                {
+                    credentials.Username = uri.UserInfo.Split(':')[0];
+                    credentials.Password = uri.UserInfo.Split(':')[1];
+                }
+                credentials.IdentityServer = Regex.Match(uri.Query, "identity=([^&]+)").Groups[1].Value;
+                credentials.ClientScope = Regex.Match(uri.Query, "scope=([^&]+)").Groups[1].Value;
+                credentials.ClientSecret = Regex.Match(uri.Query, "secret=([^&]+)").Groups[1].Value;
+                return new Tuple<string, Credentials>(uri.Authority, credentials);
             }
         }
 
@@ -149,6 +166,8 @@ namespace MSConvertGUI
         void connect()
         {
             string url = serverLocationTextBox.Text;
+            if (!url.Any())
+                return;
             if (!url.StartsWith("http"))
                 url = "https://" + url;
             if (!url.EndsWith(BasePath))
@@ -159,14 +178,24 @@ namespace MSConvertGUI
             {
                 try
                 {
-                    if (SelectedCredentials != null)
+                    if (SelectedCredentials != null && SelectedCredentials.Username.Any() && SelectedCredentials.Password.Any())
                     {
                         TokenClient client = new TokenClient(TokenEndpoint, "resourceownerclient", SelectedCredentials.ClientSecret);
                         TokenResponse response = client.RequestResourceOwnerPasswordAsync(SelectedCredentials.Username, SelectedCredentials.Password, SelectedCredentials.ClientScope).Result;
                         if (response.IsError)
                         {
-                            if (MessageBox.Show(this, "Username or password are not correct!", "Error", MessageBoxButtons.RetryCancel) == DialogResult.Cancel)
-                                return;
+                            if (response.ErrorDescription.Contains("InvalidLogin"))
+                            {
+                                using (new CenterWinDialog(this))
+                                {
+                                    if (MessageBox.Show(this, "Username or password are not correct!", "Error", MessageBoxButtons.RetryCancel) == DialogResult.Cancel)
+                                        return;
+                                }
+                            }
+                            else if (response.Exception != null)
+                                throw response.Exception;
+                            else
+                                throw new InvalidOperationException(response.Error + ": " + response.ErrorDescription);
                         }
                         else
                         {
@@ -203,15 +232,30 @@ namespace MSConvertGUI
                 }
                 catch (Exception ex)
                 {
-                    if (MessageBox.Show(this, "Failed to connect to identity server:\r\n" + ex.ToString(), "Error", MessageBoxButtons.RetryCancel) == DialogResult.Cancel)
+                    if (ex.InnerException != null)
+                        ex = ex.InnerException; // bypass AggregateException
+                    if (MessageBox.Show(this, "Failed to connect to identity server:\r\n" + ex.Message, "Error", MessageBoxButtons.RetryCancel) == DialogResult.Cancel)
                         return;
                     SelectedCredentials = null;
                 }
             }
 
+            serverLocationTextBox.Text = url;
+
             FileTree.Nodes.Clear();
             FileTree.Nodes.Add("host", host, 0);
-            GetFolders();
+
+            try
+            {
+                GetFolders();
+            }
+            catch (Exception ex)
+            {
+                Program.HandleException(ex);
+                disconnect();
+                return;
+            }
+
             FileTree.ExpandAll();
 
             serverLocationTextBox.Text = url;
@@ -224,6 +268,7 @@ namespace MSConvertGUI
             FileTree.Nodes.Clear();
             FolderViewList.Items.Clear();
             serverLocationTextBox.ReadOnly = false;
+            SelectedCredentials = null;
             connectButton.Text = "Connect";
         }
 
