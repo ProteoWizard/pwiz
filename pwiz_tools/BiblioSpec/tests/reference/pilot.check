@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:pilot.blib	584	1	8
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:pilot.blib	584	1	9
 id	RefSpectraID	position	mass
 1	1	2	0.984016
 2	1	4	57.021464

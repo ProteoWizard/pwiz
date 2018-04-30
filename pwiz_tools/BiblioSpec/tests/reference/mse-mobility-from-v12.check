@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:mse-mobility-from-v12.blib	11	1	8
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:mse-mobility-from-v12.blib	11	1	9
 id	RefSpectraID	position	mass
 1	4	1	57.021464
 2	4	2	57.021464

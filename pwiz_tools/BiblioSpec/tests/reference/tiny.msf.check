@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:tiny.msf.blib	5	1	8
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:tiny.msf.blib	5	1	9
 id	RefSpectraID	position	mass
 1	1	1	4.008491
 2	1	2	4.008491
