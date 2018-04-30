@@ -519,8 +519,6 @@ namespace pwiz.Skyline.Util
                 using (var webClient = new UTF8WebClient())
                 {
                     JObject jsonResponse = webClient.Get(uri);
-//                    string response = webClient.UploadString(uri, PanoramaUtil.FORM_POST, string.Empty); // Not L10N
-//                    JObject jsonResponse = JObject.Parse(response);
                     string type = (string)jsonResponse["type"]; // Not L10N
                     if (string.Equals(type, "project")) // Not L10N
                     {
@@ -807,8 +805,8 @@ namespace pwiz.Skyline.Util
                     DeleteTempZipFile(tmpUploadUri, server.AuthHeader);
                     return null;
                 }
-
-                _webClient.Headers.Remove("Temporary"); // Remove the "Temporary" header added while uploading the file
+                // Remove the "Temporary" header added while uploading the file
+                _webClient.Headers.Remove("Temporary"); // Not L10N 
 
                 // Make sure the temporary file was uploaded to the server
                 ConfirmFileOnServer(tmpUploadUri, server.AuthHeader);
@@ -1077,7 +1075,7 @@ namespace pwiz.Skyline.Util
         private string _csrfToken;
         private Uri _serverUri;
 
-        private static string LABKEY_CSRF = "X-LABKEY-CSRF";
+        private static string LABKEY_CSRF = "X-LABKEY-CSRF"; // Not L10N
 
         public WebClientWithCredentials(Uri serverUri, string username, string password)
         {
