@@ -49,13 +49,14 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR</NMakePreprocessorDefinitions>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir);$(SolutionDir)\libraries\boost_aux;$(SolutionDir)\libraries\boost_1_54_0;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir);$(SolutionDir)libraries\boost_aux;$(SolutionDir)libraries\boost_1_54_0;$(SolutionDir)libraries\SQLite;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir);$(SolutionDir)\libraries\boost_aux;$(SolutionDir)\libraries\boost_1_56_0;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir);$(SolutionDir)libraries\boost_aux;$(SolutionDir)libraries\boost_1_56_0;$(SolutionDir)libraries\SQLite;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions> /GH /Gh</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalManifestDependencies>dasfasdfs;%(AdditionalManifestDependencies)</AdditionalManifestDependencies>
@@ -64,7 +65,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <BuildLog />
     <ClCompile>
-      <PreprocessorDefinitions>PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;PWIZ_READER_SHIMADZU;PWIZ_READER_UNIFI;WIN32;USE_RAW_PTR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -689,6 +690,7 @@
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\Baf2Sql.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\CompassData.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\CompassDataTest.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TimsData.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFile.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFileTest.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFileValues.cpp" />
@@ -1097,6 +1099,7 @@
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Agilent\MidacData.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\Baf2Sql.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\CompassData.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TimsData.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFile.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFileCOM.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFileTypes.h" />

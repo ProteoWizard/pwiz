@@ -135,10 +135,17 @@ enum PWIZ_API_DECL Polarity
     Positive = 2
 };
 
+enum PWIZ_API_DECL EnergyLevel
+{
+    Low = 1,
+    High = 2
+};
+
 struct PWIZ_API_DECL UnifiSpectrum
 {
     double retentionTime;
     Polarity scanPolarity;
+    EnergyLevel energyLevel;
     double driftTime;
 
     size_t arrayLength;
