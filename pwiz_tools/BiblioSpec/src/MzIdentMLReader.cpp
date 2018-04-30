@@ -59,8 +59,9 @@ MzIdentMLReader::~MzIdentMLReader()
  * stores psms, organized by spectrum file, and imports all spectra.
  */
 bool MzIdentMLReader::parseFile(){
+    map<DBSequencePtr, Protein> proteins;
     Verbosity::debug("Reading psms from the file.");
-    collectPsms();
+    collectPsms(proteins);
     
     // for each file
     if( fileMap_.size() > 1 ){
@@ -145,7 +146,7 @@ bool MzIdentMLReader::parseFile(){
  *         SpectrumIdenficiationItem -- specific peptide match to the spec
  *             PeptideEvidencePtr -- one for each prot in which pep is found
  */
-void MzIdentMLReader::collectPsms(){
+void MzIdentMLReader::collectPsms(map<DBSequencePtr, Protein>& proteins) {
     // 1 SpectrumIdentificationList = 1 .MGF file
     for(; list_iter_ != list_end_; ++list_iter_){
         
@@ -201,6 +202,18 @@ void MzIdentMLReader::collectPsms(){
                 }
                 curPSM_->score = score;
                 curPSM_->charge = item.chargeState;
+                for (vector<PeptideEvidencePtr>::const_iterator i = item.peptideEvidencePtr.begin();
+                     i != item.peptideEvidencePtr.end();
+                     i++) {
+                    const DBSequencePtr& dbSeq = (*i)->dbSequencePtr;
+                    map<DBSequencePtr, Protein>::const_iterator j = proteins.find(dbSeq);
+                    if (j != proteins.end()) {
+                        curPSM_->proteins.insert(&j->second);
+                    } else {
+                        proteins[dbSeq] = Protein(dbSeq->accession);
+                        curPSM_->proteins.insert(&proteins[dbSeq]);
+                    }
+                }
                 extractModifications(item.peptidePtr, curPSM_);
                 
                 // add the psm to the map

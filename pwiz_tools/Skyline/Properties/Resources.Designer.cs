@@ -11101,6 +11101,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You are missing compensation voltages for the following:.
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_You_are_missing_compensation_voltages_for_the_following_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_You_are_missing_compensation_voltages_for_the_following_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You are missing fine tune optimized compensation voltages..
         /// </summary>
         public static string ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_ {
@@ -11127,6 +11137,17 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_You_are_missing_medium_tune_optimized_compensation_volta" +
                         "ges_for_the_following_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You can set explicit compensation voltages for these, or add their values to a document optimization library in Transition Settings under the Prediction tab..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_You_can_set_explicit_compensation_voltages_for_these__or_add_their_values_to_a_document_optimization_library_in_Transition_Settings_under_the_Prediction_tab_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_You_can_set_explicit_compensation_voltages_for_these__or" +
+                        "_add_their_values_to_a_document_optimization_library_in_Transition_Settings_unde" +
+                        "r_the_Prediction_tab_", resourceCulture);
             }
         }
         
@@ -27239,6 +27260,26 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ToolDescription_CallArgsCollector_Error_loading_report_from_the_temporary_file__0" +
                         "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error running the installed tool {0}. The method &apos;{1}&apos; has the wrong signature..
+        /// </summary>
+        public static string ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_method___1___has_the_wrong_signature_ {
+            get {
+                return ResourceManager.GetString("ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_metho" +
+                        "d___1___has_the_wrong_signature_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find any CollectArgs method to call on class &apos;{0}&apos;..
+        /// </summary>
+        public static string ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___ {
+            get {
+                return ResourceManager.GetString("ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_" +
+                        "call_on_class___0___", resourceCulture);
             }
         }
         

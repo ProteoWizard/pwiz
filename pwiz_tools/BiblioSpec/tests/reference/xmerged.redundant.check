@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:xmerged.redundant.blib	175	1	8
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:xmerged.redundant.blib	175	1	9
 id	RefSpectraID	position	mass
 1	16	6	57.0
 2	16	9	57.0

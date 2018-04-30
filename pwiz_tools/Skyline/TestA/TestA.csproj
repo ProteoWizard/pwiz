@@ -142,6 +142,7 @@
   <ItemGroup>
     <Compile Include="AdductTest.cs" />
     <Compile Include="AnnotationUnitTest.cs" />
+    <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
     <Compile Include="CommandLineImportAnnotationsTest.cs" />
@@ -212,6 +213,7 @@
     <Compile Include="StringHelpersTest.cs" />
     <Compile Include="TestSerializeIsolationScheme.cs" />
     <Compile Include="TextUtilTest.cs" />
+    <Compile Include="ToolDescriptionTest.cs" />
     <Compile Include="TransitionSettings07Test.cs" />
     <Compile Include="TypeSafeEnumTest.cs" />
     <Compile Include="UniModTest.cs" />

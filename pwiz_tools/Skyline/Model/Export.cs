@@ -356,6 +356,7 @@ namespace pwiz.Skyline.Model
         public virtual int PrimaryTransitionCount { get; set; }
         public virtual int DwellTime { get; set; }
         public virtual bool UseSlens { get; set; }
+        public virtual bool WriteCompensationVoltages { get; set; }
         public virtual bool AddEnergyRamp { get; set; }
         public virtual bool AddTriggerReference { get; set; }
         public virtual double RunLength { get; set; }
@@ -601,6 +602,7 @@ namespace pwiz.Skyline.Model
         {
             var exporter = InitExporter(new ThermoQuantivaMassListExporter(document));
             exporter.UseSlens = UseSlens;
+            exporter.WriteFaimsCv = WriteCompensationVoltages;
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
@@ -984,6 +986,8 @@ namespace pwiz.Skyline.Model
 
         protected bool USE_COMPOUND_COUNT_WORKAROUND { get { return true; } }
 
+        public bool WriteFaimsCv { get; set; }
+
         public ThermoQuantivaMassListExporter(SrmDocument document)
             : base(document)
         {
@@ -1026,8 +1030,11 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.Write("S-lens"); // Not L10N
             }
-            writer.Write(FieldSeparator);
-            writer.Write("FAIMS CV (V)"); // Not L10N
+            if (WriteFaimsCv)
+            {
+                writer.Write(FieldSeparator);
+                writer.Write("FAIMS CV (V)"); // Not L10N
+            }
             writer.WriteLine();
         }
 
@@ -1130,9 +1137,9 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.Write((nodeTranGroup.ExplicitValues.SLens ?? DEFAULT_SLENS).ToString(CultureInfo));
             }
-            writer.Write(FieldSeparator);
-            if (Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null)
+            if (WriteFaimsCv)
             {
+                writer.Write(FieldSeparator);
                 writer.Write(GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step));
             }
             writer.WriteLine();
@@ -1978,7 +1985,7 @@ namespace pwiz.Skyline.Model
 
             // TODO: Need better way to handle case where user give all CoV as explicit
             string compensationVoltage = Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null
-                ? string.Format(",{0}", GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step).ToString("0.00", CultureInfo)) // Not L10N
+                ? string.Format(",{0}", GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step).GetValueOrDefault().ToString("0.00", CultureInfo)) // Not L10N
                 : null;
 
            string oneLine = string.Format("{0},{1},{2},{3}{4}{5}", q1, q3, dwellOrRt, extPeptideId, // Not L10N
@@ -2081,7 +2088,7 @@ namespace pwiz.Skyline.Model
                     pepGroupName,
                     modifiedPepSequence,
                     GetTransitionName(charge, nodeTran),
-                    GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step).ToString("0.0", CultureInfo.InvariantCulture), // Not L10N
+                    GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step).GetValueOrDefault().ToString("0.0", CultureInfo.InvariantCulture), // Not L10N
                     nodeTranGroup.TransitionGroup.LabelType);
                 extGroupId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
                     pepGroupName,
