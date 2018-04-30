@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:pride.mill.blib	6	1	8
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:pride.mill.blib	6	1	9
 id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
 1	TLLWTELFR	590.27	2	TLLWTELFR	-	-	1	189	0.0	0.0	0.0	0	0.0	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	1	12.43	3

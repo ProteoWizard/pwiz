@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:Small_Library-Positive-ions_CE-Merged.blib	6	1	8
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:Small_Library-Positive-ions_CE-Merged.blib	6	1	9
 id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
 1	N/A	285.0	1	N/A	-	-	1	52	0.0	0.0	0.0	0	9.013	N/A	N/A	Diazepam	C16H13ClN2O	[M+H]	N/A	cas:439-14-5	1	9	0.0	0

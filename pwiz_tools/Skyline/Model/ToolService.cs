@@ -64,8 +64,9 @@ namespace pwiz.Skyline.Model
         /// <returns>Report as a string.</returns>
         public string GetReport(string toolName, string reportName)
         {
-            string report = ToolDescriptionHelpers.GetReport(Program.MainWindow.Document, reportName, toolName, Program.MainWindow);
-            return report;
+            var report = new StringWriter();
+            ToolDescriptionHelpers.GetReport(Program.MainWindow.Document, reportName, toolName, Program.MainWindow, report);
+            return report.ToString();
         }
 
         public string GetReportFromDefinition(string reportDefinition)

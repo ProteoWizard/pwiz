@@ -22,8 +22,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using Microsoft.VisualBasic.FileIO;
 
 namespace MSStatArgsCollector
 {    
@@ -240,12 +242,25 @@ namespace MSStatArgsCollector
 
     public class MSstatsGroupComparisonCollector
     {
+        /// <summary>
+        /// This is the entry point that gets called by Skyline before Skyline calls the MSstats
+        /// R Script.
+        /// </summary>
         public static string[] CollectArgs(IWin32Window parent, string report, string[] oldArgs)
         {
+            return CollectArgsReader(parent, new StringReader(report), oldArgs);
+        }
+
+        /// <summary>
+        /// This entry point might be used future versions of Skyline in case the report text is too
+        /// large to fit in a string.
+        /// </summary>
+        public static string[] CollectArgsReader(IWin32Window parent, TextReader report, string[] oldArgs)
+        {
             const string conditionColumnName = "Condition"; // Not L10N
-            // Split report (.csv file) by lines
-            string[] lines = report.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-            string[] fields = lines[0].ParseCsvFields();
+            var parser = new TextFieldParser(report);
+            parser.SetDelimiters(",");
+            string[] fields = parser.ReadFields() ?? new string[0];
             int groupIndex = Array.IndexOf(fields, conditionColumnName);
             if (groupIndex < 0)
             {
@@ -257,18 +272,11 @@ namespace MSStatArgsCollector
 
             ICollection<string> groups = new HashSet<string>();
             // The last line in the CSV file is empty, thus we compare length - 1 
-            for (int i = 1; i < lines.Length - 1; i++)
+            string[] line;
+            while ((line = parser.ReadFields()) != null)
             {
-                try
-                {
-                    groups.Add(lines[i].ParseCsvFields()[groupIndex]);
-                }
-                catch
-                {
-                    // ignore
-                }
+                groups.Add(line[groupIndex]);
             }
-
             using (var dlg = new GroupComparisonUi(groups.ToArray(), oldArgs))
             {
                 var result = parent != null ? dlg.ShowDialog(parent) : dlg.ShowDialog();
