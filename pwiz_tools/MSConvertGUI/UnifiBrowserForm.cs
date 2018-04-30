@@ -68,6 +68,47 @@ namespace MSConvertGUI
             }
         }
 
+        public class UnifiResultSorter : ListViewColumnSorter
+        {
+            UnifiBrowserForm p;
+            public UnifiResultSorter(UnifiBrowserForm parent)
+            {
+                p = parent;
+            }
+            public override int Compare(object x, object y)
+            {
+                if (SortColumn < 0)
+                {
+                    ListViewItem lvX = x as ListViewItem;
+                    ListViewItem lvY = y as ListViewItem;
+                    int compareResult;
+                    
+                    compareResult = CompareSubItems(lvX, lvY, p.Analysis.Index);
+                    if (compareResult == 0)
+                    {
+                        compareResult = CompareSubItems(lvX, lvY, p.WellPosition.Index);
+                        if (compareResult == 0)
+                        {
+                            compareResult = CompareSubItems(lvX, lvY, p.SourceName.Index);
+                            if (compareResult == 0)
+                            {
+                                compareResult = CompareSubItems(lvX, lvY, p.Replicate.Index);
+                                return compareResult;
+                            }
+                            else
+                                return compareResult;
+                        }
+                        else
+                            return compareResult;
+                    }
+                    else
+                        return compareResult;
+                }
+                else
+                    return base.Compare(x, y);
+            }
+        }
+
         private string IdentityServerBasePath { get { return SelectedCredentials.IdentityServer + "/identity"; } }
         private string AuthorizeEndpoint { get { return IdentityServerBasePath + "/connect/authorize"; } }
         private string LogoutEndpoint { get { return IdentityServerBasePath + "/connect/endsession"; } }
@@ -99,12 +140,14 @@ namespace MSConvertGUI
             _nodeImages = treeViewImageList;
             FileTree.ImageList = _nodeImages;
 
+            DoubleBuffered = true;
+
             FolderViewList.LargeImageList = FolderViewList.SmallImageList = treeViewImageList;
             FolderViewList.Columns.Remove(SourceSize);
 
-            FolderViewList.ListViewItemSorter = _sorter = new ListViewColumnSorter();
+            FolderViewList.ListViewItemSorter = _sorter = new UnifiResultSorter(this);
             _sorter.Order = SortOrder.Ascending;
-            _sorter.SortColumn = 0;
+            _sorter.SortColumn = -1; // default to multi-column sort
 
             _httpClient = new HttpClient();
 
@@ -158,8 +201,8 @@ namespace MSConvertGUI
                     var parentId = (parentIdProperty as JValue).Value.ToString();
                     var parentNode = _nodeById[parentId];
                     _nodeById[id] = parentNode.Nodes.Add(id, System.IO.Path.GetFileName(path), 1);
-                    _nodeById[id].Tag = "folder";
                 }
+                _nodeById[id].Tag = "folder";
             }
         }
 
@@ -319,14 +362,23 @@ namespace MSConvertGUI
                     var id = item.Property("id").Value.ToString();
                     var created = item.Property("createdAt").Value.ToString();
 
+                    var sampleResult = GetJsonFromEndpoint(String.Format("/sampleresults({0})", id));
+                    var sample = sampleResult.Property("sample").Value as JObject;
+                    var replicate = sample.Property("replicateNumber").Value.ToString();
+                    var wellPosition = sample.Property("wellPosition").Value.ToString();
+                    var acquisitionStartTime = sample.Property("acquisitionStartTime").Value.ToString();
+                    name = sample.Property("name").Value.ToString();
+
                     JObject analysis = (GetJsonFromEndpoint(String.Format("/sampleresults({0})/analyses", id))["value"] as JArray).FirstOrDefault() as JObject;
                     string analysisName = "unknown";
                     if (analysis != null)
                         analysisName = analysis.Property("name").Value.ToString();
 
-                    FolderViewList.Items.Add(new ListViewItem(new string[] { name, analysisName, type, created }, 2) { Tag = String.Format("/sampleresults({0})", id) });
+                    FolderViewList.Items.Add(new ListViewItem(new string[] { type, analysisName, wellPosition, replicate, name, acquisitionStartTime, created }, 2) { Tag = String.Format("/sampleresults({0})", id) });
                 }
             }
+
+            FolderViewList.Sort();
         }
 
         private void FolderViewList_SelectedIndexChanged(object sender, EventArgs e)
