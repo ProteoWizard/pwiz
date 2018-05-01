@@ -64,6 +64,8 @@ namespace pwiz.Common.SystemUtil
         private static extern bool GetWindowRect(IntPtr hWnd, out RECT rc);
         [DllImport("user32.dll")]
         private static extern bool MoveWindow(IntPtr hWnd, int x, int y, int w, int h, bool repaint);
-        private struct RECT { public int Left; public int Top; public int Right; public int Bottom; } // ReSharper disable once UnassignedField.Compiler
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("ReSharper", "UnassignedField.Compiler")]
+        private struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
     }
 }
