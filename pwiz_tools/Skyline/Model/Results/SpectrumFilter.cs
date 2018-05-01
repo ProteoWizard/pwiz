@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.Results
         private double _minFilterPairsRT; // Min of range of RT filter values across FilterPairs 
         private double _maxFilterPairsRT; // Max of range of RT filter values across FilterPairs
         private readonly SpectrumFilterPair[] _filterMzValues;
-        private readonly Dictionary<double,SpectrumFilterPair[]> _filterMzValuesFAIMSDict; // FAIMS looks at CV as well as mz
+        private readonly Dictionary<double,SpectrumFilterPair[]> _filterMzValuesFAIMSDict; // FAIMS chromatogram extraction is a special case for non-contiguous scans
         private readonly SpectrumFilterPair[] _filterRTValues;
         private readonly ChromKey[] _productChromKeys;
         private int _retentionTimeIndex;
@@ -270,7 +270,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 _filterMzValues = dictPrecursorMzToFilter.Values.ToArray();
 
-                // For FAIMS data, we want to filter on CV as well as mz, so create convenient subsets of filters
+                // For FAIMS chromatogram extraction is a special case for non-contiguous scans, so create convenient subsets of filters
                 foreach (var cv in _filterMzValues.Where(f => f.HasIonMobilityFAIMS())
                     .Select(f => f.GetIonMobilityWindow(false).IonMobility.Mobility.Value).Distinct())
                 {

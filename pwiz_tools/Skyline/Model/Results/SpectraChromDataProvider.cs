@@ -283,6 +283,7 @@ namespace pwiz.Skyline.Model.Results
                     var dataSpectrum = _spectra.CurrentSpectrum;
                     var spectra = _spectra.CurrentSpectra;
 
+                    // FAIMS chromatogram extraction is a special case for non-contiguous scans
                     // Ignore this spectrum if FAIMS CV is not interesting
                     if (!_filter.PassesFilterFAIMS(dataSpectrum))
                     {

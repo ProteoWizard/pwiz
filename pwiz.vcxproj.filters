@@ -504,6 +504,7 @@
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefinerTest.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility_Test.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TimsData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libraries\boost_aux\boost\nowide\args.hpp" />
@@ -896,5 +897,6 @@
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_ScanSummer.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefiner.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TimsData.hpp" />
   </ItemGroup>
 </Project>
