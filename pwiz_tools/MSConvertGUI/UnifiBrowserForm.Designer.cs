@@ -54,9 +54,13 @@ namespace MSConvertGUI
             this.VertSplit = new System.Windows.Forms.SplitContainer();
             this.FileTree = new System.Windows.Forms.TreeView();
             this.FolderViewList = new System.Windows.Forms.ListView();
-            this.SourceName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.SourceSize = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.SourceType = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.Analysis = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.WellPosition = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.Replicate = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.SourceName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.AcquisitionStartTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.SourceSize = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.DateModified = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.labelSourcePath = new System.Windows.Forms.Label();
             this.serverLocationTextBox = new System.Windows.Forms.TextBox();
@@ -66,7 +70,6 @@ namespace MSConvertGUI
             this.sampleResultTextBox = new System.Windows.Forms.TextBox();
             this.connectButton = new System.Windows.Forms.Button();
             this.treeViewImageList = new System.Windows.Forms.ImageList(this.components);
-            this.Analysis = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             ((System.ComponentModel.ISupportInitialize)(this.VertSplit)).BeginInit();
             this.VertSplit.Panel1.SuspendLayout();
             this.VertSplit.Panel2.SuspendLayout();
@@ -88,8 +91,8 @@ namespace MSConvertGUI
             // VertSplit.Panel2
             // 
             this.VertSplit.Panel2.Controls.Add(this.FolderViewList);
-            this.VertSplit.Size = new System.Drawing.Size(919, 549);
-            this.VertSplit.SplitterDistance = 289;
+            this.VertSplit.Size = new System.Drawing.Size(1462, 549);
+            this.VertSplit.SplitterDistance = 334;
             this.VertSplit.TabIndex = 44;
             this.VertSplit.TabStop = false;
             // 
@@ -99,22 +102,26 @@ namespace MSConvertGUI
             this.FileTree.LabelEdit = true;
             this.FileTree.Location = new System.Drawing.Point(0, 0);
             this.FileTree.Name = "FileTree";
-            this.FileTree.Size = new System.Drawing.Size(289, 549);
+            this.FileTree.Size = new System.Drawing.Size(334, 549);
             this.FileTree.TabIndex = 33;
             this.FileTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.FileTree_AfterSelect);
             // 
             // FolderViewList
             // 
             this.FolderViewList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.SourceName,
-            this.Analysis,
-            this.SourceSize,
             this.SourceType,
+            this.Analysis,
+            this.WellPosition,
+            this.Replicate,
+            this.SourceName,
+            this.AcquisitionStartTime,
+            this.SourceSize,
             this.DateModified});
             this.FolderViewList.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.FolderViewList.FullRowSelect = true;
             this.FolderViewList.Location = new System.Drawing.Point(0, 0);
             this.FolderViewList.Name = "FolderViewList";
-            this.FolderViewList.Size = new System.Drawing.Size(626, 549);
+            this.FolderViewList.Size = new System.Drawing.Size(1124, 549);
             this.FolderViewList.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.FolderViewList.TabIndex = 24;
             this.FolderViewList.UseCompatibleStateImageBehavior = false;
@@ -123,19 +130,38 @@ namespace MSConvertGUI
             this.FolderViewList.SelectedIndexChanged += new System.EventHandler(this.FolderViewList_SelectedIndexChanged);
             this.FolderViewList.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.FolderViewList_MouseDoubleClick);
             // 
+            // SourceType
+            // 
+            this.SourceType.Text = "Type";
+            this.SourceType.Width = 80;
+            // 
+            // Analysis
+            // 
+            this.Analysis.Text = "Analysis";
+            this.Analysis.Width = 200;
+            // 
+            // WellPosition
+            // 
+            this.WellPosition.Text = "Well Position";
+            this.WellPosition.Width = 95;
+            // 
+            // Replicate
+            // 
+            this.Replicate.Text = "Replicate";
+            // 
             // SourceName
             // 
             this.SourceName.Text = "Name";
             this.SourceName.Width = 200;
             // 
+            // AcquisitionStartTime
+            // 
+            this.AcquisitionStartTime.Text = "Acquisition Start Time";
+            this.AcquisitionStartTime.Width = 130;
+            // 
             // SourceSize
             // 
             this.SourceSize.Text = "Size";
-            // 
-            // SourceType
-            // 
-            this.SourceType.Text = "Type";
-            this.SourceType.Width = 80;
             // 
             // DateModified
             // 
@@ -160,14 +186,14 @@ namespace MSConvertGUI
             this.serverLocationTextBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this.serverLocationTextBox.Location = new System.Drawing.Point(102, 5);
             this.serverLocationTextBox.Name = "serverLocationTextBox";
-            this.serverLocationTextBox.Size = new System.Drawing.Size(732, 20);
+            this.serverLocationTextBox.Size = new System.Drawing.Size(1275, 20);
             this.serverLocationTextBox.TabIndex = 45;
             // 
             // cancelButton
             // 
             this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cancelButton.Location = new System.Drawing.Point(865, 586);
+            this.cancelButton.Location = new System.Drawing.Point(1408, 586);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(66, 21);
             this.cancelButton.TabIndex = 50;
@@ -178,7 +204,7 @@ namespace MSConvertGUI
             // 
             this.openButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.openButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.openButton.Location = new System.Drawing.Point(793, 586);
+            this.openButton.Location = new System.Drawing.Point(1336, 586);
             this.openButton.Name = "openButton";
             this.openButton.Size = new System.Drawing.Size(66, 21);
             this.openButton.TabIndex = 49;
@@ -204,13 +230,13 @@ namespace MSConvertGUI
             this.sampleResultTextBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this.sampleResultTextBox.Location = new System.Drawing.Point(102, 586);
             this.sampleResultTextBox.Name = "sampleResultTextBox";
-            this.sampleResultTextBox.Size = new System.Drawing.Size(685, 20);
+            this.sampleResultTextBox.Size = new System.Drawing.Size(1228, 20);
             this.sampleResultTextBox.TabIndex = 47;
             // 
             // connectButton
             // 
             this.connectButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.connectButton.Location = new System.Drawing.Point(840, 5);
+            this.connectButton.Location = new System.Drawing.Point(1383, 5);
             this.connectButton.Name = "connectButton";
             this.connectButton.Size = new System.Drawing.Size(91, 21);
             this.connectButton.TabIndex = 51;
@@ -225,16 +251,11 @@ namespace MSConvertGUI
             this.treeViewImageList.Images.SetKeyName(1, "folder.png");
             this.treeViewImageList.Images.SetKeyName(2, "DataProcessing.png");
             // 
-            // Analysis
-            // 
-            this.Analysis.Text = "Analysis";
-            this.Analysis.Width = 200;
-            // 
             // UnifiBrowserForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(943, 618);
+            this.ClientSize = new System.Drawing.Size(1486, 618);
             this.Controls.Add(this.connectButton);
             this.Controls.Add(this.cancelButton);
             this.Controls.Add(this.openButton);
@@ -259,10 +280,7 @@ namespace MSConvertGUI
         private System.Windows.Forms.SplitContainer VertSplit;
         private System.Windows.Forms.TreeView FileTree;
         private System.Windows.Forms.ListView FolderViewList;
-        private System.Windows.Forms.ColumnHeader SourceName;
         private System.Windows.Forms.ColumnHeader SourceSize;
-        private System.Windows.Forms.ColumnHeader SourceType;
-        private System.Windows.Forms.ColumnHeader DateModified;
         private System.Windows.Forms.Label labelSourcePath;
         private System.Windows.Forms.TextBox serverLocationTextBox;
         private System.Windows.Forms.Button cancelButton;
@@ -271,7 +289,13 @@ namespace MSConvertGUI
         private System.Windows.Forms.TextBox sampleResultTextBox;
         private System.Windows.Forms.Button connectButton;
         private System.Windows.Forms.ImageList treeViewImageList;
-        private System.Windows.Forms.ColumnHeader Analysis;
+        internal System.Windows.Forms.ColumnHeader SourceName;
+        internal System.Windows.Forms.ColumnHeader SourceType;
+        internal System.Windows.Forms.ColumnHeader DateModified;
+        internal System.Windows.Forms.ColumnHeader WellPosition;
+        internal System.Windows.Forms.ColumnHeader Replicate;
+        internal System.Windows.Forms.ColumnHeader AcquisitionStartTime;
+        internal System.Windows.Forms.ColumnHeader Analysis;
 
     }
 }
