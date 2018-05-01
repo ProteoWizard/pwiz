@@ -1526,6 +1526,10 @@ namespace pwiz.Skyline.Model
             {
                 // Not a proper small molecule transition list, but was it trying to be one?
                 var header = csvText.Split('\n')[0];
+                if (header.ToLowerInvariant().Contains("peptide")) // Not L10N
+                {
+                    return false;
+                }
                 return new[]
                 {
                     // These are pretty basic, without overlap in peptide lists
