@@ -89,6 +89,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(editLibraryList, editLibraryList.OkDialog);
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
+            WaitForDocumentLoaded();
             Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0].UseExplicitPeakBounds);
 
             var manageResultsDialog = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);

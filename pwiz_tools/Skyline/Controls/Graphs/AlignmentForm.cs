@@ -440,7 +440,8 @@ namespace pwiz.Skyline.Controls.Graphs
             private static IDictionary<Target, double> GetFirstRetentionTimes(
                 SrmSettings settings, RetentionTimeSource retentionTimeSource)
             {
-                var libraryRetentionTimes = settings.GetRetentionTimes(MsDataFileUri.Parse(retentionTimeSource.Name));
+                var libraryRetentionTimes = settings.PeptideSettings.Libraries.IsLoaded ? 
+                    settings.GetRetentionTimes(MsDataFileUri.Parse(retentionTimeSource.Name)) : null;
                 if (null == libraryRetentionTimes)
                 {
                     return new Dictionary<Target, double>();
