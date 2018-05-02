@@ -31,7 +31,7 @@ ECHO
 #                           Default: "./libraries"
 #
 #   --boost-src=<DIR>       Find Boost source distribution here.
-#                           Default: "<libraries-path>/boost_*"
+#                           Default: "<libraries-path>/boost_*" 
 #
 #   --zlib-src=<DIR>        Find zlib source distribution here.
 #                           Default: "<libraries-path>/zlib-1.23.0"

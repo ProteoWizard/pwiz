@@ -34,9 +34,10 @@ templatePath = sys.argv[1]
 buildPath = sys.argv[2]
 installPath = sys.argv[3]
 version = sys.argv[4]
+numericVersion = sys.argv[5]
 
 installerSuffix = "-x86"
-if sys.argv[5] == "64":
+if sys.argv[6] == "64":
     installerSuffix = "-x86_64"
 
 # a unique ProductGuid every time allows multiple parallel installations of pwiz
@@ -83,6 +84,7 @@ wxsTemplate = wxsTemplate.replace("__CONTEXTMENU_REGISTRY__",contextMenuRegistri
 wxsTemplate = wxsTemplate.replace("__CONTEXTMENU_CHECKBOXEN__",contextMenuOptions())
 wxsTemplate = wxsTemplate.replace("{ProductGuid}", guid)
 wxsTemplate = wxsTemplate.replace("{version}", version)
+wxsTemplate = wxsTemplate.replace("{numeric-version}", numericVersion)
 wxsTemplate = wxsTemplate.replace("msvc-release", installPath)
 
 # delete old wxs and wixObj files
