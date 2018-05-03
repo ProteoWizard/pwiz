@@ -44,7 +44,6 @@ rule vendor-api-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ bruker-dll-location $(API_PATH) : $(properties) ] &&
        ! [ without-binary-msdata $(properties) ] &&
@@ -84,7 +83,6 @@ rule has-bruker-reader ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ bruker-dll-location $(API_PATH) : $(properties) ] &&
        ! [ without-binary-msdata $(properties) ] &&

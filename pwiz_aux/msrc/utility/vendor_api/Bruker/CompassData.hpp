@@ -26,7 +26,9 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/BinaryData.hpp"
 #include "pwiz/utility/misc/automation_vector.h"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 #include <string>
 #include <vector>
 #include <boost/smart_ptr.hpp>
@@ -205,6 +207,9 @@ struct PWIZ_API_DECL MSSpectrum
     virtual bool isIonMobilitySpectrum() const { return false; }
     virtual double oneOverK0() const { return 0.0; }
 
+    virtual void getCombinedSpectrumData(std::vector<double>& mz, std::vector<double>& intensities, std::vector<double>& mobilities) const { }
+    virtual pwiz::util::IntegerSet getMergedScanNumbers() const { return pwiz::util::IntegerSet(); }
+
     virtual MSSpectrumParameterListPtr parameters() const = 0;
 };
 
@@ -240,7 +245,7 @@ typedef boost::shared_ptr<LCSpectrum> LCSpectrumPtr;
 struct PWIZ_API_DECL CompassData
 {
     typedef boost::shared_ptr<CompassData> Ptr;
-    static Ptr create(const std::string& rawpath,
+    static Ptr create(const std::string& rawpath, bool combineIonMobilitySpectra = false,
                       msdata::detail::Bruker::Reader_Bruker_Format format = msdata::detail::Bruker::Reader_Bruker_Format_Unknown);
 
     virtual ~CompassData() {}

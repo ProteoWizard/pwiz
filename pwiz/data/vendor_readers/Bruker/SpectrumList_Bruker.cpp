@@ -55,9 +55,10 @@ PWIZ_API_DECL
 SpectrumList_Bruker::SpectrumList_Bruker(MSData& msd,
                                          const string& rootpath,
                                          Reader_Bruker_Format format,
-                                         CompassDataPtr compassDataPtr)
+                                         CompassDataPtr compassDataPtr,
+                                         const Reader::Config& config)
 :   msd_(msd), rootpath_(rootpath), format_(format),
-    compassDataPtr_(compassDataPtr),
+    compassDataPtr_(compassDataPtr), config_(config),
     size_(0)
 {
     fillSourceList();
@@ -150,7 +151,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
     result->id = si.id;
 
     // the scan element may be empty for MALDI spectra, but it's required for a valid file
-    result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
     scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
@@ -214,8 +214,40 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         if (scanTime > 0)
             scan.set(MS_scan_start_time, scanTime, UO_second);
 
+        pair<double, double> scanRange = spectrum->getScanRange();
+        if (scanRange.first > 0 && scanRange.second > 0)
+            scan.scanWindows.push_back(ScanWindow(scanRange.first, scanRange.second, MS_m_z));
+
         if (spectrum->isIonMobilitySpectrum())
             scan.set(MS_inverse_reduced_ion_mobility, spectrum->oneOverK0(), MS_Vs_cm_2);
+
+        IntegerSet scanNumbers = spectrum->getMergedScanNumbers();
+        if (config_.combineIonMobilitySpectra && scanNumbers.size() < 100)
+        {
+            using namespace boost::spirit::karma;
+            auto frameScanPair = compassDataPtr_->getFrameScanPair(si.scan);
+            generate(std::back_insert_iterator<std::string>(scan.spectrumID),
+                     "frame=" << int_ << " scan=" << int_,
+                     frameScanPair.first, *scanNumbers.begin());
+
+            vector<Scan>& scans = result->scanList.scans;
+            for (auto itr = ++scanNumbers.begin(); itr != scanNumbers.end(); ++itr)
+            {
+                scans.push_back(Scan());
+                generate(std::back_insert_iterator<std::string>(scans.back().spectrumID),
+                         "frame=" << int_ << " scan=" << int_,
+                         frameScanPair.first, *itr);
+
+                if (scanTime > 0)
+                    scans.back().set(MS_scan_start_time, scanTime, UO_second);
+
+                if (scanRange.first > 0 && scanRange.second > 0)
+                    scans.back().scanWindows.push_back(ScanWindow(scanRange.first, scanRange.second, MS_m_z));
+            }
+            result->scanList.set(MS_sum_of_spectra);
+        }
+        else
+            result->scanList.set(MS_no_combination);
 
         IonPolarity polarity = spectrum->getPolarity();
         switch (polarity)
@@ -243,10 +275,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
 
         //sd.set(MS_lowest_observed_m_z, minObservedMz);
         //sd.set(MS_highest_observed_m_z, maxObservedMz);
-
-        pair<double, double> scanRange = spectrum->getScanRange();
-        if (scanRange.first > 0 && scanRange.second > 0)
-            scan.scanWindows.push_back(ScanWindow(scanRange.first, scanRange.second, MS_m_z));
 
         if (msLevel > 1)
         {
@@ -328,29 +356,46 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             bool getLineData = msLevelsToCentroid.contains(msLevel);
 
             result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
-            automation_vector<double> mzArray, intensityArray;
 
-            if (!getLineData)
+            if (config_.combineIonMobilitySpectra)
             {
-                spectrum->getProfileData(mzArray, intensityArray);
-                if (mzArray.size() == 0)
-                    getLineData = true;  // We preferred profile, but there isn't any - try centroided
-                else
-                    result->set(MS_profile_spectrum);
+                auto& mz = result->getMZArray()->data;
+                auto& intensity = result->getIntensityArray()->data;
+
+                BinaryDataArrayPtr mobility(new BinaryDataArray);
+                result->binaryDataArrayPtrs.push_back(mobility);
+                CVParam arrayType(MS_mean_ion_mobility_array);
+                arrayType.units = MS_Vs_cm_2;
+                mobility->cvParams.emplace_back(arrayType);
+
+                spectrum->getCombinedSpectrumData(mz, intensity, mobility->data);
+                result->defaultArrayLength = mz.size();
             }
-
-            if (getLineData)
+            else
             {
-                result->set(MS_centroid_spectrum); // Declare this as centroided data even if scan is empty
-                spectrum->getLineData(mzArray, intensityArray);
-                if (mzArray.size() > 0 && msLevelsToCentroid.contains(msLevel))
+                automation_vector<double> mzArray, intensityArray;
+                if (!getLineData)
                 {
-                    result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was probably also a profile spectrum, but doesn't need conversion (actually checking for profile data is crazy slow)
+                    spectrum->getProfileData(mzArray, intensityArray);
+                    if (mzArray.size() == 0)
+                        getLineData = true;  // We preferred profile, but there isn't any - try centroided
+                    else
+                        result->set(MS_profile_spectrum);
                 }
+
+                if (getLineData)
+                {
+                    result->set(MS_centroid_spectrum); // Declare this as centroided data even if scan is empty
+                    spectrum->getLineData(mzArray, intensityArray);
+                    if (mzArray.size() > 0 && msLevelsToCentroid.contains(msLevel))
+                    {
+                        result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was probably also a profile spectrum, but doesn't need conversion (actually checking for profile data is crazy slow)
+                    }
+                }
+                result->getMZArray()->data.assign(mzArray.begin(), mzArray.end());
+                result->getIntensityArray()->data.assign(intensityArray.begin(), intensityArray.end());
+                result->defaultArrayLength = mzArray.size();
             }
-            result->getMZArray()->data.assign(mzArray.begin(), mzArray.end());
-            result->getIntensityArray()->data.assign(intensityArray.begin(), intensityArray.end());
-            result->defaultArrayLength = mzArray.size();
         }
         else if (detailLevel == DetailLevel_FullMetadata)
         {
@@ -582,9 +627,14 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
             si.scan = scan;
             auto frameScanPair = compassDataPtr_->getFrameScanPair(scan);
             std::back_insert_iterator<std::string> sink(si.id);
-            generate(sink,
-                     "frame=" << int_ << " scan=" << int_,
-                     frameScanPair.first, frameScanPair.second);
+            if (config_.combineIonMobilitySpectra)
+                generate(sink,
+                         "merged=" << int_,
+                         si.index);
+            else
+                generate(sink,
+                         "frame=" << int_ << " scan=" << int_,
+                         frameScanPair.first, frameScanPair.second);
             idToIndexTempMap[si.id] = si.index;
         }
     }

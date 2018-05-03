@@ -25,7 +25,6 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/utility/misc/BinaryData.hpp"
 #include "CompassData.hpp"
 #include <boost/optional.hpp>
 #include "timsdata_cpp.h"
@@ -42,9 +41,25 @@ namespace Bruker {
 
 typedef boost::shared_ptr<TimsBinaryData> TimsBinaryDataPtr;
 struct TimsSpectrum;
+struct TimsDataImpl;
+
+struct PasefPrecursorInfo
+{
+    int scanBegin, scanEnd; // scan end is inclusive
+    double oneOverK0; // average value from scanBegin to scanEnd
+    double isolationMz;
+    double isolationWidth;
+    double collisionEnergy;
+    double monoisotopicMz;
+    int charge;
+    double intensity;
+};
+typedef boost::shared_ptr<PasefPrecursorInfo> PasefPrecursorInfoPtr;
 
 struct PWIZ_API_DECL TimsFrame
 {
+
+
     TimsFrame(TimsBinaryDataPtr storage, int64_t frameId,
               int msLevel, double rt,
               double startMz, double endMz,
@@ -59,6 +74,7 @@ struct PWIZ_API_DECL TimsFrame
 
     private:
     friend struct TimsSpectrum;
+    friend struct TimsDataImpl;
     int64_t frameId_;
     int msLevel_;
     double rt_;
@@ -76,6 +92,8 @@ struct PWIZ_API_DECL TimsFrame
     optional<double> precursorMz_;
     int scanMode_;
 
+    vector<PasefPrecursorInfoPtr> pasef_precursor_info_;
+
     TimsBinaryDataPtr storage_;
     vector<double> oneOverK0_; // access by (scan number - 1)
 };
@@ -85,7 +103,7 @@ typedef boost::shared_ptr<TimsFrame> TimsFramePtr;
 
 struct PWIZ_API_DECL TimsSpectrum : public MSSpectrum
 {
-    TimsSpectrum(const TimsFramePtr& framePtr, int scanIndex);
+    TimsSpectrum(const TimsFramePtr& framePtr, int scanBegin, int scanEnd, PasefPrecursorInfoPtr pasefPrecursorInfoPtr = nullptr);
 
     virtual ~TimsSpectrum() {}
 
@@ -109,20 +127,23 @@ struct PWIZ_API_DECL TimsSpectrum : public MSSpectrum
     virtual int getChargeState() const;
     virtual double getIsolationWidth() const;
 
-    virtual bool isIonMobilitySpectrum() const { return true; }
-    virtual double oneOverK0() const { return framePtr_->oneOverK0_[scanIndex_]; }
+    virtual bool isIonMobilitySpectrum() const { return oneOverK0() > 0; }
+    virtual double oneOverK0() const;
 
-    void getCombinedSpectumData(util::BinaryData<double>& mz, util::BinaryData<double>& intensities, util::BinaryData<double>& mobilities) const;
+    void getCombinedSpectrumData(std::vector<double>& mz, std::vector<double>& intensities, std::vector<double>& mobilities) const;
+    virtual pwiz::util::IntegerSet getMergedScanNumbers() const;
 
-    int scanIndex() const { return scanIndex_; }
+    int scanBegin() const { return scanBegin_; }
+    int scanEnd() const { return scanEnd_; }
     TimsFramePtr framePtr() const { return framePtr_; }
 
     virtual MSSpectrumParameterListPtr parameters() const;
 
     private:
 
-    int scanIndex_;
+    int scanBegin_, scanEnd_; // 0-based index, scanEnd is inclusive (so for unmerged spectrum, begin==end)
     TimsFramePtr framePtr_;
+    PasefPrecursorInfoPtr pasefPrecursorInfoPtr_;
 };
 
 typedef boost::shared_ptr<TimsSpectrum> TimsSpectrumPtr;

@@ -667,14 +667,14 @@ struct CompassDataImpl : public CompassData
 };
 
 
-PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath,
+PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath, bool combineIonMobilitySpectra,
                                                  Reader_Bruker_Format format)
 {
     if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
         return CompassDataPtr(new Baf2SqlImpl(rawpath));
 #ifdef _WIN64
     else if (format == Reader_Bruker_Format_TDF)
-        return CompassDataPtr(new TimsDataImpl(rawpath, false));
+        return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra));
 #endif
 
     try {return CompassDataPtr(new CompassDataImpl(rawpath, format));} CATCH_AND_FORWARD
@@ -741,17 +741,17 @@ PWIZ_API_DECL const MSSpectrumParameter& MSSpectrumParameterIterator::dereferenc
 }
 
 
-PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath,
+PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath, bool combineIonMobilitySpectra,
                                                  Reader_Bruker_Format format)
 {
     if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
         return CompassDataPtr(new Baf2SqlImpl(rawpath));
 #ifdef _WIN64
     else if (format == Reader_Bruker_Format_TDF)
-        return CompassDataPtr(new TimsDataImpl(rawpath, false));
+        return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra));
 #endif
     else
-        throw runtime_error("[CompassData::create] Bruker API was built with only BAF support; YEP and FID files not supported in this build");
+        throw runtime_error("[CompassData::create] Bruker API was built with only BAF and TDF support; YEP and FID files not supported in this build");
 }
 
 

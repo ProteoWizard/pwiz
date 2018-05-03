@@ -181,7 +181,10 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         int numScans = row.get<int>(++idx);
         int numPeaks = row.get<int>(++idx);
         if (numPeaks == 0)
+        {
+            frames_.push_back(TimsFramePtr());
             continue;
+        }
 
         optional<uint64_t> parentId(row.get<optional<sqlite3_int64> >(++idx));
         optional<double> precursorMz(row.get<optional<double> >(++idx));
@@ -196,8 +199,70 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                                            polarity, scanMode, numScans,
                                            parentId, precursorMz,
                                            isolationWidth, precursorCharge));
-        for (int i=0; i < numScans; ++i)
-            spectra_.emplace_back(new TimsSpectrum(frames_.back(), i));
+        if (!combineIonMobilitySpectra)
+            for (int i = 0; i < numScans; ++i)
+                spectra_.emplace_back(new TimsSpectrum(frames_.back(), i, i));
+    }
+
+    try
+    {
+        vector<double> avgScanNumber(1), avgOneOverK0;
+        sqlite::query q(db, "SELECT Frame, ScanNumBegin, ScanNumEnd, IsolationMz, IsolationWidth, CollisionEnergy, MonoisotopicMz, Charge, ScanNumber, Intensity, Parent "
+                            "FROM PasefFrameMsMsInfo f, Precursors p where p.id=f.precursor");
+        for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
+        {
+            sqlite::query::rows row = *itr;
+            int idx = -1;
+            int64_t frameId = row.get<sqlite3_int64>(++idx);
+
+            if (!frames_[frameId - 1]) // numPeaks == 0, but sometimes still shows up in PasefFrameMsMsInfo!?
+                continue;
+
+            frames_[frameId - 1]->pasef_precursor_info_.emplace_back(new PasefPrecursorInfo);
+            PasefPrecursorInfo& info = *frames_[frameId - 1]->pasef_precursor_info_.back();
+
+            info.scanBegin = row.get<int>(++idx);
+            info.scanEnd = row.get<int>(++idx) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
+
+            info.isolationMz = row.get<double>(++idx);
+            info.isolationWidth = row.get<double>(++idx);
+            info.collisionEnergy = row.get<double>(++idx);
+            info.monoisotopicMz = row.get<double>(++idx);
+            info.charge = row.get<int>(++idx);
+            avgScanNumber[0] = row.get<double>(++idx);
+            info.intensity = row.get<double>(++idx);
+
+            tdfStorage_->scanNumToOneOverK0(frameId, avgScanNumber, avgOneOverK0);
+            info.oneOverK0 = avgOneOverK0[0];
+        }
+    }
+    catch (sqlite3pp::database_error&)
+    {
+        // ignore error if table not present
+    }
+
+    // when combining ion mobility spectra, spectra array is filled after querying PASEF info
+    if (combineIonMobilitySpectra)
+    {
+        for (const auto& frame : frames_)
+        {
+            if (!frame)
+                continue;
+
+            if (!frame->pasef_precursor_info_.empty())
+            {
+                // TODO: add PASEF information to spectra in non-combining mode
+                for (const auto& precursor : frame->pasef_precursor_info_)
+                {
+                    spectra_.emplace_back(new TimsSpectrum(frame, precursor->scanBegin, precursor->scanEnd, precursor));
+                }
+            }
+            else // MS1 or non-PASEF MS2
+            {
+                int scanIndex = spectra_.size();
+                spectra_.emplace_back(new TimsSpectrum(frame, 0, frame->numScans_ - 1));
+            }
+        }
     }
 }
 
@@ -210,7 +275,7 @@ MSSpectrumPtr TimsDataImpl::getMSSpectrum(int scan, DetailLevel detailLevel) con
 pair<size_t, size_t> TimsDataImpl::getFrameScanPair(int scan) const
 {
     const auto& s = spectra_[scan - 1];
-    return make_pair(s->framePtr()->frameId(), s->scanIndex()+1);
+    return make_pair(s->framePtr()->frameId(), s->scanBegin()+1);
 }
 
 size_t TimsDataImpl::getLCSourceCount() const { return 0; }
@@ -252,21 +317,21 @@ TimsFrame::TimsFrame(TimsBinaryDataPtr storage, int64_t frameId,
     storage_->scanNumToOneOverK0(frameId, scanNumbers, oneOverK0_);
 }
 
-TimsSpectrum::TimsSpectrum(const TimsFramePtr& framePtr, int scanIndex)
-    : framePtr_(framePtr), scanIndex_(scanIndex)
+TimsSpectrum::TimsSpectrum(const TimsFramePtr& framePtr, int scanBegin, int scanEnd, PasefPrecursorInfoPtr pasefPrecursorInfoPtr)
+    : framePtr_(framePtr), scanBegin_(scanBegin), scanEnd_(scanEnd), pasefPrecursorInfoPtr_(pasefPrecursorInfoPtr)
 {
 }
 
 bool TimsSpectrum::hasLineData() const { return getLineDataSize() > 0; }
 bool TimsSpectrum::hasProfileData() const { return false; }
-size_t TimsSpectrum::getLineDataSize() const { return framePtr_->storage_->readScans(framePtr_->frameId_, scanIndex_, scanIndex_ +1).getNbrPeaks(0); }
+size_t TimsSpectrum::getLineDataSize() const { return framePtr_->storage_->readScans(framePtr_->frameId_, scanBegin_, scanEnd_ + 1).getTotalNbrPeaks(); }
 size_t TimsSpectrum::getProfileDataSize() const { return 0; }
 
 void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const
 {
     const auto& frame = *framePtr_;
     auto& storage = *frame.storage_;
-    const auto& frameProxy = storage.readScans(frame.frameId_, scanIndex_, scanIndex_ + 1);
+    const auto& frameProxy = storage.readScans(frame.frameId_, scanBegin_, scanEnd_ + 1);
     auto mzIndices = frameProxy.getScanX(0);
     vector<double> mzIndicesAsDoubles(mzIndices.size());
     for (size_t i = 0; i < mzIndicesAsDoubles.size(); ++i)
@@ -288,9 +353,91 @@ void TimsSpectrum::getProfileData(automation_vector<double>& mz, automation_vect
     return;
 }
 
-void TimsSpectrum::getCombinedSpectumData(util::BinaryData<double>& mz, util::BinaryData<double>& intensities, util::BinaryData<double>& mobilities) const
+double TimsSpectrum::oneOverK0() const
 {
+    if (pasefPrecursorInfoPtr_) // combination mode must be on
+        return pasefPrecursorInfoPtr_->oneOverK0;
+    else if (scanBegin_ == scanEnd_)
+        return framePtr_->oneOverK0_[scanBegin_];
+    else
+        return 0; // no mobility value for non-PASEF merged spectra
+}
 
+namespace {
+    template<typename T>
+    struct SortByOther
+    {
+        const vector<T> & value_vector;
+
+        SortByOther(const vector<T> & val_vec) :
+            value_vector(val_vec) {}
+
+        bool operator()(int i1, int i2) const
+        {
+            return value_vector[i1] < value_vector[i2];
+        }
+    };
+}
+
+void TimsSpectrum::getCombinedSpectrumData(std::vector<double>& mz, std::vector<double>& intensities, std::vector<double>& mobilities) const
+{
+    const auto& frame = *framePtr_;
+    auto& storage = *frame.storage_;
+    
+    const auto& frameProxy = storage.readScans(frame.frameId_, scanBegin_, scanEnd_ + 1);
+    vector<double> mzIndicesAsDoubles;
+    mzIndicesAsDoubles.reserve(frameProxy.getTotalNbrPeaks());
+    for (int i = 0; i < scanEnd_ - scanBegin_; ++i)
+    {
+        auto mzIndices = frameProxy.getScanX(i);
+        for (size_t i = 0; i < mzIndices.size(); ++i)
+            mzIndicesAsDoubles.push_back(mzIndices[i]);
+    }
+    storage.indexToMz(frame.frameId_, mzIndicesAsDoubles, mz);
+
+    intensities.reserve(frameProxy.getTotalNbrPeaks());
+    for (int i = 0; i < scanEnd_ - scanBegin_; ++i)
+    {
+        auto intensityCounts = frameProxy.getScanY(i);
+        for (size_t i = 0; i < intensityCounts.size(); ++i)
+            intensities.push_back(intensityCounts[i]);
+    }
+
+    mzIndicesAsDoubles.clear();
+    for (int i = 0; i < frameProxy.getNbrScans(); ++i)
+        for (int j = 0; j < frameProxy.getNbrPeaks(i); ++j)
+            mzIndicesAsDoubles.push_back(scanBegin_ + i);
+    storage.scanNumToOneOverK0(frame.frameId_, mzIndicesAsDoubles, mobilities);
+    
+    // sort an array of indices by m/z; these indices are used to reorder all 3 arrays
+    vector<int> indices(mz.size());
+    for (int i = 0; i < mz.size(); ++i)
+        indices[i] = i;
+    std::sort(indices.begin(), indices.end(), SortByOther<double>(mz));
+    vector<double> mzTmp(mz.size()), intensityTmp(mz.size()), mobilityTmp(mz.size());
+    for (int i = 0; i < mz.size(); ++i)
+    {
+        mzTmp[i] = mz[indices[i]];
+        intensityTmp[i] = intensities[indices[i]];
+        mobilityTmp[i] = mobilities[indices[i]];
+    }
+    swap(mzTmp, mz);
+    swap(intensityTmp, intensities);
+    swap(mobilityTmp, mobilities);
+
+    // add jitter to identical m/z values (which come from different mobility bins)
+    for (size_t i = 1; i < mz.size(); ++i)
+        if (mz[i - 1] == mz[i])
+        {
+            size_t start_i = i - 1;
+            for (; i < mz.size() && mz[start_i] == mz[i]; ++i)
+                mz[i] += 1e-8 * (i-start_i);
+        }
+}
+
+IntegerSet TimsSpectrum::getMergedScanNumbers() const
+{
+    return IntegerSet(scanBegin_, scanEnd_);
 }
 
 int TimsSpectrum::getMSMSStage() const { return framePtr_->msLevel_; }
@@ -300,7 +447,13 @@ void TimsSpectrum::getIsolationData(std::vector<double>& isolatedMZs, std::vecto
 {
     isolatedMZs.clear();
     isolationModes.clear();
-    if (framePtr_->precursorMz_.is_initialized())
+
+    if (pasefPrecursorInfoPtr_)
+    {
+        isolatedMZs.resize(1, pasefPrecursorInfoPtr_->isolationMz);
+        isolationModes.resize(1, IsolationMode_On);
+    }
+    else if (framePtr_->precursorMz_.is_initialized())
     {
         isolatedMZs.resize(1, framePtr_->precursorMz_.get());
         isolationModes.resize(1, IsolationMode_On);
@@ -311,7 +464,14 @@ void TimsSpectrum::getFragmentationData(std::vector<double>& fragmentedMZs, std:
 {
     fragmentedMZs.clear();
     fragmentationModes.clear();
-    if (framePtr_->precursorMz_.is_initialized())
+
+    if (pasefPrecursorInfoPtr_)
+    {
+        double mz = pasefPrecursorInfoPtr_->monoisotopicMz > 0 ? pasefPrecursorInfoPtr_->monoisotopicMz : pasefPrecursorInfoPtr_->isolationMz;
+        fragmentedMZs.resize(1, mz);
+        fragmentationModes.resize(1, translateScanMode(framePtr_->scanMode_));
+    }
+    else if (framePtr_->precursorMz_.is_initialized())
     {
         fragmentedMZs.resize(1, framePtr_->precursorMz_.get());
         fragmentationModes.resize(1, translateScanMode(framePtr_->scanMode_));
@@ -327,12 +487,18 @@ std::pair<double, double> TimsSpectrum::getScanRange() const
 
 int TimsSpectrum::getChargeState() const
 {
-    return framePtr_->chargeState_.get_value_or(0);
+    if (pasefPrecursorInfoPtr_)
+        return pasefPrecursorInfoPtr_->charge;
+    else
+        return framePtr_->chargeState_.get_value_or(0);
 }
 
 double TimsSpectrum::getIsolationWidth() const
 {
-    return framePtr_->isolationWidth_.get_value_or(0);
+    if (pasefPrecursorInfoPtr_)
+        return pasefPrecursorInfoPtr_->isolationWidth;
+    else
+        return framePtr_->isolationWidth_.get_value_or(0);
 }
 
 
