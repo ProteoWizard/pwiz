@@ -11,7 +11,7 @@ namespace pwiz.Common.SystemUtil
 {
     public class CenterWinDialog : IDisposable
     {
-        private int mTries = 0;
+        private int mTries;
         private Form mOwner;
 
         public CenterWinDialog(Form owner)
@@ -24,7 +24,7 @@ namespace pwiz.Common.SystemUtil
         {
             // Enumerate windows to find the message box
             if (mTries < 0) return;
-            EnumThreadWndProc callback = new EnumThreadWndProc(checkWindow);
+            EnumThreadWndProc callback = checkWindow;
             if (EnumThreadWindows(GetCurrentThreadId(), callback, IntPtr.Zero))
             {
                 if (++mTries < 10) mOwner.BeginInvoke(new MethodInvoker(findDialog));
@@ -35,7 +35,7 @@ namespace pwiz.Common.SystemUtil
             // Checks if <hWnd> is a dialog
             StringBuilder sb = new StringBuilder(260);
             GetClassName(hWnd, sb, sb.Capacity);
-            if (sb.ToString() != "#32770") return true;
+            if (sb.ToString() != "#32770") return true; // Not L10N
             // Got it
             Rectangle frmRect = new Rectangle(mOwner.Location, mOwner.Size);
             RECT dlgRect;
@@ -64,6 +64,8 @@ namespace pwiz.Common.SystemUtil
         private static extern bool GetWindowRect(IntPtr hWnd, out RECT rc);
         [DllImport("user32.dll")]
         private static extern bool MoveWindow(IntPtr hWnd, int x, int y, int w, int h, bool repaint);
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("ReSharper", "UnassignedField.Compiler")]
         private struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
     }
 }
