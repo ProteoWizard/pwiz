@@ -8922,7 +8922,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
     <value>Error on line {0}, column{1}: {2}</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_" xml:space="preserve">
-    <value>Error reading column headers, did not recognize:
+    <value>Error reading small molecule column headers, did not recognize:
 {0}
 Supported values include:
 {1}</value>

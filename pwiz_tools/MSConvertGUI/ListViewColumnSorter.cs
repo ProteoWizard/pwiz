@@ -26,35 +26,11 @@ namespace MSConvertGUI
             ObjectCompare = new CaseInsensitiveComparer();
         }
 
-        public int Compare( object x, object y )
+        public virtual int Compare( object x, object y )
         {
-            int compareResult;
             ListViewItem listviewX = x as ListViewItem;
             ListViewItem listviewY = y as ListViewItem;
-
-            string xText = listviewX.SubItems[ColumnToSort].Text;
-            string yText = listviewY.SubItems[ColumnToSort].Text;
-
-            // Try to compare the tags
-            if( listviewX.SubItems[ColumnToSort].Tag is IComparable &&
-                listviewY.SubItems[ColumnToSort].Tag is IComparable )
-            {
-                IComparable xd = (IComparable) listviewX.SubItems[ColumnToSort].Tag;
-                IComparable yd = (IComparable) listviewY.SubItems[ColumnToSort].Tag;
-                compareResult = xd.CompareTo( yd );
-            } else
-            {
-                // Try to compare the items as numeric
-                decimal xd, yd;
-                if( Decimal.TryParse( xText, out xd ) && Decimal.TryParse( yText, out yd ) )
-                {
-                    compareResult = xd.CompareTo( yd );
-                } else
-                {
-                    // compare the items as strings
-                    compareResult = xText.CompareTo( yText );
-                }
-            }
+            int compareResult = CompareSubItems(listviewX, listviewY, ColumnToSort);
 
             // Calculate the correct return value based on the object comparison.
             if( OrderOfSort == SortOrder.Ascending )
@@ -78,6 +54,40 @@ namespace MSConvertGUI
         {
             set { OrderOfSort = value; }
             get { return OrderOfSort; }
+        }
+        
+        protected int CompareSubItems(ListViewItem x, ListViewItem y, string key)
+        {
+            return CompareSubItems(x, y, x.ListView.Columns[key].Index);
+        }
+
+        protected int CompareSubItems(ListViewItem x, ListViewItem y, int columnToSort)
+        {
+            string xText = x.SubItems[columnToSort].Text;
+            string yText = y.SubItems[columnToSort].Text;
+
+            // Try to compare the tags
+            if (x.SubItems[columnToSort].Tag is IComparable &&
+                y.SubItems[columnToSort].Tag is IComparable)
+            {
+                IComparable xd = (IComparable)x.SubItems[columnToSort].Tag;
+                IComparable yd = (IComparable)y.SubItems[columnToSort].Tag;
+                return xd.CompareTo(yd);
+            }
+            else
+            {
+                // Try to compare the items as numeric
+                decimal xd, yd;
+                if (Decimal.TryParse(xText, out xd) && Decimal.TryParse(yText, out yd))
+                {
+                    return xd.CompareTo(yd);
+                }
+                else
+                {
+                    // compare the items as strings
+                    return xText.CompareTo(yText);
+                }
+            }
         }
     }
 }

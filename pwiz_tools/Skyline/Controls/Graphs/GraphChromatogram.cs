@@ -1138,7 +1138,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var chromGroupInfo = ChromGroupInfos[0];
             var fileId = chromatograms.FindFile(chromGroupInfo);
 
-            var nodeGroup = _nodeGroups != null ? _nodeGroups[0] : null;
+            var nodeGroup = _nodeGroups != null ? _nodeGroups.FirstOrDefault() : null;
             if (nodeGroup == null)
                 nodeTranSelected = null;
             var info = chromGroupInfo.GetTransitionInfo(new SignedMz(0, nodeGroup != null && nodeGroup.PrecursorCharge < 0), 0, TransformChrom.raw);

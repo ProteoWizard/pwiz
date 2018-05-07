@@ -188,7 +188,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 var newFilters = ViewSpec.Filters.ToArray();
                 var filterInfo = ViewInfo.Filters[e.RowIndex];
-                var filterPredicate = FilterPredicate.CreateFilterPredicate(
+                var filterPredicate = SafeCreateFilterPredicate(
                     filterInfo.ColumnDescriptor.DataSchema,
                     filterInfo.ColumnDescriptor.PropertyType,
                     FilterOperationFromDisplayName(
@@ -196,6 +196,19 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     dataGridViewFilter.Rows[e.RowIndex].Cells[colFilterOperand.Index].Value as string);
                 newFilters[e.RowIndex] = new FilterSpec(filterInfo.ColumnDescriptor.PropertyPath, filterPredicate);
                 ViewSpec = ViewSpec.SetFilters(newFilters);
+            }
+        }
+
+        private FilterPredicate SafeCreateFilterPredicate(DataSchema dataSchema, Type columnType,
+            IFilterOperation filterOperation, string operand)
+        {
+            try
+            {
+                return FilterPredicate.CreateFilterPredicate(dataSchema, columnType, filterOperation, operand);
+            }
+            catch
+            {
+                return FilterPredicate.CreateFilterPredicate(dataSchema, typeof(string), filterOperation, operand);
             }
         }
 
