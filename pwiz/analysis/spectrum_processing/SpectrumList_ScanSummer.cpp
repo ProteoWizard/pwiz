@@ -167,11 +167,11 @@ void SpectrumList_ScanSummer::sumSubScansNaive( vector<double> & x, vector<doubl
         binnedIntensity.push_back(summedIntensity[0]);
         for (size_t i = 1; i < summedMZ.size(); ++i)
         {
-            if (fabs(binnedMZ.back() - summedMZ[i]) < 1e-7)
+            if (fabs(binnedMZ.back() - summedMZ[i]) < 1e-6)
             {
-                size_t start_i = i - 1;
-                for (; i < summedMZ.size() && fabs(binnedMZ.back() - summedMZ[i]) < 1e-7; ++i)
+                for (; i < summedMZ.size() && fabs(binnedMZ.back() - summedMZ[i]) < 1e-6; ++i)
                     binnedIntensity.back() += summedIntensity[i];
+                --i;
             }
             else
             {
@@ -195,22 +195,14 @@ void SpectrumList_ScanSummer::sumSubScansNaive( vector<double> & x, vector<doubl
         {
             // check if this m/z point was recorded from a previous sub-scan
             vector<double>::iterator pIonIt;
-            pIonIt = lower_bound(summedMZ.begin(),summedMZ.end(),subMz[j]); // first element that is greater than or equal to subMz[j]
+            pIonIt = lower_bound(summedMZ.begin(), summedMZ.end(), subMz[j] - 1e-2); // first element that is greater than or equal to subMz[j]
             int indexMZ = pIonIt - summedMZ.begin();
             if (pIonIt == summedMZ.end()) // first check if mzs[j] is outside search range
             {
-                if ( !summedMZ.empty() && subMz[j] > summedMZ[indexMZ-1] ) // insert at back
-                {
-                    summedMZ.push_back(subMz[j]);
-                    summedIntensity.push_back(subIntensity[j]);
-                }
-                else // insert at front
-                {
-                    summedMZ.insert(summedMZ.begin(),subMz[j]);
-                    summedIntensity.insert(summedIntensity.begin(),subIntensity[j]);
-                }
+                summedMZ.push_back(subMz[j]);
+                summedIntensity.push_back(subIntensity[j]);
             }
-            else if (*pIonIt != subMz[j]) // if the closest value is not equal to mzs[i], start a new m/z point
+            else if (fabs(*pIonIt - subMz[j]) > 1e-2) // if the closest value is not equal to mzs[i], start a new m/z point
             {
                 summedMZ.insert(pIonIt,subMz[j]);
                 summedIntensity.insert(summedIntensity.begin()+indexMZ,subIntensity[j]);
