@@ -160,6 +160,9 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     /// returns true if the source has LC spectra or traces
     virtual bool hasLCData() const;
 
+    /// returns true if the source is TIMS PASEF data
+    virtual bool hasPASEFData() const;
+
     /// returns the number of spectra available from the MS source
     virtual size_t getMSSpectrumCount() const;
 
@@ -203,6 +206,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     std::string acquisitionDateTime_;
     std::string operatorName_;
     bool combineSpectra_;
+    bool hasPASEFData_;
 };
 
 

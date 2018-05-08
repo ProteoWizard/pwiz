@@ -256,6 +256,9 @@ struct PWIZ_API_DECL CompassData
     /// returns true if the source has LC spectra or traces
     virtual bool hasLCData() const = 0;
 
+    /// returns true if the source is TIMS PASEF data
+    virtual bool hasPASEFData() const { return false; }
+
     /// returns the number of spectra available from the MS source
     virtual size_t getMSSpectrumCount() const = 0;
 

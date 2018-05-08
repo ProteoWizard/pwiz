@@ -665,6 +665,11 @@ PWIZ_API_DECL bool SpectrumList_Bruker::hasIonMobility() const
     return format_ == Reader_Bruker_Format_TDF;
 }
 
+PWIZ_API_DECL bool SpectrumList_Bruker::hasPASEF() const
+{
+    return compassDataPtr_->hasPASEFData();
+}
+
 PWIZ_API_DECL bool SpectrumList_Bruker::canConvertInverseK0AndCCS() const
 {
     return format_ == Reader_Bruker_Format_TDF;

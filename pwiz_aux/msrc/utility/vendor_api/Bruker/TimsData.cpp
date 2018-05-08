@@ -118,7 +118,8 @@ namespace Bruker {
 TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra)
     : tdfFilepath_((bfs::path(rawpath) / "analysis.tdf").string()),
       tdfStorage_(new TimsBinaryData(rawpath)),
-      combineSpectra_(combineIonMobilitySpectra)
+      combineSpectra_(combineIonMobilitySpectra),
+      hasPASEFData_(false)
 {
     sqlite::database db(tdfFilepath_);
 
@@ -235,6 +236,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
             tdfStorage_->scanNumToOneOverK0(frameId, avgScanNumber, avgOneOverK0);
             info.oneOverK0 = avgOneOverK0[0];
         }
+        hasPASEFData_ = true;
     }
     catch (sqlite3pp::database_error&)
     {
@@ -269,6 +271,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
 bool TimsDataImpl::hasMSData() const { return true; }
 bool TimsDataImpl::hasLCData() const { return false; }
+bool TimsDataImpl::hasPASEFData() const { return hasPASEFData_; }
 size_t TimsDataImpl::getMSSpectrumCount() const { return spectra_.size(); }
 MSSpectrumPtr TimsDataImpl::getMSSpectrum(int scan, DetailLevel detailLevel) const { return spectra_[scan - 1]; }
 
