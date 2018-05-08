@@ -83,8 +83,16 @@ namespace pwiz.Common.DataBinding
 
         public string GetOperandDisplayText(DataSchema dataSchema, Type propertyType)
         {
-            object operand = GetOperandValue(dataSchema, propertyType);
-            return (string) Convert.ChangeType(operand, typeof (string), dataSchema.DataSchemaLocalizer.FormatProvider);
+            try
+            {
+                object operand = GetOperandValue(dataSchema, propertyType);
+                return (string) Convert.ChangeType(operand, typeof(string),
+                    dataSchema.DataSchemaLocalizer.FormatProvider);
+            }
+            catch (Exception)
+            {
+                return InvariantOperandText;
+            }
         }
 
         private static object ParseOperandValue(CultureInfo cultureInfo, Type type, string operandValue)

@@ -1129,6 +1129,10 @@ namespace pwiz.Skyline.Model.Lib
         // ReSharper disable PossibleMultipleEnumeration
         protected int FindFileInList(MsDataFileUri sourceFile, IEnumerable<string> fileNames)
         {
+            if (fileNames == null)
+            {
+                return -1;
+            }
             string sourceFileToString = sourceFile.ToString();
             int iFile = 0;
             foreach (var fileName in fileNames)

@@ -26012,7 +26012,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error reading column headers, did not recognize:
+        ///   Looks up a localized string similar to Error reading small molecule column headers, did not recognize:
         ///{0}
         ///Supported values include:
         ///{1}.
