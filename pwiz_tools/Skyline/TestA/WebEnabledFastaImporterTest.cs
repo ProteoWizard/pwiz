@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteomeDatabase.DataModel;
 using pwiz.ProteomeDatabase.Fasta;
@@ -84,6 +85,7 @@ namespace pwiz.SkylineTestA
             List<DbProtein> proteins = new List<DbProtein>();
             proteins.AddRange(importer.Import(new StringReader(STR_VALID_FASTA)));
             Assert.AreEqual(3, proteins.Count);
+            Assert.IsTrue(proteins.TrueForAll(p => !string.IsNullOrEmpty(p.Names.ToArray()[0].Gene))); // Test with and without OX= syntax
         }
 
         private const string STR_INVALID_FASTA =
@@ -119,7 +121,7 @@ SALGIAWASNWEYSAFVPTNPWRSSMSLVRKFSLNTEYQANPETELINLKAEPILNISNA
 GPWSRFATNTTLTKANSYNVDLSNSTGTLEFELVYAVNTTQTISKSVFADLSLWFKGLED
 PEEYLRMGFEVSASSFFLDRGNSKVKFVKENPYFTNRMSVNNQPFKSENDLSYYKVYGLL
 DQNILELYFNDGDVVSTNTYFMTTGNALGSVNMTTGVDNLFYIDKFQVREVK
->sp|P10144|GRAB_HUMAN Granzyme B OS=Homo sapiens GN=GZMB PE=1 SV=2
+>sp|P10144|GRAB_HUMAN Granzyme B OS=Homo sapiens OX=9606 GN=GZMB PE=1 SV=2
 MQPILLLLAFLLLPRADAGEIIGGHEAKPHSRPYMAYLMIWDQKSLKRCGGFLIRDDFVL
 TAAHCWGSSINVTLGAHNIKEQEPTQQFIPVKRPIPHPAYNPKNFSNDIMLLQLERKAKR
 TRAVQPLRLPSNKAQVKPGQTCSVAGWGQTAPLGKHSHTLQEVKMTVQEDRKCESDLRHY
