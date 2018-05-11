@@ -46,7 +46,7 @@ struct TimsDataImpl;
 struct PasefPrecursorInfo
 {
     int scanBegin, scanEnd; // scan end is inclusive
-    double oneOverK0; // average value from scanBegin to scanEnd
+    double avgScanNumber; // average value from Precursors table
     double isolationMz;
     double isolationWidth;
     double collisionEnergy;
@@ -143,6 +143,7 @@ struct PWIZ_API_DECL TimsSpectrum : public MSSpectrum
 
     int scanBegin_, scanEnd_; // 0-based index, scanEnd is inclusive (so for unmerged spectrum, begin==end)
     TimsFramePtr framePtr_;
+    TimsFrame& frame_;
     PasefPrecursorInfoPtr pasefPrecursorInfoPtr_;
 };
 
