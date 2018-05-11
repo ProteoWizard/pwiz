@@ -49,6 +49,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Util.Extensions;
 
@@ -1093,16 +1094,16 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSetting]
-        public ChorusAccountList ChorusAccountList
+        public RemoteAccountList RemoteAccountList
         {
             get 
             { 
-                var list = (ChorusAccountList) this["ChorusAccountList"]; // Not L10N
+                var list = (RemoteAccountList) this["ChorusAccountList"]; // Not L10N
                 if (list == null)
                 {
-                    list = new ChorusAccountList();
+                    list = new RemoteAccountList();
                     list.AddDefaults();
-                    ChorusAccountList = list;
+                    RemoteAccountList = list;
                 }
                 return list;
             }

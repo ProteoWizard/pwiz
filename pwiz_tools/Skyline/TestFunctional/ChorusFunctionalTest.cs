@@ -21,6 +21,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
@@ -34,7 +35,7 @@ namespace pwiz.SkylineTestFunctional
         public void TestChorus()
         {
             Settings.Default.EnableChorus = true;
-            Settings.Default.ChorusAccountList.Clear();
+            Settings.Default.RemoteAccountList.Clear();
             TestFilesZip = @"TestFunctional\ChorusFunctionalTest.zip";
             RunFunctionalTest();
         }

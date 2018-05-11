@@ -24,6 +24,7 @@ using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
@@ -35,7 +36,7 @@ namespace pwiz.Skyline.ToolsUI
     public partial class ToolOptionsUI : FormEx
     {
         private readonly SettingsListBoxDriver<Server> _driverServers;
-        private readonly SettingsListBoxDriver<ChorusAccount> _driverChorusAccounts;
+        private readonly SettingsListBoxDriver<RemoteAccount> _driverChorusAccounts;
         private readonly SettingsListComboDriver<ColorScheme> _driverColorSchemes;
 
         public ToolOptionsUI()
@@ -47,7 +48,7 @@ namespace pwiz.Skyline.ToolsUI
 
             _driverServers = new SettingsListBoxDriver<Server>(listboxServers, Settings.Default.ServerList);
             _driverServers.LoadList();
-            _driverChorusAccounts = new SettingsListBoxDriver<ChorusAccount>(listBoxChorusAccounts, Settings.Default.ChorusAccountList);
+            _driverChorusAccounts = new SettingsListBoxDriver<RemoteAccount>(listBoxChorusAccounts, Settings.Default.RemoteAccountList);
             _driverChorusAccounts.LoadList();
             _driverColorSchemes = new SettingsListComboDriver<ColorScheme>(comboColorScheme, Settings.Default.ColorSchemes, true);
             _driverColorSchemes.LoadList(Settings.Default.CurrentColorScheme);

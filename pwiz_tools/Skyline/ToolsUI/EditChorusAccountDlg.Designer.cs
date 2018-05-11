@@ -38,6 +38,8 @@
             this.lblUsername = new System.Windows.Forms.Label();
             this.textUsername = new System.Windows.Forms.TextBox();
             this.btnTest = new System.Windows.Forms.Button();
+            this.comboAccountType = new System.Windows.Forms.ComboBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // lblServerUrl
@@ -92,12 +94,25 @@
             this.btnTest.UseVisualStyleBackColor = true;
             this.btnTest.Click += new System.EventHandler(this.btnTest_Click);
             // 
+            // comboAccountType
+            // 
+            this.comboAccountType.FormattingEnabled = true;
+            resources.ApplyResources(this.comboAccountType, "comboAccountType");
+            this.comboAccountType.Name = "comboAccountType";
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.Name = "label1";
+            // 
             // EditChorusAccountDlg
             // 
             this.AcceptButton = this.btnOK;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.comboAccountType);
             this.Controls.Add(this.btnTest);
             this.Controls.Add(this.lblServerUrl);
             this.Controls.Add(this.btnCancel);
@@ -128,5 +143,7 @@
         private System.Windows.Forms.Label lblUsername;
         internal System.Windows.Forms.TextBox textUsername;
         private System.Windows.Forms.Button btnTest;
+        private System.Windows.Forms.ComboBox comboAccountType;
+        private System.Windows.Forms.Label label1;
     }
 }

@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
@@ -31,26 +30,30 @@ namespace pwiz.Skyline.ToolsUI
 {
     public partial class EditChorusAccountDlg : FormEx
     {
-        private readonly ChorusAccount _originalAccount;
-        private readonly IList<ChorusAccount> _existing;
-        public EditChorusAccountDlg(ChorusAccount chorusAccount, IEnumerable<ChorusAccount> existing)
+        private readonly RemoteAccount _originalAccount;
+        private readonly IList<RemoteAccount> _existing;
+        public EditChorusAccountDlg(RemoteAccount chorusAccount, IEnumerable<RemoteAccount> existing)
         {
             InitializeComponent();
             _existing = ImmutableList.ValueOf(existing);
             _originalAccount = chorusAccount;
+            comboAccountType.Items.AddRange(RemoteAccountType.ALL.ToArray());
             SetChorusAccount(chorusAccount);
         }
 
-        public void SetChorusAccount(ChorusAccount chorusAccount)
+        public void SetChorusAccount(RemoteAccount chorusAccount)
         {
+            comboAccountType.SelectedIndex = RemoteAccountType.ALL.IndexOf(chorusAccount.AccountType);
             textUsername.Text = chorusAccount.Username;
             textPassword.Text = chorusAccount.Password;
             textServerURL.Text = chorusAccount.ServerUrl;
         }
 
-        public ChorusAccount GetChorusAccount()
+        public RemoteAccount GetChorusAccount()
         {
-            return new ChorusAccount(textServerURL.Text.Trim(), textUsername.Text.Trim(), textPassword.Text);
+            var accountType = (RemoteAccountType) comboAccountType.SelectedItem;
+            return accountType.GetEmptyAccount().ChangeServerUrl(textServerURL.Text.Trim())
+                .ChangeUsername(textUsername.Text.Trim()).ChangePassword(textPassword.Text);
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -78,8 +81,9 @@ namespace pwiz.Skyline.ToolsUI
             {
                 return false;
             }
+#if false
             ChorusAccount chorusAccount = GetChorusAccount();
-            ChorusSession chorusSession = new ChorusSession();
+            ChorusSession chorusSession = new ChorusSession(chorusAccount);
             try
             {
                 CookieContainer cookieContainer = new CookieContainer();
@@ -89,7 +93,7 @@ namespace pwiz.Skyline.ToolsUI
                     MessageDlg.Show(this, Resources.EditChorusAccountDlg_TestSettings_Settings_are_correct);
                     return true;
                 }
-                catch (ChorusServerException chorusException)
+                catch (RemoteServerException chorusException)
                 {
                     MessageDlg.ShowException(this, chorusException);
                     textPassword.Focus();
@@ -102,6 +106,8 @@ namespace pwiz.Skyline.ToolsUI
                 textServerURL.Focus();
                 return false;
             }
+#endif
+            return true;
         }
 
         private bool ValidateValues()

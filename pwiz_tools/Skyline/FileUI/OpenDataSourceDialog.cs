@@ -27,6 +27,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -39,15 +40,16 @@ namespace pwiz.Skyline.FileUI
         private readonly Stack<MsDataFileUri> _previousDirectories = new Stack<MsDataFileUri>();
         private readonly int _specialFolderCount;
         private readonly int _myComputerIndex;
-        private readonly int _chorusIndex;
-        private ChorusSession _chorusSession;
-        private readonly ChorusAccountList _chorusAccounts;
+        private readonly int _remoteIndex;
+        private RemoteSession _remoteSession;
+        private RemoteAccount _remoteAccount;
+        private readonly IList<RemoteAccount> _remoteAccounts;
         private bool _waitingForData;
 
-        public OpenDataSourceDialog(ChorusAccountList chorusAccounts)
+        public OpenDataSourceDialog(IEnumerable<RemoteAccount> remoteAccounts)
         {
             InitializeComponent();
-            _chorusAccounts = chorusAccounts;
+            _remoteAccounts = remoteAccounts.ToArray();
 
             listView.ListViewItemSorter = _listViewColumnSorter;
 
@@ -77,27 +79,15 @@ namespace pwiz.Skyline.FileUI
             listView.LargeImageList = imageList;
 
             TreeView tv = new TreeView { Indent = 8 };
-            if (Settings.Default.EnableChorus)
-            {
-                _chorusIndex = lookInComboBox.Items.Count;
-                TreeNode chorusNode = tv.Nodes.Add("Chorus", // Not L10N
-                    Resources.OpenDataSourceDialog_OpenDataSourceDialog_Chorus_Project, (int) ImageIndex.Chorus,
-                    (int) ImageIndex.Chorus);
-                chorusNode.Tag = ChorusUrl.EMPTY;
-                lookInComboBox.Items.Add(chorusNode);
-                chorusButton.Visible = true;
-                recentDocumentsButton.Visible = false;
-            }
-            else
-            {
-                _chorusIndex = -1;
-                TreeNode recentDocumentsNode = tv.Nodes.Add("My Recent Documents", // Not L10N
-                    Resources.OpenDataSourceDialog_OpenDataSourceDialog_My_Recent_Documents, 0, 0);
-                recentDocumentsNode.Tag = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.Recent));
-                lookInComboBox.Items.Add(recentDocumentsNode);
-                chorusButton.Visible = false;
-                recentDocumentsButton.Visible = true;
-            }
+            _remoteIndex = lookInComboBox.Items.Count;
+            TreeNode unifiNode = tv.Nodes.Add("Remote", // Not L10N
+                Resources.OpenDataSourceDialog_OpenDataSourceDialog_Chorus_Project, (int) ImageIndex.Remote,
+                (int) ImageIndex.Remote);
+            unifiNode.Tag = RemoteUrl.EMPTY;
+            lookInComboBox.Items.Add(unifiNode);
+            chorusButton.Visible = true;
+            recentDocumentsButton.Visible = false;
+
             TreeNode desktopNode = tv.Nodes.Add("Desktop",  // Not L10N
                 Resources.OpenDataSourceDialog_OpenDataSourceDialog_Desktop, (int) ImageIndex.Desktop, (int) ImageIndex.Desktop );
             desktopNode.Tag = new MsDataFilePath(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory));
@@ -135,10 +125,7 @@ namespace pwiz.Skyline.FileUI
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             base.OnFormClosed(e);
-            if (null != _chorusSession)
-            {
-                _chorusSession.Abort();
-            }
+            RemoteSession = null;
         }
 
         private MsDataFileUri _currentDirectory;
@@ -147,18 +134,18 @@ namespace pwiz.Skyline.FileUI
             get { return _currentDirectory; }
             set
             {
-                if (Equals(value, ChorusUrl.EMPTY))
+                if (Equals(value, RemoteUrl.EMPTY))
                 {
                     EnsureChorusAccount();
-                    if (!_chorusAccounts.Any())
+                    if (!_remoteAccounts.Any())
                     {
                         return;
                     }
-                    if (_chorusAccounts.Count == 1)
+                    if (_remoteAccounts.Count == 1)
                     {
                         // If there is exactly one account, then skip the level that
                         // lists the accounts to choose from.
-                        value = _chorusAccounts.First().GetChorusUrl();
+                        value = _remoteAccounts.First().GetRootUrl();
                     }
                 }
                 if (value != null)
@@ -168,6 +155,39 @@ namespace pwiz.Skyline.FileUI
                     populateComboBoxFromDirectory(_currentDirectory);
                 }
             }
+        }
+
+        public RemoteSession RemoteSession
+        {
+            get { return _remoteSession; }
+            set
+            {
+                if (ReferenceEquals(RemoteSession, value))
+                {
+                    return;
+                }
+                if (null != RemoteSession)
+                {
+                    RemoteSession.Dispose();
+                }
+                _remoteSession = value;
+                if (null != RemoteSession)
+                {
+                    AttachContentsAvailable(RemoteSession);
+                }
+            }
+        }
+
+        private void AttachContentsAvailable(RemoteSession remoteSession)
+        {
+            remoteSession.ContentsAvailable += () =>
+            {
+                if (!ReferenceEquals(remoteSession, RemoteSession))
+                {
+                    return;
+                }
+                ChorusContentsAvailable();
+            };
         }
 
         public MsDataFileUri InitialDirectory { get; set; }
@@ -340,37 +360,36 @@ namespace pwiz.Skyline.FileUI
                     });
                 }
             }
-            else if (directory is ChorusUrl)
+            else if (directory is RemoteUrl)
             {
-                ChorusUrl chorusUrl = directory as ChorusUrl;
-                if (null == _chorusSession)
-                {
-                    _chorusSession = new ChorusSession();
-                    _chorusSession.ContentsAvailable += ChorusContentsAvailable;
-                }
+                RemoteUrl chorusUrl = directory as RemoteUrl;
                 if (string.IsNullOrEmpty(chorusUrl.ServerUrl))
                 {
-                    foreach (var chorusAccount in _chorusAccounts)
+                    foreach (var chorusAccount in _remoteAccounts)
                     {
-                        listSourceInfo.Add(new SourceInfo(chorusAccount.GetChorusUrl())
+                        listSourceInfo.Add(new SourceInfo(chorusAccount.GetRootUrl())
                         {
                             name = chorusAccount.GetKey(),
                             type = DataSourceUtil.FOLDER_TYPE,
-                            imageIndex = ImageIndex.Chorus,
+                            imageIndex = ImageIndex.Remote,
                         });
                     }
                 }
                 else
                 {
-                    ChorusAccount chorusAccount = GetChorusAccount(chorusUrl);
-                    ChorusServerException exception;
-                    bool isComplete = _chorusSession.AsyncFetchContents(chorusAccount, chorusUrl, out exception);
-                    foreach (var item in _chorusSession.ListContents(chorusAccount, chorusUrl))
+                    RemoteAccount chorusAccount = GetChorusAccount(chorusUrl);
+                    if (RemoteSession == null || !Equals(chorusAccount, RemoteSession.Account))
+                    {
+                        RemoteSession = RemoteSession.CreateSession(chorusAccount);
+                    }
+                    RemoteServerException exception;
+                    bool isComplete = _remoteSession.AsyncFetchContents(chorusUrl, out exception);
+                    foreach (var item in _remoteSession.ListContents(chorusUrl))
                     {
                         var imageIndex = DataSourceUtil.IsFolderType(item.Type)
                             ? ImageIndex.Folder
                             : ImageIndex.MassSpecFile;
-                        listSourceInfo.Add(new SourceInfo(item.ChorusUrl)
+                        listSourceInfo.Add(new SourceInfo(item.MsDataFileUri)
                         {
                             name = item.Label,
                             type = item.Type,
@@ -383,7 +402,7 @@ namespace pwiz.Skyline.FileUI
                     {
                         if (MultiButtonMsgDlg.Show(this, exception.Message, Resources.OpenDataSourceDialog_populateListViewFromDirectory_Retry) != DialogResult.Cancel)
                         {
-                            _chorusSession.RetryFetchContents(chorusAccount, chorusUrl);
+                            RemoteSession.RetryFetchContents(chorusUrl);
                             isComplete = false;
                         }
                     }
@@ -494,10 +513,10 @@ namespace pwiz.Skyline.FileUI
             // ReSharper restore EmptyGeneralCatchClause
         }
 
-        private ChorusAccount GetChorusAccount(ChorusUrl chorusUrl)
+        private RemoteAccount GetChorusAccount(RemoteUrl chorusUrl)
         {
             return
-                _chorusAccounts.FirstOrDefault(
+                _remoteAccounts.FirstOrDefault(
                     chorusAccount =>
                         Equals(chorusAccount.ServerUrl, chorusUrl.ServerUrl) &&
                         Equals(chorusAccount.Username, chorusUrl.Username));
@@ -536,9 +555,9 @@ namespace pwiz.Skyline.FileUI
 
             if (dirInfo == null)
             {
-                if (directory is ChorusUrl)
+                if (directory is RemoteUrl)
                 {
-                    lookInComboBox.SelectedIndex = _chorusIndex;
+                    lookInComboBox.SelectedIndex = _remoteIndex;
                 }
                 else
                 {
@@ -896,7 +915,7 @@ namespace pwiz.Skyline.FileUI
 
         private void chorusButton_Click( object sender, EventArgs e )
         {
-            CurrentDirectory = ChorusUrl.EMPTY;
+            CurrentDirectory = RemoteUrl.EMPTY;
         }
 
         private void desktopButton_Click( object sender, EventArgs e )
@@ -1070,34 +1089,30 @@ namespace pwiz.Skyline.FileUI
             Folder,
             MassSpecFile,
             UnknownFile,
-            Chorus
+            Remote,
         }
 
         private void EnsureChorusAccount()
         {
-            if (_chorusAccounts.Any())
+            if (_remoteAccounts.Any())
             {
                 return;
             }
             DialogResult buttonPress = MultiButtonMsgDlg.Show(
                 this,
                 TextUtil.LineSeparate(
-                    Resources.OpenDataSourceDialog_EnsureChorusAccount_No_Chorus_acounts_have_been_specified,
-                    Resources.OpenDataSourceDialog_EnsureChorusAccount_Press_Register_to_register_for_an_account_on_the_Chorus_Project,
-                    Resources.OpenDataSourceDialog_EnsureChorusAccount_Press_Add_to_use_specify_an_existing_Chorus_account),
-                Resources.OpenDataSourceDialog_EnsureChorusAccount_Register, Resources.OpenDataSourceDialog_EnsureChorusAccount_Add, true);
+                    "No remote accounts have been specified. If you have an existing Unifi or Chorus account you can enter your login information now."),
+                "Unifi", "Chorus", true);
             if (buttonPress == DialogResult.Cancel)
                 return;
 
             if (buttonPress == DialogResult.Yes)
             {
-                // person intends to register                   
-                WebHelpers.OpenLink(this, "https://chorusproject.org/pages/register.html"); // Not L10N
-            }
-            var newAccount = _chorusAccounts.NewItem(this, _chorusAccounts, null);
-            if (null != newAccount)
-            {
-                _chorusAccounts.Add(newAccount);
+                var newAccount = Settings.Default.RemoteAccountList.NewItem(this, Settings.Default.RemoteAccountList, null);
+                if (null != newAccount)
+                {
+                    Settings.Default.RemoteAccountList.Add(newAccount);
+                }
             }
         }
 
