@@ -53,22 +53,18 @@ namespace pwiz.Skyline.Model
             {
                 var staticBaseMods = docNode.ExplicitMods.GetStaticBaseMods(labelType);
                 var labelMods = docNode.ExplicitMods.GetModifications(labelType);
-                var explicitLabelType = labelType;
                 if (labelMods == null && !labelType.IsLight)
                 {
                     labelMods = docNode.ExplicitMods.GetModifications(IsotopeLabelType.light);
-                    explicitLabelType = IsotopeLabelType.light;
                     includeStaticHeavyMods = true;
                 }
                 if (labelMods != null || staticBaseMods != null)
                 {
                     IEnumerable<ExplicitMod> modsToAdd = (labelMods ?? Enumerable.Empty<ExplicitMod>())
                         .Concat(staticBaseMods ?? Enumerable.Empty<ExplicitMod>());
-                    var monoMasses = docNode.ExplicitMods.GetModMasses(MassType.Monoisotopic, explicitLabelType);
-                    var avgMasses = docNode.ExplicitMods.GetModMasses(MassType.Average, explicitLabelType);
                     foreach (var mod in modsToAdd)
                     {
-                        explicitMods.Add(new Modification(mod, monoMasses[mod.IndexAA], avgMasses[mod.IndexAA]));
+                        explicitMods.Add(MakeModification(unmodifiedSequence, mod));
                     }
                     includeStaticMods = docNode.ExplicitMods.IsVariableStaticMods && staticBaseMods == null;
                 }
@@ -105,25 +101,7 @@ namespace pwiz.Skyline.Model
                         {
                             continue;
                         }
-                        var monoMass = staticMod.MonoisotopicMass ??
-                                       SrmSettings.MonoisotopicMassCalc.GetAAModMass(unmodifiedSequence[i], i,
-                                           unmodifiedSequence.Length);
-                        var avgMass = staticMod.AverageMass ??
-                                      SrmSettings.AverageMassCalc.GetAAModMass(unmodifiedSequence[i], i,
-                                          unmodifiedSequence.Length);
-                        if (monoMass == 0 && avgMass == 0)
-                        {
-                            char aa = unmodifiedSequence[i];
-                            if ((staticMod.LabelAtoms & LabelAtoms.LabelsAA) != LabelAtoms.None && AminoAcid.IsAA(aa))
-                            {
-                                string heavyFormula = SequenceMassCalc.GetHeavyFormula(aa, staticMod.LabelAtoms);
-                                monoMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, heavyFormula,
-                                    SequenceMassCalc.MassPrecision);
-                                avgMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, heavyFormula,
-                                    SequenceMassCalc.MassPrecision);
-                            }
-                        }
-                        explicitMods.Add(new Modification(new ExplicitMod(i, staticMod), monoMass, avgMass));
+                        explicitMods.Add(MakeModification(unmodifiedSequence, new ExplicitMod(i, staticMod)));
                     }
                 }
             }
@@ -366,6 +344,30 @@ namespace pwiz.Skyline.Model
                 hashCode = (hashCode * 397) ^ (int) _defaultMassType;
                 return hashCode;
             }
+        }
+        private static Modification MakeModification(string unmodifiedSequence, ExplicitMod explicitMod)
+        {
+            var staticMod = explicitMod.Modification;
+            int i = explicitMod.IndexAA;
+            var monoMass = staticMod.MonoisotopicMass ??
+                           SrmSettings.MonoisotopicMassCalc.GetAAModMass(unmodifiedSequence[i], i,
+                               unmodifiedSequence.Length);
+            var avgMass = staticMod.AverageMass ??
+                          SrmSettings.AverageMassCalc.GetAAModMass(unmodifiedSequence[i], i,
+                              unmodifiedSequence.Length);
+            if (monoMass == 0 && avgMass == 0)
+            {
+                char aa = unmodifiedSequence[i];
+                if ((staticMod.LabelAtoms & LabelAtoms.LabelsAA) != LabelAtoms.None && AminoAcid.IsAA(aa))
+                {
+                    string heavyFormula = SequenceMassCalc.GetHeavyFormula(aa, staticMod.LabelAtoms);
+                    monoMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, heavyFormula,
+                        SequenceMassCalc.MassPrecision);
+                    avgMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, heavyFormula,
+                        SequenceMassCalc.MassPrecision);
+                }
+            }
+            return new Modification(explicitMod, monoMass, avgMass);
         }
     }
 }
