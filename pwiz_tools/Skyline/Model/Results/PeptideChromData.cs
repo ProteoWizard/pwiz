@@ -273,7 +273,7 @@ namespace pwiz.Skyline.Model.Results
             while (ThermoZerosFix())
             {
             }
-            ChromDataSet.TruncateMs1ForScheduledMs2(_dataSets);
+            TruncateMs1Chromatograms();
 
             // Moved to ProteoWizard
             //                else if (WiffZerosFix())
@@ -405,6 +405,25 @@ namespace pwiz.Skyline.Model.Results
                 chromDataSet.InterpolationParams = interpolationParams.ChangeStartEndIndex(startSet, endSet);
                 chromDataSet.PeptideIndexOffset = startSet;
             }
+        }
+
+        /// <summary>
+        /// If this dataset contains both MS1 and MS2 chromatograms, then shorten the MS1 chromatograms
+        /// so that they are the same length as the MS2 chromatograms.
+        /// </summary>
+        private void TruncateMs1Chromatograms()
+        {
+            if (NodePep == null)
+            {
+                return;
+            }
+            if (!NodePep.TransitionGroups.Any(tg =>
+                tg.Transitions.Any(transition => !transition.IsMs1 && transition.Quantitative)))
+            {
+                // Do not truncate the MS1 chromatograms if all of the MS2 transitions are non-quantitative
+                return;
+            }
+            ChromDataSet.TruncateMs1ForScheduledMs2(_dataSets);
         }
 
         /// <summary>
