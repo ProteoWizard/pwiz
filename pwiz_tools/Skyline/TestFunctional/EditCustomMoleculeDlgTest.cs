@@ -56,6 +56,7 @@ namespace pwiz.SkylineTestFunctional
         {
             AsMasses();
             AsFormulas();
+            TestEditTransitionNoFormula();
         }
 
         protected void AsMasses()
@@ -796,6 +797,37 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Test the fix for editing a transition with no formula - we were passing in the parent molecule
+        /// instead of the transition molecule, a hangover from the pre-adduct days
+        /// </summary>
+        private void TestEditTransitionNoFormula()
+        {
+            // Clear out the document
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+                var transitionList =
+                "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Note\n"+
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n"+
+                "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,V',,[M-H]1-,186.1863380499,-1,";
+                SetClipboardText(transitionList);
+                SkylineWindow.Paste();
+            });
+            // Position ourselves on the second transition
+            SelectNode(SrmDocument.Level.Transitions, 1);
+            var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(
+                () => SkylineWindow.ModifyTransition((TransitionTreeNode)SkylineWindow.SequenceTree.SelectedNode));
+            RunUI(() =>
+            {
+                var massPrecisionTolerance = 0.00001;
+                Assert.AreEqual(186.18633804, double.Parse(editMoleculeDlg.FormulaBox.MonoText), massPrecisionTolerance);
+                Assert.AreEqual(186.18633804, double.Parse(editMoleculeDlg.FormulaBox.AverageText), massPrecisionTolerance);
+            });
+            OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
+
         }
     }
 }

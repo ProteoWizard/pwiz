@@ -2123,7 +2123,7 @@ namespace pwiz.Skyline
                     Transition.MIN_PRODUCT_CHARGE,
                     Transition.MAX_PRODUCT_CHARGE,
                     Document.Settings,
-                    nodeGroupTree.DocNode.CustomMolecule,
+                    nodeTran.Transition.CustomIon,
                     nodeTran.Transition.Adduct, null, null, null))
                 {
                     dlg.SetResult(nodeTran.Transition.CustomIon, nodeTran.Transition.Adduct);
