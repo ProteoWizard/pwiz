@@ -327,11 +327,15 @@ namespace pwiz.Skyline.Model.DocSettings
             // Return the singly protonated mass (massH) of the peptide fragment, or custom molecule mass before electron removal
             var labelType = group==null ? IsotopeLabelType.light : group.LabelType;
 
-            IFragmentMassCalc calc = GetFragmentCalc(labelType, mods);
-            if (calc == null && transition.IsCustom())
+            IFragmentMassCalc calc;
+            if (transition.IsNonReporterCustomIon())
             {
                 // Small molecules provide their own molecule formula, just use the standard calculator
                 calc = GetDefaultFragmentCalc();
+            }
+            else
+            {
+                calc = GetFragmentCalc(labelType, mods);
             }
             if (calc == null)
             {
