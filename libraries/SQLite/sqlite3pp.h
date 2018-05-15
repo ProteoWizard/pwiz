@@ -104,6 +104,9 @@ namespace sqlite3pp
 
         sqlite3_int64 last_insert_rowid() const;
 
+        bool has_table(const std::string& table);
+        bool has_table(const char* table);
+
         int error_code() const;
         char const* error_msg() const;
 

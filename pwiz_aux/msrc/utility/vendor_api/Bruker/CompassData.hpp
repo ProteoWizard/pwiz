@@ -246,7 +246,8 @@ struct PWIZ_API_DECL CompassData
 {
     typedef boost::shared_ptr<CompassData> Ptr;
     static Ptr create(const std::string& rawpath, bool combineIonMobilitySpectra = false,
-                      msdata::detail::Bruker::Reader_Bruker_Format format = msdata::detail::Bruker::Reader_Bruker_Format_Unknown);
+        msdata::detail::Bruker::Reader_Bruker_Format format = msdata::detail::Bruker::Reader_Bruker_Format_Unknown, 
+        int preferOnlyMsLevel = 0); // when nonzero, caller only wants spectra at this ms level
 
     virtual ~CompassData() {}
 
@@ -263,7 +264,10 @@ struct PWIZ_API_DECL CompassData
     virtual size_t getMSSpectrumCount() const = 0;
 
     /// converts a one-dimensional, one-based scan number to a one-based frame number and one-based scan number within the frame (only for TDF data)
-    virtual std::pair<size_t, size_t> getFrameScanPair(int scan) const = 0;
+    virtual std::pair<size_t, size_t> getFrameScanPair(int scan) const;
+
+    /// converts a one-based frame number and one-based scan number to a one-dimensional, one-based scan index (only for TDF data)
+    virtual size_t getSpectrumIndex(int frame, int scan) const;
 
     /// returns a spectrum from the MS source
     virtual MSSpectrumPtr getMSSpectrum(int scan, DetailLevel detailLevel = DetailLevel_FullMetadata) const = 0;

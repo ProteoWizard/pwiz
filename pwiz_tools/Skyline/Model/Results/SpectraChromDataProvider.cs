@@ -930,6 +930,16 @@ namespace pwiz.Skyline.Model.Results
                             }
                         }
 
+                        // Ignore if this is an ion mobility range nobody cares about
+                        if (_dataFile.GetIonMobilityIsInexpensive && _filter.HasIonMobilityFilters)
+                        {
+                            var ionMobility = _lookaheadContext.GetIonMobility(i);
+                            if (ionMobility.HasValue &&  !_filter.AnyIonMobilityFilterContains(ionMobility))
+                            {
+                                continue;
+                            }
+                        }
+
                         // Inexpensive checks are complete, now actually get the spectrum data
                         var nextSpectrum = _lookaheadContext.GetSpectrum(i);
                         // Assertion for testing ID to spectrum index support
@@ -1186,6 +1196,14 @@ namespace pwiz.Skyline.Model.Results
                     return _dataFile.GetMsLevel(index);
             }
 
+            public IonMobilityValue GetIonMobility(int index)
+            {
+                if (index == _lookAheadIndex && _lookAheadDataSpectrum != null)
+                    return _lookAheadDataSpectrum.IonMobility;
+                else
+                    return _dataFile.GetIonMobility(index);
+            }
+
             public double? GetRetentionTime(int index)
             {
                 if (index == _lookAheadIndex && _lookAheadDataSpectrum != null)
@@ -1275,6 +1293,24 @@ namespace pwiz.Skyline.Model.Results
 
                     if (_lookAheadIndex < _lenSpectra)
                     {
+                        // Ignore if this is an ion mobility range nobody cares about
+                        if (_dataFile.GetIonMobilityIsInexpensive && _filter.HasIonMobilityFilters)
+                        {
+                            for (var probe = _lookAheadIndex; probe < _lenSpectra-1; probe++)
+                            {
+                                var ionMobility = _dataFile.GetIonMobility(probe);
+                                if (ionMobility.HasValue &&
+                                    !_filter.AnyIonMobilityFilterContains(ionMobility) &&
+                                    IonMobilityValue.IsExpectedValueOrdering(_previousIonMobilityValue, ionMobility))
+                                {
+                                    _lookAheadIndex++;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
                         dataSpectrum = _lookAheadDataSpectrum = _dataFile.GetSpectrum(_lookAheadIndex);
                         // Reasons to keep adding to the list:
                         //   Retention time hasn't changed but ion mobility has changed, or

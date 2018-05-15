@@ -85,7 +85,23 @@ PWIZ_API_DECL size_t SpectrumList_Bruker::find(const string& id) const
 {
     boost::container::flat_map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
     if (scanItr == idToIndexMap_.end())
+    {
+        if (format_ == Reader_Bruker_Format_TDF)
+        {
+            try
+            {
+                int frame = msdata::id::valueAs<int>(id, "frame");
+                int scan = msdata::id::valueAs<int>(id, "scan");
+                return compassDataPtr_->getSpectrumIndex(frame, scan);
+            }
+            catch (exception&)
+            {
+                // fall through and return size_ (id not found)
+            }
+        }
+
         return size_;
+    }
     return scanItr->second;
 }
 
@@ -218,9 +234,29 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         if (scanRange.first > 0 && scanRange.second > 0)
             scan.scanWindows.push_back(ScanWindow(scanRange.first, scanRange.second, MS_m_z));
 
+        IonPolarity polarity = spectrum->getPolarity();
+        switch (polarity)
+        {
+            case IonPolarity_Negative:
+                result->set(MS_negative_scan);
+                break;
+            case IonPolarity_Positive:
+                result->set(MS_positive_scan);
+                break;
+            default:
+                break;
+        }
+
+        if (detailLevel == DetailLevel_InstantMetadata)
+            return result;
+
         if (spectrum->isIonMobilitySpectrum())
             scan.set(MS_inverse_reduced_ion_mobility, spectrum->oneOverK0(), MS_Vs_cm_2);
 
+        if (detailLevel == DetailLevel_FastMetadata)
+            return result;
+
+        // Enumerating merged scan numbers is not instant.
         IntegerSet scanNumbers = spectrum->getMergedScanNumbers();
         if (config_.combineIonMobilitySpectra && scanNumbers.size() < 100)
         {
@@ -248,23 +284,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         }
         else
             result->scanList.set(MS_no_combination);
-
-        IonPolarity polarity = spectrum->getPolarity();
-        switch (polarity)
-        {
-            case IonPolarity_Negative:
-                result->set(MS_negative_scan);
-                break;
-            case IonPolarity_Positive:
-                result->set(MS_positive_scan);
-                break;
-            default:
-                break;
-        }
-
-        // Enumerating the parameter list is not instant.
-        if (detailLevel == DetailLevel_InstantMetadata)
-            return result;
 
         //sd.set(MS_base_peak_m_z, pScanStats_->BPM);
         if (spectrum->getTIC() > 0)
@@ -618,9 +637,10 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
     }
     else if (format_ == Reader_Bruker_Format_TDF)
     {
+        index_.reserve(compassDataPtr_->getMSSpectrumCount());
         for (size_t scan = 1, end = compassDataPtr_->getMSSpectrumCount(); scan <= end; ++scan)
         {
-            index_.push_back(IndexEntry());
+            index_.emplace_back(IndexEntry());
             IndexEntry& si = index_.back();
             si.source = si.collection = -1;
             si.index = index_.size() - 1;
@@ -628,14 +648,16 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
             auto frameScanPair = compassDataPtr_->getFrameScanPair(scan);
             std::back_insert_iterator<std::string> sink(si.id);
             if (config_.combineIonMobilitySpectra)
+            {
                 generate(sink,
                          "merged=" << int_,
                          si.index);
-            else
+                idToIndexTempMap[si.id] = si.index;
+            }
+            else // not inserting into idToIndexTempMap (instead uses on-the-fly logic in find())
                 generate(sink,
                          "frame=" << int_ << " scan=" << int_,
                          frameScanPair.first, frameScanPair.second);
-            idToIndexTempMap[si.id] = si.index;
         }
     }
     else if (format_ != Reader_Bruker_Format_U2)
@@ -725,6 +747,7 @@ SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel)
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 bool SpectrumList_Bruker::hasIonMobility() const { return false; }
+bool SpectrumList_Bruker::hasPASEF() const { return false; }
 bool SpectrumList_Bruker::canConvertInverseK0AndCCS() const { return false; }
 double SpectrumList_Bruker::inverseK0ToCCS(double inverseK0, double mz, int charge) const {return 0;}
 double SpectrumList_Bruker::ccsToInverseK0(double ccs, double mz, int charge) const {return 0;}

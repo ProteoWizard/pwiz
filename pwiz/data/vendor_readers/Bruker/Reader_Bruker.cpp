@@ -208,7 +208,7 @@ void Reader_Bruker::read(const string& filename,
     if (bfs::is_regular_file(rootpath))
         rootpath = rootpath.branch_path();
 
-    CompassDataPtr compassDataPtr(CompassData::create(rootpath.string(), config.combineIonMobilitySpectra, format));
+    CompassDataPtr compassDataPtr(CompassData::create(rootpath.string(), config.combineIonMobilitySpectra, format, config.preferOnlyMsLevel));
 
     SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, rootpath.string(), format, compassDataPtr, config);
     ChromatogramList_Bruker* cl = new ChromatogramList_Bruker(result, rootpath.string(), format, compassDataPtr);
