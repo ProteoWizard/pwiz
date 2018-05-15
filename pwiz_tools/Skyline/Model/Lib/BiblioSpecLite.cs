@@ -1565,9 +1565,9 @@ namespace pwiz.Skyline.Model.Lib
                             {
                                 var ionMobility = reader.GetDouble(iIonMobility);
                                 var collisionalCrossSectionSqA = reader.GetDouble(iCCS);
-                                var ionMobilityighEnergyOffset = reader.GetDouble(iIonMobilityHighEnergyOffset);
-                                if (!(ionMobility == 0 && collisionalCrossSectionSqA == 0 && ionMobilityighEnergyOffset == 0))
-                                    ionMobilityInfo = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility, ionMobilityType), collisionalCrossSectionSqA, iIonMobilityHighEnergyOffset);
+                                var ionMobilityHighEnergyOffset = reader.GetDouble(iIonMobilityHighEnergyOffset);
+                                if (!(ionMobility == 0 && collisionalCrossSectionSqA == 0 && ionMobilityHighEnergyOffset == 0))
+                                    ionMobilityInfo = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility, ionMobilityType), collisionalCrossSectionSqA, ionMobilityHighEnergyOffset);
                             }
                         }
                         else if (hasDriftTime) 
