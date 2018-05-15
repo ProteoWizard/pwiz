@@ -262,7 +262,7 @@
     <value>1</value>
   </data>
   <data name="txtNumDecoys.ToolTip" xml:space="preserve">
-    <value>乘以要加入的肽数量。
+    <value>乘以要加入的肽段的数量。
 可以是像 0.5 或 2.5 的十进制数字。</value>
   </data>
   <data name="&gt;&gt;txtNumDecoys.Name" xml:space="preserve">
@@ -473,7 +473,7 @@
     <value>2</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>每个目标的诱饵：</value>
+    <value>每个目标的诱饵数目：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
