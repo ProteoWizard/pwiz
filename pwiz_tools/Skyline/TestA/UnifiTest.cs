@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void TestRemoteAccountList()
         {
-            var unifiAccount = new UnifiAccount("unifi_username", "unifi_password").ChangeServerUrl("https://unifiserver.xxx");
+            var unifiAccount = new UnifiAccount("https://unifiserver.xxx", "unifi_username", "unifi_password");
             var chorusAccount = new ChorusAccount("https://chorusserver.xxx", "chorus_username", "chorus_password");
             var remoteAccountList = new RemoteAccountList();
             remoteAccountList.Add(unifiAccount);

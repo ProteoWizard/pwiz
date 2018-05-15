@@ -21,7 +21,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             lockmass_tol,
             path,
             server,
-            username        }
+            username,
+            modified_time,
+        }
 
         public abstract RemoteAccountType AccountType { get; }
 
@@ -36,7 +38,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             ServerUrl = nameValueParameters.GetValue(Attr.server.ToString());
             Username = nameValueParameters.GetValue(Attr.username.ToString());
             EncodedPath = nameValueParameters.GetValue(Attr.path.ToString());
-
+            ModifiedTime = nameValueParameters.GetDateValue(Attr.modified_time.ToString());
         }
 
         public override MsDataFileUri ChangeCentroiding(bool centroidMS1, bool centroidMS2)
@@ -58,6 +60,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         public LockMassParameters LockMassParameters { get; private set; }
         public string ServerUrl { get; private set; }
         public string Username { get; private set; }
+        public DateTime? ModifiedTime { get; private set; }
+
+        public RemoteUrl ChangeModifiedTime(DateTime? modifiedTime)
+        {
+            return ChangeProp(ImClone(this), im => im.ModifiedTime = modifiedTime);
+        }
 
         public RemoteUrl ChangeServerUrl(string serverUrl)
         {
@@ -115,6 +123,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             nameValuePairs.SetValue(Attr.path.ToString(), EncodedPath);
             nameValuePairs.SetValue(Attr.server.ToString(), ServerUrl);
             nameValuePairs.SetValue(Attr.username.ToString(), Username);
+            nameValuePairs.SetDateValue(Attr.modified_time.ToString(), ModifiedTime);
             return nameValuePairs;
         }
 
@@ -153,7 +162,16 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public IEnumerable<string> GetPathParts()
         {
+            if (EncodedPath == null)
+            {
+                return new string[0];
+            }
             return EncodedPath.Split('/').Select(Uri.UnescapeDataString);
+        }
+
+        public override DateTime GetFileLastWriteTime()
+        {
+            return ModifiedTime.GetValueOrDefault();
         }
 
         public override string GetFilePath()
@@ -168,11 +186,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         private class Empty : RemoteUrl
         {
-            public override DateTime GetFileLastWriteTime()
-            {
-                return default(DateTime);
-            }
-
             public override string GetFilePath()
             {
                 return string.Empty;
@@ -191,6 +204,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             public override string ToString()
             {
                 return string.Empty;
+            }
+
+            public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra)
+            {
+                throw new InvalidOperationException();
             }
         }
 
@@ -212,6 +230,37 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 return defaultValue;
             }
             return (T) Convert.ChangeType(strValue, typeof(T), CultureInfo.InvariantCulture);
+        }
+
+        protected bool Equals(RemoteUrl other)
+        {
+            return CentroidMs1 == other.CentroidMs1 && CentroidMs2 == other.CentroidMs2 &&
+                   Equals(LockMassParameters, other.LockMassParameters) && string.Equals(ServerUrl, other.ServerUrl) &&
+                   string.Equals(Username, other.Username) && ModifiedTime.Equals(other.ModifiedTime) &&
+                   string.Equals(EncodedPath, other.EncodedPath);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((RemoteUrl) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = CentroidMs1.GetHashCode();
+                hashCode = (hashCode * 397) ^ CentroidMs2.GetHashCode();
+                hashCode = (hashCode * 397) ^ (LockMassParameters != null ? LockMassParameters.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ServerUrl != null ? ServerUrl.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Username != null ? Username.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ ModifiedTime.GetHashCode();
+                hashCode = (hashCode * 397) ^ (EncodedPath != null ? EncodedPath.GetHashCode() : 0);
+                return hashCode;
+            }
         }
     }
 }

@@ -47,6 +47,30 @@ namespace pwiz.Skyline.Util
             SetValue(key, value ? "true" : null);
         }
 
+        public void SetDateValue(string key, DateTime? value)
+        {
+            if (value == null)
+            {
+                _nameValueCollection.Remove(key);
+            }
+            else
+            {
+                _nameValueCollection[key] = value.Value.ToString(CultureInfo.InvariantCulture);
+            }
+        }
+
+        public void SetLongValue(string key, long? value)
+        {
+            if (value == null)
+            {
+                _nameValueCollection.Remove(key);
+            }
+            else
+            {
+                _nameValueCollection[key] = value.Value.ToString(CultureInfo.InvariantCulture);
+            }
+        }
+
         public string GetValue(string key)
         {
             return _nameValueCollection[key];

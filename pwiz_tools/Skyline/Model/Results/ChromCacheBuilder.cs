@@ -162,7 +162,6 @@ namespace pwiz.Skyline.Model.Results
             try
             {
                 var dataFilePath = MSDataFilePath;
-                var lockMassCorrection = MSDataFilePath.GetLockMassParameters();
                 var centroidMS1 = MSDataFilePath.GetCentroidMs1();
                 var centroidMS2 = MSDataFilePath.GetCentroidMs2();
                 var msDataFilePath = MSDataFilePath as MsDataFilePath;
@@ -178,11 +177,6 @@ namespace pwiz.Skyline.Model.Results
                 }
                 MSDataFilePath = dataFilePath;
 
-                // Read the instrument data indexes
-                int sampleIndex = dataFilePath.GetSampleIndex();
-                if (sampleIndex == -1)
-                    sampleIndex = 0;
-
                 // Once a ChromDataProvider is created, it owns disposing of the MSDataFileImpl.
                 MsDataFileImpl inFile = null;
                 ChromDataProvider provider = null;
@@ -191,11 +185,9 @@ namespace pwiz.Skyline.Model.Results
                     if (dataFilePathRecalc == null && !RemoteChromDataProvider.IsRemoteChromFile(dataFilePath))
                     {
                         // Always use SIM as spectra, if any full-scan chromatogram extraction is enabled
-                        var configInfo = fileInfo.InstrumentInfoList.FirstOrDefault();
                         var fullScan = _document.Settings.TransitionSettings.FullScan;
                         var enableSimSpectrum = fullScan.IsEnabled;
-                        inFile = GetMsDataFile(dataFilePathPart, sampleIndex, lockMassCorrection, configInfo,
-                            enableSimSpectrum, centroidMS1, centroidMS2);
+                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum);
                         // Preserve centroiding info as part of MsDataFileUri string in chromdata only if it will be used
                         // CONSIDER: Dangerously high knowledge of future control flow required for making this decision
                         if (!ChromatogramDataProvider.HasChromatogramData(inFile) && !inFile.HasSrmSpectra)
@@ -222,7 +214,7 @@ namespace pwiz.Skyline.Model.Results
                         }
                         else
                         {
-                            _currentFileInfo = new FileBuildInfo(inFile);
+                            _currentFileInfo = FileBuildInfo.GetFileBuildInfo(MSDataFilePath, inFile);
                         }
                     }
 
@@ -1431,12 +1423,10 @@ namespace pwiz.Skyline.Model.Results
 
     internal sealed class FileBuildInfo
     {
-        public FileBuildInfo(MsDataFileImpl file)
-            : this(file.RunStartTime,
-                   ChromCachedFile.GetLastWriteTime(new MsDataFilePath(file.FilePath)),
-                   file.GetInstrumentConfigInfoList(),
-                   null, false)
+        public static FileBuildInfo GetFileBuildInfo(MsDataFileUri msDataFileUri, MsDataFileImpl file)
         {
+            return new FileBuildInfo(file.RunStartTime, msDataFileUri.GetFileLastWriteTime(),
+                file.GetInstrumentConfigInfoList(), null, false);
         }
 
         public FileBuildInfo(DateTime? startTime,

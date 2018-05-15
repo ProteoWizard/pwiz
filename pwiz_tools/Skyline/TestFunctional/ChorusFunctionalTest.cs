@@ -48,10 +48,10 @@ namespace pwiz.SkylineTestFunctional
             var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
             var multiButtonMsgDlg = ShowDialog<MultiButtonMsgDlg>(() => openDataSourceDialog.CurrentDirectory = ChorusUrl.EMPTY);
             OkDialog(multiButtonMsgDlg, multiButtonMsgDlg.Btn1Click);
-            var editChorusAccountDlg = WaitForOpenForm<EditChorusAccountDlg>();
+            var editChorusAccountDlg = WaitForOpenForm<EditRemoteAccountDlg>();
             RunUI(()=>
             {
-                editChorusAccountDlg.SetChorusAccount(chorusAccount);
+                editChorusAccountDlg.SetRemoteAccount(chorusAccount);
             });
             OkDialog(editChorusAccountDlg, editChorusAccountDlg.OkDialog);
             Assert.AreEqual(chorusAccount.GetChorusUrl(), openDataSourceDialog.CurrentDirectory);

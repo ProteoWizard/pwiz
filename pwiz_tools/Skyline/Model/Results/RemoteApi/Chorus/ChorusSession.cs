@@ -358,10 +358,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
                 items = items.Concat(chorusContents.files.Select(
                     file =>
                     {
-                        ChorusUrl fileUrl = chorusUrl.SetFileId(file.id)
+                        ChorusUrl fileUrl = (ChorusUrl) chorusUrl.SetFileId(file.id)
                             .AddPathPart(file.GetName())
-                            .SetFileWriteTime(file.GetModifiedDateTime())
-                            .SetRunStartTime(file.GetAcquisitionDateTime());
+                            .ChangeRunStartTime(file.GetAcquisitionDateTime())
+                            .ChangeModifiedTime(file.GetModifiedDateTime());
                         return new RemoteItem(fileUrl, file.GetName(),
                             GetFileType(file), file.GetModifiedDateTime(), file.fileSizeBytes);
                     }

@@ -15,6 +15,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             Path = GetProperty(jobject, "path");
             FolderType = GetProperty(jobject, "folderType");
             ParentId = GetProperty(jobject, "parentId");
+            if (string.IsNullOrEmpty(ParentId))
+            {
+                ParentId = null;
+            }
         }
     }
 }

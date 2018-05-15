@@ -23,6 +23,7 @@ using System.Web;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
+using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -68,6 +69,10 @@ namespace pwiz.Skyline.Model.Results
             {
                 return new ChorusUrl(url);
             }
+            if (url.StartsWith(UnifiUrl.UrlPrefix))
+            {
+                return new UnifiUrl(url);
+            }
             return new MsDataFilePath(SampleHelp.GetPathFilePart(url), 
                 SampleHelp.GetPathSampleNamePart(url), 
                 SampleHelp.GetPathSampleIndexPart(url),
@@ -75,6 +80,8 @@ namespace pwiz.Skyline.Model.Results
                 SampleHelp.GetCentroidMs1(url),
                 SampleHelp.GetCentroidMs2(url));
         }
+
+        public abstract MsDataFileImpl OpenMsDataFile(bool simAsSpectra);
     }
 
     public class MsDataFilePath : MsDataFileUri
@@ -251,6 +258,13 @@ namespace pwiz.Skyline.Model.Results
                 hashCode = (hashCode*397) ^ (CentroidMs2 ? 1 : 0);
                 return hashCode;
             }
+        }
+
+        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra)
+        {
+            return new MsDataFileImpl(FilePath, Math.Max(SampleIndex, 0), LockMassParameters, simAsSpectra,
+                requireVendorCentroidedMS1: CentroidMs1, requireVendorCentroidedMS2: CentroidMs2,
+                ignoreZeroIntensityPoints: true);
         }
     }
 }

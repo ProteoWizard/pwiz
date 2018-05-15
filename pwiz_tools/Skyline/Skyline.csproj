@@ -3211,14 +3211,14 @@
     <EmbeddedResource Include="Controls\GroupComparison\CreateMatchExpressionDlg.resx">
       <DependentUpon>CreateMatchExpressionDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\EditChorusAccountDlg.ja.resx">
-      <DependentUpon>EditChorusAccountDlg.cs</DependentUpon>
+    <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.ja.resx">
+      <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\EditChorusAccountDlg.resx">
-      <DependentUpon>EditChorusAccountDlg.cs</DependentUpon>
+    <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.resx">
+      <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\EditChorusAccountDlg.zh-CHS.resx">
-      <DependentUpon>EditChorusAccountDlg.cs</DependentUpon>
+    <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.zh-CHS.resx">
+      <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditCustomThemeDlg.ja.resx">
       <DependentUpon>EditCustomThemeDlg.cs</DependentUpon>
@@ -3355,11 +3355,11 @@
     <Compile Include="ToolsUI\ConfigureToolsDlg.designer.cs">
       <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="ToolsUI\EditChorusAccountDlg.cs">
+    <Compile Include="ToolsUI\EditRemoteAccountDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ToolsUI\EditChorusAccountDlg.Designer.cs">
-      <DependentUpon>EditChorusAccountDlg.cs</DependentUpon>
+    <Compile Include="ToolsUI\EditRemoteAccountDlg.Designer.cs">
+      <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\EditCustomThemeDlg.cs">
       <SubType>Form</SubType>

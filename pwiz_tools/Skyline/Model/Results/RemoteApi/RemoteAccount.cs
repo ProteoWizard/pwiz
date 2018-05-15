@@ -15,7 +15,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         {
             username,
             password,
-            server_url,
+            server_url
         }
 
         public abstract RemoteSession CreateSession();
@@ -92,8 +92,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public virtual void WriteXml(XmlWriter writer)
         {
-            writer.WriteAttributeString(ATTR.server_url, ServerUrl);
-            writer.WriteAttributeString(ATTR.username, Username);
+            writer.WriteAttributeIfString(ATTR.server_url, ServerUrl);
+            writer.WriteAttributeIfString(ATTR.username, Username);
             if (!string.IsNullOrEmpty(Password))
             {
                 writer.WriteAttributeString(ATTR.password, TextUtil.EncryptString(Password));

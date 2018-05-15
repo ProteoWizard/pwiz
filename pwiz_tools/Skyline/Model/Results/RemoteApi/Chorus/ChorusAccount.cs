@@ -17,8 +17,12 @@
  * limitations under the License.
  */
 
+using System;
+using System.Net;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus

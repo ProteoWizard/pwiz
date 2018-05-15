@@ -42,7 +42,6 @@ namespace pwiz.Skyline.FileUI
         private readonly int _myComputerIndex;
         private readonly int _remoteIndex;
         private RemoteSession _remoteSession;
-        private RemoteAccount _remoteAccount;
         private readonly IList<RemoteAccount> _remoteAccounts;
         private bool _waitingForData;
 
@@ -81,8 +80,8 @@ namespace pwiz.Skyline.FileUI
             TreeView tv = new TreeView { Indent = 8 };
             _remoteIndex = lookInComboBox.Items.Count;
             TreeNode unifiNode = tv.Nodes.Add("Remote", // Not L10N
-                Resources.OpenDataSourceDialog_OpenDataSourceDialog_Chorus_Project, (int) ImageIndex.Remote,
-                (int) ImageIndex.Remote);
+                "Remote", (int) ImageIndex.MyNetworkPlaces,
+                (int) ImageIndex.MyNetworkPlaces);
             unifiNode.Tag = RemoteUrl.EMPTY;
             lookInComboBox.Items.Add(unifiNode);
             chorusButton.Visible = true;
@@ -362,29 +361,29 @@ namespace pwiz.Skyline.FileUI
             }
             else if (directory is RemoteUrl)
             {
-                RemoteUrl chorusUrl = directory as RemoteUrl;
-                if (string.IsNullOrEmpty(chorusUrl.ServerUrl))
+                RemoteUrl remoteUrl = directory as RemoteUrl;
+                if (string.IsNullOrEmpty(remoteUrl.ServerUrl))
                 {
-                    foreach (var chorusAccount in _remoteAccounts)
+                    foreach (var remoteAccount in _remoteAccounts)
                     {
-                        listSourceInfo.Add(new SourceInfo(chorusAccount.GetRootUrl())
+                        listSourceInfo.Add(new SourceInfo(remoteAccount.GetRootUrl())
                         {
-                            name = chorusAccount.GetKey(),
+                            name = remoteAccount.GetKey(),
                             type = DataSourceUtil.FOLDER_TYPE,
-                            imageIndex = ImageIndex.Remote,
+                            imageIndex = ImageIndex.MyNetworkPlaces,
                         });
                     }
                 }
                 else
                 {
-                    RemoteAccount chorusAccount = GetChorusAccount(chorusUrl);
-                    if (RemoteSession == null || !Equals(chorusAccount, RemoteSession.Account))
+                    RemoteAccount remoteAccount = GetRemoteAccount(remoteUrl);
+                    if (RemoteSession == null || !Equals(remoteAccount, RemoteSession.Account))
                     {
-                        RemoteSession = RemoteSession.CreateSession(chorusAccount);
+                        RemoteSession = RemoteSession.CreateSession(remoteAccount);
                     }
                     RemoteServerException exception;
-                    bool isComplete = _remoteSession.AsyncFetchContents(chorusUrl, out exception);
-                    foreach (var item in _remoteSession.ListContents(chorusUrl))
+                    bool isComplete = _remoteSession.AsyncFetchContents(remoteUrl, out exception);
+                    foreach (var item in _remoteSession.ListContents(remoteUrl))
                     {
                         var imageIndex = DataSourceUtil.IsFolderType(item.Type)
                             ? ImageIndex.Folder
@@ -402,7 +401,7 @@ namespace pwiz.Skyline.FileUI
                     {
                         if (MultiButtonMsgDlg.Show(this, exception.Message, Resources.OpenDataSourceDialog_populateListViewFromDirectory_Retry) != DialogResult.Cancel)
                         {
-                            RemoteSession.RetryFetchContents(chorusUrl);
+                            RemoteSession.RetryFetchContents(remoteUrl);
                             isComplete = false;
                         }
                     }
@@ -497,7 +496,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     try
                     {
-                        if (CurrentDirectory is ChorusUrl && _waitingForData)
+                        if (CurrentDirectory is RemoteUrl && _waitingForData)
                         {
                             populateListViewFromDirectory(CurrentDirectory);
                         }
@@ -513,7 +512,7 @@ namespace pwiz.Skyline.FileUI
             // ReSharper restore EmptyGeneralCatchClause
         }
 
-        private RemoteAccount GetChorusAccount(RemoteUrl chorusUrl)
+        private RemoteAccount GetRemoteAccount(RemoteUrl chorusUrl)
         {
             return
                 _remoteAccounts.FirstOrDefault(
@@ -1089,7 +1088,6 @@ namespace pwiz.Skyline.FileUI
             Folder,
             MassSpecFile,
             UnknownFile,
-            Remote,
         }
 
         private void EnsureChorusAccount()

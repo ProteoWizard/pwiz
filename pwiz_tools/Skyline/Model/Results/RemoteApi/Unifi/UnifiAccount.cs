@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using IdentityModel.Client;
 using Newtonsoft.Json.Linq;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
 {
@@ -14,23 +15,47 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
     public class UnifiAccount : RemoteAccount
     {
         public static readonly UnifiAccount DEFAULT 
-            = new UnifiAccount(string.Empty, string.Empty)
+            = new UnifiAccount("https://unifiapi.waters.com:50034", string.Empty, string.Empty)
         {
-            ServerUrl = "https://unifiapi.waters.com:50034",
             IdentityServer = "https://unifiapi.waters.com:50333",
-            ClientScope = "unifi",
-            ClientSecret = "secret",
         };
-        public UnifiAccount(string username, string password)
+        public UnifiAccount(string serverUrl, string username, string password)
         {
+            ServerUrl = serverUrl;
             Username = username;
             Password = password;
-
+            string strPort = ":50333";
+            int ichLastColon = ServerUrl.LastIndexOf(':');
+            if (ichLastColon == ServerUrl.IndexOf(':'))
+            {
+                IdentityServer = ServerUrl + strPort;
+            }
+            else
+            {
+                IdentityServer = ServerUrl.Substring(0, ichLastColon) + strPort;
+            }
+            ClientScope = "unifi";
+            ClientSecret = "secret";
         }
 
         public string IdentityServer { get; private set; }
+
+        public UnifiAccount ChangeIdentityServer(string identityServer)
+        {
+            return ChangeProp(ImClone(this), im => im.IdentityServer = identityServer);
+        }
         public string ClientScope { get; private set; }
+
+        public UnifiAccount ChangeClientScope(string clientScope)
+        {
+            return ChangeProp(ImClone(this), im => im.ClientScope = clientScope);
+        }
         public string ClientSecret { get; private set; }
+
+        public UnifiAccount ChangeClientSecret(string clientSecret)
+        {
+            return ChangeProp(ImClone(this), im => im.ClientSecret = clientSecret);
+        }
 
         private enum ATTR
         {
@@ -44,15 +69,22 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             base.ReadXElement(xElement);
             IdentityServer = (string) xElement.Attribute(ATTR.identity_server.ToString());
             ClientScope = (string) xElement.Attribute(ATTR.client_scope.ToString());
-            ClientSecret = (string) xElement.Attribute(ATTR.client_secret.ToString());
+            string clientSecret = (string) xElement.Attribute(ATTR.client_secret.ToString());
+            if (clientSecret != null)
+            {
+                ClientSecret = TextUtil.DecryptString(clientSecret);
+            }
         }
 
         public override void WriteXml(XmlWriter writer)
         {
             base.WriteXml(writer);
-            writer.WriteAttributeString(ATTR.identity_server, IdentityServer);
-            writer.WriteAttributeString(ATTR.client_scope, ClientScope);
-            writer.WriteAttributeString(ATTR.client_secret, ClientSecret);
+            writer.WriteAttributeIfString(ATTR.identity_server, IdentityServer);
+            writer.WriteAttributeIfString(ATTR.client_scope, ClientScope);
+            if (ClientSecret != null)
+            {
+                writer.WriteAttributeIfString(ATTR.client_secret, TextUtil.EncryptString(ClientSecret));
+            }
         }
 
         public string GetFoldersUrl()

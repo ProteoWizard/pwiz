@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
+using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
@@ -43,7 +44,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public abstract bool AsyncFetchContents(RemoteUrl chorusUrl, out RemoteServerException remoteException);
 
-        protected bool AsyncFetch<T>(Uri requestUri, Func<Uri, T> fetcher, out RemoteServerException remoteException) where T : IResponseData
+        protected bool AsyncFetch<T>(Uri requestUri, Func<Uri, T> fetcher, out RemoteServerException remoteException)
         {
             if (null == requestUri)
             {
@@ -69,8 +70,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             return false;
         }
 
-        protected void RetryFetch<T>(Uri requestUri, Func<Uri, T> fetcher) where T : IResponseData
+        protected void RetryFetch<T>(Uri requestUri, Func<Uri, T> fetcher)
         {
+            if (requestUri == null)
+            {
+                return;
+            }
             var key = new RequestKey(typeof(T), requestUri);
             lock (_lock)
             {
@@ -86,7 +91,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         }
 
-        private void FetchAndStore<T>(Uri requestUri, Func<Uri, T> fetcher) where T : IResponseData
+        private void FetchAndStore<T>(Uri requestUri, Func<Uri, T> fetcher)
         {
             var key = new RequestKey(typeof(T), requestUri);
             try
@@ -94,7 +99,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 var data = fetcher(requestUri);
                 lock (_lock)
                 {
-                    _responses[key] = new RemoteResponse(data);
+                    _responses[key] = new RemoteResponse(data, null);
                 }
             }
             catch (Exception exception)
@@ -109,14 +114,19 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 }
                 lock (_lock)
                 {
-                    _responses[key] = new RemoteResponse(remoteException);
+                    _responses[key] = new RemoteResponse(null, remoteException);
                 }
             }
             FireContentsAvailable();
         }
 
-        protected bool TryGetData<T>(Uri requestUri, out T data) where T : IResponseData
+        protected bool TryGetData<T>(Uri requestUri, out T data)
         {
+            if (requestUri == null)
+            {
+                data = default(T);
+                return false;
+            }
             lock (_lock)
             {
                 RemoteResponse remoteResponse;
@@ -137,6 +147,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             {
                 return new ChorusSession(chorusAccount);
             }
+            var unifiAccount = remoteAccount as UnifiAccount;
+            if (unifiAccount != null)
+            {
+                return new UnifiSession(unifiAccount);
+            }
             throw new ArgumentException();
         }
 
@@ -144,17 +159,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         protected class RemoteResponse
         {
-            public RemoteResponse(IResponseData data)
+            public RemoteResponse(object data, RemoteServerException exception)
             {
                 Data = data;
-            }
-
-            public RemoteResponse(RemoteServerException exception)
-            {
                 Exception = exception;
             }
 
-            public IResponseData Data { get; private set; }
+            public object Data { get; private set; }
             public RemoteServerException Exception { get; private set; }
         }
 

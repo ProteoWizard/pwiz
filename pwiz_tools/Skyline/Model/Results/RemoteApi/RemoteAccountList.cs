@@ -15,16 +15,16 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             yield break;
         }
 
-        public override string Title { get { return Resources.ChorusAccountList_Title_Edit_Chorus_Accounts; } }
+        public override string Title { get { return "Edit Remote Accounts"; } }
 
-        public override string Label { get { return Resources.ChorusAccountList_Label_Chorus_Accounts; } }
+        public override string Label { get { return "Remote Accounts"; } }
 
         public override RemoteAccount EditItem(Control owner, RemoteAccount item, IEnumerable<RemoteAccount> existing, object tag)
         {
-            using (EditChorusAccountDlg editChorusAccountDlg = new EditChorusAccountDlg(item ?? UnifiAccount.DEFAULT, existing ?? this))
+            using (EditRemoteAccountDlg editRemoteAccountDlg = new EditRemoteAccountDlg(item ?? UnifiAccount.DEFAULT, existing ?? this))
             {
-                if (editChorusAccountDlg.ShowDialog(owner) == DialogResult.OK)
-                    return editChorusAccountDlg.GetChorusAccount();
+                if (editRemoteAccountDlg.ShowDialog(owner) == DialogResult.OK)
+                    return editRemoteAccountDlg.GetRemoteAccount();
 
                 return null;
             }

@@ -24,7 +24,6 @@ using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
@@ -48,7 +47,7 @@ namespace pwiz.Skyline.ToolsUI
 
             _driverServers = new SettingsListBoxDriver<Server>(listboxServers, Settings.Default.ServerList);
             _driverServers.LoadList();
-            _driverChorusAccounts = new SettingsListBoxDriver<RemoteAccount>(listBoxChorusAccounts, Settings.Default.RemoteAccountList);
+            _driverChorusAccounts = new SettingsListBoxDriver<RemoteAccount>(listBoxRemoteAccounts, Settings.Default.RemoteAccountList);
             _driverChorusAccounts.LoadList();
             _driverColorSchemes = new SettingsListComboDriver<ColorScheme>(comboColorScheme, Settings.Default.ColorSchemes, true);
             _driverColorSchemes.LoadList(Settings.Default.CurrentColorScheme);
@@ -71,10 +70,6 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     listBoxLanguages.SelectedIndex = i;
                 }
-            }
-            if (!Settings.Default.EnableChorus)
-            {
-                tabControl.TabPages.Remove(tabChorus);
             }
             comboCompactFormatOption.Items.AddRange(CompactFormatOption.ALL_VALUES.ToArray());
             comboCompactFormatOption.SelectedItem = CompactFormatOption.FromSettings();

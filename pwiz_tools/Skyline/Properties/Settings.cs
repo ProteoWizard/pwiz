@@ -1097,8 +1097,8 @@ namespace pwiz.Skyline.Properties
         public RemoteAccountList RemoteAccountList
         {
             get 
-            { 
-                var list = (RemoteAccountList) this["ChorusAccountList"]; // Not L10N
+            {
+                var list = (RemoteAccountList)this["RemoteAccountList"]; // Not L10N
                 if (list == null)
                 {
                     list = new RemoteAccountList();
@@ -1109,7 +1109,7 @@ namespace pwiz.Skyline.Properties
             }
             set
             {
-                this["ChorusAccountList"] = value; // Not L10N
+                this["RemoteAccountList"] = value; // Not L10N
             }
         }
 
