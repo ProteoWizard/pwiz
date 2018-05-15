@@ -140,7 +140,7 @@
   </data>
   <data name="lblReportError.Text" xml:space="preserve">
     <value>为 Skyline 开发人员寻找一种在其自己的系统上
-生成此错误的方法将会大大提高修复错误的可能性。
+重现此错误的方法将会大大提高修复错误的可能性。
 请提供以下信息以帮助我们修复此问题。</value>
   </data>
   <data name="&gt;&gt;lblReportError.Name" xml:space="preserve">
