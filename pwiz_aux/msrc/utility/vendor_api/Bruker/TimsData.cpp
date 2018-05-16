@@ -361,7 +361,7 @@ const PasefPrecursorInfo TimsSpectrum::empty_;
 
 bool TimsSpectrum::hasLineData() const { return getLineDataSize() > 0; }
 bool TimsSpectrum::hasProfileData() const { return false; }
-size_t TimsSpectrum::getLineDataSize() const { return frame_.storage_->readScans(frame_.frameId_, scanBegin_, scanEnd_ + 1).getTotalNbrPeaks(); }
+size_t TimsSpectrum::getLineDataSize() const { return frame_.storage_->readScans(frame_.frameId_, scanBegin_, scanBegin_ + 1).getTotalNbrPeaks(); }
 size_t TimsSpectrum::getProfileDataSize() const { return 0; }
 
 void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const
@@ -398,7 +398,7 @@ double TimsSpectrum::oneOverK0() const
         frame_.storage_->scanNumToOneOverK0(frame_.frameId_, avgScanNumber, avgOneOverK0);
         return avgOneOverK0[0];
     }
-    else if (scanBegin_ == scanEnd_)
+    else if (scanBegin_ == scanEnd_ || scanEnd_ >= frame_.firstScanIndex_) // for non-merged spectrum, scanEnd_ is the monotonic scan index
         return frame_.oneOverK0_[scanBegin_];
     else
         return 0; // no mobility value for non-PASEF merged spectra
