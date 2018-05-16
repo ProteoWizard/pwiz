@@ -13348,6 +13348,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot automatically train mProphet model without decoys, but decoy options resulted in no decoys being generated. Please increase number of decoys per target, or disable automatic training of mProphet model..
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_ {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_" +
+                        "decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase" +
+                        "_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change digestion settings.
         /// </summary>
         public static string ImportFastaControl_ImportFasta_Change_digestion_settings {
@@ -13394,12 +13405,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please enter a valid non-negative number of decoys per target..
+        ///   Looks up a localized string similar to Please enter a valid number of decoys per target greater than 0..
         /// </summary>
-        public static string ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys_per_target_ {
+        public static string ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_ {
             get {
-                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys" +
-                        "_per_target_", resourceCulture);
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_g" +
+                        "reater_than_0_", resourceCulture);
             }
         }
         
