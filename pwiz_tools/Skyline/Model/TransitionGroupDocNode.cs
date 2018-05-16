@@ -933,7 +933,7 @@ namespace pwiz.Skyline.Model
                             continue;
                         var massH = settingsNew.GetFragmentMass(TransitionGroup, mods, tran, isotopeDist);
                         var quantInfo = TransitionDocNode.TransitionQuantInfo.GetTransitionQuantInfo(tran, losses, isotopeDist,
-                            massH, transitionRanks).UseValuesFrom(nodeTransition.QuantInfo);
+                            Transition.CalcMass(massH, losses), transitionRanks).UseValuesFrom(nodeTransition.QuantInfo);
                         if (!ReferenceEquals(quantInfo.LibInfo, nodeTransition.LibInfo))
                             dotProductChange = true;
 
