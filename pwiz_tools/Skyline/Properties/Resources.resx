@@ -9798,8 +9798,8 @@ Here are the {0} pairs with multiple entries:
   <data name="AreaCVHistogram2DGraphPane_UpdateGraph_Calculating____" xml:space="preserve">
     <value>Calculating ...</value>
   </data>
-  <data name="ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys_per_target_" xml:space="preserve">
-    <value>Please enter a valid non-negative number of decoys per target.</value>
+  <data name="ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_" xml:space="preserve">
+    <value>Please enter a valid number of decoys per target greater than 0.</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated_when_using_reversed_decoys_" xml:space="preserve">
     <value>A maximum of one decoy per target may be generated when using reversed decoys.</value>
@@ -10088,5 +10088,7 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_method___1___has_the_wrong_signature_" xml:space="preserve">
     <value>Error running the installed tool {0}. The method '{1}' has the wrong signature.</value>
+  <data name="ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
+    <value>Cannot automatically train mProphet model without decoys, but decoy options resulted in no decoys being generated. Please increase number of decoys per target, or disable automatic training of mProphet model.</value>
   </data>
 </root>
