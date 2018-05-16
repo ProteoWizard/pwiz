@@ -59,7 +59,6 @@ namespace pwiz.Skyline.Model.Results
         private double _maxFilterPairsRT; // Max of range of RT filter values across FilterPairs
         private readonly SpectrumFilterPair[] _filterMzValues;
         private readonly SpectrumFilterPair[] _filterRTValues;
-        private readonly Tuple<double, double>[] _filterAggregatedIonMobilityRanges; // List of all active ion mobility ranges independent of mz
         private readonly ChromKey[] _productChromKeys;
         private int _retentionTimeIndex;
         private readonly bool _isWatersFile;
@@ -265,44 +264,12 @@ namespace pwiz.Skyline.Model.Results
                 Array.Copy(_filterMzValues, _filterRTValues, _filterMzValues.Length);
                 Array.Sort(_filterRTValues, CompareByRT);
 
-                // Set up for inexpensive ion mobility filter before full read of spectra
-                var filterIonMobilityRanges = new List<Tuple<double, double>>();
-                foreach (var fp in _filterMzValues)
-                {
-                    if (fp.MinIonMobilityValue.HasValue && fp.MaxIonMobilityValue.HasValue)
-                    {
-                        filterIonMobilityRanges.Add(new Tuple<double, double>(fp.MinIonMobilityValue.Value,
-                            fp.MaxIonMobilityValue.Value));
-                    }
-                }
-                filterIonMobilityRanges.Sort(); // Sort ranges by lower limit
-                for (var i = 1; i < filterIonMobilityRanges.Count; )
-                {
-                    if (filterIonMobilityRanges[i - 1].Item2 >= filterIonMobilityRanges[i].Item1) // Current range in list overlaps previous range
-                    {
-                        filterIonMobilityRanges[i - 1] =
-                            new Tuple<double, double>(filterIonMobilityRanges[i - 1].Item1,
-                                Math.Max(filterIonMobilityRanges[i - 1].Item2, filterIonMobilityRanges[i].Item2));
-                        filterIonMobilityRanges.RemoveAt(i);
-                    }
-                    else
-                    {
-                        i++;
-                    }
-                }
-                _filterAggregatedIonMobilityRanges = filterIonMobilityRanges.ToArray();
             }
 
             InitRTLimits();
         }
 
         public bool ProvidesCollisionalCrossSectionConverter { get { return _ionMobilityFunctionsProvider != null;  } }
-
-        public bool HasIonMobilityFilters
-        {
-            get { return _filterAggregatedIonMobilityRanges.Any(); }
-        }
-        public bool AnyIonMobilityFilterContains(IonMobilityValue ionMobility) { return _filterAggregatedIonMobilityRanges.Any(r => r.Item1 <= ionMobility.Mobility && ionMobility.Mobility <= r.Item2); }
 
         public MsDataFileImpl.eIonMobilityUnits IonMobilityUnits
         {
