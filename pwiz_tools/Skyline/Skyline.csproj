@@ -324,10 +324,12 @@
     <Compile Include="Model\Lib\LibraryKey.cs" />
     <Compile Include="Model\MassModification.cs" />
     <Compile Include="Model\Optimization\OptimizationDictionary.cs" />
+    <Compile Include="Model\Results\RemoteApi\IRemoteHttpInterface.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccountList.cs" />
     <Compile Include="Model\Results\RemoteApi\Chorus\ChorusUrl.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccount.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccountType.cs" />
+    <Compile Include="Model\Results\RemoteApi\RemoteHttpInterface.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteItem.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteServerException.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteSession.cs" />

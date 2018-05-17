@@ -28,8 +28,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
         private ImmutableList<UnifiFolderObject> GetFolders(Uri requestUri)
         {
             var httpClient = UnifiAccount.GetAuthenticatedHttpClient();
-            var response = httpClient.GetAsync(requestUri).Result;
-            string responseBody = response.Content.ReadAsStringAsync().Result;
+            string responseBody = RemoteHttpInterface.Instance.Get(httpClient, requestUri);
             var jsonObject = JObject.Parse(responseBody);
 
             var foldersValue = jsonObject["value"] as JArray;

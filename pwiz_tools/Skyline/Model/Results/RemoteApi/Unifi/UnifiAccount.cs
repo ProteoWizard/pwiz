@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
         {
             var tokenClient = new TokenClient(IdentityServer + "/identity/connect/token", "resourceownerclient",
                 ClientSecret, new HttpClientHandler());
-            return tokenClient.RequestResourceOwnerPasswordAsync(Username, Password, ClientScope).Result;
+            return RemoteHttpInterface.Instance.RequestResourceOwnerPassword(tokenClient, Username, Password, ClientScope);
         }
 
         public IEnumerable<UnifiFolderObject> GetFolders()
