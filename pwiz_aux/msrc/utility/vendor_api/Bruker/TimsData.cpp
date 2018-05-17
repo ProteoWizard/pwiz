@@ -214,10 +214,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         int numScans = row.get<int>(++idx);
         int numPeaks = row.get<int>(++idx);
         if (numPeaks == 0)
-        {
-            frames_.push_back(TimsFramePtr());
             continue;
-        }
 
         optional<uint64_t> parentId(row.get<optional<sqlite3_int64> >(++idx));
         optional<double> precursorMz(row.get<optional<double> >(++idx));
@@ -225,19 +222,21 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         optional<int> precursorCharge(row.get<optional<int> >(++idx));
         optional<double> collisionEnergy(row.get<optional<double> >(++idx));
 
-        frames_.emplace_back(new TimsFrame(tdfStorage_, frameId,
-                                           msLevel, rt,
-                                           mzAcqRangeLower, mzAcqRangeUpper,
-                                           tic, bpi,
-                                           polarity, scanMode, numScans,
-                                           parentId, precursorMz,
-                                           isolationWidth, precursorCharge));
-
-        frames_.back()->firstScanIndex_ = scanIndex;
+        TimsFramePtr frame(new TimsFrame(tdfStorage_, frameId,
+                                         msLevel, rt,
+                                         mzAcqRangeLower, mzAcqRangeUpper,
+                                         tic, bpi,
+                                         polarity, scanMode, numScans,
+                                         parentId, precursorMz,
+                                         isolationWidth, precursorCharge));
+        frames_[frameId] = frame;
 
         if (!combineIonMobilitySpectra)
+        {
+            frame->firstScanIndex_ = scanIndex;
             for (int i = 0; i < numScans; ++i, ++scanIndex)
-                spectra_.emplace_back(new TimsSpectrum(frames_.back(), i, scanIndex));
+                spectra_.emplace_back(new TimsSpectrum(frame, i, scanIndex));
+        }
     }
 
     hasPASEFData_ = db.has_table("PasefFrameMsMsInfo");
@@ -251,11 +250,13 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
             int idx = -1;
             int64_t frameId = row.get<sqlite3_int64>(++idx);
 
-            if (!frames_[frameId - 1]) // numPeaks == 0, but sometimes still shows up in PasefFrameMsMsInfo!?
+            auto findItr = frames_.find(frameId);
+            if (findItr == frames_.end()) // numPeaks == 0, but sometimes still shows up in PasefFrameMsMsInfo!?
                 continue;
+            auto& frame = findItr->second;
 
-            frames_[frameId - 1]->pasef_precursor_info_.emplace_back(new PasefPrecursorInfo);
-            PasefPrecursorInfo& info = *frames_[frameId - 1]->pasef_precursor_info_.back();
+            frame->pasef_precursor_info_.emplace_back(new PasefPrecursorInfo);
+            PasefPrecursorInfo& info = *frame->pasef_precursor_info_.back();
 
             info.scanBegin = row.get<int>(++idx);
             info.scanEnd = row.get<int>(++idx) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
@@ -273,10 +274,9 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     // when combining ion mobility spectra, spectra array is filled after querying PASEF info
     if (combineIonMobilitySpectra)
     {
-        for (const auto& frame : frames_)
+        for (const auto& kvp : frames_)
         {
-            if (!frame)
-                continue;
+            const auto& frame = kvp.second;
 
             if (!frame->pasef_precursor_info_.empty())
             {
@@ -309,7 +309,14 @@ pair<size_t, size_t> TimsDataImpl::getFrameScanPair(int scan) const
 
 size_t TimsDataImpl::getSpectrumIndex(int frame, int scan) const
 {
-    return frames_.at(frame - 1)->firstScanIndex_ + scan - 1;
+    auto findItr = frames_.find(frame);
+    if (findItr == frames_.end())
+        throw out_of_range("[TimsData::getSpectrumIndex] invalid frame index");
+
+    if (!findItr->second->firstScanIndex_)
+        throw runtime_error("[TimsData::getSpectrumIndex] cannot get index from frame/scan in combineIonMobilitySpectra mode");
+
+    return findItr->second->firstScanIndex_.get() + scan - 1;
 }
 
 
@@ -398,7 +405,7 @@ double TimsSpectrum::oneOverK0() const
         frame_.storage_->scanNumToOneOverK0(frame_.frameId_, avgScanNumber, avgOneOverK0);
         return avgOneOverK0[0];
     }
-    else if (scanBegin_ == scanEnd_ || scanEnd_ >= frame_.firstScanIndex_) // for non-merged spectrum, scanEnd_ is the monotonic scan index
+    else if (frame_.firstScanIndex_) // for non-merged spectrum, scanEnd_ is the monotonic scan index
         return frame_.oneOverK0_[scanBegin_];
     else
         return 0; // no mobility value for non-PASEF merged spectra
