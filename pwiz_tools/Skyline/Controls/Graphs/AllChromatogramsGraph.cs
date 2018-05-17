@@ -322,7 +322,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Update overall progress bar.
             if (_partialProgressList.Count == 0)
-                progressBarTotal.Value = status.PercentComplete;
+                progressBarTotal.Value = Math.Max(0, status.PercentComplete);
             else
             {
                 int percentComplete = 0;
