@@ -9,26 +9,22 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 {
     public class ChorusUrl : RemoteUrl
     {
-        public static readonly ChorusUrl EMPTY = new ChorusUrl(ChorusUrlPrefix);
-        public const string ChorusUrlPrefix = "chorus:";    // Not L10N
+        public static readonly string ChorusUrlPrefix = RemoteAccountType.CHORUS.Name + ":";    // Not L10N
+        public static readonly ChorusUrl Empty = new ChorusUrl(ChorusUrlPrefix);
 
-        public ChorusUrl(string chorusUrl)
+        public ChorusUrl(string chorusUrl) : base(chorusUrl)
         {
-            if (!chorusUrl.StartsWith(ChorusUrlPrefix))
-            {
-                throw new ArgumentException("URL must start with " + ChorusUrlPrefix); // Not L10N
-            }
-            var nameValueParameters = NameValueParameters.Parse(chorusUrl.Substring(ChorusUrlPrefix.Length));
-            Init(nameValueParameters);
         }
 
         protected override void Init(NameValueParameters nameValueParameters)
         {
             base.Init(nameValueParameters);
+            // ReSharper disable NonLocalizedString
             ProjectId = nameValueParameters.GetLongValue("projectId");
             ExperimentId = nameValueParameters.GetLongValue("experimentId");
             FileId = nameValueParameters.GetLongValue("fileId");
             RunStartTime = nameValueParameters.GetDateValue("runStartTime");
+            // ReSharper restore NonLocalizedString
         }
 
         public long? ProjectId { get; private set; }
@@ -69,49 +65,26 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             return false;  // Chorus will have already performed lockmass correction
         }
 
-        public override LockMassParameters GetLockMassParameters()
-        {
-            return LockMassParameters.EMPTY;  // Chorus will have already performed lockmass correction
-        }
-
-        public override MsDataFileUri ChangeLockMassParameters(LockMassParameters lockMassParameters)
-        {
-            return this;  // Chorus will have already performed lockmass correction
-        }
-
-        public override bool GetCentroidMs1()
-        {
-            return false;  // Chorus will have already centroided
-        }
-
-        public override bool GetCentroidMs2()
-        {
-            return false; // Chorus will have already centroided
-        }
-
-        public override MsDataFileUri ChangeCentroiding(bool centroidMS1, bool centroidMS2)
-        {
-            return this; // Chorus will have already centroided
-        }
-
         protected override NameValueParameters GetParameters()
         {
             var result = base.GetParameters();
+            // ReSharper disable NonLocalizedString
             result.SetLongValue("projectId", ProjectId);
             result.SetLongValue("experimentId", ExperimentId);
             result.SetLongValue("fileId", FileId);
             result.SetDateValue("runStartTime", RunStartTime);
+            // ReSharper restore NonLocalizedString
             return result;
         }
 
         public ChorusUrl GetRootChorusUrl()
         {
-            return (ChorusUrl) EMPTY.ChangeServerUrl(ServerUrl).ChangeUsername(Username);
+            return (ChorusUrl) Empty.ChangeServerUrl(ServerUrl).ChangeUsername(Username);
         }
 
         public Uri GetChromExtractionUri()
         {
-            return new Uri(ServerUrl + "/skyline/api/chroextract/file/" + LongToString(FileId.Value));    // Not L10N
+            return new Uri(ServerUrl + "/skyline/api/chroextract/file/" + LongToString(FileId.Value)); // Not L10N
         }
 
         protected bool Equals(ChorusUrl other)
@@ -146,7 +119,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             var pathParts = GetPathParts().ToArray();
             if (pathParts.Length == 0)
             {
-                return EMPTY;
+                return Empty;
             }
             var result = GetRootChorusUrl();
             for (int i = 0; i < pathParts.Length - 1; i++)

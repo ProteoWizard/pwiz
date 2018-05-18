@@ -27,7 +27,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -45,10 +44,10 @@ namespace pwiz.Skyline.FileUI
         private readonly IList<RemoteAccount> _remoteAccounts;
         private bool _waitingForData;
 
-        public OpenDataSourceDialog(IEnumerable<RemoteAccount> remoteAccounts)
+        public OpenDataSourceDialog(IList<RemoteAccount> remoteAccounts)
         {
             InitializeComponent();
-            _remoteAccounts = remoteAccounts.ToArray();
+            _remoteAccounts = remoteAccounts;
 
             listView.ListViewItemSorter = _listViewColumnSorter;
 
@@ -135,7 +134,7 @@ namespace pwiz.Skyline.FileUI
             {
                 if (Equals(value, RemoteUrl.EMPTY))
                 {
-                    EnsureChorusAccount();
+                    EnsureRemoteAccount();
                     if (!_remoteAccounts.Any())
                     {
                         return;
@@ -834,18 +833,21 @@ namespace pwiz.Skyline.FileUI
         private void upOneLevelButton_Click( object sender, EventArgs e )
         {
             MsDataFileUri parent = null;
-            var chorusUrl = _currentDirectory as ChorusUrl;
             var dataFilePath = _currentDirectory as MsDataFilePath;
-            if (chorusUrl != null)
-            {
-                parent = chorusUrl.GetParent();
-            }
-            else if (dataFilePath != null && !string.IsNullOrEmpty(dataFilePath.FilePath))
+            if (dataFilePath != null && !string.IsNullOrEmpty(dataFilePath.FilePath))
             {
                 DirectoryInfo parentDirectory = Directory.GetParent(dataFilePath.FilePath);
                 if (parentDirectory != null)
                 {
                     parent = new MsDataFilePath(parentDirectory.FullName);
+                }
+            }
+            else
+            {
+                if (_previousDirectories.Any())
+                {
+                    CurrentDirectory = _previousDirectories.Pop();
+                    return;
                 }
             }
             if (null != parent && !Equals(parent, _currentDirectory))
@@ -1090,27 +1092,16 @@ namespace pwiz.Skyline.FileUI
             UnknownFile,
         }
 
-        private void EnsureChorusAccount()
+        private void EnsureRemoteAccount()
         {
             if (_remoteAccounts.Any())
             {
                 return;
             }
-            DialogResult buttonPress = MultiButtonMsgDlg.Show(
-                this,
-                TextUtil.LineSeparate(
-                    "No remote accounts have been specified. If you have an existing Unifi or Chorus account you can enter your login information now."),
-                "Unifi", "Chorus", true);
-            if (buttonPress == DialogResult.Cancel)
-                return;
-
-            if (buttonPress == DialogResult.Yes)
+            var newAccount = Settings.Default.RemoteAccountList.NewItem(this, Settings.Default.RemoteAccountList, null);
+            if (null != newAccount)
             {
-                var newAccount = Settings.Default.RemoteAccountList.NewItem(this, Settings.Default.RemoteAccountList, null);
-                if (null != newAccount)
-                {
-                    Settings.Default.RemoteAccountList.Add(newAccount);
-                }
+                Settings.Default.RemoteAccountList.Add(newAccount);
             }
         }
 
@@ -1139,5 +1130,7 @@ namespace pwiz.Skyline.FileUI
             }
             return GetSafeDateModified(driveInfo.RootDirectory);
         }
+
+        public IEnumerable<string> ListItemNames { get { return listView.Items.OfType<ListViewItem>().Select(item=>item.Text); } }
     }
 }

@@ -17,18 +17,14 @@
  * limitations under the License.
  */
 
-using System;
-using System.Net;
 using System.Xml;
 using System.Xml.Serialization;
-using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 {
     [XmlRoot("chorus_account")]
-    public sealed class ChorusAccount : RemoteAccount, IXmlSerializable
+    public sealed class ChorusAccount : RemoteAccount
     {
         public const string DEFAULT_SERVER = "https://chorusproject.org"; // Not L10N
         public static readonly ChorusAccount BLANK = (ChorusAccount)new ChorusAccount()
@@ -49,7 +45,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 
         public ChorusUrl GetChorusUrl()
         {
-            return (ChorusUrl) ChorusUrl.EMPTY.ChangeServerUrl(ServerUrl).ChangeUsername(Username);
+            return (ChorusUrl) ChorusUrl.Empty.ChangeServerUrl(ServerUrl).ChangeUsername(Username);
         }
 
         public ChorusAccount Clone()

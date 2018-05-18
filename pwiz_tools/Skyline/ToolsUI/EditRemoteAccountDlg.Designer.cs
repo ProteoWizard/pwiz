@@ -41,12 +41,12 @@
             this.comboAccountType = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBoxUnifi = new System.Windows.Forms.GroupBox();
-            this.lblIdentityServer = new System.Windows.Forms.Label();
-            this.tbxIdentityServer = new System.Windows.Forms.TextBox();
-            this.lblClientScope = new System.Windows.Forms.Label();
-            this.tbxClientScope = new System.Windows.Forms.TextBox();
-            this.lblClientSecret = new System.Windows.Forms.Label();
             this.tbxClientSecret = new System.Windows.Forms.TextBox();
+            this.lblClientSecret = new System.Windows.Forms.Label();
+            this.tbxClientScope = new System.Windows.Forms.TextBox();
+            this.lblClientScope = new System.Windows.Forms.Label();
+            this.tbxIdentityServer = new System.Windows.Forms.TextBox();
+            this.lblIdentityServer = new System.Windows.Forms.Label();
             this.groupBoxUnifi.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -126,35 +126,35 @@
             this.groupBoxUnifi.Name = "groupBoxUnifi";
             this.groupBoxUnifi.TabStop = false;
             // 
-            // lblIdentityServer
+            // tbxClientSecret
             // 
-            resources.ApplyResources(this.lblIdentityServer, "lblIdentityServer");
-            this.lblIdentityServer.Name = "lblIdentityServer";
-            // 
-            // tbxIdentityServer
-            // 
-            resources.ApplyResources(this.tbxIdentityServer, "tbxIdentityServer");
-            this.tbxIdentityServer.Name = "tbxIdentityServer";
-            // 
-            // lblClientScope
-            // 
-            resources.ApplyResources(this.lblClientScope, "lblClientScope");
-            this.lblClientScope.Name = "lblClientScope";
-            // 
-            // tbxClientScope
-            // 
-            resources.ApplyResources(this.tbxClientScope, "tbxClientScope");
-            this.tbxClientScope.Name = "tbxClientScope";
+            resources.ApplyResources(this.tbxClientSecret, "tbxClientSecret");
+            this.tbxClientSecret.Name = "tbxClientSecret";
             // 
             // lblClientSecret
             // 
             resources.ApplyResources(this.lblClientSecret, "lblClientSecret");
             this.lblClientSecret.Name = "lblClientSecret";
             // 
-            // tbxClientSecret
+            // tbxClientScope
             // 
-            resources.ApplyResources(this.tbxClientSecret, "tbxClientSecret");
-            this.tbxClientSecret.Name = "tbxClientSecret";
+            resources.ApplyResources(this.tbxClientScope, "tbxClientScope");
+            this.tbxClientScope.Name = "tbxClientScope";
+            // 
+            // lblClientScope
+            // 
+            resources.ApplyResources(this.lblClientScope, "lblClientScope");
+            this.lblClientScope.Name = "lblClientScope";
+            // 
+            // tbxIdentityServer
+            // 
+            resources.ApplyResources(this.tbxIdentityServer, "tbxIdentityServer");
+            this.tbxIdentityServer.Name = "tbxIdentityServer";
+            // 
+            // lblIdentityServer
+            // 
+            resources.ApplyResources(this.lblIdentityServer, "lblIdentityServer");
+            this.lblIdentityServer.Name = "lblIdentityServer";
             // 
             // EditRemoteAccountDlg
             // 

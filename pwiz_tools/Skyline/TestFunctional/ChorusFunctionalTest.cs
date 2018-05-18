@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Hoofnagle_MSe_targeted.sky")));
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             var openDataSourceDialog = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
-            var multiButtonMsgDlg = ShowDialog<MultiButtonMsgDlg>(() => openDataSourceDialog.CurrentDirectory = ChorusUrl.EMPTY);
+            var multiButtonMsgDlg = ShowDialog<MultiButtonMsgDlg>(() => openDataSourceDialog.CurrentDirectory = RemoteUrl.EMPTY);
             OkDialog(multiButtonMsgDlg, multiButtonMsgDlg.Btn1Click);
             var editChorusAccountDlg = WaitForOpenForm<EditRemoteAccountDlg>();
             RunUI(()=>

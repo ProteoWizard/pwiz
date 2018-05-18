@@ -619,7 +619,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>Specify Chorus Account</value>
+    <value>Remote Account Details</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditRemoteAccountDlg</value>

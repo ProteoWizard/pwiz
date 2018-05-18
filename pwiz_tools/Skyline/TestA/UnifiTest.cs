@@ -17,12 +17,15 @@ namespace pwiz.SkylineTestA
     {
         private static UnifiAccount GetAccount()
         {
-            return (UnifiAccount) UnifiAccount.DEFAULT.ChangeUsername("chambers")
-                .ChangePassword(Environment.GetEnvironmentVariable("UNIFI_PASSWORD"));
+            return UnifiTestUtil.GetTestAccount();
         }
         [TestMethod]
         public void TestUnifiAuthenticate()
         {
+            if (!UnifiTestUtil.EnableUnifiTests)
+            {
+                return;
+            }
             var account = GetAccount();
             var tokenResponse = account.Authenticate();
             Assert.IsFalse(tokenResponse.IsError);
@@ -32,6 +35,11 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void TestUnifiGetFolders()
         {
+            if (!UnifiTestUtil.EnableUnifiTests)
+            {
+                return;
+            }
+
             var account = GetAccount();
             var httpClient = AuthenticateHttpClient(account);
             var response = httpClient.GetAsync(account.GetFoldersUrl()).Result;
@@ -48,6 +56,11 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void TestUnifiGetFiles()
         {
+            if (!UnifiTestUtil.EnableUnifiTests)
+            {
+                return;
+            }
+
             var account = GetAccount();
             var folders = account.GetFolders().ToArray();
             Assert.AreNotEqual(0, folders.Length);

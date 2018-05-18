@@ -16,29 +16,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using Newtonsoft.Json.Linq;
+using System;
+using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 
-namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
+namespace pwiz.SkylineTestUtil
 {
-    public class UnifiFolderObject : UnifiObject
+    /// <summary>
+    /// Helper methods for testing the Unifi server.
+    /// In order for Unifi tests to be enabled, you must have an environment variable "UNIFI_PASSWORD".
+    /// </summary>
+    public class UnifiTestUtil
     {
-        public string Path { get; private set; }
-        public string FolderType { get; private set; }
-        public string ParentId { get; private set; }
-
-        public UnifiFolderObject(JObject jobject)
+        public static UnifiAccount GetTestAccount()
         {
-            // ReSharper disable NonLocalizedString
-            Id = GetProperty(jobject, "id");
-            Name = GetProperty(jobject, "name");
-            Path = GetProperty(jobject, "path");
-            FolderType = GetProperty(jobject, "folderType");
-            ParentId = GetProperty(jobject, "parentId");
-            // ReSharper restore NonLocalizedString
-            if (string.IsNullOrEmpty(ParentId))
+            var password = Environment.GetEnvironmentVariable("UNIFI_PASSWORD");
+            if (password == null)
             {
-                ParentId = null;
+                return null;
             }
+            return (UnifiAccount)UnifiAccount.DEFAULT.ChangeUsername("chambers")
+                .ChangePassword(password);
+
+        }
+
+        public static bool EnableUnifiTests
+        {
+            get { return GetTestAccount() != null; }
         }
     }
 }

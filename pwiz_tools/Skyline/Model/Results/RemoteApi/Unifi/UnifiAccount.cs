@@ -1,4 +1,22 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2018 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Xml;
@@ -24,7 +42,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             ServerUrl = serverUrl;
             Username = username;
             Password = password;
-            string strPort = ":50333";
+            string strPort = ":50333"; // Not L10N
             int ichLastColon = ServerUrl.LastIndexOf(':');
             if (ichLastColon == ServerUrl.IndexOf(':'))
             {
@@ -34,8 +52,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             {
                 IdentityServer = ServerUrl.Substring(0, ichLastColon) + strPort;
             }
-            ClientScope = "unifi";
-            ClientSecret = "secret";
+            ClientScope = "unifi"; // Not L10N
+            ClientSecret = "secret"; // Not L10N
         }
 
         public string IdentityServer { get; private set; }
@@ -89,14 +107,14 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
 
         public string GetFoldersUrl()
         {
-            return ServerUrl + "/unifi/v1/folders";
+            return ServerUrl + "/unifi/v1/folders"; // Not L10N
         }
 
         public TokenResponse Authenticate()
         {
-            var tokenClient = new TokenClient(IdentityServer + "/identity/connect/token", "resourceownerclient",
+            var tokenClient = new TokenClient(IdentityServer + "/identity/connect/token", "resourceownerclient", // Not L10N
                 ClientSecret, new HttpClientHandler());
-            return RemoteHttpInterface.Instance.RequestResourceOwnerPassword(tokenClient, Username, Password, ClientScope);
+            return tokenClient.RequestResourceOwnerPasswordAsync(Username, Password, ClientScope).Result;
         }
 
         public IEnumerable<UnifiFolderObject> GetFolders()
@@ -106,7 +124,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
 
-            var foldersValue = jsonObject["value"] as JArray;
+            var foldersValue = jsonObject["value"] as JArray; // Not L10N
             if (foldersValue == null)
             {
                 return new UnifiFolderObject[0];
@@ -117,11 +135,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
         public IEnumerable<UnifiFileObject> GetFiles(UnifiFolderObject folder)
         {
             var httpClient = GetAuthenticatedHttpClient();
-            string url = string.Format("/unifi/v1/folders({0})/items", folder.Id);
+            string url = string.Format("/unifi/v1/folders({0})/items", folder.Id); // Not L10N
             var response = httpClient.GetAsync(ServerUrl + url).Result;
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
-            var itemsValue = jsonObject["value"] as JArray;
+            var itemsValue = jsonObject["value"] as JArray; // Not L10N
             if (itemsValue == null)
             {
                 return new UnifiFileObject[0];
@@ -134,8 +152,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             var tokenResponse = Authenticate();
             var httpClient = new HttpClient();
             httpClient.SetBearerToken(tokenResponse.AccessToken);
-            httpClient.DefaultRequestHeaders.Remove("Accept");
-            httpClient.DefaultRequestHeaders.Add("Accept", "application/json;odata.metadata=minimal");
+            httpClient.DefaultRequestHeaders.Remove("Accept"); // Not L10N
+            httpClient.DefaultRequestHeaders.Add("Accept", "application/json;odata.metadata=minimal"); // Not L10N
             return httpClient;
         }
 
@@ -151,7 +169,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
 
         public override RemoteUrl GetRootUrl()
         {
-            return UnifiUrl.EMPTY.ChangeServerUrl(ServerUrl).ChangeUsername(Username);
+            return UnifiUrl.Empty.ChangeServerUrl(ServerUrl).ChangeUsername(Username);
         }
 
         private UnifiAccount()

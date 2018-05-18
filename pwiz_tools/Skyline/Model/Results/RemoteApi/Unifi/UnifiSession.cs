@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2018 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
@@ -28,10 +46,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
         private ImmutableList<UnifiFolderObject> GetFolders(Uri requestUri)
         {
             var httpClient = UnifiAccount.GetAuthenticatedHttpClient();
-            string responseBody = RemoteHttpInterface.Instance.Get(httpClient, requestUri);
+            string responseBody = httpClient.GetAsync(requestUri).Result.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
 
-            var foldersValue = jsonObject["value"] as JArray;
+            var foldersValue = jsonObject["value"] as JArray; // Not L10N
             if (foldersValue == null)
             {
                 return ImmutableList<UnifiFolderObject>.EMPTY;
@@ -45,12 +63,14 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             var response = httpClient.GetAsync(requestUri).Result;
             string responseBody = response.Content.ReadAsStringAsync().Result;
             var jsonObject = JObject.Parse(responseBody);
-            var itemsValue = jsonObject["value"] as JArray;
+            var itemsValue = jsonObject["value"] as JArray; // Not L10N
             if (itemsValue == null)
             {
                 return ImmutableList<UnifiFileObject>.EMPTY;
             }
-            return ImmutableList.ValueOf(itemsValue.OfType<JObject>().Select(f => new UnifiFileObject(f)));
+            return ImmutableList.ValueOf(itemsValue.OfType<JObject>()
+                .Where(f => "SampleResult" == UnifiObject.GetProperty(f, "type")) // Not L10N
+                .Select(f => new UnifiFileObject(f)));
         }
 
         public override IEnumerable<RemoteItem> ListContents(MsDataFileUri parentUrl)
@@ -91,7 +111,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
 
         private Uri GetRootContentsUrl()
         {
-            return new Uri(UnifiAccount.ServerUrl + "/unifi/v1/folders");
+            return new Uri(UnifiAccount.ServerUrl + "/unifi/v1/folders"); // Not L10N
         }
 
         private Uri GetFileContentsUrl(UnifiUrl unifiUrl)
@@ -100,7 +120,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             {
                 return null;
             }
-            string url = string.Format("/unifi/v1/folders({0})/items", unifiUrl.Id);
+            string url = string.Format("/unifi/v1/folders({0})/items", unifiUrl.Id); // Not L10N
             return new Uri(UnifiAccount.ServerUrl + url);
         }
     }

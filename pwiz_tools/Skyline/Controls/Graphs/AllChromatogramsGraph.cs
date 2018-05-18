@@ -188,7 +188,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else if (SelectedControl.Progress == 0)
             {
-                labelFileName.Text = Path.GetFileNameWithoutExtension(SelectedControl.FilePath.GetFilePath());
+                labelFileName.Text = SelectedControl.FilePath.GetFileNameWithoutExtension();
                 ShowControl(labelFileName);
             }
             else

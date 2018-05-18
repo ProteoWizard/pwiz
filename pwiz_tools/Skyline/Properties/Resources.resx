@@ -10089,4 +10089,16 @@ Recognized isotopes include: {2}</value>
   <data name="ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_method___1___has_the_wrong_signature_" xml:space="preserve">
     <value>Error running the installed tool {0}. The method '{1}' has the wrong signature.</value>
   </data>
+  <data name="UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__" xml:space="preserve">
+    <value>Cannot find account for username {0} and server {1}.</value>
+  </data>
+  <data name="OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__If_you_have_an_existing_Unifi_or_Chorus_account_you_can_enter_your_login_information_now_" xml:space="preserve">
+    <value>No remote accounts have been specified. If you have an existing Unifi or Chorus account you can enter your login information now.</value>
+  </data>
+  <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
+    <value>Edit Remote Accounts</value>
+  </data>
+  <data name="RemoteAccountList_Label_Remote_Accounts" xml:space="preserve">
+    <value>Remote Accounts</value>
+  </data>
 </root>

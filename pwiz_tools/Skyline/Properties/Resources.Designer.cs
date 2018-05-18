@@ -17450,6 +17450,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No remote accounts have been specified. If you have an existing Unifi or Chorus account you can enter your login information now..
+        /// </summary>
+        public static string OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__If_you_have_an_existing_Unifi_or_Chorus_account_you_can_enter_your_login_information_now_ {
+            get {
+                return ResourceManager.GetString("OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__" +
+                        "If_you_have_an_existing_Unifi_or_Chorus_account_you_can_enter_your_login_informa" +
+                        "tion_now_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to My Network Place.
         /// </summary>
         public static string OpenDataSourceDialog_lookInComboBox_SelectionChangeCommitted_My_Network_Place {
@@ -21352,6 +21363,24 @@ namespace pwiz.Skyline.Properties {
         public static string RelativeRTExtension_LOCALIZED_VALUES_Unknown {
             get {
                 return ResourceManager.GetString("RelativeRTExtension_LOCALIZED_VALUES_Unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remote Accounts.
+        /// </summary>
+        public static string RemoteAccountList_Label_Remote_Accounts {
+            get {
+                return ResourceManager.GetString("RemoteAccountList_Label_Remote_Accounts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit Remote Accounts.
+        /// </summary>
+        public static string RemoteAccountList_Title_Edit_Remote_Accounts {
+            get {
+                return ResourceManager.GetString("RemoteAccountList_Title_Edit_Remote_Accounts", resourceCulture);
             }
         }
         
@@ -29521,6 +29550,15 @@ namespace pwiz.Skyline.Properties {
         public static string UndoRedoList_GetLabelText_Undo_1_Action {
             get {
                 return ResourceManager.GetString("UndoRedoList_GetLabelText_Undo_1_Action", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot find account for username {0} and server {1}..
+        /// </summary>
+        public static string UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__ {
+            get {
+                return ResourceManager.GetString("UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__", resourceCulture);
             }
         }
         
