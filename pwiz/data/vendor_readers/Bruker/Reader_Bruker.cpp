@@ -120,11 +120,31 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
 
     msd.id = bfs::basename(rootpath);
 
-    SoftwarePtr software(new Software);
-    software->id = "CompassXtract";
-    software->set(MS_CompassXtract);
-    software->version = "3.1.7";
-    msd.softwarePtrs.push_back(software);
+    SoftwarePtr apiSoftware(new Software);
+    msd.softwarePtrs.push_back(apiSoftware);
+    switch (format)
+    {
+        case Reader_Bruker_Format_BAF:
+        case Reader_Bruker_Format_BAF_and_U2:
+            apiSoftware->id = "BAF2SQL";
+            apiSoftware->set(MS_Bruker_software);
+            apiSoftware->userParams.emplace_back("software name", "BAF2SQL");
+            apiSoftware->version = "2.7.300.20-112";
+            break;
+
+        case Reader_Bruker_Format_TDF:
+            apiSoftware->id = "TIMS_SDK";
+            apiSoftware->set(MS_Bruker_software);
+            apiSoftware->userParams.emplace_back("software name", "TIMS SDK");
+            apiSoftware->version = "2.3.101.131-791";
+            break;
+
+        default:
+            apiSoftware->id = "CompassXtract";
+            apiSoftware->set(MS_CompassXtract);
+            apiSoftware->version = "3.1.7";
+            break;
+    }
 
     SoftwarePtr acquisitionSoftware(new Software);
     CVID acquisitionSoftwareCvid = translateAsAcquisitionSoftware(compassDataPtr);

@@ -68,30 +68,6 @@ void testAccept(const Reader& reader, const string& rawpath)
 }
 
 
-void testFind(const MSData& msd)
-{
-    if (msd.run.spectrumListPtr && msd.run.spectrumListPtr->size() > 0)
-    {
-        auto& sl = *msd.run.spectrumListPtr;
-        auto firstId = sl.spectrumIdentity(0).id;
-        auto firstIdAb = msdata::id::abbreviate(firstId);
-        auto lastId = sl.spectrumIdentity(sl.size() - 1).id;
-        unit_assert_operator_equal(0, sl.find(firstId));
-        unit_assert_operator_equal(0, sl.findAbbreviated(firstIdAb));
-        unit_assert_operator_equal(sl.size() - 1, sl.find(lastId));
-    }
-
-    if (msd.run.chromatogramListPtr && msd.run.chromatogramListPtr->size() > 0)
-    {
-        auto& cl = *msd.run.chromatogramListPtr;
-        auto firstId = cl.chromatogramIdentity(0).id;
-        auto lastId = cl.chromatogramIdentity(cl.size() - 1).id;
-        unit_assert_operator_equal(0, cl.find(firstId));
-        unit_assert_operator_equal(cl.size() - 1, cl.find(lastId));
-    }
-}
-
-
 void mangleSourceFileLocations(const string& sourceName, vector<SourceFilePtr>& sourceFiles, const string& newSourceName = "")
 {
     // mangling the absolute paths is necessary for the test to work from any path
@@ -297,9 +273,6 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
         if (diff) cerr << headDiff(diff, 5000) << endl;
         unit_assert(!diff);
 
-        // test SpectrumList::find (some vendors may override it)
-        testFind(msd);
-
         // test serialization of this vendor format in and out of pwiz's supported open formats
         stringstream* stringstreamPtr = new stringstream;
         boost::shared_ptr<std::iostream> serializedStreamPtr(stringstreamPtr);
@@ -312,7 +285,9 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
             serializer_mz5.write(targetResultFilename_mz5, msd);
             serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
 
-            Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5);
+            DiffConfig diffConfig_mz5;
+            diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
+            Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5, diffConfig_mz5);
             if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
             unit_assert(!diff_mz5);
         }
@@ -320,6 +295,7 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
 #endif
         DiffConfig diffConfig_non_mzML;
         diffConfig_non_mzML.ignoreMetadata = true;
+        diffConfig_non_mzML.ignoreExtraBinaryDataArrays = true;
         diffConfig_non_mzML.ignoreChromatograms = true;
 
         // check if the file type is one that loses nativeIDs in translation
