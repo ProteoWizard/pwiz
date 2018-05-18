@@ -7,7 +7,7 @@ set TARGETPLATFORM=32
 set ARGS=
 set TARGETS=
 set REGISTER=
-set OPTIMIZATION=space
+set OPTIMIZATION=optimization=space
 set NOLOG=
 
 set ALL_ARGS= %*
@@ -29,10 +29,11 @@ if "%ALL_ARGS: REGISTER=%" neq "%ALL_ARGS%" (
     set ALL_ARGS=%ALL_ARGS: REGISTER=%
 )
 if "%ALL_ARGS: debug=%" neq "%ALL_ARGS%" (
-    set OPTIMIZATION=off
+    set OPTIMIZATION=
 )
 if "%ALL_ARGS: DEBUG=%" neq "%ALL_ARGS%" (
-    set OPTIMIZATION=off
+    set OPTIMIZATION=debug
+    set ALL_ARGS=%ALL_ARGS: DEBUG=%
 )
 if "%ALL_ARGS: nolog=%" neq "%ALL_ARGS%" (
     set NOLOG=1
@@ -41,6 +42,10 @@ if "%ALL_ARGS: nolog=%" neq "%ALL_ARGS%" (
 if "%ALL_ARGS: NOLOG=%" neq "%ALL_ARGS%" (
     set NOLOG=1
     set ALL_ARGS=%ALL_ARGS: NOLOG=%
+)
+if "%ALL_ARGS: unset-optimization=%" neq "%ALL_ARGS%" (
+    set OPTIMIZATION=
+    set ALL_ARGS=%ALL_ARGS: unset-optimization=%
 )
 
 REM # quickbuild.bat should be in the current directory or parent directory
@@ -68,10 +73,10 @@ if %ERRORLEVEL% NEQ 0 exit /b 1
 
 echo Building %TARGETPLATFORM%-bit %ALL_ARGS%
 echo.
-echo %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --hash --without-compassxtract optimization=%OPTIMIZATION% secure-scl=off address-model=%TARGETPLATFORM% %ALL_ARGS%
+echo %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --abbreviate-paths --without-compassxtract %OPTIMIZATION% address-model=%TARGETPLATFORM% %ALL_ARGS%
 
 if "%NOLOG%"=="1" (
-    call %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --hash --without-compassxtract optimization=%OPTIMIZATION% secure-scl=off address-model=%TARGETPLATFORM% %ALL_ARGS%
+    call %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --abbreviate-paths --without-compassxtract %OPTIMIZATION% address-model=%TARGETPLATFORM% %ALL_ARGS%
     GOTO BUILD_DONE
 )
 
@@ -80,7 +85,7 @@ set QUICKBUILDLOG=%CD%\build%TARGETPLATFORM%.log
 echo Build output: %QUICKBUILDLOG%
 
 REM # build!
-call %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --hash --without-compassxtract optimization=%OPTIMIZATION% secure-scl=off address-model=%TARGETPLATFORM% %ALL_ARGS% >%QUICKBUILDLOG% 2>&1
+call %QUICKBUILD% -j%NUMBER_OF_PROCESSORS% --abbreviate-paths --without-compassxtract %OPTIMIZATION% address-model=%TARGETPLATFORM% %ALL_ARGS% >%QUICKBUILDLOG% 2>&1
 
 REM # look for problems
 findstr /c:"...updated" %QUICKBUILDLOG%

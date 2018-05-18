@@ -854,7 +854,8 @@ int go(const Config& config)
 {
     *os_ << config;
 
-    boost::filesystem::create_directories(config.outputPath);
+    if (!bfs::exists(config.outputPath))
+        boost::filesystem::create_directories(config.outputPath);
 
     FullReaderList readers;
 
