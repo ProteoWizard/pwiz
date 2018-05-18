@@ -19,6 +19,7 @@
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi
 {
@@ -41,12 +42,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         {
             public override string Label
             {
-                get { return "Chorus"; }
+                get { return Resources.Chorus_Label_Chorus; }
             }
 
             public override string Name
             {
-                get { return "chorus"; }
+                get { return "chorus"; } // Not L10N
             }
 
             public override RemoteUrl GetEmptyUrl()
@@ -69,17 +70,17 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
             public override string Label
             {
-                get { return "Unifi"; }
+                get { return Resources.Unifi_Label_Unifi; }
             }
 
             public override string Name
             {
-                get { return "unifi"; }
+                get { return "unifi"; } // Not L10N
             }
 
             public override RemoteAccount GetEmptyAccount()
             {
-                return new UnifiAccount("https://unifiapi.waters.com:50034", null, null);
+                return new UnifiAccount("https://unifiapi.waters.com:50034", null, null); // Not L10N
             }
         }
     }

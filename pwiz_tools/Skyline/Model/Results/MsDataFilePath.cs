@@ -17,9 +17,7 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Specialized;
 using System.IO;
-using System.Web;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results.RemoteApi.Chorus;

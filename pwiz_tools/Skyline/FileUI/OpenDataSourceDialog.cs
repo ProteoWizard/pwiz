@@ -79,7 +79,7 @@ namespace pwiz.Skyline.FileUI
             TreeView tv = new TreeView { Indent = 8 };
             _remoteIndex = lookInComboBox.Items.Count;
             TreeNode unifiNode = tv.Nodes.Add("Remote", // Not L10N
-                "Remote", (int) ImageIndex.MyNetworkPlaces,
+                Resources.OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts, (int) ImageIndex.MyNetworkPlaces,
                 (int) ImageIndex.MyNetworkPlaces);
             unifiNode.Tag = RemoteUrl.EMPTY;
             lookInComboBox.Items.Add(unifiNode);

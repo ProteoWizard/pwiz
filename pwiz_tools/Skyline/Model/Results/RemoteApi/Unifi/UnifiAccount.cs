@@ -33,9 +33,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
     public class UnifiAccount : RemoteAccount
     {
         public static readonly UnifiAccount DEFAULT 
-            = new UnifiAccount("https://unifiapi.waters.com:50034", string.Empty, string.Empty)
+            = new UnifiAccount("https://unifiapi.waters.com:50034", string.Empty, string.Empty) // Not L10N
         {
-            IdentityServer = "https://unifiapi.waters.com:50333",
+            IdentityServer = "https://unifiapi.waters.com:50333" // Not L10N
         };
         public UnifiAccount(string serverUrl, string username, string password)
         {

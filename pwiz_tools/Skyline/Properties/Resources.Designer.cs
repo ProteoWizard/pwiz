@@ -3067,6 +3067,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chorus.
+        /// </summary>
+        public static string Chorus_Label_Chorus {
+            get {
+                return ResourceManager.GetString("Chorus_Label_Chorus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Chorus Accounts.
         /// </summary>
         public static string ChorusAccountList_Label_Chorus_Accounts {
@@ -10011,6 +10020,26 @@ namespace pwiz.Skyline.Properties {
         public static string EditPepModsDlg_GetIsotopeLabelText_Isotope__0__ {
             get {
                 return ResourceManager.GetString("EditPepModsDlg_GetIsotopeLabelText_Isotope__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while trying to authenticate..
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_ {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authentic" +
+                        "ate_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An exception occurred while trying to fetch the directory listing..
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_ {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch" +
+                        "_the_directory_listing_", resourceCulture);
             }
         }
         
@@ -17538,6 +17567,15 @@ namespace pwiz.Skyline.Properties {
         public static string OpenDataSourceDialog_OpenDataSourceDialog_My_Recent_Documents {
             get {
                 return ResourceManager.GetString("OpenDataSourceDialog_OpenDataSourceDialog_My_Recent_Documents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remote Accounts.
+        /// </summary>
+        public static string OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts {
+            get {
+                return ResourceManager.GetString("OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts", resourceCulture);
             }
         }
         
@@ -29550,6 +29588,15 @@ namespace pwiz.Skyline.Properties {
         public static string UndoRedoList_GetLabelText_Undo_1_Action {
             get {
                 return ResourceManager.GetString("UndoRedoList_GetLabelText_Undo_1_Action", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unifi.
+        /// </summary>
+        public static string Unifi_Label_Unifi {
+            get {
+                return ResourceManager.GetString("Unifi_Label_Unifi", resourceCulture);
             }
         }
         

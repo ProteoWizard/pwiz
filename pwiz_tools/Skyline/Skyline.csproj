@@ -373,7 +373,6 @@
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiFileObject.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiFolderObject.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiObject.cs" />
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiServer.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiSession.cs" />
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">

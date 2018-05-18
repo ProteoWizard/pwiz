@@ -23,7 +23,6 @@ using System.Net;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Results.RemoteApi;
@@ -158,12 +157,12 @@ namespace pwiz.Skyline.ToolsUI
                     if (tokenResponse.IsError)
                     {
                         string error = tokenResponse.ErrorDescription ?? tokenResponse.Error;
-                        MessageDlg.Show(this, TextUtil.LineSeparate("An error occurred while trying to authenticate.", error));
-                        if (tokenResponse.Error == "invalid_scope")
+                        MessageDlg.Show(this, TextUtil.LineSeparate(Resources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, error));
+                        if (tokenResponse.Error == "invalid_scope") // Not L10N
                         {
                             tbxClientScope.Focus();
                         }
-                        else if (tokenResponse.Error == "invalid_client")
+                        else if (tokenResponse.Error == "invalid_client") // Not L10N
                         {
                             tbxClientSecret.Focus();
                         }
@@ -180,7 +179,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 catch (Exception e)
                 {
-                    MessageDlg.ShowWithException(this, "An error occurred while trying to authenticate.", e);
+                    MessageDlg.ShowWithException(this, Resources.EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_, e);
                     tbxIdentityServer.Focus();
                     return false;
                 }
@@ -227,7 +226,7 @@ namespace pwiz.Skyline.ToolsUI
                     }
                     catch (Exception e)
                     {
-                        MessageDlg.ShowWithException(this, "An exception occurred while trying to fetch the directory listing.", e);
+                        MessageDlg.ShowWithException(this, Resources.EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_, e);
                         textServerURL.Focus();
                         return false;
                     }

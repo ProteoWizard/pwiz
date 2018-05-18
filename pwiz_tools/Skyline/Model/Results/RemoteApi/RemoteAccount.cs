@@ -70,12 +70,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         public string GetKey()
         {
             var accountType = AccountType;
-            string prefix = accountType.Name + ":";
+            string prefix = accountType.Name + ":"; // Not L10N
             if (ServerUrl == accountType.GetEmptyUrl().ServerUrl)
             {
                 return prefix + Username;
             }
-            return prefix + Username + "@" + ServerUrl;
+            return prefix + Username + "@" + ServerUrl; // Not L10N
         }
 
         public XmlSchema GetSchema()

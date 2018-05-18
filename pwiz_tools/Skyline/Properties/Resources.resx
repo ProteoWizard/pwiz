@@ -10101,4 +10101,19 @@ Recognized isotopes include: {2}</value>
   <data name="RemoteAccountList_Label_Remote_Accounts" xml:space="preserve">
     <value>Remote Accounts</value>
   </data>
+  <data name="OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts" xml:space="preserve">
+    <value>Remote Accounts</value>
+  </data>
+  <data name="Chorus_Label_Chorus" xml:space="preserve">
+    <value>Chorus</value>
+  </data>
+  <data name="Unifi_Label_Unifi" xml:space="preserve">
+    <value>Unifi</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_" xml:space="preserve">
+    <value>An error occurred while trying to authenticate.</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_" xml:space="preserve">
+    <value>An exception occurred while trying to fetch the directory listing.</value>
+  </data>
 </root>
