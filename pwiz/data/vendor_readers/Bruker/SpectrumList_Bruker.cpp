@@ -247,6 +247,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                 break;
         }
 
+        //sd.set(MS_base_peak_m_z, pScanStats_->BPM);
+        if (spectrum->getTIC() > 0)
+        {
+            result->set(MS_base_peak_intensity, spectrum->getBPI());
+            result->set(MS_total_ion_current, spectrum->getTIC());
+        }
+
         if (detailLevel == DetailLevel_InstantMetadata)
             return result;
 
@@ -284,13 +291,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         }
         else
             result->scanList.set(MS_no_combination);
-
-        //sd.set(MS_base_peak_m_z, pScanStats_->BPM);
-        if (spectrum->getTIC() > 0)
-        {
-            result->set(MS_base_peak_intensity, spectrum->getBPI());
-            result->set(MS_total_ion_current, spectrum->getTIC());
-        }
 
         //sd.set(MS_lowest_observed_m_z, minObservedMz);
         //sd.set(MS_highest_observed_m_z, maxObservedMz);

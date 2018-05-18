@@ -254,7 +254,7 @@ namespace sqlite3pp
 
     bool database::has_table(const char* table)
     {
-        query q(*this, "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = '?'");
+        query q(*this, "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?");
         q.bind(1, table);
         return q.begin()->get<sqlite3_int64>(0) > 0;
     }

@@ -462,7 +462,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(errMaxDecoys, errMaxDecoys.OkDialog);
             RunUI(() => { importPeptideSearchDlg.ImportFastaControl.NumDecoys = -1; });
             var errValidNumDecoys = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-            Assert.AreEqual(Resources.ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys_per_target_, errValidNumDecoys.Message);
+            Assert.AreEqual(Resources.ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_, errValidNumDecoys.Message);
             OkDialog(errValidNumDecoys, errValidNumDecoys.OkDialog);
             RunUI(() =>
             {

@@ -178,10 +178,9 @@ namespace pwiz.Skyline.Model.Results
                 int sampleIndex = SampleHelp.GetPathSampleIndexPart(dataFilePath);
                 if (sampleIndex == -1)
                     sampleIndex = 0;
-                var preferOnlyMsLevel = Transitions.Any(t => t.Source == ChromSource.fragment) ? 0 : 1; // Ask provider to omit MS2 if we don't have any fragments
                 // Full-scan extraction always uses SIM as spectra
                 _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, lockMassParameters, true, 
-                    requireVendorCentroidedMS1: DataFilePath.GetCentroidMs1(), requireVendorCentroidedMS2: DataFilePath.GetCentroidMs2(), preferOnlyMsLevel: preferOnlyMsLevel);
+                    requireVendorCentroidedMS1: DataFilePath.GetCentroidMs1(), requireVendorCentroidedMS2: DataFilePath.GetCentroidMs2());
             }
             return _dataFile;
         }

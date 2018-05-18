@@ -464,7 +464,8 @@ void diff(const Spectrum& a,
 
     // special handling for binary data arrays
 
-    if (a.binaryDataArrayPtrs.size() != b.binaryDataArrayPtrs.size())
+    if ((!config.ignoreExtraBinaryDataArrays && a.binaryDataArrayPtrs.size() != b.binaryDataArrayPtrs.size()) ||
+        (config.ignoreExtraBinaryDataArrays && (a.binaryDataArrayPtrs.size() < 2 || b.binaryDataArrayPtrs.size() < 2)))
     {
         a_b.userParams.push_back(UserParam("Binary data array count: " + 
                                  lexical_cast<string>(a.binaryDataArrayPtrs.size())));
@@ -474,9 +475,21 @@ void diff(const Spectrum& a,
     else
     {
         pair<size_t, double> maxPrecisionDiff(0, 0);
-        diff(a.binaryDataArrayPtrs, b.binaryDataArrayPtrs, 
-             a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs,
-             config, maxPrecisionDiff);
+        if (config.ignoreExtraBinaryDataArrays)
+        {
+            // only check 2 primary arrays
+            vector<BinaryDataArrayPtr> aBDA(a.binaryDataArrayPtrs.begin(), a.binaryDataArrayPtrs.begin() + 2);
+            vector<BinaryDataArrayPtr> bBDA(b.binaryDataArrayPtrs.begin(), b.binaryDataArrayPtrs.begin() + 2);
+            diff(aBDA, bBDA,
+                 a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs,
+                 config, maxPrecisionDiff);
+        }
+        else
+        {
+            diff(a.binaryDataArrayPtrs, b.binaryDataArrayPtrs, 
+                 a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs,
+                 config, maxPrecisionDiff);
+        }
       
         if (maxPrecisionDiff.second>(config.precision+numeric_limits<double>::epsilon()))   
         {
@@ -532,7 +545,8 @@ void diff(const Chromatogram& a,
 
     // special handling for binary data arrays
 
-    if (a.binaryDataArrayPtrs.size() != b.binaryDataArrayPtrs.size())
+    if ((!config.ignoreExtraBinaryDataArrays && a.binaryDataArrayPtrs.size() != b.binaryDataArrayPtrs.size()) ||
+        (config.ignoreExtraBinaryDataArrays && (a.binaryDataArrayPtrs.size() < 2 || b.binaryDataArrayPtrs.size() < 2)))
     {
         a_b.userParams.push_back(UserParam("Binary data array count: " + 
                                  lexical_cast<string>(a.binaryDataArrayPtrs.size())));
@@ -542,9 +556,21 @@ void diff(const Chromatogram& a,
     else
     {
         pair<size_t, double> maxPrecisionDiff(0, 0);
-        diff(a.binaryDataArrayPtrs, b.binaryDataArrayPtrs,
-             a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs,
-             config, maxPrecisionDiff);
+        if (config.ignoreExtraBinaryDataArrays)
+        {
+            // only check 2 primary arrays
+            vector<BinaryDataArrayPtr> aBDA(a.binaryDataArrayPtrs.begin(), a.binaryDataArrayPtrs.begin() + 2);
+            vector<BinaryDataArrayPtr> bBDA(b.binaryDataArrayPtrs.begin(), b.binaryDataArrayPtrs.begin() + 2);
+            diff(aBDA, bBDA,
+                 a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs,
+                 config, maxPrecisionDiff);
+        }
+        else
+        {
+            diff(a.binaryDataArrayPtrs, b.binaryDataArrayPtrs, 
+                 a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs,
+                 config, maxPrecisionDiff);
+        }
 
         if (maxPrecisionDiff.second>(config.precision+numeric_limits<double>::epsilon()))   
         {

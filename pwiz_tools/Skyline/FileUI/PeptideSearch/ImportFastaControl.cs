@@ -237,9 +237,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (!string.IsNullOrEmpty(DecoyGenerationMethod))
             {
-                if (!NumDecoys.HasValue || NumDecoys < 0)
+                if (!NumDecoys.HasValue || NumDecoys <= 0)
                 {
-                    MessageDlg.Show(WizardForm, Resources.ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys_per_target_);
+                    MessageDlg.Show(WizardForm, Resources.ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_);
                     txtNumDecoys.Focus();
                     return false;
                 }
@@ -343,7 +343,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return false;
 
                 if (AutoTrain)
+                {
+                    if (!docNew.Peptides.Any(pep => pep.IsDecoy))
+                    {
+                        MessageDlg.Show(this, Resources.ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_);
+                        return false;
+                    }
                     docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideIntegration(integration => integration.ChangeAutoTrain(true)));
+                }
 
                 SkylineWindow.ModifyDocument(Resources.ImportFastaControl_ImportFasta_Insert_FASTA, doc =>
                 {

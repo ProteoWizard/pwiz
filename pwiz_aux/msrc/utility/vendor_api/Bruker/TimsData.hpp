@@ -27,6 +27,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "CompassData.hpp"
 #include <boost/optional.hpp>
+#include <boost/container/flat_map.hpp>
 #include "timsdata_cpp.h"
 
 
@@ -92,7 +93,7 @@ struct PWIZ_API_DECL TimsFrame
     optional<double> precursorMz_;
     int scanMode_;
 
-    size_t firstScanIndex_;
+    optional<size_t> firstScanIndex_; // only set in combined mode
 
     vector<PasefPrecursorInfoPtr> pasef_precursor_info_;
 
@@ -252,7 +253,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     private:
     std::string tdfFilepath_;
     TimsBinaryDataPtr tdfStorage_;
-    std::vector<TimsFramePtr> frames_;
+    boost::container::flat_map<size_t, TimsFramePtr> frames_;
     std::vector<TimsSpectrumPtr> spectra_;
     std::string acquisitionSoftware_;
     std::string acquisitionSoftwareVersion_;
