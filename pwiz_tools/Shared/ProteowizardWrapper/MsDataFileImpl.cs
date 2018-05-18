@@ -863,10 +863,7 @@ namespace pwiz.ProteowizardWrapper
 
         private static bool NegativePolarity(Spectrum spectrum)
         {
-            var param = spectrum.cvParamChild(CVID.MS_scan_polarity);
-            if (param.empty())
-                return false;  // Assume positive if undeclared
-            return (param.cvid == CVID.MS_negative_scan);
+            return spectrum.hasCVParamChildWithValue(CVID.MS_scan_polarity, CVID.MS_negative_scan);
         }
 
         public bool IsSrmSpectrum(int scanIndex)

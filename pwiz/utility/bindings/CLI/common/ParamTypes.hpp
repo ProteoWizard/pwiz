@@ -453,6 +453,11 @@ public ref class ParamContainer
     bool hasCVParamChild(CVID cvid);
 
     /// <summary>
+    /// returns true iff cvParams contains a child IS_A of cvid (recursive) with indicated value
+    /// </summary>
+    bool hasCVParamChildWithValue(CVID cvid, CVID value);
+
+    /// <summary>
     /// Finds and returns UserParam with specified name 
     /// <para>- returns UserParam() if name not found</para>
     /// <para>- not recursive: looks only at local userParams</para>

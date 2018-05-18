@@ -222,6 +222,26 @@ PWIZ_API_DECL CVParam ParamContainer::cvParamChild(CVID cvid) const
     return CVParam();
 }
 
+PWIZ_API_DECL bool ParamContainer::hasCVParamChildWithValue(CVID cvid, CVID value) const
+{
+    // first look in our own cvParams
+
+    vector<CVParam>::const_iterator it =
+        find_if(cvParams.begin(), cvParams.end(), CVParamIsChildOf(cvid));
+
+    if (it != cvParams.end()) return it->cvid == value;
+
+    // then recurse into paramGroupPtrs
+
+    for (vector<ParamGroupPtr>::const_iterator jt = paramGroupPtrs.begin();
+        jt != paramGroupPtrs.end(); ++jt)
+    {
+        return jt->get() && (*jt)->cvParamChild(cvid).cvid == value;
+    }
+
+    return false;
+}
+
 
 PWIZ_API_DECL vector<CVParam> ParamContainer::cvParamChildren(CVID cvid) const
 {

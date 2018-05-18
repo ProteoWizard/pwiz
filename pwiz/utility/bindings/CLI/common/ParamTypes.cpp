@@ -297,6 +297,11 @@ bool ParamContainer::hasCVParamChild(CVID cvid)
     return base_->hasCVParamChild((pwiz::cv::CVID) cvid);
 }
 
+bool ParamContainer::hasCVParamChildWithValue(CVID cvid, CVID value)
+{
+    return base_->hasCVParamChildWithValue((pwiz::cv::CVID) cvid, (pwiz::cv::CVID) value);
+}
+
 UserParam^ ParamContainer::userParam(System::String^ name)
 {
     return gcnew UserParam(new b::UserParam(base_->userParam(ToStdString(name))));

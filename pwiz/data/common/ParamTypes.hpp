@@ -298,6 +298,9 @@ struct PWIZ_API_DECL ParamContainer
     /// returns true iff cvParams contains a child (is_a) of cvid (recursive)
     bool hasCVParamChild(CVID cvid) const;
 
+    /// returns true iff cvParams contains a child (is_a) of cvid (recursive), and first found has indicated value
+    bool hasCVParamChildWithValue(CVID cvid, CVID value) const;
+
     /// finds UserParam with specified name 
     /// - returns UserParam() if name not found 
     /// - not recursive: looks only at local userParams
