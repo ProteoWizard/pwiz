@@ -172,7 +172,10 @@ if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
 if "_%BOOST_JAM_ARCH%_" == "__" set BOOST_JAM_ARCH=x86
 set BOOST_JAM_ARGS=%BOOST_JAM_ARGS% %BOOST_JAM_ARCH%
 
+REM return to current directory as vsdevcmd_end.bat switches to %USERPROFILE%\Source if it exists.
+pushd %CD%
 if "_%VSINSTALLDIR%_" == "__" call :Call_If_Exists "%BOOST_JAM_TOOLSET_ROOT%Auxiliary\Build\vcvarsall.bat" %BOOST_JAM_ARGS%
+popd
 set "BOOST_JAM_CC=cl /nologo /RTC1 /Zi /MTd /Fobootstrap/ /Fdbootstrap/ -DNT -DYYDEBUG -wd4996 kernel32.lib advapi32.lib user32.lib"
 set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
 set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"

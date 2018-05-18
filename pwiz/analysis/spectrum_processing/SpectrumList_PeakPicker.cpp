@@ -32,6 +32,7 @@
 #include "pwiz/data/vendor_readers/ABI/T2D/SpectrumList_ABI_T2D.hpp"
 #include "pwiz/data/vendor_readers/Agilent/SpectrumList_Agilent.hpp"
 #include "pwiz/data/vendor_readers/Bruker/SpectrumList_Bruker.hpp"
+#include "pwiz/data/vendor_readers/Shimadzu/SpectrumList_Shimadzu.hpp"
 #include "pwiz/data/vendor_readers/Thermo/SpectrumList_Thermo.hpp"
 #include "pwiz/data/vendor_readers/Waters/SpectrumList_Waters.hpp"
 
@@ -92,6 +93,12 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         {
             mode_ = 6;
         }
+
+        detail::SpectrumList_Shimadzu* shimadzu = dynamic_cast<detail::SpectrumList_Shimadzu*>(&*inner);
+        if (shimadzu)
+        {
+            mode_ = 7;
+        }
     }
 
     // add processing methods to the copy of the inner SpectrumList's data processing
@@ -114,6 +121,8 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         method.userParams.push_back(UserParam("ABI/DataExplorer peak picking"));
     else if (mode_ == 6)
         method.userParams.push_back(UserParam("Waters/MassLynx peak picking"));
+    else if (mode_ == 7)
+        method.userParams.push_back(UserParam("Shimadzu peak picking"));
     //else
     //    method.userParams.push_back(algorithm->name());
     if (preferVendorPeakPicking && !mode_ && (algorithm_ != NULL)) // VendorOnlyPeakPicker sets algorithm null, we deal with this at get binary data time
@@ -171,6 +180,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
 
         case 6:
             s = dynamic_cast<detail::SpectrumList_Waters*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToPeakPick_);
+            break;
+
+        case 7:
+            s = dynamic_cast<detail::SpectrumList_Shimadzu*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToPeakPick_);
             break;
 
         case 0:

@@ -33,6 +33,7 @@ import generators ;
 import make ;
 import modules ;
 import os ;
+import param ;
 import path ;
 import print ;
 import project ;
@@ -94,7 +95,7 @@ rule init (
         find-tools $(docbook-xsl-dir) : $(docbook-dtd-dir) : $(boostbook-dir) ;
 
         # Register generators only if we were called via "using boostbook ;"
-        local reg-gen = generators.register-standard ;
+        local reg-gen = generators.register-xslt ;
         $(reg-gen) boostbook.dtdxml-to-boostbook  : DTDXML  : XML ;
         $(reg-gen) boostbook.boostbook-to-docbook : XML     : DOCBOOK ;
         $(reg-gen) boostbook.boostbook-to-tests   : XML     : TESTS ;
@@ -168,8 +169,8 @@ local rule modify-config ( )
 
 rule print-error ( location message * )
 {
-    ECHO error: at $(location) ;
-    ECHO error: $(message) ;
+    ECHO "error:" at $(location) ;
+    ECHO "error:" $(message) ;
     EXIT ;
 }
 
@@ -202,12 +203,12 @@ rule check-docbook-xsl-dir ( )
     {
         if ! [ path.glob $(.docbook-xsl-dir) : common/common.xsl ]
         {
-            .error-message = [ make-error BoostBook: could not find docbook XSL stylesheets
-                in: [ path.native $(.docbook-xsl-dir) ] ] ;
+            .error-message = [ make-error "BoostBook:" could not find docbook XSL stylesheets
+                "in:" [ path.native $(.docbook-xsl-dir) ] ] ;
         }
         else if $(.debug-configuration)
         {
-            ECHO notice: BoostBook: found docbook XSL stylesheets in: [
+            ECHO "notice:" "BoostBook:" found docbook XSL stylesheets "in:" [
                 path.native $(.docbook-xsl-dir) ] ;
         }
     }
@@ -220,12 +221,12 @@ rule check-docbook-dtd-dir ( )
     {
         if ! [ path.glob $(.docbook-dtd-dir) : docbookx.dtd ]
         {
-            .error-message = [ make-error BoostBook: could not find docbook DTD in: [
+            .error-message = [ make-error "BoostBook:" could not find docbook DTD "in:" [
                 path.native $(.docbook-dtd-dir) ] ] ;
         }
         else if $(.debug-configuration)
         {
-            ECHO notice: BoostBook: found docbook DTD in: [ path.native
+            ECHO "notice:" "BoostBook:" found docbook DTD "in:" [ path.native
                 $(.docbook-dtd-dir) ] ;
         }
     }
@@ -236,16 +237,16 @@ rule check-boostbook-xsl-dir ( )
 {
     if ! $(.boostbook-xsl-dir)
     {
-        .error-message = [ make-error BoostBook: could not find boostbook XSL stylesheets. ] ;
+        .error-message = [ make-error "BoostBook:" could not find boostbook XSL "stylesheets." ] ;
     }
     else if ! [ path.glob $(.boostbook-xsl-dir) : docbook.xsl ]
     {
-        .error-message = [ make-error  BoostBook: could not find docbook XSL stylesheets in:
+        .error-message = [ make-error  "BoostBook:" could not find docbook XSL stylesheets "in:"
             [ path.native $(.boostbook-xsl-dir) ] ] ;
     }
     else if $(.debug-configuration)
     {
-        ECHO notice: BoostBook: found boostbook XSL stylesheets in: [
+        ECHO "notice:" "BoostBook:" found boostbook XSL stylesheets "in:" [
             path.native $(.boostbook-xsl-dir) ] ;
     }
 }
@@ -255,16 +256,16 @@ rule check-boostbook-dtd-dir ( )
 {
     if ! $(.boostbook-dtd-dir)
     {
-        .error-message = [ make-error BoostBook: could not find boostbook DTD. ] ;
+        .error-message = [ make-error "BoostBook:" could not find boostbook DTD. ] ;
     }
     else if ! [ path.glob $(.boostbook-dtd-dir) : boostbook.dtd ]
     {
-        .error-message = [ make-error BoostBook: could not find boostbook DTD in: [
+        .error-message = [ make-error "BoostBook:" could not find boostbook DTD "in:" [
             path.native $(.boostbook-dtd-dir) ] ] ;
     }
     else if $(.debug-configuration)
     {
-        ECHO notice: BoostBook: found boostbook DTD in: [ path.native
+        ECHO "notice:" "BoostBook:" found boostbook DTD "in:" [ path.native
             $(.boostbook-dtd-dir) ] ;
     }
 }
@@ -274,7 +275,7 @@ rule check-boostbook-dir ( boostbook-dir ? )
 {
     if $(boostbook-dir) && ! [ path.glob $(boostbook-dir) : xsl ]
     {
-        .error-message = [ make-error BoostBook: could not find boostbook in: [ path.native
+        .error-message = [ make-error "BoostBook:" could not find boostbook "in:" [ path.native
             $(boostbook-dir) ] ] ;
     }
 }
@@ -383,8 +384,8 @@ rule find-tools ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-dir ? )
 
     if $(.debug-configuration)
     {
-        ECHO notice: Boost.Book: searching XSL/DTD "in" ;
-        ECHO notice: [ sequence.transform path.native : $(boostbook-dir) ] ;
+        ECHO "notice:" "Boost.Book:" searching XSL/DTD "in" ;
+        ECHO "notice:" [ sequence.transform path.native : $(boostbook-dir) ] ;
     }
     local boostbook-xsl-dir ;
     for local dir in $(boostbook-dir)
@@ -509,7 +510,7 @@ rule format-catalog-path ( path )
     {
         if [ os.name ] = NT
         {
-            drive = [ MATCH ^/(.):(.*)$ : $(path) ] ;
+            drive = [ MATCH "^/(.):(.*)$" : $(path) ] ;
             result = /cygdrive/$(drive[1])$(drive[2]) ;
         }
     }
@@ -716,11 +717,14 @@ class boostbook-target-class : basic-target
 
 # Declare a boostbook target.
 #
-rule boostbook ( target-name : sources * : requirements * : default-build * )
+rule boostbook ( target-name : sources * : requirements * : default-build * :
+    usage-requirements * )
 {
+    param.handle-named-params
+        sources requirements default-build usage-requirements ;
     return [ targets.create-metatarget boostbook-target-class :
         [ project.current ] : $(target-name) : $(sources) : $(requirements) :
-        $(default-build) ] ;
+        $(default-build) : $(usage-requirements) ] ;
 }
 
 

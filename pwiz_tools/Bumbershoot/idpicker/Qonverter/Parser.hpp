@@ -32,9 +32,9 @@
 #include <map>
 #include "Qonverter.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/data/identdata/IdentData.hpp"
 #include <boost/date_time.hpp>
-#include <boost/filesystem/path.hpp>
 
 
 #ifndef IDPICKER_NAMESPACE

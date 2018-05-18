@@ -96,8 +96,6 @@ rule init ( version ? :  command * : options * )
         : $(command) : $(default_path) ] ;
                 
     common.handle-options intel-linux : $(condition) : $(command) : $(options) ;
-
-    gcc.init-link-flags intel-linux gnu $(condition) ;
     
     local root = [ feature.get-values <root> : $(options) ] ;
     local bin ;
@@ -147,7 +145,7 @@ rule init ( version ? :  command * : options * )
             local lib_path = $(root)/lib $(root:P)/lib/$(bin:B) ;
             if $(.debug-configuration)
             {
-                ECHO notice: using intel libraries :: $(condition) :: $(lib_path) ;
+                ECHO notice\: using intel libraries "::" $(condition) "::" $(lib_path) ;
             }
             flags intel-linux.link RUN_PATH $(condition) : $(lib_path) ;
         }   

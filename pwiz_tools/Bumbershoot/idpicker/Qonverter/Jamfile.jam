@@ -118,7 +118,7 @@ generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpQueryVersion.cpp : idpQuery :
 
 obj CoreVersion : CoreVersion.cpp ;
 
-make gene2protein.db3 : ../gene2protein.db3 : @common.copy ;
+make gene2protein.db3 : ../gene2protein.db3 : @common.copy : <dependency>CoreVersion ; # dependency on a build target makes all build features relevant (so <location> is calculated properly)
 explicit gene2protein.db3 ;
 
 exe idpQonvert : idpQonvert.cpp CoreVersion idpQonvertVersion.cpp Qonverter $(IDPICKER_PATH)/../freicore : <dependency>gene2protein.db3 ;
@@ -139,7 +139,6 @@ unit-test QonverterTest : QonverterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATI
 unit-test EmbedderTest : EmbedderTest.cpp Qonverter $(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata_examples $(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata : $(TEAMCITY_TEST_DECORATION) <dependency>gene2protein.db3 ;
 unit-test FilterTest : FilterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 unit-test LoggerTest : LoggerTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
-doctest EmbedderDoctest : Embedder.cpp : <library>Qonverter $(TEAMCITY_TEST_DECORATION) <dependency>gene2protein.db3/<location-prefix>doctest ;
 
 path-constant TEST_DATA_PATH : ../TestData ;
 run CommandlineTest.cpp

@@ -21,7 +21,6 @@ import unix ;
 feature.extend toolset : qcc ;
 
 toolset.inherit-generators qcc : unix : unix.link unix.link.dll ;
-generators.override builtin.lib-generator : qcc.prebuilt ;
 toolset.inherit-flags qcc : unix ;
 toolset.inherit-rules qcc : unix ;
 
@@ -101,7 +100,7 @@ actions compile.c++
 
 actions compile.c
 {
-    "$(CONFIG_COMMAND)" $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -lang-c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions compile.asm
