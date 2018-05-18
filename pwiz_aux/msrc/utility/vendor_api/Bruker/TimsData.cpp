@@ -235,7 +235,8 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         {
             frame->firstScanIndex_ = scanIndex;
             for (int i = 0; i < numScans; ++i, ++scanIndex)
-                spectra_.emplace_back(new TimsSpectrumMS1(frames_.back(), i));
+                spectra_.emplace_back(new TimsSpectrumNonPASEF(frame, i));
+        }
     }
 
     hasPASEFData_ = db.has_table("PasefFrameMsMsInfo");
@@ -282,12 +283,12 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 // TODO: add PASEF information to spectra in non-combining mode
                 for (const auto& precursor : frame->pasef_precursor_info_)
                 {
-                    spectra_.emplace_back(new TimsSpectrumMS2Combined(frame, precursor->scanBegin, precursor->scanEnd, *precursor));
+                    spectra_.emplace_back(new TimsSpectrumCombinedPASEF(frame, precursor->scanBegin, precursor->scanEnd, *precursor));
                 }
             }
             else // MS1 or non-PASEF MS2
             {
-                spectra_.emplace_back(new TimsSpectrumMS1Combined(frame, 0, frame->numScans_ - 1));
+                spectra_.emplace_back(new TimsSpectrumCombinedNonPASEF(frame, 0, frame->numScans_ - 1));
             }
         }
     }
@@ -362,7 +363,7 @@ const PasefPrecursorInfo TimsSpectrum::empty_;
 
 bool TimsSpectrum::hasLineData() const { return getLineDataSize() > 0; }
 bool TimsSpectrum::hasProfileData() const { return false; }
-size_t TimsSpectrum::getLineDataSize() const { return frame_.storage_.readScans(frame_.frameId_, scanBegin_,  scanBegin_ + 1).getTotalNbrPeaks(); }
+size_t TimsSpectrum::getLineDataSize() const { return frame_.storage_.readScans(frame_.frameId_, scanBegin_, scanBegin_ + 1).getTotalNbrPeaks(); }
 size_t TimsSpectrum::getProfileDataSize() const { return 0; }
 
 void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const
@@ -370,16 +371,26 @@ void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<
     auto& storage = frame_.storage_;
     const auto& frameProxy = storage.readScans(frame_.frameId_, scanBegin_, scanBegin_ + 1);
     auto mzIndices = frameProxy.getScanX(0);
-    vector<double> mzIndicesAsDoubles(mzIndices.size());
-    for (size_t i = 0; i < mzIndicesAsDoubles.size(); ++i)
-        mzIndicesAsDoubles[i] = mzIndices[i];
+    auto count = mzIndices.size();
 
-    storage.indexToMz(frame_.frameId_, mzIndicesAsDoubles, mz);
+    // Empty scans are not uncommon, save some heap thrashing
+    if (count == 0)
+    {
+        mz.resize(0);
+        intensities.resize(0);
+        return;
+    }
 
     auto intensityCounts = frameProxy.getScanY(0);
     intensities.resize_no_initialize(intensityCounts.size());
-    for (size_t i=0; i < intensities.size(); ++i)
+    vector<double> mzIndicesAsDoubles(count);
+
+    for (size_t i = count; i--;)
+    {
+        mzIndicesAsDoubles[i] = mzIndices[i];
         intensities[i] = intensityCounts[i];
+    }
+    storage.indexToMz(frame_.frameId_, mzIndicesAsDoubles, mz);
 }
 
 void TimsSpectrum::getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const

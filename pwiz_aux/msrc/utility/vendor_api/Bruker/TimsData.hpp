@@ -156,31 +156,31 @@ public:
 
 };
 
-struct TimsSpectrumMS1 : public TimsSpectrum
+struct TimsSpectrumNonPASEF : public TimsSpectrum
 {
-    TimsSpectrumMS1(const TimsFramePtr& framePtr, int scanBegin) : 
+    TimsSpectrumNonPASEF(const TimsFramePtr& framePtr, int scanBegin) : 
         TimsSpectrum(framePtr, scanBegin) {}
-    virtual ~TimsSpectrumMS1() {}
+    virtual ~TimsSpectrumNonPASEF() {}
     virtual int scanEnd() const { return scanBegin_; }
     virtual bool isCombinedScans() const { return false; }
 };
 
-struct TimsSpectrumMS1Combined : public TimsSpectrumMS1
+struct TimsSpectrumCombinedNonPASEF : public TimsSpectrumNonPASEF
 {
-    TimsSpectrumMS1Combined(const TimsFramePtr& framePtr, int scanBegin, int scanEnd) : 
-        TimsSpectrumMS1(framePtr, scanBegin), scanEnd_(scanEnd) {}
-    virtual ~TimsSpectrumMS1Combined() {}
+    TimsSpectrumCombinedNonPASEF(const TimsFramePtr& framePtr, int scanBegin, int scanEnd) : 
+        TimsSpectrumNonPASEF(framePtr, scanBegin), scanEnd_(scanEnd) {}
+    virtual ~TimsSpectrumCombinedNonPASEF() {}
     virtual int scanEnd() const { return scanEnd_; }
     virtual bool isCombinedScans() const { return scanEnd_ != scanBegin_; }
 private:
     int scanEnd_; // 0-based index, scanEnd is inclusive (so for unmerged spectrum, begin==end)
 };
 
-struct TimsSpectrumMS2 : public TimsSpectrum
+struct TimsSpectrumPASEF : public TimsSpectrum
 {
-    TimsSpectrumMS2(const TimsFramePtr& framePtr, int scanBegin, const PasefPrecursorInfo& pasefPrecursorInfo) :
+    TimsSpectrumPASEF(const TimsFramePtr& framePtr, int scanBegin, const PasefPrecursorInfo& pasefPrecursorInfo) :
         TimsSpectrum(framePtr, scanBegin), pasefPrecursorInfo_(pasefPrecursorInfo) {}
-    virtual ~TimsSpectrumMS2() {}
+    virtual ~TimsSpectrumPASEF() {}
     virtual int scanEnd() const { return scanBegin_; }
     virtual bool isCombinedScans() const { return false; }
     virtual bool HasPasefPrecursorInfo() const { return &pasefPrecursorInfo_ != &empty_; };
@@ -189,12 +189,12 @@ private:
     const PasefPrecursorInfo& pasefPrecursorInfo_;
 };
 
-struct TimsSpectrumMS2Combined : public TimsSpectrumMS2
+struct TimsSpectrumCombinedPASEF : public TimsSpectrumPASEF
 {
-    TimsSpectrumMS2Combined(const TimsFramePtr& framePtr, int scanBegin, int scanEnd, const PasefPrecursorInfo& pasefPrecursorInfo) :
-        TimsSpectrumMS2(framePtr, scanBegin, pasefPrecursorInfo), scanEnd_(scanEnd) {}
+    TimsSpectrumCombinedPASEF(const TimsFramePtr& framePtr, int scanBegin, int scanEnd, const PasefPrecursorInfo& pasefPrecursorInfo) :
+        TimsSpectrumPASEF(framePtr, scanBegin, pasefPrecursorInfo), scanEnd_(scanEnd) {}
 
-    virtual ~TimsSpectrumMS2Combined() {}
+    virtual ~TimsSpectrumCombinedPASEF() {}
     virtual int scanEnd() const { return scanEnd_; }
     virtual bool isCombinedScans() const { return scanEnd_ != scanBegin_; }
 private:
