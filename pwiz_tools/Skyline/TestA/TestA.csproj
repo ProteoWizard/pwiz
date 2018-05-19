@@ -147,7 +147,6 @@
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="netstandard" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdductTest.cs" />

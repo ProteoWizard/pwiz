@@ -46,7 +46,6 @@
 #using <System.Web.dll>
 #using <System.Net.Http.dll>
 #using <System.Net.Http.WebRequest.dll>
-
 using namespace pwiz::util;
 using namespace System;
 using namespace System::Web;
@@ -738,7 +737,7 @@ class UnifiData::Impl
         fields->Add(IdentityModel::OidcConstants::TokenRequest::Password, password);
         fields->Add(IdentityModel::OidcConstants::TokenRequest::Scope, _clientScope);
 
-        auto tokenClient = gcnew TokenClient(tokenEndpoint(), "resourceownerclient", _clientSecret, gcnew System::Net::Http::HttpClientHandler(), IdentityModel::Client::AuthenticationStyle::BasicAuthentication);
+        auto tokenClient = gcnew TokenClient(tokenEndpoint(), "resourceownerclient", _clientSecret, IdentityModel::Client::AuthenticationStyle::BasicAuthentication);
         TokenResponse^ response = tokenClient->RequestAsync(fields, System::Threading::CancellationToken::None)->Result;
         if (response->IsError)
             throw user_error("authentication error: incorrect username or password? (" + ToStdString(response->Error) + ")");
