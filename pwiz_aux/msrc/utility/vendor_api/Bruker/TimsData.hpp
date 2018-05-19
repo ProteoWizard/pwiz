@@ -25,9 +25,9 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/utility/misc/BinaryData.hpp"
 #include "CompassData.hpp"
 #include <boost/optional.hpp>
+#include <boost/container/flat_map.hpp>
 #include "timsdata_cpp.h"
 
 
@@ -42,9 +42,25 @@ namespace Bruker {
 
 typedef boost::shared_ptr<TimsBinaryData> TimsBinaryDataPtr;
 struct TimsSpectrum;
+struct TimsDataImpl;
+
+struct PasefPrecursorInfo
+{
+    int scanBegin, scanEnd; // scan end is inclusive
+    double avgScanNumber; // average value from Precursors table
+    double isolationMz;
+    double isolationWidth;
+    double collisionEnergy;
+    double monoisotopicMz;
+    int charge;
+    double intensity;
+};
+typedef boost::shared_ptr<PasefPrecursorInfo> PasefPrecursorInfoPtr;
 
 struct PWIZ_API_DECL TimsFrame
 {
+
+
     TimsFrame(TimsBinaryDataPtr storage, int64_t frameId,
               int msLevel, double rt,
               double startMz, double endMz,
@@ -59,6 +75,7 @@ struct PWIZ_API_DECL TimsFrame
 
     private:
     friend struct TimsSpectrum;
+    friend struct TimsDataImpl;
     int64_t frameId_;
     int msLevel_;
     double rt_;
@@ -76,6 +93,10 @@ struct PWIZ_API_DECL TimsFrame
     optional<double> precursorMz_;
     int scanMode_;
 
+    optional<size_t> firstScanIndex_; // only set in combined mode
+
+    vector<PasefPrecursorInfoPtr> pasef_precursor_info_;
+
     TimsBinaryDataPtr storage_;
     vector<double> oneOverK0_; // access by (scan number - 1)
 };
@@ -85,7 +106,7 @@ typedef boost::shared_ptr<TimsFrame> TimsFramePtr;
 
 struct PWIZ_API_DECL TimsSpectrum : public MSSpectrum
 {
-    TimsSpectrum(const TimsFramePtr& framePtr, int scanIndex);
+    TimsSpectrum(const TimsFramePtr& framePtr, int scanBegin, int scanEnd, const PasefPrecursorInfo& pasefPrecursorInfo = empty_);
 
     virtual ~TimsSpectrum() {}
 
@@ -96,8 +117,8 @@ struct PWIZ_API_DECL TimsSpectrum : public MSSpectrum
     virtual void getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const;
     virtual void getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const;
 
-    virtual double getTIC() const { return framePtr_->tic_; }
-    virtual double getBPI() const { return framePtr_->bpi_; }
+    virtual double getTIC() const { return frame_.tic_; }
+    virtual double getBPI() const { return frame_.bpi_; }
 
     virtual int getMSMSStage() const;
     virtual double getRetentionTime() const;
@@ -109,20 +130,24 @@ struct PWIZ_API_DECL TimsSpectrum : public MSSpectrum
     virtual int getChargeState() const;
     virtual double getIsolationWidth() const;
 
-    virtual bool isIonMobilitySpectrum() const { return true; }
-    virtual double oneOverK0() const { return framePtr_->oneOverK0_[scanIndex_]; }
+    virtual bool isIonMobilitySpectrum() const { return oneOverK0() > 0; }
+    virtual double oneOverK0() const;
 
-    void getCombinedSpectumData(util::BinaryData<double>& mz, util::BinaryData<double>& intensities, util::BinaryData<double>& mobilities) const;
+    void getCombinedSpectrumData(std::vector<double>& mz, std::vector<double>& intensities, std::vector<double>& mobilities) const;
+    virtual pwiz::util::IntegerSet getMergedScanNumbers() const;
 
-    int scanIndex() const { return scanIndex_; }
-    TimsFramePtr framePtr() const { return framePtr_; }
+    int scanBegin() const { return scanBegin_; }
+    int scanEnd() const { return scanEnd_; }
 
     virtual MSSpectrumParameterListPtr parameters() const;
 
     private:
+    friend struct TimsDataImpl;
 
-    int scanIndex_;
-    TimsFramePtr framePtr_;
+    int scanBegin_, scanEnd_; // 0-based index, scanEnd is inclusive (so for unmerged spectrum, begin==end)
+    const TimsFrame& frame_;
+    const PasefPrecursorInfo& pasefPrecursorInfo_;
+    const static PasefPrecursorInfo empty_;
 };
 
 typedef boost::shared_ptr<TimsSpectrum> TimsSpectrumPtr;
@@ -130,7 +155,7 @@ typedef boost::shared_ptr<TimsSpectrum> TimsSpectrumPtr;
 
 struct PWIZ_API_DECL TimsDataImpl : public CompassData
 {
-    TimsDataImpl(const std::string& rawpath, bool combineIonMobilitySpectra);
+    TimsDataImpl(const std::string& rawpath, bool combineIonMobilitySpectra, int preferOnlyMsLevel = 0);
     virtual ~TimsDataImpl() {}
 
     /// returns true if the source has MS spectra
@@ -139,6 +164,9 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     /// returns true if the source has LC spectra or traces
     virtual bool hasLCData() const;
 
+    /// returns true if the source is TIMS PASEF data
+    virtual bool hasPASEFData() const;
+
     /// returns the number of spectra available from the MS source
     virtual size_t getMSSpectrumCount() const;
 
@@ -146,6 +174,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     virtual MSSpectrumPtr getMSSpectrum(int scan, DetailLevel detailLevel = DetailLevel_FullMetadata) const;
 
     virtual std::pair<size_t, size_t> getFrameScanPair(int scan) const;
+    virtual size_t getSpectrumIndex(int frame, int scan) const;
 
     /// returns the number of sources available from the LC system
     virtual size_t getLCSourceCount() const;
@@ -173,7 +202,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     private:
     std::string tdfFilepath_;
     TimsBinaryDataPtr tdfStorage_;
-    std::vector<TimsFramePtr> frames_;
+    boost::container::flat_map<size_t, TimsFramePtr> frames_;
     std::vector<TimsSpectrumPtr> spectra_;
     std::string acquisitionSoftware_;
     std::string acquisitionSoftwareVersion_;
@@ -182,6 +211,8 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     std::string acquisitionDateTime_;
     std::string operatorName_;
     bool combineSpectra_;
+    bool hasPASEFData_;
+    int preferOnlyMsLevel_; // when nonzero, caller only wants spectra at this ms level
 };
 
 

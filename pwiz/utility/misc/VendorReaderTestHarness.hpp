@@ -40,12 +40,18 @@ struct PWIZ_API_DECL TestPathPredicate
 };
 
 
+struct PWIZ_API_DECL ReaderTestConfig : public pwiz::msdata::Reader::Config
+{
+    std::string resultFilename(const std::string& baseFilename) const;
+};
+
 /// A common test harness for vendor readers;
 PWIZ_API_DECL
 int testReader(const pwiz::msdata::Reader& reader,
                const std::vector<std::string>& args,
                bool testAcceptOnly, bool requireUnicodeSupport,
-               const TestPathPredicate& isPathTestable);
+               const TestPathPredicate& isPathTestable,
+               const ReaderTestConfig& config = ReaderTestConfig());
 
 
 } // namespace util

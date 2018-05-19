@@ -551,6 +551,9 @@ struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
     /// get intensity array (may be null)
     BinaryDataArrayPtr getIntensityArray() const;
 
+    /// get array with specified CVParam (may be null)
+    BinaryDataArrayPtr getArrayByCVID(CVID arrayType) const;
+
     /// set binary data arrays 
     void setMZIntensityPairs(const std::vector<MZIntensityPair>& input, CVID intensityUnits);
 

@@ -69,6 +69,9 @@ public ref class ReaderConfig
     /// when false, the reader will treat times with unknown time zone as UTC
     bool adjustUnknownTimeZonesToHostTimeZone;
 
+    /// when nonzero, if reader can enumerate only spectra of ms level, it will (currently only supported by Bruker TDF)
+    int preferOnlyMsLevel;
+
     ReaderConfig()
     : simAsSpectra(false)
     , srmAsSpectra(false)
@@ -77,6 +80,7 @@ public ref class ReaderConfig
     , combineIonMobilitySpectra(false)
     , unknownInstrumentIsError(false)
     , adjustUnknownTimeZonesToHostTimeZone(true)
+    , preferOnlyMsLevel(0)
     {
     }
 };

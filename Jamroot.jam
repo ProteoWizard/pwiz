@@ -438,12 +438,14 @@ rule MAKE_BUILD_TIMESTAMP ( )
     return $(d:J=) ;
 }
 
+local rev = [ MATCH "([a-f0-9]*)" : [ SHELL "git rev-parse --short HEAD" ] ] ;
+local branch = [ MATCH "\\* ([^\r\n]*)" : [ SHELL "git branch" ] ] ;
 
 constant PWIZ_MAJOR : 3 ;
 constant PWIZ_MINOR : 0 ;
 constant PWIZ_BUILD_TIMESTAMP : [ MAKE_BUILD_TIMESTAMP ] ;
-constant PWIZ_GIT_REV : [ MATCH "([a-f0-9]*)" : [ SHELL "git rev-parse --short HEAD" ] ] ;
-constant PWIZ_GIT_BRANCH : [ MATCH "\\* ([^\r\n]*)" : [ SHELL "git branch" ] ] ;
+constant PWIZ_GIT_REV : $(rev:E=0) ;
+constant PWIZ_GIT_BRANCH : $(branch:E=master) ;
 
 numeric-version-tag = $(PWIZ_MAJOR) $(PWIZ_MINOR) $(PWIZ_BUILD_TIMESTAMP) ;
 version-tag = $(numeric-version-tag) $(PWIZ_GIT_REV) ;
