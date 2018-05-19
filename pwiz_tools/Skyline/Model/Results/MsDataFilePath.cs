@@ -25,7 +25,7 @@ using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public abstract class MsDataFileUri : Immutable
+    public abstract class MsDataFileUri : Immutable, IComparable
     {
         public abstract MsDataFileUri GetLocation();
         public abstract string GetFilePath();
@@ -80,6 +80,15 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public abstract MsDataFileImpl OpenMsDataFile(bool simAsSpectra);
+        public int CompareTo(object obj)
+        {
+            if (obj == null)
+            {
+                return 1;
+            }
+            var msDataFileUri = (MsDataFileUri) obj;
+            return string.CompareOrdinal(ToString(), msDataFileUri.ToString());
+        }
     }
 
     public class MsDataFilePath : MsDataFileUri
