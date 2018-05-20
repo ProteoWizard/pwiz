@@ -223,6 +223,7 @@
     <Compile Include="SignedMzTest.cs" />
     <Compile Include="StringHelpersTest.cs" />
     <Compile Include="TestSerializeIsolationScheme.cs" />
+    <Compile Include="TestUnifiPassword.cs" />
     <Compile Include="TextUtilTest.cs" />
     <Compile Include="ToolDescriptionTest.cs" />
     <Compile Include="TransitionSettings07Test.cs" />
