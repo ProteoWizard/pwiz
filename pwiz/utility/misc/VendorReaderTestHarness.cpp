@@ -241,11 +241,11 @@ class SpectrumList_MGF_Filter : public SpectrumListWrapper
 };
 
 
-void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSupport)
+void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSupport, const ReaderTestConfig& config)
 {
     if (os_) *os_ << "testRead(): " << rawpath << endl;
 
-    Reader::Config readerConfig;
+    Reader::Config readerConfig(config);
     readerConfig.adjustUnknownTimeZonesToHostTimeZone = false; // do not adjust times, because we don't want the test to depend on the time zone of the test agent
 
     // read file into MSData object
@@ -264,7 +264,7 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
         manglePwizSoftware(msd);
         if (os_) TextWriter(*os_,0)(msd);
 
-        bfs::path targetResultFilename = bfs::path(rawpath).parent_path() / (msd.run.id + ".mzML");
+        bfs::path targetResultFilename = bfs::path(rawpath).parent_path() / config.resultFilename(msd.run.id + ".mzML");
         MSDataFile targetResult(targetResultFilename.string());
         hackInMemoryMSData(sourceName, targetResult);
 
@@ -285,7 +285,9 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
             serializer_mz5.write(targetResultFilename_mz5, msd);
             serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
 
-            Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5);
+            DiffConfig diffConfig_mz5;
+            diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
+            Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5, diffConfig_mz5);
             if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
             unit_assert(!diff_mz5);
         }
@@ -293,6 +295,7 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
 #endif
         DiffConfig diffConfig_non_mzML;
         diffConfig_non_mzML.ignoreMetadata = true;
+        diffConfig_non_mzML.ignoreExtraBinaryDataArrays = true;
         diffConfig_non_mzML.ignoreChromatograms = true;
 
         // check if the file type is one that loses nativeIDs in translation
@@ -422,7 +425,7 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
             manglePwizSoftware(msd);
             if (os_) TextWriter(*os_, 0)(msd);
 
-            bfs::path::string_type targetResultFilename = (rawpathPath.parent_path() / (msd.run.id + ".mzML")).native();
+            bfs::path::string_type targetResultFilename = (rawpathPath.parent_path() / config.resultFilename(msd.run.id + ".mzML")).native();
             bal::replace_all(targetResultFilename, unicodeTestString, L"");
             MSDataFile targetResult(bfs::path(targetResultFilename).string());
             hackInMemoryMSData(sourceNameAsPath.string(), targetResult, newSourceName.string());
@@ -486,32 +489,32 @@ void testRead(const Reader& reader, const string& rawpath, bool requireUnicodeSu
 }
 
 
-void test(const Reader& reader, bool testAcceptOnly, bool requireUnicodeSupport, const string& rawpath)
+void test(const Reader& reader, bool testAcceptOnly, bool requireUnicodeSupport, const string& rawpath, const ReaderTestConfig& config)
 {
     testAccept(reader, rawpath);
 
     if (!testAcceptOnly)
-        testRead(reader, rawpath, requireUnicodeSupport);
+        testRead(reader, rawpath, requireUnicodeSupport, config);
 }
 
 
-void generate(const Reader& reader, const string& rawpath)
+void generate(const Reader& reader, const string& rawpath, const ReaderTestConfig& config)
 {
     // read file into MSData object
     vector<MSDataPtr> msds;
-    Reader::Config readerConfig;
+    Reader::Config readerConfig(config);
     readerConfig.adjustUnknownTimeZonesToHostTimeZone = false;
     reader.read(rawpath, "dummy", msds, readerConfig);
-    MSDataFile::WriteConfig config;
-    config.indexed = false;
-    config.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_32;
-    config.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
+    MSDataFile::WriteConfig writeConfig;
+    writeConfig.indexed = false;
+    writeConfig.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_32;
+    writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
     if (os_) *os_ << "Writing mzML(s) for " << rawpath << endl;
     for (size_t i=0; i < msds.size(); ++i)
     {
-        bfs::path outputFilename = bfs::path(rawpath).parent_path() / (msds[i]->run.id + ".mzML");
+        bfs::path outputFilename = bfs::path(rawpath).parent_path() / config.resultFilename(msds[i]->run.id + ".mzML");
         calculateSourceFileChecksums(msds[i]->fileDescription.sourceFilePtrs);
-        MSDataFile::write(*msds[i], outputFilename.string(), config);
+        MSDataFile::write(*msds[i], outputFilename.string(), writeConfig);
     }
 }
 
@@ -528,7 +531,7 @@ void parseArgs(const vector<string>& args, bool& generateMzML, vector<string>& r
     }
 }
 
-void testThreadSafetyWorker(boost::barrier* testBarrier, const Reader* reader, bool* testAcceptOnly, bool* requireUnicodeSupport, const string* rawpath)
+void testThreadSafetyWorker(boost::barrier* testBarrier, const Reader* reader, bool* testAcceptOnly, bool* requireUnicodeSupport, const string* rawpath, const ReaderTestConfig* config)
 {
     testBarrier->wait(); // wait until all threads have started
 
@@ -537,7 +540,7 @@ void testThreadSafetyWorker(boost::barrier* testBarrier, const Reader* reader, b
         testAccept(*reader, *rawpath);
 
         if (!(*testAcceptOnly))
-            testRead(*reader, *rawpath, *requireUnicodeSupport);
+            testRead(*reader, *rawpath, *requireUnicodeSupport, *config);
     }
     catch (exception& e)
     {
@@ -549,12 +552,12 @@ void testThreadSafetyWorker(boost::barrier* testBarrier, const Reader* reader, b
     }
 }
 
-void testThreadSafety(const int& testThreadCount, const Reader& reader, bool testAcceptOnly, bool requireUnicodeSupport, const string& rawpath)
+void testThreadSafety(const int& testThreadCount, const Reader& reader, bool testAcceptOnly, bool requireUnicodeSupport, const string& rawpath, const ReaderTestConfig& config)
 {
     boost::barrier testBarrier(testThreadCount);
     boost::thread_group testThreadGroup;
     for (int i=0; i < testThreadCount; ++i)
-        testThreadGroup.add_thread(new boost::thread(&testThreadSafetyWorker, &testBarrier, &reader, &testAcceptOnly, &requireUnicodeSupport, &rawpath));
+        testThreadGroup.add_thread(new boost::thread(&testThreadSafetyWorker, &testBarrier, &reader, &testAcceptOnly, &requireUnicodeSupport, &rawpath, &config));
     testThreadGroup.join_all();
 }
 
@@ -562,7 +565,21 @@ void testThreadSafety(const int& testThreadCount, const Reader& reader, bool tes
 
 
 PWIZ_API_DECL
-int testReader(const Reader& reader, const vector<string>& args, bool testAcceptOnly, bool requireUnicodeSupport, const TestPathPredicate& isPathTestable)
+string ReaderTestConfig::resultFilename(const string& baseFilename) const
+{
+    string result = baseFilename;
+    if (simAsSpectra) bal::replace_all(result, ".mzML", "-simSpectra.mzML");
+    if (srmAsSpectra) bal::replace_all(result, ".mzML", "-srmSpectra.mzML");
+    if (acceptZeroLengthSpectra) bal::replace_all(result, ".mzML", "-acceptZeroLength.mzML");
+    if (ignoreZeroIntensityPoints) bal::replace_all(result, ".mzML", "-ignoreZeros.mzML");
+    if (combineIonMobilitySpectra) bal::replace_all(result, ".mzML", "-combineIMS.mzML");
+    if (preferOnlyMsLevel) bal::replace_all(result, ".mzML", "-ms" + lexical_cast<string>(preferOnlyMsLevel) + ".mzML");
+    return result;
+}
+
+
+PWIZ_API_DECL
+int testReader(const Reader& reader, const vector<string>& args, bool testAcceptOnly, bool requireUnicodeSupport, const TestPathPredicate& isPathTestable, const ReaderTestConfig& config)
 {
     bool generateMzML;
     vector<string> rawpaths;
@@ -584,13 +601,13 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
             if (!isPathTestable(rawpath))
                 continue;
             else if (generateMzML && !testAcceptOnly)
-                generate(reader, rawpath);
+                generate(reader, rawpath, config);
             else
             {
                 ++totalTests;
                 try
                 {
-                    test(reader, testAcceptOnly, requireUnicodeSupport, rawpath);
+                    test(reader, testAcceptOnly, requireUnicodeSupport, rawpath, config);
                 }
                 catch (exception& e)
                 {
