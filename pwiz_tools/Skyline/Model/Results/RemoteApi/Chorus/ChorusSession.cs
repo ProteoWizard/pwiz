@@ -303,7 +303,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             }
             Uri requestUri = GetContentsUri(ChorusAccount, chorusUrl);
             ChorusContents contents;
-            if (!TryGetData(requestUri, out contents))
+            if (!TryGetData(requestUri, out contents) || contents == null)
             {
                 return new RemoteItem[0];
             }
