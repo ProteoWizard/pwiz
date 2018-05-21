@@ -170,16 +170,27 @@ namespace pwiz.Skyline.Model.Results
         {
             if (_dataFile == null)
             {
-                string dataFilePath = FindDataFilePath();
-                var lockMassParameters = DataFilePath.GetLockMassParameters();
-                if (dataFilePath == null)
-                    throw new FileNotFoundException(string.Format(Resources.ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_, DataFilePath));
-                int sampleIndex = SampleHelp.GetPathSampleIndexPart(dataFilePath);
-                if (sampleIndex == -1)
-                    sampleIndex = 0;
-                // Full-scan extraction always uses SIM as spectra
-                _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, lockMassParameters, true, 
-                    requireVendorCentroidedMS1: DataFilePath.GetCentroidMs1(), requireVendorCentroidedMS2: DataFilePath.GetCentroidMs2());
+                if (DataFilePath is MsDataFilePath)
+                {
+                    string dataFilePath = FindDataFilePath();
+                    var lockMassParameters = DataFilePath.GetLockMassParameters();
+                    if (dataFilePath == null)
+                        throw new FileNotFoundException(string.Format(
+                            Resources
+                                .ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_,
+                            DataFilePath));
+                    int sampleIndex = SampleHelp.GetPathSampleIndexPart(dataFilePath);
+                    if (sampleIndex == -1)
+                        sampleIndex = 0;
+                    // Full-scan extraction always uses SIM as spectra
+                    _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, lockMassParameters, true,
+                        requireVendorCentroidedMS1: DataFilePath.GetCentroidMs1(),
+                        requireVendorCentroidedMS2: DataFilePath.GetCentroidMs2());
+                }
+                else
+                {
+                    _dataFile = DataFilePath.OpenMsDataFile(true, 0);
+                }
             }
             return _dataFile;
         }

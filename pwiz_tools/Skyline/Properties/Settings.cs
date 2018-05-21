@@ -1093,22 +1093,22 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSetting]
-        public ChorusAccountList ChorusAccountList
+        public RemoteAccountList RemoteAccountList
         {
             get 
-            { 
-                var list = (ChorusAccountList) this["ChorusAccountList"]; // Not L10N
+            {
+                var list = (RemoteAccountList)this["RemoteAccountList"]; // Not L10N
                 if (list == null)
                 {
-                    list = new ChorusAccountList();
+                    list = new RemoteAccountList();
                     list.AddDefaults();
-                    ChorusAccountList = list;
+                    RemoteAccountList = list;
                 }
                 return list;
             }
             set
             {
-                this["ChorusAccountList"] = value; // Not L10N
+                this["RemoteAccountList"] = value; // Not L10N
             }
         }
 
