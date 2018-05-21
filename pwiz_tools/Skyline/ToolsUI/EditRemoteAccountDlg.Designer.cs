@@ -104,6 +104,7 @@
             // 
             // comboAccountType
             // 
+            this.comboAccountType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboAccountType.FormattingEnabled = true;
             resources.ApplyResources(this.comboAccountType, "comboAccountType");
             this.comboAccountType.Name = "comboAccountType";

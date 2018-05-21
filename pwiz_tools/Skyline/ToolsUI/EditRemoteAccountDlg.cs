@@ -289,6 +289,20 @@ namespace pwiz.Skyline.ToolsUI
         private void comboAccountType_SelectedIndexChanged(object sender, EventArgs e)
         {
             groupBoxUnifi.Visible = RemoteAccountType.UNIFI.Equals(AccountType);
+            if (AccountType == RemoteAccountType.CHORUS)
+            {
+                if (textServerURL.Text == UnifiAccount.DEFAULT.ServerUrl)
+                {
+                    textServerURL.Text = ChorusAccount.DEFAULT_SERVER;
+                }
+            }
+            if (AccountType == RemoteAccountType.UNIFI)
+            {
+                if (textServerURL.Text == ChorusAccount.DEFAULT_SERVER)
+                {
+                    textServerURL.Text = UnifiAccount.DEFAULT.ServerUrl;
+                }
+            }
         }
     }
 }
