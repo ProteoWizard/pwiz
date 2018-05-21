@@ -73,13 +73,14 @@ namespace seems
                 var scanTimeColumn = dgv.Columns["ScanTime"];
                 var ticColumn = dgv.Columns["TotalIonCurrent"];
                 var msLevelColumn = dgv.Columns["MsLevel"];
+                var ionMobilityColumn = dgv.Columns["IonMobility"];
 
                 IntensityByScanTime = new SortedList<double, double>(dgv.RowCount / 200);
 
                 for (int i = 0; i < dgv.RowCount; ++i)
                 {
                     int msLevel = (int) dgv[msLevelColumn.Index, i].Value;
-                    if (targetMsLevel != msLevel)
+                    if (targetMsLevel != msLevel || (double) dgv[ionMobilityColumn.Index, i].Value == 0)
                         continue;
 
                     double scanTime = (double) dgv[scanTimeColumn.Index, i].Value;
