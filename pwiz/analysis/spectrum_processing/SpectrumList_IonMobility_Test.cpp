@@ -43,7 +43,7 @@ void test(const string& filepath, const ReaderList& readerList)
     {
         SpectrumList_IonMobility slim(msd.run.spectrumListPtr);
         ostringstream failedTests;
-        unit_assert_to_stream(slim.getIonMobilityUnits() == SpectrumList_IonMobility::eIonMobilityUnits::drift_time_msec, failedTests);
+        unit_assert_to_stream(slim.getIonMobilityUnits() == SpectrumList_IonMobility::IonMobilityUnits::drift_time_msec, failedTests);
         unit_assert_equal_to_stream(242.55569, slim.ionMobilityToCCS(32.62, 922.01, 1), EPSILON, failedTests);
         unit_assert_equal_to_stream(195.69509, slim.ionMobilityToCCS(25.78, 400.1755, 1), EPSILON, failedTests);
         unit_assert_equal_to_stream(243.57694, slim.ionMobilityToCCS(31.55, 254.0593, 1), EPSILON, failedTests);

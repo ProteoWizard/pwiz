@@ -31,7 +31,17 @@ struct IsRawData : public pwiz::util::TestPathPredicate
     bool operator() (const string& rawpath) const
     {
         return bfs::is_directory(rawpath) &&
-               bal::to_lower_copy(BFS_STRING(bfs::path(rawpath).extension())) == ".raw";
+               bal::iends_with(rawpath, ".raw");
+    }
+};
+
+struct IsIMSData : public pwiz::util::TestPathPredicate
+{
+    bool operator() (const string& rawpath) const
+    {
+        return bfs::is_directory(rawpath) &&
+               bal::iends_with(rawpath, ".raw") &&
+               (bal::istarts_with(bfs::path(rawpath).filename().string(), "HD") || bal::istarts_with(bfs::path(rawpath).filename().string(), "SONAR"));
     }
 };
 
@@ -48,7 +58,13 @@ int main(int argc, char* argv[])
     try
     {
         bool requireUnicodeSupport = false;
-        pwiz::util::testReader(pwiz::msdata::Reader_Waters(), testArgs, testAcceptOnly, requireUnicodeSupport, IsRawData());
+
+        pwiz::util::ReaderTestConfig config;
+        pwiz::msdata::Reader_Waters reader;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsRawData(), config);
+
+        config.combineIonMobilitySpectra = true;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsIMSData(), config);
     }
     catch (exception& e)
     {
