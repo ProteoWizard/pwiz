@@ -250,22 +250,53 @@ namespace seems
             heatmapGraphPane.CurveList.Clear();
             heatmapGraphPane.GraphObjList.Add(new TextObj("Loading...", 0.5, 0.5, CoordType.ChartFraction) {FontSpec = new FontSpec {Border = new Border {IsVisible = false}, IsBold = true, Size = 24}});
             msGraphControl.Refresh();
-
+            
+            var mainSpectrumList = source.Source.MSDataFile.run.spectrumList;
             var bounds = heatmapBoundsByMsLevel[msLevel];
+            int lastBinIndex = -1;
             foreach (var bin in ionMobilityBins)
             {
-                var spectrum = source.GetMassSpectrum(bin.BinIndex);
-                var points = spectrum.Points;
-                for (int j = 0; j < points.Count; ++j)
-                {
-                    double mz = points[j].X;
-                    double intensity = points[j].Y;
-                    bounds.MinX = Math.Min(bounds.MinX, mz);
-                    bounds.MinY = Math.Min(bounds.MinY, bin.IonMobility);
-                    bounds.MaxX = Math.Max(bounds.MaxX, mz);
-                    bounds.MaxY = Math.Max(bounds.MaxY, bin.IonMobility);
+                // skip bins where the spectrum is the same as the last bin (that spectrum's points were added from its mobility array)
+                if (bin.BinIndex == lastBinIndex)
+                    continue;
+                lastBinIndex = bin.BinIndex;
 
-                    heatmapPoints.Add(new Point3D(mz, bin.IonMobility, intensity));
+                var s = mainSpectrumList.spectrum(bin.BinIndex, true);
+                var mzArray = s.getMZArray().data;
+                var intensityArray = s.getIntensityArray().data;
+                var mobilityBDA = s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_drift_time_array);
+                if (mobilityBDA == null)
+                    mobilityBDA = s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_ion_mobility_array);
+
+                if (mobilityBDA != null)
+                {
+                    var mobilityArray = mobilityBDA.data;
+                    for (int j = 0, end = mzArray.Count; j < end; ++j)
+                    {
+                        double mz = mzArray[j];
+                        double intensity = intensityArray[j];
+                        double mobility = mobilityArray[j];
+                        bounds.MinX = Math.Min(bounds.MinX, mz);
+                        bounds.MinY = Math.Min(bounds.MinY, mobility);
+                        bounds.MaxX = Math.Max(bounds.MaxX, mz);
+                        bounds.MaxY = Math.Max(bounds.MaxY, mobility);
+
+                        heatmapPoints.Add(new Point3D(mz, mobility, intensity));
+                    }
+                }
+                else
+                {
+                    for (int j = 0, end = mzArray.Count; j < end; ++j)
+                    {
+                        double mz = mzArray[j];
+                        double intensity = intensityArray[j];
+                        bounds.MinX = Math.Min(bounds.MinX, mz);
+                        bounds.MinY = Math.Min(bounds.MinY, bin.IonMobility);
+                        bounds.MaxX = Math.Max(bounds.MaxX, mz);
+                        bounds.MaxY = Math.Max(bounds.MaxY, bin.IonMobility);
+
+                        heatmapPoints.Add(new Point3D(mz, bin.IonMobility, intensity));
+                    }
                 }
             }
 
@@ -295,6 +326,8 @@ namespace seems
             var ticColumn = dgv.Columns["TotalIonCurrent"];
             var msLevelColumn = dgv.Columns["MsLevel"];
             var dataPointsColumn = dgv.Columns["DataPoints"];
+            var idColumn = dgv.Columns["Id"];
+            var mainSpectrumList = source.Source.MSDataFile.run.spectrumList;
             if (scanTimeColumn == null || ticColumn == null || msLevelColumn == null || dataPointsColumn == null)
                 throw new InvalidOperationException("scan time, TIC, ms level, and data points columns should never be null");
 
@@ -327,8 +360,24 @@ namespace seems
 
                 double scanTime = (double) dgv[scanTimeColumn.Index, i].Value;
                 double ionMobility = (double) dgv[ionMobilityColumn.Index, i].Value;
+                if (ionMobility == 0)
+                {
+                    var s = mainSpectrumList.spectrum(i, true);
+                    var mobilityArray = s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_drift_time_array);
+                    if (mobilityArray == null)
+                    {
+                        mobilityArray = s.getArrayByCVID(pwiz.CLI.cv.CVID.MS_mean_ion_mobility_array);
+                        if (mobilityArray == null)
+                            continue;
+                    }
+                    var mobilityBins = mobilityArray.data;
+                    foreach (double bin in mobilityBins)
+                        ionMobilityBinsByMsLevelAndScanTime[msLevel][scanTime].Add(new MobilityBin(bin, i));
+                }
+                else
+                    ionMobilityBinsByMsLevelAndScanTime[msLevel][scanTime].Add(new MobilityBin(ionMobility, i));
+
                 //double intensity = (double) dgv[ticColumn.Index, i].Value;
-                ionMobilityBinsByMsLevelAndScanTime[msLevel][scanTime].Add(new MobilityBin(ionMobility, i));
             }
 
             var g = msGraphControl.CreateGraphics();
@@ -416,6 +465,9 @@ namespace seems
         private Point lastMouseDownPos;
         bool msGraphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
+            if (e.Button != MouseButtons.Left)
+                return false;
+
             // record mouse down point in control chromatogram (to determine whether the user is doing a drag-to-zoom)
             var focusedPane = sender.MasterPane.FindPane(e.Location) as MSGraphPane;
             if (focusedPane == null || focusedPane.Tag == null)
@@ -427,7 +479,10 @@ namespace seems
 
         bool msGraphControl_MouseUpEvent( ZedGraphControl sender, MouseEventArgs e )
         {
-            // change heatmap when user clicks in a control chromatogram (unless they're dragging a zoom box)
+            if (e.Button != MouseButtons.Left)
+                return false;
+
+            // change heatmap when user left clicks in a control chromatogram (unless they're dragging a zoom box)
 
             var focusedPane = sender.MasterPane.FindPane( e.Location ) as MSGraphPane;
             if (focusedPane == null || focusedPane.Tag == null)

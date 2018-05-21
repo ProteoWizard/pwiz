@@ -152,7 +152,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
             get { return RemoteAccountType.CHORUS; }
         }
 
-        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra)
+        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel)
         {
             throw new InvalidOperationException();
         }

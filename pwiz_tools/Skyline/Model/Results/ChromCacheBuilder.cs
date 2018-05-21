@@ -187,7 +187,8 @@ namespace pwiz.Skyline.Model.Results
                         // Always use SIM as spectra, if any full-scan chromatogram extraction is enabled
                         var fullScan = _document.Settings.TransitionSettings.FullScan;
                         var enableSimSpectrum = fullScan.IsEnabled;
-                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum);
+                        var preferOnlyMsLevel = fullScan.IsEnabled && !fullScan.IsEnabledMsMs ? 1 : 0; // If we don't want MS2, ask reader to totally skip it (not guaranteed)
+                        inFile = MSDataFilePath.OpenMsDataFile(enableSimSpectrum, preferOnlyMsLevel);
                         // Preserve centroiding info as part of MsDataFileUri string in chromdata only if it will be used
                         // CONSIDER: Dangerously high knowledge of future control flow required for making this decision
                         if (!ChromatogramDataProvider.HasChromatogramData(inFile) && !inFile.HasSrmSpectra)
@@ -369,11 +370,11 @@ namespace pwiz.Skyline.Model.Results
                                      cachedFile.HasMidasSpectra);
         }
 
-        private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, LockMassParameters lockMassParameters, MsInstrumentConfigInfo msInstrumentConfigInfo, bool enableSimSpectrum, bool requireCentroidedMS1, bool requireCentroidedMS2)
+        private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, LockMassParameters lockMassParameters, MsInstrumentConfigInfo msInstrumentConfigInfo, bool enableSimSpectrum, bool requireCentroidedMS1, bool requireCentroidedMS2, int preferOnlyMsLevel)
         {
             return new MsDataFileImpl(dataFilePathPart, sampleIndex, lockMassParameters, enableSimSpectrum,
                 requireVendorCentroidedMS1:requireCentroidedMS1, requireVendorCentroidedMS2:requireCentroidedMS2,
-                ignoreZeroIntensityPoints:true);
+                ignoreZeroIntensityPoints:true, preferOnlyMsLevel:preferOnlyMsLevel);
         }
 
         private void ExitRead(Exception x)

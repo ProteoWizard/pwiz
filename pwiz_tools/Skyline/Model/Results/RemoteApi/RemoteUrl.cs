@@ -246,7 +246,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 return string.Empty;
             }
 
-            public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra)
+            public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel)
             {
                 throw new InvalidOperationException();
             }

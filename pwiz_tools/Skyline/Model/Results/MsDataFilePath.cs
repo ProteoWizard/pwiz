@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.Results
                 SampleHelp.GetCentroidMs2(url));
         }
 
-        public abstract MsDataFileImpl OpenMsDataFile(bool simAsSpectra);
+        public abstract MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel);
     }
 
     public class MsDataFilePath : MsDataFileUri
@@ -258,11 +258,11 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra)
+        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel)
         {
             return new MsDataFileImpl(FilePath, Math.Max(SampleIndex, 0), LockMassParameters, simAsSpectra,
                 requireVendorCentroidedMS1: CentroidMs1, requireVendorCentroidedMS2: CentroidMs2,
-                ignoreZeroIntensityPoints: true);
+                ignoreZeroIntensityPoints: true, preferOnlyMsLevel: preferOnlyMsLevel);
         }
     }
 }
