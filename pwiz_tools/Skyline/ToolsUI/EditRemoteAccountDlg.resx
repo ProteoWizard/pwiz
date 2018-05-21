@@ -133,7 +133,7 @@
     <value>63, 13</value>
   </data>
   <data name="lblServerUrl.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="lblServerUrl.Text" xml:space="preserve">
     <value>&amp;Server URL</value>
@@ -163,7 +163,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>11</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Cancel</value>
@@ -193,7 +193,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnOK.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>10</value>
   </data>
   <data name="btnOK.Text" xml:space="preserve">
     <value>OK</value>
@@ -223,7 +223,7 @@
     <value>259, 20</value>
   </data>
   <data name="textServerURL.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;textServerURL.Name" xml:space="preserve">
     <value>textServerURL</value>
@@ -250,7 +250,7 @@
     <value>259, 20</value>
   </data>
   <data name="textPassword.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="&gt;&gt;textPassword.Name" xml:space="preserve">
     <value>textPassword</value>
@@ -277,7 +277,7 @@
     <value>56, 13</value>
   </data>
   <data name="lblPassword.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="lblPassword.Text" xml:space="preserve">
     <value>&amp;Password:</value>
@@ -307,7 +307,7 @@
     <value>58, 13</value>
   </data>
   <data name="lblUsername.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="lblUsername.Text" xml:space="preserve">
     <value>&amp;Username:</value>
@@ -334,7 +334,7 @@
     <value>259, 20</value>
   </data>
   <data name="textUsername.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;textUsername.Name" xml:space="preserve">
     <value>textUsername</value>
@@ -358,7 +358,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnTest.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>9</value>
   </data>
   <data name="btnTest.Text" xml:space="preserve">
     <value>Test</value>
@@ -382,7 +382,7 @@
     <value>145, 21</value>
   </data>
   <data name="comboAccountType.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;comboAccountType.Name" xml:space="preserve">
     <value>comboAccountType</value>
@@ -406,7 +406,7 @@
     <value>73, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
     <value>Account type:</value>
@@ -589,7 +589,7 @@
     <value>262, 144</value>
   </data>
   <data name="groupBoxUnifi.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>8</value>
   </data>
   <data name="groupBoxUnifi.Text" xml:space="preserve">
     <value>Advanced Unifi Settings</value>
