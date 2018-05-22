@@ -117,10 +117,12 @@ namespace Bruker {
 
 TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra, int preferOnlyMsLevel)
     : tdfFilepath_((bfs::path(rawpath) / "analysis.tdf").string()),
-      tdfStorage_(new TimsBinaryData(rawpath)),
+      tdfStoragePtr_(new TimsBinaryData(rawpath)),
+      tdfStorage_(*tdfStoragePtr_),
       combineSpectra_(combineIonMobilitySpectra),
       hasPASEFData_(false),
-      preferOnlyMsLevel_(preferOnlyMsLevel)
+      preferOnlyMsLevel_(preferOnlyMsLevel),
+      currentFrameId_(-1)
 {
     sqlite::database db(tdfFilepath_);
 
@@ -222,7 +224,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         optional<int> precursorCharge(row.get<optional<int> >(++idx));
         optional<double> collisionEnergy(row.get<optional<double> >(++idx));
 
-        TimsFramePtr frame(new TimsFrame(tdfStorage_, frameId,
+        TimsFramePtr frame(new TimsFrame(*this, frameId,
                                          msLevel, rt,
                                          mzAcqRangeLower, mzAcqRangeUpper,
                                          tic, bpi,
@@ -336,7 +338,27 @@ InstrumentSource TimsDataImpl::getInstrumentSource() const { return instrumentSo
 std::string TimsDataImpl::getAcquisitionSoftware() const { return acquisitionSoftware_; }
 std::string TimsDataImpl::getAcquisitionSoftwareVersion() const { return acquisitionSoftwareVersion_; }
 
-TimsFrame::TimsFrame(TimsBinaryDataPtr storage, int64_t frameId,
+///
+/// Reimplementations of TimsBinaryData functions to cache entire frames while dealing with single spectrum
+///
+
+/// Read all scans from a single frame. Not thread-safe.
+
+const ::timsdata::FrameProxy& TimsDataImpl::readFrame(
+    int64_t frame_id)     //< frame index
+{
+    if (frame_id != currentFrameId_)
+    {
+        const auto findItr = frames_.find(frame_id);
+        if (findItr == frames_.end())
+            throw out_of_range("[TimsData::readScans] invalid frame index");
+        const auto framePtr = findItr->second;
+        return tdfStorage_.readScans(currentFrameId_ = frame_id, 0, framePtr->numScans_, true);
+    }
+    return tdfStorage_.CurrentFrameProxy();
+}
+
+TimsFrame::TimsFrame(TimsDataImpl& timsDataImpl, int64_t frameId,
                      int msLevel, double rt,
                      double startMz, double endMz,
                      double tic, double bpi,
@@ -350,28 +372,27 @@ TimsFrame::TimsFrame(TimsBinaryDataPtr storage, int64_t frameId,
       polarity_(polarity), scanRange_(startMz, endMz),
       precursorMz_(precursorMz), scanMode_(scanMode),
       isolationWidth_(isolationWidth), chargeState_(precursorCharge),
-      storage_(*storage), oneOverK0_(numScans)
+      timsDataImpl_(timsDataImpl), oneOverK0_(numScans)
 {
     vector<double> scanNumbers(numScans);
     for(int i=1; i <= numScans; ++i)
         scanNumbers[i-1] = i;
-
-    storage_.scanNumToOneOverK0(frameId, scanNumbers, oneOverK0_);
+    timsDataImpl_.tdfStorage_.scanNumToOneOverK0(frameId, scanNumbers, oneOverK0_);
 }
 
 const PasefPrecursorInfo TimsSpectrum::empty_;
 
 bool TimsSpectrum::hasLineData() const { return getLineDataSize() > 0; }
 bool TimsSpectrum::hasProfileData() const { return false; }
-size_t TimsSpectrum::getLineDataSize() const { return frame_.storage_.readScans(frame_.frameId_, scanBegin_, scanBegin_ + 1).getTotalNbrPeaks(); }
+size_t TimsSpectrum::getLineDataSize() const { return frame_.timsDataImpl_.readFrame(frame_.frameId_).getNbrPeaks(scanBegin_); }
 size_t TimsSpectrum::getProfileDataSize() const { return 0; }
 
 void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const
 {
-    auto& storage = frame_.storage_;
-    const auto& frameProxy = storage.readScans(frame_.frameId_, scanBegin_, scanBegin_ + 1);
-    auto mzIndices = frameProxy.getScanX(0);
-    auto count = mzIndices.size();
+    auto& storage = frame_.timsDataImpl_;
+    const auto& frameProxy = storage.readFrame(frame_.frameId_);
+    auto intensityCounts = frameProxy.getScanY(scanBegin_);
+    auto count = intensityCounts.size();
 
     // Empty scans are not uncommon, save some heap thrashing
     if (count == 0)
@@ -381,16 +402,17 @@ void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<
         return;
     }
 
-    auto intensityCounts = frameProxy.getScanY(0);
+    auto scanMZs = frameProxy.getScanMZs(scanBegin_);
     intensities.resize_no_initialize(intensityCounts.size());
-    vector<double> mzIndicesAsDoubles(count);
+    mz.resize_no_initialize(intensityCounts.size());
 
-    for (size_t i = count; i--;)
+    double *m = &mz[0];
+    double *inten = &intensities[0];
+    for (size_t i = 0; i < count;)
     {
-        mzIndicesAsDoubles[i] = mzIndices[i];
-        intensities[i] = intensityCounts[i];
+       *m++ = scanMZs[i];
+        *inten++ = intensityCounts[i++];
     }
-    storage.indexToMz(frame_.frameId_, mzIndicesAsDoubles, mz);
 }
 
 void TimsSpectrum::getProfileData(automation_vector<double>& mz, automation_vector<double>& intensities) const
@@ -407,7 +429,7 @@ double TimsSpectrum::oneOverK0() const
     {
         vector<double> avgScanNumber(1, GetPasefPrecursorInfo().avgScanNumber);
         vector<double> avgOneOverK0(1);
-        frame_.storage_.scanNumToOneOverK0(frame_.frameId_, avgScanNumber, avgOneOverK0);
+        frame_.timsDataImpl_.tdfStorage_.scanNumToOneOverK0(frame_.frameId_, avgScanNumber, avgOneOverK0);
         return avgOneOverK0[0];
     }
     else if (!isCombinedScans())
@@ -434,9 +456,9 @@ namespace {
 
 void TimsSpectrum::getCombinedSpectrumData(std::vector<double>& mz, std::vector<double>& intensities, std::vector<double>& mobilities) const
 {
-    auto& storage = frame_.storage_;
+    auto& storage = frame_.timsDataImpl_.tdfStorage_;
     
-    const auto& frameProxy = storage.readScans(frame_.frameId_, scanBegin_, scanEnd() + 1);
+    const auto& frameProxy = storage.readScans(frame_.frameId_, scanBegin_, scanEnd() + 1, false);
     vector<double> mzIndicesAsDoubles;
     mzIndicesAsDoubles.reserve(frameProxy.getTotalNbrPeaks());
     for (int i = 0; i < scanEnd() - scanBegin_; ++i)

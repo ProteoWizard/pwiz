@@ -28,7 +28,7 @@
 #include "CompassData.hpp"
 #include <boost/optional.hpp>
 #include <boost/container/flat_map.hpp>
-#include "timsdata_cpp.h"
+#include "timsdata_cpp_pwiz.h" // Derived from timsdata_cpp.h, has light changes to help with single-scan access efficiency
 
 
 using boost::optional;
@@ -61,7 +61,7 @@ struct PWIZ_API_DECL TimsFrame
 {
 
 
-    TimsFrame(TimsBinaryDataPtr storage, int64_t frameId,
+    TimsFrame(TimsDataImpl& timsDataImpl, int64_t frameId,
               int msLevel, double rt,
               double startMz, double endMz,
               double tic, double bpi,
@@ -97,7 +97,7 @@ struct PWIZ_API_DECL TimsFrame
 
     vector<PasefPrecursorInfoPtr> pasef_precursor_info_;
 
-    TimsBinaryData & storage_;
+    TimsDataImpl & timsDataImpl_;
     vector<double> oneOverK0_; // access by (scan number - 1)
 };
 
@@ -252,7 +252,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
 
     private:
     std::string tdfFilepath_;
-    TimsBinaryDataPtr tdfStorage_;
+    TimsBinaryDataPtr tdfStoragePtr_;
     boost::container::flat_map<size_t, TimsFramePtr> frames_;
     std::vector<TimsSpectrumPtr> spectra_;
     std::string acquisitionSoftware_;
@@ -264,6 +264,21 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     bool combineSpectra_;
     bool hasPASEFData_;
     int preferOnlyMsLevel_; // when nonzero, caller only wants spectra at this ms level
+
+    int64_t currentFrameId_; // used for cacheing frame contents
+
+    protected:
+    friend struct TimsFrame;
+    friend struct TimsSpectrum;
+    TimsBinaryData& tdfStorage_;
+
+    ///
+    /// cache entire frames while dealing with single spectrum access
+    ///
+
+    const timsdata::FrameProxy& readFrame(
+        int64_t frame_id);     //< frame index
+
 };
 
 
