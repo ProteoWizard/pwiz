@@ -4196,6 +4196,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to     {0} or &apos;{1}&apos;.
+        /// </summary>
+        public static string CommandArgs_ParseArgsInternal______0__or___1__ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseArgsInternal______0__or___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to --import-cache-file can only be specified once.
         /// </summary>
         public static string CommandArgs_ParseArgsInternal___import_cache_file_can_only_be_specified_once {
@@ -4277,6 +4286,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_" +
                         "the___import_all_option_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Attempting to exclude an unknown feature name &apos;{0}&apos;. Try one of the following:.
+        /// </summary>
+        public static string CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_nam" +
+                        "e___0____Try_one_of_the_following_", resourceCulture);
             }
         }
         
@@ -4708,6 +4727,24 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_CreateScoringModel_Error__There_are_no_decoy_peptides_in_the_document" +
                         "__Failed_to_create_scoring_model_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluding feature score &apos;{0}&apos;.
+        /// </summary>
+        public static string CommandLine_CreateScoringModel_Excluding_feature_score___0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_CreateScoringModel_Excluding_feature_score___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluding feature scores:.
+        /// </summary>
+        public static string CommandLine_CreateScoringModel_Excluding_feature_scores_ {
+            get {
+                return ResourceManager.GetString("CommandLine_CreateScoringModel_Excluding_feature_scores_", resourceCulture);
             }
         }
         

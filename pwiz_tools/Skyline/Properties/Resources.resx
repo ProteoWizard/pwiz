@@ -10119,4 +10119,17 @@ Recognized isotopes include: {2}</value>
   <data name="ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
     <value>Cannot automatically train mProphet model without decoys, but decoy options resulted in no decoys being generated. Please increase number of decoys per target, or disable automatic training of mProphet model.</value>
   </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_score___0__" xml:space="preserve">
+    <value>Excluding feature score '{0}'</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_scores_" xml:space="preserve">
+    <value>Excluding feature scores:</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to exclude an unknown feature name '{0}'. Try one of the following:</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal______0__or___1__" xml:space="preserve">
+    <value>    {0} or '{1}'</value>
+    <comment>Two possible values separated by "or" with the second quoted</comment>
+  </data>
 </root>
