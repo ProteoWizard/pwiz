@@ -55,17 +55,17 @@ struct TestScanSummerCalculator
 TestScanSummerCalculator testScanSummerCalculators[] =
 {
 
-    { "112 120 121 123 124 128 129",
-      "7 0 1 4 2 1 7",
+    { "112 112.0000001 112.1 120 121 123 124 128 129",
+      "  3           2     5   0   1   4   2   1   7",
       120.0,
       20.0},
 
-    { "119 120 121 122 123 124 127 128 129",
-      "4 5 6 7 8 9 10 11 12",
+    { "112.0001 119 120 121 122 123 124 127 128 129",
+      "       1   4   5   6   7   8   9  10  11  12",
       120.01,
       20.1},
 
-    { "200 200.01 200.02 200.09 200.20",
+    { "200 200.1 200.2 200.9 202",
       "1.0 3.0 1.0 0.0 3.0",
       401.23,
       21.01},
@@ -75,7 +75,7 @@ TestScanSummerCalculator testScanSummerCalculators[] =
       119.96,
       21.05},
 
-    { "200.01 200.02 200.03 200.08 200.09",
+    { "200.1 200.2 200.3 200.8 200.9",
       "1.0 3.0 1.0 1.0 4.0",
       401.19,
       21.1},
@@ -85,12 +85,12 @@ TestScanSummerCalculator testScanSummerCalculators[] =
 TestScanSummerCalculator goldStandard[] =
 {
 
-    { "112 119 120 121 122 123 124 126 127 128 129",
-      "7 4 12 7 7 12 11 7 17 12 19",
+    { "112 112.1 119 120 121 122 123 124 126 127 128 129",
+      "6       5   4  12   7   7  12  11   7  17  12  19",
       120.0,
       20.0},
 
-    { "200 200.01 200.02 200.03 200.08 200.09 200.20",
+    { "200 200.1 200.2 200.3 200.8 200.9 202",
       "1.0 4.0 4.0 1.0 1.0 4.0 3.0",
       401.23,
       21.01},
@@ -167,10 +167,10 @@ int test()
             vector<double> goldMZArray = parseDoubleArray(goldStandard[i].inputMZArray);
             vector<double> goldIntensityArray = parseDoubleArray(goldStandard[i].inputIntensityArray);
 
-            unit_assert(mzs.size() == goldMZArray.size());
-            unit_assert(intensities.size() == goldIntensityArray.size());
-            unit_assert(precursorMZ == goldStandard[i].inputPrecursorMZ);
-            unit_assert(rTime == goldStandard[i].rTime);
+            unit_assert_operator_equal(goldMZArray.size(), mzs.size());
+            unit_assert_operator_equal(goldIntensityArray.size(), intensities.size());
+            unit_assert_operator_equal(goldStandard[i].inputPrecursorMZ, precursorMZ);
+            unit_assert_operator_equal(goldStandard[i].rTime, rTime);
 
             for (size_t j=0; j < mzs.size(); ++j)
             {

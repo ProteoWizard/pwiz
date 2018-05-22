@@ -44,7 +44,6 @@ rule vendor-api-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ bruker-dll-location $(API_PATH) : $(properties) ] &&
        ! [ without-binary-msdata $(properties) ] &&
@@ -84,7 +83,6 @@ rule has-bruker-reader ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        [ bruker-dll-location $(API_PATH) : $(properties) ] &&
        ! [ without-binary-msdata $(properties) ] &&
@@ -109,7 +107,18 @@ rule filesystem-shared ( properties * )
 }
 
 # shared with pwiz_vendor_api_bruker
-obj Reader_Bruker_Detail : Reader_Bruker_Detail.cpp : <conditional>@has-bruker-reader <conditional>@filesystem-shared : : <conditional>@filesystem-shared ;
+obj Reader_Bruker_Detail
+    : # sources
+        Reader_Bruker_Detail.cpp
+    : # requirements
+        <conditional>@has-bruker-reader
+        <conditional>@filesystem-shared
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+    : # default-build
+    : # usage-requirements
+        <conditional>@filesystem-shared
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+    ;
 
 
 lib pwiz_reader_bruker
@@ -119,11 +128,9 @@ lib pwiz_reader_bruker
         ChromatogramList_Bruker.cpp
         Reader_Bruker_Detail
     : # requirements
-        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
         <conditional>@vendor-api-requirements
     : # default-build
     : # usage-requirements
-        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
         <conditional>@vendor-api-requirements
     ;
 
