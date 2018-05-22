@@ -277,15 +277,18 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             for (auto itr = ++scanNumbers.begin(); itr != scanNumbers.end(); ++itr)
             {
                 scans.push_back(Scan());
+                scans.back().instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
                 generate(std::back_insert_iterator<std::string>(scans.back().spectrumID),
                          "frame=" << int_ << " scan=" << int_,
                          frameScanPair.first, *itr);
 
-                if (scanTime > 0)
-                    scans.back().set(MS_scan_start_time, scanTime, UO_second);
+                // CONSIDER: do we need this? all scan times will be the same and it's rather verbose
+                //if (scanTime > 0)
+                //    scans.back().set(MS_scan_start_time, scanTime, UO_second);
 
-                if (scanRange.first > 0 && scanRange.second > 0)
-                    scans.back().scanWindows.push_back(ScanWindow(scanRange.first, scanRange.second, MS_m_z));
+                // CONSIDER: do we need this? all scan ranges will be the same and it's very verbose!
+                //if (scanRange.first > 0 && scanRange.second > 0)
+                //    scans.back().scanWindows.push_back(ScanWindow(scanRange.first, scanRange.second, MS_m_z));
             }
             result->scanList.set(MS_sum_of_spectra);
         }
