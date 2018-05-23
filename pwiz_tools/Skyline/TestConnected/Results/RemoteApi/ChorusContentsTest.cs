@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestConnected.Results.RemoteApi
@@ -35,7 +35,7 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
         public void TestAuthenticate()
         {
             CookieContainer cookieContainer = new CookieContainer();
-            ChorusSession chorusSession = new ChorusSession();
+            ChorusSession chorusSession = new ChorusSession(TEST_ACCOUNT);
             Assert.AreEqual(0, cookieContainer.Count);
             chorusSession.Login(TEST_ACCOUNT, cookieContainer);
             Assert.AreEqual(1, cookieContainer.Count);
@@ -45,8 +45,8 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
         //[TestMethod]
         public void TestChorusContents()
         {
-            ChorusSession chorusSession = new ChorusSession();
-            ChorusContents chorusContents = chorusSession.FetchContents(TEST_ACCOUNT, new Uri(TEST_ACCOUNT.ServerUrl + "/skyline/api/contents/my/projects"));
+            ChorusSession chorusSession = new ChorusSession(TEST_ACCOUNT);
+            ChorusContents chorusContents = chorusSession.FetchContents(new Uri(TEST_ACCOUNT.ServerUrl + "/skyline/api/contents/my/projects"));
             Assert.IsNotNull(chorusContents);
         }
 
@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
             {
                 new ChorusAccount("https://chorusproject.org", "pavel.kaplin@gmail.com", "pwd"),
             };
-            ChorusSession chorusSession = new ChorusSession();
+            ChorusSession chorusSession = new ChorusSession(TEST_ACCOUNT);
             var instrumentModels = new HashSet<string>();
             foreach (var account in accounts)
             {
@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
                 {
                     try
                     {
-                        chorusContents = chorusSession.FetchContents(account,
+                        chorusContents = chorusSession.FetchContents(
                             new Uri(account.ServerUrl + "/skyline/api/contents/my/files"));
                         break;
                     }

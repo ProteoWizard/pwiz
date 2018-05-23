@@ -10089,7 +10089,47 @@ Recognized isotopes include: {2}</value>
   <data name="ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_method___1___has_the_wrong_signature_" xml:space="preserve">
     <value>Error running the installed tool {0}. The method '{1}' has the wrong signature.</value>
   </data>
+  <data name="UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__" xml:space="preserve">
+    <value>Cannot find account for username {0} and server {1}.</value>
+  </data>
+  <data name="OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__If_you_have_an_existing_Unifi_or_Chorus_account_you_can_enter_your_login_information_now_" xml:space="preserve">
+    <value>No remote accounts have been specified. If you have an existing Unifi or Chorus account you can enter your login information now.</value>
+  </data>
+  <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
+    <value>Edit Remote Accounts</value>
+  </data>
+  <data name="RemoteAccountList_Label_Remote_Accounts" xml:space="preserve">
+    <value>Remote Accounts</value>
+  </data>
+  <data name="OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts" xml:space="preserve">
+    <value>Remote Accounts</value>
+  </data>
+  <data name="Chorus_Label_Chorus" xml:space="preserve">
+    <value>Chorus</value>
+  </data>
+  <data name="Unifi_Label_Unifi" xml:space="preserve">
+    <value>Unifi</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_" xml:space="preserve">
+    <value>An error occurred while trying to authenticate.</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_" xml:space="preserve">
+    <value>An exception occurred while trying to fetch the directory listing.</value>
+  </data>
   <data name="ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
     <value>Cannot automatically train mProphet model without decoys, but decoy options resulted in no decoys being generated. Please increase number of decoys per target, or disable automatic training of mProphet model.</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_score___0__" xml:space="preserve">
+    <value>Excluding feature score '{0}'</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_scores_" xml:space="preserve">
+    <value>Excluding feature scores:</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to exclude an unknown feature name '{0}'. Try one of the following:</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal______0__or___1__" xml:space="preserve">
+    <value>    {0} or '{1}'</value>
+    <comment>Two possible values separated by "or" with the second quoted</comment>
   </data>
 </root>

@@ -40,6 +40,8 @@ typedef struct {
     std::vector <int> indexList;
 } precursorGroup;
 
+typedef boost::shared_ptr<precursorGroup> precursorGroupPtr;
+
 
 namespace pwiz {
 namespace analysis {
@@ -54,7 +56,7 @@ class PWIZ_API_DECL SpectrumList_ScanSummer : public msdata::SpectrumListWrapper
     void pushSpectrum(const msdata::SpectrumIdentity&);
     double getPrecursorMz(const msdata::Spectrum&) const;
     //void sumSubScansResample( std::vector<double> &, std::vector<double> &, size_t, msdata::DetailLevel) const;
-    void sumSubScansNaive( std::vector<double> &, std::vector<double> &, size_t, msdata::DetailLevel) const;
+    void sumSubScansNaive( std::vector<double> &, std::vector<double> &, const precursorGroupPtr&, msdata::DetailLevel) const;
     virtual size_t size() const;
     virtual const msdata::SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
@@ -68,11 +70,11 @@ class PWIZ_API_DECL SpectrumList_ScanSummer : public msdata::SpectrumListWrapper
     double precursorTol_;
     double rTimeTol_;
 
-    mutable int ms2cnt;
     std::vector<msdata::SpectrumIdentity> spectrumIdentities; // local cache, with fixed up index fields
     std::vector<size_t> indexMap; // maps index -> original index
-    std::vector< precursorGroup > precursorList;
-    std::vector< precursorGroup > ms2RetentionTimes;
+    std::vector<precursorGroupPtr> precursorMap; // maps new index -> precursor group
+    std::vector<precursorGroupPtr> precursorList;
+    std::vector<precursorGroupPtr> ms2RetentionTimes;
     SpectrumList_ScanSummer(SpectrumList_ScanSummer&); //copy constructor
     SpectrumList_ScanSummer& operator=(SpectrumList_ScanSummer&); //assignment operator
 };

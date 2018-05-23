@@ -70,6 +70,9 @@ class PWIZ_API_DECL Reader
         /// such as centroiding all spectra at once instead of one at a time
         pwiz::util::IterationListenerRegistry* iterationListenerRegistry;
 
+        /// when nonzero, if reader can enumerate only spectra of ms level, it will (currently only supported by Bruker TDF)
+        int preferOnlyMsLevel;
+
         Config();
         Config(const Config& rhs);
     };
