@@ -136,6 +136,7 @@ lib blibbuild
     MaxQuantReader.cpp
     MSFReader.cpp
     MSFSpecReader.cpp
+    mzTabReader.cpp
     OSWReader.cpp
     ProteinPilotReader.cpp
     saxhandler.cpp
