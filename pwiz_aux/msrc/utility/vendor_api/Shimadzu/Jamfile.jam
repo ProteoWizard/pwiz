@@ -144,6 +144,7 @@ rule install-requirements ( properties * )
     if $(dll_location)
     {
         result += <source>$(dll_location)/DataReader.dll ;
+        result += <source>$(dll_location)/../CABINET.dll ;
         result += <source>$(dll_location)/../DualProbeInterfaceParametersCS.dll ;
         result += <source>$(dll_location)/../Google.Protobuf.dll ;
         result += <source>$(dll_location)/../QTFLProtoCS.dll ;
