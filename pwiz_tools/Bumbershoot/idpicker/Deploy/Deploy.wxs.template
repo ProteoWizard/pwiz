@@ -263,7 +263,7 @@
 <Component Feature="MainFeature"><File Source="msvc-release\QTFLProtoCS.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Source="msvc-release\Shimadzu.LabSolutions.IO.IoModule.dll" KeyPath="yes"/></Component>
 <?if $(var.AddressModel)=64 ?>
-<Directory Name="x64">
+<Directory Id="Shimadzu_x64" Name="x64">
     <Component Feature="MainFeature"><File Source="msvc-release\x64\CLFIO32.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\x64\CRHAKEI2.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\x64\IOModuleQTFL.dll" KeyPath="yes"/></Component>
@@ -273,7 +273,7 @@
     <Component Feature="MainFeature"><File Source="msvc-release\x64\QTFLDebugLog.dll" KeyPath="yes"/></Component>
 </Directory>
 <?else?>
-<Directory Name="x86">
+<Directory Id="Shimadzu_x86" Name="x86">
     <Component Feature="MainFeature"><File Source="msvc-release\x86\CLFIO32.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\x86\CRHAKEI2.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Source="msvc-release\x86\IOModuleQTFL.dll" KeyPath="yes"/></Component>
