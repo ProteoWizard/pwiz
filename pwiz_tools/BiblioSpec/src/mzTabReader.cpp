@@ -205,14 +205,14 @@ void mzTabReader::parseLine(const string& line) {
                 try {
                     curPSM_->specKey = lexical_cast<int>(scanStr);
                 } catch (bad_lexical_cast&) {
-                    throw BlibException(false, "Invalid scan '%s' on line %d", scanStr, lineNum_);
+                    throw BlibException(false, "Invalid scan '%s' on line %d", scanStr.c_str(), lineNum_);
                 }
             } else if (starts_with(i->second, indexPrefix)) {
                 string indexStr = i->second.substr(indexPrefix.size());
                 try {
                     curPSM_->specIndex = lexical_cast<int>(indexStr);
                 } catch (bad_lexical_cast&) {
-                    throw BlibException(false, "Invalid index '%s' on line %d", indexStr, lineNum_);
+                    throw BlibException(false, "Invalid index '%s' on line %d", indexStr.c_str(), lineNum_);
                 }
             } else {
                 curPSM_->specName = i->second;
@@ -305,7 +305,7 @@ bool mzTabReader::parseSequence(const vector<string>& fields, string& outSequenc
             try {
                 id = lexical_cast<int>(idStr);
             } catch (bad_lexical_cast&) {
-                throw BlibException(false, "Invalid Unimod ID '%s' on line %d (%s)", idStr, lineNum_, modStr.c_str());
+                throw BlibException(false, "Invalid Unimod ID '%s' on line %d (%s)", idStr.c_str(), lineNum_, modStr.c_str());
             }
             if (!unimod_.hasMod(id)) {
                 Verbosity::warn("Unrecognized Unimod ID %d on line %d", id, lineNum_);
@@ -321,7 +321,7 @@ bool mzTabReader::parseSequence(const vector<string>& fields, string& outSequenc
             try {
                 id = lexical_cast<int>(idStr);
             } catch (bad_lexical_cast&) {
-                throw BlibException(false, "Invalid PSI-MOD ID '%s' on line %d (%s)", idStr, lineNum_, modStr.c_str());
+                throw BlibException(false, "Invalid PSI-MOD ID '%s' on line %d (%s)", idStr.c_str(), lineNum_, modStr.c_str());
             }
             // TODO Implement support
             throw BlibException(false, "PSI-MOD modifications not yet supported. Line %d (%s)", lineNum_, modStr.c_str());
