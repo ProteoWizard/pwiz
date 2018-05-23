@@ -28,7 +28,7 @@
 #include "CompassData.hpp"
 #include <boost/optional.hpp>
 #include <boost/container/flat_map.hpp>
-#include "timsdata_cpp_pwiz.h" // Derived from timsdata_cpp.h, has light changes to help with single-scan access efficiency
+#include "timsdata_cpp.h"
 
 
 using boost::optional;
@@ -61,7 +61,7 @@ struct PWIZ_API_DECL TimsFrame
 {
 
 
-    TimsFrame(TimsDataImpl& timsDataImpl, int64_t frameId,
+    TimsFrame(TimsBinaryDataPtr storage, int64_t frameId,
               int msLevel, double rt,
               double startMz, double endMz,
               double tic, double bpi,
@@ -97,7 +97,7 @@ struct PWIZ_API_DECL TimsFrame
 
     vector<PasefPrecursorInfoPtr> pasef_precursor_info_;
 
-    TimsDataImpl & timsDataImpl_;
+    TimsBinaryDataPtr storage_;
     vector<double> oneOverK0_; // access by (scan number - 1)
 };
 
@@ -106,10 +106,8 @@ typedef boost::shared_ptr<TimsFrame> TimsFramePtr;
 
 struct PWIZ_API_DECL TimsSpectrum : public MSSpectrum
 {
-protected:
-    TimsSpectrum(const TimsFramePtr& framePtr, int scanBegin) : 
-        frame_(*framePtr), scanBegin_(scanBegin) {}
-public:
+    TimsSpectrum(const TimsFramePtr& framePtr, int scanBegin, int scanEnd, const PasefPrecursorInfo& pasefPrecursorInfo = empty_);
+
     virtual ~TimsSpectrum() {}
 
     virtual bool hasLineData() const;
@@ -138,67 +136,18 @@ public:
     void getCombinedSpectrumData(std::vector<double>& mz, std::vector<double>& intensities, std::vector<double>& mobilities) const;
     virtual pwiz::util::IntegerSet getMergedScanNumbers() const;
 
-    virtual bool HasPasefPrecursorInfo() const { return false; }
-    virtual const PasefPrecursorInfo& GetPasefPrecursorInfo() const { return empty_; }
-
     int scanBegin() const { return scanBegin_; }
-    virtual int scanEnd() const = 0;
-    virtual bool isCombinedScans() const = 0;
+    int scanEnd() const { return scanEnd_; }
 
     virtual MSSpectrumParameterListPtr parameters() const;
 
-    protected:
+    private:
     friend struct TimsDataImpl;
 
+    int scanBegin_, scanEnd_; // 0-based index, scanEnd is inclusive (so for unmerged spectrum, begin==end)
     const TimsFrame& frame_;
-    const int scanBegin_;
-    const static PasefPrecursorInfo empty_;
-
-};
-
-struct TimsSpectrumNonPASEF : public TimsSpectrum
-{
-    TimsSpectrumNonPASEF(const TimsFramePtr& framePtr, int scanBegin) : 
-        TimsSpectrum(framePtr, scanBegin) {}
-    virtual ~TimsSpectrumNonPASEF() {}
-    virtual int scanEnd() const { return scanBegin_; }
-    virtual bool isCombinedScans() const { return false; }
-};
-
-struct TimsSpectrumCombinedNonPASEF : public TimsSpectrumNonPASEF
-{
-    TimsSpectrumCombinedNonPASEF(const TimsFramePtr& framePtr, int scanBegin, int scanEnd) : 
-        TimsSpectrumNonPASEF(framePtr, scanBegin), scanEnd_(scanEnd) {}
-    virtual ~TimsSpectrumCombinedNonPASEF() {}
-    virtual int scanEnd() const { return scanEnd_; }
-    virtual bool isCombinedScans() const { return scanEnd_ != scanBegin_; }
-private:
-    int scanEnd_; // 0-based index, scanEnd is inclusive (so for unmerged spectrum, begin==end)
-};
-
-struct TimsSpectrumPASEF : public TimsSpectrum
-{
-    TimsSpectrumPASEF(const TimsFramePtr& framePtr, int scanBegin, const PasefPrecursorInfo& pasefPrecursorInfo) :
-        TimsSpectrum(framePtr, scanBegin), pasefPrecursorInfo_(pasefPrecursorInfo) {}
-    virtual ~TimsSpectrumPASEF() {}
-    virtual int scanEnd() const { return scanBegin_; }
-    virtual bool isCombinedScans() const { return false; }
-    virtual bool HasPasefPrecursorInfo() const { return &pasefPrecursorInfo_ != &empty_; };
-    virtual const PasefPrecursorInfo& GetPasefPrecursorInfo() const { return pasefPrecursorInfo_; }
-private:
     const PasefPrecursorInfo& pasefPrecursorInfo_;
-};
-
-struct TimsSpectrumCombinedPASEF : public TimsSpectrumPASEF
-{
-    TimsSpectrumCombinedPASEF(const TimsFramePtr& framePtr, int scanBegin, int scanEnd, const PasefPrecursorInfo& pasefPrecursorInfo) :
-        TimsSpectrumPASEF(framePtr, scanBegin, pasefPrecursorInfo), scanEnd_(scanEnd) {}
-
-    virtual ~TimsSpectrumCombinedPASEF() {}
-    virtual int scanEnd() const { return scanEnd_; }
-    virtual bool isCombinedScans() const { return scanEnd_ != scanBegin_; }
-private:
-    int scanEnd_; // 0-based index, scanEnd is inclusive (so for unmerged spectrum, begin==end)
+    const static PasefPrecursorInfo empty_;
 };
 
 typedef boost::shared_ptr<TimsSpectrum> TimsSpectrumPtr;
@@ -252,7 +201,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
 
     private:
     std::string tdfFilepath_;
-    TimsBinaryDataPtr tdfStoragePtr_;
+    TimsBinaryDataPtr tdfStorage_;
     boost::container::flat_map<size_t, TimsFramePtr> frames_;
     std::vector<TimsSpectrumPtr> spectra_;
     std::string acquisitionSoftware_;
@@ -264,21 +213,6 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     bool combineSpectra_;
     bool hasPASEFData_;
     int preferOnlyMsLevel_; // when nonzero, caller only wants spectra at this ms level
-
-    int64_t currentFrameId_; // used for cacheing frame contents
-
-    protected:
-    friend struct TimsFrame;
-    friend struct TimsSpectrum;
-    TimsBinaryData& tdfStorage_;
-
-    ///
-    /// cache entire frames while dealing with single spectrum access
-    ///
-
-    const timsdata::FrameProxy& readFrame(
-        int64_t frame_id);     //< frame index
-
 };
 
 
