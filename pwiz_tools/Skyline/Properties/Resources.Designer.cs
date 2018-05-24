@@ -26933,6 +26933,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Data Independent Acquisition.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Data_Independent_Acquisition {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Data_Independent_Acquisition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Grouped Study Data Processing.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small Molecule Targets.
+        /// </summary>
+        public static string StartPage_PopulateTutorialPanel_Small_Molecule_Targets {
+            get {
+                return ResourceManager.GetString("StartPage_PopulateTutorialPanel_Small_Molecule_Targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Import DIA Peptide Search.
         /// </summary>
         public static string StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search {

@@ -4572,8 +4572,8 @@
   <data name="MQuestDefaultIntensityCorrelationCalc_Name_Default_dotp_or_idotp" xml:space="preserve">
     <value>默认点积或同位素点积</value>
   </data>
-  <data name="StartPage_PopulateWizardPanel_Import_DIA_DDA_Peptide_Search" xml:space="preserve">
-    <value>导入 DIA+DDA 肽搜索</value>
+  <data name="StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search" xml:space="preserve">
+    <value>导入 DIA 肽搜索</value>
   </data>
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
     <value>文档必须包含针对其导出特性的目标。</value>

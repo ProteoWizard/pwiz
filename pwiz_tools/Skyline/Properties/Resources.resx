@@ -10092,4 +10092,13 @@ Recognized isotopes include: {2}</value>
   <data name="ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
     <value>Cannot automatically train mProphet model without decoys, but decoy options resulted in no decoys being generated. Please increase number of decoys per target, or disable automatic training of mProphet model.</value>
   </data>
+  <data name="StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing" xml:space="preserve">
+    <value>Grouped Study Data Processing</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Targets" xml:space="preserve">
+    <value>Small Molecule Targets</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Data_Independent_Acquisition" xml:space="preserve">
+    <value>Data Independent Acquisition</value>
+  </data>
 </root>
