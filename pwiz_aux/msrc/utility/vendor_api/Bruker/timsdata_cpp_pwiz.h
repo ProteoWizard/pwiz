@@ -47,7 +47,7 @@ namespace timsdata
         {
         }
 
-        void Update(size_t num_scans_, size_t frame_id)
+        void update(size_t num_scans_, size_t frame_id)
         {
             num_scans = num_scans_;
             scan_offsets.resize(num_scans + 1);
@@ -132,7 +132,7 @@ namespace timsdata
             : handle(0)
             , initial_frame_buffer_size(128)
             , pData()
-            , currentFrameProxy(pData)
+            , currentFrameProxy_(pData)
         {
             handle = tims_open(analysis_directory_name.c_str(), use_recalibration);
             ctor_complete();
@@ -148,7 +148,7 @@ namespace timsdata
             : handle(0)
             , initial_frame_buffer_size(128)
             , pData()
-            , currentFrameProxy(pData)
+            , currentFrameProxy_(pData)
         {
             handle = tims_open_using_recalibration(analysis_directory_name.c_str(), calibrationFileSuffix.c_str());
             ctor_complete();
@@ -195,20 +195,20 @@ namespace timsdata
                 if(4 * initial_frame_buffer_size > required_len) {
                     if(required_len < 4 * num_scans)
                         BOOST_THROW_EXCEPTION(std::runtime_error("Data array too small."));
-                    currentFrameProxy.Update(num_scans, frame_id);
+                    currentFrameProxy_.update(num_scans, frame_id);
                     if (perform_mz_conversion)
                     {
-                        currentFrameProxy.mzIndicesAsDoubles.resize(currentFrameProxy.getTotalNbrPeaks());
-                        double *d = &currentFrameProxy.mzIndicesAsDoubles[0];
+                        currentFrameProxy_.mzIndicesAsDoubles.resize(currentFrameProxy_.getTotalNbrPeaks());
+                        double *d = &currentFrameProxy_.mzIndicesAsDoubles[0];
                         for (size_t i = 0; i < num_scans; ++i)
                         {
-                            auto mzIndices = currentFrameProxy.getScanX(i);
+                            auto mzIndices = currentFrameProxy_.getScanX(i);
                             for (size_t i = 0; i < mzIndices.size(); ++i)
                                 *d++ = mzIndices[i];
                         }
-                        indexToMz(frame_id, currentFrameProxy.mzIndicesAsDoubles, currentFrameProxy.mzValues);
+                        indexToMz(frame_id, currentFrameProxy_.mzIndicesAsDoubles, currentFrameProxy_.mzValues);
                     }
-                    return currentFrameProxy;
+                    return currentFrameProxy_;
                 }
 
                 if(required_len > 16777216) // arbitrary limit for now...
@@ -220,9 +220,9 @@ namespace timsdata
             }
         }
 
-        const ::timsdata::FrameProxy& CurrentFrameProxy()
+        const ::timsdata::FrameProxy& currentFrameProxy()
         {
-            return currentFrameProxy;
+            return currentFrameProxy_;
         }
 
         #define BDAL_TIMS_DEFINE_CONVERSION_FUNCTION(CPPNAME, CNAME) \
@@ -270,7 +270,7 @@ namespace timsdata
 
         uint64_t handle;
         size_t initial_frame_buffer_size; // number of uint32_t elements
-        ::timsdata::FrameProxy currentFrameProxy;
+        ::timsdata::FrameProxy currentFrameProxy_;
         std::vector<uint32_t> pData;
 
     };

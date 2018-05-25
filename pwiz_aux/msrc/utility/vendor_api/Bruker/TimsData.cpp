@@ -355,7 +355,7 @@ const ::timsdata::FrameProxy& TimsDataImpl::readFrame(
         const auto framePtr = findItr->second;
         return tdfStorage_.readScans(currentFrameId_ = frame_id, 0, framePtr->numScans_, true);
     }
-    return tdfStorage_.CurrentFrameProxy();
+    return tdfStorage_.currentFrameProxy();
 }
 
 TimsFrame::TimsFrame(TimsDataImpl& timsDataImpl, int64_t frameId,
