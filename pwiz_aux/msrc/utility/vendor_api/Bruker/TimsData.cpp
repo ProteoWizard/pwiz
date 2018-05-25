@@ -461,7 +461,8 @@ void TimsSpectrum::getCombinedSpectrumData(std::vector<double>& mz, std::vector<
     const auto& frameProxy = storage.readScans(frame_.frameId_, scanBegin_, scanEnd() + 1, false);
     vector<double> mzIndicesAsDoubles;
     mzIndicesAsDoubles.reserve(frameProxy.getTotalNbrPeaks());
-    for (int i = 0; i < scanEnd() - scanBegin_; ++i)
+    int range = scanEnd() - scanBegin_;
+    for (int i = 0; i < range; ++i)
     {
         auto mzIndices = frameProxy.getScanX(i);
         for (size_t i = 0; i < mzIndices.size(); ++i)
@@ -470,7 +471,7 @@ void TimsSpectrum::getCombinedSpectrumData(std::vector<double>& mz, std::vector<
     storage.indexToMz(frame_.frameId_, mzIndicesAsDoubles, mz);
 
     intensities.reserve(frameProxy.getTotalNbrPeaks());
-    for (int i = 0; i < scanEnd() - scanBegin_; ++i)
+    for (int i = 0; i < range; ++i)
     {
         auto intensityCounts = frameProxy.getScanY(i);
         for (size_t i = 0; i < intensityCounts.size(); ++i)

@@ -36,23 +36,23 @@ namespace timsdata
 {
 
     /// Proxy object to conveniently access the data read via tims_read_scans() of the C
-    /// API. (Copies of this object share the same underlying data buffer.)
-    class FrameProxy
+    /// API. NB copying this object is expensive, the intent is that there's only one
+    /// per open file.
+    class FrameProxy : public boost::noncopyable
     {
     protected:
         friend class TimsData;
 
-        FrameProxy ()
+        FrameProxy(const std::vector<uint32_t> & pData_) : pData(pData_)
         {
         }
 
-        void Update(size_t num_scans_, const boost::shared_array<uint32_t> & pData_, size_t frame_id)
+        void Update(size_t num_scans_, size_t frame_id)
         {
             num_scans = num_scans_;
-            pData = pData_;
             scan_offsets.resize(num_scans + 1);
             scan_offsets[0] = 0;
-            std::partial_sum(pData.get() + 0, pData.get() + num_scans, scan_offsets.begin() + 1);
+            std::partial_sum(pData.begin(), pData.begin() + num_scans, scan_offsets.begin() + 1);
         }
 
     public:
@@ -88,8 +88,8 @@ namespace timsdata
 
     private:
         size_t num_scans;
-        boost::shared_array<uint32_t> pData; //< data layout as described in tims_read_scans()
-        std::vector<uint32_t> scan_offsets;
+        const vector<uint32_t>& pData; //< data layout as described in tims_read_scans()
+        vector<uint32_t> scan_offsets;
         vector<double> mzIndicesAsDoubles;
         vector<double> mzValues;
 
@@ -100,7 +100,7 @@ namespace timsdata
 
         boost::iterator_range<const uint32_t *> makeRange (size_t scan_num, size_t offset) const {
             throwIfInvalidScanNumber(scan_num);
-            const uint32_t *p = pData.get() + num_scans + 2*scan_offsets[scan_num] + offset;
+            const uint32_t *p = &pData[num_scans + 2*scan_offsets[scan_num] + offset];
             return boost::make_iterator_range(p, p + pData[scan_num]);
         }
 
@@ -131,6 +131,8 @@ namespace timsdata
         explicit TimsData (const std::string &analysis_directory_name, bool use_recalibration=false)
             : handle(0)
             , initial_frame_buffer_size(128)
+            , pData()
+            , currentFrameProxy(pData)
         {
             handle = tims_open(analysis_directory_name.c_str(), use_recalibration);
             ctor_complete();
@@ -145,6 +147,8 @@ namespace timsdata
         explicit TimsData(const std::string &analysis_directory_name, std::string calibrationFileSuffix)
             : handle(0)
             , initial_frame_buffer_size(128)
+            , pData()
+            , currentFrameProxy(pData)
         {
             handle = tims_open_using_recalibration(analysis_directory_name.c_str(), calibrationFileSuffix.c_str());
             ctor_complete();
@@ -184,41 +188,41 @@ namespace timsdata
             for(;;) {
 
                 uint32_t required_len = tims_read_scans_v2(handle, frame_id, scan_begin, scan_end,
-                                                           pData.get(), uint32_t(4*initial_frame_buffer_size));
+                                                           &pData[0], uint32_t(4*initial_frame_buffer_size));
                 if(required_len == 0)
                     throwLastError();
 
                 if(4 * initial_frame_buffer_size > required_len) {
                     if(required_len < 4 * num_scans)
                         BOOST_THROW_EXCEPTION(std::runtime_error("Data array too small."));
-                    frameProxy.Update(num_scans, pData, frame_id);
+                    currentFrameProxy.Update(num_scans, frame_id);
                     if (perform_mz_conversion)
                     {
-                        frameProxy.mzIndicesAsDoubles.resize(frameProxy.getTotalNbrPeaks());
-                        double *d = &frameProxy.mzIndicesAsDoubles[0];
-                        for (int i = 0; i < num_scans; ++i)
+                        currentFrameProxy.mzIndicesAsDoubles.resize(currentFrameProxy.getTotalNbrPeaks());
+                        double *d = &currentFrameProxy.mzIndicesAsDoubles[0];
+                        for (size_t i = 0; i < num_scans; ++i)
                         {
-                            auto mzIndices = frameProxy.getScanX(i);
+                            auto mzIndices = currentFrameProxy.getScanX(i);
                             for (size_t i = 0; i < mzIndices.size(); ++i)
                                 *d++ = mzIndices[i];
                         }
-                        indexToMz(frame_id, frameProxy.mzIndicesAsDoubles, frameProxy.mzValues);
+                        indexToMz(frame_id, currentFrameProxy.mzIndicesAsDoubles, currentFrameProxy.mzValues);
                     }
-                    return frameProxy;
+                    return currentFrameProxy;
                 }
 
                 if(required_len > 16777216) // arbitrary limit for now...
                     BOOST_THROW_EXCEPTION(std::runtime_error("Maximum expected frame size exceeded."));
                 
                 initial_frame_buffer_size = required_len / 4 + 1; // grow buffer
-                pData.reset(new uint32_t[initial_frame_buffer_size]);
+                pData.resize(initial_frame_buffer_size);
 
             }
         }
 
         const ::timsdata::FrameProxy& CurrentFrameProxy()
         {
-            return frameProxy;
+            return currentFrameProxy;
         }
 
         #define BDAL_TIMS_DEFINE_CONVERSION_FUNCTION(CPPNAME, CNAME) \
@@ -261,13 +265,13 @@ namespace timsdata
         {
             if (handle == 0)
                 throwLastError();
-            pData.reset(new uint32_t[initial_frame_buffer_size]);
+            pData.resize(initial_frame_buffer_size);
         }
 
         uint64_t handle;
         size_t initial_frame_buffer_size; // number of uint32_t elements
-        ::timsdata::FrameProxy frameProxy;
-        boost::shared_array<uint32_t> pData;
+        ::timsdata::FrameProxy currentFrameProxy;
+        std::vector<uint32_t> pData;
 
     };
 
