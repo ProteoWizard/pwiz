@@ -351,7 +351,7 @@ const ::timsdata::FrameProxy& TimsDataImpl::readFrame(
     {
         const auto findItr = frames_.find(frame_id);
         if (findItr == frames_.end())
-            throw out_of_range("[TimsData::readScans] invalid frame index");
+            throw out_of_range("[TimsData::readFrame] invalid frame index");
         const auto framePtr = findItr->second;
         return tdfStorage_.readScans(currentFrameId_ = frame_id, 0, framePtr->numScans_, true);
     }
@@ -384,7 +384,7 @@ const PasefPrecursorInfo TimsSpectrum::empty_;
 
 bool TimsSpectrum::hasLineData() const { return getLineDataSize() > 0; }
 bool TimsSpectrum::hasProfileData() const { return false; }
-size_t TimsSpectrum::getLineDataSize() const { return frame_.timsDataImpl_.readFrame(frame_.frameId_).getNbrPeaks(scanBegin_); }
+size_t TimsSpectrum::getLineDataSize() const { return frame_.timsDataImpl_.readFrame(frame_.frameId_).getNbrPeaks(0); }
 size_t TimsSpectrum::getProfileDataSize() const { return 0; }
 
 void TimsSpectrum::getLineData(automation_vector<double>& mz, automation_vector<double>& intensities) const
@@ -462,7 +462,7 @@ void TimsSpectrum::getCombinedSpectrumData(std::vector<double>& mz, std::vector<
     vector<double> mzIndicesAsDoubles;
     mzIndicesAsDoubles.reserve(frameProxy.getTotalNbrPeaks());
     int range = scanEnd() - scanBegin_;
-    for (int i = 0; i < range; ++i)
+    for (int i = 0; i <= range; ++i)
     {
         auto mzIndices = frameProxy.getScanX(i);
         for (size_t i = 0; i < mzIndices.size(); ++i)
@@ -471,7 +471,7 @@ void TimsSpectrum::getCombinedSpectrumData(std::vector<double>& mz, std::vector<
     storage.indexToMz(frame_.frameId_, mzIndicesAsDoubles, mz);
 
     intensities.reserve(frameProxy.getTotalNbrPeaks());
-    for (int i = 0; i < range; ++i)
+    for (int i = 0; i <= range; ++i)
     {
         auto intensityCounts = frameProxy.getScanY(i);
         for (size_t i = 0; i < intensityCounts.size(); ++i)
