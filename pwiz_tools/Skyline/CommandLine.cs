@@ -1413,6 +1413,7 @@ namespace pwiz.Skyline
                 if (commandArgs.IsCreateScoringModel)
                 {
                     modelAndFeatures = CreateScoringModel(commandArgs.ReintegratModelName,
+                        commandArgs.ExcludeFeatures,
                         commandArgs.IsDecoyModel,
                         commandArgs.IsSecondBestModel,
                         commandArgs.IsLogTraining,
@@ -1456,7 +1457,8 @@ namespace pwiz.Skyline
             }
         }
 
-        private ModelAndFeatures CreateScoringModel(string modelName, bool decoys, bool secondBest, bool log, int? modelIterationCount)
+        private ModelAndFeatures CreateScoringModel(string modelName, IList<IPeakFeatureCalculator> excludeFeatures,
+            bool decoys, bool secondBest, bool log, int? modelIterationCount)
         {
             _out.WriteLine(Resources.CommandLine_CreateScoringModel_Creating_scoring_model__0_, modelName);
 
@@ -1464,6 +1466,19 @@ namespace pwiz.Skyline
             {
                 // Create new scoring model using the default calculators.
                 var calcs = MProphetPeakScoringModel.GetDefaultCalculators(_doc);
+                if (excludeFeatures.Count > 0)
+                {
+                    if (excludeFeatures.Count == 1)
+                        _out.WriteLine(Resources.CommandLine_CreateScoringModel_Excluding_feature_score___0__, excludeFeatures.First().Name);
+                    else
+                    {
+                        _out.WriteLine(Resources.CommandLine_CreateScoringModel_Excluding_feature_scores_);
+                        foreach (var featureCalculator in excludeFeatures)
+                            _out.WriteLine("    " + featureCalculator.Name);    // Not L10N
+                    }
+                    // Excluding any requested by the caller
+                    calcs = calcs.Where(c => excludeFeatures.All(c2 => c.GetType() != c2.GetType())).ToArray();
+                }
                 var scoringModel = new MProphetPeakScoringModel(modelName, null as LinearModelParams, calcs, decoys, secondBest);
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
                 var targetDecoyGenerator = new TargetDecoyGenerator(scoringModel, _doc.GetPeakFeatures(calcs, progressMonitor));
