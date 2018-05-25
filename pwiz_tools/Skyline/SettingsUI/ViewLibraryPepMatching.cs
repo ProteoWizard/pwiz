@@ -399,6 +399,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     newDocument = AddPeptidesToLibraryGroup(newDocument, listPeptidesToAdd, broker,
                                                             toPath, out selectedPath);
+                    if (listPeptidesToAdd.Count > 1000)
+                        selectedPath = selectedPath.Parent; // Don't force Skyline to open a massive peptide list, if it wouldn't otherwise
                 }
             }
 
