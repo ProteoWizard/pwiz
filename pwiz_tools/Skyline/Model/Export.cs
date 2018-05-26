@@ -163,14 +163,14 @@ namespace pwiz.Skyline.Model
     public static class ExportInstrumentType
     {
         // ReSharper disable NonLocalizedString
-        public const string ABI = "AB SCIEX";
-        public const string ABI_QTRAP = "AB SCIEX QTRAP";
-        public const string ABI_TOF = "AB SCIEX TOF";
+        public const string ABI = "SCIEX";
+        public const string ABI_QTRAP = "SCIEX QTRAP";
+        public const string ABI_TOF = "SCIEX QTOF";
         public const string AGILENT = "Agilent";
-        public const string AGILENT_TOF = "Agilent TOF";
+        public const string AGILENT_TOF = "Agilent QTOF";
         public const string AGILENT6400 = "Agilent 6400 Series";
         public const string BRUKER = "Bruker";
-        public const string BRUKER_TOF = "Bruker TOF";
+        public const string BRUKER_TOF = "Bruker QTOF";
         public const string SHIMADZU = "Shimadzu";
         public const string THERMO = "Thermo";
         public const string THERMO_TSQ = "Thermo TSQ";
@@ -196,10 +196,10 @@ namespace pwiz.Skyline.Model
 
         public static readonly string[] METHOD_TYPES =
             {
-                ABI_QTRAP,
-                ABI_TOF,
                 AGILENT6400,
                 BRUKER_TOF,
+                ABI_QTRAP,
+                ABI_TOF,
                 SHIMADZU,
                 THERMO_TSQ,
                 THERMO_LTQ,
@@ -211,9 +211,9 @@ namespace pwiz.Skyline.Model
 
         public static readonly string[] TRANSITION_LIST_TYPES =
             {
-                ABI,
                 AGILENT,
                 BRUKER,
+                ABI,
                 SHIMADZU,
                 THERMO,
                 THERMO_QUANTIVA,
@@ -222,8 +222,8 @@ namespace pwiz.Skyline.Model
 
         public static readonly string[] ISOLATION_LIST_TYPES =
             {
-                ABI_TOF,
                 AGILENT_TOF,
+                ABI_TOF,
                 THERMO_Q_EXACTIVE,
                 THERMO_FUSION,
                 WATERS_SYNAPT_TRAP,

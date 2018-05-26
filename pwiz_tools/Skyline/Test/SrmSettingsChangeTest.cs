@@ -50,10 +50,10 @@ namespace pwiz.SkylineTest
             // Change declustering potential, collision energy, and retention time
             var regressions = new DeclusterPotentialList();
             regressions.AddDefaults();
-            var dpRegress = regressions["ABI"];
+            var dpRegress = regressions["SCIEX"];
             var collisions = new CollisionEnergyList();
             collisions.AddDefaults();
-            var ceRegress = collisions["ABI 4000 QTrap"];
+            var ceRegress = collisions["SCIEX"];
             var calc = Settings.Default.RTScoreCalculatorList.GetDefaults().First();
             var rtRegress = new RetentionTimeRegression("Test", calc, 3.5, 10.4, 12.8,
                 new MeasuredRetentionTime[0]);
