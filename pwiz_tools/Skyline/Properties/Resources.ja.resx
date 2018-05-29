@@ -4572,8 +4572,8 @@
   <data name="MQuestDefaultIntensityCorrelationCalc_Name_Default_dotp_or_idotp" xml:space="preserve">
     <value>デフォルト内積または同位体内積</value>
   </data>
-  <data name="StartPage_PopulateWizardPanel_Import_DIA_DDA_Peptide_Search" xml:space="preserve">
-    <value>DIA+DDAペプチド検索のインポート</value>
+  <data name="StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search" xml:space="preserve">
+    <value>DIAペプチド検索のインポート</value>
   </data>
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
     <value>ドキュメントには、機能をエクスポートするターゲットが含まれている必要があります。</value>

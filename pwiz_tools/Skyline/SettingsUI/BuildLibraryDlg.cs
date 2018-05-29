@@ -55,8 +55,10 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_MAX_QUANT,
             BiblioSpecLiteBuilder.EXT_WATERS_MSE,
             BiblioSpecLiteBuilder.EXT_PROXL_XML,
-            BiblioSpecLiteBuilder.EXT_TSV
-        };
+            BiblioSpecLiteBuilder.EXT_TSV,
+            BiblioSpecLiteBuilder.EXT_MZTAB,
+            BiblioSpecLiteBuilder.EXT_MZTAB_TXT,
+       };
 
         private BiblioSpecLiteBuilder _builder;
 

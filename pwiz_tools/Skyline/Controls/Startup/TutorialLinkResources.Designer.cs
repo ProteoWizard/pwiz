@@ -340,7 +340,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-3_1.pdf.
+        ///   Looks up a localized string similar to https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMolecule-3_6.pdf.
         /// </summary>
         internal static string SmallMolecule_pdf {
             get {
@@ -349,38 +349,11 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.gs.washington.edu/tutorials/SmallMolecule.zip.
+        ///   Looks up a localized string similar to https://skyline.gs.washington.edu/tutorials/SmallMolecule_3_6.zip.
         /// </summary>
         internal static string SmallMolecule_zip {
             get {
                 return ResourceManager.GetString("SmallMolecule_zip", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Data Independent Acquisition.
-        /// </summary>
-        internal static string StartPage_getBoxPanels_Data_Independent_Acquisition {
-            get {
-                return ResourceManager.GetString("StartPage_getBoxPanels_Data_Independent_Acquisition", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Grouped Study Data Processing.
-        /// </summary>
-        internal static string StartPage_getBoxPanels_Grouped_Study_Data_Processing {
-            get {
-                return ResourceManager.GetString("StartPage_getBoxPanels_Grouped_Study_Data_Processing", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Small Molecule Targets.
-        /// </summary>
-        internal static string StartPage_getBoxPanels_Small_Molecule_Targets {
-            get {
-                return ResourceManager.GetString("StartPage_getBoxPanels_Small_Molecule_Targets", resourceCulture);
             }
         }
         
