@@ -113,6 +113,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Shimadzu::spectrum(size_t index, DetailLe
     result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
+    scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
 
     pwiz::vendor_api::Shimadzu::SpectrumPtr spectrum = rawfile_->getSpectrum(ie.scanNumber);
 

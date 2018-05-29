@@ -20,7 +20,7 @@
     <software id="Shimadzu_x0020_software" version="4.0">
       <cvParam cvRef="MS" accession="MS:1001557" name="Shimadzu Corporation software" value=""/>
     </software>
-    <software id="pwiz" version="3.0.18142">
+    <software id="pwiz" version="3.0.18149">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>

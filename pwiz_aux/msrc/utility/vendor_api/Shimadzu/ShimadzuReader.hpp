@@ -64,7 +64,6 @@ struct PWIZ_API_DECL SRMTransition
 
 struct PWIZ_API_DECL Chromatogram
 {
-    virtual const SRMTransition& getTransition() const = 0;
     virtual int getTotalDataPoints() const = 0;
     virtual void getXArray(std::vector<double>& x) const = 0;
     virtual void getYArray(std::vector<double>& y) const = 0;
@@ -73,6 +72,14 @@ struct PWIZ_API_DECL Chromatogram
 };
 
 typedef boost::shared_ptr<Chromatogram> ChromatogramPtr;
+
+
+struct PWIZ_API_DECL SRMChromatogram : public Chromatogram
+{
+    virtual const SRMTransition& getTransition() const = 0;
+};
+
+typedef boost::shared_ptr<SRMChromatogram> SRMChromatogramPtr;
 
 
 struct PWIZ_API_DECL Spectrum
@@ -115,9 +122,9 @@ public:
     virtual boost::local_time::local_date_time getAnalysisDate(bool adjustToHostTime) const = 0;
 
     virtual const std::set<SRMTransition>& getTransitions() const = 0;
-    virtual ChromatogramPtr getChromatogram(const SRMTransition& transition) const = 0;
+    virtual SRMChromatogramPtr getSRM(const SRMTransition& transition) const = 0;
 
-    //virtual ChromatogramPtr getTIC() const = 0;
+    virtual ChromatogramPtr getTIC() const = 0;
 
     virtual int getScanCount() const = 0;
     virtual SpectrumPtr getSpectrum(int scanNumber) const = 0;

@@ -52,8 +52,9 @@ namespace pwiz {
 namespace vendor_api {
 namespace Shimadzu {
 
+class ShimadzuReaderImpl;
    
-class MRMChromatogramImpl : public Chromatogram
+class MRMChromatogramImpl : public SRMChromatogram
 {
     public:
         MRMChromatogramImpl(ShimadzuAPI::MRMChromatogram^ chromatogram, const SRMTransition& transition)
@@ -71,7 +72,7 @@ class MRMChromatogramImpl : public Chromatogram
     gcroot<ShimadzuAPI::MRMChromatogram^> chromatogram_;
 };
 
-class TOFChromatogramImpl : public Chromatogram
+class TOFChromatogramImpl : public SRMChromatogram
 {
     public:
     TOFChromatogramImpl(ShimadzuIO::Generic::MassChromatogramObject^ chromatogram, const SRMTransition& transition)
@@ -106,6 +107,28 @@ class TOFChromatogramImpl : public Chromatogram
     private:
     SRMTransition transition_;
     gcroot<ShimadzuIO::Generic::MassChromatogramObject^> chromatogram_;
+};
+
+
+class TICChromatogramImpl : public Chromatogram
+{
+    public:
+    TICChromatogramImpl(const ShimadzuReaderImpl& reader, DataObject^ dataObject);
+
+    virtual int getTotalDataPoints() const { try { return (int) x_.size(); } CATCH_AND_FORWARD }
+    virtual void getXArray(std::vector<double>& x) const
+    {
+        x = x_;
+    }
+
+    virtual void getYArray(std::vector<double>& y) const
+    {
+        y = y_;
+    }
+
+    private:
+    std::vector<double> x_;
+    std::vector<double> y_;
 };
 
 
@@ -222,17 +245,16 @@ class ShimadzuReaderImpl : public ShimadzuReader
                 }
 
                 auto chromatogramMng = dataObject_->MS->Chromatogram;
-                auto eventTIC = gcnew ShimadzuGeneric::MassChromatogramObject();
 
                 auto dummySpectrum = gcnew ShimadzuGeneric::MassSpectrumObject();
                 try { dataObject_->MS->Spectrum->GetMSSpectrumByScan(dummySpectrum, 1); }
                 catch (...) {}
 
-                // for some reason (bug) the first chromatogram retrieval sometimes fails, so get that out of the way
-                chromatogramMng->GetTICChromatogram(eventTIC, 1, 1);
-
                 int lastScanTime = 0;
-                short lastScanTimeEvent;
+                unsigned int lastScanNumber = 0;
+
+                int startTime, endTime;
+                dataObject_->MS->Parameters->GetAnalysisTime(startTime, endTime, 0);
 
                 segmentCount_ = chromatogramMng->SegmentCount;
                 eventNumbersBySegment_.resize(segmentCount_);
@@ -244,26 +266,17 @@ class ShimadzuReaderImpl : public ShimadzuReader
                     for (int j = 1; j <= eventNumbers.size(); ++j)
                     {
                         eventNumbers[j - 1] = chromatogramMng->GetEventNo(i, j);
-                        chromatogramMng->GetTICChromatogram(eventTIC, i, eventNumbers[j - 1]);
-                        if (eventTIC->TotalPoints == 0)
-                        {
-                            // TODO: log empty chromatogram
-                            cerr << "Warning: empty TIC chromatogram for segment " << i << " event " << eventNumbers[j - 1] << endl;
-                            continue;
-                        }
 
-                        int eventLastScanTime = eventTIC->RetTimeList[eventTIC->TotalPoints - 1];
-                        if (eventLastScanTime > lastScanTime)
-                        {
-                            lastScanTime = eventLastScanTime;
-                            lastScanTimeEvent = eventNumbers[j - 1];
-                        }
+                        unsigned int eventLastScanNumber;
+                        result2 = dataObject_->MS->Spectrum->RetTimeToScan(eventLastScanNumber, endTime, eventNumbers[j - 1]);
+                        if (ShimadzuUtil::Failed(result2))
+                            throw runtime_error("[ShimadzuReader::ctor] RetTimeToScan error: " + ToStdString(System::Enum::GetName(result2.GetType(), (System::Object^) result2)));
+
+                        if (eventLastScanNumber > lastScanNumber)
+                            lastScanNumber = eventLastScanNumber;
                     }
                 }
-                unsigned int lastScanNumber;
-                result2 = dataObject_->MS->Spectrum->RetTimeToScan(lastScanNumber, lastScanTime, lastScanTimeEvent);
-                if (ShimadzuUtil::Failed(result2))
-                    throw runtime_error("[ShimadzuReader::ctor] RetTimeToScan error: " + ToStdString(System::Enum::GetName(result2.GetType(), (System::Object^) result2)));
+
                 scanCount_ = lastScanNumber;
             }
         }
@@ -329,9 +342,14 @@ class ShimadzuReaderImpl : public ShimadzuReader
             return blt::local_date_time(pt, blt::time_zone_ptr());
     }
 
-    virtual ChromatogramPtr getChromatogram(const SRMTransition& transition) const
+    virtual SRMChromatogramPtr getSRM(const SRMTransition& transition) const
     {
-        try { return ChromatogramPtr(new MRMChromatogramImpl(reader_->GetChromatogram(transitions_[transition.id]), transition)); } CATCH_AND_FORWARD
+        try { return SRMChromatogramPtr(new MRMChromatogramImpl(reader_->GetChromatogram(transitions_[transition.id]), transition)); } CATCH_AND_FORWARD
+    }
+
+    virtual ChromatogramPtr getTIC() const
+    {
+        try { return ChromatogramPtr(new TICChromatogramImpl(*this, dataObject_)); } CATCH_AND_FORWARD
     }
 
     virtual SpectrumPtr getSpectrum(int scanNumber) const
@@ -348,11 +366,11 @@ class ShimadzuReaderImpl : public ShimadzuReader
     }
 
     private:
+    friend class TICChromatogramImpl;
     gcroot<ShimadzuAPI::MassDataReader^> reader_;
     gcroot<DataObject^> dataObject_;
     gcroot<System::Collections::Generic::Dictionary<short, ShimadzuGeneric::Param::MS::MassEventInfo^>^> eventInfo_;
     //gcroot<MethodObject^> methodObject_;
-    //gcroot<ShimadzuGeneric::MassChromatogramObject^> tic_;
     int segmentCount_;
     int scanCount_;
     vector<vector<int>> eventNumbersBySegment_;
@@ -370,6 +388,33 @@ PWIZ_API_DECL
 ShimadzuReaderPtr ShimadzuReader::create(const string& filepath)
 {
     try { return ShimadzuReaderPtr(new ShimadzuReaderImpl(filepath)); } CATCH_AND_FORWARD
+}
+
+
+TICChromatogramImpl::TICChromatogramImpl(const ShimadzuReaderImpl& reader, DataObject^ dataObject)
+{
+    auto chromatogramMng = dataObject->MS->Chromatogram;
+    auto eventTIC = gcnew ShimadzuGeneric::MassChromatogramObject();
+    map<int, int> fullFileTIC;
+
+    for (int i = 1; i <= reader.segmentCount_; ++i)
+    {
+        auto& eventNumbers = reader.eventNumbersBySegment_[i - 1];
+        for (short eventNumber : eventNumbers)
+        {
+            chromatogramMng->GetTICChromatogram(eventTIC, i, eventNumber);
+            for (int j = 0, end = eventTIC->ChromIntList->Length; j < end; ++j)
+                fullFileTIC[eventTIC->RetTimeList[j]] += eventTIC->ChromIntList[j];
+        }
+    }
+
+    x_.reserve(fullFileTIC.size());
+    y_.reserve(fullFileTIC.size());
+    for (const auto& kvp : fullFileTIC)
+    {
+        x_.push_back((double) kvp.first / ShimadzuUtil::MASSNUMBER_UNIT);
+        y_.push_back((double) kvp.second);
+    }
 }
 
 
