@@ -66,6 +66,8 @@ namespace pwiz.SkylineTestFunctional
             TestSmallMolecules = false;
             AgilentThermoABSciexTriggeredTest();
 
+            Assert.IsFalse(IsTriggeredRecordMode);  // Make sure no commits with this set to true
+
             BrukerTOFMethodTest();
             TestSmallMolecules = save;
 
@@ -405,6 +407,11 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
+        /// <summary>
+        /// Change to true to write *.csv test files
+        /// </summary>
+        private bool IsTriggeredRecordMode { get { return false; } }
+
         private void AgilentThermoABSciexTriggeredTest()
         {
             // Failure trying to export to file with a peptide lacking results or library match
@@ -434,11 +441,12 @@ namespace pwiz.SkylineTestFunctional
             // a peptide without results
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Bovine_std_curated_seq_small2-trigger.sky")));
             string agilentExpected = TestFilesDir.GetTestPath("TranListTriggered.csv");
-            string agilentActual = TestFilesDir.GetTestPath("TranListTriggered-actual.csv");
+            string agilentActual = IsTriggeredRecordMode ? agilentExpected : TestFilesDir.GetTestPath("TranListTriggered-actual.csv");
             string thermoExpected = TestFilesDir.GetTestPath("TranListIsrm.csv");
-            string thermoActual = TestFilesDir.GetTestPath("TranListIsrm-actual.csv");
+            string thermoActualTemp = TestFilesDir.GetTestPath("TranListIsrm-actual.csv");
+            string thermoActual = IsTriggeredRecordMode ? thermoExpected : thermoActualTemp;
             string abSciexExpected = TestFilesDir.GetTestPath("TranListAbSciexTriggered.csv");
-            string abSciexActual = TestFilesDir.GetTestPath("TranListAbSciexTriggered-actual.csv");
+            string abSciexActual = IsTriggeredRecordMode ? abSciexExpected : TestFilesDir.GetTestPath("TranListAbSciexTriggered-actual.csv");
             string agilentActualMeth = TestFilesDir.GetTestPath("TranListTriggered-actual.m");
             string agilentTemplateMeth = TestFilesDir.GetTestPath("cm-HSA-2_1mm-tMRM-TH100B.m");
             // Agilent transition list
@@ -484,9 +492,11 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.NoDiff(File.ReadAllText(abSciexExpected), File.ReadAllText(abSciexActual));
 
             // Thermo transition list
+            string thermoExpectedText = null;
             for (var with_slens = 0; with_slens < 2; with_slens++)
             {
                 var slens = with_slens > 0;
+                string thermoActualPath = thermoActual;
                 RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List),
                     exportMethodDlg =>
                     {
@@ -499,14 +509,18 @@ namespace pwiz.SkylineTestFunctional
                         exportMethodDlg.IsThermoStartAndEndTime = true;
                         Assert.IsTrue(exportMethodDlg.IsPrimaryCountVisible);
                         Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
-                        exportMethodDlg.OkDialog(thermoActual);
+                        exportMethodDlg.OkDialog(thermoActualPath);
                     });
-                var expected = File.ReadAllText(thermoExpected);
-                if (slens)
-                {
-                    expected = expected.Replace(",1,1", ",50,1,1"); // Additional column for slens value of 50
-                }
-                AssertEx.NoDiff(expected, File.ReadAllText(thermoActual));
+                if (thermoExpectedText == null)
+                    thermoExpectedText = File.ReadAllText(thermoExpected);
+                else
+                    thermoExpectedText = thermoExpectedText.Replace(",1,1", ",50,1,1"); // Additional column for slens value of 50
+
+                AssertEx.NoDiff(thermoExpectedText, File.ReadAllText(thermoActual));
+
+                // Avoid overwriting base file with s-lens version
+                if (thermoExpected == thermoActual)
+                    thermoActual = thermoActualTemp;
             }
 
 
@@ -536,7 +550,7 @@ namespace pwiz.SkylineTestFunctional
 
             // AB Sciex transition list with previous results
             string abSciexWithResultsExpected = TestFilesDir.GetTestPath("TranListAbSciexWithResultsTriggered.csv");
-            string abSciexWithResultsActual = TestFilesDir.GetTestPath("TranListAbSciexWithResultsTriggered-actual.csv");
+            string abSciexWithResultsActual = IsTriggeredRecordMode ? abSciexWithResultsExpected : TestFilesDir.GetTestPath("TranListAbSciexWithResultsTriggered-actual.csv");
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("MRM Triggered MRM data imported.sky")));
             WaitForDocumentLoaded();
             {
