@@ -328,7 +328,7 @@ class ShimadzuReaderImpl : public ShimadzuReader
         if ((System::Object^)dataObject_ == nullptr)
             return blt::local_date_time(blt::not_a_date_time);
 
-        System::DateTime acquisitionTime = dataObject_->SampleInfo->AnalysisDate;
+        System::DateTime acquisitionTime = dataObject_->SampleInfo->AnalysisDate.ToUniversalTime();
 
         bpt::ptime pt(boost::gregorian::date(acquisitionTime.Year, boost::gregorian::greg_month(acquisitionTime.Month), acquisitionTime.Day),
                       bpt::time_duration(acquisitionTime.Hour, acquisitionTime.Minute, acquisitionTime.Second, bpt::millisec(acquisitionTime.Millisecond).fractional_seconds()));
