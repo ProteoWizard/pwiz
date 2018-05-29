@@ -74,7 +74,7 @@ namespace timsdata
         boost::iterator_range<const double *>getScanMZs(size_t scan_num) const {
             throwIfInvalidScanNumber(scan_num);
             const double *p = &mzValues[scan_offsets[scan_num]];
-            const double *pEnd = &mzValues[scan_offsets[scan_num + 1]];
+            const double *pEnd = &mzValues[0] + scan_offsets[scan_num + 1]; // for last scan in frame this will point just past end of mzValues
             return boost::make_iterator_range(p, pEnd);
         }
 
