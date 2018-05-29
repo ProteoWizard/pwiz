@@ -109,31 +109,38 @@ namespace pwiz.Skyline.FileUI
             comboOptimizing.SelectedIndex = 0;
 
             // Set instrument type based on CE regression name for the document.
-            string instrumentTypeName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
-            if (instrumentTypeName != null)
+            string cePredictorName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
+            if (cePredictorName != null)
             {
                 // Look for the first instrument type with the same prefix as the CE name
-                string instrumentTypePrefix = instrumentTypeName.Split(' ')[0];
-                // We still have some CE regressions that begin with ABI, while all instruments
-                // have been changed to AB SCIEX
-                if (Equals("ABI", instrumentTypePrefix)) // Not L10N
-                    instrumentTypePrefix = "AB"; // Not L10N
+                string cePredictorPrefix = cePredictorName.Split(' ')[0];
+                // We still may see some CE regressions that begin with ABI or AB, while all instruments
+                // have been changed to start with SCIEX
+                if (Equals("ABI", cePredictorPrefix) || Equals("AB", cePredictorPrefix)) // Not L10N
+                    cePredictorPrefix = ExportInstrumentType.ABI;
                 int i = -1;
                 if (document.Settings.TransitionSettings.FullScan.IsEnabled)
                 {
-                    i = listTypes.IndexOf(typeName => typeName.StartsWith(instrumentTypePrefix) &&
+                    i = listTypes.IndexOf(typeName => typeName.StartsWith(cePredictorPrefix) &&
                         ExportInstrumentType.IsFullScanInstrumentType(typeName));
                 }
                 if (i == -1)
                 {
-                    i = listTypes.IndexOf(typeName => typeName.StartsWith(instrumentTypePrefix));
+                    i = listTypes.IndexOf(typeName => typeName.StartsWith(cePredictorPrefix));
                 }
                 if (i != -1)
                     InstrumentType = listTypes[i];
             }
             // If nothing found based on CE regression name, just use the first instrument in the list
             if (InstrumentType == null)
-                InstrumentType = listTypes[0];
+            {
+                var instrumentTypeFirst = listTypes[0];
+                // Avoid defaulting to Agilent for DIA when we know it is not supported.
+                if (IsDiaFullScan && Equals(instrumentTypeFirst, ExportInstrumentType.AGILENT_TOF) && listTypes.Length > 1)
+                    InstrumentType = listTypes[1];
+                else
+                    InstrumentType = instrumentTypeFirst;
+            }
 
             // Reset method type based on what was used last and what the chosen instrument is capable of
             ExportMethodType mType = Helpers.ParseEnum(Settings.Default.ExportMethodType, ExportMethodType.Standard);
@@ -667,7 +674,7 @@ namespace pwiz.Skyline.FileUI
                 if (IsDia)
                 {
                     if (Equals(InstrumentType, ExportInstrumentType.AGILENT_TOF) ||
-                        Equals(InstrumentType, ExportInstrumentType.ABI_TOF) ||
+                        Equals(InstrumentType, ExportInstrumentType.ABI_TOF) || // CONSIDER: Should be possible, but we haven't done methods yet
                         Equals(InstrumentType, ExportInstrumentType.THERMO_LTQ))
                     {
                         helper.ShowTextBoxError(textTemplateFile, Resources.ExportMethodDlg_OkDialog_Export_of_DIA_method_is_not_supported_for__0__, InstrumentType);
@@ -777,19 +784,15 @@ namespace pwiz.Skyline.FileUI
                 var predict = documentExport.Settings.TransitionSettings.Prediction;
                 var ce = predict.CollisionEnergy;
                 string ceName = (ce != null ? ce.Name : null);
-                string ceNameDefault = _instrumentType;
-                if (ceNameDefault.IndexOf(' ') != -1)
-                    ceNameDefault = ceNameDefault.Substring(0, ceNameDefault.IndexOf(' '));
-                bool ceInSynch = ceName != null && ceName.StartsWith(ceNameDefault);
+                string ceNameDefault = _instrumentType.Split(' ')[0];
+                bool ceInSynch = IsInSynchPredictor(ceName, ceNameDefault);
 
                 var dp = predict.DeclusteringPotential;
                 string dpName = (dp != null ? dp.Name : null);
-                string dpNameDefault = _instrumentType;
-                if (dpNameDefault.IndexOf(' ') != -1)
-                    dpNameDefault = dpNameDefault.Substring(0, dpNameDefault.IndexOf(' '));
+                string dpNameDefault = _instrumentType.Split(' ')[0];
                 bool dpInSynch = true;
                 if (_instrumentType == ExportInstrumentType.ABI)
-                    dpInSynch = dpName != null && dpName.StartsWith(dpNameDefault);
+                    dpInSynch = IsInSynchPredictor(dpName, dpNameDefault);
                 else
                     dpNameDefault = null; // Ignored for all other types
 
@@ -999,6 +1002,18 @@ namespace pwiz.Skyline.FileUI
                 Settings.Default.ExportPolarityFilterEnum = TypeSafeEnum.ValidateOrDefault((ExportPolarity)comboPolarityFilter.SelectedIndex, ExportPolarity.all).ToString();
             DialogResult = DialogResult.OK;
             Close();
+        }
+
+        private static bool IsInSynchPredictor(string name, string namePrefix)
+        {
+            if (name == null)
+                return false;
+            if (name.StartsWith(namePrefix))
+                return true;
+            // SCIEX has had many prefixes
+            if (namePrefix.Equals(ExportInstrumentType.ABI.Split(' ')[0]))
+                return IsInSynchPredictor(name, "AB") || IsInSynchPredictor(name, "ABI");   // Not L10N
+            return false;
         }
 
         private static bool CheckAnalyzer(bool enabled, FullScanMassAnalyzerType analyzerType, params FullScanMassAnalyzerType[] analyzerTypesAccepted)
@@ -1333,8 +1348,15 @@ namespace pwiz.Skyline.FileUI
         {
             get
             {
-                return IsFullScanInstrument &&
-                    _document.Settings.TransitionSettings.FullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA;
+                return IsFullScanInstrument && IsDiaFullScan;
+            }
+        }
+
+        private bool IsDiaFullScan
+        {
+            get
+            {
+                return _document.Settings.TransitionSettings.FullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA;
             }
         }
 
