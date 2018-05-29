@@ -55,7 +55,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;PWIZ_READER_SHIMADZU;WIN32;USE_RAW_PTR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalUsingDirectories>pwiz_aux\msrc\utility\vendor_api\Shimadzu;pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
       <AdditionalOptions> /GH /Gh</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -369,6 +370,10 @@
     <ClCompile Include="pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Bruker\SpectrumList_Bruker.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\ExtendedReaderList.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\ChromatogramList_Shimadzu.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Test.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Shimadzu\SpectrumList_Shimadzu.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Thermo\ChromatogramList_Thermo.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Thermo\Reader_Thermo.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Thermo\Reader_Thermo_Detail.cpp" />
@@ -691,6 +696,12 @@
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\CompassData.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\CompassDataTest.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TimsData.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Shimadzu\ShimadzuReader.cpp">
+      <AdditionalUsingDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Directory);%(Directory)\x86;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+      <ForcedUsingFiles Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Shimadzu.LabSolutions.IO.IoModule.dll;QTFLProtoCS.dll;DataReader.dll;%(ForcedUsingFiles)</ForcedUsingFiles>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+    </ClCompile>
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Shimadzu\ShimadzuReaderTest.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFile.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFileTest.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFileValues.cpp" />
@@ -758,6 +769,9 @@
     <ClInclude Include="pwiz\data\vendor_readers\bruker\reader_bruker.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\bruker\reader_bruker_detail.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\bruker\spectrumlist_bruker.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\ChromatogramList_Shimadzu.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\SpectrumList_Shimadzu.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UIMF\Reader_UIMF.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UIMF\SpectrumList_UIMF.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\Waters\ChromatogramList_Waters.hpp" />
@@ -1099,6 +1113,7 @@
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Agilent\MidacData.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\Baf2Sql.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\CompassData.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Shimadzu\ShimadzuReader.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TimsData.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFile.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\thermo\RawFileCOM.h" />

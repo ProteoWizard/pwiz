@@ -629,6 +629,49 @@ rule copy-assemblies ( target : properties * )
         }
     }
 
+    # TODO: figure out a better way to specify subdirectories for assembly-dependencies
+    local assemblies-ex = [ feature.get-values <assembly-dependency-ex> : $(properties) ] ;
+    if $(assemblies-ex)
+    {
+        local target-path = [ on $(target) return $(LOCATE) ] ;
+        for local assembly in $(assemblies-ex)
+        {
+            local assembly-parts = [ SPLIT_BY_CHARACTERS $(assembly) : "|" ] ;
+            local assembly-path = $(assembly-parts[1]) ;
+            if ( $(assembly-parts[2]) )
+            {
+                local features = [ feature.split $(assembly-parts[2]) ] ;
+                this-target-path = [ path.native [ path.join $(target-path) [ feature.get-values <location-prefix> : $(features) ] ] ] ;
+            }
+
+            if ! [ path.is-rooted $(assembly-path) ]
+            {
+                # error?
+            }
+
+            assembly-path = [ path.native $(assembly-path) ] ;
+            local assembly-at-target-filepath = [ path.native [ path.join $(this-target-path) $(assembly-path:D=) ] ] ;
+            
+            if $(this-target-path) != $(assembly-path) &&
+               ! ( $(this-target-path) in $(.unique-targets) )
+            {
+                .unique-targets += $(this-target-path) ;
+                common.mkdir $(this-target-path) ;
+            }
+
+            if $(assembly-at-target-filepath) != $(assembly-path) &&
+               ! ( $(assembly-at-target-filepath) in $(.unique-targets) )
+            {
+                .unique-targets += $(assembly-at-target-filepath) ;
+                common.copy $(assembly-at-target-filepath) : $(assembly-path) ;
+                DEPENDS $(assembly-at-target-filepath) : $(this-target-path) $(assembly-path) ;
+                DEPENDS $(target) : $(assembly-at-target-filepath) ;
+                #JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
+                #JAM_SEMAPHORE on $(target) = "dotNetSemaphore" ;
+            }
+        }
+    }
+
     # .NET applications may need a side-by-side configuration file that must be named like $(target).exe.config
     local configuration-file = [ feature.get-values <configuration-file> : $(properties) ] ;
     if $(configuration-file)
@@ -1658,6 +1701,7 @@ local rule register-toolset-really ( )
         feature.feature secure-scl          : default on off        : propagated ;
         feature.feature assembly            :                       : free dependency ;
         feature.feature assembly-dependency :                       : free dependency ;
+        feature.feature assembly-dependency-ex :                    : free ;
         feature.feature manifest-dependency :                       : free dependency ;
         feature.feature configuration-file  :                       : free dependency ;
         feature.feature using-clr           : false true            : composite ;
