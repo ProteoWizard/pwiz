@@ -33,6 +33,7 @@
 #include "PrideXmlReader.h"
 #include "MaxQuantReader.h"
 #include "MSFReader.h"
+#include "mzTabReader.h"
 #include "SslReader.h"
 #include "TandemNativeParser.h"
 #include "PwizReader.h"
