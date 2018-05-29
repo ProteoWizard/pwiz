@@ -1745,8 +1745,8 @@ namespace pwiz.Skyline.Properties
                     }
                 default:    // v4.1.1 - SCIEX request to replace ABI entries with one new SCIEX entry
                 {
-                    var list7 = GetDefaults(7).Select(cr => cr.Name.Contains("ABI")
-                        ? new CollisionEnergyRegression("SCIEX", new[]
+                    var list7 = GetDefaults(7).Select(cr => cr.Name.Contains("ABI") // Not L10N
+                        ? new CollisionEnergyRegression("SCIEX", new[]  // Not L10N
                         {
                             new ChargeRegressionLine(2, 0.049, -1),
                             new ChargeRegressionLine(3, 0.048, -2),

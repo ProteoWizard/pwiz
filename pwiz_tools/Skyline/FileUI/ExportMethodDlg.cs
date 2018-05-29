@@ -1012,7 +1012,7 @@ namespace pwiz.Skyline.FileUI
                 return true;
             // SCIEX has had many prefixes
             if (namePrefix.Equals(ExportInstrumentType.ABI.Split(' ')[0]))
-                return IsInSynchPredictor(name, "AB") || IsInSynchPredictor(name, "ABI");
+                return IsInSynchPredictor(name, "AB") || IsInSynchPredictor(name, "ABI");   // Not L10N
             return false;
         }
 
