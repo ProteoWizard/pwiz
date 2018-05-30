@@ -1,5 +1,5 @@
 
-![ProteoWizard Logo](http://proteowizard.sourceforge.net/images/pwiz_purple_logo.png "ProteoWizard")
+![ProteoWizard Logo](http://www.proteowizard.org/img/proteowizard-logo.jpg "ProteoWizard")
 
 The ProteoWizard Library and Tools are a set of modular and extensible open-source, cross-platform tools and software libraries that facilitate proteomics data analysis.
 
