@@ -63,13 +63,14 @@
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripButtonCopy});
-            this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
+            this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.Table;
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
             // 
             // toolStripButtonCopy
             // 
             this.toolStripButtonCopy.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonCopy.ForeColor = System.Drawing.SystemColors.ControlText;
             this.toolStripButtonCopy.Image = global::pwiz.Skyline.Properties.Resources.Copy;
             resources.ApplyResources(this.toolStripButtonCopy, "toolStripButtonCopy");
             this.toolStripButtonCopy.Name = "toolStripButtonCopy";
