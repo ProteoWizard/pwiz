@@ -113,6 +113,16 @@ namespace pwiz.Skyline.Alerts
                 else
                 {
                     DetailMessage = value.ToString();
+                    if (value.InnerException != null)
+                    {
+                        DetailMessage += string.Format(" (HRESULT:0x{0:X8}, inner HRESULT:0x{1:X8})",  // Not L10N
+                            value.HResult, value.InnerException.HResult);
+                    }
+                    else
+                    {
+                        DetailMessage += string.Format(" (HRESULT:0x{0:X8})", // Not L10N
+                            value.HResult);
+                    }
                 }
             }
         }
