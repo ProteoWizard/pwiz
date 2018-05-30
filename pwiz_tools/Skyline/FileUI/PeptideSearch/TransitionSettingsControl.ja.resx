@@ -445,7 +445,7 @@
     <value>6</value>
   </data>
   <data name="cbExclusionUseDIAWindow.Text" xml:space="preserve">
-    <value>除外にDIAプリカーサーウィンドウを使用します(&amp;U)</value>
+    <value>DIAのプリカーサーウィンドウをexclusionに使用(&amp;U)</value>
   </data>
   <data name="&gt;&gt;cbExclusionUseDIAWindow.Name" xml:space="preserve">
     <value>cbExclusionUseDIAWindow</value>
@@ -475,7 +475,7 @@
     <value>13</value>
   </data>
   <data name="lblMinIonCountUnits.Text" xml:space="preserve">
-    <value>最小プロダクトイオン</value>
+    <value>プロダクトイオンの最小数</value>
   </data>
   <data name="&gt;&gt;lblMinIonCountUnits.Name" xml:space="preserve">
     <value>lblMinIonCountUnits</value>
