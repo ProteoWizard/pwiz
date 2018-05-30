@@ -102,8 +102,8 @@ namespace pwiz.Skyline.Model.Lib
 
             // Get necessary mass calculators and masses
             var calcMatchPre = settings.GetPrecursorCalc(labelType, lookupMods);
-            var calcMatch = settings.GetFragmentCalc(labelType, lookupMods);
-            var calcPredict = settings.GetFragmentCalc(group.LabelType, lookupMods);
+            var calcMatch = isProteomic ? settings.GetFragmentCalc(labelType, lookupMods) : settings.GetDefaultFragmentCalc();
+            var calcPredict = isProteomic ? settings.GetFragmentCalc(group.LabelType, lookupMods) : calcMatch;
             if (isProteomic && rp.sequence.IsProteomic)
             {
                 rp.precursorMz = SequenceMassCalc.GetMZ(calcMatchPre.GetPrecursorMass(rp.sequence), rp.precursorAdduct);

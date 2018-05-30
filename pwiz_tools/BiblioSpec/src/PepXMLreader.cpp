@@ -173,6 +173,9 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
                analysisType_ = XTANDEM_ANALYSIS;
                scoreType_ = TANDEM_EXPECTATION_VALUE;
                probCutOff = getScoreThreshold(TANDEM);
+           } else if(search_engine.find("crux") == 0) {
+               Verbosity::comment(V_DEBUG, "Pepxml file is from Crux.");
+               analysisType_ = CRUX_ANALYSIS;
            }// else assume peptide prophet or inter prophet 
 
            if (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS &&
@@ -292,7 +295,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == SEQUEST_XCORR && score_name == "q-value") ||
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == MASCOT_IONS_SCORE && score_name == "exp-value") ||
            (analysisType_ == MORPHEUS_ANALYSIS && score_name == "psm q-value") ||
-           (analysisType_ == MSGF_ANALYSIS && score_name == "qvalue")) {
+           (analysisType_ == MSGF_ANALYSIS && score_name == "qvalue") ||
+           (analysisType_ == CRUX_ANALYSIS && score_name == "percolator_qvalue")) {
            pepProb = getDoubleRequiredAttrValue("value", attr);
        } else if (analysisType_ == PEAKS_ANALYSIS && score_name == "-10lgp") {
            pepProb = getDoubleRequiredAttrValue("value", attr);
@@ -454,6 +458,7 @@ bool PepXMLreader::scorePasses(double score){
     case MORPHEUS_ANALYSIS:
     case MSGF_ANALYSIS:
     case PEAKS_ANALYSIS:
+    case CRUX_ANALYSIS:
         if(score <= probCutOff){
             return true;
         }

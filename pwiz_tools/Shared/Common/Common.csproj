@@ -353,6 +353,9 @@
     <EmbeddedResource Include="DataBinding\Controls\ColumnListEditor.resx">
       <DependentUpon>ColumnListEditor.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\ColumnListEditor.zh-CHS.resx">
+      <DependentUpon>ColumnListEditor.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\ChooseColumnsTab.ja.resx">
       <DependentUpon>ChooseColumnsTab.cs</DependentUpon>
     </EmbeddedResource>
@@ -434,10 +437,16 @@
     <EmbeddedResource Include="DataBinding\Controls\ManageLayoutsForm.resx">
       <DependentUpon>ManageLayoutsForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\ManageLayoutsForm.zh-CHS.resx">
+      <DependentUpon>ManageLayoutsForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\NameLayoutForm.ja.resx">
       <DependentUpon>NameLayoutForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\NameLayoutForm.resx">
+      <DependentUpon>NameLayoutForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\NameLayoutForm.zh-CHS.resx">
       <DependentUpon>NameLayoutForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\PivotEditor.ja.resx">
@@ -456,6 +465,9 @@
     <EmbeddedResource Include="DataBinding\Controls\NavBar.zh-CHS.resx">
       <DependentUpon>NavBar.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\PivotEditor.zh-CHS.resx">
+      <DependentUpon>PivotEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\QuickFilterForm.ja.resx">
       <DependentUpon>QuickFilterForm.cs</DependentUpon>

@@ -1069,7 +1069,7 @@ W = 2T/R</value>
     <value>10</value>
   </data>
   <data name="cbUseSpectralLibraryDriftTimes.Text" xml:space="preserve">
-    <value>存在する場合にはスペクトルライブラリのイオン移動度値を使用(&amp;S)</value>
+    <value>スペクトルライブラリのイオン移動度の値が存在する場合には使用する(&amp;S)</value>
   </data>
   <data name="cbUseSpectralLibraryDriftTimes.ToolTip" xml:space="preserve">
     <value>これを選択すると、読み込まれたスペクトルライブラリのイオン移動度値がクロマトグラム抽出に使用されます。</value>
