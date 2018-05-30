@@ -208,7 +208,7 @@
     <value>0</value>
   </data>
   <data name="labelExplanation.Text" xml:space="preserve">
-    <value>選択したファイルには共通プリフィックスがあります。このプリフィックスの一部またはすべてを削除して、Skylineで使用する名前を短くしますか？</value>
+    <value>選択したファイルには共通の文字列（プリフィックス）があります。このプリフィックスの一部またはすべてを削除して、Skylineで使用する名前を短くしますか？</value>
   </data>
   <data name="&gt;&gt;labelExplanation.Name" xml:space="preserve">
     <value>labelExplanation</value>
