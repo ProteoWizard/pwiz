@@ -26,6 +26,7 @@
 #include "pwiz/utility/misc/Once.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
 #include <boost/shared_ptr.hpp>
+#include <boost/core/null_deleter.hpp>
 #include <boost/any.hpp>
 #include <boost/range/adaptor/map.hpp>
 
@@ -116,7 +117,8 @@ struct PWIZ_API_DECL RawData
           ChromatogramReader(Reader),
           PeakPicker(rawpath, ilr),
           rawpath_(rawpath),
-          numSpectra_(0)
+          numSpectra_(0),
+          hasProfile_(false)
     {
         LockMass.SetRawReader(Reader);
 
@@ -148,6 +150,9 @@ struct PWIZ_API_DECL RawData
                 shared_ptr<CachedCompressedDataCluster>& cdc = cdcByFunction[itr.first];
                 cdc.reset(new CachedCompressedDataCluster(Reader));
             }
+
+            if (!hasProfile_)
+                hasProfile_ |= Info.IsContinuum(itr.first);
         }
 
         initHeaderProps(rawpath);
@@ -245,6 +250,12 @@ struct PWIZ_API_DECL RawData
 
     void Centroid() const
     {
+        if (!hasProfile_)
+        {
+            centroidRaw_.reset(const_cast<RawData*>(this), boost::null_deleter());
+            return;
+        }
+
         string centroidPath = rawpath_ + "\\centroid.raw";
         if (!bfs::exists(centroidPath))
             PeakPicker.Centroid(centroidPath);
@@ -330,6 +341,7 @@ struct PWIZ_API_DECL RawData
     vector<bool> ionMobilityByFunctionIndex;
     map<string, string> headerProps;
     int numSpectra_; // not separated by ion mobility
+    bool hasProfile_; // can only centroid if at least one function is profile mode
 
     mutable map<int, shared_ptr<CachedCompressedDataCluster> > cdcByFunction;
 
