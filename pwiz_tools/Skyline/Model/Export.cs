@@ -1954,8 +1954,17 @@ namespace pwiz.Skyline.Model
             string extGroupId;
             GetPeptideAndGroupNames(nodePepGroup, nodePep, nodeTranGroup, nodeTran, step, out extPeptideId, out extGroupId);
 
-            string dp = Math.Round(GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo);
-            string ce = Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo);
+            double ceValue = GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step);
+            if (ceValue < 10) // SCIEX does not allow CE below 10
+            {
+                if (OptimizeType == ExportOptimize.CE)
+                    return;
+                ceValue = 10;
+            }
+            string ce = Math.Round(ceValue, 1).ToString(CultureInfo);
+            double dpValue = GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step);
+            // CONSIDER: Is there a minimum DP value?
+            string dp = Math.Round(dpValue, 1).ToString(CultureInfo);
 
             string precursorWindow = string.Empty;
             string productWindow = string.Empty;
