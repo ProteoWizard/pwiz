@@ -18,11 +18,12 @@
  */
 using System;
 using System.Globalization;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public sealed class IsotopeLabelType : IComparable
+    public sealed class IsotopeLabelType : IComparable, IAuditLogObject
     {
         // ReSharper disable InconsistentNaming 
         public const string LIGHT_NAME = "light"; // Not L10N
@@ -75,6 +76,9 @@ namespace pwiz.Skyline.Model
         {
             return SortOrder - ((IsotopeLabelType) obj).SortOrder;
         }
+
+        public string AuditLogText { get { return Name; } }
+        public bool IsName { get { return true; } }
 
         #region object overrides
 

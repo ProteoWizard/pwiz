@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -96,18 +97,21 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Set of amino acid residues with an especially weak bond, causing
         /// them to be highly expressed during fragmentation.
         /// </summary>
+        [Diff]
         public string Fragment { get; private set; }
 
         /// <summary>
         /// Set of amino acid residues that bond more tightly to the <see cref="Fragment"/>
         /// residues, causing the fragment not to be so highly expressed.
         /// </summary>
+        [Diff]
         public string Restrict { get; private set; }
 
         /// <summary>
         /// The terminus (n- or c-) side of the <see cref="Fragment"/> amino acid residues
         /// that has the weak bond.  (e.g. n-terminal proline)
         /// </summary>
+        [Diff]
         public SequenceTerminus? Terminus { get; private set; }
 
         /// <summary>
@@ -115,6 +119,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// extremely low specificity.  (e.g. y2 for n-terminal proline and tryptic digestion
         /// is either PR or PK)
         /// </summary>
+        [Diff]
         public int? MinFragmentLength { get; private set; }
         public bool IsNTerm() { return Terminus.HasValue && Terminus.Value == SequenceTerminus.N; }
         public bool IsCTerm() { return Terminus.HasValue && Terminus.Value == SequenceTerminus.C; }
@@ -146,6 +151,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public int Charge { get { return Adduct.AdductCharge; } }
 
+        [Diff]
         public bool IsFragment { get { return Fragment != null; } }
         public bool IsCustom { get { return !IsFragment; } }
 
@@ -156,6 +162,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool IsOptional { get; private set; }
 
+        [DiffParent]
         public SettingsCustomIon SettingsCustomIon { get; private set; }
 
         #region Property change methods

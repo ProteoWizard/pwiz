@@ -73,10 +73,13 @@ namespace pwiz.Skyline.Model.DocSettings
             CreateFragmentMassCalcs();
         }
 
+        [DiffParent]
         public PeptideSettings PeptideSettings { get; private set; }
 
+        [DiffParent]
         public TransitionSettings TransitionSettings { get; private set; }
 
+        [DiffParent]
         public DataSettings DataSettings { get; private set; }
 
         public MeasuredResults MeasuredResults { get; private set; }
@@ -1800,6 +1803,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public static SrmSettings Deserialize(XmlReader reader)
         {
             return reader.Deserialize(new SrmSettings());
+        }
+
+        private enum EL
+        {
+            audit_log
         }
 
         public override void ReadXml(XmlReader reader)

@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model.Databinding
                         }
                         return doc.ChangeSettings(doc.Settings.ChangeDataSettings(
                             doc.Settings.DataSettings.ChangeViewSpecList(newViewSpecList)));
-                    });
+                    }, SkylineWindow.SettingsLogFunction);
                 }
             }
         }
@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Model.Databinding
                     }
                     return doc.ChangeSettings(doc.Settings.ChangeDataSettings(
                         doc.Settings.DataSettings.ChangeViewSpecList(newViewSpecList)));
-                });
+                }, SkylineWindow.SettingsLogFunction);
             }
             
         }

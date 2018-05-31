@@ -27,9 +27,11 @@ namespace pwiz.Common.DataBinding
     public interface ICollectionInfo
     {
         Type ElementType { get; }
+        Type ElementValueType { get; }
         Type KeyType { get; }
         bool IsDictionary { get; }
         object GetItemFromKey(object collection, object key);
+        object GetItemValueFromKey(object collection, object key);
         IEnumerable GetKeys(object collection);
         IEnumerable GetItems(object collection);
     }
@@ -102,6 +104,11 @@ namespace pwiz.Common.DataBinding
                 get { return typeof(KeyValuePair<TKey, TValue>); }
             }
 
+            public Type ElementValueType
+            {
+                get { return typeof(TValue); }
+            }
+
             public Type KeyType
             {
                 get { return typeof(TKey); }
@@ -124,6 +131,16 @@ namespace pwiz.Common.DataBinding
                     return new KeyValuePair<TKey, TValue>((TKey) key, value);
                 }
                 return null;
+            }
+
+            public object GetItemValueFromKey(object collection, object key)
+            {
+                var item = GetItemFromKey(collection, key);
+                if (item == null)
+                    return null;
+
+                return ((KeyValuePair<TKey, TValue>)item).Value;
+
             }
 
             public IEnumerable GetKeys(object collection)
@@ -153,6 +170,11 @@ namespace pwiz.Common.DataBinding
                 get { return typeof(TItem); }
             }
 
+            public Type ElementValueType
+            {
+                get { return ElementType; }
+            }
+
             public bool IsDictionary
             {
                 get { return false; }
@@ -171,6 +193,11 @@ namespace pwiz.Common.DataBinding
                     return null;
                 }
                 return list[index.Value];
+            }
+
+            public object GetItemValueFromKey(object collection, object key)
+            {
+                return GetItemFromKey(collection, key);
             }
 
             public IEnumerable GetKeys(object collection)

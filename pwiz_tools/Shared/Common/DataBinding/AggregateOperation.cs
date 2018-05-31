@@ -27,7 +27,7 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
-    public abstract class AggregateOperation
+    public abstract class AggregateOperation : IAuditLogObject
     {
         public static readonly AggregateOperation Count = new CountImpl();
 
@@ -93,6 +93,15 @@ namespace pwiz.Common.DataBinding
             return Label;
         }
 
+        public string AuditLogText
+        {
+            get { return Label; }
+        }
+
+        public bool IsName
+        {
+            get { return true; }
+        }
 
         public abstract Type GetPropertyType(Type originalPropertyType);
 

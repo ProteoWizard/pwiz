@@ -463,6 +463,7 @@ namespace pwiz.Skyline
             this.editGroupComparisonListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resultsGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.documentGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.auditLogMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
             this.toolBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2952,6 +2953,7 @@ namespace pwiz.Skyline
             this.groupComparisonsMenuItem,
             this.resultsGridMenuItem,
             this.documentGridMenuItem,
+            this.auditLogMenuItem,
             this.toolStripSeparator36,
             this.toolBarToolStripMenuItem,
             this.statusToolStripMenuItem});
@@ -3596,6 +3598,12 @@ namespace pwiz.Skyline
             this.documentGridMenuItem.Name = "documentGridMenuItem";
             resources.ApplyResources(this.documentGridMenuItem, "documentGridMenuItem");
             this.documentGridMenuItem.Click += new System.EventHandler(this.documentGridMenuItem_Click);
+            // 
+            // auditLogMenuItem
+            // 
+            this.auditLogMenuItem.Name = "auditLogMenuItem";
+            resources.ApplyResources(this.auditLogMenuItem, "auditLogMenuItem");
+            this.auditLogMenuItem.Click += new System.EventHandler(this.auditLogMenuItem_Click);
             // 
             // toolStripSeparator36
             // 
@@ -4558,6 +4566,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem lineAreaGraphDisplayTypeMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportAnnotationsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importAnnotationsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem auditLogMenuItem;
     }
 }
 
