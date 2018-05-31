@@ -203,6 +203,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Results\AgilentCEOptTest.cs" />
+    <Compile Include="Results\AsymCEOptTest.cs" />
     <Compile Include="Results\BetterTransTest.cs" />
     <Compile Include="Results\ChromCacheMinimizerTest.cs" />
     <Compile Include="Results\AsymDiaTest.cs" />
@@ -316,6 +317,7 @@
     <None Include="ModMatch.zip" />
     <None Include="Refine.zip" />
     <None Include="Results\AgilentCEOpt.zip" />
+    <None Include="Results\AsymCEOptimization.zip" />
     <None Include="Results\AsymDIA.zip" />
     <None Include="Results\BetterTransTest.zip" />
     <None Include="Results\FullScan.zip" />

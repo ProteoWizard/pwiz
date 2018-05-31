@@ -1280,6 +1280,8 @@ namespace pwiz.Skyline.Model
                                 // Make sure nothing gets added when no measurements are present
                                 if (listChromInfo.Count == 0)
                                     countInfos = 0;
+                                else if (listChromInfo.Count < countInfos)
+                                    offset = FindCenterInfo(nodeTran, listChromInfo) - numSteps;
                                 for (int i = 0; i < countInfos; i++)
                                 {
                                     ChromatogramInfo info = null;
@@ -1354,6 +1356,27 @@ namespace pwiz.Skyline.Model
                 }
                 return resultsCalc.UpdateTransitionGroupNode(this);
             }
+        }
+
+        /// <summary>
+        /// Returns the <see cref="ChromatogramInfo"/> with the closest m/z value to the given transition.
+        /// </summary>
+        private int FindCenterInfo(TransitionDocNode nodeTran, List<ChromatogramInfo> listChromInfo)
+        {
+            // The list is assumed to be sorted by m/z. So, m/z values should get closer and closer
+            // until they start getting farther and farther.
+            double minDelta = double.MaxValue;
+            for (int i = 1; i < listChromInfo.Count; i++)
+            {
+                // Stop once the first element is farther away than the last and return the last
+                double delta = Math.Abs(listChromInfo[i].ProductMz - nodeTran.Mz);
+                if (delta > minDelta)
+                    return i - 1;
+                minDelta = delta;
+            }
+
+            // Just got closer with each step. So return the last element
+            return listChromInfo.Count - 1;
         }
 
         private static int GetBestIndex(ChromatogramInfo info, PeakFeatureStatistics reintegratePeak, double qcutoff, ref UserSet userSet)

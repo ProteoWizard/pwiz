@@ -26,7 +26,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestA.Results
 {
     /// <summary>
-    /// Test SIM scan results.
+    /// Test Agilent CE optimzation.
     /// </summary>
     [TestClass]
     public class AgilentCEOptTest : AbstractUnitTest
