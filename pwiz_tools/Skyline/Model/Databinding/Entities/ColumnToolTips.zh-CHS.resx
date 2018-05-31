@@ -344,7 +344,7 @@
 或色谱图非提取自高分辨率 MS1 数据。</value>
   </data>
   <data name="IsotopeLabelType">
-    <value>与母离子（轻标/重标）相关的签记类型名称，
+    <value>与母离子（轻标/重标）相关的标记类型名称，
 表明应用了哪些同位素修饰</value>
   </data>
   <data name="Key">
@@ -411,7 +411,7 @@
 全宽 (FWHM)。</value>
   </data>
   <data name="MaxHeight">
-    <value>高度最大值</value>
+    <value>最大高度</value>
   </data>
   <data name="MaxRetentionTime">
     <value>离子对保留时间值最大值。</value>
@@ -654,7 +654,7 @@
 肽树视图中的蛋白质名称，也会看到蛋白质序列。</value>
   </data>
   <data name="ProteinSpecies">
-    <value>蛋白质物种</value>
+    <value>蛋白质种类</value>
   </data>
   <data name="QuadraticCoefficient">
     <value>二次回归中 x 平方项的系数。</value>
@@ -858,10 +858,10 @@
     <value>以平方埃为单位的离子迁移测量值，通常会转换为适当的单位（例如漂移时间，inverseK0），并用于从离子迁移质谱中提取色谱图。</value>
   </data>
   <data name="DriftTimeFragment">
-    <value>片段离子的离子迁移漂移时间（以毫秒为单位），通常因能量碰撞更多而移动更快。（仅用于向后相容：离子迁移片段和离子迁移单位是首选术语。）</value>
+    <value>子离子的离子迁移漂移时间（以毫秒为单位），通常因能量碰撞更多而移动更快。（仅用于向后相容：离子迁移片段和离子迁移单位是首选术语。）</value>
   </data>
   <data name="DriftTimeMS1">
-    <value>母离子的离子迁移漂移时间（以毫秒为单位），通常因能量较少而比片段离子移动稍慢。（仅用于向后相容：离子迁移MS1 和离子迁移单位是首选术语。）</value>
+    <value>母离子的离子迁移漂移时间（以毫秒为单位），通常因能量较低而比片段离子移动稍慢。（仅用于向后相容：离子迁移 MS1 和离子迁移单位是首选术语。）</value>
   </data>
   <data name="DriftTimeWindow">
     <value>在色谱图提取中使用的离子迁移漂移时间窗口（以毫秒为单位）。（仅用于向后相容：离子迁移窗口和离子迁移单位是首选术语。）</value>
@@ -870,7 +870,7 @@
     <value>待转换为离子迁移且用于从离子迁移质谱中提取色谱图确切所需的碰撞横截面（以平方埃为单位），覆盖所有模型值。</value>
   </data>
   <data name="IonMobilityFragment">
-    <value>在片段离子色谱图提取中使用的离子迁移过滤器窗口的中心。这可能不同于母离子的值，因为片段离子可能由于能量碰撞更多而移动得更快，</value>
+    <value>在子离子色谱图提取中使用的离子迁移过滤器窗口的中心。这可能不同于母离子的值，因为子离子可能由于能量碰撞更多而移动得更快，</value>
   </data>
   <data name="IonMobilityMS1">
     <value>在母离子色谱图提取中使用的离子迁移过滤器窗口的中心。</value>

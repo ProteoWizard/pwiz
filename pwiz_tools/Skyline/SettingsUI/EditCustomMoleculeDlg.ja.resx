@@ -162,7 +162,7 @@
     <value>19</value>
   </data>
   <data name="textIonMobilityHighEnergyOffset.ToolTip" xml:space="preserve">
-    <value>事後ドリフト断片化に運動エネルギーが追加され、少し速くなったフライトを補正するために小さな（通常、負数）値がプロダクトイオンに適用されました。</value>
+    <value>ドリフト後断片化に運動エネルギーが追加されたために、僅かに速くなったイオンの飛行を補正するために小さな値（通常、負の数）がプロダクトイオンに適用されました。</value>
   </data>
   <data name="&gt;&gt;textIonMobilityHighEnergyOffset.Name" xml:space="preserve">
     <value>textIonMobilityHighEnergyOffset</value>

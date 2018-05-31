@@ -132,7 +132,7 @@
     <value>3</value>
   </data>
   <data name="labelPrefix.Text" xml:space="preserve">
-    <value>公共前缀(&amp;C)：</value>
+    <value>相同前缀(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;labelPrefix.Name" xml:space="preserve">
     <value>labelPrefix</value>
@@ -208,7 +208,7 @@
     <value>0</value>
   </data>
   <data name="labelExplanation.Text" xml:space="preserve">
-    <value>您所选择的文件含有公共前缀。您希望删除某些或所有此前缀以便缩短用于 Skyline 的名称吗？</value>
+    <value>您所选择的文件含有相同的前缀。您希望删除某些或所有此前缀以便缩短用于 Skyline 的名称吗？</value>
   </data>
   <data name="&gt;&gt;labelExplanation.Name" xml:space="preserve">
     <value>labelExplanation</value>
@@ -289,7 +289,7 @@
     <value>5</value>
   </data>
   <data name="labelSuffix.Text" xml:space="preserve">
-    <value>公共后缀(&amp;S)：</value>
+    <value>相同后缀(&amp;S)：</value>
   </data>
   <data name="&gt;&gt;labelSuffix.Name" xml:space="preserve">
     <value>labelSuffix</value>

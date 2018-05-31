@@ -163,7 +163,11 @@
     <value>20</value>
   </data>
   <data name="gridRegression.ToolTip" xml:space="preserve">
-    <value>イオン移動度ライブラリにおいて、次の式を用いてプリカーサー衝突断面積「C」から予測イオン移動度「D」を計算するために使用する勾配と切片の値です。  D = 勾配 * C + 切片  各プリカーサーイオン荷電状態に対し、それぞれ固有の勾配と切片の値が必要です。プリカーサーイオン荷電状態がこのリストに表示されていない場合、その荷電状態に対するクロマトグラム抽出ではイオン移動度情報は使用されません。つまり、クロマトグラムはイオン移動度をフィルタすることなく、すべてのイオン移動度ビンに対してクロマトグラムが抽出されます。</value>
+    <value>イオン移動度ライブラリにおいて、プリカーサー衝突断面積「C」から予測イオン移動度「D」を、以下の式で計算するために使用する勾配と切片の値です。
+
+D = 勾配 * C + 切片
+
+各プリカーサーイオン荷電状態に対し、それぞれ固有の勾配と切片の値が必要です。プリカーサーイオン荷電状態がこのリストに表示されていない場合、その荷電状態に対するクロマトグラム抽出ではイオン移動度情報は使用されません。つまり、イオン移動度をフィルタすることなく、すべてのイオン移動度のビンに対するクロマトグラムが抽出されます。</value>
   </data>
   <data name="&gt;&gt;gridRegression.Name" xml:space="preserve">
     <value>gridRegression</value>
@@ -196,7 +200,7 @@
     <value>18</value>
   </data>
   <data name="comboLibrary.ToolTip" xml:space="preserve">
-    <value>衝突断面積値または特定のペプチドや荷電状態に対する測定イオン移動度値の保存された表を選択（または作成）します。</value>
+    <value>特定のペプチドや荷電状態に対する衝突断面積値またはイオン移動度測定値の保存された表を選択（または作成）します。</value>
   </data>
   <data name="&gt;&gt;comboLibrary.Name" xml:space="preserve">
     <value>comboLibrary</value>
@@ -304,7 +308,7 @@
     <value>高エネルギーオフセット</value>
   </data>
   <data name="MeasuredIonMobilityHighEnergyOffsetMsec.ToolTipText" xml:space="preserve">
-    <value>Waters IMSでは、高エネルギースペクトルのイオンは、ドリフト分離後に少し速くフライトします</value>
+    <value>WatersのIMSでは、高エネルギースペクトルのイオンは、ドリフト分離後に少し速く飛行します</value>
   </data>
   <data name="MeasuredIonMobilityHighEnergyOffsetMsec.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -325,7 +329,7 @@
     <value>14</value>
   </data>
   <data name="gridMeasuredDriftTimes.ToolTip" xml:space="preserve">
-    <value>観測されたイオン移動度値が優先的に使用されます。欠損値は、イオン移動度ライブラリから取得されます（ある場合）。</value>
+    <value>観測されたイオン移動度値が優先的に使用されます。欠損値は、イオン移動度ライブラリがある場合には、そこから取得されます。</value>
   </data>
   <data name="&gt;&gt;gridMeasuredDriftTimes.Name" xml:space="preserve">
     <value>gridMeasuredDriftTimes</value>

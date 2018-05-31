@@ -268,7 +268,7 @@
     <value>5</value>
   </data>
   <data name="radioKeepAll.Text" xml:space="preserve">
-    <value>保持全部</value>
+    <value>保留全部</value>
   </data>
   <data name="&gt;&gt;radioKeepAll.Name" xml:space="preserve">
     <value>radioKeepAll</value>
@@ -379,7 +379,7 @@
     <value>2</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>您是否想按蛋白质包含的肽数过滤蛋白质？</value>
+    <value>您是否想用蛋白质包含的肽段数目来过滤蛋白质？</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -406,7 +406,7 @@
     <value>0</value>
   </data>
   <data name="cbRemoveRepeated.Text" xml:space="preserve">
-    <value>删除多余重复肽段</value>
+    <value>删除重复的肽段</value>
   </data>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
@@ -442,10 +442,10 @@
     <value>1</value>
   </data>
   <data name="cbRemoveDuplicate.Text" xml:space="preserve">
-    <value>删除所有重复肽段</value>
+    <value>删除重复的肽段</value>
   </data>
   <data name="cbRemoveDuplicate.ToolTip" xml:space="preserve">
-    <value>文档内不是独一无二的所有肽段都将被删除。</value>
+    <value>文档内所有不是独一无二的肽段都将被删除。</value>
   </data>
   <data name="&gt;&gt;cbRemoveDuplicate.Name" xml:space="preserve">
     <value>cbRemoveDuplicate</value>
@@ -496,7 +496,7 @@
     <value>2</value>
   </data>
   <data name="lblEmptyProteins.Text" xml:space="preserve">
-    <value>将添加 {0} 个空蛋白质</value>
+    <value>将添加 {0} 个空白蛋白质</value>
   </data>
   <data name="&gt;&gt;lblEmptyProteins.Name" xml:space="preserve">
     <value>lblEmptyProteins</value>
