@@ -94,6 +94,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             using (var identity = WindowsIdentity.GetCurrent())
             {
+                // ReSharper disable once PossibleNullReferenceException
                 User = identity.Name;
             }
 
