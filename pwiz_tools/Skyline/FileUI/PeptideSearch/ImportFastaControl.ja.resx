@@ -556,7 +556,7 @@
     <value>4</value>
   </data>
   <data name="cbAutoTrain.Text" xml:space="preserve">
-    <value>mProphetモデルを自動的にトレーニングする</value>
+    <value>mProphetのモデルを自動的にトレーニングする</value>
   </data>
   <data name="&gt;&gt;cbAutoTrain.Name" xml:space="preserve">
     <value>cbAutoTrain</value>

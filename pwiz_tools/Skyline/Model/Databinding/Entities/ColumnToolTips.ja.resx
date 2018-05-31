@@ -763,22 +763,22 @@ Double Blank（ダブルブランク）</value>
     <value>値</value>
   </data>
   <data name="CollisionalCrossSection">
-    <value>イオン移動度をオングストロームの二乗で表したものです。通常は適切な単位（ドリフト時間、inverseK0など）に変換され、イオン移動度質量スペクトルからのクロマトグラムの抽出に使用されます。</value>
+    <value>イオン移動度をオングストロームの二乗で表したものです。通常は適切な単位（ドリフト時間、K0の逆数など）に変換され、イオン移動度質量スペクトルからのクロマトグラムの抽出に使用されます。</value>
   </data>
   <data name="DriftTimeFragment">
-    <value>フラグメントイオンのイオン移動度ドリフト時間（ミリ秒）です。エネルギー衝突が増えるため、通常は移動が速くなります。（上位互換性専用：推奨される用語はIonMobilityFragmentとIonMobilityUnitsです。）</value>
+    <value>フラグメントイオンのイオン移動度のドリフト時間（ミリ秒）です。衝突エネルギーがより大きいため、通常は移動が速くなります。（下位互換専用：推奨される用語はIonMobilityFragmentとIonMobilityUnitsです。）</value>
   </data>
   <data name="DriftTimeMS1">
-    <value>プリカーサーイオンのイオン移動度ドリフト時間（ミリ秒）です。エネルギーが低いため、通常はフラグメントイオンよりも少し長めになります。（上位互換性専用：推奨される用語はIonMobilityMS1とIonMobilityUnitsです。）</value>
+    <value>プリカーサーイオンのイオン移動度のドリフト時間（ミリ秒）です。エネルギーが低いため、通常はフラグメントイオンよりも少し長めになります。（下位互換専用：推奨される用語はIonMobilityMS1とIonMobilityUnitsです。）</value>
   </data>
   <data name="DriftTimeWindow">
-    <value>クロマトグラムの抽出で使用するイオン移動度ドリフト時間幅（ミリ秒）です。（上位互換性専用：推奨される用語はIonMobilityWindowとIonMobilityUnitsです。）</value>
+    <value>クロマトグラムの抽出で使用するイオン移動度のドリフト時間幅（ミリ秒）です。（下位互換専用：推奨される用語はIonMobilityWindowとIonMobilityUnitsです。）</value>
   </data>
   <data name="ExplicitCollisionalCrossSection">
     <value>イオン移動度質量スペクトルからのクロマトグラムの抽出に使用され、イオン移動度に変換するために望まれる衝突断面積（オングストロームの二乗の単位）です。他のすべてのモデル値を無効にします。 </value>
   </data>
   <data name="IonMobilityFragment">
-    <value>フラグメントイオンのクロマトグラム抽出に使用するイオン移動度フィルタウィンドウの中心です。エネルギー衝突が増えるため、フラグメントイオンの移動が速くなり、プリカーサーイオンの値とは異なることがあります。</value>
+    <value>フラグメントイオンのクロマトグラム抽出に使用するイオン移動度フィルタウィンドウの中心です。高エネルギーでの衝突のため、フラグメントイオンの移動が速くなり、プリカーサーイオンの値とは異なることがあります。</value>
   </data>
   <data name="IonMobilityMS1">
     <value>プリカーサーイオンのクロマトグラムの抽出に使用するイオン移動度フィルタウィンドウの中心です。</value>
