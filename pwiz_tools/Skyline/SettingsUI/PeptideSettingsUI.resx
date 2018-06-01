@@ -1045,7 +1045,7 @@ times from a peptide specific hydrophobicity score.</value>
     <value>12</value>
   </data>
   <data name="textSpectralLibraryDriftTimesResolvingPower.ToolTip" xml:space="preserve">
-    <value>Determines matching tolerance for drift times in spectral libraries (drift times are measured in milliseconds): 
+    <value>Determines matching tolerance for ion mobility in spectral libraries (for example, drift time): 
 For resolving power "R" at drift time "T", the width "W" of the drift time matching window centered at T is
 W = 2T/R</value>
   </data>
@@ -1142,12 +1142,12 @@ W = 2T/R</value>
     <value>17</value>
   </data>
   <data name="textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip" xml:space="preserve">
-    <value>Determines drift time matching tolerance (drift times are measured in milliseconds), where: 
-dtMax = maximum measured drift time
-W0 = width at drift time zero
-Wmax = width at dtMax
-The width "W" of the drift time matching window centered at any drift time "T" is
-W = (W0 + T*(Wmax-W0)/dtMax)
+    <value>Determines matching tolerance for ion mobility in spectral libraries, where: 
+imMax = maximum measured ion mobility
+W0 = width at ion mobility zero
+Wmax = width at imMax
+The width "W" of the ion mobility matching window centered at any ion mobility "M" is
+W = (W0 + M*(Wmax-W0)/imMax)
 </value>
   </data>
   <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Name" xml:space="preserve">
@@ -1172,12 +1172,12 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>15</value>
   </data>
   <data name="textSpectralLibraryDriftTimesWidthAtDt0.ToolTip" xml:space="preserve">
-    <value>Determines drift time matching tolerance (drift times are measured in milliseconds), where: 
-dtMax = maximum measured drift time
-W0 = width at drift time zero
-Wmax = width at dtMax
-The width "W" of the drift time matching window centered at any drift time "T" is
-W = (W0 + T*(Wmax-W0)/dtMax)
+    <value>Determines matching tolerance for ion mobility in spectral libraries, where: 
+imMax = maximum measured ion mobility
+W0 = width at ion mobility zero
+Wmax = width at imMax
+The width "W" of the ion mobility matching window centered at any ion mobility "M" is
+W = (W0 + M*(Wmax-W0)/imMax)
 </value>
   </data>
   <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Name" xml:space="preserve">
@@ -1363,63 +1363,6 @@ W = (W0 + T*(Wmax-W0)/dtMax)
   <data name="&gt;&gt;tabDigestion.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="labelWidthAtDt0Units.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelWidthAtDt0Units.Location" type="System.Drawing.Point, System.Drawing">
-    <value>243, 315</value>
-  </data>
-  <data name="labelWidthAtDt0Units.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 13</value>
-  </data>
-  <data name="labelWidthAtDt0Units.TabIndex" type="System.Int32, mscorlib">
-    <value>18</value>
-  </data>
-  <data name="labelWidthAtDt0Units.Text" xml:space="preserve">
-    <value>msec</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDt0Units.Name" xml:space="preserve">
-    <value>labelWidthAtDt0Units</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDt0Units.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDt0Units.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDt0Units.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>385, 315</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 13</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.Text" xml:space="preserve">
-    <value>msec</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDtMaxUnits.Name" xml:space="preserve">
-    <value>labelWidthAtDtMaxUnits</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDtMaxUnits.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDtMaxUnits.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDtMaxUnits.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="labelWidthDtMax.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1436,7 +1379,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>16</value>
   </data>
   <data name="labelWidthDtMax.Text" xml:space="preserve">
-    <value>Width at DtMa&amp;x:</value>
+    <value>Width at imMa&amp;x:</value>
   </data>
   <data name="&gt;&gt;labelWidthDtMax.Name" xml:space="preserve">
     <value>labelWidthDtMax</value>
@@ -1466,7 +1409,7 @@ W = (W0 + T*(Wmax-W0)/dtMax)
     <value>14</value>
   </data>
   <data name="labelWidthDtZero.Text" xml:space="preserve">
-    <value>Width at Dt&amp;0:</value>
+    <value>Width at im&amp;0:</value>
   </data>
   <data name="&gt;&gt;labelWidthDtZero.Name" xml:space="preserve">
     <value>labelWidthDtZero</value>
