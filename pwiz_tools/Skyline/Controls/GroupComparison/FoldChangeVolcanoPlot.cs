@@ -218,8 +218,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
 
             zedGraphControl.GraphPane.AxisChangeEvent -= GraphPane_AxisChangeEvent;
-            _bindingListSource.AllRowsChanged -= BindingListSourceAllRowsChanged;
-            _bindingListSource.ListChanged -= BindingListSourceOnListChanged;
+
+            if (_bindingListSource != null)
+            {
+                _bindingListSource.AllRowsChanged -= BindingListSourceAllRowsChanged;
+                _bindingListSource.ListChanged -= BindingListSourceOnListChanged;
+            }
 
             UpdateFilter(false);
 

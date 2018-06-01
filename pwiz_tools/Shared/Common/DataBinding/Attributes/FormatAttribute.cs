@@ -36,6 +36,6 @@ namespace pwiz.Common.DataBinding.Attributes
         }
         public string Format { get; private set; }
         public string NullValue { get; set; }
-        public int? Width { get; set; }
+        public int Width { get; set; }
     }
 }

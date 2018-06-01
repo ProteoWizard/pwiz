@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -31,6 +32,7 @@ namespace pwiz.Skyline.Model
     {
         public static readonly CustomIon EMPTY = new CustomIon();
 
+        [DiffParent(ignoreName:true)]
         public Adduct Adduct { get; private set; }
 
         /// <summary>
@@ -105,6 +107,7 @@ namespace pwiz.Skyline.Model
             return ion;
         }
 
+        [Diff]
         public string NeutralFormula { get { return Formula; } }
 
         public string FormulaWithAdductApplied
@@ -116,7 +119,9 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        [Diff]
         public double MonoisotopicMassMz { get { return Adduct.MzFromNeutralMass(MonoisotopicMass, MassType.Monoisotopic); } }
+        [Diff]
         public double AverageMassMz { get { return Adduct.MzFromNeutralMass(AverageMass, MassType.Average); } }
 
         public new string ToSerializableString()

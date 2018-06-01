@@ -20,13 +20,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Collections
 {
     /// <summary>
     /// Immutable sorted set of elements.
     /// </summary>
-    public abstract class ValueSet<TSet, TElement> : IEnumerable<TElement> where TSet : ValueSet<TSet, TElement>, new()
+    public abstract class ValueSet<TSet, TElement> : IAuditLogObject, IEnumerable<TElement> where TSet : ValueSet<TSet, TElement>, new()
     {
         private TElement[] _array;
         protected ValueSet()
@@ -68,6 +69,9 @@ namespace pwiz.Common.Collections
             result._array = MakeElementArray(result, values);
             return result;
         }
+
+        public string AuditLogText { get { return string.Format("\"{0}\"", ToString()); } } // Not L10N
+        public bool IsName { get { return false; } }
 
         #region Equality Members
         public override int GetHashCode()

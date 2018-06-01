@@ -462,6 +462,7 @@ namespace pwiz.Skyline.Util
         // N.B. "AdductCharge" and "AdductFormula" seem like weirdly redundant names, until you consider that 
         // they can show up in reports, at which point "Charge" and "Formula" are a bit overloaded.
 
+        [Diff]
         public int AdductCharge { get; private set; }  // The charge that the adduct gives to a molecule
 
         public string AdductFormula // Return adduct description - will produce [M+H] format for protonation
