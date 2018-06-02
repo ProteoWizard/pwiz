@@ -24,6 +24,8 @@ using System.Text.RegularExpressions;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -147,6 +149,7 @@ namespace pwiz.Skyline
         private const string ARG_REINTEGRATE_MODEL_BOTH = "reintegrate-model-both"; // Not L10N
         private const string ARG_REINTEGRATE_OVERWRITE_PEAKS = "reintegrate-overwrite-peaks"; // Not L10N
         private const string ARG_REINTEGRATE_LOG_TRAINING = "reintegrate-log-training"; // Not L10N
+        private const string ARG_REINTEGRATE_EXCLUDE_FEATURE = "reintegrate-exclude-feature"; // Not L10N
 
         public string ReintegratModelName { get; private set; }
         public int? ReintegrateModelIterationCount { get; private set; }
@@ -155,6 +158,7 @@ namespace pwiz.Skyline
         public bool IsSecondBestModel { get; private set; }
         public bool IsDecoyModel { get; private set; }
         public bool IsLogTraining { get; private set; }
+        public List<IPeakFeatureCalculator> ExcludeFeatures { get; private set; }
 
         public bool Reintegrating { get { return !string.IsNullOrEmpty(ReintegratModelName); } }
 
@@ -501,6 +505,7 @@ namespace pwiz.Skyline
 
             ReplicateFile = new List<MsDataFileUri>();
             SearchResultsFiles = new List<string>();
+            ExcludeFeatures = new List<IPeakFeatureCalculator>();
 
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;
@@ -602,7 +607,8 @@ namespace pwiz.Skyline
                 else if (IsNameValue(pair, "import-process-count")) // Not L10N
                 {
                     ImportThreads = int.Parse(pair.Value);
-                    Program.MultiProcImport = true;
+                    if (ImportThreads > 0)
+                        Program.MultiProcImport = true;
                 }
                 else if (IsNameOnly(pair, "timestamp")) // Not L10N
                 {
@@ -1176,6 +1182,25 @@ namespace pwiz.Skyline
                 {
                     IsLogTraining = true;
                 }
+                else if (IsNameValue(pair, ARG_REINTEGRATE_EXCLUDE_FEATURE))
+                {
+                    string featureName = pair.Value;
+                    var calc = PeakFeatureCalculator.Calculators.FirstOrDefault(c =>
+                        Equals(featureName, c.HeaderName) || Equals(featureName, c.Name));
+                    if (calc == null)
+                    {
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_, featureName);
+                        foreach (var featureCalculator in PeakFeatureCalculator.Calculators)
+                        {
+                            if (Equals(featureCalculator.HeaderName, featureCalculator.Name))
+                                _out.WriteLine("    {0}", featureCalculator.HeaderName);    // Not L10N
+                            else
+                                _out.WriteLine(Resources.CommandArgs_ParseArgsInternal______0__or___1__, featureCalculator.HeaderName, featureCalculator.Name);
+                        }
+                        return false;
+                    }
+                    ExcludeFeatures.Add(calc);
+                }
                 else if (IsNameValue(pair, "report-name")) // Not L10N
                 {
                     ReportName = pair.Value;
@@ -1512,6 +1537,10 @@ namespace pwiz.Skyline
                     WarnArgRequirment(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_BOTH);
                 else
                     WarnArgRequirment(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_SECOND_BEST);
+            }
+            if (!IsCreateScoringModel && ExcludeFeatures.Count > 0)
+            {
+                WarnArgRequirment(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_EXCLUDE_FEATURE);
             }
             if (!AddDecoys && AddDecoysCount.HasValue)
             {

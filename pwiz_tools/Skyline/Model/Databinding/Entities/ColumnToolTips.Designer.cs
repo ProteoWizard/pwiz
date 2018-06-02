@@ -107,6 +107,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Detailed description of the change.
+        /// </summary>
+        public static string AllInfoMessage {
+            get {
+                return ResourceManager.GetString("AllInfoMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Known quantity of analyte that was spiked into the external or quality control standard..
         /// </summary>
         public static string AnalyteConcentration {
@@ -142,6 +151,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string AreaRatio {
             get {
                 return ResourceManager.GetString("AreaRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 
+        ///      Row of audit log information
+        ///    .
+        /// </summary>
+        public static string AuditLogRow {
+            get {
+                return ResourceManager.GetString("AuditLogRow", resourceCulture);
             }
         }
         
@@ -513,6 +533,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to List of detailed change messages and reasons.
+        /// </summary>
+        public static string Details {
+            get {
+                return ResourceManager.GetString("Details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model..
         /// </summary>
         public static string DetectionQValue {
@@ -527,6 +556,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string DetectionZScore {
             get {
                 return ResourceManager.GetString("DetectionZScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Document format version at the time the change was made.
+        /// </summary>
+        public static string DocumentFormat {
+            get {
+                return ResourceManager.GetString("DocumentFormat", resourceCulture);
             }
         }
         
@@ -2365,6 +2403,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reason the user gave for making the change.
+        /// </summary>
+        public static string Reason {
+            get {
+                return ResourceManager.GetString("Reason", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Replicate.
         /// </summary>
         public static string Replicate {
@@ -2516,6 +2563,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SampleType {
             get {
                 return ResourceManager.GetString("SampleType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Version of Skyline in which the change was made.
+        /// </summary>
+        public static string SkylineVersion {
+            get {
+                return ResourceManager.GetString("SkylineVersion", resourceCulture);
             }
         }
         
@@ -2675,6 +2731,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Description of the change.
+        /// </summary>
+        public static string SummaryMessage {
+            get {
+                return ResourceManager.GetString("SummaryMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The modified sequence where modifications are referred to by their three letter codes, e.g. &quot;C[CAM]&quot;. If the modification does not have a three letter code, then its full name is used instead..
         /// </summary>
         public static string ThreeLetterCodes {
@@ -2698,6 +2763,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Times {
             get {
                 return ResourceManager.GetString("Times", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time at which this change was made.
+        /// </summary>
+        public static string TimeStamp {
+            get {
+                return ResourceManager.GetString("TimeStamp", resourceCulture);
             }
         }
         
@@ -2909,11 +2983,29 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Description of the change.
+        /// </summary>
+        public static string UndoRedoMessage {
+            get {
+                return ResourceManager.GetString("UndoRedoMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The modified sequence where modifications are referred to by their unimod id, e.g. &quot;C(unimod:4)&quot;. If the modification does not have a unimod id, then its full name is used instead..
         /// </summary>
         public static string UnimodIds {
             get {
                 return ResourceManager.GetString("UnimodIds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User who made the change.
+        /// </summary>
+        public static string User {
+            get {
+                return ResourceManager.GetString("User", resourceCulture);
             }
         }
         

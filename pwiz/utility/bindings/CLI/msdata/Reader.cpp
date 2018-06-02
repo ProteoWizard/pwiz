@@ -79,6 +79,7 @@ static void copyReaderConfig(pwiz::msdata::Reader::Config& config, ReaderConfig^
     config.combineIonMobilitySpectra = readerConfig->combineIonMobilitySpectra;
     config.unknownInstrumentIsError = readerConfig->unknownInstrumentIsError;
     config.adjustUnknownTimeZonesToHostTimeZone = readerConfig->adjustUnknownTimeZonesToHostTimeZone;
+    config.preferOnlyMsLevel = readerConfig->preferOnlyMsLevel;
 }
 
 void Reader::read(System::String^ filename, System::String^ head, MSData^ result, int sampleIndex, ReaderConfig^ readerConfig)

@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// the single <see cref="Name"/> property in both cases should
     /// be read-only to preserve immutability of derrived types.
     /// </summary>
-    public abstract class XmlNamedElement : Immutable, IKeyContainer<string>, IXmlSerializable
+    public abstract class XmlNamedElement : Immutable, IKeyContainer<string>, IXmlSerializable, IAuditLogObject
     {
         /// <summary>
         /// A dummy name for instances which will only be used internally
@@ -69,6 +69,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return Name;
         }
+
+        public virtual string AuditLogText { get { return Name; } }
+        public virtual bool IsName { get { return true; } }
 
         #region Property change methods
 

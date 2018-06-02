@@ -116,12 +116,12 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             // Initialize filter settings
-            textPeptidePrecursorCharges.Text = Filter.PeptidePrecursorCharges.ToArray().ToString(", "); // Not L10N? Internationalization of comma?
-            textPeptideIonCharges.Text = Filter.PeptideProductCharges.ToArray().ToString(", "); // Not L10N? Internationalization of comma?
-            textPeptideIonTypes.Text = TransitionFilter.ToStringIonTypes(Filter.PeptideIonTypes, true);
-            textSmallMoleculeIonTypes.Text = TransitionFilter.ToStringSmallMoleculeIonTypes(Filter.SmallMoleculeIonTypes, true);
-            textSmallMoleculePrecursorAdducts.Text = Filter.SmallMoleculePrecursorAdducts.ToArray().ToString(", "); // Not L10N? Internationalization of comma?
-            textSmallMoleculeFragmentAdducts.Text = Filter.SmallMoleculeFragmentAdducts.ToArray().ToString(", "); // Not L10N? Internationalization of comma?
+            textPeptidePrecursorCharges.Text = Filter.PeptidePrecursorChargesString;
+            textPeptideIonCharges.Text = Filter.PeptideProductChargesString;
+            textPeptideIonTypes.Text = Filter.PeptideIonTypesString;
+            textSmallMoleculeIonTypes.Text = Filter.SmallMoleculeIonTypesString;
+            textSmallMoleculePrecursorAdducts.Text = Filter.SmallMoleculePrecursorAdductsString;
+            textSmallMoleculeFragmentAdducts.Text = Filter.SmallMoleculeFragmentAdductsString;
             comboRangeFrom.SelectedItem = Filter.FragmentRangeFirst.Label;
             comboRangeTo.SelectedItem = Filter.FragmentRangeLast.Label;
             textExclusionWindow.Text = Filter.PrecursorMzWindow != 0
@@ -177,7 +177,6 @@ namespace pwiz.Skyline.SettingsUI
 
             DoIsolationSchemeChanged();
         }
-
 
         /// <summary>
         /// Callback function which gets called when the user changes the isolation scheme in the full scan tab

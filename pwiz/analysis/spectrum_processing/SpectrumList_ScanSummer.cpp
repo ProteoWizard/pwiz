@@ -28,9 +28,9 @@
 #include "pwiz/data/vendor_readers/Waters/SpectrumList_Waters.hpp"
 
 bool sortFunc (parentIon i, parentIon j) { return (i.mz<j.mz); } // comparator for sorting of parentIon by m/z 
-bool sortRtime (precursorGroup i, precursorGroup j) { return (i.rTimeStart<j.rTimeStart); } // comparator for sorting of precursor List by rtime 
+bool sortRtime (precursorGroupPtr i, precursorGroupPtr j) { return (i->rTimeStart<j->rTimeStart); } // comparator for sorting of precursor List by rtime 
 bool pIonCompare (parentIon i, double mz) { return (i.mz<mz); } // comparator for searching parentIon by m/z
-bool pGroupCompare (precursorGroup i, double mz) { return ( i.precursorMZ < mz ); } // comparator for searching precursorGroups by m/z
+bool pGroupCompare (precursorGroupPtr i, double mz) { return ( i->precursorMZ < mz ); } // comparator for searching precursorGroups by m/z
 
 
 namespace pwiz {
@@ -150,87 +150,69 @@ double SpectrumList_ScanSummer::getPrecursorMz(const msdata::Spectrum& spectrum)
 //
 
 
-void SpectrumList_ScanSummer::sumSubScansNaive( vector<double> & x, vector<double> & y, size_t refIndex, DetailLevel detailLevel ) const
+void SpectrumList_ScanSummer::sumSubScansNaive( vector<double> & x, vector<double> & y, const precursorGroupPtr& precursorGroupPtr, DetailLevel detailLevel ) const
 {
-
     if (x.size() != y.size())
         throw runtime_error("[SpectrumList_ScanSummer::sumSubScansNaive()] x and y arrays must be the same size");
 
+    vector<double>& summedMZ = x;
+    vector<double>& summedIntensity = y;
 
-    // get the index for the precursorGroupList
-    SpectrumPtr s = inner_->spectrum(refIndex, detailLevel ); // get binary data
-    double precursorMZ = getPrecursorMz(*s); // get the precursor value
+    vector<double> binnedMZ; binnedMZ.reserve(summedMZ.size());
+    vector<double> binnedIntensity; binnedIntensity.reserve(summedMZ.size());
 
-    vector<precursorGroup>::const_iterator pGroupIt = lower_bound(precursorList.begin(),precursorList.end(),precursorMZ,pGroupCompare); // returns iterator to first element in precursorList where mz >= precursorMZ
-    while ( pGroupIt->indexList[0] != (int)refIndex )
+    if (summedMZ.size() > 1)
     {
-        pGroupIt++; // lower_bound returns the first element in a repeat sequence
-        if ( pGroupIt == precursorList.end() )
-            throw runtime_error("[SpectrumList_ScanSummer::sumSubScans()] Cannot find the correct precursorList element...");
-    }
-
-    vector<double>& summedMZ = s->getMZArray()->data;
-    vector<double>& summedIntensity = s->getIntensityArray()->data;
-
-    vector<int>::const_iterator InitialIt = pGroupIt->indexList.begin();
-    InitialIt++;
-    if (InitialIt != pGroupIt->indexList.end())
-    {
-
-        for( vector<int>::const_iterator listIt = InitialIt; listIt != pGroupIt->indexList.end(); ++listIt)
+        binnedMZ.push_back(summedMZ[0]);
+        binnedIntensity.push_back(summedIntensity[0]);
+        for (size_t i = 1; i < summedMZ.size(); ++i)
         {
-
-            SpectrumPtr s2 = inner_->spectrum( *listIt, detailLevel );
-            vector<double>& subMz = s2->getMZArray()->data;
-            vector<double>& subIntensity = s2->getIntensityArray()->data;
-
-            for( size_t j=0, jend=subMz.size(); j < jend ; ++j)
+            if (fabs(binnedMZ.back() - summedMZ[i]) < 1e-6)
             {
-
-                // check if this m/z point was recorded from a previous sub-scan
-                vector<double>::iterator pIonIt;
-                pIonIt = lower_bound(summedMZ.begin(),summedMZ.end(),subMz[j]); // first element that is greater than or equal to subMz[j]
-                int indexMZ = pIonIt - summedMZ.begin();
-                if (pIonIt == summedMZ.end()) // first check if mzs[j] is outside search range
-                {
-                    if ( subMz[j] > summedMZ[indexMZ-1] ) // insert at back
-                    {
-                        summedMZ.push_back(subMz[j]);
-                        summedIntensity.push_back(subIntensity[j]);
-                    }
-                    else // insert at front
-                    {
-                        summedMZ.insert(summedMZ.begin(),subMz[j]);
-                        summedIntensity.insert(summedIntensity.begin(),subIntensity[j]);
-                    }
-                }
-                else if (*pIonIt != subMz[j]) // if the closest value is not equal to mzs[i], start a new m/z point
-                {
-                    summedMZ.insert(pIonIt,subMz[j]);
-                    summedIntensity.insert(summedIntensity.begin()+indexMZ,subIntensity[j]);
-                }
-                else // m/z value recorded from previous sub-scan for this precursor; calculate the sum
-                {
-                    summedIntensity[indexMZ] += subIntensity[j];
-                }
-            
-
+                for (; i < summedMZ.size() && fabs(binnedMZ.back() - summedMZ[i]) < 1e-6; ++i)
+                    binnedIntensity.back() += summedIntensity[i];
+                --i;
             }
-
+            else
+            {
+                binnedMZ.push_back(summedMZ[i]);
+                binnedIntensity.push_back(summedIntensity[i]);
+            }
         }
 
+        swap(summedMZ, binnedMZ);
+        swap(summedIntensity, binnedIntensity);
     }
 
-    x.resize(summedIntensity.size());
-    y.resize(summedIntensity.size());
-    for (size_t i=0, iend=summedIntensity.size(); i < iend ; ++i)
+    vector<int>::const_iterator InitialIt = precursorGroupPtr->indexList.begin()+1;
+    for( vector<int>::const_iterator listIt = InitialIt; listIt != precursorGroupPtr->indexList.end(); ++listIt)
     {
-            x[i] = summedMZ[i];
-            y[i] = summedIntensity[i];
-    }
+        SpectrumPtr s2 = inner_->spectrum( *listIt, detailLevel );
+        vector<double>& subMz = s2->getMZArray()->data;
+        vector<double>& subIntensity = s2->getIntensityArray()->data;
 
-    
-
+        for( size_t j=0, jend=subMz.size(); j < jend ; ++j)
+        {
+            // check if this m/z point was recorded from a previous sub-scan
+            vector<double>::iterator pIonIt;
+            pIonIt = lower_bound(summedMZ.begin(), summedMZ.end(), subMz[j] - 1e-2); // first element that is greater than or equal to subMz[j]
+            int indexMZ = pIonIt - summedMZ.begin();
+            if (pIonIt == summedMZ.end()) // first check if mzs[j] is outside search range
+            {
+                summedMZ.push_back(subMz[j]);
+                summedIntensity.push_back(subIntensity[j]);
+            }
+            else if (fabs(*pIonIt - subMz[j]) > 1e-2) // if the closest value is not equal to mzs[i], start a new m/z point
+            {
+                summedMZ.insert(pIonIt,subMz[j]);
+                summedIntensity.insert(summedIntensity.begin()+indexMZ,subIntensity[j]);
+            }
+            else // m/z value recorded from previous sub-scan for this precursor; calculate the sum
+            {
+                summedIntensity[indexMZ] += subIntensity[j];
+            }
+        }
+    }  
 }
 
 
@@ -242,82 +224,79 @@ PWIZ_API_DECL SpectrumList_ScanSummer::SpectrumList_ScanSummer(const SpectrumLis
 {
     if (!inner_.get()) throw runtime_error("[SpectrumList_ScanSummer] Null pointer");
 
-    // Some parameters
-    double precursorMZ = 0.0; 
-    
-    ms2cnt=0;
-
     for (size_t i=0, end=inner_->size(); i < end; ++i )
     {
-       
         const SpectrumIdentity& spectrumIdentity = inner_->spectrumIdentity(i);
-        SpectrumPtr s = inner_->spectrum(i, true); 
-        precursorMZ = getPrecursorMz(*s); 
+        SpectrumPtr s = inner_->spectrum(i, false); 
+        double precursorMZ = getPrecursorMz(*s); 
 
         if (precursorMZ == 0.0) // ms1 scans do not need summing
         {
             pushSpectrum(spectrumIdentity);
+            precursorMap.push_back(precursorGroupPtr());
             continue;
         }
         double rTime = s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds();
-        ms2cnt++;
 
-        if (ms2cnt==1) // set some parameters
+        if (precursorList.empty()) // set some parameters
         {
             lowerMZlimit = s->scanList.scans[0].scanWindows[0].cvParam(MS_scan_window_lower_limit).valueAs<double>();
             upperMZlimit = s->scanList.scans[0].scanWindows[0].cvParam(MS_scan_window_upper_limit).valueAs<double>();
             TotalDaltons = upperMZlimit - lowerMZlimit;
         }
 
-        vector<precursorGroup>::iterator pGroupIt,prevIt;
+        vector<precursorGroupPtr>::iterator pGroupIt,prevIt;
         pGroupIt = lower_bound(precursorList.begin(),precursorList.end(),precursorMZ,pGroupCompare); // returns iterator to first element in precursorList where mz >= precursorMZ
 
         if ( precursorList.empty() )
         {
             pushSpectrum(spectrumIdentity); 
-            precursorGroup newGroup;
-            newGroup.precursorMZ = precursorMZ;
-            newGroup.rTimeStart = rTime;
-            newGroup.indexList.push_back(i);
+            precursorGroupPtr newGroup(new precursorGroup);
+            newGroup->precursorMZ = precursorMZ;
+            newGroup->rTimeStart = rTime;
+            newGroup->indexList.push_back(i);
+            precursorMap.push_back(newGroup);
             precursorList.push_back(newGroup);
         }
         else if ( pGroupIt == precursorList.end() ) 
         {
 
             prevIt = pGroupIt - 1;
-            double lowerDiff = precursorMZ - prevIt->precursorMZ;  
-            double lrTimeDiff = abs(rTime - prevIt->rTimeStart);
+            double lowerDiff = precursorMZ - (*prevIt)->precursorMZ;  
+            double lrTimeDiff = abs(rTime - (*prevIt)->rTimeStart);
 
             if ( lowerDiff < precursorTol_ && lrTimeDiff < rTimeTol_ )
             {
-                    prevIt->indexList.push_back(i);
+                    (*prevIt)->indexList.push_back(i);
             }
             else
             {
                 pushSpectrum(spectrumIdentity); 
-                precursorGroup newGroup;
-                newGroup.precursorMZ = precursorMZ;
-                newGroup.rTimeStart = rTime;
-                newGroup.indexList.push_back(i);
+                precursorGroupPtr newGroup(new precursorGroup);
+                newGroup->precursorMZ = precursorMZ;
+                newGroup->rTimeStart = rTime;
+                newGroup->indexList.push_back(i);
+                precursorMap.push_back(newGroup);
                 precursorList.push_back(newGroup); 
             }
         }
         else if ( pGroupIt == precursorList.begin() )
         {
-            double upperDiff = pGroupIt->precursorMZ - precursorMZ; 
-            double urTimeDiff = abs(rTime - pGroupIt->rTimeStart); 
+            double upperDiff = (*pGroupIt)->precursorMZ - precursorMZ;
+            double urTimeDiff = abs(rTime - (*pGroupIt)->rTimeStart);
 
             if ( upperDiff < precursorTol_ && urTimeDiff < rTimeTol_ )
             {
-                    pGroupIt->indexList.push_back(i);
+                (*pGroupIt)->indexList.push_back(i);
             }
             else
             {
                 pushSpectrum(spectrumIdentity); 
-                precursorGroup newGroup;
-                newGroup.precursorMZ = precursorMZ;
-                newGroup.rTimeStart = rTime;
-                newGroup.indexList.push_back(i);
+                precursorGroupPtr newGroup(new precursorGroup);
+                newGroup->precursorMZ = precursorMZ;
+                newGroup->rTimeStart = rTime;
+                newGroup->indexList.push_back(i);
+                precursorMap.push_back(newGroup);
                 precursorList.insert(pGroupIt,newGroup); 
             }
         }
@@ -325,26 +304,27 @@ PWIZ_API_DECL SpectrumList_ScanSummer::SpectrumList_ScanSummer(const SpectrumLis
         {
 
             prevIt = pGroupIt - 1;
-            double upperDiff = pGroupIt->precursorMZ - precursorMZ; 
-            double lowerDiff = precursorMZ - prevIt->precursorMZ; 
-            double urTimeDiff = abs(rTime - pGroupIt->rTimeStart); 
-            double lrTimeDiff = abs(rTime - prevIt->rTimeStart);
+            double upperDiff = (*pGroupIt)->precursorMZ - precursorMZ;
+            double lowerDiff = precursorMZ - (*prevIt)->precursorMZ; 
+            double urTimeDiff = abs(rTime - (*pGroupIt)->rTimeStart);
+            double lrTimeDiff = abs(rTime - (*prevIt)->rTimeStart);
 
             if ( upperDiff < precursorTol_ && upperDiff <= lowerDiff && urTimeDiff < rTimeTol_ )
             {
-                    pGroupIt->indexList.push_back(i);
+                    (*pGroupIt)->indexList.push_back(i);
             }
             else if ( lowerDiff < precursorTol_ && lrTimeDiff < rTimeTol_ )
             {
-                    prevIt->indexList.push_back(i);
+                    (*prevIt)->indexList.push_back(i);
             }
             else
             {
                 pushSpectrum(spectrumIdentity); 
-                precursorGroup newGroup;
-                newGroup.precursorMZ = precursorMZ;
-                newGroup.rTimeStart = rTime;
-                newGroup.indexList.push_back(i);
+                precursorGroupPtr newGroup(new precursorGroup);
+                newGroup->precursorMZ = precursorMZ;
+                newGroup->rTimeStart = rTime;
+                newGroup->indexList.push_back(i);
+                precursorMap.push_back(newGroup);
                 precursorList.insert(pGroupIt,newGroup); 
             }
 
@@ -354,8 +334,6 @@ PWIZ_API_DECL SpectrumList_ScanSummer::SpectrumList_ScanSummer(const SpectrumLis
 
     ms2RetentionTimes = precursorList;
     sort(ms2RetentionTimes.begin(),ms2RetentionTimes.end(),sortRtime);
-    ms2cnt = 0; // reset
-
 }
 
 PWIZ_API_DECL size_t SpectrumList_ScanSummer::size() const
@@ -380,21 +358,23 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ScanSummer::spectrum(size_t index, Detail
 {
 
     size_t summedScanIndex = indexMap.at(index);
-    SpectrumPtr summedSpectrum = inner_->spectrum(summedScanIndex, detailLevel);
+    SpectrumPtr summedSpectrum = inner_->spectrum(summedScanIndex, true);
     
     if (summedSpectrum->cvParam(MS_ms_level).valueAs<int>() > 1) // MS/MS scan
     {
-
         try
         {
+            auto precursorGroupPtr = precursorMap.at(index);
+            if (!precursorGroupPtr)
+                throw runtime_error("ms2 index points to null precursorGroupPtr");
+
             // output ms2 spectra by retention time, grab the appropriate spectrum
-            int newIndex = ms2RetentionTimes[ms2cnt].indexList[0];
-            summedSpectrum = inner_->spectrum(newIndex, detailLevel);
-            ms2cnt++;
+            int newIndex = precursorGroupPtr->indexList[0];
+            summedSpectrum = inner_->spectrum(newIndex, true);
 
             vector<double>& mzs = summedSpectrum->getMZArray()->data;
             vector<double>& intensities = summedSpectrum->getIntensityArray()->data;
-            sumSubScansNaive( mzs, intensities, newIndex, detailLevel );
+            sumSubScansNaive(mzs, intensities, precursorGroupPtr, DetailLevel_FullData);
             summedSpectrum->defaultArrayLength = mzs.size();
 
         }

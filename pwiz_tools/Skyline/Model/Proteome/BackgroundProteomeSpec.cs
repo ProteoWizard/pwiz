@@ -22,6 +22,7 @@ using System.IO;
 using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -51,6 +52,7 @@ namespace pwiz.Skyline.Model.Proteome
             database_path,
         }
 
+        [Diff]
         public string DatabasePath { get; private set; }
 
         public bool IsNone
