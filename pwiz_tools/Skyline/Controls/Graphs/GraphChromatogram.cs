@@ -2235,20 +2235,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 (settings.TransitionSettings.FullScan.IsEnabled || settings.PeptideSettings.Libraries.HasMidasLibrary))
             {
                 var nodeGroupsArray = nodeGroups.ToArray();
-                var transitionGroups = nodeGroupsArray.Select(nodeGroup => nodeGroup.TransitionGroup).ToArray();
                 if (Settings.Default.ShowPeptideIdTimes)
                 {
                     var listTimes = new List<double>();
-                    foreach (var group in transitionGroups)
-                    {
-                        IsotopeLabelType labelType;
-                        double[] retentionTimes;
-                        if (settings.TryGetRetentionTimes(lookupSequence, group.PrecursorAdduct,
-                                                          lookupMods, FilePath, out labelType, out retentionTimes))
-                        {
-                            listTimes.AddRange(retentionTimes);
-                        }
-                    }
+                    listTimes.AddRange(settings.GetRetentionTimes(lookupSequence, lookupMods, FilePath));
                     var selectedSpectrum = _stateProvider.SelectedSpectrum;
                     if (selectedSpectrum != null && Equals(FilePath, selectedSpectrum.FilePath))
                     {
@@ -2276,6 +2266,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 if (Settings.Default.ShowUnalignedPeptideIdTimes)
                 {
+                    // ReSharper disable PossibleMultipleEnumeration
                     var precursorMzs = nodeGroupsArray.Select(nodeGroup => nodeGroup.PrecursorMz).ToArray();
                     var listTimes = new List<double>(settings.GetRetentionTimesNotAlignedTo(FilePath, lookupSequence, lookupMods, precursorMzs));
                     if (listTimes.Count > 0)
@@ -2284,6 +2275,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         Array.Sort(sortedTimes);
                         chromGraphPrimary.UnalignedRetentionMsMs = sortedTimes;
                     }
+                    // ReSharper restore PossibleMultipleEnumeration
                 }
             }
         }

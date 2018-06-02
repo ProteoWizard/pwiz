@@ -541,12 +541,6 @@ namespace pwiz.Skyline.Model.Lib
 
         }
 
-        public override bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
-        {
-            retentionTimes = null;
-            return false;
-        }
-
         public override bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes)
         {
             retentionTimes = null;

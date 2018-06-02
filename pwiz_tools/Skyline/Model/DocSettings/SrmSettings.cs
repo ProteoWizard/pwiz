@@ -850,23 +850,13 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
-        public bool TryGetRetentionTimes(Target sequence, Adduct adduct, ExplicitMods mods, MsDataFileUri filePath,
-            out IsotopeLabelType type, out double[] retentionTimes)
+        public IEnumerable<double> GetRetentionTimes(Target sequence, ExplicitMods mods, MsDataFileUri filePath)
         {
             var libraries = PeptideSettings.Libraries;
-            foreach (var typedSequence in GetTypedSequences(sequence, mods, adduct))
-            {
-                var key = new LibKey(typedSequence.ModifiedSequence, typedSequence.Adduct);
-                if (libraries.TryGetRetentionTimes(key, filePath, out retentionTimes))
-                {
-                    type = typedSequence.LabelType;
-                    return true;
-                }
-            }
-
-            type = IsotopeLabelType.light;
-            retentionTimes = null;
-            return false;
+            var targets = GetTypedSequences(sequence, mods, Adduct.EMPTY, sequence.IsProteomic)
+                .Select(typedSequence=>typedSequence.ModifiedSequence)
+                .ToArray();
+            return libraries.GetRetentionTimes(targets, filePath);
         }
 
         public double[] GetBestRetentionTimes(PeptideDocNode nodePep, MsDataFileUri filePath)
@@ -942,7 +932,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             int? index = (alignmentIndex != null ? alignmentIndex.FileIndex : null);
 
-            var times = library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref index).ToArray();
+            var times = library.GetRetentionTimesWithSequences(filePath, modifiedSequences, ref index).ToArray();
 
             if (alignmentIndex != null)
                 alignmentIndex.FileIndex = index;
@@ -989,7 +979,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 foreach (var source in library.ListRetentionTimeSources())
                 {
                     int? index = null;
-                    times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref index));
+                    times.AddRange(library.GetRetentionTimesWithSequences(new MsDataFilePath(source.Name), modifiedSequences, ref index));
                 }
             }
             return times.ToArray();
@@ -1027,7 +1017,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         }
                         int? indexIgnore = null;
                         // ReSharper disable PossibleMultipleEnumeration
-                        times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref indexIgnore));
+                        times.AddRange(library.GetRetentionTimesWithSequences(new MsDataFilePath(source.Name), modifiedSequences, ref indexIgnore));
                         // ReSharper restore PossibleMultipleEnumeration
                     }
                 }

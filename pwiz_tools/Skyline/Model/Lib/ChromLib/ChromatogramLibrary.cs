@@ -348,19 +348,6 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             }
         }
 
-        public override bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
-        {
-            int i = FindEntry(key);
-            int j = _librarySourceFiles.IndexOf(info => Equals(filePath.ToString(), info.FilePath));
-            if (i != -1 && j != -1)
-            {
-                retentionTimes = _libraryEntries[i].RetentionTimesByFileId.GetTimes(_librarySourceFiles[j].Id);
-                return true;
-            }
-
-            return base.TryGetRetentionTimes(key, filePath, out retentionTimes);
-        }
-
         public override bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes)
         {
             int j = _librarySourceFiles.IndexOf(info => Equals(filePath.ToString(), info.FilePath));

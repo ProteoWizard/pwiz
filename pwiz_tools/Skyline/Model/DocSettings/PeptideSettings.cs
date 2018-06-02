@@ -2104,17 +2104,19 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
-        public bool TryGetRetentionTimes(LibKey key, MsDataFileUri filePath, out double[] retentionTimes)
+        public IEnumerable<double> GetRetentionTimes(ICollection<Target> targets, MsDataFileUri filePath)
         {
-            Assume.IsTrue(IsLoaded);
-
-            foreach (Library lib in _libraries)
+            var result = Enumerable.Empty<double>();
+            foreach (var lib in _libraries)
             {
-                if (lib != null && !(lib is MidasLibrary) && lib.TryGetRetentionTimes(key, filePath, out retentionTimes))
-                    return true;
+                if (lib == null || lib is MidasLibrary)
+                {
+                    continue;
+                }
+                int? fileId = null;
+                result = result.Concat(lib.GetRetentionTimesWithSequences(filePath, targets, ref fileId));
             }
-            retentionTimes = null;
-            return false;
+            return result;
         }
 
         public bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes)
