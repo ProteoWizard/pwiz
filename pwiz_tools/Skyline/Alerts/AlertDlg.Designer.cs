@@ -29,12 +29,17 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AlertDlg));
+            this.lowerPanel = new System.Windows.Forms.Panel();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.toolStripButtonCopy = new System.Windows.Forms.ToolStripButton();
             this.buttonPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.btnMoreInfo = new System.Windows.Forms.Button();
             this.splitContainer = new System.Windows.Forms.SplitContainer();
             this.messageScrollPanel = new System.Windows.Forms.Panel();
             this.labelMessage = new System.Windows.Forms.Label();
             this.tbxDetail = new System.Windows.Forms.TextBox();
+            this.lowerPanel.SuspendLayout();
+            this.toolStrip1.SuspendLayout();
             this.buttonPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
             this.splitContainer.Panel1.SuspendLayout();
@@ -42,6 +47,34 @@
             this.splitContainer.SuspendLayout();
             this.messageScrollPanel.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // lowerPanel
+            // 
+            this.lowerPanel.BackColor = System.Drawing.SystemColors.Control;
+            this.lowerPanel.Controls.Add(this.toolStrip1);
+            this.lowerPanel.Controls.Add(this.buttonPanel);
+            resources.ApplyResources(this.lowerPanel, "lowerPanel");
+            this.lowerPanel.Name = "lowerPanel";
+            // 
+            // toolStrip1
+            // 
+            this.toolStrip1.CanOverflow = false;
+            resources.ApplyResources(this.toolStrip1, "toolStrip1");
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripButtonCopy});
+            this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.Table;
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
+            // 
+            // toolStripButtonCopy
+            // 
+            this.toolStripButtonCopy.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonCopy.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.toolStripButtonCopy.Image = global::pwiz.Skyline.Properties.Resources.Copy;
+            resources.ApplyResources(this.toolStripButtonCopy, "toolStripButtonCopy");
+            this.toolStripButtonCopy.Name = "toolStripButtonCopy";
+            this.toolStripButtonCopy.Click += new System.EventHandler(this.toolStripButtonCopy_Click);
             // 
             // buttonPanel
             // 
@@ -67,7 +100,7 @@
             // 
             this.splitContainer.Panel1.BackColor = System.Drawing.SystemColors.Window;
             this.splitContainer.Panel1.Controls.Add(this.messageScrollPanel);
-            this.splitContainer.Panel1.Controls.Add(this.buttonPanel);
+            this.splitContainer.Panel1.Controls.Add(this.lowerPanel);
             // 
             // splitContainer.Panel2
             // 
@@ -104,6 +137,10 @@
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MessageDlg_KeyDown);
+            this.lowerPanel.ResumeLayout(false);
+            this.lowerPanel.PerformLayout();
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
             this.buttonPanel.ResumeLayout(false);
             this.splitContainer.Panel1.ResumeLayout(false);
             this.splitContainer.Panel2.ResumeLayout(false);
@@ -118,11 +155,14 @@
 
         #endregion
 
+        private System.Windows.Forms.Panel lowerPanel;
         private System.Windows.Forms.FlowLayoutPanel buttonPanel;
         private System.Windows.Forms.Button btnMoreInfo;
         private System.Windows.Forms.SplitContainer splitContainer;
         private System.Windows.Forms.TextBox tbxDetail;
         private System.Windows.Forms.Panel messageScrollPanel;
         private System.Windows.Forms.Label labelMessage;
+        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripButton toolStripButtonCopy;
     }
 }
