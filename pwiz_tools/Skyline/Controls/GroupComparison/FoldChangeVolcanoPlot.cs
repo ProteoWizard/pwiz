@@ -218,8 +218,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
 
             zedGraphControl.GraphPane.AxisChangeEvent -= GraphPane_AxisChangeEvent;
-            _bindingListSource.AllRowsChanged -= BindingListSourceAllRowsChanged;
-            _bindingListSource.ListChanged -= BindingListSourceOnListChanged;
+
+            if (_bindingListSource != null)
+            {
+                _bindingListSource.AllRowsChanged -= BindingListSourceAllRowsChanged;
+                _bindingListSource.ListChanged -= BindingListSourceOnListChanged;
+            }
 
             UpdateFilter(false);
 
@@ -288,7 +292,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         // ReSharper disable PossibleMultipleEnumeration
         private void UpdateGraph()
         {
-            if (!IsHandleCreated)
+            if (!IsHandleCreated || _bindingListSource == null)
                 return;
             
             zedGraphControl.GraphPane.GraphObjList.Clear();
@@ -793,7 +797,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private bool UpdateFilter(bool filter)
         {
-            if (!IsHandleCreated)
+            if (!IsHandleCreated || _bindingListSource == null)
                 return false;
 
             if (!_bindingListSource.IsComplete)

@@ -55,6 +55,7 @@ lib IdpSqlExtensions
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>static
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry/<link>static
         <link>shared
+        #<debug-symbols>on
     : # default-build
     : # usage-requirements
         <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp/<link>static
@@ -110,10 +111,10 @@ lib Qonverter
 import path ;
 import generate-version ;
 
-generate-version.cpp $(IDPICKER_PATH)/Qonverter/CoreVersion.cpp : IDPicker : $(MAJOR) : $(MINOR) : [ path.glob $(IDPICKER_PATH)/Qonverter : *.?pp *.h : idp*.cpp Version.cpp ] ;
-generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpQonvertVersion.cpp : idpQonvert : $(MAJOR) : $(MINOR) : $(IDPICKER_PATH)/Qonverter/idpQonvert.cpp ;
-generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpAssembleVersion.cpp : idpAssemble : $(MAJOR) : $(MINOR) : $(IDPICKER_PATH)/Qonverter/idpAssemble.cpp ;
-generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpQueryVersion.cpp : idpQuery : $(MAJOR) : $(MINOR) : $(IDPICKER_PATH)/Qonverter/idpQuery.cpp ;
+generate-version.cpp $(IDPICKER_PATH)/Qonverter/CoreVersion.cpp : IDPicker : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpQonvertVersion.cpp : idpQonvert : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpAssembleVersion.cpp : idpAssemble : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(IDPICKER_PATH)/Qonverter/idpQueryVersion.cpp : idpQuery : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
 
 obj CoreVersion : CoreVersion.cpp ;
 
@@ -138,7 +139,7 @@ unit-test QonverterTest : QonverterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATI
 unit-test EmbedderTest : EmbedderTest.cpp Qonverter $(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata_examples $(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata : $(TEAMCITY_TEST_DECORATION) <dependency>gene2protein.db3 ;
 unit-test FilterTest : FilterTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
 unit-test LoggerTest : LoggerTest.cpp Qonverter : $(TEAMCITY_TEST_DECORATION) ;
-doctest EmbedderDoctest : Embedder.cpp : <library>Qonverter  $(TEAMCITY_TEST_DECORATION) ;
+doctest EmbedderDoctest : Embedder.cpp : <library>Qonverter $(TEAMCITY_TEST_DECORATION) <dependency>gene2protein.db3/<location-prefix>doctest ;
 
 path-constant TEST_DATA_PATH : ../TestData ;
 run CommandlineTest.cpp

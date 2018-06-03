@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
@@ -330,12 +331,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [InvariantDisplayName("PeptideDocumentLocation")]
+        [Obsolete]
         public DocumentLocation DocumentLocation
         {
             get
             {
                 return new DocumentLocation(IdentityPath.ToGlobalIndexList());
             }
+        }
+
+        [InvariantDisplayName("PeptideLocator")]
+        public string Locator
+        {
+            get { return GetLocator(); }
         }
 
         public double? InternalStandardConcentration
@@ -372,6 +380,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                         DataSchema.SkylineWindow.SelectedPath = IdentityPath;
                     }
                 });
+            }
+        }
+
+        public FiguresOfMerit FiguresOfMerit
+        {
+            get
+            {
+                CalibrationCurveFitter calibrationCurveFitter = GetCalibrationCurveFitter();
+                var calibrationCurve = calibrationCurveFitter.GetCalibrationCurve();
+                return calibrationCurveFitter.GetFiguresOfMerit(calibrationCurve);
             }
         }
 
@@ -422,5 +440,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return IsSmallMolecule() ? DocNode.CustomMolecule.AccessionNumbers.GetSMILES() ?? string.Empty : string.Empty; }
         }
 
+        protected override NodeRef NodeRefPrototype
+        {
+            get { return MoleculeRef.PROTOTYPE; }
+        }
     }
 }

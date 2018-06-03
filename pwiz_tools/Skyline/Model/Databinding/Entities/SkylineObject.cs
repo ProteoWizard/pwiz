@@ -20,6 +20,7 @@
 using System;
 using System.ComponentModel;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.ElementLocators;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -36,6 +37,21 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         protected SrmDocument SrmDocument
         {
             get { return DataSchema.Document; }
+        }
+
+        public virtual ElementRef GetElementRef()
+        {
+            return null;
+        }
+
+        public string GetLocator()
+        {
+            var elementRef = GetElementRef();
+            if (elementRef == null)
+            {
+                return null;
+            }
+            return elementRef.ToString();
         }
 
         public virtual object GetAnnotation(AnnotationDef annotationDef)

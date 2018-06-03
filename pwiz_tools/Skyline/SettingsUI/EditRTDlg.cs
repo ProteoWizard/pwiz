@@ -311,6 +311,8 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public int PeptideCount { get { return Peptides.Count; } }
+
         private SortableBindingList<MeasuredPeptide> Peptides { get { return _gridViewDriver.Items; } }
 
         private IList<MeasuredRetentionTime> GetTablePeptides()

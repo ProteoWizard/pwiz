@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Alerts
 
         private void linkProteoWizard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(this, "http://proteowizard.sourceforge.net/"); // Not L10N
+            WebHelpers.OpenLink(this, "https://github.com/ProteoWizard"); // Not L10N
         }
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

@@ -28,7 +28,8 @@ runQC <- function() {
 
 	raw <- read.csv(arguments[1])
 	
-	if( !is.element(c('DetectionQValue'), colnames(raw)) ){
+	if( !is.element(c('DetectionQValue'), colnames(raw)) | 
+	    !is.element(c('Detection.Q.Value'), colnames(raw))){
 	    filter.qvalue <- FALSE
 	} else {
 	    filter.qvalue <- TRUE
@@ -36,19 +37,21 @@ runQC <- function() {
 
 	## remove the rows for iRT peptides
 	raw <- SkylinetoMSstatsFormat(raw,
+	                              removeProtein_with1Feature = TRUE,
 	                              filter_with_Qvalue = filter.qvalue)
 
 	## get standard protein name from StandardType column
+	## select 'global standard' but, after process, it becomes Normalization??
 	standardpepname <- ""
-	if(sum(unique(raw$StandardType) %in% "Global Standard") !=0 ){
-		standardpepname <- as.character(unique(raw[raw$StandardType == "Global Standard", "PeptideModifiedSequence"]))
+	if(sum(unique(raw$StandardType) %in% c("Normalization", "Global Standard")) !=0 ){
+		standardpepname <- as.character(unique(raw[raw$StandardType %in% c("Normalization", "Global Standard"), "PeptideSequence"]))
 	}
-
-
+  
 	## check result grid missing or not
 	countna<-apply(raw, 2, function(x) sum(is.na(x) | x == ""))
 	naname<-names(countna[countna != 0])
-	naname<-naname[-which(naname %in% c("StandardType", "Intensity", "Truncated"))]
+	naname<-naname[-which(naname %in% c("StandardType", "Intensity", "Truncated",
+	                                    "FragmentIon", "ProductCharge"))]
 
 	if(length(naname) != 0){
 		stop(message(paste("Some ", paste(naname, collapse=", "), " have no value. Please check \"Result Grid\" in View. \n", sep="")))
@@ -105,7 +108,14 @@ runQC <- function() {
 	inputremoveproteins <- arguments[5]
 
 
-	quantData <- try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname,  fillIncompleteRows=(inputmissingpeaks=="TRUE"), featureSubset=input_feature_selection, remove_proteins_with_interference=(inputremoveproteins=="TRUE"), summaryMethod = "TMP", censoredInt="0", skylineReport=TRUE))
+	quantData <- try(dataProcess(raw, 
+	                             normalization=inputnormalize, 
+	                             nameStandards=standardpepname,  
+	                             fillIncompleteRows=(inputmissingpeaks=="TRUE"), 
+	                             featureSubset=input_feature_selection, 
+	                             remove_noninformative_feature_outlier=(inputremoveproteins=="TRUE"), 
+	                             summaryMethod = "TMP", 
+	                             censoredInt="0"))
 
 	if (class(quantData) != "try-error") {
 
@@ -134,13 +144,17 @@ runQC <- function() {
 		cat("\n\n =======================================")
 		cat("\n ** Generating dataProcess Plots..... \n \n")
 
-		dataProcessPlots(data=quantData, type="ProfilePlot", address="", width=as.numeric(arguments[6]), height=as.numeric(arguments[7]))
+		dataProcessPlots(data=quantData, type="ProfilePlot", 
+		                 address="", width=as.numeric(arguments[6]), height=as.numeric(arguments[7]))
 		cat("\n Saved ProfilePlot.pdf \n \n")
 
-		dataProcessPlots(data=quantData, type="QCPlot", address="", width=as.numeric(arguments[6]), height=as.numeric(arguments[7]))
+		dataProcessPlots(data=quantData, type="QCPlot",
+		                 which.Protein = 'allonly',
+		                 address="", width=as.numeric(arguments[6]), height=as.numeric(arguments[7]))
 		cat("\n Saved QCPlot.pdf \n \n")
 
-		dataProcessPlots(data=quantData, type="ConditionPlot", address="")
+		dataProcessPlots(data=quantData, type="ConditionPlot", 
+		                 address="")
 		cat("\n Saved ConditionPlot.pdf \n ")
 	}
 }

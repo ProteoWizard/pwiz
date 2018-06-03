@@ -42,7 +42,7 @@ namespace AutoQC
                 ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
                 : "";
             form.Text = string.Format("AutoQC Loader {0}", VERSION);
-            // form.Text = string.Format("AutoQC Loader-daily {0}", version);
+            // form.Text = string.Format("AutoQC Loader-daily {0}", VERSION);
 
             //Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
             //Console.WriteLine("Local user config path: {0}", config.FilePath);

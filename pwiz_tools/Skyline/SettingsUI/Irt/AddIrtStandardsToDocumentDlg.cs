@@ -18,10 +18,11 @@
  */
 using System;
 using System.Windows.Forms;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
-    public partial class AddIrtStandardsToDocumentDlg : Form
+    public partial class AddIrtStandardsToDocumentDlg : FormEx
     {
         public int NumTransitions
         {

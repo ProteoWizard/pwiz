@@ -20,7 +20,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading;
 
 namespace AutoQC
@@ -303,6 +302,11 @@ namespace AutoQC
         {
             CheckDrive();
 
+            if (!Directory.Exists(_fileWatcher.Path))
+            {
+                throw new FileWatcherException(string.Format("Folder does not exist {0}. Configuration \"{1}\"", _fileWatcher.Path, _configName));
+            }
+
             if (_dataFiles.IsEmpty)
             {
                 return null;
@@ -312,14 +316,14 @@ namespace AutoQC
             _dataFiles.TryDequeue(out filePath);
             return filePath;
         }
-
+        
         public void CheckDrive()
         {  
             if (!_driveInfo.IsNetworkDrive())
             {
                 if (_fileWatcherError != null)
                 {
-                    throw new FileWatcherException(string.Format("There was an error watching the folder {0}. Config {1}", _fileWatcher.Path, _configName),
+                    throw new FileWatcherException(string.Format("There was an error watching the folder {0}. Configuration \"{1}\"", _fileWatcher.Path, _configName),
                         _fileWatcherError.GetException());
                 }
                 return;
@@ -330,13 +334,7 @@ namespace AutoQC
             // even after the connection is re-established.
             try
             {
-                bool reconnected;
-                NetworkDriveUtil.EnsureDrive(_driveInfo, _logger, out reconnected, _configName);
-                if (reconnected)
-                {
-                    RestartFileWatcher();
-                    return;
-                }
+                TryConnect(DateTime.Now);
             }
             catch (FileWatcherException)
             {
@@ -344,7 +342,7 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                throw new FileWatcherException("Error connecting to network drive.", e);  
+                throw new FileWatcherException(string.Format("Error connecting to network drive. Message was: {0}.", e.Message), e);  
             }
 
             if (_fileWatcherError != null)
@@ -353,6 +351,7 @@ namespace AutoQC
                 // it means another config watching a folder on the same mapped drive re-mapped the drive.
                 if (Directory.Exists(_fileWatcher.Path))
                 {
+                    Program.LogInfo(string.Format("Restarting file watcher for configuration \"{0}\".", _configName));
                     RestartFileWatcher();
                 }
                 else
@@ -363,6 +362,33 @@ namespace AutoQC
             }
         }
 
+        private bool TryConnect(DateTime startTime)
+        {
+            if (startTime.AddHours(1) < DateTime.Now)
+            {
+                throw new FileWatcherException(string.Format("Unable to connect to network drive for 1 hour. Network Drive: {0}. Configuration \"{1}\".", _driveInfo, _configName));   
+            }
+
+            bool reconnected;
+            var driveAvailable = NetworkDriveUtil.EnsureDrive(_driveInfo, _logger, out reconnected, _configName);
+
+            if (!driveAvailable)
+            {
+                // keep trying every 1 minute for a hour or until the drive is available again.  
+                Thread.Sleep(TimeSpan.FromMinutes(1));
+
+                TryConnect(startTime);
+            }
+
+            if (reconnected)
+            {
+                Program.LogInfo(string.Format("Re-connected drive {0} for configuration \"{1}\".  Restarting file watcher.", _driveInfo,
+                    _configName));
+                RestartFileWatcher();
+            }
+            return true;
+        }
+
         private void RestartFileWatcher()
         {
             try
@@ -371,7 +397,7 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                throw new FileWatcherException(string.Format("Error restarting file watcher for config {0}", _configName), e);
+                throw new FileWatcherException(string.Format("Error restarting file watcher for configuration \"{0}\"", _configName), e);
             }   
         }
 
@@ -538,10 +564,7 @@ namespace AutoQC
             {
                 return string.Format("DriveLetter: {0}; Path: {1}", DriveLetter, NetworkDrivePath);
             }
-            else
-            {
-                return string.Format("DriveLetter: {0}", DriveLetter);  
-            }
+            return string.Format("DriveLetter: {0}", DriveLetter);
         }
     }
 }

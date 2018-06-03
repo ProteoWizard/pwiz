@@ -67,7 +67,7 @@ namespace IDPicker.Forms
                 var mods = new Dictionary<int, List<double>>();
                 if (!String.IsNullOrEmpty((string) queryRow[3]))
                 {
-                    var offsetMassDeltaPairs = ((string) queryRow[3]).Split(',');
+                    var offsetMassDeltaPairs = ((string) queryRow[3]).Split(Properties.Settings.Default.GroupConcatSeparator[0]);
                     foreach (var pair in offsetMassDeltaPairs)
                     {
                         var offsetAndMassDelta = pair.Split(':');

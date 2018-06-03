@@ -164,9 +164,6 @@ namespace tagrecon
         if( g_pid == 0 )
         {
           cout << "TagRecon " << Version::str() << " (" << Version::LastModified() << ")\n" <<
-                  "FreiCore " << freicore::Version::str() << " (" << freicore::Version::LastModified() << ")\n" <<
-                  "ProteoWizard MSData " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")\n" <<
-                  "ProteoWizard Proteome " << pwiz::proteome::Version::str() << " (" << pwiz::proteome::Version::LastModified() << ")\n" <<
                     TAGRECON_LICENSE << endl;
         }
 

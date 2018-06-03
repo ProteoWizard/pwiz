@@ -13,6 +13,7 @@
     <column name="Results!*.Value.Area" />
     <column name="Precursor.Peptide.StandardType" />
     <column name="Results!*.Value.Truncated" />
+    <column name="Results!*.Value.PrecursorResult.DetectionQValue" />
     <filter column="Results!*.Value" opname="isnotnullorblank" />
     <filter column="Precursor.IsDecoy" opname="&lt;&gt;" operand="True" />
   </view>

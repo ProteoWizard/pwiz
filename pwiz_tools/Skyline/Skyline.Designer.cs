@@ -287,6 +287,7 @@ namespace pwiz.Skyline
             this.importAssayLibraryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importMassListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importDocumentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importAnnotationsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportTransitionListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportIsolationListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -299,6 +300,7 @@ namespace pwiz.Skyline
             this.chromatogramsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mProphetFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chorusRequestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportAnnotationsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mruBeforeToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.mruAfterToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.exitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -461,6 +463,7 @@ namespace pwiz.Skyline
             this.editGroupComparisonListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resultsGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.documentGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.auditLogMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
             this.toolBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2295,7 +2298,8 @@ namespace pwiz.Skyline
             this.importFASTAMenuItem,
             this.importAssayLibraryMenuItem,
             this.importMassListMenuItem,
-            this.importDocumentMenuItem});
+            this.importDocumentMenuItem,
+            this.importAnnotationsMenuItem});
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
             resources.ApplyResources(this.importToolStripMenuItem, "importToolStripMenuItem");
             // 
@@ -2351,6 +2355,12 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.importDocumentMenuItem, "importDocumentMenuItem");
             this.importDocumentMenuItem.Click += new System.EventHandler(this.importDocumentMenuItem_Click);
             // 
+            // importAnnotationsMenuItem
+            // 
+            this.importAnnotationsMenuItem.Name = "importAnnotationsMenuItem";
+            resources.ApplyResources(this.importAnnotationsMenuItem, "importAnnotationsMenuItem");
+            this.importAnnotationsMenuItem.Click += new System.EventHandler(this.importAnnotationsMenuItem_Click);
+            // 
             // exportToolStripMenuItem
             // 
             this.exportToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -2364,7 +2374,8 @@ namespace pwiz.Skyline
             this.exportSpectralLibraryMenuItem,
             this.chromatogramsToolStripMenuItem,
             this.mProphetFeaturesMenuItem,
-            this.chorusRequestToolStripMenuItem});
+            this.chorusRequestToolStripMenuItem,
+            this.exportAnnotationsMenuItem});
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
             resources.ApplyResources(this.exportToolStripMenuItem, "exportToolStripMenuItem");
             // 
@@ -2431,6 +2442,12 @@ namespace pwiz.Skyline
             this.chorusRequestToolStripMenuItem.Name = "chorusRequestToolStripMenuItem";
             resources.ApplyResources(this.chorusRequestToolStripMenuItem, "chorusRequestToolStripMenuItem");
             this.chorusRequestToolStripMenuItem.Click += new System.EventHandler(this.chorusRequestToolStripMenuItem_Click);
+            // 
+            // exportAnnotationsMenuItem
+            // 
+            this.exportAnnotationsMenuItem.Name = "exportAnnotationsMenuItem";
+            resources.ApplyResources(this.exportAnnotationsMenuItem, "exportAnnotationsMenuItem");
+            this.exportAnnotationsMenuItem.Click += new System.EventHandler(this.exportAnnotationsMenuItem_Click);
             // 
             // mruBeforeToolStripSeparator
             // 
@@ -2936,6 +2953,7 @@ namespace pwiz.Skyline
             this.groupComparisonsMenuItem,
             this.resultsGridMenuItem,
             this.documentGridMenuItem,
+            this.auditLogMenuItem,
             this.toolStripSeparator36,
             this.toolBarToolStripMenuItem,
             this.statusToolStripMenuItem});
@@ -3580,6 +3598,12 @@ namespace pwiz.Skyline
             this.documentGridMenuItem.Name = "documentGridMenuItem";
             resources.ApplyResources(this.documentGridMenuItem, "documentGridMenuItem");
             this.documentGridMenuItem.Click += new System.EventHandler(this.documentGridMenuItem_Click);
+            // 
+            // auditLogMenuItem
+            // 
+            this.auditLogMenuItem.Name = "auditLogMenuItem";
+            resources.ApplyResources(this.auditLogMenuItem, "auditLogMenuItem");
+            this.auditLogMenuItem.Click += new System.EventHandler(this.auditLogMenuItem_Click);
             // 
             // toolStripSeparator36
             // 
@@ -4540,6 +4564,9 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem graphTypeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem barAreaGraphDisplayTypeMenuItem;
         private System.Windows.Forms.ToolStripMenuItem lineAreaGraphDisplayTypeMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportAnnotationsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importAnnotationsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem auditLogMenuItem;
     }
 }
 

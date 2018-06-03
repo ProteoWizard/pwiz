@@ -62,7 +62,7 @@ string usage(const Config& config)
 
     oss << endl
         << "Questions, comments, and bug reports:\n"
-        << "http://proteowizard.sourceforge.net\n"
+        << "https://github.com/ProteoWizard\n"
         << "support@proteowizard.org\n"
         << "\n"
         << "Build date: " << __DATE__ << " " << __TIME__ << endl;

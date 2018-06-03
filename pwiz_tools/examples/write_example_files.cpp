@@ -106,7 +106,7 @@ int main()
         writeTiny();
         writeSmall();
 
-        cout << "\nhttp://proteowizard.sourceforge.net\n"
+        cout << "\nhttps://github.com/ProteoWizard\n"
              << "support@proteowizard.org\n";
 
         return 0;

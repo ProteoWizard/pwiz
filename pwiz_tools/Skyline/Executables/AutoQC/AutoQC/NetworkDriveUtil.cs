@@ -12,16 +12,25 @@ namespace AutoQC
     {
         private static readonly object LOCK = new object();
 
-        public static void EnsureDrive(DriveInfo driveInfo, IAutoQcLogger logger, out bool reconnected, string configName)
+        public static bool EnsureDrive(DriveInfo driveInfo, IAutoQcLogger logger, out bool reconnected, string configName)
         {
             // Do we need a lock here? Don't want two configurations, on the same mapped (disconnected) drive, 
             // to try to re-map the drive.
             lock (LOCK)
             {
-                if (Directory.Exists(driveInfo.DriveLetter + Path.DirectorySeparatorChar))
+                // Program.LogInfo(string.Format("Checking drive {0} for config {1}", driveInfo, configName)); // TODO - debug
+
+                if (IsDriveAvailable(driveInfo, configName))
                 {
                     reconnected = false;
-                    return; // Drive root already exists.
+                    return true; // Drive root already exists.
+                }
+
+                if (!driveInfo.IsNetworkDrive())
+                {
+                    Program.LogInfo(string.Format("Unable to connect to drive {0}. Config: {1}", driveInfo.DriveLetter, configName));
+                    reconnected = false;
+                    return false;
                 }
 
                 // TODO: Do we need to unmount first? 
@@ -39,20 +48,43 @@ namespace AutoQC
                         process.WaitForExit();
                     }
 
-                    if (Directory.Exists(driveInfo.DriveLetter + Path.DirectorySeparatorChar))
+                    Program.LogInfo(string.Format("After attempting to reconnect.. {0}. Config: {1}", driveInfo.DriveLetter, configName));
+
+                    if(IsDriveAvailable(driveInfo, configName))
                     {
                         reconnected = true;
                         logger.Log(
                             string.Format(
                                 "Network drive was temporarily disconnected. Successfully remapped network drive {0}. Config: {1}",
                                 driveInfo, configName));
-                        return;
+                        return true;
                     }
                 }
 
-                throw new FileWatcherException(
-                    string.Format("Unable to connect to drive {0}. Config: {1}", driveInfo, configName));
+                Program.LogInfo(string.Format("Unable to connect to network drive {0}. Config: {1}", driveInfo.DriveLetter, configName));
+                reconnected = false;
+                return false;
             }
+        }
+
+        private static bool IsDriveAvailable(DriveInfo driveInfo, string configName)
+        {
+            if (!driveInfo.IsNetworkDrive())
+            {
+                return true;
+            }
+            
+            var drives = System.IO.DriveInfo.GetDrives();
+            foreach (var drive in drives)
+            {
+                if (drive.Name.StartsWith(driveInfo.DriveLetter) && drive.IsReady)
+                {
+                    // Program.LogInfo(string.Format("Network Drive is mapped {0}. Config: {1}", driveInfo.DriveLetter, configName)); // TODO - remove
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static string ReadNetworkDrivePath(string driveLetter)
@@ -92,7 +124,7 @@ namespace AutoQC
                     return Convert.ToString(mo["ProviderName"]);
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return null;
             }

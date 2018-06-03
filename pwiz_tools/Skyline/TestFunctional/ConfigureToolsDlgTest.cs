@@ -311,7 +311,7 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.RunTool(0);                                               
                 });
             string reportText =
-                "PeptideSequence,ProteinName,ReplicateName,PredictedRetentionTime,PeptideRetentionTime,PeptidePeakFoundRatio"; // Not L10N
+                "Peptide,Protein,Replicate,PredictedRetentionTime,PeptideRetentionTime,PeptidePeakFoundRatio"; // Not L10N
             WaitForConditionUI(30*1000, () => SkylineWindow.ImmediateWindow != null);
             WaitForConditionUI(() =>
             {
@@ -324,7 +324,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.RunTool(1);
             });
             string reportText1 =
-                "PeptideSequence,ProteinName,ReplicateName,PrecursorMz,PrecursorCharge,ProductMz,ProductCharge,FragmentIon,RetentionTime,Area,Background,PeakRank"; // Not L10N
+                "Peptide,Protein,Replicate,PrecursorMz,PrecursorCharge,ProductMz,ProductCharge,FragmentIon,RetentionTime,Area,Background,PeakRank"; // Not L10N
             string actualText=String.Empty;
             if (!TryWaitForConditionUI(() => (actualText=SkylineWindow.ImmediateWindow.TextContent).Contains(reportText1)))
             {

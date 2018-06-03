@@ -1023,6 +1023,15 @@ namespace pwiz.Skyline.Util
             _blocks = items.GetBlocks().ToList();
         }
 
+        public static BlockedArray<TItem> Convert<TItemSrc>(BlockedArrayList<TItemSrc> blockedArrayList,
+            Func<TItemSrc, TItem> converter)
+        {
+            return new BlockedArray<TItem>(blockedArrayList.GetBlocks()
+                .Select(block => block.Select(converter).ToArray())
+                .ToList(),
+                blockedArrayList.Count);
+        }
+
         private BlockedArray(List<TItem[]> blocks, int itemCount)
         {
             _itemCount = itemCount;

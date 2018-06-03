@@ -29,12 +29,16 @@
 #include "IdpSqlExtensions.hpp"
 #include "boost/crc.hpp"
 #include "boost/range/algorithm/sort.hpp"
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/framework/accumulator_set.hpp>
+#include "../../freicore/percentile.hpp"
 #include "sqlite3ext.h" /* Do not use <sqlite3.h>! */
 #include "sqlite3pp.h"
 SQLITE_EXTENSION_INIT1
 
 using namespace pwiz::util;
 namespace sqlite = sqlite3pp;
+namespace accs = boost::accumulators;
 
 
 namespace {
@@ -99,6 +103,117 @@ namespace {
                 pThis = new DistinctDoubleArraySum(0);
 
             sqlite3_result_blob(context, pThis->result.empty() ? NULL : &pThis->result[0], pThis->result.size() * sizeof(double), SQLITE_TRANSIENT);
+
+            delete pThis;
+        }
+    };
+
+
+    struct DistinctDoubleArrayMean
+    {
+        typedef DistinctDoubleArrayMean MyType;
+        set<int> arrayIds;
+        vector<double> result;
+        boost::crc_32_type crc32;
+
+        DistinctDoubleArrayMean(int arrayLength) : result((size_t)arrayLength, 0.0) {}
+
+        static void Step(sqlite3_context* context, int numValues, sqlite3_value** values)
+        {
+            DistinctDoubleArraySum::Step(context, numValues, values);
+        }
+
+        static void Final(sqlite3_context* context)
+        {
+            void* aggContext = sqlite3_aggregate_context(context, 0);
+            if (aggContext == NULL)
+                throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
+
+            MyType** ppThis = static_cast<MyType**>(aggContext);
+            MyType*& pThis = *ppThis;
+
+            if (pThis == NULL)
+                pThis = new DistinctDoubleArrayMean(0);
+
+            // divide sum by number of elements
+            if (!pThis->result.empty())
+                for (auto& r : pThis->result)
+                    r /= pThis->arrayIds.size();
+
+            sqlite3_result_blob(context, pThis->result.empty() ? NULL : &pThis->result[0], pThis->result.size() * sizeof(double), SQLITE_TRANSIENT);
+
+            delete pThis;
+        }
+    };
+
+    struct DistinctDoubleArrayMedian
+    {
+        typedef DistinctDoubleArrayMedian MyType;
+        typedef accs::accumulator_set<double, accs::stats<accs::tag::percentile> > MedianAccumulator;
+        set<int> arrayIds;
+        vector<MedianAccumulator> medianAccumulators;
+        boost::crc_32_type crc32;
+
+        DistinctDoubleArrayMedian(int arrayLength) : medianAccumulators((size_t)arrayLength) {}
+
+        static void Step(sqlite3_context* context, int numValues, sqlite3_value** values)
+        {
+            void* aggContext = sqlite3_aggregate_context(context, sizeof(MyType*));
+            if (aggContext == NULL)
+                throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
+
+            MyType** ppThis = static_cast<MyType**>(aggContext);
+            MyType*& pThis = *ppThis;
+
+            if (numValues > 1 || values[0] == NULL)
+                return;
+
+            int arrayByteCount = sqlite3_value_bytes(values[0]);
+            int arrayLength = arrayByteCount / 8;
+            const char* arrayBytes = static_cast<const char*>(sqlite3_value_blob(values[0]));
+            if (arrayBytes == NULL)
+                return;
+
+            if (arrayByteCount % 8 > 0)
+                throw runtime_error("distinct_double_array_sum only works with BLOBs of double precision floats");
+
+            if (pThis == NULL)
+                pThis = new DistinctDoubleArrayMedian(arrayLength);
+            else
+                pThis->crc32.reset();
+
+            // if the arrayId was already in the set, ignore its values
+            pThis->crc32.process_bytes(arrayBytes, arrayByteCount);
+            int arrayId = pThis->crc32.checksum();
+            if (!pThis->arrayIds.insert(arrayId).second)
+                return;
+
+            const double* arrayValues = reinterpret_cast<const double*>(arrayBytes);
+
+            for (int i = 0; i < arrayLength; ++i)
+                (pThis->medianAccumulators[i])(arrayValues[i]);
+        }
+
+        static void Final(sqlite3_context* context)
+        {
+            void* aggContext = sqlite3_aggregate_context(context, 0);
+            if (aggContext == NULL)
+                throw runtime_error(sqlite3_errmsg(sqlite3_context_db_handle(context)));
+
+            MyType** ppThis = static_cast<MyType**>(aggContext);
+            MyType*& pThis = *ppThis;
+
+            if (pThis == NULL)
+                pThis = new DistinctDoubleArrayMedian(0);
+
+            // divide sum by number of elements
+            vector<double> result;
+            result.reserve(pThis->medianAccumulators.size());
+            if (!pThis->medianAccumulators.empty())
+                for (auto& acc : pThis->medianAccumulators)
+                    result.push_back(accs::percentile(acc, accs::percentile_number = 50));
+
+            sqlite3_result_blob(context, result.empty() ? NULL : &result[0], result.size() * sizeof(double), SQLITE_TRANSIENT);
 
             delete pThis;
         }
@@ -316,6 +431,57 @@ namespace {
 
     string GroupConcatEx::separator_ = ",";
 
+    void SortUnmappedLast(sqlite3_context* context, int numValues, sqlite3_value** values)
+    {
+        if (numValues != 1)
+        {
+            sqlite3_result_error(context, "[SORT_UNMAPPED_LAST] requires 1 text argument", -1);
+            return;
+        }
+
+        if (values[0] == NULL)
+        {
+            sqlite3_result_null(context);
+            return;
+        }
+
+        const unsigned char* text = sqlite3_value_text(values[0]);
+        auto textRange = boost::make_iterator_range(text, text + sqlite3_value_bytes(values[0]));
+
+        if (textRange.size() < 3 || std::find(textRange.begin(), textRange.end(), GroupConcatEx::separator_[0]) == textRange.end())
+        {
+            sqlite3_result_text(context, (const char*) text, textRange.size(), NULL);
+            return;
+        }
+
+        vector<string> tokens;
+        bal::split(tokens, textRange, bal::is_any_of(GroupConcatEx::separator_));
+
+        std::sort(tokens.begin(), tokens.end(), [&](const string& lhs, const string& rhs)
+        {
+            bool lhsUnmapped = bal::starts_with(lhs, "Unmapped_");
+            bool rhsUnmapped = bal::starts_with(rhs, "Unmapped_");
+            if (lhsUnmapped && rhsUnmapped)
+                return lhs < rhs;
+            if (lhsUnmapped)
+                return false;
+            if (rhsUnmapped)
+                return true;
+            return lhs < rhs;
+        });
+
+        char* result = (char*)sqlite3_malloc(textRange.size()+1);
+        size_t offset = 0;
+        for (const string& token : tokens)
+        {
+            std::copy(token.begin(), token.end(), result + offset);
+            offset += token.length() + 1;
+            result[offset-1] = GroupConcatEx::separator_[0];
+        }
+        result[textRange.size()] = 0;
+
+        sqlite3_result_text(context, result, textRange.size()+1, sqlite3_free);
+    };
 
     /// Automatically choose monoisotopic or average mass error based on the following logic:
     /// if the absolute value of monoisotopic error is less than absolute value of average error
@@ -404,6 +570,8 @@ namespace IDPicker {
 
 PWIZ_API_DECL void setGroupConcatSeparator(const std::string& separator) { GroupConcatEx::separator_ = separator; }
 
+PWIZ_API_DECL const std::string& getGroupConcatSeparator() { return GroupConcatEx::separator_; }
+
 } // IDPicker
 
 
@@ -415,6 +583,8 @@ PWIZ_API_DECL int sqlite3_idpsqlextensions_init(sqlite3 *idpDbConnection, char *
     SQLITE_EXTENSION_INIT2(pApi);
 
     rc += sqlite3_create_function(idpDbConnection, "distinct_double_array_sum", -1, SQLITE_ANY, 0, NULL, &DistinctDoubleArraySum::Step, &DistinctDoubleArraySum::Final);
+    rc += sqlite3_create_function(idpDbConnection, "distinct_double_array_mean", -1, SQLITE_ANY, 0, NULL, &DistinctDoubleArrayMean::Step, &DistinctDoubleArrayMean::Final);
+    rc += sqlite3_create_function(idpDbConnection, "distinct_double_array_median", -1, SQLITE_ANY, 0, NULL, &DistinctDoubleArrayMedian::Step, &DistinctDoubleArrayMedian::Final);
 
     rc += sqlite3_create_function(idpDbConnection, "distinct_double_array_tukey_biweight_average", -1, SQLITE_ANY, 0, NULL, &DistinctTukeyBiweightAverage::Step, &DistinctTukeyBiweightAverage::Final);
 
@@ -424,6 +594,8 @@ PWIZ_API_DECL int sqlite3_idpsqlextensions_init(sqlite3 *idpDbConnection, char *
 
     rc += sqlite3_create_function(idpDbConnection, "group_concat", -1, SQLITE_ANY, 0, NULL, &GroupConcatEx::Step, &GroupConcatEx::Final);
     rc += sqlite3_create_function(idpDbConnection, "group_concat_ex", -1, SQLITE_ANY, 0, NULL, &GroupConcatEx::Step, &GroupConcatEx::Final);
+    
+    rc += sqlite3_create_function(idpDbConnection, "sort_unmapped_last", 1, SQLITE_ANY, 0, &SortUnmappedLast, NULL, NULL);
 
     rc += sqlite3_create_function(idpDbConnection, "get_smaller_mass_error", 2, SQLITE_ANY, 0, &GetSmallerMassError, NULL, NULL);
 

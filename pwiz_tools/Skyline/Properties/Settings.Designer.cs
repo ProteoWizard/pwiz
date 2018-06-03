@@ -1779,6 +1779,18 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AllowLabelOverlap {
+            get {
+                return ((bool)(this["AllowLabelOverlap"]));
+            }
+            set {
+                this["AllowLabelOverlap"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool TestSmallMolecules {
             get {
@@ -2659,6 +2671,30 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["ShowAdvancedVolcanoPlotFormatting"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AuditLogging {
+            get {
+                return ((bool)(this["AuditLogging"]));
+            }
+            set {
+                this["AuditLogging"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string AuditLogView {
+            get {
+                return ((string)(this["AuditLogView"]));
+            }
+            set {
+                this["AuditLogView"] = value;
             }
         }
     }

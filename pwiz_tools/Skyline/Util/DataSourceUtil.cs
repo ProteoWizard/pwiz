@@ -381,5 +381,19 @@ namespace pwiz.Skyline.Util
                 return null;
             return listPaths.ToArray();
         }
+
+        /// <summary>
+        /// If the passed in MsDataFileUri is a multi-sample wiff file, then return a list of
+        /// MsDataFileUri's representing the samples, otherwise, return the MsDataFileUri itself.
+        /// </summary>
+        public static IEnumerable<MsDataFileUri> ListSubPaths(MsDataFileUri msDataFileUri)
+        {
+            var msDataFilePath = msDataFileUri as MsDataFilePath;
+            if (msDataFilePath == null || !IsWiffFile(msDataFilePath.FilePath))
+            {
+                return new[] {msDataFileUri};
+            }
+            return GetWiffSubPaths(msDataFilePath.FilePath);
+        }
     }
 }

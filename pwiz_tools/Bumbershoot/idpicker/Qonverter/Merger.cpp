@@ -64,13 +64,13 @@ namespace {
 
 boost::format mismatchedPeptideMappingSql(
     "DROP TABLE IF EXISTS NewPeptideProteinMapping;\n"
-    "CREATE TEMP TABLE NewPeptideProteinMapping AS SELECT SUBSTR(pd.Sequence, pi.Offset + 1, pi.Length) AS Peptide, COUNT(DISTINCT pro.Accession) AS AccessionCount, pi.Peptide AS NewId\n"
+    "CREATE TEMP TABLE NewPeptideProteinMapping AS SELECT SUBSTR(pd.Sequence, pi.Offset + 1, pi.Length) AS PeptideSequence, COUNT(DISTINCT pro.Accession) AS AccessionCount, pi.Peptide AS NewId\n"
     "FROM %1%.Protein pro\n"
     "JOIN %1%.ProteinData pd ON pi.Protein = pd.Id\n"
     "JOIN %1%.PeptideInstance pi ON pro.Id = pi.Protein\n"
     "GROUP BY pi.Peptide;\n"
     "DROP TABLE IF EXISTS OldPeptideProteinMapping;\n"
-    "CREATE TEMP TABLE OldPeptideProteinMapping AS SELECT SUBSTR(pd.Sequence, pi.Offset + 1, pi.Length) AS Peptide, COUNT(DISTINCT pro.Accession) AS AccessionCount, pi.Peptide AS OldId\n"
+    "CREATE TEMP TABLE OldPeptideProteinMapping AS SELECT SUBSTR(pd.Sequence, pi.Offset + 1, pi.Length) AS PeptideSequence, COUNT(DISTINCT pro.Accession) AS AccessionCount, pi.Peptide AS OldId\n"
     "FROM merged.Protein pro\n"
     "JOIN merged.ProteinData pd ON pi.Protein = pd.Id\n"
     "JOIN merged.PeptideInstance pi ON pro.Id = pi.Protein\n"
@@ -762,16 +762,14 @@ struct Merger::Impl
     {
         if (!skipPeptideMismatchCheck)
         {
-            cout << "checking some shit!" << endl;
             execute(db, mismatchedPeptideMappingSql % mergeSourceDatabase);
-            if (sqlite3pp::query(db, "SELECT COUNT(*) FROM NewPeptideProteinMapping new, OldPeptideProteinMapping old WHERE new.Peptide = old.Peptide AND new.AccessionCount != old.AccessionCount").begin()->get<sqlite3_int64>(0) > 0)
+            if (sqlite3pp::query(db, "SELECT COUNT(*) FROM NewPeptideProteinMapping new, OldPeptideProteinMapping old WHERE new.PeptideSequence = old.PeptideSequence AND new.AccessionCount != old.AccessionCount").begin()->get<sqlite3_int64>(0) > 0)
             {
-                boost::format mismatchedPeptideDetailsSql("SELECT Peptide"
+                boost::format mismatchedPeptideDetailsSql("SELECT new.PeptideSequence"
                                                           ", (SELECT GROUP_CONCAT(DISTINCT Accession) FROM %1%.Protein pro, PeptideInstance pi WHERE NewId=pi.Peptide AND pi.Protein=pro.Id) AS NewAccessions"
                                                           ", (SELECT GROUP_CONCAT(DISTINCT Accession) FROM merged.Protein pro, PeptideInstance pi WHERE OldId=pi.Peptide AND pi.Protein=pro.Id) AS OldAccessions"
-                                                          " FROM NewPeptideProteinMapping new, OldPeptideProteinMapping old WHERE new.Peptide = old.Peptide AND new.AccessionCount != old.AccessionCount GROUP BY new.Peptide");
+                                                          " FROM NewPeptideProteinMapping new, OldPeptideProteinMapping old WHERE new.PeptideSequence = old.PeptideSequence AND new.AccessionCount != old.AccessionCount GROUP BY new.PeptideSequence");
                 sqlite3pp::query mismatchedPeptideDetails(db, (mismatchedPeptideDetailsSql % mergeSourceDatabase).str().c_str());
-                int i = 10;
                 stringstream errorMsg("the same peptide maps to different sets of proteins (which is not allowed); this can be caused by merging idpDBs that were imported with different protein databases, or merging after applying 'Crop Assembly'; for example:\n");
                 errorMsg << "Peptide\tNewAccessions\tOldAccessions\n";
                 for (sqlite3pp::query::rows row : mismatchedPeptideDetails)

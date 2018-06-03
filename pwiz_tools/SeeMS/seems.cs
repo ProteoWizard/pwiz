@@ -45,9 +45,6 @@ namespace seems
 {
 	public partial class seemsForm : Form
 	{
-        public static string Version = "0.5";
-        public static string LastModified = "2/10/2009";
-
 		private bool isLoaded = false;
 		private OpenDataSourceDialog browseToFileDialog;
 

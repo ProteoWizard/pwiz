@@ -21,6 +21,7 @@ using System;
 using System.ComponentModel;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
@@ -121,6 +122,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override string ToString()
         {
             return string.Format("{0:0}", ChromInfo.Area); // Not L10N
+        }
+
+        [InvariantDisplayName("TransitionResultLocator")]
+        public string Locator
+        {
+            get { return GetLocator(); }
+        }
+
+        public override ElementRef GetElementRef()
+        {
+            return TransitionResultRef.PROTOTYPE.ChangeChromInfo(GetResultFile().Replicate.ChromatogramSet, ChromInfo)
+                .ChangeParent(Transition.GetElementRef());
         }
     }
 }

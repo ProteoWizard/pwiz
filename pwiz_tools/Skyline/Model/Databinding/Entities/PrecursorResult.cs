@@ -131,7 +131,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     return null;
                 }
-                return SrmDocument.GetOptimizedCompensationVoltage(Precursor.Peptide.DocNode, Precursor.DocNode);
+                return SrmDocument.GetCompensationVoltage(Precursor.Peptide.DocNode, Precursor.DocNode, ChromInfo.OptimizationStep, covRegression.TuneLevel);
             }
         }
 
@@ -207,5 +207,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return _peptideResult = _peptideResult ?? new PeptideResult(Precursor.Peptide, GetResultFile()); }
         }
+
+        [InvariantDisplayName("PrecursorResultLocator")]
+        public string Locator { get { return GetLocator(); } }
     }
 }

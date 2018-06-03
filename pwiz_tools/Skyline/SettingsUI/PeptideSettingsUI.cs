@@ -115,11 +115,24 @@ namespace pwiz.Skyline.SettingsUI
             string selDT = (Prediction.IonMobilityPredictor == null ? null : Prediction.IonMobilityPredictor.Name);
             _driverDT.LoadList(selDT);
             cbUseSpectralLibraryDriftTimes.Checked = textSpectralLibraryDriftTimesResolvingPower.Enabled = Prediction.UseLibraryIonMobilityValues;
-            if (Prediction.LibraryIonMobilityWindowWidthCalculator != null)
+            var imsWindowCalc = Prediction.LibraryIonMobilityWindowWidthCalculator;
+            if (imsWindowCalc != null)
             {
-                textSpectralLibraryDriftTimesResolvingPower.Text = Prediction.LibraryIonMobilityWindowWidthCalculator.ResolvingPower.ToString(LocalizationHelper.CurrentCulture);
-                textSpectralLibraryDriftTimesWidthAtDt0.Text = Prediction.LibraryIonMobilityWindowWidthCalculator.PeakWidthAtIonMobilityValueZero.ToString(LocalizationHelper.CurrentCulture);
-                textSpectralLibraryDriftTimesWidthAtDtMax.Text = Prediction.LibraryIonMobilityWindowWidthCalculator.PeakWidthAtIonMobilityValueMax.ToString(LocalizationHelper.CurrentCulture);
+                cbLinear.Checked = imsWindowCalc.PeakWidthMode == IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
+                if (cbLinear.Checked)
+                {
+                    textSpectralLibraryDriftTimesResolvingPower.Text = string.Empty;
+                    textSpectralLibraryDriftTimesWidthAtDt0.Text = imsWindowCalc.PeakWidthAtIonMobilityValueZero.ToString(LocalizationHelper.CurrentCulture);
+                    textSpectralLibraryDriftTimesWidthAtDtMax.Text = imsWindowCalc.PeakWidthAtIonMobilityValueMax.ToString(LocalizationHelper.CurrentCulture);
+                }
+                else
+                {
+                    textSpectralLibraryDriftTimesResolvingPower.Text = imsWindowCalc.ResolvingPower != 0
+                        ? imsWindowCalc.ResolvingPower.ToString(LocalizationHelper.CurrentCulture)
+                        : string.Empty;
+                    textSpectralLibraryDriftTimesWidthAtDt0.Text = string.Empty;
+                    textSpectralLibraryDriftTimesWidthAtDtMax.Text = string.Empty;
+                }                
             }
 
             // Initialize filter settings
@@ -180,6 +193,11 @@ namespace pwiz.Skyline.SettingsUI
             comboRegressionFit.SelectedItem = _peptideSettings.Quantification.RegressionFit;
             comboQuantMsLevel.SelectedIndex = Math.Max(0, _quantMsLevels.IndexOf(_peptideSettings.Quantification.MsLevel));
             tbxQuantUnits.Text = _peptideSettings.Quantification.Units;
+
+            comboLodMethod.Items.AddRange(LodCalculation.ALL.Cast<object>().ToArray());
+            comboLodMethod.SelectedItem = _peptideSettings.Quantification.LodCalculation;
+            tbxMaxLoqBias.Text = _peptideSettings.Quantification.MaxLoqBias.ToString();
+            tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
 
             UpdateLibraryDriftPeakWidthControls();
         }
@@ -482,7 +500,33 @@ namespace pwiz.Skyline.SettingsUI
                 .ChangeRegressionWeighting(comboWeighting.SelectedItem as RegressionWeighting)
                 .ChangeRegressionFit(comboRegressionFit.SelectedItem as RegressionFit)
                 .ChangeMsLevel(_quantMsLevels[comboQuantMsLevel.SelectedIndex])
-                .ChangeUnits(tbxQuantUnits.Text);
+                .ChangeUnits(tbxQuantUnits.Text)
+                .ChangeLodCalculation(comboLodMethod.SelectedItem as LodCalculation);
+            if (Equals(quantification.LodCalculation, LodCalculation.TURNING_POINT) &&
+                !Equals(quantification.RegressionFit, RegressionFit.BILINEAR))
+            {
+                MessageDlg.Show(this, Resources.PeptideSettingsUI_ValidateNewSettings_In_order_to_use_the__Bilinear_turning_point__method_of_LOD_calculation___Regression_fit__must_be_set_to__Bilinear__);
+                comboLodMethod.Focus();
+                return null;
+            }
+            if (!string.IsNullOrEmpty(tbxMaxLoqBias.Text.Trim()))
+            {
+                double maxLoqBias;
+                if (!helper.ValidateDecimalTextBox(tbxMaxLoqBias, 0, null, out maxLoqBias))
+                {
+                    return null;
+                }
+                quantification = quantification.ChangeMaxLoqBias(maxLoqBias);
+            }
+            if (!string.IsNullOrEmpty(tbxMaxLoqCv.Text.Trim()))
+            {
+                double maxLoqCv;
+                if (!helper.ValidateDecimalTextBox(tbxMaxLoqCv, 0, null, out maxLoqCv))
+                {
+                    return null;
+                }
+                quantification = quantification.ChangeMaxLoqCv(maxLoqCv);
+            }
 
             return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome)
                     .ChangeAbsoluteQuantification(quantification);
@@ -679,8 +723,11 @@ namespace pwiz.Skyline.SettingsUI
         private void cbUseSpectralLibraryDriftTimes_CheckChanged(object sender, EventArgs e)
         {
             bool enable = cbUseSpectralLibraryDriftTimes.Checked;
+            labelResolvingPower.Enabled =
             textSpectralLibraryDriftTimesResolvingPower.Enabled = enable;
+            labelWidthAtDt0Units.Enabled = labelWidthDtZero.Enabled =
             textSpectralLibraryDriftTimesWidthAtDt0.Enabled = enable;
+            labelWidthAtDtMaxUnits.Enabled = labelWidthDtMax.Enabled =
             textSpectralLibraryDriftTimesWidthAtDtMax.Enabled = enable;
             cbLinear.Enabled = enable;
             // If disabling the text box, and it has content, make sure it is
@@ -1411,6 +1458,37 @@ namespace pwiz.Skyline.SettingsUI
             set { tbxQuantUnits.Text = value; }
         }
 
+        public double? QuantMaxLoqBias
+        {
+            get {
+                if (tbxMaxLoqBias.Text.Trim().Length == 0)
+                {
+                    return null;
+                }
+                return double.Parse(tbxMaxLoqBias.Text.Trim());
+            }
+            set { tbxMaxLoqBias.Text = value.ToString(); }
+        }
+
+        public double? QuantMaxLoqCv
+        {
+            get
+            {
+                if (tbxMaxLoqCv.Text.Trim().Length == 0)
+                {
+                    return null;
+                }
+                return double.Parse(tbxMaxLoqCv.Text.Trim());
+            }
+            set { tbxMaxLoqCv.Text = value.ToString(); }
+        }
+
+        public LodCalculation QuantLodMethod
+        {
+            get { return comboLodMethod.SelectedItem as LodCalculation; }
+            set { comboLodMethod.SelectedItem = value; }
+        }
+
         #endregion
 
         public sealed class LabelTypeComboDriver
@@ -1751,6 +1829,5 @@ namespace pwiz.Skyline.SettingsUI
             cbLinear.Checked = checkedState;
             UpdateLibraryDriftPeakWidthControls();
         }
-
     }
 }

@@ -41,9 +41,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             RegressionFit = RegressionFit.NONE;
             NormalizationMethod = NormalizationMethod.NONE;
             Units = null;
+            LodCalculation = LodCalculation.NONE;
         }
 
+        [Diff]
         public RegressionWeighting RegressionWeighting { get; private set; }
+        [Diff]
         public RegressionFit RegressionFit { get; private set; }
         
         public QuantificationSettings ChangeRegressionWeighting(RegressionWeighting weighting)
@@ -56,6 +59,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.RegressionFit = regressionFit);
         }
 
+        [Diff]
         public NormalizationMethod NormalizationMethod { get; private set; }
 
         public QuantificationSettings ChangeNormalizationMethod(NormalizationMethod normalizationMethod)
@@ -63,6 +67,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.NormalizationMethod = normalizationMethod);
         }
 
+        // TODO: custom localizer for null==all?
+        [Diff]
         public int? MsLevel { get; private set; }
 
         public QuantificationSettings ChangeMsLevel(int? level)
@@ -70,11 +76,35 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.MsLevel = level);
         }
 
+        [Diff]
         public string Units { get; private set; }
 
         public QuantificationSettings ChangeUnits(string units)
         {
             return ChangeProp(ImClone(this), im => im.Units = string.IsNullOrEmpty(units) ? null : units);
+        }
+
+        [Diff]
+        public LodCalculation LodCalculation { get; private set; }
+
+        public QuantificationSettings ChangeLodCalculation(LodCalculation lodCalculation)
+        {
+            return ChangeProp(ImClone(this), im => im.LodCalculation = lodCalculation);
+        }
+
+        [Diff]
+        public double? MaxLoqBias { get; private set; }
+        [Diff]
+        public double? MaxLoqCv { get; private set; }
+
+        public QuantificationSettings ChangeMaxLoqBias(double? maxLoqBias)
+        {
+            return ChangeProp(ImClone(this), im => im.MaxLoqBias = maxLoqBias);
+        }
+
+        public QuantificationSettings ChangeMaxLoqCv(double? maxLoqCv)
+        {
+            return ChangeProp(ImClone(this), im => im.MaxLoqCv = maxLoqCv);
         }
 
         #region Equality Members
@@ -85,7 +115,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                    Equals(RegressionFit, other.RegressionFit) && 
                    Equals(NormalizationMethod, other.NormalizationMethod) &&
                    Equals(MsLevel, other.MsLevel) &&
-                   Equals(Units, other.Units);
+                   Equals(Units, other.Units) &&
+                   Equals(LodCalculation, other.LodCalculation) &&
+                   Equals(MaxLoqBias, other.MaxLoqBias) &&
+                   Equals(MaxLoqCv, other.MaxLoqCv);
         }
 
         public override bool Equals(object obj)
@@ -105,6 +138,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 hashCode = (hashCode*397) ^ NormalizationMethod.GetHashCode();
                 hashCode = (hashCode*397) ^ MsLevel.GetHashCode();
                 hashCode = (hashCode*397) ^ (Units == null ? 0 : Units.GetHashCode());
+                hashCode = (hashCode*397) ^ LodCalculation.GetHashCode();
+                hashCode = (hashCode*397) ^ MaxLoqBias.GetHashCode();
+                hashCode = (hashCode*397) ^ MaxLoqCv.GetHashCode();
                 return hashCode;
             }
         }
@@ -118,7 +154,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             fit,
             normalization,
             ms_level,
-            units
+            units,
+            lod_calculation,
+            max_loq_bias,
+            max_loq_cv,
         }
         XmlSchema IXmlSerializable.GetSchema()
         {
@@ -136,6 +175,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             NormalizationMethod = NormalizationMethod.FromName(reader.GetAttribute(Attr.normalization));
             MsLevel = reader.GetNullableIntAttribute(Attr.ms_level);
             Units = reader.GetAttribute(Attr.units);
+            LodCalculation = LodCalculation.Parse(reader.GetAttribute(Attr.lod_calculation));
+            MaxLoqBias = reader.GetNullableDoubleAttribute(Attr.max_loq_bias);
+            MaxLoqCv = reader.GetNullableDoubleAttribute(Attr.max_loq_cv);
             bool empty = reader.IsEmptyElement;
             reader.Read();
             if (!empty)
@@ -160,6 +202,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
             writer.WriteAttributeNullable(Attr.ms_level, MsLevel);
             writer.WriteAttributeIfString(Attr.units, Units);
+            if (LodCalculation != LodCalculation.NONE)
+            {
+                writer.WriteAttributeString(Attr.lod_calculation, LodCalculation.Name);
+            }
+            writer.WriteAttributeNullable(Attr.max_loq_bias, MaxLoqBias);
+            writer.WriteAttributeNullable(Attr.max_loq_cv, MaxLoqCv);
         }
 
         public static QuantificationSettings Deserialize(XmlReader reader)

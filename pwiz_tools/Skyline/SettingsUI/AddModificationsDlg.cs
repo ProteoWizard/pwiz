@@ -6,10 +6,11 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class AddModificationsDlg : Form
+    public partial class AddModificationsDlg : FormEx
     {
         private enum ModType { structural, heavy }
 
@@ -229,11 +230,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             SelectAll(true);
             OkDialog();
-        }
-
-        public void CancelDialog()
-        {
-            DialogResult = DialogResult.Cancel;
         }
     }
 }

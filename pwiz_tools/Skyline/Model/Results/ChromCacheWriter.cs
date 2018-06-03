@@ -34,8 +34,8 @@ namespace pwiz.Skyline.Model.Results
         protected List<ChromCachedFile> _listCachedFiles = new List<ChromCachedFile>();
         protected BlockedArrayList<ChromTransition> _listTransitions =
             new BlockedArrayList<ChromTransition>(ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
-        protected BlockedArrayList<ChromGroupHeaderInfo> _listGroups =
-            new BlockedArrayList<ChromGroupHeaderInfo>(ChromGroupHeaderInfo.SizeOf, ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE);
+        protected BlockedArrayList<ChromGroupHeaderEntry> _listGroups =
+            new BlockedArrayList<ChromGroupHeaderEntry>(ChromGroupHeaderInfo.SizeOf, ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE);
         protected List<byte> _listTextIdBytes = new List<byte>();
         protected readonly List<Type> _listScoreTypes = new List<Type>();
         protected readonly FileSaver _fs;
@@ -84,13 +84,15 @@ namespace pwiz.Skyline.Model.Results
                                 countBytesScanIds = _fsScans.Stream.Position;
 
                                 _listGroups.Sort();
+                                var listChromGroupHeaderInfos = ReadOnlyList.Create(_listGroups.Count,
+                                    i => _listGroups[i].ChromGroupHeaderInfo);
                                 ChromatogramCache.WriteStructs(CacheFormat,
                                                                _fs.Stream,
                                                                _fsScans.Stream,
                                                                _fsPeaks.Stream,
                                                                _fsScores.Stream,
                                                                _listCachedFiles,
-                                                               _listGroups,
+                                                               listChromGroupHeaderInfos,
                                                                _listTransitions,
                                                                _listTextIdBytes,
                                                                _listScoreTypes,
@@ -125,7 +127,8 @@ namespace pwiz.Skyline.Model.Results
                             _fsScores.Stream.Seek(0, SeekOrigin.Begin);
                             var arrayCachFiles = _listCachedFiles.ToArray();
                             _listCachedFiles = null;
-                            var arrayChromEntries = _listGroups.ToBlockedArray();
+                            var arrayChromEntries = BlockedArray<ChromGroupHeaderInfo>.Convert(_listGroups, 
+                                entry => entry.ChromGroupHeaderInfo);
                             _listGroups = null;
                             var arrayTransitions = _listTransitions.ToBlockedArray();
                             _listTransitions = null;

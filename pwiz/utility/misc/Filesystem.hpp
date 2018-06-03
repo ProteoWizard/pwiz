@@ -101,6 +101,8 @@ std::string abbreviate_byte_size(boost::uintmax_t byteSize,
                                  ByteSizeAbbreviation abbreviationType = ByteSizeAbbreviation_SI);
 
 
+PWIZ_API_DECL bool isHTTP(const std::string& filepath);
+
 PWIZ_API_DECL std::string read_file_header(const std::string& filepath, size_t length = 512);
 
 

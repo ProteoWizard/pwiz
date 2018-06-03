@@ -1186,6 +1186,14 @@ namespace pwiz.Skyline.Model.Results
                     return _dataFile.GetMsLevel(index);
             }
 
+            public IonMobilityValue GetIonMobility(int index)
+            {
+                if (index == _lookAheadIndex && _lookAheadDataSpectrum != null)
+                    return _lookAheadDataSpectrum.IonMobility;
+                else
+                    return _dataFile.GetIonMobility(index);
+            }
+
             public double? GetRetentionTime(int index)
             {
                 if (index == _lookAheadIndex && _lookAheadDataSpectrum != null)

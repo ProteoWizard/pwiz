@@ -210,6 +210,21 @@ namespace IDPicker.Forms
         {
             public DataFilter DataFilter { get; protected set; }
             public IList<Row> ChildRows { get; set; }
+
+            public static string RollupSQL { get { return GetQuantitationRollupSql(Properties.GUI.Settings.Default.QuantitationRollupMethod); } }
+            protected static string GetQuantitationRollupSql(QuantitationRollupMethod method)
+            {
+                switch (method)
+                {
+                    case QuantitationRollupMethod.Sum: return "DISTINCT_DOUBLE_ARRAY_SUM";
+                    case QuantitationRollupMethod.Mean: return "DISTINCT_DOUBLE_ARRAY_MEAN";
+                    case QuantitationRollupMethod.Median: return "DISTINCT_DOUBLE_ARRAY_MEDIAN";
+                    case QuantitationRollupMethod.Tukey: return "DISTINCT_DOUBLE_ARRAY_TUKEY_BIWEIGHT_AVERAGE";
+                    case QuantitationRollupMethod.TukeyLog: return "DISTINCT_DOUBLE_ARRAY_TUKEY_BIWEIGHT_LOG_AVERAGE";
+                    default:
+                        throw new ArgumentException("unsupported rollup method " + method.ToString());
+                }
+            }
         }
 
         protected IList<Row> rows, basicRows;
@@ -933,5 +948,4 @@ namespace IDPicker.Forms
         }
         #endregion
     }
-
 }

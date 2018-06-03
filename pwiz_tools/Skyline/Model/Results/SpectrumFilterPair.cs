@@ -103,8 +103,8 @@ namespace pwiz.Skyline.Model.Results
         public SignedMz Q1 { get; private set; }
         public double? MinTime { get; private set; }
         public double? MaxTime { get; private set; }
-        private double? MinIonMobilityValue { get; set; }
-        private double? MaxIonMobilityValue { get; set; }
+        public double? MinIonMobilityValue { get; private set; }
+        public double? MaxIonMobilityValue { get; private set; }
         private IonMobilityAndCCS IonMobilityInfo { get; set; }
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
@@ -186,6 +186,7 @@ namespace pwiz.Skyline.Model.Results
             float[] massErrors = highAcc ? new float[targetCount] : null;
             double[] meanErrors = highAcc ? new double[targetCount] : null;
 
+            int spectrumCount = 0;
             int rtCount = 0;
             double lastRT = 0;
             foreach (var spectrum in spectra)
@@ -204,6 +205,7 @@ namespace pwiz.Skyline.Model.Results
                 // Filter on scan polarity
                 if (Q1.IsNegative != spectrum.NegativeCharge)
                     continue;
+                spectrumCount++;
 
                 // Filter on ion mobility, if any
                 if (!ContainsIonMobilityValue(spectrum.IonMobility, useDriftTimeHighEnergyOffset))
@@ -283,6 +285,10 @@ namespace pwiz.Skyline.Model.Results
                         meanErrors[targetIndex] = meanError;
                 }
                 
+            }
+            if (spectrumCount == 0)
+            {
+                return null;
             }
             if (meanErrors != null)
             {

@@ -105,9 +105,14 @@ namespace IDPicker.DataModel
                 RegisterFunction("round", new StandardSQLFunction("round"));
                 RegisterFunction("round_to_integer", new RoundToInteger());
                 RegisterFunction("group_concat", new StandardSQLFunction("group_concat_ex", NHibernateUtil.String));
+                RegisterFunction("sort_unmapped_last", new StandardSQLFunction("sort_unmapped_last", NHibernateUtil.String));
                 RegisterFunction("distinct_group_concat", new DistinctGroupConcat());
                 RegisterFunction("distinct_sum", new DistinctSum());
                 RegisterFunction("distinct_double_array_sum", new StandardSQLFunction("distinct_double_array_sum", NHibernateUtil.BinaryBlob));
+                RegisterFunction("distinct_double_array_mean", new StandardSQLFunction("distinct_double_array_mean", NHibernateUtil.BinaryBlob));
+                RegisterFunction("distinct_double_array_median", new StandardSQLFunction("distinct_double_array_median", NHibernateUtil.BinaryBlob));
+                RegisterFunction("distinct_double_array_tukey_biweight_average", new StandardSQLFunction("distinct_double_array_tukey_biweight_average", NHibernateUtil.BinaryBlob));
+                RegisterFunction("distinct_double_array_tukey_biweight_log_average", new StandardSQLFunction("distinct_double_array_tukey_biweight_log_average", NHibernateUtil.BinaryBlob));
                 RegisterFunction("parens", new Parens());
             }
         }

@@ -40,6 +40,8 @@ Spectrum::Spectrum() :
     ionMobilityHighEnergyOffset_(0),
     ionMobilityType_(IONMOBILITY_NONE),
     retentionTime_(0),
+    startTime_(0),
+    endTime_(0),
     totalIonCurrentRaw_(-1),
     totalIonCurrentProcessed_(-1), 
     basePeakIntensityRaw_(-1), 
@@ -56,6 +58,8 @@ Spectrum::Spectrum(const Spectrum& s)
     collisionalCrossSection_ = s.collisionalCrossSection_;
     ionMobilityHighEnergyOffset_ = s.ionMobilityHighEnergyOffset_;
     retentionTime_ = s.retentionTime_;
+    startTime_ = s.startTime_;
+    endTime_ = s.endTime_;
     type_ = s.type_;
     totalIonCurrentRaw_ = s.totalIonCurrentRaw_;
     totalIonCurrentProcessed_ = s.totalIonCurrentProcessed_;
@@ -81,6 +85,8 @@ void Spectrum::clear() {
     collisionalCrossSection_ = 0;
     ionMobilityHighEnergyOffset_ = 0;
     retentionTime_ = 0;
+    startTime_ = 0;
+    endTime_ = 0;
     type_ = SPEC_UNDEF;
     possibleCharges_.clear();
     rawPeaks_.clear();
@@ -100,6 +106,8 @@ Spectrum& Spectrum::operator= (const Spectrum& right)
     collisionalCrossSection_ = right.collisionalCrossSection_;
     ionMobilityHighEnergyOffset_ = right.ionMobilityHighEnergyOffset_;
     retentionTime_ = right.retentionTime_;
+    startTime_ = right.startTime_;
+    endTime_ = right.endTime_;
     possibleCharges_ = right.possibleCharges_;
     rawPeaks_ = right.rawPeaks_;
     processedPeaks_ = right.processedPeaks_;
@@ -140,6 +148,16 @@ double Spectrum::getCollisionalCrossSection() const
 double Spectrum::getRetentionTime() const
 {
     return retentionTime_;
+}
+
+double Spectrum::getStartTime() const
+{
+    return startTime_;
+}
+
+double Spectrum::getEndTime() const
+{
+    return endTime_;
 }
 
 int Spectrum::getNumRawPeaks() const
@@ -300,6 +318,14 @@ void Spectrum::setCollisionalCrossSection(double ccs) {
 
 void Spectrum::setRetentionTime(double rt){
     retentionTime_ = rt;
+}
+
+void Spectrum::setStartTime(double rt){
+    startTime_ = rt;
+}
+
+void Spectrum::setEndTime(double rt){
+    endTime_ = rt;
 }
 
 /*

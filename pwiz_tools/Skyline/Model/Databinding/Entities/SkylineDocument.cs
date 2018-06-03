@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Skyline.Model.ElementLocators;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -57,6 +58,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override string GetDeleteConfirmation(int nodeCount)
         {
             return GetGenericDeleteConfirmation(nodeCount);
+        }
+
+        protected override NodeRef NodeRefPrototype
+        {
+            get { return DocumentRef.PROTOTYPE; }
         }
     }
 }

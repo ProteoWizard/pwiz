@@ -51,6 +51,8 @@ class PWIZ_API_DECL SpectrumList_PeakPicker : public msdata::SpectrumListWrapper
     virtual msdata::SpectrumPtr spectrum(size_t index, msdata::DetailLevel detailLevel) const;
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
 
+    const util::IntegerSet& msLevels() const { return msLevelsToPeakPick_; }
+
     private:
     PeakDetectorPtr algorithm_;
     const util::IntegerSet msLevelsToPeakPick_;

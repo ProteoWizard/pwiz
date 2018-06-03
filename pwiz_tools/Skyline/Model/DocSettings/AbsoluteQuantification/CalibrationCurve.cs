@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Hibernate;
@@ -45,6 +46,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             return ChangeProp(ImClone(this), im => im.Intercept = intercept);
         }
+
+        [Format(Formats.CalibrationCurve, NullValue = TextUtil.EXCEL_NA)]
+        public double? TurningPoint { get; private set; }
+
+        public CalibrationCurve ChangeTurningPoint(double? turningPoint)
+        {
+            return ChangeProp(ImClone(this), im => im.TurningPoint = turningPoint);
+        }
+
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? PointCount { get; private set; }
 
@@ -78,6 +88,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public double? GetY(double? x)
         {
+            if (TurningPoint.HasValue && x < TurningPoint)
+            {
+                x = TurningPoint;
+            }
             if (QuadraticCoefficient.HasValue)
             {
                 return x*x*QuadraticCoefficient.Value + x*Slope + Intercept.GetValueOrDefault();
@@ -85,7 +99,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return x*Slope + Intercept.GetValueOrDefault();
         }
 
-        public double? GetX(double? y)
+        public double? GetFittedX(double? y)
         {
             if (QuadraticCoefficient.HasValue)
             {
@@ -104,31 +118,47 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return (y - Intercept.GetValueOrDefault())/Slope;
         }
 
+        public double? GetX(double? y)
+        {
+            double? x = GetFittedX(y);
+            if (x.HasValue && TurningPoint.HasValue && x < TurningPoint)
+            {
+                return null;
+            }
+            return x;
+        }
+
         public override string ToString()
         {
             if (!string.IsNullOrEmpty(ErrorMessage))
             {
                 return TextUtil.SpaceSeparate(QuantificationStrings.CalibrationCurve_ToString_Error__, ErrorMessage);
             }
+            List<string> parts = new List<string>();
+
             if (QuadraticCoefficient.HasValue)
             {
-                return string.Format(QuantificationStrings.CalibrationCurve_ToString_y_x_2_x_c,
+                parts.Add(string.Format(QuantificationStrings.CalibrationCurve_ToString_y_x_2_x_c,
                     QuadraticCoefficient.Value.ToString(Formats.CalibrationCurve),
                     Slope.Value.ToString(Formats.CalibrationCurve),
-                    Intercept.Value.ToString(Formats.CalibrationCurve));
+                    Intercept.Value.ToString(Formats.CalibrationCurve)));
             }
-            if (Slope.HasValue)
+            else if (Slope.HasValue)
             {
+                parts.Add(String.Format(QuantificationStrings.CalibrationCurve_ToString_Slope___0_,
+                    Slope.Value.ToString(Formats.CalibrationCurve)));
                 if (Intercept.HasValue)
                 {
-                    return string.Format(QuantificationStrings.CalibrationCurve_ToString_Slope___0__Intercept___1_,
-                        Slope.Value.ToString(Formats.CalibrationCurve), 
-                        Intercept.Value.ToString(Formats.CalibrationCurve));
+                    parts.Add(string.Format(QuantificationStrings.CalibrationCurve_ToString_Intercept___0_, 
+                        Intercept.Value.ToString(Formats.CalibrationCurve)));
                 }
-                return String.Format(QuantificationStrings.CalibrationCurve_ToString_Slope___0_, 
-                    Slope.Value.ToString(Formats.CalibrationCurve));
             }
-            return string.Empty;
+            if (TurningPoint.HasValue)
+            {
+                parts.Add(string.Format(QuantificationStrings.CalibrationCurve_ToString_Turning_Point___0_, 
+                    TurningPoint.Value.ToString(Formats.CalibrationCurve)));
+            }
+            return TextUtil.SpaceSeparate(parts);
         }
 
         public int CompareTo(object obj)

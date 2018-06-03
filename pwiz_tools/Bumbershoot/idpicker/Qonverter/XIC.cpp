@@ -371,7 +371,7 @@ XICWindowList GetMZRTWindows(sqlite::database& db, MS2ScanMap& ms2ScanMap, const
     SortByScanTime sortByScanTime;
 
     string currentMatch = "";
-    BOOST_FOREACH(sqlite::query::rows row, q)
+    for(sqlite::query::rows row : q)
     {
         sqlite_int64 psmId;
         sqlite_int64 peptideId;
@@ -537,7 +537,7 @@ int writeChromatograms(const string& idpDBFilename,
         map<string,string> matchIdToPeptide; 
         string source = "";
         
-        BOOST_FOREACH(const RegDefinedPrecursorInfo& info, RegDefinedPrecursors)
+        for(const RegDefinedPrecursorInfo& info : RegDefinedPrecursors)
         {
             if (info.chromatogram.MS1RT.empty())
                 continue;
@@ -550,9 +550,7 @@ int writeChromatograms(const string& idpDBFilename,
 
             c.id = info.chromatogram.id;
             c.setTimeIntensityArrays(info.chromatogram.MS1RT, info.chromatogram.MS1Intensity, UO_second, MS_number_of_detector_counts);
-            //for setting spline for regression rt
-            double highestPeakIntensity=0;
-            double medianIntensity=0;
+
             //output all crawdad peaks
             {
                 chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
@@ -561,7 +559,7 @@ int writeChromatograms(const string& idpDBFilename,
                 c2.id = "Regression: Crawdad peaks for "+ info.chromatogram.id;
                 c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
 
-                BOOST_FOREACH(const Peak& peak, info.chromatogram.peaks)
+                for(const Peak& peak : info.chromatogram.peaks)
                 {
                     simulateGaussianPeak(peak.startTime, peak.endTime,
                                          peak.intensity, info.baselineIntensity,
@@ -624,7 +622,7 @@ int writeChromatograms(const string& idpDBFilename,
             }
         }
         
-        BOOST_FOREACH(const XICWindow& window, pepWindow)
+        for(const XICWindow& window : pepWindow)
         {
             if (window.MS1RT.empty())
                 continue;
@@ -669,7 +667,7 @@ int writeChromatograms(const string& idpDBFilename,
                 c2.id = "Crawdad peaks for " + oss.str();
                 c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
 
-                BOOST_FOREACH(const Peak& peak, window.peaks)
+                for(const Peak& peak : window.peaks)
                 {
                     simulateGaussianPeak(peak.startTime, peak.endTime,
                                          peak.intensity, baselineIntensity,
@@ -837,7 +835,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
             string distinctMatch;
 
             int temp = 0;
-            BOOST_FOREACH(sqlite::query::rows row, distinctModifiedPeptideByNativeIDQuery)
+            for(sqlite::query::rows row : distinctModifiedPeptideByNativeIDQuery)
             {
                 temp++;
                 row.getter() >> nativeId >> distinctMatch;
@@ -1005,8 +1003,8 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
 
                 std::string   line;
                 getline(file, line);
-                bool useAvgMass = config.ChromatogramMzUpperOffset.units != MZTolerance::PPM && config.ChromatogramMzLowerOffset.units != MZTolerance::PPM &&
-                      config.ChromatogramMzUpperOffset.value + config.ChromatogramMzLowerOffset.value > 1;
+                //bool useAvgMass = config.ChromatogramMzUpperOffset.units != MZTolerance::PPM && config.ChromatogramMzLowerOffset.units != MZTolerance::PPM &&
+                //                  config.ChromatogramMzUpperOffset.value + config.ChromatogramMzLowerOffset.value > 1;
                 while(getline(file, line))
                 {
                     istringstream   ss(line);
@@ -1078,7 +1076,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
                 mzMinMax = std::for_each(mzV.begin(), mzV.end(), mzMinMax);
                 boost::icl::interval_set<double> spectrumMzRange(continuous_interval<double>::closed(accs::min(mzMinMax), accs::max(mzMinMax)));
 
-                BOOST_FOREACH(const XICWindow& window, pepWindow)
+                for(const XICWindow& window : pepWindow)
                 {
                     // if the MS1 retention time is not in the RT window constructed for this peptide, skip this window
                     if (!boost::icl::contains(hull(window.preRT), curRT))
@@ -1101,7 +1099,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
 
                 //loop through all regression defined precursors
 
-                      BOOST_FOREACH(RegDefinedPrecursorInfo& info, RegDefinedPrecursors)
+                      for(RegDefinedPrecursorInfo& info : RegDefinedPrecursors)
                 {
 
                     if (!boost::icl::contains(info.scanTimeWindow, curRT))
@@ -1129,16 +1127,16 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
                 MS2ScanInfo& scanInfo = const_cast<MS2ScanInfo&>(*ms2ScanMap.get<nativeID>().find(spectrum->id));
                 if (scanInfo.precursorIntensity == 0)
                 {
-                    BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
+                    for(const double& p : spectrum->getIntensityArray()->data)
                         scanInfo.precursorIntensity += p;
                 }
             }
         } // end of spectra loop
         
         //finalize ms1 vectors
-        BOOST_FOREACH(const XICWindow& window, pepWindow)
+        for(const XICWindow& window : pepWindow)
             window.FinalizeMS1();
-        BOOST_FOREACH(RegDefinedPrecursorInfo& info, RegDefinedPrecursors)
+        for(RegDefinedPrecursorInfo& info : RegDefinedPrecursors)
             info.chromatogram.FinalizeMS1();
 
         // Find peaks with Crawdad
@@ -1147,7 +1145,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
         size_t windowBestPeaks = 0;
         size_t regBestPeaks = 0;
         ITERATION_UPDATE(ilr, currentFile, totalFiles, "Finding distinct match peaks...");
-        BOOST_FOREACH(const XICWindow& window, pepWindow)
+        for(const XICWindow& window : pepWindow)
         {
             ++i;
             if (window.MS1RT.empty())
@@ -1170,7 +1168,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
             interpolator.resample(window.MS1RT, window.MS1Intensity);
 
             // eliminate negative signal
-            BOOST_FOREACH(double& intensity, window.MS1Intensity)
+            for(double& intensity : window.MS1Intensity)
                 intensity = max(0.0, intensity);
             CrawdadPeakFinder crawdadPeakFinder;
             crawdadPeakFinder.SetChromatogram(window.MS1RT, window.MS1Intensity);
@@ -1193,7 +1191,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
                 // add zero scores before and after the "curve" using the minimum time gap
                 ms2Times.push_back(window.PSMs.front().spectrum->scanStartTime - minDiff);
                 ms2Scores.push_back(0);
-                BOOST_FOREACH(const XICPeptideSpectrumMatch& psm, window.PSMs)
+                for(const XICPeptideSpectrumMatch& psm : window.PSMs)
                 {
                     ms2Times.push_back(psm.spectrum->scanStartTime);
                     ms2Scores.push_back(psm.score);
@@ -1207,7 +1205,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
             // find the peak with the highest sum of (PSM scores * interpolated SIC) within the peak;
             // if no IDs fall within peaks, find the peak closest to the best scoring id
             map<double, map<double, Peak> > peakByIntensityBySumOfProducts;
-            BOOST_FOREACH(const CrawdadPeakPtr& crawPeak, crawPeaks)
+            for(const CrawdadPeakPtr& crawPeak : crawPeaks)
             {
                 double startTime = window.MS1RT[crawPeak->getStartIndex()];
                 double endTime = window.MS1RT[crawPeak->getEndIndex()];
@@ -1246,7 +1244,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
                 }
                 else
                 {
-                    BOOST_FOREACH(const XICPeptideSpectrumMatch& psm, window.PSMs)
+                    for(const XICPeptideSpectrumMatch& psm : window.PSMs)
                     {
                         if (wideStartTime <= psm.spectrum->scanStartTime && psm.spectrum->scanStartTime <= wideEndTime)
                             sumOfProducts += psm.score * interpolator.interpolate(window.MS1RT, window.MS1Intensity, psm.spectrum->scanStartTime);
@@ -1277,7 +1275,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
         //cycle through all regression defined precursors, passing each one to crawdad
         ITERATION_UPDATE(ilr, currentFile, totalFiles, "Finding regression defined peptide peaks...");
 
-        BOOST_FOREACH(RegDefinedPrecursorInfo& info, RegDefinedPrecursors)
+        for(RegDefinedPrecursorInfo& info : RegDefinedPrecursors)
         {
 
             ++i;
@@ -1300,7 +1298,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
 
 
             // eliminate negative signal
-            BOOST_FOREACH(double& intensity, info.chromatogram.MS1Intensity)
+            for(double& intensity : info.chromatogram.MS1Intensity)
                 intensity = max(0.0, intensity);
 
             CrawdadPeakFinder crawdadPeakFinder;
@@ -1312,7 +1310,7 @@ int EmbedMS1ForFile(sqlite::database& idpDb, const string& idpDBFilePath, const 
                 continue;
 
 
-            BOOST_FOREACH(const CrawdadPeakPtr& crawPeak, crawPeaks)
+            for(const CrawdadPeakPtr& crawPeak : crawPeaks)
             {
 
                 double startTime = lc.MS1RT[crawPeak->getStartIndex()];

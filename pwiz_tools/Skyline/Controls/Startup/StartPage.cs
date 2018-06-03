@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = Resources.StartPage_PopulateWizardPanel_Import_DIA_DDA_Peptide_Search,
+                    Caption = Resources.StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search,
                     Icon = Resources.WizardPeptideSearchDIA,
                     EventAction = () => Import(ActionImport.DataType.peptide_search_dia),
                     Description =
@@ -241,7 +241,7 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = TutorialLinkResources.StartPage_getBoxPanels_Grouped_Study_Data_Processing, 
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing, 
                     Icon = Resources.GroupedStudies_thumb, 
                     EventAction = ()=>Tutorial(
                         ActionTutorial.TutorialType.grouped_study_data_processing, 
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = TutorialLinkResources.StartPage_getBoxPanels_Small_Molecule_Targets, 
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Small_Molecule_Targets, 
                     Icon = Resources.SmallMolecule_thumb, 
                     EventAction = ()=>Tutorial(
                         ActionTutorial.TutorialType.small_molecule_targets, 
@@ -301,7 +301,7 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new ActionBoxControl
                 {
-                    Caption = TutorialLinkResources.StartPage_getBoxPanels_Data_Independent_Acquisition, 
+                    Caption = Resources.StartPage_PopulateTutorialPanel_Data_Independent_Acquisition, 
                     Icon = Resources.DIA_thumb, 
                     EventAction = ()=>Tutorial(
                         ActionTutorial.TutorialType.data_independent_acquisition, 

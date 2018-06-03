@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model.Databinding
                         }
                         return doc.ChangeSettings(doc.Settings.ChangeDataSettings(
                             doc.Settings.DataSettings.ChangeViewSpecList(newViewSpecList)));
-                    });
+                    }, SkylineWindow.SettingsLogFunction);
                 }
             }
         }
@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Model.Databinding
                     }
                     return doc.ChangeSettings(doc.Settings.ChangeDataSettings(
                         doc.Settings.DataSettings.ChangeViewSpecList(newViewSpecList)));
-                });
+                }, SkylineWindow.SettingsLogFunction);
             }
             
         }
@@ -418,7 +418,8 @@ namespace pwiz.Skyline.Model.Databinding
             }
             else
             {
-                var columnsToRemove = new HashSet<PropertyPath>();
+                var columnsToRemove = new HashSet<PropertyPath> 
+                    {PropertyPath.Root.Property("Locator")};
                 bool addRoot = false;
                 bool docHasCustomIons = ((SkylineDataSchema)columnDescriptor.DataSchema).Document.CustomIonCount != 0;
                 bool docHasOnlyCustomIons = docHasCustomIons && ((SkylineDataSchema)columnDescriptor.DataSchema).Document.PeptideCount == 0;
@@ -448,6 +449,7 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("ConcentrationMultiplier"));
                     columnsToRemove.Add(PropertyPath.Root.Property("InternalStandardConcentration"));
                     columnsToRemove.Add(PropertyPath.Root.Property("CalibrationCurve"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("FiguresOfMerit"));
                     columnsToRemove.Add(PropertyPath.Root.Property("NormalizationMethod"));
                     foreach (var prop in MoleculeAccessionNumbers.PREFERRED_ACCESSION_TYPE_ORDER)
                         columnsToRemove.Add(PropertyPath.Root.Property(prop)); // By default don't show CAS, InChI etc

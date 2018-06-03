@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         public override float GetRankValue(PeptideRankId rankId)
         {
-            if (rankId == ChromatogramLibrarySpec.PEPTIDE_RANK_PEAK_AREA)
+            if (ReferenceEquals(rankId, ChromatogramLibrarySpec.PEPTIDE_RANK_PEAK_AREA))
             {
                 return (float) PeakArea;
             }

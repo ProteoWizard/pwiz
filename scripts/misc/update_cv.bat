@@ -12,7 +12,7 @@ REM ##
 REM # Get the location of update_cv.bat and drop trailing slash
 set PWIZ_ROOT=%~dp0..\..
 REM set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
-set BOOST_BUILD_PATH=%PWIZ_ROOT%\libraries\boost-build
+set BOOST_BUILD_PATH=%PWIZ_ROOT%\libraries\boost-build\src
 
 REM # download latest OBO files
 pushd %~dp0

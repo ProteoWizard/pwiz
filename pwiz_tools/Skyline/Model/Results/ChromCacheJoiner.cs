@@ -138,14 +138,14 @@ namespace pwiz.Skyline.Model.Results
 
                     for (int i = 0; i < rawData.ChromatogramEntries.Length; i++)
                     {
-                        _listGroups.Add(rawData.RecalcEntry(i,
+                        _listGroups.Add(new ChromGroupHeaderEntry(i, rawData.RecalcEntry(i,
                                             offsetFiles,
                                             offsetTransitions,
                                             offsetPeaks,
                                             offsetScores,
                                             offsetPoints,
                                             _dictTextIdToByteIndex,
-                                            _listTextIdBytes));
+                                            _listTextIdBytes)));
                     }
 
                     inStream.Seek(0, SeekOrigin.Begin);

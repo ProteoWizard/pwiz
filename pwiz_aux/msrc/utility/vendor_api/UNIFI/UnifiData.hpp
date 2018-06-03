@@ -43,14 +43,6 @@ namespace vendor_api {
 namespace UNIFI {
 
 /*
-
-PWIZ_API_DECL enum Polarity
-{
-    Positive = 0,
-    Negative = 1,
-    Undefined = 2
-};
-
 struct PWIZ_API_DECL Spectrum
 {
     virtual int getSampleNumber() const = 0;
@@ -136,17 +128,25 @@ typedef boost::shared_ptr<Experiment> ExperimentPtr;
 typedef std::map<std::pair<int, int>, ExperimentPtr> ExperimentsMap;*/
 
 
-enum Polarity
+enum PWIZ_API_DECL Polarity
 {
     Unknown = 0,
     Negative = 1,
     Positive = 2
 };
 
+enum PWIZ_API_DECL EnergyLevel
+{
+    Low = 1,
+    High = 2
+};
+
 struct PWIZ_API_DECL UnifiSpectrum
 {
     double retentionTime;
     Polarity scanPolarity;
+    EnergyLevel energyLevel;
+    double driftTime;
 
     size_t arrayLength;
     std::vector<double> mzArray;
@@ -170,6 +170,11 @@ class PWIZ_API_DECL UnifiData
     const std::string& getSampleName() const;
     const std::string& getSampleDescription() const;
 
+    bool hasIonMobilityData() const;
+
+    bool canConvertDriftTimeAndCCS() const;
+    double driftTimeToCCS(double driftTimeInMilliseconds, double mz, int charge) const;
+    double ccsToDriftTime(double ccs, double mz, int charge) const;
 
 
     private:

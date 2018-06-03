@@ -28,6 +28,7 @@
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
+#include "pwiz/analysis/chromatogram_processing/ChromatogramListFactory.hpp"
 #include "pwiz/Version.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/analysis/Version.hpp"
@@ -51,6 +52,7 @@ struct Config : public Reader::Config
 {
     vector<string> filenames;
     vector<string> filters;
+    vector<string> chromatogramFilters;
     string outputPath;
     string extension;
     string outputFile;
@@ -100,7 +102,7 @@ string Config::outputFilename(const string& filename, const MSData& msd) const
 
     // this list is for Windows; it's a superset of the POSIX list
     string illegalFilename = "\\/*:?<>|\"";
-    BOOST_FOREACH(char& c, runId)
+    for(char& c : runId)
         if (illegalFilename.find(c) != string::npos)
             c = '_';
 
@@ -118,8 +120,12 @@ ostream& operator<<(ostream& os, const Config& config)
     os << "contactFilename: " << config.contactFilename << endl;
     os << endl;
 
-    os << "filters:\n  ";
+    os << "spectrum list filters:\n  ";
     copy(config.filters.begin(), config.filters.end(), ostream_iterator<string>(os,"\n  "));
+    os << endl;
+
+    os << "chromatogram list filters:\n  ";
+    copy(config.chromatogramFilters.begin(), config.chromatogramFilters.end(), ostream_iterator<string>(os, "\n  "));
     os << endl;
 
     os << "filenames:\n  ";
@@ -303,6 +309,9 @@ Config parseCommandLine(int argc, char** argv)
         ("filter",
             po::value< vector<string> >(&config.filters),
             ": add a spectrum list filter")
+        ("chromatogramFilter",
+            po::value< vector<string> >(&config.chromatogramFilters),
+            ": add a chromatogram list filter")
         ("merge",
             po::value<bool>(&config.merge)->zero_tokens(),
             ": create a single output file from multiple input files by merging file-level metadata and concatenating spectrum lists")
@@ -422,12 +431,10 @@ Config parseCommandLine(int argc, char** argv)
           << endl
 
           << "Questions, comments, and bug reports:\n"
-          << "http://proteowizard.sourceforge.net\n"
+          << "https://github.com/ProteoWizard\n"
           << "support@proteowizard.org\n"
           << "\n"
           << "ProteoWizard release: " << pwiz::Version::str() << " (" << pwiz::Version::LastModified() << ")" << endl
-          << "ProteoWizard MSData: " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")" << endl
-          << "ProteoWizard Analysis: " << pwiz::analysis::Version::str() << " (" << pwiz::analysis::Version::LastModified() << ")" << endl
           << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
     if ((argc <= 1) || detailedHelp)
@@ -459,12 +466,16 @@ Config parseCommandLine(int argc, char** argv)
 
         // expand the filenames by globbing to handle wildcards
         vector<bfs::path> globbedFilenames;
-        BOOST_FOREACH(const string& filename, config.filenames)
-            if (expand_pathmask(bfs::path(filename), globbedFilenames) == 0)
-                cout <<  "[msconvert] no files found matching \"" << filename << "\"" << endl;
+        for(const string& filename : config.filenames)
+        {
+            if (isHTTP(filename))
+                globbedFilenames.push_back(filename);
+            else if (expand_pathmask(bfs::path(filename), globbedFilenames) == 0)
+                cout << "[msconvert] no files found matching \"" << filename << "\"" << endl;
+        }
 
         config.filenames.clear();
-        BOOST_FOREACH(const bfs::path& filename, globbedFilenames)
+        for(const bfs::path& filename : globbedFilenames)
             config.filenames.push_back(filename.string());
     }
 
@@ -673,12 +684,27 @@ void addContactInfo(MSData& msd, const string& contactFilename)
 
 class UserFeedbackIterationListener : public IterationListener
 {
+    std::streamoff longestMessage;
+
     public:
+
+    UserFeedbackIterationListener()
+    {
+        longestMessage = 0;
+    }
 
     virtual Status update(const UpdateMessage& updateMessage)
     {
-        // add tabs to erase all of the previous line
-        *os_ << updateMessage.iterationIndex+1 << "/" << updateMessage.iterationCount << "\t\t\t\r" << flush;
+        
+        stringstream updateString;
+        if (updateMessage.message.empty())
+            updateString << updateMessage.iterationIndex + 1 << "/" << updateMessage.iterationCount;
+        else
+            updateString << updateMessage.message << ": " << updateMessage.iterationIndex + 1 << "/" << updateMessage.iterationCount;
+
+        longestMessage = max(longestMessage, (std::streamoff) updateString.tellp());
+        updateString << string(longestMessage - updateString.tellp(), ' '); // add whitespace to erase all of the previous line
+        *os_ << updateString.str() << "\r" << flush;
 
         // spectrum and chromatogram lists both iterate; put them on different lines
         if (updateMessage.iterationIndex+1 == updateMessage.iterationCount)
@@ -704,7 +730,7 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
     ReaderList::Config readerConfig(config);
 
     // Each file is read in separately in MSData objects in the msdList list.
-    BOOST_FOREACH(const string& filename, filenames)
+    for(const string& filename : filenames)
     {
         try
         {
@@ -738,6 +764,7 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
             addContactInfo(msd, config.contactFilename);
 
         SpectrumListFactory::wrap(msd, config.filters);
+        ChromatogramListFactory::wrap(msd, config.chromatogramFilters);
 
         string outputFilename = config.outputFilename("merged-spectra", msd);
         *os_ << "writing output file: " << outputFilename << endl;
@@ -764,7 +791,17 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
     *os_ << "processing file: " << filename << endl;
 
+    // handle progress updates if requested
+
+    IterationListenerRegistry iterationListenerRegistry;
+    // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
+    const size_t iterationPeriod = 100;
+    iterationListenerRegistry.addListener(IterationListenerPtr(new UserFeedbackIterationListener), iterationPeriod);
+    IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0;
+
     ReaderList::Config readerConfig(config);
+
+    readerConfig.iterationListenerRegistry = pILR;
 
     vector<MSDataPtr> msdList;
     readers.read(filename, msdList, readerConfig);
@@ -783,14 +820,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
                 addContactInfo(msd, config.contactFilename);
 
             SpectrumListFactory::wrap(msd, config.filters);
-
-            // handle progress updates if requested
-
-            IterationListenerRegistry iterationListenerRegistry;
-            // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
-            const size_t iterationPeriod = 100;
-            iterationListenerRegistry.addListener(IterationListenerPtr(new UserFeedbackIterationListener), iterationPeriod);
-            IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0; 
+            ChromatogramListFactory::wrap(msd, config.chromatogramFilters);
 
             // write out the new data file
             string outputFilename = config.outputFilename(filename, msd);
@@ -801,7 +831,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             else
             {
                 // String compare of filenames is case-sensitive, which is a problem on Windows. bfs::equivalent() fixes this.
-                if (filename == outputFilename || bfs::equivalent(filename, outputFilename))
+                if (!isHTTP(filename) && (filename == outputFilename || bfs::equivalent(filename, outputFilename)))
                 {
                     throw user_error("Output filepath is the same as input filepath");
                 }
@@ -862,6 +892,8 @@ int main(int argc, char* argv[])
     std::locale global_loc = std::locale();
     std::locale loc(global_loc, new bfs::detail::utf8_codecvt_facet);
     bfs::path::imbue(loc);
+    cout.imbue(loc);
+    cerr.imbue(loc);
 
     try
     {
@@ -901,8 +933,6 @@ int main(int argc, char* argv[])
          << "Attach the command output and this version information in your report:\n"
          << "\n"
          << "ProteoWizard release: " << pwiz::Version::str() << " (" << pwiz::Version::LastModified() << ")" << endl
-         << "ProteoWizard MSData: " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")" << endl
-         << "ProteoWizard Analysis: " << pwiz::analysis::Version::str() << " (" << pwiz::analysis::Version::LastModified() << ")" << endl
          << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
     return 1;

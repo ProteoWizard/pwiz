@@ -39,6 +39,9 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
 #include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakFilter.hpp"
+#include "boost/variant.hpp"
+#include "boost/variant/get.hpp"
+#include "boost/bind.hpp"
 #include "boost/foreach_field.hpp"
 #include "boost/throw_exception.hpp"
 #include "boost/xpressive/xpressive.hpp"
@@ -1135,10 +1138,10 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
         throw runtime_error("[loadGeneMetadata] gene2protein.db3 not found: download it from http://fenchurch.mc.vanderbilt.edu/bin/g2p/gene2protein.db3 and put it in the IDPicker directory.");
 
     using namespace boost::xpressive;
-    sregex refseqRegex = sregex::compile("^(?:generic\\|)?(?:gi\\|\\d+\\|ref\\|)?(\\S+?)(?:\\.\\d+)(?:\\|)?$");
-    sregex ensemblRegex = sregex::compile("^(?:generic\\|)?(ENSP[^ |]+)");
-    sregex swissProtRegex = sregex::compile("^(?:generic\\|)?(?:sp\\|)?(\\w+)");
-    sregex lrgRegex = sregex::compile("^(?:generic\\|)?(LRG_\\w+)");
+    sregex refseqRegex = sregex::compile("^(?:generic\\|)?(?:gi\\|\\d+\\|ref\\|)?([NXY]P_\\d+)(?:\\.\\d+)?.*");
+    sregex ensemblRegex = sregex::compile("^(?:generic\\|)?(ENSP[A-Za-z0-9]+).*");
+    sregex swissProtRegex = sregex::compile("^(?:generic\\|)?(?:sp\\|)?([A-Za-z0-9]+).*");
+    sregex lrgRegex = sregex::compile("^(?:generic\\|)?(LRG_[A-Za-z0-9]+)");
 
     typedef boost::tuple<string, string, string, int, boost::optional<string>, boost::optional<string> > GeneTuple;
     typedef map<int, GeneTuple> GeneMap;
@@ -1167,13 +1170,19 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
 
             string accession = row.get<string>(0);
             int geneid = row.get<int>(1);
-            if (regex_match(accession, refseqRegex))
+            if (regex_search(accession, refseqRegex))
             {
                 accession = regex_replace(accession, refseqRegex, "$1");
             }
-            else if (!regex_match(accession, ensemblRegex) &&
-                     !regex_match(accession, swissProtRegex) &&
-                     !regex_match(accession, lrgRegex))
+            else if (regex_search(accession, ensemblRegex))
+            {
+                accession = regex_replace(accession, ensemblRegex, "$1");
+            }
+            else if (regex_search(accession, swissProtRegex))
+            {
+                accession = regex_replace(accession, swissProtRegex, "$1");
+            }
+            else if (!regex_search(accession, lrgRegex))
             {
                 throw runtime_error("[loadMetadata] gene2protein.db3 accession " + accession + " does not match one of the supported accession formats");
             }
@@ -1209,7 +1218,20 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
     for(sqlite::query::rows row : proteinIdAccessions)
     {
         sqlite3_int64 id = row.get<sqlite3_int64>(0);
-        string accession = regex_replace(row.get<string>(1), refseqRegex, "$1");
+        string accession = row.get<string>(1);
+
+        if (regex_search(accession, refseqRegex))
+        {
+            accession = regex_replace(accession, refseqRegex, "$1");
+        }
+        else if (regex_search(accession, ensemblRegex))
+        {
+            accession = regex_replace(accession, ensemblRegex, "$1");
+        }
+        else if (regex_search(accession, swissProtRegex))
+        {
+            accession = regex_replace(accession, swissProtRegex, "$1");
+        }
 
         ProteinToGeneMap::const_iterator findItr = proteinToGeneMap.find(accession);
         if (findItr == proteinToGeneMap.end())
@@ -1242,6 +1264,110 @@ void embedGeneMetadata(const string& idpDbFilepath, pwiz::util::IterationListene
         Filter filter;
         filter.config = currentConfig.get();
         filter.filter(idpDb.connected(), ilr);
+    }
+}
+
+struct VariantRowVisitor : boost::static_visitor<> { template <typename T> void operator()(const T& t, sqlite::statement::bindstream& os) const { os << t; } };
+
+TEST_CASE("Embedding gene metadata") {
+
+    if (bfs::exists("embedderDoctest.idpDB")) bfs::remove("embedderDoctest.idpDB");
+    sqlite::database db("embedderDoctest.idpDB");
+    db.load_extension("IdpSqlExtensions");
+
+    db.execute("CREATE TABLE About AS SELECT " + lexical_cast<string>(CURRENT_SCHEMA_REVISION) + " AS SchemaRevision;"
+               "CREATE TABLE IF NOT EXISTS Protein(Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup INT, Length INT, GeneId TEXT, GeneGroup INT);"
+               "CREATE TABLE IF NOT EXISTS ProteinMetadata (Id INTEGER PRIMARY KEY, Description TEXT, Hash BLOB, TaxonomyId INT, GeneName TEXT, Chromosome TEXT, GeneFamily TEXT, GeneDescription TEXT);"
+               "CREATE TABLE IF NOT EXISTS FilterHistory (Id INTEGER PRIMARY KEY, MaximumQValue NUMERIC, MinimumDistinctPeptides INT, MinimumSpectra INT,  MinimumAdditionalPeptides INT, GeneLevelFiltering INT, PrecursorMzTolerance TEXT,\n"
+               "                                          DistinctMatchFormat TEXT, MinimumSpectraPerDistinctMatch INT, MinimumSpectraPerDistinctPeptide INT, MaximumProteinGroupsPerPeptide INT,\n"
+               "                                          Clusters INT, ProteinGroups INT, Proteins INT, GeneGroups INT, Genes INT, DistinctPeptides INT, DistinctMatches INT, FilteredSpectra INT, ProteinFDR NUMERIC, PeptideFDR NUMERIC, SpectrumFDR NUMERIC);"
+               );
+
+    auto proteins = vector<vector<boost::variant<int, const char*>>>
+    {
+        // A2M     alpha-2-macroglobulin     12p13.31
+        { 1, "NP_000005.2", 0 },
+        { 2, "NP_001334352", 0 },
+        { 3, "P01023", 0 },
+        { 4, "ENSP00000323929", 0 },
+        { 5, "ENSP00000385710_F123R,M234F,T1234S", 0 },
+
+        // ABCA2     ATP binding cassette subfamily A member 2    9q34.3      ABCA
+        { 6, "generic|NP_997698.1", 0 },
+        { 7, "XP_006717059", 0 },
+        { 8, "generic|ENSP00000344155", 0 },
+        { 9, "sp|Q9BZC7", 0 },
+        { 10, "NP_997698_F123R", 0 },
+
+        // Abca1     ATP-binding cassette, sub-family A (ABC1), member 1     4:53030787-53159895
+        { 11, "gi|123456|ref|NP_038482.3", 0 },
+        { 12, "ENSMUSP00000030010", 0 },
+        { 13, "P41233_F123R", 0 },
+
+        // decoys
+        { 14, "rev_NP_038482", 1 },
+        { 15, "DECOY_ENSP00000344155_F123R", 1 },
+        { 16, "r-P41233", 1 }
+    };
+
+    sqlite::command proteinInsert(db, "INSERT INTO Protein (Id, Accession, IsDecoy, Cluster, ProteinGroup, Length, GeneId, GeneGroup) VALUES (?, ?, ?, 1, 1, 123, NULL, NULL)");
+    sqlite::command proteinMetadataInsert(db, "INSERT INTO ProteinMetadata (Id) VALUES (?)");
+    for (const auto& proteinRow : proteins)
+    {
+        auto binder = proteinInsert.binder();
+        for (size_t i = 0; i < proteinRow.size(); ++i)
+            boost::apply_visitor(boost::bind(VariantRowVisitor(), _1, boost::ref(binder)), proteinRow[i]);
+        proteinInsert.step();
+        proteinInsert.reset();
+
+        proteinMetadataInsert.bind(0, boost::get<int>(proteinRow[0]));
+        proteinMetadataInsert.step();
+        proteinMetadataInsert.reset();
+    }
+
+    embedGeneMetadata("embedderDoctest.idpDB");
+
+    sqlite::query q(db, "SELECT GeneId, CAST(TaxonomyId AS TEXT), GeneName, Chromosome, IFNULL(GeneFamily, '') FROM Protein pro, ProteinMetadata pmd WHERE pro.Id=pmd.Id");
+    auto itr = q.begin();
+
+    for (int i = 0; i < 5; ++i) // 0-4 are A2M
+    {
+        int column = 0;
+        for (const string& value : vector<string>{ "A2M", "9606", "alpha-2-macroglobulin", "12p13.31", "" })
+        {
+            CHECK(itr->get<string>(column++) == value);
+        }
+        ++itr;
+    }
+
+    for (int i = 0; i < 5; ++i) // 5-9 are ABCA2
+    {
+        int column = 0;
+        for (const string& value : vector<string>{ "ABCA2", "9606", "ATP binding cassette subfamily A member 2", "9q34.3", "ABCA" })
+        {
+            CHECK(itr->get<string>(column++) == value);
+        }
+        ++itr;
+    }
+
+    for (int i = 0; i < 3; ++i) // 10-12 are Abca1
+    {
+        int column = 0;
+        for (const string& value : vector<string>{ "Abca1", "10090", "ATP-binding cassette, sub-family A (ABC1), member 1", "4:53030787-53159895", "" })
+        {
+            CHECK(itr->get<string>(column++) == value);
+        }
+        ++itr;
+    }
+
+    for (int i = 0; i < 3; ++i) // 13-15 are decoys
+    {
+        int column = 0;
+        for (const auto& value : vector<sqlite::null_type>(5))
+        {
+            CHECK(itr->get<sqlite::null_type>(column++) == value);
+        }
+        ++itr;
     }
 }
 

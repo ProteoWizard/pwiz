@@ -126,8 +126,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return null;
             }
             float tolerance = (float) Transition.DataSchema.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            var chromatogramInfos = chromatogramGroupInfo.GetAllTransitionInfo(Transition.DocNode.Mz, tolerance,
-                ChromatogramGroup.PrecursorResult.GetResultFile().Replicate.ChromatogramSet.OptimizationFunction);
+            var chromatogramInfos = chromatogramGroupInfo.GetAllTransitionInfo(Transition.DocNode, tolerance,
+                ChromatogramGroup.PrecursorResult.GetResultFile().Replicate.ChromatogramSet.OptimizationFunction, TransformChrom.raw);
             int index = chromatogramInfos.Length / 2 + ChromatogramGroup.PrecursorResult.OptStep;
             if (index < 0 || index >= chromatogramInfos.Length)
             {

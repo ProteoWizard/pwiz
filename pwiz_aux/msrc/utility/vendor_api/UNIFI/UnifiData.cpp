@@ -123,6 +123,8 @@ public:
 
     [ProtoBuf::ProtoMember(3)]
     property ProtoPolarity IonizationPolarity;
+
+    property System::Collections::Generic::List<int>^ ScanIndexes;
 };
 
 
@@ -293,11 +295,11 @@ ref class ParallelDownloadQueue
 
                 start = DateTime::UtcNow;
                 auto lastSpectrum = start;
+                auto stream = response->Content->ReadAsStreamAsync()->Result;
                 for (int i = 0; i < _chunkSize && (taskIndex + i) < _numSpectra; ++i)
                 {
                     //if(!_cache->Contains(taskIndex + i))// ((i % 50) == 0)
                     {
-                        auto stream = response->Content->ReadAsStreamAsync()->Result;
                         auto spectrum = ProtoBuf::Serializer::DeserializeWithLengthPrefix<MSeMassSpectrum^>(stream, ProtoBuf::PrefixStyle::Base128);
                         if (spectrum == nullptr)
                             throw gcnew Exception(System::String::Format("deserialized null spectrum for index {0} (spectrum {1})", i, taskIndex + i));
@@ -312,10 +314,22 @@ ref class ParallelDownloadQueue
                             throw gcnew Exception(System::String::Format("download is going too slow in chunk {0} on thread {1}: one spectrum ({2}) took {3}s", taskIndex, currentThreadId, taskIndex+i, (DateTime::UtcNow - lastSpectrum).TotalSeconds));
                         lastSpectrum = DateTime::UtcNow;
 
+                        if (spectrum->ScanSize->Length > 1)
+                        {
+                            // calculate cumulative scan indexes
+                            spectrum->ScanIndexes = gcnew System::Collections::Generic::List<int>(spectrum->ScanSize->Length);
+                            spectrum->ScanIndexes->Add(0);
+                            for (int j = 1; j < spectrum->ScanSize->Length; ++j)
+                                spectrum->ScanIndexes->Add(spectrum->ScanIndexes[j - 1] + spectrum->ScanSize[j - 1]);
+                        }
+
                         //spectrum->Masses = gcnew cli::array<double>(10);
                         //spectrum->Intensities = gcnew cli::array<double>(10);
                         if (!_cache->Contains(taskIndex + i))
+                        {
+                            //Console::WriteLine("Adding result to cache: {0}", taskIndex + i);
                             _cache->Add(taskIndex + i, spectrum);
+                        }
                     }
                     /*else
                     {
@@ -385,10 +399,27 @@ class UnifiData::Impl
     {
         try
         {
+            Uri^ temp;
             if (bal::starts_with(sampleResultUrl, "http://") || bal::starts_with(sampleResultUrl, "https://"))
-                _sampleResultUrl = gcnew Uri(ToSystemString(sampleResultUrl));
+                temp = gcnew Uri(ToSystemString(sampleResultUrl));
             else
-                _sampleResultUrl = gcnew Uri(ToSystemString("https://" + sampleResultUrl));
+                temp = gcnew Uri(ToSystemString("https://" + sampleResultUrl));
+
+            auto queryVars = System::Web::HttpUtility::ParseQueryString(temp->Query);
+            if (queryVars->Count > 0)
+            {
+                _identityServerUrl = gcnew Uri(queryVars[L"identity"]);
+                _clientScope = queryVars[L"scope"];
+                _clientSecret = queryVars[L"secret"];
+            }
+            else
+            {
+
+                _identityServerUrl = gcnew Uri(System::String::Format("{0}://{1}@{2}:50333", temp->Scheme, temp->UserInfo, temp->Host));
+                _clientScope = L"unifi";
+                _clientSecret = L"secret";
+            }
+            _sampleResultUrl = gcnew Uri(temp->GetLeftPart(UriPartial::Path));
 
             auto webRequestHandler = gcnew System::Net::Http::WebRequestHandler();
             webRequestHandler->UnsafeAuthenticatedConnectionSharing = true;
@@ -401,8 +432,9 @@ class UnifiData::Impl
 
             getSampleMetadata();
             getNumberOfSpectra();
+            //Console::WriteLine("numLogicalSpectra: {0}, numNetworkSpectra: {1}", _numLogicalSpectra, _numNetworkSpectra);
 
-            _chunkSize = (int) std::ceil(_numSpectra/100.0);//200;
+            _chunkSize = (int) std::ceil(_numNetworkSpectra /100.0);//200;
             _chunkReadahead = 3;
             _cacheSize = _chunkSize * _chunkReadahead * 2;
 
@@ -410,7 +442,7 @@ class UnifiData::Impl
             _cache->SetPolicy(LruEvictionPolicy<int, MSeMassSpectrum^>::typeid->GetGenericTypeDefinition());
 
             _tasksByIndex = gcnew ConcurrentDictionary<int, Task^>();
-            _queue = gcnew ParallelDownloadQueue(_sampleResultUrl, _accessToken, _httpClient, _numSpectra, _cache, _tasksByIndex, _chunkSize, _chunkReadahead+1);
+            _queue = gcnew ParallelDownloadQueue(_sampleResultUrl, _accessToken, _httpClient, _numNetworkSpectra, _cache, _tasksByIndex, _chunkSize, _chunkReadahead+1);
         }
         CATCH_AND_FORWARD
     }
@@ -418,8 +450,7 @@ class UnifiData::Impl
     friend class UnifiData;
 
     private:
-    const string identityServerBaseAddress = "https://unifiapi.waters.com:50333/identity";
-    const string tokenEndpoint = identityServerBaseAddress + "/connect/token";
+    System::String^ tokenEndpoint() { return System::Uri(_identityServerUrl, L"/identity/connect/token").ToString(); }
 
     /// returns JSON describing the sampleResult, for example:
     //{
@@ -613,24 +644,62 @@ class UnifiData::Impl
     //    }
     //  ]
     //}
-    System::String^ functionInfoEndpoint() { return _sampleResultUrl + "/spectrumInfo"; }
+    System::String^ functionInfoEndpoint() { return _sampleResultUrl + "/spectrumInfos"; }
 
-    /// returns a simple integer count of the number of spectra in this sampleResult
+    //{
+    //  "value": [
+    //      {
+    //          "id": "8c2a6c13-d8d3-4440-a19e-573b05b0ca91",
+    //          "valuesX" : [546.8483,546.8513,546.8543,...],
+    //          "valuesY": [0,10,0,...],
+    //          "retentionTime": 0.00176544255,
+    //          "retentionTimeIndex" : 0,
+    //          "totalNumberOfSpectra" : 36
+    //      }
+    //  ]
+    //}
+    System::String^ functionDataEndpoint(System::String^ spectrumInfoId) { return _sampleResultUrl + "/spectrumInfos(" + spectrumInfoId + ")/data?$top=1"; }
+
+    /// returns a simple integer count of the number of spectra in this sampleResult, but does not multiply by 200 for IMS multiscan spectra
     System::String^ spectrumCountEndpoint() { return _sampleResultUrl + "/spectra/mass.mse/$count"; }
 
     /// returns a JSON array or protobuf stream of the spectral intensities and masses (if the HTTP Accept header specifies 'application/octet-stream')
     System::String^ spectrumEndpoint(size_t skip, size_t top) { return _sampleResultUrl + "/spectra/mass.mse?$skip=" + skip + "&$top=" + top; }
 
+    /// a POST request to this with a JSON body of (1-based?) bin indexes, e.g. {"bins": [1,2,3,4,5]}
+    System::String^ binsToDriftTimesEndPoint() { return _sampleResultUrl + "/spectra/mass.mse/convertbintodrifttime"; }
 
     gcroot<Uri^> _sampleResultUrl;
+    gcroot<Uri^> _identityServerUrl;
+    gcroot<System::String^> _clientScope;
+    gcroot<System::String^> _clientSecret;
     gcroot<System::String^> _accessToken;
     gcroot<HttpClient^> _httpClient;
     gcroot<ParallelDownloadQueue^> _queue;
 
-    int _numSpectra;
+    int _numNetworkSpectra; // number of spectra without accounting for drift scans
+    int _numLogicalSpectra; // number of spectra with IMS spectra counting as 200 logical spectra
+
     string _sampleName;
     string _sampleDescription;
     blt::local_date_time _acquisitionStartTime; // UTC
+
+    struct FunctionInfo
+    {
+        FunctionInfo(int function) : function(function), numSpectra(0) {}
+
+        int function; // 0-based index into SpectrumInfo array
+        string id;
+        bool isCentroidData;
+        bool isRetentionData;
+        bool isIonMobilityData;
+        bool hasCCSCalibration;
+        int numSpectra;
+    };
+
+    vector<FunctionInfo> _functionInfo;
+    bool _hasAnyIonMobilityData;
+    vector<double> _binToDriftTime; // drift time for each of the 200 bins (0-base indexed) 
 
     gcroot<MemoryCache<int, MSeMassSpectrum^>^> _cache;
     gcroot<IDictionary<int, Task^>^> _tasksByIndex;
@@ -639,6 +708,18 @@ class UnifiData::Impl
     int _cacheSize;
 
     size_t taskIndexFromSpectrumIndex(size_t index) { return (index / _chunkSize) * _chunkSize; }
+
+    size_t networkIndexFromLogicalIndex(size_t logicalIndex)
+    {
+        if (!_hasAnyIonMobilityData)
+            return logicalIndex;
+
+        // 0-199 -> 0
+        // 200-399 -> 1
+        // 400-599 -> 2
+        // etc.
+        return (size_t) floor(logicalIndex / 200.0);
+    }
 
     void getAccessToken()
     {
@@ -654,14 +735,15 @@ class UnifiData::Impl
         fields->Add(IdentityModel::OidcConstants::TokenRequest::GrantType, IdentityModel::OidcConstants::GrantTypes::Password);
         fields->Add(IdentityModel::OidcConstants::TokenRequest::UserName, username);
         fields->Add(IdentityModel::OidcConstants::TokenRequest::Password, password);
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::Scope, "unifi");
+        fields->Add(IdentityModel::OidcConstants::TokenRequest::Scope, _clientScope);
 
-        auto tokenClient = gcnew TokenClient(ToSystemString(tokenEndpoint), "resourceownerclient", "secret", IdentityModel::Client::AuthenticationStyle::BasicAuthentication);
+        auto tokenClient = gcnew TokenClient(tokenEndpoint(), "resourceownerclient", _clientSecret, IdentityModel::Client::AuthenticationStyle::BasicAuthentication);
         TokenResponse^ response = tokenClient->RequestAsync(fields, System::Threading::CancellationToken::None)->Result;
         if (response->IsError)
             throw user_error("authentication error: incorrect username or password? (" + ToStdString(response->Error) + ")");
 
         _accessToken = response->AccessToken;
+        //Console::WriteLine(_accessToken);
     }
 
     void getHttpClient()
@@ -677,7 +759,7 @@ class UnifiData::Impl
         {
             auto response = _httpClient->GetAsync(sampleResultMetadataEndpoint())->Result;
             if (!response->IsSuccessStatusCode)
-                throw std::runtime_error("error getting sample result metadata (" + ToStdString(response->StatusCode.ToString()) + ")");
+                throw gcnew Exception("response status code does not indicate success (" + response->StatusCode.ToString() + "); URL was: " + sampleResultMetadataEndpoint());
 
             json = response->Content->ReadAsStringAsync()->Result;
         }
@@ -701,7 +783,7 @@ class UnifiData::Impl
                 acquisitionTime = acquisitionTime.AddYears(1400 - acquisitionTime.Year);
 
             bpt::ptime pt(boost::gregorian::date(acquisitionTime.Year, boost::gregorian::greg_month(acquisitionTime.Month), acquisitionTime.Day),
-                          bpt::time_duration(acquisitionTime.Hour, acquisitionTime.Minute, acquisitionTime.Second, bpt::millisec(acquisitionTime.Millisecond).fractional_seconds()));
+                bpt::time_duration(acquisitionTime.Hour, acquisitionTime.Minute, acquisitionTime.Second, bpt::millisec(acquisitionTime.Millisecond).fractional_seconds()));
             _acquisitionStartTime = blt::local_date_time(pt, blt::time_zone_ptr()); // UTC
         }
         catch (Exception^ e)
@@ -712,6 +794,116 @@ class UnifiData::Impl
         {
             throw e;
         }
+
+        bool hasMSeData = false;
+
+        try
+        {
+            auto response = _httpClient->GetAsync(functionInfoEndpoint())->Result;
+            if (!response->IsSuccessStatusCode)
+                throw gcnew Exception("response status code does not indicate success (" + response->StatusCode.ToString() + "); URL was: " + functionInfoEndpoint());
+
+            json = response->Content->ReadAsStringAsync()->Result;
+
+            _numLogicalSpectra = 0;
+            _hasAnyIonMobilityData = false;
+
+            auto o = JObject::Parse(json);
+            for each (auto spectrumInfo in o->SelectToken("$.value")->Children())
+            {
+                _functionInfo.emplace_back(_functionInfo.size());
+                FunctionInfo& fi = _functionInfo.back();
+
+                auto id = spectrumInfo->SelectToken("$.id")->ToString();
+                fi.id = ToStdString(id);
+                fi.isCentroidData = (bool)spectrumInfo->SelectToken("$.isCentroidData");
+                fi.isRetentionData = (bool)spectrumInfo->SelectToken("$.isRetentionData");
+                fi.isIonMobilityData = (bool)spectrumInfo->SelectToken("$.isIonMobilityData");
+                fi.hasCCSCalibration = (bool)spectrumInfo->SelectToken("$.hasCCSCalibration");
+
+                _hasAnyIonMobilityData |= fi.isIonMobilityData;
+
+                //Console::WriteLine("{0}:\n{1}", id, spectrumInfo->ToString());
+
+                // skip non-MSe functions for now; UNIFI API doesn't allow downloading their data (!!!)
+                auto mseLevel = spectrumInfo->SelectToken("$.analyticalTechnique.tofGroup.mseLevel");
+                if (System::Object::ReferenceEquals(mseLevel, nullptr) || mseLevel->ToString() == "Unknown")
+                    continue;
+
+                hasMSeData = true;
+
+                try
+                {
+                    auto response = _httpClient->GetAsync(functionDataEndpoint(id))->Result;
+                    if (!response->IsSuccessStatusCode)
+                        throw gcnew Exception("response status code does not indicate success (" + response->StatusCode.ToString() + "); URL was: " + functionDataEndpoint(id));
+
+                    json = response->Content->ReadAsStringAsync()->Result;
+                    auto o2 = JObject::Parse(json); // there should only be one spectrum but it's in a JSON array
+                    for each (auto spectrum in o2->SelectToken("$.value")->Children())
+                        fi.numSpectra = (int)spectrum->SelectToken("$.totalNumberOfSpectra");
+
+                    //if (fi.isIonMobilityData)
+                    //    fi.numSpectra *= 200;
+                }
+                catch (Exception^ e)
+                {
+                    throw std::runtime_error("error getting data for spectrumInfo " + fi.id + ": " + ToStdString(e->ToString()->Split(L'\n')[0]));
+                }
+            }
+
+            for (const auto& fi : _functionInfo)
+            {
+                if (_hasAnyIonMobilityData) // assume that only ion mobility functions contribute to final spectra count; i.e. lockmass won't count
+                {
+                    if (fi.isIonMobilityData)
+                        _numLogicalSpectra += fi.isIonMobilityData ? fi.numSpectra * 200 : 0;
+                }
+                else
+                    _numLogicalSpectra += fi.numSpectra;
+            }
+        }
+        catch (Exception^ e)
+        {
+            throw std::runtime_error("error getting function spectrumInfos: " + ToStdString(e->ToString()->Split(L'\n')[0]));
+        }
+        catch (std::exception& e)
+        {
+            throw e;
+        }
+
+        if (!hasMSeData)
+            throw std::runtime_error("only MSe and HD-MSe data is supported at this time");
+
+        if (_hasAnyIonMobilityData)
+        {
+            try
+            {
+                auto postContent = gcnew System::Net::Http::StringContent("{\"bins\": [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,"
+                                                                          "50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,"
+                                                                          "100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,"
+                                                                          "151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200]}");
+                postContent->Headers->ContentType->MediaType = "application/json";
+                auto response = _httpClient->PostAsync(binsToDriftTimesEndPoint(), postContent)->Result;
+                if (!response->IsSuccessStatusCode)
+                    throw gcnew Exception("response status code does not indicate success (" + response->StatusCode.ToString() + "); URL was: " + binsToDriftTimesEndPoint());
+
+                json = response->Content->ReadAsStringAsync()->Result; // {"value": [0.071,0.142,0.213,...]}
+
+                _binToDriftTime.reserve(200);
+
+                auto o = JObject::Parse(json);
+                for each (auto value in o->SelectToken("$.value")->Children())
+                    _binToDriftTime.push_back((double) value);
+
+                if (_binToDriftTime.size() != 200)
+                    throw gcnew Exception("convertbintodrifttime result did not contain 200 values as expected");
+            }
+            catch (Exception^ e)
+            {
+                throw std::runtime_error("error getting function spectrumInfos: " + ToStdString(e->ToString()->Split(L'\n')[0]));
+            }
+        }
     }
 
     void getNumberOfSpectra()
@@ -719,20 +911,98 @@ class UnifiData::Impl
         auto response = _httpClient->GetAsync(spectrumCountEndpoint())->Result;
         if (!response->IsSuccessStatusCode)
             throw std::runtime_error("error getting number of spectra (" + ToStdString(response->StatusCode.ToString()) + ")");
-        if (!Int32::TryParse(response->Content->ReadAsStringAsync()->Result, _numSpectra))
+        if (!Int32::TryParse(response->Content->ReadAsStringAsync()->Result, _numNetworkSpectra))
             throw std::runtime_error("error parsing number of spectra \"" + ToStdString(response->Content->ReadAsStringAsync()->Result) + "\"");
     }
 
-    void convertWatersToPwizSpectrum(MSeMassSpectrum^ spectrum, UnifiSpectrum& result, bool getBinaryData)
+    void convertWatersToPwizSpectrum(MSeMassSpectrum^ spectrum, UnifiSpectrum& result, int logicalIndex, bool getBinaryData)
     {
         result.retentionTime = spectrum->RetentionTime;
         result.scanPolarity = (Polarity)spectrum->IonizationPolarity;
-        result.arrayLength = spectrum->Masses->Length;
 
-        if (getBinaryData)
+        if (!_hasAnyIonMobilityData)
         {
-            ToStdVector(spectrum->Masses, result.mzArray);
-            ToStdVector(spectrum->Intensities, result.intensityArray);
+            if (spectrum->ScanSize->Length > 1)
+                throw std::runtime_error("non-ion-mobility spectrum with ScanSize.Length > 1");
+
+            result.driftTime = 0;
+            result.arrayLength = spectrum->Masses->Length;
+            result.energyLevel = (logicalIndex % 2) == 0 ? Low : High;
+
+            if (getBinaryData && result.arrayLength > 0)
+            {
+                ToStdVector(spectrum->Masses, result.mzArray);
+                ToStdVector(spectrum->Intensities, result.intensityArray);
+
+                // for IMS data, we must sort all the points from the drift scans
+                /* NOTE: keeping this code for future support of --combineIonMobilitySpectra
+                std::vector<std::size_t> p(result.mzArray.size());
+                std::iota(p.begin(), p.end(), 0);
+                std::sort(p.begin(), p.end(), [&](std::size_t i, std::size_t j) { return result.mzArray[i] < result.mzArray[j]; });
+
+                std::vector<bool> done(result.mzArray.size());
+                for (std::size_t i = 0; i < result.mzArray.size(); ++i)
+                {
+                    if (done[i])
+                        continue;
+
+                    done[i] = true;
+                    std::size_t prev_j = i;
+                    std::size_t j = p[i];
+                    while (i != j)
+                    {
+                        std::swap(result.mzArray[prev_j], result.mzArray[j]);
+                        std::swap(result.intensityArray[prev_j], result.intensityArray[j]);
+                        done[j] = true;
+                        prev_j = j;
+                        j = p[j];
+                    }
+                }
+
+                // and then combine equal points
+                vector<double>& a = result.mzArray, &b = result.intensityArray;
+
+                size_t i = 1, j = 0;
+                while (i < a.size())
+                {
+                    while (a[i] == a[j] && i < a.size())
+                    {
+                        b[j] += b[i];
+                        ++i;
+                    }
+
+                    if (i == a.size())
+                        break;
+
+                    ++j;
+                    a[j] = a[i];
+                    b[j] = b[i];
+                    ++i;
+                }
+
+                a.resize(j + 1);
+                b.resize(j + 1);*/
+            }
+        }
+        else
+        {
+            if (spectrum->ScanSize->Length == 1)
+                throw std::runtime_error("assumed ion-mobility spectrum but ScanSize.Length == 1");
+
+            if (spectrum->ScanSize->Length != 200)
+                throw std::runtime_error("assumed ion-mobility spectrum but ScanSize.Length != 200");
+
+            int driftScanIndex = logicalIndex % 200;
+            result.driftTime = _binToDriftTime[driftScanIndex];
+            result.arrayLength = spectrum->ScanSize[driftScanIndex];
+            result.energyLevel = (networkIndexFromLogicalIndex(logicalIndex) % 2) == 0 ? Low : High;
+
+            if (getBinaryData && result.arrayLength > 0)
+            {
+                int driftScanArrayOffset = spectrum->ScanIndexes[driftScanIndex];
+                ToStdVector(spectrum->Masses, driftScanArrayOffset, result.mzArray, 0, result.arrayLength);
+                ToStdVector(spectrum->Intensities, driftScanArrayOffset, result.intensityArray, 0, result.arrayLength);
+            }
         }
     }
 
@@ -740,20 +1010,23 @@ class UnifiData::Impl
     {
         try
         {
-            //Console::WriteLine("\ngetSpectrum {0}", index);
             MSeMassSpectrum^ spectrum = nullptr;
-            int taskIndex = taskIndexFromSpectrumIndex(index);
+            int networkIndex = networkIndexFromLogicalIndex(index);
+            int taskIndex = taskIndexFromSpectrumIndex(networkIndex);
 
-            if (_cache->TryGet(index, spectrum))
+            if (_cache->TryGet(networkIndex, spectrum))
             {
-                convertWatersToPwizSpectrum(spectrum, result, getBinaryData);
+                convertWatersToPwizSpectrum(spectrum, result, index, getBinaryData);
 
                 // also queue the next 5 chunks
                 for (int i = 1; i <= _chunkReadahead; ++i)
                 {
-                    if ((taskIndex + _chunkSize * i) > _numSpectra)
+                    if ((taskIndex + _chunkSize * i) > _numNetworkSpectra)
                         break;
-                    if (!_cache->Contains(taskIndex + ((_chunkSize+1) * i - 1))) // if cache contains last index for chunk, don't requeue it
+                    //Console::WriteLine("Queueing chunk {0} after finding {1} in cache", taskIndex + _chunkSize * i, taskIndex);
+
+                    int lastNetworkIndexOfChunk = taskIndex + ((_chunkSize + 1) * i - 1);
+                    if (!_cache->Contains(lastNetworkIndexOfChunk)) // if cache contains last index for chunk, don't requeue it
                         _queue->getChunkTask(taskIndex + _chunkSize * i, false, false);
                 }
 
@@ -777,9 +1050,12 @@ class UnifiData::Impl
             // also queue the next 5 chunks
             for (int i = 1; i <= _chunkReadahead; ++i)
             {
-                if ((taskIndexFromSpectrumIndex(index) + _chunkSize * i) > _numSpectra)
+                if ((taskIndex + _chunkSize * i) > _numNetworkSpectra)
                     break;
-                if (!_cache->Contains(taskIndex + ((_chunkSize + 1) * i - 1))) // if cache contains last index for chunk, don't requeue it
+                //Console::WriteLine("Queueing chunk {0} after waiting for {1}", taskIndexFromSpectrumIndex(index) + _chunkSize * i, taskIndex);
+
+                int lastNetworkIndexOfChunk = taskIndex + ((_chunkSize + 1) * i - 1);
+                if (!_cache->Contains(lastNetworkIndexOfChunk)) // if cache contains last index for chunk, don't requeue it
                     _queue->getChunkTask(taskIndex + _chunkSize * i, false, false);
             }
 #ifdef _WIN32 //DEBUG
@@ -787,22 +1063,16 @@ class UnifiData::Impl
 #endif
             chunkTask->Wait(); // wait for the task to finish
 
-            spectrum = _cache->Get(index);
+            spectrum = _cache->Get(networkIndex);
             if (spectrum == nullptr)
                 throw std::runtime_error("spectrum still null after task finished: " + lexical_cast<string>(index));
 
-            convertWatersToPwizSpectrum(spectrum, result, getBinaryData);
+            convertWatersToPwizSpectrum(spectrum, result, index, getBinaryData);
 
         } CATCH_AND_FORWARD_EX(index)
     }
 
-    /*virtual InstrumentModel getInstrumentModel() const;
-    virtual IonSourceType getIonSourceType() const;
-    virtual blt::local_date_time getSampleAcquisitionTime(int sample, bool adjustToHostTime) const;
 
-    virtual ExperimentPtr getExperiment(int sample, int period, int experiment) const;
-    virtual SpectrumPtr getSpectrum(int sample, int period, int experiment, int cycle) const;
-    virtual SpectrumPtr getSpectrum(ExperimentPtr experiment, int cycle) const;*/
 };
 
 
@@ -1364,13 +1634,20 @@ UnifiData::~UnifiData()
 {
 }
 
-PWIZ_API_DECL size_t UnifiData::numberOfSpectra() const { return (size_t) _impl->_numSpectra; }
+PWIZ_API_DECL size_t UnifiData::numberOfSpectra() const { return (size_t) _impl->_numLogicalSpectra; }
 
 PWIZ_API_DECL void UnifiData::getSpectrum(size_t index, UnifiSpectrum& spectrum, bool getBinaryData) const { _impl->getSpectrum(index, spectrum, getBinaryData); }
 
 PWIZ_API_DECL const boost::local_time::local_date_time& UnifiData::getAcquisitionStartTime() const { return _impl->_acquisitionStartTime; }
 PWIZ_API_DECL const std::string& UnifiData::getSampleName() const { return _impl->_sampleName; }
 PWIZ_API_DECL const std::string& UnifiData::getSampleDescription() const { return _impl->_sampleDescription; }
+
+
+PWIZ_API_DECL bool UnifiData::hasIonMobilityData() const { return _impl->_hasAnyIonMobilityData; }
+
+PWIZ_API_DECL bool UnifiData::canConvertDriftTimeAndCCS() const { return false; }
+PWIZ_API_DECL double UnifiData::driftTimeToCCS(double driftTimeInMilliseconds, double mz, int charge) const { return 0; }
+PWIZ_API_DECL double UnifiData::ccsToDriftTime(double ccs, double mz, int charge) const { return 0; }
 
 } // ABI
 } // vendor_api

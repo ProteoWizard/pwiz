@@ -109,31 +109,38 @@ namespace pwiz.Skyline.FileUI
             comboOptimizing.SelectedIndex = 0;
 
             // Set instrument type based on CE regression name for the document.
-            string instrumentTypeName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
-            if (instrumentTypeName != null)
+            string cePredictorName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
+            if (cePredictorName != null)
             {
                 // Look for the first instrument type with the same prefix as the CE name
-                string instrumentTypePrefix = instrumentTypeName.Split(' ')[0];
-                // We still have some CE regressions that begin with ABI, while all instruments
-                // have been changed to AB SCIEX
-                if (Equals("ABI", instrumentTypePrefix)) // Not L10N
-                    instrumentTypePrefix = "AB"; // Not L10N
+                string cePredictorPrefix = cePredictorName.Split(' ')[0];
+                // We still may see some CE regressions that begin with ABI or AB, while all instruments
+                // have been changed to start with SCIEX
+                if (Equals("ABI", cePredictorPrefix) || Equals("AB", cePredictorPrefix)) // Not L10N
+                    cePredictorPrefix = ExportInstrumentType.ABI;
                 int i = -1;
                 if (document.Settings.TransitionSettings.FullScan.IsEnabled)
                 {
-                    i = listTypes.IndexOf(typeName => typeName.StartsWith(instrumentTypePrefix) &&
+                    i = listTypes.IndexOf(typeName => typeName.StartsWith(cePredictorPrefix) &&
                         ExportInstrumentType.IsFullScanInstrumentType(typeName));
                 }
                 if (i == -1)
                 {
-                    i = listTypes.IndexOf(typeName => typeName.StartsWith(instrumentTypePrefix));
+                    i = listTypes.IndexOf(typeName => typeName.StartsWith(cePredictorPrefix));
                 }
                 if (i != -1)
                     InstrumentType = listTypes[i];
             }
             // If nothing found based on CE regression name, just use the first instrument in the list
             if (InstrumentType == null)
-                InstrumentType = listTypes[0];
+            {
+                var instrumentTypeFirst = listTypes[0];
+                // Avoid defaulting to Agilent for DIA when we know it is not supported.
+                if (IsDiaFullScan && Equals(instrumentTypeFirst, ExportInstrumentType.AGILENT_TOF) && listTypes.Length > 1)
+                    InstrumentType = listTypes[1];
+                else
+                    InstrumentType = instrumentTypeFirst;
+            }
 
             // Reset method type based on what was used last and what the chosen instrument is capable of
             ExportMethodType mType = Helpers.ParseEnum(Settings.Default.ExportMethodType, ExportMethodType.Standard);
@@ -187,10 +194,13 @@ namespace pwiz.Skyline.FileUI
             cbExportEdcMass.Checked = Settings.Default.ExportEdcMass;
             textPrimaryCount.Text = Settings.Default.PrimaryTransitionCount.ToString(LocalizationHelper.CurrentCulture);
             // Reposition from design layout
+            cbSlens.Top = textMaxTransitions.Bottom;
+            cbWriteCoV.Top = cbSlens.Bottom;
             panelThermoColumns.Top = labelDwellTime.Top;
             panelThermoRt.Top = panelThermoColumns.Top - (int)(panelThermoRt.Height*0.8);
             panelAbSciexTOF.Top = textDwellTime.Top + (textDwellTime.Height - panelAbSciexTOF.Height)/2;
             panelTriggered.Top = textDwellTime.Top + (textDwellTime.Height - panelTriggered.Height)/2;
+            panelTuneColumns.Top = comboTargetType.Top + (comboTargetType.Height - panelTuneColumns.Height)/2;
             panelSciexTune.Top = labelOptimizing.Top;
             panelWaters.Top = labelDwellTime.Top - panelWaters.Height;
 
@@ -435,6 +445,12 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public bool WriteCompensationVoltages
+        {
+            get { return _exportProperties.WriteCompensationVoltages; }
+            set { _exportProperties.WriteCompensationVoltages = cbWriteCoV.Checked = value; }
+        }
+
         public ExportPolarity PolarityFilter
         {
             get { return _exportProperties.PolarityFilter; }
@@ -502,7 +518,8 @@ namespace pwiz.Skyline.FileUI
         private void UpdateCovControls()
         {
             bool covInList = comboOptimizing.Items.Contains(ExportOptimize.COV);
-            bool canOptimizeCov = InstrumentType.Contains("SCIEX") && _document.Settings.TransitionSettings.Prediction.CompensationVoltage != null; // Not L10N
+            bool canOptimizeCov = _document.Settings.TransitionSettings.Prediction.CompensationVoltage != null &&
+                (InstrumentType.Contains("SCIEX") || InstrumentType.Equals(ExportInstrumentType.THERMO_QUANTIVA)); // Not L10N
             if (covInList && !canOptimizeCov)
             {
                 if (comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.COV))
@@ -539,6 +556,22 @@ namespace pwiz.Skyline.FileUI
             cbSlens.Visible = cbSlens.Enabled =
                 InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
                 InstrumentType == ExportInstrumentType.THERMO;  // TODO bspratt is this specific enough?
+        }
+
+        private void UpdateThermoFaimsCvControl()
+        {
+            cbWriteCoV.Visible = cbWriteCoV.Enabled = InstrumentType == ExportInstrumentType.THERMO_QUANTIVA;
+            var optimizing = comboOptimizing.SelectedItem;
+            if (optimizing != null && Equals(optimizing.ToString(), ExportOptimize.COV))
+            {
+                cbWriteCoV.Checked = true;
+                cbWriteCoV.Enabled = false;
+            }
+        }
+
+        private void UpdateThermoTuneControls()
+        {
+            panelTuneColumns.Visible = InstrumentType == ExportInstrumentType.THERMO_FUSION;
         }
 
         private void UpdateMaxTransitions()
@@ -641,7 +674,7 @@ namespace pwiz.Skyline.FileUI
                 if (IsDia)
                 {
                     if (Equals(InstrumentType, ExportInstrumentType.AGILENT_TOF) ||
-                        Equals(InstrumentType, ExportInstrumentType.ABI_TOF) ||
+                        Equals(InstrumentType, ExportInstrumentType.ABI_TOF) || // CONSIDER: Should be possible, but we haven't done methods yet
                         Equals(InstrumentType, ExportInstrumentType.THERMO_LTQ))
                     {
                         helper.ShowTextBoxError(textTemplateFile, Resources.ExportMethodDlg_OkDialog_Export_of_DIA_method_is_not_supported_for__0__, InstrumentType);
@@ -751,19 +784,15 @@ namespace pwiz.Skyline.FileUI
                 var predict = documentExport.Settings.TransitionSettings.Prediction;
                 var ce = predict.CollisionEnergy;
                 string ceName = (ce != null ? ce.Name : null);
-                string ceNameDefault = _instrumentType;
-                if (ceNameDefault.IndexOf(' ') != -1)
-                    ceNameDefault = ceNameDefault.Substring(0, ceNameDefault.IndexOf(' '));
-                bool ceInSynch = ceName != null && ceName.StartsWith(ceNameDefault);
+                string ceNameDefault = _instrumentType.Split(' ')[0];
+                bool ceInSynch = IsInSynchPredictor(ceName, ceNameDefault);
 
                 var dp = predict.DeclusteringPotential;
                 string dpName = (dp != null ? dp.Name : null);
-                string dpNameDefault = _instrumentType;
-                if (dpNameDefault.IndexOf(' ') != -1)
-                    dpNameDefault = dpNameDefault.Substring(0, dpNameDefault.IndexOf(' '));
+                string dpNameDefault = _instrumentType.Split(' ')[0];
                 bool dpInSynch = true;
                 if (_instrumentType == ExportInstrumentType.ABI)
-                    dpInSynch = dpName != null && dpName.StartsWith(dpNameDefault);
+                    dpInSynch = IsInSynchPredictor(dpName, dpNameDefault);
                 else
                     dpNameDefault = null; // Ignored for all other types
 
@@ -794,54 +823,69 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            if (documentExport.Settings.TransitionSettings.Prediction.CompensationVoltage != null &&
-                !Equals(comboOptimizing.SelectedItem.ToString(), ExportOptimize.COV))
+            var covPrediction = documentExport.Settings.TransitionSettings.Prediction.CompensationVoltage != null;
+            var writeFaims = cbWriteCoV.Visible && cbWriteCoV.Checked;
+            if ((covPrediction || writeFaims) && !Equals(comboOptimizing.SelectedItem.ToString(), ExportOptimize.COV))
             {
                 // Show warning if we don't have results for the highest tune level
-                var highestCoV = documentExport.HighestCompensationVoltageTuning();
                 string message = null;
-                switch (highestCoV)
+                if (!writeFaims)
                 {
-                    case CompensationVoltageParameters.Tuning.fine:
-                        {
-                            var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
-                            if (missing.Any())
+                    var highestCoV = documentExport.HighestCompensationVoltageTuning();
+                    switch (highestCoV)
+                    {
+                        case CompensationVoltageParameters.Tuning.fine:
                             {
-                                message = TextUtil.LineSeparate(
-                                    Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_for_the_following_,
-                                    TextUtil.LineSeparate(missing));
+                                var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
+                                if (missing.Any())
+                                {
+                                    message = TextUtil.LineSeparate(
+                                        Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_for_the_following_,
+                                        TextUtil.LineSeparate(missing));
+                                }
+                                break;
                             }
-                            break;
-                        }
-                    case CompensationVoltageParameters.Tuning.medium:
-                        {
-                            message = Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_;
-                            var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
-                            if (missing.Any())
+                        case CompensationVoltageParameters.Tuning.medium:
                             {
-                                message = TextUtil.LineSeparate(message,
-                                    Resources.ExportMethodDlg_OkDialog_You_are_missing_medium_tune_optimized_compensation_voltages_for_the_following_,
-                                    TextUtil.LineSeparate(missing));
+                                message = Resources.ExportMethodDlg_OkDialog_You_are_missing_fine_tune_optimized_compensation_voltages_;
+                                var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
+                                if (missing.Any())
+                                {
+                                    message = TextUtil.LineSeparate(message,
+                                        Resources.ExportMethodDlg_OkDialog_You_are_missing_medium_tune_optimized_compensation_voltages_for_the_following_,
+                                        TextUtil.LineSeparate(missing));
+                                }
+                                break;
                             }
-                            break;
-                        }
-                    case CompensationVoltageParameters.Tuning.rough:
-                        {
-                            message = Resources.ExportMethodDlg_OkDialog_You_have_only_rough_tune_optimized_compensation_voltages_;
-                            var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
-                            if (missing.Any())
+                        case CompensationVoltageParameters.Tuning.rough:
                             {
-                                message = TextUtil.LineSeparate(message,
-                                    Resources.ExportMethodDlg_OkDialog_You_are_missing_any_optimized_compensation_voltages_for_the_following_,
-                                    TextUtil.LineSeparate(missing));
+                                message = Resources.ExportMethodDlg_OkDialog_You_have_only_rough_tune_optimized_compensation_voltages_;
+                                var missing = documentExport.GetMissingCompensationVoltages(highestCoV).ToArray();
+                                if (missing.Any())
+                                {
+                                    message = TextUtil.LineSeparate(message,
+                                        Resources.ExportMethodDlg_OkDialog_You_are_missing_any_optimized_compensation_voltages_for_the_following_,
+                                        TextUtil.LineSeparate(missing));
+                                }
+                                break;
                             }
-                            break;
-                        }
-                    case CompensationVoltageParameters.Tuning.none:
-                        {
-                            message = Resources.ExportMethodDlg_OkDialog_Your_document_does_not_contain_compensation_voltage_results__but_compensation_voltage_is_set_under_transition_settings_;
-                            break;
-                        }
+                        case CompensationVoltageParameters.Tuning.none:
+                            {
+                                message = Resources.ExportMethodDlg_OkDialog_Your_document_does_not_contain_compensation_voltage_results__but_compensation_voltage_is_set_under_transition_settings_;
+                                break;
+                            }
+                    }
+                }
+                else
+                {
+                    var missing = documentExport.GetMissingCompensationVoltages(CompensationVoltageParameters.Tuning.fine).ToArray();
+                    if (missing.Any())
+                    {
+                        message = TextUtil.LineSeparate(
+                            Resources.ExportMethodDlg_OkDialog_You_are_missing_compensation_voltages_for_the_following_,
+                            TextUtil.LineSeparate(missing),
+                            Resources.ExportMethodDlg_OkDialog_You_can_set_explicit_compensation_voltages_for_these__or_add_their_values_to_a_document_optimization_library_in_Transition_Settings_under_the_Prediction_tab_);
+                    }
                 }
 
                 if (message != null)
@@ -960,6 +1004,18 @@ namespace pwiz.Skyline.FileUI
             Close();
         }
 
+        private static bool IsInSynchPredictor(string name, string namePrefix)
+        {
+            if (name == null)
+                return false;
+            if (name.StartsWith(namePrefix))
+                return true;
+            // SCIEX has had many prefixes
+            if (namePrefix.Equals(ExportInstrumentType.ABI.Split(' ')[0]))
+                return IsInSynchPredictor(name, "AB") || IsInSynchPredictor(name, "ABI");   // Not L10N
+            return false;
+        }
+
         private static bool CheckAnalyzer(bool enabled, FullScanMassAnalyzerType analyzerType, params FullScanMassAnalyzerType[] analyzerTypesAccepted)
         {
             return !enabled || analyzerType == FullScanMassAnalyzerType.centroided || analyzerTypesAccepted.Contains(analyzerType);
@@ -986,7 +1042,9 @@ namespace pwiz.Skyline.FileUI
             _exportProperties.FullScans = _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
             _exportProperties.AddEnergyRamp = panelThermoColumns.Visible && cbEnergyRamp.Checked;
             _exportProperties.UseSlens = cbSlens.Checked;
+            _exportProperties.WriteCompensationVoltages = cbWriteCoV.Checked;
             _exportProperties.AddTriggerReference = panelThermoColumns.Visible && cbTriggerRefColumns.Checked;
+            _exportProperties.Tune3 = panelTuneColumns.Visible && cbTune3.Checked;
 
             _exportProperties.ExportMultiQuant = panelAbSciexTOF.Visible && cbExportMultiQuant.Checked;
 
@@ -1290,8 +1348,15 @@ namespace pwiz.Skyline.FileUI
         {
             get
             {
-                return IsFullScanInstrument &&
-                    _document.Settings.TransitionSettings.FullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA;
+                return IsFullScanInstrument && IsDiaFullScan;
+            }
+        }
+
+        private bool IsDiaFullScan
+        {
+            get
+            {
+                return _document.Settings.TransitionSettings.FullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA;
             }
         }
 
@@ -1421,6 +1486,8 @@ namespace pwiz.Skyline.FileUI
             UpdateWatersControls();
             UpdateThermoRtControls(targetType);
             UpdateThermoSLensControl(targetType);
+            UpdateThermoFaimsCvControl();
+            UpdateThermoTuneControls();
             UpdateMaxLabel(standard);
         }
 
@@ -1742,6 +1809,7 @@ namespace pwiz.Skyline.FileUI
         {
             CalcMethodCount();
             panelSciexTune.Visible = comboOptimizing.SelectedItem.ToString().Equals(ExportOptimize.COV);
+            UpdateThermoFaimsCvControl();
         }
 
         private void cbIgnoreProteins_CheckedChanged(object sender, EventArgs e)

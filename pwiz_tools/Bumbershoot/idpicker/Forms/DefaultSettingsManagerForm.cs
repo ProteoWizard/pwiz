@@ -89,6 +89,7 @@ namespace IDPicker.Forms
 
             sourceExtensionsTextBox.Text = settings.SourceExtensions;
             groupSeparatorTextBox.Text = settings.GroupConcatSeparator;
+            quantitationRollupMethodComboBox.SelectedIndex = (int) Properties.GUI.Settings.Default.QuantitationRollupMethod - 1;
 
             nonFixedDriveWarningCheckBox.Checked = Properties.GUI.Settings.Default.WarnAboutNonFixedDrive;
             embedGeneMetadataWarningCheckBox.Checked = Properties.GUI.Settings.Default.WarnAboutNoGeneMetadata;
@@ -125,6 +126,8 @@ namespace IDPicker.Forms
             settings.SourceExtensions = sourceExtensionsTextBox.Text;
             settings.GroupConcatSeparator = groupSeparatorTextBox.Text;
             SchemaUpdater.SetGroupConcatSeparator(settings.GroupConcatSeparator);
+
+            Properties.GUI.Settings.Default.QuantitationRollupMethod = (QuantitationRollupMethod) (quantitationRollupMethodComboBox.SelectedIndex + 1);
 
             Properties.GUI.Settings.Default.WarnAboutNonFixedDrive = nonFixedDriveWarningCheckBox.Checked;
             Properties.GUI.Settings.Default.WarnAboutNoGeneMetadata = embedGeneMetadataWarningCheckBox.Checked;

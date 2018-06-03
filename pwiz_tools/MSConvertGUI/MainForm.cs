@@ -29,6 +29,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 using CustomDataSourceDialog;
 using pwiz.CLI.msdata;
 
@@ -38,7 +39,8 @@ namespace MSConvertGUI
     {
         IList<string> cmdline_args;
         string SetDefaultsDataType = ""; // watch last-added filetype, offer to set defaults for that type
-        string AboutButtonHelpText = "Each control has a \"tooltip\": let your cursor rest atop a control for a moment to see a help message for that control.\r\n\r\n" +
+        string AboutButtonHelpText = "Version: " + Application.ProductVersion + "\r\n\r\n" +
+            "Each control has a \"tooltip\": let your cursor rest atop a control for a moment to see a help message for that control.\r\n\r\n" +
             "For more in depth help, visit http://proteowizard.sourceforge.net/tools.shtml .  " +
             "The documentation there describing the command line version of msconvert will be useful for understanding this " +
             "program, especially filters.\r\n\r\nActually, you will generally find the command line version to be more current, complete and " +
@@ -89,6 +91,27 @@ namespace MSConvertGUI
                     AddFileButton_Click(this, EventArgs.Empty);
                 }
             }
+            else if (IsNetworkSource(text))
+            {
+                var credentialMatch = Regex.Match(text, "(http[s]?://)([^:]+):([^@]+)@(.*)");
+                if (credentialMatch.Success)
+                {
+                    string url = credentialMatch.Groups[1].Value + credentialMatch.Groups[4].Value;
+                    string[] urlParts = new Uri(url).GetLeftPart(UriPartial.Authority).Split(':');
+                    LastUsedUnifiCredentials = new UnifiBrowserForm.Credentials
+                    {
+                        Username = credentialMatch.Groups[2].Value,
+                        Password = credentialMatch.Groups[3].Value,
+                        IdentityServer = urlParts[0] + ":" + urlParts[1] + ":50333",
+                        ClientScope = "unifi",
+                        ClientSecret = "secret"
+                    };
+                    UnifiCredentialsByUrl[url] = LastUsedUnifiCredentials;
+                    FileBox.Text = url;
+                }
+                else
+                    FileBox.Text = text;
+            }
             else
                 FileBox.Text = text;
         }
@@ -131,6 +154,20 @@ namespace MSConvertGUI
             if (File.Exists(configname))
                 SetGUIfromCfg(configname); // populate buttons etc from config file
 
+            if (Properties.Settings.Default.LastUsedUnifiUrl.Length > 0)
+            {
+                try
+                {
+                    var unifiSettings = UnifiBrowserForm.Credentials.ParseUrlWithAuthentication(Properties.Settings.Default.LastUsedUnifiUrl);
+                    LastUsedUnifiHost = unifiSettings.Item1;
+                    LastUsedUnifiCredentials = unifiSettings.Item2;
+                }
+                catch (Exception ex)
+                {
+                    Program.HandleException(ex);
+                }
+            }
+
             thresholdTypeComboBox.Items.AddRange(thresholdTypes.Select(o => o.Key).ToArray());
             thresholdTypeComboBox.SelectedIndex = 0;
             thresholdOrientationComboBox.SelectedIndex = 0;
@@ -138,6 +175,9 @@ namespace MSConvertGUI
 
             ValidateNumpress(); // make sure numpress settings are reasonable
 
+            networkResourceComboBox.DisplayMember = "DisplayName";
+            networkResourceComboBox.Items.Insert(0, placeholder);
+            networkResourceComboBox.SelectedItem = placeholder;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -145,6 +185,79 @@ namespace MSConvertGUI
             // don't let running jobs prevent the process from exiting
             Process.GetCurrentProcess().Kill();
         }
+
+        class DummyComboBoxItem
+        {
+            public string DisplayName
+            {
+                get
+                {
+                    return "Browse network resource...";
+                }
+            }
+        }
+        private DummyComboBoxItem placeholder = new DummyComboBoxItem();
+
+        private Map<string, UnifiBrowserForm.Credentials> UnifiCredentialsByUrl = new Map<string, UnifiBrowserForm.Credentials>();
+        private string LastUsedUnifiHost;
+        private UnifiBrowserForm.Credentials LastUsedUnifiCredentials;
+
+        private void networkResourceComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (networkResourceComboBox.SelectedItem == null) return;
+            if (networkResourceComboBox.SelectedItem == placeholder) return;
+            
+            if (networkResourceComboBox.SelectedItem.ToString() == "UNIFI")
+            {
+                var browser = new UnifiBrowserForm(LastUsedUnifiHost, LastUsedUnifiCredentials);
+                if (browser.ShowDialog() == DialogResult.OK)
+                {
+                    var selectedDataSources = browser.SelectedSampleResults.ToList();
+                    if (selectedDataSources.Count == 1)
+                    {
+                        setFileBoxText(selectedDataSources[0]);
+                        UnifiCredentialsByUrl[selectedDataSources[0]] = browser.SelectedCredentials;
+                    }
+                    else if (selectedDataSources.Count > 1)
+                    {
+                        foreach (string dataSource in selectedDataSources)
+                        {
+                            UnifiCredentialsByUrl[dataSource] = browser.SelectedCredentials;
+                            FileListBox.Items.Add(dataSource);
+                        }
+
+                        /*if (String.IsNullOrEmpty(OutputBox.Text) ||
+                            !Directory.Exists(OutputBox.Text))
+                            OutputBox.Text = Path.GetDirectoryName(selectedDataSources[0]);*/
+
+                        RemoveFileButton.Enabled = FileListBox.Items.Count > 0;
+                    }
+                }
+                LastUsedUnifiHost = browser.SelectedHost;
+                LastUsedUnifiCredentials = browser.SelectedCredentials;
+                Properties.Settings.Default.LastUsedUnifiUrl = LastUsedUnifiCredentials.GetUrlWithAuthentication(LastUsedUnifiHost);
+                Properties.Settings.Default.Save();
+            }
+
+            networkResourceComboBox.Items.Add(placeholder);
+            networkResourceComboBox.SelectedItem = placeholder;
+        }
+
+        private void networkResourceComboBox_DropDown(object sender, EventArgs e)
+        {
+            networkResourceComboBox.Items.Remove(placeholder);
+        }
+
+        private void networkResourceComboBox_Leave(object sender, EventArgs e)
+        {
+            //this covers user aborting the selection (by clicking away or choosing the system null drop down option)
+            //The control may not immedietly change, but if the user clicks anywhere else it will reset
+            if (networkResourceComboBox.SelectedItem != placeholder)
+            {
+                if (!networkResourceComboBox.Items.Contains(placeholder)) networkResourceComboBox.Items.Add(placeholder);
+                networkResourceComboBox.SelectedItem = placeholder;
+            }
+        }    
 
         private void FilterBox_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -194,9 +307,15 @@ namespace MSConvertGUI
             }
         }
 
-        private bool IsValidSource(string filepath)
+        public static bool IsNetworkSource(string path)
         {
-            return (File.Exists(filepath) || Directory.Exists(filepath)) &&
+            return path.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) ||
+                   path.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public bool IsValidSource(string filepath)
+        {
+            return (File.Exists(filepath) || Directory.Exists(filepath) || IsNetworkSource(filepath)) &&
                    !FileListBox.Items.Contains(filepath) &&
                    !String.IsNullOrEmpty(ReaderList.FullReaderList.identify(filepath));
         }
@@ -211,7 +330,13 @@ namespace MSConvertGUI
             if (IsValidSource(FileBox.Text))
             {
                 if (String.IsNullOrEmpty(OutputBox.Text))
-                    OutputBox.Text = Path.GetDirectoryName(FileBox.Text);
+                {
+                    if (!IsNetworkSource(FileBox.Text))
+                        OutputBox.Text = Path.GetDirectoryName(FileBox.Text);
+                    else
+                        OutputBox.Text = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+                }
+
                 // update the set-defaults button
                 SetDefaultsDataType = ReaderList.FullReaderList.identify(FileBox.Text);
                 SetDefaultsButton.Text = "Use these settings next time I start MSConvertGUI with " + SetDefaultsDataType + " data";
@@ -701,7 +826,7 @@ namespace MSConvertGUI
             }
 
 
-            var pf = new ProgressForm(filesToProcess, outputFolder, commandLine);
+            var pf = new ProgressForm(filesToProcess, outputFolder, commandLine, UnifiCredentialsByUrl);
             pf.Text = "Conversion Progress";
             pf.ShowDialog();
 

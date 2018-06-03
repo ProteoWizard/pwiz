@@ -32,6 +32,8 @@ struct SpecData{
     IONMOBILITY_TYPE ionMobilityType;
     float ccs; // collisional cross section
     double retentionTime; // in minutes
+    double startTime;
+    double endTime;
     double mz;
     int numPeaks;
     double* mzs;
@@ -39,7 +41,7 @@ struct SpecData{
     float* productIonMobilities; // In Waters machines, product ions have kinetic energy added after the drift tube and thus slightly faster time than the precursor from there to the detector.
     
     SpecData():
-        id(0), ionMobility(0), ionMobilityType(IONMOBILITY_NONE), ccs(0), retentionTime(0), mz(0), numPeaks(-1){
+        id(0), ionMobility(0), ionMobilityType(IONMOBILITY_NONE), ccs(0), retentionTime(0), startTime(0), endTime(0), mz(0), numPeaks(-1){
         mzs = NULL;
         intensities = NULL;
         productIonMobilities = NULL;
@@ -57,6 +59,8 @@ struct SpecData{
         ionMobilityType = rhs.ionMobilityType;
         ccs = rhs.ccs;
         retentionTime = rhs.retentionTime;
+        startTime = rhs.startTime;
+        endTime = rhs.endTime;
         mz = rhs.mz;
         numPeaks = rhs.numPeaks;
 

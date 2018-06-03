@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:tiny.msf.blib	5	1	7
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:tiny.msf.blib	5	1	9
 id	RefSpectraID	position	mass
 1	1	1	4.008491
 2	1	2	4.008491
@@ -13,12 +13,12 @@ id	RefSpectraID	position	mass
 10	4	1	15.994915
 11	4	8	15.994915
 12	4	10	4.008491
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	KKLVPLK	419.8190673725	2	K[+4.0]K[+4.0]LVPLK[+4.0]	-	-	1	90	0.0	0.0	0.0	0	0.32088	N/A	N/A	N/A	N/A	N/A	1	2	0.002	1
-2	VPKKILK	419.819158925234	2	VPK[+4.0]K[+4.0]ILK[+4.0]	-	-	1	95	0.0	0.0	0.0	0	1.12651166666667	N/A	N/A	N/A	N/A	N/A	1	4	0.006	1
-3	KLKVIPK	419.819219960391	2	K[+4.0]LK[+4.0]VIPK[+4.0]	-	-	1	100	0.0	0.0	0.0	0	2.24853	N/A	N/A	N/A	N/A	N/A	1	6	0.002	1
-4	MASASGAMAK	481.220159901797	2	M[+16.0]ASASGAM[+16.0]AK[+4.0]	-	-	1	120	0.0	0.0	0.0	0	2.85028666666667	N/A	N/A	N/A	N/A	N/A	1	9	0.01	1
-5	RPVTPKK	413.769812001406	2	RPVTPKK	-	-	1	175	0.0	0.0	0.0	0	2.87913166666667	N/A	N/A	N/A	N/A	N/A	2	10	0.002	1
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	KKLVPLK	419.8190673725	2	K[+4.0]K[+4.0]LVPLK[+4.0]	-	-	1	90	0.0	0.0	0.0	0	0.32088	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	2	0.002	1
+2	VPKKILK	419.819158925234	2	VPK[+4.0]K[+4.0]ILK[+4.0]	-	-	1	95	0.0	0.0	0.0	0	1.12651166666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	4	0.006	1
+3	KLKVIPK	419.819219960391	2	K[+4.0]LK[+4.0]VIPK[+4.0]	-	-	1	100	0.0	0.0	0.0	0	2.24853	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	6	0.002	1
+4	MASASGAMAK	481.220159901797	2	M[+16.0]ASASGAM[+16.0]AK[+4.0]	-	-	1	120	0.0	0.0	0.0	0	2.85028666666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	9	0.01	1
+5	RPVTPKK	413.769812001406	2	RPVTPKK	-	-	1	175	0.0	0.0	0.0	0	2.87913166666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	2	10	0.002	1
 id	fileName	cutoffScore
 1	D:/Elite_MAM/MITO_03.raw	-1.0
 2	X:/Test.raw	-1.0

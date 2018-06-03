@@ -96,7 +96,9 @@ namespace AutoQC
             var panoramaClient = new WebPanoramaClient(PanoramaServerUri);
             try
             {
-                PanoramaUtil.VerifyServerInformation(panoramaClient, PanoramaServerUri, PanoramaUserEmail, PanoramaPassword);
+                PanoramaUtil.VerifyServerInformation(panoramaClient, PanoramaUserEmail, PanoramaPassword);
+                PanoramaServerUri = panoramaClient.ServerUri ?? PanoramaServerUri;
+                PanoramaServerUrl = PanoramaServerUri.AbsoluteUri;
             }
             catch (Exception ex)
             {

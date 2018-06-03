@@ -4572,8 +4572,8 @@ If you prefer you can choose to report anonymously.</value>
   <data name="MQuestDefaultIntensityCorrelationCalc_Name_Default_dotp_or_idotp" xml:space="preserve">
     <value>Default dotp or idotp</value>
   </data>
-  <data name="StartPage_PopulateWizardPanel_Import_DIA_DDA_Peptide_Search" xml:space="preserve">
-    <value>Import DIA+DDA Peptide Search</value>
+  <data name="StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search" xml:space="preserve">
+    <value>Import DIA Peptide Search</value>
   </data>
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
     <value>The document must contain targets for which to export features.</value>
@@ -5590,9 +5590,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>There is no sequence for this protein</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_" xml:space="preserve">
-    <value>A drift time predictor with the name {0} already exists.</value>
   </data>
   <data name="CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_" xml:space="preserve">
     <value>Error: Duplicate replicate name '{0}' after applying regular expression.</value>
@@ -8925,7 +8922,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
     <value>Error on line {0}, column{1}: {2}</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_" xml:space="preserve">
-    <value>Error reading column headers, did not recognize:
+    <value>Error reading small molecule column headers, did not recognize:
 {0}
 Supported values include:
 {1}</value>
@@ -9071,9 +9068,6 @@ Here are the last 3 errors:
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_" xml:space="preserve">
     <value>Adduct {0} charge {1} does not agree with declared charge {2}</value>
-  </data>
-  <data name="BioMassCalc_ApplyAdductToFormula_Adduct_description___0___calls_for_more_labeled__1__than_are_found_in_the_molecule" xml:space="preserve">
-    <value>Adduct description "{0}" calls for more labeled {1} than are found in the molecule</value>
   </data>
   <data name="BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__" xml:space="preserve">
     <value>Unknown symbol "{0}" in adduct description "{1}"</value>
@@ -9804,8 +9798,8 @@ Here are the {0} pairs with multiple entries:
   <data name="AreaCVHistogram2DGraphPane_UpdateGraph_Calculating____" xml:space="preserve">
     <value>Calculating ...</value>
   </data>
-  <data name="ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys_per_target_" xml:space="preserve">
-    <value>Please enter a valid non-negative number of decoys per target.</value>
+  <data name="ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_" xml:space="preserve">
+    <value>Please enter a valid number of decoys per target greater than 0.</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated_when_using_reversed_decoys_" xml:space="preserve">
     <value>A maximum of one decoy per target may be generated when using reversed decoys.</value>
@@ -10001,5 +9995,150 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs" xml:space="preserve">
     <value>OtherIDs</value>
+  </data>
+  <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
+    <value>Are you sure you want to clear all saved settings? This will immediately return {0} to its original configuration and cannot be undone.</value>
+  </data>
+  <data name="SkylineVersion_V4_1_Skyline_4_1" xml:space="preserve">
+    <value>Skyline 4.1</value>
+  </data>
+  <data name="PeptideGroupTreeNode_ChildHeading__0__Molecules" xml:space="preserve">
+    <value>{0} Molecules</value>
+  </data>
+  <data name="PeptideGroupTreeNode_ChildUndoHeading__0__molecules" xml:space="preserve">
+    <value>{0} molecules</value>
+  </data>
+  <data name="PeptideGroupTreeNode_Heading_Molecule_Group" xml:space="preserve">
+    <value>Molecule Group</value>
+  </data>
+  <data name="PeptideTreeNode_Heading_Title_Molecule" xml:space="preserve">
+    <value>Molecule</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_" xml:space="preserve">
+    <value>Cannot build library from OpenSWATH results mixed with results from other tools.</value>
+  </data>
+  <data name="PeptideSettingsUI_ValidateNewSettings_In_order_to_use_the__Bilinear_turning_point__method_of_LOD_calculation___Regression_fit__must_be_set_to__Bilinear__" xml:space="preserve">
+    <value>In order to use the 'Bilinear turning point' method of LOD calculation, 'Regression fit' must be set to 'Bilinear'.</value>
+  </data>
+  <data name="RegressionFit_BILINEAR_Bilinear" xml:space="preserve">
+    <value>Bilinear</value>
+  </data>
+  <data name="Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_" xml:space="preserve">
+    <value>Adduct "{0}" calls for removing more {1} atoms than are found in the molecule {2}</value>
+  </data>
+  <data name="Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_" xml:space="preserve">
+    <value>Adduct "{0}" calls for labeling more {1} atoms than are found in the molecule {2}</value>
+  </data>
+  <data name="DocumentAnnotations_ElementNotFoundException_Could_not_find_element___0___" xml:space="preserve">
+    <value>Could not find element '{0}'.</value>
+    <comment>"element" just means a generic thing that is in a Skyline document. Could be a peptide, result file, etc.</comment>
+  </data>
+  <data name="DocumentAnnotations_AnnotationDoesNotApplyException_Annotation___0___does_not_apply_to_element___1___" xml:space="preserve">
+    <value>Annotation '{0}' does not apply to element '{1}'.</value>
+    <comment>"element" just means a generic thing that is in a Skyline document. Could be a peptide, result file, etc.</comment>
+  </data>
+  <data name="ElementLocator_Parse__0__is_not_a_valid_element_locator_" xml:space="preserve">
+    <value>{0} is not a valid element locator.</value>
+    <comment>"element" just means a generic thing that is in a Skyline document. Could be a peptide, result file, etc.</comment>
+  </data>
+  <data name="ElementLocator_UnexpectedException__0__was_unexpected_in___1___at_position__2__" xml:space="preserve">
+    <value>{0} was unexpected in '{1}' at position {2}.</value>
+  </data>
+  <data name="ElementLocator_ReadQuotedString_End_of_text" xml:space="preserve">
+    <value>End of text</value>
+  </data>
+  <data name="DocumentAnnotations_AnnotationsNotSupported_The_element___0___cannot_have_annotations_" xml:space="preserve">
+    <value>The element '{0}' cannot have annotations.</value>
+  </data>
+  <data name="FileStreamManager_GetTempFileName_Access_Denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_permissions_or_retry_the_operation_after_moving_or_copying_files_to_a_different_folder_" xml:space="preserve">
+    <value>Access Denied: unable to create a file in the folder "{0}". Adjust the folder write permissions or retry the operation after moving or copying files to a different folder.</value>
+  </data>
+  <data name="SkylineWindow_ImportAnnotations_Import_Annotations" xml:space="preserve">
+    <value>Import Annotations</value>
+  </data>
+  <data name="CommandLine_ImportAnnotations_Failed_while_reading_annotations_" xml:space="preserve">
+    <value>Failed while reading annotations.</value>
+  </data>
+  <data name="Columns_Columns_Unrecognized_column___0__" xml:space="preserve">
+    <value>Unrecognized column '{0}'</value>
+  </data>
+  <data name="Columns_Columns_Duplicate_column___0__" xml:space="preserve">
+    <value>Duplicate column '{0}'</value>
+  </data>
+  <data name="Columns_Columns_Missing_column___0__" xml:space="preserve">
+    <value>Missing column '{0}'</value>
+  </data>
+  <data name="EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_" xml:space="preserve">
+    <value>An ion mobility predictor with the name {0} already exists.</value>
+  </data>
+  <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Molecule" xml:space="preserve">
+    <value>Molecule</value>
+  </data>
+  <data name="EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Adduct" xml:space="preserve">
+    <value>Adduct</value>
+  </data>
+  <data name="ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___" xml:space="preserve">
+    <value>Unable to find any CollectArgs method to call on class '{0}'.</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_are_missing_compensation_voltages_for_the_following_" xml:space="preserve">
+    <value>You are missing compensation voltages for the following:</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_You_can_set_explicit_compensation_voltages_for_these__or_add_their_values_to_a_document_optimization_library_in_Transition_Settings_under_the_Prediction_tab_" xml:space="preserve">
+    <value>You can set explicit compensation voltages for these, or add their values to a document optimization library in Transition Settings under the Prediction tab.</value>
+  </data>
+  <data name="ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_method___1___has_the_wrong_signature_" xml:space="preserve">
+    <value>Error running the installed tool {0}. The method '{1}' has the wrong signature.</value>
+  </data>
+  <data name="UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__" xml:space="preserve">
+    <value>Cannot find account for username {0} and server {1}.</value>
+  </data>
+  <data name="OpenDataSourceDialog_EnsureRemoteAccount_No_remote_accounts_have_been_specified__If_you_have_an_existing_Unifi_or_Chorus_account_you_can_enter_your_login_information_now_" xml:space="preserve">
+    <value>No remote accounts have been specified. If you have an existing Unifi or Chorus account you can enter your login information now.</value>
+  </data>
+  <data name="RemoteAccountList_Title_Edit_Remote_Accounts" xml:space="preserve">
+    <value>Edit Remote Accounts</value>
+  </data>
+  <data name="RemoteAccountList_Label_Remote_Accounts" xml:space="preserve">
+    <value>Remote Accounts</value>
+  </data>
+  <data name="OpenDataSourceDialog_OpenDataSourceDialog_Remote_Accounts" xml:space="preserve">
+    <value>Remote Accounts</value>
+  </data>
+  <data name="Chorus_Label_Chorus" xml:space="preserve">
+    <value>Chorus</value>
+  </data>
+  <data name="Unifi_Label_Unifi" xml:space="preserve">
+    <value>Unifi</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_error_occurred_while_trying_to_authenticate_" xml:space="preserve">
+    <value>An error occurred while trying to authenticate.</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestUnifiAccount_An_exception_occurred_while_trying_to_fetch_the_directory_listing_" xml:space="preserve">
+    <value>An exception occurred while trying to fetch the directory listing.</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_" xml:space="preserve">
+    <value>Cannot automatically train mProphet model without decoys, but decoy options resulted in no decoys being generated. Please increase number of decoys per target, or disable automatic training of mProphet model.</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Grouped_Study_Data_Processing" xml:space="preserve">
+    <value>Grouped Study Data Processing</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Small_Molecule_Targets" xml:space="preserve">
+    <value>Small Molecule Targets</value>
+  </data>
+  <data name="StartPage_PopulateTutorialPanel_Data_Independent_Acquisition" xml:space="preserve">
+    <value>Data Independent Acquisition</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_score___0__" xml:space="preserve">
+    <value>Excluding feature score '{0}'</value>
+  </data>
+  <data name="CommandLine_CreateScoringModel_Excluding_feature_scores_" xml:space="preserve">
+    <value>Excluding feature scores:</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_" xml:space="preserve">
+    <value>Error: Attempting to exclude an unknown feature name '{0}'. Try one of the following:</value>
+  </data>
+  <data name="CommandArgs_ParseArgsInternal______0__or___1__" xml:space="preserve">
+    <value>    {0} or '{1}'</value>
+    <comment>Two possible values separated by "or" with the second quoted</comment>
   </data>
 </root>

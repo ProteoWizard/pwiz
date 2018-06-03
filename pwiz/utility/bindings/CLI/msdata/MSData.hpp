@@ -1117,6 +1117,11 @@ public ref class Spectrum : public ParamContainer
     BinaryDataArray^ getIntensityArray();
 
     /// <summary>
+    /// get array with specified CVParam (may be null)
+    /// </summary>
+    BinaryDataArray^ getArrayByCVID(CVID arrayType);
+
+    /// <summary>
     /// set binary data arrays
     /// </summary>
     void setMZIntensityPairs(MZIntensityPairList^ input);

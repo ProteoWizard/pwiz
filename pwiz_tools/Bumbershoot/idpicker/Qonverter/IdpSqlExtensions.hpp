@@ -35,6 +35,9 @@ namespace IDPicker {
 /// this allows changing the separator with the DISTINCT keyword, e.g. GROUP_CONCAT_EX(DISTINCT <...>)
 PWIZ_API_DECL void setGroupConcatSeparator(const std::string& separator);
 
+/// gets the separator used to separate groups in the GROUP_CONCAT_EX user function
+PWIZ_API_DECL const std::string& getGroupConcatSeparator();
+
 } // IDPicker
 
 #endif // _IDPSQLEXTENSIONS_HPP_

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<views>
+  <view name="TFExportReport" rowsource="pwiz.Skyline.Model.Databinding.Entities.Transition" sublist="Results!*">
+    <column name="Precursor.Peptide.Protein.Name" />
+    <column name="Precursor.Peptide.ModifiedSequence" />
+    <column name="Precursor.IsotopeLabelType" />
+    <column name="Precursor.ModifiedSequence" />
+    <column name="&quot;annotation_TFExport_IntegrationStrategy&quot;" />
+    <column name="&quot;annotation_TFExport_WindowType&quot;" />
+    <column name="&quot;annotation_TFExport_WorkFlow&quot;" />
+    <column name="Precursor.Mz" />
+    <column name="ProductMz" />
+    <column name="ProductCharge" />
+    <column name="Precursor.ResultSummary.BestRetentionTime.Mean" />
+    <column name="FragmentIon" />
+    <column name="FragmentIonType" />
+    <column name="Precursor.Peptide.StandardType" />
+    <column name="Precursor.CollisionEnergy" />
+    <column name="Results!*.Value.PrecursorResult.BestRetentionTime" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.FileName" />
+    <column name="Results!*.Value.Area" />
+    <column name="Precursor.Charge" />
+  </view>
+</views>

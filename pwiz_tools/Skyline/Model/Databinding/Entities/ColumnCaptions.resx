@@ -264,6 +264,9 @@
   <data name="ExcludeFromCalibration">
     <value>Exclude From Calibration</value>
   </data>
+  <data name="FiguresOfMerit">
+    <value>Figures Of Merit</value>
+  </data>
   <data name="FileIndex">
     <value>File Index</value>
   </data>
@@ -375,6 +378,12 @@
   </data>
   <data name="LibraryType">
     <value>Library Type</value>
+  </data>
+  <data name="LimitOfDetection">
+    <value>Limit Of Detection</value>
+  </data>
+  <data name="LimitOfQuantification">
+    <value>Limit Of Quantification</value>
   </data>
   <data name="LinearFit">
     <value>Linear Fit</value>
@@ -520,6 +529,9 @@
   <data name="PeptideDocumentLocation">
     <value>Peptide Document Location</value>
   </data>
+  <data name="PeptideLocator">
+    <value>Peptide Locator</value>
+  </data>
   <data name="PeptideModifiedSequence">
     <value>Peptide Modified Sequence</value>
   </data>
@@ -539,6 +551,9 @@
   </data>
   <data name="PeptideResultDocumentLocation">
     <value>Peptide Result Document Location</value>
+  </data>
+  <data name="PeptideResultLocator">
+    <value>Peptide Result Locator</value>
   </data>
   <data name="PeptideResults">
     <value>Peptide Results</value>
@@ -567,6 +582,9 @@
   <data name="PrecursorCharge">
     <value>Precursor Charge</value>
   </data>
+  <data name="PrecursorLocator">
+    <value>Precursor Locator</value>
+  </data>
   <data name="PrecursorMz">
     <value>Precursor Mz</value>
   </data>
@@ -590,6 +608,9 @@
   </data>
   <data name="PrecursorResult">
     <value>Precursor Result</value>
+  </data>
+  <data name="PrecursorResultLocator">
+    <value>Precursor Result Locator</value>
   </data>
   <data name="PrecursorResults">
     <value>Precursor Results</value>
@@ -632,6 +653,9 @@
   </data>
   <data name="ProteinGene">
     <value>Protein Gene</value>
+  </data>
+  <data name="ProteinLocator">
+    <value>Protein Locator</value>
   </data>
   <data name="ProteinName">
     <value>Protein Name</value>
@@ -702,6 +726,9 @@
   <data name="ReplicateIndex">
     <value>Replicate Index</value>
   </data>
+  <data name="ReplicateLocator">
+    <value>Replicate Locator</value>
+  </data>
   <data name="ReplicateName">
     <value>Replicate Name</value>
   </data>
@@ -714,6 +741,9 @@
   <data name="ResultFile">
     <value>Result File</value>
   </data>
+  <data name="ResultFileLocator">
+    <value>Result File Locator</value>
+  </data>
   <data name="Results">
     <value>Results</value>
   </data>
@@ -725,6 +755,9 @@
   </data>
   <data name="RSquared">
     <value>R Squared</value>
+  </data>
+  <data name="SampleDilutionFactor">
+    <value>Sample Dilution Factor</value>
   </data>
   <data name="SampleName">
     <value>Sample Name</value>
@@ -820,6 +853,9 @@
   <data name="TransitionIsDecoy">
     <value>Transition Is Decoy</value>
   </data>
+  <data name="TransitionLocator">
+    <value>Transition Locator</value>
+  </data>
   <data name="TransitionNote">
     <value>Transition Note</value>
   </data>
@@ -828,6 +864,9 @@
   </data>
   <data name="TransitionResult">
     <value>Transition Result</value>
+  </data>
+  <data name="TransitionResultLocator">
+    <value>Transition Result Locator</value>
   </data>
   <data name="TransitionResults">
     <value>Transition Results</value>
@@ -840,6 +879,9 @@
   </data>
   <data name="Truncated">
     <value>Truncated</value>
+  </data>
+  <data name="TurningPoint">
+    <value>Turning Point</value>
   </data>
   <data name="TValue">
     <value>T-Value</value>
@@ -973,5 +1015,37 @@
   </data>
   <data name="AbsLog2FoldChange">
     <value>Absolute Log 2 Fold Change</value>
+  </data>
+  <data name="DocumentFormat">
+    <value>Document Format Version</value>
+  </data>
+  <data name="Reason">
+    <value>Reason</value>
+  </data>
+  <data name="SkylineVersion">
+    <value>Skyline Version</value>
+  </data>
+  <data name="TimeStamp">
+    <value>Time Stamp</value>
+  </data>
+  <data name="User">
+    <value>User</value>
+  </data>
+  <data name="UndoRedoMessage">
+    <value>Undo Redo Message</value>
+  </data>
+  <data name="SummaryMessage">
+    <value>Summary Message</value>
+  </data>
+  <data name="AllInfoMessage">
+    <value>All Info Message</value>
+  </data>
+  <data name="Details">
+    <value>Details</value>
+  </data>
+  <data name="AuditLogRow">
+    <value>
+      Audit Log Row
+    </value>
   </data>
 </root>

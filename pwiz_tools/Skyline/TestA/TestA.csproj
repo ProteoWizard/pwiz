@@ -102,11 +102,19 @@
     <Prefer32Bit>false</Prefer32Bit>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Accessibility">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="DigitalRune.Windows.Docking, Version=1.3.5.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="IdentityModel, Version=2.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\IdentityModel.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\log4net.dll</HintPath>
@@ -117,7 +125,9 @@
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="NHibernate">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\NHibernate\NHibernate.dll</HintPath>
@@ -131,6 +141,7 @@
     <Reference Include="System.Deployment" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq">
@@ -140,13 +151,18 @@
   <ItemGroup>
     <Compile Include="AdductTest.cs" />
     <Compile Include="AnnotationUnitTest.cs" />
+    <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
+    <Compile Include="CommandLineImportAnnotationsTest.cs" />
     <Compile Include="CommandLineMProphetTest.cs" />
+    <Compile Include="CommandLineNoJoinTest.cs" />
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="CommandLineImportTest.cs" />
+    <Compile Include="CommandLineWiffTest.cs" />
     <Compile Include="DecoysTest.cs" />
     <Compile Include="DigestionTest.cs" />
+    <Compile Include="ElementLocatorTest.cs" />
     <Compile Include="DocLoadLibraryTest.cs" />
     <Compile Include="DocumentSerializerTest.cs" />
     <Compile Include="EspTest.cs" />
@@ -187,6 +203,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Results\AgilentCEOptTest.cs" />
+    <Compile Include="Results\AsymCEOptTest.cs" />
     <Compile Include="Results\BetterTransTest.cs" />
     <Compile Include="Results\ChromCacheMinimizerTest.cs" />
     <Compile Include="Results\AsymDiaTest.cs" />
@@ -206,8 +223,10 @@
     <Compile Include="StringHelpersTest.cs" />
     <Compile Include="TestSerializeIsolationScheme.cs" />
     <Compile Include="TextUtilTest.cs" />
+    <Compile Include="ToolDescriptionTest.cs" />
     <Compile Include="TransitionSettings07Test.cs" />
     <Compile Include="TypeSafeEnumTest.cs" />
+    <Compile Include="UnifiTest.cs" />
     <Compile Include="UniModTest.cs" />
     <Compile Include="MProphetResultsHandlerTest.cs" />
     <Compile Include="UniquePrefixTest.cs" />
@@ -215,6 +234,7 @@
     <Compile Include="ExplicitLossTest.cs" />
     <Compile Include="SmallMoleculesMzOnlyTest.cs" />
     <Compile Include="VariableModTest.cs" />
+    <Compile Include="WebEnabledFastaImporterTest.cs" />
     <Compile Include="XmlValidationTest.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -257,9 +277,12 @@
   <ItemGroup>
     <None Include="ChromatogramExporterTest.zip" />
     <None Include="CommandLineAssayImportTest.zip" />
+    <None Include="CommandLineImportAnnotationsTest.zip" />
     <None Include="CommandLineImportTest.zip" />
     <None Include="CommandLineMProphetTest.zip" />
+    <None Include="CommandLineNoJoinTest.zip" />
     <None Include="CommandLineTest.zip" />
+    <None Include="CommandLineWiffTest.zip" />
     <None Include="DocLoadLibraryTest.zip" />
     <EmbeddedResource Include="DocumentSerializerTest.sky" />
     <EmbeddedResource Include="explicit-losses.sky" />
@@ -294,6 +317,7 @@
     <None Include="ModMatch.zip" />
     <None Include="Refine.zip" />
     <None Include="Results\AgilentCEOpt.zip" />
+    <None Include="Results\AsymCEOptimization.zip" />
     <None Include="Results\AsymDIA.zip" />
     <None Include="Results\BetterTransTest.zip" />
     <None Include="Results\FullScan.zip" />
@@ -307,7 +331,9 @@
     <EmbeddedResource Include="Results\MultiLabel.sky" />
     <EmbeddedResource Include="Study7.sky" />
     <None Include="ExportMethodShimadzuTest.zip" />
-    <EmbeddedResource Include="SmallMoleculesMzOnly_3-7.sky" />
+    <EmbeddedResource Include="SmallMoleculesMzOnly_3-7.sky">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <None Include="XmlValidationTest.zip" />
   </ItemGroup>
   <ItemGroup>

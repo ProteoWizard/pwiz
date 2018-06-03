@@ -116,11 +116,11 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             double covMin;
-            if (!helper.ValidateDecimalTextBox(textMin, 0, null, out covMin))
+            if (!helper.ValidateDecimalTextBox(textMin, null, null, out covMin))
                 return;
 
             double covMax;
-            if (!helper.ValidateDecimalTextBox(textMax, 0, null, out covMax))
+            if (!helper.ValidateDecimalTextBox(textMax, null, null, out covMax))
                 return;
 
             if (covMax < covMin)

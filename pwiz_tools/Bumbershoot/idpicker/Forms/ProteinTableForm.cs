@@ -157,8 +157,8 @@ namespace IDPicker.Forms
                                                        ", pro" +
                                                        ", COUNT(DISTINCT pro.id)" +
                                                        ", AVG(pro.Coverage)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.iTRAQ_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.TMT_ReporterIonIntensities)" +
                                                        ", DISTINCT_GROUP_CONCAT(ROUND_TO_INTEGER(mod.MonoMassDelta) || '@' || pm.Site || PARENS(pi.Offset+pm.Offset+1))" +
                                                        ", pro.ProteinGroup" +
                                                        dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
@@ -207,8 +207,8 @@ namespace IDPicker.Forms
                 lock (session)
                 {
                     basicColumns = session.CreateQuery(AggregateRow.Selection +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.iTRAQ_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.TMT_ReporterIonIntensities)" +
                                                        ", DISTINCT_GROUP_CONCAT(ROUND_TO_INTEGER(mod.MonoMassDelta) || '@' || pm.Site || PARENS(pi.Offset+pm.Offset+1))" +
                                                        ", pro" +
                                                        dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
@@ -269,13 +269,13 @@ namespace IDPicker.Forms
                 lock (session)
                 {
                     basicColumns = session.CreateQuery(AggregateRow.Selection +
-                                                       ", DISTINCT_GROUP_CONCAT(pro.GeneId)" +
+                                                       ", SORT_UNMAPPED_LAST(DISTINCT_GROUP_CONCAT(pro.GeneId))" +
                                                        ", pro" +
                                                        ", COUNT(DISTINCT pro.GeneId)" +
                                                        ", COUNT(DISTINCT pro.Id)" +
                                                        ", AVG(pro.Coverage)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.iTRAQ_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.TMT_ReporterIonIntensities)" +
                                                        ", pro.GeneGroup" +
                                                        dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
                                                                                          DataFilter.ProteinToSpectrum) +
@@ -323,8 +323,8 @@ namespace IDPicker.Forms
                 {
                     basicColumns = session.CreateQuery(AggregateRow.Selection +
                                                        ", COUNT(DISTINCT pro.Id)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)" +
-                                                       ", DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.iTRAQ_ReporterIonIntensities)" +
+                                                       ", " + RollupSQL + "(s.TMT_ReporterIonIntensities)" +
                                                        ", pro" +
                                                        dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
                                                                                          DataFilter.ProteinToSpectrum) +
@@ -497,8 +497,8 @@ namespace IDPicker.Forms
             if (pivot.Text.Contains("Spectra")) valueColumn = "COUNT(DISTINCT psm.Spectrum.id)";
             else if (pivot.Text.Contains("Matches")) valueColumn = "COUNT(DISTINCT psm.DistinctMatchId)";
             else if (pivot.Text.Contains("Peptides")) valueColumn = "COUNT(DISTINCT psm.Peptide.id)";
-            else if (pivot.Text.Contains("iTRAQ")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.iTRAQ_ReporterIonIntensities)";
-            else if (pivot.Text.Contains("TMT")) valueColumn = "DISTINCT_DOUBLE_ARRAY_SUM(s.TMT_ReporterIonIntensities)";
+            else if (pivot.Text.Contains("iTRAQ")) valueColumn = Row.RollupSQL + "(s.iTRAQ_ReporterIonIntensities)";
+            else if (pivot.Text.Contains("TMT")) valueColumn = Row.RollupSQL + "(s.TMT_ReporterIonIntensities)";
             else if (pivot.Text.Contains("MS1")) valueColumn = "DISTINCT_SUM(xic.PeakIntensity)";
             else throw new ArgumentException("unable to handle pivot column " + pivot.Text);
 
@@ -1580,6 +1580,7 @@ namespace IDPicker.Forms
                 return;
 
             var sourceNames = sourceById.Select(o => o.Value.Name);
+            var isobaricSampleMapping = Embedder.GetIsobaricSampleMapping(session.Connection.GetDataSource());
 
             if (statsBySpectrumSource != null)
             foreach (long sourceId in statsBySpectrumSource.Keys)
@@ -1651,11 +1652,22 @@ namespace IDPicker.Forms
                 if (checkedPivots.Any(o => o.Text.Contains("Group") && (o.Text.Contains("TMT") || o.Text.Contains("iTRAQ"))))
                 {
                     var quantColumns = checkedPivots.Any(o => o.Text.Contains("TMT")) ? TMT_ReporterIonColumns : iTRAQ_ReporterIonColumns;
+                    var sampleNames = isobaricSampleMapping.ContainsKey(groupName.TrimEnd('/')) ? isobaricSampleMapping[groupName.TrimEnd('/')] : null;
 
+                    int sampleMapIndex = 0;
                     for (int i = 0; i < quantColumns.Count; ++i)
                     {
+                        string sampleName = groupName;
+                        if (quantColumns[i].Visible && sampleNames != null)
+                        {
+                            sampleName = sampleNames[sampleMapIndex];
+                            ++sampleMapIndex;
+                            if (sampleName == "Empty")
+                                continue;
+                        }
+
                         DataGridViewColumn newColumn = quantColumns[i].Clone() as DataGridViewColumn;
-                        newColumn.HeaderText = String.Format("{0} ({1})", groupName, newColumn.HeaderText);
+                        newColumn.HeaderText = String.Format("{0} ({1})", sampleName, newColumn.HeaderText);
                         newColumn.Tag = new Pair<bool, Map<long, PivotData>>(true, statsBySpectrumSourceGroup[groupId]);
                         newColumn.DataPropertyName = i.ToString();
                         newColumn.Name = "pivotQuantColumn" + i.ToString();

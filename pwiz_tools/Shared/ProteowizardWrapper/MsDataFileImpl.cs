@@ -118,12 +118,13 @@ namespace pwiz.ProteowizardWrapper
         public MsDataFileImpl(string path, int sampleIndex = 0, LockMassParameters lockmassParameters = null,
             bool simAsSpectra = false, bool srmAsSpectra = false, bool acceptZeroLengthSpectra = true,
             bool requireVendorCentroidedMS1 = false, bool requireVendorCentroidedMS2 = false,
-            bool ignoreZeroIntensityPoints = false)
+            bool ignoreZeroIntensityPoints = false, 
+            int preferOnlyMsLevel = 0)
         {
             // see note above on enabling performance measurement
             _perf = PerfUtilFactory.CreatePerfUtil("MsDataFileImpl " + // Not L10N 
-                string.Format("{0},sampleIndex:{1},lockmassCorrection:{2},simAsSpectra:{3},srmAsSpectra:{4},acceptZeroLengthSpectra:{5},requireVendorCentroidedMS1:{6},requireVendorCentroidedMS2:{7}",  // Not L10N
-                path, sampleIndex, !(lockmassParameters == null || lockmassParameters.IsEmpty), simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra, requireVendorCentroidedMS1, requireVendorCentroidedMS2));
+                string.Format("{0},sampleIndex:{1},lockmassCorrection:{2},simAsSpectra:{3},srmAsSpectra:{4},acceptZeroLengthSpectra:{5},requireVendorCentroidedMS1:{6},requireVendorCentroidedMS2:{7},preferOnlyMsLevel:{8}",  // Not L10N
+                path, sampleIndex, !(lockmassParameters == null || lockmassParameters.IsEmpty), simAsSpectra, srmAsSpectra, acceptZeroLengthSpectra, requireVendorCentroidedMS1, requireVendorCentroidedMS2, preferOnlyMsLevel));
             using (_perf.CreateTimer("open")) // Not L10N
             {
                 FilePath = path;
@@ -133,7 +134,8 @@ namespace pwiz.ProteowizardWrapper
                     simAsSpectra = simAsSpectra,
                     srmAsSpectra = srmAsSpectra,
                     acceptZeroLengthSpectra = acceptZeroLengthSpectra,
-                    ignoreZeroIntensityPoints = ignoreZeroIntensityPoints
+                    ignoreZeroIntensityPoints = ignoreZeroIntensityPoints,
+                    preferOnlyMsLevel = preferOnlyMsLevel
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
@@ -473,8 +475,6 @@ namespace pwiz.ProteowizardWrapper
             {
                 if (_spectrumList == null)
                 {
-                    // CONSIDER(bspratt): there is no acceptable wrapping order when both centroiding and lockmass are needed at the same time 
-                    // (For now, this can't happen in practice, as Waters offers no centroiding, but someday this may force pwiz API rework)
                     var centroidLevel = new List<int>();
                     _spectrumList = _msDataFile.run.spectrumList;
                     bool hasSrmSpectra = HasSrmSpectraInList(_spectrumList);
@@ -495,6 +495,7 @@ namespace pwiz.ProteowizardWrapper
                     _lockmassFunction = null;
                     if (_lockmassParameters != null && !_lockmassParameters.IsEmpty  && _spectrumList != null)
                     {
+                        // N.B. it's OK for lockmass wrapper to wrap centroiding wrapper, but not vice versa.
                         _spectrumList = new SpectrumList_LockmassRefiner(_spectrumList,
                             _lockmassParameters.LockmassPositive ?? 0,
                             _lockmassParameters.LockmassNegative ?? 0,
@@ -811,10 +812,11 @@ namespace pwiz.ProteowizardWrapper
                     var ionMobility = GetIonMobility(spectrum);
                     if (!ionMobility.HasValue)
                     {
-                        if (IsWatersLockmassSpectrum(GetSpectrum(spectrum, i)))
+                        // Assume that if first few regular scans are without IM info, they are all without IM info
+                        if (i < 20 || IsWatersLockmassSpectrum(GetSpectrum(spectrum, i)))
                             continue;  // In SONAR data, lockmass scan without IM info doesn't mean there's no IM info
                         if (!maxIonMobility.HasValue)
-                            return null; // Assume that if first regular scan is without IM info, they are all
+                            return null; 
                     }
                     if (!maxIonMobility.HasValue)
                     {
@@ -843,10 +845,7 @@ namespace pwiz.ProteowizardWrapper
 
         public string GetSpectrumId(int scanIndex)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex))
-            {
-                return spectrum.id;
-            }
+            return SpectrumList.spectrumIdentity(scanIndex).id;
         }
 
         public bool IsCentroided(int scanIndex)
@@ -906,6 +905,11 @@ namespace pwiz.ProteowizardWrapper
             if (param.empty())
                 return null;
             return (int) param.value;
+        }
+
+        public bool GetIonMobilityIsInexpensive
+        {
+            get { return _detailIonMobility == DetailLevel.InstantMetadata; }
         }
 
         public IonMobilityValue GetIonMobility(int scanIndex)
@@ -1198,8 +1202,8 @@ namespace pwiz.ProteowizardWrapper
         public SignedMz? PrecursorMz { get; set; }
         public double? PrecursorCollisionEnergy  { get; set; }
         public SignedMz? IsolationWindowTargetMz { get; set; }
-        public double? IsolationWindowUpper { get; set; }
-        public double? IsolationWindowLower { get; set; }
+        public double? IsolationWindowUpper { get; set; } // Add this to IsolationWindowTargetMz to get window upper bound
+        public double? IsolationWindowLower { get; set; } // Subtract this from IsolationWindowTargetMz to get window lower bound
         public SignedMz? IsolationMz
         {
             get
@@ -1283,7 +1287,9 @@ namespace pwiz.ProteowizardWrapper
         {
             return value == Mobility  ?this : GetIonMobilityValue(value, Units);
         }
+        [DiffAttribute]
         public double? Mobility { get; private set; }
+        [DiffAttribute]
         public MsDataFileImpl.eIonMobilityUnits Units { get; private set; }
         public bool HasValue { get { return Mobility.HasValue; } }
 

@@ -40,6 +40,9 @@ const int isotopes_H_size = sizeof(isotopes_H)/sizeof(Isotope);
 Isotope isotopes_2H[] = { {2.014101778, 1} };
 const int isotopes_2H_size = sizeof(isotopes_2H)/sizeof(Isotope);
 
+Isotope isotopes_3H[] = { {3.0160492675, 1} };
+const int isotopes_3H_size = sizeof(isotopes_3H)/sizeof(Isotope);
+
 Isotope isotopes_He[] = { {3.0160293097, 1.37e-06}, {4.0026032497, 0.99999863}, };
 const int isotopes_He_size = sizeof(isotopes_He)/sizeof(Isotope);
 
@@ -392,7 +395,8 @@ const int isotopes_Uuh_size = sizeof(isotopes_Uuh)/sizeof(Isotope);
 PWIZ_API_DECL Element elements_[] =
 {
     { H, "H", 1, 1.00794, isotopes_H, isotopes_H_size },
-    { _2H, "_2H", 1, isotopes_2H[0].mass, isotopes_2H, isotopes_2H_size },
+    { _2H, "_2H", 1, isotopes_2H[0].mass, isotopes_2H, isotopes_2H_size, "D" }, // D is IUPAC shorthand for 2H
+    { _3H, "_3H", 1, isotopes_3H[0].mass, isotopes_3H, isotopes_3H_size, "T" }, // T is IUPAC shorthand for 3H
     { He, "He", 2, 4.002602, isotopes_He, isotopes_He_size },
     { Li, "Li", 3, 6.941, isotopes_Li, isotopes_Li_size },
     { Be, "Be", 4, 9.012182, isotopes_Be, isotopes_Be_size },

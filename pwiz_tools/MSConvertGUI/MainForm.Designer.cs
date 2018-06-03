@@ -166,6 +166,7 @@ namespace MSConvertGUI
             this.AboutButton = new System.Windows.Forms.Button();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.networkResourceComboBox = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).BeginInit();
             this.FilterGB.SuspendLayout();
             this.DemultiplexPanel.SuspendLayout();
@@ -1384,7 +1385,7 @@ namespace MSConvertGUI
             // 
             // AboutButton
             // 
-            this.AboutButton.Location = new System.Drawing.Point(495, 33);
+            this.AboutButton.Location = new System.Drawing.Point(519, 32);
             this.AboutButton.Name = "AboutButton";
             this.AboutButton.Size = new System.Drawing.Size(131, 23);
             this.AboutButton.TabIndex = 33;
@@ -1405,11 +1406,26 @@ namespace MSConvertGUI
             this.dataGridViewTextBoxColumn2.HeaderText = "Parameters";
             this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
             // 
+            // networkResourceComboBox
+            // 
+            this.networkResourceComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.networkResourceComboBox.FormattingEnabled = true;
+            this.networkResourceComboBox.Items.AddRange(new object[] {
+            "UNIFI"});
+            this.networkResourceComboBox.Location = new System.Drawing.Point(326, 35);
+            this.networkResourceComboBox.Name = "networkResourceComboBox";
+            this.networkResourceComboBox.Size = new System.Drawing.Size(167, 21);
+            this.networkResourceComboBox.TabIndex = 34;
+            this.networkResourceComboBox.DropDown += new System.EventHandler(this.networkResourceComboBox_DropDown);
+            this.networkResourceComboBox.SelectedIndexChanged += new System.EventHandler(this.networkResourceComboBox_SelectedIndexChanged);
+            this.networkResourceComboBox.Leave += new System.EventHandler(this.networkResourceComboBox_Leave);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(661, 551);
+            this.Controls.Add(this.networkResourceComboBox);
             this.Controls.Add(this.AboutButton);
             this.Controls.Add(this.BrowseFileButton);
             this.Controls.Add(this.FileListRadio);
@@ -1579,6 +1595,7 @@ namespace MSConvertGUI
         private System.Windows.Forms.TextBox DemuxMassErrorValue;
         private System.Windows.Forms.Label DemuxMassErrorLabel;
         private System.Windows.Forms.ComboBox DemuxTypeBox;
+        private System.Windows.Forms.ComboBox networkResourceComboBox;
     }
 }
 

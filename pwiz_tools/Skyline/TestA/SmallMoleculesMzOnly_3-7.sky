@@ -28,7 +28,7 @@
       </transition_filter>
       <transition_libraries ion_match_tolerance="0.5" ion_count="3" pick_from="all" />
       <transition_integration />
-      <transition_instrument min_mz="50" max_mz="1500" mz_match_tolerance="0.055" />
+      <transition_instrument min_mz="50" max_mz="2000" mz_match_tolerance="0.055" />
     </transition_settings>
     <data_settings document_guid="4d3bd06f-4e90-4ed0-8319-5bf56355a641" />
   </settings_summary>
@@ -93,6 +93,60 @@
           <precursor_mz>88.522088</precursor_mz>
           <product_mz>77</product_mz>
           <collision_energy>3</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+    <molecule mass_average="1639.6994514200906" mass_monoisotopic="1639.6994514200906" custom_ion_name="(Glc)10" avg_measured_retention_time="38.13932">
+      <precursor charge="-2" precursor_mz="819.42" collision_energy="30.45312" mass_average="1638.8389028401809" mass_monoisotopic="1638.8389028401809" custom_ion_name="(Glc)10">
+        <transition fragment_type="precursor" mass_average="1638.8389028401809" mass_monoisotopic="1638.8389028401809" custom_ion_name="(Glc)10">
+          <precursor_mz>819.42</precursor_mz>
+          <product_mz>819.42</product_mz>
+          <collision_energy>30.45312</collision_energy>
+        </transition>
+      </precursor>
+      <precursor charge="-1" precursor_mz="1639.7" collision_energy="59.9832" mass_average="1639.6994514200906" mass_monoisotopic="1639.6994514200906" custom_ion_name="(Glc)10">
+        <transition fragment_type="precursor" mass_average="1639.6994514200906" mass_monoisotopic="1639.6994514200906" custom_ion_name="(Glc)10">
+          <precursor_mz>1639.7</precursor_mz>
+          <product_mz>1639.7</product_mz>
+          <collision_energy>59.9832</collision_energy>
+        </transition>
+      </precursor>
+    </molecule>
+  </peptide_list>
+  <peptide_list label_name="test2" websearch_status="X" auto_manage_children="false">
+    <molecule explicit_retention_time="10.3" explicit_retention_time_window="0.1" auto_manage_children="false"     concentration_multiplier="6.25" internal_standard_concentration="0.045" mass_average="351.000548579909" mass_monoisotopic="351.000548579909" custom_ion_name="PGE2" avg_measured_retention_time="22.5248756">
+    <precursor charge="-1" precursor_mz="351.217698" auto_manage_children="false" collision_energy="21.500837" declustering_potential="56.72077" ion_formula="C20H31O5" mass_average="351.46014" mass_monoisotopic="351.217149" custom_ion_name="PGE2">
+      <transition fragment_type="custom" mass_average="271.000548579909" mass_monoisotopic="271.000548579909" product_charge="-1">
+        <precursor_mz>351.217698</precursor_mz>
+        <product_mz>271.001097</product_mz>
+        <collision_energy>21.500837</collision_energy>
+        <declustering_potential>56.72077</declustering_potential>
+      </transition>
+    </precursor>
+    <precursor charge="-1" isotope_label="heavy" precursor_mz="355.242805" collision_energy="21.645741" declustering_potential="57.0142" ion_formula="C20H27O5H'4" mass_average="355.484787" mass_monoisotopic="355.242256" custom_ion_name="D4 PGE2">
+      <transition fragment_type="custom" mass_average="275.00054857990943" mass_monoisotopic="275.00054857990943" custom_ion_name="" product_charge="-1">
+        <precursor_mz>355.242805</precursor_mz>
+        <product_mz>275.001097</product_mz>
+        <collision_energy>21.645741</collision_energy>
+        <declustering_potential>57.0142</declustering_potential>
+      </transition>
+    </precursor>
+    </molecule>
+    <molecule auto_manage_children="false" concentration_multiplier="6.25" internal_standard_concentration="0.075" mass_average="335.000548579909" mass_monoisotopic="335.000548579909" custom_ion_name="LTB4" avg_measured_retention_time="27.888">
+      <precursor charge="-1" precursor_mz="335.001097" collision_energy="20.917039" declustering_potential="55.53858" mass_average="335.000548579909" mass_monoisotopic="335.000548579909" custom_ion_name="LTB4">
+        <transition fragment_type="custom" mass_average="195.000548579909" mass_monoisotopic="195.000548579909" product_charge="-1">
+          <precursor_mz>335.001097</precursor_mz>
+          <product_mz>195.001097</product_mz>
+          <collision_energy>20.917039</collision_energy>
+          <declustering_potential>55.53858</declustering_potential>
+        </transition>
+      </precursor>
+      <precursor charge="-1" isotope_label="heavy" precursor_mz="339.247891" collision_energy="21.069924" declustering_potential="55.848171" ion_formula="C20H27O4H'4" mass_average="339.485387" mass_monoisotopic="339.247342" custom_ion_name="D4 LTB4">
+        <transition fragment_type="custom" mass_average="197.00054857990946" mass_monoisotopic="197.00054857990946" custom_ion_name="" product_charge="-1">
+          <precursor_mz>339.247891</precursor_mz>
+          <product_mz>197.001097</product_mz>
+          <collision_energy>21.069924</collision_energy>
+          <declustering_potential>55.848171</declustering_potential>
         </transition>
       </precursor>
     </molecule>

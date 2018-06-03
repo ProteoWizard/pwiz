@@ -59,12 +59,15 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using DataFormats = System.Windows.Forms.DataFormats;
 using Timer = System.Windows.Forms.Timer;
 
 namespace pwiz.Skyline
@@ -628,14 +631,29 @@ namespace pwiz.Skyline
             ModifyDocument(description, null, act, null, null);
         }
 
-        public void ModifyDocument(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified)
+        public void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocument, SrmDocument, AuditLogEntry> logFunc)
+        {
+            ModifyDocument(description, null, act, null, null, logFunc);
+        }
+
+        public static AuditLogEntry SettingsLogFunction(SrmDocument oldDoc, SrmDocument newDoc)
+        {
+            var tree = Reflector<SrmDocument>.BuildDiffTree(Property.ROOT_PROPERTY, oldDoc, newDoc, DateTime.Now); // Not L10N
+            return tree != null && tree.Root != null ? new AuditLogEntry(oldDoc.FormatVersion, tree) : null;
+        }
+
+        public void ModifyDocument(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified, Func<SrmDocument, SrmDocument, AuditLogEntry> logFunc = null)
         {
             try
             {
-                using (var undo = BeginUndo(description, undoState))
+                using (var undo = BeginUndo(undoState))
                 {
-                    if (ModifyDocumentInner(act, onModifying, onModified))
-                        undo.Commit();
+                    AuditLogEntry entry;
+                    if (ModifyDocumentInner(act, onModifying, onModified, logFunc, out entry))
+                    {
+                        undo.Commit(entry != null ? entry.UndoRedo.ToString() : description);
+                        AddAuditLogEntry(entry);
+                    }   
                 }
             }
             catch (IdentityNotFoundException)
@@ -652,12 +670,59 @@ namespace pwiz.Skyline
             }
         }
 
+        private void AddAuditLogEntry(AuditLogEntry entry)
+        {
+            if (entry != null)
+            {
+                if (Settings.Default.AuditLogging || entry.CountEntryType == MessageType.log_cleared)
+                {
+                    ModifyDocumentNoUndo(d => d.ChangeAuditLog(ImmutableList<AuditLogEntry>.ValueOf(Document.AuditLog.AuditLogEntries.Concat(new[] { entry }))));
+                }
+                else
+                    UpdateCountLogEntry(1, entry.AllInfo.Count, MessageType.log_unlogged_changes);
+            }  
+        }
+
+        private AuditLogEntry UpdateCountLogEntry(int undoRedoCount, int allInfoCount, MessageType type, bool addToDoc = true)
+        {
+            var logEntries = new List<AuditLogEntry>(Document.AuditLog.AuditLogEntries);
+            var countEntry = logEntries.FirstOrDefault(e => e.CountEntryType == type);
+
+            if (countEntry != null)
+            {
+                var countEntries = logEntries.Where(e =>
+                    e.CountEntryType == MessageType.log_cleared ||
+                    e.CountEntryType == MessageType.log_unlogged_changes).ToArray();
+
+                undoRedoCount += countEntries.Sum(e => int.Parse(e.UndoRedo.Names[0])) - countEntries.Length;
+                allInfoCount += countEntries.Sum(e => int.Parse(e.AllInfo[0].Names[0])) - countEntries.Length;
+                logEntries.Remove(countEntry);
+            }
+
+            var newCountEntry = AuditLogEntry.MakeCountEntry(type, Document.FormatVersion,
+                DateTime.Now, undoRedoCount, allInfoCount);
+            if (addToDoc)
+            {
+                logEntries.Add(newCountEntry);
+
+                ModifyDocumentNoUndo(d => d.ChangeAuditLog(ImmutableList<AuditLogEntry>.ValueOf(logEntries)));
+            }
+
+            return newCountEntry;
+        }
+
         public void ModifyDocumentNoUndo(Func<SrmDocument, SrmDocument> act)
         {
             ModifyDocumentInner(act, null, null);
         }
 
-        private bool ModifyDocumentInner(Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified)
+        private void ModifyDocumentInner(Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified)
+        {
+            AuditLogEntry unused;
+            ModifyDocumentInner(act, onModifying, onModified, null, out unused);
+        }
+
+        private bool ModifyDocumentInner(Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified, Func<SrmDocument, SrmDocument, AuditLogEntry> logFunc, out AuditLogEntry resultEntry)
         {
             SrmDocument docOriginal;
             SrmDocument docNew;
@@ -669,6 +734,8 @@ namespace pwiz.Skyline
 
                 docOriginal = Document;
                 docNew = act(docOriginal);
+
+                resultEntry = logFunc != null ? logFunc(docOriginal, docNew) : null;
 
                 // If no change has been made, return without committing a
                 // new undo record to the undo stack.
@@ -735,9 +802,9 @@ namespace pwiz.Skyline
             }
         }
 
-        public IUndoTransaction BeginUndo(string description, IUndoState undoState = null)
+        public IUndoTransaction BeginUndo(IUndoState undoState = null)
         {
-            return _undoManager.BeginTransaction(description, undoState);
+            return _undoManager.BeginTransaction(undoState);
         }
 
         public bool InUndoRedo { get { return _undoManager.InUndoRedo; } }
@@ -1604,7 +1671,10 @@ namespace pwiz.Skyline
                 }
                 foreach (var removeParams in listRemoveParams)
                 {
-                    if (doc.FindNode(removeParams.ParentPath) != null)
+                    var nodeParent = doc.FindNode(removeParams.ParentPath);
+                    if (nodeParent is TransitionGroupDocNode)
+                        doc = (SrmDocument) doc.RemoveAllSynched(removeParams.ParentPath.Parent, removeParams.ParentPath.Child, removeParams.RemoveIds);
+                    else if (nodeParent != null)
                         doc = (SrmDocument) doc.RemoveAll(removeParams.ParentPath, removeParams.RemoveIds);
                 }
                 return doc;
@@ -2119,7 +2189,7 @@ namespace pwiz.Skyline
                     Transition.MIN_PRODUCT_CHARGE,
                     Transition.MAX_PRODUCT_CHARGE,
                     Document.Settings,
-                    nodeGroupTree.DocNode.CustomMolecule,
+                    nodeTran.Transition.CustomIon,
                     nodeTran.Transition.Adduct, null, null, null))
                 {
                     dlg.SetResult(nodeTran.Transition.CustomIon, nodeTran.Transition.Adduct);
@@ -2713,7 +2783,7 @@ namespace pwiz.Skyline
                         doc => doc.ChangeSettings(
                             doc.Settings.ChangeDataSettings(
                                 doc.Settings.DataSettings.AddGroupComparisonDef(
-                                editDlg.GroupComparisonDef))));
+                                editDlg.GroupComparisonDef))), SettingsLogFunction);
                 }
             }
         }
@@ -2724,7 +2794,7 @@ namespace pwiz.Skyline
                         doc => doc.ChangeSettings(
                             doc.Settings.ChangeDataSettings(
                                 doc.Settings.DataSettings.ChangePanoramaPublishUri(
-                                uri))));
+                                uri))), SettingsLogFunction);
         }
 
         private void editGroupComparisonListMenuItem_Click(object sender, EventArgs e)
@@ -3246,7 +3316,7 @@ namespace pwiz.Skyline
                                                     {
                                                         settingsNew = (SrmSettings) doc.Settings.ChangeName(ss.SaveName);
                                                         return doc.ChangeSettings(settingsNew);
-                                                    });
+                                                    }, SettingsLogFunction);
 
                 if (settingsNew != null)
                     Settings.Default.SrmSettingsList.Add(settingsNew.MakeSavable(ss.SaveName));
@@ -3403,7 +3473,7 @@ namespace pwiz.Skyline
             }
 
             ModifyDocument(message ?? Resources.SkylineWindow_ChangeSettings_Change_settings, undoState,
-                doc => doc.ChangeSettings(newSettings, monitor), onModifyingAction, onModifiedAction);
+                doc => doc.ChangeSettings(newSettings, monitor), onModifyingAction, onModifiedAction, SettingsLogFunction);
             return true;
         }
 
@@ -3427,7 +3497,7 @@ namespace pwiz.Skyline
                     ModifyDocument(Resources.SkylineWindow_ShowDocumentSettingsDialog_Change_document_settings,
                         doc => doc.ChangeSettings(
                             doc.Settings.ChangeDataSettings(
-                                dlg.GetDataSettings(doc.Settings.DataSettings))));
+                                dlg.GetDataSettings(doc.Settings.DataSettings))), SettingsLogFunction);
                 }
             }
         }
@@ -3447,7 +3517,7 @@ namespace pwiz.Skyline
             if (integrateAll != DocumentUI.Settings.TransitionSettings.Integration.IsIntegrateAll)
             {
                 ModifyDocument(integrateAll ? Resources.SkylineWindow_IntegrateAll_Set_integrate_all : Resources.SkylineWindow_IntegrateAll_Clear_integrate_all,
-                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIntegration(i => i.ChangeIntegrateAll(integrateAll))));
+                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIntegration(i => i.ChangeIntegrateAll(integrateAll))), SettingsLogFunction);
             }
         }
 
@@ -5036,6 +5106,54 @@ namespace pwiz.Skyline
             {
                 collapseProteinsMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Lists;
                 collapsePeptidesMenuItem.Text = Resources.SkylineWindow_expandAllMenuItem_DropDownOpening__Molecules;
+            }
+        }
+
+        public void SelectElement(ElementRef elementRef)
+        {
+            var document = Document;
+            var measuredResults = document.Settings.MeasuredResults;
+            var resultFileRef = elementRef as ResultFileRef;
+            if (resultFileRef != null)
+            {
+                elementRef = resultFileRef.Parent;
+            }
+            var replicateRef = elementRef as ReplicateRef;
+            if (replicateRef != null)
+            {
+                if (measuredResults == null)
+                {
+                    return;
+                }
+                var index = measuredResults.Chromatograms.IndexOf(chromSet => chromSet.Name == replicateRef.Name);
+                if (index >= 0)
+                {
+                    SelectedResultsIndex = index;
+                }
+                return;
+            }
+            var bookmark = new Bookmark();
+            var resultRef = elementRef as ResultRef;
+            if (resultRef != null)
+            {
+                var chromFileInfo = resultRef.FindChromFileInfo(document);
+                if (chromFileInfo != null)
+                {
+                    bookmark = bookmark.ChangeChromFileInfoId(chromFileInfo.FileId)
+                        .ChangeOptStep(resultRef.OptimizationStep);
+                }
+                elementRef = elementRef.Parent;
+            }
+            var nodeRef = elementRef as NodeRef;
+            if (nodeRef != null)
+            {
+                var identityPath = nodeRef.ToIdentityPath(document);
+                if (identityPath == null)
+                {
+                    return;
+                }
+                bookmark = bookmark.ChangeIdentityPath(identityPath);
+                NavigateToBookmark(bookmark);
             }
         }
     }

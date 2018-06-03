@@ -104,6 +104,7 @@
 <Component Feature="MainFeature"><File Id="_IDPicker.exe.config" Name="IDPicker.exe.config" Source="msvc-release\IDPicker.exe.config" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_IDPicker.exe.manifest" Name="IDPicker.exe.manifest" Source="msvc-release\IDPicker.exe.manifest" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_IDPicker.Controls.dll" Name="IDPicker.Controls.dll" Source="msvc-release\IDPicker.Controls.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_PureControls.dll" Name="PureControls.dll" Source="msvc-release\PureControls.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_IDPicker.DataModel.dll" Name="IDPicker.DataModel.dll" Source="msvc-release\IDPicker.DataModel.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_IDPicker.Util.dll" Name="IDPicker.Util.dll" Source="msvc-release\IDPicker.Util.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_IDPicker.Util.dll.config" Name="IDPicker.Util.dll.config" Source="msvc-release\IDPicker.Util.dll.config" KeyPath="yes"/></Component>

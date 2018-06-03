@@ -74,6 +74,8 @@ namespace pwiz.SkylineTestA
         {
             // Test some underlying formula handling for fanciful user-supplied values
             Assert.IsTrue(Molecule.AreEquivalentFormulas("C10H30Si5O5H-CH4", "C9H27O5Si5"));
+            Assert.AreEqual("C7H27O5Si4", BioMassCalc.MONOISOTOPIC.FindFormulaIntersection(new[] { "C8H30Si5O5H-CH4", "C9H27O5Si4", "C9H27O5Si5Na" }));
+            Assert.AreEqual("C7H27O5Si4", BioMassCalc.MONOISOTOPIC.FindFormulaIntersectionUnlabeled(new[] { "C7C'H30Si5O5H-CH4", "C9H27O5Si4", "C9H25H'2O5Si5Na" }));
 
             // There is a difference between a proteomic adduct and non proteomic, primarily in how they display
             Assert.AreEqual(Adduct.FromStringAssumeChargeOnly("M+H"), Adduct.M_PLUS_H);
@@ -398,6 +400,7 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(2 * (massHectochlorin + 1.23456), mz, .001);
 
             TestException(Hectochlorin, "M3Cl37+H"); // Trying to label more chlorines than exist in the molecule
+            TestException(Hectochlorin, "M-3Cl+H"); // Trying to remove more chlorines than exist in the molecule
             TestException(PENTANE, "M+foo+H"); // Unknown adduct
             TestException(PENTANE, "M2Cl37H+H"); // nonsense label ("2Cl37H2" would make sense, but regular H doesn't belong)
             TestException(PENTANE, "M+2H+"); // Trailing sign - we now understand this as a charge state declaration, but this one doesn't match described charge
@@ -411,7 +414,19 @@ namespace pwiz.SkylineTestA
 
             // Figuring out adducts from old style skyline doc ion molecules and ion precursors
             var adductDiff = Adduct.FromFormulaDiff("C6H27NO2Si2C'5", "C'5H11NO2", 3);
-            Assert.AreEqual("[M+C6H16Si2]", adductDiff.AdductFormula);
+            Assert.AreEqual("[M+C6H16Si2]3+", adductDiff.AdductFormula);
+            Assert.AreEqual(3, adductDiff.AdductCharge);
+            Assert.AreEqual(Adduct.FromString("[M+C6H16Si2]3+", Adduct.ADDUCT_TYPE.non_proteomic, null), adductDiff);
+            adductDiff = Adduct.FromFormulaDiff("C6H27NO2", "C6H27NO2", 3);
+            Assert.AreEqual("[M+3]", adductDiff.AdductFormula);
+            Assert.AreEqual(3, adductDiff.AdductCharge);
+            adductDiff = Adduct.ProtonatedFromFormulaDiff("C6H27NO2Si2C'5", "C'5H11NO2", 3);
+            var expectedFromProtonatedDiff = "[M+C6H13Si2+3H]";
+            Assert.AreEqual(expectedFromProtonatedDiff, adductDiff.AdductFormula);
+            Assert.AreEqual(3, adductDiff.AdductCharge);
+            Assert.AreEqual(Adduct.FromString(expectedFromProtonatedDiff, Adduct.ADDUCT_TYPE.non_proteomic, null), adductDiff);
+            adductDiff = Adduct.ProtonatedFromFormulaDiff("C6H27NO2", "C6H27NO2", 3);
+            Assert.AreEqual("[M+3H]", adductDiff.AdductFormula);
             Assert.AreEqual(3, adductDiff.AdductCharge);
 
             // Implied positive mode

@@ -38,6 +38,7 @@ CreateIrtCalculatorDlg,TestAssayLibraryImport
 CreateMatchExpressionDlg,TestVolcanoPlotFormatting
 DefineAnnotationDlg,TestAnnotations
 DiaIsolationWindowsGraphForm,TestIsolationScheme
+DocumentationViewer,TestStandardType
 DocumentGridForm,TestReportSummary
 DocumentSettingsDlg,TestAnnotations
 EditCEDlg,TestOptimization
@@ -66,6 +67,7 @@ EditPeakScoringModelDlg.FeaturesTab,TestPeakPickingTutorial
 EditPeakScoringModelDlg.PvalueTab,TestPeakPickingTutorial
 EditPeakScoringModelDlg.QvalueTab,TestPeakPickingTutorial
 EditPepModsDlg,TestExplicitVariable
+EditRemoteAccountDlg,TestUnifi
 EditRTDlg,TestRetentionTimeFilter
 EditServerDlg,TestAccessServer
 EditStaticModDlg.IsotopeModView,TestEditStaticMod

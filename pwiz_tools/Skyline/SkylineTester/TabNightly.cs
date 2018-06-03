@@ -525,7 +525,7 @@ namespace SkylineTester
 
         private string GetRevision(bool nuke)
         {
-            // Get current git revision info.
+            // Get current git revision info in form of git hash.
             string revision = String.Empty;
             try
             {

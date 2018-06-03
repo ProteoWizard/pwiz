@@ -227,9 +227,9 @@ namespace pwiz.Skyline.Model.Lib
 
         }
 
-        public override LibrarySpec CreateSpec(string path)
+        protected override LibrarySpec CreateSpec()
         {
-            return new XHunterLibSpec(Name, path);
+            return new XHunterLibSpec(Name, FilePath);
         }
 
         public override string SpecFilter

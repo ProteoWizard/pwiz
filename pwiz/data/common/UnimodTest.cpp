@@ -68,7 +68,7 @@ void test()
     unit_assert_operator_equal("Acetyl", acetyl.name);
     unit_assert(acetyl.approved);
     unit_assert_operator_equal("C2H2O1", acetyl.deltaComposition.formula());
-    unit_assert_operator_equal(8, acetyl.specificities.size());
+    unit_assert_operator_equal(9, acetyl.specificities.size());
 
     unit_assert_operator_equal(Site::Lysine, acetyl.specificities[0].site);
     unit_assert_operator_equal(Position::Anywhere, acetyl.specificities[0].position);
@@ -130,8 +130,8 @@ void test()
     unit_assert_operator_equal(2, modifications(oxidation.deltaAverageMass(), 0, false, indeterminate, Site::Methionine | Site::Alanine).size());
 
 
-    // 18 mods are 28 +/- 1
-    unit_assert_operator_equal(18, modifications(28, 1, true, indeterminate).size());
+    // 19 mods are 28 +/- 1
+    unit_assert_operator_equal(19, modifications(28, 1, true, indeterminate).size());
 
     // only two of those mods happen post-translationally on protein N-termini
     unit_assert_operator_equal(2, modifications(28, 1, true, indeterminate, Site::Any,

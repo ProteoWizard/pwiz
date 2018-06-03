@@ -4572,8 +4572,8 @@
   <data name="MQuestDefaultIntensityCorrelationCalc_Name_Default_dotp_or_idotp" xml:space="preserve">
     <value>默认点积或同位素点积</value>
   </data>
-  <data name="StartPage_PopulateWizardPanel_Import_DIA_DDA_Peptide_Search" xml:space="preserve">
-    <value>导入 DIA+DDA 肽搜索</value>
+  <data name="StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search" xml:space="preserve">
+    <value>导入 DIA 肽搜索</value>
   </data>
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
     <value>文档必须包含针对其导出特性的目标。</value>
@@ -5590,9 +5590,6 @@
   </data>
   <data name="ImportFastaHelper_CheckSequence_There_is_no_sequence_for_this_protein" xml:space="preserve">
     <value>无此蛋白质序列</value>
-  </data>
-  <data name="EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_" xml:space="preserve">
-    <value>具有名称{0}的漂移时间预测器已经存在。</value>
   </data>
   <data name="CommandLine_ApplyNamingPattern_Error__Duplicate_replicate_name___0___after_applying_regular_expression_" xml:space="preserve">
     <value>错误：应用常规表达式后重复测定名称“{0}”重复。</value>
@@ -9071,9 +9068,6 @@
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_" xml:space="preserve">
     <value>加合物 {0} 电荷 {1} 与声明电荷 {2} 不匹配</value>
-  </data>
-  <data name="BioMassCalc_ApplyAdductToFormula_Adduct_description___0___calls_for_more_labeled__1__than_are_found_in_the_molecule" xml:space="preserve">
-    <value>加合物描述“{0}”需要的标记 {1} 比在分子中找到的更多</value>
   </data>
   <data name="BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__" xml:space="preserve">
     <value>加合物描述“{1}”中有未知符号“{0}”</value>

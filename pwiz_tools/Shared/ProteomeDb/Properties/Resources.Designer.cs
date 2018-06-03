@@ -243,5 +243,15 @@ namespace pwiz.ProteomeDatabase.Properties {
                         "sion_and_try_again_", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A protein sequence cannot contain the character &apos;{0}&apos; at line {1}.
+        /// </summary>
+        public static string WebEnabledFastaImporter_ValidateProteinSequence_A_protein_sequence_cannot_contain_the_character___0___at_line__1_ {
+            get {
+                return ResourceManager.GetString("WebEnabledFastaImporter_ValidateProteinSequence_A_protein_sequence_cannot_contain" +
+                        "_the_character___0___at_line__1_", resourceCulture);
+            }
+        }
     }
 }

@@ -78,6 +78,9 @@ namespace seems
         private CVID nativeIdFormat = CVID.CVID_Unknown;
         public CVID NativeIdFormat { get { return nativeIdFormat; } }
 
+        private bool hasMergedSpectra = false;
+        private bool hasNativeIdSpectra = false;
+
 		private void initializeGridView( CVID nativeIdFormat )
 		{
             // force handle creation
@@ -93,7 +96,7 @@ namespace seems
                 {
                     string[] nameValuePair = nameValuePairs[i].Split( "=".ToCharArray() );
                     DataGridViewColumn nameColumn = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
-                    nameColumn.Name = nameValuePair[0];
+                    nameColumn.Name = nameValuePair[0] + "NativeIdColumn";
                     nameColumn.HeaderText = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase( nameValuePair[0] );
                     nameColumn.DataPropertyName = nameValuePair[0];
                     gridView.Columns.Insert( 1 + i, nameColumn );
@@ -261,9 +264,33 @@ namespace seems
             SpectrumDataSet.SpectrumTableRow row = spectrumDataSet.SpectrumTable.NewSpectrumTableRow();
             row.Id = spectrum.Id;
 
-            if( nativeIdFormat != CVID.CVID_Unknown )
+            if (spectrum.Id.StartsWith("merged="))
             {
-                gridView.Columns["Id"].Visible = false;
+                if (!hasMergedSpectra)
+                {
+                    hasMergedSpectra = true;
+                    gridView.Columns["Id"].Visible = true;
+                }
+
+                if (!hasNativeIdSpectra)
+                {
+                    foreach (DataGridViewColumn column in gridView.Columns)
+                        if (column.Name.EndsWith("NativeIdColumn"))
+                            column.Visible = false;
+                }
+            }
+            else if( nativeIdFormat != CVID.CVID_Unknown )
+            {
+                if (!hasMergedSpectra)
+                    gridView.Columns["Id"].Visible = false;
+
+                if (!hasNativeIdSpectra)
+                {
+                    hasNativeIdSpectra = true;
+                    foreach (DataGridViewColumn column in gridView.Columns)
+                        if (column.Name.EndsWith("NativeIdColumn"))
+                            column.Visible = true;
+                }
 
                 // guard against case where input is mzXML which
                 // is identified as, say, Agilent-derived, but 

@@ -33,6 +33,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -261,6 +262,11 @@ namespace pwiz.Skyline
                     return false;
             }
 
+            if (!ImportAnnotations(commandArgs))
+            {
+                return false;
+            }
+
             if (commandArgs.Saving)
             {
                 var saveFile = commandArgs.SaveFile ?? _skylineFile;
@@ -304,15 +310,15 @@ namespace pwiz.Skyline
                 var listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>();
                 if (!string.IsNullOrEmpty(commandArgs.ReplicateName))
                 {
-                    var files = commandArgs.ReplicateFile.ToArray();
+                    var files = commandArgs.ReplicateFile.SelectMany(DataSourceUtil.ListSubPaths).ToArray();
                     listNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(commandArgs.ReplicateName, files));
                 }
                 else
                 {
-                    foreach (var dataFile in commandArgs.ReplicateFile)
+                    foreach (var dataFile in commandArgs.ReplicateFile.SelectMany(DataSourceUtil.ListSubPaths))
                     {
                         listNamedPaths.Add(new KeyValuePair<string, MsDataFileUri[]>(
-                            dataFile.GetFileNameWithoutExtension(),
+                            dataFile.GetSampleName() ?? dataFile.GetFileNameWithoutExtension(),
                             new[] {dataFile}));
                     }
                 }
@@ -343,6 +349,26 @@ namespace pwiz.Skyline
             }
 
             return true;
+        }
+
+        private bool ImportAnnotations(CommandArgs commandArgs)
+        {
+            if (string.IsNullOrEmpty(commandArgs.ImportAnnotations))
+            {
+                return true;
+            }
+            try
+            {
+                var documentAnnotations = new DocumentAnnotations(_doc);
+                _doc = documentAnnotations.ReadAnnotationsFromFile(CancellationToken.None, commandArgs.ImportAnnotations);
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_ImportAnnotations_Failed_while_reading_annotations_);
+                _out.WriteLine(x.Message);
+                return false;
+            }
         }
 
         private void PerformExportOperations(CommandArgs commandArgs)
@@ -1151,13 +1177,16 @@ namespace pwiz.Skyline
             }
 
             _out.WriteLine(Resources.CommandLine_ImportResultsFile_Adding_results___);
-
-            // Hack for un-readable RAW files from Thermo instruments.
-            if(!CanReadFile(replicateFile))
+            var targetSkyd = ChromatogramCache.PartPathForName(_skylineFile, replicateFile);
+            if (!File.Exists(targetSkyd))
             {
-                _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, replicateFile);
-                return true;
-            }
+                // Hack for un-readable RAW files from Thermo instruments.
+                if (!CanReadFile(replicateFile))
+                {
+                    _out.WriteLine(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, replicateFile);
+                    return true;
+                }  
+            } 
 
             if (disableJoining)
                 _doc = _doc.ChangeSettingsNoDiff(_doc.Settings.ChangeIsResultsJoiningDisabled(true));
@@ -1384,6 +1413,7 @@ namespace pwiz.Skyline
                 if (commandArgs.IsCreateScoringModel)
                 {
                     modelAndFeatures = CreateScoringModel(commandArgs.ReintegratModelName,
+                        commandArgs.ExcludeFeatures,
                         commandArgs.IsDecoyModel,
                         commandArgs.IsSecondBestModel,
                         commandArgs.IsLogTraining,
@@ -1427,7 +1457,8 @@ namespace pwiz.Skyline
             }
         }
 
-        private ModelAndFeatures CreateScoringModel(string modelName, bool decoys, bool secondBest, bool log, int? modelIterationCount)
+        private ModelAndFeatures CreateScoringModel(string modelName, IList<IPeakFeatureCalculator> excludeFeatures,
+            bool decoys, bool secondBest, bool log, int? modelIterationCount)
         {
             _out.WriteLine(Resources.CommandLine_CreateScoringModel_Creating_scoring_model__0_, modelName);
 
@@ -1435,6 +1466,19 @@ namespace pwiz.Skyline
             {
                 // Create new scoring model using the default calculators.
                 var calcs = MProphetPeakScoringModel.GetDefaultCalculators(_doc);
+                if (excludeFeatures.Count > 0)
+                {
+                    if (excludeFeatures.Count == 1)
+                        _out.WriteLine(Resources.CommandLine_CreateScoringModel_Excluding_feature_score___0__, excludeFeatures.First().Name);
+                    else
+                    {
+                        _out.WriteLine(Resources.CommandLine_CreateScoringModel_Excluding_feature_scores_);
+                        foreach (var featureCalculator in excludeFeatures)
+                            _out.WriteLine("    " + featureCalculator.Name);    // Not L10N
+                    }
+                    // Excluding any requested by the caller
+                    calcs = calcs.Where(c => excludeFeatures.All(c2 => c.GetType() != c2.GetType())).ToArray();
+                }
                 var scoringModel = new MProphetPeakScoringModel(modelName, null as LinearModelParams, calcs, decoys, secondBest);
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
                 var targetDecoyGenerator = new TargetDecoyGenerator(scoringModel, _doc.GetPeakFeatures(calcs, progressMonitor));
@@ -1826,6 +1870,8 @@ namespace pwiz.Skyline
                 librarySpec = new SpectrastSpec(name, path);
             else if (Equals(ext, MidasLibSpec.EXT))
                 librarySpec = new MidasLibSpec(name, path);
+            else if (Equals(ext, EncyclopeDiaSpec.EXT))
+                librarySpec = new EncyclopeDiaSpec(name, path);
             else
             {
                 _out.WriteLine(Resources.CommandLine_SetLibrary_Error__The_file__0__is_not_a_supported_spectral_library_file_format_, path);

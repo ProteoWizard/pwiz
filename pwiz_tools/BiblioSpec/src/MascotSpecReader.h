@@ -261,15 +261,41 @@ class MascotSpecReader : public SpecFileReader {
      */
     void getIonMobilityFromTitle(SpecData& returnData, const string& title) // For Bruker TIMS
     {
+        // Pick out the Mobility value from something like
+        // title= Cmpd X, +MSn(383.4828600), 61.20 min MS: 151978/ |MSMS:151979/|count(pasefframemsmsinfo.precursor)=10|Id=2813793|AverageMz=383.672206171834|MonoisotopicMz=383.482886705023|Charge=3|Intensity=1217|ScanNumber=829.680327868853|Mobility=0.701142751474809
         const char* tag = "Mobility=";
-        const int tagLen = 9;
+        const char* delimiter = "|";
         size_t start = title.find(tag, 0);
+        if (start == string::npos)
+        {
+            // Try the "TITLE=Cmpd 1, +MS2(948.5056), 63.0eV, 52.60-52.61min, 1/K0=1.409 #26317-26323" variant        
+            tag = "1/K0=";
+            delimiter = " ";
+            start = title.find(tag, 0);
+        }
+        size_t end;
         if (start != string::npos)
         {
+            int tagLen = strlen(tag);
             start += tagLen;
-            size_t end = title.find("|", start);
+            end = title.find(delimiter, start);
             if (end == string::npos)
                 end = title.length();
+        }
+        else // Try the "TITLE=1 Features, +MS2(479.538163, 2+), 0.8123 1/k0," variant
+        {
+            end = title.find(" 1/k0", 0);
+            if (end != string::npos)
+            {
+                start = title.find_last_of(' ',end - 1);
+                if (start != string::npos)
+                {
+                    start++;
+                }
+            }
+        }
+        if (start != string::npos)
+        {
             string imStr = title.substr(start, end - start);
             try
             {

@@ -41,25 +41,23 @@ namespace SkylineNightly
     {
         private const string NIGHTLY_TASK_NAME = "Skyline nightly build";
 
-        private const string TEAM_CITY_BUILD_URL = "https://teamcity.labkey.org/viewType.html?buildTypeId={0}";
-        private const string TEAM_CITY_ZIP_URL = "https://teamcity.labkey.org/repository/download/{0}/{1}:id/SkylineTester.zip";
-        private const string TEAM_CITY_BUILD_TYPE_64 = "bt209";
-        private const string TEAM_CITY_BUILD_TYPE_RELEASE_64 = "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional";
-        private const string TEAM_CITY_BUILD_TYPE_32 = "bt19";
-        private const string TEAM_CITY_BUILD_TYPE = TEAM_CITY_BUILD_TYPE_64;
+        private const string TEAM_CITY_ZIP_URL = "https://teamcity.labkey.org/guestAuth/repository/download/{0}/.lastFinished/SkylineTester.zip{1}";
+        private const string TEAM_CITY_BUILD_TYPE_64_MASTER = "bt209";
+        private const string TEAM_CITY_BUILD_TYPE_64_RELEASE = "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional";
         private const string TEAM_CITY_USER_NAME = "guest";
         private const string TEAM_CITY_USER_PASSWORD = "guest";
-        private const string LABKEY_URL = "https://skyline.ms/labkey/testresults/home/development/Nightly%20x64/post.view?";
-        private const string LABKEY_PERF_URL = "https://skyline.ms/labkey/testresults/home/development/Performance%20Tests/post.view?";
-        private const string LABKEY_STRESS_URL = "https://skyline.ms/labkey/testresults/home/development/NightlyStress/post.view?";
-        private const string LABKEY_RELEASE_URL = "https://skyline.ms/labkey/testresults/home/development/Release%20Branch/post.view?";
-        private const string LABKEY_RELEASE_PERF_URL = "https://skyline.ms/labkey/testresults/home/development/Release%20Branch%20Performance%20Tests/post.view?";
-        private const string LABKEY_INTEGRATION_URL = "https://skyline.ms/labkey/testresults/home/development/Integration/post.view";
+        private const string LABKEY_URL = "https://skyline.ms/testresults/home/development/Nightly%20x64/post.view?";
+        private const string LABKEY_PERF_URL = "https://skyline.ms/testresults/home/development/Performance%20Tests/post.view?";
+        private const string LABKEY_STRESS_URL = "https://skyline.ms/testresults/home/development/NightlyStress/post.view?";
+        private const string LABKEY_RELEASE_URL = "https://skyline.ms/testresults/home/development/Release%20Branch/post.view?";
+        private const string LABKEY_RELEASE_PERF_URL = "https://skyline.ms/testresults/home/development/Release%20Branch%20Performance%20Tests/post.view?";
+        private const string LABKEY_INTEGRATION_URL = "https://skyline.ms/testresults/home/development/Integration/post.view";
         
         private const string GIT_MASTER_URL = "https://github.com/ProteoWizard/pwiz";
+        private const string GIT_BRANCHES_URL = GIT_MASTER_URL + "/tree/";
 
-        // Current integration branch
-        private const string GIT_INTEGRATION_BRANCH_URL = GIT_MASTER_URL+"/tree/Skyline/work/20180125_FiguresOfMerit";
+        // Current integration branch - this gets appended to GIT_BRANCHES_URL for integration build
+        private const string INTEGRATION_BRANCH = "Skyline/work/20180125_FiguresOfMerit";
 
         private DateTime _startTime;
         public string LogFileName { get; private set; }
@@ -259,12 +257,12 @@ namespace SkylineNightly
             // Download most recent build of SkylineTester.
             var skylineTesterZip = Path.Combine(_skylineTesterDir, skylineTesterDirBasis + ".zip");
             const int attempts = 30;
+            string branchUrl = null;
             for (int i = 0; i < attempts; i++)
             {
                 try
                 {
                     DownloadSkylineTester(skylineTesterZip, _runMode);
-                    break;
                 }
                 catch (Exception ex)
                 {
@@ -274,39 +272,54 @@ namespace SkylineNightly
                         LogAndThrow("Unable to download SkylineTester");
                     }
                     Thread.Sleep(60*1000);  // one minute
+                    continue;
                 }
-            }
 
-            // Install SkylineTester.
-            if (!InstallSkylineTester(skylineTesterZip, _skylineTesterDir))
-                LogAndThrow("SkylineTester installation failed.");
-
-            // Delete zip file.
-            Log("Delete zip file " + skylineTesterZip);
-            File.Delete(skylineTesterZip);
-
-            // Now figure out which branch we're working in - there's a file in the downloaded SkylineTester zip that tells us.
-            string branchUrl = null;
-            var branchLine = File.ReadAllLines(Path.Combine(_skylineTesterDir, "SkylineTester Files", "Version.cpp")).FirstOrDefault(l => l.Contains("Version::Branch"));
-            if (!string.IsNullOrEmpty(branchLine))
-            {
-                // Looks like std::string Version::Branch()   {return "skyline_9_7";}
-                var branch = branchLine.Split(new[] { "\"" }, StringSplitOptions.None)[1];
-                if (branch.Equals("master"))
+                // Install SkylineTester.
+                if (!InstallSkylineTester(skylineTesterZip, _skylineTesterDir))
+                    LogAndThrow("SkylineTester installation failed.");
+                try
                 {
-                    branchUrl = GIT_MASTER_URL;
-                }
-                else
-                {
-                    branchUrl = GIT_MASTER_URL + "/tree/" + branch;
-                }
-            }
-            // Or if we are running the integration build, then we use the trunk SkylineTester, but have it build the branch TestRunner.exe
-            else if (_runMode == RunMode.integration)
-            {
-                branchUrl = GIT_INTEGRATION_BRANCH_URL;
-            }
+                    // Delete zip file.
+                    Log("Delete zip file " + skylineTesterZip);
+                    File.Delete(skylineTesterZip);
 
+                    // If we are running the integration build, then we use the trunk SkylineTester, but have it build the branch TestRunner.exe
+                    if (_runMode == RunMode.integration)
+                    {
+                        branchUrl = GIT_BRANCHES_URL + INTEGRATION_BRANCH;
+                    }
+                    else
+                    {
+                        // Figure out which branch we're working in - there's a file in the downloaded SkylineTester zip that tells us.
+                        var branchLine = File.ReadAllLines(Path.Combine(_skylineTesterDir, "SkylineTester Files", "Version.cpp")).FirstOrDefault(l => l.Contains("Version::Branch"));
+                        if (!string.IsNullOrEmpty(branchLine))
+                        {
+                            // Looks like std::string Version::Branch()   {return "Skyline/skyline_9_7";}
+                            var branch = branchLine.Split(new[] { "\"" }, StringSplitOptions.None)[1];
+                            if (branch.Equals("master"))
+                            {
+                                branchUrl = GIT_MASTER_URL;
+                            }
+                            else
+                            {
+                                branchUrl = GIT_BRANCHES_URL + branch;
+                            }
+                        }
+                        
+                    }
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Log("Exception while unzipping SkylineTester: " + ex.Message + " (Probably still being built, will retry every 60 seconds for 30 minutes.)");
+                    if (i == attempts - 1)
+                    {
+                        LogAndThrow("Unable to identify branch from Version.cpp in SkylineTester");
+                    }
+                    Thread.Sleep(60 * 1000);  // one minute
+                }
+            }
             // Create ".skytr" file to execute nightly build in SkylineTester.
             var assembly = Assembly.GetExecutingAssembly();
             const string resourceName = "SkylineNightly.SkylineNightly.skytr";
@@ -328,7 +341,7 @@ namespace SkylineNightly
                     skylineTester.GetChild("nightlyDuration").Set(((int)_duration.TotalHours).ToString());
                     skylineTester.GetChild("nightlyRepeat").Set(_runMode == RunMode.stress ? "100" : "1");
                     skylineTester.GetChild("nightlyRandomize").Set(_runMode == RunMode.stress ? "true" : "false");
-                    if (!string.IsNullOrEmpty(branchUrl) && !branchUrl.Contains("trunk"))
+                    if (!string.IsNullOrEmpty(branchUrl) && branchUrl.Contains("tree"))
                     {
                         skylineTester.GetChild("nightlyBuildTrunk").Set("false");
                         skylineTester.GetChild("nightlyBranch").Set("true");
@@ -412,21 +425,13 @@ namespace SkylineNightly
             using (var client = new WebClient())
             {
                 client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
-                var buildType = ((mode == RunMode.release) || (mode == RunMode.release_perf))
-                    ? TEAM_CITY_BUILD_TYPE_RELEASE_64
-                    : TEAM_CITY_BUILD_TYPE;
-                var buildPageUrl = string.Format(TEAM_CITY_BUILD_URL, buildType);
-                Log("Download Team City build page");
-                var buildStatusPage = client.DownloadString(buildPageUrl);
+                var isRelease = ((mode == RunMode.release) || (mode == RunMode.release_perf));
+                var branchType = isRelease ? "" : "?branch=master"; // TC has a config just for release, but main config builds pull requests, other branches etc
+                var buildType = isRelease ? TEAM_CITY_BUILD_TYPE_64_RELEASE : TEAM_CITY_BUILD_TYPE_64_MASTER;
 
-                var match = Regex.Match(buildStatusPage, @"<span\sid=""build:([^""]*):text"">Tests\spassed:");
-                if (match.Success)
-                {
-                    string id = match.Groups[1].Value;
-                    string zipFileLink = string.Format(TEAM_CITY_ZIP_URL, buildType, id);
-                    Log("Download SkylineTester zip file");
-                    client.DownloadFile(zipFileLink, skylineTesterZip);
-                }
+                string zipFileLink = string.Format(TEAM_CITY_ZIP_URL, buildType, branchType);
+                Log("Download SkylineTester zip file as " + zipFileLink);
+                client.DownloadFile(zipFileLink, skylineTesterZip); // N.B. depending on caller to do try/catch
             }
         }
 
@@ -475,7 +480,7 @@ namespace SkylineNightly
             ParseLeaks(log);
 
             var hasPerftests = log.Contains("# Perf tests");
-            var isIntegration = log.Contains(GIT_INTEGRATION_BRANCH_URL);
+            var isIntegration = log.Contains(GIT_BRANCHES_URL);
             var isTrunk = !isIntegration && !log.Contains("Testing branch at");
 
             var machineName = Environment.MachineName;
@@ -489,18 +494,32 @@ namespace SkylineNightly
 
             // See if we can parse revision info from the log
             string revisionInfo = null;
+            string gitHash = null;
             // Checked out revision 9708.
             var reRevision = new Regex(@"\nChecked out revision (.*)\.\r\n", RegexOptions.Compiled); // As in "Checked out revision 9708."
             var revMatch = reRevision.Match(log);
             if (revMatch.Success)
             {
                 revisionInfo = revMatch.Groups[1].Value;
+                gitHash = "(svn)";
+            }
+            else // Look for log message where we emit our build ID
+            {
+                // look for build message like "ProteoWizard 3.0.18099.a0147f2 x64 AMD64"
+                reRevision = new Regex(@"\nProteoWizard \d+\.\d+\.([^ ]*)\.([^ ]*).*\r\n", RegexOptions.Compiled); 
+                revMatch = reRevision.Match(log);
+                if (revMatch.Success)
+                {
+                    revisionInfo = revMatch.Groups[1].Value;
+                    gitHash = revMatch.Groups[2].Value;
+                }
             }
 
             _nightly["id"] = machineName;
             _nightly["os"] = Environment.OSVersion;
             var buildroot = ParseBuildRoot(log);
             _nightly["revision"] = revisionInfo ?? GetRevision(buildroot);
+            _nightly["git_hash"] = gitHash ?? string.Empty;
             _nightly["start"] = _startTime;
             _nightly["duration"] = (int)_duration.TotalMinutes;
             _nightly["testsrun"] = testCount;
@@ -773,15 +792,14 @@ namespace SkylineNightly
             git.Start();
             var gitOutput = git.StandardOutput.ReadToEnd();
             git.WaitForExit();
-            return gitOutput;
+            return gitOutput.Trim();
         }
 
         private string GetRevision(string pwizDir)
         {
 
-            var revisionCount = GitCommand(pwizDir, @"rev-list --count head");
             var revisionHash = GitCommand(pwizDir, @"rev-parse --short HEAD");
-            var revision = revisionCount + " (" + revisionHash + ")";
+            var revision = "unknownDate." + revisionHash;
             return revision;
         }
 

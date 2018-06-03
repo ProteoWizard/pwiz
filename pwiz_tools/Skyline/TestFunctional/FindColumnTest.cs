@@ -37,7 +37,7 @@ namespace pwiz.SkylineTestFunctional
         {
             PropertyPath expectedPath1 = PropertyPath.Parse("Proteins!*.Peptides!*.Results!*");
             PropertyPath expectedPath2 = PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value.PeptideRetentionTime");
-            PropertyPath expectedPath3 = PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value.DocumentLocation");
+            PropertyPath expectedPath3 = PropertyPath.Parse("Proteins!*.Peptides!*.Results!*.Value.Locator");
 
             var exportReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
             RunUI(() =>

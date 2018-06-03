@@ -860,6 +860,33 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(trans.Annotations.Note, "macrobrew");
             }
 
+            // Load a document whose settings call for different mass type for precursors and fragments
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("mixed_mass_types.sky")));
+            docOrig = SkylineWindow.Document;
+            var pasteDlg5 = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var columnOrder5 = new[]
+            {
+                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+            };
+            RunUI(() =>
+            {
+                pasteDlg5.IsMolecule = true;
+                pasteDlg5.SetSmallMoleculeColumns(columnOrder5.ToList());
+            });
+            WaitForConditionUI(() => pasteDlg5.GetUsableColumnCount() == columnOrder5.ToList().Count);
+            const string precursorOnly = "15xT\tC150H197N30O103P14\t-3";
+            SetClipboardText(precursorOnly);
+            RunUI(pasteDlg5.PasteTransitions);
+            OkDialog(pasteDlg5, pasteDlg5.OkDialog);
+            pastedDoc = WaitForDocumentChange(docOrig);
+            Assume.AreEqual(pastedDoc.MoleculePrecursorPairs.First().NodeGroup.PrecursorMz,
+                pastedDoc.MoleculeTransitions.First().Mz);
+            Assume.AreEqual(pastedDoc.MoleculePrecursorPairs.First().NodeGroup.PrecursorMzMassType,
+                pastedDoc.MoleculeTransitions.First().MzMassType);
+            Assume.AreEqual(MassType.Average, pastedDoc.MoleculeTransitions.First().MzMassType);
+
             NewDocument();
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
         }
@@ -918,6 +945,8 @@ namespace pwiz.SkylineTestFunctional
                     TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys)));
             // This should still be close enough to correct that we can tell that's what the user was going for
             Assert.IsTrue(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2));
+            // But the word "peptide" should prevent us from trying to read this as small molecule data
+            Assert.IsFalse(SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(textCSV2.Replace("grommet", "Peptide")));
            
 
             // And check for handling of localization
@@ -992,6 +1021,21 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
                 Assert.AreEqual(4, pastedDoc.MoleculeCount);
             }
+
+            // Check handling of transition list where precursor is indicated by leaving product columns empty
+            var textCSV7 =
+                "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Explicit Retention Time,Collisional Cross Section (sq A),Product m/z,Product Charge\n" +
+                "Lipid,L1,C41H74NO8P,[M+H],6.75,273.41,,\n" +
+                "Lipid,L1,C41H74NO8P,[M+H],6.75,273.41,263.2371,1\n" +
+                "Lipid,L2,C42H82NO8P,[M+Na],7.3,288.89,,\n" +
+                "Lipid,L2,C42H82NO8P,[M+Na],7.3,288.89,184.0785,1\n";
+            NewDocument();
+            RunUI(() =>
+            {
+                SetClipboardText(textCSV7);
+                SkylineWindow.Paste();
+            });
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);
         }
 
         private void TestLabelsNoFormulas()

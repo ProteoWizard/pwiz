@@ -297,7 +297,7 @@ http://www.nhibernate.org
 
 ProteoWizard
 質量分析データのインポート
-http://proteowizard.sourceforge.net
+https://github.com/ProteoWizard
 
 Shimadzu Corporation
 Shimadzu's ファイルコンバータソフトウェア
@@ -410,7 +410,7 @@ http://www.zlib.net</value>
     <value>8</value>
   </data>
   <data name="linkProteoWizard.Text" xml:space="preserve">
-    <value>proteowizard.sourceforge.net</value>
+    <value>github.com/ProteoWizard</value>
   </data>
   <data name="&gt;&gt;linkProteoWizard.Name" xml:space="preserve">
     <value>linkProteoWizard</value>

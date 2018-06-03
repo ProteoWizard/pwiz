@@ -42,6 +42,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         private IonMobilityPredictor _predictor;
         private readonly IEnumerable<IonMobilityPredictor> _existing;
         private bool _showRegressions;
+        private readonly bool _smallMoleculeUI; // Set true if document is non empty and not purely peptides
 
         public const int COLUMN_SEQUENCE = 0;
         public const int COLUMN_CHARGE = 1;
@@ -64,6 +65,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 }
             }
 
+            _smallMoleculeUI = Program.MainWindow.Document.DocumentType != SrmDocument.DOCUMENT_TYPE.proteomic;
+            if (_smallMoleculeUI)
+            {
+                gridMeasuredDriftTimes.Columns[COLUMN_SEQUENCE].HeaderText = Resources.EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Molecule;
+                gridMeasuredDriftTimes.Columns[COLUMN_CHARGE].HeaderText = Resources.EditDriftTimePredictorDlg_EditDriftTimePredictorDlg_Adduct;
+            }
 
             // TODO: ion mobility libraries are more complex than initially thought - leave these conversions to the mass spec vendors for now
             labelIonMobilityLibrary.Visible = comboLibrary.Visible = false;
@@ -146,16 +153,19 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                         : string.Empty;
                     var im = p.Value.IonMobility.Units == units ? p.Value.IonMobility.Mobility : null;
                     var imOffset = p.Value.IonMobility.Units == units ? p.Value.HighEnergyIonMobilityValueOffset : 0;
+                    var chargeOrAdductString = _smallMoleculeUI
+                                ? p.Key.Adduct.AdductFormula
+                                : p.Key.Charge.ToString(LocalizationHelper.CurrentCulture);
                     if (hasHighEnergyOffsets)
                         gridMeasuredDriftTimes.Rows.Add(p.Key.Target,
-                            p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
+                            chargeOrAdductString,
                             im.HasValue ? im.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty,
                             ccs,
                             imOffset.ToString(LocalizationHelper.CurrentCulture)
                             );
                     else
                         gridMeasuredDriftTimes.Rows.Add(p.Key.Target,
-                            p.Key.Charge.ToString(LocalizationHelper.CurrentCulture),
+                            chargeOrAdductString,
                             im.HasValue ? im.Value.ToString(LocalizationHelper.CurrentCulture) : string.Empty,
                             ccs
                             );
@@ -225,7 +235,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             if (_existing.Contains(r => !Equals(_predictor, r) && Equals(name, r.Name)) && !forceOverwrite)
             {
                 if (MessageBox.Show(this,
-                    TextUtil.LineSeparate(string.Format(Resources.EditDriftTimePredictorDlg_OkDialog_A_drift_time_predictor_with_the_name__0__already_exists_,name),
+                    TextUtil.LineSeparate(string.Format(Resources.EditDriftTimePredictorDlg_OkDialog_An_ion_mobility_predictor_with_the_name__0__already_exists_,name),
                         Resources.EditDriftTimePredictorDlg_OkDialog_Do_you_want_to_change_it_),
                     Program.Name, MessageBoxButtons.YesNo) != DialogResult.Yes)
                 {
@@ -521,8 +531,19 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 if (!ValidateSequence(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_SEQUENCE], out seq))
                     return null;
 
+                // OK, we have a non-empty "sequence" string, but is that actually a peptide or a molecule?
+                // See if there's anything in the document whose text representation matches what's in the list
+                var target = Program.MainWindow.Document.Molecules.Select(m=>m.Target).FirstOrDefault(t => seq.Equals(t.ToString()));
+                if (target == null || target.IsEmpty)
+                {
+                    // Does seq evaluate as a peptide?
+                    target = !seq.All(c => char.IsUpper(c) || char.IsDigit(c) || "[+-,.]()".Contains(c)) // Not L10N
+                        ? new Target(CustomMolecule.FromSerializableString(seq)) 
+                        : Target.FromSerializableString(seq);
+                }
+
                 Adduct charge;
-                if (!ValidateCharge(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_CHARGE], out charge))
+                if (!ValidateCharge(e, row.Cells[EditDriftTimePredictorDlg.COLUMN_CHARGE], target.IsProteomic, out charge))
                     return null;
 
                 double mobility;
@@ -539,7 +560,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 var ionMobility = IonMobilityValue.GetIonMobilityValue(mobility, units);
                 try
                 {
-                    dict.Add(new LibKey(seq, charge.AdductCharge),  IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, ccs, highEnergyOffset));
+                    dict.Add(new LibKey(target, charge),  IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, ccs, highEnergyOffset));
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch
@@ -550,10 +571,22 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             return dict;
         }
 
-        private bool ValidateCharge(CancelEventArgs e, DataGridViewCell cell, out Adduct charge)
+        private bool ValidateCharge(CancelEventArgs e, DataGridViewCell cell, bool assumeProteomic, out Adduct charge)
         {
-            if (!ValidateCell(e, cell, Adduct.FromStringAssumeProtonated, out charge, true))
-                return false;
+            if (assumeProteomic)
+            {
+                if (!ValidateCell(e, cell, Adduct.FromStringAssumeProtonated, out charge, true))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (!ValidateCell(e, cell, Adduct.FromStringAssumeProtonatedNonProteomic, out charge, true))
+                {
+                    return false;
+                }
+            }
 
             var errmsg = ValidateCharge(charge);
             if (errmsg != null)

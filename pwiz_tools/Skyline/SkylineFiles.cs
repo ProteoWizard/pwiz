@@ -40,6 +40,7 @@ using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Esp;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
@@ -1286,6 +1287,13 @@ namespace pwiz.Skyline
             var mi = new List<SpectrumPeaksInfo.MI>();
             var rt = 0.0;
             var im = IonMobilityAndCCS.EMPTY;
+            var imGroup = TransitionGroupIonMobilityInfo.EMPTY; // CCS may be available only at group level
+            var groupChromInfos = nodeTranGroup.GetSafeChromInfo(replicateIndex);
+            if (!groupChromInfos.IsEmpty)
+            {
+                var chromInfo = groupChromInfos.First(info => info.OptimizationStep == 0);
+                imGroup = chromInfo.IonMobilityInfo;
+            }
             var maxApex = float.MinValue;
             string chromFileName = null;
             foreach (var nodeTran in nodeTranGroup.Transitions)
@@ -1319,7 +1327,7 @@ namespace pwiz.Skyline
                 {
                     maxApex = chromInfo.Height;
                     rt = chromInfo.RetentionTime;
-                    im = IonMobilityAndCCS.GetIonMobilityAndCCS(chromInfo.IonMobility.IonMobility, chromInfo.IonMobility.CollisionalCrossSectionSqA, 0);
+                    im = IonMobilityAndCCS.GetIonMobilityAndCCS(chromInfo.IonMobility.IonMobility, chromInfo.IonMobility.CollisionalCrossSectionSqA ?? imGroup.CollisionalCrossSection, 0);
                 }
             }
             if (chromFileName == null)
@@ -1333,11 +1341,19 @@ namespace pwiz.Skyline
                     Key = key,
                     PrecursorMz = nodeTranGroup.PrecursorMz,
                     SpectrumPeaks = new SpectrumPeaksInfo(mi.ToArray()),
-                    RetentionTimes = new List<SpectrumMzInfo.IonMobilityAndRT>()
+                    RetentionTimes = new List<SpectrumMzInfo.IonMobilityAndRT>(),
+                    IonMobility = im,
+                    RetentionTime = rt
                 };
                 spectra[key] = spectrumMzInfo;
             }
-            spectrumMzInfo.RetentionTimes.Add(new SpectrumMzInfo.IonMobilityAndRT(chromFileName, im, rt, replicateIndex == nodePep.BestResult));
+            var isBest = replicateIndex == nodePep.BestResult;
+            if (isBest)
+            {
+                spectrumMzInfo.IonMobility = im;
+                spectrumMzInfo.RetentionTime = rt;
+            }
+            spectrumMzInfo.RetentionTimes.Add(new SpectrumMzInfo.IonMobilityAndRT(chromFileName, im, rt, isBest));
         }
 
         private void exportReportMenuItem_Click(object sender, EventArgs e)
@@ -1698,7 +1714,7 @@ namespace pwiz.Skyline
                     docNew.Settings.UpdateDefaultModifications(false);
                 }
                 return docNew;
-            });
+            }, SettingsLogFunction);
 
             if (selectPath != null)
                 SequenceTree.SelectedPath = selectPath;
@@ -1976,7 +1992,7 @@ namespace pwiz.Skyline
                     throw new InvalidDataException(string.Format(Resources.SkylineWindow_ImportMassList_Unexpected_document_change_during_operation___0_, x.Message, x));
                 }
                 return doc;
-            });
+            }, SettingsLogFunction);
 
             if (selectPath != null)
                 SequenceTree.SelectedPath = selectPath;
@@ -2778,7 +2794,7 @@ namespace pwiz.Skyline
                         doc.ValidateResults();
 
                         return doc;
-                    });
+                    }, SettingsLogFunction);
 
                     // Modify document will have closed the streams by now.  So, it is safe to delete the files.
                     if (dlg.IsRemoveAllLibraryRuns)
@@ -2812,7 +2828,11 @@ namespace pwiz.Skyline
             if (setReimport.Count == 0)
                 return;
 
-            new LongOperationRunner {JobTitle = Resources.SkylineWindow_ReimportChromatograms_Reimporting_chromatograms}
+            new LongOperationRunner
+                {
+                    ParentControl = this,
+                    JobTitle = Resources.SkylineWindow_ReimportChromatograms_Reimporting_chromatograms
+                }
                 .Run(longWaitBroker =>
                 {
                     // Remove all replicates to be re-imported
@@ -3064,6 +3084,110 @@ namespace pwiz.Skyline
             using (var dlg = new ExportChorusRequestDlg(DocumentUI, Path.GetFileNameWithoutExtension(DocumentFilePath)))
             {
                 dlg.ShowDialog(this);
+            }
+        }
+
+        private void exportAnnotationsMenuItem_Click(object sender, EventArgs e)
+        {
+            string strSaveFileName = string.Empty;
+            if (!string.IsNullOrEmpty(DocumentFilePath))
+            {
+                strSaveFileName = Path.GetFileNameWithoutExtension(DocumentFilePath);
+            }
+            strSaveFileName += "Annotations.csv"; // Not L10N
+
+            using (var dlg = new SaveFileDialog
+            {
+                FileName = strSaveFileName,
+                DefaultExt = TextUtil.EXT_CSV,
+                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV),
+                InitialDirectory = Settings.Default.ExportDirectory,
+                OverwritePrompt = true,
+            })
+            {
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                {
+                    return;
+                }
+                ExportAnnotations(dlg.FileName);
+            }
+        }
+
+        public void ExportAnnotations(string filename)
+        {
+            try
+            {
+                var documentAnnotations = new DocumentAnnotations(Document);
+                using (var longWaitDlg = new LongWaitDlg(this))
+                {
+                    longWaitDlg.PerformWork(this, 1000, broker =>
+                    {
+                        using (var fileSaver = new FileSaver(filename))
+                        {
+                            documentAnnotations.WriteAnnotationsToFile(broker.CancellationToken, fileSaver.SafeName);
+                            fileSaver.Commit();
+                        }
+                    });
+                }
+            }
+            catch (Exception e)
+            {
+                MessageDlg.ShowException(this, e);
+            }
+        }
+
+        public void ImportAnnotations(string filename)
+        {
+            try
+            {
+                lock (GetDocumentChangeLock())
+                {
+                    var originalDocument = Document;
+                    SrmDocument newDocument = null;
+                    using (var longWaitDlg = new LongWaitDlg(this))
+                    {
+                        longWaitDlg.PerformWork(this, 1000, broker =>
+                        {
+                            var documentAnnotations = new DocumentAnnotations(originalDocument);
+                            newDocument =
+                                documentAnnotations.ReadAnnotationsFromFile(broker.CancellationToken, filename);
+                        });
+                    }
+                    if (newDocument != null)
+                    {
+                        ModifyDocument(Resources.SkylineWindow_ImportAnnotations_Import_Annotations, doc =>
+                        {
+                            if (!ReferenceEquals(doc, originalDocument))
+                            {
+                                throw new ApplicationException(Resources
+                                    .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
+                            }
+                            return newDocument;
+                        });
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageDlg.ShowException(this, exception);
+            }
+        }
+
+
+        private void importAnnotationsMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new OpenFileDialog
+            {
+                DefaultExt = TextUtil.EXT_CSV,
+                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV),
+                InitialDirectory = Settings.Default.ExportDirectory,
+            })
+            {
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                {
+                    return;
+                }
+                ImportAnnotations(dlg.FileName);
             }
         }
 

@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MathNet.Numerics.Statistics;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
@@ -71,7 +72,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return null;
             }
             double concentrationMultiplier = PeptideQuantifier.PeptideDocNode.ConcentrationMultiplier.GetValueOrDefault(1.0);
-            return chromatogramSet.AnalyteConcentration*concentrationMultiplier;
+            return chromatogramSet.AnalyteConcentration*concentrationMultiplier/chromatogramSet.SampleDilutionFactor;
         }
 
         public IDictionary<int, double> GetStandardConcentrations()
@@ -208,8 +209,92 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return new CalibrationCurve()
                     .ChangeErrorMessage(QuantificationStrings.CalibrationCurveFitter_GetCalibrationCurve_All_of_the_external_standards_are_missing_one_or_more_peaks_);
             }
-            CalibrationCurve calibrationCurve = QuantificationSettings.RegressionFit.Fit(weightedPoints);
-            return calibrationCurve;
+            return FindBestLodForPoints(weightedPoints);
+        }
+
+        public FiguresOfMerit GetFiguresOfMerit(CalibrationCurve calibrationCurve)
+        {
+            var figuresOfMerit = FiguresOfMerit.EMPTY;
+            if (calibrationCurve != null)
+            {
+                figuresOfMerit = figuresOfMerit.ChangeLimitOfDetection(
+                    QuantificationSettings.LodCalculation.CalculateLod(calibrationCurve, this));
+            }
+            figuresOfMerit = figuresOfMerit.ChangeLimitOfQuantification(GetLimitOfQuantification(calibrationCurve));
+            if (!FiguresOfMerit.EMPTY.Equals(figuresOfMerit))
+            {
+                figuresOfMerit = figuresOfMerit.ChangeUnits(QuantificationSettings.Units);
+            }
+            return figuresOfMerit;
+        }
+
+        public double? GetLimitOfQuantification(CalibrationCurve calibrationCurve)
+        {
+            if (!QuantificationSettings.MaxLoqBias.HasValue && !QuantificationSettings.MaxLoqCv.HasValue)
+            {
+                return null;
+            }
+            var concentrationReplicateLookup = GetStandardConcentrations().ToLookup(entry=>entry.Value, entry=>entry.Key);
+            foreach (var concentrationReplicate in concentrationReplicateLookup.OrderBy(grouping=>grouping.Key))
+            {
+                var peakAreas = new List<double>();
+                foreach (var replicateIndex in concentrationReplicate)
+                {
+                    double? peakArea = GetNormalizedPeakArea(replicateIndex);
+                    if (peakArea.HasValue)
+                    {
+                        peakAreas.Add(peakArea.Value);
+                    }
+                }
+                if (QuantificationSettings.MaxLoqCv.HasValue)
+                {
+                    double cv = peakAreas.StandardDeviation() / peakAreas.Mean();
+                    if (double.IsNaN(cv) || double.IsInfinity(cv))
+                    {
+                        continue;
+                    }
+                    if (cv * 100 > QuantificationSettings.MaxLoqCv)
+                    {
+                        continue;
+                    }
+                }
+                if (QuantificationSettings.MaxLoqBias.HasValue)
+                {
+                    if (calibrationCurve == null)
+                    {
+                        continue;
+                    }
+                    double meanPeakArea = peakAreas.Mean();
+                    double? backCalculatedConcentration =
+                        GetConcentrationFromXValue(calibrationCurve.GetFittedX(meanPeakArea));
+                    if (!backCalculatedConcentration.HasValue)
+                    {
+                        continue;
+                    }
+                    double bias = (concentrationReplicate.Key - backCalculatedConcentration.Value) /
+                                  concentrationReplicate.Key;
+                    if (double.IsNaN(bias) || double.IsInfinity(bias))
+                    {
+                        continue;
+                    }
+                    if (Math.Abs(bias * 100) > QuantificationSettings.MaxLoqBias.Value)
+                    {
+                        continue;
+                    }
+                }
+                return concentrationReplicate.Key;
+            }
+            return null;
+        }
+
+        private CalibrationCurve GetCalibrationCurveFromPoints(IList<WeightedPoint> points)
+        {
+            return QuantificationSettings.RegressionFit.Fit(points);
+        }
+
+        private CalibrationCurve FindBestLodForPoints(IList<WeightedPoint> weightedPoints)
+        {
+            return GetCalibrationCurveFromPoints(weightedPoints);
         }
 
         public string GetXAxisTitle()
@@ -261,19 +346,27 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             return GetNormalizedPeakArea(replicateIndex);
         }
-
         public double? GetCalculatedConcentration(CalibrationCurve calibrationCurve, int replicateIndex)
         {
             if (!HasExternalStandards() && !HasInternalStandardConcentration())
             {
                 return null;
             }
-            double? xValue = GetCalculatedXValue(calibrationCurve, replicateIndex);
+            return GetConcentrationFromXValue(GetCalculatedXValue(calibrationCurve, replicateIndex) * GetDilutionFactor(replicateIndex));
+        }
+
+        public double? GetConcentrationFromXValue(double? xValue)
+        {
             if (HasExternalStandards() && HasInternalStandardConcentration())
             {
-                return xValue*PeptideQuantifier.PeptideDocNode.InternalStandardConcentration;
+                return xValue * PeptideQuantifier.PeptideDocNode.InternalStandardConcentration;
             }
             return xValue;
+        }
+
+        public double GetDilutionFactor(int replicateIndex)
+        {
+            return SrmSettings.MeasuredResults.Chromatograms[replicateIndex].SampleDilutionFactor;
         }
 
         public bool IsExcluded(int replicateIndex)

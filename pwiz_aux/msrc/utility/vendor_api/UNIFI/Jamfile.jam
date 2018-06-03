@@ -46,8 +46,8 @@ rule vendor-api-requirements ( properties * )
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
         }
         result += <assembly>$(dll_location)/unifi-protobuf-net.dll ;
-        result += <assembly>$(dll_location)/Newtonsoft.Json.dll ;
-        result += <assembly>$(dll_location)/IdentityModel.dll ;
+        result += <assembly>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/Newtonsoft.Json.dll ;
+        result += <assembly>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/IdentityModel.dll ;
         result += <assembly>$(dll_location)/System.Runtime.Caching.Generic.dll ;
         result += <assembly>$(dll_location)/ParallelExtensionsExtras.dll ;
         result += <include>$(dll_location) ;
@@ -99,8 +99,8 @@ rule install-requirements ( properties * )
     if $(dll_location)
     {
         result += <source>$(dll_location)/unifi-protobuf-net.dll ;
-        result += <source>$(dll_location)/Newtonsoft.Json.dll ;
-        result += <source>$(dll_location)/IdentityModel.dll ;
+        result += <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/Newtonsoft.Json.dll ;
+        result += <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/IdentityModel.dll ;
         result += <source>$(dll_location)/System.Runtime.Caching.Generic.dll ;
         result += <source>$(dll_location)/ParallelExtensionsExtras.dll ;
     }

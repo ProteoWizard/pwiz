@@ -207,6 +207,7 @@ namespace IDPicker
 
             spectrumTableForm.SpectrumViewFilter += handleViewFilter;
             spectrumTableForm.SpectrumViewVisualize += spectrumTableForm_SpectrumViewVisualize;
+            spectrumTableForm.IsobaricMappingChanged += spectrumTableForm_IsobaricMappingChanged;
             spectrumTableForm.FinishedSetData += handleFinishedSetData;
             spectrumTableForm.StartingSetData += handleStartingSetData;
             proteinTableForm.ProteinViewFilter += handleViewFilter;
@@ -624,6 +625,14 @@ namespace IDPicker
             form.FormClosed += (s, e2) => formSession.Dispose();
         }
         #endregion
+
+        void spectrumTableForm_IsobaricMappingChanged(object sender, EventArgs e)
+        {
+            proteinTableForm.ClearData(true);
+            peptideTableForm.ClearData(true);
+            proteinTableForm.SetData(session, viewFilter);
+            peptideTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
+        }
 
         void handleViewFilter(object sender, ViewFilterEventArgs e)
         {
@@ -1747,8 +1756,21 @@ namespace IDPicker
 
         private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            // save old rollup method to check whether it changed
+            var oldRollupMethod = Properties.GUI.Settings.Default.QuantitationRollupMethod;
+
             var form = new DefaultSettingsManagerForm { StartPosition = FormStartPosition.CenterParent };
-            form.ShowDialog(this);
+            if (form.ShowDialog(this) == DialogResult.OK)
+            {
+                // if rollup method changed, refresh protein and peptide views
+                if (Properties.GUI.Settings.Default.QuantitationRollupMethod != oldRollupMethod)
+                {
+                    proteinTableForm.ClearData(true);
+                    peptideTableForm.ClearData(true);
+                    proteinTableForm.SetData(session, viewFilter);
+                    peptideTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
+                }
+            }
         }
 
         private void ShowQonverterSettings(object sender, EventArgs e)

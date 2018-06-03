@@ -89,7 +89,7 @@ int main(int argc, const char* argv[])
         {
             cout << "Usage: hello_analyzer_2 [options] [filenames]\n"
                  << "Options:\n" << app.usageOptions << endl
-                 << "http://proteowizard.sourceforge.net\n"
+                 << "https://github.com/ProteoWizard\n"
                  << "support@proteowizard.org\n";
             return 1;
         }

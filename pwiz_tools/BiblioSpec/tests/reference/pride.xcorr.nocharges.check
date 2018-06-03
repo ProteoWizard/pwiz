@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:pride.xcorr.nocharges.blib	5	1	7
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:pride.xcorr.nocharges.blib	5	1	9
 id	RefSpectraID	position	mass
 1	1	10	57.021464
 2	2	10	57.021464
@@ -10,12 +10,12 @@ id	RefSpectraID	position	mass
 7	5	1	57.021464
 8	5	3	57.021464
 9	5	12	57.021464
-id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	ITGAQVGTGCGTLNDGK	826.349975585937	2	ITGAQVGTGC[+57.0]GTLNDGK	-	-	1	680	0.0	0.0	0.0	0	30.1486666666667	N/A	N/A	N/A	N/A	N/A	1	8421	4.4592	12
-2	ITGAQVGTGCGTLNDGK	550.859985351562	3	ITGAQVGTGC[+57.0]GTLNDGK	-	-	1	418	0.0	0.0	0.0	0	30.1755	N/A	N/A	N/A	N/A	N/A	1	8426	4.2029	12
-3	ITGAQVGTGCGTLNDGK	825.140014648438	2	ITGAQVGTGC[+57.0]GTLNDGK	-	-	1	480	0.0	0.0	0.0	0	30.3008333333333	N/A	N/A	N/A	N/A	N/A	1	8450	3.9148	12
-4	CICDPGYSGPTCK	758.119995117188	2	C[+57.0]IC[+57.0]DPGYSGPTC[+57.0]K	-	-	1	230	0.0	0.0	0.0	0	30.1805	N/A	N/A	N/A	N/A	N/A	1	8427	3.3241	12
-5	CICDPGYSGPTCK	758.650024414063	2	C[+57.0]IC[+57.0]DPGYSGPTC[+57.0]K	-	-	1	334	0.0	0.0	0.0	0	30.1648333333333	N/A	N/A	N/A	N/A	N/A	1	8424	3.2001	12
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
+1	ITGAQVGTGCGTLNDGK	826.349975585937	2	ITGAQVGTGC[+57.0]GTLNDGK	-	-	1	680	0.0	0.0	0.0	0	30.1486666666667	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	8421	4.4592	12
+2	ITGAQVGTGCGTLNDGK	550.859985351562	3	ITGAQVGTGC[+57.0]GTLNDGK	-	-	1	418	0.0	0.0	0.0	0	30.1755	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	8426	4.2029	12
+3	ITGAQVGTGCGTLNDGK	825.140014648438	2	ITGAQVGTGC[+57.0]GTLNDGK	-	-	1	480	0.0	0.0	0.0	0	30.3008333333333	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	8450	3.9148	12
+4	CICDPGYSGPTCK	758.119995117188	2	C[+57.0]IC[+57.0]DPGYSGPTC[+57.0]K	-	-	1	230	0.0	0.0	0.0	0	30.1805	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	8427	3.3241	12
+5	CICDPGYSGPTCK	758.650024414063	2	C[+57.0]IC[+57.0]DPGYSGPTC[+57.0]K	-	-	1	334	0.0	0.0	0.0	0	30.1648333333333	N/A	N/A	N/A	N/A	N/A	N/A	N/A	1	8424	3.2001	12
 id	fileName	cutoffScore
 1	/BiblioSpec/tests/inputs/test.xcorr.nocharges.pride.xml	-1.0
 id	scoreType	probabilityType

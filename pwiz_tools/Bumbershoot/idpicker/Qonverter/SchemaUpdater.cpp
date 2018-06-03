@@ -55,7 +55,7 @@ namespace {
         return vector<double>(valueArray, valueArray + elementCount);
     }
 
-    TEST_CASE("DistinctDoubleArraySum and DistinctTukeyBiweightAverage tests") {
+    TEST_CASE("DistinctDoubleArray* tests") {
         sqlite::database db(":memory:");
         db.load_extension("IdpSqlExtensions");
 
@@ -94,6 +94,36 @@ namespace {
 
             values = blobToDoubleArray(*itr, 4, 0); ++itr;
             CHECK(values == vector<double> { 12.0, 24.0, 40.0, 68.0 });
+        }
+
+        SUBCASE("plain mean") {
+            auto values = blobToDoubleArray(*sqlite::query(db, "SELECT DISTINCT_DOUBLE_ARRAY_MEAN(Values_) FROM test").begin(), 4, 0);
+            CHECK(values == vector<double> { (6.0 + 12) / 6, (12.0 + 24) / 6, (20.0 + 40) / 6, (34.0 + 68) / 6 });
+        }
+
+        SUBCASE("plain mean by group") {
+            sqlite::query q(db, "SELECT DISTINCT_DOUBLE_ARRAY_MEAN(Values_) FROM test GROUP BY Group_ ORDER BY Group_");
+            auto itr = q.begin();
+            auto values = blobToDoubleArray(*itr, 4, 0); ++itr;
+            CHECK(values == vector<double> { 6.0/3, 12.0/3, 20.0/3, 34.0/3 });
+
+            values = blobToDoubleArray(*itr, 4, 0); ++itr;
+            CHECK(values == vector<double> { 12.0/3, 24.0/3, 40.0/3, 68.0/3 });
+        }
+
+        SUBCASE("plain median") {
+            auto values = blobToDoubleArray(*sqlite::query(db, "SELECT DISTINCT_DOUBLE_ARRAY_MEDIAN(Values_) FROM test").begin(), 4, 0);
+            CHECK(values == vector<double> { 2.5, 5.0, 8.5, 15 }); // 1,2,2,3,4,6  2,4,4,6,8,12  3,6,8,9,16,18  4,8,14,16,28,32
+        }
+
+        SUBCASE("plain median by group") {
+            sqlite::query q(db, "SELECT DISTINCT_DOUBLE_ARRAY_MEDIAN(Values_) FROM test GROUP BY Group_ ORDER BY Group_");
+            auto itr = q.begin();
+            auto values = blobToDoubleArray(*itr, 4, 0); ++itr;
+            CHECK(values == vector<double> { 2.0, 4.0, 8.0, 14.0 });
+
+            values = blobToDoubleArray(*itr, 4, 0); ++itr;
+            CHECK(values == vector<double> { 4.0, 8.0, 16.0, 28.0 });
         }
 
         SUBCASE("Tukey Biweight average") {
@@ -201,6 +231,27 @@ namespace {
         }
     }
 
+    TEST_CASE("SortUnmappedLast tests") {
+
+        sqlite::database db(":memory:");
+        db.load_extension("IdpSqlExtensions");
+
+        IDPicker::setGroupConcatSeparator(",");
+
+        CHECK("Bar,Baz,Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Foo,Baz,Bar')").begin()->get<string>(0));
+        CHECK("Bar,Baz,Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Foo,Bar,Baz')").begin()->get<string>(0));
+        CHECK("Bar,Baz,Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Bar,Baz,Foo')").begin()->get<string>(0));
+
+        CHECK("Bar,Foo,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Foo,Bar,Unmapped_Foo')").begin()->get<string>(0));
+        CHECK("Bar,Foo,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Foo,Unmapped_Foo,Bar')").begin()->get<string>(0));
+        CHECK("Bar,Foo,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Unmapped_Foo,Bar,Foo')").begin()->get<string>(0));
+        CHECK("Bar,Foo,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Unmapped_Foo,Foo,Bar')").begin()->get<string>(0));
+
+        CHECK("Bar,Unmapped_Baz,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Bar,Unmapped_Baz,Unmapped_Foo')").begin()->get<string>(0));
+        CHECK("Bar,Unmapped_Baz,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Unmapped_Baz,Bar,Unmapped_Foo')").begin()->get<string>(0));
+        CHECK("Bar,Unmapped_Baz,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Unmapped_Baz,Unmapped_Foo,Bar')").begin()->get<string>(0));
+        CHECK("Bar,Unmapped_Baz,Unmapped_Foo" == sqlite::query(db, "SELECT SORT_UNMAPPED_LAST('Unmapped_Foo,Unmapped_Baz,Bar')").begin()->get<string>(0));
+    }
 
 void update_17_to_18(sqlite::database& db, const IterationListenerRegistry* ilr, bool& vacuumNeeded)
 {

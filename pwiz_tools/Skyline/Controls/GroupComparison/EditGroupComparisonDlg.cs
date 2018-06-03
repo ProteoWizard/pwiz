@@ -195,7 +195,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 Program.MainWindow.ModifyDocument(
                     GroupComparisonStrings.GroupComparisonSettingsForm_GroupComparisonDef_Change_Group_Comparison,
-                    doc => model.ApplyChangesToDocument(doc, groupDef)
+                    doc => model.ApplyChangesToDocument(doc, groupDef),
+                    SkylineWindow.SettingsLogFunction
                 );
                 
                 Settings.Default.GroupComparisonDefList.Add(groupDef);

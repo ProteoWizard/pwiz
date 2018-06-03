@@ -30,6 +30,7 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
@@ -45,7 +46,7 @@ namespace pwiz.SkylineTest.Reporting
     public class ColumnCaptionLocalizationTest : AbstractUnitTest
     {
         private static readonly IList<Type> STARTING_TYPES = ImmutableList.ValueOf(new[]
-            {typeof (SkylineDocument), typeof (FoldChangeBindingSource.FoldChangeRow)});
+            {typeof (SkylineDocument), typeof (FoldChangeBindingSource.FoldChangeRow), typeof(AuditLogRow)});
         /// <summary>
         /// This test method just outputs the entire text that should go in "ColumnCaptions.resx".
         /// </summary>
@@ -92,7 +93,7 @@ namespace pwiz.SkylineTest.Reporting
         /// If you add a Property to any of the entities that get displayed in Skyline Live Reports, you probably have
         /// to add an entry to ColumnToolTips.resx so that the column tooltip can be localized.
         /// </summary>
-        //[TestMethod] // TODO(bspratt/nicksh) Enable this once Nick and Brian have the last handful of column tooltips ready
+        [TestMethod]
         public void TestAllColumnToolTipsAreLocalized()
         {
             var documentContainer = new MemoryDocumentContainer();
@@ -105,8 +106,11 @@ namespace pwiz.SkylineTest.Reporting
                 var invariantDescription = skylineDataSchema.GetColumnDescription(columnDescriptor);
                 if (string.IsNullOrEmpty(invariantDescription))
                 {
-                    var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor);
-                    missingCaptions.Add((ColumnCaption) invariantCaption);
+                    var invariantCaption = skylineDataSchema.GetColumnCaption(columnDescriptor) as ColumnCaption;
+                    if (invariantCaption != null)
+                    {
+                        missingCaptions.Add(invariantCaption);
+                    }
                 }
             }
             if (missingCaptions.Count == 0)
@@ -150,6 +154,37 @@ namespace pwiz.SkylineTest.Reporting
             var unusedCaptions = columnCaptions.ToArray();
             Assert.AreEqual(0, unusedCaptions.Length, "Unused entries found in ColumnCaptions.resx: {0}", string.Join(",", unusedCaptions));
         }
+
+        /// <summary>
+        /// Tests that all of the entries in ColumnTooltips.resx actually show up in Skyline Live Reports somewhere.
+        /// </summary>
+        [TestMethod]
+        public void TestCheckForUnusedColumnTooltips()
+        {
+            var documentContainer = new MemoryDocumentContainer();
+            Assert.IsTrue(documentContainer.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), documentContainer.Document));
+            SkylineDataSchema dataSchema = new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT);
+            var columnCaptions = new HashSet<string>();
+            var resourceManager = ColumnToolTips.ResourceManager;
+            var resourceSet = resourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
+            var enumerator = resourceSet.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                string key = enumerator.Key as string;
+                if (null != key)
+                {
+                    columnCaptions.Add(key);
+                }
+            }
+            foreach (var columnDescriptor in EnumerateAllColumnDescriptors(dataSchema, STARTING_TYPES))
+            {
+                var invariantCaption = dataSchema.GetColumnCaption(columnDescriptor);
+                columnCaptions.Remove(invariantCaption.GetCaption(DataSchemaLocalizer.INVARIANT));
+            }
+            var unusedCaptions = columnCaptions.ToArray();
+            Assert.AreEqual(0, unusedCaptions.Length, "Unused entries found in ColumnToolTips.resx: {0}", string.Join(",", unusedCaptions));
+        }
+
 
         public IEnumerable<ColumnDescriptor> EnumerateAllColumnDescriptors(DataSchema dataSchema,
             ICollection<Type> startingTypes)

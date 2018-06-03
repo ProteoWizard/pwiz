@@ -320,9 +320,9 @@ namespace pwiz.Skyline.Model.Lib
             return new NistSpectrumHeaderInfo(Name, info.TFRatio, info.RT, info.iRT, info.TotalIntensity, info.Copies);
         }
 
-        public override LibrarySpec CreateSpec(string path)
+        protected override LibrarySpec CreateSpec()
         {
-            return new NistLibSpec(Name, path);
+            return new NistLibSpec(Name, FilePath);
         }
 
         public override string SpecFilter
@@ -517,6 +517,7 @@ namespace pwiz.Skyline.Model.Lib
             };
         // ReSharper restore NonLocalizedString
         private IPooledStream _readStream;
+        private bool _anyRetentionTimes;
 
         protected static Library Load(LibrarySpec spec, NistLibraryBase library, ILoadMonitor loader)
         {
@@ -573,7 +574,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override bool IsSameLibrary(Library library)
         {
-            NistLibrary nlib = library as NistLibrary;
+            NistLibraryBase nlib = library as NistLibraryBase;
             if (nlib != null)
                 return Equals(Id, nlib.Id);
             return false;
@@ -583,7 +584,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             // Not a valid request, if the two libraries are not the same.
             Debug.Assert(IsSameLibrary(library));
-            string libRevision = ((NistLibrary)library).Revision;
+            string libRevision = ((NistLibraryBase)library).Revision;
             if (Revision == null && libRevision == null)
                 return 0;
             if (Revision == null)
@@ -1191,6 +1192,12 @@ namespace pwiz.Skyline.Model.Lib
             return rt/60;
         }
 
+        protected override void SetLibraryEntries(IEnumerable<NistSpectrumInfo> entries)
+        {
+            base.SetLibraryEntries(entries);
+            _anyRetentionTimes = _libraryEntries.Any(entry => entry.RT.HasValue);
+        }
+
         protected override SpectrumPeaksInfo.MI[] ReadSpectrum(NistSpectrumInfo info)
         {
             byte[] peaksCompressed = new byte[info.CompressedSize];
@@ -1265,9 +1272,11 @@ namespace pwiz.Skyline.Model.Lib
             if (_libraryEntries == null)
                 return base.ListRetentionTimeSources();
 
-            return _libraryEntries.Any(entry => entry.RT.HasValue)
-                ? new List<RetentionTimeSource> {new RetentionTimeSource(FilePath, Name)}
-                : base.ListRetentionTimeSources();
+            if (!_anyRetentionTimes)
+            {
+                return base.ListRetentionTimeSources();
+            }
+            return new List<RetentionTimeSource> {new RetentionTimeSource(FilePath, Name)};
         }
 
         public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<Target> peptideSequences, ref int? fileIndex)

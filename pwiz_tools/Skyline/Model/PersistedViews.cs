@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model
         }
 
         public int RevisionIndex { get; private set; }
-        public int RevisionIndexCurrent { get { return 7; } }
+        public int RevisionIndexCurrent { get { return 8; } }
         public override void ReadXml(XmlReader reader)
         {
             RevisionIndex = reader.GetIntAttribute(Attr.revision);
@@ -156,6 +156,10 @@ namespace pwiz.Skyline.Model
             if (revisionIndex >= 7)
             {
                 reportStrings.Add(REPORTS_V7);
+            }
+            if (revisionIndex >= 8)
+            {
+                reportStrings.Add(REPORTS_V8);
             }
             var list = new List<KeyValuePair<ViewGroupId, ViewSpec>>();
             var xmlSerializer = new XmlSerializer(typeof(ViewSpecList));
@@ -397,6 +401,44 @@ namespace pwiz.Skyline.Model
     <column name='NormalizationMethod' />
     <column name='CalibrationCurve' />
     <column name='Note' />
+  </view>
+</views>
+";
+
+        private const string REPORTS_V8 = @"<views>
+  <view name='Peptide Ratio Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
+    <column name='' />
+    <column name='Protein' />
+    <column name='Results!*.Value.ResultFile.Replicate' />
+    <column name='Results!*.Value.PeptidePeakFoundRatio' />
+    <column name='Results!*.Value.PeptideRetentionTime' />
+    <column name='Results!*.Value.RatioToStandard' />
+    <column name='Results!*.Value.Quantification' />
+    <filter column='Results!*.Value' opname='isnotnullorblank' />
+  </view>
+  <view name='Peptide RT Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*'>
+    <column name='' />
+    <column name='Protein' />
+    <column name='Results!*.Value.ResultFile.Replicate' />
+    <column name='PredictedRetentionTime' />
+    <column name='Results!*.Value.PeptideRetentionTime' />
+    <column name='Results!*.Value.PeptidePeakFoundRatio' />
+    <filter column='Results!*.Value' opname='isnotnullorblank' />
+  </view>
+  <view name='Transition Results' rowsource='pwiz.Skyline.Model.Databinding.Entities.Transition' sublist='Results!*'>
+    <column name='Precursor.Peptide' />
+    <column name='Precursor.Peptide.Protein' />
+    <column name='Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate' />
+    <column name='Precursor.Mz' />
+    <column name='Precursor.Charge' />
+    <column name='ProductMz' />
+    <column name='ProductCharge' />
+    <column name='FragmentIon' />
+    <column name='Results!*.Value.RetentionTime' />
+    <column name='Results!*.Value.Area' />
+    <column name='Results!*.Value.Background' />
+    <column name='Results!*.Value.PeakRank' />
+    <filter column='Results!*.Value' opname='isnotnullorblank' />
   </view>
 </views>
 ";

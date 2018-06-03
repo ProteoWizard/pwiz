@@ -28,6 +28,8 @@ using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
@@ -315,6 +317,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private int _rescoreCount;
 
+        private const double DEFAULT_DILUTION_FACTOR = 1;
+
         public ChromatogramSet(string name,
             IEnumerable<MsDataFileUri> msDataFileNames)
             : this(name, msDataFileNames, Annotations.EMPTY, null)
@@ -339,6 +343,7 @@ namespace pwiz.Skyline.Model.Results
             OptimizationFunction = optimizationFunction;
             Annotations = annotations;
             SampleType = SampleType.DEFAULT;
+            SampleDilutionFactor = DEFAULT_DILUTION_FACTOR;
         }
 
         public IList<ChromFileInfo> MSDataFileInfos
@@ -442,6 +447,8 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public double? AnalyteConcentration { get; private set; }
+
+        public double SampleDilutionFactor { get; private set; }
 
         public SampleType SampleType { get; private set; }
 
@@ -559,6 +566,11 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.SampleType = sampleType ?? SampleType.DEFAULT);
         }
 
+        public ChromatogramSet ChangeDilutionFactor(double dilutionFactor)
+        {
+            return ChangeProp(ImClone(this), im => im.SampleDilutionFactor = dilutionFactor);
+        }
+
         #endregion
 
         public static MsDataFileUri GetExistingDataFilePath(string cachePath, MsDataFileUri msDataFileUri)
@@ -662,6 +674,7 @@ namespace pwiz.Skyline.Model.Results
             explicit_global_standard_area,
             tic_area,
             ion_mobility_type,
+            sample_dilution_factor,
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -680,6 +693,7 @@ namespace pwiz.Skyline.Model.Results
             UseForRetentionTimeFilter = reader.GetBoolAttribute(ATTR.use_for_retention_time_prediction, false);
             AnalyteConcentration = reader.GetNullableDoubleAttribute(ATTR.analyte_concentration);
             SampleType = SampleType.FromName(reader.GetAttribute(ATTR.sample_type));
+            SampleDilutionFactor = reader.GetDoubleAttribute(ATTR.sample_dilution_factor, DEFAULT_DILUTION_FACTOR);
             // Consume tag
             reader.Read();
 
@@ -735,6 +749,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 writer.WriteAttribute(ATTR.sample_type, SampleType.Name);
             }
+            writer.WriteAttribute(ATTR.sample_dilution_factor, SampleDilutionFactor, DEFAULT_DILUTION_FACTOR);
 
             // Write optimization element, if present
             if (OptimizationFunction != null)
@@ -842,6 +857,8 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             if (!Equals(obj.SampleType, SampleType))
                 return false;
+            if (!Equals(obj.SampleDilutionFactor, SampleDilutionFactor))
+                return false;
             return true;
         }
 
@@ -864,6 +881,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ _rescoreCount;
                 result = (result*397) ^ AnalyteConcentration.GetHashCode();
                 result = (result*397) ^ SampleType.GetHashCode();
+                result = (result*397) ^ SampleDilutionFactor.GetHashCode();
                 return result;
             }
         }
@@ -883,12 +901,17 @@ namespace pwiz.Skyline.Model.Results
         public ChromFileInfo(MsDataFileUri filePath)
             : base(new ChromFileInfoId())
         {
-            ChorusUrl chorusUrl = filePath as ChorusUrl;
-            if (null != chorusUrl)
+            RemoteUrl remoteUrl = filePath as RemoteUrl;
+            if (null != remoteUrl)
             {
-                FileWriteTime = chorusUrl.FileWriteTime;
+                FileWriteTime = remoteUrl.ModifiedTime;
+                filePath = remoteUrl.ChangeModifiedTime(null);
+            }
+            var chorusUrl = filePath as ChorusUrl;
+            if (chorusUrl != null)
+            {
                 RunStartTime = chorusUrl.RunStartTime;
-                filePath = chorusUrl.SetFileWriteTime(null).SetRunStartTime(null);
+                filePath = chorusUrl.ChangeRunStartTime(null);
             }
             FilePath = filePath;
             InstrumentInfoList = new MsInstrumentConfigInfo[0];

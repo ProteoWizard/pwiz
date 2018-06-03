@@ -16,7 +16,7 @@ minorVersion INTEGER -- Version 7 adds peak annotations
 -- Version 2 added ion mobility information
 )
 
-INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Mon Dec 11 17:19:36 2017',-1,0,7)
+INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Wed Apr 25 16:44:25 2018',-1,0,9)
 
 CREATE TABLE RefSpectra ( -- spectrum metadata - actual mz/intensity pairs in RefSpectraPeaks
 id INTEGER primary key autoincrement not null, -- lookup key for RefSpectraPeaks
@@ -33,6 +33,8 @@ collisionalCrossSectionSqA REAL, -- precursor CCS in square Angstroms for ion mo
 ionMobilityHighEnergyOffset REAL, -- ion mobility value increment for fragments (see ionMobilityType for units)
 ionMobilityType TINYINT, -- ion mobility units (required if ionMobility is used, see IonMobilityTypes table for key)
 retentionTime REAL, -- chromatographic retention time in minutes, if known
+startTime REAL, -- start retention time in minutes, if known
+endTime REAL, -- end retention time in minutes, if known
 moleculeName VARCHAR(128), -- precursor molecule's name (not needed for peptides)
 chemicalFormula VARCHAR(128), -- precursor molecule's neutral formula (not needed for peptides)
 precursorAdduct VARCHAR(128), -- ionizing adduct e.g. [M+Na], [2M-H2O+2H] etc (not needed for peptides)
@@ -57,6 +59,16 @@ peakMZ BLOB, -- mz values encoded as little-endian 64 bit doubles, length is det
 peakIntensity BLOB -- mz values encoded as little-endian 32 bit floats, length is determined by the numPeaks value in the corresponding RefSpectra.  Usually zlib-compressed if compressed size is less than original size.
 )
 
+CREATE TABLE Proteins -- protein information for RefSpectra.
+(id INTEGER primary key autoincrement not null,
+accession VARCHAR(200) -- protein accession number
+)
+
+CREATE TABLE RefSpectraProteins -- mapping of proteins between RefSpectra and Proteins tables.
+(RefSpectraId INTEGER not null, -- the RefSpectra being mapped to a protein
+ProteinId INTEGER not null -- the Protein for the RefSpectra
+)
+
 CREATE TABLE RefSpectraPeakAnnotations -- optional annotations for peaks in RefSpectra. There may be more than one annotation per peak, and not every peak in a RefSpectra has to be annotated.
 (id INTEGER primary key autoincrement not null,
 RefSpectraID INTEGER not null, -- the RefSpectra containing the peak being annotated
@@ -66,7 +78,7 @@ formula VARCHAR(256), -- fragment neutral chemical formula
 inchiKey VARCHAR(256), -- fragment molecular identifier for structure retrieval
 otherKeys VARCHAR(256), -- alternative molecular identifiers for fragment structure retrieval, tab separated e.g. cas:58-08-2\thmdb:01847 
 charge INTEGER, -- integer charge value, must agree with fragment adduct
-adduct VARCHAR(256), -- fargment adduct description, can include neutral loss e.g. [M+H] or [M-H2O+] 
+adduct VARCHAR(256), -- fragment adduct description, can include neutral loss e.g. [M+H] or [M-H2O+] 
 comment VARCHAR(256), -- freetext comment
 mzTheoretical REAL not null, -- calculated mz, should agree with formula and adduct if any
 mzObserved REAL not null -- actual measured mz, should agree with the indexed mz found in the RefSpectra

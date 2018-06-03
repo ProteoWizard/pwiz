@@ -67,5 +67,8 @@
     <Setting Name="UpgradeRequired" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="QuantitationRollupMethod" Type="IDPicker.QuantitationRollupMethod" Scope="User">
+      <Value Profile="(Default)">Sum</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -19,13 +19,14 @@
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding.Controls
 {
-    public partial class ManageLayoutsForm : Form
+    public partial class ManageLayoutsForm : CommonFormEx
     {
         private ViewLayoutList _viewLayoutList;
         private bool _inUpdateUi;

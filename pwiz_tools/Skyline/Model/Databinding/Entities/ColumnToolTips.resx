@@ -99,6 +99,15 @@
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
 
+  <data name="AbsFoldChange">
+    <value>Absolute value of the fold change</value>
+  </data>
+  <data name="AbsLog2FoldChange">
+    <value>Absolute value of the log base 2 of the fold change</value>
+  </data>
+  <data name="AdjustedPValue">
+    <value>P-value adjusted for the multiple comparisons within this group comparison across the multiple peptides or proteins. The adjustment is done using the Benjamini-Hochberg procedure.</value>
+  </data>
   <data name="Accuracy">
     <value>Ratio of the Analyte Concentration (specified on the Replicate) to the Calculated Concentraion</value>
   </data>
@@ -123,6 +132,9 @@ appeared on the heavy transitions.</value>
   </data>
   <data name="AverageMassErrorPPM">
     <value>Average Mass Error PPM</value>
+  </data>
+  <data name="AverageMasses">
+    <value>The modified sequence which specifies modifications with their average masses, e.g. "C[+57.05162]".</value>
   </data>
   <data name="AverageMeasuredRetentionTime">
     <value>The average peptide retention time over all replicates</value>
@@ -151,6 +163,34 @@ maximum intensity for the precursor.</value>
   </data>
   <data name="CalibrationCurve">
     <value>Calibration Curve that was calculated using Replicates whose Sample Type was "Standard" and that had an "Analyte Concentration" specified.</value>
+  </data>
+  <data name="Chromatogram">
+    <value>Chromatogram for the transition and replicate.</value>
+  </data>
+  <data name="ChromatogramExtractionWidth">
+    <value>Full width of the channel over which the spectrum intensities were summed</value>
+  </data>
+  <data name="ChromatogramIonMobility">
+    <value>Center of the ion mobility window that was used to filter spectra during chromatogram extraction</value>
+  </data>
+  <data name="ChromatogramIonMobilityExtractionWidth">
+    <value>Full width of the ion mobility window that was used to filter spectra during chromatogram extraction</value>
+  </data>
+  <data name="ChromatogramIonMobilityUnits">
+    <value>Unitys of the chromatogram ion mobility and chromatogram ion mobility extraction width</value>
+  </data>
+  <data name="ChromatogramPrecursorMz">
+    <value>Precursor m/z of the chromatogram</value>
+  </data>
+  <data name="ChromatogramProductMz">
+    <value>Product m/z of the chromatogram</value>
+  </data>
+  <data name="ChromatogramSource">
+    <value>Type of scans from which the chromatogram was extracted: one of "fragment", "sim", "ms1", or "unknown"</value>
+    <comment>Keep the english form of "fragment", "sim", "ms1", or "unknown" because that is what users see in the Document Grid. However, maybe put the localized translation in parentheses: "fragment" (translation of fragment), "sim" (translation of selected ion monitoring), etc. </comment>
+  </data>
+  <data name="ConfidenceLevel">
+    <value>Confidence level which was used to determine the confidence interval around the fold change.</value>
   </data>
   <data name="CleavageAa">
     <value>Specific amino acid residue in the peptide after (C-terminal of) which the
@@ -207,6 +247,9 @@ values.</value>
   <data name="CvTotalAreaRatio">
     <value>Coefficient of variation (CV) of the precursor TotalAreaRatio values</value>
   </data>
+  <data name="DegreesOfFreedom">
+    <value>Number of degrees of freedom which was used to calculate the confidence interval of the T-test.</value>
+  </data>
   <data name="DeclusteringPotential">
     <value>Declustering Potential for the precursor ion according to
 instrument/vendor specific default declustering potential equation within Skyline</value>
@@ -255,6 +298,15 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
   <data name="ExplicitDriftTimeMsec">
     <value>The exact desired drift time (in milliseconds) to be used in extracting chromatograms from ion mobility mass spectra, overriding all model values.</value>
   </data>
+  <data name="ExplicitIonMobility">
+    <value>The ion mobility value of the center of the filter window used when extracting chromatograms</value>
+  </data>
+  <data name="ExplicitIonMobilityHighEnergyOffset">
+    <value>The ion mobility high energy offset to be used when extracting chromatograms</value>
+  </data>
+  <data name="ExplicitIonMobilityUnits">
+    <value>The units of the Explicit Ion Mobility values.</value>
+  </data>
   <data name="ExplicitGlobalStandardArea">
     <value>Value to use when calculating "ratio to global standards". 
     Use this when you want to normalize peak areas in a particular replicate by dividing by a value that you calculated outside of Skyline.</value>
@@ -268,6 +320,9 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
   <data name="ExplicitSLens">
     <value>The exact desired SLens value (Thermo instruments only) to be used in SRM methods or transitions lists for a target.</value>
   </data>
+  <data name="FiguresOfMerit">
+    <value>The limits of detection and quantification for the peptide or molecule. The method for calculating these quantities can be chosen on the Quantification tab of the Peptide Settings.</value>
+  </data>
   <data name="FileIndex">
     <value>File Index</value>
   </data>
@@ -276,6 +331,9 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
   </data>
   <data name="Files">
     <value>Files</value>
+  </data>
+  <data name="FoldChange">
+    <value>The fold change value. The fold change is the ratio of the normalized intensity of the treatment group to the normalized intensity of the control group.</value>
   </data>
   <data name="FoldChangeResult">
     <value>Result of comparing values between the two groups.</value>
@@ -289,6 +347,9 @@ which the peptide was cleaved upon fragmentation. (e.g. 8, 10, 7, etc.)</value>
   </data>
   <data name="FragmentIonType">
     <value>The type of the product ion (y, b, c, z, a, x, precursor)</value>
+  </data>
+  <data name="FullNames">
+    <value>The modified sequence where modifications are referred to by their full names, e.g. "C[Carbamidomethyl (C)]".</value>
   </data>
   <data name="FullScanFilterWidth">
     <value>Full Scan Filter Width</value>
@@ -310,14 +371,35 @@ boundaries.</value>
     <value>True if a MS/MS peptide identification exists for the result file at a time
 between the peak integration boundaries.</value>
   </data>
+  <data name="Intensities">
+    <value>Comma separated list of chromatogram intensities.</value>
+  </data>
   <data name="Intercept">
     <value>Y-intercept in the fitted line or curve</value>
   </data>
   <data name="InternalStandardConcentration">
     <value>Quantity of internal standard in the sample.</value>
   </data>
+  <data name="InterpolatedData">
+    <value>Chromatogram data which was interpolated in the time dimension so that the retention times are evenly spaced, and all transitions within the peptide or molecule have the same number of points.</value>
+  </data>
+  <data name="InterpolatedIntensities">
+    <value>Chromatogram intensities from the interpolated data.</value>
+  </data>
+  <data name="InterpolatedMassErrors">
+    <value>Chromatogram mass errors from the interpolated data.</value>
+  </data>
+  <data name="InterpolatedNumberOfPoints">
+    <value>The number of points in the interpolated chromatogram.</value>
+  </data>
+  <data name="InterpolatedTimes">
+    <value>The retention times in the interpolated chromatogram.</value>
+  </data>
   <data name="IonFormula">
     <value>An atomic chemical formula for the fully charged (and possibly isotope labeled) ion to be measured in a mass spectrometer.</value>
+  </data>
+  <data name="IonName">
+    <value>The name of the precursor.</value>
   </data>
   <data name="IsDecoy">
     <value>True if this is a decoy precursor.</value>
@@ -386,6 +468,20 @@ precursors of a protein.</value>
     <value>The type of MS/MS spectral library (BiblioSpec, GPM, NIST), if a MS/MS
 spectral library spectrum is associated with the precursor ion.</value>
   </data>
+  <data name="LimitOfDetection">
+    <value> The lower concentration limit at which the analyte can be reliably distinguished from a blank.
+      The options about for calculating the lower limit of detection can be specified on the Quantification tab of the Peptide Settings.</value>
+  </data>
+  <data name="LimitOfQuantification">
+    <value>The lower concentration limit where the analyte is said to be quantifiable.
+The options for determining this value can be specified on the Quantification tab of the Peptide Settings.</value>
+  </data>
+  <data name="LinearFit">
+    <value>The result of doing the linear regression to determine the fold change.</value>
+  </data>
+  <data name="Log2FoldChange">
+    <value>The logarithm base 2 of the fold change value.</value>
+  </data>
   <data name="Losses">
     <value>A comma separated list of all neutral losses from this fragment</value>
   </data>
@@ -394,6 +490,9 @@ spectral library spectrum is associated with the precursor ion.</value>
   </data>
   <data name="MassErrorPPM">
     <value>Mass Error PPM</value>
+  </data>
+  <data name="MassErrors">
+    <value>The mass errors of the chromatogram.</value>
   </data>
   <data name="Max">
     <value>Max</value>
@@ -404,6 +503,9 @@ spectral library spectrum is associated with the precursor ion.</value>
   <data name="MaxEndTime">
     <value>Maximum EndTime of all transitions for a precursor. Unless manually
 edited all transitions for a precursor use the same integration boundaries.</value>
+  </data>
+  <data name="MaxFoldChange">
+    <value>The upper bound of the confidence interval of the fold change.</value>
   </data>
   <data name="MaxFwhm">
     <value>The maximum full width at half max (FWHM) of the transitions for the
@@ -457,6 +559,9 @@ precursor.</value>
   <data name="MinBestRetentionTime">
     <value>Minimum of the precursor BestRetentionTime values</value>
   </data>
+  <data name="MinFoldChange">
+    <value>The lower bound of the confidence interval of the fold change.</value>
+  </data>
   <data name="MinRetentionTime">
     <value>Minimum of the transition RetentionTime values.</value>
   </data>
@@ -471,6 +576,21 @@ edited all transitions for a precursor use the same integration boundaries</valu
     <value>Peptide sequence including any amino acid modifications such as
 cysteine alkylation. (example: AGLC[+57]QTFVYGGC[+57]R)</value>
   </data>
+  <data name="ModifiedSequenceAverageMasses">
+    <value>The modified sequence of the precursor where modifications are referred to by their average masses, e.g. "C[+57.05162]".</value>
+  </data>
+  <data name="ModifiedSequenceFullNames">
+    <value>The modified sequence of the precursor where modifications are referred to by their full names, e.g. "C[Carbamidomethyl (C)]".</value>
+  </data>
+  <data name="ModifiedSequenceMonoisotopicMasses">
+    <value>The modified sequence of the precursor where modifications are referred to by their monoisotopic masses, e.g. "C[+57.021464]".</value>
+  </data>
+  <data name="ModifiedSequenceThreeLetterCodes">
+    <value>The modified sequence of the precursor where modifications are referred to by their three letter codes, e.g. "C[CAM]". If the modification does not have a three letter code, then its full name is used instead.</value>
+  </data>
+  <data name="ModifiedSequenceUnimodIds">
+    <value>The modified sequence of the precursor where modifications are referred to by their unimod id, e.g. "C(unimod:4)". If the modification does not have a unimod id, then its full name is used instead.</value>
+  </data>
   <data name="ModifiedTime">
     <value>Last time and date at which the original mass spectrometer file was
 modified on disk</value>
@@ -481,7 +601,10 @@ modified on disk</value>
   <data name="MoleculeName">
     <value>A general name that may be assigned to a small molecule in its neutral, unlabeled form.</value>
   </data>
-  <data name="MSLevel">
+  <data name="MonoisotopicMasses">
+    <value>The modified sequence where modifications are referred to by their monoisotopic masses, e.g. "C[+57.021464]".</value>
+  </data>
+  <data name="MsLevel">
     <value>Indicates whether the result was obtained using only precursor intensities (MS Level 1) or product intensities (MS Level 2).</value>
   </data>
   <data name="NextAa">
@@ -493,6 +616,9 @@ modified on disk</value>
   <data name="NormalizedArea">
     <value>Value obtained by normalizing the peptide/molecule intensity according to either the explicit "Normalization Method" for the peptide/molecule or the normalization method specified on:
     Settings > Peptide Settings > Quantification</value>
+  </data>
+  <data name="NumberOfPoints">
+    <value>The number of points in the chromatogram.</value>
   </data>
   <data name="OptCollisionEnergy">
     <value>The collision energy value corresponding to the OptStep if
@@ -523,9 +649,28 @@ same precursor.</value>
   <data name="PeptideDocumentLocation">
     <value>Unique identifier of the peptide within the Skyline document. This can be used when writing external tools which call back into Skyline to change the selection, etc.</value>
   </data>
+  <data name="PeptideLocator">
+    <value>Unique identifier of the peptide within the Skyline document. This will always start with "Molecule:", and usually ends with the peptide modified sequence or molecule name.</value>
+    <comment>Do not translate "Molecule:"</comment>
+  </data>
   <data name="PeptideModifiedSequence">
     <value>Amino acid sequence annotated with only structural
 modification delta masses (e.g. AC[+57]GR).</value>
+  </data>
+  <data name="PeptideModifiedSequenceAverageMasses">
+    <value>The modified sequence of the peptide where modifications are referred to by their average masses, e.g. "C[+57.05162]".</value>
+  </data>
+  <data name="PeptideModifiedSequenceFullNames">
+    <value>The modified sequence of the peptide where modifications are referred to by their full names, e.g. "C[Carbamidomethyl (C)]".</value>
+  </data>
+  <data name="PeptideModifiedSequenceMonoisotopicMasses">
+    <value>The modified sequence of the peptide where modifications are referred to by their monoisotopic masses, e.g. "C[+57.021464]".</value>
+  </data>
+  <data name="PeptideModifiedSequenceThreeLetterCodes">
+    <value>The modified sequence of the peptide where modifications are referred to by their three letter codes, e.g. "C[CAM]". If the modification does not have a three letter code, then its full name is used instead.</value>
+  </data>
+  <data name="PeptideModifiedSequenceUnimodIds">
+    <value>The modified sequence of the peptide where modifications are referred to by their unimod id, e.g. "C(unimod:4)". If the modification does not have a unimod id, then its full name is used instead.</value>
   </data>
   <data name="PeptideNote">
     <value>A free text note associated with the peptide by clicking Edit Note on the
@@ -539,6 +684,10 @@ Edit menu</value>
   </data>
   <data name="PeptideResultDocumentLocation">
     <value>Unique identifier of the Peptide Result within the document. This can be used when writing interactive external tools.</value>
+  </data>
+  <data name="PeptideResultLocator">
+    <value>Unique identifier of the Peptide Result within the document. This will begin with "MoleculeResult:" and will contain the peptide modified sequence and the replicate name.</value>
+    <comment>Do not translate "MoleculeResult:"</comment>
   </data>
   <data name="PeptideResults">
     <value>Peptide Results</value>
@@ -558,13 +707,32 @@ Edit menu</value>
   <data name="PointCount">
     <value>Number of data points that were used in the curve fit.</value>
   </data>
+  <data name="PointsAcrossPeak">
+    <value>Number of chromatogram points between the start and end time of the integrated peak.</value>
+  </data>
   <data name="Precursor">
     <value>Precursor</value>
+  </data>
+  <data name="PrecursorAdduct">
+    <value>The adduct which is applied to the molecule to make the precursor.</value>
   </data>
   <data name="PrecursorCharge">
     <value>
       The charge associated with the precursor ion.
     </value>
+  </data>
+  <data name="PrecursorIonFormula">
+    <value>The formula of the precursor ion.</value>
+  </data>
+  <data name="PrecursorIonName">
+    <value>The name of the precursor.</value>
+  </data>
+  <data name="PrecursorLocator">
+    <value>Unique identifier of the precursor within the document. This will begin with "Precursor:" and usually ends with the precursor's label type followed by its adduct.</value>
+    <comment>Do not translate "Precursor:"</comment>
+  </data>
+  <data name="PrecursorNeutralFormula">
+    <value>The formula of the precursor ion. This is deprecated and "PrecursorIonFomula" should be used instead.</value>
   </data>
   <data name="PrecursorMz">
     <value>The mass to charge ratio (m/z) of the precursor ion.</value>
@@ -587,6 +755,10 @@ using the Results Grid.</value>
   </data>
   <data name="PrecursorResult">
     <value>Precursor Result</value>
+  </data>
+  <data name="PrecursorResultLocator">
+    <value>Unique identifier of the precursor result within the document. This begins with "PrecursorResult:" and usually ends with the replicate name but may have additional attributes for the optimization step and result file.</value>
+    <comment>Do not translate "PrecursorResult:".</comment>
   </data>
   <data name="PrecursorResults">
     <value>Precursor Results</value>
@@ -615,6 +787,15 @@ SSRCalc 3.0 is available), or #N/A if no retention time regression has been assi
     <value>Shift in m/z applied to the product ion to create
 the decoy m/z.</value>
   </data>
+  <data name="ProductAdduct">
+    <value>The adduct applied to the product ion.</value>
+  </data>
+  <data name="ProductIonFormula">
+    <value>The formula of the product ion.</value>
+  </data>
+  <data name="ProductNeutralFormula">
+    <value>The formula of the product ion. This is deprecated, and "ProductIonFormula" should be used instead.</value>
+  </data>
   <data name="ProductMz">
     <value>The mass to charge ratio (m/z) of the product ion.</value>
   </data>
@@ -634,6 +815,10 @@ also when you hover over the protein name in the peptide tree view.</value>
   </data>
   <data name="ProteinGene">
     <value>Protein Gene</value>
+  </data>
+  <data name="ProteinLocator">
+    <value>Unique identifier of the protein within the document. This begins with "MoleculeGroup:" and usually ends with the protein name but may have additional attributes if the protein name is not unique within the document.</value>
+    <comment>Do not translate "MoleculeGroup:".</comment>
   </data>
   <data name="ProteinName">
     <value>Protein Name as defined or entered into Skyline (in some cases in
@@ -656,6 +841,9 @@ also when you hover over the protein name in the peptide tree view.</value>
   </data>
   <data name="ProteinSpecies">
     <value>Protein Species</value>
+  </data>
+  <data name="PValue">
+    <value>The P-value indicating the probability that random chance could have produced a result as extreme as what was observed.</value>
   </data>
   <data name="QuadraticCoefficient">
     <value>Coefficient of the x-squared term in a quadratic regression.</value>
@@ -685,6 +873,21 @@ measured.</value>
   <data name="RatioToStandard">
     <value>Peptide area ratio of light to heavy</value>
   </data>
+  <data name="RawData">
+    <value>The raw (uninterpolated) chromatogram data. The chromatograms have unevenly spaced times, and the chromatograms of each transition potentially has a different number of points.</value>
+  </data>
+  <data name="RawIntensities">
+    <value>The intensities of the raw (uninterpolated) chromatogram.</value>
+  </data>
+  <data name="RawMassErrors">
+    <value>The mass errors of the raw (uninterpolated) chromatogram.</value>
+  </data>
+  <data name="RawNumberOfPoints">
+    <value>The number of points in the raw (uninterpolated) chromatogram.</value>
+  </data>
+  <data name="RawTimes">
+    <value>The retention times in the raw (uninterpolated) chromatogram.</value>
+  </data>
   <data name="Replicate">
     <value>Replicate</value>
   </data>
@@ -693,6 +896,10 @@ measured.</value>
   </data>
   <data name="ReplicateIndex">
     <value>Replicate Index</value>
+  </data>
+  <data name="ReplicateLocator">
+    <value>Unique identifier of the replicate within the document. This is always "Replicate:/" followed by the name of the replicate.</value>
+    <comment>Do not translate "Replicate:/".</comment>
   </data>
   <data name="ReplicateName">
     <value>The replicate name assigned to the data during import.</value>
@@ -705,6 +912,11 @@ measured.</value>
   </data>
   <data name="ResultFile">
     <value>Result File</value>
+  </data>
+  <data name="ResultFileLocator">
+    <value>Unique identifier of the result file within the document. This begins with "ResultFile:/" followed by the replicate name. 
+This usually ends with the result filename, but may have additional attributes such as the full path if the filename is not unique within the replicate.</value>
+    <comment>Do not translate "ResultFile:/".</comment>
   </data>
   <data name="Results">
     <value>Results</value>
@@ -719,6 +931,10 @@ retention score calculator, if one is used (e.g. SSRCalc or iRT score)
   </data>
   <data name="RSquared">
     <value>Coefficient of determination</value>
+  </data>
+  <data name="SampleDilutionFactor">
+    <value>The amount by which the sample was diluted before being analyzed. 
+External standards typically have a dilution factor of 1, and unknown samples may have been diluted by a factor greater than 1 in order to bring them into the quantifiable range for the instrument.</value>
   </data>
   <data name="SampleName">
     <value>The sample name, if the data was imported from a multi-sample WIFF
@@ -735,6 +951,9 @@ file, or the file name again for other file types.</value>
   </data>
   <data name="Slope">
     <value>Coefficient of the linear term in the fitted curve or line.</value>
+  </data>
+  <data name="StandardError">
+    <value>The standard error of the estimated value in the linear fit.</value>
   </data>
   <data name="StandardType">
     <value>Standard Type</value>
@@ -780,8 +999,14 @@ file, or the file name again for other file types.</value>
     <value>Standard deviation of the precursor TotalAreaNormalized
 values.</value>
   </data>
+  <data name="ThreeLetterCodes">
+    <value>The modified sequence where modifications are referred to by their three letter codes, e.g. "C[CAM]". If the modification does not have a three letter code, then its full name is used instead.</value>
+  </data>
   <data name="TicArea">
     <value>Integral of the total ion current over the entire run.</value>
+  </data>
+  <data name="Times">
+    <value>The retention times of the chromatogram.</value>
   </data>
   <data name="TotalArea">
     <value>The summed Area values of all individual transitions for the particular
@@ -821,6 +1046,10 @@ particular precursor</value>
   <data name="TransitionIsDecoy">
     <value>True if this is a decoy transition</value>
   </data>
+  <data name="TransitionLocator">
+    <value>Unique identifier of the transition within the document. This begins with "Transition:".</value>
+    <comment>Do not translate "Transition:"</comment>
+  </data>
   <data name="TransitionNote">
     <value>A free text note associated with the transition by clicking Edit Note on
 the Edit menu</value>
@@ -831,6 +1060,10 @@ using the Results Grid.</value>
   </data>
   <data name="TransitionResult">
     <value>Transition Result</value>
+  </data>
+  <data name="TransitionResultLocator">
+    <value>Unique identifier of the transition result within the document. This begins with "TransitionResult:" and usually ends with the replicate name, but may have additional attributes for the optimization step and result file.</value>
+    <comment>Do not translate "TransitionResult:".</comment>
   </data>
   <data name="TransitionResults">
     <value>Transition Results</value>
@@ -845,6 +1078,15 @@ using the Results Grid.</value>
     <value>True if the integrated a peak has a boundary at either end of the acquisition
 time range, where intensity at the end is greater than 1% of the entire peak height
 higher than the other extent.</value>
+  </data>
+  <data name="TurningPoint">
+    <value>For bilinear regressions, the X-coordinate where the two lines intersect.</value>
+  </data>
+  <data name="TValue">
+    <value>The estimated value of the linear fit by the standard error.</value>
+  </data>
+  <data name="UnimodIds">
+    <value>The modified sequence where modifications are referred to by their unimod id, e.g. "C(unimod:4)". If the modification does not have a unimod id, then its full name is used instead.</value>
   </data>
   <data name="UserSetPeak">
     <value>True if the default choice of peak or its boundaries was manually altered</value>
@@ -896,5 +1138,37 @@ higher than the other extent.</value>
   </data>
   <data name="SMILES" xml:space="preserve">
     <value>Standardized molecular identifier</value>
+  </data>
+  <data name="TimeStamp">
+    <value>Time at which this change was made</value>
+  </data>
+  <data name="UndoRedoMessage">
+    <value>Description of the change</value>
+  </data>
+  <data name="SummaryMessage">
+    <value>Description of the change</value>
+  </data>
+  <data name="AllInfoMessage">
+    <value>Detailed description of the change</value>
+  </data>
+  <data name="DocumentFormat" xml:space="preserve">
+    <value>Document format version at the time the change was made</value>
+  </data>
+  <data name="User">
+    <value>User who made the change</value>
+  </data>
+  <data name="Reason">
+    <value>Reason the user gave for making the change</value>
+  </data>
+  <data name="SkylineVersion">
+    <value>Version of Skyline in which the change was made</value>
+  </data>
+  <data name="Details">
+    <value>List of detailed change messages and reasons</value>
+  </data>
+  <data name="AuditLogRow">
+    <value>
+      Row of audit log information
+    </value>
   </data>
 </root>

@@ -339,7 +339,9 @@ void BlibMaker::createTables(vector<string> &commands, bool execute)
            "collisionalCrossSectionSqA REAL, -- precursor CCS in square Angstroms for ion mobility, if known\n"
            "ionMobilityHighEnergyOffset REAL, -- ion mobility value increment for fragments (see ionMobilityType for units)\n"
            "ionMobilityType TINYINT, -- ion mobility units (required if ionMobility is used, see IonMobilityTypes table for key)\n"
-           "retentionTime REAL, -- chromatographic retention time in minutes, if known\n";
+           "retentionTime REAL, -- chromatographic retention time in minutes, if known\n"
+           "startTime REAL, -- start retention time in minutes, if known\n"
+           "endTime REAL, -- end retention time in minutes, if known\n";
     cols += SmallMolMetadata::sql_col_decls();
     cols += "fileID INTEGER, -- index into SpectrumSourceFiles table for source file information\n"
            "SpecIDinFile VARCHAR(256), -- original spectrum label, id, or description in source file\n"
@@ -361,6 +363,8 @@ void BlibMaker::createTables(vector<string> &commands, bool execute)
         "peakIntensity BLOB -- mz values encoded as little-endian 32 bit floats, length is determined by the numPeaks value in the corresponding RefSpectra.  Usually zlib-compressed if compressed size is less than original size.\n"
         ")");
 
+    createTable("Proteins", commands, false);
+    createTable("RefSpectraProteins", commands, false);
     createTable("RefSpectraPeakAnnotations", commands, false);
     createTable("SpectrumSourceFiles", commands, false);
     createTable("ScoreTypes", commands, false);
@@ -433,12 +437,22 @@ void BlibMaker::createTable(const char* tableName, vector<string> &commands, boo
             "inchiKey VARCHAR(256), -- fragment molecular identifier for structure retrieval\n"
             "otherKeys VARCHAR(256), -- alternative molecular identifiers for fragment structure retrieval, tab separated e.g. cas:58-08-2\\thmdb:01847 \n"
             "charge INTEGER, -- integer charge value, must agree with fragment adduct\n"
-            "adduct VARCHAR(256), -- fargment adduct description, can include neutral loss e.g. [M+H] or [M-H2O+] \n"
+            "adduct VARCHAR(256), -- fragment adduct description, can include neutral loss e.g. [M+H] or [M-H2O+] \n"
             "comment VARCHAR(256), -- freetext comment\n"
             "mzTheoretical REAL not null, -- calculated mz, should agree with formula and adduct if any\n"
             "mzObserved REAL not null -- actual measured mz, should agree with the indexed mz found in the RefSpectra\n)",
             ZSQLBUFLEN);
         commands.push_back(zSql);
+    } else if (strcmp(tableName, "Proteins") == 0) {
+        commands.push_back(
+            "CREATE TABLE Proteins -- protein information for RefSpectra.\n"
+            "(id INTEGER primary key autoincrement not null,\n"
+            "accession VARCHAR(200) -- protein accession number\n)");
+    } else if (strcmp(tableName, "RefSpectraProteins") == 0) {
+        commands.push_back(
+            "CREATE TABLE RefSpectraProteins -- mapping of proteins between RefSpectra and Proteins tables.\n"
+            "(RefSpectraId INTEGER not null, -- the RefSpectra being mapped to a protein\n"
+            "ProteinId INTEGER not null -- the Protein for the RefSpectra\n)");
     } else {
         Verbosity::error("Cannot create '%s' table. Unknown name.",
                          tableName);
@@ -484,8 +498,18 @@ void BlibMaker::updateTables(){
         createTable("RefSpectraPeakAnnotations", commands, true);
     }
 
+    if (!tableExists("main", "Proteins")) {
+        createTable("Proteins", commands, true);
+    }
+
+    if (!tableExists("main", "RefSpectraProteins")) {
+        createTable("RefSpectraProteins", commands, true);
+    }
+
     vector< pair<string, string> > newColumns;
     newColumns.push_back(make_pair("retentionTime", "REAL"));
+    newColumns.push_back(make_pair("startTime", "REAL"));
+    newColumns.push_back(make_pair("endTime", "REAL"));
     newColumns.push_back(make_pair("fileID", "INTEGER"));
     newColumns.push_back(make_pair("SpecIDinFile", "VARCHAR(256)"));
     newColumns.push_back(make_pair("score", "REAL"));
@@ -637,6 +661,17 @@ void BlibMaker::transferSpectrumFiles(const char* schemaTmp){ //i.e. db name
     }
 }
 
+void BlibMaker::transferProteins(const char* schemaTmp) {
+    // first check to see if the incoming library has spectrum source files
+    if (!tableExists(schemaTmp, "Proteins")) {
+        return;
+    }
+
+    snprintf(zSql, ZSQLBUFLEN,
+        "INSERT INTO main.Proteins (id, accession) SELECT id, accession FROM %s.Proteins", schemaTmp);
+    sql_stmt(zSql);
+}
+
 /**
  * In preparation for transfering spectra from one library to another,
  * get what will be the fileID for the new library.  Look up the
@@ -715,6 +750,9 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
         {
             alternate_cols = "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType";
             alternate_cols += SmallMolMetadata::sql_col_names_csv();
+            if (tableVersion >= MIN_VERSION_RT_BOUNDS) {
+                alternate_cols += ", startTime, endTime";
+            }
         }
         else
             alternate_cols = "'0', '0', '0', '0', '', '', '', '', ''"; // Handle missing ion mobility and small molecule info
@@ -776,6 +814,20 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
             copies, newFileID, alternate_cols.c_str(), schemaTmp, spectraTmpID);
         sql_stmt(zSql);
     }
+    else if (tableVersion >= MIN_VERSION_RT_BOUNDS)
+    {
+        snprintf(zSql, ZSQLBUFLEN,
+            "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
+            "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, "
+            "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType%s, "
+            "startTime, endTime, retentionTime, specIDinFile, score, scoreType) "
+            "SELECT peptideSeq, precursorMZ, precursorCharge, "
+            "peptideModSeq, prevAA, nextAA, %d, numPeaks, %d, %s "
+            "FROM %s.RefSpectra WHERE id = %d",
+            SmallMolMetadata::sql_col_names_csv().c_str(),
+            copies, newFileID, alternate_cols.c_str(), schemaTmp, spectraTmpID);
+        sql_stmt(zSql);
+    }
     else
     {
         snprintf(zSql, ZSQLBUFLEN,
@@ -795,9 +847,11 @@ int BlibMaker::transferSpectrum(const char* schemaTmp,
 
     transferPeaks(schemaTmp, spectraID, spectraTmpID);
     transferModifications(schemaTmp, spectraID, spectraTmpID);
-    if (tableVersion >= MIN_VERSION_PEAK_ANNOT)
-    {
+    if (tableVersion >= MIN_VERSION_PEAK_ANNOT) {
         transferPeakAnnotations(schemaTmp, spectraID, spectraTmpID);
+    }
+    if (tableVersion >= MIN_VERSION_PROTEINS) {
+        transferRefSpectraProteins(schemaTmp, spectraID, spectraTmpID);
     }
     return spectraID;
 }
@@ -903,6 +957,14 @@ void BlibMaker::transferPeakAnnotations(const char* schemaTmp,
 
         rc = sqlite3_step(pStmt);
     }
+}
+
+void BlibMaker::transferRefSpectraProteins(const char* schemaTmp, int spectraID, int spectraTmpID) {
+    snprintf(zSql, ZSQLBUFLEN,
+        "INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) "
+        "SELECT %d, ProteinId FROM %s.RefSpectraProteins WHERE RefSpectraId = %d",
+        spectraID, schemaTmp, spectraTmpID);
+    sql_stmt(zSql);
 }
 
 int BlibMaker::getFileId(const string& file, double cutoffScore) {

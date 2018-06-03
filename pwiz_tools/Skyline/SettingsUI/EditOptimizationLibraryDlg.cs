@@ -751,12 +751,20 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
             }
 
-            private static string ValidateOptimizedValue(string optimizedText)
+            private string ValidateOptimizedValue(string optimizedText)
             {
                 double optimizedValue;
                 if (optimizedText == null || !double.TryParse(optimizedText, out optimizedValue))
                     return Resources.LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_valid_decimal_numbers_;
-                return optimizedValue <= 0 ? Resources.LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_greater_than_zero_ : null;
+                switch (ViewDbType)
+                {
+                    case OptimizationType.compensation_voltage_fine:
+                    case OptimizationType.compensation_voltage_medium:
+                    case OptimizationType.compensation_voltage_rough:
+                        return null;
+                    default:
+                        return optimizedValue <= 0 ? Resources.LibraryGridViewDriver_ValidateOptimizedValue_Optimized_values_must_be_greater_than_zero_ : null;
+                }
             }
 
             protected override bool DoRowValidating(int rowIndex)
@@ -837,9 +845,8 @@ namespace pwiz.Skyline.SettingsUI
                                 else if (Equals(ViewType, ExportOptimize.COV))
                                 {
                                     key = new OptimizationKey(ViewDbType, sequence, charge, null, Adduct.EMPTY);
-                                    double? cov = OptimizationStep<CompensationVoltageRegressionFine>.FindOptimizedValueFromResults(_document.Settings,
-                                        peptide, nodeGroup, null, OptimizedMethodType.Precursor, SrmDocument.GetCompensationVoltageFine);
-                                    value = cov.HasValue ? cov.Value : 0;
+                                    value = OptimizationStep<CompensationVoltageRegressionFine>.FindOptimizedValueFromResults(_document.Settings,
+                                        peptide, nodeGroup, null, OptimizedMethodType.Precursor, SrmDocument.GetCompensationVoltageFine) ?? 0;
                                 }
                                 if (value.HasValue && value > 0)
                                 {

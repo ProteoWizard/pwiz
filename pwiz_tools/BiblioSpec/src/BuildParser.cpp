@@ -51,10 +51,10 @@ BuildParser::BuildParser(BlibBuilder& maker,
 
     string stmt = "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
         "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobility, collisionalCrossSectionSqA, "
-        "ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, fileID, specIDinFile, "
-        "score, scoreType" + 
+        "ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, startTime, endTime, fileID, "
+        "specIDinFile, score, scoreType" + 
         SmallMolMetadata::sql_col_names_csv() + 
-        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
+        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
     sqlite3_prepare(maker.getDb(), stmt.c_str(),
      -1, &insertSpectrumStmt_, NULL);
 
@@ -255,6 +255,29 @@ sqlite3_int64 BuildParser::insertSpectrumFilename(string& filename,
     return fileId;
 }
 
+sqlite3_int64 BuildParser::insertProtein(const Protein* protein) {
+    // first see if the protein already exists
+    string statement = "SELECT id FROM Proteins WHERE accession = '" +
+        SqliteRoutine::ESCAPE_APOSTROPHES(protein->accession) + "'";
+
+    char** result;
+    int iRow, iCol;
+    int returnCode = sqlite3_get_table(blibMaker_.getDb(), statement.c_str(), &result, &iRow, &iCol, 0);
+    blibMaker_.check_rc(returnCode, statement.c_str());
+    if (iRow > 0) { // protein already exists
+        sqlite3_int64 proteinId = atol(result[1]);
+        sqlite3_free_table(result);
+        return proteinId;
+    }
+    sqlite3_free_table(result);
+
+    string sql_statement = "INSERT INTO Proteins (accession) VALUES('" +
+        SqliteRoutine::ESCAPE_APOSTROPHES(protein->accession) + "')";
+
+    blibMaker_.sql_stmt(sql_statement.c_str());
+    return sqlite3_last_insert_rowid(blibMaker_.getDb());
+}
+
 /**
  * \brief Use the BlibBuilder to add to the library entries in the list
  * of psms, adding spectra from the curSpecFileName file. The same
@@ -315,6 +338,7 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
     }
 
     // for each psm
+    map<const Protein*, sqlite3_int64> proteinIds;
     for(unsigned int i=0; i<psms_.size(); i++) {
         PSM* psm = psms_.at(i);
         SpecData curSpectrum;
@@ -333,7 +357,7 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
                            psm->specKey, psm->specName.c_str(), psm->charge);
 
         try{
-            insertSpectrum(psm, curSpectrum, fileId, scoreType);
+            insertSpectrum(psm, curSpectrum, fileId, scoreType, proteinIds);
 
             if (showSpecProgress) {
                 specProgress_->increment();
@@ -378,32 +402,29 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
 void BuildParser::insertSpectrum(PSM* psm, 
                                  const SpecData& curSpectrum, 
                                  sqlite3_int64 fileId,
-                                 PSM_SCORE_TYPE scoreType){
+                                 PSM_SCORE_TYPE scoreType,
+                                 map<const Protein*, sqlite3_int64>& proteins) {
     char sql_statement_buf[LARGE_BUFFER_SIZE];
 
     // get the spec id in the spec file
     string specIdStr = psm->idAsString();
 
     // check if charge state exists
-    if (psm->charge < 1)
-    {
+    if (psm->charge < 1) {
         // try to calculate charge
         Verbosity::debug("Attempting to calculate charge state for spectrum %s (%s)",
                          specIdStr.c_str(), psm->modifiedSeq.c_str());
         double pepMass = calculatePeptideMass(psm);
         int calcCharge = calculateCharge(pepMass, curSpectrum.mz);
-        if (calcCharge > 0)
-        {
+        if (calcCharge > 0) {
             psm->charge = calcCharge;
-        }
-        else
-        {
+        } else {
             Verbosity::warn("Could not calculate charge state for spectrum %s (%s, "
                             "mass %f and precursor m/z %f)",
                             specIdStr.c_str(), psm->modifiedSeq.c_str(), pepMass, curSpectrum.mz);
         }
     }
-    
+
     // this order must agree with insertSpectrumStmt_ as set in the ctor
     int field = 1;
     sqlite3_bind_text(insertSpectrumStmt_, field++, psm->unmodSeq.c_str(), -1, SQLITE_STATIC);
@@ -419,6 +440,13 @@ void BuildParser::insertSpectrum(PSM* psm,
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.getIonMobilityHighEnergyOffset());
     sqlite3_bind_int(insertSpectrumStmt_, field++, (int)curSpectrum.ionMobilityType);
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.retentionTime);
+    if (curSpectrum.startTime != 0 && curSpectrum.endTime != 0) {
+        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.startTime);
+        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.endTime);
+    } else {
+        sqlite3_bind_null(insertSpectrumStmt_, field++);
+        sqlite3_bind_null(insertSpectrumStmt_, field++);
+    }
     sqlite3_bind_int(insertSpectrumStmt_, field++, fileId);
     sqlite3_bind_text(insertSpectrumStmt_, field++, specIdStr.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_double(insertSpectrumStmt_, field++, psm->score);
@@ -461,8 +489,17 @@ void BuildParser::insertSpectrum(PSM* psm,
         
     }// next mod
 
+    // insert protein info
+    for (set<const Protein*>::const_iterator i = psm->proteins.begin(); i != psm->proteins.end(); i++) {
+        map<const Protein*, sqlite3_int64>::const_iterator j = proteins.find(*i);
+        sqlite3_int64 proteinId = (j == proteins.end()) ? insertProtein(*i) : j->second;
+        sprintf(sql_statement_buf,
+                "INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) VALUES (%d, %d)",
+                libSpecId, proteinId);
+        blibMaker_.sql_stmt(sql_statement_buf);
+        sql_statement_buf[0] = '\0';
+    }
 }
-
 
 bool seqsILEquivalent(string seq1, string seq2)
 {

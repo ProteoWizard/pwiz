@@ -60,16 +60,17 @@ namespace pwiz.Skyline.Model.Results
         private MsDataFileImpl _dataFile;
         private MsDataFileScanIds _msDataFileScanIds; // Indexed container of MsDataFileImpl ids
         private Func<MsDataFileScanIds> _getMsDataFileScanIds;
+        private WeakReference<MeasuredResults> _measuredResultsReference;
 
         public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, ChromSource source,
-            IList<float> times, TransitionFullScanInfo[] transitions, Func<MsDataFileScanIds> getMsDataFileScanIds)
+            IList<float> times, TransitionFullScanInfo[] transitions, MeasuredResults measuredResults, Func<MsDataFileScanIds> getMsDataFileScanIds)
         {
             DocFilePath = docFilePath;
             DataFilePath = dataFilePath;
             Source = source;
             Times = times;
             Transitions = transitions;
-
+            _measuredResultsReference = new WeakReference<MeasuredResults>(measuredResults);
             _getMsDataFileScanIds = getMsDataFileScanIds;
         }
 
@@ -99,6 +100,16 @@ namespace pwiz.Skyline.Model.Results
             var scanProvider = other as ScanProvider;
             if (scanProvider == null)
                 return false;
+            MeasuredResults thisMeasuredResults, otherMeasuredResults;
+            if (!_measuredResultsReference.TryGetTarget(out thisMeasuredResults) ||
+                !scanProvider._measuredResultsReference.TryGetTarget(out otherMeasuredResults))
+            {
+                return false;
+            }
+            if (!ReferenceEquals(thisMeasuredResults, otherMeasuredResults))
+            {
+                return false;
+            }
             _dataFile = scanProvider._dataFile;
             _msDataFileScanIds = scanProvider._msDataFileScanIds;
             _getMsDataFileScanIds = scanProvider._getMsDataFileScanIds;
@@ -159,16 +170,27 @@ namespace pwiz.Skyline.Model.Results
         {
             if (_dataFile == null)
             {
-                string dataFilePath = FindDataFilePath();
-                var lockMassParameters = DataFilePath.GetLockMassParameters();
-                if (dataFilePath == null)
-                    throw new FileNotFoundException(string.Format(Resources.ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_, DataFilePath));
-                int sampleIndex = SampleHelp.GetPathSampleIndexPart(dataFilePath);
-                if (sampleIndex == -1)
-                    sampleIndex = 0;
-                // Full-scan extraction always uses SIM as spectra
-                _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, lockMassParameters, true, 
-                    requireVendorCentroidedMS1: DataFilePath.GetCentroidMs1(), requireVendorCentroidedMS2: DataFilePath.GetCentroidMs2());
+                if (DataFilePath is MsDataFilePath)
+                {
+                    string dataFilePath = FindDataFilePath();
+                    var lockMassParameters = DataFilePath.GetLockMassParameters();
+                    if (dataFilePath == null)
+                        throw new FileNotFoundException(string.Format(
+                            Resources
+                                .ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_,
+                            DataFilePath));
+                    int sampleIndex = SampleHelp.GetPathSampleIndexPart(dataFilePath);
+                    if (sampleIndex == -1)
+                        sampleIndex = 0;
+                    // Full-scan extraction always uses SIM as spectra
+                    _dataFile = new MsDataFileImpl(dataFilePath, sampleIndex, lockMassParameters, true,
+                        requireVendorCentroidedMS1: DataFilePath.GetCentroidMs1(),
+                        requireVendorCentroidedMS2: DataFilePath.GetCentroidMs2());
+                }
+                else
+                {
+                    _dataFile = DataFilePath.OpenMsDataFile(true, 0);
+                }
             }
             return _dataFile;
         }

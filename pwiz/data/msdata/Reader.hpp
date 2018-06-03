@@ -25,6 +25,7 @@
 #define _READER_HPP_
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/IterationListener.hpp"
 #include "MSData.hpp"
 #include <string>
 #include <stdexcept>
@@ -63,6 +64,14 @@ class PWIZ_API_DECL Reader
         /// when true, if a reader does not know what time zone was used to record a time, it will assume the time refers to the host's local time;
         /// when false, the reader will treat times with unknown time zone as UTC
         bool adjustUnknownTimeZonesToHostTimeZone;
+
+        /// progress listener for when initializing a file takes a long time,
+        /// or the reader has to run a long process before continuing,
+        /// such as centroiding all spectra at once instead of one at a time
+        pwiz::util::IterationListenerRegistry* iterationListenerRegistry;
+
+        /// when nonzero, if reader can enumerate only spectra of ms level, it will (currently only supported by Bruker TDF)
+        int preferOnlyMsLevel;
 
         Config();
         Config(const Config& rhs);

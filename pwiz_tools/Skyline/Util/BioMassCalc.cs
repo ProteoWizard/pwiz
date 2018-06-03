@@ -497,6 +497,16 @@ namespace pwiz.Skyline.Util
             return dictAtomCounts.Aggregate(string.Empty, (current, pair) => current + string.Format(CultureInfo.InvariantCulture, "{0}{1}", pair.Key, (pair.Value>1) ? pair.Value.ToString() : string.Empty)); // Not L10N
         }
 
+        public static bool SymbolIsIsotope(string symbol)
+        {
+            return symbol.Contains("'") || symbol.Contains('"');// Not L10N
+        }
+
+        public static string UnlabeledFromIsotopeSymbol(string symbol)
+        {
+            return symbol.Replace("'", string.Empty).Replace("\"", string.Empty); // Not L10N
+        }
+
         /// <summary>
         /// Find the C'3H'3 in  C'3C2H9H'3NO2S
         /// </summary>
@@ -507,7 +517,52 @@ namespace pwiz.Skyline.Util
             var parse = desc;
             var dictAtomCounts = new Dictionary<string, int>();
             ParseCounts(ref parse, dictAtomCounts, false);
-            return dictAtomCounts.Where(pair => pair.Key.Contains("'") || pair.Key.Contains('"')).ToDictionary(p => p.Key, p => p.Value); // Not L10N
+            return dictAtomCounts.Where(pair => SymbolIsIsotope(pair.Key)).ToDictionary(p => p.Key, p => p.Value); 
+        }
+
+        /// <summary>
+        // Find the intersection of a list of formulas, ignoring labels
+        // e.g. for C12H3H'2S2, C10H5, and C10H4Nz, return C10H4
+        /// </summary>
+        public string FindFormulaIntersectionUnlabeled(IEnumerable<string> formulas)
+        {
+            var unlabeled = formulas.Select(f => MONOISOTOPIC.StripLabelsFromFormula(f)).ToList();
+            return FindFormulaIntersection(unlabeled);
+        }
+
+        /// <summary>
+        // Find the intersection of a list of formulas
+        // e.g. for C12H5S2, C10H5, and C10H4Nz, return C10H4
+        /// </summary>
+        public string FindFormulaIntersection(IList<string> formulas)
+        {
+            if (formulas.Count == 0)
+                return string.Empty;
+            if (formulas.Count == 1)
+                return formulas[0];
+            if (formulas.Count == 2 && string.Equals(formulas[0], formulas[1]))
+                return formulas[0];
+            var common = Molecule.ParseExpressionToDictionary(formulas[0]);
+            for (var i = 1; i < formulas.Count; i++)
+            {
+                var next = Molecule.ParseExpression(formulas[i]);
+                foreach (var kvp in next)
+                {
+                    int count;
+                    if (common.TryGetValue(kvp.Key, out count))
+                    {
+                        common[kvp.Key] = Math.Min(count, kvp.Value);
+                    }
+                }
+                foreach (var kvp in common)
+                {
+                    if (!next.ContainsKey(kvp.Key) || next[kvp.Key] == 0)
+                    {
+                        common[kvp.Key] = 0;
+                    }
+                }
+            }
+            return Molecule.FromDict(common).ToString();
         }
 
         /// <summary>

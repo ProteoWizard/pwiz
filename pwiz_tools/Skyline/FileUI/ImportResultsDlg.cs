@@ -325,7 +325,7 @@ namespace pwiz.Skyline.FileUI
 
         public static MsDataFileUri[] GetDataSourcePaths(Control parent, string documentSavedPath)
         {
-            using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.ChorusAccountList)
+            using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.RemoteAccountList)
                 {
                     Text = Resources.ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files
                 })
@@ -654,6 +654,12 @@ namespace pwiz.Skyline.FileUI
         {
             get { return radioAddExisting.Checked; }
             set { radioAddExisting.Checked = value; }
+        }
+
+        public bool RadioCreateMultipleChecked
+        {
+            get { return radioCreateMultiple.Checked; }
+            set { radioCreateMultiple.Checked = value; }
         }
 
         public bool RadioCreateMultipleMultiChecked

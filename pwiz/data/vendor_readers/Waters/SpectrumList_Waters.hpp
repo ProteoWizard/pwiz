@@ -45,14 +45,22 @@ namespace detail {
 class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
 {
     public:
+        struct VendorOptions
+        {
+            pwiz::util::IntegerSet msLevelsToCentroid;
 
+        };
     virtual size_t size() const;
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
-    virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const;
-    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const;
+
+    // TODO: convert vendor-specific parameters to a single config struct, but all non-vendor wrappers are going to have to pass it along :(
+    virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+    virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
 
     virtual pwiz::analysis::Spectrum3DPtr spectrum3d(double scanStartTime, const boost::icl::interval_set<double>& driftTimeRanges) const;
 

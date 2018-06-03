@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -30,33 +32,79 @@ namespace pwiz.SkylineTestA
         public void ConvertSmallMolMzOnlyFrom37Test()
         {
             var docSmall = ResultsUtil.DeserializeDocument("SmallMoleculesMzOnly_3-7.sky", GetType());
-            AssertEx.IsDocumentState(docSmall, 0, 3, 5, 7, 7);
+            AssertEx.IsDocumentState(docSmall, 0, 4, 8, 13, 13);
             int iGroup = 0;
+            var iTran = 0;
+            var heavies = new HashSet<int> { 2, 3, 5, 11, 13 }; // Indexes of nodes expected to be !isLight
+            var mzPrecursorDeclared = new[]
+            {
+                "146.2",
+                "155.2",
+                "500.",
+                "300.",
+                "320.",
+                "177.044724",
+                "88.522088",
+                "819.42",
+                "1639.7",
+                "351.217698",
+                "355.242805",
+                "335.001097",
+                "339.247891"
+            };
             foreach (var nodeGroup in docSmall.MoleculeTransitionGroups)
             {
-                if (++iGroup < 6) // The last molecule and its precursors was entered at higher precision
+                Adduct expectedPrecursorAdduct;
+                switch (++iGroup)
                 {
-                    // All precursor m/z values should be single-digit precision (entered by a person)
-                    Assert.AreEqual(Math.Round(nodeGroup.PrecursorMz.Value, 1), nodeGroup.PrecursorMz.Value);
+                    case 6:
+                        expectedPrecursorAdduct = Adduct.M_PLUS;
+                        break;
+                    case 7:
+                        expectedPrecursorAdduct = Adduct.M_PLUS_2;
+                        break;
+                    case 8:
+                        expectedPrecursorAdduct = Adduct.M_MINUS_2.ChangeIsotopeLabels(-.86055);
+                        break;
+                    case 9:
+                        expectedPrecursorAdduct = Adduct.M_MINUS;
+                        break;
+                    case 10:
+                        expectedPrecursorAdduct = Adduct.M_MINUS_H;
+                        break;
+                    case 11:
+                        expectedPrecursorAdduct = Adduct.FromString("[M4H2-H]", Adduct.ADDUCT_TYPE.non_proteomic, null);
+                        break;
+                    case 12:
+                        expectedPrecursorAdduct = Adduct.M_MINUS_H.ChangeIsotopeLabels(-.221687, 6);
+                        break;
+                    case 13:
+                        expectedPrecursorAdduct = Adduct.FromString("[M4H2-H]", Adduct.ADDUCT_TYPE.non_proteomic, null);
+                        break;
+                    default:
+                        // Check translation to adducts worked as expected
+                        expectedPrecursorAdduct =
+                            Adduct.FromCharge(nodeGroup.PrecursorCharge, Adduct.ADDUCT_TYPE.non_proteomic);
+                        if (iGroup == 5)
+                            expectedPrecursorAdduct = expectedPrecursorAdduct.ChangeIsotopeLabels(60.0);
+                        break;
+                }
+                var prec = mzPrecursorDeclared[iGroup - 1].Split('.')[1].Length;
+                Assert.AreEqual(double.Parse(mzPrecursorDeclared[iGroup-1], CultureInfo.InvariantCulture), Math.Round(nodeGroup.PrecursorMz, prec), "mz iGroup="+iGroup);
+                Assert.AreEqual(expectedPrecursorAdduct, nodeGroup.PrecursorAdduct, "iGroup="+iGroup);
+                Assert.AreEqual(heavies.Contains(iGroup), !nodeGroup.IsLight, "iGroup=" + iGroup);
+                // Most product m/z values should be single-digit precision (entered by a person)
+                foreach (var nodeTran in nodeGroup.Transitions)
+                {
+                    if (++iTran < 7)
+                    {
+                        Assert.AreEqual(Math.Round(nodeTran.Mz, 1), nodeTran.Mz.Value);
+                    }
+                    var expectedTransitionAdduct = nodeTran.IsMs1 ? expectedPrecursorAdduct : Adduct.FromChargeNoMass(nodeTran.Transition.Charge);
+                    Assert.AreEqual(expectedTransitionAdduct, nodeTran.Transition.Adduct, "iTran=" + iTran);
+                }
+            }
 
-                    // Check translation to adducts worked as expected
-                    var expectedAdduct = Adduct.FromCharge(nodeGroup.PrecursorCharge, Adduct.ADDUCT_TYPE.non_proteomic);
-                    if (iGroup == 5)
-                        expectedAdduct = expectedAdduct.ChangeIsotopeLabels(60.0);
-                    Assert.AreEqual(expectedAdduct, nodeGroup.PrecursorAdduct);
-                }
-                else
-                {
-                    var expectedAdduct = Adduct.FromCharge(iGroup-5, Adduct.ADDUCT_TYPE.non_proteomic);
-                    Assert.AreEqual(expectedAdduct, nodeGroup.PrecursorAdduct);
-                }
-            }
-            // All product m/z values should be single-digit precision (entered by a person)
-            foreach (var nodeTran in docSmall.MoleculeTransitions)
-            {
-                Assert.AreEqual(Math.Round(nodeTran.Mz, 1), nodeTran.Mz.Value);
-                Assert.AreEqual(Adduct.FromChargeNoMass(nodeTran.Transition.Charge), nodeTran.Transition.Adduct);
-            }
             AssertEx.Serializable(docSmall);
         }
     }

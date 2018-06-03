@@ -210,5 +210,17 @@ namespace IDPicker.Properties.GUI {
                 this["UpgradeRequired"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Sum")]
+        public global::IDPicker.QuantitationRollupMethod QuantitationRollupMethod {
+            get {
+                return ((global::IDPicker.QuantitationRollupMethod)(this["QuantitationRollupMethod"]));
+            }
+            set {
+                this["QuantitationRollupMethod"] = value;
+            }
+        }
     }
 }

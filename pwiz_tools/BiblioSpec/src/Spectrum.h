@@ -116,6 +116,8 @@ class Spectrum
     double ionMobilityHighEnergyOffset_; // for Waters Mse IMS, where product ions fly a little faster between the end of the drift tube and the detector
     IONMOBILITY_TYPE ionMobilityType_;
     double retentionTime_;
+    double startTime_;
+    double endTime_;
     double totalIonCurrentRaw_;
     double totalIonCurrentProcessed_;
     double basePeakIntensityRaw_;
@@ -143,6 +145,8 @@ class Spectrum
     IONMOBILITY_TYPE getIonMobilityType() const;
     double getCollisionalCrossSection() const;
     double getRetentionTime() const;
+    double getStartTime() const;
+    double getEndTime() const;
     int getNumRawPeaks() const; 
     int getNumProcessedPeaks() const;
     double getTotalIonCurrentRaw() const;
@@ -166,6 +170,8 @@ class Spectrum
     void setIonMobilityHighEnergyOffset(double imHEO);
     void setCollisionalCrossSection(double ccs);
     void setRetentionTime(double rt);
+    void setStartTime(double rt);
+    void setEndTime(double rt);
     void setRawPeaks(const vector<PEAK_T>& newpeaks);
     void setProcessedPeaks(const vector<PEAK_T>& newpeaks);
     virtual void addCharge(int newz);

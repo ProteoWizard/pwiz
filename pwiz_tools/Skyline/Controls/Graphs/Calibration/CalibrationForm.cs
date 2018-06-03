@@ -51,6 +51,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             zedGraphControl.GraphPane.Legend.IsVisible = false;
             zedGraphControl.GraphPane.Title.Text = null;
             zedGraphControl.GraphPane.Title.FontSpec.Size = 12f;
+            zedGraphControl.GraphPane.IsFontsScaled = false;
             zedGraphControl.GraphPane.XAxis.MajorTic.IsOpposite = false;
             zedGraphControl.GraphPane.XAxis.MinorTic.IsOpposite = false;
             zedGraphControl.GraphPane.YAxis.MajorTic.IsOpposite = false;
@@ -109,6 +110,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
 
         public CalibrationCurve CalibrationCurve { get; private set; }
+        public FiguresOfMerit FiguresOfMerit { get; private set; }
 
         private void DisplayCalibrationCurve()
         {
@@ -118,6 +120,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             zedGraphControl.GraphPane.Legend.IsVisible = options.ShowLegend;
             _scatterPlots = null;
             CalibrationCurve = null;
+            FiguresOfMerit = FiguresOfMerit.EMPTY;
             SrmDocument document = DocumentUiContainer.DocumentUI;
             if (!document.Settings.HasResults)
             {
@@ -178,7 +181,9 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             zedGraphControl.GraphPane.XAxis.Title.Text = curveFitter.GetXAxisTitle();
             zedGraphControl.GraphPane.YAxis.Title.Text = curveFitter.GetYAxisTitle();
             CalibrationCurve = curveFitter.GetCalibrationCurve();
+            FiguresOfMerit = curveFitter.GetFiguresOfMerit(CalibrationCurve);
             double minX = double.MaxValue, maxX = double.MinValue;
+            double minY = double.MaxValue;
             _scatterPlots = new CurveList();
             foreach (var sampleType in SampleType.ListSampleTypes())
             {
@@ -198,9 +203,9 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         continue;
                     }
                     double? y = curveFitter.GetYValue(iReplicate);
+                    double? xCalculated = curveFitter.GetCalculatedXValue(CalibrationCurve, iReplicate);
                     double? x = curveFitter.GetSpecifiedXValue(iReplicate)
-                                ?? curveFitter.GetCalculatedXValue(CalibrationCurve, iReplicate);
-
+                                ?? xCalculated;
                     if (y.HasValue && x.HasValue)
                     {
                         PointPair point = new PointPair(x.Value, y.Value) {Tag = iReplicate};
@@ -212,11 +217,28 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         {
                             pointPairList.Add(point);
                         }
+                        if (double.IsNaN(x.Value) || double.IsInfinity(x.Value)
+                            || double.IsNaN(y.Value) || double.IsInfinity(y.Value))
+                        {
+                            continue;
+                        }
                         if (!Options.LogPlot || x.Value > 0)
                         {
                             minX = Math.Min(minX, x.Value);
                         }
+                        if (!Options.LogPlot || y.Value > 0)
+                        {
+                            minY = Math.Min(minY, y.Value);
+                        }
                         maxX = Math.Max(maxX, x.Value);
+                        if (xCalculated.HasValue)
+                        {
+                            maxX = Math.Max(maxX, xCalculated.Value);
+                            if (!Options.LogPlot || xCalculated.Value > 0)
+                            {
+                                minX = Math.Min(minX, xCalculated.Value);
+                            }
+                        }
                     }
                 }
                 if (pointPairList.Any())
@@ -254,7 +276,17 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                             interpolatedLinePointCount = 2;
                         }
                     }
-                    LineItem interpolatedLine = CreateInterpolatedLine(CalibrationCurve, minX, maxX,
+                    double[] xValues;
+                    if (CalibrationCurve.TurningPoint.HasValue)
+                    {
+                        xValues = new[] {minX, CalibrationCurve.TurningPoint.Value, maxX};
+                    }
+                    else
+                    {
+                        xValues = new[] {minX, maxX};
+                    }
+                    Array.Sort(xValues);
+                    LineItem interpolatedLine = CreateInterpolatedLine(CalibrationCurve, xValues,
                         interpolatedLinePointCount, Options.LogPlot);
                     if (null != interpolatedLine)
                     {
@@ -273,6 +305,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     labelLines.Add(string.Format("{0}: {1}", // Not L10N
                         QuantificationStrings.Weighting, curveFitter.QuantificationSettings.RegressionWeighting));
                 }
+                string strFiguresOfMerit = FiguresOfMerit.ToString();
+                if (!string.IsNullOrEmpty(strFiguresOfMerit))
+                {
+                    labelLines.Add(strFiguresOfMerit);
+                }
             }
 
             if (options.ShowSelection)
@@ -281,9 +318,32 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 double? xSelected = curveFitter.GetCalculatedXValue(CalibrationCurve, _skylineWindow.SelectedResultsIndex);
                 if (xSelected.HasValue && ySelected.HasValue)
                 {
+                    const float selectedLineWidth = 2;
                     ArrowObj arrow = new ArrowObj(xSelected.Value, ySelected.Value, xSelected.Value,
-                        ySelected.Value) {Line = {Color = GraphSummary.ColorSelected}};
+                        ySelected.Value) { Line = { Color = GraphSummary.ColorSelected } };
                     zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
+                    var selectedLineColor = Color.FromArgb(128, GraphSummary.ColorSelected);
+                    var verticalLine = new LineObj(xSelected.Value, ySelected.Value, xSelected.Value, options.LogPlot ? double.MinValue : 0)
+                    {
+                        Line = { Color = selectedLineColor, Width = selectedLineWidth },
+                        Location = { CoordinateFrame = CoordType.AxisXYScale },
+                        ZOrder = ZOrder.E_BehindCurves,
+                        IsClippedToChartRect = true
+                    };
+                    zedGraphControl.GraphPane.GraphObjList.Add(verticalLine);
+                    double? xSpecified = curveFitter.GetSpecifiedXValue(_skylineWindow.SelectedResultsIndex);
+                    if (xSpecified.HasValue)
+                    {
+                        var horizontalLine = new LineObj(xSpecified.Value, ySelected.Value, xSelected.Value,
+                            ySelected.Value)
+                        {
+                            Line = { Color = selectedLineColor, Width = selectedLineWidth },
+                            Location = { CoordinateFrame = CoordType.AxisXYScale },
+                            ZOrder = ZOrder.E_BehindCurves,
+                            IsClippedToChartRect = true
+                        };
+                        zedGraphControl.GraphPane.GraphObjList.Add(horizontalLine);
+                    }
                 }
 
                 var quantificationResult = curveFitter.GetQuantificationResult(_skylineWindow.SelectedResultsIndex);
@@ -493,24 +553,29 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             UpdateUI(false);
         }
 
-        private LineItem CreateInterpolatedLine(CalibrationCurve calibrationCurve, double minX, double maxX, int pointCount, bool logPlot)
+        private LineItem CreateInterpolatedLine(CalibrationCurve calibrationCurve, double[] xValues, int pointCount, bool logPlot)
         {
             PointPairList pointPairList = new PointPairList();
-            for (int i = 0; i < pointCount; i++)
+            for (int iRange = 0; iRange < xValues.Length - 1; iRange++)
             {
-                double x;
-                if (logPlot)
+                double minX = xValues[iRange];
+                double maxX = xValues[iRange + 1];
+                for (int i = 0; i < pointCount; i++)
                 {
-                    x = Math.Exp((Math.Log(minX)*(pointCount - 1 - i) + Math.Log(maxX)*i)/(pointCount - 1));
-                }
-                else
-                {
-                    x = (minX*(pointCount - 1 - i) + maxX*i)/(pointCount - 1);
-                }
-                double? y = calibrationCurve.GetY(x);
-                if (y.HasValue)
-                {
-                    pointPairList.Add(x, y.Value);
+                    double x;
+                    if (logPlot)
+                    {
+                        x = Math.Exp((Math.Log(minX) * (pointCount - 1 - i) + Math.Log(maxX) * i) / (pointCount - 1));
+                    }
+                    else
+                    {
+                        x = (minX * (pointCount - 1 - i) + maxX * i) / (pointCount - 1);
+                    }
+                    double? y = calibrationCurve.GetY(x);
+                    if (y.HasValue)
+                    {
+                        pointPairList.Add(x, y.Value);
+                    }
                 }
             }
             if (!pointPairList.Any())

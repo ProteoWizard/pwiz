@@ -263,6 +263,7 @@ namespace pwiz.Skyline.Model.Results
                 _filterRTValues = new SpectrumFilterPair[_filterMzValues.Length];
                 Array.Copy(_filterMzValues, _filterRTValues, _filterMzValues.Length);
                 Array.Sort(_filterRTValues, CompareByRT);
+
             }
 
             InitRTLimits();
@@ -480,8 +481,9 @@ namespace pwiz.Skyline.Model.Results
                     if (!Equals(spec.RetentionTime, rt) || !IonMobilityValue.IsExpectedValueOrdering(spectra[i - 1].IonMobility, spec.IonMobility))
                         return true;  // Not a run of IMS bins, must have been actual SIM scan
                     win = GetIsolationWindows(spec.Precursors).FirstOrDefault();
-                    mzLow = Math.Min(mzLow, win.IsolationMz.Value - win.IsolationWidth.Value / 2);
-                    mzHigh = Math.Max(mzHigh, win.IsolationMz.Value + win.IsolationWidth.Value / 2);
+                    var halfIsolationWidth = (win.IsolationWidth??0) / 2; // Isolation width may not be declared in IMS scans
+                    mzLow = Math.Min(mzLow, win.IsolationMz.Value - halfIsolationWidth);
+                    mzHigh = Math.Max(mzHigh, win.IsolationMz.Value + halfIsolationWidth);
                 }
                 var width = mzHigh - mzLow;
                 isSimSpectrum = IsSimIsolation(new IsolationWindowFilter(new SignedMz(mzLow + width/2), width));
