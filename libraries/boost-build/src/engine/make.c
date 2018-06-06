@@ -44,6 +44,8 @@
 #include "search.h"
 #include "timestamp.h"
 #include "variable.h"
+#include "execcmd.h"
+#include "output.h"
 
 #include <assert.h>
 
@@ -82,7 +84,7 @@ static char const * target_bind[] =
     "exists",
 };
 
-#define spaces(x) ( "                    " + ( x > 20 ? 0 : 20-x ) )
+#define spaces(x) ( ((const char *)"                    ") + ( x > 20 ? 0 : 20-x ) )
 
 
 /*

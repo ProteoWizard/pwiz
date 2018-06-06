@@ -83,8 +83,8 @@ rule waters-define ( properties * )
     if <toolset>msvc in $(properties) &&
        ( <toolset-msvc:version>12.0 in $(properties) ||
          <toolset-msvc:version>12.0express in $(properties) || 
-         <toolset-msvc:version>14.0 in $(properties) ) &&
-       <runtime-debugging>off in $(properties) &&
+         <toolset-msvc:version>14.0 in $(properties) || 
+         <toolset-msvc:version>14.1 in $(properties) ) &&
        [ project-exists $(WATERS_API_PATH) ] &&
        [ masslynxraw-dll-location $(WATERS_API_PATH) : $(properties) ]  &&
 	   ! [ without-binary-msdata $(properties) ] &&
@@ -101,8 +101,8 @@ rule waters-api-usage-requirements ( properties * )
     if <toolset>msvc in $(properties) &&
        ( <toolset-msvc:version>12.0 in $(properties) ||
          <toolset-msvc:version>12.0express in $(properties) || 
-         <toolset-msvc:version>14.0 in $(properties) ) &&
-       <runtime-debugging>off in $(properties) &&
+         <toolset-msvc:version>14.0 in $(properties) || 
+         <toolset-msvc:version>14.1 in $(properties) ) &&
        [ project-exists $(WATERS_API_PATH) ] &&
        [ masslynxraw-dll-location $(WATERS_API_PATH) : $(properties) ]  &&
 	   ! [ without-binary-msdata $(properties) ] &&
@@ -155,15 +155,15 @@ lib blibbuild
     <conditional>@mascot-api-requirements
     <conditional>@waters-define
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
-    <dependency>modifications.xml
-    <dependency>unimod.xml
+    <assembly-dependency>modifications.xml # required file for running BlibBuild with MaxQuant support
+    <assembly-dependency>unimod.xml # required file for running BlibBuild with OpenSWATH support
   : # default-build
   : # usage-requirements
     <conditional>@mascot-api-usage-requirements
     <conditional>@waters-api-usage-requirements
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
-    <dependency>modifications.xml
-    <dependency>unimod.xml
+	<assembly-dependency>unimod.xml
+	<assembly-dependency>modifications.xml
  ;
 
 lib blib
@@ -287,11 +287,6 @@ exe LibToSqlite3
 make unimod_2.xsd : ./unimod_2.xsd : @common.copy ;
 make quantitation_1.xsd : ./quantitation_1.xsd : @common.copy ;
 make quantitation_2.xsd : ./quantitation_2.xsd : @common.copy ;
-
-# required file for running BlibBuild with MaxQuant support
-make modifications.xml : ./modifications.xml : @common.copy ;
-
-make unimod.xml : ./unimod.xml : @common.copy ;
 
 install install
     : BlibBuild BlibFilter BlibSearch BlibToMs2

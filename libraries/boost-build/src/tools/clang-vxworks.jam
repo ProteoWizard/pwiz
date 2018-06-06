@@ -31,8 +31,7 @@ generators.override clang-vxworks.searched-lib-generator : searched-lib-generato
 
 toolset.inherit-rules clang-vxworks : gcc ;
 toolset.inherit-flags clang-vxworks : gcc 
-        : <inlining>off <inlining>on <inlining>full <optimization>space 
-          <warnings>off <warnings>all <warnings>on
+        : <inlining>full
           <architecture>x86/<address-model>32
           <architecture>x86/<address-model>64
         ;
@@ -41,10 +40,6 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 {
     .debug-configuration = true ;
 }
-                       
-# vectorization diagnostics
-feature vectorize : off on full ;
-
 # Initializes the clang-vxworks toolset
 #   version in optional
 #   compile and link options allow you to specify addition command line options for each version
@@ -69,9 +64,11 @@ rule init ( version ? :  command * : options * )
 
     common.handle-options clang-vxworks : $(condition) : $(command) : $(options) ;
 
-    gcc.init-link-flags clang-vxworks vxworks $(condition) ;
-
     toolset.flags clang-vxworks.link      .LD  : $(linker) ;
+
+    # - Archive builder.
+    local archiver = [ feature.get-values <archiver> : $(options) ] ;
+    toolset.flags clang-vxworks.archive .AR $(condition) : $(archiver[1]) ;
 }
 
 SPACE = " " ;
@@ -80,24 +77,8 @@ toolset.flags clang-vxworks.compile OPTIONS <cflags> ;
 toolset.flags clang-vxworks.compile.c++ OPTIONS <cxxflags> ;
 toolset.flags clang-vxworks.compile INCLUDES <include> ;
 
-# Declare flags and action for compilation.
-toolset.flags clang-vxworks.compile OPTIONS <optimization>off   : -O0 ;
-toolset.flags clang-vxworks.compile OPTIONS <optimization>speed : -O3 ;
-toolset.flags clang-vxworks.compile OPTIONS <optimization>space : -Os ;
-
 # For clang, 'on' and 'full' are identical
-toolset.flags clang-vxworks.compile OPTIONS <inlining>off  : -fno-inline ;
-toolset.flags clang-vxworks.compile OPTIONS <inlining>on   : -Wno-inline ;
 toolset.flags clang-vxworks.compile OPTIONS <inlining>full : -Wno-inline ;
-
-toolset.flags clang-vxworks.compile OPTIONS <warnings>off : -w ;
-toolset.flags clang-vxworks.compile OPTIONS <warnings>on  : -Wall ;
-toolset.flags clang-vxworks.compile OPTIONS <warnings>all : -Wall -pedantic ;
-toolset.flags clang-vxworks.compile OPTIONS <warnings-as-errors>on : -Werror ;
-
-toolset.flags clang-vxworks.compile OPTIONS <debug-symbols>on : -g ;
-toolset.flags clang-vxworks.compile OPTIONS <profiling>on : -pg ;
-toolset.flags clang-vxworks.compile OPTIONS <rtti>off : -fno-rtti ;
 
 toolset.flags clang-vxworks.compile OPTIONS <flags> ;
 
@@ -114,8 +95,6 @@ actions compile.c++
 
 
 
-flags clang-vxworks ARFLAGS <archiveflags> ;
-
 # Default value. Mostly for the sake of clang-linux
 # that inherits from gcc, but does not has the same
 # logic to set the .AR variable. We can put the same
@@ -128,8 +107,6 @@ actions piecemeal archive
 {
   "$(.AR)" $(AROPTIONS) rcu "$(<)" "$(>)"
 }
-
-flags clang-vxworks.link USER_OPTIONS <linkflags> ;
 
 # Declare actions for linking
 rule link ( targets * : sources * : properties * )
