@@ -99,6 +99,7 @@ lib pwiz_vendor_api_uimf
         #<link>shared
         
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <toolset>msvc:<cxxflags>/wd4564 # warning C4564: method 'GetIntensityBlockForDemultiplexing' of class 'UIMFLibrary::DataReader' defines unsupported default parameter 'numFramesToSum'
         <conditional>@vendor-api-requirements
         <conditional>@msvc-uimf-requirement
     : # default-build
