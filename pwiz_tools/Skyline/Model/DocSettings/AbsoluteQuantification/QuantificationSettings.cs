@@ -44,7 +44,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             LodCalculation = LodCalculation.NONE;
         }
 
+        [Diff]
         public RegressionWeighting RegressionWeighting { get; private set; }
+        [Diff]
         public RegressionFit RegressionFit { get; private set; }
         
         public QuantificationSettings ChangeRegressionWeighting(RegressionWeighting weighting)
@@ -57,6 +59,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.RegressionFit = regressionFit);
         }
 
+        [Diff]
         public NormalizationMethod NormalizationMethod { get; private set; }
 
         public QuantificationSettings ChangeNormalizationMethod(NormalizationMethod normalizationMethod)
@@ -64,6 +67,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.NormalizationMethod = normalizationMethod);
         }
 
+        // TODO: custom localizer for null==all?
+        [Diff]
         public int? MsLevel { get; private set; }
 
         public QuantificationSettings ChangeMsLevel(int? level)
@@ -71,6 +76,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.MsLevel = level);
         }
 
+        [Diff]
         public string Units { get; private set; }
 
         public QuantificationSettings ChangeUnits(string units)
@@ -78,6 +84,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.Units = string.IsNullOrEmpty(units) ? null : units);
         }
 
+        [Diff]
         public LodCalculation LodCalculation { get; private set; }
 
         public QuantificationSettings ChangeLodCalculation(LodCalculation lodCalculation)
@@ -85,7 +92,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.LodCalculation = lodCalculation);
         }
 
+        [Diff]
         public double? MaxLoqBias { get; private set; }
+        [Diff]
         public double? MaxLoqCv { get; private set; }
 
         public QuantificationSettings ChangeMaxLoqBias(double? maxLoqBias)

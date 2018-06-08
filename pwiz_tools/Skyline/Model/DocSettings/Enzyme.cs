@@ -22,6 +22,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -73,16 +74,18 @@ namespace pwiz.Skyline.Model.DocSettings
             return !string.IsNullOrEmpty(s) ? s : null;
         }
 
+        [Diff]
         public bool IsSemiCleaving { get; private set; }
-
+        [Diff]
         public string CleavageC { get; private set; }
-
+        [Diff]
         public string RestrictC { get; private set; }
-
+        [Diff]
         public string CleavageN { get; private set; }
-
+        [Diff]
         public string RestrictN { get; private set; }
 
+        [Diff]
         public SequenceTerminus? Type
         {
             get
@@ -508,8 +511,10 @@ namespace pwiz.Skyline.Model.DocSettings
             ExcludeRaggedEnds = excludeRaggedEnds;
         }
 
+        [Diff]
         public int MaxMissedCleavages { get; private set; }
 
+        [Diff]
         public bool ExcludeRaggedEnds { get; private set; }
 
         #region Implementation of IXmlSerializable
@@ -627,14 +632,17 @@ namespace pwiz.Skyline.Model.DocSettings
         /// The regular expression string to exclude, if a peptide
         /// sequence matches
         /// </summary>
+        [Diff]
         public string Regex { get; private set; }
-
+        //TODO: custom localzier? might need a newer one
+        [Diff]
         public bool IsIncludeMatch { get; private set; }
 
         /// <summary>
         /// True if the filter should be applied to the light strutural
         /// modified sequence string.
         /// </summary>
+        [Diff]
         public bool IsMatchMod { get; private set; }
 
         #region Implementation of IXmlSerializable

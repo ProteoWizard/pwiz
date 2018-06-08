@@ -21,13 +21,14 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Web;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
-    public abstract class NormalizationMethod
+    public abstract class NormalizationMethod : IAuditLogObject
     {
         private const string ratio_prefix = "ratio_to_"; // Not L10N
         private const string surrogate_prefix = "surrogate_"; // Not L10N
@@ -292,5 +293,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return _getLabelFunc();
             }
         }
+
+        public string AuditLogText { get { return _name; } }
+        public bool IsName { get { return true; }}
     }
 }

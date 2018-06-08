@@ -3966,7 +3966,7 @@
     <value>{0} 必须大于 0。</value>
   </data>
   <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_" xml:space="preserve">
-    <value>复合物得分（标准化）</value>
+    <value>综合得分（标准化）</value>
   </data>
   <data name="Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted" xml:space="preserve">
     <value>库标题中的数据缺损。文件可能已损坏。</value>
@@ -4033,7 +4033,7 @@
     <value>观察到的错误判断比率</value>
   </data>
   <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Train_a_model_to_see_composite_score" xml:space="preserve">
-    <value>训练一个模型，以查看复合物得分</value>
+    <value>训练一个模型，以查看综合得分</value>
   </data>
   <data name="RDotPPropertyAccessor_PeptideProperty_Dot_Product__0__To__1_" xml:space="preserve">
     <value>点积 {0} 至 {1}</value>

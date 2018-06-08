@@ -22,10 +22,11 @@ using System.Linq;
 using MathNet.Numerics.LinearRegression;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public class RegressionFit
+    public class RegressionFit : IAuditLogObject
     {
         public static readonly RegressionFit NONE = new RegressionFit("none", // Not L10N
             ()=>QuantificationStrings.RegressionFit_NONE_None, NoExternalStandards);
@@ -56,6 +57,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         }
 
         public string Name { get; private set; }
+
+        public string AuditLogText { get { return Name; } }
+        public bool IsName { get { return true; } }
 
         public override string ToString()
         {
