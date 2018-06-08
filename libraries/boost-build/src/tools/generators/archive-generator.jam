@@ -11,7 +11,6 @@ import generators ;
 #
 class archive-generator : generator
 {
-    import generators ;
     import property-set ;
 
     rule __init__ ( id composing ? : source-types + : target-types +
@@ -25,8 +24,6 @@ class archive-generator : generator
     rule run ( project name ? : property-set : sources + )
     {
         sources += [ $(property-set).get <library>  ] ;
-
-        property-set = [ $(property-set).add-raw <relevant>link ] ;
 
         local result = [ generator.run $(project) $(name) : $(property-set)
             : $(sources) ] ;
@@ -47,7 +44,7 @@ class archive-generator : generator
         # will link to the library, but it should not cause any harm. So, return
         # all LIB sources together with created targets, so that dependants link
         # to them.
-        local usage-requirements = <relevant>link ;
+        local usage-requirements ;
         if [ $(property-set).get <link> ] = static
         {
             for local t in $(sources)
@@ -59,7 +56,9 @@ class archive-generator : generator
             }
         }
 
-        return [ generators.add-usage-requirements $(result) : $(usage-requirements) ] ;
+        usage-requirements = [ property-set.create $(usage-requirements) ] ;
+
+        return $(usage-requirements) $(result) ;
     }
 }
 

@@ -101,7 +101,6 @@ int exec_check
 void exec_cmd
 (
     string const * command,
-    int flags,
     ExecCmdCallback func,
     void * closure,
     LIST * shell

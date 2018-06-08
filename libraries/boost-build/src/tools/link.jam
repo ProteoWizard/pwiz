@@ -34,7 +34,7 @@ actions touch {
    $(TOUCH) "$(<)"
 }
 
-rule can-symlink ( project )
+rule can-symlink ( project : ps )
 {
     if ! $(.can-symlink)
     {
@@ -45,7 +45,7 @@ rule can-symlink ( project )
         local target = [ new file-target test-symlink : :
             $(project) : [ new action $(source-target) : link.mklink ] ] ;
 
-        if [ configure.try-build $(target) : [ property-set.empty ] : "symlinks supported" ]
+        if [ configure.try-build $(target) : $(ps) : "symlinks supported" ]
         {
             .can-symlink = true ;
         }       
@@ -64,7 +64,7 @@ if [ os.name ] = NT
 {
 
 # Test for Windows junctions (mklink /J)
-rule can-junction ( project )
+rule can-junction ( project : ps )
 {
     if ! $(.can-junction)
     {
@@ -75,7 +75,7 @@ rule can-junction ( project )
         local target = [ new file-target test-junction : :
             $(project) : [ new action $(source-target) : link.junction ] ] ;
 
-        if [ configure.try-build $(target) : [ property-set.empty ] : "junctions supported" ]
+        if [ configure.try-build $(target) : $(ps) : "junctions supported" ]
         {
             .can-junction = true ;
         }       
@@ -96,13 +96,13 @@ else
 
 .can-junction = false ;
 
-rule can-junction ( project )
+rule can-junction ( project : ps )
 {
 }
 
 }
 
-rule can-hardlink ( project )
+rule can-hardlink ( project : ps )
 {
     if ! $(.can-hardlink)
     {
@@ -119,7 +119,7 @@ rule can-hardlink ( project )
             : [ new property-set <location-prefix>symlink ]
             ] ] ;
 
-        if [ configure.try-build $(target) : [ property-set.empty ] : "hardlinks supported" ]
+        if [ configure.try-build $(target) : $(ps) : "hardlinks supported" ]
         {
             .can-hardlink = true ;
         }       
@@ -192,10 +192,10 @@ class symlink-target-class : basic-target
 
         # If we have symlinks, don't bother checking
         # for hardlinks and junctions.
-        if ! [ link.can-symlink $(self.project) ]
+        if ! [ link.can-symlink $(self.project) : $(property-set) ]
         {
-            link.can-junction $(self.project) ;
-            link.can-hardlink $(self.project) ;
+            link.can-junction $(self.project) : $(property-set) ;
+            link.can-hardlink $(self.project) : $(property-set) ;
         }
 
         if [ $(property-set).get <location> ]

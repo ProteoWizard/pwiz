@@ -9,7 +9,6 @@
 # This module defines the 'make' main target rule.
 
 import "class" : new ;
-import param ;
 import project ;
 import property-set ;
 import targets ;
@@ -18,8 +17,6 @@ import targets ;
 class make-target-class : basic-target
 {
     import "class" : new ;
-    import indirect ;
-    import toolset ;
     import type ;
     import virtual-target ;
 
@@ -37,11 +34,10 @@ class make-target-class : basic-target
         # below.
         local m = [ MATCH ^@(.*) : $(action-name) ] ;
 
-        local relevant = [ toolset.relevant [ indirect.get-rule $(m[1]) ] ] ;
-        local a = [ new action $(source-targets) : $(m[1]) : [ $(property-set).add $(relevant) ] ] ;
+        local a = [ new action $(source-targets) : $(m[1]) : $(property-set) ] ;
         local t = [ new file-target $(self.name) exact : [ type.type
             $(self.name) ] : $(self.project) : $(a) ] ;
-        return $(relevant) [ virtual-target.register $(t) ] ;
+        return [ property-set.empty ] [ virtual-target.register $(t) ] ;
     }
 }
 
@@ -51,8 +47,6 @@ class make-target-class : basic-target
 rule make ( target-name : sources * : generating-rule + : requirements * :
     usage-requirements * )
 {
-    param.handle-named-params
-        sources generating-rule requirements default-build usage-requirements ;
     # The '@' sign causes the feature.jam module to qualify rule name with the
     # module name of current project, if needed.
     local m = [ MATCH ^(@).* : $(generating-rule) ] ;

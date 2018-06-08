@@ -26,10 +26,9 @@ feature.feature cxxstd
 
 # The cxxstd:dialet subfeature indicates if a non-standard dialect should be
 # used. These usually have either/or extensions or platform specific
-# functionality. Not specifying the dialect will default to 'iso'. Which will
-# attempt to use ISO C++ Standard conformance to the best of the compiler's
-# ability.
+# functionality. Not specifying the dialect will disable any dialect and use
+# ANSI C++ Standard conformance.
 
 feature.subfeature cxxstd : dialect
-    : iso gnu ms
-    : composite propagated ;
+    : gnu ms
+    : optional composite propagated ;

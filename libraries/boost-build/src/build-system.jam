@@ -15,7 +15,6 @@ import configure ;
 import config-cache ;
 import feature ;
 import generators ;
-import indirect ;
 import make ;
 import modules ;
 import os ;
@@ -102,20 +101,15 @@ rule set-default-toolset ( toolset : version ? )
     .default-toolset-version = $(version) ;
 }
 
-rule add-pre-build-hook ( function )
+rule set-pre-build-hook ( function )
 {
-    .pre-build-hook += [ indirect.make $(function) : [ CALLER_MODULE ] ] ;
+    .pre-build-hook = $(function) ;
 }
 
-rule add-post-build-hook ( function )
+rule set-post-build-hook ( function )
 {
-    .post-build-hook += [ indirect.make $(function) : [ CALLER_MODULE ] ] ;
+    .post-build-hook = $(function) ;
 }
-
-# Old names for backwards compatibility
-IMPORT build-system : add-pre-build-hook : build-system : set-pre-build-hook ;
-IMPORT build-system : add-post-build-hook : build-system : set-post-build-hook ;
-EXPORT build-system : set-pre-build-hook set-post-build-hook ;
 
 ################################################################################
 #
@@ -231,7 +225,7 @@ local rule load-config ( module-name : filename : path + : must-find ? )
     {
         local path-string = $(path) ;
         if $(path-string) = "" { path-string = . ; }
-        ECHO "notice:" Searching '$(path-string)' for $(module-name)
+        ECHO notice: Searching '$(path-string)' for $(module-name)
             configuration file '$(filename)'. ;
     }
     local where = [ GLOB $(path) : $(filename) ] ;
@@ -243,7 +237,7 @@ local rule load-config ( module-name : filename : path + : must-find ? )
             local where-string = $(where:D) ;
             if $(where-string) = "" { where-string = . ; }
             where-string = '$(where-string)' ;
-            ECHO "notice:" Loading $(module-name) configuration file '$(filename)'
+            ECHO notice: Loading $(module-name) configuration file '$(filename)'
                 from $(where-string:J=" "). ;
         }
 
@@ -267,39 +261,10 @@ local rule load-config ( module-name : filename : path + : must-find ? )
             errors.user-error Configuration file '$(filename)' not found "in"
                 $(path-string). ;
         }
-        ECHO "notice:" Configuration file '$(filename)' not found "in"
+        ECHO notice: Configuration file '$(filename)' not found "in"
             $(path-string). ;
     }
     return $(where) ;
-}
-
-# Parses options of the form --xxx-config=path/to/config.jam
-# and environmental variables of the form BOOST_BUILD_XXX_CONFIG.
-# If not found, returns an empty list.  The option may be
-# explicitly set to the empty string, in which case, handle-config-option
-# will return "".
-#
-local rule handle-config-option ( name : env ? )
-{
-    local result = [ MATCH ^--$(name)=(.*)$ : $(.argv) ] ;
-    if ! $(result)-is-defined && $(env)
-    {
-        result = [ os.environ $(env) ] ;
-    }
-    # Special handling for the case when the OS does not strip the quotes
-    # around the file name, as is the case when using Cygwin bash.
-    result = [ utility.unquote $(result[-1]) ] ;
-    if ! $(result)
-    {
-        return $(result) ;
-    }
-    # Treat explicitly entered user paths as native OS path
-    # references and, if non-absolute, root them at the current
-    # working directory.
-    result = [ path.make $(result) ] ;
-    result = [ path.root $(result) [ path.pwd ] ] ;
-    result = [ path.native $(result) ] ;
-    return $(result) ;
 }
 
 
@@ -312,21 +277,11 @@ local rule handle-config-option ( name : env ? )
 # files will not be. If a relative path is specified, file is searched for in
 # the current folder.
 #
-#   -- all-config --
-#   Loaded only if specified on the command-line using the --config command
-# line option.  If a file name is specified, it must exist and replaces all
-# other configuration files.  If an empty file name is passed, no configuration
-# files will be loaded.
-#
 #   -- site-config --
-#   Named site-config.jam by default or may be named explicitly using the
-# --site-config command-line option.  If named explicitly, the file is found
-# relative to the current working directory and must exist.  If the default one
-# is used then it is searched for in the system root path (Windows),
-# /etc (non-Windows), user's home folder or the Boost Build path, in that
-# order.  Not loaded in case the test-config configuration file is loaded,
-# the file is explicitly set to the empty string or the --ignore-site-config
-# command-line option is specified.
+#   Always named site-config.jam. Will only be found if located on the system
+# root path (Windows), /etc (non-Windows), user's home folder or the Boost Build
+# path, in that order. Not loaded in case the test-config configuration file is
+# loaded or the --ignore-site-config command-line option is specified.
 #
 #   -- user-config --
 #   Named user-config.jam by default or may be named explicitly using the
@@ -339,12 +294,8 @@ local rule handle-config-option ( name : env ? )
 # file must exist.
 #
 #   -- project-config --
-#   Named project-config.jam. Looked up in the current working folder and
-# then upwards through its parents up to the root folder.  It may also be
-# named explicitly using the --project-config command-line option.  If a file
-# is specified explicitly, it is found relative to the current working
-# directory and must exist.  If an empty file name is passed, project-config
-# will not be loaded.
+#   Always named project-config.jam. Looked up in the current working folder and
+# then upwards through its parents up to the root folder.
 #
 # Test configurations have been added primarily for use by Boost Build's
 # internal unit testing system but may be used freely in other places as well.
@@ -354,11 +305,14 @@ local rule load-configuration-files
     # Flag indicating that site configuration should not be loaded.
     local ignore-site-config =
         [ MATCH ^(--ignore-site-config)$ : $(.argv) ] ;
-    local ignore-user-config ;
-    local ignore-project-config ;
 
     initialize-config-module test-config ;
-    local test-config = [ handle-config-option test-config ] ;
+    local test-config = [ MATCH ^--test-config=(.*)$ : $(.argv) ] ;
+    local uq = [ MATCH \"(.*)\" : $(test-config) ] ;
+    if $(uq)
+    {
+        test-config = $(uq) ;
+    }
     if $(test-config)
     {
         local where = [ load-config test-config : $(test-config:BS) :
@@ -371,31 +325,11 @@ local rule load-configuration-files
                 ECHO "notice: be ignored due to the test configuration being"
                     "loaded." ;
             }
-            ignore-site-config = true ;
-            ignore-user-config = true ;
         }
-    }
-
-    initialize-config-module all-config ;
-    local all-config = [ handle-config-option config ] ;
-    if $(all-config)
-    {
-        load-config all-config : $(all-config:D=) : $(all-config:D) : required ;
-        if $(.debug-config)
+        else
         {
-            ECHO "notice: Regular configuration files will be ignored due" ;
-            ECHO "notice: to the global configuration being loaded." ;
+            test-config = ;
         }
-    }
-    if $(all-config)-is-defined
-    {
-        if $(.debug-config) && ! $(all-config)
-        {
-            ECHO "notice: Configuration file loading explicitly disabled." ;
-        }
-        ignore-site-config = true ;
-        ignore-user-config = true ;
-        ignore-project-config = true ;
     }
 
     local user-path = [ os.home-directories ] [ os.environ BOOST_BUILD_PATH ] ;
@@ -405,56 +339,59 @@ local rule load-configuration-files
         site-path = [ modules.peek : SystemRoot ] $(user-path) ;
     }
 
-    if $(.debug-config) && $(ignore-site-config) = --ignore-site-config
+    if $(.debug-config) && ! $(test-config) && $(ignore-site-config)
     {
         ECHO "notice: Site configuration files will be ignored due to the" ;
         ECHO "notice: --ignore-site-config command-line option." ;
     }
 
     initialize-config-module site-config ;
-    if ! $(ignore-site-config)
+    if ! $(test-config) && ! $(ignore-site-config)
     {
-        local site-config = [ handle-config-option site-config ] ;
-        if $(site-config)
-        {
-            load-config site-config : $(site-config:D=) : $(site-config:D)
-                : must-exist ;
-        }
-        else if ! $(site-config)-is-defined
-        {
-            load-config site-config : site-config.jam : $(site-path) ;
-        }
-        else if $(.debug-config)
-        {
-            ECHO "notice:" Site configuration file loading explicitly disabled. ;
-        }
+        load-config site-config : site-config.jam : $(site-path) ;
     }
 
     initialize-config-module user-config ;
-    if ! $(ignore-user-config)
+    if ! $(test-config)
     {
-        local user-config =
-            [ handle-config-option user-config : BOOST_BUILD_USER_CONFIG ] ;
+        local user-config = [ MATCH ^--user-config=(.*)$ : $(.argv) ] ;
+        user-config = $(user-config[-1]) ;
+        user-config ?= [ os.environ BOOST_BUILD_USER_CONFIG ] ;
+        # Special handling for the case when the OS does not strip the quotes
+        # around the file name, as is the case when using Cygwin bash.
+        user-config = [ utility.unquote $(user-config) ] ;
+        local explicitly-requested = $(user-config) ;
+        user-config ?= user-config.jam ;
 
         if $(user-config)
         {
-            if $(.debug-config)
+            if $(explicitly-requested)
             {
-                ECHO "notice:" Loading explicitly specified user configuration
-                    "file:" ;
-                ECHO "    $(user-config)" ;
-            }
+                # Treat explicitly entered user paths as native OS path
+                # references and, if non-absolute, root them at the current
+                # working directory.
+                user-config = [ path.make $(user-config) ] ;
+                user-config = [ path.root $(user-config) [ path.pwd ] ] ;
+                user-config = [ path.native $(user-config) ] ;
 
-            load-config user-config : $(user-config:D=) : $(user-config:D)
-                : must-exist ;
-        }
-        else if ! $(user-config)-is-defined
-        {
-            load-config user-config : user-config.jam : $(user-path) ;
+                if $(.debug-config)
+                {
+                    ECHO notice: Loading explicitly specified user configuration
+                        file: ;
+                    ECHO "    $(user-config)" ;
+                }
+
+                load-config user-config : $(user-config:BS) : $(user-config:D)
+                    : must-exist ;
+            }
+            else
+            {
+                load-config user-config : $(user-config) : $(user-path) ;
+            }
         }
         else if $(.debug-config)
         {
-            ECHO "notice:" User configuration file loading explicitly disabled. ;
+            ECHO notice: User configuration file loading explicitly disabled. ;
         }
     }
 
@@ -464,33 +401,15 @@ local rule load-configuration-files
     # - We need to load project-config.jam before Jamroot
     # - We probably need to load project-config.jam even if there is no Jamroot
     #   - e.g. to implement automake-style out-of-tree builds.
-    if ! $(ignore-project-config)
+    local file = [ path.glob "." : project-config.jam ] ;
+    if ! $(file)
     {
-        local project-config = [ handle-config-option project-config ] ;
-        if $(project-config)
-        {
-            initialize-config-module project-config : $(project-config:D=) ;
-            load-config project-config : $(project-config:D=)
-                : $(project-config:D) : must-exist ;
-        }
-        else if ! $(project-config)-is-defined
-        {
-            local file = [ path.glob "." : project-config.jam ] ;
-            if ! $(file)
-            {
-                file = [ path.glob-in-parents "." : project-config.jam ] ;
-            }
-            if $(file)
-            {
-                initialize-config-module project-config : $(file:D) ;
-                load-config project-config : project-config.jam : $(file:D) ;
-            }
-        }
-        else if $(.debug-config)
-        {
-            ECHO "notice:" Project configuration file loading explicitly
-                disabled. ;
-        }
+        file = [ path.glob-in-parents "." : project-config.jam ] ;
+    }
+    if $(file)
+    {
+        initialize-config-module project-config : $(file:D) ;
+        load-config project-config : project-config.jam : $(file:D) ;
     }
 
     project.end-load ;
@@ -511,7 +430,7 @@ local rule process-explicit-toolset-requests
     for local t in $(option-toolsets) $(feature-toolsets)
     {
         # Parse toolset-version/properties.
-        local toolset = [ MATCH "([^/]+)/?.*" : $(t) ] ;
+        local toolset = [ MATCH ([^/]+)/?.* : $(t) ] ;
         local properties = [ feature.expand-subfeatures <toolset>$(toolset) : true ] ;
         local toolset-property = [ property.select <toolset> : $(properties) ] ;
         local known ;
@@ -538,10 +457,8 @@ local rule process-explicit-toolset-requests
                 ECHO "notice: [cmdline-cfg] toolset $(toolset) not"
                     "previously configured; attempting to auto-configure now" ;
             }
-            local t,v = [ MATCH "([^-]+)-?(.+)?" : $(toolset) ] ;
-            project.push-current ;
+            local t,v = [ MATCH ([^-]+)-?(.+)? : $(toolset) ] ;
             toolset.using $(t,v[1]) : $(t,v[2]) ;
-            project.pop-current ;
         }
 
         # Make sure we get an appropriate property into the build request in
@@ -551,7 +468,7 @@ local rule process-explicit-toolset-requests
         {
             if $(.debug-config)
             {
-                ECHO "notice:" "[cmdline-cfg]" adding toolset=$(t) to the build
+                ECHO notice: [cmdline-cfg] adding toolset=$(t) to the build
                     request. ;
             }
             extra-properties += toolset=$(t) ;
@@ -1046,9 +963,9 @@ local rule should-clean-project ( project )
     {
         configure.print-configure-checks-summary ;
 
-        for local function in $(.pre-build-hook)
+        if $(.pre-build-hook)
         {
-            indirect.call $(function) ;
+            $(.pre-build-hook) ;
         }
 
         DEPENDS all : $(actual-targets) ;
@@ -1063,9 +980,9 @@ local rule should-clean-project ( project )
             {
                 UPDATE_NOW $(.out-xml) : : ignore-minus-n ;
             }
-            for local function in $(.post-build-hook)
+            if $(.post-build-hook)
             {
-                indirect.call $(function) $(ok) ;
+                $(.post-build-hook) $(ok) ;
             }
             # Prevent automatic update of the 'all' target, now that we have
             # explicitly updated what we wanted.

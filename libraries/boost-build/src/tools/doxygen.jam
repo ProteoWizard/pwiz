@@ -27,7 +27,6 @@ import make ;
 import modules ;
 import generators ;
 import os ;
-import param ;
 import path ;
 import print ;
 import project ;
@@ -43,7 +42,7 @@ import virtual-target ;
 
 # Use to specify extra configuration paramters. These get translated into a
 # doxyfile which configures the building of the docs.
-feature.feature "doxygen:param" : : free ;
+feature.feature doxygen:param : : free ;
 
 # Specify the "<xsl:param>boost.doxygen.header.prefix" XSLT option.
 feature.feature prefix : : free ;
@@ -64,7 +63,7 @@ feature.feature doxygen.doxproc.id : : free ;
 feature.feature doxygen.doxproc.title : : free ;
 
 # Location for images when generating XML
-feature.feature "doxygen:xml-imagedir" : : free ;
+feature.feature doxygen:xml-imagedir : : free ;
 
 # Indicates whether the entire directory should be deleted
 feature.feature doxygen.rmdir : off on : optional incidental ;
@@ -106,9 +105,9 @@ rule init ( name ? )
             : DOXYFILE : DOXYGEN_XML_MULTIFILE ;
         generators.register-standard doxygen.xml-dir-to-boostbook
             : DOXYGEN_XML_MULTIFILE : BOOSTBOOK : <doxygen.processor>doxproc ;
-        generators.register-xslt doxygen.xml-to-boostbook
+        generators.register-standard doxygen.xml-to-boostbook
             : DOXYGEN_XML : BOOSTBOOK : <doxygen.processor>xsltproc ;
-        generators.register-xslt doxygen.collect
+        generators.register-standard doxygen.collect
             : DOXYGEN_XML_MULTIFILE : DOXYGEN_XML ;
         generators.register-standard doxygen.run
             : DOXYFILE : DOXYGEN_HTML_MULTIFILE ;
@@ -253,7 +252,7 @@ rule translate-path ( path )
         {
             if $(.is-cygwin)
             {
-                match = [ MATCH "^(.):(.*)" : $(path) ] ;
+                match = [ MATCH ^(.):(.*) : $(path) ] ;
                 if $(match)
                 {
                     return /cygdrive/$(match[1])$(match[2]:T) ;
@@ -275,7 +274,6 @@ rule translate-path ( path )
     }
 }
 
-toolset.uses-features doxygen.headers-to-doxyfile : "<doxygen:param>" ;
 
 # Generates a doxygen configuration file (doxyfile) given a set of C++ sources
 # and a property list that may contain <doxygen:param> features.
@@ -289,7 +287,7 @@ rule headers-to-doxyfile ( target : sources * : properties * )
     # Translate <doxygen:param> into command line flags.
     for local param in [ feature.get-values <doxygen:param> : $(properties) ]
     {
-        local namevalue = [ MATCH "([^=]*)=(.*)" : $(param) ] ;
+        local namevalue = [ MATCH ([^=]*)=(.*) : $(param) ] ;
         if $(namevalue[1]) = OUTPUT_DIRECTORY
         {
             output-dir = [ translate-path [ utility.unquote $(namevalue[2]) ] ]
@@ -323,7 +321,6 @@ rule headers-to-doxyfile ( target : sources * : properties * )
     print.text $(text) : true ;
 }
 
-toolset.uses-features doxygen.run : <doxygen.rmdir> "<doxygen:param>" ;
 
 # Run Doxygen. See doxygen-action for a description of the strange properties of
 # this rule.
@@ -334,7 +331,7 @@ rule run ( target : source : properties * )
     if <doxygen.rmdir>on in $(properties)
     {
         local output-dir = [ path.make [ MATCH
-            "<doxygen:param>OUTPUT_DIRECTORY=\"?([^\"]*)" : $(properties) ] ] ;
+            <doxygen:param>OUTPUT_DIRECTORY=\"?([^\"]*) : $(properties) ] ] ;
         local html-dir = [ path.make [ MATCH <doxygen:param>HTML_OUTPUT=(.*) :
             $(properties) ] ] ;
         if $(output-dir) && $(html-dir) &&
@@ -380,7 +377,7 @@ rule check-boostbook ( )
             : The boostbook module is not initialized you have attempted to use
             : the 'doxygen' toolset, which requires BoostBook, but never
             : initialized BoostBook.
-            : "Hint:" add 'using boostbook \;' to your user-config.jam. ;
+            : Hint: add 'using boostbook ;' to your user-config.jam. ;
     }
 }
 
@@ -409,7 +406,6 @@ rule collect ( target : source : properties * )
         : <xsl:param>doxygen.xml.path=$(native-path) ;
 }
 
-toolset.uses-features doxygen.xml-to-boostbook : <prefix> <reftitle> ;
 
 # Translate Doxygen XML into BoostBook.
 #
@@ -623,8 +619,6 @@ rule check-tools ( target )
 rule doxygen ( target : sources + : requirements * : default-build * :
     usage-requirements * )
 {
-    param.handle-named-params
-        sources requirements default-build usage-requirements ;
     requirements += <format>none ;
     freeze-config ;
     local project = [ project.current ] ;
