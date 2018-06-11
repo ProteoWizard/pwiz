@@ -2931,9 +2931,6 @@
   <data name="documentGridMenuItem.Text" xml:space="preserve">
     <value>&amp;Document Grid</value>
   </data>
-  <data name="auditLogMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
-    <value>Alt+4</value>
-  </data>
   <data name="auditLogMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>273, 30</value>
   </data>

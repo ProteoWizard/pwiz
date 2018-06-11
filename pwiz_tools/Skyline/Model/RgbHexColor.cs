@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model
             set { _color = value; NotifyPropertyChanged(); }
         }
 
-        [Diff]
+        [Track]
         public string Rgb
         {
             get

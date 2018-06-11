@@ -25,19 +25,19 @@ namespace pwiz.Skyline.Model.AuditLog
 {
     public class Property
     {
-        private readonly DiffAttributeBase _diffAttribute;
+        private readonly TrackAttributeBase _trackAttribute;
 
         public static readonly Property ROOT_PROPERTY = new Property(null, null);
 
-        public Property(PropertyInfo propertyInfo, DiffAttributeBase diffAttribute)
+        public Property(PropertyInfo propertyInfo, TrackAttributeBase trackAttribute)
         {
             PropertyInfo = propertyInfo;
-            _diffAttribute = diffAttribute;
+            _trackAttribute = trackAttribute;
         }
 
         public PropertyInfo PropertyInfo { get; private set; }
-        [Diff]
-        public bool IsRoot { get { return PropertyInfo == null && _diffAttribute == null; } }
+        [Track]
+        public bool IsRoot { get { return PropertyInfo == null && _trackAttribute == null; } }
 
         public string GetName(object rootObject, object parentObject)
         {
@@ -45,14 +45,14 @@ namespace pwiz.Skyline.Model.AuditLog
             if (parentObject != null)
                 name = parentObject.GetType().Name + '_' + name;
 
-            if (_diffAttribute.CustomLocalizer != null)
+            if (_trackAttribute.CustomLocalizer != null)
             {
-                var localizer = CustomPropertyLocalizer.CreateInstance(_diffAttribute.CustomLocalizer);
+                var localizer = CustomPropertyLocalizer.CreateInstance(_trackAttribute.CustomLocalizer);
                 if (localizer.Relative || rootObject != null)
                     name = localizer.Localize(rootObject, parentObject) ?? name;
             }
 
-            return string.Format("{{0:{0}}}", name); // Not L10N
+            return "{0:" + name + "}"; // Not L10N
         }
 
         public string GetElementName(object parentObject)
@@ -65,19 +65,19 @@ namespace pwiz.Skyline.Model.AuditLog
             var hasName = PropertyElementNames.ResourceManager.GetString(name) != null;
 
             if (hasName)
-                return string.Format("{{1:{0}}}", name); // Not L10N
+                return "{1:" + name + "}"; // Not L10N
 
             return null;
         }
 
-        [Diff]
-        public bool IsTab { get { return _diffAttribute.IsTab; } }
-        [Diff]
-        public bool IgnoreName { get { return _diffAttribute.IgnoreName; } }
-        [Diff]
-        public bool DiffProperties { get { return _diffAttribute.DiffProperties; } }
-        [Diff]
-        public Type CustomLocalizer { get { return _diffAttribute.CustomLocalizer; } }
+        [Track]
+        public bool IsTab { get { return _trackAttribute.IsTab; } }
+        [Track]
+        public bool IgnoreName { get { return _trackAttribute.IgnoreName; } }
+        [Track]
+        public bool DiffProperties { get { return _trackAttribute.DiffProperties; } }
+        [Track]
+        public Type CustomLocalizer { get { return _trackAttribute.CustomLocalizer; } }
 
         // For Debugging
         public override string ToString()

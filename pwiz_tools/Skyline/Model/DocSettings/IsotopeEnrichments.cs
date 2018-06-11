@@ -47,10 +47,21 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
-        [DiffParent]
+        [TrackChildren]
         public ImmutableList<IsotopeEnrichmentItem> Enrichments
         {
             get { return _isotopeEnrichments; }
+        }
+
+        public override string AuditLogText
+        {
+            get
+            {
+                if (Equals(this, DEFAULT))
+                    return "{4:IsotopeEnrichments_DEFAULT_Default}"; // Not L10N
+                
+                return Name;
+            }
         }
 
         public IsotopeAbundances IsotopeAbundances { get; private set; }
@@ -177,11 +188,11 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
-        [Diff]
+        [Track]
         public string IsotopeSymbol { get; private set; }
-        [Diff]
+        [Track]
         public double AtomPercentEnrichment { get; private set; }
-        [Diff]
+        [Track]
         public string Symbol { get { return BioMassCalc.GetMonoisotopicSymbol(IsotopeSymbol); } }
         private int IsotopeIndex { get { return BioMassCalc.GetIsotopeDistributionIndex(IsotopeSymbol); } }
 

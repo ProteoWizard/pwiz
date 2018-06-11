@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Proteome
             database_path,
         }
 
-        [Diff]
+        [Track]
         public string DatabasePath { get; private set; }
 
         public bool IsNone

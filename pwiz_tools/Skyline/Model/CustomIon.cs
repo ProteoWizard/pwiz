@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model
     {
         public static readonly CustomIon EMPTY = new CustomIon();
 
-        [DiffParent(ignoreName:true)]
+        [TrackChildren(ignoreName:true)]
         public Adduct Adduct { get; private set; }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Model
             return ion;
         }
 
-        [Diff]
+        [Track]
         public string NeutralFormula { get { return Formula; } }
 
         public string FormulaWithAdductApplied
@@ -119,9 +119,9 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        [Diff]
+        [Track]
         public double MonoisotopicMassMz { get { return Adduct.MzFromNeutralMass(MonoisotopicMass, MassType.Monoisotopic); } }
-        [Diff]
+        [Track]
         public double AverageMassMz { get { return Adduct.MzFromNeutralMass(AverageMass, MassType.Average); } }
 
         public new string ToSerializableString()

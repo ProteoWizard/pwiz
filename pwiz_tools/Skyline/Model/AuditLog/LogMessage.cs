@@ -26,6 +26,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.AuditLog
@@ -113,7 +114,8 @@ namespace pwiz.Skyline.Model.AuditLog
             s => PropertyNames.ResourceManager.GetString(s),
             s => PropertyElementNames.ResourceManager.GetString(s),
             s => AuditLogStrings.ResourceManager.GetString(s),
-            LocalizeValue
+            LocalizeValue,
+            s => Resources.ResourceManager.GetString(s)
         };
 
         private static string LocalizeValue(string s)
@@ -256,7 +258,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (names.Count != GetExpectedNameCount(Type))
                 throw new XmlException();
 
-            Names = ImmutableList<string>.ValueOf(names);
+            Names = ImmutableList.ValueOf(names);
 
             // Some messages have no names, so they don't have an end element
             if (reader.NodeType == XmlNodeType.EndElement && reader.Name == XML_ROOT)

@@ -39,7 +39,7 @@ namespace pwiz.Common.DataBinding.Layout
         {
             return ChangeProp(ImClone(this), im => im.ColumnFormats = ImmutableList.ValueOf(formats));
         }
-        [Diff(ignoreName:true)]
+        [Track(ignoreName:true)]
         public ImmutableList<IRowTransform> RowTransforms { get; private set; } // PivotSpec, RowFilter
 
         public ViewLayout ChangeRowTransforms(IEnumerable<IRowTransform> rowTransforms)

@@ -24,12 +24,14 @@ namespace pwiz.Common.SystemUtil
     public interface IAuditLogObject
     {
         string AuditLogText { get; }
+        // Determines whether the AuditLogText is a name or a string representation
+        // of the object
         bool IsName { get; }
     }
 
-    public abstract class DiffAttributeBase : Attribute
+    public abstract class TrackAttributeBase : Attribute
     {
-        protected DiffAttributeBase(bool isTab, bool ignoreName, Type customLocalizer)
+        protected TrackAttributeBase(bool isTab, bool ignoreName, Type customLocalizer)
         {
             IsTab = isTab;
             IgnoreName = ignoreName;
@@ -45,18 +47,18 @@ namespace pwiz.Common.SystemUtil
     }
 
     [AttributeUsage(AttributeTargets.Property)]
-    public class DiffAttribute : DiffAttributeBase
+    public class TrackAttribute : TrackAttributeBase
     {
-        public DiffAttribute(bool isTab = false,
+        public TrackAttribute(bool isTab = false,
             bool ignoreName = false,
             Type customLocalizer = null)
             : base(isTab, ignoreName, customLocalizer) { }
     }
 
     [AttributeUsage(AttributeTargets.Property)]
-    public class DiffParentAttribute : DiffAttributeBase
+    public class TrackChildrenAttribute : TrackAttributeBase
     {
-        public DiffParentAttribute(bool isTab = false,
+        public TrackChildrenAttribute(bool isTab = false,
             bool ignoreName = false,
             Type customLocalizer = null)
             : base(isTab, ignoreName, customLocalizer) { }

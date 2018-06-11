@@ -213,4 +213,7 @@
   <data name="LogMessage_LocalizeValue_False" xml:space="preserve">
     <value>False</value>
   </data>
+  <data name="Default" xml:space="preserve">
+    <value>Default!</value>
+  </data>
 </root>

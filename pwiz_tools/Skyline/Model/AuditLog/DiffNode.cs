@@ -291,10 +291,14 @@ namespace pwiz.Skyline.Model.AuditLog
             var newIsName = false;
             var oldIsName = false;
 
+            // new-/oldValue can are only null if reflection is not allowed and their AuditLogText uses reflection
             var newValue = NewValue == null ? "{2:Missing}" : ObjectToString(allowReflection, NewValue, out newIsName); // Not L10N
             var oldValue = OldValue == null ? "{2:Missing}" : ObjectToString(allowReflection, OldValue, out oldIsName); // Not L10N
 
             var sameValue = Equals(oldValue, newValue);
+
+            if (Expanded && newValue != null)
+                return new LogMessage(level, MessageType.is_, string.Empty, Expanded, name.ToString(), newValue);
 
             // If the string representations are the same, we don't want to show either of them
             if (!sameValue)
@@ -303,17 +307,12 @@ namespace pwiz.Skyline.Model.AuditLog
                 // case it gets set to "Missing"
                 if (oldIsName || newIsName || (level == LogLevel.all_info && !Expanded))
                 {
-                    //if (!oldIsName && !newIsName && IsCollectionElement)
-                    //    return new LogMessage(MessageType.coll_changed_to, Expanded, name.ToString(), oldValue, newValue);
-
                     return new LogMessage(level, MessageType.changed_from_to, string.Empty, Expanded, name.ToString(), oldValue, newValue);
                 }
-            }
-
-            if (!sameValue || Expanded)
-            {
-                if (newValue != null)
-                    return new LogMessage(level, Expanded ? MessageType.is_ : MessageType.changed_to, string.Empty, Expanded, name.ToString(), newValue);
+                else if (newValue != null)
+                {
+                    return new LogMessage(level, MessageType.changed_to, string.Empty, Expanded, name.ToString(), newValue);
+                }
             }
 
             return new LogMessage(level, MessageType.changed, string.Empty, Expanded, name.ToString());
@@ -361,9 +360,6 @@ namespace pwiz.Skyline.Model.AuditLog
             else // summary, all_info
             {
                 var value = ObjectToString(allowReflection);
-
-                if (name.IsElement != (name.Name == value))
-                    System.Diagnostics.Debugger.Break();
 
                 if (name.Name == value)
                     name = name.Parent;

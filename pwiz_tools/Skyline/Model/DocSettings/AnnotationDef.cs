@@ -59,9 +59,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        [Diff]
+        [Track]
         public AnnotationTargetSet AnnotationTargets { get; private set; }
-        [Diff]
+        [Track]
         public AnnotationType Type { get { return _type; } private set { _type = value; } }
         public Type ValueType
         {
@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        [Diff]
+        [Track]
         public ImmutableList<String> Items
         {
             get { return _items; }

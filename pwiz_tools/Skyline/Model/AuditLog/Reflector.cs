@@ -40,11 +40,11 @@ namespace pwiz.Skyline.Model.AuditLog
             foreach (var property in typeof(T).GetProperties())
             {
                 var attributes = property.GetCustomAttributes(false);
-                var diffAttr = attributes.OfType<DiffAttributeBase>().FirstOrDefault();
+                var trackAttribute = attributes.OfType<TrackAttributeBase>().FirstOrDefault();
 
-                if (diffAttr != null)
+                if (trackAttribute != null)
                 {
-                    _properities.Add(new Property(property, diffAttr));
+                    _properities.Add(new Property(property, trackAttribute));
                 }
             }
         }

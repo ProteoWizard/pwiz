@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Optimization
             DatabasePath = databasePath;
         }
 
-        [Diff]
+        [Track]
         public string DatabasePath { get; private set; }
 
         public bool IsNone

@@ -1406,7 +1406,7 @@ namespace pwiz.Skyline.Model.Lib
             UseExplicitPeakBounds = true;
         }
 
-        [Diff]
+        [Track]
         public string FilePath { get; private set; }
 
         /// <summary>
@@ -1430,7 +1430,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public abstract IEnumerable<PeptideRankId> PeptideRankIds { get; }
 
-        [Diff]
+        [Track]
         public bool UseExplicitPeakBounds { get; private set; }
 
         #region Property change methods
@@ -2295,7 +2295,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        [Diff]
+        [Track]
         public LibraryKey LibraryKey { get; private set; }
 
         public LibKey(double precursorMz,

@@ -152,20 +152,20 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        [Diff]
+        [Track]
         public string AAs { get; private set; }
 
-        [Diff]
+        [Track]
         public ModTerminus? Terminus { get; private set; }
 
-        [Diff]
+        [Track]
         public bool IsVariable { get; private set; }
 
-        [Diff]
+        [Track]
         public string Formula { get; private set; }
-        [Diff]
+        [Track]
         public double? MonoisotopicMass { get; private set; }
-        [Diff]
+        [Track]
         public double? AverageMass { get; private set; }
 
         public LabelAtoms LabelAtoms { get; private set; }
@@ -235,7 +235,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public RelativeRT RelativeRT { get; private set; }
 
-        [DiffParent]
+        [TrackChildren]
         public IList<FragmentLoss> Losses
         {
             get { return _losses; }
@@ -766,7 +766,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public IsotopeLabelType LabelType { get; private set; }
-        [DiffParent(ignoreName: true)]
+        [TrackChildren(ignoreName: true)]
         public ImmutableList<StaticMod> Modifications { get; private set; }
 
         public bool HasImplicitModifications
