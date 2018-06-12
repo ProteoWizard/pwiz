@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public SrmDocument Document
         {
-            get { return _skylineWindow != null ? _skylineWindow.DocumentUI : null; }
+            get { return _skylineWindow != null ? _skylineWindow.Document : null; }
         }
 
         public bool AnyProteomic
