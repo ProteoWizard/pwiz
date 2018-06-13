@@ -121,7 +121,7 @@ if ! --incremental in [ modules.peek : ARGV ]
 
 obj CoreVersion : CoreVersion.cpp ;
 
-make gene2protein.db3 : ../gene2protein.db3 : @common.copy ;
+make gene2protein.db3 : ../gene2protein.db3 : @common.copy : <dependency>CoreVersion ; # dependency on a build target makes all build features relevant (so <location> is calculated properly)
 explicit gene2protein.db3 ;
 
 exe idpQonvert : idpQonvert.cpp CoreVersion idpQonvertVersion.cpp Qonverter $(IDPICKER_PATH)/../freicore : <dependency>gene2protein.db3 ;

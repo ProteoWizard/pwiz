@@ -114,8 +114,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         set name="Topograph unit test"
         $(TEST_PRECOMMAND)
         msbuild $(TOPOGRAPH_PATH)/Topograph.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TopographTestProject /nologo /verbosity:minimal
-        msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /nologo /verbosity:minimal
         set status=%ERRORLEVEL%
+        IF %status%==0 (msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /nologo /verbosity:minimal && set status=%ERRORLEVEL%)
         $(TEST_POSTCOMMAND)
     }
 

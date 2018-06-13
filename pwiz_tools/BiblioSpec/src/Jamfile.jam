@@ -123,10 +123,12 @@ project
       <include>$(PWIZ_ROOT_PATH)/libraries/expat-2.0.1/lib
 ;
 
+obj BlibBuilder : BlibBuilder.cpp ;
+
 # the main BiblioSpec library
 lib blibbuild
   : # sources
-    BlibBuilder.cpp
+    BlibBuilder
     BuildParser.cpp
     IdpXMLreader.cpp
     MzIdentMLReader.cpp
@@ -283,16 +285,18 @@ exe LibToSqlite3
     <library>blib_v_1
  ;
 
+# for make targets below, <dependency> on a build target makes all build features relevant (so <location> is calculated properly)
+
 # required files for running BlibBuild with Mascot support
 make unimod_2.xsd : ./unimod_2.xsd : @common.copy ;
-make quantitation_1.xsd : ./quantitation_1.xsd : @common.copy ;
-make quantitation_2.xsd : ./quantitation_2.xsd : @common.copy ;
+make quantitation_1.xsd : ./quantitation_1.xsd : @common.copy : <dependency>BlibBuilder ;
+make quantitation_2.xsd : ./quantitation_2.xsd : @common.copy : <dependency>BlibBuilder ;
 
 # required file for running BlibBuild with MaxQuant support
-make modifications.xml : ./modifications.xml : @common.copy ;
+make modifications.xml : ./modifications.xml : @common.copy : <dependency>BlibBuilder ;
 
 # required file for running BlibBuild with OpenSWATH support
-make unimod.xml : ./unimod.xml : @common.copy ;
+make unimod.xml : ./unimod.xml : @common.copy : <dependency>BlibBuilder ;
 
 install install
     : BlibBuild BlibFilter BlibSearch BlibToMs2

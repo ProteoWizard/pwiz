@@ -85,7 +85,7 @@ rule init ( version ? : command * : options * : requirement * )
           : [ SHELL "/usr/bin/sw_vers -productVersion" ] ] ;
         if $(.debug-configuration)
         {
-            ECHO notice: OSX version on this machine is $(.host-osx-version) ;
+            ECHO notice\: OSX version on this machine is $(.host-osx-version) ;
         }
     }
                       
@@ -156,9 +156,6 @@ rule init ( version ? : command * : options * : requirement * )
         flags darwin.compile OPTIONS $(condition)/<inlining>full : -Wno-inline ;
     }
 
-    # - Set the link flags common with the GCC toolset.
-    gcc.init-link-flags darwin darwin $(condition) ;
-
     # - The symbol strip program.
     local strip ;
     if <striper> in $(options)
@@ -186,7 +183,7 @@ rule init ( version ? : command * : options * : requirement * )
         flags darwin.link .STRIP $(condition) : $(strip[1]) ;
         if $(.debug-configuration)
         {
-            ECHO notice: using strip for $(condition) at $(strip[1]) ;
+            ECHO notice\: using strip for $(condition) at $(strip[1]) ;
         }
     }
 
@@ -198,7 +195,7 @@ rule init ( version ? : command * : options * : requirement * )
     flags darwin.archive .LIBTOOL $(condition) : $(archiver[1]) ;
     if $(.debug-configuration)
     {
-        ECHO notice: using archiver for $(condition) at $(archiver[1]) ;
+        ECHO notice\: using archiver for $(condition) at $(archiver[1]) ;
     }
     
     # - Initialize the SDKs available in the root for this tool.
@@ -246,7 +243,7 @@ local rule init-sdk ( condition * : root ? : version + : version-feature ? )
     {
         if $(.debug-configuration)
         {
-            ECHO notice: available sdk for $(condition)/<macosx-version>$(version-feature) at $(root) ;
+            ECHO notice\: available sdk for $(condition)/<macosx-version>$(version-feature) at $(root) ;
         }
         
         # Add the version to the features for specifying them.
@@ -372,7 +369,7 @@ local rule init-available-sdk-versions ( condition * : root ? )
     local result ;
     for local sdk in $(sdks)
     {
-        local sdk-match = [ MATCH ([^0-9]+)([0-9]+)[.]([0-9x]+)[.]?([0-9x]+)? : $(sdk:D=) ] ;
+        local sdk-match = [ MATCH "([^0-9]+)([0-9]+)[.]([0-9x]+)[.]?([0-9x]+)?" : $(sdk:D=) ] ;
         local sdk-platform = $(sdk-match[1]:L) ;
         local sdk-version = $(sdk-match[2-]) ;
         if $(sdk-version)
