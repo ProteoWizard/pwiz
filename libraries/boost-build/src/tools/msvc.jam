@@ -1288,7 +1288,7 @@ local rule configure-really ( version ? : options * )
             # Windows, the above test will fail (since WOW64 simulates a 32-bit
             # environment, including environment values).  So check the WOW64
             # variable PROCESSOR_ARCHITEW6432 as well.
-            if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_ARCHITEW6432 ] ]
+            if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_ARCHITEW6432 ] ] && $(global-setup)
             {
                 # Express editions do not have native 64-bit tools, use x86 cross-compile instead
                 local result = [ SHELL "\"$(global-setup)\" amd64" ] ;

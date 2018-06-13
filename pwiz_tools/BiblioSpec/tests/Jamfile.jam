@@ -73,7 +73,7 @@ rule mascot-installed ( properties * )
     local msparser_path = [ msparser-path $(properties) ] ;
 #    if ! $(msparser_path)
 #   Allow TeamCity to pass
-    if ! $(msparser_path) || !(<toolset>msvc in $(properties))
+    if ! $(msparser_path) || ! ( <toolset>msvc in $(properties) )
     {
         result = <build>no ;
     }

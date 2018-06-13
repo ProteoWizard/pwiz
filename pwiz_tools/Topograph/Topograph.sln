@@ -1,6 +1,8 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2026
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7EA73219-CF0D-4CE6-9816-A8194D9F19BF}"
 	ProjectSection(SolutionItems) = preProject
 		LocalTestRun_x64.testrunconfig = LocalTestRun_x64.testrunconfig
@@ -29,9 +31,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZedGraph", "..\Shared\zedgraph\ZedGraph.csproj", "{B99650EE-AF46-47B4-A4A9-212ADE7809B7}"
 EndProject
 Global
-	GlobalSection(TestCaseManagementSettings) = postSolution
-		CategoryFile = Topograph.vsmdi
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
@@ -103,14 +102,6 @@ Global
 		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|x64.Build.0 = Release|x64
 		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|x86.ActiveCfg = Release|x86
 		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|x86.Build.0 = Release|x86
-		{5C81BB57-E46C-4B3B-9764-82F835E643B8}.Debug|x64.ActiveCfg = Debug|x64
-		{5C81BB57-E46C-4B3B-9764-82F835E643B8}.Debug|x64.Build.0 = Debug|x64
-		{5C81BB57-E46C-4B3B-9764-82F835E643B8}.Debug|x86.ActiveCfg = Debug|Win32
-		{5C81BB57-E46C-4B3B-9764-82F835E643B8}.Debug|x86.Build.0 = Debug|Win32
-		{5C81BB57-E46C-4B3B-9764-82F835E643B8}.Release|x64.ActiveCfg = Release|x64
-		{5C81BB57-E46C-4B3B-9764-82F835E643B8}.Release|x64.Build.0 = Release|x64
-		{5C81BB57-E46C-4B3B-9764-82F835E643B8}.Release|x86.ActiveCfg = Release|Win32
-		{5C81BB57-E46C-4B3B-9764-82F835E643B8}.Release|x86.Build.0 = Release|Win32
 		{32CC9B1A-9442-4B56-AF34-FB47595278A1}.Debug|x64.ActiveCfg = Debug|x64
 		{32CC9B1A-9442-4B56-AF34-FB47595278A1}.Debug|x64.Build.0 = Debug|x64
 		{32CC9B1A-9442-4B56-AF34-FB47595278A1}.Debug|x86.ActiveCfg = Debug|x86
@@ -130,5 +121,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D8D06801-5489-4F81-A6EC-72D5F8930DC3}
+	EndGlobalSection
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = Topograph.vsmdi
 	EndGlobalSection
 EndGlobal

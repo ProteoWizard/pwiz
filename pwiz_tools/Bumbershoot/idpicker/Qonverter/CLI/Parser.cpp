@@ -24,11 +24,14 @@
 
 
 #include "Parser.hpp"
-#include "../Parser.hpp"
 #include "Logger.hpp"
+
+#pragma unmanaged
+#include "../Parser.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "boost/foreach_field.hpp"
+#pragma managed
 
 
 namespace IDPicker {
