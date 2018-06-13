@@ -29,6 +29,7 @@ namespace pwiz.Common.DataBinding.Layout
     public class PivotSpec : Immutable, IRowTransform
     {
         public static readonly PivotSpec EMPTY = new PivotSpec();
+        [DiffParent]
         public ImmutableList<Column> RowHeaders { get; private set; }
 
         public PivotSpec()
@@ -42,13 +43,14 @@ namespace pwiz.Common.DataBinding.Layout
         {
             return ChangeProp(ImClone(this), im => im.RowHeaders = ImmutableList.ValueOfOrEmpty(columns));
         }
-
+        [DiffParent]
         public ImmutableList<Column> ColumnHeaders { get; private set; }
 
         public PivotSpec ChangeColumnHeaders(IEnumerable<Column> columns)
         {
             return ChangeProp(ImClone(this), im => im.ColumnHeaders = ImmutableList.ValueOfOrEmpty(columns));
         }
+        [DiffParent]
         public ImmutableList<AggregateColumn> Values { get; private set; }
 
         public PivotSpec ChangeValues(IEnumerable<AggregateColumn> columns)
@@ -87,7 +89,7 @@ namespace pwiz.Common.DataBinding.Layout
             }
         }
 
-        public class Column : Immutable
+        public class Column : Immutable, IAuditLogObject
         {
             public Column(ColumnId sourceColumn)
             {
@@ -133,6 +135,9 @@ namespace pwiz.Common.DataBinding.Layout
                     return hashCode;
                 }
             }
+
+            public string AuditLogText { get { return SourceColumn.Name; } }
+            public bool IsName { get { return true; }}
         }
 
         public class AggregateColumn : Column
@@ -141,6 +146,7 @@ namespace pwiz.Common.DataBinding.Layout
             {
                 AggregateOperation = aggregateOperation;
             }
+            [Diff]
             public AggregateOperation AggregateOperation { get; private set; }
 
             protected bool Equals(AggregateColumn other)

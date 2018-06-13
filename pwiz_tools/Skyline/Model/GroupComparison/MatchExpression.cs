@@ -206,12 +206,21 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return proteomic ? ProteinMetadataManager.ProteinModalDisplayText(protein.DocNode) : protein.Name;
         }
 
-        public static string GetProteinText(Protein protein, ProteinMetadataManager.ProteinDisplayMode proteinDisplayMode)
+        public static string GetProteinText(Protein protein, MatchOption matchOption)
         {
-            return protein != null ? ProteinMetadataManager.ProteinModalDisplayText(protein.DocNode.ProteinMetadata, proteinDisplayMode) : null;
+            return protein != null
+                ? ProteinMetadataManager.ProteinModalDisplayText(protein.DocNode.ProteinMetadata,
+                    MatchOptionToDisplayMode(matchOption))
+                : null;
         }
 
-        public string GetMatchString(SrmDocument document, Protein protein, Databinding.Entities.Peptide peptide)
+        public string GetDisplayString(SrmDocument document, Protein protein, Databinding.Entities.Peptide peptide)
+        {
+            return GetRowString(document, protein, peptide, true);
+        }
+
+        private string GetRowString(SrmDocument document, Protein protein, Databinding.Entities.Peptide peptide,
+            bool showProteinForPeptides)
         {
             if (protein == null)
                 return null;
@@ -225,7 +234,10 @@ namespace pwiz.Skyline.Model.GroupComparison
                     case MatchOption.ProteinAccession:
                     case MatchOption.ProteinPreferredName:
                     case MatchOption.ProteinGene:
-                        return GetProteinText(protein, MatchOptionToDisplayMode(m));
+                        if (!perProtein && showProteinForPeptides)
+                            return string.Format("{0} ({1})", GetRowDisplayText(protein, peptide), // Not L10N
+                                GetProteinText(protein, m));
+                        return GetProteinText(protein, m);
                     case MatchOption.PeptideSequence:
                         if (!perProtein)
                             return peptide.Sequence;
@@ -235,7 +247,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                             return peptide.ModifiedSequence.ToString();
                         break;
                     case MatchOption.MoleculeGroupName:
-                            return protein.Name;
+                        return protein.Name;
                     case MatchOption.MoleculeName:
                         if (!perProtein)
                             return peptide.MoleculeName;
@@ -255,10 +267,12 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
             }
 
-            if (protein.DocNode.IsProteomic)
-                return GetRowDisplayText(protein, peptide);
+            return GetRowDisplayText(protein, peptide);
+        }
 
-            return perProtein ? protein.Name : peptide.MoleculeName;
+        public string GetMatchString(SrmDocument document, Protein protein, Databinding.Entities.Peptide peptide)
+        {
+            return GetRowString(document, protein, peptide, false);
         }
 
         public bool Matches(SrmDocument document, Protein protein, Databinding.Entities.Peptide peptide, FoldChangeResult foldChangeResult, CutoffSettings cutoffSettings)
@@ -280,7 +294,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     case MatchOption.InChiKey:
                     {
                         var matchString = GetMatchString(document, protein, peptide);
-                        if (matchString == null || !Regex.IsMatch(matchString, RegExpr))
+                        if (matchString == null || !IsRegexValid() || !Regex.IsMatch(matchString, RegExpr))
                             return false;
                         break;
                     }

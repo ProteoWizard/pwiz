@@ -152,14 +152,20 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
+        [Diff]
         public string AAs { get; private set; }
 
+        [Diff]
         public ModTerminus? Terminus { get; private set; }
 
+        [Diff]
         public bool IsVariable { get; private set; }
 
+        [Diff]
         public string Formula { get; private set; }
+        [Diff]
         public double? MonoisotopicMass { get; private set; }
+        [Diff]
         public double? AverageMass { get; private set; }
 
         public LabelAtoms LabelAtoms { get; private set; }
@@ -229,6 +235,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public RelativeRT RelativeRT { get; private set; }
 
+        [DiffParent]
         public IList<FragmentLoss> Losses
         {
             get { return _losses; }
@@ -750,7 +757,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
     }
 
-    public sealed class TypedModifications : Immutable
+    public sealed class TypedModifications : Immutable, IAuditLogObject
     {
         public TypedModifications(IsotopeLabelType labelType, IList<StaticMod> modifications)
         {
@@ -759,6 +766,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public IsotopeLabelType LabelType { get; private set; }
+        [DiffParent(ignoreName: true)]
         public ImmutableList<StaticMod> Modifications { get; private set; }
 
         public bool HasImplicitModifications
@@ -801,6 +809,9 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public string AuditLogText { get { return LabelType.ToString(); } }
+        public bool IsName { get { return true; }}
     }
 
     public sealed class ExplicitMods : Immutable
