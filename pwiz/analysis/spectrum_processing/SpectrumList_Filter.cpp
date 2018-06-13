@@ -287,7 +287,7 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_MSLevelSet::acc
     CVParam param = spectrum.cvParamChild(MS_spectrum_type);
     if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
     if (!cvIsA(param.cvid, MS_mass_spectrum))
-        return true; // MS level filter doesn't affect non-MS spectra
+        return msLevelSet_.contains(0); // non-MS spectra are considered ms level 0
     param = spectrum.cvParam(MS_ms_level);
     if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
     int msLevel = param.valueAs<int>();
