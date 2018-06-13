@@ -29,6 +29,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
@@ -232,7 +233,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 var digest = new DigestSettings(missedCleavages, peptideSettings.DigestSettings.ExcludeRaggedEnds);
                 peptideSettings = peptideSettings.ChangeDigestSettings(digest).ChangeEnzyme(enzyme);
                 SkylineWindow.ModifyDocument(string.Format(Resources.ImportFastaControl_ImportFasta_Change_digestion_settings), doc =>
-                    doc.ChangeSettings(settings.ChangePeptideSettings(peptideSettings)), SkylineWindow.SettingsLogFunction);
+                    doc.ChangeSettings(settings.ChangePeptideSettings(peptideSettings)), AuditLogEntry.SettingsLogFunction);
             }
 
             if (!string.IsNullOrEmpty(DecoyGenerationMethod))

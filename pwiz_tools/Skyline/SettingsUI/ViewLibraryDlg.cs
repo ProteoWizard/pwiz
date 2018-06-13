@@ -37,6 +37,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -414,7 +415,7 @@ namespace pwiz.Skyline.SettingsUI
                         doc = doc.ChangeSettings(doc.Settings.ChangePeptideSettings(doc.Settings.PeptideSettings.ChangeModifications(mods)));
                         doc.Settings.UpdateDefaultModifications(false);
                         return doc;
-                    }, SkylineWindow.SettingsLogFunction);
+                    }, AuditLogEntry.SettingsLogFunction);
                 }
                 return true;
             }
@@ -1366,7 +1367,7 @@ namespace pwiz.Skyline.SettingsUI
                             return newDoc;
                     var modsNew = _matcher.GetDocModifications(newDoc); 
                     return newDoc.ChangeSettings(newDoc.Settings.ChangePeptideModifications(mods => modsNew));
-                }, SkylineWindow.SettingsLogFunction);
+                }, AuditLogEntry.SettingsLogFunction);
             
             Program.MainWindow.SelectedPath = selectedPath;
             Document.Settings.UpdateDefaultModifications(true, true);
@@ -1477,7 +1478,7 @@ namespace pwiz.Skyline.SettingsUI
                     Program.MainWindow.ModifyDocument(Resources.ViewLibraryDlg_CheckLibraryInSettings_Add_Library, doc =>
                         doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(pepLibraries =>
                             pepLibraries.ChangeLibraries(new List<LibrarySpec>(docLibraries.LibrarySpecs) { _selectedSpec },
-                            new List<Library>(docLibraries.Libraries) { _selectedLibrary }))), SkylineWindow.SettingsLogFunction);
+                            new List<Library>(docLibraries.Libraries) { _selectedLibrary }))), AuditLogEntry.SettingsLogFunction);
             }
             return DialogResult.OK;
         }
@@ -1613,7 +1614,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (!_matcher.HasMatches)
                         return newDoc;
                     return newDoc.ChangeSettings(newDoc.Settings.ChangePeptideModifications(mods => modsNew));
-                }, SkylineWindow.SettingsLogFunction);
+                }, AuditLogEntry.SettingsLogFunction);
 
             Program.MainWindow.SelectedPath = selectedPath;
             Document.Settings.UpdateDefaultModifications(true, true);

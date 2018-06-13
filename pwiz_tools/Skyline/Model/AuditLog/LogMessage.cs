@@ -34,14 +34,44 @@ namespace pwiz.Skyline.Model.AuditLog
     [XmlRoot(XML_ROOT)]
     public class LogMessage : Immutable, IXmlSerializable
     {
-        private readonly int[] _expectedNames = {2, 3, 2, 1, 1, 1, 2, 2, 2, 0, 0, 1, 1};
         public const string XML_ROOT = "message"; // Not L10N
+
+        public enum MessageType
+        {
+            none,
+
+            // Settings
+            is_,
+            changed_from_to,
+            changed_to,
+            changed,
+            removed,
+            added,
+            contains,
+            removed_from,
+            added_to,
+
+            // Log
+            log_disabled,
+            log_enabled,
+            log_unlogged_changes,
+            log_cleared,
+
+            // DocNode
+            remove_empty_proteins,
+            removed_protein,
+            remove_empty_peptides,
+            removed_peptide_from_protein,
+            remove_duplicate_peptides,
+            remove_repeated_peptides,
+            removed_transition_group_from_peptide_from_protein,
+            removed_transition_from_transition_group_from_peptide_from_protein,
+            removed_items // TODO: improve this, should show specific messages
+
+        }
 
         public LogMessage(LogLevel level, MessageType type, string reason, bool expanded, params string[] names)
         {
-            if (GetExpectedNameCount(type) != names.Length)
-                throw new ArgumentException();
-
             Level = level;
             Type = type;
             Names = ImmutableList.ValueOf(names);
@@ -68,15 +98,17 @@ namespace pwiz.Skyline.Model.AuditLog
             return "\"" + s + "\""; // Not L10N
         }
 
-        public int GetExpectedNameCount(MessageType type)
-        {
-            return _expectedNames[(int) type];
-        }
-
         public override string ToString()
         {
             var names = Names.Select(s => (object) LocalizeLogStringProperties(s)).ToArray();
-            switch (Type)
+
+            var format = AuditLogStrings.ResourceManager.GetString(Type.ToString());
+            if (string.IsNullOrEmpty(format))
+                return "Unknown message type";
+
+            return string.Format(format, names);
+
+            /*switch (Type)
             {
                 case MessageType.is_:
                     return string.Format(AuditLogStrings.LogMessage_ToString__0__is__1_, names);
@@ -106,7 +138,7 @@ namespace pwiz.Skyline.Model.AuditLog
                     return string.Format(AuditLogStrings.LogMessage_ToString__0__changes_cleared, names);
                 default:
                     throw new ArgumentOutOfRangeException();
-            }
+            }*/
         }
 
         private static readonly Func<string, string>[] LOCALIZER_FUNCTIONS =
@@ -196,7 +228,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             unchecked
             {
-                int hashCode = (int) Type;
+                int hashCode = Type.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Names != null ? Names.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ Expanded.GetHashCode();
                 return hashCode;
@@ -254,9 +286,6 @@ namespace pwiz.Skyline.Model.AuditLog
 
             while (reader.IsStartElement(EL.name))
                 names.Add(reader.ReadElementString());
-
-            if (names.Count != GetExpectedNameCount(Type))
-                throw new XmlException();
 
             Names = ImmutableList.ValueOf(names);
 

@@ -636,12 +636,6 @@ namespace pwiz.Skyline
             ModifyDocument(description, null, act, null, null, logFunc);
         }
 
-        public static AuditLogEntry SettingsLogFunction(SrmDocument oldDoc, SrmDocument newDoc)
-        {
-            var tree = Reflector<SrmDocument>.BuildDiffTree(Property.ROOT_PROPERTY, oldDoc, newDoc, DateTime.Now); // Not L10N
-            return tree != null && tree.Root != null ? new AuditLogEntry(oldDoc.FormatVersion, tree) : null;
-        }
-
         public void ModifyDocument(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified, Func<SrmDocument, SrmDocument, AuditLogEntry> logFunc = null)
         {
             try
@@ -652,7 +646,8 @@ namespace pwiz.Skyline
                     if (ModifyDocumentInner(act, onModifying, onModified, logFunc, out entry))
                     {
                         undo.Commit(entry != null ? entry.UndoRedo.ToString() : description);
-                        AddAuditLogEntry(entry);
+                        if (entry != null)
+                            entry.AddToDocument(Document, ModifyDocumentNoUndo);
                     }   
                 }
             }
@@ -668,47 +663,6 @@ namespace pwiz.Skyline
             {
                 MessageDlg.Show(this, TextUtil.LineSeparate(Resources.SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document, x.Message)); // Not L10N
             }
-        }
-
-        private void AddAuditLogEntry(AuditLogEntry entry)
-        {
-            if (entry != null)
-            {
-                if (Settings.Default.AuditLogging || entry.CountEntryType == MessageType.log_cleared)
-                {
-                    ModifyDocumentNoUndo(d => d.ChangeAuditLog(ImmutableList<AuditLogEntry>.ValueOf(Document.AuditLog.AuditLogEntries.Concat(new[] { entry }))));
-                }
-                else
-                    UpdateCountLogEntry(1, entry.AllInfo.Count, MessageType.log_unlogged_changes);
-            }  
-        }
-
-        private AuditLogEntry UpdateCountLogEntry(int undoRedoCount, int allInfoCount, MessageType type, bool addToDoc = true)
-        {
-            var logEntries = new List<AuditLogEntry>(Document.AuditLog.AuditLogEntries);
-            var countEntry = logEntries.FirstOrDefault(e => e.CountEntryType == type);
-
-            if (countEntry != null)
-            {
-                var countEntries = logEntries.Where(e =>
-                    e.CountEntryType == MessageType.log_cleared ||
-                    e.CountEntryType == MessageType.log_unlogged_changes).ToArray();
-
-                undoRedoCount += countEntries.Sum(e => int.Parse(e.UndoRedo.Names[0])) - countEntries.Length;
-                allInfoCount += countEntries.Sum(e => int.Parse(e.AllInfo[0].Names[0])) - countEntries.Length;
-                logEntries.Remove(countEntry);
-            }
-
-            var newCountEntry = AuditLogEntry.MakeCountEntry(type, Document.FormatVersion,
-                DateTime.Now, undoRedoCount, allInfoCount);
-            if (addToDoc)
-            {
-                logEntries.Add(newCountEntry);
-
-                ModifyDocumentNoUndo(d => d.ChangeAuditLog(ImmutableList<AuditLogEntry>.ValueOf(logEntries)));
-            }
-
-            return newCountEntry;
         }
 
         public void ModifyDocumentNoUndo(Func<SrmDocument, SrmDocument> act)
@@ -1678,7 +1632,7 @@ namespace pwiz.Skyline
                         doc = (SrmDocument) doc.RemoveAll(removeParams.ParentPath, removeParams.RemoveIds);
                 }
                 return doc;
-            });
+            }, (oldDoc, newDoc) => DiffDocNodes(LogMessage.MessageType.removed_items, oldDoc, newDoc));
         }
 
         private class RemoveParams
@@ -2443,28 +2397,179 @@ namespace pwiz.Skyline
             }
         }
 
+        public class DocNodeIdComparer : IEqualityComparer<DocNode>
+        {
+            public bool Equals(DocNode node1, DocNode node2)
+            {
+                if (ReferenceEquals(node1, node2))
+                    return true;
+
+                if (ReferenceEquals(node1, null) || ReferenceEquals(node2, null))
+                    return false;
+
+                return node1.Id.GlobalIndex == node2.Id.GlobalIndex;
+            }
+
+            public int GetHashCode(DocNode obj)
+            {
+                return obj.Id.GlobalIndex.GetHashCode();
+            }
+        }
+
+        private class DocNodePair<T> where T : DocNode
+        {
+            public DocNodePair(T oldNode, T newNode)
+            {
+                OldNode = oldNode;
+                NewNode = newNode;
+            }
+
+            public T OldNode { get; private set; }
+            public T NewNode { get; private set; }
+        }
+
+        private Dictionary<int, T> CreateDictionary<T>(IEnumerable<T> nodes) where T : DocNode
+        {
+            return new Dictionary<int, T>(nodes.ToDictionary(n => n.Id.GlobalIndex));
+        }
+
+        private List<DocNodePair<T>> MatchNodes<T>(IEnumerable<T> oldNodes, IEnumerable<T> newNodes) where T : DocNode
+        {
+            var oldDict = CreateDictionary(oldNodes);
+            var newDict = CreateDictionary(newNodes);
+
+            return oldDict.Keys.Intersect(newDict.Keys).Select(k => new DocNodePair<T>(oldDict[k], newDict[k]))
+                .ToList();
+        }
+
+        public AuditLogEntry DiffDocNodes(LogMessage.MessageType action, SrmDocument oldDoc, SrmDocument newDoc)
+        {
+            var matchedPeptideGroups = MatchNodes(oldDoc.Children, newDoc.Children);
+            var removedNodes = oldDoc.Children.Except(newDoc.Children, new DocNodeIdComparer());
+
+            var allInfo = removedNodes.OfType<PeptideGroupDocNode>().Select(group =>
+                new AuditLogEntry.MessageTypeNamesPair(LogMessage.MessageType.removed_protein, group.Name)).ToList();
+
+            foreach (var peptideGroupPair in matchedPeptideGroups)
+            {
+                var oldPepGroup = peptideGroupPair.OldNode as PeptideGroupDocNode;
+                var newPepGroup = peptideGroupPair.NewNode as PeptideGroupDocNode;
+
+                if (oldPepGroup == null || newPepGroup == null)
+                    continue;
+
+                var peptideGroupName = newPepGroup.Name;
+
+                var matchedPeptides = MatchNodes(oldPepGroup.Peptides, newPepGroup.Peptides);
+                var removedPeptides = oldPepGroup.Peptides.Except(newPepGroup.Peptides, new DocNodeIdComparer()).Cast<PeptideDocNode>();
+                allInfo.AddRange(removedPeptides.Select(p =>
+                    new AuditLogEntry.MessageTypeNamesPair(LogMessage.MessageType.removed_peptide_from_protein,
+                        PeptideTreeNode.GetLabel(p, string.Empty), peptideGroupName)));
+
+                var tree = Reflector<PeptideGroupDocNode>.BuildDiffTree(Property.ROOT_PROPERTY, oldPepGroup, newPepGroup, DateTime.Now);
+                if (tree.Root != null)
+                {
+                    foreach (var node in tree.Root.Nodes)
+                    {
+                        var oldObj = node.Objects.LastOrDefault();
+                        var newObj = node.Objects.FirstOrDefault();
+                        var newValue = newObj == null ? "{2:Missing}" : newObj.ToString(); // Not L10N
+                        var oldValue = oldObj == null ? "{2:Missing}" : oldObj.ToString(); // Not L10N
+
+                        // TODO: do this much more cleanly and also for each doc node
+                        allInfo.Add(
+                            new AuditLogEntry.MessageTypeNamesPair(LogMessage.MessageType.changed_from_to,
+                                node.Property.PropertyInfo.Name + " of " + peptideGroupName,
+                                oldValue, newValue));
+                    }
+                }
+
+                foreach (var peptidePair in matchedPeptides)
+                {
+                    var oldPeptideNode = peptidePair.OldNode;
+                    var newPeptideNode = peptidePair.NewNode;
+                    var peptideName = PeptideTreeNode.GetLabel(newPeptideNode, string.Empty);
+
+                    var matchedTransitionGroups = MatchNodes(oldPeptideNode.TransitionGroups,
+                        newPeptideNode.TransitionGroups);
+                    var removedTransitionGroups = oldPeptideNode.TransitionGroups
+                        .Except(newPeptideNode.TransitionGroups, new DocNodeIdComparer())
+                        .Cast<TransitionGroupDocNode>();
+
+                    allInfo.AddRange(removedTransitionGroups.Select(t =>
+                        new AuditLogEntry.MessageTypeNamesPair(LogMessage.MessageType.removed_transition_group_from_peptide_from_protein,
+                            TransitionGroupTreeNode.GetLabel(t.TransitionGroup,
+                                t.PrecursorMz, string.Empty), peptideName, peptideGroupName)));
+
+                    // diff peptides
+
+                    foreach (var transitionGroupPair in matchedTransitionGroups)
+                    {
+                        var oldTransitionGroup = transitionGroupPair.OldNode;
+                        var newTransitionGroup = transitionGroupPair.NewNode;
+
+                        var matchedTransitions = MatchNodes(oldTransitionGroup.Transitions,
+                            newTransitionGroup.Transitions);
+                        var removedTransitions = oldTransitionGroup.Transitions
+                            .Except(newTransitionGroup.Transitions, new DocNodeIdComparer())
+                            .Cast<TransitionDocNode>();
+
+                        allInfo.AddRange(removedTransitions.Select(t =>
+                            new AuditLogEntry.MessageTypeNamesPair(
+                                LogMessage.MessageType
+                                    .removed_transition_from_transition_group_from_peptide_from_protein,
+                                TransitionTreeNode.GetLabel(t, string.Empty),
+                                TransitionGroupTreeNode.GetLabel(newTransitionGroup.TransitionGroup,
+                                    newTransitionGroup.PrecursorMz, string.Empty),
+                                peptideName, peptideGroupName)));
+
+                        // diff transition groups
+
+                        foreach (var transitionPair in matchedTransitions)
+                        {
+                            // diff transitions
+                        }
+                    }
+                }
+            }
+
+            if (allInfo.Any())
+            {
+                var undoRedo = new AuditLogEntry.MessageTypeNamesPair(action);
+                return AuditLogEntry.MakeCustomEntry(Document.FormatVersion, DateTime.Now, undoRedo, undoRedo, allInfo);
+            }
+
+            return null;
+        }
+
         private void removeEmptyProteinsMenuItem_Click(object sender, EventArgs e)
         {
             var refinementSettings = new RefinementSettings { MinPeptidesPerProtein = 1 };
-            ModifyDocument(Resources.SkylineWindow_removeEmptyProteinsMenuItem_Click_Remove_empty_proteins, refinementSettings.Refine); 
+            ModifyDocument(Resources.SkylineWindow_removeEmptyProteinsMenuItem_Click_Remove_empty_proteins,
+                refinementSettings.Refine, (oldDoc, newDoc) => DiffDocNodes(LogMessage.MessageType.remove_empty_proteins, oldDoc, newDoc));
         }
 
         private void removeEmptyPeptidesMenuItem_Click(object sender, EventArgs e)
         {
             var refinementSettings = new RefinementSettings { MinPrecursorsPerPeptide = 1 };
-            ModifyDocument(Resources.SkylineWindow_removeEmptyPeptidesMenuItem_Click_Remove_empty_peptides, refinementSettings.Refine);
+            ModifyDocument(Resources.SkylineWindow_removeEmptyPeptidesMenuItem_Click_Remove_empty_peptides,
+                refinementSettings.Refine, (oldDoc, newDoc) => DiffDocNodes(LogMessage.MessageType.remove_empty_peptides, oldDoc, newDoc));
         }
 
         private void removeDuplicatePeptidesMenuItem_Click(object sender, EventArgs e)
         {
             var refinementSettings = new RefinementSettings { RemoveDuplicatePeptides = true };
-            ModifyDocument(Resources.SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides, refinementSettings.Refine);
+            ModifyDocument(Resources.SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides,
+                refinementSettings.Refine,
+                (oldDoc, newDoc) => DiffDocNodes(LogMessage.MessageType.remove_duplicate_peptides, oldDoc, newDoc));
         }
 
         private void removeRepeatedPeptidesMenuItem_Click(object sender, EventArgs e)
         {
             var refinementSettings = new RefinementSettings { RemoveRepeatedPeptides = true };
-            ModifyDocument(Resources.SkylineWindow_removeRepeatedPeptidesMenuItem_Click_Remove_repeated_peptides, refinementSettings.Refine);
+            ModifyDocument(Resources.SkylineWindow_removeRepeatedPeptidesMenuItem_Click_Remove_repeated_peptides,
+                refinementSettings.Refine,
+                (oldDoc, newDoc) => DiffDocNodes(LogMessage.MessageType.remove_repeated_peptides, oldDoc, newDoc));
         }
 
         private void renameProteinsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2783,7 +2888,7 @@ namespace pwiz.Skyline
                         doc => doc.ChangeSettings(
                             doc.Settings.ChangeDataSettings(
                                 doc.Settings.DataSettings.AddGroupComparisonDef(
-                                editDlg.GroupComparisonDef))), SettingsLogFunction);
+                                editDlg.GroupComparisonDef))), AuditLogEntry.SettingsLogFunction);
                 }
             }
         }
@@ -2794,7 +2899,7 @@ namespace pwiz.Skyline
                         doc => doc.ChangeSettings(
                             doc.Settings.ChangeDataSettings(
                                 doc.Settings.DataSettings.ChangePanoramaPublishUri(
-                                uri))), SettingsLogFunction);
+                                uri))), AuditLogEntry.SettingsLogFunction);
         }
 
         private void editGroupComparisonListMenuItem_Click(object sender, EventArgs e)
@@ -3316,7 +3421,7 @@ namespace pwiz.Skyline
                                                     {
                                                         settingsNew = (SrmSettings) doc.Settings.ChangeName(ss.SaveName);
                                                         return doc.ChangeSettings(settingsNew);
-                                                    }, SettingsLogFunction);
+                                                    }, AuditLogEntry.SettingsLogFunction);
 
                 if (settingsNew != null)
                     Settings.Default.SrmSettingsList.Add(settingsNew.MakeSavable(ss.SaveName));
@@ -3473,7 +3578,7 @@ namespace pwiz.Skyline
             }
 
             ModifyDocument(message ?? Resources.SkylineWindow_ChangeSettings_Change_settings, undoState,
-                doc => doc.ChangeSettings(newSettings, monitor), onModifyingAction, onModifiedAction, SettingsLogFunction);
+                doc => doc.ChangeSettings(newSettings, monitor), onModifyingAction, onModifiedAction, AuditLogEntry.SettingsLogFunction);
             return true;
         }
 
@@ -3497,7 +3602,7 @@ namespace pwiz.Skyline
                     ModifyDocument(Resources.SkylineWindow_ShowDocumentSettingsDialog_Change_document_settings,
                         doc => doc.ChangeSettings(
                             doc.Settings.ChangeDataSettings(
-                                dlg.GetDataSettings(doc.Settings.DataSettings))), SettingsLogFunction);
+                                dlg.GetDataSettings(doc.Settings.DataSettings))), AuditLogEntry.SettingsLogFunction);
                 }
             }
         }
@@ -3517,7 +3622,7 @@ namespace pwiz.Skyline
             if (integrateAll != DocumentUI.Settings.TransitionSettings.Integration.IsIntegrateAll)
             {
                 ModifyDocument(integrateAll ? Resources.SkylineWindow_IntegrateAll_Set_integrate_all : Resources.SkylineWindow_IntegrateAll_Clear_integrate_all,
-                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIntegration(i => i.ChangeIntegrateAll(integrateAll))), SettingsLogFunction);
+                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIntegration(i => i.ChangeIntegrateAll(integrateAll))), AuditLogEntry.SettingsLogFunction);
             }
         }
 

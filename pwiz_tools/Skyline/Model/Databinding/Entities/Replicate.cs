@@ -50,6 +50,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public ChromatogramSet ChromatogramSet { get { return _chromatogramSet.Value; } }
         public void ChangeChromatogramSet(EditDescription editDescription, ChromatogramSet chromatogramSet)
         {
+            // TODO: this modify document also needs it's own thing
             ModifyDocument(editDescription, document =>
                 {
                     var measuredResults = document.Settings.MeasuredResults;

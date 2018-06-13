@@ -68,6 +68,7 @@ namespace pwiz.Skyline.Model
         /// User supplied comment of this node.  All <see cref="DocNode"/> objects
         /// in the document support user notes.
         /// </summary>
+        [Track]
         public string Note { get { return Annotations.Note;} }
 
         /// <summary>

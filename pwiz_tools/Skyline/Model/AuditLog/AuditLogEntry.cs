@@ -98,12 +98,38 @@ namespace pwiz.Skyline.Model.AuditLog
                 User = identity.Name;
             }
 
-            Reason = reason ?? string.Empty;
+            Reason = reason ?? String.Empty;
         }
 
-        public AuditLogEntry(DocumentFormat formatVersion, DiffTree tree)
-            : this(formatVersion, tree.TimeStamp, string.Empty)
+        public class MessageTypeNamesPair
         {
+            public MessageTypeNamesPair(LogMessage.MessageType type, params string[] names)
+            {
+                Type = type;
+                Names = names;
+            }
+
+            public LogMessage.MessageType Type { get; private set; }
+            public string[] Names { get; private set; }
+        }
+
+        public static AuditLogEntry MakeCustomEntry(DocumentFormat formatVersion, DateTime timeStamp,
+            MessageTypeNamesPair undoRedo, MessageTypeNamesPair summary, IEnumerable<MessageTypeNamesPair> allInfo)
+        {
+            var result = new AuditLogEntry(formatVersion, timeStamp, string.Empty);
+
+            result.UndoRedo = new LogMessage(LogLevel.undo_redo, undoRedo.Type, string.Empty, false, undoRedo.Names);
+            result.Summary = new LogMessage(LogLevel.undo_redo, summary.Type, string.Empty, false, summary.Names);
+            result.AllInfo = allInfo
+                .Select(p => new LogMessage(LogLevel.all_info, p.Type, string.Empty, false, p.Names)).ToArray();
+
+            return result;
+        }
+
+        public static AuditLogEntry MakeSettingsChangeEntry(DocumentFormat formatVersion, DiffTree tree)
+        {
+            var result = new AuditLogEntry(formatVersion, tree.TimeStamp, string.Empty);
+ 
             var nodeNamePair = tree.Root.FindFirstMultiChildParent(tree, PropertyName.Root, true, false);
             // Remove "Settings" from property name if possible
             if (nodeNamePair.Name.Parent != PropertyName.Root)
@@ -119,42 +145,44 @@ namespace pwiz.Skyline.Model.AuditLog
                 }
             }
 
-            UndoRedo = nodeNamePair.ToMessage(LogLevel.undo_redo);
-            Summary = tree.Root.FindFirstMultiChildParent(tree, PropertyName.Root, false, false).ToMessage(LogLevel.summary);
-            AllInfo = tree.Root.FindAllLeafNodes(tree, PropertyName.Root, true)
+            result.UndoRedo = nodeNamePair.ToMessage(LogLevel.undo_redo);
+            result.Summary = tree.Root.FindFirstMultiChildParent(tree, PropertyName.Root, false, false).ToMessage(LogLevel.summary);
+            result.AllInfo = tree.Root.FindAllLeafNodes(tree, PropertyName.Root, true)
                 .Select(n => n.ToMessage(LogLevel.all_info)).ToArray();
-        }
-
-        public static AuditLogEntry MakeLogSettingsChangeEntry(DocumentFormat formatVersion, DateTime timeStamp)
-        {
-            var result = new AuditLogEntry(formatVersion, timeStamp, string.Empty);
-
-            var type = Settings.Default.AuditLogging ? MessageType.log_enabled : MessageType.log_disabled;
-
-            result.UndoRedo = new LogMessage(LogLevel.undo_redo, type, string.Empty, false);
-            result.Summary = new LogMessage(LogLevel.summary, type, string.Empty, false);
-            result.AllInfo = new List<LogMessage> { new LogMessage(LogLevel.all_info, type, string.Empty, false) };
 
             return result;
         }
 
-        public static AuditLogEntry MakeCountEntry(MessageType type, DocumentFormat formatVersion,
+        public static AuditLogEntry MakeLogEnabledDisabledEntry(DocumentFormat formatVersion, DateTime timeStamp)
+        {
+            var result = new AuditLogEntry(formatVersion, timeStamp, String.Empty);
+
+            var type = Settings.Default.AuditLogging ? LogMessage.MessageType.log_enabled : LogMessage.MessageType.log_disabled;
+
+            result.UndoRedo = new LogMessage(LogLevel.undo_redo, type, String.Empty, false);
+            result.Summary = new LogMessage(LogLevel.summary, type, String.Empty, false);
+            result.AllInfo = new List<LogMessage> { new LogMessage(LogLevel.all_info, type, String.Empty, false) };
+
+            return result;
+        }
+
+        public static AuditLogEntry MakeCountEntry(LogMessage.MessageType type, DocumentFormat formatVersion,
             DateTime timeStamp, int undoRedoCount, int allInfoCount)
         {
-            if (type != MessageType.log_unlogged_changes && type != MessageType.log_cleared)
+            if (type != LogMessage.MessageType.log_unlogged_changes && type != LogMessage.MessageType.log_cleared)
                 throw new ArgumentException();
 
             // ReSharper disable once UseObjectOrCollectionInitializer
-            var result = new AuditLogEntry(formatVersion, timeStamp, string.Empty);
+            var result = new AuditLogEntry(formatVersion, timeStamp, String.Empty);
 
-            result.UndoRedo = new LogMessage(LogLevel.undo_redo, type, string.Empty, false,
+            result.UndoRedo = new LogMessage(LogLevel.undo_redo, type, String.Empty, false,
                 undoRedoCount.ToString());
-            result.Summary = new LogMessage(LogLevel.summary, type, string.Empty, false,
+            result.Summary = new LogMessage(LogLevel.summary, type, String.Empty, false,
                 undoRedoCount.ToString());
 
             result.AllInfo = new List<LogMessage>
             {
-                new LogMessage(LogLevel.all_info, type, string.Empty, false,
+                new LogMessage(LogLevel.all_info, type, String.Empty, false,
                     allInfoCount.ToString())
             };
 
@@ -173,7 +201,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public LogMessage Summary { get; private set; }
         public IList<LogMessage> AllInfo { get; private set; }
 
-        public MessageType? CountEntryType { get; private set; }
+        public LogMessage.MessageType? CountEntryType { get; private set; }
 
         public AuditLogEntry ChangeReason(string reason)
         {
@@ -183,6 +211,55 @@ namespace pwiz.Skyline.Model.AuditLog
         public AuditLogEntry ChangeAllInfo(IList<LogMessage> allInfo)
         {
             return ChangeProp(ImClone(this), im => im.AllInfo = allInfo);
+        }
+
+        public void AddToDocument(SrmDocument document, Action<Func<SrmDocument, SrmDocument>> modifyDocument)
+        {
+            if (Settings.Default.AuditLogging || CountEntryType == LogMessage.MessageType.log_cleared)
+            {
+                modifyDocument(d => d.ChangeAuditLog(
+                    ImmutableList<AuditLogEntry>.ValueOf(d.AuditLog.AuditLogEntries.Concat(new[] { this }))));
+            }
+            else
+            {
+                UpdateCountLogEntry(document, modifyDocument, 1, AllInfo.Count, LogMessage.MessageType.log_unlogged_changes);
+            }
+        }
+
+        public static AuditLogEntry UpdateCountLogEntry(SrmDocument document,
+            Action<Func<SrmDocument, SrmDocument>> modifyDocument, int undoRedoCount, int allInfoCount,
+            LogMessage.MessageType type, bool addToDoc = true)
+        {
+            var logEntries = new List<AuditLogEntry>(document.AuditLog.AuditLogEntries);
+            var countEntry = logEntries.FirstOrDefault(e => e.CountEntryType == type);
+
+            if (countEntry != null)
+            {
+                var countEntries = logEntries.Where(e =>
+                    e.CountEntryType == LogMessage.MessageType.log_cleared ||
+                    e.CountEntryType == LogMessage.MessageType.log_unlogged_changes).ToArray();
+
+                undoRedoCount += countEntries.Sum(e => int.Parse(e.UndoRedo.Names[0])) - countEntries.Length;
+                allInfoCount += countEntries.Sum(e => int.Parse(e.AllInfo[0].Names[0])) - countEntries.Length;
+                logEntries.Remove(countEntry);
+            }
+
+            var newCountEntry = MakeCountEntry(type, document.FormatVersion,
+                DateTime.Now, undoRedoCount, allInfoCount);
+            if (addToDoc)
+            {
+                logEntries.Add(newCountEntry);
+
+                modifyDocument(d => d.ChangeAuditLog(ImmutableList<AuditLogEntry>.ValueOf(logEntries)));
+            }
+
+            return newCountEntry;
+        }
+
+        public static AuditLogEntry SettingsLogFunction(SrmDocument oldDoc, SrmDocument newDoc)
+        {
+            var tree = Reflector<SrmDocument>.BuildDiffTree(Property.ROOT_PROPERTY, oldDoc, newDoc, DateTime.Now);
+            return tree != null && tree.Root != null ? MakeSettingsChangeEntry(oldDoc.FormatVersion, tree) : null;
         }
 
         #region Implementation of IXmlSerializable
@@ -225,7 +302,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (CountEntryType.HasValue)
                 writer.WriteAttribute(ATTR.count_type, CountEntryType);
 
-            if (!string.IsNullOrEmpty(Reason))
+            if (!String.IsNullOrEmpty(Reason))
                 writer.WriteElementString(EL.reason, Reason);
             
             writer.WriteElement(EL.message, UndoRedo);
@@ -248,11 +325,11 @@ namespace pwiz.Skyline.Model.AuditLog
             if (countType == null)
                 CountEntryType = null;
             else
-                CountEntryType = (MessageType) Enum.Parse(typeof(MessageType), countType);
+                CountEntryType = (LogMessage.MessageType) Enum.Parse(typeof(LogMessage.MessageType), countType);
 
             reader.ReadStartElement();
 
-            Reason = reader.IsStartElement(EL.reason) ? reader.ReadElementString() : string.Empty;
+            Reason = reader.IsStartElement(EL.reason) ? reader.ReadElementString() : String.Empty;
 
             UndoRedo = reader.DeserializeElement<LogMessage>();
             Summary = reader.DeserializeElement<LogMessage>();

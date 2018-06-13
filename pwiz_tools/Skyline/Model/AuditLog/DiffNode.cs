@@ -27,24 +27,6 @@ namespace pwiz.Skyline.Model.AuditLog
 {
     public enum LogLevel { undo_redo, summary, all_info };
 
-    public enum MessageType
-    {
-        is_,
-        changed_from_to,
-        changed_to,
-        changed,
-        removed,
-        added,
-        contains,
-        removed_from,
-        added_to,
-        
-        log_disabled,
-        log_enabled,
-        log_unlogged_changes,
-        log_cleared
-    }
-
     // Base class for all nodes
     public abstract class DiffNode
     {
@@ -102,7 +84,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (Property.IsRoot)
                 return oneNode ? Nodes[0].FindFirstMultiChildParent(tree, null, shortenName, allowReflection, this) : null;
 
-            var parentObj = parentNode != null ? parentNode.Objects.FirstOrDefault() : null;
+            var parentObj = parentNode != null ? parentNode.Objects.LastOrDefault() : null;
 
             var propertyNameString = Property.GetName(tree.Root.Objects.FirstOrDefault(), parentObj);
 
@@ -168,7 +150,7 @@ namespace pwiz.Skyline.Model.AuditLog
             }
                 
 
-            var propertyNameString = Property.GetName(tree.Root.Objects.FirstOrDefault(),
+            var propertyNameString = Property.GetName(tree.Root.Objects.LastOrDefault(),
                 parentNode != null ? parentNode.Objects.FirstOrDefault() : null);
 
             var isName = false;
@@ -298,7 +280,7 @@ namespace pwiz.Skyline.Model.AuditLog
             var sameValue = Equals(oldValue, newValue);
 
             if (Expanded && newValue != null)
-                return new LogMessage(level, MessageType.is_, string.Empty, Expanded, name.ToString(), newValue);
+                return new LogMessage(level, LogMessage.MessageType.is_, string.Empty, Expanded, name.ToString(), newValue);
 
             // If the string representations are the same, we don't want to show either of them
             if (!sameValue)
@@ -307,15 +289,15 @@ namespace pwiz.Skyline.Model.AuditLog
                 // case it gets set to "Missing"
                 if (oldIsName || newIsName || (level == LogLevel.all_info && !Expanded))
                 {
-                    return new LogMessage(level, MessageType.changed_from_to, string.Empty, Expanded, name.ToString(), oldValue, newValue);
+                    return new LogMessage(level, LogMessage.MessageType.changed_from_to, string.Empty, Expanded, name.ToString(), oldValue, newValue);
                 }
                 else if (newValue != null)
                 {
-                    return new LogMessage(level, MessageType.changed_to, string.Empty, Expanded, name.ToString(), newValue);
+                    return new LogMessage(level, LogMessage.MessageType.changed_to, string.Empty, Expanded, name.ToString(), newValue);
                 }
             }
 
-            return new LogMessage(level, MessageType.changed, string.Empty, Expanded, name.ToString());
+            return new LogMessage(level, LogMessage.MessageType.changed, string.Empty, Expanded, name.ToString());
         }
     }
 
@@ -355,7 +337,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             if (level == LogLevel.undo_redo && name.Parent.OverrideChildSeparator != null)
             {
-                return new LogMessage(level, Removed ? MessageType.removed : MessageType.added, string.Empty, Expanded, name.ToString());
+                return new LogMessage(level, Removed ? LogMessage.MessageType.removed : LogMessage.MessageType.added, string.Empty, Expanded, name.ToString());
             }
             else // summary, all_info
             {
@@ -364,7 +346,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 if (name.Name == value)
                     name = name.Parent;
 
-                return new LogMessage(level, Removed ? MessageType.removed_from : Expanded ? MessageType.contains : MessageType.added_to, string.Empty, Expanded, name.ToString(), value);
+                return new LogMessage(level, Removed ? LogMessage.MessageType.removed_from : Expanded ? LogMessage.MessageType.contains : LogMessage.MessageType.added_to, string.Empty, Expanded, name.ToString(), value);
             }
         }
     }

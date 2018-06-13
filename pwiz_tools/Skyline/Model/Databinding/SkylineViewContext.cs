@@ -33,6 +33,7 @@ using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Hibernate;
@@ -166,7 +167,7 @@ namespace pwiz.Skyline.Model.Databinding
                         }
                         return doc.ChangeSettings(doc.Settings.ChangeDataSettings(
                             doc.Settings.DataSettings.ChangeViewSpecList(newViewSpecList)));
-                    }, SkylineWindow.SettingsLogFunction);
+                    }, AuditLogEntry.SettingsLogFunction);
                 }
             }
         }
@@ -186,7 +187,7 @@ namespace pwiz.Skyline.Model.Databinding
                     }
                     return doc.ChangeSettings(doc.Settings.ChangeDataSettings(
                         doc.Settings.DataSettings.ChangeViewSpecList(newViewSpecList)));
-                }, SkylineWindow.SettingsLogFunction);
+                }, AuditLogEntry.SettingsLogFunction);
             }
             
         }

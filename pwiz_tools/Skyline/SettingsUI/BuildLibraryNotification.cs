@@ -438,7 +438,7 @@ namespace pwiz.Skyline.SettingsUI
                     Settings.Default.RetentionTimeList.Add(addPredictorDlg.Regression);
                     NotificationContainer.ModifyDocument(Resources.LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor,
                         doc => doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
-                            predict.ChangeRetentionTime(addPredictorDlg.Regression))), SkylineWindow.SettingsLogFunction);
+                            predict.ChangeRetentionTime(addPredictorDlg.Regression))), AuditLogEntry.SettingsLogFunction);
                 }
             }
         }

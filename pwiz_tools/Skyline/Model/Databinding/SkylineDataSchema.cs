@@ -25,6 +25,7 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
@@ -289,7 +290,7 @@ namespace pwiz.Skyline.Model.Databinding
                     });
                     return newDocument;
                 }
-            });
+            }, (oldDoc, newDoc) => SkylineWindow.DiffDocNodes(LogMessage.MessageType.removed_items, oldDoc, newDoc));
             _batchChangesOriginalDocument = null;
             DocumentChangedEventHandler(_documentContainer, new DocumentChangedEventArgs(_document));
         }
@@ -300,11 +301,12 @@ namespace pwiz.Skyline.Model.Databinding
             _document = _documentContainer.Document;
         }
 
-        public void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action)
+        public void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action, Func<SrmDocument, SrmDocument, AuditLogEntry> logFunc = null)
         {
             if (_batchChangesOriginalDocument == null)
             {
-                SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action);
+                SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
+                    (oldDoc, newDoc) => SkylineWindow.DiffDocNodes(LogMessage.MessageType.removed_items, oldDoc, newDoc));
                 return;
             }
             VerifyDocumentCurrent(_batchChangesOriginalDocument, _documentContainer.Document);
