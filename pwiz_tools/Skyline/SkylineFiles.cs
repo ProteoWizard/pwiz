@@ -1714,7 +1714,7 @@ namespace pwiz.Skyline
                     docNew.Settings.UpdateDefaultModifications(false);
                 }
                 return docNew;
-            });
+            }, SettingsLogFunction);
 
             if (selectPath != null)
                 SequenceTree.SelectedPath = selectPath;
@@ -1992,7 +1992,7 @@ namespace pwiz.Skyline
                     throw new InvalidDataException(string.Format(Resources.SkylineWindow_ImportMassList_Unexpected_document_change_during_operation___0_, x.Message, x));
                 }
                 return doc;
-            });
+            }, SettingsLogFunction);
 
             if (selectPath != null)
                 SequenceTree.SelectedPath = selectPath;
@@ -2794,7 +2794,7 @@ namespace pwiz.Skyline
                         doc.ValidateResults();
 
                         return doc;
-                    });
+                    }, SettingsLogFunction);
 
                     // Modify document will have closed the streams by now.  So, it is safe to delete the files.
                     if (dlg.IsRemoveAllLibraryRuns)

@@ -47,9 +47,47 @@ namespace pwiz.Common.DataBinding
             ViewSpecs = ImmutableList.ValueOfOrEmpty(viewSpecs);
             ViewLayouts = ImmutableList.ValueOfOrEmpty(viewLayouts);
         }
-        
+
         public ImmutableList<ViewSpec> ViewSpecs { get;private set; }
         public ImmutableList<ViewLayoutList> ViewLayouts { get; private set; }
+        
+        [DiffParent]
+        public ImmutableList<View> Views
+        {
+            get
+            {
+                return ImmutableList<View>.ValueOf(ViewSpecs.Select(v =>
+                    new View(v, ViewLayouts.FirstOrDefault(vll => vll.ViewName == v.Name))));
+            }
+        }
+
+        public class View : IAuditLogObject
+        {
+            private readonly ViewLayoutList _layouts;
+            public View(ViewSpec spec, ViewLayoutList layouts)
+            {
+                ViewSpec = spec;
+                _layouts = layouts;
+            }
+
+            [DiffParent(ignoreName:true)]
+            public ViewSpec ViewSpec { get; private set; }
+
+            [DiffParent]
+            public ImmutableList<ViewLayout> Layouts
+            {
+                get
+                {
+                    if (_layouts == null)
+                        return ImmutableList<ViewLayout>.EMPTY;
+
+                    return _layouts.Layouts;
+                }
+            }
+
+            public string AuditLogText { get { return ViewSpec.Name; } }
+            public bool IsName { get { return true; } }
+        }
 
         public ViewSpecList FilterRowSources(ICollection<string> rowSources)
         {

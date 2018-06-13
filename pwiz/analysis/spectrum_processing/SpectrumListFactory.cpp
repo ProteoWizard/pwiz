@@ -861,7 +861,14 @@ SpectrumListPtr filterCreator_mzPrecursors(const MSData& msd, const string& carg
     string arg = carg;
 
     auto mzTol = parseKeyValuePair<MZTolerance, 2>(arg, "mzTol=", MZTolerance(10, MZTolerance::PPM));
+    auto targetStr = parseKeyValuePair<string>(arg, "target=", "selected");
     auto mode = parseKeyValuePair<SpectrumList_Filter::Predicate::FilterMode>(arg, "mode=", SpectrumList_Filter::Predicate::FilterMode_Include);
+
+    auto target = SpectrumList_FilterPredicate_PrecursorMzSet::TargetMode_Selected;
+    if (targetStr == "isolated")
+        target = SpectrumList_FilterPredicate_PrecursorMzSet::TargetMode_Isolated;
+    else if (targetStr != "selected")
+        throw user_error("[SpectrumListFactory::filterCreator_mzPrecursors()] invalid value for 'target' parameter: " + targetStr);
 
     char open='\0', comma='\0', close='\0';
     std::set<double> setMz;
@@ -879,20 +886,18 @@ SpectrumListPtr filterCreator_mzPrecursors(const MSData& msd, const string& carg
     iss >> close;
 
     if (open!='[' || close!=']')
-    {
-        cerr << "mzPrecursors filter expected a list of m/z values formatted something like \"[123.4,567.8,789.0]\"" << endl;
-        return SpectrumListPtr();
-    }
+        throw user_error("[SpectrumListFactory::filterCreator_mzPrecursors()] expected a list of m/z values formatted like \"[123.4,567.8,789.0]\"");
 
     return SpectrumListPtr(new
         SpectrumList_Filter(msd.run.spectrumListPtr,
-                            SpectrumList_FilterPredicate_PrecursorMzSet(setMz, mzTol, mode)));
+                            SpectrumList_FilterPredicate_PrecursorMzSet(setMz, mzTol, mode, target)));
 }
-UsageInfo usage_mzPrecursors = {"<precursor_mz_list> [mzTol=<mzTol (10 ppm)>] [mode=<include|exclude (include)>]",
+UsageInfo usage_mzPrecursors = {"<precursor_mz_list> [mzTol=<mzTol (10 ppm)>] [target=<selected|isolated> (selected)] [mode=<include|exclude (include)>]",
     "Filters spectra based on precursor m/z values found in the <precursor_mz_list>, with <mzTol> m/z tolerance. To retain "
     "only spectra with precursor m/z values of 123.4 and 567.8, use --filter \"mzPrecursors [123.4,567.8]\". "
     "Note that this filter will drop MS1 scans unless you include 0.0 in the list of precursor values."
     "   <mzTol> is optional and must be specified as a number and units (PPM or MZ). For example, \"5 PPM\" or \"2.1 MZ\".\n"
+    "   <target> is optional and must be either \"selected\" (the default) or \"isolated\". It determines whether the isolated m/z or the selected m/z is used for the \"precursor m/z\"\n"
     "   <mode> is optional and must be either \"include\" (the default) or \"exclude\".  If \"exclude\" is "
     "used, the filter drops spectra that match the various criteria instead of keeping them."
     };

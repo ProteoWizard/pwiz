@@ -187,7 +187,7 @@ void updatePsmRows(sqlite::database& db, bool logQonversionDetails, const PSMLis
 
         sqlite::transaction transaction(db);
         sqlite::command(db, "DROP TABLE IF EXISTS QonversionDetails").execute();
-        sqlite::command(db, "CREATE TABLE QonversionDetails (PsmId, Source, "SPECTRUM_ID_STR", OriginalRank, NewRank, Charge, BestSpecificity, MonteCarloWeights, TotalScore, QValue, FDRScore, DecoyState)").execute();
+        sqlite::command(db, "CREATE TABLE QonversionDetails (PsmId, Source, " SPECTRUM_ID_STR ", OriginalRank, NewRank, Charge, BestSpecificity, MonteCarloWeights, TotalScore, QValue, FDRScore, DecoyState)").execute();
         sqlite::command insertQonversionDetails(db, "INSERT INTO QonversionDetails VALUES (?,(SELECT Source FROM Spectrum WHERE Id=?),?,?,?,?,?,?,?,?,?,?)");
         BOOST_FOREACH(const PeptideSpectrumMatch& row, psmRows)
         {

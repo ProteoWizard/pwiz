@@ -31,6 +31,7 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include <boost/bind.hpp>
+#include <boost/spirit/include/karma.hpp>
 
 
 namespace pwiz {
@@ -171,9 +172,19 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
     return result;
 }
 
+template <typename T>
+struct nosci_policy : boost::spirit::karma::real_policies<T>
+{
+    static unsigned int precision(T) { return 9; }
+    static int floatfield(T) { return boost::spirit::karma::real_policies<T>::fmtflags::fixed; }
+};
 
 PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
 {
+    using namespace boost::spirit::karma;
+    typedef real_generator<double, nosci_policy<double> > nosci_type;
+    static const nosci_type nosci = nosci_type();
+
     // support file-level TIC for all file types
     index_.push_back(IndexEntry());
     IndexEntry& ci = index_.back();
@@ -192,21 +203,23 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
         ci.chromatogramType = transition.type == Transition::MRM ? MS_SRM_chromatogram
                                                                  : MS_SIM_chromatogram;
         ci.transition = transition;
-        string polarity = polarityStringForFilter((transition.ionPolarity == IonPolarity_Negative) ? MS_negative_scan : MS_positive_scan);
+        std::string polarity = polarityStringForFilter((transition.ionPolarity == IonPolarity_Negative) ? MS_negative_scan : MS_positive_scan);
+        std::back_insert_iterator<std::string> sink(ci.id);
         if (ci.chromatogramType == MS_SRM_chromatogram)
-            ci.id = (format("%sSRM SIC Q1=%.10g Q3=%.10g start=%.10g end=%.10g")
-                     % polarity
-                     % transition.Q1
-                     % transition.Q3
-                     % transition.acquiredTimeRange.start
-                     % transition.acquiredTimeRange.end
-                    ).str();
+        {
+            generate(sink, "SRM SIC Q1=" << nosci << " Q3=" << nosci << " start=" << nosci << " end=" << nosci,
+                     transition.Q1,
+                     transition.Q3,
+                     transition.acquiredTimeRange.start,
+                     transition.acquiredTimeRange.end
+                    );
+        }
         else
-            ci.id = (format("SIM SIC Q1=%.10g start=%.10g end=%.10g")
-                     % transition.Q1
-                     % transition.acquiredTimeRange.start
-                     % transition.acquiredTimeRange.end
-                    ).str();
+            generate(sink, "SIM SIC Q1=" << nosci << " start=" << nosci << " end=" << nosci,
+                     transition.Q1,
+                     transition.acquiredTimeRange.start,
+                     transition.acquiredTimeRange.end
+                    );
         idMap_[ci.id] = ci.index;
     }
 }

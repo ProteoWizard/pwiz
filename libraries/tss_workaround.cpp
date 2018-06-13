@@ -1,1 +1,1 @@
-extern "C" void tss_cleanup_implemented() {} // workaround for TSS linker error?
+namespace boost { void tss_cleanup_implemented() {} }

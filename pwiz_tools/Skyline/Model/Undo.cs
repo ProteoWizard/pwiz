@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public interface IUndoTransaction : IDisposable
     {
-        void Commit();
+        void Commit(string description);
 
         void Rollback();
     }
@@ -235,10 +235,9 @@ namespace pwiz.Skyline.Model
         /// and is intended for use inside a using clause, which rollback the transaction
         /// automatically, if it is not commited within the scope.
         /// </summary>
-        /// <param name="description">Description of the action to be performed</param>
         /// <param name="undoState">An undo state snapshot from the UI thread, in case the transation is begun on another thread</param>
         /// <returns>Transaction instance</returns>
-        public IUndoTransaction BeginTransaction(string description, IUndoState undoState = null)
+        public IUndoTransaction BeginTransaction(IUndoState undoState = null)
         {
             if (InUndoRedo)
                 throw new InvalidOperationException(Resources.UndoManager_BeginTransaction_Undo_transaction_may_not_be_started_in_undo_redo);
@@ -248,20 +247,22 @@ namespace pwiz.Skyline.Model
             if (_pendingRecord != null)
                 return new NoOpTransaction();
 
-            _pendingRecord = new UndoRecord(description, undoState ?? _client.GetUndoState());
+            _pendingRecord = new UndoRecord(undoState ?? _client.GetUndoState());
             return new UndoTransaction(this);
         }
 
         /// <summary>
         /// Commits the pending <see cref="IUndoState"/> record created by
         /// <see cref="BeginTransaction"/> to the undo stack, and clears the redo stack.
+        /// <param name="description">Description of the action to be performed</param>
         /// </summary>
-        private void Commit()
+        private void Commit(string description)
         {
             if (_pendingRecord == null)
                 throw new InvalidOperationException(Resources.UndoManager_Commit_Commit_called_with_no_pending_undo_record);
 
             _redoStack.Clear();
+            _pendingRecord.Description = description;
             _undoStack.Push(_pendingRecord);
             _pendingRecord = null;
 
@@ -336,7 +337,7 @@ namespace pwiz.Skyline.Model
                 for (int i = 0; i < list.Count; i++)
                 {
                     description = (i < list.Count - 1 ? list[i + 1].Description : top.Description);
-                    to.Push(new UndoRecord(description, list[i].UndoState));
+                    to.Push(new UndoRecord(list[i].UndoState, description));
                 }
             }
             finally
@@ -377,19 +378,19 @@ namespace pwiz.Skyline.Model
         /// </summary>
         private sealed class UndoRecord
         {
-            public UndoRecord(string description, IUndoState undoState)
+            public UndoRecord(IUndoState undoState, string description = null)
             {
-                Description = description;
                 UndoState = undoState;
+                Description = description;
             }
 
-            public string Description { get; private set; }
+            public string Description { get; set; }
 
             public IUndoState UndoState { get; private set; }
 
             public UndoRecord Restore(string description)
             {
-                return new UndoRecord(description ?? Description, UndoState.Restore());
+                return new UndoRecord(UndoState.Restore(), description ?? Description);
             }
         }
 
@@ -411,9 +412,9 @@ namespace pwiz.Skyline.Model
                 Rollback();
             }
 
-            public void Commit()
+            public void Commit(string description)
             {
-                _manager.Commit();
+                _manager.Commit(description);
             }
 
             public void Rollback()
@@ -434,7 +435,7 @@ namespace pwiz.Skyline.Model
         private class NoOpTransaction : IUndoTransaction
         {
             public void Dispose() {}
-            public void Commit() {}
+            public void Commit(string description) {}
             public void Rollback() {}
             public bool IsNested()
             {

@@ -28,7 +28,7 @@ if [ modules.peek : NT ] {
 # The DLL is forced to be <link>shared, but its dependencies may be static or shared depending on
 # the build request. The default is link=static, so the command-line is tested for link=shared.
 local bound_lib_requirements = <link>static/<using-clr>false ;
-if link=shared in [ modules.peek : ARGV ]
+if "link=shared" in [ modules.peek : ARGV ]
 {
     bound_lib_requirements = <link>shared/<using-clr>false ;
 }
@@ -211,9 +211,7 @@ if ( ! --incremental in [ modules.peek : ARGV ] )
 {
     actions merge_xdc_files
     {
-        IF EXIST "%VS90COMNTOOLS%" CALL "%VS90COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-        IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-        IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+        $(MSVC_CURRENT_SETUP_SCRIPT)
         xdcmake.exe /nologo $(DOC_DATA_PATH)/*.xdc $(DOC_PATH)/*.xdc /out:$(OUTPUT_PATH)\$(<[1]:D=)
     }
 }
@@ -241,9 +239,7 @@ rule merge_xdc_data_files ( targets + : sources * : properties * )
 
 actions merge_xdc_data_files
 {
-    IF EXIST "%VS90COMNTOOLS%" CALL "%VS90COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
-    IF EXIST "%VS120COMNTOOLS%" CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" >nul
+    $(MSVC_CURRENT_SETUP_SCRIPT)
     xdcmake.exe /nologo "$(DOC_DATA_PATH)/*.xdc" "/out:$(OUTPUT_PATH)\$(<[1]:D=)"
 }
 

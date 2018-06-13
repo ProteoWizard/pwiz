@@ -414,7 +414,7 @@ namespace pwiz.Skyline.SettingsUI
                         doc = doc.ChangeSettings(doc.Settings.ChangePeptideSettings(doc.Settings.PeptideSettings.ChangeModifications(mods)));
                         doc.Settings.UpdateDefaultModifications(false);
                         return doc;
-                    });
+                    }, SkylineWindow.SettingsLogFunction);
                 }
                 return true;
             }
@@ -1366,7 +1366,7 @@ namespace pwiz.Skyline.SettingsUI
                             return newDoc;
                     var modsNew = _matcher.GetDocModifications(newDoc); 
                     return newDoc.ChangeSettings(newDoc.Settings.ChangePeptideModifications(mods => modsNew));
-                });
+                }, SkylineWindow.SettingsLogFunction);
             
             Program.MainWindow.SelectedPath = selectedPath;
             Document.Settings.UpdateDefaultModifications(true, true);
@@ -1477,7 +1477,7 @@ namespace pwiz.Skyline.SettingsUI
                     Program.MainWindow.ModifyDocument(Resources.ViewLibraryDlg_CheckLibraryInSettings_Add_Library, doc =>
                         doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(pepLibraries =>
                             pepLibraries.ChangeLibraries(new List<LibrarySpec>(docLibraries.LibrarySpecs) { _selectedSpec },
-                            new List<Library>(docLibraries.Libraries) { _selectedLibrary }))));
+                            new List<Library>(docLibraries.Libraries) { _selectedLibrary }))), SkylineWindow.SettingsLogFunction);
             }
             return DialogResult.OK;
         }
@@ -1613,7 +1613,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (!_matcher.HasMatches)
                         return newDoc;
                     return newDoc.ChangeSettings(newDoc.Settings.ChangePeptideModifications(mods => modsNew));
-                });
+                }, SkylineWindow.SettingsLogFunction);
 
             Program.MainWindow.SelectedPath = selectedPath;
             Document.Settings.UpdateDefaultModifications(true, true);

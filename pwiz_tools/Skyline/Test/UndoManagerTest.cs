@@ -54,19 +54,19 @@ namespace pwiz.SkylineTest
             manager.RedoRestore(10);
 
             const string description = "Success";
-            using (var undo = manager.BeginTransaction(description))
+            using (var undo = manager.BeginTransaction())
             {
                 Assert.IsTrue(manager.Recording);
                 undoable.Revise();
                 undoable.AllowStackChanges = true;
-                undo.Commit();
+                undo.Commit(description);
                 undoable.AllowStackChanges = false;
             }
             Assert.IsFalse(manager.Recording);
             // Undo stack should contain new record
             Assert.AreEqual(description, manager.UndoDescription);
 
-            using (manager.BeginTransaction("Implicit rollback"))
+            using (manager.BeginTransaction())
             {
                 Assert.IsTrue(manager.Recording);
                 // No commit call
@@ -75,7 +75,7 @@ namespace pwiz.SkylineTest
             // Undo stack shouldn't change
             Assert.AreEqual(description, manager.UndoDescription);
 
-            using (var undo = manager.BeginTransaction("Explicit rollback"))
+            using (var undo = manager.BeginTransaction())
             {
                 Assert.IsTrue(manager.Recording);
                 undo.Rollback();
@@ -84,18 +84,18 @@ namespace pwiz.SkylineTest
             // Undo stack shouldn't change
             Assert.AreEqual(description, manager.UndoDescription);
 
-            var undoFree = manager.BeginTransaction("Rollback without Dispose");
+            var undoFree = manager.BeginTransaction();
             Assert.IsTrue(manager.Recording);
             undoFree.Rollback();
             Assert.IsFalse(manager.Recording);
             // Undo stack shouldn't change
             Assert.AreEqual(description, manager.UndoDescription);
 
-            undoFree = manager.BeginTransaction("Commit without Dispose");
+            undoFree = manager.BeginTransaction();
             Assert.IsTrue(manager.Recording);
             undoable.Revise();
             undoable.AllowStackChanges = true;
-            undoFree.Commit();
+            undoFree.Commit("Commit without Dispose");
             undoable.AllowStackChanges = false;
             Assert.IsFalse(manager.Recording);
             // Undo stack should have extra record
@@ -113,18 +113,18 @@ namespace pwiz.SkylineTest
             undoable.AllowStackChanges = false;
 
             var descriptionNested = "Nested transactions";
-            using (var undo = manager.BeginTransaction(descriptionNested))
+            using (var undo = manager.BeginTransaction())
             {
                 Assert.IsTrue(manager.Recording);
-                using (var undoInner = manager.BeginTransaction("Inner transaction"))
+                using (var undoInner = manager.BeginTransaction())
                 {
                     undoable.Revise();
-                    undoInner.Commit(); // Should be ignored
+                    undoInner.Commit("Inner transaction"); // Should be ignored
                     Assert.IsTrue(manager.Recording);
                 }
                 Assert.IsTrue(manager.Recording);
                 undoable.AllowStackChanges = true;
-                undo.Commit();
+                undo.Commit(descriptionNested);
                 undoable.AllowStackChanges = false;
                 Assert.IsFalse(manager.Recording);
             }
@@ -136,12 +136,12 @@ namespace pwiz.SkylineTest
 
             try
             {
-                using (var undo = manager.BeginTransaction("Commit after rollback"))
+                using (var undo = manager.BeginTransaction())
                 {
                     Assert.IsTrue(manager.Recording);
                     undo.Rollback();
                     Assert.IsFalse(manager.Recording);
-                    undo.Commit();
+                    undo.Commit("Commit after rollback");
                     Assert.Fail("Exception exptected");
                 }
             }
@@ -153,21 +153,21 @@ namespace pwiz.SkylineTest
             try
             {
                 descriptionNested = "Double commit";
-                using (var undo = manager.BeginTransaction(descriptionNested))
+                using (var undo = manager.BeginTransaction())
                 {
                     Assert.IsTrue(manager.Recording);
-                    using (var undoInner = manager.BeginTransaction("Inner transaction"))
+                    using (var undoInner = manager.BeginTransaction())
                     {
                         undoable.Revise();
-                        undoInner.Commit();
+                        undoInner.Commit("Inner transaction");
                         Assert.IsTrue(manager.Recording);
                     }
                     undoable.AllowStackChanges = true;
-                    undo.Commit();
+                    undo.Commit(descriptionNested);
                     undoable.AllowStackChanges = false;
                     Assert.IsFalse(manager.Recording);
 
-                    undo.Commit();
+                    undo.Commit(descriptionNested);
                     Assert.Fail("Exception exptected");
                 }
             }
@@ -194,10 +194,10 @@ namespace pwiz.SkylineTest
 
             for (int i = 0; i < count; i++)
             {
-                using (var undo = manager.BeginTransaction(string.Format("Revision {0}", i + 1)))
+                using (var undo = manager.BeginTransaction())
                 {
+                    undo.Commit(string.Format("Revision {0}", i + 1));
                     undoable.Revise();
-                    undo.Commit();
                 }
             }
 
