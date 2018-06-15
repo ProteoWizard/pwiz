@@ -80,8 +80,6 @@ namespace pwiz.Skyline.SettingsUI
             this.label1 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.tabPrediction = new System.Windows.Forms.TabPage();
-            this.labelWidthAtDt0Units = new System.Windows.Forms.Label();
-            this.labelWidthAtDtMaxUnits = new System.Windows.Forms.Label();
             this.labelWidthDtMax = new System.Windows.Forms.Label();
             this.labelWidthDtZero = new System.Windows.Forms.Label();
             this.cbLinear = new System.Windows.Forms.CheckBox();
@@ -528,9 +526,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabPrediction
             // 
-            this.tabPrediction.Controls.Add(this.labelWidthAtDt0Units);
             this.tabPrediction.Controls.Add(this.textSpectralLibraryDriftTimesWidthAtDtMax);
-            this.tabPrediction.Controls.Add(this.labelWidthAtDtMaxUnits);
             this.tabPrediction.Controls.Add(this.textSpectralLibraryDriftTimesWidthAtDt0);
             this.tabPrediction.Controls.Add(this.labelWidthDtMax);
             this.tabPrediction.Controls.Add(this.labelWidthDtZero);
@@ -551,16 +547,6 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.tabPrediction, "tabPrediction");
             this.tabPrediction.Name = "tabPrediction";
             this.tabPrediction.UseVisualStyleBackColor = true;
-            // 
-            // labelWidthAtDt0Units
-            // 
-            resources.ApplyResources(this.labelWidthAtDt0Units, "labelWidthAtDt0Units");
-            this.labelWidthAtDt0Units.Name = "labelWidthAtDt0Units";
-            // 
-            // labelWidthAtDtMaxUnits
-            // 
-            resources.ApplyResources(this.labelWidthAtDtMaxUnits, "labelWidthAtDtMaxUnits");
-            this.labelWidthAtDtMaxUnits.Name = "labelWidthAtDtMaxUnits";
             // 
             // labelWidthDtMax
             // 
@@ -1090,8 +1076,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.TextBox textSpectralLibraryDriftTimesWidthAtDt0;
         private System.Windows.Forms.Label labelWidthDtMax;
         private System.Windows.Forms.Label labelWidthDtZero;
-        private System.Windows.Forms.Label labelWidthAtDt0Units;
-        private System.Windows.Forms.Label labelWidthAtDtMaxUnits;
         private System.Windows.Forms.Button btnFilter;
         private System.Windows.Forms.Label lblCaclulateLodBy;
         private System.Windows.Forms.Label lblMaxLoqCvPct;

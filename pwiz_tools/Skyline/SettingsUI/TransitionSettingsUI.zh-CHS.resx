@@ -1490,7 +1490,7 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
     <value>0</value>
   </data>
   <data name="label9.Text" xml:space="preserve">
-    <value>离子匹配耐受性(&amp;I)：</value>
+    <value>离子匹配误差限(&amp;I)：</value>
   </data>
   <data name="&gt;&gt;label9.Name" xml:space="preserve">
     <value>label9</value>

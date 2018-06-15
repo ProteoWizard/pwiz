@@ -302,11 +302,13 @@ namespace pwiz.SkylineTestFunctional
                             exprInfo.MatchExpression.matchOptions);
 
                     createExprDlg.Expression = exprInfo.MatchExpression.RegExpr;
-
-                    CollectionAssert.AreEqual(exprInfo.ExpectedMatches, createExprDlg.MatchingRows.ToArray(),
-                        string.Format("Expected: {0}\nActual: {1}", string.Join(", ", exprInfo.ExpectedMatches), string.Join(", ", createExprDlg.MatchingRows)));
-                        
                 });
+
+                WaitForConditionUI(() => exprInfo.ExpectedMatches.Count == createExprDlg.MatchingRows.Count(), "Different number of rows");
+
+                RunUI(() => CollectionAssert.AreEqual(exprInfo.ExpectedMatches, createExprDlg.MatchingRows.ToArray(),
+                    string.Format("Expected: {0}\nActual: {1}", string.Join(", ", exprInfo.ExpectedMatches),
+                        string.Join(", ", createExprDlg.MatchingRows))));
 
                 OkDialog(createExprDlg, createExprDlg.OkDialog);
             }

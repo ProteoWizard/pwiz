@@ -380,7 +380,7 @@
     <value>线性拟合</value>
   </data>
   <data name="Log2FoldChange">
-    <value>记录 2 文件夹更改</value>
+    <value>Log2（倍数变化）</value>
   </data>
   <data name="Losses">
     <value>丢失</value>
