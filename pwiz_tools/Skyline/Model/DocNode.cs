@@ -60,15 +60,15 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public Identity Id { get; private set; }
 
+        [TrackChildren(ignoreName:true, defaultValues:typeof(DefaultValuesNull))]
         public Annotations Annotations { get; private set; }
-
+        
         public abstract AnnotationDef.AnnotationTarget AnnotationTarget { get; }
 
         /// <summary>
         /// User supplied comment of this node.  All <see cref="DocNode"/> objects
         /// in the document support user notes.
         /// </summary>
-        [Track]
         public string Note { get { return Annotations.Note;} }
 
         /// <summary>

@@ -290,7 +290,7 @@ namespace pwiz.Skyline.Model.Databinding
                     });
                     return newDocument;
                 }
-            }, (oldDoc, newDoc) => SkylineWindow.DiffDocNodes(LogMessage.MessageType.removed_items, oldDoc, newDoc));
+            }, (oldDoc, newDoc) => SkylineWindow.DiffDocNodes(MessageType.pasted_document_grid, oldDoc, newDoc));
             _batchChangesOriginalDocument = null;
             DocumentChangedEventHandler(_documentContainer, new DocumentChangedEventArgs(_document));
         }
@@ -306,7 +306,7 @@ namespace pwiz.Skyline.Model.Databinding
             if (_batchChangesOriginalDocument == null)
             {
                 SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
-                    (oldDoc, newDoc) => SkylineWindow.DiffDocNodes(LogMessage.MessageType.removed_items, oldDoc, newDoc));
+                    (oldDoc, newDoc) => SkylineWindow.DiffDocNodes(MessageType.edited_document_grid, oldDoc, newDoc));
                 return;
             }
             VerifyDocumentCurrent(_batchChangesOriginalDocument, _documentContainer.Document);

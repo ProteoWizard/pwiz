@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -29,21 +30,38 @@ namespace pwiz.Common.SystemUtil
         bool IsName { get; }
     }
 
+    public abstract class DefaultValues
+    {
+        public abstract IEnumerable<object> Values { get; }
+    }
+
+    public class DefaultValuesNull : DefaultValues
+    {
+        public override IEnumerable<object> Values
+        {
+            get { yield return null; }
+        }
+    }
+
     public abstract class TrackAttributeBase : Attribute
     {
-        protected TrackAttributeBase(bool isTab, bool ignoreName, Type customLocalizer)
+        protected TrackAttributeBase(bool isTab, bool ignoreName, Type defaultValues, Type customLocalizer)
         {
             IsTab = isTab;
             IgnoreName = ignoreName;
+            DefaultValues = defaultValues;
             CustomLocalizer = customLocalizer;
         }
 
         public bool IsTab { get; protected set; }
         public bool IgnoreName { get; protected set; }
+        
 
+        public bool IgnoreNull { get; protected set; }
         public virtual bool DiffProperties { get { return false; } }
 
-        public Type CustomLocalizer;
+        public Type DefaultValues { get; protected set; }
+        public Type CustomLocalizer { get; protected set; }
     }
 
     [AttributeUsage(AttributeTargets.Property)]
@@ -51,8 +69,9 @@ namespace pwiz.Common.SystemUtil
     {
         public TrackAttribute(bool isTab = false,
             bool ignoreName = false,
+            Type defaultValues = null,
             Type customLocalizer = null)
-            : base(isTab, ignoreName, customLocalizer) { }
+            : base(isTab, ignoreName, defaultValues, customLocalizer) { }
     }
 
     [AttributeUsage(AttributeTargets.Property)]
@@ -60,8 +79,9 @@ namespace pwiz.Common.SystemUtil
     {
         public TrackChildrenAttribute(bool isTab = false,
             bool ignoreName = false,
+            Type defaultValues = null,
             Type customLocalizer = null)
-            : base(isTab, ignoreName, customLocalizer) { }
+            : base(isTab, ignoreName, defaultValues, customLocalizer) { }
 
         public override bool DiffProperties { get { return true; } }
     }

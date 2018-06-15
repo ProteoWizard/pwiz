@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using pwiz.Common.Collections;
@@ -71,28 +70,33 @@ namespace pwiz.Skyline.Model.AuditLog
 
             // thisProperty.PropertyInfo is null only upon the initial call, where Property.ROOT is passed.
             // Therefore the first object to diff can't be a collection.
-            var collectionDiff = thisProperty.PropertyInfo != null &&
-                CollectionInfo.ForType(thisProperty.PropertyInfo.PropertyType) != null;
+            var collectionDiff = thisProperty.HasPropertyInfo &&
+                                 thisProperty.IsCollectionType();
 
             // The propertyPath does not contain the current property at this point
             if (collectionDiff)
                 propertyPath = propertyPath.LookupByKey(elementKey.ToString());
-            else if (thisProperty.PropertyInfo != null)
-                propertyPath = propertyPath.Property(thisProperty.PropertyInfo.Name);         
+            else if (thisProperty.HasPropertyInfo)
+                propertyPath = thisProperty.AddProperty(propertyPath);      
 
             DiffNode resultNode = collectionDiff
                 ? new ElementPropertyDiffNode(thisProperty, propertyPath, oldObj, newObj, elementKey, null, expand)
                 : new PropertyDiffNode(thisProperty, propertyPath, oldObj, newObj, null, expand);
 
-            if (!collectionDiff && newObj == null)
+            // We only look at properties if both objects are non null, unless we're expanding
+            // and only the old object is null
+            if (ReferenceEquals(oldObj, null) && !expand || ReferenceEquals(newObj, null))
+            {
+                
                 return resultNode;
+            }
 
             foreach (var property in _properities)
             {
-                var oldVal = oldObj == null ? null : property.PropertyInfo.GetValue(oldObj);
-                var newVal = newObj == null ? null : property.PropertyInfo.GetValue(newObj);
+                var oldVal = oldObj == null ? null : property.GetValue(oldObj);
+                var newVal = property.GetValue(newObj);
 
-                var valType = property.PropertyInfo.PropertyType;
+                var valType = property.GetPropertyType(oldVal, newVal);
 
                 // If the objects should be treated as unequal, all comparisons are ignored
                 if (ReferenceEquals(oldVal, newVal) && !expand)
@@ -105,7 +109,7 @@ namespace pwiz.Skyline.Model.AuditLog
                     {
                         // Here we just want to diff the collection elements and dont recurse further,
                         // so the callback simply checks for equality
-                        var nodes = CompareCollections(collectionInfo, property, propertyPath, oldVal, newVal, expand,
+                        var nodes = Reflector.CompareCollections(collectionInfo, property, propertyPath, oldVal, newVal, expand,
                             (type, prop, oldElem, newElem, propPath, key, exp) =>
                             {
                                 if (!Equals(oldElem, newElem) || exp)
@@ -121,7 +125,7 @@ namespace pwiz.Skyline.Model.AuditLog
                         if (nodes.Any() || expand)
                         {
                             resultNode.Nodes.Add(new PropertyDiffNode(property,
-                                propertyPath.Property(property.PropertyInfo.Name), oldVal, newVal, nodes, expand));
+                                property.AddProperty(propertyPath), oldVal, newVal, nodes, expand));
                         }
                     }
                     else
@@ -130,22 +134,22 @@ namespace pwiz.Skyline.Model.AuditLog
                         if (!Equals(oldVal, newVal) || expand)
                         {
                             resultNode.Nodes.Add(new PropertyDiffNode(property,
-                                propertyPath.Property(property.PropertyInfo.Name), oldVal, newVal, null, expand));
+                                property.AddProperty(propertyPath), oldVal, newVal, null, expand));
                         }
                     }
                 }
                 else
                 {
                     var propertyType = valType;
-                    var collectionInfo = CollectionInfo.ForType(propertyType);
+                    var collectionInfo = Reflector.GetCollectionInfo(ref propertyType, ref oldVal, ref newVal);
 
                     if (collectionInfo != null)
                     {
                         // Since the collection is DiffParent, we have to go into the elements and compare their properties
-                        var nodes = CompareCollections(collectionInfo, property, propertyPath, oldVal, newVal, expand, Reflector.BuildDiffTree);
+                        var nodes = Reflector.CompareCollections(collectionInfo, property, propertyPath, oldVal, newVal, expand, Reflector.BuildDiffTree);
 
                         if (nodes.Any() || expand)
-                            resultNode.Nodes.Add(new PropertyDiffNode(property, propertyPath.Property(property.PropertyInfo.Name), oldVal, newVal, nodes, expand));
+                            resultNode.Nodes.Add(new PropertyDiffNode(property, property.AddProperty(propertyPath), oldVal, newVal, nodes, expand));
                     }
                     else
                     {
@@ -160,133 +164,10 @@ namespace pwiz.Skyline.Model.AuditLog
             // If there are child nodes, we always want to return the parent node,
             // but if it's just the root node or a diffparent (meaning only the object reference changed)
             // we return null (meaning the objects are equivalent)
-            if (resultNode.Nodes.Count == 0 && (thisProperty.PropertyInfo == null || thisProperty.DiffProperties))
+            if (resultNode.Nodes.Count == 0 && (!thisProperty.HasPropertyInfo || thisProperty.DiffProperties))
                 return null;
 
             return resultNode;
-        }
-
-        // Determines whether two IAuditLogObjects (most likely from two different
-        // collections match.
-        private static bool Matches(Type type, IAuditLogObject obj1, IAuditLogObject obj2, bool diffProperties)
-        {
-            if (ReferenceEquals(obj1, obj2))
-                return true;
-
-            if (obj1 == null || obj2 == null)
-                return false;
-
-            if (obj1.IsName)
-            {
-                return obj1.AuditLogText == obj2.AuditLogText;
-            } 
-            else
-            {
-                var auditObj1 = AuditLogObject.GetObject(obj1);
-                var auditObj2 = AuditLogObject.GetObject(obj2);
-
-                return diffProperties
-                    ? Reflector.Equals(type, auditObj1, auditObj2)
-                    : Equals(auditObj1, auditObj2);
-            }   
-        }
-
-        private static List<DiffNode> CompareCollections(ICollectionInfo collectionInfo, Property property, PropertyPath propertyPath, object oldVal, object newVal, bool expand, Func<Type, Property, object, object, PropertyPath, object, bool, DiffNode> func)
-        {
-            var result = new List<DiffNode>();
-
-            var oldKeys = collectionInfo.GetKeys(oldVal).OfType<object>().ToArray();
-            var newKeys = collectionInfo.GetKeys(newVal).OfType<object>().ToList();
-            var removeIndices = new List<int>();
-
-            propertyPath = propertyPath.Property(property.PropertyInfo.Name);
-
-            // If we assume elements are unequal, we assume the old collection was empty
-            // and all elements were added
-            if (expand)
-            {
-                return newKeys.Select(k =>
-                {
-                    var value = collectionInfo.GetItemValueFromKey(newVal, k);
-                    // We also want to know what properties were set in the new elements,
-                    // So we call the diff function here too
-                    var node = func(collectionInfo.ElementValueType, property, null,
-                        value, propertyPath, k, true);
-
-                    return (DiffNode) new ElementDiffNode(property,
-                        propertyPath.LookupByKey(k.ToString()),
-                        value, k, false,
-                        node == null ? null : node.Nodes, true);
-                }).ToList();
-            }
-
-            var newElemObjs = newKeys
-                .Select(k => AuditLogObject.GetAuditLogObject(collectionInfo.GetItemValueFromKey(newVal, k))).ToList();
-
-            foreach (var key in oldKeys)
-            {
-                var oldKey = key;
-                var oldElem = collectionInfo.GetItemValueFromKey(oldVal, oldKey);
-
-                var oldElemObj = AuditLogObject.GetAuditLogObject(oldElem);
-
-                // Try to find a matching object
-                var index = newElemObjs.FindIndex(o => Matches(collectionInfo.ElementValueType, o, oldElemObj, property.DiffProperties));
-
-                if (index >= 0)
-                {
-                    var newElem = collectionInfo.GetItemValueFromKey(newVal, newKeys[index]);
-                    var node = func(collectionInfo.ElementValueType, property, oldElem, newElem, propertyPath, newKeys[index], false);
-
-                    // Make sure elements are unequal
-                    if (node != null)
-                        result.Add(node);
-
-                    // This item has been dealt with, so we mark it for removal
-                    removeIndices.Add(index);
-                }
-                else
-                {
-                    // If the element can't be found, we assume it was removed
-                    result.Add(new ElementDiffNode(property, propertyPath.LookupByKey(key.ToString()), oldElem, key, true));
-                }
-            }
-
-            // We order by descending so that the later indices are still valid
-            // after removing one
-            foreach (var i in removeIndices.OrderByDescending(i => i))
-                newKeys.RemoveAt(i);
-
-            // The keys that are left over are most likely elements that were added to the colletion
-            result.AddRange(newKeys.Select(k =>
-                new ElementDiffNode(property, propertyPath.LookupByKey(k.ToString()), collectionInfo.GetItemValueFromKey(newVal, k), k, false)));
-
-            return result;
-        }
-
-        // Checks whether two collections are exactly equal, meaning all elements are the same and at the same
-        // indices/keys.
-        private static bool CollectionEquals(ICollectionInfo collectionInfo, object coll1, object coll2, Func<Type, object, object, bool> func)
-        {
-            var oldKeys = collectionInfo.GetKeys(coll1).OfType<object>().ToArray();
-            var newKeys = collectionInfo.GetKeys(coll2).OfType<object>().ToArray();
-
-            if (oldKeys.Length != newKeys.Length)
-                return false;
-
-            for (var i = 0; i < oldKeys.Length; ++i)
-            {
-                if (oldKeys[i] != newKeys[i])
-                    return false;
-
-                var val1 = collectionInfo.GetItemValueFromKey(coll1, oldKeys[i]);
-                var val2 = collectionInfo.GetItemValueFromKey(coll2, newKeys[i]);
-
-                if (!func(collectionInfo.ElementValueType, val1, val2))
-                    return false;
-            }
-
-            return true;
         }
 
         // Compares two objects based on their properties which are marked with Diff attributes
@@ -301,8 +182,8 @@ namespace pwiz.Skyline.Model.AuditLog
 
             foreach (var property in _properities)
             {
-                var val1 = property.PropertyInfo.GetValue(obj1);
-                var val2 = property.PropertyInfo.GetValue(obj2);
+                var val1 = property.GetValue(obj1);
+                var val2 = property.GetValue(obj2);
 
                 if (ReferenceEquals(val1, val2))
                     continue;
@@ -310,14 +191,14 @@ namespace pwiz.Skyline.Model.AuditLog
                 if (ReferenceEquals(val1, null) || ReferenceEquals(val2, null))
                     return false;
 
-                var valType = property.PropertyInfo.PropertyType;
+                var valType = property.GetPropertyType(val1, val2);
 
                 var collectionInfo = CollectionInfo.ForType(valType);
                 if (!property.DiffProperties)
                 {
                     if (collectionInfo != null)
                     {
-                        if (!CollectionEquals(collectionInfo, val1, val2,
+                        if (!Reflector.CollectionEquals(collectionInfo, val1, val2,
                             (type, elem1, elem2) => Equals(elem1, elem2)))
                             return false;
                     }
@@ -328,7 +209,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 {
                     if (collectionInfo != null)
                     {
-                        if (!CollectionEquals(collectionInfo, val1, val2, Reflector.Equals))
+                        if (!Reflector.CollectionEquals(collectionInfo, val1, val2, Reflector.Equals))
                             return false;
                     }
                     else if (!Reflector.Equals(valType, val1, val2))
@@ -351,10 +232,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (obj == null)
                 return "{2:Missing}"; // Not L10N
 
-            if (Reflector.HasToString(obj))
-                return AuditLogObject.InvariantToString(obj);
-
-            return Reflector.ToString(type, obj, wrapProperties);
+            return AuditLogToStringHelper.InvariantToString(obj) ?? Reflector.ToString(type, obj, wrapProperties);
         }
 
         private static string ToString(T obj, bool wrapProperties)
@@ -402,8 +280,8 @@ namespace pwiz.Skyline.Model.AuditLog
                 for (var i = 0; i < _properities.Count; ++i)
                 {
                     var property = _properities[i];
-                    var value = property.PropertyInfo.GetValue(obj);
-                    var type = property.PropertyInfo.PropertyType;
+                    var value = property.GetValue(obj);
+                    var type = property.GetPropertyType(value);
 
                     if (property.IgnoreName)
                     {
@@ -431,8 +309,177 @@ namespace pwiz.Skyline.Model.AuditLog
     /// </summary>
     public class Reflector
     {
+        // Determines whether two IAuditLogObjects (most likely from two different
+        // collections match.
+        public static bool Matches(Type type, IAuditLogObject obj1, IAuditLogObject obj2, bool diffProperties)
+        {
+            if (ReferenceEquals(obj1, obj2))
+                return true;
+
+            if (obj1 == null || obj2 == null)
+                return false;
+
+            var auditObj1 = AuditLogObject.GetObject(obj1);
+            var auditObj2 = AuditLogObject.GetObject(obj2);
+
+            if (ReferenceEquals(auditObj1, auditObj2))
+                return true;
+            if (ReferenceEquals(auditObj1, null) || ReferenceEquals(auditObj2, null))
+                return false;
+
+            type = Property.GetPropertyType(type, auditObj1, auditObj2);
+            if (typeof(DocNode).IsAssignableFrom(type))
+            {
+
+                // ReSharper disable once PossibleNullReferenceException
+                return (auditObj1 as DocNode).Id.GlobalIndex
+                    // ReSharper disable once PossibleNullReferenceException
+                       == (auditObj2 as DocNode).Id.GlobalIndex;
+            }
+
+            if (obj1.IsName)
+            {
+                return obj1.AuditLogText == obj2.AuditLogText;
+            }
+            else
+            {
+                return diffProperties
+                    ? Equals(type, auditObj1, auditObj2)
+                    : Equals(auditObj1, auditObj2);
+            }
+        }
+
+        public static List<DiffNode> CompareCollections(ICollectionInfo collectionInfo, Property property, PropertyPath propertyPath, object oldVal, object newVal, bool expand, Func<Type, Property, object, object, PropertyPath, object, bool, DiffNode> func)
+        {
+            var result = new List<DiffNode>();
+            
+            var oldKeys = collectionInfo.GetKeys(oldVal).OfType<object>().ToArray();
+            var newKeys = collectionInfo.GetKeys(newVal).OfType<object>().ToList();  
+            var removeIndices = new List<int>();
+
+            propertyPath = property.AddProperty(propertyPath);
+
+            // If we assume elements are unequal, we assume the old collection was empty
+            // and all elements were added
+            if (expand)
+            {
+                return newKeys.Select(k =>
+                {
+                    var value = collectionInfo.GetItemValueFromKey(newVal, k);
+                    // We also want to know what properties were set in the new elements,
+                    // So we call the diff function here too
+                    var node = func(Property.GetPropertyType(collectionInfo.ElementValueType, value), property, null,
+                        value, propertyPath, k, true);
+
+                    return (DiffNode)new ElementDiffNode(property,
+                        propertyPath.LookupByKey(k.ToString()),
+                        value, k, false,
+                        node == null ? null : node.Nodes, true);
+                }).ToList();
+            }
+
+            var newElemObjs = newKeys
+                .Select(k => AuditLogObject.GetAuditLogObject(collectionInfo.GetItemValueFromKey(newVal, k))).ToList();
+
+            foreach (var key in oldKeys)
+            {
+                var oldKey = key;
+                var oldElem = collectionInfo.GetItemValueFromKey(oldVal, oldKey);
+
+                var oldElemObj = AuditLogObject.GetAuditLogObject(oldElem);
+
+                // Try to find a matching object
+                var index = newElemObjs.FindIndex(o => Matches(collectionInfo.ElementValueType, o, oldElemObj, property.DiffProperties));
+
+                if (index >= 0)
+                {
+                    var newElem = collectionInfo.GetItemValueFromKey(newVal, newKeys[index]);
+                    var node = func(Property.GetPropertyType(collectionInfo.ElementValueType, oldElem, newElem), property, oldElem, newElem, propertyPath, newKeys[index], false);
+
+                    // Make sure elements are unequal
+                    if (node != null)
+                        result.Add(node);
+
+                    // This item has been dealt with, so we mark it for removal
+                    removeIndices.Add(index);
+                }
+                else
+                {
+                    // If the element can't be found, we assume it was removed
+                    result.Add(new ElementDiffNode(property, propertyPath.LookupByKey(key.ToString()), oldElem, key, true));
+                }
+            }
+
+            // We order by descending so that the later indices are still valid
+            // after removing one
+            foreach (var i in removeIndices.OrderByDescending(i => i))
+                newKeys.RemoveAt(i);
+
+            // The keys that are left over are most likely elements that were added to the colletion
+            result.AddRange(newKeys.Select(k =>
+                new ElementDiffNode(property, propertyPath.LookupByKey(k.ToString()), collectionInfo.GetItemValueFromKey(newVal, k), k, false)));
+
+            return result;
+        }
+
+        // Checks whether two collections are exactly equal, meaning all elements are the same and at the same
+        // indices/keys.
+        public static bool CollectionEquals(ICollectionInfo collectionInfo, object coll1, object coll2, Func<Type, object, object, bool> func)
+        {
+            var oldKeys = collectionInfo.GetKeys(coll1).OfType<object>().ToArray();
+            var newKeys = collectionInfo.GetKeys(coll2).OfType<object>().ToArray();
+
+            if (oldKeys.Length != newKeys.Length)
+                return false;
+
+            for (var i = 0; i < oldKeys.Length; ++i)
+            {
+                if (oldKeys[i] != newKeys[i])
+                    return false;
+
+                var val1 = collectionInfo.GetItemValueFromKey(coll1, oldKeys[i]);
+                var val2 = collectionInfo.GetItemValueFromKey(coll2, newKeys[i]);
+
+                if (!func(collectionInfo.ElementValueType, val1, val2))
+                    return false;
+            }
+
+            return true;
+        }
+
+        public static ICollectionInfo GetCollectionInfo(ref Type type, ref object oldVal, ref object newVal)
+        {
+            var collectionInfo = CollectionInfo.ForType(type);
+            if (collectionInfo != null)
+                return collectionInfo;
+
+            // See if we can convert to an array
+            if (type.DeclaringType == typeof(Enumerable) || (type.IsGenericType && typeof(IEnumerable<>).IsAssignableFrom(type.GetGenericTypeDefinition())))
+            {
+                var genericType = type.GenericTypeArguments.Last();
+                if (oldVal != null)
+                    oldVal = ToArray(genericType, oldVal);
+                if (newVal != null)
+                    newVal = ToArray(genericType, newVal);
+
+                return CollectionInfo.ForType(genericType.MakeArrayType());
+            }
+
+            return null;
+        }
+
         // ReSharper disable PossibleNullReferenceException
         #region Wrapper functions
+
+        public static object ToArray(Type type, object obj)
+        {
+            var enumerableType = typeof(Enumerable);
+            var toArray = enumerableType.GetMethod("ToArray", BindingFlags.Public | BindingFlags.Static)
+                .MakeGenericMethod(type);
+            Assume.IsNotNull(toArray);
+            return toArray.Invoke(null, new[] { obj });
+        }
+
         public static IList<Property> GetProperties(Type type)
         {
             var reflectorType = typeof(Reflector<>).MakeGenericType(type);
@@ -538,9 +585,11 @@ namespace pwiz.Skyline.Model.AuditLog
             var newObj = objects[0];
             var oldObj = objects.Length == 2 ? objects[1] : null;
 
-            var type = currentNode.Property.PropertyInfo.PropertyType;
+            var type = currentNode.Property.GetPropertyType(oldObj, newObj);
+            object nullObject = null;
             if (elementKey != null)
-                type = CollectionInfo.ForType(type).ElementValueType;
+                type = Property.GetPropertyType(GetCollectionInfo(ref type, ref nullObject, ref nullObject).ElementValueType,
+                    newObj);
 
             var node = BuildDiffTree(type, currentNode.Property, oldObj, newObj, currentNode.PropertyPath.Parent, elementKey, true);
 
@@ -554,64 +603,6 @@ namespace pwiz.Skyline.Model.AuditLog
             parentNode.Nodes.Insert(index, node);
 
             return node;
-        }
-    }
-
-    public class AuditLogObject : IAuditLogObject
-    {
-        public AuditLogObject(object obj)
-        {
-            Object = obj;
-        }
-
-        public static string InvariantToString(object obj)
-        {
-            var type = obj.GetType();
-            var format = "\"{0}\""; // Not L10N
-            if (type == typeof(double) || type == typeof(bool) || type == typeof(int))
-                format = "{{3:{0}}}"; // Not L10N
-
-            return string.Format(CultureInfo.InvariantCulture, format, obj);
-        }
-
-        public string AuditLogText
-        {
-            get
-            {
-                if (Object == null)
-                    return "{2:Missing}"; // Not L10N
-
-                var type = Object.GetType();
-                if (Reflector.HasToString(Object))
-                    return InvariantToString(Object);
-
-                return Reflector.ToString(type, Object);
-            }
-        }
-
-        public bool IsName
-        {
-            get { return false; }
-        }
-
-        public object Object { get; private set; }
-
-        public static object GetObject(IAuditLogObject auditLogObj)
-        {
-            var obj = auditLogObj as AuditLogObject;
-            return obj != null ? obj.Object : auditLogObj;
-        }
-
-        public static IAuditLogObject GetAuditLogObject(object obj)
-        {
-            bool usesReflection;
-            return GetAuditLogObject(obj, out usesReflection);
-        }
-        public static IAuditLogObject GetAuditLogObject(object obj, out bool usesReflection)
-        {
-            var auditLogObj = obj as IAuditLogObject;
-            usesReflection = auditLogObj == null && !Reflector.HasToString(obj) ;
-            return auditLogObj ?? new AuditLogObject(obj);
         }
     }
 }

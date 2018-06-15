@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -33,7 +34,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
-    public class TransitionGroupDocNode : DocNodeParent
+    public class TransitionGroupDocNode : DocNodeParent, IAuditLogObject
     {
         public const int MIN_DOT_PRODUCT_TRANSITIONS = 3;
         public const int MIN_DOT_PRODUCT_MS1_TRANSITIONS = 3;
@@ -107,6 +108,7 @@ namespace pwiz.Skyline.Model
 
         public TransitionGroup TransitionGroup { get { return (TransitionGroup) Id; }}
 
+        [TrackChildren(ignoreName:true)]
         public IEnumerable<TransitionDocNode> Transitions { get { return Children.Cast<TransitionDocNode>(); } }
 
         public IEnumerable<TransitionDocNode> QuantitativeTransitions
@@ -2944,5 +2946,12 @@ namespace pwiz.Skyline.Model
                 Assume.AreNotEqual(existing, transitionRanks[firstIon.PredictedMz]); 
             }
         }
+
+        public string AuditLogText
+        {
+            get { return TransitionGroupTreeNode.GetLabel(TransitionGroup, PrecursorMz, string.Empty); }
+        }
+
+        public bool IsName { get { return true; } }
     }
 }

@@ -31,44 +31,59 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
+    public enum MessageType
+    {
+        none,
+
+        // Settings
+        is_,
+        changed_from_to,
+        changed_to,
+        changed,
+        contains,
+        removed_from,
+        added_to,
+
+        // Log
+        log_disabled,
+        log_enabled,
+        log_unlogged_changes,
+        log_cleared,
+
+        // DocNode
+        remove_empty_proteins,
+        removed_protein,
+        remove_empty_peptides,
+        removed_peptide_from_protein,
+        remove_duplicate_peptides,
+        remove_repeated_peptides,
+        deleted_targets,
+        pasted_targets,
+        picked_children,
+        inserted_data,
+        edited_note,
+        set_standard_type,
+        modified,
+        edited_document_grid,
+        pasted_document_grid,
+        renamed_proteins,
+        inserted_fasta,
+        inserted_proteins,
+        inserted_peptides,
+        inserted_transitions,
+        accepted_proteins,
+        accept_peptides,
+        sort_protein_name,
+        sort_protein_accession,
+        sort_protein_preferred_name,
+        sort_protein_gene,
+        added_peptide_decoys
+    }
+
     [XmlRoot(XML_ROOT)]
     public class LogMessage : Immutable, IXmlSerializable
     {
         public const string XML_ROOT = "message"; // Not L10N
-
-        public enum MessageType
-        {
-            none,
-
-            // Settings
-            is_,
-            changed_from_to,
-            changed_to,
-            changed,
-            removed,
-            added,
-            contains,
-            removed_from,
-            added_to,
-
-            // Log
-            log_disabled,
-            log_enabled,
-            log_unlogged_changes,
-            log_cleared,
-
-            // DocNode
-            remove_empty_proteins,
-            removed_protein,
-            remove_empty_peptides,
-            removed_peptide_from_protein,
-            remove_duplicate_peptides,
-            remove_repeated_peptides,
-            removed_transition_group_from_peptide_from_protein,
-            removed_transition_from_transition_group_from_peptide_from_protein,
-            removed_items // TODO: improve this, should show specific messages
-
-        }
 
         public LogMessage(LogLevel level, MessageType type, string reason, bool expanded, params string[] names)
         {
@@ -85,9 +100,19 @@ namespace pwiz.Skyline.Model.AuditLog
         public bool Expanded { get; private set; }
         public IList<string> Names { get; private set; }
 
+        public LogMessage ChangeType(MessageType type)
+        {
+            return ChangeProp(ImClone(this), im => im.Type = type);
+        }
+
         public LogMessage ChangeReason(string reason)
         {
             return ChangeProp(ImClone(this), im => im.Reason = reason);
+        }
+
+        public LogMessage ChangeNames(IList<string> names)
+        {
+            return ChangeProp(ImClone(this), im => im.Names = names);
         }
 
         public static string Quote(string s)
@@ -95,7 +120,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (s == null)
                 return null;
 
-            return "\"" + s + "\""; // Not L10N
+            return string.Format("\"{0}\"", s);
         }
 
         public override string ToString()
@@ -104,41 +129,9 @@ namespace pwiz.Skyline.Model.AuditLog
 
             var format = AuditLogStrings.ResourceManager.GetString(Type.ToString());
             if (string.IsNullOrEmpty(format))
-                return "Unknown message type";
+                return string.Format("<" + string.Join(", ", Enumerable.Range(0, names.Length).Select(i => "{" + i + "}")) + ">", names); // Not L10N
 
             return string.Format(format, names);
-
-            /*switch (Type)
-            {
-                case MessageType.is_:
-                    return string.Format(AuditLogStrings.LogMessage_ToString__0__is__1_, names);
-                case MessageType.changed_from_to:
-                    return string.Format(AuditLogStrings.LogMessage_ToString__0__changed_from__1__to__2_, names);
-                case MessageType.changed_to:
-                    return string.Format(AuditLogStrings.LogMessage_ToString__0__changed_to__1_, names);
-                case MessageType.changed:
-                    return string.Format(AuditLogStrings.LogMessage_ToString__0__changed, names);
-                case MessageType.removed:
-                    return string.Format(AuditLogStrings.LogMessage_ToString__0__was_removed, names);
-                case MessageType.added:
-                    return string.Format(AuditLogStrings.LogMessage_ToString__0__was_added, names);
-                case MessageType.contains:
-                    return string.Format(AuditLogStrings.LogMessage_ToString__0___contains__1_, names);
-                case MessageType.removed_from:
-                    return string.Format(AuditLogStrings.LogMessage_ToString__0____1__was_removed, names);
-                case MessageType.added_to:
-                    return string.Format(AuditLogStrings.LogMessage_ToString__0____1__was_added, names);
-                case MessageType.log_disabled:
-                    return AuditLogStrings.LogMessage_ToString_Audit_logging_has_been_disabled;
-                case MessageType.log_enabled:
-                    return AuditLogStrings.LogMessage_ToString_Audit_logging_has_been_enabled;
-                case MessageType.log_unlogged_changes:
-                    return string.Format(AuditLogStrings.LogMessage_ToString__0__unlogged_changes, names);
-                case MessageType.log_cleared:
-                    return string.Format(AuditLogStrings.LogMessage_ToString__0__changes_cleared, names);
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }*/
         }
 
         private static readonly Func<string, string>[] LOCALIZER_FUNCTIONS =

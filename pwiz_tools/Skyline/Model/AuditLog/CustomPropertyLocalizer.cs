@@ -51,9 +51,9 @@ namespace pwiz.Skyline.Model.AuditLog
 
             foreach (var property in Reflector.GetProperties(obj.GetType()))
             {
-                if (property.PropertyInfo.Name == pathArray[index])
+                if (property.PropertyName == pathArray[index])
                 {
-                    var val = property.PropertyInfo.GetValue(obj);
+                    var val = property.GetValue(obj);
                     return FindObjectByPath(pathArray, ++index, val);
                 }         
             }

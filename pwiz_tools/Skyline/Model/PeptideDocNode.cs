@@ -22,6 +22,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
@@ -34,7 +35,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public class PeptideDocNode : DocNodeParent
+    public class PeptideDocNode : DocNodeParent, IAuditLogObject
     {
         public static readonly StandardType STANDARD_TYPE_IRT = StandardType.IRT;  // Not L10N
         public static readonly StandardType STANDARD_TYPE_QC = StandardType.QC;    // Not L10N
@@ -93,6 +94,9 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public string AuditLogText { get { return PeptideTreeNode.GetLabel(this, string.Empty); } }
+        public bool IsName { get { return true; } }
+
         protected override IList<DocNode> OrderedChildren(IList<DocNode> children)
         {
             if (Peptide.IsCustomMolecule && children.Any() && !SrmDocument.IsSpecialNonProteomicTestDocNode(this))
@@ -116,12 +120,14 @@ namespace pwiz.Skyline.Model
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.peptide; } }
 
+        [TrackChildren]
         public ExplicitMods ExplicitMods { get; private set; }
 
         public ModifiedSequenceMods SourceKey { get; private set; }
 
         public ExplicitRetentionTimeInfo ExplicitRetentionTime { get; private set; } // For transition lists with explicit values for RT
 
+        [Track]
         public StandardType GlobalStandardType { get; private set; }
 
         public Target ModifiedTarget { get; private set; }
@@ -588,14 +594,16 @@ namespace pwiz.Skyline.Model
         public int TransitionGroupCount { get { return GetCount((int)Level.TransitionGroups); } }
         public int TransitionCount { get { return GetCount((int)Level.Transitions); } }
 
+        [TrackChildren(ignoreName:true)]
         public IEnumerable<TransitionGroupDocNode> TransitionGroups
         {
             get
             {
-                foreach (TransitionGroupDocNode nodeGroup in Children)
-                {
-                    yield return nodeGroup;
-                }
+                return Children.Cast<TransitionGroupDocNode>();
+                //foreach (TransitionGroupDocNode nodeGroup in Children)
+                //{
+                //    yield return nodeGroup;
+                //}
             }
         }
 

@@ -5515,7 +5515,7 @@ namespace pwiz.Skyline
                     document => document.ChangeAuditLog(ImmutableList<AuditLogEntry>.EMPTY), (oldDoc, newDoc) =>
                     {
                         return AuditLogEntry.UpdateCountLogEntry(oldDoc, ModifyDocumentNoUndo, oldDoc.AuditLog.AuditLogEntries.Count,
-                            oldDoc.AuditLog.AuditLogEntries.Sum(e => e.AllInfo.Count), LogMessage.MessageType.log_cleared, false);
+                            oldDoc.AuditLog.AuditLogEntries.Sum(e => e.AllInfo.Count), MessageType.log_cleared, false);
                     });
             } 
         }

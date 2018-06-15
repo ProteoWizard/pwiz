@@ -42,12 +42,18 @@ namespace pwiz.ProteomeDatabase.API
     public sealed class ProteinMetadata : Immutable, IEquatable<ProteinMetadata>
     {
         public static readonly ProteinMetadata EMPTY = new ProteinMetadata();
+        [Track]
         public string Name { get; private set; } // as read from fasta header line '>[name] [description]'
+        [Track]
         public string Description { get; private set; }// as read from fasta header line '>[name] [description]'
         // stuff that may be buried in description, or pulled from a webservice
+        [Track]
         public string PreferredName { get; private set; }
+        [Track]
         public string Accession { get; private set; }
+        [Track]
         public string Gene { get; private set; }
+        [Track]
         public string Species { get; private set; }
         // if this does not start with the "search complete" tag, we owe a trip to the internet to try to dig out more metadata
         public WebSearchInfo WebSearchInfo { get; private set; }

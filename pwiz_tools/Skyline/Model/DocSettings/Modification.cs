@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -981,11 +982,13 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        [TrackChildren]
         public IList<ExplicitMod> StaticModifications
         {
             get { return GetModifications(IsotopeLabelType.light); }
         }
 
+        [TrackChildren]
         public IList<ExplicitMod> HeavyModifications
         {
             get { return GetModifications(IsotopeLabelType.heavy); }
@@ -1202,7 +1205,7 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
-    public sealed class ExplicitMod : Immutable
+    public sealed class ExplicitMod : Immutable, IAuditLogObject
     {
         public ExplicitMod(int indexAA, StaticMod modification)
         {
@@ -1218,6 +1221,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public int IndexAA { get; private set; }
+        [TrackChildren]
         public StaticMod Modification { get; private set; }
 
         #region Property change methods
@@ -1260,6 +1264,16 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public string AuditLogText
+        {
+            get { return string.Format(AuditLogStrings.ExplicitMod_AuditLogText__0__at_index__1_, Modification.AAs, IndexAA); }
+        }
+
+        public bool IsName
+        {
+            get { return true; }
+        }
     }
 
     public sealed class TypedExplicitModifications : Immutable

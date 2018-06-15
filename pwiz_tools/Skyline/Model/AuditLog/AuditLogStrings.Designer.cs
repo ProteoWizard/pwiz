@@ -61,16 +61,34 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} was added.
+        ///   Looks up a localized string similar to Accepted peptides.
         /// </summary>
-        public static string added {
+        public static string accept_peptides {
             get {
-                return ResourceManager.GetString("added", resourceCulture);
+                return ResourceManager.GetString("accept_peptides", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}: {1} was added.
+        ///   Looks up a localized string similar to Accepted proteins.
+        /// </summary>
+        public static string accepted_proteins {
+            get {
+                return ResourceManager.GetString("accepted_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added {0} peptide decoys using {1} method.
+        /// </summary>
+        public static string added_peptide_decoys {
+            get {
+                return ResourceManager.GetString("added_peptide_decoys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} : {1} was added.
         /// </summary>
         public static string added_to {
             get {
@@ -196,7 +214,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}: contains {1}.
+        ///   Looks up a localized string similar to {0} : contains {1}.
         /// </summary>
         public static string contains {
             get {
@@ -214,11 +232,92 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to : .
+        ///   Looks up a localized string similar to Deleted {0} targets.
         /// </summary>
-        public static string ElementTypeSeparator {
+        public static string deleted_targets {
             get {
-                return ResourceManager.GetString("ElementTypeSeparator", resourceCulture);
+                return ResourceManager.GetString("deleted_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edited in document in grid.
+        /// </summary>
+        public static string edited_document_grid {
+            get {
+                return ResourceManager.GetString("edited_document_grid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edited note of {0}.
+        /// </summary>
+        public static string edited_note {
+            get {
+                return ResourceManager.GetString("edited_note", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} at index {1}.
+        /// </summary>
+        public static string ExplicitMod_AuditLogText__0__at_index__1_ {
+            get {
+                return ResourceManager.GetString("ExplicitMod_AuditLogText__0__at_index__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to False.
+        /// </summary>
+        public static string False {
+            get {
+                return ResourceManager.GetString("False", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inserted Peptides/Proteins.
+        /// </summary>
+        public static string inserted_data {
+            get {
+                return ResourceManager.GetString("inserted_data", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inserted {0} proteins from FASTA.
+        /// </summary>
+        public static string inserted_fasta {
+            get {
+                return ResourceManager.GetString("inserted_fasta", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inserted {0} peptides.
+        /// </summary>
+        public static string inserted_peptides {
+            get {
+                return ResourceManager.GetString("inserted_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inserted {0} proteins.
+        /// </summary>
+        public static string inserted_proteins {
+            get {
+                return ResourceManager.GetString("inserted_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inserted {0} transitions.
+        /// </summary>
+        public static string inserted_transitions {
+            get {
+                return ResourceManager.GetString("inserted_transitions", resourceCulture);
             }
         }
         
@@ -295,6 +394,51 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Modified {0}.
+        /// </summary>
+        public static string modified {
+            get {
+                return ResourceManager.GetString("modified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string None {
+            get {
+                return ResourceManager.GetString("None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pasted into document grid.
+        /// </summary>
+        public static string pasted_document_grid {
+            get {
+                return ResourceManager.GetString("pasted_document_grid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pasted targets.
+        /// </summary>
+        public static string pasted_targets {
+            get {
+                return ResourceManager.GetString("pasted_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Picked {0} children for {1}.
+        /// </summary>
+        public static string picked_children {
+            get {
+                return ResourceManager.GetString("picked_children", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to  &gt; .
         /// </summary>
         public static string PropertySeparator {
@@ -340,29 +484,11 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} was removed.
-        /// </summary>
-        public static string removed {
-            get {
-                return ResourceManager.GetString("removed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0}: {1} was removed.
+        ///   Looks up a localized string similar to {0} : {1} was removed.
         /// </summary>
         public static string removed_from {
             get {
                 return ResourceManager.GetString("removed_from", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Removed items.
-        /// </summary>
-        public static string removed_items {
-            get {
-                return ResourceManager.GetString("removed_items", resourceCulture);
             }
         }
         
@@ -403,11 +529,101 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Renamed {0}.
+        /// </summary>
+        public static string renamed_proteins {
+            get {
+                return ResourceManager.GetString("renamed_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set standard type of {0} to &quot;{1}&quot;.
+        /// </summary>
+        public static string set_standard_type {
+            get {
+                return ResourceManager.GetString("set_standard_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} targets.
+        /// </summary>
+        public static string SkylineWindow_EditNote__0__targets {
+            get {
+                return ResourceManager.GetString("SkylineWindow_EditNote__0__targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} peptides.
+        /// </summary>
+        public static string SkylineWindow_SetStandardType__0__peptides {
+            get {
+                return ResourceManager.GetString("SkylineWindow_SetStandardType__0__peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} proteins.
+        /// </summary>
+        public static string SkylineWindow_ShowRenameProteinsDlg__0__proteins {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowRenameProteinsDlg__0__proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sorted by protein accession.
+        /// </summary>
+        public static string sort_protein_accession {
+            get {
+                return ResourceManager.GetString("sort_protein_accession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sorted by protein gene.
+        /// </summary>
+        public static string sort_protein_gene {
+            get {
+                return ResourceManager.GetString("sort_protein_gene", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sorted by protein name.
+        /// </summary>
+        public static string sort_protein_name {
+            get {
+                return ResourceManager.GetString("sort_protein_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sorted by protein preferred name.
+        /// </summary>
+        public static string sort_protein_preferred_name {
+            get {
+                return ResourceManager.GetString("sort_protein_preferred_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to  -- .
         /// </summary>
         public static string TabSeparator {
             get {
                 return ResourceManager.GetString("TabSeparator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to True.
+        /// </summary>
+        public static string True {
+            get {
+                return ResourceManager.GetString("True", resourceCulture);
             }
         }
     }

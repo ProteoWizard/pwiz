@@ -18,7 +18,10 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.AuditLog
@@ -26,26 +29,103 @@ namespace pwiz.Skyline.Model.AuditLog
     public class Property
     {
         private readonly TrackAttributeBase _trackAttribute;
+        private readonly PropertyInfo _propertyInfo;
 
         public static readonly Property ROOT_PROPERTY = new Property(null, null);
 
         public Property(PropertyInfo propertyInfo, TrackAttributeBase trackAttribute)
         {
-            PropertyInfo = propertyInfo;
+            _propertyInfo = propertyInfo;
             _trackAttribute = trackAttribute;
         }
 
-        public PropertyInfo PropertyInfo { get; private set; }
+        public bool IsRoot
+        {
+            get { return _propertyInfo == null && _trackAttribute == null; }
+        }
+
         [Track]
-        public bool IsRoot { get { return PropertyInfo == null && _trackAttribute == null; } }
+        public string PropertyName
+        {
+            get { return _propertyInfo.Name; }
+        }
+
+        // Actual type of the property, should only be used in special cases
+        [Track]
+        public Type PropertyType
+        {
+            get { return _propertyInfo.PropertyType; }
+        }
+
+        public bool HasPropertyInfo
+        {
+            get { return _propertyInfo != null; }
+        }
+
+        public bool IsTab { get { return _trackAttribute.IsTab; } }
+        public bool IgnoreName { get { return _trackAttribute.IgnoreName; } }
+        public bool DiffProperties { get { return _trackAttribute.DiffProperties; } }
+        public Type CustomLocalizer { get { return _trackAttribute.CustomLocalizer; } }
+
+        public object GetValue(object obj)
+        {
+            return _propertyInfo.GetValue(obj);
+        }
+
+        public PropertyPath AddProperty(PropertyPath path)
+        {
+            return path.Property(_propertyInfo.Name);
+        }
+
+        // These functions get the most derived, common type of the given objects
+        // For instance, if the property type is DocNode, the oldObject a PeptideDocNode and
+        // the newObject a PeptideGroupDocNode we only compare based on the DocNode properties. If the newObject
+        // was also a PeptideDocNode, we compare based on PeptideDocNode properties.
+
+        public static Type GetPropertyType(Type type, object oldObject, object newObject)
+        {
+            var type1 = oldObject == null ? null : oldObject.GetType();
+            var type2 = newObject == null ? null : newObject.GetType();
+
+            // Compared based on the object type if the types are the same and not null,
+            // otherwise compare by the type of the property, which is guaranteed to be a shared
+            // base by both objects
+            if (type1 == type2 && type1 != null)
+                return type1;
+
+            return type;
+        }
+
+        public Type GetPropertyType(object oldObject, object newObject)
+        {
+            return GetPropertyType(_propertyInfo.PropertyType, oldObject, newObject);
+        }
+
+        public static Type GetPropertyType(Type type, object obj)
+        {
+            return obj == null ? type : obj.GetType();
+        }
+
+        public Type GetPropertyType(object obj)
+        {
+            return GetPropertyType(_propertyInfo.PropertyType, obj);
+        }
+
+
+        public bool IsCollectionType()
+        {
+            var type = _propertyInfo.PropertyType;
+            return CollectionInfo.ForType(type) != null || type.DeclaringType == typeof(Enumerable) ||
+                   (type.IsGenericType && typeof(IEnumerable<>).IsAssignableFrom(type.GetGenericTypeDefinition()));
+        }
 
         public string GetName(object rootObject, object parentObject)
         {
-            var name = PropertyInfo.Name;
+            var name = _propertyInfo.Name;
             if (parentObject != null)
                 name = parentObject.GetType().Name + '_' + name;
 
-            if (_trackAttribute.CustomLocalizer != null)
+            if (_trackAttribute != null && _trackAttribute.CustomLocalizer != null)
             {
                 var localizer = CustomPropertyLocalizer.CreateInstance(_trackAttribute.CustomLocalizer);
                 if (localizer.Relative || rootObject != null)
@@ -57,7 +137,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public string GetElementName(object parentObject)
         {
-            var name = PropertyInfo.Name;
+            var name = _propertyInfo.Name;
             if (parentObject != null)
                 name = parentObject.GetType().Name + '_' + name;
 
@@ -69,15 +149,6 @@ namespace pwiz.Skyline.Model.AuditLog
 
             return null;
         }
-
-        [Track]
-        public bool IsTab { get { return _trackAttribute.IsTab; } }
-        [Track]
-        public bool IgnoreName { get { return _trackAttribute.IgnoreName; } }
-        [Track]
-        public bool DiffProperties { get { return _trackAttribute.DiffProperties; } }
-        [Track]
-        public Type CustomLocalizer { get { return _trackAttribute.CustomLocalizer; } }
 
         // For Debugging
         public override string ToString()

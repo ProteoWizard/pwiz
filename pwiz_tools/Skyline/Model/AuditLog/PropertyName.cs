@@ -61,21 +61,15 @@ namespace pwiz.Skyline.Model.AuditLog
         }
 
         public virtual string Separator { get { return "{2:PropertySeparator}"; } } // Not L10N
-        public virtual string OverrideChildSeparator { get { return null; } }
 
         private static string ToString(PropertyName name)
         {
             var text = name.Format();
 
             if (name.Parent == Root)
-            {
                 return text;
-            }  
             else
-            {
-                return ToString(name.Parent) + (name.Parent.OverrideChildSeparator ?? name.Separator) + text;
-            }
-                
+                return ToString(name.Parent) + name.Separator + text;   
         }
 
         public PropertyName Parent { get; private set; }
@@ -107,15 +101,5 @@ namespace pwiz.Skyline.Model.AuditLog
         public PropertyTabName(string name) : base(name) { }
 
         public override string Separator { get { return "{2:TabSeparator}"; } } // Not L10N
-    }
-
-    /// <summary>
-    /// Name of a collection that is found in the UI (e.g Group Comparison or Report). Used for undo redo
-    /// </summary>
-    public class PropertyElementTypeName : PropertyElementName
-    {
-        public PropertyElementTypeName(string name) : base(name) { }
-
-        public override string OverrideChildSeparator { get { return "{2:ElementTypeSeparator}"; } } // Not L10N
     }
 }

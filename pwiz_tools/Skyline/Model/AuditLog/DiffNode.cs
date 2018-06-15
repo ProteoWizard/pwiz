@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 return !allowReflection ? null : auditLogObj.AuditLogText;
 
             var text = auditLogObj.AuditLogText;
-            return isName ? LogMessage.Quote(text) : text;
+            return isName && !(obj is DocNode) ? LogMessage.Quote(text) : text; // DocNodes shouldn't have quotes around them
         }
 
         public DiffNodeNamePair FindFirstMultiChildParent(DiffTree tree, PropertyName name, bool shortenName, bool allowReflection, DiffNode parentNode = null)
@@ -109,7 +109,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 {
                     // Remove everything from the path and replace it with the element name, e.g "Settings > DataSettings > GroupComparisons"
                     // becomes "GroupComparison:"
-                    newName = PropertyName.Root.SubProperty(new PropertyElementTypeName(elemName));
+                    newName = PropertyName.Root.SubProperty(new PropertyElementName(elemName));
                 }
                 else
                 {
@@ -124,10 +124,13 @@ namespace pwiz.Skyline.Model.AuditLog
             var objects = Objects.Select(AuditLogObject.GetAuditLogObject)
                 .Where(o => o == null || o.IsName).ToArray();
             if (objects.Length == 2)
+            {
                 if ((objects[0] != null) != (objects[1] != null) ||
-                    (objects[0] != null && objects[1] != null && objects[0].AuditLogText != objects[1].AuditLogText) &&
-                    Property.PropertyInfo.PropertyType != typeof(SrmSettings))
+                    (objects[0] != null && objects[1] != null && objects[0].AuditLogText != objects[1].AuditLogText && !(objects[0] is DocNode)) &&
+                    Property.PropertyType != typeof(SrmSettings))
                         oneNode = false; // Stop recursion, since in the undo-redo/summary log we don't want to go deeper for objects where the name changed
+            }
+
 
             return oneNode ? Nodes[0].FindFirstMultiChildParent(tree, newName, shortenName, allowReflection, this) : new DiffNodeNamePair(this, newName, allowReflection);
         }
@@ -186,7 +189,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             var objects = auditLogObjects.Select(AuditLogObject.GetObject).ToArray();
 
-            if (Property.DiffProperties && Property.PropertyInfo.PropertyType != typeof(SrmSettings))
+            if (Property.DiffProperties && Property.PropertyType != typeof(SrmSettings))
             {
                 if (objects.Length == 2)
                 {
@@ -195,7 +198,7 @@ namespace pwiz.Skyline.Model.AuditLog
                     // are unchanged
                     if ((objects[0] != null) != (objects[1] != null) ||
                         (objects[0] != null && objects[1] != null &&
-                         auditLogObjects[0].AuditLogText != auditLogObjects[1].AuditLogText))
+                         auditLogObjects[0].AuditLogText != auditLogObjects[1].AuditLogText && !(objects[0] is DocNode)))
                     {
                         // If the new object is null ("Missing"), we don't want to display all properties having changed to null ("Missing")
                         if (objects[0] != null)
@@ -279,8 +282,11 @@ namespace pwiz.Skyline.Model.AuditLog
 
             var sameValue = Equals(oldValue, newValue);
 
-            if (Expanded && newValue != null)
-                return new LogMessage(level, LogMessage.MessageType.is_, string.Empty, Expanded, name.ToString(), newValue);
+            if (Expanded)
+            {
+                return new LogMessage(level, Property.IsCollectionType() ? MessageType.contains : MessageType.is_,
+                    string.Empty, Expanded, name.ToString(), newValue);
+            }
 
             // If the string representations are the same, we don't want to show either of them
             if (!sameValue)
@@ -289,15 +295,15 @@ namespace pwiz.Skyline.Model.AuditLog
                 // case it gets set to "Missing"
                 if (oldIsName || newIsName || (level == LogLevel.all_info && !Expanded))
                 {
-                    return new LogMessage(level, LogMessage.MessageType.changed_from_to, string.Empty, Expanded, name.ToString(), oldValue, newValue);
+                    return new LogMessage(level, MessageType.changed_from_to, string.Empty, Expanded, name.ToString(), oldValue, newValue);
                 }
                 else if (newValue != null)
                 {
-                    return new LogMessage(level, LogMessage.MessageType.changed_to, string.Empty, Expanded, name.ToString(), newValue);
+                    return new LogMessage(level, MessageType.changed_to, string.Empty, Expanded, name.ToString(), newValue);
                 }
             }
 
-            return new LogMessage(level, LogMessage.MessageType.changed, string.Empty, Expanded, name.ToString());
+            return new LogMessage(level, MessageType.changed, string.Empty, Expanded, name.ToString());
         }
     }
 
@@ -335,19 +341,12 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public override LogMessage ToMessage(PropertyName name, LogLevel level, bool allowReflection)
         {
-            if (level == LogLevel.undo_redo && name.Parent.OverrideChildSeparator != null)
-            {
-                return new LogMessage(level, Removed ? LogMessage.MessageType.removed : LogMessage.MessageType.added, string.Empty, Expanded, name.ToString());
-            }
-            else // summary, all_info
-            {
-                var value = ObjectToString(allowReflection);
+            var value = ObjectToString(allowReflection);
 
-                if (name.Name == value)
-                    name = name.Parent;
+            if (name.Name == value || IsCollectionElement)
+                name = name.Parent;
 
-                return new LogMessage(level, Removed ? LogMessage.MessageType.removed_from : Expanded ? LogMessage.MessageType.contains : LogMessage.MessageType.added_to, string.Empty, Expanded, name.ToString(), value);
-            }
+            return new LogMessage(level, Removed ? MessageType.removed_from : Expanded ? MessageType.contains : MessageType.added_to, string.Empty, Expanded, name.ToString(), value);
         }
     }
 

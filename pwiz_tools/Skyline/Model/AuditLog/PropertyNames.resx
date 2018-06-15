@@ -737,4 +737,58 @@
   <data name="MeasuredIon_SettingsCustomIon" xml:space="preserve">
     <value>Custom product ion</value>
   </data>
+  <data name="Targets" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="PeptideDocNode_GlobalStandardType" xml:space="preserve">
+    <value>Standard type</value>
+  </data>
+  <data name="Annotations_Note" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="Annotations_AnnotationsEnumerable" xml:space="preserve">
+    <value>Annotations</value>
+  </data>
+  <data name="Annotations_ColorBrush" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="ExplicitMods_HeavyModifications" xml:space="preserve">
+    <value>Heavy</value>
+  </data>
+  <data name="ExplicitMods_StaticModifications" xml:space="preserve">
+    <value>Structural</value>
+  </data>
+  <data name="ExplicitMod_IndexAA" xml:space="preserve">
+    <value>Amino Acid index</value>
+  </data>
+  <data name="ExplicitMod_Modification" xml:space="preserve">
+    <value>Modification</value>
+  </data>
+  <data name="PeptideDocNode_ExplicitMods" xml:space="preserve">
+    <value>Modifications</value>
+  </data>
+  <data name="PeptideGroupDocNode_Sequence" xml:space="preserve">
+    <value>Sequence</value>
+  </data>
+  <data name="ProteinMetadata_Accession" xml:space="preserve">
+    <value>Accession</value>
+  </data>
+  <data name="ProteinMetadata_Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="ProteinMetadata_Gene" xml:space="preserve">
+    <value>Gene</value>
+  </data>
+  <data name="ProteinMetadata_PreferredName" xml:space="preserve">
+    <value>Preferred name</value>
+  </data>
+  <data name="ProteinMetadata_Species" xml:space="preserve">
+    <value>Species</value>
+  </data>
+  <data name="ProteinMetadata_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Annotation_Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
 </root>

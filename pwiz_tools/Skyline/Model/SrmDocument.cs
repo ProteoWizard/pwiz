@@ -343,6 +343,8 @@ namespace pwiz.Skyline.Model
 
         public AuditLogList AuditLog { get; private set; }
 
+        public Targets Targets { get { return new Targets(this);} }
+
         public bool DeferSettingsChanges { get; private set; }
 
         /// <summary>
@@ -2395,5 +2397,20 @@ namespace pwiz.Skyline.Model
         }
 
         #endregion
+    }
+
+    public class Targets
+    {
+        private SrmDocument _doc;
+        public Targets(SrmDocument doc)
+        {
+            _doc = doc;
+        }
+
+        [TrackChildren(ignoreName:true)]
+        public IList<DocNode> Children
+        {
+            get { return _doc.Children; }
+        }
     }
 }

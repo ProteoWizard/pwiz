@@ -98,19 +98,25 @@ namespace pwiz.Skyline.Model.AuditLog
                 User = identity.Name;
             }
 
-            Reason = reason ?? String.Empty;
+            Reason = reason ?? string.Empty;
         }
 
         public class MessageTypeNamesPair
         {
-            public MessageTypeNamesPair(LogMessage.MessageType type, params string[] names)
+            public MessageTypeNamesPair(MessageType type, params string[] names)
             {
                 Type = type;
                 Names = names;
             }
 
-            public LogMessage.MessageType Type { get; private set; }
+            public MessageType Type { get; private set; }
             public string[] Names { get; private set; }
+        }
+
+        public static AuditLogEntry MakeSingleMessageEntry(DocumentFormat formatVersion, DateTime timeStamp,
+            MessageTypeNamesPair typeNamesPair)
+        {
+            return MakeCustomEntry(formatVersion, timeStamp, typeNamesPair, typeNamesPair, new[] { typeNamesPair });
         }
 
         public static AuditLogEntry MakeCustomEntry(DocumentFormat formatVersion, DateTime timeStamp,
@@ -126,18 +132,18 @@ namespace pwiz.Skyline.Model.AuditLog
             return result;
         }
 
-        public static AuditLogEntry MakeSettingsChangeEntry(DocumentFormat formatVersion, DiffTree tree)
+        public static AuditLogEntry MakePropertyChangeEntry(DocumentFormat formatVersion, DiffTree tree)
         {
             var result = new AuditLogEntry(formatVersion, tree.TimeStamp, string.Empty);
  
             var nodeNamePair = tree.Root.FindFirstMultiChildParent(tree, PropertyName.Root, true, false);
             // Remove "Settings" from property name if possible
-            if (nodeNamePair.Name.Parent != PropertyName.Root)
+            if (nodeNamePair.Name != null && nodeNamePair.Name.Parent != PropertyName.Root)
             {
                 var name = nodeNamePair.Name;
                 while (name.Parent.Parent != PropertyName.Root)
                     name = name.Parent;
-
+                // TODO: replace with 0:SrmDocument_Settings
                 if (name.Parent.Name == "{0:Settings}") // Not L10N
                 {
                     PropertyName.Root.SubProperty(name, false);
@@ -155,34 +161,34 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public static AuditLogEntry MakeLogEnabledDisabledEntry(DocumentFormat formatVersion, DateTime timeStamp)
         {
-            var result = new AuditLogEntry(formatVersion, timeStamp, String.Empty);
+            var result = new AuditLogEntry(formatVersion, timeStamp, string.Empty);
 
-            var type = Settings.Default.AuditLogging ? LogMessage.MessageType.log_enabled : LogMessage.MessageType.log_disabled;
+            var type = Settings.Default.AuditLogging ? MessageType.log_enabled : MessageType.log_disabled;
 
-            result.UndoRedo = new LogMessage(LogLevel.undo_redo, type, String.Empty, false);
-            result.Summary = new LogMessage(LogLevel.summary, type, String.Empty, false);
-            result.AllInfo = new List<LogMessage> { new LogMessage(LogLevel.all_info, type, String.Empty, false) };
+            result.UndoRedo = new LogMessage(LogLevel.undo_redo, type, string.Empty, false);
+            result.Summary = new LogMessage(LogLevel.summary, type, string.Empty, false);
+            result.AllInfo = new List<LogMessage> { new LogMessage(LogLevel.all_info, type, string.Empty, false) };
 
             return result;
         }
 
-        public static AuditLogEntry MakeCountEntry(LogMessage.MessageType type, DocumentFormat formatVersion,
+        public static AuditLogEntry MakeCountEntry(MessageType type, DocumentFormat formatVersion,
             DateTime timeStamp, int undoRedoCount, int allInfoCount)
         {
-            if (type != LogMessage.MessageType.log_unlogged_changes && type != LogMessage.MessageType.log_cleared)
+            if (type != MessageType.log_unlogged_changes && type != MessageType.log_cleared)
                 throw new ArgumentException();
 
             // ReSharper disable once UseObjectOrCollectionInitializer
-            var result = new AuditLogEntry(formatVersion, timeStamp, String.Empty);
+            var result = new AuditLogEntry(formatVersion, timeStamp, string.Empty);
 
-            result.UndoRedo = new LogMessage(LogLevel.undo_redo, type, String.Empty, false,
+            result.UndoRedo = new LogMessage(LogLevel.undo_redo, type, string.Empty, false,
                 undoRedoCount.ToString());
-            result.Summary = new LogMessage(LogLevel.summary, type, String.Empty, false,
+            result.Summary = new LogMessage(LogLevel.summary, type, string.Empty, false,
                 undoRedoCount.ToString());
 
             result.AllInfo = new List<LogMessage>
             {
-                new LogMessage(LogLevel.all_info, type, String.Empty, false,
+                new LogMessage(LogLevel.all_info, type, string.Empty, false,
                     allInfoCount.ToString())
             };
 
@@ -201,11 +207,16 @@ namespace pwiz.Skyline.Model.AuditLog
         public LogMessage Summary { get; private set; }
         public IList<LogMessage> AllInfo { get; private set; }
 
-        public LogMessage.MessageType? CountEntryType { get; private set; }
+        public MessageType? CountEntryType { get; private set; }
 
         public AuditLogEntry ChangeReason(string reason)
         {
             return ChangeProp(ImClone(this), im => im.Reason = reason);
+        }
+
+        public AuditLogEntry ChangeUndoRedo(LogMessage undoRedo)
+        {
+            return ChangeProp(ImClone(this), im => im.UndoRedo = undoRedo);
         }
 
         public AuditLogEntry ChangeAllInfo(IList<LogMessage> allInfo)
@@ -215,20 +226,20 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public void AddToDocument(SrmDocument document, Action<Func<SrmDocument, SrmDocument>> modifyDocument)
         {
-            if (Settings.Default.AuditLogging || CountEntryType == LogMessage.MessageType.log_cleared)
+            if (Settings.Default.AuditLogging || CountEntryType == MessageType.log_cleared)
             {
                 modifyDocument(d => d.ChangeAuditLog(
                     ImmutableList<AuditLogEntry>.ValueOf(d.AuditLog.AuditLogEntries.Concat(new[] { this }))));
             }
             else
             {
-                UpdateCountLogEntry(document, modifyDocument, 1, AllInfo.Count, LogMessage.MessageType.log_unlogged_changes);
+                UpdateCountLogEntry(document, modifyDocument, 1, AllInfo.Count, MessageType.log_unlogged_changes);
             }
         }
 
         public static AuditLogEntry UpdateCountLogEntry(SrmDocument document,
             Action<Func<SrmDocument, SrmDocument>> modifyDocument, int undoRedoCount, int allInfoCount,
-            LogMessage.MessageType type, bool addToDoc = true)
+            MessageType type, bool addToDoc = true)
         {
             var logEntries = new List<AuditLogEntry>(document.AuditLog.AuditLogEntries);
             var countEntry = logEntries.FirstOrDefault(e => e.CountEntryType == type);
@@ -236,8 +247,8 @@ namespace pwiz.Skyline.Model.AuditLog
             if (countEntry != null)
             {
                 var countEntries = logEntries.Where(e =>
-                    e.CountEntryType == LogMessage.MessageType.log_cleared ||
-                    e.CountEntryType == LogMessage.MessageType.log_unlogged_changes).ToArray();
+                    e.CountEntryType == MessageType.log_cleared ||
+                    e.CountEntryType == MessageType.log_unlogged_changes).ToArray();
 
                 undoRedoCount += countEntries.Sum(e => int.Parse(e.UndoRedo.Names[0])) - countEntries.Length;
                 allInfoCount += countEntries.Sum(e => int.Parse(e.AllInfo[0].Names[0])) - countEntries.Length;
@@ -259,7 +270,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public static AuditLogEntry SettingsLogFunction(SrmDocument oldDoc, SrmDocument newDoc)
         {
             var tree = Reflector<SrmDocument>.BuildDiffTree(Property.ROOT_PROPERTY, oldDoc, newDoc, DateTime.Now);
-            return tree != null && tree.Root != null ? MakeSettingsChangeEntry(oldDoc.FormatVersion, tree) : null;
+            return tree != null && tree.Root != null ? MakePropertyChangeEntry(oldDoc.FormatVersion, tree) : null;
         }
 
         #region Implementation of IXmlSerializable
@@ -325,7 +336,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (countType == null)
                 CountEntryType = null;
             else
-                CountEntryType = (LogMessage.MessageType) Enum.Parse(typeof(LogMessage.MessageType), countType);
+                CountEntryType = (MessageType) Enum.Parse(typeof(MessageType), countType);
 
             reader.ReadStartElement();
 

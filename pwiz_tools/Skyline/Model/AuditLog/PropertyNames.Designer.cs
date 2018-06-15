@@ -79,6 +79,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Value.
+        /// </summary>
+        public static string Annotation_Value {
+            get {
+                return ResourceManager.GetString("Annotation_Value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Applies to.
         /// </summary>
         public static string AnnotationDef_AnnotationTargets {
@@ -102,6 +111,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string AnnotationDef_Type {
             get {
                 return ResourceManager.GetString("AnnotationDef_Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Annotations.
+        /// </summary>
+        public static string Annotations_AnnotationsEnumerable {
+            get {
+                return ResourceManager.GetString("Annotations_AnnotationsEnumerable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Color.
+        /// </summary>
+        public static string Annotations_ColorBrush {
+            get {
+                return ResourceManager.GetString("Annotations_ColorBrush", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Note.
+        /// </summary>
+        public static string Annotations_Note {
+            get {
+                return ResourceManager.GetString("Annotations_Note", resourceCulture);
             }
         }
         
@@ -354,6 +390,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string Enzyme_Type {
             get {
                 return ResourceManager.GetString("Enzyme_Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Amino Acid index.
+        /// </summary>
+        public static string ExplicitMod_IndexAA {
+            get {
+                return ResourceManager.GetString("ExplicitMod_IndexAA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Modification.
+        /// </summary>
+        public static string ExplicitMod_Modification {
+            get {
+                return ResourceManager.GetString("ExplicitMod_Modification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Heavy.
+        /// </summary>
+        public static string ExplicitMods_HeavyModifications {
+            get {
+                return ResourceManager.GetString("ExplicitMods_HeavyModifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Structural.
+        /// </summary>
+        public static string ExplicitMods_StaticModifications {
+            get {
+                return ResourceManager.GetString("ExplicitMods_StaticModifications", resourceCulture);
             }
         }
         
@@ -871,6 +943,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Modifications.
+        /// </summary>
+        public static string PeptideDocNode_ExplicitMods {
+            get {
+                return ResourceManager.GetString("PeptideDocNode_ExplicitMods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Standard type.
+        /// </summary>
+        public static string PeptideDocNode_GlobalStandardType {
+            get {
+                return ResourceManager.GetString("PeptideDocNode_GlobalStandardType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Not matching expression.
         /// </summary>
         public static string PeptideExcludeRegex_IsIncludeMatch {
@@ -939,6 +1029,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string PeptideFilter_MinPeptideLength {
             get {
                 return ResourceManager.GetString("PeptideFilter_MinPeptideLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sequence.
+        /// </summary>
+        public static string PeptideGroupDocNode_Sequence {
+            get {
+                return ResourceManager.GetString("PeptideGroupDocNode_Sequence", resourceCulture);
             }
         }
         
@@ -1173,6 +1272,60 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string PivotSpec_Values {
             get {
                 return ResourceManager.GetString("PivotSpec_Values", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Accession.
+        /// </summary>
+        public static string ProteinMetadata_Accession {
+            get {
+                return ResourceManager.GetString("ProteinMetadata_Accession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Description.
+        /// </summary>
+        public static string ProteinMetadata_Description {
+            get {
+                return ResourceManager.GetString("ProteinMetadata_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gene.
+        /// </summary>
+        public static string ProteinMetadata_Gene {
+            get {
+                return ResourceManager.GetString("ProteinMetadata_Gene", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        public static string ProteinMetadata_Name {
+            get {
+                return ResourceManager.GetString("ProteinMetadata_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preferred name.
+        /// </summary>
+        public static string ProteinMetadata_PreferredName {
+            get {
+                return ResourceManager.GetString("ProteinMetadata_PreferredName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Species.
+        /// </summary>
+        public static string ProteinMetadata_Species {
+            get {
+                return ResourceManager.GetString("ProteinMetadata_Species", resourceCulture);
             }
         }
         
@@ -1425,6 +1578,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string StaticMod_Terminus {
             get {
                 return ResourceManager.GetString("StaticMod_Terminus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Targets.
+        /// </summary>
+        public static string Targets {
+            get {
+                return ResourceManager.GetString("Targets", resourceCulture);
             }
         }
         

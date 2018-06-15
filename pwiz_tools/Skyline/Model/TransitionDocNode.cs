@@ -34,7 +34,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public class TransitionDocNode : DocNode
+    public class TransitionDocNode : DocNode, IAuditLogObject
     {
         public TransitionDocNode(Transition id,
                                  TransitionLosses losses,
@@ -910,6 +910,15 @@ namespace pwiz.Skyline.Model
                 }
                 return quantInfo;
             }
+        }
+
+        public string AuditLogText
+        {
+            get { return TransitionTreeNode.GetLabel(this, string.Empty); }
+        }
+        public bool IsName
+        {
+            get { return true; }
         }
     }
 }

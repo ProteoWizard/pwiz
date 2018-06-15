@@ -32,7 +32,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public class PeptideGroupDocNode : DocNodeParent
+    public class PeptideGroupDocNode : DocNodeParent, IAuditLogObject
     {
         private ProteinMetadata _proteinMetadata;  // name, description, accession, gene, etc
 
@@ -69,6 +69,8 @@ namespace pwiz.Skyline.Model
             _proteinMetadata = proteinMetadata;
         }
 
+        public bool IsName { get { return true; } }
+        public string AuditLogText { get { return Name; } }
         public PeptideGroup PeptideGroup { get { return (PeptideGroup)Id; } }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget
@@ -80,12 +82,18 @@ namespace pwiz.Skyline.Model
         public bool IsPeptideList { get { return !(PeptideGroup is FastaSequence); } }
         public bool IsDecoy { get { return PeptideGroup.IsDecoy; } }
 
-        [Track]
         public string Name { get { return _proteinMetadata.Name ?? PeptideGroup.Name ?? string.Empty; } } // prefer ours over peptidegroup, if set
         public string OriginalName { get { return PeptideGroup.Name; } }
-        [Track]
         public string Description { get { return _proteinMetadata.Description ?? PeptideGroup.Description; } } // prefer ours over peptidegroup, if set
-        public string OriginalDescription { get { return PeptideGroup.Description; } } 
+        public string OriginalDescription { get { return PeptideGroup.Description; } }
+
+        [Track]
+        public string Sequence
+        {
+            get { return PeptideGroup.Sequence; }
+        }
+
+        [TrackChildren(ignoreName: true)]
         public ProteinMetadata ProteinMetadata { get { return _proteinMetadata.Merge(new ProteinMetadata(PeptideGroup.Name, PeptideGroup.Description)); } } // prefer our name and description over peptidegroup
 
         /// <summary>
@@ -119,6 +127,7 @@ namespace pwiz.Skyline.Model
             get { return !IsProteomic; }
         }
 
+        [TrackChildren(ignoreName:true)]
         public IEnumerable<PeptideDocNode> Molecules { get { return Children.Cast<PeptideDocNode>(); } }
         public IEnumerable<PeptideDocNode> SmallMolecules { get { return Molecules.Where(p => p.Peptide.IsCustomMolecule); } }
         public IEnumerable<PeptideDocNode> Peptides { get { return Molecules.Where(p => !p.Peptide.IsCustomMolecule); } }

@@ -30,6 +30,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -1198,6 +1199,7 @@ namespace pwiz.Skyline.EditUI
             bool error = false;
             IdentityPath newSelectedPath = SelectedPath;
             bool? keepEmptyProteins = null;
+            int proteinCount = -1;
             Program.MainWindow.ModifyDocument(
                 Description,
                 document =>
@@ -1205,6 +1207,7 @@ namespace pwiz.Skyline.EditUI
                     newSelectedPath = SelectedPath;
                     List<PeptideGroupDocNode> newPeptideGroups;
                     var newDocument = GetNewDocument(document, false, ref newSelectedPath, out newPeptideGroups);
+
                     if (newDocument == null)
                     {
                         error = true;
@@ -1225,6 +1228,37 @@ namespace pwiz.Skyline.EditUI
                         newDocument = ImportPeptideSearch.RemoveProteinsByPeptideCount(newDocument, 1);
                     }
                     return newDocument;
+                }, (oldDoc, newDoc) =>
+                {
+                    MessageType type;
+                    int arg = 0;
+                    switch (PasteFormat)
+                    {
+                        case PasteFormat.fasta:
+                            type = MessageType.inserted_fasta;
+                            arg = proteinCount;
+                            break;
+                        case PasteFormat.protein_list:
+                            type = MessageType.inserted_proteins;
+                            arg = gridViewProteins.RowCount - 1;
+                            break;
+                        case PasteFormat.peptide_list:
+                            type = MessageType.inserted_peptides;
+                            arg = gridViewPeptides.RowCount - 1;
+                            break;
+                        case PasteFormat.transition_list:
+                            type = MessageType.inserted_transitions;
+                            arg = gridViewTransitionList.RowCount - 1;
+                            break;
+                        default:
+                            type = MessageType.inserted_data;
+                            break;
+                    }
+
+                    var args = new string[0];
+                    if (arg > 0)
+                        args = new[] { arg.ToString() };
+                    return Program.MainWindow.DiffDocNodes(type, oldDoc, newDoc, args);
                 });
             if (error)
             {
