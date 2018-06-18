@@ -778,6 +778,11 @@ namespace pwiz.SkylineTestUtil
 
         public static bool WaitForConditionUI(Func<bool> func, string timeoutMessage)
         {
+            return WaitForConditionUI(func, () => timeoutMessage);
+        }
+
+        public static bool WaitForConditionUI(Func<bool> func, Func<string> timeoutMessage)
+        {
             return WaitForConditionUI(WAIT_TIME, func, timeoutMessage);
         }
 
@@ -791,7 +796,7 @@ namespace pwiz.SkylineTestUtil
             return WaitForConditionUI(millis, func, null, false);
         }
 
-        public static bool WaitForConditionUI(int millis, Func<bool> func, string timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true)
+        public static bool WaitForConditionUI(int millis, Func<bool> func, Func<string> timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true)
         {
             int waitCycles = GetWaitCycles(millis);
             for (int i = 0; i < waitCycles; i++)
@@ -815,9 +820,10 @@ namespace pwiz.SkylineTestUtil
             }
             if (failOnTimeout)
             {
-                var msg = (timeoutMessage == null)
-                    ? string.Empty
-                    : " (" + timeoutMessage + ")";
+                var msg = string.Empty;
+                if (timeoutMessage != null)
+                    RunUI(() => msg = " (" + timeoutMessage() + ")");
+
                 Assert.Fail("Timeout {0} seconds exceeded in WaitForConditionUI{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString()); // Not L10N
             }
             return false;
