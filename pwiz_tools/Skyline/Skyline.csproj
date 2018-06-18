@@ -41,8 +41,8 @@
     <MapFileExtensions>false</MapFileExtensions>
     <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-release-64_4_1/</InstallUrl>
     <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-release-64_4_1/</UpdateUrl>
-    <SupportUrl>https://skyline.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
-    <ProductName>Skyline-daily</ProductName>
+    <SupportUrl>https://skyline.ms/support.url</SupportUrl>
+    <ProductName>Skyline</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
