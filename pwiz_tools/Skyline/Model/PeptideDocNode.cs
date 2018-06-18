@@ -120,14 +120,14 @@ namespace pwiz.Skyline.Model
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.peptide; } }
 
-        [TrackChildren]
+        [TrackChildren(defaultValues:typeof(DefaultValuesNull))]
         public ExplicitMods ExplicitMods { get; private set; }
 
         public ModifiedSequenceMods SourceKey { get; private set; }
 
         public ExplicitRetentionTimeInfo ExplicitRetentionTime { get; private set; } // For transition lists with explicit values for RT
 
-        [Track]
+        [Track(defaultValues:typeof(DefaultValuesNull))]
         public StandardType GlobalStandardType { get; private set; }
 
         public Target ModifiedTarget { get; private set; }

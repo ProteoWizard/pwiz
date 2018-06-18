@@ -1402,6 +1402,96 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string RefinementSettings_AddLabelType {
+            get {
+                return ResourceManager.GetString("RefinementSettings_AddLabelType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Auto-select all peptides.
+        /// </summary>
+        public static string RefinementSettings_AutoPickPeptidesAll {
+            get {
+                return ResourceManager.GetString("RefinementSettings_AutoPickPeptidesAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Auto-select all precursors.
+        /// </summary>
+        public static string RefinementSettings_AutoPickPrecursorsAll {
+            get {
+                return ResourceManager.GetString("RefinementSettings_AutoPickPrecursorsAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Auto-select all transitions.
+        /// </summary>
+        public static string RefinementSettings_AutoPickTransitionsAll {
+            get {
+                return ResourceManager.GetString("RefinementSettings_AutoPickTransitionsAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min peptides per protein.
+        /// </summary>
+        public static string RefinementSettings_MinPeptidesPerProtein {
+            get {
+                return ResourceManager.GetString("RefinementSettings_MinPeptidesPerProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min transitions per precursor.
+        /// </summary>
+        public static string RefinementSettings_MinTransitionsPepPrecursor {
+            get {
+                return ResourceManager.GetString("RefinementSettings_MinTransitionsPepPrecursor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove label type.
+        /// </summary>
+        public static string RefinementSettings_RefineLabelType {
+            get {
+                return ResourceManager.GetString("RefinementSettings_RefineLabelType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove duplicate peptides.
+        /// </summary>
+        public static string RefinementSettings_RemoveDuplicatePeptides {
+            get {
+                return ResourceManager.GetString("RefinementSettings_RemoveDuplicatePeptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove peptides missing library match.
+        /// </summary>
+        public static string RefinementSettings_RemoveMissingLibrary {
+            get {
+                return ResourceManager.GetString("RefinementSettings_RemoveMissingLibrary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove repeated peptides.
+        /// </summary>
+        public static string RefinementSettings_RemoveRepeatedPeptides {
+            get {
+                return ResourceManager.GetString("RefinementSettings_RemoveRepeatedPeptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Resolution.
         /// </summary>
         public static string Resolution {
@@ -1452,6 +1542,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string RetentionTimeRegression_TimeWindow {
             get {
                 return ResourceManager.GetString("RetentionTimeRegression_TimeWindow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings.
+        /// </summary>
+        public static string Settings {
+            get {
+                return ResourceManager.GetString("Settings", resourceCulture);
             }
         }
         

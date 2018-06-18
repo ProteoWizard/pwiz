@@ -26,7 +26,7 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
-    public class Property
+    public class Property : Immutable
     {
         private readonly TrackAttributeBase _trackAttribute;
         private readonly PropertyInfo _propertyInfo;
@@ -54,7 +54,16 @@ namespace pwiz.Skyline.Model.AuditLog
         [Track]
         public Type PropertyType
         {
-            get { return _propertyInfo.PropertyType; }
+            get { return TypeOverride ?? _propertyInfo.PropertyType; }
+        }
+
+        public Type TypeOverride { get; private set; }
+
+        public bool IsCollectionElement { get { return TypeOverride != null; } }
+
+        public Property ChangeTypeOverride(Type type)
+        {
+            return ChangeProp(ImClone(this), im => im.TypeOverride = type);
         }
 
         public bool HasPropertyInfo
@@ -65,7 +74,28 @@ namespace pwiz.Skyline.Model.AuditLog
         public bool IsTab { get { return _trackAttribute.IsTab; } }
         public bool IgnoreName { get { return _trackAttribute.IgnoreName; } }
         public bool DiffProperties { get { return _trackAttribute.DiffProperties; } }
-        public Type CustomLocalizer { get { return _trackAttribute.CustomLocalizer; } }
+
+        public CustomPropertyLocalizer CustomLocalizer
+        {
+            get
+            {
+                if (_trackAttribute == null || _trackAttribute.CustomLocalizer == null)
+                    return null;
+
+                return CustomPropertyLocalizer.CreateInstance(_trackAttribute.CustomLocalizer);
+            }
+        }
+
+        public DefaultValues DefaultValues
+        {
+            get
+            {
+                if (_trackAttribute == null || _trackAttribute.DefaultValues == null)
+                    return null;
+
+                return DefaultValues.CreateInstance(_trackAttribute.DefaultValues);
+            }
+        }
 
         public object GetValue(object obj)
         {
@@ -74,7 +104,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public PropertyPath AddProperty(PropertyPath path)
         {
-            return path.Property(_propertyInfo.Name);
+            return path.Property(PropertyName);
         }
 
         // These functions get the most derived, common type of the given objects
@@ -98,7 +128,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public Type GetPropertyType(object oldObject, object newObject)
         {
-            return GetPropertyType(_propertyInfo.PropertyType, oldObject, newObject);
+            return GetPropertyType(PropertyType, oldObject, newObject);
         }
 
         public static Type GetPropertyType(Type type, object obj)
@@ -108,15 +138,17 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public Type GetPropertyType(object obj)
         {
-            return GetPropertyType(_propertyInfo.PropertyType, obj);
+            return GetPropertyType(PropertyType, obj);
         }
 
-
-        public bool IsCollectionType()
+        public bool IsCollectionType
         {
-            var type = _propertyInfo.PropertyType;
-            return CollectionInfo.ForType(type) != null || type.DeclaringType == typeof(Enumerable) ||
-                   (type.IsGenericType && typeof(IEnumerable<>).IsAssignableFrom(type.GetGenericTypeDefinition()));
+            get
+            {
+                var type = PropertyType;
+                return CollectionInfo.ForType(type) != null || type.DeclaringType == typeof(Enumerable) ||
+                       (type.IsGenericType && typeof(IEnumerable<>).IsAssignableFrom(type.GetGenericTypeDefinition()));
+            }
         }
 
         public string GetName(object rootObject, object parentObject)
@@ -125,12 +157,9 @@ namespace pwiz.Skyline.Model.AuditLog
             if (parentObject != null)
                 name = parentObject.GetType().Name + '_' + name;
 
-            if (_trackAttribute != null && _trackAttribute.CustomLocalizer != null)
-            {
-                var localizer = CustomPropertyLocalizer.CreateInstance(_trackAttribute.CustomLocalizer);
-                if (localizer.Relative || rootObject != null)
-                    name = localizer.Localize(rootObject, parentObject) ?? name;
-            }
+            var localizer = CustomLocalizer;
+            if (localizer != null && (localizer.Relative || rootObject != null))
+                name = localizer.Localize(rootObject, parentObject) ?? name;
 
             return "{0:" + name + "}"; // Not L10N
         }

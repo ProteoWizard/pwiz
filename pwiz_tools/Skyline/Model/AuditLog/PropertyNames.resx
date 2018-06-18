@@ -791,4 +791,37 @@
   <data name="Annotation_Value" xml:space="preserve">
     <value>Value</value>
   </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="RefinementSettings_AddLabelType" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="RefinementSettings_AutoPickPeptidesAll" xml:space="preserve">
+    <value>Auto-select all peptides</value>
+  </data>
+  <data name="RefinementSettings_AutoPickPrecursorsAll" xml:space="preserve">
+    <value>Auto-select all precursors</value>
+  </data>
+  <data name="RefinementSettings_AutoPickTransitionsAll" xml:space="preserve">
+    <value>Auto-select all transitions</value>
+  </data>
+  <data name="RefinementSettings_MinPeptidesPerProtein" xml:space="preserve">
+    <value>Min peptides per protein</value>
+  </data>
+  <data name="RefinementSettings_MinTransitionsPepPrecursor" xml:space="preserve">
+    <value>Min transitions per precursor</value>
+  </data>
+  <data name="RefinementSettings_RefineLabelType" xml:space="preserve">
+    <value>Remove label type</value>
+  </data>
+  <data name="RefinementSettings_RemoveDuplicatePeptides" xml:space="preserve">
+    <value>Remove duplicate peptides</value>
+  </data>
+  <data name="RefinementSettings_RemoveMissingLibrary" xml:space="preserve">
+    <value>Remove peptides missing library match</value>
+  </data>
+  <data name="RefinementSettings_RemoveRepeatedPeptides" xml:space="preserve">
+    <value>Remove repeated peptides</value>
+  </data>
 </root>

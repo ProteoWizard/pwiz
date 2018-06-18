@@ -18,6 +18,7 @@
  */
 
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
@@ -26,12 +27,12 @@ namespace pwiz.Skyline.Model.AuditLog
     /// PropertyNames actually get displayed to the users (unlike PropertyPaths)
     /// Name of a property
     /// </summary>
-    public class PropertyName
+    public class PropertyName : Immutable
     {
-        public static readonly PropertyName Root = new PropertyName(null, null);
+        public static readonly PropertyName ROOT = new PropertyName(null, null);
 
         public PropertyName(string name)
-            : this(Root, name)
+            : this(ROOT, name)
         {
         }
 
@@ -41,13 +42,9 @@ namespace pwiz.Skyline.Model.AuditLog
             Name = name;
         }
 
-        public PropertyName SubProperty(PropertyName property, bool clone = true)
+        public PropertyName SubProperty(PropertyName propertyName)
         {
-            if(clone)
-                property = (PropertyName) property.MemberwiseClone();
-
-            property.Parent = this;
-            return property;
+            return ChangeProp(ImClone(propertyName), im => im.Parent = this);
         }
 
         public override string ToString()
@@ -66,7 +63,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             var text = name.Format();
 
-            if (name.Parent == Root)
+            if (ReferenceEquals(name.Parent, ROOT))
                 return text;
             else
                 return ToString(name.Parent) + name.Separator + text;   

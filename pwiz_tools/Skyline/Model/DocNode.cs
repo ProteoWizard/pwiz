@@ -60,7 +60,20 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public Identity Id { get; private set; }
 
-        [TrackChildren(ignoreName:true, defaultValues:typeof(DefaultValuesNull))]
+        private class DefaultValuesAnnotation : DefaultValues
+        {
+
+            protected override IEnumerable<object> _values
+            {
+                get
+                {
+                    yield return null;
+                    yield return Annotations.EMPTY;
+                }
+            }
+        }
+
+        [TrackChildren(ignoreName: true, defaultValues: typeof(DefaultValuesAnnotation))]
         public Annotations Annotations { get; private set; }
         
         public abstract AnnotationDef.AnnotationTarget AnnotationTarget { get; }

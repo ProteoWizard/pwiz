@@ -308,4 +308,7 @@
   <data name="added_peptide_decoys" xml:space="preserve">
     <value>Added {0} peptide decoys using {1} method</value>
   </data>
+  <data name="refined_using" xml:space="preserve">
+    <value>Refined using {0}</value>
+  </data>
 </root>

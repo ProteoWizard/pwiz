@@ -448,6 +448,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Refined using {0}.
+        /// </summary>
+        public static string refined_using {
+            get {
+                return ResourceManager.GetString("refined_using", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Removed duplicate peptides.
         /// </summary>
         public static string remove_duplicate_peptides {

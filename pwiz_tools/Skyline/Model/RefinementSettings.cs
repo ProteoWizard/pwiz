@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -60,20 +61,6 @@ namespace pwiz.Skyline.Model
     {
         private bool _removeDuplicatePeptides;
 
-        public int? MinPeptidesPerProtein { get; set; }
-        public bool RemoveDuplicatePeptides
-        {
-            get { return _removeDuplicatePeptides; }
-            set
-            {
-                _removeDuplicatePeptides = value;
-                // Removing duplicate peptides implies removing
-                // repeated peptids.
-                if (_removeDuplicatePeptides)
-                    RemoveRepeatedPeptides = true;
-            }
-        }
-
         public struct PeptideCharge
         {
             public PeptideCharge(Target sequence, Adduct charge) : this()
@@ -88,20 +75,75 @@ namespace pwiz.Skyline.Model
 
         public enum ProteinSpecType {  name, accession, preferred }
 
-        public IEnumerable<LibraryKey> AcceptedPeptides { get; set; }
-        public IEnumerable<string> AcceptedProteins { get; set; }
-        public ProteinSpecType AcceptProteinType { get; set; }
-        public bool AcceptModified { get; set; }
+        private class DefaultValuesFalse : DefaultValues
+        {
+            protected override IEnumerable<object> _values
+            {
+                get { yield return false; }
+            }
+        }
+
+        private class DefaultValuesAddLabelType : DefaultValues
+        {
+            public override bool IsDefault(object obj, object parentObject)
+            {
+                var refSettings = parentObject as RefinementSettings;
+                if (refSettings == null)
+                    return false;
+
+                return refSettings.RefineLabelType == null;
+            }
+        }
+
+        // Document
+        [Track(defaultValues: typeof(DefaultValuesNull))]
+        public int? MinPeptidesPerProtein { get; set; }
+        [Track(defaultValues: typeof(DefaultValuesFalse))]
         public bool RemoveRepeatedPeptides { get; set; }
+        [Track(defaultValues: typeof(DefaultValuesFalse))]
+        public bool RemoveDuplicatePeptides
+        {
+            get { return _removeDuplicatePeptides; }
+            set
+            {
+                _removeDuplicatePeptides = value;
+                // Removing duplicate peptides implies removing
+                // repeated peptids.
+                if (_removeDuplicatePeptides)
+                    RemoveRepeatedPeptides = true;
+            }
+        }
+        [Track(defaultValues: typeof(DefaultValuesFalse))]
         public bool RemoveMissingLibrary { get; set; }
-        public int? MinPrecursorsPerPeptide { get; set; }
+        [Track(defaultValues: typeof(DefaultValuesNull))]
         public int? MinTransitionsPepPrecursor { get; set; }
+        [Track(defaultValues: typeof(DefaultValuesNull))]
         public IsotopeLabelType RefineLabelType { get; set; }
+        [Track(defaultValues: typeof(DefaultValuesAddLabelType))]
         public bool AddLabelType { get; set; }
+        public PickLevel AutoPickChildrenAll { get; set; }
+        [Track(defaultValues: typeof(DefaultValuesFalse))]
+        public bool AutoPickPeptidesAll { get { return (AutoPickChildrenAll & PickLevel.peptides) != 0; } }
+        [Track(defaultValues: typeof(DefaultValuesFalse))]
+        public bool AutoPickPrecursorsAll { get { return (AutoPickChildrenAll & PickLevel.precursors) != 0; } }
+        [Track(defaultValues: typeof(DefaultValuesFalse))]
+        public bool AutoPickTransitionsAll { get { return (AutoPickChildrenAll & PickLevel.transitions) != 0; } }
+        // Results
         public double? MinPeakFoundRatio { get; set; }
         public double? MaxPeakFoundRatio { get; set; }
         public double? MaxPepPeakRank { get; set; }
         public double? MaxPeakRank { get; set; }
+
+
+        public IEnumerable<LibraryKey> AcceptedPeptides { get; set; }
+        public IEnumerable<string> AcceptedProteins { get; set; }
+        public ProteinSpecType AcceptProteinType { get; set; }
+        public bool AcceptModified { get; set; }
+        
+        
+        public int? MinPrecursorsPerPeptide { get; set; }
+
+
         public bool PreferLargeIons { get; set; }
         public bool RemoveMissingResults { get; set; }
         public double? RTRegressionThreshold { get; set; }
@@ -109,10 +151,6 @@ namespace pwiz.Skyline.Model
         public double? DotProductThreshold { get; set; }
         public double? IdotProductThreshold { get; set; }
         public bool UseBestResult { get; set; }
-        public PickLevel AutoPickChildrenAll { get; set; }
-        public bool AutoPickPeptidesAll { get { return (AutoPickChildrenAll & PickLevel.peptides) != 0; } }
-        public bool AutoPickPrecursorsAll { get { return (AutoPickChildrenAll & PickLevel.precursors) != 0; } }
-        public bool AutoPickTransitionsAll { get { return (AutoPickChildrenAll & PickLevel.transitions) != 0; } }
         public bool AutoPickChildrenOff { get; set; }
         public int NumberOfDecoys { get; set; }
         public string DecoysMethod { get; set; }

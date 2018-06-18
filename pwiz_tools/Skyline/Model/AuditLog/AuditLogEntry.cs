@@ -27,6 +27,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -132,28 +133,39 @@ namespace pwiz.Skyline.Model.AuditLog
             return result;
         }
 
+        private static PropertyName RemoveTopmostParent(PropertyName name)
+        {
+            if (name == PropertyName.ROOT || name.Parent == PropertyName.ROOT)
+                return name;
+
+            if (name.Parent.Parent == PropertyName.ROOT)
+                return PropertyName.ROOT.SubProperty(name);
+
+            return RemoveTopmostParent(name.Parent).SubProperty(name);
+        }
+
         public static AuditLogEntry MakePropertyChangeEntry(DocumentFormat formatVersion, DiffTree tree)
         {
             var result = new AuditLogEntry(formatVersion, tree.TimeStamp, string.Empty);
  
-            var nodeNamePair = tree.Root.FindFirstMultiChildParent(tree, PropertyName.Root, true, false);
+            var nodeNamePair = tree.Root.FindFirstMultiChildParent(tree, PropertyName.ROOT, true, false);
             // Remove "Settings" from property name if possible
-            if (nodeNamePair.Name != null && nodeNamePair.Name.Parent != PropertyName.Root)
+            if (nodeNamePair.Name != null && nodeNamePair.Name.Parent != PropertyName.ROOT)
             {
                 var name = nodeNamePair.Name;
-                while (name.Parent.Parent != PropertyName.Root)
+                while (name.Parent.Parent != PropertyName.ROOT)
                     name = name.Parent;
-                // TODO: replace with 0:SrmDocument_Settings
+
                 if (name.Parent.Name == "{0:Settings}") // Not L10N
                 {
-                    PropertyName.Root.SubProperty(name, false);
-                    nodeNamePair = new DiffNodeNamePair(nodeNamePair.Node, nodeNamePair.Name, false);
+                    name = RemoveTopmostParent(nodeNamePair.Name);
+                    nodeNamePair = nodeNamePair.ChangeName(name);
                 }
             }
 
             result.UndoRedo = nodeNamePair.ToMessage(LogLevel.undo_redo);
-            result.Summary = tree.Root.FindFirstMultiChildParent(tree, PropertyName.Root, false, false).ToMessage(LogLevel.summary);
-            result.AllInfo = tree.Root.FindAllLeafNodes(tree, PropertyName.Root, true)
+            result.Summary = tree.Root.FindFirstMultiChildParent(tree, PropertyName.ROOT, false, false).ToMessage(LogLevel.summary);
+            result.AllInfo = tree.Root.FindAllLeafNodes(tree, PropertyName.ROOT, true)
                 .Select(n => n.ToMessage(LogLevel.all_info)).ToArray();
 
             return result;
@@ -269,7 +281,8 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public static AuditLogEntry SettingsLogFunction(SrmDocument oldDoc, SrmDocument newDoc)
         {
-            var tree = Reflector<SrmDocument>.BuildDiffTree(Property.ROOT_PROPERTY, oldDoc, newDoc, DateTime.Now);
+            var property = new Property(typeof(SrmDocument).GetProperty("Settings"), new TrackChildrenAttribute());
+            var tree = Reflector<SrmSettings>.BuildDiffTree(property, oldDoc.Settings, newDoc.Settings, DateTime.Now);
             return tree != null && tree.Root != null ? MakePropertyChangeEntry(oldDoc.FormatVersion, tree) : null;
         }
 

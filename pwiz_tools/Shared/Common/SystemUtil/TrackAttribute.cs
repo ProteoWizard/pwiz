@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -32,12 +33,25 @@ namespace pwiz.Common.SystemUtil
 
     public abstract class DefaultValues
     {
-        public abstract IEnumerable<object> Values { get; }
+        protected virtual IEnumerable<object> _values
+        {
+            get { return Enumerable.Empty<object>(); }
+        }
+
+        public virtual bool IsDefault(object obj, object parentObject)
+        {
+            return _values.Contains(obj);
+        }
+
+        public static DefaultValues CreateInstance(Type defaultValuesType)
+        {
+            return (DefaultValues) Activator.CreateInstance(defaultValuesType);
+        }
     }
 
     public class DefaultValuesNull : DefaultValues
     {
-        public override IEnumerable<object> Values
+        protected override IEnumerable<object> _values
         {
             get { yield return null; }
         }

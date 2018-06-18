@@ -77,13 +77,15 @@ namespace pwiz.Skyline.Model.AuditLog
         sort_protein_accession,
         sort_protein_preferred_name,
         sort_protein_gene,
-        added_peptide_decoys
+        added_peptide_decoys,
+        refined_using
     }
 
     [XmlRoot(XML_ROOT)]
     public class LogMessage : Immutable, IXmlSerializable
     {
         public const string XML_ROOT = "message"; // Not L10N
+        public const string MISSING = "{2:Missing}"; // Not L10N
 
         public LogMessage(LogLevel level, MessageType type, string reason, bool expanded, params string[] names)
         {

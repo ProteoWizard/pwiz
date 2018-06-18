@@ -73,12 +73,21 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        [Track]
+        [Track(defaultValues:typeof(DefaultValuesNull))]
         public String Note { get; private set; }
 
         public int ColorIndex { get; private set; }
 
-        [Track]
+        private class DefaultValuesBrush : DefaultValues
+        {
+            public override bool IsDefault(object obj, object parentObject)
+            {
+                var annotations = parentObject as Annotations;
+                return annotations != null && annotations.ColorIndex == -1;
+            }
+        }
+
+        [Track(defaultValues:typeof(DefaultValuesBrush))]
         public Brush ColorBrush
         {
             get { return COLOR_BRUSHES[Math.Max(0, Math.Min(COLOR_BRUSHES.Count - 1, ColorIndex))]; }

@@ -2413,7 +2413,13 @@ namespace pwiz.Skyline
             {
                 if (refineDlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    ModifyDocument(Resources.SkylineWindow_ShowRefineDlg_Refine, doc => refineDlg.RefinementSettings.Refine(doc));
+                    ModifyDocument(Resources.SkylineWindow_ShowRefineDlg_Refine,
+                        doc => refineDlg.RefinementSettings.Refine(doc),
+                        (oldDoc, newDoc) =>
+                        {
+                            var settings = Reflector<RefinementSettings>.ToString(refineDlg.RefinementSettings);
+                            return DiffDocNodes(MessageType.refined_using, oldDoc, newDoc, settings);
+                        });
                 }
             }
         }

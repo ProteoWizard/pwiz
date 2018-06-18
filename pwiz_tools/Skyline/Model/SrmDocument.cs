@@ -338,7 +338,6 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Document-wide settings information
         /// </summary>
-        [TrackChildren]
         public SrmSettings Settings { get; private set; }
 
         public AuditLogList AuditLog { get; private set; }

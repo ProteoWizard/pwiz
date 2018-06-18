@@ -71,25 +71,35 @@ namespace pwiz.Skyline.Model.AuditLog
             // thisProperty.PropertyInfo is null only upon the initial call, where Property.ROOT is passed.
             // Therefore the first object to diff can't be a collection.
             var collectionDiff = thisProperty.HasPropertyInfo &&
-                                 thisProperty.IsCollectionType();
+                                 thisProperty.IsCollectionElement;
 
             // The propertyPath does not contain the current property at this point
             if (collectionDiff)
                 propertyPath = propertyPath.LookupByKey(elementKey.ToString());
             else if (thisProperty.HasPropertyInfo)
-                propertyPath = thisProperty.AddProperty(propertyPath);      
+                propertyPath = thisProperty.AddProperty(propertyPath);
 
             DiffNode resultNode = collectionDiff
                 ? new ElementPropertyDiffNode(thisProperty, propertyPath, oldObj, newObj, elementKey, null, expand)
                 : new PropertyDiffNode(thisProperty, propertyPath, oldObj, newObj, null, expand);
 
+            if (!expand)
+            {
+                var oldAuditObj = AuditLogObject.GetAuditLogObject(oldObj);
+                var newAuditObj = AuditLogObject.GetAuditLogObject(newObj);
+                if (ReferenceEquals(oldObj, null) && !ReferenceEquals(newObj, null) && newAuditObj.IsName ||
+                    (oldAuditObj.IsName && newAuditObj.IsName && oldAuditObj.AuditLogText != newAuditObj.AuditLogText &&
+                     !typeof(DocNode).IsAssignableFrom(thisProperty.PropertyType)))
+                {
+                    expand = true;
+                    resultNode.IsFirstExpansionNode = true;
+                }
+            }
+
             // We only look at properties if both objects are non null, unless we're expanding
             // and only the old object is null
-            if (ReferenceEquals(oldObj, null) && !expand || ReferenceEquals(newObj, null))
-            {
-                
+            if (ReferenceEquals(oldObj, null) && !expand || ReferenceEquals(newObj, null)) 
                 return resultNode;
-            }
 
             foreach (var property in _properities)
             {
@@ -230,7 +240,7 @@ namespace pwiz.Skyline.Model.AuditLog
         private static string ToString(Type type, object obj, bool wrapProperties)
         {
             if (obj == null)
-                return "{2:Missing}"; // Not L10N
+                return LogMessage.MISSING;
 
             return AuditLogToStringHelper.InvariantToString(obj) ?? Reflector.ToString(type, obj, wrapProperties);
         }
@@ -238,11 +248,11 @@ namespace pwiz.Skyline.Model.AuditLog
         private static string ToString(T obj, bool wrapProperties)
         {
             if (obj == null)
-                return "{2:Missing}"; // Not L10N
+                return LogMessage.MISSING;
 
             var collectionInfo = CollectionInfo.ForType(typeof(T));
 
-            string[] strings;
+            List<string> strings;
             string format;
 
             var auditLogObj = AuditLogObject.GetAuditLogObject(obj);
@@ -265,7 +275,7 @@ namespace pwiz.Skyline.Model.AuditLog
             {
                 var keys = collectionInfo.GetKeys(obj).Cast<object>().ToArray();
 
-                strings = new string[keys.Length];
+                strings = new List<string>(keys.Length);
                 for (var i = 0; i < keys.Length; ++i)
                 {
                     var element = collectionInfo.GetItemValueFromKey(obj, keys[i]);
@@ -276,21 +286,23 @@ namespace pwiz.Skyline.Model.AuditLog
             }
             else
             {
-                strings = new string[_properities.Count];
-                for (var i = 0; i < _properities.Count; ++i)
+                strings = new List<string>();
+                foreach (var property in _properities)
                 {
-                    var property = _properities[i];
                     var value = property.GetValue(obj);
                     var type = property.GetPropertyType(value);
 
+                    var defaultValues = property.DefaultValues;
+                    if (defaultValues != null && defaultValues.IsDefault(value, obj))
+                        continue;
+
                     if (property.IgnoreName)
                     {
-                        strings[i] = ToString(type, value, false);
+                        strings.Add(ToString(type, value, false));
                     }
                     else
                     {
-                        strings[i] = property.GetName(null, obj) + "="; // Not L10N
-                        strings[i] += ToString(type, value, true);
+                        strings.Add(property.GetName(null, obj) + "=" + ToString(type, value, true)); // Not L10N
                     }
                 }
 
@@ -358,6 +370,7 @@ namespace pwiz.Skyline.Model.AuditLog
             var removeIndices = new List<int>();
 
             propertyPath = property.AddProperty(propertyPath);
+            property = property.ChangeTypeOverride(collectionInfo.ElementValueType);
 
             // If we assume elements are unequal, we assume the old collection was empty
             // and all elements were added
@@ -368,7 +381,7 @@ namespace pwiz.Skyline.Model.AuditLog
                     var value = collectionInfo.GetItemValueFromKey(newVal, k);
                     // We also want to know what properties were set in the new elements,
                     // So we call the diff function here too
-                    var node = func(Property.GetPropertyType(collectionInfo.ElementValueType, value), property, null,
+                    var node = func(property.GetPropertyType(value), property, null,
                         value, propertyPath, k, true);
 
                     return (DiffNode)new ElementDiffNode(property,
@@ -389,12 +402,12 @@ namespace pwiz.Skyline.Model.AuditLog
                 var oldElemObj = AuditLogObject.GetAuditLogObject(oldElem);
 
                 // Try to find a matching object
-                var index = newElemObjs.FindIndex(o => Matches(collectionInfo.ElementValueType, o, oldElemObj, property.DiffProperties));
+                var index = newElemObjs.FindIndex(o => Matches(property.PropertyType, o, oldElemObj, property.DiffProperties));
 
                 if (index >= 0)
                 {
                     var newElem = collectionInfo.GetItemValueFromKey(newVal, newKeys[index]);
-                    var node = func(Property.GetPropertyType(collectionInfo.ElementValueType, oldElem, newElem), property, oldElem, newElem, propertyPath, newKeys[index], false);
+                    var node = func(property.GetPropertyType(oldElem, newElem), property, oldElem, newElem, propertyPath, newKeys[index], false);
 
                     // Make sure elements are unequal
                     if (node != null)
@@ -416,8 +429,17 @@ namespace pwiz.Skyline.Model.AuditLog
                 newKeys.RemoveAt(i);
 
             // The keys that are left over are most likely elements that were added to the colletion
-            result.AddRange(newKeys.Select(k =>
-                new ElementDiffNode(property, propertyPath.LookupByKey(k.ToString()), collectionInfo.GetItemValueFromKey(newVal, k), k, false)));
+            var added = newKeys.Select(k =>
+                new ElementDiffNode(property, propertyPath.LookupByKey(k.ToString()),
+                    collectionInfo.GetItemValueFromKey(newVal, k), k, false)).ToList();
+
+            foreach (var node in added.Where(n => AuditLogObject.GetAuditLogObject(n.Element).IsName))
+            {
+                node.Nodes.AddRange(func(node.Property.GetPropertyType(node.Element), node.Property, null, node.Element, propertyPath, node.ElementKey, true).Nodes);
+                node.IsFirstExpansionNode = true;
+            }
+                
+            result.AddRange(added);
 
             return result;
         }
