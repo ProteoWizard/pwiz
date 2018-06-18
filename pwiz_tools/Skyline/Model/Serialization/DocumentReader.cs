@@ -1346,7 +1346,10 @@ namespace pwiz.Skyline.Model.Serialization
 
                 var node = new TransitionDocNode(transition, info.Losses, massH, TransitionDocNode.TransitionQuantInfo.DEFAULT);
                 curList.Add(node);
-                ValidateSerializedVsCalculatedProductMz(declaredProductMz, node); // Sanity check
+                if (peptide.IsCustomMolecule)
+                {
+                    ValidateSerializedVsCalculatedProductMz(declaredProductMz, node); // Sanity check
+                }
             }
 
             // Use collected information to create the DocNodes.
@@ -1497,7 +1500,10 @@ namespace pwiz.Skyline.Model.Serialization
                 throw new InvalidDataException(Resources.SrmDocument_ReadTransitionXml_All_transitions_of_decoy_precursors_must_have_a_decoy_mass_shift);
             var node = new TransitionDocNode(transition, info.Annotations, losses,
                 mass, new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, info.LibInfo, info.Quantitative), info.Results);
-            ValidateSerializedVsCalculatedProductMz(declaredProductMz, node);  // Sanity check
+            if (group.Peptide.IsCustomMolecule)
+            {
+                ValidateSerializedVsCalculatedProductMz(declaredProductMz, node);  // Sanity check
+            }
             return node;
         }
 

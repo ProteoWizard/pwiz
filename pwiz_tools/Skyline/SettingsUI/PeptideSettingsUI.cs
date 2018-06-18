@@ -115,11 +115,24 @@ namespace pwiz.Skyline.SettingsUI
             string selDT = (Prediction.IonMobilityPredictor == null ? null : Prediction.IonMobilityPredictor.Name);
             _driverDT.LoadList(selDT);
             cbUseSpectralLibraryDriftTimes.Checked = textSpectralLibraryDriftTimesResolvingPower.Enabled = Prediction.UseLibraryIonMobilityValues;
-            if (Prediction.LibraryIonMobilityWindowWidthCalculator != null)
+            var imsWindowCalc = Prediction.LibraryIonMobilityWindowWidthCalculator;
+            if (imsWindowCalc != null)
             {
-                textSpectralLibraryDriftTimesResolvingPower.Text = Prediction.LibraryIonMobilityWindowWidthCalculator.ResolvingPower.ToString(LocalizationHelper.CurrentCulture);
-                textSpectralLibraryDriftTimesWidthAtDt0.Text = Prediction.LibraryIonMobilityWindowWidthCalculator.PeakWidthAtIonMobilityValueZero.ToString(LocalizationHelper.CurrentCulture);
-                textSpectralLibraryDriftTimesWidthAtDtMax.Text = Prediction.LibraryIonMobilityWindowWidthCalculator.PeakWidthAtIonMobilityValueMax.ToString(LocalizationHelper.CurrentCulture);
+                cbLinear.Checked = imsWindowCalc.PeakWidthMode == IonMobilityWindowWidthCalculator.IonMobilityPeakWidthType.linear_range;
+                if (cbLinear.Checked)
+                {
+                    textSpectralLibraryDriftTimesResolvingPower.Text = string.Empty;
+                    textSpectralLibraryDriftTimesWidthAtDt0.Text = imsWindowCalc.PeakWidthAtIonMobilityValueZero.ToString(LocalizationHelper.CurrentCulture);
+                    textSpectralLibraryDriftTimesWidthAtDtMax.Text = imsWindowCalc.PeakWidthAtIonMobilityValueMax.ToString(LocalizationHelper.CurrentCulture);
+                }
+                else
+                {
+                    textSpectralLibraryDriftTimesResolvingPower.Text = imsWindowCalc.ResolvingPower != 0
+                        ? imsWindowCalc.ResolvingPower.ToString(LocalizationHelper.CurrentCulture)
+                        : string.Empty;
+                    textSpectralLibraryDriftTimesWidthAtDt0.Text = string.Empty;
+                    textSpectralLibraryDriftTimesWidthAtDtMax.Text = string.Empty;
+                }                
             }
 
             // Initialize filter settings
@@ -679,8 +692,11 @@ namespace pwiz.Skyline.SettingsUI
         private void cbUseSpectralLibraryDriftTimes_CheckChanged(object sender, EventArgs e)
         {
             bool enable = cbUseSpectralLibraryDriftTimes.Checked;
+            labelResolvingPower.Enabled =
             textSpectralLibraryDriftTimesResolvingPower.Enabled = enable;
+            labelWidthAtDt0Units.Enabled = labelWidthDtZero.Enabled =
             textSpectralLibraryDriftTimesWidthAtDt0.Enabled = enable;
+            labelWidthAtDtMaxUnits.Enabled = labelWidthDtMax.Enabled =
             textSpectralLibraryDriftTimesWidthAtDtMax.Enabled = enable;
             cbLinear.Enabled = enable;
             // If disabling the text box, and it has content, make sure it is
