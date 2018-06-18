@@ -127,7 +127,7 @@
     <value>倍率変化</value>
   </data>
   <data name="VolcanoPlot_VolcanoPlot_Volcano_Plot" xml:space="preserve">
-    <value>火山プロット</value>
+    <value>ボルケーノプロット</value>
   </data>
   <data name="EditGroupComparisonDlg_btnOK_Click_There_is_already_a_group_comparison_named__0__" xml:space="preserve">
     <value>既に{0}という名のグループ比較があります。</value>
@@ -231,13 +231,13 @@
     <value>タンパク質</value>
   </data>
   <data name="FoldChangeRowTipProvider_RenderTip_Fold_Change" xml:space="preserve">
-    <value>倍率変化</value>
+    <value>変化率</value>
   </data>
   <data name="FoldChangeRowTipProvider_RenderTip_P_Value" xml:space="preserve">
     <value>p値</value>
   </data>
   <data name="FoldChange_Log2_Fold_Change_" xml:space="preserve">
-    <value>Log2（倍率変化）</value>
+    <value>Log2（変化率）</value>
   </data>
   <data name="FoldChange__Log10_P_Value_" xml:space="preserve">
     <value>-Log10(p値)</value>
@@ -300,7 +300,7 @@
     <value>分子式</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Molecule_Group_Name" xml:space="preserve">
-    <value>分子集団名</value>
+    <value>分子グループ名</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Size" xml:space="preserve">
     <value>サイズ</value>
@@ -339,7 +339,7 @@
     <value>逆三角形</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Cross" xml:space="preserve">
-    <value>丸に×</value>
+    <value>X字型</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Plus" xml:space="preserve">
     <value>プラス記号</value>

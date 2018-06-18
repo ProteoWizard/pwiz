@@ -55,7 +55,7 @@ actions msbuild_deploy
 {
     echo Building pwiz-setup in $(CONFIGURATION:L) configuration...
     pushd $(THIS_PATH)
-    "%PYTHON_HOME%/python.exe" pwiz-setup.py "$(THIS_PATH)" "$(PWIZ_BUILD_PATH)" "$(LOCATION)" "$(PWIZ_VERSION_TAG)" $(ADDRESS_MODEL)
+    "%PYTHON_HOME%/python.exe" pwiz-setup.py "$(THIS_PATH)" "$(PWIZ_BUILD_PATH)" "$(LOCATION)" "$(PWIZ_VERSION_TAG)" "$(PWIZ_NUMERIC_VERSION_TAG)" $(ADDRESS_MODEL)
     pushd $(PWIZ_BUILD_PATH)
     "%WIX%\bin\candle.exe" -nologo *.wxs -arch $(ARCH) -dAddressModel=$(ADDRESS_MODEL) -dToolset=$(TOOLSET)
     "%WIX%\bin\light.exe" -nologo *.wixObj -ext WixUIExtension -ext WixNetFxExtension -cultures:en-us

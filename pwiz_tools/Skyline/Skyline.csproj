@@ -41,13 +41,13 @@
     <MapFileExtensions>false</MapFileExtensions>
     <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-release-64_4_1/</InstallUrl>
     <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-release-64_4_1/</UpdateUrl>
-    <SupportUrl>https://skyline.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
-    <ProductName>Skyline-daily</ProductName>
+    <SupportUrl>https://skyline.ms/support.url</SupportUrl>
+    <ProductName>Skyline</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>11710</ApplicationRevision>
-    <ApplicationVersion>4.1.0.11710</ApplicationVersion>
+    <ApplicationRevision>18163</ApplicationRevision>
+    <ApplicationVersion>4.1.0.18163</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -4191,7 +4191,7 @@
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
-    <PublishFile Include="Skyline-daily.pdb">
+    <PublishFile Include="Skyline.pdb">
       <Visible>False</Visible>
       <Group>
       </Group>

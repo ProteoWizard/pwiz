@@ -188,7 +188,7 @@
     <value>193, 26</value>
   </data>
   <data name="removePeakContextMenuItem.Text" xml:space="preserve">
-    <value>删除峰值</value>
+    <value>删除峰</value>
   </data>
   <data name="noStandardContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>175, 22</value>
@@ -465,7 +465,7 @@
     <value>212, 22</value>
   </data>
   <data name="removePeakGraphMenuItem.Text" xml:space="preserve">
-    <value>删除峰值</value>
+    <value>删除峰</value>
   </data>
   <data name="toolStripSeparator33.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 6</value>
@@ -1164,7 +1164,7 @@
     <value>209, 22</value>
   </data>
   <data name="areaNormalizeContextMenuItem.Text" xml:space="preserve">
-    <value>归一化</value>
+    <value>归一化到</value>
   </data>
   <data name="documentScopeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 22</value>
@@ -1293,7 +1293,7 @@
     <value>209, 22</value>
   </data>
   <data name="areaCVNormalizedToToolStripMenuItem.Text" xml:space="preserve">
-    <value>归一化</value>
+    <value>归一化到</value>
   </data>
   <data name="areaCVLogScaleToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
@@ -1305,7 +1305,7 @@
     <value>209, 22</value>
   </data>
   <data name="removeAboveCVCutoffToolStripMenuItem.Text" xml:space="preserve">
-    <value>删除 CV 截止以上</value>
+    <value>删除 CV 阈值以上</value>
   </data>
   <data name="toolStripSeparator57.Size" type="System.Drawing.Size, System.Drawing">
     <value>206, 6</value>
@@ -1963,7 +1963,7 @@
     <value>284, 22</value>
   </data>
   <data name="removePeakToolStripMenuItem.Text" xml:space="preserve">
-    <value>删除峰值</value>
+    <value>删除峰</value>
   </data>
   <data name="integrationToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 22</value>

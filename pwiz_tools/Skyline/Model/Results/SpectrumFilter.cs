@@ -171,7 +171,7 @@ namespace pwiz.Skyline.Model.Results
                             {
                                 minTime = peakBoundaries.StartTime - _fullScan.RetentionTimeFilterLength;
                                 maxTime = peakBoundaries.EndTime + _fullScan.RetentionTimeFilterLength;
-                                canSchedule = false;
+                                _isSharedTime = false;
                             }
                         }
                         if (canSchedule)
