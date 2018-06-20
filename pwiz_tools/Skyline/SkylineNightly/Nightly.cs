@@ -57,7 +57,7 @@ namespace SkylineNightly
         private const string GIT_BRANCHES_URL = GIT_MASTER_URL + "/tree/";
 
         // Current integration branch - this gets appended to GIT_BRANCHES_URL for integration build
-        private const string INTEGRATION_BRANCH = "Skyline/work/20180125_FiguresOfMerit";
+        private const string INTEGRATION_BRANCH = "feature/VS2017-update";
 
         private DateTime _startTime;
         public string LogFileName { get; private set; }
@@ -303,7 +303,7 @@ namespace SkylineNightly
                             }
                             else
                             {
-                                branchUrl = GIT_BRANCHES_URL + branch;
+                                branchUrl = GIT_BRANCHES_URL + branch; // Looks like https://github.com/ProteoWizard/pwiz/tree/Skyline/skyline_9_7
                             }
                         }
                         
