@@ -46,6 +46,7 @@ namespace pwiz.SkylineTestFunctional
             var scenarioNames = new []
             {
                 "CalibrationTest",
+                "CalibrationExcludedTest",
                 "p180test_calibration_DukeApril2016",
                 "MergedDocuments"
             };
