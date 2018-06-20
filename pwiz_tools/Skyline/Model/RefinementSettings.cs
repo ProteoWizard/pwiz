@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public sealed class RefinementSettings
+    public sealed class RefinementSettings : IAuditLogComparable
     {
         private bool _removeDuplicatePeptides;
 
@@ -75,14 +75,6 @@ namespace pwiz.Skyline.Model
 
         public enum ProteinSpecType {  name, accession, preferred }
 
-        private class DefaultValuesFalse : DefaultValues
-        {
-            protected override IEnumerable<object> _values
-            {
-                get { yield return false; }
-            }
-        }
-
         private class DefaultValuesAddLabelType : DefaultValues
         {
             public override bool IsDefault(object obj, object parentObject)
@@ -95,12 +87,17 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public object DefaultObject
+        {
+            get { return new RefinementSettings(); }
+        }
+
         // Document
-        [Track(defaultValues: typeof(DefaultValuesNull))]
+        [Track]
         public int? MinPeptidesPerProtein { get; set; }
-        [Track(defaultValues: typeof(DefaultValuesFalse))]
+        [Track]
         public bool RemoveRepeatedPeptides { get; set; }
-        [Track(defaultValues: typeof(DefaultValuesFalse))]
+        [Track]
         public bool RemoveDuplicatePeptides
         {
             get { return _removeDuplicatePeptides; }
@@ -113,20 +110,20 @@ namespace pwiz.Skyline.Model
                     RemoveRepeatedPeptides = true;
             }
         }
-        [Track(defaultValues: typeof(DefaultValuesFalse))]
+        [Track]
         public bool RemoveMissingLibrary { get; set; }
-        [Track(defaultValues: typeof(DefaultValuesNull))]
+        [Track]
         public int? MinTransitionsPepPrecursor { get; set; }
-        [Track(defaultValues: typeof(DefaultValuesNull))]
+        [Track]
         public IsotopeLabelType RefineLabelType { get; set; }
         [Track(defaultValues: typeof(DefaultValuesAddLabelType))]
         public bool AddLabelType { get; set; }
         public PickLevel AutoPickChildrenAll { get; set; }
-        [Track(defaultValues: typeof(DefaultValuesFalse))]
+        [Track]
         public bool AutoPickPeptidesAll { get { return (AutoPickChildrenAll & PickLevel.peptides) != 0; } }
-        [Track(defaultValues: typeof(DefaultValuesFalse))]
+        [Track]
         public bool AutoPickPrecursorsAll { get { return (AutoPickChildrenAll & PickLevel.precursors) != 0; } }
-        [Track(defaultValues: typeof(DefaultValuesFalse))]
+        [Track]
         public bool AutoPickTransitionsAll { get { return (AutoPickChildrenAll & PickLevel.transitions) != 0; } }
         // Results
         public double? MinPeakFoundRatio { get; set; }

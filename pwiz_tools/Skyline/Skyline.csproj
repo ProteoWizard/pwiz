@@ -299,6 +299,7 @@
     <Compile Include="AlgLib\statistics.cs" />
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
     <Compile Include="Model\AuditLog\AuditLogToStringHelper.cs" />
+    <Compile Include="Model\AuditLog\Databinding\AuditLogColumn.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogDetailRow.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogRow.cs" />
     <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
@@ -307,6 +308,7 @@
       <DependentUpon>AuditLogStrings.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\AuditLog\CustomPropertyLocalizer.cs" />
+    <Compile Include="Model\AuditLog\Databinding\TextImageColumn.cs" />
     <Compile Include="Model\AuditLog\LogMessage.cs" />
     <Compile Include="Model\AuditLog\Property.cs" />
     <Compile Include="Model\AuditLog\PropertyElementNames.Designer.cs">

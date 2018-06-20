@@ -130,11 +130,13 @@ namespace pwiz.Skyline.Model.AuditLog
 
             var objects = Objects.Select(AuditLogObject.GetAuditLogObject)
                 .Where(o => o == null || o.IsName).ToArray();
+            
             if (objects.Length == 2)
             {
+                var isSrmSettings = Property.GetPropertyType(objects[1], objects[0]) == typeof(SrmSettings);
                 if ((objects[0] != null) != (objects[1] != null) ||
                     (objects[0] != null && objects[1] != null && objects[0].AuditLogText != objects[1].AuditLogText && !(objects[0] is DocNode)) &&
-                    Property.PropertyType != typeof(SrmSettings))
+                    !isSrmSettings)
                         oneNode = false; // Stop recursion, since in the undo-redo/summary log we don't want to go deeper for objects where the name changed
             }
             return oneNode ? Nodes[0].FindFirstMultiChildParent(tree, newName, shortenName, allowReflection, this) : new DiffNodeNamePair(ChangeExpanded(false), newName, allowReflection);
@@ -189,9 +191,10 @@ namespace pwiz.Skyline.Model.AuditLog
                 result.Add(new DiffNodeNamePair(this, name, allowReflection));
                 return result;
             }
-
+            
             var obj = Objects.FirstOrDefault();
-            var isNamedChange = IsFirstExpansionNode || (obj != null && AuditLogObject.GetAuditLogObject(obj).IsName) && Property.PropertyType != typeof(SrmSettings) && Expanded;
+            var isSrmSettings = Property.GetPropertyType(obj) == typeof(SrmSettings);
+            var isNamedChange = IsFirstExpansionNode || (obj != null && AuditLogObject.GetAuditLogObject(obj).IsName) && !isSrmSettings && Expanded;
             if (isNamedChange)
                 result.Add(new DiffNodeNamePair(this, name, allowReflection));
 
@@ -247,7 +250,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             if (Expanded && level == LogLevel.all_info)
             {
-                return new LogMessage(level, Property.IsCollectionType ? MessageType.contains : MessageType.is_,
+                return new LogMessage(level, Property.IsCollectionType(NewValue) ? MessageType.contains : MessageType.is_,
                     string.Empty, Expanded, name.ToString(), newValue);
             }
 

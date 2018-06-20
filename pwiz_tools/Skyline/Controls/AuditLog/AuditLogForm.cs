@@ -72,7 +72,6 @@ namespace pwiz.Skyline.Controls.AuditLog
             }
         }
 
-
         public static void EnableAuditLogging(bool enable, SkylineWindow window)
         {
             Settings.Default.AuditLogging = enable;
@@ -101,6 +100,21 @@ namespace pwiz.Skyline.Controls.AuditLog
             BindingListSource.ListChanged += BindingListSource_ListChanged;
             _clearLogButton.Click += _clearLogButton_Click;
             _enableAuditLogging.CheckedChanged += enableAuditLogging_CheckedChanged;
+            DataGridView.RowPrePaint += DataGridView_RowPrePaint;
+        }
+
+        void DataGridView_RowPrePaint(object sender, DataGridViewRowPrePaintEventArgs e)
+        {
+            var rowItem = DataGridView.Rows[e.RowIndex].DataBoundItem as RowItem;
+            if (rowItem == null)
+                return;
+
+            var auditLogRow = rowItem.Value as AuditLogRow;
+            if (auditLogRow == null || rowItem.RowKey.Length == 0 || !rowItem.RowKey.Last.Key.Equals(PropertyPath.Root.Property("Details").LookupAllItems()))
+                return;
+
+            if ((int)rowItem.RowKey.Last.Value == 0)
+                DataGridView.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.LightGray;
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
@@ -126,7 +140,7 @@ namespace pwiz.Skyline.Controls.AuditLog
 
             viewSpec = viewSpec.SetSublistId(PropertyPath.Root.Property("Details").LookupAllItems()); // Not L10N
             viewSpec = viewSpec.SetColumns(columns);
-           
+
             return new ViewInfo(columnDescriptor, viewSpec).ChangeViewGroup(ViewGroup.BUILT_IN);
         }
 
@@ -165,7 +179,7 @@ namespace pwiz.Skyline.Controls.AuditLog
 
             private AuditLogRow GetRow(AuditLogEntry entry, SkylineDataSchema skylineDataSchema)
             {
-                return new AuditLogRow(skylineDataSchema, entry, entry.SkylineVersion, entry.FormatVersion, entry.TimeStamp, entry.User);
+                return new AuditLogRow(skylineDataSchema, entry);
             }
 
             public override IEnumerable GetItems()

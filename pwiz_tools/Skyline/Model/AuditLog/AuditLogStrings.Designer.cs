@@ -448,11 +448,11 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Refined using {0}.
+        ///   Looks up a localized string similar to Refined targets.
         /// </summary>
-        public static string refined_using {
+        public static string refined_targets {
             get {
-                return ResourceManager.GetString("refined_using", resourceCulture);
+                return ResourceManager.GetString("refined_targets", resourceCulture);
             }
         }
         

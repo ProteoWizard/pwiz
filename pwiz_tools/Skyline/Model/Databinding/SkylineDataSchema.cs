@@ -26,6 +26,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
@@ -64,7 +65,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             return base.IsScalar(type) || type == typeof(IsotopeLabelType) || type == typeof(DocumentLocation) ||
                    type == typeof(SampleType) || type == typeof(GroupIdentifier) || type == typeof(StandardType) ||
-                   type == typeof(NormalizationMethod);
+                   type == typeof(NormalizationMethod) || type == typeof(AuditLogRow.AuditLogRowText);
         }
 
         public override bool IsRootTypeSelectable(Type type)
@@ -185,6 +186,8 @@ namespace pwiz.Skyline.Model.Databinding
         }
 
         public SkylineWindow SkylineWindow { get { return _documentContainer as SkylineWindow; } }
+
+        public IDocumentContainer DocumentContainer { get { return _documentContainer; } }
 
         private ReplicateSummaries _replicateSummaries;
         public ReplicateSummaries GetReplicateSummaries()

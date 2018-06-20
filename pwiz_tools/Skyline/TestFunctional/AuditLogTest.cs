@@ -56,7 +56,7 @@ namespace pwiz.SkylineTestFunctional
                 "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}");
 
             // Non existent resource name
-            VerifyStringLocalization("{0:Settings}", "{0:Settings}");
+            VerifyStringLocalization("{0:SEttings}", "{0:SEttings}");
 
             var unlocalized = GetUnlocalizedProperties(typeof(SrmDocument), PropertyPath.Root);
             if (unlocalized.Any())
@@ -107,10 +107,11 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
 
-                var type = property.PropertyType;
-                var collectionInfo = CollectionInfo.ForType(type);
+                var type = property.GetPropertyType(null);
+                object nullObject = null;
+                var collectionInfo = Reflector.GetCollectionInfo(ref type, ref nullObject, ref nullObject);
                 if (collectionInfo != null)
-                    type = collectionInfo.ElementType;
+                    type = collectionInfo.ElementValueType;
 
                 // The reflector will fail with a non class type because of the type restriction
                 // on Reflector<T>

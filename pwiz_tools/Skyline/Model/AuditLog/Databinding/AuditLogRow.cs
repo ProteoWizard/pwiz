@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -25,7 +24,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.AuditLog.Databinding
@@ -34,17 +32,16 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
     {
         private AuditLogEntry _entry;
 
-        public AuditLogRow(SkylineDataSchema dataSchema, AuditLogEntry entry, string skylineVersion,
-            DocumentFormat documentFormat, DateTime timeStamp, string user) : base(dataSchema)
+        public AuditLogRow(SkylineDataSchema dataSchema, AuditLogEntry entry) : base(dataSchema)
         {
             Assume.IsNotNull(entry);
             _entry = entry;
 
-            SkylineVersion = skylineVersion;
-            DocumentFormat = documentFormat.AsDouble();
-            TimeStamp = timeStamp.ToString(CultureInfo.CurrentCulture);
-
-            User = user;
+            SkylineVersion = entry.SkylineVersion;
+            DocumentFormat = entry.FormatVersion.AsDouble();
+            TimeStamp = entry.TimeStamp.ToString(CultureInfo.CurrentCulture);
+            User = entry.User;
+            ExtraText = entry.ExtraText;
 
             Details = ImmutableList.ValueOf(
                 Enumerable.Range(0, entry.AllInfo.Count).Select(i => new AuditLogDetailRow(this, i)));
@@ -54,12 +51,46 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
         public string TimeStamp { get; private set; }
 
-        [Format(Width=512)]
-        public string UndoRedoMessage { get { return _entry.UndoRedo.ToString(); } }
+        public string ExtraText { get; private set; }
 
+        public class AuditLogRowText
+        {
+            public AuditLogRowText(string text, string extraText)
+            {
+                Text = text;
+                ExtraText = extraText;
+            }
+
+            public string Text { get; private set; }
+            public string ExtraText { get; private set; }
+
+            public override string ToString()
+            {
+                return Text;
+            }
+        }
+
+        [DataGridViewColumnType(typeof(AuditLogColumn))]
+        [Format(Width = 512)]
+        public AuditLogRowText UndoRedoMessage
+        {
+            get
+            {
+                return new AuditLogRowText(_entry.UndoRedo.ToString(),
+                    LogMessage.LocalizeLogStringProperties(ExtraText));
+            }
+        }
+
+        [DataGridViewColumnType(typeof(AuditLogColumn))]
         [Format(Width=512)]
-        public string SummaryMessage { get { return _entry.Summary.ToString(); } }
-            
+        public AuditLogRowText SummaryMessage
+        {
+            get
+            {
+                return new AuditLogRowText(_entry.Summary.ToString(),
+                    LogMessage.LocalizeLogStringProperties(ExtraText));
+            }
+        }
 
         public string SkylineVersion { get; private set; }
         public double DocumentFormat { get; private set; }
@@ -77,16 +108,9 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             set
             {
                 var newEntry = _entry.ChangeReason(value);
-                if (newEntry.AllInfo.Count == 1)
-                {
-                    var infoCopy = newEntry.AllInfo.ToArray();
-                    infoCopy[0] = newEntry.AllInfo[0].ChangeReason(value);
-                    newEntry = newEntry.ChangeAllInfo(infoCopy);
-                }
-
                 ModifyDocument(EditDescription.SetColumn("Reason", // Not L10N
                         value), d => ChangeEntry(d, newEntry));
-
+ 
                 _entry = newEntry;
             }
         }
@@ -94,7 +118,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
         public SrmDocument ChangeEntry(SrmDocument document, AuditLogEntry auditLogEntry)
         {
             var copy = new List<AuditLogEntry>(document.AuditLog.AuditLogEntries);
-            var index = copy.FindIndex(e => ReferenceEquals(e, _entry)); // This is not found??
+            var index = copy.FindIndex(e => ReferenceEquals(e, _entry));
             if (index >= 0)
             {
                 copy[index] = auditLogEntry;
@@ -103,6 +127,5 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
             return document;
         }
-
     }
 }

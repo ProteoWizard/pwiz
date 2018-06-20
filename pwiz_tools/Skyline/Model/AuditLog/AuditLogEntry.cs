@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.AuditLog
     public class AuditLogList : Immutable, IXmlSerializable
     {
         public const string XML_ROOT = "audit_log"; // Not L10N
-
+        
         public AuditLogList(ImmutableList<AuditLogEntry> auditLogEntries)
         {
             AuditLogEntries = auditLogEntries;
@@ -84,7 +84,9 @@ namespace pwiz.Skyline.Model.AuditLog
     {
         public const string XML_ROOT = "audit_log_entry"; // Not L10N
 
-        private AuditLogEntry(DocumentFormat formatVersion, DateTime timeStamp, string reason)
+        private IList<LogMessage> _allInfo;
+
+        private AuditLogEntry(DocumentFormat formatVersion, DateTime timeStamp, string reason, bool insertIntoUndoRedo = false, string extraText = null)
         {
             SkylineVersion = Install.Version;
             if (Install.Is64Bit)
@@ -92,6 +94,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             FormatVersion = formatVersion;
             TimeStamp = timeStamp;
+            ExtraText = extraText;
 
             using (var identity = WindowsIdentity.GetCurrent())
             {
@@ -100,6 +103,19 @@ namespace pwiz.Skyline.Model.AuditLog
             }
 
             Reason = reason ?? string.Empty;
+            InsertUndoRedoIntoAllInfo = insertIntoUndoRedo;
+        }
+
+
+        private static PropertyName RemoveTopmostParent(PropertyName name)
+        {
+            if (name == PropertyName.ROOT || name.Parent == PropertyName.ROOT)
+                return name;
+
+            if (name.Parent.Parent == PropertyName.ROOT)
+                return PropertyName.ROOT.SubProperty(name);
+
+            return RemoveTopmostParent(name.Parent).SubProperty(name);
         }
 
         public class MessageTypeNamesPair
@@ -114,60 +130,52 @@ namespace pwiz.Skyline.Model.AuditLog
             public string[] Names { get; private set; }
         }
 
+        // Functions to create audit log entries
+
         public static AuditLogEntry MakeSingleMessageEntry(DocumentFormat formatVersion, DateTime timeStamp,
-            MessageTypeNamesPair typeNamesPair)
+            MessageTypeNamesPair typeNamesPair, string extraText = null)
         {
-            return MakeCustomEntry(formatVersion, timeStamp, typeNamesPair, typeNamesPair, new[] { typeNamesPair });
-        }
+            var result = new AuditLogEntry(formatVersion, timeStamp, string.Empty, true, extraText);
 
-        public static AuditLogEntry MakeCustomEntry(DocumentFormat formatVersion, DateTime timeStamp,
-            MessageTypeNamesPair undoRedo, MessageTypeNamesPair summary, IEnumerable<MessageTypeNamesPair> allInfo)
-        {
-            var result = new AuditLogEntry(formatVersion, timeStamp, string.Empty);
-
-            result.UndoRedo = new LogMessage(LogLevel.undo_redo, undoRedo.Type, string.Empty, false, undoRedo.Names);
-            result.Summary = new LogMessage(LogLevel.undo_redo, summary.Type, string.Empty, false, summary.Names);
-            result.AllInfo = allInfo
+            result.UndoRedo = new LogMessage(LogLevel.undo_redo, typeNamesPair.Type, string.Empty, false, typeNamesPair.Names);
+            result.Summary = new LogMessage(LogLevel.undo_redo, typeNamesPair.Type, string.Empty, false, typeNamesPair.Names);
+            result.AllInfo = new[] { typeNamesPair }
                 .Select(p => new LogMessage(LogLevel.all_info, p.Type, string.Empty, false, p.Names)).ToArray();
 
             return result;
         }
 
-        private static PropertyName RemoveTopmostParent(PropertyName name)
+        public static AuditLogEntry MakePropertyChangeEntry(DocumentFormat formatVersion, DiffTree tree, MessageTypeNamesPair customUndoRedo = null, string extraText = null)
         {
-            if (name == PropertyName.ROOT || name.Parent == PropertyName.ROOT)
-                return name;
+            var result = new AuditLogEntry(formatVersion, tree.TimeStamp, string.Empty, true, extraText);
 
-            if (name.Parent.Parent == PropertyName.ROOT)
-                return PropertyName.ROOT.SubProperty(name);
-
-            return RemoveTopmostParent(name.Parent).SubProperty(name);
-        }
-
-        public static AuditLogEntry MakePropertyChangeEntry(DocumentFormat formatVersion, DiffTree tree)
-        {
-            var result = new AuditLogEntry(formatVersion, tree.TimeStamp, string.Empty);
- 
-            var nodeNamePair = tree.Root.FindFirstMultiChildParent(tree, PropertyName.ROOT, true, false);
-            // Remove "Settings" from property name if possible
-            if (nodeNamePair.Name != null && nodeNamePair.Name.Parent != PropertyName.ROOT)
+            if (customUndoRedo == null)
             {
-                var name = nodeNamePair.Name;
-                while (name.Parent.Parent != PropertyName.ROOT)
-                    name = name.Parent;
-
-                if (name.Parent.Name == "{0:Settings}") // Not L10N
+                var nodeNamePair = tree.Root.FindFirstMultiChildParent(tree, PropertyName.ROOT, true, false);
+                // Remove "Settings" from property name if possible
+                if (nodeNamePair.Name != null && nodeNamePair.Name.Parent != PropertyName.ROOT)
                 {
-                    name = RemoveTopmostParent(nodeNamePair.Name);
-                    nodeNamePair = nodeNamePair.ChangeName(name);
+                    var name = nodeNamePair.Name;
+                    while (name.Parent.Parent != PropertyName.ROOT)
+                        name = name.Parent;
+
+                    if (name.Parent.Name == "{0:Settings}") // Not L10N
+                    {
+                        name = RemoveTopmostParent(nodeNamePair.Name);
+                        nodeNamePair = nodeNamePair.ChangeName(name);
+                    }
                 }
+                result.UndoRedo = nodeNamePair.ToMessage(LogLevel.undo_redo);
+            }
+            else
+            {
+                result.UndoRedo = new LogMessage(LogLevel.undo_redo, customUndoRedo.Type, string.Empty, false, customUndoRedo.Names);
             }
 
-            result.UndoRedo = nodeNamePair.ToMessage(LogLevel.undo_redo);
             result.Summary = tree.Root.FindFirstMultiChildParent(tree, PropertyName.ROOT, false, false).ToMessage(LogLevel.summary);
             result.AllInfo = tree.Root.FindAllLeafNodes(tree, PropertyName.ROOT, true)
                 .Select(n => n.ToMessage(LogLevel.all_info)).ToArray();
-
+            
             return result;
         }
 
@@ -209,26 +217,36 @@ namespace pwiz.Skyline.Model.AuditLog
             return result;
         }
 
+
         public string SkylineVersion { get; private set; }
         public DocumentFormat FormatVersion { get; private set; }
-
         public DateTime TimeStamp { get; private set; }
         public string User { get; private set; }
         public string Reason { get; private set; }
+        public string ExtraText { get; private set; }
         public LogMessage UndoRedo { get; private set; }
         public LogMessage Summary { get; private set; }
-        public IList<LogMessage> AllInfo { get; private set; }
+
+        public IList<LogMessage> AllInfo
+        {
+            get { return _allInfo; }
+            private set { _allInfo = ImmutableList.ValueOf(InsertUndoRedoIntoAllInfo ? new[] { UndoRedo }.Concat(value) : value); }
+        }
+
+        public bool InsertUndoRedoIntoAllInfo { get; private set; }
+
+        public bool HasSingleAllInfoRow
+        {
+            get { return _allInfo.Count == 1; }
+        }
 
         public MessageType? CountEntryType { get; private set; }
+
+        // Property change functions
 
         public AuditLogEntry ChangeReason(string reason)
         {
             return ChangeProp(ImClone(this), im => im.Reason = reason);
-        }
-
-        public AuditLogEntry ChangeUndoRedo(LogMessage undoRedo)
-        {
-            return ChangeProp(ImClone(this), im => im.UndoRedo = undoRedo);
         }
 
         public AuditLogEntry ChangeAllInfo(IList<LogMessage> allInfo)
@@ -236,12 +254,13 @@ namespace pwiz.Skyline.Model.AuditLog
             return ChangeProp(ImClone(this), im => im.AllInfo = allInfo);
         }
 
+
         public void AddToDocument(SrmDocument document, Action<Func<SrmDocument, SrmDocument>> modifyDocument)
         {
             if (Settings.Default.AuditLogging || CountEntryType == MessageType.log_cleared)
             {
                 modifyDocument(d => d.ChangeAuditLog(
-                    ImmutableList<AuditLogEntry>.ValueOf(d.AuditLog.AuditLogEntries.Concat(new[] { this }))));
+                    ImmutableList.ValueOf(d.AuditLog.AuditLogEntries.Concat(new[] { this }))));
             }
             else
             {
@@ -303,13 +322,15 @@ namespace pwiz.Skyline.Model.AuditLog
             format_version,
             time_stamp,
             user,
-            count_type
+            count_type,
+            insert_undo_redo
         }
 
         private enum EL
         {
             message,
-            reason
+            reason,
+            extra_text
         }
 
         public static AuditLogEntry Deserialize(XmlReader reader)
@@ -323,19 +344,23 @@ namespace pwiz.Skyline.Model.AuditLog
             writer.WriteAttribute(ATTR.time_stamp, TimeStamp.ToUniversalTime().ToString(CultureInfo.InvariantCulture));
             writer.WriteAttribute(ATTR.user, User);
 
+            writer.WriteAttribute(ATTR.insert_undo_redo, InsertUndoRedoIntoAllInfo);
+
             if (CountEntryType.HasValue)
                 writer.WriteAttribute(ATTR.count_type, CountEntryType);
 
-            if (!String.IsNullOrEmpty(Reason))
+            if (!string.IsNullOrEmpty(Reason))
                 writer.WriteElementString(EL.reason, Reason);
+
+            if (!string.IsNullOrEmpty(ExtraText))
+                writer.WriteElementString(EL.extra_text, ExtraText);
             
             writer.WriteElement(EL.message, UndoRedo);
             writer.WriteElement(EL.message, Summary);
 
-            foreach (var info in AllInfo)
-            {
-                writer.WriteElement(EL.message, info);
-            }
+            var startIndex = InsertUndoRedoIntoAllInfo ? 1 : 0;
+            for (var i = startIndex; i < _allInfo.Count; ++i)
+                writer.WriteElement(EL.message, _allInfo[i]);
         }
 
         public void ReadXml(XmlReader reader)
@@ -345,6 +370,8 @@ namespace pwiz.Skyline.Model.AuditLog
             TimeStamp = DateTime.SpecifyKind(time, DateTimeKind.Utc).ToLocalTime();
             User = reader.GetAttribute(ATTR.user);
 
+            InsertUndoRedoIntoAllInfo = reader.GetBoolAttribute(ATTR.insert_undo_redo);
+
             var countType = reader.GetAttribute(ATTR.count_type);
             if (countType == null)
                 CountEntryType = null;
@@ -353,16 +380,17 @@ namespace pwiz.Skyline.Model.AuditLog
 
             reader.ReadStartElement();
 
-            Reason = reader.IsStartElement(EL.reason) ? reader.ReadElementString() : String.Empty;
+            Reason = reader.IsStartElement(EL.reason) ? reader.ReadElementString() : string.Empty;
+            ExtraText = reader.IsStartElement(EL.extra_text) ? reader.ReadElementString() : string.Empty;
 
             UndoRedo = reader.DeserializeElement<LogMessage>();
             Summary = reader.DeserializeElement<LogMessage>();
 
-            AllInfo = new List<LogMessage>();
+            var list = new List<LogMessage>();
             while (reader.IsStartElement(EL.message))
-            {
-                AllInfo.Add(reader.DeserializeElement<LogMessage>());
-            }
+                list.Add(reader.DeserializeElement<LogMessage>());
+
+            AllInfo = list;
 
             reader.ReadEndElement();
         }

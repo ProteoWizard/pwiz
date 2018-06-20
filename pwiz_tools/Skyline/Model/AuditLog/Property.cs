@@ -52,9 +52,9 @@ namespace pwiz.Skyline.Model.AuditLog
 
         // Actual type of the property, should only be used in special cases
         [Track]
-        public Type PropertyType
+        private Type _propertyType
         {
-            get { return TypeOverride ?? _propertyInfo.PropertyType; }
+            get { return TypeOverride ?? (_propertyInfo == null ? null : _propertyInfo.PropertyType); }
         }
 
         public Type TypeOverride { get; private set; }
@@ -97,11 +97,6 @@ namespace pwiz.Skyline.Model.AuditLog
             }
         }
 
-        public object GetValue(object obj)
-        {
-            return _propertyInfo.GetValue(obj);
-        }
-
         public PropertyPath AddProperty(PropertyPath path)
         {
             return path.Property(PropertyName);
@@ -128,7 +123,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public Type GetPropertyType(object oldObject, object newObject)
         {
-            return GetPropertyType(PropertyType, oldObject, newObject);
+            return GetPropertyType(_propertyType, oldObject, newObject);
         }
 
         public static Type GetPropertyType(Type type, object obj)
@@ -138,17 +133,19 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public Type GetPropertyType(object obj)
         {
-            return GetPropertyType(PropertyType, obj);
+            return GetPropertyType(_propertyType, obj);
         }
 
-        public bool IsCollectionType
+        public bool IsCollectionType(object obj)
         {
-            get
-            {
-                var type = PropertyType;
-                return CollectionInfo.ForType(type) != null || type.DeclaringType == typeof(Enumerable) ||
-                       (type.IsGenericType && typeof(IEnumerable<>).IsAssignableFrom(type.GetGenericTypeDefinition()));
-            }
+            var type = GetPropertyType(obj);
+            return CollectionInfo.ForType(type) != null || type.DeclaringType == typeof(Enumerable) ||
+                    (type.IsGenericType && typeof(IEnumerable<>).IsAssignableFrom(type.GetGenericTypeDefinition()));
+        }
+
+        public object GetValue(object obj)
+        {
+            return _propertyInfo.GetValue(obj);
         }
 
         public string GetName(object rootObject, object parentObject)
@@ -182,7 +179,7 @@ namespace pwiz.Skyline.Model.AuditLog
         // For Debugging
         public override string ToString()
         {
-            return Reflector<Property>.ToString(this);
+            return Reflector.ToString(this);
         }
     }
 }

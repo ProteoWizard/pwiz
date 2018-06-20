@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Deployment.Application;
 using System.Diagnostics;
+using System.Diagnostics.SymbolStore;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -2417,167 +2418,37 @@ namespace pwiz.Skyline
                         doc => refineDlg.RefinementSettings.Refine(doc),
                         (oldDoc, newDoc) =>
                         {
-                            var settings = Reflector<RefinementSettings>.ToString(refineDlg.RefinementSettings);
-                            return DiffDocNodes(MessageType.refined_using, oldDoc, newDoc, settings);
+                            var settings = Reflector.ToString(
+                                Reflector.GetRootProperty(typeof(RefineDlg), "RefinementSettings"), // Not L10N
+                                refineDlg.RefinementSettings);
+
+                            return settings != null
+                                ? DiffDocNodesWithExtraText(MessageType.refined_targets, oldDoc, newDoc, settings)
+                                : null;
                         });
                 }
             }
         }
-        
-        /*public class DocNodeIdComparer : IEqualityComparer<DocNode>
-        {
-            public bool Equals(DocNode node1, DocNode node2)
-            {
-                if (ReferenceEquals(node1, node2))
-                    return true;
-
-                if (ReferenceEquals(node1, null) || ReferenceEquals(node2, null))
-                    return false;
-
-                return node1.Id.GlobalIndex == node2.Id.GlobalIndex;
-            }
-
-            public int GetHashCode(DocNode obj)
-            {
-                return obj.Id.GlobalIndex.GetHashCode();
-            }
-        }
-
-        private class DocNodePair<T> where T : DocNode
-        {
-            public DocNodePair(T oldNode, T newNode)
-            {
-                OldNode = oldNode;
-                NewNode = newNode;
-            }
-
-            public T OldNode { get; private set; }
-            public T NewNode { get; private set; }
-        }
-
-        private Dictionary<int, T> CreateDictionary<T>(IEnumerable<T> nodes) where T : DocNode
-        {
-            return new Dictionary<int, T>(nodes.ToDictionary(n => n.Id.GlobalIndex));
-        }
-
-        private List<DocNodePair<T>> MatchNodes<T>(IEnumerable<T> oldNodes, IEnumerable<T> newNodes) where T : DocNode
-        {
-            var oldDict = CreateDictionary(oldNodes);
-            var newDict = CreateDictionary(newNodes);
-
-            return oldDict.Keys.Intersect(newDict.Keys).Select(k => new DocNodePair<T>(oldDict[k], newDict[k]))
-                .ToList();
-        }*/
 
         public AuditLogEntry DiffDocNodes(MessageType action, SrmDocument oldDoc, SrmDocument newDoc, params string[] actionParameters)
         {
-            var property = new Property(typeof(SrmDocument).GetProperty("Targets"), new TrackChildrenAttribute()); // Not L10N
+            return DiffDocNodesWithExtraText(action, oldDoc, newDoc, null, actionParameters);
+        }
+
+        public AuditLogEntry DiffDocNodesWithExtraText(MessageType action, SrmDocument oldDoc, SrmDocument newDoc,
+            string extraText, params string[] actionParameters)
+        {
+            var property = Reflector.GetRootProperty(typeof(SrmDocument), "Targets"); // Not L10N
             var diffNode = Reflector<Targets>.BuildDiffTree(property, oldDoc.Targets, newDoc.Targets, DateTime.Now);
 
             if (diffNode.Root != null)
             {
-                var entry = AuditLogEntry.MakePropertyChangeEntry(oldDoc.FormatVersion, diffNode);
-                return entry.ChangeUndoRedo(entry.UndoRedo.ChangeType(action).ChangeNames(actionParameters));
+                var undoRedo = new AuditLogEntry.MessageTypeNamesPair(action, actionParameters);
+                var entry = AuditLogEntry.MakePropertyChangeEntry(oldDoc.FormatVersion, diffNode, undoRedo, extraText);
+                return entry;
             }
 
             return null;
-
-            /*var matchedPeptideGroups = MatchNodes(oldDoc.Children, newDoc.Children);
-            var removedNodes = oldDoc.Children.Except(newDoc.Children, new DocNodeIdComparer());
-
-            var allInfo = removedNodes.OfType<PeptideGroupDocNode>().Select(group =>
-                new AuditLogEntry.MessageTypeNamesPair(LogMessage.MessageType.removed_protein, group.Name)).ToList();
-
-            foreach (var peptideGroupPair in matchedPeptideGroups)
-            {
-                var oldPepGroup = peptideGroupPair.OldNode as PeptideGroupDocNode;
-                var newPepGroup = peptideGroupPair.NewNode as PeptideGroupDocNode;
-
-                if (oldPepGroup == null || newPepGroup == null)
-                    continue;
-
-                var peptideGroupName = newPepGroup.Name;
-
-                var matchedPeptides = MatchNodes(oldPepGroup.Peptides, newPepGroup.Peptides);
-                var removedPeptides = oldPepGroup.Peptides.Except(newPepGroup.Peptides, new DocNodeIdComparer()).Cast<PeptideDocNode>();
-                allInfo.AddRange(removedPeptides.Select(p =>
-                    new AuditLogEntry.MessageTypeNamesPair(LogMessage.MessageType.removed_peptide_from_protein,
-                        PeptideTreeNode.GetLabel(p, string.Empty), peptideGroupName)));
-
-                var tree = Reflector<PeptideGroupDocNode>.BuildDiffTree(Property.ROOT_PROPERTY, oldPepGroup, newPepGroup, DateTime.Now);
-                if (tree.Root != null)
-                {
-                    foreach (var node in tree.Root.Nodes)
-                    {
-                        var oldObj = node.Objects.LastOrDefault();
-                        var newObj = node.Objects.FirstOrDefault();
-                        var newValue = newObj == null ? "{2:Missing}" : newObj.ToString(); // Not L10N
-                        var oldValue = oldObj == null ? "{2:Missing}" : oldObj.ToString(); // Not L10N
-
-                        // TODO: do this much more cleanly and also for each doc node
-                        allInfo.Add(
-                            new AuditLogEntry.MessageTypeNamesPair(LogMessage.MessageType.changed_from_to,
-                                node.Property.PropertyInfo.Name + " of " + peptideGroupName,
-                                oldValue, newValue));
-                    }
-                }
-
-                foreach (var peptidePair in matchedPeptides)
-                {
-                    var oldPeptideNode = peptidePair.OldNode;
-                    var newPeptideNode = peptidePair.NewNode;
-                    var peptideName = PeptideTreeNode.GetLabel(newPeptideNode, string.Empty);
-
-                    var matchedTransitionGroups = MatchNodes(oldPeptideNode.TransitionGroups,
-                        newPeptideNode.TransitionGroups);
-                    var removedTransitionGroups = oldPeptideNode.TransitionGroups
-                        .Except(newPeptideNode.TransitionGroups, new DocNodeIdComparer())
-                        .Cast<TransitionGroupDocNode>();
-
-                    allInfo.AddRange(removedTransitionGroups.Select(t =>
-                        new AuditLogEntry.MessageTypeNamesPair(LogMessage.MessageType.removed_transition_group_from_peptide_from_protein,
-                            TransitionGroupTreeNode.GetLabel(t.TransitionGroup,
-                                t.PrecursorMz, string.Empty), peptideName, peptideGroupName)));
-
-                    // diff peptides
-
-                    foreach (var transitionGroupPair in matchedTransitionGroups)
-                    {
-                        var oldTransitionGroup = transitionGroupPair.OldNode;
-                        var newTransitionGroup = transitionGroupPair.NewNode;
-
-                        var matchedTransitions = MatchNodes(oldTransitionGroup.Transitions,
-                            newTransitionGroup.Transitions);
-                        var removedTransitions = oldTransitionGroup.Transitions
-                            .Except(newTransitionGroup.Transitions, new DocNodeIdComparer())
-                            .Cast<TransitionDocNode>();
-
-                        allInfo.AddRange(removedTransitions.Select(t =>
-                            new AuditLogEntry.MessageTypeNamesPair(
-                                LogMessage.MessageType
-                                    .removed_transition_from_transition_group_from_peptide_from_protein,
-                                TransitionTreeNode.GetLabel(t, string.Empty),
-                                TransitionGroupTreeNode.GetLabel(newTransitionGroup.TransitionGroup,
-                                    newTransitionGroup.PrecursorMz, string.Empty),
-                                peptideName, peptideGroupName)));
-
-                        // diff transition groups
-
-                        foreach (var transitionPair in matchedTransitions)
-                        {
-                            // diff transitions
-                        }
-                    }
-                }
-            }
-
-            if (allInfo.Any())
-            {
-                var undoRedo = new AuditLogEntry.MessageTypeNamesPair(action);
-                return AuditLogEntry.MakeCustomEntry(Document.FormatVersion, DateTime.Now, undoRedo, undoRedo, allInfo);
-            }
-
-            return null;*/
         }
 
         private void removeEmptyProteinsMenuItem_Click(object sender, EventArgs e)
@@ -2669,8 +2540,9 @@ namespace pwiz.Skyline
                     if (dlg.RemoveEmptyProteins)
                         refinementSettings.MinPeptidesPerProtein = 1;
 
+
                     ModifyDocument(Resources.SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides, refinementSettings.Refine,
-                        (oldDoc, newDoc) => DiffDocNodes(MessageType.accept_peptides, oldDoc, newDoc));
+                        (oldDoc, newDoc) => DiffDocNodesWithExtraText(MessageType.accept_peptides, oldDoc, newDoc, dlg.PeptidesText));
                 }
             }
         }

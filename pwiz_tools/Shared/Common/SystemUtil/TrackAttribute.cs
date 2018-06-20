@@ -31,6 +31,11 @@ namespace pwiz.Common.SystemUtil
         bool IsName { get; }
     }
 
+    public interface IAuditLogComparable
+    {
+        object DefaultObject { get; }
+    }
+
     public abstract class DefaultValues
     {
         protected virtual IEnumerable<object> _values

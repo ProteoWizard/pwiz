@@ -72,13 +72,16 @@ namespace pwiz.Skyline.Model.AuditLog
         inserted_peptides,
         inserted_transitions,
         accepted_proteins,
+
         accept_peptides,
+        accept_peptides_no_options,
+
         sort_protein_name,
         sort_protein_accession,
         sort_protein_preferred_name,
         sort_protein_gene,
         added_peptide_decoys,
-        refined_using
+        refined_targets
     }
 
     [XmlRoot(XML_ROOT)]
