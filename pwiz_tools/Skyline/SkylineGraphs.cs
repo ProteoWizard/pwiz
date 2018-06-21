@@ -3988,7 +3988,7 @@ namespace pwiz.Skyline
                 {
                     UpdateAreaPointsTypeMenuItems();
 
-                    if (!pointsToolStripMenuItem.DropDownItems.OfType<object>().Any())
+                    if (pointsToolStripMenuItem.DropDownItems.Count == 0)
                     {
                         pointsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                         {
@@ -4000,8 +4000,25 @@ namespace pwiz.Skyline
                     menuStrip.Items.Insert(iInsert++, pointsToolStripMenuItem);
                 }
 
+                UpdateAreaCVTransitionsMenuItems();
+
+                if (areaCVTransitionsToolStripMenuItem.DropDownItems.Count == 0)
+                {
+                    areaCVTransitionsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                    {
+                        areaCVAllTransitionsToolStripMenuItem,
+                        areaCVBestTransitionsToolStripMenuItem,
+                        toolStripSeparator58,
+                        areaCVPrecursorsToolStripMenuItem,
+                        areaCVProductsToolStripMenuItem
+                    });
+                }
+
+                menuStrip.Items.Insert(iInsert++, areaCVTransitionsToolStripMenuItem);
+
+
                 UpdateAreaBinWidthMenuItems();
-                if (!areaCVbinWidthToolStripMenuItem.DropDownItems.OfType<object>().Any())
+                if (areaCVbinWidthToolStripMenuItem.DropDownItems.Count == 0)
                 {
                     areaCVbinWidthToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
@@ -4087,6 +4104,47 @@ namespace pwiz.Skyline
                     menuStrip.Items.Remove(item);
             }
         }
+
+        private void UpdateAreaCVTransitionsMenuItems()
+        {
+            areaCVAllTransitionsToolStripMenuItem.Checked = AreaGraphController.AreaCVTransitions == AreaCVTransitions.all;
+            areaCVBestTransitionsToolStripMenuItem.Checked = AreaGraphController.AreaCVTransitions == AreaCVTransitions.best;
+            areaCVPrecursorsToolStripMenuItem.Checked = AreaGraphController.AreaCVMsLevel == AreaCVMsLevel.precursors;
+            areaCVProductsToolStripMenuItem.Checked = AreaGraphController.AreaCVMsLevel == AreaCVMsLevel.products;
+        }
+
+        private void areaCVAllTransitionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetAreaCVTransitions(AreaCVTransitions.all);
+        }
+
+        private void areaCVBestTransitionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetAreaCVTransitions(AreaCVTransitions.best);
+        }
+
+        public void SetAreaCVTransitions(AreaCVTransitions transitions)
+        {
+            AreaGraphController.AreaCVTransitions = transitions;
+            UpdatePeakAreaGraph();
+        }
+
+        private void areaCVPrecursorsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetAreaCVMsLevel(AreaCVMsLevel.precursors);
+        }
+
+        private void areaCVProductsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetAreaCVMsLevel(AreaCVMsLevel.products);
+        }
+
+        public void SetAreaCVMsLevel(AreaCVMsLevel msLevel)
+        {
+            AreaGraphController.AreaCVMsLevel = msLevel;
+            UpdatePeakAreaGraph();
+        }
+
 
         private void UpdateAreaBinWidthMenuItems()
         {
