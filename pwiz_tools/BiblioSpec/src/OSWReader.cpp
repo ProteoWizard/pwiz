@@ -134,9 +134,9 @@ bool OSWReader::parseFile() {
             transferPeaks(curSpectrum, curPeakMzs, curPeakIntensities); // set peaks for previous spectrum
 
             curSpectrum = &(spectra_.insert(make_pair(featureId, SpecData())).first->second);
-            curSpectrum->retentionTime = sqlite3_column_double(stmt, 2);
-            curSpectrum->startTime = sqlite3_column_double(stmt, 7);
-            curSpectrum->endTime = sqlite3_column_double(stmt, 8);
+            curSpectrum->retentionTime = sqlite3_column_double(stmt, 2)/60;
+            curSpectrum->startTime = sqlite3_column_double(stmt, 7)/60;
+            curSpectrum->endTime = sqlite3_column_double(stmt, 8)/60;
             curSpectrum->mz = sqlite3_column_double(stmt, 5);
         }
         curPeakMzs.push_back(sqlite3_column_double(stmt, 9));

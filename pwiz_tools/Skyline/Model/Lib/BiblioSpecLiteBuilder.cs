@@ -55,6 +55,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_TSV = ".tsv";
         public const string EXT_MZTAB = ".mzTab";
         public const string EXT_MZTAB_TXT = "mztab.txt";
+        public const string EXT_OPEN_SWATH = ".osw";
         // ReSharper restore NonLocalizedString
 
         private ReadOnlyCollection<string> _inputFiles;
