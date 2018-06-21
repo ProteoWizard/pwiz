@@ -68,6 +68,28 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 Array.ForEach(new Control[] {lblTolerance, txtTolerance, lblToleranceUnits, lblIonCount, txtIonCount, lblIonCountUnits}, c => c.Top -= offset);
                 cbExclusionUseDIAWindow.Hide();
             }
+            // If these are just the document defaults, use something more appropriate for DIA
+            else
+            {
+                var settingsCurrent = SkylineWindow.DocumentUI.Settings.TransitionSettings;
+                var settings = settingsCurrent;
+                var defSettings = SrmSettingsList.GetDefault().TransitionSettings;
+                if (Equals(settings.Filter, defSettings.Filter))
+                {
+                    settings = settings.ChangeFilter(settings.Filter
+                        .ChangePeptidePrecursorCharges(new[] { Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED })
+                        .ChangePeptideProductCharges(new[] { Adduct.SINGLY_PROTONATED, Adduct.DOUBLY_PROTONATED })
+                        .ChangePeptideIonTypes(new[] { IonType.y, IonType.b, IonType.precursor }));
+                }
+                if (Equals(settings.Libraries, defSettings.Libraries))
+                {
+                    settings = settings.ChangeLibraries(settings.Libraries.ChangeIonMatchTolerance(0.05)
+                        .ChangeIonCount(6)
+                        .ChangeMinIonCount(6));
+                }
+                if (!ReferenceEquals(settings, settingsCurrent))
+                    SetFields(settings);
+            }
         }
 
         public static bool ValidateAdductListTextBox(MessageBoxHelper helper, TextBox control, bool proteomic,
