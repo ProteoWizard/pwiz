@@ -81,6 +81,7 @@ bool OSWReader::parseFile() {
         "LEFT JOIN PEPTIDE_PROTEIN_MAPPING ON PRECURSOR_PEPTIDE_MAPPING.PEPTIDE_ID = PEPTIDE_PROTEIN_MAPPING.PEPTIDE_ID "
         "LEFT JOIN PROTEIN ON PEPTIDE_PROTEIN_MAPPING.PROTEIN_ID = PROTEIN.ID "
         "WHERE PRECURSOR.DECOY = 0 "
+        "  AND SCORE_MS2.RANK = 1 "
         "  AND SCORE_MS2.QVALUE <= " + boost::lexical_cast<string>(scoreThreshold_) + " "
         "ORDER BY FEATURE.ID ASC";
     sqlite3_stmt* stmt;
