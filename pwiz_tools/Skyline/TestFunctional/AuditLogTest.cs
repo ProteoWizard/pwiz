@@ -193,29 +193,33 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(expectedColumns[i][j], builtInViews[i].Columns[j].Name);
             }
 
-            // Verify that the audit log rows in the grid correspond to the audit log entries
-            Assert.AreEqual(auditLogForm.BindingListSource.Count, LOG_ENTRY_MESSAGESES.Length);
-            for (var i = 0; i < auditLogForm.BindingListSource.Count; i++)
+            WaitForConditionUI(() => auditLogForm.BindingListSource.IsComplete);
+            RunUI(() =>
             {
-                var rowItem = auditLogForm.BindingListSource[i] as RowItem;
-                Assert.IsNotNull(rowItem);
-                var row = rowItem.Value as AuditLogRow;
-                Assert.IsNotNull(row);
-
-                Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedSummary.ToString(), row.SummaryMessage);
-                Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedUndoRedo.ToString(), row.UndoRedoMessage);
-
-                if (LOG_ENTRY_MESSAGESES[i].ExpectedAllInfo.Length != row.Details.Count)
+                // Verify that the audit log rows in the grid correspond to the audit log entries
+                Assert.AreEqual(auditLogForm.BindingListSource.Count, LOG_ENTRY_MESSAGESES.Length);
+                for (var i = 0; i < auditLogForm.BindingListSource.Count; i++)
                 {
-                    Assert.Fail("Expected: " +
-                                string.Join(",\n", LOG_ENTRY_MESSAGESES[i].ExpectedAllInfo.Select(l => l.ToString())) +
-                                "\nActual: " + string.Join(",\n", row.Details.Select(d => d.AllInfoMessage)));
-                }
+                    var rowItem = auditLogForm.BindingListSource[i] as RowItem;
+                    Assert.IsNotNull(rowItem);
+                    var row = rowItem.Value as AuditLogRow;
+                    Assert.IsNotNull(row);
 
-                for (var j = 0; j < row.Details.Count; ++j)
-                    Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedAllInfo[j].ToString(), row.Details[j].AllInfoMessage);
-                    
-            }
+                    Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedSummary.ToString(), row.SummaryMessage);
+                    Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedUndoRedo.ToString(), row.UndoRedoMessage);
+
+                    if (LOG_ENTRY_MESSAGESES[i].ExpectedAllInfo.Length != row.Details.Count)
+                    {
+                        Assert.Fail("Expected: " +
+                                    string.Join(",\n", LOG_ENTRY_MESSAGESES[i].ExpectedAllInfo.Select(l => l.ToString())) +
+                                    "\nActual: " + string.Join(",\n", row.Details.Select(d => d.AllInfoMessage)));
+                    }
+
+                    for (var j = 0; j < row.Details.Count; ++j)
+                        Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedAllInfo[j].ToString(), row.Details[j].AllInfoMessage);
+
+                }
+            });
 
             // Change to a view that shows the reason
             RunUI(() =>

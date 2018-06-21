@@ -2697,5 +2697,41 @@ namespace pwiz.Skyline.Properties {
                 this["AuditLogView"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("all")]
+        public string AreaCVTransitions {
+            get {
+                return ((string)(this["AreaCVTransitions"]));
+            }
+            set {
+                this["AreaCVTransitions"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("products")]
+        public string AreaCVMsLevel {
+            get {
+                return ((string)(this["AreaCVMsLevel"]));
+            }
+            set {
+                this["AreaCVMsLevel"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
+        public int AreaCVRatioIndex {
+            get {
+                return ((int)(this["AreaCVRatioIndex"]));
+            }
+            set {
+                this["AreaCVRatioIndex"] = value;
+            }
+        }
     }
 }
