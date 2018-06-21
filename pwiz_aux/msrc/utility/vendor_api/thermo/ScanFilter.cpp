@@ -448,7 +448,7 @@ const static boost::regex filterRegex("^(?<analyzer>FTMS|ITMS|TQMS|SQMS|TOFMS|SE
                          "(?<source>EI|CI|FAB|ESI|APCI|NSI|TSP|FD|MALDI|GD)?\\s*"
                          "(?<corona>!corona|corona)?\\s*"
                          "(?<photoIonization>!pi|pi)?\\s*"
-                         "(?<sourceCID>!sid|sid=\\d+(?:\\.\\d+))?\\s*"
+                         "(?<sourceCID>!sid|sid=-?\\d+(?:\\.\\d+))?\\s*"
                          "(?<detectorSet>!det|det=\\d+(?:\\.\\d+))?\\s*"
                          "(?:cv=(?<compensationVoltage>-?\\d+(?:\\.\\d+)?))?\\s*"
                          "(?<rapid>!r|r)?\\s*"
