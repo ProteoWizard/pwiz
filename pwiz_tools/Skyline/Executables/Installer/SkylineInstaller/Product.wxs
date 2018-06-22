@@ -592,6 +592,9 @@
       <Component Id="ucrtbase.dll">
         <File Source="$(var.Skyline.TargetDir)/ucrtbase.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="unimod.xml">
+        <File Source="$(var.Skyline.TargetDir)/unimod.xml" KeyPath="yes"/>
+      </Component>
       <Component Id="unimod_2.xsd">
         <File Source="$(var.Skyline.TargetDir)/unimod_2.xsd" KeyPath="yes"/>
       </Component>

@@ -304,13 +304,11 @@ namespace pwiz.SkylineTestFunctional
                     createExprDlg.Expression = exprInfo.MatchExpression.RegExpr;
                 });
 
-                WaitForConditionUI(() => exprInfo.ExpectedMatches.Count == createExprDlg.MatchingRows.Count(),
+                WaitForConditionUI(() => exprInfo.ExpectedMatches.Count == createExprDlg.MatchingRows.Count(), () =>
                     string.Format("Expected: {0}\nActual: {1}", string.Join(", ", exprInfo.ExpectedMatches),
                         string.Join(", ", createExprDlg.MatchingRows)));
 
-                RunUI(() => CollectionAssert.AreEqual(exprInfo.ExpectedMatches, createExprDlg.MatchingRows.ToArray(),
-                    string.Format("Expected: {0}\nActual: {1}", string.Join(", ", exprInfo.ExpectedMatches),
-                        string.Join(", ", createExprDlg.MatchingRows))));
+                RunUI(() => CollectionAssert.AreEqual(exprInfo.ExpectedMatches, createExprDlg.MatchingRows.ToArray()));
 
                 OkDialog(createExprDlg, createExprDlg.OkDialog);
             }
