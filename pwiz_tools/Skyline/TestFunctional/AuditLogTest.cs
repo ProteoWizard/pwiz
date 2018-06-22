@@ -203,8 +203,8 @@ namespace pwiz.SkylineTestFunctional
                     var row = rowItem.Value as AuditLogRow;
                     Assert.IsNotNull(row);
 
-                    Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedSummary.ToString(), row.SummaryMessage);
-                    Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedUndoRedo.ToString(), row.UndoRedoMessage);
+                    Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedSummary.ToString(), row.SummaryMessage.Text);
+                    Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedUndoRedo.ToString(), row.UndoRedoMessage.Text);
 
                     if (LOG_ENTRY_MESSAGESES[i].ExpectedAllInfo.Length != row.Details.Count)
                     {
@@ -214,7 +214,7 @@ namespace pwiz.SkylineTestFunctional
                     }
 
                     for (var j = 0; j < row.Details.Count; ++j)
-                        Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedAllInfo[j].ToString(), row.Details[j].AllInfoMessage);
+                        Assert.AreEqual(LOG_ENTRY_MESSAGESES[i].ExpectedAllInfo[j].ToString(), row.Details[j].AllInfoMessage.Text);
 
                 }
             });
@@ -231,26 +231,43 @@ namespace pwiz.SkylineTestFunctional
                         new ColumnSpec(PropertyPath.Parse("Details!*.Reason"))
                     }).SetName("Reason View"));
             });
+
             WaitForConditionUI(() => auditLogForm.BindingListSource.IsComplete);
             // Verify that changing the reason of a row correctly modifies the audit log entries in the document
             RunUI(() =>
             {
                 // (Precursor mass changed to "Average" row) Changing the reason of this row should change the reason of its detail row and vice versa
-                ChangeReason(auditLogForm, "Reason", 1, "Reason 1");
-                Assert.AreEqual("Reason 1", SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[1].Reason);
-                Assert.AreEqual("Reason 1", SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[1].AllInfo[0].Reason);
-                ChangeReason(auditLogForm, "Details!*.Reason", 1, "Reason 2");
-                Assert.AreEqual("Reason 2", SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[1].Reason);
-                Assert.AreEqual("Reason 2", SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[1].AllInfo[0].Reason);
-
+                ChangeReason(auditLogForm, "Reason", 2, "Reason 1");
+            });
+            WaitForConditionUI(() => auditLogForm.BindingListSource.IsComplete);
+            RunUI(() =>
+            {
+                Assert.AreEqual("Reason 1", SkylineWindow.Document.AuditLog.AuditLogEntries[1].Reason);
+                ChangeReason(auditLogForm, "Details!*.Reason", 2, "Reason 2");
+                
+            });
+            WaitForConditionUI(() => auditLogForm.BindingListSource.IsComplete);
+            RunUI(() =>
+            {
+                Assert.AreEqual("Reason 2", SkylineWindow.Document.AuditLog.AuditLogEntries[1].Reason);
                 // (Collision Energy changed from Thermo to Thermo TSQ Q.) Changing the reason of this row should not change the reason of its detail row and vice versa
-                ChangeReason(auditLogForm, "Reason", 2, "Reason 3");
-                Assert.AreEqual("Reason 3", SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[2].Reason);
-                Assert.IsTrue(SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[2].AllInfo
+                ChangeReason(auditLogForm, "Reason", 4, "Reason 3");
+
+            });
+            WaitForConditionUI(() => auditLogForm.BindingListSource.IsComplete);
+            RunUI(() =>
+            {
+                Assert.AreEqual("Reason 3", SkylineWindow.Document.AuditLog.AuditLogEntries[2].Reason);
+                Assert.IsTrue(SkylineWindow.Document.AuditLog.AuditLogEntries[2].AllInfo
                     .All(l => string.IsNullOrEmpty(l.Reason)));
-                ChangeReason(auditLogForm, "Details!*.Reason", 2, "Reason 4");
-                Assert.AreEqual("Reason 3", SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[2].Reason);
-                Assert.AreEqual("Reason 4", SkylineWindow.DocumentUI.AuditLog.AuditLogEntries[2].AllInfo[0].Reason);
+                ChangeReason(auditLogForm, "Details!*.Reason", 4, "Reason 4");
+
+            });
+            WaitForConditionUI(() => auditLogForm.BindingListSource.IsComplete);
+            RunUI(() =>
+            {
+                Assert.AreEqual("Reason 3", SkylineWindow.Document.AuditLog.AuditLogEntries[2].Reason);
+                Assert.AreEqual("Reason 4", SkylineWindow.Document.AuditLog.AuditLogEntries[2].AllInfo[1].Reason);
             });
         }
 
@@ -513,6 +530,9 @@ namespace pwiz.SkylineTestFunctional
                     "\"Average\""),
                 new[]
                 {
+                    new LogMessage(LogLevel.undo_redo, MessageType.changed_to, string.Empty, false,
+                        "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_PrecursorMassType}",
+                        "\"Average\""),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_PrecursorMassType}",
                         "\"Monoisotopic\"",
@@ -529,6 +549,10 @@ namespace pwiz.SkylineTestFunctional
                     "\"Thermo TSQ Quantiva\""),
                 new[]
                 {
+                    new LogMessage(LogLevel.undo_redo, MessageType.changed_from_to, string.Empty, false,
+                        "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}",
+                        "\"Thermo\"",
+                        "\"Thermo TSQ Quantiva\""),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}",
                         "\"Thermo\"",
@@ -557,6 +581,10 @@ namespace pwiz.SkylineTestFunctional
                     "\"SCIEX\""),
                 new[]
                 {
+                    new LogMessage(LogLevel.undo_redo, MessageType.changed_from_to, string.Empty, false,
+                        "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}",
+                        "{2:Missing}",
+                        "\"SCIEX\""),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}",
                         "{2:Missing}",
@@ -581,6 +609,8 @@ namespace pwiz.SkylineTestFunctional
                     "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}"),
                 new[]
                 {
+                    new LogMessage(LogLevel.undo_redo, MessageType.changed, string.Empty, false,
+                        "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}"),
                     new LogMessage(LogLevel.all_info, MessageType.added_to, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_MeasuredIons}",
                         "\"N-terminal to Proline\""),
@@ -633,6 +663,9 @@ namespace pwiz.SkylineTestFunctional
                     "\"SubjectId\""),
                 new[]
                 {
+                    new LogMessage(LogLevel.undo_redo, MessageType.removed_from, string.Empty, false,
+                        "{1:DataSettings_AnnotationDefs}",
+                        "\"SubjectId\""),
                     new LogMessage(LogLevel.all_info, MessageType.removed_from, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}",
                         "\"SubjectId\""),
@@ -646,6 +679,9 @@ namespace pwiz.SkylineTestFunctional
                     "\"SubjectId\""),
                 new[]
                 {
+                    new LogMessage(LogLevel.undo_redo, MessageType.added_to, string.Empty, false,
+                        "{1:DataSettings_AnnotationDefs}",
+                        "\"SubjectId\""),
                     new LogMessage(LogLevel.all_info, MessageType.added_to, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}",
                         "\"SubjectId\""),
@@ -666,6 +702,8 @@ namespace pwiz.SkylineTestFunctional
                     "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}"),
                 new[]
                 {
+                    new LogMessage(LogLevel.undo_redo, MessageType.changed, string.Empty, false,
+                        "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}"),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_FullScan}{2:PropertySeparator}{0:TransitionFullScan_AcquisitionMethod}",
                         "\"None\"",

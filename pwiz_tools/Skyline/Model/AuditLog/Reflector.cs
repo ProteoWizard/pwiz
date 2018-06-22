@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public static string ToString(Property property, IAuditLogComparable obj)
         {
             var diffNode = BuildDiffTree(property.GetPropertyType(obj), property, obj.DefaultObject, obj, PropertyPath.Root, null, false);
-            return diffNode == null ? null : ToString(new DiffNodePropertyObjectSelector(diffNode), true, true, 0).Trim();
+            return diffNode == null ? null : ToString(new DiffNodePropertyObjectSelector(diffNode), true, true, 0);
         }
 
         public static string ToString(object obj)
@@ -265,19 +265,33 @@ namespace pwiz.Skyline.Model.AuditLog
             return ToString(new PropertyObjectSelector(Property.ROOT_PROPERTY, obj), true, false, -1).Trim();
         }
 
-        private static string ToString(Type type, ObjectSelector propertyObjectSelector, bool wrapProperties, bool addwhitespace, int indentLevel)
+        private static string ToString(Type type, ObjectSelector propertyObjectSelector, bool wrapProperties, bool formatWhitespace, int indentLevel)
         {
             if (propertyObjectSelector.Object == null)
                 return LogMessage.MISSING;
 
+            // If the name is not getting ignored there will be an equal sign in front of this text,
+            // so dont indent, unless the object is a collection element, in which case it has no equal sign
+            var indent =
+                (propertyObjectSelector.Property.IgnoreName || propertyObjectSelector.Property.IsCollectionElement) &&
+                formatWhitespace;
+
             var auditLogObj = propertyObjectSelector.Object as IAuditLogObject;
             if (auditLogObj != null && !auditLogObj.IsName)
-                return LogMessage.Quote(auditLogObj.AuditLogText);
+                return Indent(indent, LogMessage.Quote(auditLogObj.AuditLogText), indentLevel);
 
-            return AuditLogToStringHelper.InvariantToString(propertyObjectSelector.Object) ?? AuditLogToStringHelper.KnownTypeToString(propertyObjectSelector.Object) ??
-                    ToString(propertyObjectSelector, wrapProperties, addwhitespace, indentLevel);
+            return Indent(indent,
+                       AuditLogToStringHelper.InvariantToString(propertyObjectSelector.Object) ??
+                       AuditLogToStringHelper.KnownTypeToString(propertyObjectSelector.Object), indentLevel) ??
+                   ToString(propertyObjectSelector, wrapProperties, formatWhitespace, indentLevel + 1);
         }
 
+        /// <summary>
+        /// Used by the ToString function to select properties to include in the string representation.
+        /// Each selector contains an <see cref="ObjectContainer"/> from which the actual <see cref="Object"/> can be retrieved,
+        /// the <see cref="AuditLog.Property"/> corresponding to the <see cref="Object"/> and a list of <see cref="SubSelectors"/>
+        /// that are used to iterate over the objects properties or sub elements.
+        /// </summary>
         private abstract class ObjectSelector
         {
             protected ObjectSelector(Property property, object objectContainer)
@@ -319,7 +333,7 @@ namespace pwiz.Skyline.Model.AuditLog
             public override object Object { get { return ObjectContainer; } }
         }
 
-        private class DiffNodePropertyObjectSelector : PropertyObjectSelector
+        private sealed class DiffNodePropertyObjectSelector : PropertyObjectSelector
         {
             public DiffNodePropertyObjectSelector(DiffNode node) :
                 base(node.Property, node)
@@ -337,17 +351,21 @@ namespace pwiz.Skyline.Model.AuditLog
             }
         }
 
-        private static string Indent(bool indent, string s, int indentLevel)
+        private static string GetIndentation(int indentLevel)
         {
-            if (!indent)
-                return s;
-
-            var indentation = new StringBuilder(4 * indentLevel).Insert(0, "    ", indentLevel).ToString(); // Not L10N
-            s = indentation + s;
-            return s.Replace("\r\n", "\r\n" + indentation); // Not L10N
+            return new StringBuilder(4 * indentLevel).Insert(0, "    ", indentLevel).ToString(); // Not L10N
         }
 
-        private static string ToString(ObjectSelector selector, bool wrapProperties, bool addwhitespace, int indentLevel)
+        private static string Indent(bool indent, string s, int indentLevel)
+        {
+            if (!indent || s == null || indentLevel < 0)
+                return s;
+
+            s = GetIndentation(indentLevel) + s;
+            return s;
+        }
+
+        private static string ToString(ObjectSelector selector, bool wrapProperties, bool formatWhiteSpace, int indentLevel)
         {
             var obj = selector.Object;
             if (obj == null)
@@ -361,9 +379,10 @@ namespace pwiz.Skyline.Model.AuditLog
             string format;
 
             var auditLogObj = AuditLogObject.GetAuditLogObject(obj);
-
             var subSelectors = selector.SubSelectors.ToArray();
+
             string result;
+
             if (auditLogObj.IsName)
             {
                 var name = LogMessage.Quote(auditLogObj.AuditLogText);
@@ -384,16 +403,27 @@ namespace pwiz.Skyline.Model.AuditLog
                 strings = new List<string>(keys.Length);
                 Assume.AreEqual(subSelectors.Length, keys.Length);
                 for (var i = 0; i < keys.Length; ++i)
-                    strings.Add(Indent(addwhitespace, ToString(collectionInfo.ElementValueType, subSelectors[i], wrapProperties, addwhitespace, indentLevel + 1), 1));
+                {
+                    strings.Add(ToString(collectionInfo.ElementValueType, subSelectors[i], wrapProperties,
+                        formatWhiteSpace, indentLevel));
+                }
 
-                format = addwhitespace ? ("\r\n[\r\n{0}\r\n]") : "[ {0} ]"; // Not L10N
+                if (formatWhiteSpace)
+                {
+                    if (indentLevel == 0)
+                        format = "{0}"; // Not L10N
+                    else
+                        format = string.Format("\r\n{0}[\r\n{{0}}\r\n{0}]", GetIndentation(indentLevel - 1)); // Not L10N
+                }
+                else
+                {
+                    format = "[ {0} ]"; // Not L10N
+                }
             }
             else
             {
-                if (wrapProperties)
-                    ++indentLevel;
-
                 strings = new List<string>();
+
                 foreach (var subSelector in subSelectors)
                 {
                     var value = subSelector.Object;
@@ -405,19 +435,36 @@ namespace pwiz.Skyline.Model.AuditLog
 
                     if (subSelector.Property.IgnoreName)
                     {
-                        strings.Add(ToString(type, subSelector, false, addwhitespace, indentLevel));
+                        strings.Add(ToString(type, subSelector, false, formatWhiteSpace, indentLevel - 1));
                     }
                     else
                     {
-                        strings.Add(Indent(addwhitespace, subSelector.Property.GetName(null, obj) + " = " + // Not L10N
-                                    ToString(type, subSelector, true, addwhitespace, indentLevel + 1), 1));
+                        strings.Add(Indent(formatWhiteSpace, subSelector.Property.GetName(null, obj) + "=" + // Not L10N
+                            ToString(type, subSelector, true, formatWhiteSpace, indentLevel), indentLevel));
                     }
                 }
 
-                format =(wrapProperties ? (addwhitespace ? "\r\n{{\r\n{0}\r\n}}" : "{{ {0} }}") : "{0}"); // Not L10N
+                // If we don't want to wrap properties or this is the "root" text, we don't
+                // show curly braces
+                if (wrapProperties && (!formatWhiteSpace || indentLevel != 0))
+                {
+                    if (formatWhiteSpace)
+                    {
+                        format = string.Format("\r\n{0}{{{{\r\n{{0}}\r\n{0}}}}}", // Not L10N 
+                            GetIndentation(indentLevel - 1));
+                    }
+                    else
+                    {
+                        format = "{{ {0} }}"; // Not L10N
+                    }
+                }
+                else
+                {
+                    format = "{0}"; // Not L10N
+                }
             }
 
-            var separator = addwhitespace ? ",\r\n" : ", "; // Not L10N
+            var separator = formatWhiteSpace ? ",\r\n" : ", "; // Not L10N
             return string.Format(result, string.Format(format, string.Join(separator, strings))); // Not L10N
         }
 

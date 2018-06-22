@@ -187,8 +187,6 @@ namespace pwiz.Skyline.Model.Databinding
 
         public SkylineWindow SkylineWindow { get { return _documentContainer as SkylineWindow; } }
 
-        public IDocumentContainer DocumentContainer { get { return _documentContainer; } }
-
         private ReplicateSummaries _replicateSummaries;
         public ReplicateSummaries GetReplicateSummaries()
         {

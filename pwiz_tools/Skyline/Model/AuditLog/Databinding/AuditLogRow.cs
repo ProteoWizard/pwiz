@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -30,39 +31,35 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 {
     public class AuditLogRow : SkylineObject
     {
-        private AuditLogEntry _entry;
+        private readonly AuditLogEntry _entry;
 
         public AuditLogRow(SkylineDataSchema dataSchema, AuditLogEntry entry) : base(dataSchema)
         {
             Assume.IsNotNull(entry);
             _entry = entry;
-
-            SkylineVersion = entry.SkylineVersion;
-            DocumentFormat = entry.FormatVersion.AsDouble();
-            TimeStamp = entry.TimeStamp.ToString(CultureInfo.CurrentCulture);
-            User = entry.User;
-            ExtraText = entry.ExtraText;
-
             Details = ImmutableList.ValueOf(
                 Enumerable.Range(0, entry.AllInfo.Count).Select(i => new AuditLogDetailRow(this, i)));
         }
 
-        public AuditLogEntry GetEntry() { return _entry; }
+        public AuditLogEntry Entry
+        {
+            get { return _entry; }
+        }
 
-        public string TimeStamp { get; private set; }
-
-        public string ExtraText { get; private set; }
+        public string TimeStamp { get { return _entry.TimeStamp.ToString(CultureInfo.CurrentCulture); } }
 
         public class AuditLogRowText
         {
-            public AuditLogRowText(string text, string extraText)
+            public AuditLogRowText(string text, string extraText, Action undoAction)
             {
                 Text = text;
                 ExtraText = extraText;
+                UndoAction = undoAction;
             }
 
             public string Text { get; private set; }
             public string ExtraText { get; private set; }
+            public Action UndoAction { get; private set; }
 
             public override string ToString()
             {
@@ -77,7 +74,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             get
             {
                 return new AuditLogRowText(_entry.UndoRedo.ToString(),
-                    LogMessage.LocalizeLogStringProperties(ExtraText));
+                    LogMessage.LocalizeLogStringProperties(_entry.ExtraText), _entry.UndoAction);
             }
         }
 
@@ -88,13 +85,13 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             get
             {
                 return new AuditLogRowText(_entry.Summary.ToString(),
-                    LogMessage.LocalizeLogStringProperties(ExtraText));
+                    LogMessage.LocalizeLogStringProperties(_entry.ExtraText), _entry.UndoAction);
             }
         }
 
-        public string SkylineVersion { get; private set; }
-        public double DocumentFormat { get; private set; }
-        public string User { get; private set; }
+        public string SkylineVersion { get { return _entry.SkylineVersion; } }
+        public double DocumentFormat { get { return _entry.FormatVersion.AsDouble(); } }
+        public string User { get { return _entry.User; } }
 
         [OneToMany(ForeignKey = "AuditLogRow")] // Not L10N
         public IList<AuditLogDetailRow> Details { get; private set; }
@@ -110,8 +107,6 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                 var newEntry = _entry.ChangeReason(value);
                 ModifyDocument(EditDescription.SetColumn("Reason", // Not L10N
                         value), d => ChangeEntry(d, newEntry));
- 
-                _entry = newEntry;
             }
         }
 

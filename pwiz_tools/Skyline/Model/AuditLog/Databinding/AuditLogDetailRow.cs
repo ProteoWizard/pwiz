@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
@@ -38,25 +39,38 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
         public AuditLogRow AuditLogRow { get; private set; }
 
+        [DataGridViewColumnType(typeof(AuditLogColumn))]
         [Format(Width = 512)]
-        public string AllInfoMessage
+        public AuditLogRow.AuditLogRowText AllInfoMessage
         {
-            get { return AuditLogRow.GetEntry().AllInfo[_detailIndex].ToString(); }
+            get
+            {
+                string extraText = null;
+                Action undoAction = null;
+
+                if (AuditLogRow.Entry.InsertUndoRedoIntoAllInfo && _detailIndex == 0)
+                {
+                    extraText = LogMessage.LocalizeLogStringProperties(AuditLogRow.Entry.ExtraText);
+                    undoAction = AuditLogRow.Entry.UndoAction;
+                }
+
+                return new AuditLogRow.AuditLogRowText(AuditLogRow.Entry.AllInfo[_detailIndex].ToString(), extraText, undoAction);
+            }
         }
 
         public string Reason
         {
             get
             {
-                var entry = AuditLogRow.GetEntry();
+                var entry = AuditLogRow.Entry;
                 if (entry.InsertUndoRedoIntoAllInfo && _detailIndex == 0 || entry.HasSingleAllInfoRow)
                     return entry.Reason;
 
-                return AuditLogRow.GetEntry().AllInfo[_detailIndex].Reason;
+                return AuditLogRow.Entry.AllInfo[_detailIndex].Reason;
             }
             set
             {
-                var entry = AuditLogRow.GetEntry();
+                var entry = AuditLogRow.Entry;
 
                 if (entry.InsertUndoRedoIntoAllInfo && _detailIndex == 0 || entry.HasSingleAllInfoRow)
                 {
@@ -74,7 +88,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                 }
                     
                 var allInfoCopy = list.ToArray();
-                allInfoCopy[index] = entry.AllInfo[index].ChangeReason(value);
+                allInfoCopy[index] = entry.AllInfo[_detailIndex].ChangeReason(value);
                 entry = entry.ChangeAllInfo(allInfoCopy);
 
                 ModifyDocument(EditDescription.SetColumn("Reason", value), // Not L10N
@@ -84,7 +98,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
         public override string ToString()
         {
-            return TextUtil.SpaceSeparate(AllInfoMessage, Reason);
+            return TextUtil.SpaceSeparate(AllInfoMessage.Text, Reason);
         }
     }
 }

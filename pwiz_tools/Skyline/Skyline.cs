@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Deployment.Application;
 using System.Diagnostics;
-using System.Diagnostics.SymbolStore;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -648,7 +647,10 @@ namespace pwiz.Skyline
                     {
                         undo.Commit(entry != null ? entry.UndoRedo.ToString() : description);
                         if (entry != null)
+                        {
+                            entry = entry.ChangeUndoAction(UndoAuditLogEntry);
                             entry.AddToDocument(Document, ModifyDocumentNoUndo);
+                        }  
                     }   
                 }
             }
@@ -664,6 +666,19 @@ namespace pwiz.Skyline
             {
                 MessageDlg.Show(this, TextUtil.LineSeparate(Resources.SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document, x.Message)); // Not L10N
             }
+        }
+
+        public void UndoAuditLogEntry(AuditLogEntry entry)
+        {
+            var entries = Document.AuditLog.AuditLogEntries;
+            var index = entries.IndexOf(e => ReferenceEquals(e, entry));
+            var undoIndex = entries.Count - index - 1;
+
+            Assume.IsTrue(undoIndex >= 0 && undoIndex < _undoManager.UndoCount,
+                string.Format("Attempting to undo index {0} (count = {1})", undoIndex, _undoManager.UndoCount)); // Not L10N
+            Assume.AreEqual(_undoManager.UndoDescriptions.ElementAt(undoIndex), entry.UndoRedo.ToString());
+
+            _undoManager.UndoRestore(undoIndex);
         }
 
         public void ModifyDocumentNoUndo(Func<SrmDocument, SrmDocument> act)

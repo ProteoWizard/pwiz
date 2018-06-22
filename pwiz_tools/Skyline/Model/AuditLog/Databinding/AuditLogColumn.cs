@@ -18,16 +18,16 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
         public override bool ShouldDisplay(object cellValue, int imageIndex)
         {
-            var rowText = cellValue as AuditLogRow.AuditLogRowText;
-            if (rowText == null)
+            var value = cellValue as AuditLogRow.AuditLogRowText;
+            if (value == null)
                 return false;
 
             switch (imageIndex)
             {
                 case 0:
-                    return true;
+                    return value.UndoAction != null;
                 case 1:
-                    return !string.IsNullOrEmpty(rowText.ExtraText);
+                    return !string.IsNullOrEmpty(value.ExtraText);
                 default:
                     return false;
             }
@@ -41,6 +41,9 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
             switch (imageIndex)
             {
+                case 0:
+                    value.UndoAction();
+                    break;
                 case 1:
                 {
                     MessageDlg.Show(DataGridView.FindForm(), value.ExtraText);

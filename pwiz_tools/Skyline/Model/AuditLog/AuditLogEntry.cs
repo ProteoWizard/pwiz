@@ -84,7 +84,8 @@ namespace pwiz.Skyline.Model.AuditLog
     {
         public const string XML_ROOT = "audit_log_entry"; // Not L10N
 
-        private IList<LogMessage> _allInfo;
+        private ImmutableList<LogMessage> _allInfo;
+        private Action<AuditLogEntry> _undoAction;
 
         private AuditLogEntry(DocumentFormat formatVersion, DateTime timeStamp, string reason, bool insertIntoUndoRedo = false, string extraText = null)
         {
@@ -217,7 +218,6 @@ namespace pwiz.Skyline.Model.AuditLog
             return result;
         }
 
-
         public string SkylineVersion { get; private set; }
         public DocumentFormat FormatVersion { get; private set; }
         public DateTime TimeStamp { get; private set; }
@@ -226,6 +226,17 @@ namespace pwiz.Skyline.Model.AuditLog
         public string ExtraText { get; private set; }
         public LogMessage UndoRedo { get; private set; }
         public LogMessage Summary { get; private set; }
+
+        public Action UndoAction
+        {
+            get
+            {
+                if (_undoAction == null)
+                    return null;
+
+                return () => _undoAction(this);
+            }
+        }
 
         public IList<LogMessage> AllInfo
         {
@@ -237,7 +248,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public bool HasSingleAllInfoRow
         {
-            get { return _allInfo.Count == 1; }
+            get { return _allInfo.Count == (InsertUndoRedoIntoAllInfo ? 2 : 1); }
         }
 
         public MessageType? CountEntryType { get; private set; }
@@ -254,6 +265,10 @@ namespace pwiz.Skyline.Model.AuditLog
             return ChangeProp(ImClone(this), im => im.AllInfo = allInfo);
         }
 
+        public AuditLogEntry ChangeUndoAction(Action<AuditLogEntry> undoAction)
+        {
+            return ChangeProp(ImClone(this), im => im._undoAction = undoAction);
+        }
 
         public void AddToDocument(SrmDocument document, Action<Func<SrmDocument, SrmDocument>> modifyDocument)
         {
