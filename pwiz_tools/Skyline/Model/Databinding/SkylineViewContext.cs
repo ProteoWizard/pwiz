@@ -485,6 +485,7 @@ namespace pwiz.Skyline.Model.Databinding
                         columnsToRemove.Add(PropertyPath.Root.Property("NeutralFormula"));
                         columnsToRemove.Add(PropertyPath.Root.Property("Adduct"));
                     }
+                    columnsToRemove.Add(PropertyPath.Root.Property("CollisionEnergy"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ResultSummary"));
                     columnsToRemove.Add(PropertyPath.Root.Property("NeutralMass"));
                     columnsToRemove.Add(PropertyPath.Root.Property("TransitionCount"));
@@ -504,6 +505,8 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDeclusteringPotential"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitSLens"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitConeVoltage"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryName"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryType"));
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Transition))
@@ -519,6 +522,9 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("IsotopeDistIndex"));
                     columnsToRemove.Add(PropertyPath.Root.Property("IsotopeDistRank"));
                     columnsToRemove.Add(PropertyPath.Root.Property("FullScanFilterWidth"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryRank"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryIntensity"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("IsotopeDistProportion"));
 
                     if (docHasOnlyCustomIons)
                     {
