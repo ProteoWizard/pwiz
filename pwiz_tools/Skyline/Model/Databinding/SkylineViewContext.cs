@@ -485,6 +485,9 @@ namespace pwiz.Skyline.Model.Databinding
                         columnsToRemove.Add(PropertyPath.Root.Property("NeutralFormula"));
                         columnsToRemove.Add(PropertyPath.Root.Property("Adduct"));
                     }
+                    columnsToRemove.Add(PropertyPath.Root.Property("CollisionEnergy"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ResultSummary"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("NeutralMass"));
                     columnsToRemove.Add(PropertyPath.Root.Property("TransitionCount"));
                     columnsToRemove.Add(PropertyPath.Root.Property("DeclusteringPotential"));
                     columnsToRemove.Add(PropertyPath.Root.Property("LibraryScore1"));
@@ -502,10 +505,14 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDeclusteringPotential"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitSLens"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitConeVoltage"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryName"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryType"));
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Entities.Transition))
                 {
+                    columnsToRemove.Add(PropertyPath.Root.Property("ResultSummary"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("ProductNeutralMass"));
                     columnsToRemove.Add(PropertyPath.Root.Property("FragmentIonType"));
                     columnsToRemove.Add(PropertyPath.Root.Property("FragmentIonOrdinal"));
                     columnsToRemove.Add(PropertyPath.Root.Property("CleavageAa"));
@@ -513,6 +520,11 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("IsDecoy"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ProductDecoyMzShift"));
                     columnsToRemove.Add(PropertyPath.Root.Property("IsotopeDistIndex"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("IsotopeDistRank"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("FullScanFilterWidth"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryRank"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("LibraryIntensity"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("IsotopeDistProportion"));
 
                     if (docHasOnlyCustomIons)
                     {
@@ -531,6 +543,7 @@ namespace pwiz.Skyline.Model.Databinding
                 else if (columnDescriptor.PropertyType == typeof(Replicate))
                 {
                     columnsToRemove.Add(PropertyPath.Root.Property("Name"));
+                    columnsToRemove.Add(PropertyPath.Root.Property("SampleDilutionFactor"));
                     addRoot = true;
                 }
                 viewSpec = viewSpec.SetSublistId(GetReplicateSublist(columnDescriptor.PropertyType));
