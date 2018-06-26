@@ -638,8 +638,17 @@ namespace pwiz.Skyline
 
         public static AuditLogEntry SettingsLogFunction(SrmDocument oldDoc, SrmDocument newDoc)
         {
-            var tree = Reflector<SrmDocument>.BuildDiffTree(Property.ROOT_PROPERTY, oldDoc, newDoc, DateTime.Now); // Not L10N
-            return tree != null && tree.Root != null ? new AuditLogEntry(oldDoc.FormatVersion, tree) : null;
+            try
+            {
+                var tree = Reflector<SrmDocument>.BuildDiffTree(Property.ROOT_PROPERTY, oldDoc, newDoc,
+                    DateTime.Now); // Not L10N
+                return tree != null && tree.Root != null ? new AuditLogEntry(oldDoc.FormatVersion, tree) : null;
+            }
+            catch (Exception e)
+            {
+                Program.ReportException(e);
+                return null;
+            }
         }
 
         public void ModifyDocument(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified, Func<SrmDocument, SrmDocument, AuditLogEntry> logFunc = null)
