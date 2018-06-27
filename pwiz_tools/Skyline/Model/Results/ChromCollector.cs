@@ -458,6 +458,7 @@ namespace pwiz.Skyline.Model.Results
 
         private readonly IList<ChromKey> _chromKeys;
         private readonly float _maxRetentionTime;
+        private readonly int _spectrumCount;
         private readonly string _cachePath;
         private readonly SpillFile[] _spillFiles;
         private readonly int[] _idToGroupId;
@@ -468,11 +469,13 @@ namespace pwiz.Skyline.Model.Results
             IList<IList<int>> chromatogramRequestOrder,
             IList<ChromKey> chromKeys,
             float maxRetentionTime,
+            int spectrumCount,
             string cachePath)
         {
             RequestOrder = chromatogramRequestOrder;
             _chromKeys = chromKeys;
             _maxRetentionTime = maxRetentionTime;
+            _spectrumCount = spectrumCount;
             _cachePath = cachePath;
             if (RequestOrder == null)
                 return;
@@ -627,13 +630,24 @@ namespace pwiz.Skyline.Model.Results
             foreach (var index in RequestOrder[groupIndex])
             {
                 var key = _chromKeys[index];
-                double duration = key.OptionalMaxTime.HasValue && key.OptionalMinTime.HasValue
-                    ? key.OptionalMaxTime.Value - key.OptionalMinTime.Value
-                    : _maxRetentionTime;
-                maxSize += (int) Math.Ceiling(duration/PeptideChromDataSets.TIME_MIN_DELTA);
+                maxSize += EstimateSpectrumCount(key.OptionalMinTime, key.OptionalMaxTime);
             }
             maxSize *= sizeof (float) + sizeof (float) + sizeof (int); // Size of intensity, mass error, scan id
             return maxSize;
+        }
+
+        private int EstimateSpectrumCount(double? minTime, double? maxTime)
+        {
+            if (!minTime.HasValue || !maxTime.HasValue)
+            {
+                return _spectrumCount;
+            }
+            double duration = maxTime.Value - minTime.Value;
+            if (duration >= _maxRetentionTime || duration <= 0)
+            {
+                return _spectrumCount;
+            }
+            return (int) Math.Ceiling(duration * _spectrumCount / _maxRetentionTime);
         }
 
         /// <summary>
