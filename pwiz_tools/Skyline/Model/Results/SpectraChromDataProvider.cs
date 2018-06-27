@@ -535,7 +535,12 @@ namespace pwiz.Skyline.Model.Results
             if (_chromGroups != null)
                 _chromGroups.Dispose();
 
-            _chromGroups = new ChromGroups(chromatogramRequestOrder, _collectors.ChromKeys, (float) (MaxRetentionTime ?? 30), _cachePath);
+            float maxRetentionTime = (float) MaxRetentionTime.GetValueOrDefault();
+            if (maxRetentionTime <= 0)
+            {
+                maxRetentionTime = 30;
+            }
+            _chromGroups = new ChromGroups(chromatogramRequestOrder, _collectors.ChromKeys, maxRetentionTime, _cachePath);
             _blockWriter = new BlockWriter(_chromGroups);
 
             if (!_collectors.IsRunningAsync)
