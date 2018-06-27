@@ -338,6 +338,7 @@ namespace pwiz.Skyline
             {
                 // If expected results are not imported successfully, terminate
                 if (!ImportResultsInDir(commandArgs.ImportSourceDirectory,
+                        commandArgs.ImportRecursive,
                         commandArgs.ImportNamingPattern,
                         commandArgs.LockMassParameters,
                         commandArgs.ImportBeforeDate,
@@ -772,12 +773,12 @@ namespace pwiz.Skyline
             return BackgroundProteomeList.GetDefault();
         }
 
-        public bool ImportResultsInDir(string sourceDir, Regex namingPattern, 
+        public bool ImportResultsInDir(string sourceDir, bool recursive, Regex namingPattern, 
             LockMassParameters lockMassParameters,
             DateTime? importBefore, DateTime? importOnOrAfter,
             OptimizableRegression optimize, bool disableJoining, bool warnOnFailure)
         {
-            var listNamedPaths = GetDataSources(sourceDir, namingPattern, lockMassParameters);
+            var listNamedPaths = GetDataSources(sourceDir, recursive, namingPattern, lockMassParameters);
             if (listNamedPaths == null)
             {
                 return false;
@@ -924,13 +925,13 @@ namespace pwiz.Skyline
             public MsDataFileUri FilePath { get; private set; }
         }
 
-        private IList<KeyValuePair<string, MsDataFileUri[]>> GetDataSources(string sourceDir, Regex namingPattern, LockMassParameters lockMassParameters)
+        private IList<KeyValuePair<string, MsDataFileUri[]>> GetDataSources(string sourceDir, bool recursive, Regex namingPattern, LockMassParameters lockMassParameters)
         {   
             // get all the valid data sources (files and sub directories) in this directory.
             IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths;
             try
             {
-                listNamedPaths = DataSourceUtil.GetDataSources(sourceDir).ToArray();
+                listNamedPaths = DataSourceUtil.GetDataSources(sourceDir, recursive).ToArray();
             }
             catch(IOException e)
             {

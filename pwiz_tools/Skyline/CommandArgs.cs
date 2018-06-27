@@ -44,6 +44,7 @@ namespace pwiz.Skyline
         public int ImportThreads { get; private set; }
         public bool ImportAppend { get; private set; }
         public bool ImportDisableJoining { get; private set; }
+        public bool ImportRecursive { get; private set; }
         public string ImportSourceDirectory { get; private set; }
         public Regex ImportNamingPattern { get; private set; }
         public DateTime? RemoveBeforeDate { get; private set; }
@@ -1032,6 +1033,12 @@ namespace pwiz.Skyline
                 }
 
                 else if (IsNameValue(pair, "import-all"))
+                {
+                    ImportSourceDirectory = GetFullPath(pair.Value);
+                    ImportRecursive = true;
+                    RequiresSkylineDocument = true;
+                }
+                else if (IsNameValue(pair, "import-all-files"))
                 {
                     ImportSourceDirectory = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
