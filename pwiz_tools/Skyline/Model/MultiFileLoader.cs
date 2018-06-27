@@ -103,11 +103,11 @@ namespace pwiz.Skyline.Model
                         break;
 
                     case ImportResultsSimultaneousFileOptions.several: // Several is 1/4 logical processors (i.e. 2 for an i7)
-                        _threadCount = Math.Max(1, Environment.ProcessorCount / 4);
+                        _threadCount = Math.Max(2, Environment.ProcessorCount / 4); // Min of 2, because you really expect more than 1
                         break;
 
                     case ImportResultsSimultaneousFileOptions.many: // Many is 1/2 logical processors (i.e. 4 for an i7)
-                        _threadCount = Math.Max(1, Environment.ProcessorCount / 2);
+                        _threadCount = Math.Max(2, Environment.ProcessorCount / 2); // Min of 2, because you really expect more than 1
                         break;
                 }
                 _threadCount = Math.Min(MAX_PARALLEL_LOAD_FILES, _threadCount);

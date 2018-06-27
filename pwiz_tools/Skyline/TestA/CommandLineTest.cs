@@ -1279,6 +1279,8 @@ namespace pwiz.SkylineTestA
             FileEx.SafeDelete(outPath2);
             var outPath3 = testFilesDir.GetTestPath("Imported_multiple3.sky");
             FileEx.SafeDelete(outPath3);
+            var outPath4 = testFilesDir.GetTestPath("Imported_multiple4.sky");
+            FileEx.SafeDelete(outPath4);
 
             var rawPath = new MsDataFilePath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" + extRaw));
             
@@ -1467,6 +1469,32 @@ namespace pwiz.SkylineTestA
                     string.Format(
                         Resources.CommandLine_CheckReplicateFiles_Error__Replicate__0__in_the_document_has_an_unexpected_file__1__,"REP01",
                         rawPath3)), msg);
+
+            
+
+            // Test: Import non-recursive
+            // Make sure only files directly in the folder get imported
+            string badFilePath = testFilesDir.GetTestPath("bad_file" + extRaw);
+            string badFileMoved = badFilePath + ".save";
+            if (File.Exists(badFilePath))
+                File.Move(badFilePath, badFileMoved);
+            string fullScanPath = testFilesDir.GetTestPath("FullScan" + extRaw);
+            string fullScanMoved = fullScanPath + ".save";
+            File.Move(fullScanPath, fullScanMoved);
+
+            msg = RunCommand("--in=" + docPath,
+                "--import-all-files=" + testFilesDir.FullPath,
+                "--out=" + outPath4);
+
+            Assert.IsTrue(File.Exists(outPath4), msg);
+            doc = ResultsUtil.DeserializeDocument(outPath4);
+            Assert.IsTrue(doc.Settings.HasResults);
+            Assert.AreEqual(4, doc.Settings.MeasuredResults.Chromatograms.Count,
+                string.Format("Expected 4 replicates from files, found: {0}",
+                    string.Join(", ", doc.Settings.MeasuredResults.Chromatograms.Select(chromSet => chromSet.Name).ToArray())));
+            if (File.Exists(badFileMoved))
+                File.Move(badFileMoved, badFilePath);
+            File.Move(fullScanMoved, fullScanPath);
 
         }
 
