@@ -204,9 +204,9 @@ namespace pwiz.Skyline.Util
 
         // This method can throw an IOException if there is an error reading .wiff files in 
         // the given directory.
-        public static IEnumerable<KeyValuePair<string, MsDataFileUri[]>> GetDataSources(string dirRoot)
+        public static IEnumerable<KeyValuePair<string, MsDataFileUri[]>> GetDataSources(string dirRoot, bool addSourcesInSubDirs = true)
         {
-            return GetDataSources(dirRoot, true, true);
+            return GetDataSources(dirRoot, true, addSourcesInSubDirs);
         }
 
         public static IEnumerable<KeyValuePair<string, MsDataFileUri[]>> GetDataSourcesInSubdirs(string dirRoot)

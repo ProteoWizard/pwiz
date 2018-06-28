@@ -44,6 +44,7 @@ namespace pwiz.Skyline
         public int ImportThreads { get; private set; }
         public bool ImportAppend { get; private set; }
         public bool ImportDisableJoining { get; private set; }
+        public bool ImportRecursive { get; private set; }
         public string ImportSourceDirectory { get; private set; }
         public Regex ImportNamingPattern { get; private set; }
         public DateTime? RemoveBeforeDate { get; private set; }
@@ -55,6 +56,16 @@ namespace pwiz.Skyline
         public string LibraryPath { get; private set; }
         public bool HideAllChromatogramsGraph { get; private set; }
         public bool NoAllChromatogramsGraph { get; private set; }
+
+        // Document import
+        public const string ARG_IMPORT_DOCUMENT = "import-document"; // Not L10N
+        public const string ARG_IMPORT_DOCUMENT_RESULTS = "import-document-results"; // Not L10N
+        public const string ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES = "import-document-merge-peptides"; // Not L10N
+
+        public bool ImportingDocuments { get { return DocImportPaths.Any(); } }
+        public List<string> DocImportPaths { get; private set; }
+        public MeasuredResults.MergeAction? DocImportResultsMerge { get; private set; }
+        public bool DocImportMergePeptides { get; private set; }
 
         // Transition list and assay library import
         public const string ARG_IMPORT_TRANSITION_LIST = "import-transition-list"; // Not L10N
@@ -503,6 +514,7 @@ namespace pwiz.Skyline
             DwellTime = AbstractMassListExporter.DWELL_TIME_DEFAULT;
             RunLength = AbstractMassListExporter.RUN_LENGTH_DEFAULT;
 
+            DocImportPaths = new List<string>();
             ReplicateFile = new List<MsDataFileUri>();
             SearchResultsFiles = new List<string>();
             ExcludeFeatures = new List<IPeakFeatureCalculator>();
@@ -884,6 +896,29 @@ namespace pwiz.Skyline
                     RequiresSkylineDocument = true;
                 }
 
+                else if (IsNameValue(pair, ARG_IMPORT_DOCUMENT))
+                {
+                    DocImportPaths.Add(GetFullPath(pair.Value));
+                    DocImportResultsMerge = DocImportResultsMerge ?? MeasuredResults.MergeAction.remove;
+                    RequiresSkylineDocument = true;
+                }
+
+                else if (IsNameValue(pair, ARG_IMPORT_DOCUMENT_RESULTS))
+                {
+                    MeasuredResults.MergeAction mergeAction;
+                    if (!Enum.TryParse(pair.Value, out mergeAction))
+                    {
+                        _out.WriteLine("Error: Invalid value {0} for {1}. Check the documentation for available results merging options.");
+                        return false;
+                    }
+                    DocImportResultsMerge = mergeAction;
+                }
+
+                else if (IsNameOnly(pair, ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES))
+                {
+                    DocImportMergePeptides = true;
+                }
+
                 else if (IsNameValue(pair, ARG_IMPORT_TRANSITION_LIST))
                 {
                     TransitionListPath = GetFullPath(pair.Value);
@@ -1032,6 +1067,12 @@ namespace pwiz.Skyline
                 }
 
                 else if (IsNameValue(pair, "import-all"))
+                {
+                    ImportSourceDirectory = GetFullPath(pair.Value);
+                    ImportRecursive = true;
+                    RequiresSkylineDocument = true;
+                }
+                else if (IsNameValue(pair, "import-all-files"))
                 {
                     ImportSourceDirectory = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
@@ -1545,6 +1586,17 @@ namespace pwiz.Skyline
             if (!AddDecoys && AddDecoysCount.HasValue)
             {
                 WarnArgRequirment(ARG_DECOYS_ADD, ARG_DECOYS_ADD_COUNT);
+            }
+            if (!ImportingDocuments)
+            {
+                if (DocImportResultsMerge.HasValue)
+                {
+                    WarnArgRequirment(ARG_IMPORT_DOCUMENT, ARG_IMPORT_DOCUMENT_RESULTS);
+                }
+                if (DocImportMergePeptides)
+                {
+                    WarnArgRequirment(ARG_IMPORT_DOCUMENT, ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES);
+                }
             }
             if (!ImportingTransitionList)
             {
