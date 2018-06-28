@@ -212,6 +212,10 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnEditList_Click(object sender, System.EventArgs e)
         {
+            if (checkedListBoxLists.SelectedIndex < 0)
+            {
+                return;
+            }
             var oldListData = _listsListBoxDriver.List[checkedListBoxLists.SelectedIndex];
             bool wasChecked = checkedListBoxLists.GetItemChecked(checkedListBoxLists.SelectedIndex);
             using (var editDlg = new ListDesigner(oldListData, _listsListBoxDriver.List))
