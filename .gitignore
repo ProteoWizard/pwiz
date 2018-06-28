@@ -391,3 +391,6 @@ Reader*Test.data
 /pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/SkylineDocument.cs
 /pwiz_tools/Skyline/ProtocolBuffers/tmp/ChromatogramGroupData.cs
 /pwiz_tools/Skyline/ProtocolBuffers/tmp/SkylineDocument.cs
+SkylineTester Results
+/b64.bat
+/b32.bat

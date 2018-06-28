@@ -668,5 +668,20 @@
     <Setting Name="ShowAdvancedVolcanoPlotFormatting" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="AuditLogging" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AuditLogView" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="AreaCVTransitions" Type="System.String" Scope="User">
+      <Value Profile="(Default)">all</Value>
+    </Setting>
+    <Setting Name="AreaCVMsLevel" Type="System.String" Scope="User">
+      <Value Profile="(Default)">products</Value>
+    </Setting>
+    <Setting Name="AreaCVRatioIndex" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">-1</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

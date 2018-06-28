@@ -153,7 +153,7 @@ namespace pwiz.SkylineTestTutorial
                 transitionDlg.SelectedTab = TransitionSettingsUI.TABS.Prediction;
                 transitionDlg.PrecursorMassType = MassType.Monoisotopic;
                 transitionDlg.FragmentMassType = MassType.Monoisotopic;
-                transitionDlg.RegressionCEName = "ABI 5500 QTrap";
+                transitionDlg.RegressionCEName = "SCIEX";
             });
 
             RunUI(() =>

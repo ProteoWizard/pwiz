@@ -276,6 +276,72 @@ namespace pwiz.SkylineTestA
     </peptide>
   </peptide_list>
 </srm_settings>";
+
+        [TestMethod]
+        public void TestMultipleExplicitModsPerAminoAcid()
+        {
+            var doc = (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(new StringReader(DOC_MULTIPLE_CYSTEINE_MODS));
+            AssertEx.VerifyModifiedSequences(doc);
+        }
+
+        private const string DOC_MULTIPLE_CYSTEINE_MODS = @"<srm_settings format_version='4.11' software_version='Skyline (64-bit) '>
+  <settings_summary name='Default'>
+    <peptide_settings>
+      <peptide_modifications max_variable_mods='3' max_neutral_losses='1'>
+        <static_modifications>
+          <static_modification name='Carbamidomethyl (C)' aminoacid='C' formula='H3C2NO' explicit_decl='true' unimod_id='4' short_name='CAM' />
+          <static_modification name='TEV' aminoacid='C' formula='C25H42N10O6' explicit_decl='true' />
+        </static_modifications>
+        <heavy_modifications>
+          <static_modification name='Tev_heavy' aminoacid='C' formula='C&apos;5N&apos;-C5N' explicit_decl='true' />
+        </heavy_modifications>
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+    </transition_settings>
+  </settings_summary>
+  <protein name='sp|P12814|ACTN1_HUMAN' description='Alpha-actinin-1 OS=Homo sapiens GN=ACTN1 PE=1 SV=2' accession='P12814' gene='ACTN1' species='Homo sapiens' preferred_name='ACTN1_HUMAN' websearch_status='X' auto_manage_children='false'>
+    <sequence>
+        MDHYDSQQTN DYMQPEEDWD RDLLLDPAWE KQQRKTFTAW CNSHLRKAGT
+        QIENIEEDFR DGLKLMLLLE VISGERLAKP ERGKMRVHKI SNVNKALDFI
+        ASKGVKLVSI GAEEIVDGNV KMTLGMIWTI ILRFAIQDIS VEETSAKEGL
+        LLWCQRKTAP YKNVNIQNFH ISWKDGLGFC ALIHRHRPEL IDYGKLRKDD
+        PLTNLNTAFD VAEKYLDIPK MLDAEDIVGT ARPDEKAIMT YVSSFYHAFS
+        GAQKAETAAN RICKVLAVNQ ENEQLMEDYE KLASDLLEWI RRTIPWLENR
+        VPENTMHAMQ QKLEDFRDYR RLHKPPKVQE KCQLEINFNT LQTKLRLSNR
+        PAFMPSEGRM VSDINNAWGC LEQVEKGYEE WLLNEIRRLE RLDHLAEKFR
+        QKASIHEAWT DGKEAMLRQK DYETATLSEI KALLKKHEAF ESDLAAHQDR
+        VEQIAAIAQE LNELDYYDSP SVNARCQKIC DQWDNLGALT QKRREALERT
+        EKLLETIDQL YLEYAKRAAP FNNWMEGAME DLQDTFIVHT IEEIQGLTTA
+        HEQFKATLPD ADKERLAILG IHNEVSKIVQ TYHVNMAGTN PYTTITPQEI
+        NGKWDHVRQL VPRRDQALTE EHARQQHNER LRKQFGAQAN VIGPWIQTKM
+        EEIGRISIEM HGTLEDQLSH LRQYEKSIVN YKPKIDQLEG DHQLIQEALI
+        FDNKHTNYTM EHIRVGWEQL LTTIARTINE VENQILTRDA KGISQEQMNE
+        FRASFNHFDR DHSGTLGPEE FKACLISLGY DIGNDPQGEA EFARIMSIVD
+        PNRLGVVTFQ AFIDFMSRET ADTDTADQVM ASFKILAGDK NYITMDELRR
+        ELPPDQAEYC IARMAPYTGP DSVPGALDYM SFSTALYGES DL</sequence>
+    <peptide auto_manage_children='false' sequence='TFTAWCNSHLR' modified_sequence='TFTAWC[+57.021464]NSHLR' start='35' end='46' prev_aa='K' next_aa='K' calc_neutral_pep_mass='1391.640454' num_missed_cleavages='0'>
+      <explicit_modifications>
+        <explicit_static_modifications>
+          <explicit_modification index_aa='5' modification_name='Carbamidomethyl (C)' mass_diff='+57' />
+        </explicit_static_modifications>
+      </explicit_modifications>
+      <precursor charge='3' calc_neutral_mass='1391.640454' precursor_mz='464.887427' auto_manage_children='false' collision_energy='0' modified_sequence='TFTAWC[+57.0]NSHLR' />
+    </peptide>
+    <peptide auto_manage_children='false' sequence='EGLLLWCQR' modified_sequence='EGLLLWC[+578.328879]QR' start='147' end='156' prev_aa='K' next_aa='K' calc_neutral_pep_mass='1694.903879' num_missed_cleavages='0'>
+      <explicit_modifications>
+        <explicit_static_modifications>
+          <explicit_modification index_aa='6' modification_name='TEV' mass_diff='+578.3' />
+        </explicit_static_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa='6' modification_name='Tev_heavy' mass_diff='+6' />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <precursor charge='2' calc_neutral_mass='1694.903879' precursor_mz='848.459215' auto_manage_children='false' collision_energy='0' modified_sequence='EGLLLWC[+578.3]QR' />
+      <precursor charge='2' isotope_label='heavy' calc_neutral_mass='1700.917688' precursor_mz='851.46612' auto_manage_children='false' collision_energy='0' modified_sequence='EGLLLWC[+584.3]QR' />
+    </peptide>
+  </protein>
+</srm_settings>";
     }
 
 }

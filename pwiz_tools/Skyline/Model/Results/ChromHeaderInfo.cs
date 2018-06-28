@@ -877,8 +877,13 @@ namespace pwiz.Skyline.Model.Results
             Source = source;
         }
 
-        public ChromTransition(ChromTransition5 chromTransition5) : this(chromTransition5.Product, 
-            chromTransition5.ExtractionWidth, 0, 0, chromTransition5.Source)
+        public ChromTransition(ChromTransition5 chromTransition5) : this(chromTransition5.Product,
+            // There was an issue with Manage Results > Rescore, which made it possible to corrupt
+            // the chromatogram source until a commit by Nick in March 2014, and Brian introduced
+            // the next version of this struct in the May, 2014. So considering the source unknown
+            // for these older files seems safest, since we are moving to paying attention to the
+            // source for chromatogram to transition matching.
+            chromTransition5.ExtractionWidth, 0, 0, ChromSource.unknown)
         {            
         }
 
@@ -2084,6 +2089,19 @@ namespace pwiz.Skyline.Model.Results
             return new SignedMz(_allTransitions[index].Product, _groupHeaderInfo.NegativeCharge);
         }
 
+        private bool IsProductGlobalMatch(int index, TransitionDocNode nodeTran, float tolerance)
+        {
+            var source = _allTransitions[index].Source;
+            bool isMs1Chromatogram = source == ChromSource.ms1 || source == ChromSource.sim;
+            bool isTranMs1 = nodeTran == null || nodeTran.IsMs1;
+            // Don't allow fragment ions to match data from MS1
+            if (!isTranMs1 && isMs1Chromatogram)
+                return false;
+            var globalMz = GetProductGlobal(index);
+            var tranMz = nodeTran != null ? nodeTran.Mz : SignedMz.ZERO;
+            return tranMz.CompareTolerant(globalMz, tolerance) == 0;
+        }
+
         public SignedMz GetProductLocal(int transitionIndex)
         {
             return new SignedMz(_allTransitions[_groupHeaderInfo.StartTransitionIndex + transitionIndex].Product, _groupHeaderInfo.NegativeCharge);
@@ -2099,20 +2117,21 @@ namespace pwiz.Skyline.Model.Results
             return _allTransitions[_groupHeaderInfo.StartTransitionIndex + transitionIndex];
         }
 
-        public ChromatogramInfo GetTransitionInfo(SignedMz productMz, float tolerance)
+        public ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, float tolerance)
         {
-            return GetTransitionInfo(productMz, tolerance, TransformChrom.interpolated);
+            return GetTransitionInfo(nodeTran, tolerance, TransformChrom.interpolated);
         }
 
-        public virtual ChromatogramInfo GetTransitionInfo(SignedMz productMz, float tolerance, TransformChrom transform)
+        public virtual ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, float tolerance, TransformChrom transform)
         {
+            var productMz = nodeTran != null ? nodeTran.Mz : SignedMz.ZERO;
             int startTran = _groupHeaderInfo.StartTransitionIndex;
             int endTran = startTran + _groupHeaderInfo.NumTransitions;
             int? iNearest = null;
             double deltaNearestMz = double.MaxValue;
             for (int i = startTran; i < endTran; i++)
             {
-                if (productMz.CompareTolerant(GetProductGlobal(i), tolerance) == 0)
+                if (IsProductGlobalMatch(i, nodeTran, tolerance))
                 {
                     // If there is optimization data, return only the middle value, which
                     // was the regression value.
@@ -2133,29 +2152,30 @@ namespace pwiz.Skyline.Model.Results
                        : null;
         }
 
-        public ChromatogramInfo[] GetAllTransitionInfo(SignedMz productMz, float tolerance, OptimizableRegression regression, TransformChrom transform)
+        public ChromatogramInfo[] GetAllTransitionInfo(TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression, TransformChrom transform)
         {
             var listChromInfo = new List<ChromatogramInfo>();
-            GetAllTransitionInfo(productMz, tolerance, regression, listChromInfo, transform);
+            GetAllTransitionInfo(nodeTran, tolerance, regression, listChromInfo, transform);
             return listChromInfo.ToArray();
         }
 
-        public void GetAllTransitionInfo(SignedMz productMz, float tolerance, OptimizableRegression regression, List<ChromatogramInfo> listChromInfo, TransformChrom transform)
+        public void GetAllTransitionInfo(TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression, List<ChromatogramInfo> listChromInfo, TransformChrom transform)
         {
             listChromInfo.Clear();
             if (regression == null)
             {
-                var info = GetTransitionInfo(productMz, tolerance, transform);
+                var info = GetTransitionInfo(nodeTran, tolerance, transform);
                 if (info != null)
                     listChromInfo.Add(info);
                 return;
             }
 
+            var productMz = nodeTran != null ? nodeTran.Mz : SignedMz.ZERO;
             int startTran = _groupHeaderInfo.StartTransitionIndex;
             int endTran = startTran + _groupHeaderInfo.NumTransitions;
             for (int i = startTran; i < endTran; i++)
             {
-                if (productMz.CompareTolerant(GetProductGlobal(i), tolerance) == 0)
+                if (IsProductGlobalMatch(i, nodeTran, tolerance))
                 {
                     int startOptTran, endOptTran;
                     GetOptimizationBounds(productMz, i, startTran, endTran, out startOptTran, out endOptTran);

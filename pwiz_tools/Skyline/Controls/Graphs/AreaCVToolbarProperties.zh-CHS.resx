@@ -132,7 +132,7 @@
     <value>0</value>
   </data>
   <data name="labelQValueCutoff.Text" xml:space="preserve">
-    <value>Q 值截止(&amp;Q)：</value>
+    <value>Q 值阈值(&amp;Q)：</value>
   </data>
   <data name="&gt;&gt;labelQValueCutoff.Name" xml:space="preserve">
     <value>labelQValueCutoff</value>
@@ -201,7 +201,7 @@
     <value>4</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>CV 截止(&amp;C)：</value>
+    <value>CV 阈值(&amp;C)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -255,7 +255,7 @@
     <value>0</value>
   </data>
   <data name="checkShowCvCutoff.Text" xml:space="preserve">
-    <value>显示 CV 截止(&amp;S)</value>
+    <value>显示 CV 阈值(&amp;S)</value>
   </data>
   <data name="&gt;&gt;checkShowCvCutoff.Name" xml:space="preserve">
     <value>checkShowCvCutoff</value>

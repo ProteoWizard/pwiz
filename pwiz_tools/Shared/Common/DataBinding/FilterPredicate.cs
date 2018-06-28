@@ -19,6 +19,7 @@
 using System;
 using System.Globalization;
 using System.Xml;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
@@ -59,8 +60,10 @@ namespace pwiz.Common.DataBinding
             FilterOperation = filterOperation;
             InvariantOperandText = invariantOperandText;
         }
+        [DiffParent(ignoreName: true)]
         public IFilterOperation FilterOperation { get; private set; }
-        private string InvariantOperandText { get; set; }
+        [Diff]
+        public string InvariantOperandText { get; private set; }
 
         public object GetOperandValue(ColumnDescriptor columnDescriptor)
         {
@@ -83,8 +86,16 @@ namespace pwiz.Common.DataBinding
 
         public string GetOperandDisplayText(DataSchema dataSchema, Type propertyType)
         {
-            object operand = GetOperandValue(dataSchema, propertyType);
-            return (string) Convert.ChangeType(operand, typeof (string), dataSchema.DataSchemaLocalizer.FormatProvider);
+            try
+            {
+                object operand = GetOperandValue(dataSchema, propertyType);
+                return (string) Convert.ChangeType(operand, typeof(string),
+                    dataSchema.DataSchemaLocalizer.FormatProvider);
+            }
+            catch (Exception)
+            {
+                return InvariantOperandText;
+            }
         }
 
         private static object ParseOperandValue(CultureInfo cultureInfo, Type type, string operandValue)

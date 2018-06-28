@@ -568,6 +568,38 @@ void testWrapPrecursorMzSet()
         unit_assert_operator_equal("scan=21", sl->spectrumIdentity(2).id);
         unit_assert_operator_equal("sample=1 period=1 cycle=23 experiment=1", sl->spectrumIdentity(3).id);
     }
+
+    {
+        msd.run.spectrumListPtr = originalSL;
+        SpectrumListFactory::wrap(msd, "mzPrecursors [0,445.34] target=selected");
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal(4, sl->size());
+        unit_assert_operator_equal("scan=19", sl->spectrumIdentity(0).id);
+        unit_assert_operator_equal("scan=20", sl->spectrumIdentity(1).id);
+        unit_assert_operator_equal("scan=21", sl->spectrumIdentity(2).id);
+        unit_assert_operator_equal("sample=1 period=1 cycle=23 experiment=1", sl->spectrumIdentity(3).id);
+    }
+
+    {
+        msd.run.spectrumListPtr = originalSL;
+        SpectrumListFactory::wrap(msd, "mzPrecursors [445.3] target=isolated");
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal(1, sl->size());
+        unit_assert_operator_equal("scan=20", sl->spectrumIdentity(0).id);
+    }
+
+    {
+        msd.run.spectrumListPtr = originalSL;
+        SpectrumListFactory::wrap(msd, "mzPrecursors [445.34] target=isolated"); // tolerance too tight to match to 445.3
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal(0, sl->size());
+    }
+
+    msd.run.spectrumListPtr = originalSL;
+    unit_assert_throws_what(SpectrumListFactory::wrap(msd, "mzPrecursors mode=include"), user_error, "[SpectrumListFactory::filterCreator_mzPrecursors()] expected a list of m/z values formatted like \"[123.4,567.8,789.0]\"");
+
+    msd.run.spectrumListPtr = originalSL;
+    unit_assert_throws_what(SpectrumListFactory::wrap(msd, "mzPrecursors [0,445.34] target=42"), user_error, "[SpectrumListFactory::filterCreator_mzPrecursors()] invalid value for 'target' parameter: 42");
 }
 
 void testWrapMZPresent()

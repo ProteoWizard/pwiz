@@ -172,13 +172,13 @@
     <value>クロマトグラムの抽出幅</value>
   </data>
   <data name="ChromatogramIonMobility">
-    <value>クロマトグラムイオン移動度</value>
+    <value>イオン移動度のクロマトグラム</value>
   </data>
   <data name="ChromatogramIonMobilityExtractionWidth">
-    <value>クロマトグラムイオン移動度の抽出幅</value>
+    <value>イオン移動度のクロマトグラムの抽出幅</value>
   </data>
   <data name="ChromatogramIonMobilityUnits">
-    <value>クロマトグラムイオン移動度の単位</value>
+    <value>イオン移動度のクロマトグラムの単位</value>
   </data>
   <data name="ChromatogramPrecursorMz">
     <value>クロマトグラムのプリカーサーイオンM/Z</value>
@@ -187,7 +187,7 @@
     <value>クロマトグラムのプロダクトイオンM/Z</value>
   </data>
   <data name="ChromatogramSource">
-    <value>クロマトグラムソース</value>
+    <value>クロマトグラムのソース</value>
   </data>
   <data name="CleavageAa">
     <value>開裂Aa</value>
@@ -814,7 +814,7 @@
     <value>総面積</value>
   </data>
   <data name="Times">
-    <value>時間</value>
+    <value>回数</value>
   </data>
   <data name="TotalAreaFragment">
     <value>総面積断片</value>
@@ -910,13 +910,13 @@
     <value>明示的ドリフト時間ミリ秒</value>
   </data>
   <data name="ExplicitIonMobility">
-    <value>指定イオン移動度</value>
+    <value>指定されたイオン移動度</value>
   </data>
   <data name="ExplicitIonMobilityHighEnergyOffset">
-    <value>指定イオン移動度の高エネルギーオフセット</value>
+    <value>指定されたイオン移動度の高エネルギーのオフセット</value>
   </data>
   <data name="ExplicitIonMobilityUnits">
-    <value>指定イオン移動度単位</value>
+    <value>指定されたイオン移動度の単位</value>
   </data>
   <data name="IonMobilityFragment">
     <value>イオン移動度のフラグメント</value>
@@ -1000,6 +1000,6 @@
     <value>絶対倍率変化</value>
   </data>
   <data name="AbsLog2FoldChange">
-    <value>絶対Log2倍率変化</value>
+    <value>Log2の絶対値の変化率</value>
   </data>
 </root>

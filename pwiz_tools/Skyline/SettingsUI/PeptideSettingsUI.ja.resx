@@ -1036,11 +1036,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="textSpectralLibraryDriftTimesResolvingPower.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesResolvingPower.ToolTip" xml:space="preserve">
-    <value>スペクトルライブラリにおけるドリフト時間の許容誤差を決定する（ドリフト時間はミリ秒単位で測定される）： 
-ドリフト時間「T」における分解能が「R」の場合、Tに中心のあるドリフト時間の一致ウィンドウの幅「W」は
-W = 2T/R</value>
-  </data>
+
   <data name="&gt;&gt;textSpectralLibraryDriftTimesResolvingPower.Name" xml:space="preserve">
     <value>textSpectralLibraryDriftTimesResolvingPower</value>
   </data>
@@ -1069,7 +1065,7 @@ W = 2T/R</value>
     <value>10</value>
   </data>
   <data name="cbUseSpectralLibraryDriftTimes.Text" xml:space="preserve">
-    <value>存在する場合にはスペクトルライブラリのイオン移動度値を使用(&amp;S)</value>
+    <value>スペクトルライブラリのイオン移動度の値が存在する場合には使用する(&amp;S)</value>
   </data>
   <data name="cbUseSpectralLibraryDriftTimes.ToolTip" xml:space="preserve">
     <value>これを選択すると、読み込まれたスペクトルライブラリのイオン移動度値がクロマトグラム抽出に使用されます。</value>
@@ -1133,15 +1129,6 @@ W = 2T/R</value>
   <data name="textSpectralLibraryDriftTimesWidthAtDtMax.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
   </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDtMax.ToolTip" xml:space="preserve">
-    <value>ドリフト時間の許容誤差を決定する（ドリフト時間はミリ秒単位で測定される）。ここで：
- dtMax = 測定ドリフト時間の最大値
- W0 = ドリフト時間ゼロでの幅
- Wmax = dtMaxでの幅
-ドリフト時間「T」に中心のあるドリフト時間の一致ウィンドウの幅
- W = (W0 + T*(Wmax-W0)/dtMax)
-</value>
-  </data>
   <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDtMax.Name" xml:space="preserve">
     <value>textSpectralLibraryDriftTimesWidthAtDtMax</value>
   </data>
@@ -1162,15 +1149,6 @@ W = 2T/R</value>
   </data>
   <data name="textSpectralLibraryDriftTimesWidthAtDt0.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
-  </data>
-  <data name="textSpectralLibraryDriftTimesWidthAtDt0.ToolTip" xml:space="preserve">
-    <value>ドリフト時間の許容誤差を決定する（ドリフト時間はミリ秒単位で測定される）。ここで：
- dtMax = 測定ドリフト時間の最大値
- W0 = ドリフト時間ゼロでの幅
- Wmax = dtMaxでの幅
-ドリフト時間「T」に中心のあるドリフト時間の一致ウィンドウの幅
- W = (W0 + T*(Wmax-W0)/dtMax)
-</value>
   </data>
   <data name="&gt;&gt;textSpectralLibraryDriftTimesWidthAtDt0.Name" xml:space="preserve">
     <value>textSpectralLibraryDriftTimesWidthAtDt0</value>
@@ -1355,63 +1333,6 @@ W = 2T/R</value>
   <data name="&gt;&gt;tabDigestion.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="labelWidthAtDt0Units.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelWidthAtDt0Units.Location" type="System.Drawing.Point, System.Drawing">
-    <value>243, 315</value>
-  </data>
-  <data name="labelWidthAtDt0Units.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 13</value>
-  </data>
-  <data name="labelWidthAtDt0Units.TabIndex" type="System.Int32, mscorlib">
-    <value>18</value>
-  </data>
-  <data name="labelWidthAtDt0Units.Text" xml:space="preserve">
-    <value>ミリ秒</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDt0Units.Name" xml:space="preserve">
-    <value>labelWidthAtDt0Units</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDt0Units.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDt0Units.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDt0Units.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>385, 315</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 13</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
-  </data>
-  <data name="labelWidthAtDtMaxUnits.Text" xml:space="preserve">
-    <value>ミリ秒</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDtMaxUnits.Name" xml:space="preserve">
-    <value>labelWidthAtDtMaxUnits</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDtMaxUnits.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDtMaxUnits.Parent" xml:space="preserve">
-    <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtDtMaxUnits.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="labelWidthDtMax.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1426,9 +1347,6 @@ W = 2T/R</value>
   </data>
   <data name="labelWidthDtMax.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
-  </data>
-  <data name="labelWidthDtMax.Text" xml:space="preserve">
-    <value>DtMaxでの幅(&amp;X)：</value>
   </data>
   <data name="&gt;&gt;labelWidthDtMax.Name" xml:space="preserve">
     <value>labelWidthDtMax</value>
@@ -1456,9 +1374,6 @@ W = 2T/R</value>
   </data>
   <data name="labelWidthDtZero.TabIndex" type="System.Int32, mscorlib">
     <value>14</value>
-  </data>
-  <data name="labelWidthDtZero.Text" xml:space="preserve">
-    <value>Dt0での幅(&amp;0)：</value>
   </data>
   <data name="&gt;&gt;labelWidthDtZero.Name" xml:space="preserve">
     <value>labelWidthDtZero</value>

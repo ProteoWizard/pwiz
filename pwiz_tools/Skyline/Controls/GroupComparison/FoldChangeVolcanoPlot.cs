@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public SrmDocument Document
         {
-            get { return _skylineWindow != null ? _skylineWindow.DocumentUI : null; }
+            get { return _skylineWindow != null ? _skylineWindow.Document : null; }
         }
 
         public bool AnyProteomic
@@ -218,8 +218,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
 
             zedGraphControl.GraphPane.AxisChangeEvent -= GraphPane_AxisChangeEvent;
-            _bindingListSource.AllRowsChanged -= BindingListSourceAllRowsChanged;
-            _bindingListSource.ListChanged -= BindingListSourceOnListChanged;
+
+            if (_bindingListSource != null)
+            {
+                _bindingListSource.AllRowsChanged -= BindingListSourceAllRowsChanged;
+                _bindingListSource.ListChanged -= BindingListSourceOnListChanged;
+            }
 
             UpdateFilter(false);
 

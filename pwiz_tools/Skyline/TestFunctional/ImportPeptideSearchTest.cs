@@ -430,6 +430,8 @@ namespace pwiz.SkylineTestFunctional
                 };
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                importPeptideSearchDlg.TransitionSettingsControl.IonCount = 3;  // DIA will now default to 6 and 6 minimum
+                importPeptideSearchDlg.TransitionSettingsControl.MinIonCount = 0;
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
@@ -462,7 +464,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(errMaxDecoys, errMaxDecoys.OkDialog);
             RunUI(() => { importPeptideSearchDlg.ImportFastaControl.NumDecoys = -1; });
             var errValidNumDecoys = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-            Assert.AreEqual(Resources.ImportFastaControl_ImportFasta_Please_enter_a_valid_non_negative_number_of_decoys_per_target_, errValidNumDecoys.Message);
+            Assert.AreEqual(Resources.ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_, errValidNumDecoys.Message);
             OkDialog(errValidNumDecoys, errValidNumDecoys.OkDialog);
             RunUI(() =>
             {

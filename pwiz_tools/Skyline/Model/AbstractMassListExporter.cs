@@ -798,7 +798,7 @@ namespace pwiz.Skyline.Model
             var prediction = Document.Settings.TransitionSettings.Prediction;
 
             // If exporting optimization methods, or optimization data should be ignored,
-            // use the regression setting to calculate CE
+            // use the regression setting to calculate DP
             if (OptimizeType != null || prediction.OptimizedMethodType == OptimizedMethodType.None)
             {
                 if (!Equals(OptimizeType, ExportOptimize.DP))

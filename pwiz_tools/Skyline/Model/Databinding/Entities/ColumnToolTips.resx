@@ -1142,4 +1142,36 @@ higher than the other extent.</value>
   <data name="SMILES" xml:space="preserve">
     <value>Standardized molecular identifier</value>
   </data>
+  <data name="TimeStamp">
+    <value>Time at which this change was made</value>
+  </data>
+  <data name="UndoRedoMessage">
+    <value>Description of the change</value>
+  </data>
+  <data name="SummaryMessage">
+    <value>Description of the change</value>
+  </data>
+  <data name="AllInfoMessage">
+    <value>Detailed description of the change</value>
+  </data>
+  <data name="DocumentFormat" xml:space="preserve">
+    <value>Document format version at the time the change was made</value>
+  </data>
+  <data name="User">
+    <value>User who made the change</value>
+  </data>
+  <data name="Reason">
+    <value>Reason the user gave for making the change</value>
+  </data>
+  <data name="SkylineVersion">
+    <value>Version of Skyline in which the change was made</value>
+  </data>
+  <data name="Details">
+    <value>List of detailed change messages and reasons</value>
+  </data>
+  <data name="AuditLogRow">
+    <value>
+      Row of audit log information
+    </value>
+  </data>
 </root>
