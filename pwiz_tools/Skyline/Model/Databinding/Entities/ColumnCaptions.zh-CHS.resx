@@ -380,7 +380,7 @@
     <value>线性拟合</value>
   </data>
   <data name="Log2FoldChange">
-    <value>记录 2 文件夹更改</value>
+    <value>Log2（倍数变化）</value>
   </data>
   <data name="Losses">
     <value>丢失</value>
@@ -891,7 +891,7 @@
     <value>明示离子迁移单位</value>
   </data>
   <data name="IonMobilityFragment">
-    <value>离子迁移片段</value>
+    <value>离子迁移碎片</value>
   </data>
   <data name="IonMobilityMS1">
     <value>离子迁移 MS1</value>
@@ -972,6 +972,6 @@
     <value>绝对倍数变化</value>
   </data>
   <data name="AbsLog2FoldChange">
-    <value>绝对对数 2 倍变化</value>
+    <value>绝对 Log2 倍数变化</value>
   </data>
 </root>

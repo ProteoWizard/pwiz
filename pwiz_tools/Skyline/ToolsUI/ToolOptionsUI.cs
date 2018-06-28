@@ -35,7 +35,7 @@ namespace pwiz.Skyline.ToolsUI
     public partial class ToolOptionsUI : FormEx
     {
         private readonly SettingsListBoxDriver<Server> _driverServers;
-        private readonly SettingsListBoxDriver<ChorusAccount> _driverChorusAccounts;
+        private readonly SettingsListBoxDriver<RemoteAccount> _driverChorusAccounts;
         private readonly SettingsListComboDriver<ColorScheme> _driverColorSchemes;
 
         public ToolOptionsUI()
@@ -47,7 +47,7 @@ namespace pwiz.Skyline.ToolsUI
 
             _driverServers = new SettingsListBoxDriver<Server>(listboxServers, Settings.Default.ServerList);
             _driverServers.LoadList();
-            _driverChorusAccounts = new SettingsListBoxDriver<ChorusAccount>(listBoxChorusAccounts, Settings.Default.ChorusAccountList);
+            _driverChorusAccounts = new SettingsListBoxDriver<RemoteAccount>(listBoxRemoteAccounts, Settings.Default.RemoteAccountList);
             _driverChorusAccounts.LoadList();
             _driverColorSchemes = new SettingsListComboDriver<ColorScheme>(comboColorScheme, Settings.Default.ColorSchemes, true);
             _driverColorSchemes.LoadList(Settings.Default.CurrentColorScheme);
@@ -70,10 +70,6 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     listBoxLanguages.SelectedIndex = i;
                 }
-            }
-            if (!Settings.Default.EnableChorus)
-            {
-                tabControl.TabPages.Remove(tabChorus);
             }
             comboCompactFormatOption.Items.AddRange(CompactFormatOption.ALL_VALUES.ToArray());
             comboCompactFormatOption.SelectedItem = CompactFormatOption.FromSettings();

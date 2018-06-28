@@ -72,8 +72,10 @@ namespace pwiz.Skyline.Model.DocSettings
         private AnnotationDef()
         {
         }
-        
+
+        [Diff]
         public AnnotationTargetSet AnnotationTargets { get; private set; }
+        [Diff]
         public AnnotationType Type { get { return _type; } private set { _type = value; } }
         public ListPropertyType ListPropertyType { get { return new ListPropertyType(Type, Lookup);} }
 
@@ -103,6 +105,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        [Diff]
         public ImmutableList<String> Items
         {
             get { return _items; }

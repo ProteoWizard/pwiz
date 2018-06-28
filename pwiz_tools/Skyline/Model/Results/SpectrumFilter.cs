@@ -171,7 +171,7 @@ namespace pwiz.Skyline.Model.Results
                             {
                                 minTime = peakBoundaries.StartTime - _fullScan.RetentionTimeFilterLength;
                                 maxTime = peakBoundaries.EndTime + _fullScan.RetentionTimeFilterLength;
-                                canSchedule = false;
+                                _isSharedTime = false;
                             }
                         }
                         if (canSchedule)
@@ -263,6 +263,7 @@ namespace pwiz.Skyline.Model.Results
                 _filterRTValues = new SpectrumFilterPair[_filterMzValues.Length];
                 Array.Copy(_filterMzValues, _filterRTValues, _filterMzValues.Length);
                 Array.Sort(_filterRTValues, CompareByRT);
+
             }
 
             InitRTLimits();

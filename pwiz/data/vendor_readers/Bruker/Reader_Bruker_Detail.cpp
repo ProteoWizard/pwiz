@@ -131,14 +131,17 @@ Reader_Bruker_Format format(const string& path)
 std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataPtr rawfile)
 {
     vector<InstrumentConfiguration> configurations;
-    
-    MSSpectrumPtr firstSpectrum = rawfile->getMSSpectrum(1);
-    MSSpectrumParameterListPtr parametersPtr = firstSpectrum->parameters();
-    const MSSpectrumParameterList& parameters = *parametersPtr;
-
     map<string, string> parameterMap;
-    BOOST_FOREACH(const MSSpectrumParameter& p, parameters)
-        parameterMap[p.name] = p.value;
+    
+    if (rawfile->getMSSpectrumCount() > 0)
+    {
+        MSSpectrumPtr firstSpectrum = rawfile->getMSSpectrum(1);
+        MSSpectrumParameterListPtr parametersPtr = firstSpectrum->parameters();
+        const MSSpectrumParameterList& parameters = *parametersPtr;
+
+        BOOST_FOREACH(const MSSpectrumParameter& p, parameters)
+            parameterMap[p.name] = p.value;
+    }
 
     switch (rawfile->getInstrumentSource())
     {

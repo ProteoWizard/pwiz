@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:openswath-osw.blib	30	1	8
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:openswath-osw.blib	30	1	9
 id	RefSpectraID	position	mass
 1	6	7	57.021464
 2	10	7	57.021464

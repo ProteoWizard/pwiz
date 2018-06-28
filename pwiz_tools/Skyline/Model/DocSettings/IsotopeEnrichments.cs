@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
+        [DiffParent]
         public ImmutableList<IsotopeEnrichmentItem> Enrichments
         {
             get { return _isotopeEnrichments; }
@@ -176,8 +177,11 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
+        [Diff]
         public string IsotopeSymbol { get; private set; }
+        [Diff]
         public double AtomPercentEnrichment { get; private set; }
+        [Diff]
         public string Symbol { get { return BioMassCalc.GetMonoisotopicSymbol(IsotopeSymbol); } }
         private int IsotopeIndex { get { return BioMassCalc.GetIsotopeDistributionIndex(IsotopeSymbol); } }
 

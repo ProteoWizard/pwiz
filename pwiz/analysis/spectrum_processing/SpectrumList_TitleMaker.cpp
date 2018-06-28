@@ -199,6 +199,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_TitleMaker::spectrum(size_t index, bool g
     /// <BasePeakMz> - Spectrum::cvParam("base peak m/z")
     /// <BasePeakIntensity> - Spectrum::cvParam("base peak intensity")
     /// <TotalIonCurrent> - Spectrum::cvParam("total ion current")
+    /// <IonMobility> - Scan::cvParam("ion mobility drift time") or Scan::cvParam("inverse reduced ion mobility")
 
     string title = format_;
 
@@ -260,15 +261,24 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_TitleMaker::spectrum(size_t index, bool g
         bal::replace_all(title, "<PrecursorSpectrumId>", "");
     }
 
-    double scanStartTimeInSeconds = s->scanList.scans.empty() ? 0 : s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds();
-    bal::replace_all(title, "<ScanStartTimeInSeconds>", lexical_cast<string>(scanStartTimeInSeconds));
-    bal::replace_all(title, "<ScanStartTimeInMinutes>", lexical_cast<string>(scanStartTimeInSeconds / 60));
+    if (!s->scanList.scans.empty())
+    {
+        Scan& firstScan = s->scanList.scans[0];
+
+        double scanStartTimeInSeconds = firstScan.cvParam(MS_scan_start_time).timeInSeconds();
+        bal::replace_all(title, "<ScanStartTimeInSeconds>", lexical_cast<string>(scanStartTimeInSeconds));
+        bal::replace_all(title, "<ScanStartTimeInMinutes>", lexical_cast<string>(scanStartTimeInSeconds / 60));
+
+        CVParam driftTime = firstScan.cvParam(MS_ion_mobility_drift_time);
+        bal::replace_all(title, "<IonMobility>", driftTime.empty() ? firstScan.cvParam(MS_inverse_reduced_ion_mobility).value : driftTime.value);
+    }
 
     bal::replace_all(title, "<SpectrumType>", s->cvParamChild(MS_spectrum_type).name());
     bal::replace_all(title, "<MsLevel>", s->cvParam(MS_ms_level).value);
     bal::replace_all(title, "<BasePeakMz>", s->cvParam(MS_base_peak_m_z).value);
     bal::replace_all(title, "<BasePeakIntensity>", s->cvParam(MS_base_peak_intensity).value);
     bal::replace_all(title, "<TotalIonCurrent>", s->cvParam(MS_TIC).value);
+
 
     replaceCvParam(*s, MS_spectrum_title, title);
 

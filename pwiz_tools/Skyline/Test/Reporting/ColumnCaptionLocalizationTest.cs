@@ -30,6 +30,7 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
@@ -45,7 +46,7 @@ namespace pwiz.SkylineTest.Reporting
     public class ColumnCaptionLocalizationTest : AbstractUnitTest
     {
         private static readonly IList<Type> STARTING_TYPES = ImmutableList.ValueOf(new[]
-            {typeof (SkylineDocument), typeof (FoldChangeBindingSource.FoldChangeRow)});
+            {typeof (SkylineDocument), typeof (FoldChangeBindingSource.FoldChangeRow), typeof(AuditLogRow)});
         /// <summary>
         /// This test method just outputs the entire text that should go in "ColumnCaptions.resx".
         /// </summary>

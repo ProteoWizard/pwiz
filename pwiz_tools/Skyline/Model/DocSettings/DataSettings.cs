@@ -51,11 +51,13 @@ namespace pwiz.Skyline.Model.DocSettings
             Lists = ImmutableList<ListData>.EMPTY;
         }
 
+        [DiffParent(true)]
         public ImmutableList<AnnotationDef> AnnotationDefs
         {
             get { return _annotationDefs; }
         }
 
+        [DiffParent(true)]
         public ImmutableList<GroupComparisonDef> GroupComparisonDefs
         {
             get { return _groupComparisonDefs;}
@@ -78,6 +80,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.Lists = im.Lists.ReplaceAt(index, listData));
         }
 
+        [DiffParent(ignoreName:true)]
         public ViewSpecList ViewSpecList { get; private set; }
 
         public Uri PanoramaPublishUri { get; private set; }

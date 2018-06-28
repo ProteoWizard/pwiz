@@ -2943,6 +2943,18 @@
   <data name="documentGridMenuItem.Text" xml:space="preserve">
     <value>&amp;Document Grid</value>
   </data>
+  <data name="auditLogMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Alt+4</value>
+  </data>
+  <data name="auditLogMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>273, 30</value>
+  </data>
+  <data name="auditLogMenuItem.Text" xml:space="preserve">
+    <value>Au&amp;dit Log</value>
+  </data>
+  <data name="auditLogMenuItem.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
   <data name="toolStripSeparator36.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
   </data>
@@ -5866,6 +5878,12 @@
     <value>documentGridMenuItem</value>
   </data>
   <data name="&gt;&gt;documentGridMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;auditLogMenuItem.Name" xml:space="preserve">
+    <value>auditLogMenuItem</value>
+  </data>
+  <data name="&gt;&gt;auditLogMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator36.Name" xml:space="preserve">

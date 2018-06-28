@@ -306,12 +306,15 @@ namespace pwiz.Skyline.SettingsUI
                 var rankId = settings.PeptideSettings.Libraries.RankId;
                 if (rankId != null && !_selectedSpec.PeptideRankIds.Contains(rankId))
                     settings = settings.ChangePeptideLibraries(lib => lib.ChangeRankId(null));
-
+                var isProteomic = pepInfo.Target.IsProteomic;
                 settings = settings.ChangePeptideLibraries(
                         lib => lib.ChangeLibraries(new[] { _selectedSpec }, new[] { _selectedLibrary })
                                   .ChangePick(PeptidePick.library))
                     .ChangeTransitionFilter(
-                        filter => filter.ChangePeptidePrecursorCharges(new[] { charge }).ChangeAutoSelect(true))
+                        filter => (isProteomic ? 
+                            filter.ChangePeptidePrecursorCharges(new[] { charge }) :
+                            filter.ChangeSmallMoleculePrecursorAdducts(new[] { charge }))
+                            .ChangeAutoSelect(true))
                     .ChangeMeasuredResults(null);
 
                 _chargeSettingsMap[charge] = settings;
@@ -399,6 +402,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     newDocument = AddPeptidesToLibraryGroup(newDocument, listPeptidesToAdd, broker,
                                                             toPath, out selectedPath);
+                    if (listPeptidesToAdd.Count > 1000)
+                        selectedPath = selectedPath.Parent; // Don't force Skyline to open a massive peptide list, if it wouldn't otherwise
                 }
             }
 

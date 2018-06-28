@@ -53,6 +53,8 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_WATERS_MSE = "final_fragment.csv";
         public const string EXT_PROXL_XML = ".proxl.xml";
         public const string EXT_TSV = ".tsv";
+        public const string EXT_MZTAB = ".mzTab";
+        public const string EXT_MZTAB_TXT = "mztab.txt";
         // ReSharper restore NonLocalizedString
 
         private ReadOnlyCollection<string> _inputFiles;

@@ -53,6 +53,7 @@ namespace pwiz.Skyline.Alerts
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
             Text = Program.Name;
+            toolStrip1.Renderer = new NoBorderSystemRenderer();
         }
 
         public AlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message)
@@ -343,6 +344,18 @@ namespace pwiz.Skyline.Alerts
             }
             return TextUtil.LineSeparate(message.Substring(0, MAX_MESSAGE_LENGTH),
                 Resources.AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_);
+        }
+
+        private void toolStripButtonCopy_Click(object sender, EventArgs e)
+        {
+            CopyMessage();
+        }
+
+        private class NoBorderSystemRenderer : ToolStripSystemRenderer
+        {
+            protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
+            {
+            }
         }
     }
 }

@@ -512,9 +512,9 @@ namespace pwiz.Common.DataBinding
                     {
                         column.DefaultCellStyle.NullValue = format.NullValue;
                     }
-                    if (format.Width.HasValue)
+                    if (format.Width != 0)
                     {
-                        column.Width = format.Width.Value;
+                        column.Width = format.Width;
                     }
                 }
             }

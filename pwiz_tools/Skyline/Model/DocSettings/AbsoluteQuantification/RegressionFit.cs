@@ -22,10 +22,11 @@ using System.Linq;
 using MathNet.Numerics.LinearRegression;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public class RegressionFit
+    public class RegressionFit : IAuditLogObject
     {
         public static readonly RegressionFit NONE = new RegressionFit("none", // Not L10N
             ()=>QuantificationStrings.RegressionFit_NONE_None, NoExternalStandards);
@@ -56,6 +57,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         }
 
         public string Name { get; private set; }
+
+        public string AuditLogText { get { return Name; } }
+        public bool IsName { get { return true; } }
 
         public override string ToString()
         {
@@ -166,7 +170,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 var simplexConstant = new NelderMeadSimplex.SimplexConstant((xValues[i] + xValues[i + 1]) / 2,
                     (xValues[i + 1] - xValues[i]) / 4);
-                var regressionResult = NelderMeadSimplex.Regress(new[] { simplexConstant }, 0, 10,
+                var regressionResult = NelderMeadSimplex.Regress(new[] { simplexConstant }, 0, 50,
                     constants => LodObjectiveFunction(constants[0], weightedPoints));
                 if (regressionResult.ErrorValue < bestScore)
                 {
@@ -212,7 +216,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 double delta = pt.Y - calibrationCurve.GetY(pt.X).Value;
                 totalWeight += pt.Weight;
-                totalDelta = pt.Weight * delta * delta;
+                totalDelta += pt.Weight * delta * delta;
             }
             return totalDelta / totalWeight;
         }

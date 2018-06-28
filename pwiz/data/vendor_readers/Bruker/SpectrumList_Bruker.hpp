@@ -24,6 +24,7 @@
 #define _SPECTRUMLIST_BRUKER_HPP_
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
@@ -55,6 +56,7 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListBase
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     virtual bool hasIonMobility() const;
+    virtual bool hasPASEF() const;
     virtual bool canConvertInverseK0AndCCS() const;
     virtual double inverseK0ToCCS(double inverseK0, double mz, int charge) const;
     virtual double ccsToInverseK0(double ccs, double mz, int charge) const;
@@ -63,7 +65,8 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListBase
     SpectrumList_Bruker(MSData& msd,
                         const string& rootpath,
                         Bruker::Reader_Bruker_Format format,
-                        CompassDataPtr compassDataPtr);
+                        CompassDataPtr compassDataPtr,
+                        const Reader::Config& config);
 
     MSSpectrumPtr getMSSpectrumPtr(size_t index, vendor_api::Bruker::DetailLevel detailLevel) const;
 
@@ -73,6 +76,7 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListBase
     bfs::path rootpath_;
     Bruker::Reader_Bruker_Format format_;
     mutable CompassDataPtr compassDataPtr_;
+    const Reader::Config config_;
     size_t size_;
     vector<bfs::path> sourcePaths_;
 

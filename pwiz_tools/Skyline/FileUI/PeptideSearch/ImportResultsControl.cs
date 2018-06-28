@@ -109,7 +109,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void browseToResultsFileButton_Click(object sender, EventArgs e)
         {
             MsDataFileUri[] dataSources;
-            using (var dlg = new OpenDataSourceDialog(Settings.Default.ChorusAccountList)
+            using (var dlg = new OpenDataSourceDialog(Settings.Default.RemoteAccountList)
             {
                 Text = Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search,
                 InitialDirectory = new MsDataFilePath(DocumentDirectory)

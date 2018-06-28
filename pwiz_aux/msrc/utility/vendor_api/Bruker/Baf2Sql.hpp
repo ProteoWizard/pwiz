@@ -127,8 +127,6 @@ struct PWIZ_API_DECL Baf2SqlImpl : public CompassData
     /// returns the number of spectra available from the MS source
     virtual size_t getMSSpectrumCount() const;
 
-    virtual std::pair<size_t, size_t> getFrameScanPair(int scan) const { return make_pair(0ull, 0ull); }
-
     /// returns a spectrum from the MS source
     virtual MSSpectrumPtr getMSSpectrum(int scan, DetailLevel detailLevel = DetailLevel_FullMetadata) const;
 

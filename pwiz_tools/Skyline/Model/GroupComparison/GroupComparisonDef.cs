@@ -22,6 +22,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -44,6 +45,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             NormalizationMethod = NormalizationMethod.NONE;
         }
 
+        [Diff]
         public string ControlAnnotation { get; private set; }
 
         public GroupComparisonDef ChangeControlAnnotation(string value)
@@ -51,6 +53,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ChangeProp(ImClone(this), im => im.ControlAnnotation = value);
         }
 
+        [Diff]
         public string ControlValue { get; private set; }
 
         public GroupComparisonDef ChangeControlValue(string value)
@@ -58,6 +61,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ChangeProp(ImClone(this), im => im.ControlValue = value);
         }
 
+        [Diff]
         public string CaseValue { get; private set; }
 
         public GroupComparisonDef ChangeCaseValue(string value)
@@ -65,6 +69,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ChangeProp(ImClone(this), im => im.CaseValue = value);
         }
 
+        [Diff]
         public string IdentityAnnotation { get; private set; }
 
         public GroupComparisonDef ChangeIdentityAnnotation(string value)
@@ -79,6 +84,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ChangeProp(ImClone(this), im => im.AverageTechnicalReplicates = value);
         }
 
+        [Diff]
         public NormalizationMethod NormalizationMethod { get; private set; }
 
         public GroupComparisonDef ChangeNormalizationMethod(NormalizationMethod value)
@@ -98,6 +104,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return (GroupComparisonDef) base.ChangeName(name);
         }
 
+        [Diff]
         public SummarizationMethod SummarizationMethod { get; private set; }
 
         public GroupComparisonDef ChangeSummarizationMethod(SummarizationMethod summarizationMethod)
@@ -107,6 +114,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public double ConfidenceLevel { get { return ConfidenceLevelTimes100/100; } }
 
+        [Diff]
         public double ConfidenceLevelTimes100 { get; private set; }
 
         public GroupComparisonDef ChangeConfidenceLevelTimes100(double value)
@@ -114,6 +122,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ChangeProp(ImClone(this), im => im.ConfidenceLevelTimes100 = value);
         }
 
+        [Diff]
         public bool PerProtein { get; private set; }
 
         public GroupComparisonDef ChangePerProtein(bool value)
@@ -121,6 +130,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ChangeProp(ImClone(this), im => im.PerProtein = value);
         }
 
+        [Diff]
         public bool UseZeroForMissingPeaks { get; private set; }
 
         public GroupComparisonDef ChangeUseZeroForMissingPeaks(bool value)
@@ -128,6 +138,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ChangeProp(ImClone(this), im => im.UseZeroForMissingPeaks = value);
         }
 
+        [Diff]
         public double? QValueCutoff { get; private set; }
 
         public GroupComparisonDef ChangeQValueCutoff(double? qValueCutoff)
@@ -161,6 +172,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return GroupIdentifier.MakeGroupIdentifier(annotationDef.ParsePersistedString(ControlValue));
         }
 
+        [DiffParent]
         public IList<MatchRgbHexColor> ColorRows { get; private set; }
 
         public GroupComparisonDef ChangeColorRows(IEnumerable<MatchRgbHexColor> value)

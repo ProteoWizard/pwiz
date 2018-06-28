@@ -21,12 +21,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.Properties;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
     public interface IFilterOperation
     {
         string OpName { get; }
+        [Diff]
         string DisplayName { get; }
         bool IsValidFor(ColumnDescriptor columnDescriptor);
         bool IsValidFor(DataSchema dataSchema, Type columnType);

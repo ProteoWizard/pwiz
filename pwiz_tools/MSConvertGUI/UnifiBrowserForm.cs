@@ -28,9 +28,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using System.Net.Http;
 using IdentityModel.Client;
+using pwiz.Common.SystemUtil;
 
 namespace MSConvertGUI
 {
@@ -48,6 +50,62 @@ namespace MSConvertGUI
             {
                 return url.Replace("://", String.Format("://{0}:{1}@", Username, Password)) +
                        String.Format("?identity={0}&scope={1}&secret={2}", IdentityServer, ClientScope, ClientSecret) ;
+            }
+
+            public static Tuple<string, Credentials> ParseUrlWithAuthentication(string url)
+            {
+                var uri = new Uri(url);
+                var credentials = new Credentials();
+                if (uri.UserInfo.Contains(':'))
+                {
+                    credentials.Username = uri.UserInfo.Split(':')[0];
+                    credentials.Password = uri.UserInfo.Split(':')[1];
+                }
+                credentials.IdentityServer = Regex.Match(uri.Query, "identity=([^&]+)").Groups[1].Value;
+                credentials.ClientScope = Regex.Match(uri.Query, "scope=([^&]+)").Groups[1].Value;
+                credentials.ClientSecret = Regex.Match(uri.Query, "secret=([^&]+)").Groups[1].Value;
+                return new Tuple<string, Credentials>(uri.Authority, credentials);
+            }
+        }
+
+        public class UnifiResultSorter : ListViewColumnSorter
+        {
+            UnifiBrowserForm p;
+            public UnifiResultSorter(UnifiBrowserForm parent)
+            {
+                p = parent;
+            }
+            public override int Compare(object x, object y)
+            {
+                if (SortColumn < 0)
+                {
+                    ListViewItem lvX = x as ListViewItem;
+                    ListViewItem lvY = y as ListViewItem;
+                    int compareResult;
+                    
+                    compareResult = CompareSubItems(lvX, lvY, p.Analysis.Index);
+                    if (compareResult == 0)
+                    {
+                        compareResult = CompareSubItems(lvX, lvY, p.WellPosition.Index);
+                        if (compareResult == 0)
+                        {
+                            compareResult = CompareSubItems(lvX, lvY, p.SourceName.Index);
+                            if (compareResult == 0)
+                            {
+                                compareResult = CompareSubItems(lvX, lvY, p.Replicate.Index);
+                                return compareResult;
+                            }
+                            else
+                                return compareResult;
+                        }
+                        else
+                            return compareResult;
+                    }
+                    else
+                        return compareResult;
+                }
+                else
+                    return base.Compare(x, y);
             }
         }
 
@@ -82,12 +140,14 @@ namespace MSConvertGUI
             _nodeImages = treeViewImageList;
             FileTree.ImageList = _nodeImages;
 
+            DoubleBuffered = true;
+
             FolderViewList.LargeImageList = FolderViewList.SmallImageList = treeViewImageList;
             FolderViewList.Columns.Remove(SourceSize);
 
-            FolderViewList.ListViewItemSorter = _sorter = new ListViewColumnSorter();
+            FolderViewList.ListViewItemSorter = _sorter = new UnifiResultSorter(this);
             _sorter.Order = SortOrder.Ascending;
-            _sorter.SortColumn = 0;
+            _sorter.SortColumn = -1; // default to multi-column sort
 
             _httpClient = new HttpClient();
 
@@ -141,14 +201,16 @@ namespace MSConvertGUI
                     var parentId = (parentIdProperty as JValue).Value.ToString();
                     var parentNode = _nodeById[parentId];
                     _nodeById[id] = parentNode.Nodes.Add(id, System.IO.Path.GetFileName(path), 1);
-                    _nodeById[id].Tag = "folder";
                 }
+                _nodeById[id].Tag = "folder";
             }
         }
 
         void connect()
         {
             string url = serverLocationTextBox.Text;
+            if (!url.Any())
+                return;
             if (!url.StartsWith("http"))
                 url = "https://" + url;
             if (!url.EndsWith(BasePath))
@@ -159,14 +221,24 @@ namespace MSConvertGUI
             {
                 try
                 {
-                    if (SelectedCredentials != null)
+                    if (SelectedCredentials != null && SelectedCredentials.Username.Any() && SelectedCredentials.Password.Any())
                     {
                         TokenClient client = new TokenClient(TokenEndpoint, "resourceownerclient", SelectedCredentials.ClientSecret);
                         TokenResponse response = client.RequestResourceOwnerPasswordAsync(SelectedCredentials.Username, SelectedCredentials.Password, SelectedCredentials.ClientScope).Result;
                         if (response.IsError)
                         {
-                            if (MessageBox.Show(this, "Username or password are not correct!", "Error", MessageBoxButtons.RetryCancel) == DialogResult.Cancel)
-                                return;
+                            if (response.ErrorDescription.Contains("InvalidLogin"))
+                            {
+                                using (new CenterWinDialog(this))
+                                {
+                                    if (MessageBox.Show(this, "Username or password are not correct!", "Error", MessageBoxButtons.RetryCancel) == DialogResult.Cancel)
+                                        return;
+                                }
+                            }
+                            else if (response.Exception != null)
+                                throw response.Exception;
+                            else
+                                throw new InvalidOperationException(response.Error + ": " + response.ErrorDescription);
                         }
                         else
                         {
@@ -203,15 +275,30 @@ namespace MSConvertGUI
                 }
                 catch (Exception ex)
                 {
-                    if (MessageBox.Show(this, "Failed to connect to identity server:\r\n" + ex.ToString(), "Error", MessageBoxButtons.RetryCancel) == DialogResult.Cancel)
+                    if (ex.InnerException != null)
+                        ex = ex.InnerException; // bypass AggregateException
+                    if (MessageBox.Show(this, "Failed to connect to identity server:\r\n" + ex.Message, "Error", MessageBoxButtons.RetryCancel) == DialogResult.Cancel)
                         return;
                     SelectedCredentials = null;
                 }
             }
 
+            serverLocationTextBox.Text = url;
+
             FileTree.Nodes.Clear();
             FileTree.Nodes.Add("host", host, 0);
-            GetFolders();
+
+            try
+            {
+                GetFolders();
+            }
+            catch (Exception ex)
+            {
+                Program.HandleException(ex);
+                disconnect();
+                return;
+            }
+
             FileTree.ExpandAll();
 
             serverLocationTextBox.Text = url;
@@ -224,6 +311,7 @@ namespace MSConvertGUI
             FileTree.Nodes.Clear();
             FolderViewList.Items.Clear();
             serverLocationTextBox.ReadOnly = false;
+            SelectedCredentials = null;
             connectButton.Text = "Connect";
         }
 
@@ -274,14 +362,23 @@ namespace MSConvertGUI
                     var id = item.Property("id").Value.ToString();
                     var created = item.Property("createdAt").Value.ToString();
 
+                    var sampleResult = GetJsonFromEndpoint(String.Format("/sampleresults({0})", id));
+                    var sample = sampleResult.Property("sample").Value as JObject;
+                    var replicate = sample.Property("replicateNumber").Value.ToString();
+                    var wellPosition = sample.Property("wellPosition").Value.ToString();
+                    var acquisitionStartTime = sample.Property("acquisitionStartTime").Value.ToString();
+                    name = sample.Property("name").Value.ToString();
+
                     JObject analysis = (GetJsonFromEndpoint(String.Format("/sampleresults({0})/analyses", id))["value"] as JArray).FirstOrDefault() as JObject;
                     string analysisName = "unknown";
                     if (analysis != null)
                         analysisName = analysis.Property("name").Value.ToString();
 
-                    FolderViewList.Items.Add(new ListViewItem(new string[] { name, analysisName, type, created }, 2) { Tag = String.Format("/sampleresults({0})", id) });
+                    FolderViewList.Items.Add(new ListViewItem(new string[] { type, analysisName, wellPosition, replicate, name, acquisitionStartTime, created }, 2) { Tag = String.Format("/sampleresults({0})", id) });
                 }
             }
+
+            FolderViewList.Sort();
         }
 
         private void FolderViewList_SelectedIndexChanged(object sender, EventArgs e)

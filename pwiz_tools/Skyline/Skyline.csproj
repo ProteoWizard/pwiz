@@ -108,6 +108,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
     </Reference>
+    <Reference Include="IdentityModel, Version=3.6.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Shared\Lib\IdentityModel.dll</HintPath>
+    </Reference>
     <Reference Include="Kajabity Tools">
       <HintPath>..\Shared\Lib\Kajabity Tools.dll</HintPath>
     </Reference>
@@ -143,6 +147,7 @@
       <HintPath>..\Shared\Lib\NHibernate\NHibernate.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -152,6 +157,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Management" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Security" />
     <Reference Include="System.Web" />
     <Reference Include="System.Data.DataSetExtensions">
@@ -162,6 +168,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Alerts\AboutDlg.cs">
@@ -290,6 +297,27 @@
     <Compile Include="AlgLib\solvers.cs" />
     <Compile Include="AlgLib\specialfunctions.cs" />
     <Compile Include="AlgLib\statistics.cs" />
+    <Compile Include="Model\AuditLog\Databinding\AuditLogDetailRow.cs" />
+    <Compile Include="Model\AuditLog\Databinding\AuditLogRow.cs" />
+    <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AuditLogStrings.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\AuditLog\CustomPropertyLocalizer.cs" />
+    <Compile Include="Model\AuditLog\LogMessage.cs" />
+    <Compile Include="Model\AuditLog\Property.cs" />
+    <Compile Include="Model\AuditLog\PropertyElementNames.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PropertyElementNames.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\AuditLog\PropertyNames.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PropertyNames.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\AuditLog\Reflector.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -313,7 +341,17 @@
     <Compile Include="Model\ElementLocators\ResultRef.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\FiguresOfMerit.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\LodCalculation.cs" />
+    <Compile Include="Controls\AuditLog\AuditLogForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\AuditLog\AuditLogForm.Designer.cs">
+      <DependentUpon>AuditLogForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Model\AuditLog\AuditLogEntry.cs" />
+    <Compile Include="Model\AuditLog\DiffNode.cs" />
+    <Compile Include="Model\AuditLog\PropertyName.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
+    <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
     <Compile Include="Model\Lib\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
@@ -321,6 +359,14 @@
     <Compile Include="Model\Lists\ListExceptionDetail.cs" />
     <Compile Include="Model\MassModification.cs" />
     <Compile Include="Model\Optimization\OptimizationDictionary.cs" />
+    <Compile Include="Model\Results\RemoteApi\RemoteAccountList.cs" />
+    <Compile Include="Model\Results\RemoteApi\Chorus\ChorusUrl.cs" />
+    <Compile Include="Model\Results\RemoteApi\RemoteAccount.cs" />
+    <Compile Include="Model\Results\RemoteApi\RemoteAccountType.cs" />
+    <Compile Include="Model\Results\RemoteApi\RemoteItem.cs" />
+    <Compile Include="Model\Results\RemoteApi\RemoteServerException.cs" />
+    <Compile Include="Model\Results\RemoteApi\RemoteSession.cs" />
+    <Compile Include="Model\Results\RemoteApi\RemoteUrl.cs" />
     <Compile Include="Model\Serialization\Pre372CustomIonTransitionGroupHandler.cs" />
     <Compile Include="Model\Serialization\XmlReadAhead.cs" />
     <Compile Include="Model\TargetMap.cs" />
@@ -368,6 +414,12 @@
     <Compile Include="Controls\GroupComparison\VolcanoPlotPropertiesDlg.Designer.cs">
       <DependentUpon>VolcanoPlotPropertiesDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiAccount.cs" />
+    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiFileObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiFolderObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiSession.cs" />
+    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1270,16 +1322,14 @@
     <Compile Include="Model\Results\PeptideFinder.cs" />
     <Compile Include="Model\Results\PrecursorTextId.cs" />
     <Compile Include="Model\Results\RatioValue.cs" />
-    <Compile Include="Model\Results\RemoteApi\ChorusAccount.cs" />
-    <Compile Include="Model\Results\RemoteApi\ChorusContents.cs" />
-    <Compile Include="Model\Results\RemoteApi\ChorusErrorResponse.cs" />
-    <Compile Include="Model\Results\RemoteApi\ChorusScanProvider.cs" />
-    <Compile Include="Model\Results\RemoteApi\ChorusServerException.cs" />
-    <Compile Include="Model\Results\RemoteApi\ChorusItem.cs" />
-    <Compile Include="Model\Results\RemoteApi\ChorusSession.cs" />
-    <Compile Include="Model\Results\RemoteApi\ChromatogramGeneratorTask.cs" />
-    <Compile Include="Model\Results\RemoteApi\ChromatogramRequestProvider.cs" />
-    <Compile Include="Model\Results\RemoteApi\ChromTaskList.cs" />
+    <Compile Include="Model\Results\RemoteApi\Chorus\ChorusAccount.cs" />
+    <Compile Include="Model\Results\RemoteApi\Chorus\ChorusContents.cs" />
+    <Compile Include="Model\Results\RemoteApi\Chorus\ChorusErrorResponse.cs" />
+    <Compile Include="Model\Results\RemoteApi\Chorus\ChorusScanProvider.cs" />
+    <Compile Include="Model\Results\RemoteApi\Chorus\ChorusSession.cs" />
+    <Compile Include="Model\Results\RemoteApi\Chorus\ChromatogramGeneratorTask.cs" />
+    <Compile Include="Model\Results\RemoteApi\Chorus\ChromatogramRequestProvider.cs" />
+    <Compile Include="Model\Results\RemoteApi\Chorus\ChromTaskList.cs" />
     <Compile Include="Model\Results\RemoteApi\GeneratedCode\ChromatogramRequest.cs">
       <DependentUpon>ChromatogramRequest.xsd</DependentUpon>
     </Compile>
@@ -2128,6 +2178,20 @@
     <EmbeddedResource Include="FileUI\ChooseIrtStandardPeptidesDlg.resx">
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\AuditLogStrings.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>AuditLogStrings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\PropertyElementNames.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>PropertyElementNames.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\AuditLog\PropertyNames.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>PropertyNames.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.ja.resx">
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
       <SubType>Designer</SubType>
@@ -2558,7 +2622,7 @@
       <Link>unimod.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' " Include="..\Shared\ProteowizardWrapper\obj\x64\timsdata.dll">
+    <Content Condition=" '$(Platform)' == 'x64' " Include="..\Shared\ProteowizardWrapper\obj\x64\timsdata.dll">
       <Link>timsdata.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3216,14 +3280,14 @@
     <EmbeddedResource Include="Controls\GroupComparison\CreateMatchExpressionDlg.resx">
       <DependentUpon>CreateMatchExpressionDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\EditChorusAccountDlg.ja.resx">
-      <DependentUpon>EditChorusAccountDlg.cs</DependentUpon>
+    <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.ja.resx">
+      <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\EditChorusAccountDlg.resx">
-      <DependentUpon>EditChorusAccountDlg.cs</DependentUpon>
+    <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.resx">
+      <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\EditChorusAccountDlg.zh-CHS.resx">
-      <DependentUpon>EditChorusAccountDlg.cs</DependentUpon>
+    <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.zh-CHS.resx">
+      <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditCustomThemeDlg.ja.resx">
       <DependentUpon>EditCustomThemeDlg.cs</DependentUpon>
@@ -3360,11 +3424,11 @@
     <Compile Include="ToolsUI\ConfigureToolsDlg.designer.cs">
       <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="ToolsUI\EditChorusAccountDlg.cs">
+    <Compile Include="ToolsUI\EditRemoteAccountDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ToolsUI\EditChorusAccountDlg.Designer.cs">
-      <DependentUpon>EditChorusAccountDlg.cs</DependentUpon>
+    <Compile Include="ToolsUI\EditRemoteAccountDlg.Designer.cs">
+      <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\EditCustomThemeDlg.cs">
       <SubType>Form</SubType>
@@ -3434,6 +3498,7 @@
     <Compile Include="Util\IonInfo.cs" />
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\MemoryInfo.cs" />
+    <Compile Include="Util\NameValueParameters.cs" />
     <Compile Include="Util\PanoramaUtil.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -4604,8 +4669,20 @@
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
+    <PublishFile Include="unimod.xml">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
+    </PublishFile>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Model\Unifi\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
     <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; password &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />

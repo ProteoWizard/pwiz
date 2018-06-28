@@ -154,6 +154,20 @@ namespace MSConvertGUI
             if (File.Exists(configname))
                 SetGUIfromCfg(configname); // populate buttons etc from config file
 
+            if (Properties.Settings.Default.LastUsedUnifiUrl.Length > 0)
+            {
+                try
+                {
+                    var unifiSettings = UnifiBrowserForm.Credentials.ParseUrlWithAuthentication(Properties.Settings.Default.LastUsedUnifiUrl);
+                    LastUsedUnifiHost = unifiSettings.Item1;
+                    LastUsedUnifiCredentials = unifiSettings.Item2;
+                }
+                catch (Exception ex)
+                {
+                    Program.HandleException(ex);
+                }
+            }
+
             thresholdTypeComboBox.Items.AddRange(thresholdTypes.Select(o => o.Key).ToArray());
             thresholdTypeComboBox.SelectedIndex = 0;
             thresholdOrientationComboBox.SelectedIndex = 0;
@@ -221,6 +235,8 @@ namespace MSConvertGUI
                 }
                 LastUsedUnifiHost = browser.SelectedHost;
                 LastUsedUnifiCredentials = browser.SelectedCredentials;
+                Properties.Settings.Default.LastUsedUnifiUrl = LastUsedUnifiCredentials.GetUrlWithAuthentication(LastUsedUnifiHost);
+                Properties.Settings.Default.Save();
             }
 
             networkResourceComboBox.Items.Add(placeholder);

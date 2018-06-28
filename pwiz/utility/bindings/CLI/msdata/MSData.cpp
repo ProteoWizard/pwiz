@@ -501,12 +501,32 @@ void Spectrum::getMZIntensityPairs(MZIntensityPairList^% output)
 
 BinaryDataArray^ Spectrum::getMZArray()
 {
-    try {return gcnew BinaryDataArray(new b::BinaryDataArrayPtr((*base_)->getMZArray()));} CATCH_AND_FORWARD
+    try
+    {
+        auto arrayPtr = (*base_)->getMZArray();
+        return arrayPtr ? gcnew BinaryDataArray(new b::BinaryDataArrayPtr(arrayPtr)) : nullptr;
+    }
+    CATCH_AND_FORWARD
 }
 
 BinaryDataArray^ Spectrum::getIntensityArray()
 {
-    try {return gcnew BinaryDataArray(new b::BinaryDataArrayPtr((*base_)->getIntensityArray()));} CATCH_AND_FORWARD
+    try
+    {
+        auto arrayPtr = (*base_)->getIntensityArray();
+        return arrayPtr ? gcnew BinaryDataArray(new b::BinaryDataArrayPtr(arrayPtr)) : nullptr;
+    }
+    CATCH_AND_FORWARD
+}
+
+BinaryDataArray^ Spectrum::getArrayByCVID(CVID arrayType)
+{
+    try
+    {
+        auto arrayPtr = (*base_)->getArrayByCVID((pwiz::cv::CVID) arrayType);
+        return arrayPtr ? gcnew BinaryDataArray(new b::BinaryDataArrayPtr(arrayPtr)) : nullptr;
+    }
+    CATCH_AND_FORWARD
 }
 
 void Spectrum::setMZIntensityPairs(MZIntensityPairList^ input)

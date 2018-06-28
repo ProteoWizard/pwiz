@@ -247,6 +247,18 @@ namespace sqlite3pp
         return sqlite3_last_insert_rowid(db_);
     }
 
+    bool database::has_table(const std::string& table)
+    {
+        return has_table(table.c_str());
+    }
+
+    bool database::has_table(const char* table)
+    {
+        query q(*this, "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?");
+        q.bind(1, table);
+        return q.begin()->get<sqlite3_int64>(0) > 0;
+    }
+
     int database::error_code() const
     {
         return sqlite3_errcode(db_);

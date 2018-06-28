@@ -46,6 +46,9 @@ namespace pwiz.Skyline.Controls.Graphs
             if (enabled)
                 textQValueCutoff.Text = ValueOrEmpty(Settings.Default.AreaCVQValueCutoff);
 
+            if(!double.IsNaN(Settings.Default.AreaCVQValueCutoff))
+                textQValueCutoff.Text = Settings.Default.AreaCVQValueCutoff.ToString(LocalizationHelper.CurrentCulture);
+
             textCvCutoff.Text = Settings.Default.AreaCVCVCutoff.ToString(LocalizationHelper.CurrentCulture);
             checkShowCvCutoff.Checked = Settings.Default.AreaCVShowCVCutoff;
             checkShowMedian.Checked = Settings.Default.AreaCVShowMedianCV;
