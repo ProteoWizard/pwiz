@@ -494,6 +494,10 @@ namespace pwiz.Common.DataBinding.Controls
                         newLayout
                     });
                     viewLayouts = viewLayouts.ChangeLayouts(newLayouts);
+                    if (dlg.MakeDefault)
+                    {
+                        viewLayouts = viewLayouts.ChangeDefaultLayoutName(dlg.LayoutName);
+                    }
                     ViewContext.SetViewLayoutList(viewName.GroupId, viewLayouts);
                 }
             }
