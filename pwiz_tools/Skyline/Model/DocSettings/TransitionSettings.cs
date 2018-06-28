@@ -2259,17 +2259,15 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             protected ResLocalizer(PropertyPath path) : base(path, true) { }
 
-            protected override string Localize(object obj)
+            private string LocalizeInternal(object obj)
             {
-                if (obj.GetType() != typeof(FullScanMassAnalyzerType))
+                if (obj == null || obj.GetType() != typeof(FullScanMassAnalyzerType))
                     return null;
 
                 var massAnalyzer = (FullScanMassAnalyzerType)obj;
 
                 switch (massAnalyzer)
                 {
-                    case FullScanMassAnalyzerType.none:
-                        return string.Empty;
                     case FullScanMassAnalyzerType.centroided:
                         return "MassAccuracy"; // Not L10N
                     case FullScanMassAnalyzerType.qit:
@@ -2281,6 +2279,11 @@ namespace pwiz.Skyline.Model.DocSettings
                     default:
                         return null;
                 }
+            }
+
+            protected override string Localize(object oldObj, object newObj)
+            {
+                return LocalizeInternal(newObj) ?? LocalizeInternal(oldObj);
             }
 
             public override string[] PossibleResourceNames

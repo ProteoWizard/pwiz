@@ -323,12 +323,12 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool UseMeasuredRTs { get; private set; }
 
         [Track]
-        public double? MeasuredRTWindow { get; private set; }
+        public double? MeasuredRTWindow { get; set; }
 
         [Track]
         public bool UseLibraryIonMobilityValues { get; private set; }
 
-        [TrackChildren(ignoreName:true)]
+        [TrackChildren/*(ignoreName:true)*/]
         public IonMobilityWindowWidthCalculator LibraryIonMobilityWindowWidthCalculator { get; private set; }
 
         public LibraryIonMobilityInfo LibraryIonMobilityInfo { get; private set; }

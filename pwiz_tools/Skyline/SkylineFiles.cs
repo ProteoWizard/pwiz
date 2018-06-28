@@ -1558,13 +1558,28 @@ namespace pwiz.Skyline
             }         
         }
 
+        private string InsertMessagePairIfNonEmpty<T>(PeakBoundaryImporter importer, List<AuditLogEntry.MessageTypeNamesPair> messagePairs, MessageType type, string extraInfoString,
+            HashSet<T> items)
+        {
+            var result = string.Empty;
+            if (items.Count != 0)
+            {
+                result += string.Format("{0}:\r\n{1}", extraInfoString, // Not L10N
+                                 string.Join(",\r\n", items.Select(item => item.ToString()))) + "\r\n"; // Not L10N
+                messagePairs.Add(new AuditLogEntry.MessageTypeNamesPair(type, items.Count.ToString()));
+            }
+
+            return result;
+        }
+
         private void ImportPeakBoundaries(string fileName, long lineCount, string description)
         {
             var docCurrent = DocumentUI;
             SrmDocument docNew = null;
+
+            var peakBoundaryImporter = new PeakBoundaryImporter(docCurrent);
             using (var longWaitDlg = new LongWaitDlg(this) { Text = description })
-            {
-                var peakBoundaryImporter = new PeakBoundaryImporter(docCurrent);
+            {       
                 longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
                            docNew = peakBoundaryImporter.Import(fileName, longWaitBroker, lineCount));
 
@@ -1585,6 +1600,29 @@ namespace pwiz.Skyline
                 if (!ReferenceEquals(doc, docCurrent))
                     throw new InvalidDataException(Resources.SkylineWindow_ImportPeakBoundaries_Unexpected_document_change_during_operation);
                 return docNew;
+            }, docPair =>
+            {
+                var allInfo = new List<AuditLogEntry.MessageTypeNamesPair>
+                {
+                    new AuditLogEntry.MessageTypeNamesPair(MessageType.imported_peak_boundaries,
+                        fileName)
+                };
+
+                var extraInfo = string.Empty;
+                extraInfo += InsertMessagePairIfNonEmpty(peakBoundaryImporter, allInfo,
+                    MessageType.removed_unrecognized_peptides, "{2:UnrecognizedPeptides}", // Not L10N
+                    peakBoundaryImporter.UnrecognizedPeptides);
+                extraInfo += InsertMessagePairIfNonEmpty(peakBoundaryImporter, allInfo,
+                    MessageType.removed_unrecognized_files, "{2:UnrecognizedFiles}", // Not L10N
+                    peakBoundaryImporter.UnrecognizedFiles);
+                extraInfo += InsertMessagePairIfNonEmpty(peakBoundaryImporter, allInfo,
+                    MessageType.removed_unrecognized_charge_states, "{2:UnrecognizedChargeStates}", // Not L10N
+                    peakBoundaryImporter.UnrecognizedChargeStates);
+
+                var entry = AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc.FormatVersion,
+                    new AuditLogEntry.MessageTypeNamesPair(MessageType.imported_peak_boundaries, Path.GetFileName(fileName)), extraInfo);
+                
+                return entry.ChangeAllInfo(allInfo);
             });
         }
 
@@ -2501,13 +2539,33 @@ namespace pwiz.Skyline
                         return; // User cancelled, no change
 
                     ModifyDocument(description,
-                                   doc => ImportResults(doc, namedResults, dlg.OptimizationName));
+                        doc => ImportResults(doc, namedResults, dlg.OptimizationName), docPair =>
+                            GetDialogAuditLogEntry(docPair, MessageType.imported_results, dlg.ImportSettings,
+                                dlg.NamedPathSets.Length.ToString()));
 
                     // Select the first replicate to which results were added.
                     if (ComboResults.Visible)
                         ComboResults.SelectedItem = namedResults[0].Key;
                 }
             }
+        }
+
+        public AuditLogEntry GetDialogAuditLogEntry<T>(SrmDocumentPair docPair, MessageType type, T dialogSettings, params string[] args) where T : class, IAuditLogComparable
+        {
+            var rootProp = RootProperty.Create(typeof(T));
+            var settings = Reflector.ToString(docPair, 
+                rootProp,
+                dialogSettings);
+
+            var tree = Reflector<T>.BuildDiffTree(docPair,
+                rootProp,
+                dialogSettings);
+
+            var message = new AuditLogEntry.MessageTypeNamesPair(type, args);
+            return AuditLogEntry
+                .CreateSettingsChangeEntry(docPair.OldDoc.FormatVersion, tree, settings)
+                .ChangeUndoRedo(message)
+                .ChangeSummary(message);
         }
 
         /// <summary>

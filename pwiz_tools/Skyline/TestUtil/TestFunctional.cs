@@ -968,7 +968,8 @@ namespace pwiz.SkylineTestUtil
                             TestFilesPersistent, IsExtractHere(i));
                     }
                 }
-
+                var path = @"D:\Audit log test log.txt";
+                File.AppendAllText(path, TestContext.TestName + "\r\n");
                 // Run test in new thread (Skyline on main thread).
                 Program.Init();
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();

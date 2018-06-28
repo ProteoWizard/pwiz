@@ -42,9 +42,7 @@ namespace pwiz.Skyline.Model.DocSettings
 {
     public interface IRegressionFunction
     {
-        [Track]
         double Slope { get; }
-        [Track]
         double Intercept { get; }
         double GetY(double x);
 
@@ -118,7 +116,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        [Track]
+        [TrackChildren]
         public RetentionScoreCalculatorSpec Calculator
         {
             get { return _calculator; }
@@ -128,7 +126,7 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public double TimeWindow { get; private set; }
 
-        [TrackChildren(ignoreName:true)]
+        [TrackChildren]
         public IRegressionFunction Conversion { get; private set; }
 
         [Track]
@@ -2451,8 +2449,10 @@ namespace pwiz.Skyline.Model.DocSettings
             _regressionLine = regressionLine;
         }
 
+        [Track]
         public double Slope { get { return _regressionLine.Slope; } }
 
+        [Track]
         public double Intercept { get { return _regressionLine.Intercept; } }
 
         public double GetY(double x)
@@ -2664,8 +2664,10 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         // XML Serializable properties
+        [Track]
         public double Slope { get; private set; }
 
+        [Track]
         public double Intercept { get; private set; }
 
         /// <summary>
@@ -2821,7 +2823,13 @@ namespace pwiz.Skyline.Model.DocSettings
             return ionMobilityValue.HasValue || collisionalCrossSectionSqA.HasValue ? new IonMobilityAndCCS(ionMobilityValue, collisionalCrossSectionSqA, highEnergyIonMobilityValueOffset) : EMPTY;
         }
 
-        [TrackChildren]
+        [Track]
+        public string Units
+        {
+            get { return IonMobilityFilter.IonMobilityUnitsL10NString(IonMobility.Units); }
+        }
+
+        [TrackChildren(ignoreName:true)]
         public IonMobilityValue IonMobility { get; private set; }
         [Track]
         public double? CollisionalCrossSectionSqA { get; private set; }
@@ -3265,7 +3273,35 @@ namespace pwiz.Skyline.Model.DocSettings
             return IonMobilityAndCCS.EMPTY;
         }
 
+        public class IonMobilityRow
+        {
+            public IonMobilityRow(LibKey libKey, IonMobilityAndCCS value)
+            {
+                Sequence = libKey.Sequence;
+                Charge = libKey.Charge;
+                Value = value;
+            }
+
+            [Track]
+            public string Sequence { get; set; }
+            [Track]
+            public int Charge { get; set; }
+            [TrackChildren(ignoreName:true)]
+            public IonMobilityAndCCS Value { get; set; }
+        }
+
         [TrackChildren]
+        public IDictionary<LibKey, IonMobilityRow> IonMobilityRows
+        {
+            get
+            {
+                return MeasuredMobilityIons != null
+                    ? MeasuredMobilityIons.ToDictionary(pair => pair.Key,
+                        pair => new IonMobilityRow(pair.Key, pair.Value))
+                    : null;
+            }
+        }
+
         public IDictionary<LibKey, IonMobilityAndCCS> MeasuredMobilityIons
         {
             get { return _measuredMobilityIons == null ? null : _measuredMobilityIons.AsDictionary(); }

@@ -50,15 +50,15 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
         public class AuditLogRowText
         {
-            public AuditLogRowText(string text, string extraText, Action undoAction)
+            public AuditLogRowText(string text, string extraInfo, Action undoAction)
             {
                 Text = text;
-                ExtraText = extraText;
+                ExtraInfo = extraInfo;
                 UndoAction = undoAction;
             }
 
             public string Text { get; private set; }
-            public string ExtraText { get; private set; }
+            public string ExtraInfo { get; private set; }
             public Action UndoAction { get; private set; }
 
             public override string ToString()
@@ -74,18 +74,18 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             get
             {
                 return new AuditLogRowText(_entry.UndoRedo.ToString(),
-                    LogMessage.LocalizeLogStringProperties(_entry.ExtraText), _entry.UndoAction);
+                    LogMessage.LocalizeLogStringProperties(_entry.ExtraInfo), _entry.UndoAction);
             }
         }
 
         [DataGridViewColumnType(typeof(AuditLogColumn))]
-        [Format(Width=512)]
+        [Format(Width = 512)]
         public AuditLogRowText SummaryMessage
         {
             get
             {
                 return new AuditLogRowText(_entry.Summary.ToString(),
-                    LogMessage.LocalizeLogStringProperties(_entry.ExtraText), _entry.UndoAction);
+                    LogMessage.LocalizeLogStringProperties(_entry.ExtraInfo), _entry.UndoAction);
             }
         }
 

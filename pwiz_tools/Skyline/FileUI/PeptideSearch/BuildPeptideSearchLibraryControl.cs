@@ -202,6 +202,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { textCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        public bool IncludeAmbiguousMatches
+        {
+            get { return cbIncludeAmbiguousMatches.Checked; }
+            set { cbIncludeAmbiguousMatches.Checked = value; }
+        }
+
         public bool BuildPeptideSearchLibrary(CancelEventArgs e)
         {
             // Nothing to build, if now search files were specified

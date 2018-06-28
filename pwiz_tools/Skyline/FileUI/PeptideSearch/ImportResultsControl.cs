@@ -49,6 +49,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public event EventHandler<ResultsFilesEventArgs> ResultsFilesChanged;
         private Form WizardForm { get { return FormEx.GetParentForm(this); } }
 
+        public string Prefix { get; set; }
+        public string Suffix { get; set; }
+
         public int SimultaneousFiles
         {
             get { return comboSimultaneousFiles.SelectedIndex; }

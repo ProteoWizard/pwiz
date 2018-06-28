@@ -43,6 +43,7 @@ namespace pwiz.Skyline.Model.IonMobility
             DatabasePath = databasePath;
         }
 
+        [Track]
         public string DatabasePath { get; private set; }
 
         public override bool IsNone

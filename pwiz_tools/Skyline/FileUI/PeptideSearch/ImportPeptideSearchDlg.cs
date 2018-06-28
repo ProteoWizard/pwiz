@@ -24,10 +24,13 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -131,6 +134,185 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             getChromatogramsPage.Controls.Add((Control) ImportResultsControl);
 
             _pagesToSkip = new HashSet<Pages>();
+        }
+
+        public ImportPeptideSearchSettings ImportSettings
+        {
+            get
+            {
+                return new ImportPeptideSearchSettings(BuildPepSearchLibControl, (ImportResultsControl) ImportResultsControl, MatchModificationsControl, FullScanSettingsControl, ImportFastaControl);
+            }
+        }
+
+        public class ImportPeptideSearchSettings : IAuditLogComparable
+        {
+            public ImportPeptideSearchSettings(BuildPeptideSearchLibraryControl buildPeptideSearchLibraryControl,
+                ImportResultsControl importResultsControl, MatchModificationsControl matchModificationsControl,
+                FullScanSettingsControl fullScanSettingsControl, ImportFastaControl importFastaControl) :
+                this(buildPeptideSearchLibraryControl.CutOffScore,
+                    buildPeptideSearchLibraryControl.SearchFilenames,
+                    buildPeptideSearchLibraryControl.IrtStandards,
+                    buildPeptideSearchLibraryControl.IncludeAmbiguousMatches,
+                    buildPeptideSearchLibraryControl.FilterForDocumentPeptides,
+                    buildPeptideSearchLibraryControl.WorkflowType,
+
+                    importResultsControl.ExcludeSpectrumSourceFiles,
+                    importResultsControl.FoundResultsFiles.Select(file => file.Path).ToList(),
+                    importResultsControl.MissingResultsFiles.ToList(),
+                    (MultiFileLoader.ImportResultsSimultaneousFileOptions) importResultsControl.SimultaneousFiles,
+                    importResultsControl.DoAutoRetry,
+                    importResultsControl.Prefix,
+                    importResultsControl.Suffix,
+
+                    matchModificationsControl.CheckedModifications.ToList(),
+
+                    fullScanSettingsControl.PrecursorChargesTextBox.Text,
+                    fullScanSettingsControl.PrecursorIsotopesCurrent,
+                    fullScanSettingsControl.PrecursorMassAnalyzer,
+                    fullScanSettingsControl.Peaks,
+                    fullScanSettingsControl.PrecursorRes,
+                    fullScanSettingsControl.PrecursorResMz,
+                    fullScanSettingsControl.UseSelectiveExtraction,
+                    fullScanSettingsControl.UseTimeAroundMs2Ids,
+                    fullScanSettingsControl.TimeAroundMs2Ids,
+                    fullScanSettingsControl.KeepAllTimes,
+
+                    importFastaControl.Enzyme.ToString(),
+                    importFastaControl.MaxMissedCleavages,
+                    importFastaControl.FastFile,
+                    importFastaControl.FastaText,
+                    importFastaControl.DecoyGenerationMethod,
+                    importFastaControl.NumDecoys,
+                    importFastaControl.AutoTrain)
+            {
+            }
+
+            //public static ImportPeptideSearchSettings DEFAULT = new ImportPeptideSearchSettings(0.0, new string[0], IrtStandard.NULL, false, false, Workflow.dda, false, new string[0], new string[0], MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time, false, null, null, new string[0],
+            //    string.Empty, )
+
+            public ImportPeptideSearchSettings(double cutoffScore, IList<string> searchFileNames, IrtStandard standard,
+                bool includeAmbiguousMatches, bool filterForDocumentPeptides, Workflow workFlow,
+                bool excludeSpectrumSourceFiles, IList<string> resultsFilesFound, IList<string> missingResultsFiles,
+                MultiFileLoader.ImportResultsSimultaneousFileOptions importFileOptions, bool retryImportAfterFailure,
+                string prefix, string suffix, IList<string> modifications, string precursorCharges,
+                FullScanPrecursorIsotopes precursorIsotopes, FullScanMassAnalyzerType analyzerType, int peaks,
+                double? precursorRes, double? precursorResMz, bool useSelectiveExtraction, bool useTimeAroundMs2Ids,
+                double timeAroundMs2Ids, bool keepAllTimes, string enzyme, int maxMissedCleavages, string fastaFile, string fastaText,
+                string decoyGenerationMethod, double? numDecoys, bool autoTrain)
+            {
+                CutoffScore = cutoffScore;
+                SearchFileNames = searchFileNames;
+                Standard = standard;
+                IncludeAmbiguousMatches = includeAmbiguousMatches;
+                FilterForDocumentPeptides = filterForDocumentPeptides;
+                WorkFlow = workFlow;
+
+                ExcludeSpectrumSourceFiles = excludeSpectrumSourceFiles;
+                ResultsFilesFound = resultsFilesFound;
+                MissingResultsFiles = missingResultsFiles;
+                ImportFileOptions = importFileOptions;
+                RetryImportAfterFailure = retryImportAfterFailure;
+                Prefix = prefix;
+                Suffix = suffix;
+
+                Modifications = modifications;
+
+                PrecursorCharges = precursorCharges;
+                PrecursorIsotopes = precursorIsotopes;
+                AnalyzerType = analyzerType;
+                Peaks = peaks;
+                PrecursorRes = precursorRes;
+                PrecursorResMz = precursorResMz;
+                UseSelectiveExtraction = useSelectiveExtraction;
+                UseTimeAroundMs2Ids = useTimeAroundMs2Ids;
+                TimeAroundMs2Ids = timeAroundMs2Ids;
+                KeepAllTimes = keepAllTimes;
+
+                Enzyme = enzyme;
+                MaxMissedCleavages = maxMissedCleavages;
+                FastaFile = fastaFile;
+                FastaText = fastaText;
+                DecoyGenerationMethod = decoyGenerationMethod;
+                NumDecoys = numDecoys;
+                AutoTrain = autoTrain;
+            }
+
+            // Build Spectral Library
+            [Track(ignoreDefaultParent:true)]
+            public double CutoffScore { get; private set; }
+            [Track]
+            public IList<string> SearchFileNames { get; private set; }
+            [Track(ignoreName:true)]
+            public IrtStandard Standard { get; private set; }
+            [Track]
+            public bool IncludeAmbiguousMatches { get; private set; }
+            [Track]
+            public bool FilterForDocumentPeptides { get; private set; }
+            [Track(ignoreDefaultParent:true)]
+            public Workflow WorkFlow { get; private set; }
+
+            // Extract Chromatograms
+            [Track] 
+            public bool ExcludeSpectrumSourceFiles { get; private set; }
+            [Track]
+            public IList<string> ResultsFilesFound { get; private set; }
+            [Track]
+            public IList<string> MissingResultsFiles { get; private set; }
+            [Track]
+            public MultiFileLoader.ImportResultsSimultaneousFileOptions ImportFileOptions { get; private set; }
+            [Track]
+            public bool RetryImportAfterFailure { get; private set; }
+            [Track]
+            public string Prefix { get; private set; }
+            [Track]
+            public string Suffix { get; private set; }
+
+            // Add Modifications
+            [Track]
+            public IList<string> Modifications { get; private set; }
+            
+            // Configure Full-Scan Settings
+            [Track]
+            public string PrecursorCharges { get; private set; }
+            [Track]
+            public FullScanPrecursorIsotopes PrecursorIsotopes { get; private set; }
+            [Track]
+            public FullScanMassAnalyzerType AnalyzerType { get; private set; }
+            [Track]
+            public int Peaks { get; private set; }
+            [Track]
+            public double? PrecursorRes { get; private set; }
+            [Track]
+            public double? PrecursorResMz { get; private set; }
+            [Track]
+            public bool UseSelectiveExtraction { get; private set; }
+            [Track]
+            public bool UseTimeAroundMs2Ids { get; private set; }
+            [Track]
+            public double TimeAroundMs2Ids { get; private set; }
+            [Track]
+            public bool KeepAllTimes { get; private set; }
+
+            // Import FASTA
+            [Track]
+            public string Enzyme { get; private set; }
+            [Track]
+            public int MaxMissedCleavages { get; private set; }
+            [Track]
+            public string FastaFile { get; private set; }
+            [Track]
+            public string FastaText { get; private set; }
+            [Track]
+            public string DecoyGenerationMethod { get; private set; }
+            [Track]
+            public double? NumDecoys { get; private set; }
+            [Track]
+            public bool AutoTrain { get; private set; }
+
+            public object DefaultObject
+            {
+                get { return null; }
+            }
         }
 
         public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, Workflow workflowType)
@@ -329,6 +511,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                     {
                                         ImportResultsControl.FoundResultsFiles = ImportResultsControl.FoundResultsFiles.Select(f =>
                                             new ImportPeptideSearch.FoundResultsFile(dlgName.ApplyNameChange(f.Name), f.Path)).ToList();
+
+                                        ((ImportResultsControl) ImportResultsControl).Prefix =
+                                            string.IsNullOrEmpty(prefix) ? null : prefix;
+                                        ((ImportResultsControl)ImportResultsControl).Suffix =
+                                            string.IsNullOrEmpty(suffix) ? null : suffix;
                                     }
                                 }
                             }
@@ -611,7 +798,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             else
             {
                 SkylineWindow.ModifyDocument(Resources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
-                    doc => SkylineWindow.ImportResults(doc, namedResults, ExportOptimize.NONE));
+                    doc => SkylineWindow.ImportResults(doc, namedResults, ExportOptimize.NONE));/*, docPair =>
+                    {
+                        SkylineWindow.GetDialogAuditLogEntry(oldDoc, MessageType.inserted_data, ImportSettings);
+                    });*/
                 CloseWizard(DialogResult.OK);
             }
         }

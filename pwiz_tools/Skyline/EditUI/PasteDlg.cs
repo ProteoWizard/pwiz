@@ -1223,42 +1223,57 @@ namespace pwiz.Skyline.EditUI
                             return document;
                         }
                     }
+
+                    proteinCount = newPeptideGroups.Count;
                     if (!keepEmptyProteins.Value)
                     {
                         newDocument = ImportPeptideSearch.RemoveProteinsByPeptideCount(newDocument, 1);
                     }
                     return newDocument;
-                }, (oldDoc, newDoc) =>
+                }, docPair =>
                 {
+                    if (error)
+                        return null;
+
                     MessageType type;
-                    int arg = 0;
+                    var arg = 0;
+                    string extraInfo = null;
+                    DataGridViewEx grid = null;
+
                     switch (PasteFormat)
                     {
                         case PasteFormat.fasta:
                             type = MessageType.inserted_fasta;
+                            extraInfo = tbxFasta.Text;
                             arg = proteinCount;
                             break;
                         case PasteFormat.protein_list:
                             type = MessageType.inserted_proteins;
-                            arg = gridViewProteins.RowCount - 1;
+                            grid = gridViewProteins;
                             break;
                         case PasteFormat.peptide_list:
                             type = MessageType.inserted_peptides;
-                            arg = gridViewPeptides.RowCount - 1;
+                            grid = gridViewPeptides;
                             break;
                         case PasteFormat.transition_list:
                             type = MessageType.inserted_transitions;
-                            arg = gridViewTransitionList.RowCount - 1;
+                            grid = gridViewTransitionList;
                             break;
                         default:
                             type = MessageType.inserted_data;
                             break;
                     }
 
+                    if (grid != null)
+                    {
+                        arg = grid.RowCount - 1;
+                        extraInfo = grid.GetCopyText();
+                    }
+
                     var args = new string[0];
                     if (arg > 0)
                         args = new[] { arg.ToString() };
-                    return Program.MainWindow.DiffDocNodes(type, oldDoc, newDoc, args);
+                    return Program.MainWindow.DiffDocNodesWithExtraInfo(type, docPair, extraInfo, args);
                 });
             if (error)
             {

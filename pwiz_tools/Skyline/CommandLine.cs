@@ -466,13 +466,13 @@ namespace pwiz.Skyline
             ModifyDocument(act, null);
         }
 
-        public void ModifyDocument(Func<SrmDocument, SrmDocument> act, Func<SrmDocument, SrmDocument, AuditLogEntry> logFunc)
+        public void ModifyDocument(Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc)
         {
             var docOriginal = _doc;
             _doc = act(_doc);
             if (logFunc != null)
             {
-                var logEntry = logFunc(docOriginal, _doc);
+                var logEntry = logFunc(SrmDocumentPair.Create(docOriginal, _doc));
                 if (logEntry != null)
                     logEntry.AddToDocument(_doc, ModifyDocument);
             }

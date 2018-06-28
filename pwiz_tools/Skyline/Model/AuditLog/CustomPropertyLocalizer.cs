@@ -61,30 +61,38 @@ namespace pwiz.Skyline.Model.AuditLog
             return 0;
         }
 
-        public string Localize(object rootObj, object parentObj)
+        private object FindObject(ObjectGroup objectGroup)
         {
+            if (objectGroup == null)
+                return null;
+
             var pathArrary = PropertyPathToArray(Path);
 
-            object obj;
             if (!Relative)
             {
-                if (rootObj == null)
+                if (objectGroup.RootObject == null)
                     return null;
 
-                obj = FindObjectByPath(pathArrary, 0, rootObj);
+                return FindObjectByPath(pathArrary, 0, objectGroup.RootObject);
             }
             else
             {
-                if (parentObj == null)
+                if (objectGroup.ParentObject == null)
                     return null;
 
-                obj = FindObjectByPath(pathArrary, 0, parentObj);
+                return FindObjectByPath(pathArrary, 0, objectGroup.ParentObject);
             }
-
-            return Localize(obj);
         }
 
-        protected abstract string Localize(object obj);
+        public string Localize(ObjectGroup oldGroup, ObjectGroup newGroup)
+        {
+            var oldObj = FindObject(oldGroup);
+            var newObj = FindObject(newGroup);
+
+            return Localize(oldObj, newObj);
+        }
+
+        protected abstract string Localize(object oldObj, object newObj);
 
         public static CustomPropertyLocalizer CreateInstance(Type localizerType)
         {
@@ -96,5 +104,24 @@ namespace pwiz.Skyline.Model.AuditLog
 
         // Test support
         public abstract string[] PossibleResourceNames { get; }
+    }
+
+    public class ObjectGroup
+    {
+        public ObjectGroup(object obj, object parentObject, object rootObject)
+        {
+            Object = obj;
+            ParentObject = parentObject;
+            RootObject = rootObject;
+        }
+
+        public static ObjectGroup Create(object obj, object parentObject, object rootObject)
+        {
+            return new ObjectGroup(obj, parentObject, rootObject);
+        }
+
+        public object Object { get; private set; }
+        public object ParentObject { get; private set; }
+        public object RootObject { get; private set; }
     }
 }

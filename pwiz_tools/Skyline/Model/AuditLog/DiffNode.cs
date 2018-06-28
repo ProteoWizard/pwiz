@@ -87,30 +87,22 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             var oneNode = Nodes.Count == 1;
 
-            // The root property has no name, so we immediately go to the first child node
-            if (Property.IsRoot)
-                return oneNode ? Nodes[0].FindFirstMultiChildParent(tree, null, shortenName, allowReflection, this) : null;
-
-            var parentObj = parentNode != null ? parentNode.Objects.FirstOrDefault() : null;
-
-            var propertyNameString = Property.GetName(tree.Root.Objects.FirstOrDefault(), parentObj);
+            var propertyNameString = Property.GetName(tree.Root, this, parentNode);
 
             // Collection elements should be referred to by their name or string representation
             var propName = IsCollectionElement
                 ? new PropertyElementName(ObjectToString(allowReflection))
                 : (Property.IsTab ? new PropertyTabName(propertyNameString) : new PropertyName(propertyNameString));
 
-            var canIgnoreName = Property.IgnoreName && !IsCollectionElement;
-
             // If the node can't be displayed and its name cant be ignored,
-            // we can't go further down the tree
-            if (propName.Name == null && !canIgnoreName)
+            // we can't go further down the tree. This can happen theoretically but hasn't occured anywhere yet
+            if (propName.Name == null && !Property.IgnoreName)
                 return new DiffNodeNamePair(parentNode == null ? null : parentNode.ChangeExpanded(false), name, allowReflection);
 
-            var newName = name != null ? name.SubProperty(propName) : propName;
+            var newName = name.SubProperty(propName);
 
-            var elemName = Property.GetElementName(parentObj);
-            if (shortenName && elemName != null && !IsCollectionElement)
+            var elemName = Property.GetElementName();
+            if (shortenName && Property.GetElementName() != null && !IsCollectionElement)
             {
                 if (oneNode)
                 {
@@ -125,7 +117,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 }
             }
 
-            if (canIgnoreName)
+            if (Property.IgnoreName && !IsCollectionElement)
                 newName = name;
 
             var objects = Objects.Select(AuditLogObject.GetAuditLogObject)
@@ -133,43 +125,23 @@ namespace pwiz.Skyline.Model.AuditLog
             
             if (objects.Length == 2)
             {
-                var isSrmSettings = Property.GetPropertyType(objects[1], objects[0]) == typeof(SrmSettings);
-                if ((objects[0] != null) != (objects[1] != null) ||
-                    (objects[0] != null && objects[1] != null && objects[0].AuditLogText != objects[1].AuditLogText && !(objects[0] is DocNode)) &&
-                    !isSrmSettings)
+                var type = Property.GetPropertyType(objects[1], objects[0]);
+                if (((objects[0] != null) != (objects[1] != null) ||
+                    (objects[0] != null && objects[1] != null && objects[0].AuditLogText != objects[1].AuditLogText && !typeof(DocNode).IsAssignableFrom(type))) &&
+                    !Property.IsRoot)
                         oneNode = false; // Stop recursion, since in the undo-redo/summary log we don't want to go deeper for objects where the name changed
             }
-            return oneNode ? Nodes[0].FindFirstMultiChildParent(tree, newName, shortenName, allowReflection, this) : new DiffNodeNamePair(ChangeExpanded(false), newName, allowReflection);
+
+            return oneNode && !IsFirstExpansionNode
+                ? Nodes[0].FindFirstMultiChildParent(tree, newName, shortenName, allowReflection, this)
+                : new DiffNodeNamePair(ChangeExpanded(false), newName, allowReflection);
         }
 
         public List<DiffNodeNamePair> FindAllLeafNodes(DiffTree tree, PropertyName name, bool allowReflection, DiffNode parentNode = null)
         {
             var result = new List<DiffNodeNamePair>();
 
-            var defaultValues = Property.DefaultValues;
-            if (defaultValues != null &&
-                defaultValues.IsDefault(Objects.FirstOrDefault(),
-                    parentNode != null ? parentNode.Objects.FirstOrDefault() : null) &&
-                (Expanded || defaultValues.IsDefault(Objects.LastOrDefault(),
-                     parentNode != null ? parentNode.Objects.LastOrDefault() : null)))
-                return result;
-            
-            var noNodes = Nodes.Count == 0;
-
-            // The root node has no name
-            if (Property.IsRoot)
-            {
-                if (noNodes)
-                    return null;
-
-                foreach (var n in Nodes)
-                    result.AddRange(n.FindAllLeafNodes(tree, null, allowReflection, this));
-
-                return result;
-            }
-                
-            var propertyNameString = Property.GetName(tree.Root.Objects.FirstOrDefault(),
-                parentNode != null ? parentNode.Objects.FirstOrDefault() : null);
+            var propertyNameString = Property.GetName(tree.Root, this, parentNode);
 
             var isName = false;
             // Collection elements should be referred to by their name or string representation
@@ -193,8 +165,9 @@ namespace pwiz.Skyline.Model.AuditLog
             }
             
             var obj = Objects.FirstOrDefault();
-            var isSrmSettings = Property.GetPropertyType(obj) == typeof(SrmSettings);
-            var isNamedChange = IsFirstExpansionNode || (obj != null && AuditLogObject.GetAuditLogObject(obj).IsName) && !isSrmSettings && Expanded;
+            var isNamedChange = IsFirstExpansionNode || (obj != null && AuditLogObject.GetAuditLogObject(obj).IsName) &&
+                                    Expanded && !canIgnoreName;
+
             if (isNamedChange)
                 result.Add(new DiffNodeNamePair(this, name, allowReflection));
 

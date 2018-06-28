@@ -126,7 +126,7 @@
   <data name="CollisionEnergyRegression_Conversions" xml:space="preserve">
     <value>Regression parameters</value>
   </data>
-  <data name="BackgroundProteome_DatabasePath" xml:space="preserve">
+  <data name="BackgroundProteomeSpec_DatabasePath" xml:space="preserve">
     <value>Background proteome database path</value>
   </data>
   <data name="SrmSettings_DataSettings" xml:space="preserve">
@@ -171,9 +171,6 @@
   <data name="ChargeRegressionLine_Slope" xml:space="preserve">
     <value>Slope</value>
   </data>
-  <data name="CollisionEnergyRegression_StepCount" xml:space="preserve">
-    <value>Step count</value>
-  </data>
   <data name="CompensationVoltageParameters_StepCountFine" xml:space="preserve">
     <value>Fine tune step count</value>
   </data>
@@ -182,9 +179,6 @@
   </data>
   <data name="CompensationVoltageParameters_StepCountRough" xml:space="preserve">
     <value>Rough tune step count</value>
-  </data>
-  <data name="CollisionEnergyRegression_StepSize" xml:space="preserve">
-    <value>Step size</value>
   </data>
   <data name="SrmSettings_TransitionSettings" xml:space="preserve">
     <value>Transition Settings</value>
@@ -474,7 +468,7 @@
   <data name="GroupComparisonDef_UseZeroForMissingPeaks" xml:space="preserve">
     <value>Use zero for missing peaks</value>
   </data>
-  <data name="MatchRgbHexColor_Rgb" xml:space="preserve">
+  <data name="RgbHexColor_Rgb" xml:space="preserve">
     <value>RGB</value>
   </data>
   <data name="TransitionFilter_PeptideIonTypesString" xml:space="preserve">
@@ -659,23 +653,11 @@
   <data name="AnnotationDef_Type" xml:space="preserve">
     <value>Type</value>
   </data>
-  <data name="CompensationVoltageParameters_StepCount" xml:space="preserve">
-    <value>Step count</value>
-  </data>
-  <data name="CompensationVoltageParameters_StepSize" xml:space="preserve">
-    <value>Step size</value>
-  </data>
-  <data name="DeclusteringPotentialRegression_Intercept" xml:space="preserve">
+  <data name="NamedRegressionLine_Intercept" xml:space="preserve">
     <value>Intercept</value>
   </data>
-  <data name="DeclusteringPotentialRegression_Slope" xml:space="preserve">
+  <data name="NamedRegressionLine_Slope" xml:space="preserve">
     <value>Slope</value>
-  </data>
-  <data name="DeclusteringPotentialRegression_StepCount" xml:space="preserve">
-    <value>Step count</value>
-  </data>
-  <data name="DeclusteringPotentialRegression_StepSize" xml:space="preserve">
-    <value>Step size</value>
   </data>
   <data name="GroupComparisonDef_NormalizationMethod" xml:space="preserve">
     <value>Normalization method</value>
@@ -725,13 +707,13 @@
   <data name="Adduct_AdductCharge" xml:space="preserve">
     <value>Charge</value>
   </data>
-  <data name="SettingsCustomIon_AverageMassMz" xml:space="preserve">
+  <data name="CustomIon_AverageMassMz" xml:space="preserve">
     <value>Average m/z</value>
   </data>
-  <data name="SettingsCustomIon_MonoisotopicMassMz" xml:space="preserve">
+  <data name="CustomIon_MonoisotopicMassMz" xml:space="preserve">
     <value>Monoisotopic m/z</value>
   </data>
-  <data name="SettingsCustomIon_NeutralFormula" xml:space="preserve">
+  <data name="CustomIon_NeutralFormula" xml:space="preserve">
     <value>Ion chemical formula</value>
   </data>
   <data name="MeasuredIon_SettingsCustomIon" xml:space="preserve">
@@ -823,5 +805,68 @@
   </data>
   <data name="RefinementSettings_RemoveRepeatedPeptides" xml:space="preserve">
     <value>Remove repeated peptides</value>
+  </data>
+  <data name="RefinementSettings" xml:space="preserve">
+    <value>Advanced refinement settings</value>
+  </data>
+  <data name="ImportResultsSettings" xml:space="preserve">
+    <value>Import results settings</value>
+  </data>
+  <data name="ImportResultsSettings_FileNames" xml:space="preserve">
+    <value>File names</value>
+  </data>
+  <data name="ImportResultsSettings_SingleInjectionReplicates" xml:space="preserve">
+    <value>Add single-injection replicates in files</value>
+  </data>
+  <data name="ImportResultsSettings_AddNewReplicate" xml:space="preserve">
+    <value>Add one new replicate</value>
+  </data>
+  <data name="ImportResultsSettings_AddToExistingReplicate" xml:space="preserve">
+    <value>Add files to an existing replicate</value>
+  </data>
+  <data name="ImportResultsSettings_FileImportOption" xml:space="preserve">
+    <value>Files to import simultaneously</value>
+  </data>
+  <data name="ImportResultsSettings_MultiInjectionReplicates" xml:space="preserve">
+    <value>Add multi-injection replicates in directories</value>
+  </data>
+  <data name="ImportResultsSettings_Optimization" xml:space="preserve">
+    <value>Optimizing</value>
+  </data>
+  <data name="ImportResultsSettings_Prefix" xml:space="preserve">
+    <value>Common prefix</value>
+  </data>
+  <data name="ImportResultsSettings_ReplicateName" xml:space="preserve">
+    <value>Replicate name</value>
+  </data>
+  <data name="ImportResultsSettings_RetryAfterImportFailure" xml:space="preserve">
+    <value>Retry after import failure</value>
+  </data>
+  <data name="ImportResultsSettings_ShowChromatogramsDuringImport" xml:space="preserve">
+    <value>Show chromatograms during import</value>
+  </data>
+  <data name="ImportResultsSettings_Suffix" xml:space="preserve">
+    <value>Common suffix</value>
+  </data>
+  <data name="RegressionLineElement_Intercept" xml:space="preserve">
+    <value>Intercept</value>
+  </data>
+  <data name="RegressionLineElement_Slope" xml:space="preserve">
+    <value>Slope</value>
+  </data>
+  <data name="RetentionTimeRegression_Conversion" xml:space="preserve">
+    <value>Regression</value>
+  </data>
+  <data name="OptimizableRegression_StepCount" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="OptimizableRegression_StepSize" xml:space="preserve">
+    <value>Step size</value>
+  </data>
+  <data name="CompensationVoltageParameters_StepCount" xml:space="preserve">
+    <value>Step count</value>
+  </data>
+  <data name="CompensationVoltageParameters_StepSize" xml:space="preserve">
+    <value>Step size</value>
   </data>
 </root>

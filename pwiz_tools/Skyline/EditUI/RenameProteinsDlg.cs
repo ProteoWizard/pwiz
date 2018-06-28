@@ -216,7 +216,6 @@ namespace pwiz.Skyline.EditUI
             protected override void DoPaste()
             {
                 var renameList = new List<RenameProteins>();
-
                 GridView.DoPaste(MessageParent, ValidateRow,
                                  values =>
                                  renameList.Add(new RenameProteins

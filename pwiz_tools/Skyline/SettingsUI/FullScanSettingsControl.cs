@@ -831,6 +831,17 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public bool KeepAllTimes
+        {
+            get { return radioKeepAllTime.Checked; }
+            set { radioKeepAllTime.Checked = value; }
+        }
+
+        public bool UseTimeAroundMs2Ids
+        {
+            get { return radioTimeAroundMs2Ids.Checked; }
+        }
+
         public double TimeAroundMs2Ids
         {
             get { return double.Parse(tbxTimeAroundMs2Ids.Text); }

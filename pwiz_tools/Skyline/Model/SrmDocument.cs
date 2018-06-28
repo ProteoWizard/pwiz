@@ -2398,9 +2398,42 @@ namespace pwiz.Skyline.Model
         #endregion
     }
 
+    public class ObjectPair<T>
+    {
+        protected ObjectPair(T oldObject, T newObject)
+        {
+            OldObject = oldObject;
+            NewObject = newObject;
+        }
+
+        public static ObjectPair<T> Create(T oldDoc, T newDoc)
+        {
+            return new ObjectPair<T>(oldDoc, newDoc);
+        }
+
+        public T OldObject { get; private set; }
+        public T NewObject { get; private set; }
+    }
+
+    public class SrmDocumentPair : ObjectPair<SrmDocument>
+    {
+        protected SrmDocumentPair(SrmDocument oldDoc, SrmDocument newDoc)
+            : base(oldDoc, newDoc)
+        {
+        }
+
+        public new static SrmDocumentPair Create(SrmDocument oldDoc, SrmDocument newDoc)
+        {
+            return new SrmDocumentPair(oldDoc, newDoc);
+        }
+
+        public SrmDocument OldDoc { get { return OldObject; } }
+        public SrmDocument NewDoc { get { return NewObject; } }
+    }
+
     public class Targets
     {
-        private SrmDocument _doc;
+        private readonly SrmDocument _doc;
         public Targets(SrmDocument doc)
         {
             _doc = doc;

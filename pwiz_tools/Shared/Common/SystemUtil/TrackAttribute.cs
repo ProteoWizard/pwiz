@@ -38,6 +38,11 @@ namespace pwiz.Common.SystemUtil
 
     public abstract class DefaultValues
     {
+        public IEnumerable<object> Values
+        {
+            get { return _values; }
+        }
+
         protected virtual IEnumerable<object> _values
         {
             get { return Enumerable.Empty<object>(); }
@@ -45,7 +50,7 @@ namespace pwiz.Common.SystemUtil
 
         public virtual bool IsDefault(object obj, object parentObject)
         {
-            return _values.Contains(obj);
+            return _values.Any(v => ReferenceEquals(v, obj));
         }
 
         public static DefaultValues CreateInstance(Type defaultValuesType)
@@ -64,10 +69,11 @@ namespace pwiz.Common.SystemUtil
 
     public abstract class TrackAttributeBase : Attribute
     {
-        protected TrackAttributeBase(bool isTab, bool ignoreName, Type defaultValues, Type customLocalizer)
+        protected TrackAttributeBase(bool isTab, bool ignoreName, bool ignoreDefaultParent, Type defaultValues, Type customLocalizer)
         {
             IsTab = isTab;
             IgnoreName = ignoreName;
+            IgnoreDefaultParent = ignoreDefaultParent;
             DefaultValues = defaultValues;
             CustomLocalizer = customLocalizer;
         }
@@ -75,9 +81,10 @@ namespace pwiz.Common.SystemUtil
         public bool IsTab { get; protected set; }
         public bool IgnoreName { get; protected set; }
         
-
         public bool IgnoreNull { get; protected set; }
         public virtual bool DiffProperties { get { return false; } }
+
+        public bool IgnoreDefaultParent { get; protected set; }
 
         public Type DefaultValues { get; protected set; }
         public Type CustomLocalizer { get; protected set; }
@@ -88,9 +95,10 @@ namespace pwiz.Common.SystemUtil
     {
         public TrackAttribute(bool isTab = false,
             bool ignoreName = false,
+            bool ignoreDefaultParent = false,
             Type defaultValues = null,
             Type customLocalizer = null)
-            : base(isTab, ignoreName, defaultValues, customLocalizer) { }
+            : base(isTab, ignoreName, ignoreDefaultParent, defaultValues, customLocalizer) { }
     }
 
     [AttributeUsage(AttributeTargets.Property)]
@@ -98,9 +106,10 @@ namespace pwiz.Common.SystemUtil
     {
         public TrackChildrenAttribute(bool isTab = false,
             bool ignoreName = false,
+            bool ignoreDefaultParent = false,
             Type defaultValues = null,
             Type customLocalizer = null)
-            : base(isTab, ignoreName, defaultValues, customLocalizer) { }
+            : base(isTab, ignoreName, ignoreDefaultParent, defaultValues, customLocalizer) { }
 
         public override bool DiffProperties { get { return true; } }
     }

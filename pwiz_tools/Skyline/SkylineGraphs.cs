@@ -5570,10 +5570,10 @@ namespace pwiz.Skyline
             if (Document.AuditLog.AuditLogEntries.Any())
             {
                 ModifyDocument(AuditLogStrings.AuditLogForm__clearLogButton_Click_Clear_audit_log,
-                    document => document.ChangeAuditLog(ImmutableList<AuditLogEntry>.EMPTY), (oldDoc, newDoc) =>
+                    document => document.ChangeAuditLog(ImmutableList<AuditLogEntry>.EMPTY), docPair =>
                     {
-                        return AuditLogEntry.UpdateCountLogEntry(oldDoc, ModifyDocumentNoUndo, oldDoc.AuditLog.AuditLogEntries.Count,
-                            oldDoc.AuditLog.AuditLogEntries.Sum(e => e.AllInfo.Count), MessageType.log_cleared, false);
+                        return AuditLogEntry.UpdateCountLogEntry(docPair.OldDoc, ModifyDocumentNoUndo, docPair.OldDoc.AuditLog.AuditLogEntries.Count,
+                            docPair.OldDoc.AuditLog.AuditLogEntries.Sum(e => e.AllInfo.Count), MessageType.log_cleared, false);
                     });
             } 
         }

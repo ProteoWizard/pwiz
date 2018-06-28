@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using NHibernate.Util;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -251,6 +252,9 @@ namespace pwiz.Skyline.FileUI
                         if (dlgName.IsRemove)
                         {
                             dlgName.ApplyNameChange(NamedPathSets);
+
+                            Prefix = string.IsNullOrEmpty(prefix) ? null : prefix;
+                            Suffix = string.IsNullOrEmpty(suffix) ? null : suffix;
                         }
                     }
                 }
@@ -263,6 +267,9 @@ namespace pwiz.Skyline.FileUI
             
             DialogResult = DialogResult.OK;
         }
+
+        public string Prefix { get; private set; }
+        public string Suffix { get; private set; }
 
         public static string GetCommonPrefix(IEnumerable<string> names)
         {
@@ -644,9 +651,75 @@ namespace pwiz.Skyline.FileUI
             set { comboSimultaneousFiles.SelectedIndex = value;}
         }
 
+        public class ImportResultsSettings : IAuditLogComparable
+        {
+            public static ImportResultsSettings EMPTY = new ImportResultsSettings(null, false, false, false, string.Empty, false, ExportOptimize.NONE,
+                MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time, false, false, null, null);
+
+            public ImportResultsSettings(List<string> fileNames, bool singleInjectionReplicates, bool multiInjectionReplicates,
+                bool addNewReplicate, string replicateName, bool addToExistingReplicate, string optimization,
+                MultiFileLoader.ImportResultsSimultaneousFileOptions fileImportOption,
+                bool showChromatogramsDuringImport, bool retryAfterImportFailure, string prefix, string suffix)
+            {
+                FileNames = fileNames;
+                SingleInjectionReplicates = singleInjectionReplicates;
+                MultiInjectionReplicates = multiInjectionReplicates;
+                AddNewReplicate = addNewReplicate;
+                ReplicateName = replicateName;
+                AddToExistingReplicate = addToExistingReplicate;
+                Optimization = optimization;
+                FileImportOption = fileImportOption;
+                ShowChromatogramsDuringImport = showChromatogramsDuringImport;
+                RetryAfterImportFailure = retryAfterImportFailure;
+                Prefix = prefix;
+                Suffix = suffix;
+            }
+
+            [Track]
+            public List<string> FileNames { get; private set; }
+            [Track]
+            public bool SingleInjectionReplicates { get; private set; }
+            [Track]
+            public bool MultiInjectionReplicates { get; private set; }
+            [Track]
+            public bool AddNewReplicate { get; private set; }
+            [Track]
+            public string ReplicateName { get; private set; }
+            [Track]
+            public bool AddToExistingReplicate { get; private set; }
+            [Track]
+            public string Optimization { get; private set; }
+            [Track(ignoreDefaultParent:true)]
+            public MultiFileLoader.ImportResultsSimultaneousFileOptions FileImportOption { get; private set; }
+            [Track(ignoreDefaultParent: true)]
+            public bool ShowChromatogramsDuringImport { get; private set; }
+            [Track(ignoreDefaultParent: true)]
+            public bool RetryAfterImportFailure { get; private set; }
+            [Track]
+            public string Prefix { get; private set; }
+            [Track]
+            public string Suffix { get; private set; }
+
+            public object DefaultObject
+            {
+                get { return EMPTY; }
+            }
+        }
+
+        public ImportResultsSettings ImportSettings
+        {
+            get
+            {
+                return new ImportResultsSettings(NamedPathSets.SelectMany(pair => pair.Value.Select(fileUri => fileUri.GetFileName())).ToList(), radioCreateMultiple.Checked, radioCreateMultipleMulti.Checked,
+                    radioCreateNew.Checked, ReplicateName, radioAddExisting.Checked, OptimizationName,
+                    (MultiFileLoader.ImportResultsSimultaneousFileOptions) ImportSimultaneousIndex,
+                    cbShowAllChromatograms.Checked, cbAutoRetry.Checked, Prefix, Suffix);
+            }
+        }
+
         public bool RadioAddNewChecked
         {
-            get { return radioCreateNew.Checked;}
+            get { return radioCreateNew.Checked; }
             set { radioCreateNew.Checked = value; }
         }
 

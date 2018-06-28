@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Accepted peptides.
+        ///   Looks up a localized string similar to Accepted {0} peptides.
         /// </summary>
         public static string accept_peptides {
             get {
@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Accepted proteins.
+        ///   Looks up a localized string similar to Accepted {0} proteins.
         /// </summary>
         public static string accepted_proteins {
             get {
@@ -93,6 +93,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string added_to {
             get {
                 return ResourceManager.GetString("added_to", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Associated peptide {0} with protein {1}.
+        /// </summary>
+        public static string associated_peptide_with_protein {
+            get {
+                return ResourceManager.GetString("associated_peptide_with_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Associated peptides with {0} proteins using background proteome &quot;{1}&quot;.
+        /// </summary>
+        public static string associated_proteins_bg {
+            get {
+                return ResourceManager.GetString("associated_proteins_bg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Associated peptides with {0} proteins using fasta &quot;{1}&quot;.
+        /// </summary>
+        public static string associated_proteins_fasta {
+            get {
+                return ResourceManager.GetString("associated_proteins_fasta", resourceCulture);
             }
         }
         
@@ -273,6 +300,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string False {
             get {
                 return ResourceManager.GetString("False", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported peak boundaries from &quot;{0}&quot;.
+        /// </summary>
+        public static string imported_peak_boundaries {
+            get {
+                return ResourceManager.GetString("imported_peak_boundaries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported {0} replicates.
+        /// </summary>
+        public static string imported_results {
+            get {
+                return ResourceManager.GetString("imported_results", resourceCulture);
             }
         }
         
@@ -484,6 +529,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Removed missing results.
+        /// </summary>
+        public static string remove_missing_results {
+            get {
+                return ResourceManager.GetString("remove_missing_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Removed repeated peptides.
         /// </summary>
         public static string remove_repeated_peptides {
@@ -538,7 +592,34 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Renamed {0}.
+        ///   Looks up a localized string similar to Removed {0} unrecognized charge states.
+        /// </summary>
+        public static string removed_unrecognized_charge_states {
+            get {
+                return ResourceManager.GetString("removed_unrecognized_charge_states", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} unrecognized files.
+        /// </summary>
+        public static string removed_unrecognized_files {
+            get {
+                return ResourceManager.GetString("removed_unrecognized_files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} unrecognized peptides.
+        /// </summary>
+        public static string removed_unrecognized_peptides {
+            get {
+                return ResourceManager.GetString("removed_unrecognized_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Renamed {0} proteins.
         /// </summary>
         public static string renamed_proteins {
             get {
@@ -547,11 +628,29 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Set standard type of {0} to &quot;{1}&quot;.
+        ///   Looks up a localized string similar to Renamed protein {0}.
+        /// </summary>
+        public static string renamed_single_protein {
+            get {
+                return ResourceManager.GetString("renamed_single_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set standard type for {0}.
         /// </summary>
         public static string set_standard_type {
             get {
                 return ResourceManager.GetString("set_standard_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set standard type for {0} peptides.
+        /// </summary>
+        public static string set_standard_type_peptides {
+            get {
+                return ResourceManager.GetString("set_standard_type_peptides", resourceCulture);
             }
         }
         
@@ -570,15 +669,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string SkylineWindow_SetStandardType__0__peptides {
             get {
                 return ResourceManager.GetString("SkylineWindow_SetStandardType__0__peptides", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} proteins.
-        /// </summary>
-        public static string SkylineWindow_ShowRenameProteinsDlg__0__proteins {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ShowRenameProteinsDlg__0__proteins", resourceCulture);
             }
         }
         
@@ -633,6 +723,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string True {
             get {
                 return ResourceManager.GetString("True", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unrecognized charge states.
+        /// </summary>
+        public static string UnrecognizedChargeStates {
+            get {
+                return ResourceManager.GetString("UnrecognizedChargeStates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unrecognized files.
+        /// </summary>
+        public static string UnrecognizedFiles {
+            get {
+                return ResourceManager.GetString("UnrecognizedFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unrecognized peptides.
+        /// </summary>
+        public static string UnrecognizedPeptides {
+            get {
+                return ResourceManager.GetString("UnrecognizedPeptides", resourceCulture);
             }
         }
     }

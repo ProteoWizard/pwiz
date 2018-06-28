@@ -169,7 +169,7 @@ namespace pwiz.Skyline.SettingsUI
     public interface ILibraryBuildNotificationContainer : INotificationContainer
     {
         LibraryManager LibraryManager { get; }
-        void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocument, SrmDocument, AuditLogEntry> logFunc);
+        void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc);
     }
 
     public sealed class LibraryBuildNotificationHandler

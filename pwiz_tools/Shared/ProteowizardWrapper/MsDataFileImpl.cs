@@ -1289,7 +1289,6 @@ namespace pwiz.ProteowizardWrapper
         }
         [Track]
         public double? Mobility { get; private set; }
-        [Track]
         public MsDataFileImpl.eIonMobilityUnits Units { get; private set; }
         public bool HasValue { get { return Mobility.HasValue; } }
 

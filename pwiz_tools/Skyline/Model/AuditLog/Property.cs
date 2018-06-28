@@ -23,54 +23,51 @@ using System.Linq;
 using System.Reflection;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
     public class Property : Immutable
     {
-        private readonly TrackAttributeBase _trackAttribute;
-        private readonly PropertyInfo _propertyInfo;
+        protected readonly TrackAttributeBase _trackAttribute;
+        protected readonly PropertyInfoWrapper _propertyInfo;
 
-        public static readonly Property ROOT_PROPERTY = new Property(null, null);
+        // Actual type of the property, should only be used in special cases
+        private Type _propertyType
+        {
+            get { return TypeOverride ?? _propertyInfo.PropertyType; }
+        }
+
+        private Type TypeOverride { get; set; }
 
         public Property(PropertyInfo propertyInfo, TrackAttributeBase trackAttribute)
         {
-            _propertyInfo = propertyInfo;
+            Assume.IsNotNull(propertyInfo);
+            Assume.IsNotNull(trackAttribute);
+
+            _propertyInfo = new PropertyInfoWrapper(propertyInfo);
             _trackAttribute = trackAttribute;
         }
 
-        public bool IsRoot
+        protected Property(PropertyInfoWrapper wrapper, TrackAttributeBase trackAttribute)
         {
-            get { return _propertyInfo == null && _trackAttribute == null; }
+            _propertyInfo = wrapper;
+            _trackAttribute = trackAttribute;
         }
 
-        [Track]
+        public virtual bool IsRoot
+        {
+            get { return false; }
+        }
+
         public string PropertyName
         {
             get { return _propertyInfo.Name; }
         }
 
-        // Actual type of the property, should only be used in special cases
-        [Track]
-        private Type _propertyType
-        {
-            get { return TypeOverride ?? (_propertyInfo == null ? null : _propertyInfo.PropertyType); }
-        }
+        public Type DeclaringType { get { return _propertyInfo.DeclaringType; } }
 
-        public Type TypeOverride { get; private set; }
-
-        public bool IsCollectionElement { get { return TypeOverride != null; } }
-
-        public Property ChangeTypeOverride(Type type)
-        {
-            return ChangeProp(ImClone(this), im => im.TypeOverride = type);
-        }
-
-        public bool HasPropertyInfo
-        {
-            get { return _propertyInfo != null; }
-        }
-
+        public bool IgnoreDefaultParent { get { return _trackAttribute.IgnoreDefaultParent; } }
         public bool IsTab { get { return _trackAttribute.IsTab; } }
         public bool IgnoreName { get { return _trackAttribute.IgnoreName; } }
         public bool DiffProperties { get { return _trackAttribute.DiffProperties; } }
@@ -79,7 +76,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             get
             {
-                if (_trackAttribute == null || _trackAttribute.CustomLocalizer == null)
+                if (_trackAttribute.CustomLocalizer == null)
                     return null;
 
                 return CustomPropertyLocalizer.CreateInstance(_trackAttribute.CustomLocalizer);
@@ -90,7 +87,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             get
             {
-                if (_trackAttribute == null || _trackAttribute.DefaultValues == null)
+                if (_trackAttribute.DefaultValues == null)
                     return null;
 
                 return DefaultValues.CreateInstance(_trackAttribute.DefaultValues);
@@ -136,6 +133,13 @@ namespace pwiz.Skyline.Model.AuditLog
             return GetPropertyType(_propertyType, obj);
         }
 
+        public bool IsCollectionElement { get { return TypeOverride != null; } }
+
+        public Property ChangeTypeOverride(Type type)
+        {
+            return ChangeProp(ImClone(this), im => im.TypeOverride = type);
+        }
+
         public bool IsCollectionType(object obj)
         {
             var type = GetPropertyType(obj);
@@ -147,25 +151,37 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             return _propertyInfo.GetValue(obj);
         }
+        // TODO: reconsider this object pair stuff, is that really easier? and where to use it?
 
-        public string GetName(object rootObject, object parentObject)
+        public string GetName(DiffNode root, DiffNode node, DiffNode parent)
         {
-            var name = _propertyInfo.Name;
-            if (parentObject != null)
-                name = parentObject.GetType().Name + '_' + name;
+            var oldGroup = new ObjectGroup(node.Objects.LastOrDefault(),
+                parent != null ? parent.Objects.LastOrDefault() : null, root.Objects.LastOrDefault());
+
+            var newGroup = new ObjectGroup(node.Objects.FirstOrDefault(),
+                parent != null ? parent.Objects.FirstOrDefault() : null, root.Objects.FirstOrDefault());
+
+            return GetName(oldGroup, newGroup);
+        }
+
+        public string GetName(ObjectGroup oldGroup, ObjectGroup newGroup)
+        {
+            var name = PropertyName;
+            if (_propertyInfo.DeclaringType != null)
+                name = _propertyInfo.DeclaringType.Name + '_' + name;
 
             var localizer = CustomLocalizer;
-            if (localizer != null && (localizer.Relative || rootObject != null))
-                name = localizer.Localize(rootObject, parentObject) ?? name;
+            if (localizer != null)
+                name = localizer.Localize(oldGroup, newGroup) ?? name;
 
             return "{0:" + name + "}"; // Not L10N
         }
 
-        public string GetElementName(object parentObject)
+        public string GetElementName()
         {
-            var name = _propertyInfo.Name;
-            if (parentObject != null)
-                name = parentObject.GetType().Name + '_' + name;
+            var name = PropertyName;
+            if (_propertyInfo.DeclaringType != null)
+                name = _propertyInfo.DeclaringType.Name + '_' + name;
 
             // if resource manager doesnt have resource
             var hasName = PropertyElementNames.ResourceManager.GetString(name) != null;
@@ -179,7 +195,48 @@ namespace pwiz.Skyline.Model.AuditLog
         // For Debugging
         public override string ToString()
         {
-            return Reflector.ToString(this);
+            return string.Format("{0} ({1})", PropertyName, _propertyType.Name); // Not L10N
+        }
+    }
+
+    public class PropertyInfoWrapper
+    {
+        public PropertyInfoWrapper(PropertyInfo propertyInfo) : this(propertyInfo.Name, propertyInfo.PropertyType,
+            propertyInfo.DeclaringType,
+            propertyInfo.GetValue)
+        {
+        }
+
+        public PropertyInfoWrapper(string name, Type propertyType, Type declaringType, Func<object, object> getValue)
+        {
+            Name = name;
+            PropertyType = propertyType;
+            DeclaringType = declaringType;
+            GetValue = getValue;
+        }
+
+        public string Name { get; set; }
+        public Type PropertyType { get; set; }
+        public Type DeclaringType { get; set; }
+        public Func<object, object> GetValue { get; set; }
+    }
+
+    public class RootProperty : Property
+    {
+        private RootProperty(string name, Type type, bool trackChildren)
+            : base(new PropertyInfoWrapper(name, type, null, obj => null),
+                trackChildren ? (TrackAttributeBase) new TrackChildrenAttribute() : new TrackAttribute())
+        {
+        }
+
+        public override bool IsRoot
+        {
+            get { return true; }
+        }
+
+        public static RootProperty Create(Type type, string name = null, bool trackChildren = true)
+        {
+            return new RootProperty(name ?? type.Name, type, trackChildren);
         }
     }
 }

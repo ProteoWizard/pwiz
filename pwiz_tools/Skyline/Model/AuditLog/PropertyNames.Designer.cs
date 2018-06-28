@@ -144,9 +144,9 @@ namespace pwiz.Skyline.Model.AuditLog {
         /// <summary>
         ///   Looks up a localized string similar to Background proteome database path.
         /// </summary>
-        public static string BackgroundProteome_DatabasePath {
+        public static string BackgroundProteomeSpec_DatabasePath {
             get {
-                return ResourceManager.GetString("BackgroundProteome_DatabasePath", resourceCulture);
+                return ResourceManager.GetString("BackgroundProteomeSpec_DatabasePath", resourceCulture);
             }
         }
         
@@ -183,24 +183,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string CollisionEnergyRegression_Conversions {
             get {
                 return ResourceManager.GetString("CollisionEnergyRegression_Conversions", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Step count.
-        /// </summary>
-        public static string CollisionEnergyRegression_StepCount {
-            get {
-                return ResourceManager.GetString("CollisionEnergyRegression_StepCount", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Step size.
-        /// </summary>
-        public static string CollisionEnergyRegression_StepSize {
-            get {
-                return ResourceManager.GetString("CollisionEnergyRegression_StepSize", resourceCulture);
             }
         }
         
@@ -268,6 +250,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Average m/z.
+        /// </summary>
+        public static string CustomIon_AverageMassMz {
+            get {
+                return ResourceManager.GetString("CustomIon_AverageMassMz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Monoisotopic m/z.
+        /// </summary>
+        public static string CustomIon_MonoisotopicMassMz {
+            get {
+                return ResourceManager.GetString("CustomIon_MonoisotopicMassMz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion chemical formula.
+        /// </summary>
+        public static string CustomIon_NeutralFormula {
+            get {
+                return ResourceManager.GetString("CustomIon_NeutralFormula", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Annotations.
         /// </summary>
         public static string DataSettings_AnnotationDefs {
@@ -282,42 +291,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string DataSettings_GroupComparisonDefs {
             get {
                 return ResourceManager.GetString("DataSettings_GroupComparisonDefs", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Intercept.
-        /// </summary>
-        public static string DeclusteringPotentialRegression_Intercept {
-            get {
-                return ResourceManager.GetString("DeclusteringPotentialRegression_Intercept", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Slope.
-        /// </summary>
-        public static string DeclusteringPotentialRegression_Slope {
-            get {
-                return ResourceManager.GetString("DeclusteringPotentialRegression_Slope", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Step count.
-        /// </summary>
-        public static string DeclusteringPotentialRegression_StepCount {
-            get {
-                return ResourceManager.GetString("DeclusteringPotentialRegression_StepCount", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Step size.
-        /// </summary>
-        public static string DeclusteringPotentialRegression_StepSize {
-            get {
-                return ResourceManager.GetString("DeclusteringPotentialRegression_StepSize", resourceCulture);
             }
         }
         
@@ -592,6 +565,123 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Import results settings.
+        /// </summary>
+        public static string ImportResultsSettings {
+            get {
+                return ResourceManager.GetString("ImportResultsSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add one new replicate.
+        /// </summary>
+        public static string ImportResultsSettings_AddNewReplicate {
+            get {
+                return ResourceManager.GetString("ImportResultsSettings_AddNewReplicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add files to an existing replicate.
+        /// </summary>
+        public static string ImportResultsSettings_AddToExistingReplicate {
+            get {
+                return ResourceManager.GetString("ImportResultsSettings_AddToExistingReplicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Files to import simultaneously.
+        /// </summary>
+        public static string ImportResultsSettings_FileImportOption {
+            get {
+                return ResourceManager.GetString("ImportResultsSettings_FileImportOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File names.
+        /// </summary>
+        public static string ImportResultsSettings_FileNames {
+            get {
+                return ResourceManager.GetString("ImportResultsSettings_FileNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add multi-injection replicates in directories.
+        /// </summary>
+        public static string ImportResultsSettings_MultiInjectionReplicates {
+            get {
+                return ResourceManager.GetString("ImportResultsSettings_MultiInjectionReplicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimizing.
+        /// </summary>
+        public static string ImportResultsSettings_Optimization {
+            get {
+                return ResourceManager.GetString("ImportResultsSettings_Optimization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Common prefix.
+        /// </summary>
+        public static string ImportResultsSettings_Prefix {
+            get {
+                return ResourceManager.GetString("ImportResultsSettings_Prefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicate name.
+        /// </summary>
+        public static string ImportResultsSettings_ReplicateName {
+            get {
+                return ResourceManager.GetString("ImportResultsSettings_ReplicateName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retry after import failure.
+        /// </summary>
+        public static string ImportResultsSettings_RetryAfterImportFailure {
+            get {
+                return ResourceManager.GetString("ImportResultsSettings_RetryAfterImportFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show chromatograms during import.
+        /// </summary>
+        public static string ImportResultsSettings_ShowChromatogramsDuringImport {
+            get {
+                return ResourceManager.GetString("ImportResultsSettings_ShowChromatogramsDuringImport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add single-injection replicates in files.
+        /// </summary>
+        public static string ImportResultsSettings_SingleInjectionReplicates {
+            get {
+                return ResourceManager.GetString("ImportResultsSettings_SingleInjectionReplicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Common suffix.
+        /// </summary>
+        public static string ImportResultsSettings_Suffix {
+            get {
+                return ResourceManager.GetString("ImportResultsSettings_Suffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Conversion parameters.
         /// </summary>
         public static string IonMobilityPredictor_ChargeRegressionLines {
@@ -835,15 +925,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to RGB.
-        /// </summary>
-        public static string MatchRgbHexColor_Rgb {
-            get {
-                return ResourceManager.GetString("MatchRgbHexColor_Rgb", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Charge.
         /// </summary>
         public static string MeasuredIon_Charge {
@@ -930,6 +1011,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string Name {
             get {
                 return ResourceManager.GetString("Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Intercept.
+        /// </summary>
+        public static string NamedRegressionLine_Intercept {
+            get {
+                return ResourceManager.GetString("NamedRegressionLine_Intercept", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Slope.
+        /// </summary>
+        public static string NamedRegressionLine_Slope {
+            get {
+                return ResourceManager.GetString("NamedRegressionLine_Slope", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Count.
+        /// </summary>
+        public static string OptimizableRegression_StepCount {
+            get {
+                return ResourceManager.GetString("OptimizableRegression_StepCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Step size.
+        /// </summary>
+        public static string OptimizableRegression_StepSize {
+            get {
+                return ResourceManager.GetString("OptimizableRegression_StepSize", resourceCulture);
             }
         }
         
@@ -1402,6 +1519,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Advanced refinement settings.
+        /// </summary>
+        public static string RefinementSettings {
+            get {
+                return ResourceManager.GetString("RefinementSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add.
         /// </summary>
         public static string RefinementSettings_AddLabelType {
@@ -1492,6 +1618,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Intercept.
+        /// </summary>
+        public static string RegressionLineElement_Intercept {
+            get {
+                return ResourceManager.GetString("RegressionLineElement_Intercept", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Slope.
+        /// </summary>
+        public static string RegressionLineElement_Slope {
+            get {
+                return ResourceManager.GetString("RegressionLineElement_Slope", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Resolution.
         /// </summary>
         public static string Resolution {
@@ -1528,6 +1672,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Regression.
+        /// </summary>
+        public static string RetentionTimeRegression_Conversion {
+            get {
+                return ResourceManager.GetString("RetentionTimeRegression_Conversion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Measured peptides.
         /// </summary>
         public static string RetentionTimeRegression_PeptideTimes {
@@ -1546,38 +1699,20 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to RGB.
+        /// </summary>
+        public static string RgbHexColor_Rgb {
+            get {
+                return ResourceManager.GetString("RgbHexColor_Rgb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Settings.
         /// </summary>
         public static string Settings {
             get {
                 return ResourceManager.GetString("Settings", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Average m/z.
-        /// </summary>
-        public static string SettingsCustomIon_AverageMassMz {
-            get {
-                return ResourceManager.GetString("SettingsCustomIon_AverageMassMz", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Monoisotopic m/z.
-        /// </summary>
-        public static string SettingsCustomIon_MonoisotopicMassMz {
-            get {
-                return ResourceManager.GetString("SettingsCustomIon_MonoisotopicMassMz", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Ion chemical formula.
-        /// </summary>
-        public static string SettingsCustomIon_NeutralFormula {
-            get {
-                return ResourceManager.GetString("SettingsCustomIon_NeutralFormula", resourceCulture);
             }
         }
         

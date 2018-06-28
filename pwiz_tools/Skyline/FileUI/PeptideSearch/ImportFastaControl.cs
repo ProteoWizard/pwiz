@@ -134,6 +134,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { cbAutoTrain.Checked = value; }
         }
 
+        public string FastFile { get; private set; }
+        public string FastaText { get; private set; }
+
         private void browseFastaBtn_Click(object sender, EventArgs e)
         {
             string initialDir = Settings.Default.FastaDirectory;
@@ -177,6 +180,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     _fastaFile = false;
                     tbxFasta.Text = GetFastaFileContent(fastaFilePath);
                 }
+
+                FastFile = fastaFilePath;
             }
             catch (Exception x)
             {
@@ -287,6 +292,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 if (!_fastaFile)
                 {
+                    FastaText = tbxFasta.Text;
                     // Import FASTA as content
                     using (var longWaitDlg = new LongWaitDlg(SkylineWindow) {Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA})
                     {

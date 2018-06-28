@@ -1,6 +1,25 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * Original author: Tobias Rohde <tobiasr .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2018 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System.Collections.Generic;
 using System.Drawing;
-using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.AuditLog.Databinding
@@ -27,7 +46,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                 case 0:
                     return value.UndoAction != null;
                 case 1:
-                    return !string.IsNullOrEmpty(value.ExtraText);
+                    return !string.IsNullOrEmpty(value.ExtraInfo);
                 default:
                     return false;
             }
@@ -42,11 +61,16 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             switch (imageIndex)
             {
                 case 0:
+                {
                     value.UndoAction();
                     break;
+                }
                 case 1:
                 {
-                    MessageDlg.Show(DataGridView.FindForm(), value.ExtraText);
+                    using (var form = new AuditLogExtraInfoForm(value.Text, value.ExtraInfo))
+                    {
+                        form.ShowDialog(DataGridView.FindForm());
+                    }
                     break;
                 }
             }    

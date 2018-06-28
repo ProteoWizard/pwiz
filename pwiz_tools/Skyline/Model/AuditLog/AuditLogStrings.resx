@@ -237,7 +237,7 @@
     <value>Edited note of {0}</value>
   </data>
   <data name="set_standard_type" xml:space="preserve">
-    <value>Set standard type of {0} to "{1}"</value>
+    <value>Set standard type for {0}</value>
   </data>
   <data name="None" xml:space="preserve">
     <value>None</value>
@@ -263,11 +263,8 @@
   <data name="pasted_document_grid" xml:space="preserve">
     <value>Pasted into document grid</value>
   </data>
-  <data name="SkylineWindow_ShowRenameProteinsDlg__0__proteins" xml:space="preserve">
-    <value>{0} proteins</value>
-  </data>
   <data name="renamed_proteins" xml:space="preserve">
-    <value>Renamed {0}</value>
+    <value>Renamed {0} proteins</value>
   </data>
   <data name="inserted_fasta" xml:space="preserve">
     <value>Inserted {0} proteins from FASTA</value>
@@ -282,10 +279,10 @@
     <value>Inserted {0} transitions</value>
   </data>
   <data name="accepted_proteins" xml:space="preserve">
-    <value>Accepted proteins</value>
+    <value>Accepted {0} proteins</value>
   </data>
   <data name="accept_peptides" xml:space="preserve">
-    <value>Accepted peptides</value>
+    <value>Accepted {0} peptides</value>
   </data>
   <data name="sort_protein_accession" xml:space="preserve">
     <value>Sorted by protein accession</value>
@@ -310,5 +307,47 @@
   </data>
   <data name="refined_targets" xml:space="preserve">
     <value>Refined targets</value>
+  </data>
+  <data name="associated_proteins_bg" xml:space="preserve">
+    <value>Associated peptides with {0} proteins using background proteome "{1}"</value>
+  </data>
+  <data name="associated_proteins_fasta" xml:space="preserve">
+    <value>Associated peptides with {0} proteins using fasta "{1}"</value>
+  </data>
+  <data name="associated_peptide_with_protein" xml:space="preserve">
+    <value>Associated peptide {0} with protein {1}</value>
+  </data>
+  <data name="remove_missing_results" xml:space="preserve">
+    <value>Removed missing results</value>
+  </data>
+  <data name="renamed_single_protein" xml:space="preserve">
+    <value>Renamed protein {0}</value>
+  </data>
+  <data name="set_standard_type_peptides" xml:space="preserve">
+    <value>Set standard type for {0} peptides</value>
+  </data>
+  <data name="imported_results" xml:space="preserve">
+    <value>Imported {0} replicates</value>
+  </data>
+  <data name="imported_peak_boundaries" xml:space="preserve">
+    <value>Imported peak boundaries from "{0}"</value>
+  </data>
+  <data name="removed_unrecognized_charge_states" xml:space="preserve">
+    <value>Removed {0} unrecognized charge states</value>
+  </data>
+  <data name="removed_unrecognized_files" xml:space="preserve">
+    <value>Removed {0} unrecognized files</value>
+  </data>
+  <data name="removed_unrecognized_peptides" xml:space="preserve">
+    <value>Removed {0} unrecognized peptides</value>
+  </data>
+  <data name="UnrecognizedChargeStates" xml:space="preserve">
+    <value>Unrecognized charge states</value>
+  </data>
+  <data name="UnrecognizedFiles" xml:space="preserve">
+    <value>Unrecognized files</value>
+  </data>
+  <data name="UnrecognizedPeptides" xml:space="preserve">
+    <value>Unrecognized peptides</value>
   </data>
 </root>

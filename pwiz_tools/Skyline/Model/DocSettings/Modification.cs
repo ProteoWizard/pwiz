@@ -92,9 +92,10 @@ namespace pwiz.Skyline.Model.DocSettings
     /// case of C-terminal or N-terminal modifications.
     /// </summary>
     [XmlRoot("static_modification")]
-    public sealed class StaticMod : XmlNamedElement
+    public sealed class StaticMod : XmlNamedElement, IAuditLogComparable
     {
         private ImmutableList<FragmentLoss> _losses;
+        public static StaticMod EMPTY = new StaticMod();
 
         public StaticMod(string name, string aas, ModTerminus? term, string formula)
             : this(name, aas, term, formula, LabelAtoms.None, null, null)
@@ -170,15 +171,29 @@ namespace pwiz.Skyline.Model.DocSettings
         public double? AverageMass { get; private set; }
 
         public LabelAtoms LabelAtoms { get; private set; }
+        [Track]
         public bool Label13C { get { return (LabelAtoms & LabelAtoms.C13) != 0; } }
+        [Track]
         public bool Label15N { get { return (LabelAtoms & LabelAtoms.N15) != 0; } }
+        [Track]
         public bool Label18O { get { return (LabelAtoms & LabelAtoms.O18) != 0; } }
+        [Track]
         public bool Label2H { get { return (LabelAtoms & LabelAtoms.H2) != 0; } }
+        [Track]
         public bool Label37Cl { get { return (LabelAtoms & LabelAtoms.Cl37) != 0; } }
+        [Track]
         public bool Label81Br { get { return (LabelAtoms & LabelAtoms.Br81) != 0; } }
+        [Track]
         public bool Label32P { get { return (LabelAtoms & LabelAtoms.P32) != 0; } }
+        [Track]
         public bool Label33S { get { return (LabelAtoms & LabelAtoms.S33) != 0; } }
+        [Track]
         public bool Label34S { get { return (LabelAtoms & LabelAtoms.S34) != 0; } }
+
+        public object DefaultObject
+        {
+            get { return new StaticMod(); }
+        }
 
         public double IonLabelMassDiff
         {
@@ -1205,7 +1220,7 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
-    public sealed class ExplicitMod : Immutable, IAuditLogObject
+    public sealed class ExplicitMod : Immutable, IAuditLogObject, IAuditLogComparable
     {
         public ExplicitMod(int indexAA, StaticMod modification)
         {
@@ -1221,7 +1236,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public int IndexAA { get; private set; }
-        [TrackChildren]
+        [TrackChildren(ignoreName:true)]
         public StaticMod Modification { get; private set; }
 
         #region Property change methods
@@ -1267,12 +1282,17 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public string AuditLogText
         {
-            get { return string.Format(AuditLogStrings.ExplicitMod_AuditLogText__0__at_index__1_, Modification.AAs, IndexAA); }
+            get { return string.Format(AuditLogStrings.ExplicitMod_AuditLogText__0__at_index__1_, Modification.Name, IndexAA); }
         }
 
         public bool IsName
         {
             get { return true; }
+        }
+
+        public object DefaultObject
+        {
+            get { return new ExplicitMod(-1, StaticMod.EMPTY); }
         }
     }
 

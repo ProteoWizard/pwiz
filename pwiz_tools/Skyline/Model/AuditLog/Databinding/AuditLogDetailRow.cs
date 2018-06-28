@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
                 if (AuditLogRow.Entry.InsertUndoRedoIntoAllInfo && _detailIndex == 0)
                 {
-                    extraText = LogMessage.LocalizeLogStringProperties(AuditLogRow.Entry.ExtraText);
+                    extraText = LogMessage.LocalizeLogStringProperties(AuditLogRow.Entry.ExtraInfo);
                     undoAction = AuditLogRow.Entry.UndoAction;
                 }
 

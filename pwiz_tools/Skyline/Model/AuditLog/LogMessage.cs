@@ -50,38 +50,51 @@ namespace pwiz.Skyline.Model.AuditLog
         log_unlogged_changes,
         log_cleared,
 
-        // DocNode
-        remove_empty_proteins,
-        removed_protein,
-        remove_empty_peptides,
-        removed_peptide_from_protein,
-        remove_duplicate_peptides,
-        remove_repeated_peptides,
+        // Targets window
         deleted_targets,
         pasted_targets,
         picked_children,
         inserted_data,
         edited_note,
         set_standard_type,
+        set_standard_type_peptides,
         modified,
+
+        // Document grid
         edited_document_grid,
         pasted_document_grid,
+
+        // Refine
+        remove_empty_proteins,
+        remove_empty_peptides,
+        remove_duplicate_peptides,
+        remove_repeated_peptides,
+        remove_missing_results,
         renamed_proteins,
+        renamed_single_protein,
         inserted_fasta,
         inserted_proteins,
         inserted_peptides,
         inserted_transitions,
         accepted_proteins,
-
         accept_peptides,
         accept_peptides_no_options,
-
         sort_protein_name,
         sort_protein_accession,
         sort_protein_preferred_name,
         sort_protein_gene,
         added_peptide_decoys,
-        refined_targets
+        refined_targets,
+        associated_proteins_fasta,
+        associated_proteins_bg,
+        associated_peptide_with_protein,
+
+        // File > Import
+        imported_results,
+        imported_peak_boundaries,
+        removed_unrecognized_peptides,
+        removed_unrecognized_files,
+        removed_unrecognized_charge_states
     }
 
     [XmlRoot(XML_ROOT)]

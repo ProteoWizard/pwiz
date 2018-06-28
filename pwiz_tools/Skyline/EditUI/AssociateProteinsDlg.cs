@@ -24,11 +24,14 @@ using System.Windows.Forms;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -36,6 +39,8 @@ namespace pwiz.Skyline.EditUI
     {
         private readonly SkylineWindow _parent;
         private IList<KeyValuePair<FastaSequence, List<PeptideDocNode>>> _associatedProteins;
+        private bool _isFasta;
+        private string _fileName;
 
         public AssociateProteinsDlg(SkylineWindow parent)
         {
@@ -74,6 +79,8 @@ namespace pwiz.Skyline.EditUI
                 MessageDlg.Show(this, Resources.AssociateProteinsDlg_UseBackgroundProteome_No_background_proteome_defined);
                 return;
             }
+            _isFasta = false;
+            _fileName = _parent.Document.Settings.PeptideSettings.BackgroundProteome.DatabasePath;
             checkBoxListMatches.Items.Clear();
             BackgroundProteome proteome = _parent.Document.Settings.PeptideSettings.BackgroundProteome;
             var proteinAssociations = new List<KeyValuePair<FastaSequence, List<PeptideDocNode>>>();
@@ -149,6 +156,9 @@ namespace pwiz.Skyline.EditUI
         // needed for Testing purposes so we can skip ImportFasta() because of the OpenFileDialog
         public void UseFastaFile(string file)
         {
+            _isFasta = true;
+            _fileName = file;
+
             checkBoxListMatches.Items.Clear();
             try
             {
@@ -299,7 +309,20 @@ namespace pwiz.Skyline.EditUI
                 checkBoxListMatches.CheckedIndices.OfType<int>().Select(i => _associatedProteins[i]).ToList();
 
             _parent.ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins, 
-                doc => CreateDocTree(_parent.Document, selectedProteins));
+                doc => CreateDocTree(_parent.Document, selectedProteins), docPair =>
+                {
+                    var msgType = _isFasta ? MessageType.associated_proteins_fasta : MessageType.associated_proteins_bg;
+                    var message = new AuditLogEntry.MessageTypeNamesPair(msgType, selectedProteins.Count.ToString(), Path.GetFileName(_fileName));
+                    var extraText = TextUtil.LineSeparate(selectedProteins.Select(protein => protein.Key.Name));
+
+                    var allInfo = selectedProteins.SelectMany(protein => protein.Value.Select(peptide =>
+                        new AuditLogEntry.MessageTypeNamesPair(MessageType.associated_peptide_with_protein,
+                            PeptideTreeNode.GetLabel(peptide, string.Empty), protein.Key.Name)));
+
+                    return AuditLogEntry
+                        .CreateSingleMessageEntry(docPair.OldDoc.FormatVersion, message, extraText)
+                        .ChangeAllInfo(allInfo.ToList());
+                });
 
             DialogResult = DialogResult.OK;
         }
