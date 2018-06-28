@@ -228,6 +228,12 @@ namespace pwiz.Skyline
                     return false;
             }
 
+            if (commandArgs.ImportingDocuments)
+            {
+                if (!ImportDocuments(commandArgs))
+                    return false;
+            }
+
             if (commandArgs.AddDecoys)
             {
                 if (!AddDecoys(commandArgs))
@@ -1354,6 +1360,39 @@ namespace pwiz.Skyline
             _doc = doc;
             ImportFoundResultsFiles(commandArgs, import);
             return true;
+        }
+
+        private bool ImportDocuments(CommandArgs commandArgs)
+        {
+            // Add files to the end in the order they were given.
+            foreach (var filePath in commandArgs.DocImportPaths)
+            {
+                _out.WriteLine(Resources.SkylineWindow_ImportFiles_Importing__0__, Path.GetFileName(filePath));
+
+                using (var reader = new StreamReader(filePath))
+                {
+                    IdentityPath firstAddedForFile, nextAdd;
+                    _doc = _doc.ImportDocumentXml(reader,
+                                                filePath,
+                                                commandArgs.DocImportResultsMerge.Value,
+                                                commandArgs.DocImportMergePeptides,
+                                                FindSpectralLibrary,
+                                                Settings.Default.StaticModList,
+                                                Settings.Default.HeavyModList,
+                                                null,   // Always add to the end
+                                                out firstAddedForFile,
+                                                out nextAdd,
+                                                false);
+                }
+            }
+            return true;
+        }
+
+        private string FindSpectralLibrary(string libraryName, string fileName)
+        {
+            // No ability to ask the user for the location of the library, so just warn
+            _out.WriteLine(Resources.CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_, libraryName);
+            return null;
         }
 
         private bool AddDecoys(CommandArgs commandArgs)
