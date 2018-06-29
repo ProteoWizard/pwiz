@@ -6816,9 +6816,6 @@
   <data name="IonMobilityTest_TestGetIonMobilityDBErrorHandling_The_ion_mobility_library_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_" xml:space="preserve">
     <value>イオン移動度ライブラリファイル{0}を見つけることができませんでした。作成するための十分な権限がないようです。</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_" xml:space="preserve">
-    <value>エラー：--import-replicate-nameを--import-allオプションとともに使用することはできません。</value>
-  </data>
   <data name="SpectrumLibraryInfoDlg_SetDetailsText_Matched_spectra" xml:space="preserve">
     <value>一致したスペクトル</value>
   </data>
