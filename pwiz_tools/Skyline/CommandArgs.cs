@@ -1668,11 +1668,12 @@ namespace pwiz.Skyline
                 _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_);
                 return false;
             }
-            if(ImportingSourceDirectory && !string.IsNullOrEmpty(ReplicateName))
-            {
-                _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_);
-                return false;
-            }
+            // This is now handled by creating a single replicate with the contents of the directory
+//            if(ImportingSourceDirectory && !string.IsNullOrEmpty(ReplicateName))
+//            {
+//                _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_);
+//                return false;
+//            }
             
             // Use the original file as the output file, if not told otherwise.
             if (Saving && String.IsNullOrEmpty(SaveFile))

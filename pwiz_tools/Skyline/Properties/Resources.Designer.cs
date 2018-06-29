@@ -4280,16 +4280,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: --import-replicate-name cannot be used with the --import-all option..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_" +
-                        "the___import_all_option_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error: Attempting to exclude an unknown feature name &apos;{0}&apos;. Try one of the following:.
         /// </summary>
         public static string CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_ {
