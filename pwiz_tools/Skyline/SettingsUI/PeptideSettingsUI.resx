@@ -2209,6 +2209,11 @@ W = (W0 + M*(Wmax-W0)/imMax)
   <data name="tbxMaxLoqBias.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <data name="tbxMaxLoqBias.ToolTip" xml:space="preserve">
+    <value>Maximum bias or difference from the known concentration allowed for the model
+estimate based on measured area of the concentration designated as the lower limit
+of quantification (LOQ)</value>
+  </data>
   <data name="&gt;&gt;tbxMaxLoqBias.Name" xml:space="preserve">
     <value>tbxMaxLoqBias</value>
   </data>
@@ -2229,6 +2234,9 @@ W = (W0 + M*(Wmax-W0)/imMax)
   </data>
   <data name="comboLodMethod.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
+  </data>
+  <data name="comboLodMethod.ToolTip" xml:space="preserve">
+    <value>Method of determining the lower limit of detection (LOD)</value>
   </data>
   <data name="&gt;&gt;comboLodMethod.Name" xml:space="preserve">
     <value>comboLodMethod</value>
@@ -2255,7 +2263,7 @@ W = (W0 + M*(Wmax-W0)/imMax)
     <value>6</value>
   </data>
   <data name="lblCaclulateLodBy.Text" xml:space="preserve">
-    <value>Calculate LOD by:</value>
+    <value>&amp;Calculate LOD by:</value>
   </data>
   <data name="&gt;&gt;lblCaclulateLodBy.Name" xml:space="preserve">
     <value>lblCaclulateLodBy</value>
@@ -2282,7 +2290,7 @@ W = (W0 + M*(Wmax-W0)/imMax)
     <value>0</value>
   </data>
   <data name="lblMaxLoqBias.Text" xml:space="preserve">
-    <value>Max LOQ bias:</value>
+    <value>Max LOQ &amp;bias:</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqBias.Name" xml:space="preserve">
     <value>lblMaxLoqBias</value>
@@ -2362,6 +2370,10 @@ W = (W0 + M*(Wmax-W0)/imMax)
   <data name="tbxMaxLoqCv.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
+  <data name="tbxMaxLoqCv.ToolTip" xml:space="preserve">
+    <value>Maximum CV allowed among multiple meassurements of the concentration designated as
+the lower limit of quantification (LOQ)</value>
+  </data>
   <data name="&gt;&gt;tbxMaxLoqCv.Name" xml:space="preserve">
     <value>tbxMaxLoqCv</value>
   </data>
@@ -2387,7 +2399,7 @@ W = (W0 + M*(Wmax-W0)/imMax)
     <value>3</value>
   </data>
   <data name="lblMaxLoqCv.Text" xml:space="preserve">
-    <value>Max LOQ CV:</value>
+    <value>Max LOQ C&amp;V:</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqCv.Name" xml:space="preserve">
     <value>lblMaxLoqCv</value>
@@ -2433,6 +2445,9 @@ W = (W0 + M*(Wmax-W0)/imMax)
   </data>
   <data name="tbxQuantUnits.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
+  </data>
+  <data name="tbxQuantUnits.ToolTip" xml:space="preserve">
+    <value>Units to be applied to calibrated quantities</value>
   </data>
   <data name="&gt;&gt;tbxQuantUnits.Name" xml:space="preserve">
     <value>tbxQuantUnits</value>
@@ -2494,6 +2509,9 @@ W = (W0 + M*(Wmax-W0)/imMax)
   <data name="comboQuantMsLevel.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
   </data>
+  <data name="comboQuantMsLevel.ToolTip" xml:space="preserve">
+    <value>Mass spectrum level (1, 2 or both) used to quantify</value>
+  </data>
   <data name="&gt;&gt;comboQuantMsLevel.Name" xml:space="preserve">
     <value>comboQuantMsLevel</value>
   </data>
@@ -2541,6 +2559,9 @@ W = (W0 + M*(Wmax-W0)/imMax)
   </data>
   <data name="comboNormalizationMethod.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
+  </data>
+  <data name="comboNormalizationMethod.ToolTip" xml:space="preserve">
+    <value>Method used to normalize peak areas across runs</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.Name" xml:space="preserve">
     <value>comboNormalizationMethod</value>
@@ -2590,6 +2611,9 @@ W = (W0 + M*(Wmax-W0)/imMax)
   <data name="comboRegressionFit.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <data name="comboRegressionFit.ToolTip" xml:space="preserve">
+    <value>Regression model used to estimate the relationship between peak area and quantitative values</value>
+  </data>
   <data name="&gt;&gt;comboRegressionFit.Name" xml:space="preserve">
     <value>comboRegressionFit</value>
   </data>
@@ -2637,6 +2661,9 @@ W = (W0 + M*(Wmax-W0)/imMax)
   </data>
   <data name="comboWeighting.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
+  </data>
+  <data name="comboWeighting.ToolTip" xml:space="preserve">
+    <value>The equation used to weight the impact of points in calculating the regression</value>
   </data>
   <data name="&gt;&gt;comboWeighting.Name" xml:space="preserve">
     <value>comboWeighting</value>

@@ -147,7 +147,6 @@
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.cbMargin);
             this.Controls.Add(this.zgIsolationGraph);
-            this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "DiaIsolationWindowsGraphForm";
             this.ShowInTaskbar = false;

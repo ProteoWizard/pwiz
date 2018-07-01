@@ -785,6 +785,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.tbxMaxLoqBias, "tbxMaxLoqBias");
             this.tbxMaxLoqBias.Name = "tbxMaxLoqBias";
+            this.helpTip.SetToolTip(this.tbxMaxLoqBias, resources.GetString("tbxMaxLoqBias.ToolTip"));
             // 
             // comboLodMethod
             // 
@@ -792,6 +793,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboLodMethod.FormattingEnabled = true;
             resources.ApplyResources(this.comboLodMethod, "comboLodMethod");
             this.comboLodMethod.Name = "comboLodMethod";
+            this.helpTip.SetToolTip(this.comboLodMethod, resources.GetString("comboLodMethod.ToolTip"));
             // 
             // lblCaclulateLodBy
             // 
@@ -817,6 +819,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.tbxMaxLoqCv, "tbxMaxLoqCv");
             this.tbxMaxLoqCv.Name = "tbxMaxLoqCv";
+            this.helpTip.SetToolTip(this.tbxMaxLoqCv, resources.GetString("tbxMaxLoqCv.ToolTip"));
             // 
             // lblMaxLoqCv
             // 
@@ -827,6 +830,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.tbxQuantUnits, "tbxQuantUnits");
             this.tbxQuantUnits.Name = "tbxQuantUnits";
+            this.helpTip.SetToolTip(this.tbxQuantUnits, resources.GetString("tbxQuantUnits.ToolTip"));
             // 
             // lblQuantUnits
             // 
@@ -843,6 +847,7 @@ namespace pwiz.Skyline.SettingsUI
             resources.GetString("comboQuantMsLevel.Items2")});
             resources.ApplyResources(this.comboQuantMsLevel, "comboQuantMsLevel");
             this.comboQuantMsLevel.Name = "comboQuantMsLevel";
+            this.helpTip.SetToolTip(this.comboQuantMsLevel, resources.GetString("comboQuantMsLevel.ToolTip"));
             // 
             // lblMsLevel
             // 
@@ -855,6 +860,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboNormalizationMethod.FormattingEnabled = true;
             resources.ApplyResources(this.comboNormalizationMethod, "comboNormalizationMethod");
             this.comboNormalizationMethod.Name = "comboNormalizationMethod";
+            this.helpTip.SetToolTip(this.comboNormalizationMethod, resources.GetString("comboNormalizationMethod.ToolTip"));
             // 
             // lblNormalizationMethod
             // 
@@ -867,6 +873,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboRegressionFit.FormattingEnabled = true;
             resources.ApplyResources(this.comboRegressionFit, "comboRegressionFit");
             this.comboRegressionFit.Name = "comboRegressionFit";
+            this.helpTip.SetToolTip(this.comboRegressionFit, resources.GetString("comboRegressionFit.ToolTip"));
             // 
             // lblRegressionFit
             // 
@@ -879,6 +886,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboWeighting.FormattingEnabled = true;
             resources.ApplyResources(this.comboWeighting, "comboWeighting");
             this.comboWeighting.Name = "comboWeighting";
+            this.helpTip.SetToolTip(this.comboWeighting, resources.GetString("comboWeighting.ToolTip"));
             // 
             // lblRegressionWeighting
             // 
@@ -887,6 +895,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // contextMenuCalculator
             // 
+            this.contextMenuCalculator.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuCalculator.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addCalculatorContextMenuItem,
             this.editCalculatorCurrentContextMenuItem,
@@ -914,6 +923,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // contextMenuIonMobilityLibraries
             // 
+            this.contextMenuIonMobilityLibraries.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuIonMobilityLibraries.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addIonMobilityLibraryContextMenuItem,
             this.editIonMobilityLibraryCurrentContextMenuItem,
