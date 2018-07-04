@@ -2802,7 +2802,7 @@ namespace pwiz.Skyline
         }
 
         private void ShowGraph(List<GraphSummary> graphs, bool show, GraphTypeSummary type,
-            Func<GraphTypeSummary, GraphSummary> createGraph)
+            UniqueList<GraphTypeSummary> graphTypeList, Func<GraphTypeSummary, GraphSummary> createGraph)
         {
             var graph = graphs.FirstOrDefault(g => g.Type == type);
             if (show)
@@ -2837,7 +2837,13 @@ namespace pwiz.Skyline
             }
             else if (graph != null)
             {
+                // Save current setting for the window types
+                var graphTypesSaved = graphTypeList.ToArray();
+                // Close the graph window
                 graph.Hide();
+                // Restore setting from saved value
+                graphTypeList.Clear();
+                graphTypeList.AddRange(graphTypesSaved);
             }
         }
 
@@ -2860,7 +2866,7 @@ namespace pwiz.Skyline
 
         public void ShowGraphRetentionTime(bool show, GraphTypeSummary type)
         {
-            ShowGraph(_listGraphRetentionTime, show, type, CreateGraphRetentionTime);
+            ShowGraph(_listGraphRetentionTime, show, type, Settings.Default.RTGraphTypes, CreateGraphRetentionTime);
         }
 
         private GraphSummary CreateGraphRetentionTime(GraphTypeSummary type)
@@ -3819,7 +3825,7 @@ namespace pwiz.Skyline
 
         public void ShowGraphPeakArea(bool show, GraphTypeSummary type)
         {
-            ShowGraph(_listGraphPeakArea, show, type, CreateGraphPeakArea);
+            ShowGraph(_listGraphPeakArea, show, type, Settings.Default.AreaGraphTypes, CreateGraphPeakArea);
         }
 
         private GraphSummary CreateGraphPeakArea(GraphTypeSummary type)
@@ -4887,7 +4893,7 @@ namespace pwiz.Skyline
 
         public void ShowGraphMassError(bool show, GraphTypeSummary type)
         {
-            ShowGraph(_listGraphMassError, show, type, CreateGraphMassError);
+            ShowGraph(_listGraphMassError, show, type, Settings.Default.MassErrorGraphTypes, CreateGraphMassError);
         }
 
         private GraphSummary CreateGraphMassError(GraphTypeSummary type)
