@@ -2802,7 +2802,7 @@ namespace pwiz.Skyline
         }
 
         private void ShowGraph(List<GraphSummary> graphs, bool show, GraphTypeSummary type,
-            UniqueList<GraphTypeSummary> graphTypeList, Func<GraphTypeSummary, GraphSummary> createGraph)
+            Func<GraphTypeSummary, GraphSummary> createGraph)
         {
             var graph = graphs.FirstOrDefault(g => g.Type == type);
             if (show)
@@ -2837,13 +2837,7 @@ namespace pwiz.Skyline
             }
             else if (graph != null)
             {
-                // Save current setting for the window types
-                var graphTypesSaved = graphTypeList.ToArray();
-                // Close the graph window
                 graph.Hide();
-                // Restore setting from saved value
-                graphTypeList.Clear();
-                graphTypeList.AddRange(graphTypesSaved);
             }
         }
 
@@ -2853,10 +2847,13 @@ namespace pwiz.Skyline
 
         private void UpdateUIGraphRetentionTime(bool visible)
         {
-            var list = Settings.Default.RTGraphTypes;
+            var list = Settings.Default.RTGraphTypes.ToArray();
             ShowGraphRetentionTime(visible);
             if (!visible)
-                Settings.Default.RTGraphTypes = list;
+            {
+                Settings.Default.RTGraphTypes.Clear();
+                Settings.Default.RTGraphTypes.AddRange(list);
+            }
         }
 
         public void ShowGraphRetentionTime(bool show)
@@ -2866,7 +2863,7 @@ namespace pwiz.Skyline
 
         public void ShowGraphRetentionTime(bool show, GraphTypeSummary type)
         {
-            ShowGraph(_listGraphRetentionTime, show, type, Settings.Default.RTGraphTypes, CreateGraphRetentionTime);
+            ShowGraph(_listGraphRetentionTime, show, type, CreateGraphRetentionTime);
         }
 
         private GraphSummary CreateGraphRetentionTime(GraphTypeSummary type)
@@ -3812,10 +3809,13 @@ namespace pwiz.Skyline
 
         public void UpdateUIGraphPeakArea(bool visible)
         {
-            var list = Settings.Default.AreaGraphTypes;
+            var list = Settings.Default.AreaGraphTypes.ToArray();
             ShowGraphPeakArea(visible);
             if (!visible)
-                Settings.Default.AreaGraphTypes = list;
+            {
+                Settings.Default.AreaGraphTypes.Clear();
+                Settings.Default.AreaGraphTypes.AddRange(list);
+            }
         }
 
         public void ShowGraphPeakArea(bool show)
@@ -3825,7 +3825,7 @@ namespace pwiz.Skyline
 
         public void ShowGraphPeakArea(bool show, GraphTypeSummary type)
         {
-            ShowGraph(_listGraphPeakArea, show, type, Settings.Default.AreaGraphTypes, CreateGraphPeakArea);
+            ShowGraph(_listGraphPeakArea, show, type, CreateGraphPeakArea);
         }
 
         private GraphSummary CreateGraphPeakArea(GraphTypeSummary type)
@@ -4881,10 +4881,13 @@ namespace pwiz.Skyline
 
         public void UpdateUIGraphMassError(bool visible)
         {
-            var list = Settings.Default.MassErrorGraphTypes;
+            var list = Settings.Default.MassErrorGraphTypes.ToArray();
             ShowGraphMassError(visible);
             if (!visible)
-                Settings.Default.MassErrorGraphTypes = list;
+            {
+                Settings.Default.MassErrorGraphTypes.Clear();
+                Settings.Default.MassErrorGraphTypes.AddRange(list);
+            }
         }
         public void ShowGraphMassError(bool show)
         {
@@ -4893,7 +4896,7 @@ namespace pwiz.Skyline
 
         public void ShowGraphMassError(bool show, GraphTypeSummary type)
         {
-            ShowGraph(_listGraphMassError, show, type, Settings.Default.MassErrorGraphTypes, CreateGraphMassError);
+            ShowGraph(_listGraphMassError, show, type, CreateGraphMassError);
         }
 
         private GraphSummary CreateGraphMassError(GraphTypeSummary type)

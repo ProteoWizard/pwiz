@@ -41,15 +41,19 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void OnDocumentChanged(SrmDocument oldDocument, SrmDocument newDocument)
         {
-            if (newDocument.MeasuredResults != null && newDocument.MeasuredResults.Chromatograms.Count > 1)
-            {
-                // Use first two replicates to avoid comparing the first replicate to itself
-                _graphSummary.SetResultIndexes(0, 1, false);
-            }
             // Need at least 2 replicates to do run to run regression.
-            else
+            bool visibleOld = oldDocument.MeasuredResults != null &&
+                              oldDocument.MeasuredResults.Chromatograms.Count > 1;
+            bool visibleNew = newDocument.MeasuredResults != null &&
+                              newDocument.MeasuredResults.Chromatograms.Count > 1;
+            if (visibleNew != visibleOld)
             {
-                Program.MainWindow.ShowRTRegressionGraphRunToRun();
+                if (visibleNew)
+                {
+                    // Use first two replicates to avoid comparing the first replicate to itself
+                    _graphSummary.SetResultIndexes(0, 1, false);
+                }
+                Program.MainWindow.ShowGraphRetentionTime(visibleNew, GraphTypeSummary.run_to_run_regression);
             }
         }
 
