@@ -46,14 +46,10 @@ namespace pwiz.Skyline.Controls.Graphs
                               oldDocument.MeasuredResults.Chromatograms.Count > 1;
             bool visibleNew = newDocument.MeasuredResults != null &&
                               newDocument.MeasuredResults.Chromatograms.Count > 1;
-            if (visibleNew != visibleOld)
+            if (visibleNew != visibleOld && visibleNew)
             {
-                if (visibleNew)
-                {
-                    // Use first two replicates to avoid comparing the first replicate to itself
-                    _graphSummary.SetResultIndexes(0, 1, false);
-                }
-                Program.MainWindow.ShowGraphRetentionTime(visibleNew, GraphTypeSummary.run_to_run_regression);
+                // Use first two replicates to avoid comparing the first replicate to itself
+                _graphSummary.SetResultIndexes(0, 1, false);
             }
         }
 

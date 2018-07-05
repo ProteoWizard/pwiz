@@ -266,7 +266,7 @@ namespace pwiz.Skyline
                     }
                 }
 
-                bool enable = DocumentUI.Settings.PeptideSettings.Libraries.HasLibraries;
+                bool enable = settingsNew.PeptideSettings.Libraries.HasLibraries;
                 if (enable)
                 {
                     UpdateIonTypesMenuItemsVisibility();
@@ -284,30 +284,25 @@ namespace pwiz.Skyline
                         ShowGraphSpectrum(enable && Settings.Default.ShowSpectra);
                     }
                 }
-                enable = DocumentUI.Settings.HasResults;
-                bool enableSchedule = enable || DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime != null;
-                if (retentionTimesMenuItem.Enabled != enableSchedule || replicateComparisonMenuItem.Enabled != enable)
+                enable = settingsNew.HasResults;
+                bool enableSchedule = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.schedule);
+                bool enableRunToRun = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.run_to_run_regression);
+                if (replicateComparisonMenuItem.Enabled != enable ||
+                    retentionTimesMenuItem.Enabled != enableSchedule ||
+                    runToRunMenuItem.Enabled != enableRunToRun)
                 {
                     retentionTimesMenuItem.Enabled = enableSchedule;
                     replicateComparisonMenuItem.Enabled = enable;
                     timePeptideComparisonMenuItem.Enabled = enable;
                     regressionMenuItem.Enabled = enable;
                     scoreToRunMenuItem.Enabled = enable;
-                    runToRunMenuItem.Enabled = enable; 
+                    runToRunMenuItem.Enabled = runToRunToolStripMenuItem.Enabled = enableRunToRun;
                     schedulingMenuItem.Enabled = enableSchedule;
                     if (!deserialized)
                     {
                         layoutLock.EnsureLocked();
-                        UpdateUIGraphRetentionTime(enable);
+                        UpdateUIGraphRetentionTime(IsRetentionTimeGraphTypeEnabled);
                     }
-                }
-
-                //Can only do run to run regression with at least 2 replicates
-                var enableRunToRun = settingsNew.HasResults && settingsNew.MeasuredResults.Chromatograms.Count > 1;
-                if (runToRunMenuItem.Enabled != enableRunToRun || runToRunToolStripMenuItem.Enabled != enableRunToRun)
-                {
-                    runToRunMenuItem.Enabled = enableRunToRun;
-                    runToRunToolStripMenuItem.Enabled = enableRunToRun;
                 }
 
                 if (resultsGridMenuItem.Enabled != enable)
@@ -2845,11 +2840,16 @@ namespace pwiz.Skyline
 
         public GraphSummary GraphRetentionTime { get { return _listGraphRetentionTime.FirstOrDefault(); } }
 
-        private void UpdateUIGraphRetentionTime(bool visible)
+        public bool IsGraphRetentionTimeShown(GraphTypeSummary type)
+        {
+            return _listGraphRetentionTime.Any(g => g.Type == type && !g.IsHidden);
+        }
+
+        private void UpdateUIGraphRetentionTime(Func<GraphTypeSummary, bool> isEnabled)
         {
             var list = Settings.Default.RTGraphTypes.ToArray();
-            ShowGraphRetentionTime(visible);
-            if (!visible)
+            ShowGraphRetentionTime(isEnabled);
+            if (!list.All(isEnabled))
             {
                 Settings.Default.RTGraphTypes.Clear();
                 Settings.Default.RTGraphTypes.AddRange(list);
@@ -2858,7 +2858,29 @@ namespace pwiz.Skyline
 
         public void ShowGraphRetentionTime(bool show)
         {
-            Settings.Default.RTGraphTypes.ToList().ForEach(t => ShowGraphRetentionTime(show, t));
+            ShowGraphRetentionTime(t => show && IsRetentionTimeGraphTypeEnabled(t));
+        }
+
+        private bool IsRetentionTimeGraphTypeEnabled(GraphTypeSummary type)
+        {
+            bool enabled = DocumentUI.Settings.HasResults;
+            switch (type)
+            {
+                // Can only do run to run regression with at least 2 replicates
+                case GraphTypeSummary.run_to_run_regression:
+                    return enabled && DocumentUI.Settings.MeasuredResults.Chromatograms.Count > 1;
+                // Scheduling can be enabled with a predictor even if there are no results
+                case GraphTypeSummary.schedule:
+                    return enabled || DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime != null;
+                default:
+                    return enabled;
+            }
+        }
+
+        private void ShowGraphRetentionTime(Func<GraphTypeSummary, bool> isEnabled)
+        {
+            Settings.Default.RTGraphTypes.ToList().ForEach(t =>
+                ShowGraphRetentionTime(isEnabled(t), t));
         }
 
         public void ShowGraphRetentionTime(bool show, GraphTypeSummary type)
