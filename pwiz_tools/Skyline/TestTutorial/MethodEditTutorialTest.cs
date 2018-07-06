@@ -132,7 +132,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(millis, () =>
                 SkylineWindow.DocumentUI.Settings.HasBackgroundProteome &&
                 !SkylineWindow.DocumentUI.Settings.PeptideSettings.BackgroundProteome.NeedsProteinMetadataSearch,
-                "backgroundProteome.NeedsProteinMetadataSearch");
+                () => "backgroundProteome.NeedsProteinMetadataSearch");
 
             // FASTA paste will happen on the UI thread
             RunUI(() =>

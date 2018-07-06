@@ -240,7 +240,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public void ReadXml(XmlReader reader)
         {
             FormatVersion = new DocumentFormat(reader.GetDoubleAttribute(ATTR.format_version));
-            var time = DateTime.Parse(reader.GetAttribute(ATTR.time_stamp));
+            var time = DateTime.Parse(reader.GetAttribute(ATTR.time_stamp), CultureInfo.InvariantCulture);
             TimeStamp = DateTime.SpecifyKind(time, DateTimeKind.Utc).ToLocalTime();
             User = reader.GetAttribute(ATTR.user);
 
