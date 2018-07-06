@@ -220,8 +220,6 @@ else
     actions merge_xdc_files { }
 }
 
-
-
 make pwiz_bindings_cli.xml
     : # sources
         pwiz_bindings_cli
@@ -231,18 +229,25 @@ make pwiz_bindings_cli.xml
     ;
 
 
+
 rule merge_xdc_data_files ( targets + : sources * : properties * )
 {
     local target-path = [ path.make [ on $(targets[1]) return $(LOCATE) ] ] ;
     OUTPUT_PATH on $(targets[1]) = [ path.native [ path.relative-to [ path.make [ path.pwd ] ] $(target-path) ] ] ;
 }
-
-actions merge_xdc_data_files
+    
+if ( ! --incremental in [ modules.peek : ARGV ] )
 {
-    $(MSVC_CURRENT_SETUP_SCRIPT)
-    xdcmake.exe /nologo "$(DOC_DATA_PATH)/*.xdc" "/out:$(OUTPUT_PATH)\$(<[1]:D=)"
+    actions merge_xdc_data_files
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        xdcmake.exe /nologo "$(DOC_DATA_PATH)/*.xdc" "/out:$(OUTPUT_PATH)\$(<[1]:D=)"
+    }
 }
-
+else
+{
+    actions merge_xdc_data_files { }
+}
 
 make pwiz_data_cli.xml
     : # sources

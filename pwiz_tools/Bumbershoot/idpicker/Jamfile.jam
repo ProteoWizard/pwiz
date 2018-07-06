@@ -111,7 +111,18 @@ rule test-properties ( targets + : sources * : properties * )
         CONFIGURATION on $(<[1]) = "Release" ;
     }
 
-    local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
+    local location = [ feature.get-values location : $(properties) ] ;
+    if ! $(location)
+    {
+        if <runtime-debugging>on in $(properties)
+        {
+            location = $(PWIZ_BUILD_PATH)/bin/$(PLATFORM)/Debug ;
+        }
+        else
+        {
+            location = $(PWIZ_BUILD_PATH)/bin/$(PLATFORM)/Release ;
+        }
+    }
     OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
     INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/Test/$(PLATFORM)/" ;
     JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
@@ -131,7 +142,8 @@ actions do_IDPicker_test
     msbuild $(IDPICKER_PATH)/IDPicker.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
     set status=%ERRORLEVEL%
     REM IF %status%==0 (msbuild $(IDPICKER_PATH)/Test/Test.csproj /p:SolutionDir=$(IDPICKER_PATH);Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=Test /nologo /verbosity:minimal && set status=%ERRORLEVEL%)
-    IF %status%==0 (mstest /testcontainer:$(OUTPUT_PATH)/Test.dll /noisolation /nologo /verbosity:minimal && set status=%ERRORLEVEL%)
+    REM IF %status%==0 (mstest /testcontainer:$(OUTPUT_PATH)/Test.dll /noisolation /nologo && set status=%ERRORLEVEL%)
+    IF %status%==0 (vstest.console.exe $(OUTPUT_PATH)/Test.dll /Platform:$(PLATFORM) /Framework:.NETFramework,Version=4.7.2)
     $(TEST_POSTCOMMAND)
 }
 
@@ -143,7 +155,7 @@ make IDPickerTest.passed
         <link>shared:<build>no
         <conditional>@no-express-requirement
         <conditional>@msvc-dotnet-requirement
-        <conditional>@build-location
+        #<conditional>@test-properties
         <dependency>.//IDPicker
     ;
 explicit IDPickerTest.passed ;
