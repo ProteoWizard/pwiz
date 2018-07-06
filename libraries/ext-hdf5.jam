@@ -73,8 +73,8 @@ rule init ( version ? : location : options * )
         actions make_init { "$(>[1]:P)/H5detect" > "$(<)" }
         make H5Tinit.c : H5detect : @make_init ;
         actions copy_libsettings { cp -f "$(>)" "$(<)" }
-        make libhdf5.settings : $(location)/src/posix/libhdf5.settings : @copy_libsettings ;
-        make libhdf5.settings : $(location)/src/darwin/libhdf5.settings : @copy_libsettings : <toolset>darwin ;
+        make libhdf5.settings : $(location)/src/posix/libhdf5.settings : @copy_libsettings : <dependency>H5make_libsettings ;
+        make libhdf5.settings : $(location)/src/darwin/libhdf5.settings : @copy_libsettings : <toolset>darwin <dependency>H5make_libsettings ;
 
         exe H5make_libsettings : $(location)/src/H5make_libsettings.c : $(.requirements) ;
         actions make_libsettings
