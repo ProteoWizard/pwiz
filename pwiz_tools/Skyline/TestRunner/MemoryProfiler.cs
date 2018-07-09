@@ -47,6 +47,7 @@ namespace TestRunner
             {
                 var profilerAssembly = Assembly.LoadFrom(profilerDll);
                 var profiler = profilerAssembly.GetType(PROFILER_TYPE);
+                // ReSharper disable once PossibleNullReferenceException
                 if (profiler != null && (bool)profiler.GetMethod("get_IsProfiling").Invoke(null, null))
                 {
                     FULL_SNAP_SHOT =
