@@ -21120,11 +21120,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Remove la&amp;bel type:.
+        ///   Looks up a localized string similar to Precursors of the chosen isotope label type will be added if they are missing.
         /// </summary>
-        public static string RefineDlg_cbAdd_CheckedChanged_Remove_label_type {
+        public static string RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing {
             get {
-                return ResourceManager.GetString("RefineDlg_cbAdd_CheckedChanged_Remove_label_type", resourceCulture);
+                return ResourceManager.GetString("RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_b" +
+                        "e_added_if_they_are_missing", resourceCulture);
             }
         }
         
