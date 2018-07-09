@@ -228,7 +228,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         
     
         
-    make Test.dll
+    make Test
         : # sources
         : # actions
             @do_skyline_test
@@ -240,7 +240,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>Skyline.exe
         ;
     
-    make TestA.dll
+    make TestA
         : # sources
         : # actions
             @do_skyline_test_a
@@ -252,7 +252,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>Skyline.exe
         ;
 
-    make TestFunctional.dll
+    make TestFunctional
         : # sources
         : # actions
             @do_skyline_test_functional
@@ -274,9 +274,9 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@msvc-dotnet-requirement
             <conditional>@build-location
             <dependency>Skyline.exe
-            <dependency>Test.dll
-            <dependency>TestA.dll
-            <dependency>TestFunctional.dll
+            <dependency>Test
+            <dependency>TestA
+            <dependency>TestFunctional
             # note: we build TestTutorial.dll in do_skyline_build, but it takes too long to run in a Jam build
         ;
         explicit InspectCode ;
