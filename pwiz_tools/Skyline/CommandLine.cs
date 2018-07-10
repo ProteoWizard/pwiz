@@ -346,6 +346,7 @@ namespace pwiz.Skyline
                 if (!ImportResultsInDir(commandArgs.ImportSourceDirectory,
                         commandArgs.ImportRecursive,
                         commandArgs.ImportNamingPattern,
+                        commandArgs.ReplicateName,
                         commandArgs.LockMassParameters,
                         commandArgs.ImportBeforeDate,
                         commandArgs.ImportOnOrAfterDate,
@@ -779,7 +780,7 @@ namespace pwiz.Skyline
             return BackgroundProteomeList.GetDefault();
         }
 
-        public bool ImportResultsInDir(string sourceDir, bool recursive, Regex namingPattern, 
+        public bool ImportResultsInDir(string sourceDir, bool recursive, Regex namingPattern, string replicateName,
             LockMassParameters lockMassParameters,
             DateTime? importBefore, DateTime? importOnOrAfter,
             OptimizableRegression optimize, bool disableJoining, bool warnOnFailure)
@@ -789,7 +790,11 @@ namespace pwiz.Skyline
             {
                 return false;
             }
-
+            // If there is a single name for everything then it should override any naming from GetDataSources
+            if (!string.IsNullOrEmpty(replicateName))
+            {
+                listNamedPaths = new[] { new KeyValuePair<string, MsDataFileUri[]>(replicateName, listNamedPaths.SelectMany(s => s.Value).ToArray()) };
+            }
             return ImportDataFiles(listNamedPaths, lockMassParameters, importBefore, importOnOrAfter, optimize, disableJoining, warnOnFailure);
         }
 

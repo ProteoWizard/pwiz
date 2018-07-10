@@ -4002,8 +4002,8 @@ Are you sure you want to continue?</value>
   <data name="CommandLine_ImportTransitionList_Warning__The_iRT_calculator_already_contains__0__with_the_value__1___Ignoring__2_" xml:space="preserve">
     <value>Warning: The iRT calculator already contains {0} with the value {1}. Ignoring {2}</value>
   </data>
-  <data name="AlignmentForm_UpdateGraph_Aligned_time" xml:space="preserve">
-    <value>Aligned time</value>
+  <data name="AlignmentForm_UpdateGraph_Aligned_Time" xml:space="preserve">
+    <value>Aligned Time</value>
   </data>
   <data name="WizardBlankDocument" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\StartPage\WizardBlankDocument.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -6818,9 +6818,6 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   </data>
   <data name="IonMobilityTest_TestGetIonMobilityDBErrorHandling_The_ion_mobility_library_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_" xml:space="preserve">
     <value>The ion mobility library file {0} could not be found. Perhaps you did not have sufficient privileges to create it?</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_" xml:space="preserve">
-    <value>Error: --import-replicate-name cannot be used with the --import-all option.</value>
   </data>
   <data name="SpectrumLibraryInfoDlg_SetDetailsText_Matched_spectra" xml:space="preserve">
     <value>Matched spectra</value>
@@ -10143,5 +10140,8 @@ Recognized isotopes include: {2}</value>
   <data name="CommandArgs_ParseArgsInternal______0__or___1__" xml:space="preserve">
     <value>    {0} or '{1}'</value>
     <comment>Two possible values separated by "or" with the second quoted</comment>
+  </data>
+  <data name="AlignmentForm_UpdateGraph_Time_from_Regression" xml:space="preserve">
+    <value>Time from Regression</value>
   </data>
 </root>

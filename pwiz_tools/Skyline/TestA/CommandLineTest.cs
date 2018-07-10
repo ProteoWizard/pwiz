@@ -1273,6 +1273,8 @@ namespace pwiz.SkylineTestA
 
 
             var docPath = testFilesDir.GetTestPath("test.sky");
+            var outPath0 = testFilesDir.GetTestPath("Imported_multiple0.sky");
+            FileEx.SafeDelete(outPath0);
             var outPath1 = testFilesDir.GetTestPath("Imported_multiple1.sky");
             FileEx.SafeDelete(outPath1);
             var outPath2 = testFilesDir.GetTestPath("Imported_multiple2.sky");
@@ -1296,14 +1298,20 @@ namespace pwiz.SkylineTestA
 
 
 
-            // Test: Cannot use --import-replicate-name with --import-all
+            // Test: Use --import-replicate-name with --import-all for single-replicate, multi-file import
+            const string singleName = "Unscheduled01";
             msg = RunCommand("--in=" + docPath,
-                             "--import-replicate-name=Unscheduled01",
-                             "--import-all=" + testFilesDir.FullPath,
-                             "--out=" + outPath1);
-            Assert.IsTrue(msg.Contains(Resources.CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_), msg);
-            // output file should not exist
-            Assert.IsFalse(File.Exists(outPath1));
+                             "--import-replicate-name=" + singleName,
+                             "--import-all=" + testFilesDir.GetTestPath("REP01"),
+                             "--out=" + outPath0);
+            // Used to give this error
+//            Assert.IsTrue(msg.Contains(Resources.CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_), msg);
+//            // output file should not exist
+            Assert.IsTrue(File.Exists(outPath0), msg);            
+            SrmDocument doc0 = ResultsUtil.DeserializeDocument(outPath0);
+            Assert.AreEqual(1, doc0.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc0.Settings.MeasuredResults.ContainsChromatogram(singleName));
+            Assert.AreEqual(2, doc0.Settings.MeasuredResults.Chromatograms[0].MSDataFileInfos.Count);
 
 
 

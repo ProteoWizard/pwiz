@@ -271,6 +271,7 @@
     <Compile Include="StandardTypeTest.cs" />
     <Compile Include="StartPageTest.cs" />
     <Compile Include="SummaryGraphLinePlotsTest.cs" />
+    <Compile Include="SummaryGraphVisibilityTest.cs" />
     <Compile Include="SurrogateStandardTest.cs" />
     <Compile Include="SynchronizeSummaryZoomingTest.cs" />
     <Compile Include="SynchSiblingsSmallMoleculesTest.cs" />
@@ -425,6 +426,7 @@
     <None Include="SrmSmMolChromTest.zip" />
     <None Include="StandardTypeTest.zip" />
     <None Include="StartPageTest.zip" />
+    <None Include="SummaryGraphVisibilityTest.zip" />
     <None Include="SurrogateStandardTest.zip" />
     <None Include="SynchronizeSummaryZoomingTest.zip" />
     <None Include="SynchSiblingsSmallMoleculesTest.zip" />
