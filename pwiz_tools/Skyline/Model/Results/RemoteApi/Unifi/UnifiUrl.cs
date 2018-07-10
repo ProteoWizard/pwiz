@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Linq;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -65,7 +64,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
 
         public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, int preferOnlyMsLevel)
         {
-            var account = Settings.Default.RemoteAccountList.FirstOrDefault(acct => acct.CanHandleUrl(this)) as UnifiAccount;
+            var account = FindMatchingAccount(Settings.Default.RemoteAccountList) as UnifiAccount;
             if (account == null)
             {
                 throw new RemoteServerException(string.Format(Resources.UnifiUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__, 
