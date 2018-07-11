@@ -1147,6 +1147,12 @@ namespace pwiz.Skyline.Model
                             docImport.Settings.PeptideSettings.Modifications,
                             docNew.Settings.PeptideSettings.Modifications,
                             staticMods, heavyMods);
+                        if (nodePepModified.GlobalStandardType != null)
+                        {
+                            // Try to keep settings change from changing the children of standards being imported
+                            nodePepModified = (PeptideDocNode)nodePepModified.ChangeAutoManageChildren(false)
+                                .ChangeChildrenChecked(nodePepModified.TransitionGroups.Select(nodeGroup => nodeGroup.ChangeAutoManageChildren(false)).ToArray());
+                        }
                         peptidesNew.Add(nodePepModified);
                     }
                     var nodePepGroupNew = (PeptideGroupDocNode)nodePepGroup.ChangeChildrenChecked(peptidesNew.ToArray());

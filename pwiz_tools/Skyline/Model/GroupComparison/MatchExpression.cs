@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
@@ -326,6 +327,27 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
 
             return true;
+        }
+
+        protected bool Equals(MatchExpression other)
+        {
+            return ArrayUtil.EqualsDeep(matchOptions, other.matchOptions) && string.Equals(RegExpr, other.RegExpr);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((MatchExpression)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((matchOptions != null ? matchOptions.GetHashCode() : 0) * 397) ^ (RegExpr != null ? RegExpr.GetHashCode() : 0);
+            }
         }
     }
 }

@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             int seed = (int) DateTime.Now.Ticks;
-            Console.WriteLine("FiguresOfMeritTest: using random seed {0}", seed);
+            // Console.WriteLine("FiguresOfMeritTest: using random seed {0}", seed);
             var random = new Random(seed);
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("FiguresOfMeritTest.sky")));
             var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
