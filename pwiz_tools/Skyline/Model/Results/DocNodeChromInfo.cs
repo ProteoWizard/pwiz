@@ -611,6 +611,7 @@ namespace pwiz.Skyline.Model.Results
             chromInfo.Identified = peak.Identified;
             chromInfo.UserSet = userSet;
             chromInfo.PointsAcrossPeak = peak.PointsAcross;
+            chromInfo.IsForcedIntegration = peak.IsForcedIntegration;
             return chromInfo;
         }
 

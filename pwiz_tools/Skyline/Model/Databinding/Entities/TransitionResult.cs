@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? PointsAcrossPeak { get { return ChromInfo.PointsAcrossPeak; } }
 
-        public bool Coeluting { get { return !ChromInfo.IsForcedIntegration; } }
+        public bool Coeluting { get { return !ChromInfo.IsForcedIntegration && Area > 0; } }
 
         public Chromatogram Chromatogram
         {
