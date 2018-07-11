@@ -161,6 +161,21 @@ UsageInfo usage_scanNumber = {"<scan_numbers>",
     "<scan_numbers> is an int_set of scan numbers to be kept."
 };
 
+SpectrumListPtr filterCreator_id(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
+{
+    vector<string> idSet;
+    bal::split(idSet, arg, bal::is_any_of(";"));
+    for (auto& id : idSet) bal::trim(id);
+
+    return SpectrumListPtr(new
+        SpectrumList_Filter(msd.run.spectrumListPtr,
+            SpectrumList_FilterPredicate_IdSet(set<string>(idSet.begin(), idSet.end()))));
+}
+UsageInfo usage_id = { "<id_set>",
+"Selects one or more spectra by native IDs separated by semicolon (;).\n"
+"  <id_set> is a semicolon-delimited set of ids."
+};
+
 SpectrumListPtr filterCreator_scanEvent(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
 {
     IntegerSet scanEventSet;
@@ -1469,6 +1484,7 @@ struct JumpTableEntry
 JumpTableEntry jumpTable_[] =
 {
     {"index", usage_index, filterCreator_index},
+    {"id", usage_id, filterCreator_id},
     {"msLevel", usage_msLevel, filterCreator_msLevel},
     {"chargeState", usage_chargeState, filterCreator_chargeState},
     {"precursorRecalculation", usage_precursorRecalculation, filterCreator_precursorRecalculation},
