@@ -461,16 +461,13 @@ constant PWIZ_VERSION_TAG : $(version-tag:J=.) ;
 
 echo ProteoWizard $(version-tag:J=.) $(PWIZ_GIT_BRANCH) $(PLATFORM) $(PROCESSOR_ARCHITECTURE) ;
 
-if ! --incremental in $(args)
-{
-	import generate-version ;
-	generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/msdata/Version.cpp : pwiz msdata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
-	generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/analysis/Version.cpp : pwiz analysis : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
-	generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/identdata/Version.cpp : pwiz identdata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
-	generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/tradata/Version.cpp : pwiz tradata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
-	generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/proteome/Version.cpp : pwiz proteome : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
-	generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/Version.cpp : pwiz : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
-}
+import generate-version ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/msdata/Version.cpp : pwiz msdata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/analysis/Version.cpp : pwiz analysis : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/identdata/Version.cpp : pwiz identdata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/tradata/Version.cpp : pwiz tradata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/proteome/Version.cpp : pwiz proteome : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
+generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/Version.cpp : pwiz : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
 
 # create a VERSION file which can be used by TC to parse the canonical pwiz version
 make VERSION : : @make_VERSION : <location>$(PWIZ_BUILD_PATH) ;

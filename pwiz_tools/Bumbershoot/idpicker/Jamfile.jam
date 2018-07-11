@@ -57,19 +57,17 @@ path-constant IDPICKER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Bumbershoot/idpicker 
 
 constant COMPANY_AND_PRODUCT : "Vanderbilt University" "IDPicker" ;
 
-if ! --incremental in [ modules.peek : ARGV ]
-{
-	generate-version.AssemblyInfo.cs $(IDPICKER_PATH)/Util/Properties/AssemblyInfo.cs : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : "IDPicker.Util" "IDPicker utilities." $(COMPANY_AND_PRODUCT) ;
-	generate-version.AssemblyInfo.cs $(IDPICKER_PATH)/Model/Properties/AssemblyInfo.cs : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : "IDPicker.DataModel" "IDPicker data model." $(COMPANY_AND_PRODUCT) ;
-	generate-version.AssemblyInfo.cs $(IDPICKER_PATH)/Controls/Properties/AssemblyInfo.cs : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : "IDPicker.Controls" "IDPicker custom controls." $(COMPANY_AND_PRODUCT) ;
-	generate-version.AssemblyInfo.cs $(IDPICKER_PATH)/CustomDataSourceDialog/Properties/AssemblyInfo.cs : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : "IDPicker.CustomDataSourceDialog" "IDPicker custom open file dialog." $(COMPANY_AND_PRODUCT) ;
-	generate-version.AssemblyInfo.cs $(IDPICKER_PATH)/Properties/AssemblyInfo.cs : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : "IDPicker" "Filtering, assembling, and reporting of parsimonious protein identifications." $(COMPANY_AND_PRODUCT) ;
+generate-version.AssemblyInfo.cs $(IDPICKER_PATH)/Util/Properties/AssemblyInfo.cs : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : "IDPicker.Util" "IDPicker utilities." $(COMPANY_AND_PRODUCT) ;
+generate-version.AssemblyInfo.cs $(IDPICKER_PATH)/Model/Properties/AssemblyInfo.cs : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : "IDPicker.DataModel" "IDPicker data model." $(COMPANY_AND_PRODUCT) ;
+generate-version.AssemblyInfo.cs $(IDPICKER_PATH)/Controls/Properties/AssemblyInfo.cs : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : "IDPicker.Controls" "IDPicker custom controls." $(COMPANY_AND_PRODUCT) ;
+generate-version.AssemblyInfo.cs $(IDPICKER_PATH)/CustomDataSourceDialog/Properties/AssemblyInfo.cs : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : "IDPicker.CustomDataSourceDialog" "IDPicker custom open file dialog." $(COMPANY_AND_PRODUCT) ;
+generate-version.AssemblyInfo.cs $(IDPICKER_PATH)/Properties/AssemblyInfo.cs : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : "IDPicker" "Filtering, assembling, and reporting of parsimonious protein identifications." $(COMPANY_AND_PRODUCT) ;
 
-	generate-version.rc $(IDPICKER_PATH)/Resources/Resources.rc : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
-		: "IDPicker" "IDPicker" $(COMPANY_AND_PRODUCT)
-		: IDPicker.ico IDPickerDatabase.ico IDPickerInputFile.ico
-		  BlankIcon.ico PeptideViewIcon.ico ProteinViewIcon.ico SpectrumViewIcon.ico ;
-}
+generate-version.rc $(IDPICKER_PATH)/Resources/Resources.rc : $(MAJOR) : $(MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
+    : "IDPicker" "IDPicker" $(COMPANY_AND_PRODUCT)
+    : IDPicker.ico IDPickerDatabase.ico IDPickerInputFile.ico
+      BlankIcon.ico PeptideViewIcon.ico ProteinViewIcon.ico SpectrumViewIcon.ico ;
+
 constant numeric-version-tag : $(MAJOR) $(MINOR) $(PWIZ_BUILD_TIMESTAMP) ;
 constant version-tag : $(numeric-version-tag) $(PWIZ_GIT_REV) ;
 
