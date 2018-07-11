@@ -27,16 +27,19 @@ namespace TestRunnerLib
 
         public void Run(string method, params object[] args)
         {
+            // ReSharper disable once PossibleNullReferenceException
             _skylineProgram.GetMethod(method).Invoke(null, args);
         }
 
         public void Set(string field, object value)
         {
+            // ReSharper disable once PossibleNullReferenceException
             _skylineProgram.GetMethod("set_" + field).Invoke(null, new[] {value});
         }
 
         public T Get<T>(string field)
         {
+            // ReSharper disable once PossibleNullReferenceException
             return (T) _skylineProgram.GetMethod("get_" + field).Invoke(null, null);
         }
     }

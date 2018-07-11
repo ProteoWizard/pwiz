@@ -221,6 +221,23 @@ PWIZ_API_DECL bool SpectrumList_FilterPredicate_ScanNumberSet::done() const
 }
 
 
+PWIZ_API_DECL SpectrumList_FilterPredicate_IdSet::SpectrumList_FilterPredicate_IdSet(const set<string>& idSet)
+    : idSet_(idSet)
+{}
+
+
+PWIZ_API_DECL tribool SpectrumList_FilterPredicate_IdSet::accept(const SpectrumIdentity& spectrumIdentity) const
+{
+    return idSet_.count(spectrumIdentity.id) > 0;
+}
+
+
+PWIZ_API_DECL bool SpectrumList_FilterPredicate_IdSet::done() const
+{
+    return false;
+}
+
+
 //
 // SpectrumList_FilterPredicate_ScanEventSet 
 //
