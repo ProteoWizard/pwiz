@@ -33,6 +33,7 @@
 #include "boost/logic/tribool.hpp"
 
 #include <set>
+#include <string>
 
 namespace pwiz {
 namespace analysis {
@@ -122,6 +123,18 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_ScanNumberSet : public Spectrum
     private:
     util::IntegerSet scanNumberSet_;
     mutable bool eos_;
+};
+
+
+class PWIZ_API_DECL SpectrumList_FilterPredicate_IdSet : public SpectrumList_Filter::Predicate
+{
+public:
+    SpectrumList_FilterPredicate_IdSet(const std::set<std::string>& idSet);
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const;
+    virtual bool done() const;
+
+private:
+    std::set<std::string> idSet_;
 };
 
 

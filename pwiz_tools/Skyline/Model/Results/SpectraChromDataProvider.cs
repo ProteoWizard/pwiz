@@ -920,7 +920,7 @@ namespace pwiz.Skyline.Model.Results
                             continue;
 
                         // Skip quickly through the chromatographic lead-in and tail when possible 
-                        if (msLevel > 1) // We need all MS1 for TIC and BPC
+                        if (msLevel > 1 || !_filter.IsFilteringFullGradientMs1) // We need all MS1 for TIC and BPC
                         {
                             // Only do these checks if we can get the information instantly. Otherwise,
                             // this will slow down processing in more complex cases.

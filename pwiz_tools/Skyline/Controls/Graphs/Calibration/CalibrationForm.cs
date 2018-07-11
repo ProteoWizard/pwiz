@@ -56,6 +56,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             zedGraphControl.GraphPane.XAxis.MinorTic.IsOpposite = false;
             zedGraphControl.GraphPane.YAxis.MajorTic.IsOpposite = false;
             zedGraphControl.GraphPane.YAxis.MinorTic.IsOpposite = false;
+            zedGraphControl.IsZoomOnMouseCenter = true;
         }
 
         public static CalibrationCurveOptions Options { get { return Settings.Default.CalibrationCurveOptions; } }
