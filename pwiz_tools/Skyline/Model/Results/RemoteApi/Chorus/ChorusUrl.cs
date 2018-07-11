@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Chorus
 
         public ChorusAccount FindChorusAccount(IEnumerable<RemoteAccount> chorusAccounts)
         {
-            return (ChorusAccount) chorusAccounts.FirstOrDefault(chorusAccount => chorusAccount.CanHandleUrl(this));
+            return (ChorusAccount) FindMatchingAccount(chorusAccounts);
         }
 
         private static string LongToString(long value)
