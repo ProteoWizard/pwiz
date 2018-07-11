@@ -1446,6 +1446,9 @@ namespace pwiz.Skyline.Model.Lib
             string filePathToString = filePath.ToString();
             // First look for an exact path match
             int i = _librarySourceFiles.IndexOf(info => Equals(filePathToString, info.FilePath));
+            // filePath.ToString may include decorators e.g. "C:\\data\\mydata.raw?centroid_ms1=true", try unadorned name ("mydata.raw")
+            if (i == -1)
+                i = _librarySourceFiles.IndexOf(info => Equals(filePath.GetFileName(), info.FilePath));
             // Or a straight basename match, which we sometimes use internally
             if (i == -1)
                 i = _librarySourceFiles.IndexOf(info => Equals(filePathToString, info.BaseName));
@@ -1565,9 +1568,9 @@ namespace pwiz.Skyline.Model.Lib
                             {
                                 var ionMobility = reader.GetDouble(iIonMobility);
                                 var collisionalCrossSectionSqA = reader.GetDouble(iCCS);
-                                var ionMobilityighEnergyOffset = reader.GetDouble(iIonMobilityHighEnergyOffset);
-                                if (!(ionMobility == 0 && collisionalCrossSectionSqA == 0 && ionMobilityighEnergyOffset == 0))
-                                    ionMobilityInfo = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility, ionMobilityType), collisionalCrossSectionSqA, iIonMobilityHighEnergyOffset);
+                                var ionMobilityHighEnergyOffset = reader.GetDouble(iIonMobilityHighEnergyOffset);
+                                if (!(ionMobility == 0 && collisionalCrossSectionSqA == 0 && ionMobilityHighEnergyOffset == 0))
+                                    ionMobilityInfo = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility, ionMobilityType), collisionalCrossSectionSqA, ionMobilityHighEnergyOffset);
                             }
                         }
                         else if (hasDriftTime) 
@@ -2221,7 +2224,7 @@ namespace pwiz.Skyline.Model.Lib
                     double highEnergyOffset = PrimitiveArrays.ReadOneValue<double>(stream);
                     var ionMobilityInfo = ionMobility == 0 && collisionalCrossSectionSqA == 0 && highEnergyOffset == 0 ?
                         IonMobilityAndCCS.EMPTY : 
-                         IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility > 0 ? ionMobility : (double?)null, units) , collisionalCrossSectionSqA > 0 ?  collisionalCrossSectionSqA :(double?) null, highEnergyOffset);
+                         IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility != 0 ? ionMobility : (double?)null, units) , collisionalCrossSectionSqA > 0 ?  collisionalCrossSectionSqA :(double?) null, highEnergyOffset);
                     driftTimes.Add(ionMobilityInfo);
                 }
                 keyValuePairs[i] = new KeyValuePair<int, IonMobilityAndCCS[]>(id, driftTimes.ToArray());

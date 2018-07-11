@@ -3107,14 +3107,14 @@ namespace pwiz.Skyline.Model.DocSettings
         public double ResolvingPower { get; private set; }
 
 
-        public double WidthAt(double driftTime, double driftTimeMax)
+        public double WidthAt(double ionMobility, double ionMobilityMax)
         {
             if (PeakWidthMode == IonMobilityPeakWidthType.resolving_power)
             {
-                return (ResolvingPower > 0 ? 2.0 / ResolvingPower : double.MaxValue) * driftTime; // 2.0*driftTime/resolvingPower
+                return Math.Abs((ResolvingPower > 0 ? 2.0 / ResolvingPower : double.MaxValue) * ionMobility); // 2.0*ionMobility/resolvingPower
             }
-            Assume.IsTrue(driftTimeMax > 0, "Expected dtMax value > 0 for linear range drift window calculation"); // Not L10N
-            return PeakWidthAtIonMobilityValueZero + driftTime * (PeakWidthAtIonMobilityValueMax - PeakWidthAtIonMobilityValueZero) / driftTimeMax;
+            Assume.IsTrue(ionMobilityMax != 0, "Expected ionMobilityMax value != 0 for linear range ion mobility window calculation"); // Not L10N
+            return PeakWidthAtIonMobilityValueZero + Math.Abs(ionMobility * (PeakWidthAtIonMobilityValueMax - PeakWidthAtIonMobilityValueZero) / ionMobilityMax);
         }
 
         public string Validate()
