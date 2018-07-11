@@ -647,11 +647,14 @@ rule copy-assemblies ( target : properties * )
                ! ( $(assembly-at-target-filepath) in $(.unique-targets) )
             {
                 .unique-targets += $(assembly-at-target-filepath) ;
-                common.copy $(assembly-at-target-filepath) : $(assembly-path) ;
-                DEPENDS $(assembly-at-target-filepath) : $(target-path) [ $(assembly).actualize ] ;
-                DEPENDS $(target) : $(assembly-at-target-filepath) ;
-                #JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
-                #JAM_SEMAPHORE on $(target) = "dotNetSemaphore" ;
+                if ! [ CHECK_IF_FILE $(assembly-at-target-filepath) ]
+                {
+                    common.copy $(assembly-at-target-filepath) : $(assembly-path) ;
+                    DEPENDS $(assembly-at-target-filepath) : $(target-path) [ $(assembly).actualize ] ;
+                    DEPENDS $(target) : $(assembly-at-target-filepath) ;
+                    #JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
+                    #JAM_SEMAPHORE on $(target) = "dotNetSemaphore" ;
+                }
             }
         }
     }
@@ -690,11 +693,14 @@ rule copy-assemblies ( target : properties * )
                ! ( $(assembly-at-target-filepath) in $(.unique-targets) )
             {
                 .unique-targets += $(assembly-at-target-filepath) ;
-                common.copy $(assembly-at-target-filepath) : $(assembly-path) ;
-                DEPENDS $(assembly-at-target-filepath) : $(this-target-path) $(assembly-path) ;
-                DEPENDS $(target) : $(assembly-at-target-filepath) ;
-                #JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
-                #JAM_SEMAPHORE on $(target) = "dotNetSemaphore" ;
+                if ! [ CHECK_IF_FILE $(assembly-at-target-filepath) ]
+                {
+                    common.copy $(assembly-at-target-filepath) : $(assembly-path) ;
+                    DEPENDS $(assembly-at-target-filepath) : $(this-target-path) $(assembly-path) ;
+                    DEPENDS $(target) : $(assembly-at-target-filepath) ;
+                    #JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
+                    #JAM_SEMAPHORE on $(target) = "dotNetSemaphore" ;
+                }
             }
         }
     }

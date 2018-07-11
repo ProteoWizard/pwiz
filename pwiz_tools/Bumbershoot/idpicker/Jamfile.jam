@@ -184,13 +184,22 @@ install data_dependencies
         <conditional>@install-identdata-dependencies
     ;
 
+install extension_dependencies
+    : # sources
+        Qonverter//IdpSqlExtensions
+    : # requirements
+        <conditional>@install-location
+        <install-dependencies>on
+        <install-type>SHARED_LIB
+    ;
+
 rule install-requirements ( properties * )
 {
     return [ install-location $(properties) ]
            [ install-vendor-api-dependencies $(properties) ]
-           <dependency>data_dependencies/<install-dependencies>off
-           <install-dependencies>on
-           <install-type>SHARED_LIB
+           <dependency>data_dependencies
+           <dependency>extension_dependencies
+           <install-dependencies>off
            <install-type>EXE ;
 }
 
@@ -199,6 +208,7 @@ install install_cli
         Qonverter//idpQonvert
         Qonverter//idpQuery
         Qonverter//idpAssemble
+        Qonverter//gene2protein.db3 
     : # requirements
         <conditional>@install-requirements
         <conditional>@gcc-install-dll-path
