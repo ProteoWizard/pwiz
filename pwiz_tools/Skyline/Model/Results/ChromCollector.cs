@@ -452,12 +452,15 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class ChromGroups : IDisposable
     {
-        private const int MAX_SPILL_FILE_SIZE = 200 * 1024 * 1024;
-        private const int SPILL_FILE_OVER_ESTIMATION_FACTOR = 4;
-        private static readonly float[] EMPTY_FLOAT_ARRAY = new float[0];
+        // We try to make our spill files approximately 200MB
+        private const long TARGET_SPILL_FILE_SIZE = 200 * 1024 * 1024;
+        // Errors occur if the spill file is more than 2GB, so we make sure that the
+        // most pessimistic estimate of the data size is less than this
+        private const long MAX_SPILL_FILE_SIZE = 1L << 32 - 1;
 
         private readonly IList<ChromKey> _chromKeys;
         private readonly float _maxRetentionTime;
+        private readonly int _spectrumCount;
         private readonly string _cachePath;
         private readonly SpillFile[] _spillFiles;
         private readonly int[] _idToGroupId;
@@ -468,11 +471,13 @@ namespace pwiz.Skyline.Model.Results
             IList<IList<int>> chromatogramRequestOrder,
             IList<ChromKey> chromKeys,
             float maxRetentionTime,
+            int spectrumCount,
             string cachePath)
         {
             RequestOrder = chromatogramRequestOrder;
             _chromKeys = chromKeys;
             _maxRetentionTime = maxRetentionTime;
+            _spectrumCount = spectrumCount;
             _cachePath = cachePath;
             if (RequestOrder == null)
                 return;
@@ -493,17 +498,21 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Decide how groups will be allocated to spill files.
-            int spillFileSize = 0;
+            long maxSpillFileSize = 0;
+            long estimateSpillFileSize = 0;
             SpillFile spillFile = new SpillFile();
             _spillFiles = new SpillFile[chromatogramRequestOrder.Count];
             for (int groupId = 0; groupId < _spillFiles.Length; groupId++)
             {
-                int groupSize = GetMaxSize(groupId);
-                spillFileSize += groupSize;
-                if (spillFileSize > MAX_SPILL_FILE_SIZE * SPILL_FILE_OVER_ESTIMATION_FACTOR)
+                long maxGroupSize = GetMaxSize(groupId);
+                long estimateGroupSize = EstimateGroupSize(groupId);
+                maxSpillFileSize += maxGroupSize;
+                estimateSpillFileSize += estimateGroupSize;
+                if (maxSpillFileSize > MAX_SPILL_FILE_SIZE || estimateSpillFileSize > TARGET_SPILL_FILE_SIZE)
                 {
                     spillFile = new SpillFile();
-                    spillFileSize = groupSize;
+                    maxSpillFileSize = maxGroupSize;
+                    estimateSpillFileSize = estimateGroupSize;
                 }
                 _spillFiles[groupId] = spillFile;
                 spillFile.MaxTime = Math.Max(spillFile.MaxTime, GetMaxTime(groupId));
@@ -621,19 +630,41 @@ namespace pwiz.Skyline.Model.Results
         /// Get the maximum possible size (in bytes) of a group, including all the chromatograms that are 
         /// included in the group.
         /// </summary>
-        public int GetMaxSize(int groupIndex)
+        private long GetMaxSize(int groupIndex)
         {
-            int maxSize = 0;
+            int recordSize = sizeof(float) + sizeof(float) + sizeof(float) + sizeof(int); // time, intensity, mass error, scan index
+            return _spectrumCount * RequestOrder[groupIndex].Count * recordSize;
+        }
+
+        /// <summary>
+        /// Returns the most likely size that the data for this group will take on disk.
+        /// </summary>
+        private long EstimateGroupSize(int groupIndex)
+        {
+            const int SPILL_FILE_OVERESTIMATION_FACTOR = 4;
+            long maxSize = 0;
             foreach (var index in RequestOrder[groupIndex])
             {
                 var key = _chromKeys[index];
-                double duration = key.OptionalMaxTime.HasValue && key.OptionalMinTime.HasValue
-                    ? key.OptionalMaxTime.Value - key.OptionalMinTime.Value
-                    : _maxRetentionTime;
-                maxSize += (int) Math.Ceiling(duration/PeptideChromDataSets.TIME_MIN_DELTA);
+                maxSize += EstimateSpectrumCount(key.OptionalMinTime, key.OptionalMaxTime);
             }
-            maxSize *= sizeof (float) + sizeof (float) + sizeof (int); // Size of intensity, mass error, scan id
+            maxSize *= sizeof(float) + sizeof(float) + sizeof(int); // Size of intensity, mass error, scan id
+            maxSize /= SPILL_FILE_OVERESTIMATION_FACTOR;
             return maxSize;
+        }
+
+        private int EstimateSpectrumCount(double? minTime, double? maxTime)
+        {
+            if (!minTime.HasValue || !maxTime.HasValue)
+            {
+                return _spectrumCount;
+            }
+            double duration = maxTime.Value - minTime.Value;
+            if (duration >= _maxRetentionTime || duration <= 0)
+            {
+                return _spectrumCount;
+            }
+            return (int)Math.Ceiling(duration * _spectrumCount / _maxRetentionTime);
         }
 
         /// <summary>
