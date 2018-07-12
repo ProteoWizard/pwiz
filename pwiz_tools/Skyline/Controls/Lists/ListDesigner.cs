@@ -25,11 +25,12 @@ using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lists;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Lists
 {
-    public partial class ListDesigner : Form
+    public partial class ListDesigner : FormEx
     {
         private readonly BindingList<ListProperty> _listProperties;
         private ListData _listDefOriginal;
