@@ -714,7 +714,7 @@ namespace pwiz.Skyline.ToolsUI
             ProgramPathContainer pcc = ToolMacros.GetProgramPathContainer(textCommand.Text);
             using (var dlg = new LocateFileDlg(pcc))
             {
-                dlg.ShowDialog();
+                dlg.ShowDialog(this);
             }
         }
 

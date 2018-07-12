@@ -4765,7 +4765,7 @@ namespace pwiz.Skyline
 
             using (var dlgProperties = new AreaCVToolbarProperties(graphSummary))
             {
-                if (dlgProperties.ShowDialog() == DialogResult.OK)
+                if (dlgProperties.ShowDialog(this) == DialogResult.OK)
                     UpdatePeakAreaGraph();
             }
         }
