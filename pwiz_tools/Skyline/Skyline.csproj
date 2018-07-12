@@ -329,6 +329,7 @@
       <DependentUpon>PropertyNames.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\AuditLog\Reflector.cs" />
+    <Compile Include="Model\AuditLog\ReflectorToString.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

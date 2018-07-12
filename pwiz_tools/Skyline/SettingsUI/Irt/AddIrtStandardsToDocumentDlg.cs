@@ -18,12 +18,14 @@
  */
 using System;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
     public partial class AddIrtStandardsToDocumentDlg : FormEx
     {
+        [Track]
         public int NumTransitions
         {
             get { return Convert.ToInt32(numTransitions.Value); }

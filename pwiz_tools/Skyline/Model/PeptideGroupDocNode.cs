@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model
         public string Description { get { return _proteinMetadata.Description ?? PeptideGroup.Description; } } // prefer ours over peptidegroup, if set
         public string OriginalDescription { get { return PeptideGroup.Description; } }
 
-        [Track]
+        [Track(defaultValues:typeof(DefaultValuesNull))]
         public string Sequence
         {
             get { return PeptideGroup.Sequence; }
@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Model
             get { return !IsProteomic; }
         }
 
-        [TrackChildren(ignoreName:true)]
+        [TrackChildren(ignoreName:true, defaultValues:typeof(DefaultValuesNullOrEmpty))]
         public IEnumerable<PeptideDocNode> Molecules { get { return Children.Cast<PeptideDocNode>(); } }
         public IEnumerable<PeptideDocNode> SmallMolecules { get { return Molecules.Where(p => p.Peptide.IsCustomMolecule); } }
         public IEnumerable<PeptideDocNode> Peptides { get { return Molecules.Where(p => !p.Peptide.IsCustomMolecule); } }

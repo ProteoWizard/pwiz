@@ -20,6 +20,7 @@
 using System;
 using System.Linq;
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
@@ -61,7 +62,7 @@ namespace pwiz.Skyline.Model.AuditLog
             return 0;
         }
 
-        private object FindObject(ObjectGroup objectGroup)
+        private object FindObject(ObjectGroup<object> objectGroup)
         {
             if (objectGroup == null)
                 return null;
@@ -84,15 +85,16 @@ namespace pwiz.Skyline.Model.AuditLog
             }
         }
 
-        public string Localize(ObjectGroup oldGroup, ObjectGroup newGroup)
+        public string Localize(ObjectInfo<object> objectInfo)
         {
-            var oldObj = FindObject(oldGroup);
-            var newObj = FindObject(newGroup);
+            var pair = ObjectPair<object>.Create(
+                FindObject(objectInfo.OldObjectGroup),
+                FindObject(objectInfo.NewObjectGroup));
 
-            return Localize(oldObj, newObj);
+            return Localize(pair);
         }
 
-        protected abstract string Localize(object oldObj, object newObj);
+        protected abstract string Localize(ObjectPair<object> objectPair);
 
         public static CustomPropertyLocalizer CreateInstance(Type localizerType)
         {
@@ -104,24 +106,5 @@ namespace pwiz.Skyline.Model.AuditLog
 
         // Test support
         public abstract string[] PossibleResourceNames { get; }
-    }
-
-    public class ObjectGroup
-    {
-        public ObjectGroup(object obj, object parentObject, object rootObject)
-        {
-            Object = obj;
-            ParentObject = parentObject;
-            RootObject = rootObject;
-        }
-
-        public static ObjectGroup Create(object obj, object parentObject, object rootObject)
-        {
-            return new ObjectGroup(obj, parentObject, rootObject);
-        }
-
-        public object Object { get; private set; }
-        public object ParentObject { get; private set; }
-        public object RootObject { get; private set; }
     }
 }

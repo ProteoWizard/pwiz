@@ -23,8 +23,8 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.AuditLog;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.DocSettings;
@@ -58,6 +58,10 @@ namespace pwiz.SkylineTestFunctional
             // Non existent resource name
             VerifyStringLocalization("{0:SEttings}", "{0:SEttings}");
 
+            var unlocalizedMessageTypes = GetUnlocalizedMessageTypes();
+            if (unlocalizedMessageTypes.Any())
+                Assert.Fail("The following properties are unlocalized:\n" + string.Join("\n", unlocalizedMessageTypes));
+
             var unlocalized = GetUnlocalizedProperties(RootProperty.Create(typeof(SrmSettings), "Settings"), PropertyPath.Root);
             if (unlocalized.Any())
                 Assert.Fail("The following properties are unlocalized:\n" + string.Join("\n", unlocalized));
@@ -68,13 +72,27 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(expected, LogMessage.LocalizeLogStringProperties(unlocalized));
         }
 
+        private List<UnlocalizedProperty> GetUnlocalizedMessageTypes()
+        {
+            var result = new List<UnlocalizedProperty>();
+            var values = Enum.GetValues(typeof(MessageType)).Cast<MessageType>().Skip(1); // Skip "none"
+            foreach (var enumVal in values)
+            {
+                var str = AuditLogStrings.ResourceManager.GetString(enumVal.ToString());
+                if (str == null)
+                    result.Add(new UnlocalizedProperty(enumVal.ToString()));
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// Verifies that all diff properties of T are localized, unless their name can be ignored
         /// or a custom localizer is provided
         /// </summary>
         private List<UnlocalizedProperty> GetUnlocalizedProperties(Property prop, PropertyPath path)
         {
-            var T = prop.GetPropertyType(null);
+            var T = prop.GetPropertyType(ObjectPair<object>.Create(null, null));
             var properties = Reflector.GetProperties(T);
 
             var unlocalizedProperties = new List<UnlocalizedProperty>();
@@ -101,17 +119,16 @@ namespace pwiz.SkylineTestFunctional
                         if (localized == null)
                         {
                             var propPath = property.CustomLocalizer != null ? PropertyPath.Parse(name) : subPath;
-                            unlocalizedProperties.Add(new UnlocalizedProperty(propPath, name));
+                            unlocalizedProperties.Add(new UnlocalizedProperty(name, propPath));
                         }
                     }
                 }
 
-                var type = property.GetPropertyType(null);
-                object nullObject = null;
-                var collectionInfo = Reflector.GetCollectionInfo(ref type, ref nullObject, ref nullObject);
-                if (collectionInfo != null)
+                var type = property.GetPropertyType(ObjectPair<object>.Create(null, null));
+                var collection = Reflector.GetCollectionInfo(type, ObjectPair<object>.Create(null, null));
+                if (collection != null)
                 {
-                    type = collectionInfo.ElementValueType;
+                    type = collection.Info.ElementValueType;
                     property = property.ChangeTypeOverride(type);
                 }
 
@@ -126,18 +143,21 @@ namespace pwiz.SkylineTestFunctional
 
         public class UnlocalizedProperty
         {
-            public UnlocalizedProperty(PropertyPath propertyPath, string unlocalizedString)
+            public UnlocalizedProperty(string unlocalizedString, PropertyPath propertyPath = null)
             {
-                PropertyPath = propertyPath;
                 UnlocalizedString = unlocalizedString;
+                PropertyPath = propertyPath;
             }
 
-            public PropertyPath PropertyPath { get; private set; }
             public string UnlocalizedString { get; private set; }
+            public PropertyPath PropertyPath { get; private set; }  
 
             public override string ToString()
             {
-                return string.Format("{0} ({1})", PropertyPath, UnlocalizedString);
+                if (PropertyPath != null)
+                    return string.Format("{0} ({1})", UnlocalizedString, PropertyPath);
+                else
+                    return UnlocalizedString;
             }
         }
 

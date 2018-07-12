@@ -23,11 +23,13 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -540,7 +542,12 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            Program.MainWindow.ModifyDocument(Resources.UniquePeptidesDlg_OkDialog_Exclude_peptides, ExcludePeptidesFromDocument);
+            Program.MainWindow.ModifyDocument(Resources.UniquePeptidesDlg_OkDialog_Exclude_peptides, ExcludePeptidesFromDocument,
+                docPair =>
+                {
+                    var count = dataGridView1.Rows.OfType<DataGridViewRow>().Count(row => !(bool) row.Cells[PeptideIncludedColumn.Name].Value);
+                    return AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.excluded_peptides, UniquePeptideDlgSettings, count);
+                });
             Close();
         }
 
@@ -554,6 +561,74 @@ namespace pwiz.Skyline.EditUI
                                  : ExcludePeptides((PeptideGroupDocNode) docNode));
             }
             return (SrmDocument) srmDocument.ChangeChildrenChecked(children);
+        }
+
+
+        public class ProteinPeptideSelection : IAuditLogObject
+        {
+            public ProteinPeptideSelection(string proteinName, List<string> peptides)
+            {
+                ProteinName = proteinName;
+                Peptides = peptides;
+            }
+
+            protected bool Equals(ProteinPeptideSelection other)
+            {
+                return string.Equals(ProteinName, other.ProteinName);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((ProteinPeptideSelection) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return (ProteinName != null ? ProteinName.GetHashCode() : 0);
+            }
+
+            public string ProteinName { get; private set; }
+            [Track]
+            public List<string> Peptides { get; private set; }
+
+            public string AuditLogText { get { return ProteinName; } }
+            public bool IsName { get { return true; } }
+        }
+
+        public UniquePeptideSettings UniquePeptideDlgSettings
+        {
+            get { return new UniquePeptideSettings(this); }
+        }
+
+        public class UniquePeptideSettings
+        {
+            public UniquePeptideSettings(UniquePeptidesDlg dlg)
+            {
+                ProteinPeptideSelections = new Dictionary<int, ProteinPeptideSelection>();
+                for (var i = 0; i < dlg.dataGridView1.Rows.Count; ++i)
+                {
+                    var row = dlg.dataGridView1.Rows[i];
+                    var rowTag = (Tuple<IdentityPath, PeptideDocNode>)row.Tag;
+                    if ((bool)row.Cells[dlg.PeptideIncludedColumn.Name].Value)
+                    {
+                        var id = rowTag.Item1.GetIdentity(0);
+                        if (!ProteinPeptideSelections.ContainsKey(id.GlobalIndex))
+                        {
+                            var node = (PeptideGroupDocNode)dlg.SrmDocument.FindNode(id);
+                            ProteinPeptideSelections.Add(id.GlobalIndex, new ProteinPeptideSelection(node.ProteinMetadata.Name, new List<string>()));
+                        }
+
+                        var item = ProteinPeptideSelections[id.GlobalIndex];
+                        item.Peptides.Add(PeptideTreeNode.GetLabel(rowTag.Item2, string.Empty));
+                    }
+                }
+            }
+
+            [TrackChildren]
+            public Dictionary<int, ProteinPeptideSelection> ProteinPeptideSelections { get; private set; }
         }
 
         private PeptideGroupDocNode ExcludePeptides(PeptideGroupDocNode peptideGroupDocNode)

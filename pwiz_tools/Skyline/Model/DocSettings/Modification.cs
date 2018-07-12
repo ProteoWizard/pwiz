@@ -190,9 +190,9 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public bool Label34S { get { return (LabelAtoms & LabelAtoms.S34) != 0; } }
 
-        public object DefaultObject
+        public object GetDefaultObject(ObjectInfo<object> info)
         {
-            get { return new StaticMod(); }
+            return new StaticMod();
         }
 
         public double IonLabelMassDiff
@@ -997,13 +997,13 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        [TrackChildren]
+        [TrackChildren(defaultValues: typeof(DefaultValuesNullOrEmpty))]
         public IList<ExplicitMod> StaticModifications
         {
             get { return GetModifications(IsotopeLabelType.light); }
         }
 
-        [TrackChildren]
+        [TrackChildren(defaultValues: typeof(DefaultValuesNullOrEmpty))]
         public IList<ExplicitMod> HeavyModifications
         {
             get { return GetModifications(IsotopeLabelType.heavy); }
@@ -1290,9 +1290,9 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return true; }
         }
 
-        public object DefaultObject
+        public object GetDefaultObject(ObjectInfo<object> info)
         {
-            get { return new ExplicitMod(-1, StaticMod.EMPTY); }
+            return new ExplicitMod(-1, StaticMod.EMPTY);
         }
     }
 

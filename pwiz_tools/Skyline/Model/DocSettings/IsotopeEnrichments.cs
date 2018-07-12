@@ -53,17 +53,6 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return _isotopeEnrichments; }
         }
 
-        public override string AuditLogText
-        {
-            get
-            {
-                if (Equals(this, DEFAULT))
-                    return "{4:IsotopeEnrichments_DEFAULT_Default}"; // Not L10N
-                
-                return Name;
-            }
-        }
-
         public IsotopeAbundances IsotopeAbundances { get; private set; }
 
         #region Property change methods

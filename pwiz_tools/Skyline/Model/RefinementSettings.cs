@@ -87,7 +87,10 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public object DefaultObject { get { return new RefinementSettings(); } }
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return new RefinementSettings();
+        }
 
         // Document
         [Track]

@@ -16,9 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using pwiz.Common.DataBinding;
@@ -104,33 +102,31 @@ namespace pwiz.Skyline.Model.AuditLog
         // the newObject a PeptideGroupDocNode we only compare based on the DocNode properties. If the newObject
         // was also a PeptideDocNode, we compare based on PeptideDocNode properties.
 
-        public static Type GetPropertyType(Type type, object oldObject, object newObject)
+        public static Type GetPropertyType(Type type, ObjectPair<object> objectPair)
         {
-            var type1 = oldObject == null ? null : oldObject.GetType();
-            var type2 = newObject == null ? null : newObject.GetType();
+            var type1 = objectPair.OldObject == null ? null : objectPair.OldObject.GetType();
+            var type2 = objectPair.NewObject == null ? null : objectPair.NewObject.GetType();
 
-            // Compared based on the object type if the types are the same and not null,
+            // Compare based on the object type if the types are the same and not null,
             // otherwise compare by the type of the property, which is guaranteed to be a shared
             // base by both objects
-            if (type1 == type2 && type1 != null)
+            if ((type1 == type2 || type2 == null) && type1 != null)
                 return type1;
+
+            if (type1 == null && type2 != null)
+                return type2;
 
             return type;
         }
 
-        public Type GetPropertyType(object oldObject, object newObject)
+        public Type GetPropertyType(ObjectPair<object> objectPair)
         {
-            return GetPropertyType(_propertyType, oldObject, newObject);
-        }
-
-        public static Type GetPropertyType(Type type, object obj)
-        {
-            return obj == null ? type : obj.GetType();
+            return GetPropertyType(_propertyType, objectPair);
         }
 
         public Type GetPropertyType(object obj)
         {
-            return GetPropertyType(_propertyType, obj);
+            return obj == null ? _propertyType : obj.GetType();
         }
 
         public bool IsCollectionElement { get { return TypeOverride != null; } }
@@ -143,28 +139,22 @@ namespace pwiz.Skyline.Model.AuditLog
         public bool IsCollectionType(object obj)
         {
             var type = GetPropertyType(obj);
-            return CollectionInfo.ForType(type) != null || type.DeclaringType == typeof(Enumerable) ||
-                    (type.IsGenericType && typeof(IEnumerable<>).IsAssignableFrom(type.GetGenericTypeDefinition()));
+            return Reflector.IsCollectionType(type);
         }
 
         public object GetValue(object obj)
         {
             return _propertyInfo.GetValue(obj);
         }
-        // TODO: reconsider this object pair stuff, is that really easier? and where to use it?
 
         public string GetName(DiffNode root, DiffNode node, DiffNode parent)
         {
-            var oldGroup = new ObjectGroup(node.Objects.LastOrDefault(),
-                parent != null ? parent.Objects.LastOrDefault() : null, root.Objects.LastOrDefault());
-
-            var newGroup = new ObjectGroup(node.Objects.FirstOrDefault(),
-                parent != null ? parent.Objects.FirstOrDefault() : null, root.Objects.FirstOrDefault());
-
-            return GetName(oldGroup, newGroup);
+            return GetName(new ObjectInfo<object>(node.Objects.LastOrDefault(), node.Objects.FirstOrDefault(),
+                parent != null ? parent.Objects.LastOrDefault() : null, parent != null ? parent.Objects.FirstOrDefault() : null,
+                root.Objects.LastOrDefault(), root.Objects.FirstOrDefault()));
         }
 
-        public string GetName(ObjectGroup oldGroup, ObjectGroup newGroup)
+        public string GetName(ObjectInfo<object> objectInfo)
         {
             var name = PropertyName;
             if (_propertyInfo.DeclaringType != null)
@@ -172,7 +162,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             var localizer = CustomLocalizer;
             if (localizer != null)
-                name = localizer.Localize(oldGroup, newGroup) ?? name;
+                name = localizer.Localize(objectInfo) ?? name;
 
             return "{0:" + name + "}"; // Not L10N
         }
@@ -205,6 +195,7 @@ namespace pwiz.Skyline.Model.AuditLog
             propertyInfo.DeclaringType,
             propertyInfo.GetValue)
         {
+            _propertyInfo = propertyInfo;
         }
 
         public PropertyInfoWrapper(string name, Type propertyType, Type declaringType, Func<object, object> getValue)
@@ -219,6 +210,10 @@ namespace pwiz.Skyline.Model.AuditLog
         public Type PropertyType { get; set; }
         public Type DeclaringType { get; set; }
         public Func<object, object> GetValue { get; set; }
+
+        // For debugging
+        // ReSharper disable once NotAccessedField.Local
+        private PropertyInfo _propertyInfo;
     }
 
     public class RootProperty : Property

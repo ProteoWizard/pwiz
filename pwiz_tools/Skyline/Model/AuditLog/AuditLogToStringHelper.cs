@@ -10,7 +10,8 @@ namespace pwiz.Skyline.Model.AuditLog
     {
         private static readonly Dictionary<Type, Func<object, string>> _conversionFuncs = new Dictionary<Type, Func<object, string>>
         {
-            { typeof(Brush), BrushToString }
+            { typeof(Brush), BrushToString },
+            { typeof(Uri), UriToString }
         };
 
         public static string InvariantToString(object obj)
@@ -53,6 +54,11 @@ namespace pwiz.Skyline.Model.AuditLog
             var solidBrush = obj as SolidBrush;
             var color = solidBrush == null ? new Pen((Brush)obj).Color : solidBrush.Color;
             return RgbHexColor.GetHex(color);
+        }
+
+        private static string UriToString(object obj)
+        {
+            return ((Uri)obj).ToString();
         }
     }
 }

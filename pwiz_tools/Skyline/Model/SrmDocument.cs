@@ -2398,22 +2398,6 @@ namespace pwiz.Skyline.Model
         #endregion
     }
 
-    public class ObjectPair<T>
-    {
-        protected ObjectPair(T oldObject, T newObject)
-        {
-            OldObject = oldObject;
-            NewObject = newObject;
-        }
-
-        public static ObjectPair<T> Create(T oldDoc, T newDoc)
-        {
-            return new ObjectPair<T>(oldDoc, newDoc);
-        }
-
-        public T OldObject { get; private set; }
-        public T NewObject { get; private set; }
-    }
 
     public class SrmDocumentPair : ObjectPair<SrmDocument>
     {
@@ -2425,6 +2409,11 @@ namespace pwiz.Skyline.Model
         public new static SrmDocumentPair Create(SrmDocument oldDoc, SrmDocument newDoc)
         {
             return new SrmDocumentPair(oldDoc, newDoc);
+        }
+
+        public ObjectPair<object> ToObjectType()
+        {
+            return Transform(doc => (object) doc);
         }
 
         public SrmDocument OldDoc { get { return OldObject; } }

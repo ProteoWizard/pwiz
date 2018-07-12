@@ -700,9 +700,9 @@ namespace pwiz.Skyline.FileUI
             [Track]
             public string Suffix { get; private set; }
 
-            public object DefaultObject
+            public object GetDefaultObject(ObjectInfo<object> info)
             {
-                get { return EMPTY; }
+                return EMPTY;
             }
         }
 

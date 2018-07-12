@@ -42,6 +42,11 @@ namespace pwiz.Skyline.Model.AuditLog
             Name = name;
         }
 
+        public PropertyName SubProperty(string name)
+        {
+            return new PropertyName(this, name);
+        }
+
         public PropertyName SubProperty(PropertyName propertyName)
         {
             return ChangeProp(ImClone(propertyName), im => im.Parent = this);

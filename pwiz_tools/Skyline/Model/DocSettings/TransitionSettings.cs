@@ -612,7 +612,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        private static string AdductListToString(IList<Adduct> list)
+        public static string AdductListToString(IList<Adduct> list)
         {
             return list.ToArray().ToString(", "); // Not L10N? Internationalization of comma?
         }
@@ -2281,9 +2281,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
-            protected override string Localize(object oldObj, object newObj)
+            protected override string Localize(ObjectPair<object> pair)
             {
-                return LocalizeInternal(newObj) ?? LocalizeInternal(oldObj);
+                return LocalizeInternal(pair.NewObject) ?? LocalizeInternal(pair.OldObject);
             }
 
             public override string[] PossibleResourceNames
@@ -2328,7 +2328,16 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public double? PrecursorResMz { get; private set; }
 
-        [TrackChildren]
+        private class DefaultEnrichments : DefaultValues
+        {
+            protected override IEnumerable<object> _values
+            {
+                get { yield return IsotopeEnrichments.DEFAULT; }
+            }
+        }
+
+
+        [TrackChildren(defaultValues: typeof(DefaultEnrichments))]
         public IsotopeEnrichments IsotopeEnrichments { get; private set; }
 
         public IsotopeAbundances IsotopeAbundances

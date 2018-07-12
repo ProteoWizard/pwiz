@@ -465,6 +465,7 @@ namespace pwiz.Skyline.Util
         [Track]
         public int AdductCharge { get; private set; }  // The charge that the adduct gives to a molecule
 
+        [Track]
         public string AdductFormula // Return adduct description - will produce [M+H] format for protonation
         {
             get

@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Util;
@@ -49,7 +50,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         AbovePValueCutoff
     }
 
-    public class CutoffSettings
+    public class CutoffSettings : IAuditLogComparable
     {
         public CutoffSettings(double log2FoldChangeCutoff, double pValueCutoff)
         {
@@ -79,6 +80,11 @@ namespace pwiz.Skyline.Model.GroupComparison
         public bool AnyValid
         {
             get { return FoldChangeCutoffValid || PValueCutoffValid; }
+        }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return null;
         }
     }
 

@@ -449,6 +449,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return string.Format("{0} {1} c-term & {2} n-term", Name, textC, textN); // Not L10N
         }
 
+        public override string AuditLogText
+        {
+            get { return ToString(); }
+        }
+
         private static string ToString(string cleavage, string restrict, SequenceTerminus term)
         {
             if (string.IsNullOrEmpty(cleavage))

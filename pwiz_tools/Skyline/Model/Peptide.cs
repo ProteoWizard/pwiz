@@ -819,7 +819,7 @@ namespace pwiz.Skyline.Model
             return new Target(CustomMolecule.FromSerializableString(val));
         }
 
-        public string AuditLogText { get { return Sequence; } }
+        public string AuditLogText { get { return ToSerializableString(); } }
         public bool IsName { get { return true; } }
     }
 }

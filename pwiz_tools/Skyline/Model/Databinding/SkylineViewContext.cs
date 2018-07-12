@@ -848,7 +848,9 @@ namespace pwiz.Skyline.Model.Databinding
             var skylineWindow = ((SkylineDataSchema)DataSchema).SkylineWindow;
             if (null != skylineWindow)
             {
-                skylineWindow.ModifyDocument(Resources.SkylineViewContext_DeleteDocNodes_Delete_items, doc => DeleteNodes(doc, identityPaths));
+                skylineWindow.ModifyDocument(Resources.SkylineViewContext_DeleteDocNodes_Delete_items,
+                    doc => DeleteNodes(doc, identityPaths),
+                    docPair => SkylineWindow.DiffDocNodes(MessageType.deleted_targets, docPair, identityPaths.Count));
             }
         }
 

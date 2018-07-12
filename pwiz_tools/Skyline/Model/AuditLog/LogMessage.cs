@@ -78,7 +78,6 @@ namespace pwiz.Skyline.Model.AuditLog
         inserted_transitions,
         accepted_proteins,
         accept_peptides,
-        accept_peptides_no_options,
         sort_protein_name,
         sort_protein_accession,
         sort_protein_preferred_name,
@@ -94,7 +93,46 @@ namespace pwiz.Skyline.Model.AuditLog
         imported_peak_boundaries,
         removed_unrecognized_peptides,
         removed_unrecognized_files,
-        removed_unrecognized_charge_states
+        removed_unrecognized_charge_states,
+        imported_fasta,
+        kept_empty_proteins,
+        removed_empty_proteins,
+        imported_assay_library,
+        imported_transition_list,
+        imported_spectral_library_intensities,
+        imported_doc,
+        imported_annotations,
+
+        set_included_standard,
+        set_excluded_standard,
+        canceled_import,
+        removed_below_cutoffs,
+        excluded_peptides,
+        added_spectral_library,
+        added_small_molecule_precursor,
+        added_small_molecule_transition,
+        added_small_molecule,
+        added_irt_standard_peptides,
+        renamed_node,
+        added_new_peptide_group,
+        added_peptides_to_peptide_group,
+        drag_and_dropped_nodes,
+        pasted_small_molecule_transition_list,
+        applied_peak_subsequent,
+        applied_peak_all,
+        removed_all_peaks_from,
+        removed_peak_from,
+        picked_peak,
+        changed_peak_start,
+        changed_peak_end,
+        changed_peak_bounds,
+        changed_peak_start_all,
+        changed_peak_end_all,
+        removed_rt_outliers,
+        removed_peptides_above_cutoff,
+        added_peptide_from_library,
+        added_all_peptides_from_library,
+        matched_modifications_of_library
     }
 
     [XmlRoot(XML_ROOT)]
@@ -102,6 +140,7 @@ namespace pwiz.Skyline.Model.AuditLog
     {
         public const string XML_ROOT = "message"; // Not L10N
         public const string MISSING = "{2:Missing}"; // Not L10N
+        public const string EMPTY = "{2:Empty}"; // Not L10N
 
         public LogMessage(LogLevel level, MessageType type, string reason, bool expanded, params string[] names)
         {

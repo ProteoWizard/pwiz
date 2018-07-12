@@ -59,6 +59,7 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.GroupComparison;
@@ -84,7 +85,8 @@ namespace pwiz.Skyline
             IDocumentUIContainer,
             IProgressMonitor,
             ILibraryBuildNotificationContainer,
-            IToolMacroProvider
+            IToolMacroProvider,
+            IModifyDocumentContainer
     {
         private SequenceTreeForm _sequenceTreeForm;
         private ImmediateWindow _immediateWindow;
@@ -114,6 +116,18 @@ namespace pwiz.Skyline
         private readonly Timer _timerGraphs;
         private readonly List<BackgroundLoader> _backgroundLoaders;
         private readonly object _documentChangeLock = new object();
+
+        [DllImport("User32")]
+        private static extern int GetGuiResources(IntPtr hProcess, int uiFlags);
+
+        public static int GdiObjects
+        {
+            get
+            {
+                using (var p = Process.GetCurrentProcess())
+                    return GetGuiResources(p.Handle, 0);
+            }
+        }
 
         /// <summary>
         /// Constructor for the main window of the Skyline program.
@@ -628,7 +642,10 @@ namespace pwiz.Skyline
 
         public void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act)
         {
-            ModifyDocument(description, null, act, null, null);
+            if (!Program.FunctionalTest)
+                throw new Exception("Function only to be used in testing, use overload with log function");
+
+            ModifyDocument(description, null, act, null, null, null);
         }
 
         public void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc)
@@ -636,7 +653,7 @@ namespace pwiz.Skyline
             ModifyDocument(description, null, act, null, null, logFunc);
         }
 
-        public void ModifyDocument(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified, Func<SrmDocumentPair, AuditLogEntry> logFunc = null)
+        public void ModifyDocument(string description, IUndoState undoState, Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified, Func<SrmDocumentPair, AuditLogEntry> logFunc)
         {
             try
             {
@@ -660,8 +677,8 @@ namespace pwiz.Skyline
                             if(!string.IsNullOrEmpty(entry.ExtraInfo))
                                 File.AppendAllText(path, "Extra info:\r\n" + entry.ExtraInfo + "\r\n");
                             File.AppendAllText(path, "---\r\n");
-
-                            entry = entry.ChangeUndoAction(UndoAuditLogEntry);
+                            var currentCount = _undoManager.UndoCount;
+                            entry = entry.ChangeUndoAction(e => _undoManager.UndoRestore(_undoManager.UndoCount - currentCount));
                             entry.AddToDocument(Document, ModifyDocumentNoUndo);
                         }  
                     }   
@@ -679,19 +696,6 @@ namespace pwiz.Skyline
             {
                 MessageDlg.Show(this, TextUtil.LineSeparate(Resources.SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document, x.Message)); // Not L10N
             }
-        }
-
-        public void UndoAuditLogEntry(AuditLogEntry entry)
-        {
-            var entries = Document.AuditLog.AuditLogEntries;
-            var index = entries.IndexOf(e => ReferenceEquals(e, entry));
-            var undoIndex = entries.Count - index - 1;
-
-            Assume.IsTrue(undoIndex >= 0 && undoIndex < _undoManager.UndoCount,
-                string.Format("Attempting to undo index {0} (count = {1})", undoIndex, _undoManager.UndoCount)); // Not L10N
-            Assume.AreEqual(_undoManager.UndoDescriptions.ElementAt(undoIndex), entry.UndoRedo.ToString());
-
-            _undoManager.UndoRestore(undoIndex);
         }
 
         public void ModifyDocumentNoUndo(Func<SrmDocument, SrmDocument> act)
@@ -2450,42 +2454,29 @@ namespace pwiz.Skyline
                 {
                     ModifyDocument(Resources.SkylineWindow_ShowRefineDlg_Refine,
                         doc => refineDlg.RefinementSettings.Refine(doc),
-                        docPair =>
-                        {
-                            var rootProp = RootProperty.Create(typeof(RefinementSettings));
-                            var settings = Reflector.ToString(docPair,
-                                rootProp,
-                                refineDlg.RefinementSettings);
-
-                            var tree = Reflector<RefinementSettings>.BuildDiffTree(docPair,
-                                rootProp,
-                                refineDlg.RefinementSettings);
-
-                            var message = new AuditLogEntry.MessageTypeNamesPair(MessageType.refined_targets);
-                            return AuditLogEntry
-                                .CreateSettingsChangeEntry(docPair.OldDoc.FormatVersion, tree, settings)
-                                .ChangeUndoRedo(message)
-                                .ChangeSummary(message);
-                        });
+                        docPair => AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.refined_targets,
+                            refineDlg.RefinementSettings));
                 }
             }
         }
 
-        public AuditLogEntry DiffDocNodes(MessageType action, SrmDocumentPair documentPair, params string[] actionParameters)
+        public static AuditLogEntry DiffDocNodes(MessageType action, SrmDocumentPair documentPair, params object[] actionParameters)
         {
             return DiffDocNodesWithExtraInfo(action, documentPair, null, actionParameters);
         }
 
-        public AuditLogEntry DiffDocNodesWithExtraInfo(MessageType action, SrmDocumentPair documentPair,
-            string extraInfo, params string[] actionParameters)
+        public static AuditLogEntry DiffDocNodesWithExtraInfo(MessageType action, SrmDocumentPair documentPair,
+            string extraInfo, params object[] actionParameters)
         {
             var property = RootProperty.Create(typeof(Targets));
-            var diffNode = Reflector<Targets>.BuildDiffTree(documentPair, property, documentPair.OldDoc.Targets, documentPair.NewDoc.Targets, DateTime.Now);
+            var objInfo = new ObjectInfo<object>(documentPair.OldDoc.Targets, documentPair.NewDoc.Targets,
+                documentPair.OldDoc, documentPair.NewDoc, documentPair.OldDoc, documentPair.NewDoc);
+            var diffNode = Reflector<Targets>.BuildDiffTree(objInfo, property, DateTime.Now);
 
             if (diffNode.Root != null)
             {
-                var message = new AuditLogEntry.MessageTypeNamesPair(action, actionParameters);
-                var entry = AuditLogEntry.CreateSettingsChangeEntry(documentPair.OldDoc.FormatVersion, diffNode, extraInfo)
+                var message = new MessageTypeNamesPair(action, actionParameters);
+                var entry = AuditLogEntry.CreateSettingsChangeEntry(documentPair.OldDoc, diffNode, extraInfo)
                     .ChangeUndoRedo(message)
                     /*.ChangeSummary(message)*/;
                 return entry;
@@ -2665,8 +2656,8 @@ namespace pwiz.Skyline
                 {
                     var refinementSettings = new RefinementSettings { NumberOfDecoys = decoysDlg.NumDecoys, DecoysMethod = decoysDlg.DecoysMethod };
                     ModifyDocument(Resources.SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys, refinementSettings.GenerateDecoys,
-                        docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc.FormatVersion,
-                            new AuditLogEntry.MessageTypeNamesPair(MessageType.added_peptide_decoys,
+                        docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
+                            new MessageTypeNamesPair(MessageType.added_peptide_decoys,
                                 refinementSettings.NumberOfDecoys.ToString(), refinementSettings.DecoysMethod)));
 
                     var nodePepGroup = DocumentUI.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy);
@@ -2990,7 +2981,7 @@ namespace pwiz.Skyline
                 listProteins.Sort(comparison);
                 listDecoy.Sort(comparison);
                 return (SrmDocument)doc.ChangeChildrenChecked(listIrt.Concat(listProteins).Concat(listDecoy).ToArray());
-            }, docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc.FormatVersion, new AuditLogEntry.MessageTypeNamesPair(type)));
+            }, docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, new MessageTypeNamesPair(type)));
         }
 
         public void sortProteinsByNameToolStripMenuItem_Click(object sender, EventArgs e)
@@ -3073,7 +3064,7 @@ namespace pwiz.Skyline
                             var mass = transition.CustomIon.GetMass(massType);
                             var nodeTran = new TransitionDocNode(transition, null, mass, TransitionDocNode.TransitionQuantInfo.DEFAULT);
                             return (SrmDocument)doc.Add(groupPath, nodeTran);
-                        });
+                        }, docPair => DiffDocNodes(MessageType.added_small_molecule_transition, docPair, dlg.ResultCustomMolecule.DisplayName));
                     }
                 }
             }
@@ -3098,13 +3089,15 @@ namespace pwiz.Skyline
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
+                        TransitionGroup tranGroup = null;
+                        TransitionGroupDocNode tranGroupDocNode = null;
                         ModifyDocument(string.Format(Resources.SkylineWindow_AddSmallMolecule_Add_small_molecule_precursor__0_, dlg.ResultCustomMolecule.DisplayName), doc =>
                         {
-                            var tranGroup = new TransitionGroup(nodePep.Peptide, dlg.Adduct, dlg.IsotopeLabelType);
-                            var tranGroupDocNode = new TransitionGroupDocNode(tranGroup, Annotations.EMPTY,
+                            tranGroup = new TransitionGroup(nodePep.Peptide, dlg.Adduct, dlg.IsotopeLabelType);
+                            tranGroupDocNode = new TransitionGroupDocNode(tranGroup, Annotations.EMPTY,
                                 doc.Settings, null, null, dlg.ResultExplicitTransitionGroupValues, null, GetDefaultPrecursorTransitions(doc, tranGroup), true);
                             return (SrmDocument)doc.Add(pepPath, tranGroupDocNode);
-                        });
+                        }, docPair => DiffDocNodes(MessageType.added_small_molecule_precursor, docPair, tranGroupDocNode.AuditLogText));
                     }
                 }
             }
@@ -3143,7 +3136,7 @@ namespace pwiz.Skyline
                             var nodePepNew = new PeptideDocNode(peptide, Document.Settings, null, null,
                                 dlg.ResultRetentionTimeInfo, new[] { tranGroupDocNode }, true);
                             return (SrmDocument)doc.Add(pepGroupPath, nodePepNew);
-                        });
+                        }, docPair => DiffDocNodes(MessageType.added_small_molecule, docPair, dlg.ResultCustomMolecule.DisplayName));
                     }
                 }
             }
@@ -3297,7 +3290,7 @@ namespace pwiz.Skyline
                         }
                         var newStandardPepGroup = standardPepGroup.ChangeChildren(pepList);
                         return (SrmDocument) doc.ReplaceChild(newStandardPepGroup);
-                    });
+                    }, docPair => AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.added_irt_standard_peptides, dlg));
                 }
             }
         }
@@ -3545,21 +3538,25 @@ namespace pwiz.Skyline
             return true;
         }
 
+        public SrmSettings StoreNewSettings(SrmSettings settings)
+        {
+            // Edited settings always use the default name.  Saved settings
+            // by nature have never been changed.  The way to store settings
+            // other than to the default name is SaveSettings().
+            string defaultName = SrmSettingsList.DefaultName;
+            // MakeSavable will also remove any results information
+            Settings.Default.SrmSettingsList[0] = settings.MakeSavable(defaultName);
+            // Document must have the same name as the saved version.
+            if (!Equals(settings.Name, defaultName))
+                settings = (SrmSettings)settings.ChangeName(defaultName);
+            return settings;
+        }
+
         public bool ChangeSettings(SrmSettings newSettings, bool store, string message = null, IUndoState undoState = null,
             SrmSettingsChangeMonitor monitor = null, Action onModifyingAction = null, Action onModifiedAction = null)
         {
             if (store)
-            {
-                // Edited settings always use the default name.  Saved settings
-                // by nature have never been changed.  The way to store settings
-                // other than to the default name is SaveSettings().
-                string defaultName = SrmSettingsList.DefaultName;
-                // MakeSavable will also remove any results information
-                Settings.Default.SrmSettingsList[0] = newSettings.MakeSavable(defaultName);
-                // Document must have the same name as the saved version.
-                if (!Equals(newSettings.Name, defaultName))
-                    newSettings = (SrmSettings)newSettings.ChangeName(defaultName);
-            }
+                newSettings = StoreNewSettings(newSettings);
 
             ModifyDocument(message ?? Resources.SkylineWindow_ChangeSettings_Change_settings, undoState,
                 doc => doc.ChangeSettings(newSettings, monitor), onModifyingAction, onModifiedAction, AuditLogEntry.SettingsLogFunction);
@@ -4244,13 +4241,14 @@ namespace pwiz.Skyline
                                 docNew.Settings.UpdateDefaultModifications(false);
                             }
                             return docNew;
-                        });
+                        }, docPair => DiffDocNodesWithExtraInfo(MessageType.added_new_peptide_group, docPair, labelText, peptideGroupName));
                     }
                     else
                     {
                         // Add peptide to existing protein
-                        newPeptideGroupDocNode = new PeptideGroupDocNode(oldPeptideGroupDocNode.PeptideGroup, oldPeptideGroupDocNode.Annotations, oldPeptideGroupDocNode.Name,
-                            oldPeptideGroupDocNode.Description, peptideDocNodes.ToArray(), false);
+                        newPeptideGroupDocNode = new PeptideGroupDocNode(oldPeptideGroupDocNode.PeptideGroup,
+                            oldPeptideGroupDocNode.Annotations, oldPeptideGroupDocNode.ProteinMetadata,
+                            peptideDocNodes.ToArray(), false);
                         ModifyDocument(modifyMessage, doc =>
                         {
                             var docNew = (SrmDocument) doc.ReplaceChild(newPeptideGroupDocNode);
@@ -4261,7 +4259,7 @@ namespace pwiz.Skyline
                                 docNew.Settings.UpdateDefaultModifications(false);
                             }
                             return docNew;
-                        });
+                        }, docPair => DiffDocNodesWithExtraInfo(MessageType.added_peptides_to_peptide_group, docPair, labelText, newPeptideGroupDocNode.ProteinMetadata.Name));
                     }
                 }
                 e.Node.Text = EmptyNode.TEXT_EMPTY;
@@ -4274,7 +4272,7 @@ namespace pwiz.Skyline
                 if (nodeTree != null && e.Label != null && !Equals(nodeTree.Text, e.Label))
                 {
                     ModifyDocument(string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Edit_name__0__, e.Label), doc => (SrmDocument) // Not L10N
-                        doc.ReplaceChild(nodeTree.DocNode.ChangeName(e.Label)), docPair => DiffDocNodes(MessageType.renamed_proteins, docPair, nodeTree.Text));
+                        doc.ReplaceChild(nodeTree.DocNode.ChangeName(e.Label)), docPair => DiffDocNodes(MessageType.renamed_node, docPair, nodeTree.Text));
                 }
             }
             // Put the focus back on the sequence tree
@@ -4462,7 +4460,7 @@ namespace pwiz.Skyline
 
             SrmTreeNode nodeDrop = GetSrmTreeNodeAt(e.X, e.Y);
             IdentityPath pathTarget = SrmTreeNode.GetSafePath(nodeDrop);
-            
+
             for (int i = 0; i < nodeSourcesArray.Length; i++)
             {
                 var nodeSource = nodeSourcesArray[i];
@@ -4484,6 +4482,10 @@ namespace pwiz.Skyline
             SequenceTree.SelectedPath = sourcePaths.First();
             SequenceTree.SelectedPaths = sourcePaths;
 
+            var targetNode = Document.FindNode(pathTarget);
+            var pepGroup = (targetNode as PeptideGroupDocNode) ??
+                           (PeptideGroupDocNode) Document.FindNode(nodeDrop.SrmParent.Path);
+
             ModifyDocument(Resources.SkylineWindow_sequenceTree_DragDrop_Drag_and_drop, doc =>
                                                 {
                                                     foreach (IdentityPath pathSource in sourcePaths)
@@ -4493,7 +4495,7 @@ namespace pwiz.Skyline
                                                         selectedPaths.Add(selectPath);
                                                     }
                                                     return doc;
-                                                });
+                                                }, docPair => DiffDocNodes(MessageType.drag_and_dropped_nodes, docPair, nodeSources.Count, pepGroup.Name));
 
             SequenceTree.SelectedPath = selectedPaths.First();
             SequenceTree.SelectedPaths = selectedPaths;

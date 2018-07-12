@@ -33,6 +33,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
@@ -251,14 +252,33 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
         }
 
-        private class PropertiesCutoffSettings : CutoffSettings
+        public class PropertiesCutoffSettings : CutoffSettings
         {
+            protected class FoldChangeDefaults : DefaultValues
+            {
+                protected override IEnumerable<object> _values
+                {
+                    get { yield return double.NaN; yield return 0.0; }
+                }
+            }
+
+            protected class PValueDefaults : DefaultValues
+            {
+                public override bool IsDefault(object obj, object parentObject)
+                {
+                    var dbl = (double)obj;
+                    return double.IsNaN(dbl) || dbl < 0.0;
+                }
+            }
+
+            [Track(defaultValues: typeof(FoldChangeDefaults))]
             public override double Log2FoldChangeCutoff
             {
                 get { return Settings.Default.Log2FoldChangeCutoff; }
                 set { Settings.Default.Log2FoldChangeCutoff = value; } 
             }
 
+            [Track(defaultValues: typeof(FoldChangeDefaults))]
             public override double PValueCutoff
             {
                 get { return Settings.Default.PValueCutoff; }
@@ -584,14 +604,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     var protein = (PeptideGroupDocNode) skylineWindow.DocumentUI.FindNode(selectedPath);
                     var peptide = (PeptideDocNode) skylineWindow.DocumentUI.FindNode(identityPath);
 
-                    var peptides = protein.Peptides.Except(new[] { peptide });
+                    var peptides = protein.Molecules.Except(new[] { peptide });
                     list.Remove(selectedPath);
                     list.AddRange(peptides.Select(p => new IdentityPath(selectedPath, p.Id)));
                 }
                 else if (selectedPath.Depth > identityPath.Depth)
                 {
                     var protein = (PeptideGroupDocNode) skylineWindow.DocumentUI.FindNode(identityPath);
-                    var peptidePaths = protein.Peptides.Select(p => new IdentityPath(identityPath, p.Id));
+                    var peptidePaths = protein.Molecules.Select(p => new IdentityPath(identityPath, p.Id));
 
                     list = list.Except(list.Where(path => peptidePaths.Contains(path))).ToList();
                 }
@@ -751,6 +771,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             return row.Peptide != null ? row.Peptide.DocNode.Id.GlobalIndex : row.Protein.DocNode.Id.GlobalIndex;
         }
 
+
         public void RemoveBelowCutoffs()
         {
             var rows = _bindingListSource.OfType<RowItem>()
@@ -767,7 +788,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     .Distinct()
                     .ToArray();
 
-            _skylineWindow.ModifyDocument(GroupComparisonStrings.FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs, document => (SrmDocument)document.RemoveAll(indices));
+            _skylineWindow.ModifyDocument(GroupComparisonStrings.FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs, document => (SrmDocument)document.RemoveAll(indices),
+                docPair =>
+                {
+                    var entry = AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.removed_below_cutoffs,
+                        indices.Length, GroupComparisonDef.Name);
+
+                    var settings =
+                        AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.none, (PropertiesCutoffSettings)CutoffSettings);
+
+                    return entry.ChangeExtraInfo(settings.ExtraInfo).AppendAllInfo(settings.AllInfoNoUndoRedo);
+                });
         }
 
         private void OnSelectionClick(object o, EventArgs eventArgs)

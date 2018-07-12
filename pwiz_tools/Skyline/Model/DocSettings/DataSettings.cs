@@ -64,6 +64,7 @@ namespace pwiz.Skyline.Model.DocSettings
         [TrackChildren(ignoreName:true)]
         public ViewSpecList ViewSpecList { get; private set; }
 
+        [Track]
         public Uri PanoramaPublishUri { get; private set; }
 
         public string DocumentGuid { get; private set; }

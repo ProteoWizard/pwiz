@@ -94,7 +94,15 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public string AuditLogText { get { return PeptideTreeNode.GetLabel(this, string.Empty); } }
+        public string AuditLogText
+        {
+            get
+            {
+                var label = PeptideTreeNode.GetLabel(this, string.Empty);
+                return (CustomMolecule != null && !string.IsNullOrEmpty(CustomMolecule.Formula)) ? string.Format("{0} ({1})", label, CustomMolecule.Formula) : label; // Not L10N
+            }
+        }
+
         public bool IsName { get { return true; } }
 
         protected override IList<DocNode> OrderedChildren(IList<DocNode> children)
@@ -112,6 +120,7 @@ namespace pwiz.Skyline.Model
 
         public Peptide Peptide { get { return (Peptide)Id; } }
 
+        [TrackChildren(defaultValues: typeof(DefaultValuesNull))]
         public CustomMolecule CustomMolecule { get { return Peptide.CustomMolecule; } }
 
         public PeptideModKey Key { get { return new PeptideModKey(Peptide, ExplicitMods); } }
@@ -125,6 +134,7 @@ namespace pwiz.Skyline.Model
 
         public ModifiedSequenceMods SourceKey { get; private set; }
 
+        [TrackChildren(defaultValues:typeof(DefaultValuesNull))]
         public ExplicitRetentionTimeInfo ExplicitRetentionTime { get; private set; } // For transition lists with explicit values for RT
 
         [Track(defaultValues:typeof(DefaultValuesNull))]
@@ -594,7 +604,7 @@ namespace pwiz.Skyline.Model
         public int TransitionGroupCount { get { return GetCount((int)Level.TransitionGroups); } }
         public int TransitionCount { get { return GetCount((int)Level.Transitions); } }
 
-        [TrackChildren(ignoreName:true)]
+        [TrackChildren(ignoreName: true, defaultValues: typeof(DefaultValuesNullOrEmpty))]
         public IEnumerable<TransitionGroupDocNode> TransitionGroups
         {
             get
@@ -1902,7 +1912,7 @@ namespace pwiz.Skyline.Model
         public TransitionGroupDocNode NodeGroup { get; private set; }
     }
 
-    public class ExplicitRetentionTimeInfo
+    public class ExplicitRetentionTimeInfo : IAuditLogComparable
     {
         public ExplicitRetentionTimeInfo(double retentionTime, double? retentionTimeWindow)
         {
@@ -1910,7 +1920,9 @@ namespace pwiz.Skyline.Model
             RetentionTimeWindow = retentionTimeWindow;
         }
 
+        [Track]
         public double RetentionTime { get; private set; }
+        [Track]
         public double? RetentionTimeWindow { get; private set; }
 
         public static readonly ExplicitRetentionTimeInfo EMPTY = new ExplicitRetentionTimeInfo(0, null);
@@ -1939,5 +1951,9 @@ namespace pwiz.Skyline.Model
             return result;
         }
 
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return EMPTY;
+        }
     }
 }

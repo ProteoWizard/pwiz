@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Controls
     /// </summary>
     public class SequenceTree : TreeViewMS, ITipDisplayer
     {
-        private Image _dropImage;
+//        private Image _dropImage;
         private TreeNode _nodeCapture;
         private IdentityPath _nodeEditPath;
         private Timer _pickTimer;
@@ -817,10 +817,10 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        protected Image DropImage
-        {
-            get { return _dropImage ?? (_dropImage = Resources.DropImage); }
-        }
+//        protected Image DropImage
+//        {
+//            get { return _dropImage ?? (_dropImage = Resources.DropImage); }
+//        }
 
         protected TreeNode NodeCapture
         {
@@ -848,15 +848,18 @@ namespace pwiz.Skyline.Controls
         {
             // Size for arrowhead image, centered on the node
             Rectangle rectNode = ((TreeNodeMS)node).BoundsMS;
-            Image img = DropImage;
+            //Image img = DropImage;
             return new Rectangle(rectNode.X + rectNode.Width + 5,
                                  rectNode.Y,
-                                 img.Width,
+                                 10,
                                  rectNode.Height);
         }
 
         protected Point GetPickerLocation(TreeNode node)
         {
+            Bitmap bmp;
+            Brush b;
+           
             return GetPickerLocation(GetDropRect(node));
         }
 
@@ -881,18 +884,18 @@ namespace pwiz.Skyline.Controls
 
         protected void PaintDropImage()
         {
-            if (_nodeCapture != null)
-            {
-                using (Graphics g = CreateGraphics())
-                {
-                    Rectangle dropRect = DropRect;
-                    Point pt = dropRect.Location;
-                    // Center the image in the rectangle.
-                    pt.Y += dropRect.Height/2 - DropImage.Height/2;
-                    
-                    g.DrawImage(DropImage, pt);
-                }
-            }
+//            if (_nodeCapture != null)
+//            {
+//                using (Graphics g = CreateGraphics())
+//                {
+//                    Rectangle dropRect = DropRect;
+//                    Point pt = dropRect.Location;
+//                    // Center the image in the rectangle.
+//                    pt.Y += dropRect.Height/2 - DropImage.Height/2;
+//                    
+//                    g.DrawImage(DropImage, pt);
+//                }
+//            }
         }
 
         protected override void OnGotFocus(EventArgs e)

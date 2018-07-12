@@ -46,6 +46,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             DoAutoRetry = Settings.Default.ImportResultsDoAutoRetry;
         }
 
+        public ImportResultsSettings ImportSettings
+        {
+            get { return new ImportResultsSettings(ExcludeSpectrumSourceFiles, this); }
+        }
         public event EventHandler<ResultsFilesEventArgs> ResultsFilesChanged;
         private Form WizardForm { get { return FormEx.GetParentForm(this); } }
 

@@ -34,6 +34,11 @@ namespace pwiz.Common.Collections
                 action(item);
         }
 
+        public static IList<TItem> FromSingleItem<TItem>(TItem item)
+        {
+            return new[] { item };
+        }
+
         public static bool EqualsDeep<TKey,TValue>(IDictionary <TKey,TValue> dict1, IDictionary<TKey,TValue> dict2)
         {
             if (dict1.Count != dict2.Count)

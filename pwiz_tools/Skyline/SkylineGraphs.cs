@@ -1996,7 +1996,7 @@ namespace pwiz.Skyline
                 {
                     var resultsIndex = SelectedResultsIndex;
                     var resultsFile = _listGraphChrom[resultsIndex].SelectedFileIndex;
-                    longWait.PerformWork(this, 800, monitor => doc = PeakMatcher.ApplyPeak(Document, nodePepTree, nodeTranGroup, resultsIndex, resultsFile, subsequent, monitor));
+                    longWait.PerformWork(this, 800, monitor => doc = PeakMatcher.ApplyPeak(Document, nodePepTree, ref nodeTranGroup, resultsIndex, resultsFile, subsequent, monitor));
                 }
                 catch (Exception x)
                 {
@@ -2005,7 +2005,16 @@ namespace pwiz.Skyline
 
                 if (!longWait.IsCanceled && doc != null && !ReferenceEquals(doc, Document))
                 {
-                    ModifyDocument(Resources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, document => doc);
+                    // ReSharper disable once PossibleNullReferenceException
+                    var path = PropertyName.ROOT
+                        .SubProperty(((PeptideGroupTreeNode) nodePepTree.SrmParent).DocNode.AuditLogText)
+                        .SubProperty(nodePepTree.DocNode.AuditLogText)
+                        .SubProperty(nodeTranGroup.AuditLogText);
+
+                    var msg = subsequent ? MessageType.applied_peak_subsequent : MessageType.applied_peak_all;
+
+                    ModifyDocument(Resources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak, document => doc,
+                        docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, msg, path.ToString()));
                 }
             }
         }
@@ -2065,7 +2074,15 @@ namespace pwiz.Skyline
                 // ReSharper disable once PossibleNullReferenceException
                 ModifyDocument(string.Format(Resources.SkylineWindow_removePeakContextMenuItem_Click_Remove_all_peaks_from__0_, nodePepTree.DocNode.ModifiedSequenceDisplay),
                     document => nodeGroups.Aggregate(Document,
-                            (doc, nodeGroup) => RemovePeakInternal(doc, SelectedResultsIndex, nodeGroup.Item2, nodeGroup.Item1, nodeTran)));
+                            (doc, nodeGroup) => RemovePeakInternal(doc, SelectedResultsIndex, nodeGroup.Item2, nodeGroup.Item1, nodeTran)),
+                    docPair =>
+                    {
+                        var peptideGroup = ((PeptideGroupTreeNode) nodePepTree.SrmParent).DocNode;
+                        var name = PropertyName.ROOT.SubProperty(peptideGroup.AuditLogText)
+                            .SubProperty(nodePepTree.DocNode.AuditLogText);
+                        return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.removed_all_peaks_from, name,
+                            docPair.OldDoc.MeasuredResults.Chromatograms[SelectedResultsIndex].Name);
+                    });
             }
         }
 
@@ -2075,7 +2092,22 @@ namespace pwiz.Skyline
                 ? string.Format(Resources.SkylineWindow_RemovePeak_Remove_all_peaks_from__0__, ChromGraphItem.GetTitle(nodeGroup))
                 : string.Format(Resources.SkylineWindow_RemovePeak_Remove_peak_from__0__, ChromGraphItem.GetTitle(nodeTran));
 
-            ModifyDocument(message, doc => RemovePeakInternal(doc, SelectedResultsIndex, groupPath, nodeGroup, nodeTran));
+            ModifyDocument(message, doc => RemovePeakInternal(doc, SelectedResultsIndex, groupPath, nodeGroup, nodeTran),
+                docPair =>
+                {
+                    var msg = nodeTran == null ? MessageType.removed_all_peaks_from : MessageType.removed_peak_from;
+
+                    var peptide = (PeptideDocNode) docPair.OldDoc.FindNode(groupPath.Parent);
+                    var peptideGroup = (PeptideGroupDocNode) docPair.OldDoc.FindNode(groupPath.Parent.Parent);
+
+                    var name = PropertyName.ROOT.SubProperty(peptideGroup.AuditLogText)
+                        .SubProperty(peptide.AuditLogText).SubProperty(nodeGroup.AuditLogText);
+                    if (nodeTran != null)
+                        name = name.SubProperty(nodeTran.AuditLogText);
+
+                    return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, msg, name,
+                        docPair.OldDoc.MeasuredResults.Chromatograms[SelectedResultsIndex].Name);
+                });
         }
 
         private SrmDocument RemovePeakInternal(SrmDocument document, int resultsIndex, IdentityPath groupPath,
@@ -2526,13 +2558,39 @@ namespace pwiz.Skyline
             try
             {
                 ModifyDocument(string.Format(Resources.SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_, e.RetentionTime), 
-                    doc => PickPeak(doc, e));
+                    doc => PickPeak(doc, e), docPair =>
+                    {
+                        var name = GetPropertyName(docPair.OldDoc, e.GroupPath, e.TransitionId);
+
+                        return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.picked_peak, name,
+                            e.RetentionTime, e.NameSet);
+                    });
             }
             finally
             {
                 if (graphChrom != null)
                     graphChrom.UnlockZoom();
             }
+        }
+
+        private static PropertyName GetPropertyName(SrmDocument doc, IdentityPath groupPath, Identity transitionId)
+        {
+            TransitionDocNode transitionDocNode = null;
+            var transitionGroupDocNode = (TransitionGroupDocNode)doc.FindNode(groupPath);
+            var peptideDocNode = (PeptideDocNode)doc.FindNode(groupPath.Parent);
+            var peptideGroupDocNode = (PeptideGroupDocNode)doc.FindNode(groupPath.Parent.Parent);
+
+            if (transitionId != null)
+                transitionDocNode = (TransitionDocNode)transitionGroupDocNode.FindNode(transitionId);
+
+            var name = PropertyName.ROOT.SubProperty(peptideGroupDocNode.AuditLogText)
+                .SubProperty(peptideDocNode.AuditLogText)
+                .SubProperty(transitionGroupDocNode.AuditLogText);
+
+            if (transitionDocNode != null)
+                name = name.SubProperty(transitionDocNode.AuditLogText);
+
+            return name;
         }
 
         private void graphChromatogram_ClickedChromatogram(object sender, ClickedChromatogramEventArgs e)
@@ -2638,13 +2696,43 @@ namespace pwiz.Skyline
                     message = Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peaks;
                 }
                 ModifyDocument(message,
-                    doc => ChangePeakBounds(Document, eMulti.Changes));
+                    doc => ChangePeakBounds(Document, eMulti.Changes), docPair =>
+                    {
+                        // TODO: consider that there could be other transitiongroups getting changed that are not in eMulti.Changes (see ChangePeakBounds and RelativeRT==Matching)
+                        var messages = eMulti.Changes.SelectMany(change => GetMessagesForPeakBoundsChange(GetPropertyName(docPair.OldDoc, change.GroupPath, change.Transition), change)).ToList();
+                        if (messages.Count == 1)
+                            return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, messages[0]);
+                        else
+                            return AuditLogEntry
+                                .CreateSimpleEntry(docPair.OldDoc, MessageType.changed_peak_bounds)
+                                .ChangeAllInfo(messages);
+                    });
             }
             finally
             {
                 if (graphChrom != null)
                     graphChrom.UnlockZoom();
             }
+        }
+
+        private List<MessageTypeNamesPair> GetMessagesForPeakBoundsChange(PropertyName name, ChangedPeakBoundsEventArgs args)
+        {
+            // TODO: handle PeakBoundsChangeType.both separately?
+            var singleTransitionDisplay = args.Transition != null;
+            var result = new List<MessageTypeNamesPair>();
+            if (args.ChangeType == PeakBoundsChangeType.start || args.ChangeType == PeakBoundsChangeType.both)
+                result.Add(new MessageTypeNamesPair(
+                    singleTransitionDisplay ? MessageType.changed_peak_start : MessageType.changed_peak_start_all,
+                    name, args.NameSet, args.FilePath.GetFileName(), args.StartTime));
+
+            if (args.ChangeType == PeakBoundsChangeType.end || args.ChangeType == PeakBoundsChangeType.both)
+            {
+                result.Add(new MessageTypeNamesPair(
+                    singleTransitionDisplay ? MessageType.changed_peak_end : MessageType.changed_peak_end_all, name,
+                    args.NameSet, args.FilePath.GetFileName(), args.EndTime));
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -3639,7 +3727,8 @@ namespace pwiz.Skyline
                 outlierIds.Add(outlier.Id.GlobalIndex);
 
             ModifyDocument(Resources.SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers,
-                           doc => (SrmDocument) doc.RemoveAll(outlierIds));
+                doc => (SrmDocument) doc.RemoveAll(outlierIds),
+                docPair => DiffDocNodes(MessageType.removed_rt_outliers, docPair, outlierIds.Count));
         }
 
         private void removeRTContextMenuItem_Click(object sender, EventArgs e)
@@ -4367,6 +4456,7 @@ namespace pwiz.Skyline
                     .SelectMany(d => d.PeptideAnnotationPairs)
                     .Select(pair => pair.TransitionGroup.Id.GlobalIndex));
 
+            var nodeCount = 0;
             // Remove everything not in the set
             ModifyDocument(Resources.SkylineWindow_RemoveAboveCVCutoff_Remove_peptides_above_CV_cutoff, doc =>
             {
@@ -4377,9 +4467,11 @@ namespace pwiz.Skyline
                         continue;
                     foreach (var nodeGroup in nodeMolecule.TransitionGroups.Where(n => !ids.Contains(n.Id.GlobalIndex)))
                         setRemove.Add(nodeGroup.Id.GlobalIndex);
+                    nodeCount = setRemove.Count;
                 }
                 return (SrmDocument)doc.RemoveAll(setRemove, (int) SrmDocument.Level.TransitionGroups, (int) SrmDocument.Level.Molecules);
-            });
+            }, docPair => DiffDocNodes(MessageType.removed_peptides_above_cutoff, docPair, nodeCount,
+                    Settings.Default.AreaCVCVCutoff * AreaGraphController.GetAreaCVFactorToPercentage()));
         }
 
         public void SetAreaCVGroup(string group)
@@ -4737,7 +4829,7 @@ namespace pwiz.Skyline
 
             using (var dlgProperties = new AreaCVToolbarProperties(graphSummary))
             {
-                if (dlgProperties.ShowDialog() == DialogResult.OK)
+                if (dlgProperties.ShowDialog(this) == DialogResult.OK)
                     UpdatePeakAreaGraph();
             }
         }

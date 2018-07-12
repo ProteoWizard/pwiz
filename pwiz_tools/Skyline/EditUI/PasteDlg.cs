@@ -1273,7 +1273,7 @@ namespace pwiz.Skyline.EditUI
                     var args = new string[0];
                     if (arg > 0)
                         args = new[] { arg.ToString() };
-                    return Program.MainWindow.DiffDocNodesWithExtraInfo(type, docPair, extraInfo, args);
+                    return SkylineWindow.DiffDocNodesWithExtraInfo(type, docPair, extraInfo, args);
                 });
             if (error)
             {
@@ -2049,8 +2049,10 @@ namespace pwiz.Skyline.EditUI
             return true;
         }
 
-        public static SrmDocument HandleEmptyPeptideGroups(IWin32Window parent, int emptyPeptideGroups, SrmDocument docCurrent)
+        public static SrmDocument HandleEmptyPeptideGroups(IWin32Window parent, int emptyPeptideGroups, SrmDocument docCurrent, out bool kept)
         {
+            kept = true;
+
             switch (AskWhetherToKeepEmptyProteins(parent, emptyPeptideGroups))
             {
                 case null:
@@ -2058,6 +2060,7 @@ namespace pwiz.Skyline.EditUI
                 case true:
                     return docCurrent;
                 case false:
+                    kept = false;
                     return ImportPeptideSearch.RemoveProteinsByPeptideCount(docCurrent, 1);
                 default:
                     throw new InvalidOperationException();

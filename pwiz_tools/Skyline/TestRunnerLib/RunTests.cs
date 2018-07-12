@@ -176,7 +176,30 @@ namespace TestRunnerLib
             return Path.Combine(runnerExeDirectory, assembly);
         }
 
+        [DllImport("User32")]
+        private static extern int GetGuiResources(IntPtr hProcess, int uiFlags);
+
+        public static int GdiObjects
+        {
+            get
+            {
+                using (var p = Process.GetCurrentProcess())
+                    return GetGuiResources(p.Handle, 0);
+            }
+        }
+
         public bool Run(TestInfo test, int pass, int testNumber)
+        {
+            var oldCount = GdiObjects;
+            var result = RunWrapper(test, pass, testNumber);
+            var newCount = GdiObjects;
+
+            Log("GDI Object diff: {0} ({1})\n", newCount - oldCount, newCount);
+
+            return result;
+        }
+
+        public bool RunWrapper(TestInfo test, int pass, int testNumber)
         {
             if (_showStatus)
                 Log("#@ Running {0} ({1})...\n", test.TestMethod.Name, Language.TwoLetterISOLanguageName);

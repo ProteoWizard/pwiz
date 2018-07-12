@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.AuditLog
     public class AuditLogList : Immutable, IXmlSerializable
     {
         public const string XML_ROOT = "audit_log"; // Not L10N
-        
+
         public AuditLogList(ImmutableList<AuditLogEntry> auditLogEntries)
         {
             AuditLogEntries = auditLogEntries;
@@ -79,6 +79,23 @@ namespace pwiz.Skyline.Model.AuditLog
         }
     }
 
+    public class MessageTypeNamesPair
+    {
+        public MessageTypeNamesPair(MessageType type, params object[] names)
+        {
+            Type = type;
+            Names = names.Select(obj => obj == null ? string.Empty : obj.ToString()).ToArray();
+        }
+
+        public LogMessage ToMessage(LogLevel logLevel)
+        {
+            return new LogMessage(logLevel, Type, String.Empty, false, Names);
+        }
+
+        public MessageType Type { get; private set; }
+        public string[] Names { get; private set; }
+    }
+
     [XmlRoot(XML_ROOT)]
     public class AuditLogEntry : Immutable, IXmlSerializable
     {
@@ -87,13 +104,13 @@ namespace pwiz.Skyline.Model.AuditLog
         private ImmutableList<LogMessage> _allInfo;
         private Action<AuditLogEntry> _undoAction;
 
-        private AuditLogEntry(DocumentFormat formatVersion, DateTime timeStamp, string reason, bool insertIntoUndoRedo = false, string extraInfo = null)
+        private AuditLogEntry(SrmDocument document, DateTime timeStamp, string reason, bool insertIntoUndoRedo = false, string extraInfo = null)
         {
             SkylineVersion = Install.Version;
             if (Install.Is64Bit)
                 SkylineVersion += " (64-Bit)"; // Not L10N
 
-            FormatVersion = formatVersion;
+            FormatVersion = document.FormatVersion;
             TimeStamp = timeStamp;
             ExtraInfo = extraInfo;
 
@@ -119,35 +136,18 @@ namespace pwiz.Skyline.Model.AuditLog
             return RemoveTopmostParent(name.Parent).SubProperty(name);
         }
 
-        public class MessageTypeNamesPair
-        {
-            public MessageTypeNamesPair(MessageType type, params string[] names)
-            {
-                Type = type;
-                Names = names;
-            }
-
-            public LogMessage ToMessage(LogLevel logLevel)
-            {
-                return new LogMessage(logLevel, Type, string.Empty, false, Names);
-            }
-
-            public MessageType Type { get; private set; }
-            public string[] Names { get; private set; }
-        }
-
         // Functions to create audit log entries
 
-        public static AuditLogEntry CreateEmptyEntry(DocumentFormat formatVersion,
+        public static AuditLogEntry CreateEmptyEntry(SrmDocument document,
             string extraText = null)
         {
-            return new AuditLogEntry(formatVersion, DateTime.Now, string.Empty, true, extraText);
+            return new AuditLogEntry(document, DateTime.Now, string.Empty, true, extraText);
         }
 
-        public static AuditLogEntry CreateSingleMessageEntry(DocumentFormat formatVersion,
+        public static AuditLogEntry CreateSingleMessageEntry(SrmDocument document,
             MessageTypeNamesPair typeNamesPair, string extraInfo = null)
         {
-            var result = new AuditLogEntry(formatVersion, DateTime.Now, string.Empty, true, extraInfo);
+            var result = new AuditLogEntry(document, DateTime.Now, string.Empty, true, extraInfo);
 
             result.UndoRedo = typeNamesPair.ToMessage(LogLevel.undo_redo);
             result.Summary = typeNamesPair.ToMessage(LogLevel.summary);
@@ -156,9 +156,14 @@ namespace pwiz.Skyline.Model.AuditLog
             return result;
         }
 
-        public static AuditLogEntry CreateSettingsChangeEntry(DocumentFormat formatVersion, DiffTree tree, string extraInfo = null)
+        public static AuditLogEntry CreateSimpleEntry(SrmDocument document, MessageType type, params object[] args)
         {
-            var result = new AuditLogEntry(formatVersion, tree.TimeStamp, string.Empty, true, extraInfo);
+            return CreateSingleMessageEntry(document, new MessageTypeNamesPair(type, args));
+        }
+
+        public static AuditLogEntry CreateSettingsChangeEntry(SrmDocument document, DiffTree tree, string extraInfo = null)
+        {
+            var result = new AuditLogEntry(document, tree.TimeStamp, string.Empty, true, extraInfo);
 
             var nodeNamePair = tree.Root.FindFirstMultiChildParent(tree, PropertyName.ROOT, true, false);
             // Remove "Settings" from property name if possible
@@ -184,9 +189,9 @@ namespace pwiz.Skyline.Model.AuditLog
             return result;
         }
 
-        public static AuditLogEntry CreateLogEnabledDisabledEntry(DocumentFormat formatVersion)
+        public static AuditLogEntry CreateLogEnabledDisabledEntry(SrmDocument document)
         {
-            var result = new AuditLogEntry(formatVersion, DateTime.Now, string.Empty);
+            var result = new AuditLogEntry(document, DateTime.Now, string.Empty);
 
             var type = Settings.Default.AuditLogging ? MessageType.log_enabled : MessageType.log_disabled;
 
@@ -197,14 +202,14 @@ namespace pwiz.Skyline.Model.AuditLog
             return result;
         }
 
-        public static AuditLogEntry CreateCountEntry(MessageType type, DocumentFormat formatVersion,
+        public static AuditLogEntry CreateCountEntry(SrmDocument document, MessageType type,
             int undoRedoCount, int allInfoCount)
         {
             if (type != MessageType.log_unlogged_changes && type != MessageType.log_cleared)
                 throw new ArgumentException();
 
             // ReSharper disable once UseObjectOrCollectionInitializer
-            var result = new AuditLogEntry(formatVersion, DateTime.Now, string.Empty);
+            var result = new AuditLogEntry(document, DateTime.Now, string.Empty);
 
             result.UndoRedo = new LogMessage(LogLevel.undo_redo, type, string.Empty, false,
                 undoRedoCount.ToString());
@@ -220,6 +225,27 @@ namespace pwiz.Skyline.Model.AuditLog
             result.CountEntryType = type;
 
             return result;
+        }
+
+        public static AuditLogEntry CreateDialogLogEntry<T>(SrmDocumentPair docPair, MessageType type, T dialogSettings, params object[] args) where T : class
+        {
+            var rootProp = RootProperty.Create(typeof(T));
+
+            var objectInfo =
+                new ObjectInfo<object>()
+                    .ChangeObjectPair(ObjectPair<object>.Create(null, dialogSettings))
+                    .ChangeRootObjectPair(docPair.ToObjectType());
+
+            var settings = Reflector.ToString(objectInfo, rootProp, true);
+
+            var tree = Reflector<T>.BuildDiffTree(docPair.ToObjectType(),
+                rootProp,
+                dialogSettings);
+
+            var message = new MessageTypeNamesPair(type, args);
+            return CreateSettingsChangeEntry(docPair.OldDoc, tree, settings)
+                .ChangeUndoRedo(message)
+                .ChangeSummary(message);
         }
 
         public string SkylineVersion { get; private set; }
@@ -242,10 +268,15 @@ namespace pwiz.Skyline.Model.AuditLog
             }
         }
 
+        public IEnumerable<LogMessage> AllInfoNoUndoRedo
+        {
+            get { return InsertUndoRedoIntoAllInfo ? _allInfo.Skip(1) : _allInfo; }
+        }
+
         public IList<LogMessage> AllInfo
         {
             get { return _allInfo; }
-            private set { _allInfo = ImmutableList.ValueOf(InsertUndoRedoIntoAllInfo ? new[] { UndoRedo }.Concat(value) : value); }
+            private set { _allInfo = ImmutableList.ValueOf(InsertUndoRedoIntoAllInfo ? CollectionUtil.FromSingleItem(UndoRedo).Concat(value) : value); }
         }
 
         public bool InsertUndoRedoIntoAllInfo { get; private set; }
@@ -272,7 +303,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 // Since the all info list might contain the undo redo message,
                 // changing it requires updating the all info
                 if (InsertUndoRedoIntoAllInfo)
-                    im.AllInfo = im._allInfo.Skip(1).ToList();
+                    im.AllInfo = im.AllInfoNoUndoRedo.ToList();
             });
         }
 
@@ -281,10 +312,20 @@ namespace pwiz.Skyline.Model.AuditLog
             return ChangeProp(ImClone(this), im => im.Summary = summary.ToMessage(LogLevel.summary));
         }
 
+        public AuditLogEntry ChangeSummary(LogMessage summary)
+        {
+            return ChangeProp(ImClone(this), im => im.Summary = summary);
+        }
+
         public AuditLogEntry ChangeAllInfo(IList<MessageTypeNamesPair> allInfo)
         {
             return ChangeProp(ImClone(this),
                 im => im.AllInfo = allInfo.Select(info => info.ToMessage(LogLevel.all_info)).ToList());
+        }
+
+        public AuditLogEntry AppendAllInfo(IEnumerable<LogMessage> allInfo)
+        {
+            return ChangeProp(ImClone(this), im => im.AllInfo = AllInfoNoUndoRedo.Concat(allInfo).ToList());
         }
 
         public AuditLogEntry ChangeAllInfo(IList<LogMessage> allInfo)
@@ -295,6 +336,11 @@ namespace pwiz.Skyline.Model.AuditLog
         public AuditLogEntry ChangeUndoAction(Action<AuditLogEntry> undoAction)
         {
             return ChangeProp(ImClone(this), im => im._undoAction = undoAction);
+        }
+
+        public AuditLogEntry ChangeExtraInfo(string extraInfo)
+        {
+            return ChangeProp(ImClone(this), im => im.ExtraInfo = extraInfo);
         }
 
         public void AddToDocument(SrmDocument document, Action<Func<SrmDocument, SrmDocument>> modifyDocument)
@@ -328,7 +374,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 logEntries.Remove(countEntry);
             }
 
-            var newCountEntry = CreateCountEntry(type, document.FormatVersion, undoRedoCount, allInfoCount);
+            var newCountEntry = CreateCountEntry(document, type, undoRedoCount, allInfoCount);
             if (addToDoc)
             {
                 logEntries.Add(newCountEntry);
@@ -342,8 +388,10 @@ namespace pwiz.Skyline.Model.AuditLog
         public static AuditLogEntry SettingsLogFunction(SrmDocumentPair documentPair)
         {
             var property = RootProperty.Create(typeof(SrmSettings), "Settings"); // Not L10N
-            var tree = Reflector<SrmSettings>.BuildDiffTree(documentPair, property, documentPair.OldDoc.Settings, documentPair.NewDoc.Settings, DateTime.Now);
-            return tree != null && tree.Root != null ? CreateSettingsChangeEntry(documentPair.OldDoc.FormatVersion, tree) : null;
+            var objInfo = new ObjectInfo<object>(documentPair.OldDoc.Settings, documentPair.NewDoc.Settings,
+                documentPair.OldDoc, documentPair.NewDoc, documentPair.OldDoc, documentPair.NewDoc);
+            var tree = Reflector<SrmSettings>.BuildDiffTree(objInfo, property, DateTime.Now);
+            return tree != null && tree.Root != null ? CreateSettingsChangeEntry(documentPair.OldDoc, tree) : null;
         }
 
         #region Implementation of IXmlSerializable

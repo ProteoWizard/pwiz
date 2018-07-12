@@ -1540,7 +1540,7 @@ namespace pwiz.Skyline
                 // Train the model.
                 string documentPath = log ? DocContainer.DocumentFilePath : null;
                 scoringModel = (MProphetPeakScoringModel)scoringModel.Train(targetTransitionGroups,
-                    decoyTransitionGroups, initialParams, modelIterationCount, secondBest, true, progressMonitor, documentPath);
+                    decoyTransitionGroups, targetDecoyGenerator, initialParams, modelIterationCount, secondBest, true, progressMonitor, documentPath);
 
                 Settings.Default.PeakScoringModelList.SetValue(scoringModel);
 

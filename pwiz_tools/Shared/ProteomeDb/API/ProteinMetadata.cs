@@ -39,7 +39,7 @@ namespace pwiz.ProteomeDatabase.API
     /// which gave us accession ID P0A7T9
     ///
     /// </summary>
-    public sealed class ProteinMetadata : Immutable, IEquatable<ProteinMetadata>
+    public sealed class ProteinMetadata : Immutable, IEquatable<ProteinMetadata>, IAuditLogComparable
     {
         public static readonly ProteinMetadata EMPTY = new ProteinMetadata();
         [Track]
@@ -253,6 +253,11 @@ namespace pwiz.ProteomeDatabase.API
                 result = (result * 397) ^ (WebSearchInfo != null ? WebSearchInfo.GetHashCode() : 0); // not proper metadata but worth noting when it changes
                 return result;
             }
+        }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return EMPTY;
         }
 
         public bool Equals(ProteinMetadata other)

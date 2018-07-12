@@ -76,7 +76,7 @@ namespace pwiz.Skyline.Controls.AuditLog
         {
             Settings.Default.AuditLogging = enable;
 
-            var entry = AuditLogEntry.CreateLogEnabledDisabledEntry(window.Document.FormatVersion);
+            var entry = AuditLogEntry.CreateLogEnabledDisabledEntry(window.Document);
 
             window.ModifyDocumentNoUndo(doc =>
                 doc.ChangeAuditLog(ImmutableList<AuditLogEntry>.ValueOf(doc.AuditLog.AuditLogEntries.Concat(new[] {entry}))));

@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
@@ -125,7 +124,7 @@ namespace pwiz.Skyline.Model.AuditLog
             
             if (objects.Length == 2)
             {
-                var type = Property.GetPropertyType(objects[1], objects[0]);
+                var type = Property.GetPropertyType(ObjectPair.Create(objects[1], objects[0]));
                 if (((objects[0] != null) != (objects[1] != null) ||
                     (objects[0] != null && objects[1] != null && objects[0].AuditLogText != objects[1].AuditLogText && !typeof(DocNode).IsAssignableFrom(type))) &&
                     !Property.IsRoot)
@@ -189,26 +188,24 @@ namespace pwiz.Skyline.Model.AuditLog
     // Property change
     public class PropertyDiffNode : DiffNode
     {
-        public PropertyDiffNode(Property property, PropertyPath propertyPath, object oldValue, object newValue, IEnumerable<DiffNode> nodes = null, bool expanded = false)
+        public PropertyDiffNode(Property property, PropertyPath propertyPath, ObjectPair<object> value, IEnumerable<DiffNode> nodes = null, bool expanded = false)
             : base(property, propertyPath, nodes, expanded)
         {
-            OldValue = oldValue;
-            NewValue = newValue;
+            Value = value;
         }
 
         public override IEnumerable<object> Objects
         {
             get
             {
-                yield return NewValue;
-                yield return OldValue;
+                yield return Value.NewObject;
+                yield return Value.OldObject;
             }
         }
 
         public override bool IsCollectionElement { get { return false; } }
 
-        public object OldValue { get; private set; }
-        public object NewValue { get; private set; }
+        public ObjectPair<object> Value { get; private set; }
 
         public override LogMessage ToMessage(PropertyName name, LogLevel level, bool allowReflection)
         {
@@ -216,15 +213,16 @@ namespace pwiz.Skyline.Model.AuditLog
             var oldIsName = false;
 
             // new-/oldValue can are only null if reflection is not allowed and their AuditLogText uses reflection
-            var newValue = NewValue == null ? LogMessage.MISSING : ObjectToString(allowReflection, NewValue, out newIsName);
-            var oldValue = OldValue == null ? LogMessage.MISSING : ObjectToString(allowReflection, OldValue, out oldIsName);
+            var stringPair = Value.Transform(
+                obj => obj == null ? LogMessage.MISSING : ObjectToString(allowReflection, obj, out oldIsName),
+                obj => obj == null ? LogMessage.MISSING : ObjectToString(allowReflection, obj, out newIsName));
 
-            var sameValue = Equals(oldValue, newValue);
+            var sameValue = stringPair.Equals();
 
             if (Expanded && level == LogLevel.all_info)
             {
-                return new LogMessage(level, Property.IsCollectionType(NewValue) ? MessageType.contains : MessageType.is_,
-                    string.Empty, Expanded, name.ToString(), newValue);
+                return new LogMessage(level, MessageType.is_,
+                    string.Empty, Expanded, name.ToString(), stringPair.NewObject);
             }
 
             // If the string representations are the same, we don't want to show either of them
@@ -234,11 +232,11 @@ namespace pwiz.Skyline.Model.AuditLog
                 // case it gets set to "Missing"
                 if (oldIsName || newIsName || (level == LogLevel.all_info && !Expanded))
                 {
-                    return new LogMessage(level, MessageType.changed_from_to, string.Empty, Expanded, name.ToString(), oldValue, newValue);
+                    return new LogMessage(level, MessageType.changed_from_to, string.Empty, Expanded, name.ToString(), stringPair.OldObject, stringPair.NewObject);
                 }
-                else if (newValue != null)
+                else if (stringPair.NewObject != null)
                 {
-                    return new LogMessage(level, MessageType.changed_to, string.Empty, Expanded, name.ToString(), newValue);
+                    return new LogMessage(level, MessageType.changed_to, string.Empty, Expanded, name.ToString(), stringPair.NewObject);
                 }
             }
 
@@ -249,8 +247,8 @@ namespace pwiz.Skyline.Model.AuditLog
     // Collection element was changed
     public class ElementPropertyDiffNode : PropertyDiffNode
     {
-        public ElementPropertyDiffNode(Property property, PropertyPath propertyPath, object oldValue, object newValue, object elementKey, IEnumerable<DiffNode> nodes = null, bool treatedUnequal = false)
-            : base(property, propertyPath, oldValue, newValue, nodes, treatedUnequal)
+        public ElementPropertyDiffNode(Property property, PropertyPath propertyPath, ObjectPair<object> value, object elementKey, IEnumerable<DiffNode> nodes = null, bool expanded = false)
+            : base(property, propertyPath, value, nodes, expanded)
         {
             ElementKey = elementKey;
         }

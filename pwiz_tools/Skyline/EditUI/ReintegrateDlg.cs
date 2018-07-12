@@ -153,6 +153,62 @@ namespace pwiz.Skyline.EditUI
             DialogResult = DialogResult.OK;
         }
 
+        public ReintegrateDlgSettings ReintegrateSettings
+        {
+            get { return new ReintegrateDlgSettings(this); }
+        }
+
+        public class ReintegrateDlgSettings : IAuditLogComparable
+        {
+            public ReintegrateDlgSettings(ReintegrateDlg dlg)
+                : this(dlg._driverPeakScoringModel.SelectedItem, dlg.ReintegrateAll, !dlg.ReintegrateAll, dlg.QValueCutoff, dlg.OverwriteManual)
+            {
+            }
+
+            public ReintegrateDlgSettings(IPeakScoringModel peakScoringModel, bool reintegrateAll, bool reintegrateQCutoff,
+                double? cutoff, bool overwriteManualIntegration)
+            {
+                PeakScoringModel = peakScoringModel;
+                ReintegrateAll = reintegrateAll;
+                ReintegrateQCutoff = reintegrateQCutoff;
+                Cutoff = cutoff;
+                OverwriteManualIntegration = overwriteManualIntegration;
+            }
+
+            [TrackChildren]
+            public IPeakScoringModel PeakScoringModel { get; private set; }
+
+            [Track]
+            public bool ReintegrateAll { get; private set; }
+            [Track]
+            public bool ReintegrateQCutoff { get; private set; }
+            [Track]
+            public double? Cutoff { get; private set; }
+            [Track]
+            public bool OverwriteManualIntegration { get; private set; }
+
+            public object GetDefaultObject(ObjectInfo<object> info)
+            {
+                return new ReintegrateDlgSettings(null, false, false, null, false);
+            }
+        }
+
+        public double? QValueCutoff
+        {
+            get
+            {
+                if (!ReintegrateAll)
+                {
+                    var helper = new MessageBoxHelper(this);
+                    double result;
+                    if (helper.ValidateDecimalTextBox(textBoxCutoff, 0.0, 1.0, out result))
+                        return result;
+                }
+
+                return null;
+            }
+        }
+
         #region TestHelpers
 
         public double Cutoff

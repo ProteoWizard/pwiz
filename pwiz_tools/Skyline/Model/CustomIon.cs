@@ -28,11 +28,11 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
-    public class CustomIon : CustomMolecule
+    public class CustomIon : CustomMolecule, IAuditLogComparable
     {
         public static readonly CustomIon EMPTY = new CustomIon();
 
-        [TrackChildren(ignoreName:true)]
+        [TrackChildren(ignoreName:true, ignoreDefaultParent:true)]
         public Adduct Adduct { get; private set; }
 
         /// <summary>
@@ -107,7 +107,6 @@ namespace pwiz.Skyline.Model
             return ion;
         }
 
-        [Track]
         public string NeutralFormula { get { return Formula; } }
 
         public string FormulaWithAdductApplied
@@ -163,6 +162,11 @@ namespace pwiz.Skyline.Model
         public override string DisplayNameDetail { get { return Resources.CustomIon_DisplayName_Ion; } }
 
         public override string InvariantNameDetail { get { return "Ion"; } } // Not L10N
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            var ion = (CustomIon) info.NewObject;
+            return new CustomIon(ion, Adduct.EMPTY); // Ignore CustomMolecule properties
+        }
     }
 
     /// <summary>

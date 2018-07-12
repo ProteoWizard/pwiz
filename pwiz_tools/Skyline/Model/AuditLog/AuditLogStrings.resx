@@ -350,4 +350,124 @@
   <data name="UnrecognizedPeptides" xml:space="preserve">
     <value>Unrecognized peptides</value>
   </data>
+  <data name="imported_fasta" xml:space="preserve">
+    <value>Imported FASTA from "{0}"</value>
+  </data>
+  <data name="kept_empty_proteins" xml:space="preserve">
+    <value>Kept {0} empty proteins</value>
+  </data>
+  <data name="removed_empty_proteins" xml:space="preserve">
+    <value>Removed {0} empty proteins</value>
+  </data>
+  <data name="imported_assay_library" xml:space="preserve">
+    <value>Imported assay library form "{0}"</value>
+  </data>
+  <data name="imported_transition_list" xml:space="preserve">
+    <value>Imported transition list from "{0}"</value>
+  </data>
+  <data name="imported_spectral_library_intensities" xml:space="preserve">
+    <value>Imported spectral library intensities</value>
+  </data>
+  <data name="imported_doc" xml:space="preserve">
+    <value>Imported documents from "{0}"</value>
+  </data>
+  <data name="imported_annotations" xml:space="preserve">
+    <value>Imported annotations from "{0}"</value>
+  </data>
+  <data name="set_excluded_standard" xml:space="preserve">
+    <value>Excluding peptide {0} in calibration of replicate {1}</value>
+  </data>
+  <data name="set_included_standard" xml:space="preserve">
+    <value>Including peptide {0} in calibration of replicate {1}</value>
+  </data>
+  <data name="canceled_import" xml:space="preserve">
+    <value>Canceled import</value>
+  </data>
+  <data name="removed_below_cutoffs" xml:space="preserve">
+    <value>Removed {0} nodes below cutoffs in {1} group comparison</value>
+  </data>
+  <data name="excluded_peptides" xml:space="preserve">
+    <value>Excluded {0} peptides (Unique Peptides...)</value>
+  </data>
+  <data name="added_spectral_library" xml:space="preserve">
+    <value>Added spectral library "{0}"</value>
+  </data>
+  <data name="Empty" xml:space="preserve">
+    <value>Empty</value>
+  </data>
+  <data name="added_small_molecule_precursor" xml:space="preserve">
+    <value>Added small molecule precursor {0}</value>
+  </data>
+  <data name="added_small_molecule" xml:space="preserve">
+    <value>Added small molecule {0}</value>
+  </data>
+  <data name="added_small_molecule_transition" xml:space="preserve">
+    <value>Added small molecule transition {0}</value>
+  </data>
+  <data name="added_irt_standard_peptides" xml:space="preserve">
+    <value>Added iRT standard peptides</value>
+  </data>
+  <data name="renamed_node" xml:space="preserve">
+    <value>Renamed node {0} in Targets window</value>
+  </data>
+  <data name="added_empty_peptide_group" xml:space="preserve">
+    <value>Added empty peptide group {0} in Targets window</value>
+  </data>
+  <data name="added_new_peptide_group" xml:space="preserve">
+    <value>Added peptide group {0} in Targets window</value>
+  </data>
+  <data name="added_peptides_to_peptide_group" xml:space="preserve">
+    <value>Added peptides to peptide group {0} in Targets window</value>
+  </data>
+  <data name="drag_and_dropped_nodes" xml:space="preserve">
+    <value>Drag and dropped {0} nodes to {1}</value>
+  </data>
+  <data name="pasted_small_molecule_transition_list" xml:space="preserve">
+    <value>Pasted small molecule transition list</value>
+  </data>
+  <data name="applied_peak_all" xml:space="preserve">
+    <value>Applied peak {0} to all</value>
+  </data>
+  <data name="applied_peak_subsequent" xml:space="preserve">
+    <value>Applied peak {0} to subsequent</value>
+  </data>
+  <data name="removed_peak_from" xml:space="preserve">
+    <value>Removed peak from {0} in replicate "{1}"</value>
+  </data>
+  <data name="removed_all_peaks_from" xml:space="preserve">
+    <value>Removed all peaks from {0} in replicate "{1}"</value>
+  </data>
+  <data name="picked_peak" xml:space="preserve">
+    <value>Picked peak {0} at {1} in "{2}"</value>
+  </data>
+  <data name="changed_peak_end" xml:space="preserve">
+    <value>Changed end time of peak {0} in {1} in file {2} to {3}</value>
+  </data>
+  <data name="changed_peak_end_all" xml:space="preserve">
+    <value>Changed end time of all peaks of {0} in {1} in file {2} to {3}</value>
+  </data>
+  <data name="changed_peak_start" xml:space="preserve">
+    <value>Changed start time of peak {0} in {1} in file {2} to {3}</value>
+  </data>
+  <data name="changed_peak_start_all" xml:space="preserve">
+    <value>Changed start time of all peaks of {0} in {1} in file {2} to {3}</value>
+  </data>
+  <data name="changed_peak_bounds" xml:space="preserve">
+    <value>Changed peak bounds</value>
+  </data>
+  <data name="removed_peptides_above_cutoff" xml:space="preserve">
+    <value>Removed {0} peptides above {1}% peak area cv cutoff</value>
+  </data>
+  <data name="removed_rt_outliers" xml:space="preserve">
+    <value>Removed {0} RT outliers</value>
+  </data>
+  <data name="added_all_peptides_from_library" xml:space="preserve">
+    <value>Added all ({0}) peptides from library "{1}"</value>
+  </data>
+  <data name="added_peptide_from_library" xml:space="preserve">
+    <value>Added peptide {0} from library "{1}"</value>
+  </data>
+  <data name="matched_modifications_of_library" xml:space="preserve">
+    <value>Matched modifications of library "{0}"</value>
+  </data>
 </root>

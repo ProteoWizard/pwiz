@@ -49,6 +49,29 @@ namespace pwiz.Common.DataBinding
             return GetCollectionInfo(type);
         }
 
+        public static bool CanGetCollectionInfo(Type type)
+        {
+            if (type.IsGenericType && !type.ContainsGenericParameters)
+            {
+                switch (type.GetGenericArguments().Length)
+                {
+                    case 1:
+                        if (type.GetGenericTypeDefinition() == typeof(IList<>))
+                            return true;
+                        break;
+                    case 2:
+                        if (type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                            return true;
+                        break;
+                }
+            }
+
+            if (type.BaseType != null && GetCollectionInfo(type.BaseType) != null)
+                return true;
+
+            return type.GetInterfaces().Any(interfaceType => GetCollectionInfo(interfaceType) != null);
+        }
+
         private static ICollectionInfo GetCollectionInfo(Type type)
         {
             if (type.IsGenericType && !type.ContainsGenericParameters)
