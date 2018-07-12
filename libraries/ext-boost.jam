@@ -112,7 +112,7 @@ rule init ( version : location : options * )
         local version-tokens = [ regex.split $(version) \\. ] ;
         local boost-basename = "boost_$(version-tokens:J=_)" ;
 
-        if [ path.exists $(location:D)/$(boost-basename).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
+        if [ path.exists $(location:D)/$(boost-basename).tar.bz2 ]
         {
             # extract boost tarball
             tar.extract

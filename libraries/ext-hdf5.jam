@@ -45,7 +45,7 @@ rule init ( version ? : location : options * )
         .usage-requirements = <include>$(location)/src <use>H5pubconf.h/<extension>hdf5 ;
         .requirements = $(.usage-requirements) <warnings>off [ extension.static-with-fpic ] ;
 
-        if [ path.exists $(location).tar.bz2 ] && ! --incremental in [ modules.peek : ARGV ]
+        if [ path.exists $(location).tar.bz2 ]
         {
             tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
         }

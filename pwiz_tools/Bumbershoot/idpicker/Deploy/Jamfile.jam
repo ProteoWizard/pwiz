@@ -90,6 +90,7 @@ make setup.exe
     : # requirements
         <variant>debug:<build>no # don't make debug installs
         <dependency>..//install
+        <dependency>..//IDPicker
         <dependency>..//IDPICKER_VERSION
         <conditional>@build-location
         <conditional>@msvc-requirement
