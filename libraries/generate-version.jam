@@ -30,7 +30,7 @@ else
 # rule for generating a Version.cpp file
 rule cpp ( filepath ? : namespaces * : major : minor : timestamp : last-commit-hash : branch )
 {
-if ! --incremental in [ modules.peek : ARGV ]
+if ! --incremental in [ modules.peek : ARGV ] || --force-generate-version in [ modules.peek : ARGV ]
 {
     # default filepath is "Version.cpp" in the current directory
     filepath ?= Version.cpp ;
@@ -114,7 +114,7 @@ $(namespace-footer)
 # rule for generating a C++/CLI or C# AssemblyInfo file
 rule generate-AssemblyInfo ( filepath ? : cpp-cli ? : major : minor : timestamp : last-commit-hash : AssemblyTitle AssemblyDescription AssemblyCompany AssemblyProduct )
 {
-if ! --incremental in [ modules.peek : ARGV ]
+if ! --incremental in [ modules.peek : ARGV ] || --force-generate-version in [ modules.peek : ARGV ]
 {
     local extension = "cs" ;
     local using-namespace = "using" ;
@@ -186,7 +186,7 @@ rule AssemblyInfo.cpp ( filepath ? : major : minor : timestamp : last-commit-has
 # rule for generating a native rc file with version info and optional icons
 rule rc ( filepath ? : major : minor : timestamp : last-commit-hash : Title Description Company Product : Icons * )
 {
-if ! --incremental in [ modules.peek : ARGV ]
+if ! --incremental in [ modules.peek : ARGV ] || --force-generate-version in [ modules.peek : ARGV ]
 {
     # default filepath is "Properties/Resources.rc" in the current directory
     filepath ?= Properties/Resources.rc ;
