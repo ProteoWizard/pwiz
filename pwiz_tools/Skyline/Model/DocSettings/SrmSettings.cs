@@ -2357,8 +2357,9 @@ namespace pwiz.Skyline.Model.DocSettings
                               // MS1 filtering changed select peaks
                               newTran.FullScan.PrecursorIsotopes != oldTran.FullScan.PrecursorIsotopes ||
                               newTran.FullScan.PrecursorIsotopeFilter != oldTran.FullScan.PrecursorIsotopeFilter ||
-                              (newTran.FullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None && enrichmentsChanged)
-                              ;
+                              (newTran.FullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None && enrichmentsChanged) ||
+                              !Equals(newTran.FullScan.PrecursorRes, oldTran.FullScan.PrecursorRes) ||
+                              !Equals(newTran.FullScan.PrecursorResMz, oldTran.FullScan.PrecursorResMz);
 
             // If the library loded state has changed, make sure the library properties are up to date,
             // but avoid changing the chosen transitions.
