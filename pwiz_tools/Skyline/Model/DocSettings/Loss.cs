@@ -89,6 +89,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
+        [Diff]
         public string Formula
         {
             get { return _formula; }
@@ -103,7 +104,9 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        [Diff]
         public double MonoisotopicMass { get; private set; }
+        [Diff]
         public double AverageMass { get; private set; }
 
         public double GetMass(MassType massType)
@@ -111,6 +114,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return massType.IsMonoisotopic() ? MonoisotopicMass : AverageMass;
         }
 
+        [Diff]
         public LossInclusion Inclusion { get; private set; }
 
         /// <summary>

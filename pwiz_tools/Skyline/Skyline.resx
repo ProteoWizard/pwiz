@@ -1268,6 +1268,39 @@
   <data name="pointsToolStripMenuItem.Text" xml:space="preserve">
     <value>Points</value>
   </data>
+  <data name="areaCVAllTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 22</value>
+  </data>
+  <data name="areaCVAllTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="areaCVBestTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 22</value>
+  </data>
+  <data name="areaCVBestTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Best</value>
+  </data>
+  <data name="toolStripSeparator58.Size" type="System.Drawing.Size, System.Drawing">
+    <value>126, 6</value>
+  </data>
+  <data name="areaCVPrecursorsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 22</value>
+  </data>
+  <data name="areaCVPrecursorsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Precursors</value>
+  </data>
+  <data name="areaCVProductsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>129, 22</value>
+  </data>
+  <data name="areaCVProductsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Products</value>
+  </data>
+  <data name="areaCVTransitionsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>136, 22</value>
+  </data>
+  <data name="areaCVTransitionsToolStripMenuItem.Text" xml:space="preserve">
+    <value>Transitions</value>
+  </data>
   <data name="areaCVGlobalStandardsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>163, 22</value>
   </data>
@@ -2931,6 +2964,18 @@
   <data name="documentGridMenuItem.Text" xml:space="preserve">
     <value>&amp;Document Grid</value>
   </data>
+  <data name="auditLogMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
+    <value>Alt+4</value>
+  </data>
+  <data name="auditLogMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>273, 30</value>
+  </data>
+  <data name="auditLogMenuItem.Text" xml:space="preserve">
+    <value>Au&amp;dit Log</value>
+  </data>
+  <data name="auditLogMenuItem.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
   <data name="toolStripSeparator36.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
   </data>
@@ -4512,6 +4557,42 @@
   <data name="&gt;&gt;areaCVdecoysToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;areaCVTransitionsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVTransitionsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVTransitionsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVAllTransitionsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVAllTransitionsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVAllTransitionsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVBestTransitionsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVBestTransitionsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVBestTransitionsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator58.Name" xml:space="preserve">
+    <value>toolStripSeparator58</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator58.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVPrecursorsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVPrecursorsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVPrecursorsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaCVProductsToolStripMenuItem.Name" xml:space="preserve">
+    <value>areaCVProductsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaCVProductsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;areaCVNormalizedToToolStripMenuItem.Name" xml:space="preserve">
     <value>areaCVNormalizedToToolStripMenuItem</value>
   </data>
@@ -5848,6 +5929,12 @@
     <value>documentGridMenuItem</value>
   </data>
   <data name="&gt;&gt;documentGridMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;auditLogMenuItem.Name" xml:space="preserve">
+    <value>auditLogMenuItem</value>
+  </data>
+  <data name="&gt;&gt;auditLogMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator36.Name" xml:space="preserve">

@@ -112,6 +112,10 @@ rule vendor-api-requirements ( properties * )
                 result += <assembly-dependency>$(PLATFORM_API_PATH)/msvcr71.dll ;
             }
         }
+        else
+        {
+            result += <location-prefix>without-cxt ;
+        }
         result += <assembly-dependency>$(PLATFORM_API_PATH)/baf2sql_c.dll ;
         result += <assembly-dependency>simplelogger.properties ;
         result += <assembly-dependency>bdal-logconf.xml ;

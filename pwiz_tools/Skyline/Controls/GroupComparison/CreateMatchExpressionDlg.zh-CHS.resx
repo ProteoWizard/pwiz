@@ -187,7 +187,7 @@
     <value>True</value>
   </metadata>
   <data name="nameColumn.HeaderText" xml:space="preserve">
-    <value>匹配</value>
+    <value>匹配的</value>
   </data>
   <data name="dataGridView1.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 130</value>
@@ -253,7 +253,7 @@
     <value>2</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>P 值截止(&amp;P)：</value>
+    <value>P 值阀值(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
@@ -301,7 +301,7 @@
     <value>0</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>倍数变化截止(&amp;F)：</value>
+    <value>倍数变化阈值(&amp;F)：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>

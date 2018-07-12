@@ -26,7 +26,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
@@ -34,7 +33,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
@@ -1138,10 +1137,10 @@ namespace pwiz.Skyline.Controls.Graphs
             var chromGroupInfo = ChromGroupInfos[0];
             var fileId = chromatograms.FindFile(chromGroupInfo);
 
-            var nodeGroup = _nodeGroups != null ? _nodeGroups[0] : null;
+            var nodeGroup = _nodeGroups != null ? _nodeGroups.FirstOrDefault() : null;
             if (nodeGroup == null)
                 nodeTranSelected = null;
-            var info = chromGroupInfo.GetTransitionInfo(new SignedMz(0, nodeGroup != null && nodeGroup.PrecursorCharge < 0), 0, TransformChrom.raw);
+            var info = chromGroupInfo.GetTransitionInfo(null, 0, TransformChrom.raw);
 
             TransitionChromInfo tranPeakInfo = null;
             if (nodeGroup != null)
@@ -1236,7 +1235,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                 {
                     var listChromInfo = new List<ChromatogramInfo>();
-                    chromGroupInfo.GetAllTransitionInfo(nodeTranSelected.Mz,
+                    chromGroupInfo.GetAllTransitionInfo(nodeTranSelected,
                         mzMatchTolerance,
                         chromatograms.OptimizationFunction,
                         listChromInfo, TransformChrom.raw);
@@ -1268,7 +1267,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var nodeTran = displayTrans[i];
                     // Get chromatogram info for this transition
-                    arrayChromInfo[i] = chromGroupInfo.GetTransitionInfo(nodeTran.Mz, mzMatchTolerance, TransformChrom.raw);
+                    arrayChromInfo[i] = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, TransformChrom.raw);
                 }
             }
 
@@ -1669,7 +1668,7 @@ namespace pwiz.Skyline.Controls.Graphs
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
                 var listChromInfo = new List<ChromatogramInfo>();
-                chromGroupInfo.GetAllTransitionInfo(nodeTran.Mz,
+                chromGroupInfo.GetAllTransitionInfo(nodeTran,
                     mzMatchTolerance,
                     chromatograms.OptimizationFunction,
                     listChromInfo, TransformChrom.raw);
@@ -1924,7 +1923,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         continue;
                     }
-                    var info = chromGroupInfo.GetTransitionInfo(nodeTran.Mz, mzMatchTolerance, TransformChrom.raw);
+                    var info = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, TransformChrom.raw);
                     if (info == null)
                         continue;
 
@@ -2057,7 +2056,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     ChromFileInfoId fileId = chromatograms.FindFile(chromGroupInfo);
                     foreach (var nodeTran in precursor.Transitions)
                     {
-                        var info = chromGroupInfo.GetTransitionInfo(nodeTran.Mz, mzMatchTolerance, TransformChrom.raw);
+                        var info = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, TransformChrom.raw);
                         if (info == null)
                             continue;
                         if (sumInfo == null)

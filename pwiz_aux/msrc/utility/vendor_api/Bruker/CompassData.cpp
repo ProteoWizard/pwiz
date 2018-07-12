@@ -559,8 +559,6 @@ struct CompassDataImpl : public CompassData
         try {return MSSpectrumPtr(new MSSpectrumImpl(msSpectrumCollection_->default[scan], parameterCacheByMsLevel_, detailLevel));} CATCH_AND_FORWARD
     }
 
-    virtual pair<size_t, size_t> getFrameScanPair(int scanIndex) const { return make_pair(0ull, 0ull); }
-
     virtual size_t getLCSourceCount() const
     {
         if (!hasLCData_) return 0;
@@ -667,14 +665,15 @@ struct CompassDataImpl : public CompassData
 };
 
 
-PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath,
-                                                 Reader_Bruker_Format format)
+PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath, bool combineIonMobilitySpectra,
+                                                 Reader_Bruker_Format format,
+                                                 int preferOnlyMsLevel) // when nonzero, caller only wants spectra at this ms level
 {
     if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
         return CompassDataPtr(new Baf2SqlImpl(rawpath));
 #ifdef _WIN64
     else if (format == Reader_Bruker_Format_TDF)
-        return CompassDataPtr(new TimsDataImpl(rawpath, false));
+        return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra, preferOnlyMsLevel));
 #endif
 
     try {return CompassDataPtr(new CompassDataImpl(rawpath, format));} CATCH_AND_FORWARD
@@ -740,23 +739,33 @@ PWIZ_API_DECL const MSSpectrumParameter& MSSpectrumParameterIterator::dereferenc
     return impl_->dummy;
 }
 
-
-PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath,
-                                                 Reader_Bruker_Format format)
+PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath, bool combineIonMobilitySpectra,
+                                                 Reader_Bruker_Format format,
+                                                 int preferOnlyMsLevel) // when nonzero, caller only wants spectra at this ms level
 {
     if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
         return CompassDataPtr(new Baf2SqlImpl(rawpath));
 #ifdef _WIN64
     else if (format == Reader_Bruker_Format_TDF)
-        return CompassDataPtr(new TimsDataImpl(rawpath, false));
+        return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra, preferOnlyMsLevel));
 #endif
     else
-        throw runtime_error("[CompassData::create] Bruker API was built with only BAF support; YEP and FID files not supported in this build");
+        throw runtime_error("[CompassData::create] Bruker API was built with only BAF and TDF support; YEP and FID files not supported in this build");
 }
 
 
 #endif // PWIZ_READER_BRUKER_WITH_COMPASSXTRACT
 
+
+PWIZ_API_DECL pair<size_t, size_t> CompassData::getFrameScanPair(int scanIndex) const
+{
+    throw runtime_error("[getFrameScanPair()] only supported for TDF data");
+}
+
+PWIZ_API_DECL size_t CompassData::getSpectrumIndex(int frame, int scan) const
+{
+    throw runtime_error("[getSpectrumIndex()] only supported for TDF data");
+}
 
 } // namespace Bruker
 } // namespace vendor_api

@@ -30,11 +30,23 @@ struct IsDirectory : public pwiz::util::TestPathPredicate
 {
     bool operator() (const string& rawpath) const
     {
-    #ifndef WIN64
+    #ifndef _WIN64
         if (bfs::exists(bfs::path(rawpath) / "analysis.tdf")) // no x86 DLL available
             return false;
     #endif
         return bfs::is_directory(rawpath);
+    }
+};
+
+struct IsTDF : public pwiz::util::TestPathPredicate
+{
+    bool operator() (const string& rawpath) const
+    {
+#ifdef _WIN64
+        if (bfs::exists(bfs::path(rawpath) / "analysis.tdf")) // no x86 DLL available
+            return true;
+#endif
+        return false;
     }
 };
 
@@ -51,7 +63,25 @@ int main(int argc, char* argv[])
     try
     {
         bool requireUnicodeSupport = false;
-        pwiz::util::testReader(pwiz::msdata::Reader_Bruker(), testArgs, testAcceptOnly, requireUnicodeSupport, IsDirectory());
+
+        pwiz::util::ReaderTestConfig config;
+        pwiz::msdata::Reader_Bruker reader;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsDirectory(), config);
+
+        config.preferOnlyMsLevel = 1;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
+
+        config.preferOnlyMsLevel = 2;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
+
+        config.combineIonMobilitySpectra = true;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
+
+        config.preferOnlyMsLevel = 1;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
+
+        config.preferOnlyMsLevel = 0;
+        pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
     }
     catch (exception& e)
     {

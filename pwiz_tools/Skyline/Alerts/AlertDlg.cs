@@ -53,6 +53,7 @@ namespace pwiz.Skyline.Alerts
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
             Text = Program.Name;
+            toolStrip1.Renderer = new NoBorderSystemRenderer();
         }
 
         public AlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message)
@@ -325,9 +326,9 @@ namespace pwiz.Skyline.Alerts
             labelMessage.MaximumSize = new Size(newMaxWidth, 0);
         }
 
-        private const int MAX_MESSAGE_LENGTH = 100000;
+        private const int MAX_MESSAGE_LENGTH = 50000;
         /// <summary>
-        /// Labels have difficulty displaying text longer than 100,000 characters, and SetWindowText
+        /// Labels have difficulty displaying text longer than 50,000 characters, and SetWindowText
         /// replaces strings longer than 520,000 characters with the empty string.
         /// If the message is too long, and append a line saying it was truncated.
         /// </summary>
@@ -343,6 +344,18 @@ namespace pwiz.Skyline.Alerts
             }
             return TextUtil.LineSeparate(message.Substring(0, MAX_MESSAGE_LENGTH),
                 Resources.AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_);
+        }
+
+        private void toolStripButtonCopy_Click(object sender, EventArgs e)
+        {
+            CopyMessage();
+        }
+
+        private class NoBorderSystemRenderer : ToolStripSystemRenderer
+        {
+            protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
+            {
+            }
         }
     }
 }

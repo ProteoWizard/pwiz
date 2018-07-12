@@ -141,22 +141,41 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        // Helper function for PrecursorIonFormula and PrecursorNeutralFormula
+        private void GetPrecursorFormulaAndAdduct(out Adduct adduct, out string formula)
+        {
+            if (IsSmallMolecule())
+            {
+                formula = (DocNode.CustomMolecule.Formula ?? string.Empty);
+                adduct = DocNode.PrecursorAdduct;
+            }
+            else
+            {
+                PeptideDocNode parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
+                if (parent == null)
+                {
+                    adduct = Util.Adduct.EMPTY;
+                    formula = String.Empty;
+                    return;
+                }
+
+                var molecule = RefinementSettings.ConvertToSmallMolecule(
+                    RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, out adduct,
+                    DocNode.TransitionGroup.PrecursorAdduct.AdductCharge, DocNode.TransitionGroup.LabelType);
+                formula = molecule.Formula ?? string.Empty;
+            }
+        }
+
         [InvariantDisplayName("PrecursorIonFormula")]
         public string IonFormula
         {
             get
             {
-                if (IsSmallMolecule())
-                {
-                    return (DocNode.CustomMolecule.Formula ?? string.Empty);
-                }
-                else
-                {
-                    PeptideDocNode parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
-                    Adduct adduct;
-                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, out adduct, DocNode.TransitionGroup.PrecursorAdduct.AdductCharge, DocNode.TransitionGroup.LabelType);
-                    return molecule.Formula ?? string.Empty;
-                }
+                // Given formula C12H8O3 and adduct M3H2+H, apply label 3H2 and ionization +H to return C12H'3H6
+                Adduct adduct;
+                string formula;
+                GetPrecursorFormulaAndAdduct(out adduct, out formula);
+                return string.IsNullOrEmpty(formula) ? string.Empty : adduct.ApplyToFormula(formula);
             }
         }
 
@@ -165,16 +184,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                if (IsSmallMolecule())
-                {
-                    return DocNode.CustomMolecule.Formula ?? string.Empty;
-                }
-                else
-                {
-                    var parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
-                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent);
-                    return molecule.Formula ?? string.Empty;
-                }
+                // Given formula C12H8O3 and adduct M3H2+H, apply label 3H2 but not ionization +H to return C12H'3H5
+                Adduct adduct;
+                string formula;
+                GetPrecursorFormulaAndAdduct(out adduct, out formula);
+                return string.IsNullOrEmpty(formula) ? string.Empty : adduct.ApplyIsotopeLabelsToFormula(formula);
             }
         }
 

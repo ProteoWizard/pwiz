@@ -52,9 +52,11 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
@@ -256,6 +258,7 @@ namespace pwiz.Skyline.Model
         {
             FormatVersion = DocumentFormat.CURRENT;
             Settings = settings;
+            AuditLog = new AuditLogList(ImmutableList<AuditLogEntry>.EMPTY);
             SetDocumentType(); // Note proteomic vs small molecule vs mixed (as we're empty, will be set to proteomic)
         }
 
@@ -266,6 +269,7 @@ namespace pwiz.Skyline.Model
             RevisionIndex = doc.RevisionIndex;
             UserRevisionIndex = doc.UserRevisionIndex;
             Settings = settings;
+            AuditLog = doc.AuditLog;
             DeferSettingsChanges = doc.DeferSettingsChanges;
             DocumentType = doc.DocumentType;
 
@@ -334,7 +338,10 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Document-wide settings information
         /// </summary>
+        [DiffParent]
         public SrmSettings Settings { get; private set; }
+
+        public AuditLogList AuditLog { get; private set; }
 
         public bool DeferSettingsChanges { get; private set; }
 
@@ -624,6 +631,16 @@ namespace pwiz.Skyline.Model
                 }
                 return path;
             }
+        }
+
+        public SrmDocument ChangeAuditLog(AuditLogList log)
+        {
+            return ChangeProp(ImClone(this), im => im.AuditLog = log);
+        }
+
+        public SrmDocument ChangeAuditLog(ImmutableList<AuditLogEntry> log)
+        {
+            return ChangeAuditLog(new AuditLogList(log));
         }
 
         private string GetMoleculeGroupId(string baseId)
@@ -1130,6 +1147,12 @@ namespace pwiz.Skyline.Model
                             docImport.Settings.PeptideSettings.Modifications,
                             docNew.Settings.PeptideSettings.Modifications,
                             staticMods, heavyMods);
+                        if (nodePepModified.GlobalStandardType != null)
+                        {
+                            // Try to keep settings change from changing the children of standards being imported
+                            nodePepModified = (PeptideDocNode)nodePepModified.ChangeAutoManageChildren(false)
+                                .ChangeChildrenChecked(nodePepModified.TransitionGroups.Select(nodeGroup => nodeGroup.ChangeAutoManageChildren(false)).ToArray());
+                        }
                         peptidesNew.Add(nodePepModified);
                     }
                     var nodePepGroupNew = (PeptideGroupDocNode)nodePepGroup.ChangeChildrenChecked(peptidesNew.ToArray());
@@ -1991,6 +2014,7 @@ namespace pwiz.Skyline.Model
 
                 IsProteinMetadataPending = CalcIsProteinMetadataPending(); // Background loaders are about to kick in, they need this info.
             }
+            AuditLog = documentReader.AuditLog;
             SetDocumentType(); // Note proteomic vs small_molecules vs mixed
         }
 

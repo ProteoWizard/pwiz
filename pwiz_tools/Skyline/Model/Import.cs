@@ -417,7 +417,7 @@ namespace pwiz.Skyline.Model
             return Import(progressMonitor, sourceFile, indices, dictNameSeq, out irtPeptides, out librarySpectra, out errorList);
         }
 
-        public static IEnumerable<string> IrtColumnNames { get { return new[] { "tr_recalibrated", "irt" }; } } // Not L10N
+        public static IEnumerable<string> IrtColumnNames { get { return new[] { "irt", "normalizedretentiontime", "tr_recalibrated" }; } } // Not L10N
         public static IEnumerable<string> LibraryColumnNames { get { return new[] { "libraryintensity", "relativeintensity", "relative_intensity", "relativefragmentintensity", "library_intensity" }; } } // Not L10N
 
         public IEnumerable<PeptideGroupDocNode> Import(IProgressMonitor progressMonitor,

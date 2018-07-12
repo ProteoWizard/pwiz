@@ -24,6 +24,8 @@ using System.Text.RegularExpressions;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -42,6 +44,7 @@ namespace pwiz.Skyline
         public int ImportThreads { get; private set; }
         public bool ImportAppend { get; private set; }
         public bool ImportDisableJoining { get; private set; }
+        public bool ImportRecursive { get; private set; }
         public string ImportSourceDirectory { get; private set; }
         public Regex ImportNamingPattern { get; private set; }
         public DateTime? RemoveBeforeDate { get; private set; }
@@ -53,6 +56,16 @@ namespace pwiz.Skyline
         public string LibraryPath { get; private set; }
         public bool HideAllChromatogramsGraph { get; private set; }
         public bool NoAllChromatogramsGraph { get; private set; }
+
+        // Document import
+        public const string ARG_IMPORT_DOCUMENT = "import-document"; // Not L10N
+        public const string ARG_IMPORT_DOCUMENT_RESULTS = "import-document-results"; // Not L10N
+        public const string ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES = "import-document-merge-peptides"; // Not L10N
+
+        public bool ImportingDocuments { get { return DocImportPaths.Any(); } }
+        public List<string> DocImportPaths { get; private set; }
+        public MeasuredResults.MergeAction? DocImportResultsMerge { get; private set; }
+        public bool DocImportMergePeptides { get; private set; }
 
         // Transition list and assay library import
         public const string ARG_IMPORT_TRANSITION_LIST = "import-transition-list"; // Not L10N
@@ -147,6 +160,7 @@ namespace pwiz.Skyline
         private const string ARG_REINTEGRATE_MODEL_BOTH = "reintegrate-model-both"; // Not L10N
         private const string ARG_REINTEGRATE_OVERWRITE_PEAKS = "reintegrate-overwrite-peaks"; // Not L10N
         private const string ARG_REINTEGRATE_LOG_TRAINING = "reintegrate-log-training"; // Not L10N
+        private const string ARG_REINTEGRATE_EXCLUDE_FEATURE = "reintegrate-exclude-feature"; // Not L10N
 
         public string ReintegratModelName { get; private set; }
         public int? ReintegrateModelIterationCount { get; private set; }
@@ -155,6 +169,7 @@ namespace pwiz.Skyline
         public bool IsSecondBestModel { get; private set; }
         public bool IsDecoyModel { get; private set; }
         public bool IsLogTraining { get; private set; }
+        public List<IPeakFeatureCalculator> ExcludeFeatures { get; private set; }
 
         public bool Reintegrating { get { return !string.IsNullOrEmpty(ReintegratModelName); } }
 
@@ -499,8 +514,10 @@ namespace pwiz.Skyline
             DwellTime = AbstractMassListExporter.DWELL_TIME_DEFAULT;
             RunLength = AbstractMassListExporter.RUN_LENGTH_DEFAULT;
 
+            DocImportPaths = new List<string>();
             ReplicateFile = new List<MsDataFileUri>();
             SearchResultsFiles = new List<string>();
+            ExcludeFeatures = new List<IPeakFeatureCalculator>();
 
             ImportBeforeDate = null;
             ImportOnOrAfterDate = null;
@@ -602,7 +619,8 @@ namespace pwiz.Skyline
                 else if (IsNameValue(pair, "import-process-count")) // Not L10N
                 {
                     ImportThreads = int.Parse(pair.Value);
-                    Program.MultiProcImport = true;
+                    if (ImportThreads > 0)
+                        Program.MultiProcImport = true;
                 }
                 else if (IsNameOnly(pair, "timestamp")) // Not L10N
                 {
@@ -878,6 +896,29 @@ namespace pwiz.Skyline
                     RequiresSkylineDocument = true;
                 }
 
+                else if (IsNameValue(pair, ARG_IMPORT_DOCUMENT))
+                {
+                    DocImportPaths.Add(GetFullPath(pair.Value));
+                    DocImportResultsMerge = DocImportResultsMerge ?? MeasuredResults.MergeAction.remove;
+                    RequiresSkylineDocument = true;
+                }
+
+                else if (IsNameValue(pair, ARG_IMPORT_DOCUMENT_RESULTS))
+                {
+                    MeasuredResults.MergeAction mergeAction;
+                    if (!Enum.TryParse(pair.Value, out mergeAction))
+                    {
+                        _out.WriteLine("Error: Invalid value {0} for {1}. Check the documentation for available results merging options.");
+                        return false;
+                    }
+                    DocImportResultsMerge = mergeAction;
+                }
+
+                else if (IsNameOnly(pair, ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES))
+                {
+                    DocImportMergePeptides = true;
+                }
+
                 else if (IsNameValue(pair, ARG_IMPORT_TRANSITION_LIST))
                 {
                     TransitionListPath = GetFullPath(pair.Value);
@@ -1028,6 +1069,12 @@ namespace pwiz.Skyline
                 else if (IsNameValue(pair, "import-all"))
                 {
                     ImportSourceDirectory = GetFullPath(pair.Value);
+                    ImportRecursive = true;
+                    RequiresSkylineDocument = true;
+                }
+                else if (IsNameValue(pair, "import-all-files"))
+                {
+                    ImportSourceDirectory = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
 
@@ -1175,6 +1222,25 @@ namespace pwiz.Skyline
                 else if (IsNameOnly(pair, ARG_REINTEGRATE_LOG_TRAINING))
                 {
                     IsLogTraining = true;
+                }
+                else if (IsNameValue(pair, ARG_REINTEGRATE_EXCLUDE_FEATURE))
+                {
+                    string featureName = pair.Value;
+                    var calc = PeakFeatureCalculator.Calculators.FirstOrDefault(c =>
+                        Equals(featureName, c.HeaderName) || Equals(featureName, c.Name));
+                    if (calc == null)
+                    {
+                        _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error__Attempting_to_exclude_an_unknown_feature_name___0____Try_one_of_the_following_, featureName);
+                        foreach (var featureCalculator in PeakFeatureCalculator.Calculators)
+                        {
+                            if (Equals(featureCalculator.HeaderName, featureCalculator.Name))
+                                _out.WriteLine("    {0}", featureCalculator.HeaderName);    // Not L10N
+                            else
+                                _out.WriteLine(Resources.CommandArgs_ParseArgsInternal______0__or___1__, featureCalculator.HeaderName, featureCalculator.Name);
+                        }
+                        return false;
+                    }
+                    ExcludeFeatures.Add(calc);
                 }
                 else if (IsNameValue(pair, "report-name")) // Not L10N
                 {
@@ -1513,9 +1579,24 @@ namespace pwiz.Skyline
                 else
                     WarnArgRequirment(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_MODEL_SECOND_BEST);
             }
+            if (!IsCreateScoringModel && ExcludeFeatures.Count > 0)
+            {
+                WarnArgRequirment(ARG_REINTEGRATE_CREATE_MODEL, ARG_REINTEGRATE_EXCLUDE_FEATURE);
+            }
             if (!AddDecoys && AddDecoysCount.HasValue)
             {
                 WarnArgRequirment(ARG_DECOYS_ADD, ARG_DECOYS_ADD_COUNT);
+            }
+            if (!ImportingDocuments)
+            {
+                if (DocImportResultsMerge.HasValue)
+                {
+                    WarnArgRequirment(ARG_IMPORT_DOCUMENT, ARG_IMPORT_DOCUMENT_RESULTS);
+                }
+                if (DocImportMergePeptides)
+                {
+                    WarnArgRequirment(ARG_IMPORT_DOCUMENT, ARG_IMPORT_DOCUMENT_MERGE_PEPTIDES);
+                }
             }
             if (!ImportingTransitionList)
             {
@@ -1587,11 +1668,12 @@ namespace pwiz.Skyline
                 _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_the___import_file_option_);
                 return false;
             }
-            if(ImportingSourceDirectory && !string.IsNullOrEmpty(ReplicateName))
-            {
-                _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_);
-                return false;
-            }
+            // This is now handled by creating a single replicate with the contents of the directory
+//            if(ImportingSourceDirectory && !string.IsNullOrEmpty(ReplicateName))
+//            {
+//                _out.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_);
+//                return false;
+//            }
             
             // Use the original file as the output file, if not told otherwise.
             if (Saving && String.IsNullOrEmpty(SaveFile))

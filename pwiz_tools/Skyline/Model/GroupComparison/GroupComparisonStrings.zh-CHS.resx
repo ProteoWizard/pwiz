@@ -124,7 +124,7 @@
     <value>1/已调整的 P 值</value>
   </data>
   <data name="VolcanoPlot_VolcanoPlot_Fold_Change" xml:space="preserve">
-    <value>文件夹更改</value>
+    <value>变化倍数</value>
   </data>
   <data name="VolcanoPlot_VolcanoPlot_Volcano_Plot" xml:space="preserve">
     <value>火山图</value>
@@ -166,7 +166,7 @@
     <value>肽段</value>
   </data>
   <data name="FoldChangeBarGraph_UpdateGraph_Log_2_Fold_Change" xml:space="preserve">
-    <value>记录 2 文件夹更改</value>
+    <value>Log2（倍数变化）</value>
   </data>
   <data name="FoldChangeGrid_GetTitle_Grid" xml:space="preserve">
     <value>网格</value>
@@ -231,7 +231,7 @@
     <value>蛋白质</value>
   </data>
   <data name="FoldChangeRowTipProvider_RenderTip_Fold_Change" xml:space="preserve">
-    <value>文件夹更改</value>
+    <value>变化倍数</value>
   </data>
   <data name="FoldChangeRowTipProvider_RenderTip_P_Value" xml:space="preserve">
     <value>P 值</value>
@@ -246,10 +246,10 @@
     <value>属性…</value>
   </data>
   <data name="FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs" xml:space="preserve">
-    <value>删除截止以下</value>
+    <value>删除阈值以下</value>
   </data>
   <data name="FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs" xml:space="preserve">
-    <value>删除截止以下的肽</value>
+    <value>删除阈值以下的肽</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_None" xml:space="preserve">
     <value>无</value>
@@ -264,16 +264,16 @@
     <value>蛋白质首选名称</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Gene" xml:space="preserve">
-    <value>蛋白质基因</value>
+    <value>蛋白质编码基因</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Molecule_Name" xml:space="preserve">
     <value>肽分子名称</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Below_left_cutoff" xml:space="preserve">
-    <value>在左截止以下</value>
+    <value>在左阈值以下</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Above_right_cutoff" xml:space="preserve">
-    <value>在右截止以上</value>
+    <value>在右阈值以上</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Below" xml:space="preserve">
     <value>以下</value>
@@ -297,7 +297,7 @@
     <value>已标记</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Molecula_Formula" xml:space="preserve">
-    <value>分子公式</value>
+    <value>分子式</value>
   </data>
   <data name="CreateMatchExpression_PopulateComboBoxes_Molecule_Group_Name" xml:space="preserve">
     <value>分子群组名称</value>

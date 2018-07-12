@@ -462,6 +462,7 @@ namespace pwiz.Skyline.Util
         // N.B. "AdductCharge" and "AdductFormula" seem like weirdly redundant names, until you consider that 
         // they can show up in reports, at which point "Charge" and "Formula" are a bit overloaded.
 
+        [Diff]
         public int AdductCharge { get; private set; }  // The charge that the adduct gives to a molecule
 
         public string AdductFormula // Return adduct description - will produce [M+H] format for protonation
@@ -633,7 +634,8 @@ namespace pwiz.Skyline.Util
                 var adductIons = dictIsotopeCounts.Aggregate("[M", (current, pair) => current + string.Format(CultureInfo.InvariantCulture, "{0}{1}", // Not L10N
                     (pair.Value>1) ? pair.Value.ToString() : string.Empty, 
                     (DICT_ADDUCT_NICKNAMES.FirstOrDefault(x => x.Value == pair.Key).Key ?? DICT_ADDUCT_ISOTOPE_NICKNAMES.FirstOrDefault(x => x.Value == pair.Key).Key) ??pair.Key));
-                return new Adduct(adductIons + adductTmp.AdductFormula.Substring(2), ADDUCT_TYPE.non_proteomic, charge);
+                var adductTextClose = (charge == 0) ? "]" : adductTmp.AdductFormula.Substring(2); // Not L10N
+                return new Adduct(adductIons + adductTextClose, ADDUCT_TYPE.non_proteomic, charge);
             }
             if (charge == 0)
             {

@@ -312,7 +312,7 @@ D = 斜率 * C + 截距
     <value>高能偏置</value>
   </data>
   <data name="MeasuredIonMobilityHighEnergyOffsetMsec.ToolTipText" xml:space="preserve">
-    <value>在 Waters IMS 中，高能光谱中的离子在漂移分离后的飞行速度会较快</value>
+    <value>在 Waters IMS 中，高能质谱中的离子在漂移分离后的飞行速度会较快</value>
   </data>
   <data name="MeasuredIonMobilityHighEnergyOffsetMsec.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -333,7 +333,7 @@ D = 斜率 * C + 截距
     <value>14</value>
   </data>
   <data name="gridMeasuredDriftTimes.ToolTip" xml:space="preserve">
-    <value>优先使用观察到的离子迁移值。 缺失的值将从提供的离子迁移库中提取，如有。</value>
+    <value>优先使用观察到的离子迁移值。 如果有的话，缺失的值将从提供的离子迁移库中提取。</value>
   </data>
   <data name="&gt;&gt;gridMeasuredDriftTimes.Name" xml:space="preserve">
     <value>gridMeasuredDriftTimes</value>
@@ -435,7 +435,7 @@ D = 斜率 * C + 截距
     <value>线性峰宽度(&amp;L)</value>
   </data>
   <data name="cbLinear.ToolTip" xml:space="preserve">
-    <value>选中此方框以对 Waters SONAR 数据启用线性离子迁移维度峰插值</value>
+    <value>选中此方框以对 Waters SONAR 数据启用对离子迁移维度峰的线性插值</value>
   </data>
   <data name="&gt;&gt;cbLinear.Name" xml:space="preserve">
     <value>cbLinear</value>

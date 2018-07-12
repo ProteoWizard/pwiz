@@ -53,11 +53,11 @@ namespace pwiz.SkylineTestFunctional
             const string mixedSky = "mixed.sky";
             CheckDocumentGridAndColumns(mixedSky,
                 Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List,
-                49, 32, SrmDocument.DOCUMENT_TYPE.mixed, "C19H34[M-H]", "custom");
+                49, 32, SrmDocument.DOCUMENT_TYPE.mixed, "C19H34[M-H]", "custom", "C12H19", "C12H19", "C12H18");
 
             CheckDocumentGridAndColumns(mixedSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors,
-                4, 17, SrmDocument.DOCUMENT_TYPE.mixed);
+                4, 14, SrmDocument.DOCUMENT_TYPE.mixed);
 
             CheckDocumentGridAndColumns(mixedSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
@@ -71,11 +71,12 @@ namespace pwiz.SkylineTestFunctional
             const string smallMoleculeSky = "small_molecule.sky";
             CheckDocumentGridAndColumns(smallMoleculeSky, 
                 Resources.SkylineViewContext_GetTransitionListReportSpec_Small_Molecule_Transition_List,
-                1, 17, SrmDocument.DOCUMENT_TYPE.small_molecules, "C19H34[M-H]");
+                1, 17, SrmDocument.DOCUMENT_TYPE.small_molecules, "C19H34[M-H]", null,
+                "C12H20", "C12H19H'", "C12H17H'"); // Distinguish molecule formula (no labels or ionization) from precursor formula (labels) from ion formula (labels and ionization)
 
             CheckDocumentGridAndColumns(smallMoleculeSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors,
-                1, 16, SrmDocument.DOCUMENT_TYPE.small_molecules);
+                1, 13, SrmDocument.DOCUMENT_TYPE.small_molecules);
 
             CheckDocumentGridAndColumns(smallMoleculeSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
@@ -93,7 +94,7 @@ namespace pwiz.SkylineTestFunctional
 
             CheckDocumentGridAndColumns(peptideSky,
                             Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors,
-                            3, 12, SrmDocument.DOCUMENT_TYPE.proteomic);
+                            3, 9, SrmDocument.DOCUMENT_TYPE.proteomic);
 
             CheckDocumentGridAndColumns(peptideSky,
                             Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides,
@@ -106,7 +107,10 @@ namespace pwiz.SkylineTestFunctional
             int rowCount, int colCount,  // Expected row and column count for document grid
             SrmDocument.DOCUMENT_TYPE expectedDocumentType,
             string expectedProductIonFormula = null,
-            string expectedFragmentIon = null)
+            string expectedFragmentIon = null,
+            string expectedMolecularFormula = null,
+            string expectedPrecursorNeutralFormula = null,
+            string expectedPrecursorIonFormula = null)
         {
             var oldDoc = SkylineWindow.Document;
             OpenDocument(docName);
@@ -129,6 +133,9 @@ namespace pwiz.SkylineTestFunctional
             var colProductNeutralFormula = documentGrid.FindColumn(PropertyPath.Parse("ProductNeutralFormula"));
             var colProductAdduct = documentGrid.FindColumn(PropertyPath.Parse("ProductAdduct"));
             var colFragmentIon = documentGrid.FindColumn(PropertyPath.Parse("FragmentIonType"));
+            var colMoleculeFormula = documentGrid.FindColumn(PropertyPath.Parse("Precursor.Peptide.MoleculeFormula"));
+            var colPrecursorNeutralFormula = documentGrid.FindColumn(PropertyPath.Parse("Precursor.NeutralFormula"));
+            var colPrecursorIonFormula = documentGrid.FindColumn(PropertyPath.Parse("Precursor.IonFormula"));
             if (expectedProductIonFormula == null)
             {
                 Assert.IsNull(colProductIonFormula);
@@ -147,6 +154,12 @@ namespace pwiz.SkylineTestFunctional
                 else
                 {
                     Assert.AreEqual(expectedProductIonFormula, formula);
+                }
+                if (!string.IsNullOrEmpty(expectedMolecularFormula))
+                {
+                    Assert.AreEqual(expectedMolecularFormula, documentGrid.DataGridView.Rows[0].Cells[colMoleculeFormula.Index].Value.ToString());
+                    Assert.AreEqual(expectedPrecursorNeutralFormula, documentGrid.DataGridView.Rows[0].Cells[colPrecursorNeutralFormula.Index].Value.ToString());
+                    Assert.AreEqual(expectedPrecursorIonFormula, documentGrid.DataGridView.Rows[0].Cells[colPrecursorIonFormula.Index].Value.ToString());
                 }
             });
             if (expectedFragmentIon == null)

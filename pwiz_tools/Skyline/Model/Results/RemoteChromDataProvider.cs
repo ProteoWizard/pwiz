@@ -23,7 +23,7 @@ using System.Drawing;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.Skyline.Model.Results.RemoteApi.Chorus;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Results
         {
             _document = document;
             ChorusUrl chorusUrl = (ChorusUrl)chromFileInfo.FilePath;
-            _chorusAccount = chorusUrl.FindChorusAccount(Settings.Default.ChorusAccountList);
+            _chorusAccount = chorusUrl.FindChorusAccount(Settings.Default.RemoteAccountList);
             var chromatogramRequestProviders = new List<ChromatogramRequestProvider>();
             foreach (bool firstPass in new[] {true, false})
             {

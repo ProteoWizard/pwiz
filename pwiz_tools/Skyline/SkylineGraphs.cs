@@ -40,8 +40,10 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -67,6 +69,7 @@ namespace pwiz.Skyline
         private DockableForm _resultsGridForm;
         private DocumentGridForm _documentGridForm;
         private CalibrationForm _calibrationForm;
+        private AuditLogForm _auditLogForm;
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>();
         private bool _inGraphUpdate;
         private ChromFileInfoId _alignToFile;
@@ -263,7 +266,7 @@ namespace pwiz.Skyline
                     }
                 }
 
-                bool enable = DocumentUI.Settings.PeptideSettings.Libraries.HasLibraries;
+                bool enable = settingsNew.PeptideSettings.Libraries.HasLibraries;
                 if (enable)
                 {
                     UpdateIonTypesMenuItemsVisibility();
@@ -281,30 +284,25 @@ namespace pwiz.Skyline
                         ShowGraphSpectrum(enable && Settings.Default.ShowSpectra);
                     }
                 }
-                enable = DocumentUI.Settings.HasResults;
-                bool enableSchedule = enable || DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime != null;
-                if (retentionTimesMenuItem.Enabled != enableSchedule || replicateComparisonMenuItem.Enabled != enable)
+                enable = settingsNew.HasResults;
+                bool enableSchedule = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.schedule);
+                bool enableRunToRun = IsRetentionTimeGraphTypeEnabled(GraphTypeSummary.run_to_run_regression);
+                if (replicateComparisonMenuItem.Enabled != enable ||
+                    retentionTimesMenuItem.Enabled != enableSchedule ||
+                    runToRunMenuItem.Enabled != enableRunToRun)
                 {
                     retentionTimesMenuItem.Enabled = enableSchedule;
                     replicateComparisonMenuItem.Enabled = enable;
                     timePeptideComparisonMenuItem.Enabled = enable;
                     regressionMenuItem.Enabled = enable;
                     scoreToRunMenuItem.Enabled = enable;
-                    runToRunMenuItem.Enabled = enable; 
+                    runToRunMenuItem.Enabled = runToRunToolStripMenuItem.Enabled = enableRunToRun;
                     schedulingMenuItem.Enabled = enableSchedule;
                     if (!deserialized)
                     {
                         layoutLock.EnsureLocked();
-                        UpdateUIGraphRetentionTime(enable);
+                        UpdateUIGraphRetentionTime(IsRetentionTimeGraphTypeEnabled);
                     }
-                }
-
-                //Can only do run to run regression with at least 2 replicates
-                var enableRunToRun = settingsNew.HasResults && settingsNew.MeasuredResults.Chromatograms.Count > 1;
-                if (runToRunMenuItem.Enabled != enableRunToRun || runToRunToolStripMenuItem.Enabled != enableRunToRun)
-                {
-                    runToRunMenuItem.Enabled = enableRunToRun;
-                    runToRunToolStripMenuItem.Enabled = enableRunToRun;
                 }
 
                 if (resultsGridMenuItem.Enabled != enable)
@@ -516,6 +514,7 @@ namespace pwiz.Skyline
 
             DestroyResultsGrid();
             DestroyDocumentGrid();
+            DestroyAuditLogForm();
             DestroyCalibrationForm();
 
             DestroyImmediateWindow();
@@ -643,6 +642,10 @@ namespace pwiz.Skyline
             if (Equals(persistentString, typeof (CalibrationForm).ToString()))
             {
                 return _calibrationForm ?? CreateCalibrationForm();
+            }
+            if (Equals(persistentString, typeof(AuditLogForm).ToString()))
+            {
+                return _auditLogForm ?? CreateAuditLogForm();
             }
             if (Equals(persistentString, typeof(ImmediateWindow).ToString()))
             {
@@ -2837,17 +2840,47 @@ namespace pwiz.Skyline
 
         public GraphSummary GraphRetentionTime { get { return _listGraphRetentionTime.FirstOrDefault(); } }
 
-        private void UpdateUIGraphRetentionTime(bool visible)
+        public bool IsGraphRetentionTimeShown(GraphTypeSummary type)
         {
-            var list = Settings.Default.RTGraphTypes;
-            ShowGraphRetentionTime(visible);
-            if (!visible)
-                Settings.Default.RTGraphTypes = list;
+            return _listGraphRetentionTime.Any(g => g.Type == type && !g.IsHidden);
+        }
+
+        private void UpdateUIGraphRetentionTime(Func<GraphTypeSummary, bool> isEnabled)
+        {
+            var list = Settings.Default.RTGraphTypes.ToArray();
+            ShowGraphRetentionTime(isEnabled);
+            if (!list.All(isEnabled))
+            {
+                Settings.Default.RTGraphTypes.Clear();
+                Settings.Default.RTGraphTypes.AddRange(list);
+            }
         }
 
         public void ShowGraphRetentionTime(bool show)
         {
-            Settings.Default.RTGraphTypes.ToList().ForEach(t => ShowGraphRetentionTime(show, t));
+            ShowGraphRetentionTime(t => show && IsRetentionTimeGraphTypeEnabled(t));
+        }
+
+        private bool IsRetentionTimeGraphTypeEnabled(GraphTypeSummary type)
+        {
+            bool enabled = DocumentUI.Settings.HasResults;
+            switch (type)
+            {
+                // Can only do run to run regression with at least 2 replicates
+                case GraphTypeSummary.run_to_run_regression:
+                    return enabled && DocumentUI.Settings.MeasuredResults.Chromatograms.Count > 1;
+                // Scheduling can be enabled with a predictor even if there are no results
+                case GraphTypeSummary.schedule:
+                    return enabled || DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime != null;
+                default:
+                    return enabled;
+            }
+        }
+
+        private void ShowGraphRetentionTime(Func<GraphTypeSummary, bool> isEnabled)
+        {
+            Settings.Default.RTGraphTypes.ToList().ForEach(t =>
+                ShowGraphRetentionTime(isEnabled(t), t));
         }
 
         public void ShowGraphRetentionTime(bool show, GraphTypeSummary type)
@@ -3542,7 +3575,7 @@ namespace pwiz.Skyline
                     ModifyDocument(string.Format(Resources.SkylineWindow_CreateRegression_Set_regression__0__, regression.Name),
                                    doc =>
                                    doc.ChangeSettings(
-                                       doc.Settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(regression))));
+                                       doc.Settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(regression))), SettingsLogFunction);
                 }
             }
         }
@@ -3612,7 +3645,7 @@ namespace pwiz.Skyline
                     {
                         ModifyDocument(string.Format(Resources.SkylineWindow_ShowEditCalculatorDlg_Update__0__calculator, calcNew.Name), doc =>
                             doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
-                                predict.ChangeRetentionTime(predict.RetentionTime.ChangeCalculator(calcNew)))));
+                                predict.ChangeRetentionTime(predict.RetentionTime.ChangeCalculator(calcNew)))), SettingsLogFunction);
                     }
                 }
             }
@@ -3798,10 +3831,13 @@ namespace pwiz.Skyline
 
         public void UpdateUIGraphPeakArea(bool visible)
         {
-            var list = Settings.Default.AreaGraphTypes;
+            var list = Settings.Default.AreaGraphTypes.ToArray();
             ShowGraphPeakArea(visible);
             if (!visible)
-                Settings.Default.AreaGraphTypes = list;
+            {
+                Settings.Default.AreaGraphTypes.Clear();
+                Settings.Default.AreaGraphTypes.AddRange(list);
+            }
         }
 
         public void ShowGraphPeakArea(bool show)
@@ -3980,7 +4016,7 @@ namespace pwiz.Skyline
                 {
                     UpdateAreaPointsTypeMenuItems();
 
-                    if (!pointsToolStripMenuItem.DropDownItems.OfType<object>().Any())
+                    if (pointsToolStripMenuItem.DropDownItems.Count == 0)
                     {
                         pointsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                         {
@@ -3992,8 +4028,25 @@ namespace pwiz.Skyline
                     menuStrip.Items.Insert(iInsert++, pointsToolStripMenuItem);
                 }
 
+                UpdateAreaCVTransitionsMenuItems();
+
+                if (areaCVTransitionsToolStripMenuItem.DropDownItems.Count == 0)
+                {
+                    areaCVTransitionsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                    {
+                        areaCVAllTransitionsToolStripMenuItem,
+                        areaCVBestTransitionsToolStripMenuItem,
+                        toolStripSeparator58,
+                        areaCVPrecursorsToolStripMenuItem,
+                        areaCVProductsToolStripMenuItem
+                    });
+                }
+
+                menuStrip.Items.Insert(iInsert++, areaCVTransitionsToolStripMenuItem);
+
+
                 UpdateAreaBinWidthMenuItems();
-                if (!areaCVbinWidthToolStripMenuItem.DropDownItems.OfType<object>().Any())
+                if (areaCVbinWidthToolStripMenuItem.DropDownItems.Count == 0)
                 {
                     areaCVbinWidthToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
@@ -4079,6 +4132,47 @@ namespace pwiz.Skyline
                     menuStrip.Items.Remove(item);
             }
         }
+
+        private void UpdateAreaCVTransitionsMenuItems()
+        {
+            areaCVAllTransitionsToolStripMenuItem.Checked = AreaGraphController.AreaCVTransitions == AreaCVTransitions.all;
+            areaCVBestTransitionsToolStripMenuItem.Checked = AreaGraphController.AreaCVTransitions == AreaCVTransitions.best;
+            areaCVPrecursorsToolStripMenuItem.Checked = AreaGraphController.AreaCVMsLevel == AreaCVMsLevel.precursors;
+            areaCVProductsToolStripMenuItem.Checked = AreaGraphController.AreaCVMsLevel == AreaCVMsLevel.products;
+        }
+
+        private void areaCVAllTransitionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetAreaCVTransitions(AreaCVTransitions.all);
+        }
+
+        private void areaCVBestTransitionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetAreaCVTransitions(AreaCVTransitions.best);
+        }
+
+        public void SetAreaCVTransitions(AreaCVTransitions transitions)
+        {
+            AreaGraphController.AreaCVTransitions = transitions;
+            UpdatePeakAreaGraph();
+        }
+
+        private void areaCVPrecursorsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetAreaCVMsLevel(AreaCVMsLevel.precursors);
+        }
+
+        private void areaCVProductsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetAreaCVMsLevel(AreaCVMsLevel.products);
+        }
+
+        public void SetAreaCVMsLevel(AreaCVMsLevel msLevel)
+        {
+            AreaGraphController.AreaCVMsLevel = msLevel;
+            UpdatePeakAreaGraph();
+        }
+
 
         private void UpdateAreaBinWidthMenuItems()
         {
@@ -4809,10 +4903,13 @@ namespace pwiz.Skyline
 
         public void UpdateUIGraphMassError(bool visible)
         {
-            var list = Settings.Default.MassErrorGraphTypes;
+            var list = Settings.Default.MassErrorGraphTypes.ToArray();
             ShowGraphMassError(visible);
             if (!visible)
-                Settings.Default.MassErrorGraphTypes = list;
+            {
+                Settings.Default.MassErrorGraphTypes.Clear();
+                Settings.Default.MassErrorGraphTypes.AddRange(list);
+            }
         }
         public void ShowGraphMassError(bool show)
         {
@@ -5331,9 +5428,11 @@ namespace pwiz.Skyline
             Settings.Default.ShowResultsGrid = false;
             _resultsGridForm = null;
         }
+
         #endregion
 
         #region Document Grid
+
         private void documentGridMenuItem_Click(object sender, EventArgs e)
         {
             ShowDocumentGrid(true);
@@ -5443,6 +5542,71 @@ namespace pwiz.Skyline
                 CreateCalibrationForm().Show(dockPanel, rectFloat);
             }
             return _calibrationForm;
+        }
+
+        #endregion
+
+        #region Audit Log
+
+        public void ShowAuditLog()
+        {
+            if (_auditLogForm != null && !Program.SkylineOffscreen)
+            {
+                _auditLogForm.Activate();
+            }
+            else
+            {
+                _auditLogForm = _auditLogForm ?? CreateAuditLogForm();
+                if (_auditLogForm != null)
+                {
+                    var rectFloat = GetFloatingRectangleForNewWindow();
+                    _auditLogForm.Show(dockPanel, rectFloat);
+                }
+            }
+        }
+
+        private AuditLogForm CreateAuditLogForm()
+        {
+            if (_auditLogForm == null)
+            {
+                _auditLogForm = AuditLogForm.MakeAuditLogForm(this);
+                _auditLogForm.FormClosed += _auditLogForm_FormClosed;
+            }
+
+            return _auditLogForm;
+        }
+
+        private void DestroyAuditLogForm()
+        {
+            if (_auditLogForm != null)
+            {
+                _auditLogForm.FormClosed -= _auditLogForm_FormClosed;
+                _auditLogForm.Close();
+                _auditLogForm = null;
+            }
+        }
+
+        private void auditLogMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowAuditLog();
+        }
+
+        private void _auditLogForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            _auditLogForm = null;
+        }
+
+        public void ClearAuditLog()
+        {
+            if (Document.AuditLog.AuditLogEntries.Any())
+            {
+                ModifyDocument(AuditLogStrings.AuditLogForm__clearLogButton_Click_Clear_audit_log,
+                    document => document.ChangeAuditLog(ImmutableList<AuditLogEntry>.EMPTY), (oldDoc, newDoc) =>
+                    {
+                        return UpdateCountLogEntry(oldDoc.AuditLog.AuditLogEntries.Count,
+                            oldDoc.AuditLog.AuditLogEntries.Sum(e => e.AllInfo.Count), MessageType.log_cleared, false);
+                    });
+            } 
         }
 
         #endregion

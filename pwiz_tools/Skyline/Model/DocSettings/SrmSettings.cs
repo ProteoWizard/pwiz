@@ -73,10 +73,13 @@ namespace pwiz.Skyline.Model.DocSettings
             CreateFragmentMassCalcs();
         }
 
+        [DiffParent]
         public PeptideSettings PeptideSettings { get; private set; }
 
+        [DiffParent]
         public TransitionSettings TransitionSettings { get; private set; }
 
+        [DiffParent]
         public DataSettings DataSettings { get; private set; }
 
         public MeasuredResults MeasuredResults { get; private set; }
@@ -327,11 +330,15 @@ namespace pwiz.Skyline.Model.DocSettings
             // Return the singly protonated mass (massH) of the peptide fragment, or custom molecule mass before electron removal
             var labelType = group==null ? IsotopeLabelType.light : group.LabelType;
 
-            IFragmentMassCalc calc = GetFragmentCalc(labelType, mods);
-            if (calc == null && transition.IsCustom())
+            IFragmentMassCalc calc;
+            if (transition.IsNonReporterCustomIon())
             {
                 // Small molecules provide their own molecule formula, just use the standard calculator
                 calc = GetDefaultFragmentCalc();
+            }
+            else
+            {
+                calc = GetFragmentCalc(labelType, mods);
             }
             if (calc == null)
             {
@@ -1796,6 +1803,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public static SrmSettings Deserialize(XmlReader reader)
         {
             return reader.Deserialize(new SrmSettings());
+        }
+
+        private enum EL
+        {
+            audit_log
         }
 
         public override void ReadXml(XmlReader reader)

@@ -104,8 +104,8 @@ namespace pwiz.Skyline.Model.Results
         public SignedMz Q1 { get; private set; }
         public double? MinTime { get; private set; }
         public double? MaxTime { get; private set; }
-        private double? MinIonMobilityValue { get; set; }
-        private double? MaxIonMobilityValue { get; set; }
+        public double? MinIonMobilityValue { get; set; }
+        public double? MaxIonMobilityValue { get; set; }
         private double HighEnergyIonMobilityValueOffset { get; set; }
         private IonMobilityFilter IonMobilityInfo { get; set; }
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }

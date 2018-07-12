@@ -1482,6 +1482,13 @@ namespace pwiz.Skyline.Model
             var endLine = csvText.IndexOf('\n'); // Not L10N 
             var line = (endLine != -1 ? csvText.Substring(endLine+1) : csvText);
             MassListImporter.IsColumnar(line, out formatProvider, out separator, out columnTypes);
+            // Double check that separator - does it appear in header row, or was it just an unlucky hit in a text field?
+            var header = (endLine != -1 ? csvText.Substring(0, endLine) : csvText);
+            if (!header.Contains(separator))
+            {
+                // Try again, this time without the distraction of a plausible but clearly incorrect seperator
+                MassListImporter.IsColumnar(line.Replace(separator,'_'), out formatProvider, out separator, out columnTypes);
+            }
             _cultureInfo = formatProvider;
             var reader = new StringReader(csvText);
             _csvReader = new DsvFileReader(reader, separator, SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms);
@@ -1526,6 +1533,10 @@ namespace pwiz.Skyline.Model
             {
                 // Not a proper small molecule transition list, but was it trying to be one?
                 var header = csvText.Split('\n')[0];
+                if (header.ToLowerInvariant().Contains("peptide")) // Not L10N
+                {
+                    return false;
+                }
                 return new[]
                 {
                     // These are pretty basic, without overlap in peptide lists

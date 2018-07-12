@@ -203,7 +203,9 @@ namespace pwiz.Skyline.Model.Lib
                         // Switch to pick by filter if there are no other libraries
                         if (libSpecs.Count == 1)
                         {
-                            libraries = libraries.ChangePick(PeptidePick.filter);
+                            libraries = libraries
+                                .ChangeRankId(null)
+                                .ChangePick(PeptidePick.filter);
                             docNew = docNew.ChangeSettings(docNew.Settings.ChangeTransitionSettings(
                                 settings => settings.ChangeLibraries(settings.Libraries.ChangePick(TransitionLibraryPick.none))));
                         }
@@ -1129,6 +1131,10 @@ namespace pwiz.Skyline.Model.Lib
         // ReSharper disable PossibleMultipleEnumeration
         protected int FindFileInList(MsDataFileUri sourceFile, IEnumerable<string> fileNames)
         {
+            if (fileNames == null)
+            {
+                return -1;
+            }
             string sourceFileToString = sourceFile.ToString();
             int iFile = 0;
             foreach (var fileName in fileNames)
@@ -1402,6 +1408,7 @@ namespace pwiz.Skyline.Model.Lib
             UseExplicitPeakBounds = true;
         }
 
+        [Diff]
         public string FilePath { get; private set; }
 
         /// <summary>
@@ -1425,8 +1432,8 @@ namespace pwiz.Skyline.Model.Lib
 
         public abstract IEnumerable<PeptideRankId> PeptideRankIds { get; }
 
+        [Diff]
         public bool UseExplicitPeakBounds { get; private set; }
-
 
         #region Property change methods
 
@@ -1531,7 +1538,7 @@ namespace pwiz.Skyline.Model.Lib
     /// Identity class for a type peptide ranking, with values for
     /// displaying in the user interface, and persisting to XML.
     /// </summary>
-    public sealed class PeptideRankId
+    public sealed class PeptideRankId : IAuditLogObject
     {
         public static readonly PeptideRankId PEPTIDE_RANK_NONE = new PeptideRankId(string.Empty, string.Empty);
 
@@ -1552,6 +1559,29 @@ namespace pwiz.Skyline.Model.Lib
         public string Value { get; private set; }
 
         public override string ToString() { return Label; }
+
+        public string AuditLogText { get { return Label; } }
+        public bool IsName { get { return true; } }
+
+        private bool Equals(PeptideRankId other)
+        {
+            return string.Equals(Label, other.Label) && string.Equals(Value, other.Value);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is PeptideRankId && Equals((PeptideRankId) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((Label != null ? Label.GetHashCode() : 0) * 397) ^ (Value != null ? Value.GetHashCode() : 0);
+            }
+        }
     }
 
     public abstract class SpectrumHeaderInfo : Immutable, IXmlSerializable
@@ -1576,7 +1606,7 @@ namespace pwiz.Skyline.Model.Lib
         public virtual float GetRankValue(PeptideRankId rankId)
         {
             // If super class has not provided a number of copies, return 1.
-            if (rankId == LibrarySpec.PEP_RANK_COPIES)
+            if (ReferenceEquals(rankId, LibrarySpec.PEP_RANK_COPIES))
                 return 1;
             return float.MinValue;
         }
@@ -2267,6 +2297,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        [Diff]
         public LibraryKey LibraryKey { get; private set; }
 
         public LibKey(double precursorMz,

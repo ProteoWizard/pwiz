@@ -199,6 +199,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var document = _graphSummary.DocumentUIContainer.DocumentUI;
 
+            if (!document.Settings.HasResults)
+                return;
+
             var groupsVisible = AreaGraphController.GroupByGroup != null;
             toolStripLabel1.Visible = toolStripComboGroup.Visible = groupsVisible;
 

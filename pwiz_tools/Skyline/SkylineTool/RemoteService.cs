@@ -93,6 +93,7 @@ namespace SkylineTool
                     {
                         var remoteInvoke = (RemoteInvoke) DeserializeObject(ReadAllBytes(stream));
                         var method = GetType().GetMethod(remoteInvoke.MethodName);
+                        // ReSharper disable once PossibleNullReferenceException
                         var returnValue = method.Invoke(this, remoteInvoke.Arguments);
                         bytesResponse = SerializeObject(new RemoteResponse {ReturnValue = returnValue});
                     }

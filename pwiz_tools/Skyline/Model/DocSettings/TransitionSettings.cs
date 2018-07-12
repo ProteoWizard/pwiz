@@ -27,7 +27,9 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -56,16 +58,21 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
+        [DiffParent(true)]
         public TransitionPrediction Prediction { get; private set; }
 
+        [DiffParent(true)]
         public TransitionFilter Filter { get; private set; }
 
+        [DiffParent(true)]
         public TransitionLibraries Libraries { get; private set; }
 
         public TransitionIntegration Integration { get; private set; }
 
+        [DiffParent(true)]
         public TransitionInstrument Instrument { get; private set; }
 
+        [DiffParent(true)]
         public TransitionFullScan FullScan { get; private set; }
 
         public bool IsMeasurablePrecursor(double mz)
@@ -323,19 +330,29 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
+        [Diff]
         public MassType PrecursorMassType { get; private set; }
 
+        [Diff]
         public MassType FragmentMassType { get; private set; }
 
+        [DiffParent]
         public CollisionEnergyRegression CollisionEnergy { get; private set; }
 
+        [DiffParent]
         public DeclusteringPotentialRegression DeclusteringPotential { get; private set; }
 
-        public CompensationVoltageParameters CompensationVoltage { get; private set; } 
+        [DiffParent]
+        public CompensationVoltageParameters CompensationVoltage { get; private set; }
 
+        [DiffParent]
         public OptimizationLibrary OptimizedLibrary { get; set; }
 
+        [Diff]
         public OptimizedMethodType OptimizedMethodType { get; private set; }
+
+        [Diff]
+        public bool UseOptimizationValues { get { return OptimizedMethodType != OptimizedMethodType.None; } }
 
         /// <summary>
         /// This element is here for backward compatibility with the
@@ -595,6 +612,47 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
+        private static string AdductListToString(IList<Adduct> list)
+        {
+            return list.ToArray().ToString(", "); // Not L10N? Internationalization of comma?
+        }
+
+        [Diff]
+        public string PeptidePrecursorChargesString
+        {
+            get { return AdductListToString(PeptidePrecursorCharges); }
+        }
+
+        [Diff]
+        public string PeptideProductChargesString
+        {
+            get { return AdductListToString(PeptideProductCharges); }
+        }
+
+        [Diff]
+        public string SmallMoleculePrecursorAdductsString
+        {
+            get { return AdductListToString(SmallMoleculePrecursorAdducts); }
+        }
+
+        [Diff]
+        public string SmallMoleculeFragmentAdductsString
+        {
+            get { return AdductListToString(SmallMoleculeFragmentAdducts); }
+        }
+
+        [Diff]
+        public string PeptideIonTypesString
+        {
+            get { return ToStringIonTypes(PeptideIonTypes, true); }
+        }
+
+        [Diff]
+        public string SmallMoleculeIonTypesString
+        {
+            get { return ToStringSmallMoleculeIonTypes(SmallMoleculeIonTypes, true); }
+        }
+
         public IList<Adduct> PeptidePrecursorCharges
         {
             get { return _peptidePrecursorCharges; }
@@ -667,6 +725,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IStartFragmentFinder FragmentRangeFirst { get { return _fragmentRangeFirst; } }
 
+        [Diff]
         public string FragmentRangeFirstName
         {
             get { return _fragmentRangeFirst.Name; }
@@ -684,6 +743,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IEndFragmentFinder FragmentRangeLast { get { return _fragmentRangeLast; } }
 
+        [Diff]
         public string FragmentRangeLastName
         {
             get { return _fragmentRangeLast.Name; }
@@ -699,6 +759,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        [DiffParent]
         public IList<MeasuredIon> MeasuredIons
         {
             get { return _measuredIons; }
@@ -724,6 +785,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// A m/z window width around the precursor m/z where transitions are not allowed.
         /// </summary>
+        [Diff]
         public double PrecursorMzWindow { get; private set; }
 
         /// <summary>
@@ -744,12 +806,14 @@ namespace pwiz.Skyline.Model.DocSettings
             return IsSpecialFragment(sequence, type, cleavageOffset);
         }
 
+        [Diff]
         public bool AutoSelect { get; private set; }
 
         /// <summary>
         /// Whether to use the DIA window for exclusion of fragments (exclude fragments falling 
         /// into the same DIA window as the precursor)
         /// </summary>
+        [Diff]
         public bool ExclusionUseDIAWindow { get; private set; }
 
         #region Property change methods
@@ -1433,13 +1497,23 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
+        [Diff]
         public double IonMatchTolerance { get; private set; }
 
+        [Diff]
         public int MinIonCount { get; private set; }
-        
+
+        [Diff]
         public int IonCount { get; private set; }
 
+        [Diff]
         public TransitionLibraryPick Pick { get; private set; }
+
+        [Diff]
+        public bool PickMostIntenseIons
+        {
+            get { return Pick != TransitionLibraryPick.none; }
+        }
 
         public bool HasMinIonCount(TransitionGroupDocNode nodeGroup)
         {
@@ -1699,8 +1773,10 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
+        [Diff]
         public int MinMz { get; private set; }
 
+        [Diff]
         public int MaxMz { get; private set; }
 
         public bool IsMeasurable(double mz)
@@ -1708,6 +1784,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return MinMz <= mz && mz <= MaxMz;
         }
 
+        [Diff]
         public bool IsDynamicMin { get; private set; }
 
         public int GetMinMz(double precursorMz)
@@ -1723,6 +1800,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetMinMz(precursorMz) <= mz && mz <= MaxMz;
         }
 
+        [Diff]
         public double MzMatchTolerance { get; private set; }
 
         public bool IsMzMatch(double mz1, double mz2)
@@ -1730,12 +1808,16 @@ namespace pwiz.Skyline.Model.DocSettings
             return Math.Abs(mz1 - mz1) <= MzMatchTolerance;
         }
 
+        [Diff]
         public int? MaxTransitions { get; private set; }
-        
+
+        [Diff]
         public int? MaxInclusions { get; private set; }
 
+        [Diff]
         public int? MinTime { get; private set; }
 
+        [Diff]
         public int? MaxTime { get; private set; }
 
         // Backward compatibility with 0.7.1
@@ -2120,14 +2202,17 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         // Applies to both MS1 and MS/MS because it is related to sample complexity
+        [Diff]
         public bool UseSelectiveExtraction { get; private set; }
 
         public double ResPerFilter { get { return UseSelectiveExtraction ? RES_PER_FILTER_SELECTIVE : RES_PER_FILTER; } }
 
         // MS/MS filtering
 
+        [Diff]
         public FullScanAcquisitionMethod AcquisitionMethod { get; private set; }
 
+        [DiffParent]
         public IsolationScheme IsolationScheme { get; private set; }
 
         public double? PrecursorFilter
@@ -2170,24 +2255,77 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
 
+        private abstract class ResLocalizer : CustomPropertyLocalizer
+        {
+            protected ResLocalizer(PropertyPath path) : base(path, true) { }
+
+            protected override string Localize(object obj)
+            {
+                if (obj.GetType() != typeof(FullScanMassAnalyzerType))
+                    return null;
+
+                var massAnalyzer = (FullScanMassAnalyzerType)obj;
+
+                switch (massAnalyzer)
+                {
+                    case FullScanMassAnalyzerType.none:
+                        return string.Empty;
+                    case FullScanMassAnalyzerType.centroided:
+                        return "MassAccuracy"; // Not L10N
+                    case FullScanMassAnalyzerType.qit:
+                        return "Resolution"; // Not L10N
+                    case FullScanMassAnalyzerType.tof:
+                    case FullScanMassAnalyzerType.orbitrap:
+                    case FullScanMassAnalyzerType.ft_icr:
+                        return "ResolvingPower"; // Not L10N
+                    default:
+                        return null;
+                }
+            }
+
+            public override string[] PossibleResourceNames
+            {
+                get { return new[] { "MassAccuracy", "Resolution", "ResolvingPower" }; } // Not L10N
+            }
+        }
+
+        private class ProductResLocalizer : ResLocalizer
+        {
+            public ProductResLocalizer() : base(PropertyPath.Parse("ProductMassAnalyzer")) { } // Not L10N
+        }
+
+        private class PrecursorResLocalizer : ResLocalizer
+        {
+            public PrecursorResLocalizer() : base(PropertyPath.Parse("PrecursorMassAnalyzer")) { } // Not L10N
+        }
+
+        [Diff]
         public FullScanMassAnalyzerType ProductMassAnalyzer { get; private set; }
 
+        [Diff(customLocalizer: typeof(ProductResLocalizer))]
         public double? ProductRes { get; private set; }  // Resolving Power or mass accuracy, depending on ProductMassAnalyzer value
 
+        [Diff]
         public double? ProductResMz { get; private set; }
 
         // MS1 filtering
 
+        [Diff]
         public FullScanPrecursorIsotopes PrecursorIsotopes { get; private set; }
 
+        [Diff]
         public double? PrecursorIsotopeFilter { get; private set; }
 
+        [Diff]
         public FullScanMassAnalyzerType PrecursorMassAnalyzer { get; private set; }
 
+        [Diff(customLocalizer: typeof(PrecursorResLocalizer))]
         public double? PrecursorRes { get; private set; }  // Resolving Power or mass accuracy, depending on PrecursorMassAnalyzer value
 
+        [Diff]
         public double? PrecursorResMz { get; private set; }
 
+        [DiffParent]
         public IsotopeEnrichments IsotopeEnrichments { get; private set; }
 
         public IsotopeAbundances IsotopeAbundances
@@ -2195,7 +2333,9 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return IsotopeEnrichments != null ? IsotopeEnrichments.IsotopeAbundances : null; }
         }
 
+        [Diff]
         public RetentionTimeFilterType RetentionTimeFilterType { get; private set; }
+        [Diff]
         public double RetentionTimeFilterLength { get; private set; }
 
         public bool IsEnabled
