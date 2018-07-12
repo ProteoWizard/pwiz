@@ -295,8 +295,11 @@ namespace pwiz.Skyline.Controls
 
             Document = document;
 
+            bool integrateAllChanged = e.DocumentPrevious != null &&
+                                       e.DocumentPrevious.Settings.TransitionSettings.Integration.IsIntegrateAll !=
+                                       document.Settings.TransitionSettings.Integration.IsIntegrateAll;
             // If none of the children changed, then do nothing
-            if (e.DocumentPrevious != null &&
+            if (!integrateAllChanged && e.DocumentPrevious != null &&
                     ReferenceEquals(document.Children, e.DocumentPrevious.Children))
             {
                 return;                
@@ -340,6 +343,10 @@ namespace pwiz.Skyline.Controls
 
                 SrmTreeNodeParent.UpdateNodes(this, Nodes, document.Children,
                     true, PeptideGroupTreeNode.CreateInstance, changeAll);
+                if (integrateAllChanged)
+                {
+                    UpdateNodeStates();
+                }
             }
             finally
             {

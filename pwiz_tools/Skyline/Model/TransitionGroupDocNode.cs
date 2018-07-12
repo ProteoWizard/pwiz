@@ -1073,9 +1073,6 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                // Recalculate results information
-                bool integrateAll = settingsNew.TransitionSettings.Integration.IsIntegrateAll;
-
                 // Store indexes to previous results in a dictionary for lookup
                 var settingsOld = diff.SettingsOld;
                 var dictChromIdIndex = settingsOld != null && settingsOld.HasResults
@@ -1139,8 +1136,6 @@ namespace pwiz.Skyline.Model
                         // by the user, then preserve it, and skip automatic peak picking
                         var resultOld = Results != null ? Results[iResultOld] : default(ChromInfoList<TransitionGroupChromInfo>);
                         if (!resultOld.IsEmpty &&
-                                // Do not reuse results, if integrate all has changed
-                                integrateAll == settingsOld.TransitionSettings.Integration.IsIntegrateAll &&
                                 (// Unfortunately, it is always possible that new results need
                                  // to be added from other files.  So this must be handled below.
                                  //(UserSetResults(resultOld) && setTranPrevious == null) ||
@@ -1174,7 +1169,7 @@ namespace pwiz.Skyline.Model
                     if (keepUserSet && iResultOld != -1)
                     {
                         // Or we have reintegrated peaks that are not matching the current integrate all setting
-                        if (integrateAll && (settingsOld == null || !settingsOld.TransitionSettings.Integration.IsIntegrateAll))
+                        if (settingsOld == null)
                             missmatchedEmptyReintegrated = nodePrevious.IsMismatchedEmptyReintegrated(iResultOld);
                         if (setTranPrevious != null || missmatchedEmptyReintegrated)
                             dictUserSetInfoBest = nodePrevious.FindBestUserSetInfo(iResultOld);
@@ -1312,7 +1307,7 @@ namespace pwiz.Skyline.Model
                                             else if (nodePep.HasResults && !HasResults &&
                                                 TryGetMatchingGroupInfo(nodePep, chromIndex, fileId, step, out chromGroupInfoMatch))
                                             {
-                                                peak = CalcMatchingPeak(settingsNew, info, chromGroupInfoMatch, reintegratePeak, qcutoff, integrateAll, ref userSet);
+                                                peak = CalcMatchingPeak(settingsNew, info, chromGroupInfoMatch, reintegratePeak, qcutoff, ref userSet);
                                             }
                                             // Otherwize use the best peak chosen at import time
                                             else
@@ -1320,7 +1315,6 @@ namespace pwiz.Skyline.Model
                                                 int bestIndex = GetBestIndex(info, reintegratePeak, qcutoff, ref userSet);
                                                 if (bestIndex != -1)
                                                     peak = info.GetPeak(bestIndex);
-                                                peak = CheckForcedPeak(peak, integrateAll);
                                             }
                                             ionMobility = info.GetIonMobilityFilter();
                                         }
@@ -1424,7 +1418,6 @@ namespace pwiz.Skyline.Model
                                                   TransitionGroupChromInfo chromGroupInfoMatch,
                                                   PeakFeatureStatistics reintegratePeak,
                                                   double qcutoff, 
-                                                  bool integrateAll,
                                                   ref UserSet userSet)
         {
             int startIndex = info.IndexOfNearestTime(chromGroupInfoMatch.StartRetentionTime.Value);
@@ -1441,7 +1434,6 @@ namespace pwiz.Skyline.Model
                 var peakBest = info.GetPeak(bestIndex);
                 if (peakBest.StartTime == peak.StartTime && peakBest.EndTime == peak.EndTime)
                 {
-                    peak = CheckForcedPeak(peakBest, integrateAll);
                     userSet = userSetBest;
                 }
             }
@@ -1476,13 +1468,6 @@ namespace pwiz.Skyline.Model
             }
             chromGroupInfoMatch = null;
             return false;
-        }
-
-        private static ChromPeak CheckForcedPeak(ChromPeak peak, bool integrateAll)
-        {
-            if (!integrateAll && peak.IsForcedIntegration)
-                return ChromPeak.EMPTY;
-            return peak;
         }
 
         private static TransitionChromInfo CreateTransitionChromInfo(TransitionChromInfo chromInfo, ChromFileInfoId fileId,
@@ -2284,7 +2269,7 @@ namespace pwiz.Skyline.Model
 
                 if (!info.IsEmpty)
                 {
-                    if (info.Area > 0)
+                    if (info.IsGoodPeak(Settings.TransitionSettings.Integration.IsIntegrateAll))
                         PeakCount++;
                     if (nodeTran.Quantitative)
                     {
