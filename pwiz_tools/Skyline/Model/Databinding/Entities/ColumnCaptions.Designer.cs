@@ -333,6 +333,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Coeluting.
+        /// </summary>
+        public static string Coeluting {
+            get {
+                return ResourceManager.GetString("Coeluting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Collisional Cross Section.
         /// </summary>
         public static string CollisionalCrossSection {

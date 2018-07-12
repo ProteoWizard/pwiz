@@ -284,7 +284,8 @@ namespace pwiz.SkylineTestTutorial
                     dotpExpect.ToString(LocalizationHelper.CurrentCulture));
                 SkylineWindow.EditDelete();
 
-                dotpExpect = 0.34; // Math.Round(Statistics.AngleToNormalizedContrastAngle(0.633), 2);  // 0.44
+                // TODO(nicksh): Update tutorial document to reflect this dotp value (was 0.34)
+                dotpExpect = 0.53; // Math.Round(Statistics.AngleToNormalizedContrastAngle(0.633), 2);  // 0.44
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
                 AssertEx.Contains(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text,
                     dotpExpect.ToString(LocalizationHelper.CurrentCulture));
@@ -347,7 +348,9 @@ namespace pwiz.SkylineTestTutorial
                 refineDlg.DotProductThreshold = Statistics.AngleToNormalizedContrastAngle(0.95);    // Convert from original cos(angle) dot-product
                 refineDlg.OkDialog();
             });
-            WaitForCondition(() => SkylineWindow.Document.PeptideCount < 76);
+            // TODO(nicksh): Update tutorial document: we used to expect 75 peptides
+            const int expectedRefinedPeptideCount = 81;
+            WaitForCondition(() => SkylineWindow.Document.PeptideCount <= expectedRefinedPeptideCount);
 //            foreach (var peptideDocNode in SkylineWindow.Document.Peptides)
 //            {
 //                var nodeGroup = ((TransitionGroupDocNode) peptideDocNode.Children[0]);
@@ -356,8 +359,9 @@ namespace pwiz.SkylineTestTutorial
 //            }
             RunUI(() =>
             {
-                Assert.AreEqual(75, SkylineWindow.Document.PeptideCount);
-                Assert.AreEqual(225, SkylineWindow.Document.PeptideTransitionCount);
+                Assert.AreEqual(expectedRefinedPeptideCount, SkylineWindow.Document.PeptideCount);
+                // TODO (nicksh): Update tutorial document: expected transition count used to be 225.
+                Assert.AreEqual(243, SkylineWindow.Document.PeptideTransitionCount);
                 SkylineWindow.CollapsePeptides();
                 SkylineWindow.Undo();
             });
@@ -369,11 +373,11 @@ namespace pwiz.SkylineTestTutorial
                 refineDlg.DotProductThreshold = Statistics.AngleToNormalizedContrastAngle(0.90);    // Convert from original cos(angle) dot-product
                 refineDlg.OkDialog();
             });
-
-            WaitForCondition(() => SkylineWindow.Document.PeptideCount < 120);
+            const int expectedPeptideCount = 127;
+            WaitForCondition(() => SkylineWindow.Document.PeptideCount <= expectedPeptideCount);
             RunUI(() =>
             {
-                Assert.AreEqual(117, SkylineWindow.Document.PeptideCount);
+                Assert.AreEqual(expectedPeptideCount, SkylineWindow.Document.PeptideCount);
 
                 // Scheduling for Efficient Acquisition, p. 17 
                 SkylineWindow.Undo();

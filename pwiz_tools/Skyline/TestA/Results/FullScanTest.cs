@@ -180,9 +180,9 @@ namespace pwiz.SkylineTestA.Results
                     Assume.IsTrue(nodeTran.HasResults);
                     Assume.IsNotNull(nodeTran.Results[0]);
                     if (410 > nodeTran.Mz || nodeTran.Mz > 910)
-                        Assume.IsTrue(nodeTran.Results[0][0].IsEmpty);
+                        Assume.IsTrue(nodeTran.Results[0][0].IsForcedIntegration);
                     else
-                        Assume.IsFalse(nodeTran.Results[0][0].IsEmpty);
+                        Assume.IsFalse(nodeTran.Results[0][0].IsForcedIntegration);
                 }
 
                 // Import LTQ data with MS1 and MS/MS using multiple files for a single replicate
@@ -381,11 +381,11 @@ namespace pwiz.SkylineTestA.Results
                 var tranM1 = ms1AllTranstions[0];
                 Assert.AreEqual(-1, tranM1.Transition.MassIndex);
                 Assert.IsTrue(!tranM1.Results[0].IsEmpty && !tranM1.Results[1].IsEmpty);
-                Assert.IsTrue(tranM1.Results[0][0].IsEmpty && tranM1.Results[1][0].IsEmpty);
+                Assert.IsTrue(tranM1.Results[0][0].IsEmpty && tranM1.Results[1][0].IsForcedIntegration);
                 tranM1 = ms1AllTranstions[5];
                 Assert.AreEqual(-1, tranM1.Transition.MassIndex);
                 Assert.IsTrue(!tranM1.Results[0].IsEmpty && !tranM1.Results[1].IsEmpty);
-                Assert.IsTrue(tranM1.Results[0][0].IsEmpty && tranM1.Results[1][0].IsEmpty);                
+                Assert.IsTrue(tranM1.Results[0][0].IsForcedIntegration && tranM1.Results[1][0].IsEmpty);                
             }
         }
 
