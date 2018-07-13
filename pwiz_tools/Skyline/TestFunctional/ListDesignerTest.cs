@@ -66,6 +66,7 @@ namespace pwiz.SkylineTestFunctional
             SetClipboardText(string.Join(TextUtil.SEPARATOR_TSV_STR, "Earth", "\u2641", 1.00000011, false));
             RunUI(listGridForm.DataGridView.SendPaste);
             SetCellAddress(listGridForm.DataGridView, 0, 0);
+            WaitForConditionUI(() => listGridForm.IsComplete);
             var listData = SkylineWindow.Document.Settings.DataSettings.Lists.First();
             Assert.AreEqual(1, listData.RowCount);
             SetClipboardText(TextUtil.LineSeparate(
