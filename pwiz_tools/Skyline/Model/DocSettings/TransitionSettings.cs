@@ -1665,37 +1665,6 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
 // ReSharper disable InconsistentNaming
-    public enum LegacyAcquisitionMethod   { None, Single, Multiple }    // Skyline 1.2 and earlier // Not L10N
-    public enum FullScanAcquisitionMethod { None, Targeted, DIA } // Not L10N: Not used for combo boxes.
-    public static class FullScanAcquisitionExtension
-    {
-        private static string[] LOCALIZED_VALUES
-        {
-            get
-            {
-                return new[]
-                {
-                    Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_None,
-                    Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_Targeted,
-                    Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_DIA
-                };
-            }
-        }
-        public static string GetLocalizedString(this FullScanAcquisitionMethod val)
-        {
-            return LOCALIZED_VALUES[(int)val];
-        }
-
-        public static FullScanAcquisitionMethod GetEnum(string enumValue)
-        {
-            return Helpers.EnumFromLocalizedString<FullScanAcquisitionMethod>(enumValue, LOCALIZED_VALUES);
-        }
-
-        public static FullScanAcquisitionMethod GetEnum(string enumValue, FullScanAcquisitionMethod defaultEnum)
-        {
-            return Helpers.EnumFromLocalizedString(enumValue, LOCALIZED_VALUES, defaultEnum);
-        }
-    }
     public enum FullScanPrecursorIsotopes { None, Count, Percent }
     public static class FullScanPrecursorIsotopesExtension
     {
@@ -2018,8 +1987,8 @@ namespace pwiz.Skyline.Model.DocSettings
             MaxInclusions = reader.GetNullableIntAttribute(ATTR.max_inclusions);
 
             // Full-scan filter parameters (backward compatibility w/ 0.7.1)
-            var legacyFilterType = reader.GetEnumAttribute(ATTR.precursor_filter_type, LegacyAcquisitionMethod.None);
-            PrecursorAcquisitionMethod = TransitionFullScan.TranslateLegacyFilterType(legacyFilterType);
+            PrecursorAcquisitionMethod = FullScanAcquisitionMethod.FromLegacyName(reader.GetAttribute(ATTR.precursor_filter_type)) 
+                ?? FullScanAcquisitionMethod.None;
             if (PrecursorAcquisitionMethod != FullScanAcquisitionMethod.None)
             {
                 if (PrecursorAcquisitionMethod == FullScanAcquisitionMethod.DIA)
@@ -2230,25 +2199,26 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public static IsolationScheme CreateIsolationSchemeForFilter(FullScanAcquisitionMethod acquisitionMethod, double? precursorFilter, double? precursorRightFilter)
         {
-            switch (acquisitionMethod)
+            if (acquisitionMethod == FullScanAcquisitionMethod.None)
             {
-                case FullScanAcquisitionMethod.None:
-                    throw new InvalidDataException(Resources.TransitionFullScan_CreateIsolationSchemeForFilter_Tried_to_create_an_isolation_scheme_for_non_DIA_mode);
-                
-                case FullScanAcquisitionMethod.DIA:
-                    if (!precursorFilter.HasValue)
-                    {
-                        throw new InvalidDataException(Resources.TransitionFullScan_CreateIsolationSchemeForFilter_Tried_to_create_an_isolation_scheme_without_precursor_filter);
-                    }
-                    else
-                    {
-                        string name = precursorRightFilter.HasValue
-                                          ? string.Format(Resources.TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__1_0__Th,
-                                                          precursorFilter.Value, precursorRightFilter.Value)
-                                          : string.Format(Resources.TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__Th,
-                                                          precursorFilter.Value);
-                        return new IsolationScheme(name, precursorFilter, precursorRightFilter);
-                    }
+                throw new InvalidDataException(Resources.TransitionFullScan_CreateIsolationSchemeForFilter_Tried_to_create_an_isolation_scheme_for_non_DIA_mode);
+            }
+
+            if (acquisitionMethod == FullScanAcquisitionMethod.DIA)
+            {
+                if (!precursorFilter.HasValue)
+                {
+                    throw new InvalidDataException(Resources.TransitionFullScan_CreateIsolationSchemeForFilter_Tried_to_create_an_isolation_scheme_without_precursor_filter);
+                }
+                else
+                {
+                    string name = precursorRightFilter.HasValue
+                        ? string.Format(Resources.TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__1_0__Th,
+                            precursorFilter.Value, precursorRightFilter.Value)
+                        : string.Format(Resources.TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__Th,
+                            precursorFilter.Value);
+                    return new IsolationScheme(name, precursorFilter, precursorRightFilter);
+                }
             }
 
             // No scheme for Targeted acquisition mode.
@@ -2736,9 +2706,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public void ReadXml(XmlReader reader)
         {
             // Get precursor filter types from Skyline 1.2 and earlier, or acquisition method from later releases.
-            AcquisitionMethod = reader.GetAttribute(ATTR.precursor_filter_type) != null
-                ? TranslateLegacyFilterType(reader.GetEnumAttribute(ATTR.precursor_filter_type, LegacyAcquisitionMethod.None))
-                : reader.GetEnumAttribute(ATTR.acquisition_method, FullScanAcquisitionMethod.None);
+            AcquisitionMethod = FullScanAcquisitionMethod.FromLegacyName(reader.GetAttribute(ATTR.precursor_filter_type)) ??
+                FullScanAcquisitionMethod.FromName(reader.GetAttribute(ATTR.acquisition_method));
 
             if (AcquisitionMethod != FullScanAcquisitionMethod.None)
             {
@@ -2834,16 +2803,6 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             DoValidate();
-        }
-
-        public static FullScanAcquisitionMethod TranslateLegacyFilterType(LegacyAcquisitionMethod legacyFilterType)
-        {
-            switch (legacyFilterType)
-            {
-                case LegacyAcquisitionMethod.Single:    return FullScanAcquisitionMethod.Targeted;
-                case LegacyAcquisitionMethod.Multiple:  return FullScanAcquisitionMethod.DIA;
-                default:                                return FullScanAcquisitionMethod.None;
-            }
         }
 
         public void WriteXml(XmlWriter writer)

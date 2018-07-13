@@ -735,7 +735,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
-            else
+            else if (acquisitionMethod == FullScanAcquisitionMethod.Targeted)
             {
                 // For single (Targeted) case, review all possible matches for the one closest to the
                 // desired precursor m/z value.
@@ -756,18 +756,28 @@ namespace pwiz.Skyline.Model.Results
                     {
                         minMzDelta = mzDelta;
                         // are any existing matches no longer within epsilion of new best match?
-                        for (int n = filterPairs.Count; n-- > 0; )
+                        for (int n = filterPairs.Count; n-- > 0;)
                         {
                             if ((Math.Abs(isoTargMz - filterPairs[n].Q1) - minMzDelta) > mzDeltaEpsilon)
                             {
-                                filterPairs.RemoveAt(n);  // no longer a match by our new standard
+                                filterPairs.RemoveAt(n); // no longer a match by our new standard
                             }
                         }
                         filterPairs.Add(filterPair);
                     }
                     else if ((mzDelta - minMzDelta) <= mzDeltaEpsilon)
                     {
-                        filterPairs.Add(filterPair);  // not the best, but close to it
+                        filterPairs.Add(filterPair); // not the best, but close to it
+                    }
+                }
+            }
+            else
+            {
+                foreach (var filterPair in _filterMzValues)
+                {
+                    if (filterPair.MatchesDdaPrecursor(isoWinKey.IsolationMz.Value))
+                    {
+                        filterPairs.Add(filterPair);
                     }
                 }
             }
@@ -925,17 +935,15 @@ namespace pwiz.Skyline.Model.Results
                 document.MaxTime = _maxTime.Value;
                 document.MaxTimeSpecified = true;
             }
-            switch (_acquisitionMethod)
-            {
-                case FullScanAcquisitionMethod.DIA:
+            if (_acquisitionMethod == FullScanAcquisitionMethod.DIA)
                     document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.DIA;
-                    break;
-                case FullScanAcquisitionMethod.None:
-                    document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.None;
-                    break;
-                case FullScanAcquisitionMethod.Targeted:
-                    document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.Targeted;
-                    break;
+            else if (_acquisitionMethod == FullScanAcquisitionMethod.None)
+            {
+                document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.None;
+            }
+            else if (_acquisitionMethod == FullScanAcquisitionMethod.Targeted)
+            {
+                document.Ms2FullScanAcquisitionMethod = Ms2FullScanAcquisitionMethod.Targeted;
             }
 
             if (null != _filterMzValues)

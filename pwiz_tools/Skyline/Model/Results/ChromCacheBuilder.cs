@@ -1355,6 +1355,8 @@ namespace pwiz.Skyline.Model.Results
                         flags |= ChromGroupHeaderInfo.FlagValues.has_sim_scan_ids;
             if (groupOfTimeIntensities is RawTimeIntensities)
                 flags |= ChromGroupHeaderInfo.FlagValues.raw_chromatograms;
+            if (_document.Settings.TransitionSettings.FullScan.AcquisitionMethod == FullScanAcquisitionMethod.DDA)
+                flags |= ChromGroupHeaderInfo.FlagValues.dda_acquisition_method;
 
                 var header = new ChromGroupHeaderInfo(chromDataSet.PrecursorMz,
                     0,
