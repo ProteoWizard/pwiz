@@ -432,6 +432,9 @@ namespace TestRunner
                             break;
                         }
 
+                        if (runTests.IsLeakingHandles)
+                            break;
+
                         // Run linear regression on memory size samples.
                         var memoryBytes = runTests.TotalMemoryBytes;
                         memoryPoints.Add(memoryBytes);
@@ -448,6 +451,14 @@ namespace TestRunner
                     if (failed)
                         continue;
 
+                    if (runTests.IsLeakingHandles)
+                    {
+                        if (runTests.LastGdiHandleDelta > 0)
+                            runTests.Log("!!! {0} LEAKED {1} GDI handles\r\n", test.TestMethod.Name, runTests.LastGdiHandleDelta);
+                        if (runTests.LastUserHandleDelta > 0)
+                            runTests.Log("!!! {0} LEAKED {1} User handles\r\n", test.TestMethod.Name, runTests.LastUserHandleDelta);
+                        removeList.Add(test);
+                    }
                     if (slope >= LeakThreshold)
                     {
                         runTests.Log("!!! {0} LEAKED {1} bytes\r\n", test.TestMethod.Name, Math.Floor(slope));

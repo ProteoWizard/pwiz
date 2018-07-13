@@ -87,8 +87,11 @@ namespace pwiz.Skyline.ToolsUI
 
         public class InstallZipToolHelper : IUnpackZipToolSupport
         {
-            public InstallZipToolHelper(InstallProgram installProgram)
+            private readonly Control _parent;
+
+            public InstallZipToolHelper(Control parent, InstallProgram installProgram)
             {
+                _parent = parent;
                 _installProgram = installProgram;
             }
 
@@ -100,7 +103,7 @@ namespace pwiz.Skyline.ToolsUI
                                          string foundVersion,
                                          string newCollectionName)
             {
-                return OverwriteOrInParallel(toolCollectionName, toolCollectionVersion, reportList, foundVersion, newCollectionName);
+                return OverwriteOrInParallel(_parent, toolCollectionName, toolCollectionVersion, reportList, foundVersion, newCollectionName);
             }
 
             public string InstallProgram(ProgramPathContainer programPathContainer,
@@ -112,7 +115,7 @@ namespace pwiz.Skyline.ToolsUI
 
             public bool? ShouldOverwriteAnnotations(List<AnnotationDef> annotations)
             {
-                return OverwriteAnnotations(annotations);
+                return OverwriteAnnotations(_parent, annotations);
             }
         }
 
@@ -130,7 +133,7 @@ namespace pwiz.Skyline.ToolsUI
             Exception xFailure = null;
             try
             {
-                result = ToolInstaller.UnpackZipTool(fullpath, new InstallZipToolHelper(install));
+                result = ToolInstaller.UnpackZipTool(fullpath, new InstallZipToolHelper(parent, install));
             }
             catch (ToolExecutionException x)
             {
@@ -167,7 +170,8 @@ namespace pwiz.Skyline.ToolsUI
             unknown
         }
 
-        public static bool? OverwriteOrInParallel(string toolCollectionName,
+        public static bool? OverwriteOrInParallel(Control parent,
+                                                  string toolCollectionName,
                                                   string toolCollectionVersion,
                                                   List<ReportOrViewSpec> reportList,
                                                   string foundVersion,
@@ -228,7 +232,7 @@ namespace pwiz.Skyline.ToolsUI
             }
 
             DialogResult result = MultiButtonMsgDlg.Show(
-                null, message, buttonText, Resources.ConfigureToolsDlg_OverwriteOrInParallel_In_Parallel, true);
+                parent, message, buttonText, Resources.ConfigureToolsDlg_OverwriteOrInParallel_In_Parallel, true);
             switch (result)
             {
                 case DialogResult.Cancel:
@@ -263,7 +267,7 @@ namespace pwiz.Skyline.ToolsUI
             return RelativeVersion.unknown;
         }
 
-        public static bool? OverwriteAnnotations(List<AnnotationDef> annotations)
+        public static bool? OverwriteAnnotations(Control parent, List<AnnotationDef> annotations)
         {
             List<string> annotationTitles = annotations.Select(annotation => annotation.GetKey()).ToList();
 
@@ -279,7 +283,7 @@ namespace pwiz.Skyline.ToolsUI
             string messageFormat = TextUtil.LineSeparate(annotationMessage, question);
 
             DialogResult result = MultiButtonMsgDlg.Show(
-                null,
+                parent,
                 String.Format(messageFormat, TextUtil.LineSeparate(annotationTitles)),
                 Resources.ConfigureToolsDlg_OverwriteOrInParallel_Overwrite,
                 Resources.ConfigureToolsDlg_OverwriteAnnotations_Keep_Existing, true);

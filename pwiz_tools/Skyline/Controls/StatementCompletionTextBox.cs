@@ -31,6 +31,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls
@@ -124,7 +125,7 @@ namespace pwiz.Skyline.Controls
         {
             if (StatementCompletionForm != null && !StatementCompletionForm.Visible)
             {
-                StatementCompletionForm.Show();
+                StatementCompletionForm.Show(FormEx.GetParentForm(TextBox));
                 StatementCompletionForm.ResizeToIdealSize(ScreenRect);
             }
             else
