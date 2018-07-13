@@ -42,7 +42,7 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_Shimadzu::identify(const std::str
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz_aux/msrc/utility/vendor_api/Shimadzu/ShimadzuReader.hpp"
-//#include "SpectrumList_Shimadzu.hpp"
+#include "SpectrumList_Shimadzu.hpp"
 #include "ChromatogramList_Shimadzu.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
@@ -83,7 +83,7 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
 }
 
 
-void fillInMetadata(const string& rawpath, Shimadzu::ShimadzuReaderPtr rawfile, MSData& msd)
+void fillInMetadata(const string& rawpath, Shimadzu::ShimadzuReaderPtr rawfile, MSData& msd, const Reader::Config& config)
 {
     msd.cvs = defaultCVList();
 
@@ -96,7 +96,7 @@ void fillInMetadata(const string& rawpath, Shimadzu::ShimadzuReaderPtr rawfile, 
     sourceFile->id = p.filename().string(utf8);
     sourceFile->name = p.filename().string(utf8);
     sourceFile->location = "file:///" + bfs::system_complete(p.branch_path()).string(utf8);
-    sourceFile->set(MS_Shimadzu_Biotech_nativeID_format);
+    sourceFile->set(MS_scan_number_only_nativeID_format);
     sourceFile->set(MS_mass_spectrometer_file_format);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
@@ -123,9 +123,9 @@ void fillInMetadata(const string& rawpath, Shimadzu::ShimadzuReaderPtr rawfile, 
     dpPwiz->processingMethods.back().set(MS_Conversion_to_mzML);
 
     // give ownership of dpPwiz to the SpectrumList (and ChromatogramList)
-    //SpectrumList_Shimadzu* sl = dynamic_cast<SpectrumList_Shimadzu*>(msd.run.spectrumListPtr.get());
+    SpectrumList_Shimadzu* sl = dynamic_cast<SpectrumList_Shimadzu*>(msd.run.spectrumListPtr.get());
     ChromatogramList_Shimadzu* cl = dynamic_cast<ChromatogramList_Shimadzu*>(msd.run.chromatogramListPtr.get());
-    //if (sl) sl->setDataProcessingPtr(dpPwiz);
+    if (sl) sl->setDataProcessingPtr(dpPwiz);
     if (cl) cl->setDataProcessingPtr(dpPwiz);
 
     initializeInstrumentConfigurationPtrs(msd, rawfile, softwareShimadzu);
@@ -133,7 +133,10 @@ void fillInMetadata(const string& rawpath, Shimadzu::ShimadzuReaderPtr rawfile, 
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
     msd.run.id = msd.id;
-    //msd.run.startTimeStamp = encode_xml_datetime(rawfile->getAcquisitionTime());
+
+    auto analysisDate = rawfile->getAnalysisDate(config.adjustUnknownTimeZonesToHostTimeZone);
+    if (!analysisDate.is_not_a_date_time())
+        msd.run.startTimeStamp = encode_xml_datetime(analysisDate);
 }
 
 } // namespace
@@ -153,12 +156,12 @@ void Reader_Shimadzu::read(const string& filename,
 
     Shimadzu::ShimadzuReaderPtr dataReader(Shimadzu::ShimadzuReader::create(filename));
 
-    //shared_ptr<SpectrumList_Shimadzu> sl(new SpectrumList_Shimadzu(result, dataReader));
+    shared_ptr<SpectrumList_Shimadzu> sl(new SpectrumList_Shimadzu(result, dataReader, config));
     shared_ptr<ChromatogramList_Shimadzu> cl(new ChromatogramList_Shimadzu(dataReader));
-    //result.run.spectrumListPtr = sl;
+    result.run.spectrumListPtr = sl;
     result.run.chromatogramListPtr = cl;
 
-    fillInMetadata(filename, dataReader, result);
+    fillInMetadata(filename, dataReader, result, config);
 }
 
 
@@ -180,15 +183,15 @@ namespace msdata {
 
 PWIZ_API_DECL void Reader_Shimadzu::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */, const Config& config) const
 {
-	throw ReaderFail("[Reader_Shimadzu::read()] Shimadzu reader not implemented: "
+    throw ReaderFail("[Reader_Shimadzu::read()] Shimadzu reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it
-		"support was explicitly disabled when program was built"
+        "support was explicitly disabled when program was built"
 #elif defined(WIN32) // wrong compiler
-		"program was built without COM support and cannot access Shimadzu DLLs - try building with MSVC instead of GCC"
+        "program was built without COM support and cannot access Shimadzu DLLs - try building with MSVC instead of GCC"
 #else // wrong platform
-		"Shimadzu DLLs only work on Windows"
+        "Shimadzu DLLs only work on Windows"
 #endif
-		);
+        );
 }
 
 
