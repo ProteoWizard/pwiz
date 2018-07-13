@@ -221,6 +221,23 @@ PWIZ_API_DECL bool SpectrumList_FilterPredicate_ScanNumberSet::done() const
 }
 
 
+PWIZ_API_DECL SpectrumList_FilterPredicate_IdSet::SpectrumList_FilterPredicate_IdSet(const set<string>& idSet)
+    : idSet_(idSet)
+{}
+
+
+PWIZ_API_DECL tribool SpectrumList_FilterPredicate_IdSet::accept(const SpectrumIdentity& spectrumIdentity) const
+{
+    return idSet_.count(spectrumIdentity.id) > 0;
+}
+
+
+PWIZ_API_DECL bool SpectrumList_FilterPredicate_IdSet::done() const
+{
+    return false;
+}
+
+
 //
 // SpectrumList_FilterPredicate_ScanEventSet 
 //
@@ -287,7 +304,7 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_MSLevelSet::acc
     CVParam param = spectrum.cvParamChild(MS_spectrum_type);
     if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
     if (!cvIsA(param.cvid, MS_mass_spectrum))
-        return true; // MS level filter doesn't affect non-MS spectra
+        return msLevelSet_.contains(0); // non-MS spectra are considered ms level 0
     param = spectrum.cvParam(MS_ms_level);
     if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
     int msLevel = param.valueAs<int>();

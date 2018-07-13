@@ -63,5 +63,11 @@ namespace pwiz.Common.DataBinding.Controls
             get { return tbxLayoutName.Text; }
             set { tbxLayoutName.Text = value; }
         }
+
+        public bool MakeDefault
+        {
+            get { return cbxMakeDefault.Checked; }
+            set { cbxMakeDefault.Checked = value; }
+        }
     }
 }

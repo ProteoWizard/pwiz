@@ -223,6 +223,7 @@
     <Compile Include="ManageResultsTest.cs" />
     <Compile Include="ManageResultsUndoTest.cs" />
     <Compile Include="MassErrorGraphsTest.cs" />
+    <Compile Include="MidasModificationTest.cs" />
     <Compile Include="MidasTest.cs" />
     <Compile Include="MiscFormsTest.cs" />
     <Compile Include="MultiSelectPeakAreaGraphTest.cs" />
@@ -269,6 +270,7 @@
     <Compile Include="StandardTypeTest.cs" />
     <Compile Include="StartPageTest.cs" />
     <Compile Include="SummaryGraphLinePlotsTest.cs" />
+    <Compile Include="SummaryGraphVisibilityTest.cs" />
     <Compile Include="SurrogateStandardTest.cs" />
     <Compile Include="SynchronizeSummaryZoomingTest.cs" />
     <Compile Include="SynchSiblingsSmallMoleculesTest.cs" />
@@ -394,6 +396,7 @@
     <None Include="ManageResultsTest.zip" />
     <None Include="ManageResultsUndoTest.zip" />
     <None Include="MassErrorGraphsTest.zip" />
+    <None Include="MidasModificationTest.zip" />
     <None Include="MidasTest.zip" />
     <None Include="NegativeIonChromatogramsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
@@ -422,6 +425,7 @@
     <None Include="SrmSmMolChromTest.zip" />
     <None Include="StandardTypeTest.zip" />
     <None Include="StartPageTest.zip" />
+    <None Include="SummaryGraphVisibilityTest.zip" />
     <None Include="SurrogateStandardTest.zip" />
     <None Include="SynchronizeSummaryZoomingTest.zip" />
     <None Include="SynchSiblingsSmallMoleculesTest.zip" />

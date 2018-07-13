@@ -204,11 +204,14 @@ namespace pwiz.SkylineTestTutorial
             FindNode(string.Format("{0:F04}", 504.2664));   // I18N
             RunUI(() =>
             {
-                TransitionTreeNode selNode = (TransitionTreeNode)SkylineWindow.SequenceTree.SelectedNode;
-                SkylineWindow.RemovePeak(SkylineWindow.SequenceTree.SelectedPath.GetPathTo((int)SrmDocument.Level.TransitionGroups),
-                ((TransitionGroupTreeNode)selNode.Parent).DocNode, selNode.DocNode);
+                TransitionTreeNode selNode = (TransitionTreeNode) SkylineWindow.SequenceTree.SelectedNode;
+                SkylineWindow.RemovePeak(
+                    SkylineWindow.SequenceTree.SelectedPath.GetPathTo((int) SrmDocument.Level.TransitionGroups),
+                    ((TransitionGroupTreeNode) selNode.Parent).DocNode, selNode.DocNode);
+                // Ensure that the Total Ratio is 0.62
+                // TODO(nicksh): Update tutorial Word Doc so that it has the right numbers.
                 Assert.IsTrue(Equals(SkylineWindow.SequenceTree.SelectedNode.StateImageIndex,
-                    (int)SequenceTree.StateImageId.no_peak) && SkylineWindow.SequenceTree.SelectedNode.Parent.Text.Contains((0.24).ToString(LocalizationHelper.CurrentCulture)));
+                    (int)SequenceTree.StateImageId.no_peak) && SkylineWindow.SequenceTree.SelectedNode.Parent.Text.Contains((0.62).ToString(LocalizationHelper.CurrentCulture)));
             });
 
             // Adjusting Peak Boundaries to Exclude Interference, p. 14.

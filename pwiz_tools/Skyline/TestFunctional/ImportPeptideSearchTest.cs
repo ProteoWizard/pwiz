@@ -430,6 +430,8 @@ namespace pwiz.SkylineTestFunctional
                 };
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                importPeptideSearchDlg.TransitionSettingsControl.IonCount = 3;  // DIA will now default to 6 and 6 minimum
+                importPeptideSearchDlg.TransitionSettingsControl.MinIonCount = 0;
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());

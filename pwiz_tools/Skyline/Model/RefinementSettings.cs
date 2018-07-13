@@ -431,7 +431,7 @@ namespace pwiz.Skyline.Model
                     nodeGroupRefined = nodeGroupRefined.ChangeSettings(settings, nodePep, nodePep.ExplicitMods,
                         new SrmSettingsDiff(false, false, false, false, true, false));
                 }
-                nodeGroupRefined = Refine(nodeGroupRefined, bestResultIndex);
+                nodeGroupRefined = Refine(nodeGroupRefined, bestResultIndex, document.Settings.TransitionSettings.Integration.IsIntegrateAll);
                 // Avoid removing a standard precursor because it lacks the minimum number of transitions
                 if (nodeGroupRefined.Children.Count < minTrans && nodePep.GlobalStandardType == null)
                     continue;
@@ -532,13 +532,13 @@ namespace pwiz.Skyline.Model
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
-        private TransitionGroupDocNode Refine(TransitionGroupDocNode nodeGroup, int bestResultIndex)
+        private TransitionGroupDocNode Refine(TransitionGroupDocNode nodeGroup, int bestResultIndex, bool integrateAll)
 // ReSharper restore SuggestBaseTypeForParameter
         {
             var listTrans = new List<TransitionDocNode>();
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
-                double? peakFoundRatio = nodeTran.GetPeakCountRatio(bestResultIndex);
+                double? peakFoundRatio = nodeTran.GetPeakCountRatio(bestResultIndex, integrateAll);
                 if (!peakFoundRatio.HasValue)
                 {
                     if (RemoveMissingResults)

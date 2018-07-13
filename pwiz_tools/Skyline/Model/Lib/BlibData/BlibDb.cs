@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     });
                 }
             }
-            else
+            else if (spectrum.RetentionTime.HasValue)
             {
                 refSpectra.RetentionTimes.Add(new DbRetentionTimes
                 {

@@ -1178,11 +1178,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Aligned time.
+        ///   Looks up a localized string similar to Aligned Time.
         /// </summary>
-        public static string AlignmentForm_UpdateGraph_Aligned_time {
+        public static string AlignmentForm_UpdateGraph_Aligned_Time {
             get {
-                return ResourceManager.GetString("AlignmentForm_UpdateGraph_Aligned_time", resourceCulture);
+                return ResourceManager.GetString("AlignmentForm_UpdateGraph_Aligned_Time", resourceCulture);
             }
         }
         
@@ -1237,6 +1237,15 @@ namespace pwiz.Skyline.Properties {
         public static string AlignmentForm_UpdateGraph_Time_from__0__ {
             get {
                 return ResourceManager.GetString("AlignmentForm_UpdateGraph_Time_from__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time from Regression.
+        /// </summary>
+        public static string AlignmentForm_UpdateGraph_Time_from_Regression {
+            get {
+                return ResourceManager.GetString("AlignmentForm_UpdateGraph_Time_from_Regression", resourceCulture);
             }
         }
         
@@ -4276,16 +4285,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error____import_naming_pattern_cannot_be_used_with_" +
                         "the___import_file_option_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error: --import-replicate-name cannot be used with the --import-all option..
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_" +
-                        "the___import_all_option_", resourceCulture);
             }
         }
         

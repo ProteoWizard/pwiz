@@ -291,7 +291,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.AutoZoomBestPeak();
                 var graphChrom = SkylineWindow.GetGraphChrom(prefixKeep + "1");
                 var labelStrings = graphChrom.GetAnnotationLabelStrings().ToArray();
-                Assert.IsTrue(labelStrings.Contains(string.Format("{0}\n+{1} ppm\n(idotp {2})", 75.4, 3, 0.59)),
+                Assert.IsTrue(labelStrings.Contains(string.Format("{0}\n+{1} ppm", 75.4, 3)),
                     string.Format("Missing expected label in {0}", string.Join("|", labelStrings)));
                 SkylineWindow.Width = 1250;
             });

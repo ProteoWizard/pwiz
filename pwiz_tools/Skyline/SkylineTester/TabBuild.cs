@@ -21,6 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 
@@ -127,6 +129,37 @@ namespace SkylineTester
                 : "Skyline ({0}/{1})".With(branchParts[branchParts.Length - 2], branchParts[branchParts.Length - 1]);
             var git = MainWindow.Git;
 
+            // Determine toolset requirement based on .Net usage
+            // Pull a file like
+            // https://raw.githubusercontent.com/ProteoWizard/pwiz/master/pwiz_tools/Skyline/Skyline.csproj
+            // or
+            // https://raw.githubusercontent.com/ProteoWizard/pwiz/feature/VS2017-update/pwiz_tools/Skyline/Skyline.csproj
+            var toolset = "msvc-12.0"; // VS2013
+            for (var retry = 60; retry-- >0;)
+            {
+                var csProjFileUrl = GetMasterUrl().Equals(branchUrl)
+                    ? "https://raw.githubusercontent.com/ProteoWizard/pwiz/master/pwiz_tools/Skyline/Skyline.csproj"
+                    : "https://raw.githubusercontent.com/ProteoWizard/pwiz/" + branchUrl.Split(new[]{"/pwiz/tree/"}, StringSplitOptions.None)[1] + "/pwiz_tools/Skyline/Skyline.csproj";
+                try
+                {
+                    var csProjText = (new WebClient()).DownloadString(csProjFileUrl);
+                    var dotNetVersion = csProjText.Split(new[] {"TargetFrameworkVersion"}, StringSplitOptions.None)[1].Split('v')[1].Split(new []{'.'});
+                    if ((int.Parse(dotNetVersion[0]) >= 4) && (int.Parse(dotNetVersion[1]) >= 7))
+                    {
+                        toolset = "msvc-14.1"; // VS2017 for .Net 4.7.x or greater
+                    }
+                    break;
+                }
+                catch (Exception e)
+                {
+                    MainWindow.CommandShell.AddImmediate("Trouble fetching {0} for .Net version inspection ({1})", csProjFileUrl, e.Message);
+                    if (retry == 0)
+                        throw;
+                    MainWindow.CommandShell.AddImmediate("retrying...");
+                    Thread.Sleep(60 * 1000);  // one minute
+                }
+            }
+
             var architectureList = string.Join("- and ", architectures);
             commandShell.Add("# Build {0} {1}-bit...", branchName, architectureList);
 
@@ -175,10 +208,11 @@ namespace SkylineTester
             foreach (int architecture in architectures)
             {
                 commandShell.Add("#@ Building Skyline {0} bit...\n", architecture);
-                commandShell.Add("{0} {1} {2} --i-agree-to-the-vendor-licenses toolset=msvc-12.0 nolog",
+                commandShell.Add("{0} {1} {2} --i-agree-to-the-vendor-licenses toolset={3} nolog",
                     Path.Combine(buildRoot, @"pwiz_tools\build-apps.bat").Quote(),
                     architecture,
-                    runBuildTests ? "pwiz_tools/Skyline" : "pwiz_tools/Skyline//Skyline.exe");
+                    runBuildTests ? "pwiz_tools/Skyline" : "pwiz_tools/Skyline//Skyline.exe",
+                    toolset);
             }
 
             commandShell.Add("# Build done.");

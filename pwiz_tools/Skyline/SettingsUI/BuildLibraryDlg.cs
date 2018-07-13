@@ -58,6 +58,7 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_TSV,
             BiblioSpecLiteBuilder.EXT_MZTAB,
             BiblioSpecLiteBuilder.EXT_MZTAB_TXT,
+            BiblioSpecLiteBuilder.EXT_OPEN_SWATH,
        };
 
         private BiblioSpecLiteBuilder _builder;
