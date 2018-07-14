@@ -463,13 +463,13 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         private void helpToolStripButton_Click(object sender, EventArgs e)
         {
-            ShowColumnDocumentation();
+            ShowColumnDocumentation(false);
         }
 
-        public void ShowColumnDocumentation()
+        public void ShowColumnDocumentation(bool showInTaskbar)
         {
             var documentationGenerator = new DocumentationGenerator(ChooseColumnsTab.ViewInfo.ParentColumn);
-            DocumentationViewer documentationViewer = new DocumentationViewer();
+            DocumentationViewer documentationViewer = new DocumentationViewer(showInTaskbar);
             documentationViewer.DocumentationHtml = documentationGenerator.GetDocumentationHtmlPage();
             documentationViewer.Show(this);
         }

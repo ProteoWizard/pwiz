@@ -69,8 +69,8 @@ namespace TestRunnerLib
         public readonly Dictionary<string, int> FailureCounts = new Dictionary<string, int>();
         public InvokeSkyline Skyline { get; private set; }
         public int LastTestDuration { get; private set; }
-        public int LastGdiHandleDelta { get; private set; }
-        public int LastUserHandleDelta { get; private set; }
+        public int LastGdiHandleCount { get; private set; }
+        public int LastUserHandleCount { get; private set; }
         public bool AccessInternet { get; set; }
         public bool RunPerfTests { get; set; }
         public bool AddSmallMoleculeNodes{ get; set; }
@@ -207,8 +207,6 @@ namespace TestRunnerLib
             var saveCulture = Thread.CurrentThread.CurrentCulture;
             var saveUICulture = Thread.CurrentThread.CurrentUICulture;
             long crtLeakedBytes = 0;
-            int startGdiHandles = GetHandleCount(HandleType.gdi);
-            int startUserHandles = GetHandleCount(HandleType.user);
 
             try
             {
@@ -267,23 +265,21 @@ namespace TestRunnerLib
             const int mb = 1024*1024;
             var managedMemory = (double) GC.GetTotalMemory(true) / mb;
 
-            int lastGdiHandles = GetHandleCount(HandleType.gdi);
-            LastGdiHandleDelta = lastGdiHandles - startGdiHandles;
-            int lastUserHandles = GetHandleCount(HandleType.user);
-            LastUserHandleDelta = lastUserHandles - startUserHandles;
+            LastGdiHandleCount = GetHandleCount(HandleType.gdi);
+            LastUserHandleCount = GetHandleCount(HandleType.user);
 
             if (exception == null)
             {
                 // Test succeeded.
                 Log(
-//                    "{0,3} failures, {1:F2}/{2:F1} MB, {3}/{4} handles, {5} sec.\r\n",
+                    "{0,3} failures, {1:F2}/{2:F1} MB, {3}/{4} handles, {5} sec.\r\n",
                     // Fake handles as bytes
-                    "{0,3} failures, {3}/{4} MB, {5} sec.\r\n",
+//                    "{0,3} failures, {3}/{4} MB, {5} sec.\r\n",
                     FailureCount, 
                     managedMemory, 
                     TotalMemory,
-                    lastUserHandles,
-                    lastGdiHandles,
+                    LastUserHandleCount,
+                    LastGdiHandleCount,
                     LastTestDuration);
                 if (crtLeakedBytes > CheckCrtLeaks)
                     Log("!!! {0} CRT-LEAKED {1} bytes\r\n", test.TestMethod.Name, crtLeakedBytes);
@@ -340,11 +336,6 @@ namespace TestRunnerLib
                     SetProcessWorkingSetSize(Process.GetCurrentProcess().Handle, -1, -1);
                 }
             }
-        }
-
-        public bool IsLeakingHandles
-        {
-            get { return LastGdiHandleDelta > 0 /* || LastUserHandleDelta > 0 */; }
         }
 
         [DllImport("User32")]
