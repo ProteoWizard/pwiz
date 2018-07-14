@@ -73,7 +73,11 @@ namespace OutputParser
                                 concatIssues.Add(issue.Attributes["TypeId"].Value,new List<string>());
                                 issueCounter.Add(issue.Attributes["TypeId"].Value, 0);
                             }
-                            var location = issue.Attributes["File"].Value + ":" + issue.Attributes["Line"].Value;
+                            string location = issue.Attributes["File"].Value;
+                            if (null != issue.Attributes["Line"])
+                            {
+                                location += ":" + issue.Attributes["Line"].Value;
+                            }
                             if (!concatIssues[issue.Attributes["TypeId"].Value].Contains(location))
                             {
                                 concatIssues[issue.Attributes["TypeId"].Value].Add(location);
@@ -97,9 +101,14 @@ namespace OutputParser
                     // Will only add to dictionary if the type is rated as a WARNING or and ERROR.
                     if (issue.Attributes["TypeId"].Value.Equals(NON_LOCALIZED_STRING))
                     {
-                        if (!concatIssues[issue.Attributes["TypeId"].Value].Contains(issue.Attributes["File"].Value))
+                        string message = issue.Attributes["File"].Value;
+                        if (null != issue.Attributes["Line"])
                         {
-                            concatIssues[issue.Attributes["TypeId"].Value].Add(issue.Attributes["File"].Value);
+                            message += ":" + issue.Attributes["Line"].Value;
+                        }
+                        if (!concatIssues[issue.Attributes["TypeId"].Value].Contains(message))
+                        {
+                            concatIssues[issue.Attributes["TypeId"].Value].Add(message);
                         }
                         issueCounter[NON_LOCALIZED_STRING]++;
                         totalIssueCounter++;
