@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model.Lists
 
             public override string ToPersistedString()
             {
-                return string.Join(",",
+                return string.Join(",", // Not L10N
                     _values.Select(value =>
                         value.HasValue
                             ? value.Value.ToString(Formats.RoundTrip, CultureInfo.InvariantCulture)
@@ -179,7 +179,7 @@ namespace pwiz.Skyline.Model.Lists
 
             public override string ToPersistedString()
             {
-                return string.Join(",", _values.Select(value => DsvWriter.ToDsvField(',', value)));
+                return string.Join(",", _values.Select(value => DsvWriter.ToDsvField(',', value))); // Not L10N
             }
 
             public override ColumnData SetPersistedString(string persistedString)
@@ -220,12 +220,12 @@ namespace pwiz.Skyline.Model.Lists
 
             public override string ToPersistedString()
             {
-                return string.Join(",", _values.Select(value => value ? "1" : "0"));
+                return string.Join(",", _values.Select(value => value ? "1" : "0")); // Not L10N
             }
 
             public override ColumnData SetPersistedString(string str)
             {
-                return new Booleans(ReadCsvRow(str).Select(value => "1" == value));
+                return new Booleans(ReadCsvRow(str).Select(value => "1" == value)); // Not L10N
             }
         }
     }

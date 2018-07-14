@@ -7985,6 +7985,46 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete those items from those lists?.
+        /// </summary>
+        public static string DocumentSettingsDlg_OkDialog_Are_you_sure_you_want_to_delete_those_items_from_those_lists_ {
+            get {
+                return ResourceManager.GetString("DocumentSettingsDlg_OkDialog_Are_you_sure_you_want_to_delete_those_items_from_tho" +
+                        "se_lists_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List &apos;{0}&apos; with {1} items.
+        /// </summary>
+        public static string DocumentSettingsDlg_OkDialog_List___0___with__1__items {
+            get {
+                return ResourceManager.GetString("DocumentSettingsDlg_OkDialog_List___0___with__1__items", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following lists have items in them which will be deleted when you remove the lists from your document:.
+        /// </summary>
+        public static string DocumentSettingsDlg_OkDialog_The_following_lists_have_items_in_them_which_will_be_deleted_when_you_remove_the_lists_from_your_document_ {
+            get {
+                return ResourceManager.GetString("DocumentSettingsDlg_OkDialog_The_following_lists_have_items_in_them_which_will_be" +
+                        "_deleted_when_you_remove_the_lists_from_your_document_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The list &apos;{0}&apos; has {1} items in it. If you remove that list from your document, those items will be deleted. Are you sure you want to delete those items from that list?.
+        /// </summary>
+        public static string DocumentSettingsDlg_OkDialog_The_list___0___has__1__items_in_it__If_you_remove_that_list_from_your_document__those_items_will_be_deleted__Are_you_sure_you_want_to_delete_those_items_from_that_list_ {
+            get {
+                return ResourceManager.GetString("DocumentSettingsDlg_OkDialog_The_list___0___has__1__items_in_it__If_you_remove_th" +
+                        "at_list_from_your_document__those_items_will_be_deleted__Are_you_sure_you_want_t" +
+                        "o_delete_those_items_from_that_list_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap down_pro32 {
@@ -15531,6 +15571,226 @@ namespace pwiz.Skyline.Properties {
         public static string LineColNumberedIoException_FormatMessage__0___line__1___col__2__ {
             get {
                 return ResourceManager.GetString("LineColNumberedIoException_FormatMessage__0___line__1___col__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No such list {0}.
+        /// </summary>
+        public static string ListColumnPropertyDescriptor_ChangeListData_No_such_list__0_ {
+            get {
+                return ResourceManager.GetString("ListColumnPropertyDescriptor_ChangeListData_No_such_list__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List has been deleted.
+        /// </summary>
+        public static string ListColumnPropertyDescriptor_SetValue_List_has_been_deleted {
+            get {
+                return ResourceManager.GetString("ListColumnPropertyDescriptor_SetValue_List_has_been_deleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List item has been deleted..
+        /// </summary>
+        public static string ListColumnPropertyDescriptor_SetValue_List_item_has_been_deleted_ {
+            get {
+                return ResourceManager.GetString("ListColumnPropertyDescriptor_SetValue_List_item_has_been_deleted_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lists.
+        /// </summary>
+        public static string ListDefList_Label_Lists {
+            get {
+                return ResourceManager.GetString("ListDefList_Label_Lists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Define Lists.
+        /// </summary>
+        public static string ListDefList_Title_Define_Lists {
+            get {
+                return ResourceManager.GetString("ListDefList_Title_Define_Lists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate property name.
+        /// </summary>
+        public static string ListDesigner_OkDialog_Duplicate_property_name {
+            get {
+                return ResourceManager.GetString("ListDesigner_OkDialog_Duplicate_property_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No such property.
+        /// </summary>
+        public static string ListDesigner_OkDialog_No_such_property {
+            get {
+                return ResourceManager.GetString("ListDesigner_OkDialog_No_such_property", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There is already a list named &apos;{0}&apos;..
+        /// </summary>
+        public static string ListDesigner_OkDialog_There_is_already_a_list_named___0___ {
+            get {
+                return ResourceManager.GetString("ListDesigner_OkDialog_There_is_already_a_list_named___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error trying to apply this list definition to the original data:.
+        /// </summary>
+        public static string ListDesigner_OkDialog_There_was_an_error_trying_to_apply_this_list_definition_to_the_original_data_ {
+            get {
+                return ResourceManager.GetString("ListDesigner_OkDialog_There_was_an_error_trying_to_apply_this_list_definition_to_" +
+                        "the_original_data_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Column &apos;{0}&apos; does not exist..
+        /// </summary>
+        public static string ListExceptionDetail_ColumnNotFound_Column___0___does_not_exist_ {
+            get {
+                return ResourceManager.GetString("ListExceptionDetail_ColumnNotFound_Column___0___does_not_exist_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate value &apos;{1}&apos; found in column &apos;{0}&apos;..
+        /// </summary>
+        public static string ListExceptionDetail_DuplicateValue_Duplicate_value___1___found_in_column___0___ {
+            get {
+                return ResourceManager.GetString("ListExceptionDetail_DuplicateValue_Duplicate_value___1___found_in_column___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid value &apos;{1}&apos; for column &apos;{0}&apos;..
+        /// </summary>
+        public static string ListExceptionDetail_InvalidValue_Invalid_value___1___for_column___0___ {
+            get {
+                return ResourceManager.GetString("ListExceptionDetail_InvalidValue_Invalid_value___1___for_column___0___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Column &apos;{0}&apos; cannot be blank..
+        /// </summary>
+        public static string ListExceptionDetail_NullValue_Column___0___cannot_be_blank_ {
+            get {
+                return ResourceManager.GetString("ListExceptionDetail_NullValue_Column___0___cannot_be_blank_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List: .
+        /// </summary>
+        public static string ListGridForm_BindingListSourceOnListChanged_List__ {
+            get {
+                return ResourceManager.GetString("ListGridForm_BindingListSourceOnListChanged_List__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number.
+        /// </summary>
+        public static string ListPropertyType_GetAnnotationTypeName_Number {
+            get {
+                return ResourceManager.GetString("ListPropertyType_GetAnnotationTypeName_Number", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Text.
+        /// </summary>
+        public static string ListPropertyType_GetAnnotationTypeName_Text {
+            get {
+                return ResourceManager.GetString("ListPropertyType_GetAnnotationTypeName_Text", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to True/False.
+        /// </summary>
+        public static string ListPropertyType_GetAnnotationTypeName_True_False {
+            get {
+                return ResourceManager.GetString("ListPropertyType_GetAnnotationTypeName_True_False", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value List.
+        /// </summary>
+        public static string ListPropertyType_GetAnnotationTypeName_Value_List {
+            get {
+                return ResourceManager.GetString("ListPropertyType_GetAnnotationTypeName_Value_List", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lookup: .
+        /// </summary>
+        public static string ListPropertyType_Label_Lookup__ {
+            get {
+                return ResourceManager.GetString("ListPropertyType_Label_Lookup__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add new item to list &apos;{0}&apos;.
+        /// </summary>
+        public static string ListViewContext_CommitAddNew_Add_new_item_to_list___0__ {
+            get {
+                return ResourceManager.GetString("ListViewContext_CommitAddNew_Add_new_item_to_list___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete the {0} selected items from the list &apos;{1}&apos;?.
+        /// </summary>
+        public static string ListViewContext_Delete_Are_you_sure_you_want_to_delete_the__0__selected_items_from_the_list___1___ {
+            get {
+                return ResourceManager.GetString("ListViewContext_Delete_Are_you_sure_you_want_to_delete_the__0__selected_items_fro" +
+                        "m_the_list___1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete from list &apos;{0}&apos;.
+        /// </summary>
+        public static string ListViewContext_Delete_Delete_from_list___0__ {
+            get {
+                return ResourceManager.GetString("ListViewContext_Delete_Delete_from_list___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Press OK to continue editing your row, or Cancel to throw away the new row..
+        /// </summary>
+        public static string ListViewContext_ValidateNewRow_Press_OK_to_continue_editing_your_row__or_Cancel_to_throw_away_the_new_row_ {
+            get {
+                return ResourceManager.GetString("ListViewContext_ValidateNewRow_Press_OK_to_continue_editing_your_row__or_Cancel_t" +
+                        "o_throw_away_the_new_row_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The new row could not be added because of the following error:.
+        /// </summary>
+        public static string ListViewContext_ValidateNewRow_The_new_row_could_not_be_added_because_of_the_following_error_ {
+            get {
+                return ResourceManager.GetString("ListViewContext_ValidateNewRow_The_new_row_could_not_be_added_because_of_the_foll" +
+                        "owing_error_", resourceCulture);
             }
         }
         

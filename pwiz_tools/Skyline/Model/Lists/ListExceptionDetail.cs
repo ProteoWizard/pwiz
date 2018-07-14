@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Lists
 {
@@ -46,23 +47,23 @@ namespace pwiz.Skyline.Model.Lists
 
         public static ListExceptionDetail ColumnNotFound(string listName, string columnName)
         {
-            return new ListExceptionDetail(listName, ()=>string.Format("Column '{0}' does not exist.", columnName));
+            return new ListExceptionDetail(listName, ()=>string.Format(Resources.ListExceptionDetail_ColumnNotFound_Column___0___does_not_exist_, columnName));
         }
 
         public static ListExceptionDetail DuplicateValue(string listName, string columnName, object value)
         {
-            return new ListExceptionDetail(listName, ()=>string.Format("Duplicate value '{1}' found in column '{0}'.", columnName, value));
+            return new ListExceptionDetail(listName, ()=>string.Format(Resources.ListExceptionDetail_DuplicateValue_Duplicate_value___1___found_in_column___0___, columnName, value));
         }
 
         public static ListExceptionDetail NullValue(string listName, string column)
         {
-            return new ListExceptionDetail(listName, ()=>String.Format("Column '{0}' cannot be blank.", column));
+            return new ListExceptionDetail(listName, ()=>String.Format(Resources.ListExceptionDetail_NullValue_Column___0___cannot_be_blank_, column));
         }
 
         public static ListExceptionDetail InvalidValue(string listName, string columnName, object value)
         {
             return new ListExceptionDetail(listName,
-                () => String.Format("Invalid value '{1}' for column '{0}'.", columnName, value));
+                () => String.Format(Resources.ListExceptionDetail_InvalidValue_Invalid_value___1___for_column___0___, columnName, value));
         }
     }
 }

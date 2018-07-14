@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     return GetAnnotationTypeName(AnnotationType);
                 }
-                return "Lookup: " + Lookup;
+                return Resources.ListPropertyType_Label_Lookup__ + Lookup;
             }
         }
 
@@ -62,13 +62,13 @@ namespace pwiz.Skyline.Model.DocSettings
             switch (annotationType)
             {
                 case AnnotationDef.AnnotationType.text:
-                    return "Text";
+                    return Resources.ListPropertyType_GetAnnotationTypeName_Text;
                 case AnnotationDef.AnnotationType.number:
-                    return "Number";
+                    return Resources.ListPropertyType_GetAnnotationTypeName_Number;
                 case AnnotationDef.AnnotationType.true_false:
-                    return "True/False";
+                    return Resources.ListPropertyType_GetAnnotationTypeName_True_False;
                 case AnnotationDef.AnnotationType.value_list:
-                    return "Value List";
+                    return Resources.ListPropertyType_GetAnnotationTypeName_Value_List;
                 default:
                     return annotationType.ToString();
             }

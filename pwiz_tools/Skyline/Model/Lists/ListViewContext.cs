@@ -24,21 +24,24 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lists
 {
     public class ListViewContext : SkylineViewContext, INewRowHandler
     {
-        public const string LIST_ROWSOURCE_PREFIX = "pwiz.Skyline.Model.Lists.list_";
+        public const string LIST_ROWSOURCE_PREFIX = "pwiz.Skyline.Model.Lists.list_"; // Not L10N
         public static ListViewContext CreateListViewContext(SkylineDataSchema dataSchema, string listName)
         {
             var listItemType = ListItemTypes.INSTANCE.GetListItemType(listName);
             var rootColumn = ColumnDescriptor.RootColumn(dataSchema, listItemType);
             var rowSourceConstructor = typeof(ListRowSource<>).MakeGenericType(listItemType)
                 .GetConstructor(new[] { typeof(SkylineDataSchema) });
+            // ReSharper disable PossibleNullReferenceException
             var rowSource = (IRowSource)rowSourceConstructor.Invoke(new object[] { dataSchema });
-            var rowSourceInfo = new RowSourceInfo(listItemType, rowSource, new[] {GetDefaultViewInfo(rootColumn)},
+            // ReSharper restore PossibleNullReferenceException
+            var rowSourceInfo = new RowSourceInfo(listItemType, rowSource, new[] { GetDefaultViewInfo(rootColumn) },
                 LIST_ROWSOURCE_PREFIX + listName, listName);
             return new ListViewContext(dataSchema, listName, rowSourceInfo);
         }
@@ -77,7 +80,7 @@ namespace pwiz.Skyline.Model.Lists
                 return null;
             }
             ListItemId? listItemId = null;
-            SkylineDataSchema.ModifyDocument(EditDescription.Message(string.Format("Add new item to list '{0}'", ListName)), doc =>
+            SkylineDataSchema.ModifyDocument(EditDescription.Message(string.Format(Resources.ListViewContext_CommitAddNew_Add_new_item_to_list___0__, ListName)), doc =>
             {
                 var listData = doc.Settings.DataSettings.FindList(ListName);
                 ListItemId newItemId;
@@ -132,8 +135,8 @@ namespace pwiz.Skyline.Model.Lists
             catch (Exception exception)
             {
                 if (MultiButtonMsgDlg.Show(BoundDataGridView,
-                        TextUtil.LineSeparate("The new row could not be added because of the following error:",
-                            exception.Message, "Press OK to continue editing your row, or Cancel to throw away the new row.")
+                        TextUtil.LineSeparate(Resources.ListViewContext_ValidateNewRow_The_new_row_could_not_be_added_because_of_the_following_error_,
+                            exception.Message, Resources.ListViewContext_ValidateNewRow_Press_OK_to_continue_editing_your_row__or_Cancel_to_throw_away_the_new_row_)
                             
                             , MultiButtonMsgDlg.BUTTON_OK) == DialogResult.Cancel)
                 {
@@ -156,12 +159,12 @@ namespace pwiz.Skyline.Model.Lists
             {
                 return;
             }
-            string message = string.Format("Are you sure you want to delete the {0} selected items from the list '{1}'?", selectedItems.Count, ListName);
+            string message = string.Format(Resources.ListViewContext_Delete_Are_you_sure_you_want_to_delete_the__0__selected_items_from_the_list___1___, selectedItems.Count, ListName);
             if (MultiButtonMsgDlg.Show(BoundDataGridView, message, MultiButtonMsgDlg.BUTTON_OK) != DialogResult.OK)
             {
                 return;
             }
-            SkylineDataSchema.ModifyDocument(EditDescription.Message(string.Format("Delete from list '{0}'", ListName)),
+            SkylineDataSchema.ModifyDocument(EditDescription.Message(string.Format(Resources.ListViewContext_Delete_Delete_from_list___0__, ListName)),
                 doc =>
                 {
                     var listData = doc.Settings.DataSettings.FindList(ListName);

@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.Lists
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((ListDef) obj);
         }
 
@@ -215,12 +215,12 @@ namespace pwiz.Skyline.Model.Lists
 
         public override string Label
         {
-            get { return "Lists"; }
+            get { return Resources.ListDefList_Label_Lists; }
         }
 
         public override string Title
         {
-            get { return "Define Lists"; }
+            get { return Resources.ListDefList_Title_Define_Lists; }
         }
 
         public ICollection<ListData> CreateEmptyList()
