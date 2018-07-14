@@ -102,6 +102,8 @@ namespace pwiz.Skyline.Model.Databinding
         {
             var listItem = (ListItem) value;
             object annotationValue;
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+            // ReSharper disable HeuristicUnreachableCode
             if (listItem == null)
             {
                 annotationValue = null;
@@ -110,6 +112,8 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 annotationValue = listItem.GetRecord().PrimaryKeyValue;
             }
+            // ReSharper restore HeuristicUnreachableCode
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
             _innerPropertyDescriptor.SetValue(component, annotationValue);
         }
 

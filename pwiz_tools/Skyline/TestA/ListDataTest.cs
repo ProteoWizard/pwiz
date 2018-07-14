@@ -69,10 +69,12 @@ namespace pwiz.SkylineTestA
             AssertEx.Serializable(document);
         }
 
+        // ReSharper disable UnusedMethodReturnValue.Local
         private static T EnsureDetailException<T>(Func<object> func)
         {
             return EnsureDetailException<T>(new Action(()=>func()));
         }
+        // ReSharper restore UnusedMethodReturnValue.Local
 
         private static T EnsureDetailException<T>(Action action)
         {

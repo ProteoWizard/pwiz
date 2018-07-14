@@ -96,7 +96,9 @@ namespace pwiz.Skyline.Model.Databinding
 
         public override void ResetValue(object component)
         {
+            // ReSharper disable AssignNullToNotNullAttribute
             SetValue(component, null);
+            // ReSharper restore AssignNullToNotNullAttribute
         }
 
         public override void SetValue(object component, object value)
