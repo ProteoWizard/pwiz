@@ -4,7 +4,6 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Model;
@@ -144,18 +143,18 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     var list = removedListsWithData[0];
                     message = string.Format(
-                        "The list '{0}' has {1} items in it. If you remove that list from your document, those items will be deleted. Are you sure you want to delete those items from that list?",
+                        Resources.DocumentSettingsDlg_OkDialog_The_list___0___has__1__items_in_it__If_you_remove_that_list_from_your_document__those_items_will_be_deleted__Are_you_sure_you_want_to_delete_those_items_from_that_list_,
                         list.ListName, list.RowCount);
                 }
                 else
                 {
                     message = TextUtil.LineSeparate(new[]
                         {
-                            "The following lists have items in them which will be deleted when you remove the lists from your document:"
+                            Resources.DocumentSettingsDlg_OkDialog_The_following_lists_have_items_in_them_which_will_be_deleted_when_you_remove_the_lists_from_your_document_
                         }
                         .Concat(removedListsWithData.Select(list =>
-                            string.Format("List '{0}' with {1} items", list.ListName, list.RowCount)))
-                        .Concat(new[]{"Are you sure you want to delete those items from those lists?"}));
+                            string.Format(Resources.DocumentSettingsDlg_OkDialog_List___0___with__1__items, list.ListName, list.RowCount)))
+                        .Concat(new[]{Resources.DocumentSettingsDlg_OkDialog_Are_you_sure_you_want_to_delete_those_items_from_those_lists_}));
                 }
                 if (MultiButtonMsgDlg.Show(this, message, MultiButtonMsgDlg.BUTTON_OK) == DialogResult.Cancel)
                 {

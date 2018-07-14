@@ -27,7 +27,7 @@ namespace pwiz.Common.SystemUtil
             typeBuilder.SetParent(baseType);
             return typeBuilder.CreateType();
         }
-
+        // ReSharper disable NonLocalizedString
         public static string MakeValidIdentifier(string listName)
         {
             return listName.Replace("\\", "\\\\")
@@ -40,5 +40,6 @@ namespace pwiz.Common.SystemUtil
                 .Replace(".", "\\.")
                 .Replace("|", "\\|");
         }
+        // ReSharper enable NonLocalizedString
     }
 }

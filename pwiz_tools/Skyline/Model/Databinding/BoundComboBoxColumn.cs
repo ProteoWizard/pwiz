@@ -18,7 +18,6 @@
  */
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 
 namespace pwiz.Skyline.Model.Databinding

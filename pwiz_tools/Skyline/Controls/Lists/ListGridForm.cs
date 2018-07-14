@@ -23,6 +23,7 @@ using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Lists;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Lists
@@ -46,7 +47,7 @@ namespace pwiz.Skyline.Controls.Lists
 
         private void BindingListSourceOnListChanged(object sender, ListChangedEventArgs listChangedEventArgs)
         {
-            string title = "List: " + ListName;
+            string title = Resources.ListGridForm_BindingListSourceOnListChanged_List__ + ListName;
             ViewInfo view = BindingListSource.ViewInfo;
             if (null != view && view.Name != AbstractViewContext.DefaultViewName)
             {
