@@ -54,11 +54,14 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 masterPane.PaneList.Add(new RegressionGraphPane(graphData));
             }
+        }
 
+        protected override void OnShown(EventArgs e)
+        {
             // Tell ZedGraph to auto layout all the panes
             using (Graphics g = CreateGraphics())
             {
-                masterPane.SetLayout(g, PaneLayout.SingleColumn);
+                graphControl.MasterPane.SetLayout(g, PaneLayout.SingleColumn);
                 graphControl.AxisChange();
             }
         }

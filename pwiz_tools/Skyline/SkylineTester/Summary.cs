@@ -36,6 +36,8 @@ namespace SkylineTester
             public int Leaks;
             public int ManagedMemory;
             public int TotalMemory;
+            public int UserHandles;
+            public int GdiHandles;
         }
 
         public List<Run> Runs { get; private set; }
@@ -70,6 +72,9 @@ namespace SkylineTester
                 runElement.Add(new XElement("Leaks", run.Leaks));
                 runElement.Add(new XElement("ManagedMemory", run.ManagedMemory));
                 runElement.Add(new XElement("TotalMemory", run.TotalMemory));
+                // TODO: Make sure testresults module on Skyline.ms can handle these elements
+//                runElement.Add(new XElement("UserHandles", run.UserHandles));
+//                runElement.Add(new XElement("GdiHandles", run.GdiHandles));
                 summary.Add(runElement);
             }
 
@@ -121,6 +126,12 @@ namespace SkylineTester
                             break;
                         case "totalmemory":
                             run.TotalMemory = int.Parse(element.Value, CultureInfo.InvariantCulture);
+                            break;
+                        case "userhandles":
+                            run.UserHandles = int.Parse(element.Value, CultureInfo.InvariantCulture);
+                            break;
+                        case "gdihandles":
+                            run.GdiHandles = int.Parse(element.Value, CultureInfo.InvariantCulture);
                             break;
                     }
                 }

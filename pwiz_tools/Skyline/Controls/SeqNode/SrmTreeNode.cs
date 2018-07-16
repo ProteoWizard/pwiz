@@ -427,7 +427,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             try
             {
                 PopupPickList popup = new PopupPickList(this, ChildHeading, okOnDeactivate) { Location = location };
-                popup.Show();
+                popup.Show(FormEx.GetParentForm(TreeView));
                 popup.Focus();
             }
             // Catch exceptions that may be caused trying to read results information from SKYD file
