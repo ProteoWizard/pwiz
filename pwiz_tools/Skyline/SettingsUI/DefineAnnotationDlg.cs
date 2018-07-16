@@ -95,7 +95,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return ListPropertyType.AnnotationType;
+                return ListPropertyType == null ? AnnotationDef.AnnotationType.text : ListPropertyType.AnnotationType;
             }
             set
             {
