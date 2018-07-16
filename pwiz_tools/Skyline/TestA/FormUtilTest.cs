@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestA
                         using (alertDlg)
                         {
                             alertDlg.Shown += (sender, args) => alertDlg.BeginInvoke(new Action(() => alertDlg.Close()));
-                            alertDlg.ShowDialog();
+                            alertDlg.ShowParentlessDialog();
                         }
                         Interlocked.Increment(ref numberOfFormsDestroyed);
                     }

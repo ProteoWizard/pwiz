@@ -20,6 +20,7 @@ using System;
 using System.ComponentModel;
 using System.Deployment.Application;
 using System.Threading;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
@@ -260,9 +261,9 @@ namespace pwiz.SkylineTestFunctional
             return UpdateVersion;
         }
 
-        public void OpenInstallLink()
+        public void OpenInstallLink(Control parentWindow)
         {
-            MessageDlg.Show(null, INSTALL_LINK_TEXT);
+            MessageDlg.Show(parentWindow, INSTALL_LINK_TEXT);
         }
     }
 }

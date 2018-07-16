@@ -218,7 +218,7 @@ namespace pwiz.Skyline.FileUI
             bool sucess;
             try
             {
-                sucess = listDest.ImportFile(fileName, ResolveImportConflicts);
+                sucess = listDest.ImportFile(fileName, e => ResolveImportConflicts(parent, e));
             }
             catch (Exception x)
             {
@@ -229,14 +229,14 @@ namespace pwiz.Skyline.FileUI
             return sucess;
         }
 
-        private static IList<string> ResolveImportConflicts(IList<string> existing)
+        private static IList<string> ResolveImportConflicts(Form parent, IList<string> existing)
         {
             var multipleMessage = TextUtil.LineSeparate(Resources.ShareListDlg_ImportFile_The_following_names_already_exist, string.Empty,
                                                     "{0}", string.Empty, Resources.ShareListDlg_ImportFile_Do_you_want_to_replace_them); // Not L10N
             string messageFormat = existing.Count == 1 ?
                Resources.ShareListDlg_ImportFile_The_name__0__already_exists_Do_you_want_to_replace_it :
                multipleMessage;
-            var result = MultiButtonMsgDlg.Show(null, string.Format(messageFormat, TextUtil.LineSeparate(existing)),
+            var result = MultiButtonMsgDlg.Show(parent, string.Format(messageFormat, TextUtil.LineSeparate(existing)),
                 MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true);
             if (result == DialogResult.Yes)
             {

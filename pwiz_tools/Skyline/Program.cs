@@ -200,7 +200,7 @@ namespace pwiz.Skyline
                     {
                         using (var dlg = new UpgradeLicenseDlg(licenseVersion))
                         {
-                            if (dlg.ShowDialog() == DialogResult.Cancel)
+                            if (dlg.ShowParentlessDialog() == DialogResult.Cancel)
                                 return EXIT_CODE_FAILURE_TO_START;
                         }
                     }
@@ -249,7 +249,7 @@ namespace pwiz.Skyline
                 {
                     using (var reportShutdownDlg = new ReportShutdownDlg())
                     {
-                        reportShutdownDlg.ShowDialog();
+                        reportShutdownDlg.ShowParentlessDialog();
                     }
                 }
                 SystemEvents.DisplaySettingsChanged += SystemEventsOnDisplaySettingsChanged;
@@ -272,7 +272,7 @@ namespace pwiz.Skyline
                         StartWindow = new StartPage();
                         try
                         {
-                            if (StartWindow.ShowDialog() != DialogResult.OK)
+                            if (StartWindow.ShowParentlessDialog() != DialogResult.OK)
                             {
                                 Application.Exit();
                                 return EXIT_CODE_SUCCESS;
