@@ -3168,7 +3168,6 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public double ResolvingPower { get; private set; }
 
-
         public double WidthAt(double driftTime, double driftTimeMax)
         {
             if (PeakWidthMode == IonMobilityPeakWidthType.resolving_power)
@@ -3256,7 +3255,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static readonly IonMobilityPredictor EMPTY = new IonMobilityPredictor();  // For test purposes
 
-        [Track]
         public IonMobilityLibrarySpec IonMobilityLibrary { get; private set; }
 
         [TrackChildren(ignoreName:true)]

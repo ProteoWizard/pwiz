@@ -115,13 +115,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 AutoTrain = autoTrain;
             }
 
+            private class FastaTextDefault : DefaultValues
+            {
+                public override bool IsDefault(object obj, object parentObject)
+                {
+                    return !string.IsNullOrEmpty(((ImportFastaSettings) parentObject).FastaText);
+                }
+            }
+
             [Track]
             public Enzyme Enzyme { get; private set; }
             [Track]
             public int MaxMissedCleavages { get; private set; }
             [Track]
             public string FastaFile { get; private set; }
-            [Track]
+            [Track(defaultValues: typeof(FastaTextDefault))]
             public string FastaText { get; private set; }
             [Track]
             public string DecoyGenerationMethod { get; private set; }

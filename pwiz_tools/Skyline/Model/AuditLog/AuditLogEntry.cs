@@ -96,6 +96,51 @@ namespace pwiz.Skyline.Model.AuditLog
         public string[] Names { get; private set; }
     }
 
+    public class AuditLogEntryCreator
+    {
+        public AuditLogEntryCreator(Func<SrmDocumentPair, AuditLogEntry> create)
+        {
+            Create = create;
+        }
+
+        public Func<SrmDocumentPair, AuditLogEntry> Create { get; private set; }
+    }
+
+    public class AuditLogEntryCreatorList
+    {
+        public AuditLogEntryCreatorList()
+        {
+            EntryCreators = new List<AuditLogEntryCreator>();
+        }
+
+        public void Add(Func<SrmDocumentPair, AuditLogEntry> fn)
+        {
+            Add(new AuditLogEntryCreator(fn));
+        }
+
+        public void Add(AuditLogEntryCreator entryCreator)
+        {
+            EntryCreators.Add(entryCreator);
+        }
+
+        public IEnumerable<AuditLogEntry> CreateEntries(SrmDocumentPair docPair)
+        {
+            foreach (var entryCreator in EntryCreators)
+            {
+                var entry = entryCreator.Create(docPair);
+                if (entry != null)
+                    yield return entry;
+            }
+        }
+
+        public IList<LogMessage> AllInfoMessages(SrmDocumentPair docPair)
+        {
+            return CreateEntries(docPair).SelectMany(entry => entry.AllInfoNoUndoRedo).ToList();
+        }
+
+        public List<AuditLogEntryCreator> EntryCreators { get; private set; }
+    }
+
     [XmlRoot(XML_ROOT)]
     public class AuditLogEntry : Immutable, IXmlSerializable
     {
@@ -198,31 +243,6 @@ namespace pwiz.Skyline.Model.AuditLog
             result.UndoRedo = new LogMessage(LogLevel.undo_redo, type, string.Empty, false);
             result.Summary = new LogMessage(LogLevel.summary, type, string.Empty, false);
             result.AllInfo = new List<LogMessage> { new LogMessage(LogLevel.all_info, type, string.Empty, false) };
-
-            return result;
-        }
-
-        public static AuditLogEntry CreateCountEntry(SrmDocument document, MessageType type,
-            int undoRedoCount, int allInfoCount)
-        {
-            if (type != MessageType.log_unlogged_changes && type != MessageType.log_cleared)
-                throw new ArgumentException();
-
-            // ReSharper disable once UseObjectOrCollectionInitializer
-            var result = new AuditLogEntry(document, DateTime.Now, string.Empty);
-
-            result.UndoRedo = new LogMessage(LogLevel.undo_redo, type, string.Empty, false,
-                undoRedoCount.ToString());
-            result.Summary = new LogMessage(LogLevel.summary, type, string.Empty, false,
-                undoRedoCount.ToString());
-
-            result.AllInfo = new List<LogMessage>
-            {
-                new LogMessage(LogLevel.all_info, type, string.Empty, false,
-                    allInfoCount.ToString())
-            };
-
-            result.CountEntryType = type;
 
             return result;
         }
@@ -345,44 +365,76 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public void AddToDocument(SrmDocument document, Action<Func<SrmDocument, SrmDocument>> modifyDocument)
         {
-            if (Settings.Default.AuditLogging || CountEntryType == MessageType.log_cleared)
+            modifyDocument(d =>
             {
-                modifyDocument(d => d.ChangeAuditLog(
-                    ImmutableList.ValueOf(d.AuditLog.AuditLogEntries.Concat(new[] { this }))));
-            }
-            else
-            {
-                UpdateCountLogEntry(document, modifyDocument, 1, AllInfo.Count, MessageType.log_unlogged_changes);
-            }
+                if (true || CountEntryType == MessageType.log_cleared)
+                {
+                    return d.ChangeAuditLog(
+                        ImmutableList.ValueOf(d.AuditLog.AuditLogEntries.Concat(new[] { this })));
+                }
+                else
+                {
+                    bool replace;
+                    var entry = UnloggedEntry(document, out replace);
+
+                    var oldEntries = d.AuditLog.AuditLogEntries;
+                    var newEntries = replace
+                        ? oldEntries.ReplaceAt(oldEntries.Count - 1, entry)
+                        : oldEntries.Concat(CollectionUtil.FromSingleItem(entry));
+
+                    return d.ChangeAuditLog(ImmutableList.ValueOf(newEntries));
+                }
+            });
         }
 
-        public static AuditLogEntry UpdateCountLogEntry(SrmDocument document,
-            Action<Func<SrmDocument, SrmDocument>> modifyDocument, int undoRedoCount, int allInfoCount,
-            MessageType type, bool addToDoc = true)
+        public static AuditLogEntry ClearLogEntry(SrmDocument doc)
         {
-            var logEntries = new List<AuditLogEntry>(document.AuditLog.AuditLogEntries);
-            var countEntry = logEntries.FirstOrDefault(e => e.CountEntryType == type);
+            var entries = doc.AuditLog.AuditLogEntries;
+            var countEntries = entries.Where(e =>
+                e.CountEntryType == MessageType.log_cleared ||
+                e.CountEntryType == MessageType.log_unlogged_changes).ToArray();
 
-            if (countEntry != null)
+            var undoRedoCount = 0;
+            var allInfoCount = 0;
+            foreach (var countEntry in countEntries)
             {
-                var countEntries = logEntries.Where(e =>
-                    e.CountEntryType == MessageType.log_cleared ||
-                    e.CountEntryType == MessageType.log_unlogged_changes).ToArray();
-
-                undoRedoCount += countEntries.Sum(e => int.Parse(e.UndoRedo.Names[0])) - countEntries.Length;
-                allInfoCount += countEntries.Sum(e => int.Parse(e.AllInfo[0].Names[0])) - countEntries.Length;
-                logEntries.Remove(countEntry);
+                undoRedoCount += int.Parse(countEntry.UndoRedo.Names[0]);
+                allInfoCount += int.Parse(countEntry.AllInfoNoUndoRedo.First().Names[0]);
             }
 
-            var newCountEntry = CreateCountEntry(document, type, undoRedoCount, allInfoCount);
-            if (addToDoc)
-            {
-                logEntries.Add(newCountEntry);
+            undoRedoCount += entries.Count - countEntries.Length;
+            allInfoCount += entries.Sum(e => e.AllInfoNoUndoRedo.Count()) - countEntries.Length;
 
-                modifyDocument(d => d.ChangeAuditLog(ImmutableList<AuditLogEntry>.ValueOf(logEntries)));
+            var entry = CreateSimpleEntry(doc, MessageType.log_cleared);
+            entry.CountEntryType = MessageType.log_cleared;
+
+            return entry.ChangeUndoRedo(new MessageTypeNamesPair(MessageType.log_cleared,
+                    undoRedoCount))
+                .ChangeSummary(new MessageTypeNamesPair(MessageType.log_cleared,
+                    undoRedoCount))
+                .ChangeAllInfo(CollectionUtil.FromSingleItem(new MessageTypeNamesPair(MessageType.log_cleared,
+                    allInfoCount)));
+        }
+
+        public AuditLogEntry UnloggedEntry(SrmDocument doc, out bool replace)
+        {
+            var logEntries = new List<AuditLogEntry>(doc.AuditLog.AuditLogEntries);
+
+            var countEntry = logEntries.LastOrDefault();
+
+            replace = countEntry != null && countEntry.CountEntryType == MessageType.log_unlogged_changes;
+            if (!replace)
+            {
+                countEntry = CreateSimpleEntry(doc, MessageType.log_unlogged_changes, 0);
+                countEntry.CountEntryType = MessageType.log_unlogged_changes;
             }
 
-            return newCountEntry;
+            return countEntry.ChangeUndoRedo(new MessageTypeNamesPair(MessageType.log_unlogged_changes,
+                    int.Parse(countEntry.UndoRedo.Names[0]) + 1))
+                .ChangeSummary(new MessageTypeNamesPair(MessageType.log_unlogged_changes,
+                    int.Parse(countEntry.Summary.Names[0]) + 1))
+                .ChangeAllInfo(CollectionUtil.FromSingleItem(new MessageTypeNamesPair(MessageType.log_unlogged_changes,
+                    int.Parse(countEntry.AllInfoNoUndoRedo.First().Names[0]) + AllInfoNoUndoRedo.Count())));
         }
 
         public static AuditLogEntry SettingsLogFunction(SrmDocumentPair documentPair)
@@ -392,6 +444,37 @@ namespace pwiz.Skyline.Model.AuditLog
                 documentPair.OldDoc, documentPair.NewDoc, documentPair.OldDoc, documentPair.NewDoc);
             var tree = Reflector<SrmSettings>.BuildDiffTree(objInfo, property, DateTime.Now);
             return tree != null && tree.Root != null ? CreateSettingsChangeEntry(documentPair.OldDoc, tree) : null;
+        }
+
+        public static PropertyName GetNodeName(SrmDocument doc, DocNode docNode)
+        {
+            DocNode nextNode = null;
+            if (docNode is TransitionDocNode)
+            {
+                nextNode = doc.MoleculeTransitionGroups.FirstOrDefault(group =>
+                    group.Transitions.Any(t => ReferenceEquals(t.Id, docNode.Id)));
+            }
+            else if (docNode is TransitionGroupDocNode)
+            {
+                nextNode = doc.Molecules.FirstOrDefault(group =>
+                    group.TransitionGroups.Any(t => ReferenceEquals(t.Id, docNode.Id)));
+            }
+            else if (docNode is PeptideDocNode)
+            {
+                nextNode = doc.MoleculeGroups.FirstOrDefault(group =>
+                    group.Molecules.Any(m => ReferenceEquals(m.Id, docNode.Id)));
+            }
+
+            var auditLogObj = docNode as IAuditLogObject; // TODO: add other interface to these doc nodes?
+            if (auditLogObj == null)
+                return null;
+
+            var text = auditLogObj.AuditLogText;
+
+            if (nextNode == null)
+                return PropertyName.ROOT.SubProperty(text);
+
+            return GetNodeName(doc, nextNode).SubProperty(text);
         }
 
         #region Implementation of IXmlSerializable
@@ -484,5 +567,37 @@ namespace pwiz.Skyline.Model.AuditLog
             reader.ReadEndElement();
         }
         #endregion
+    }
+
+    public abstract class AuditLogDialog<T> : FormEx
+    {
+        public AuditLogEntry CreateEntry(SrmDocumentPair docPair)
+        {
+            var rootProp = RootProperty.Create(typeof(T));
+
+            var objectInfo =
+                new ObjectInfo<object>()
+                    .ChangeObjectPair(ObjectPair<object>.Create(null, DialogSettings))
+                    .ChangeRootObjectPair(docPair.ToObjectType());
+
+            var settings = Reflector.ToString(objectInfo, rootProp, true);
+
+            var tree = Reflector<T>.BuildDiffTree(docPair.ToObjectType(),
+                rootProp,
+                DialogSettings);
+
+            return AuditLogEntry.CreateSettingsChangeEntry(docPair.OldDoc, tree, settings)
+                .ChangeUndoRedo(MessageInfo)
+                .ChangeSummary(MessageInfo);
+        }
+
+        public virtual MessageTypeNamesPair MessageInfo
+        {
+            // Often times only the all info of dialogs is used,
+            // in which case the message type is not used anyways
+            get { return new MessageTypeNamesPair(MessageType.none); }
+        }
+
+        public abstract T DialogSettings { get; }
     }
 }

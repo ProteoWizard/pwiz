@@ -912,6 +912,11 @@ namespace pwiz.SkylineTestUtil
 
         private void PauseForScreenShot(string description, int? pageNum, Type formType)
         {
+            var path = @"D:\Tutorial Logs\" + Program.TestName + ".txt";
+            if (pageNum.HasValue)
+                description = string.Format("page {0} - {1}", pageNum, description);
+            File.AppendAllText(path, description + "\r\n");
+
             if (Program.SkylineOffscreen)
                 return;
 
@@ -925,8 +930,6 @@ namespace pwiz.SkylineTestUtil
             {
                 var formSeen = new FormSeen();
                 formSeen.Saw(formType);
-                if (pageNum.HasValue)
-                    description = string.Format("page {0} - {1}", pageNum, description);
                 bool showMathingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
                 PauseAndContinueForm.Show(description, LinkPage(pageNum), showMathingPages);
             }
@@ -954,6 +957,8 @@ namespace pwiz.SkylineTestUtil
                 {
                     return;  // Don't want to run this lengthy test right now
                 }
+
+                Program.TestName = TestContext.TestName;
                 Program.FunctionalTest = true;
                 Program.TestExceptions = new List<Exception>();
                 LocalizationHelper.InitThread();
@@ -968,8 +973,6 @@ namespace pwiz.SkylineTestUtil
                             TestFilesPersistent, IsExtractHere(i));
                     }
                 }
-                var path = @"D:\Audit log test log.txt";
-                File.AppendAllText(path, TestContext.TestName + "\r\n");
                 // Run test in new thread (Skyline on main thread).
                 Program.Init();
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();

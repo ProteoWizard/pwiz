@@ -1260,8 +1260,8 @@ namespace pwiz.Skyline.EditUI
                             grid = gridViewTransitionList;
                             break;
                         default:
-                            type = MessageType.inserted_data;
-                            break;
+                            System.Diagnostics.Debugger.Break();
+                            return null;
                     }
 
                     if (grid != null)

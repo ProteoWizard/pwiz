@@ -98,6 +98,7 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
+            Settings.Default.AuditLogging = true;
             OpenImportArrange();
 
             ExploreTopPeptides();

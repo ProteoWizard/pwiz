@@ -41,7 +41,7 @@ namespace pwiz.Skyline.EditUI
     /// Dialog box which shows the user which of their peptides match more than one protein in the database,
     /// and allows them to selectively remove peptides from the document.
     /// </summary>
-    public partial class UniquePeptidesDlg : FormEx
+    public partial class UniquePeptidesDlg : AuditLogDialog<UniquePeptidesDlg.UniquePeptideSettings>
     {
         private readonly CheckBox _checkBoxPeptideIncludedColumnHeader = new CheckBox
         {
@@ -53,6 +53,7 @@ namespace pwiz.Skyline.EditUI
         private List<Tuple<IdentityPath, PeptideDocNode>> _peptideDocNodes;
         private List<HashSet<Protein>> _peptideProteins;
         private readonly HashSet<IdentityPath> _peptidesInBackgroundProteome;
+        private UniquePeptideSettings _dialogSettings;
 
         // Support multiple selection (though using peptide settings is more efficient way to do this filtering)
         public static List<PeptideGroupTreeNode> PeptideSelection(SequenceTree sequenceTree)
@@ -542,12 +543,7 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            Program.MainWindow.ModifyDocument(Resources.UniquePeptidesDlg_OkDialog_Exclude_peptides, ExcludePeptidesFromDocument,
-                docPair =>
-                {
-                    var count = dataGridView1.Rows.OfType<DataGridViewRow>().Count(row => !(bool) row.Cells[PeptideIncludedColumn.Name].Value);
-                    return AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.excluded_peptides, UniquePeptideDlgSettings, count);
-                });
+            Program.MainWindow.ModifyDocument(Resources.UniquePeptidesDlg_OkDialog_Exclude_peptides, ExcludePeptidesFromDocument, CreateEntry);
             Close();
         }
 
@@ -562,7 +558,6 @@ namespace pwiz.Skyline.EditUI
             }
             return (SrmDocument) srmDocument.ChangeChildrenChecked(children);
         }
-
 
         public class ProteinPeptideSelection : IAuditLogObject
         {
@@ -598,9 +593,18 @@ namespace pwiz.Skyline.EditUI
             public bool IsName { get { return true; } }
         }
 
-        public UniquePeptideSettings UniquePeptideDlgSettings
+        public override UniquePeptideSettings DialogSettings
         {
             get { return new UniquePeptideSettings(this); }
+        }
+
+        public override MessageTypeNamesPair MessageInfo
+        {
+            get
+            {
+                var count = dataGridView1.Rows.OfType<DataGridViewRow>().Count(row => !(bool)row.Cells[PeptideIncludedColumn.Name].Value);
+                return new MessageTypeNamesPair(MessageType.excluded_peptides, count);
+            }
         }
 
         public class UniquePeptideSettings
@@ -704,6 +708,5 @@ namespace pwiz.Skyline.EditUI
         }
 
         #endregion
-
     }
 }

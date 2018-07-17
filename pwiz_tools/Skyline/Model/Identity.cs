@@ -128,6 +128,11 @@ namespace pwiz.Skyline.Model
         #endregion
     }
 
+    public interface IIdentiyContainer
+    {
+        Identity Id { get; }
+    }
+
     /// <summary>
     /// The <see cref="DocNode"/> with the <see cref="Identity"/> specified was not found
     /// in the document or node searched.

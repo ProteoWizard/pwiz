@@ -206,7 +206,7 @@ namespace pwiz.Skyline.Model.AuditLog
             if (collection != null)
             {
                 if (collectionKeys.Length == 0)
-                    return Indent(formatWhiteSpace, LogMessage.EMPTY, indentLevel - 1);
+                    return LogMessage.EMPTY;
 
                 strings.Capacity = collectionKeys.Length;
 
@@ -265,14 +265,12 @@ namespace pwiz.Skyline.Model.AuditLog
                         var str = ToStringInternal(newInfo, subProperty, false, formatWhiteSpace, indentLevel - 1, propertyDefaults);
                         if (str != null)
                             strings.Add(str);
-                        else
-                            System.Diagnostics.Debugger.Break(); // TODO: investigate this
                     }
                     else
                     {
-                        strings.Add(Indent(formatWhiteSpace, subProperty.GetName(newInfo) + " = " + // Not L10N
-                                                             ToStringInternal(newInfo, subProperty, true, formatWhiteSpace,
-                                                                 indentLevel, propertyDefaults), indentLevel));
+                        var str = ToStringInternal(newInfo, subProperty, true, formatWhiteSpace, indentLevel, propertyDefaults);
+                        if (str != null)
+                            strings.Add(Indent(formatWhiteSpace, subProperty.GetName(newInfo) + " = " + str, indentLevel)); // Not L10N
                     }
                 }
 
@@ -289,6 +287,9 @@ namespace pwiz.Skyline.Model.AuditLog
                     format = "{0}"; // Not L10N
                 }
             }
+
+            if (strings.Count == 0)
+                return null;
 
             var separator = formatWhiteSpace ? ",\r\n" : ", "; // Not L10N
             return string.Format(result, string.Format(format, string.Join(separator, strings))); // Not L10N

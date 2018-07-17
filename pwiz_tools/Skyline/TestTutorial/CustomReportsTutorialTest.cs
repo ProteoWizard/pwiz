@@ -71,6 +71,7 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
+            Settings.Default.AuditLogging = true;
             // Data Overview, p. 2
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"CustomReports\Study7_example.sky")));
                 // Not L10N

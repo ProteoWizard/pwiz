@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 // Properties that are not DiffParent's and not collections are simply compared
                 // Also make sure that new val doesn't equal any of the default objects
                 if ((!objectInfo.ObjectPair.Equals() || expand) &&
-                        (!expand || !defaults.Any(d => Equals(d, objectInfo.ObjectPair.NewObject))))
+                        (!expand || thisProperty.IgnoreDefaultParent || !defaults.Any(d => Equals(d, objectInfo.ObjectPair.NewObject))))
                     return resultNode;
                 return null;
             }
@@ -286,12 +286,12 @@ namespace pwiz.Skyline.Model.AuditLog
                 return false;
 
             type = Property.GetPropertyType(type, objectPair);
-            if (typeof(DocNode).IsAssignableFrom(type))
+            if (typeof(IIdentiyContainer).IsAssignableFrom(type))
             {
                 // ReSharper disable once PossibleNullReferenceException
-                return (objectPair.OldObject as DocNode).Id.GlobalIndex
+                return (objectPair.OldObject as IIdentiyContainer).Id.GlobalIndex
                     // ReSharper disable once PossibleNullReferenceException
-                       == (objectPair.NewObject as DocNode).Id.GlobalIndex;
+                       == (objectPair.NewObject as IIdentiyContainer).Id.GlobalIndex;
             }
 
             if (element.OldObject.IsName)

@@ -2562,8 +2562,8 @@ namespace pwiz.Skyline
                     {
                         var name = GetPropertyName(docPair.OldDoc, e.GroupPath, e.TransitionId);
 
-                        return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.picked_peak, name,
-                            e.RetentionTime, e.NameSet);
+                        return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.picked_peak, name, e.NameSet,
+                            e.RetentionTime.MeasuredTime.ToString("#.0", CultureInfo.CurrentCulture)); // Not L10N
                     });
             }
             finally
@@ -2723,13 +2723,13 @@ namespace pwiz.Skyline
             if (args.ChangeType == PeakBoundsChangeType.start || args.ChangeType == PeakBoundsChangeType.both)
                 result.Add(new MessageTypeNamesPair(
                     singleTransitionDisplay ? MessageType.changed_peak_start : MessageType.changed_peak_start_all,
-                    name, args.NameSet, args.FilePath.GetFileName(), args.StartTime));
+                    name, args.NameSet, args.StartTime));
 
             if (args.ChangeType == PeakBoundsChangeType.end || args.ChangeType == PeakBoundsChangeType.both)
             {
                 result.Add(new MessageTypeNamesPair(
                     singleTransitionDisplay ? MessageType.changed_peak_end : MessageType.changed_peak_end_all, name,
-                    args.NameSet, args.FilePath.GetFileName(), args.EndTime));
+                    args.NameSet, args.EndTime));
             }
 
             return result;
@@ -5662,11 +5662,7 @@ namespace pwiz.Skyline
             if (Document.AuditLog.AuditLogEntries.Any())
             {
                 ModifyDocument(AuditLogStrings.AuditLogForm__clearLogButton_Click_Clear_audit_log,
-                    document => document.ChangeAuditLog(ImmutableList<AuditLogEntry>.EMPTY), docPair =>
-                    {
-                        return AuditLogEntry.UpdateCountLogEntry(docPair.OldDoc, ModifyDocumentNoUndo, docPair.OldDoc.AuditLog.AuditLogEntries.Count,
-                            docPair.OldDoc.AuditLog.AuditLogEntries.Sum(e => e.AllInfo.Count), MessageType.log_cleared, false);
-                    });
+                    document => document.ChangeAuditLog(ImmutableList<AuditLogEntry>.EMPTY), docPair => AuditLogEntry.ClearLogEntry(docPair.OldDoc));
             } 
         }
 

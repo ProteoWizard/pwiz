@@ -29,7 +29,9 @@ using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Skyline.Alerts;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -414,8 +416,9 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return false;
             }
+
             _dataGridViewPasteHandler.PerformUndoableOperation(Resources.DataboundGridControl_FillDown_Fill_Down,
-                longWaitBroker => DoFillDown(longWaitBroker, propertyDescriptors, firstRowIndex, lastRowIndex));
+                longWaitBroker => DoFillDown(longWaitBroker, propertyDescriptors, firstRowIndex, lastRowIndex), new DataGridViewPasteHandler.BatchModifyInfo(DataGridViewPasteHandler.BatchModifyAction.FillDown));
             return false;
         }
         
@@ -435,6 +438,10 @@ namespace pwiz.Skyline.Controls.Databinding
                 var row = BindingListSource[iRow];
                 for (int icol = 0; icol < propertyDescriptors.Length; icol++)
                 {
+                    var skyDocNode = (SkylineDocNode)((RowItem)row).Value;
+                    var docNode = skyDocNode.DataSchema.Document.FindNode(skyDocNode.IdentityPath);
+                    var name = AuditLogEntry.GetNodeName(skyDocNode.DataSchema.Document, docNode);
+                    Assume.IsNotNull(name);
                     var propertyDescriptor = propertyDescriptors[icol];
                     try
                     {

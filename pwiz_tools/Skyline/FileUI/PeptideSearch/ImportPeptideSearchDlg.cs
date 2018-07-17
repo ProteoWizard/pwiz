@@ -216,7 +216,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get
             {
                 var skippedTransitionPage = _pagesToSkip.Contains(Pages.transition_settings_page);
-                return new ImportPeptideSearchSettings(BuildPepSearchLibControl.BuildLibrarySettings,
+                return new ImportPeptideSearchSettings(
                     ImportResultsControl.ImportSettings,
                     MatchModificationsControl.ModificationSettings,
                     skippedTransitionPage ? null : TransitionSettingsControl.FilterAndLibrariesSettings, FullScanSettingsControl.FullScan,
@@ -227,23 +227,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public class ImportPeptideSearchSettings : IAuditLogComparable
         {
             public ImportPeptideSearchSettings(
-                BuildPeptideSearchLibraryControl.BuildPeptideSearchLibrarySettings buildPeptideSearchLibrarySettings,
                 ImportResultsSettings importResultsSettings,
                 MatchModificationsControl.MatchModificationsSettings modificationsSettings,
                 TransitionSettingsControl.TransitionFilterAndLibrariesSettings filterAndLibSettings,
                 TransitionFullScan fullScanSettings, ImportFastaControl.ImportFastaSettings importFastaSettings)
             {
-                BuildPeptideSearchLibrarySettings = buildPeptideSearchLibrarySettings;
                 ImportResultsSettings = importResultsSettings;
                 ModificationsSettings = modificationsSettings;
                 FilterAndLibrariesSettings = filterAndLibSettings;
                 FullScanSettings = fullScanSettings;
                 ImportFastaSettings = importFastaSettings;
             }
-
-            // Build Spectral Library
-            [TrackChildren]
-            public BuildPeptideSearchLibraryControl.BuildPeptideSearchLibrarySettings BuildPeptideSearchLibrarySettings { get; private set; }
 
             // Extract Chromatograms
             [TrackChildren]
@@ -272,7 +266,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return null;
 
                 return new ImportPeptideSearchSettings(
-                    BuildPeptideSearchLibraryControl.BuildPeptideSearchLibrarySettings.DEFAULT,
                     ImportResultsSettings.DEFAULT,
                     MatchModificationsControl.MatchModificationsSettings.DEFAULT,
                     TransitionSettingsControl.TransitionFilterAndLibrariesSettings.GetDefault(doc.Settings.TransitionSettings),
@@ -758,8 +751,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 SkylineWindow.ModifyDocument(
                     Resources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
                     doc => SkylineWindow.ImportResults(Document, namedResults, ExportOptimize.NONE),
-                    docPair => AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.inserted_data,
+                    docPair => AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.imported_peptide_search,
                         ImportSettings));
+                
                 CloseWizard(DialogResult.OK);
             }
         }
@@ -778,6 +772,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         return AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.added_spectral_library,
                             BuildPepSearchLibControl.BuildLibrarySettings, libName);
                     });
+                SetDocument(SkylineWindow.Document, _documents.Peek());
             }
 
             return result;

@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public virtual void SetAnnotation(AnnotationDef annotationDef, object value)
         {
         }
-        protected void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action, Func<SrmDocument, SrmDocument, AuditLogEntry> logFunc = null)
+        protected void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action, Func<SrmDocumentPair, AuditLogEntry> logFunc = null)
         {
             DataSchema.ModifyDocument(editDescription, action, logFunc);
         }

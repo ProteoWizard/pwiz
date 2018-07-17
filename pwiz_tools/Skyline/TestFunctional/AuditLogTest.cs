@@ -20,10 +20,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.AuditLog.Databinding;
@@ -62,7 +62,8 @@ namespace pwiz.SkylineTestFunctional
             if (unlocalizedMessageTypes.Any())
                 Assert.Fail("The following properties are unlocalized:\n" + string.Join("\n", unlocalizedMessageTypes));
 
-            var unlocalized = GetUnlocalizedProperties(RootProperty.Create(typeof(SrmSettings), "Settings"), PropertyPath.Root);
+            //var unlocalized = GetUnlocalizedProperties(RootProperty.Create(typeof(SrmSettings), "Settings"), PropertyPath.Root);
+            var unlocalized = GetAllUnlocalizedProperties();
             if (unlocalized.Any())
                 Assert.Fail("The following properties are unlocalized:\n" + string.Join("\n", unlocalized));
         }
@@ -70,6 +71,63 @@ namespace pwiz.SkylineTestFunctional
         private void VerifyStringLocalization(string expected, string unlocalized)
         {
             Assert.AreEqual(expected, LogMessage.LocalizeLogStringProperties(unlocalized));
+        }
+
+        public List<UnlocalizedProperty> GetAllUnlocalizedProperties()
+        {
+            var unlocalizedProperties = new List<UnlocalizedProperty>();
+
+            var types = Assembly.GetAssembly(typeof(AuditLogEntry)).GetTypes();
+
+            foreach (var classType in types)
+            {
+                try
+                {
+                    if (classType.ContainsGenericParameters)
+                        continue;
+
+                    var properties = Reflector.GetProperties(classType);
+
+                    if (properties == null)
+                        continue;
+
+                    for (var i = 0; i < properties.Count; i++)
+                    {
+                        var property = properties[i];
+                        if (!property.IgnoreName)
+                        {
+                            string[] names;
+                            var localizer = property.CustomLocalizer;
+                            if (localizer != null)
+                            {
+                                names = localizer.PossibleResourceNames;
+                            }
+                            else
+                            {
+                                names = CollectionUtil
+                                    .FromSingleItem(property.DeclaringType.Name + "_" + property.PropertyName)
+                                    .ToArray();
+                            }
+
+                            foreach (var name in names)
+                            {
+                                var localized = PropertyNames.ResourceManager.GetString(name);
+                                if (localized == null)
+                                {
+                                    unlocalizedProperties.Add(new UnlocalizedProperty(name));
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if(ex.Message != string.Empty)
+                        System.Diagnostics.Debugger.Break();
+                }
+            }
+
+            return unlocalizedProperties;
         }
 
         private List<UnlocalizedProperty> GetUnlocalizedMessageTypes()
@@ -90,7 +148,7 @@ namespace pwiz.SkylineTestFunctional
         /// Verifies that all diff properties of T are localized, unless their name can be ignored
         /// or a custom localizer is provided
         /// </summary>
-        private List<UnlocalizedProperty> GetUnlocalizedProperties(Property prop, PropertyPath path)
+        /*private List<UnlocalizedProperty> GetUnlocalizedProperties(Property prop, PropertyPath path)
         {
             var T = prop.GetPropertyType(ObjectPair<object>.Create(null, null));
             var properties = Reflector.GetProperties(T);
@@ -139,7 +197,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             return unlocalizedProperties;
-        }
+        }*/
 
         public class UnlocalizedProperty
         {
@@ -713,9 +771,9 @@ namespace pwiz.SkylineTestFunctional
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}\"SubjectId\"{2:PropertySeparator}{0:AnnotationDef_Type}",
                         "\"text\""),
-                    new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
+                    new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}\"SubjectId\"{2:PropertySeparator}{0:AnnotationDef_Items}",
-                        "[  ]"),
+                        "{2:Empty}"),
                 }),
             new LogEntryMessages(
                 new LogMessage(LogLevel.undo_redo, MessageType.changed, string.Empty, false,

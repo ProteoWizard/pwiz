@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 
@@ -27,32 +28,36 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     public class ImportResultsSettings
     {
         public static readonly ImportResultsSettings DEFAULT = new ImportResultsSettings(false,
-            MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time, false, null, null);
+            MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time, false, null, null, null);
 
         public ImportResultsSettings(bool excludeSpectrumSourceFiles, IImportResultsControl control) : this(
             excludeSpectrumSourceFiles,
             (MultiFileLoader.ImportResultsSimultaneousFileOptions) control.SimultaneousFiles, control.DoAutoRetry,
-            control.Prefix, control.Suffix)
+            control.Prefix, control.Suffix, control.FoundResultsFiles.Select(file => file.Path).ToList())
         {
         }
 
         public ImportResultsSettings(bool excludeSpectrumSourceFiles,
-            MultiFileLoader.ImportResultsSimultaneousFileOptions importFileOptions, bool retryImportAfterFailure,
-            string prefix, string suffix)
+            MultiFileLoader.ImportResultsSimultaneousFileOptions fileImportOption, bool retryAfterImportFailure,
+            string prefix, string suffix, List<string> foundResultsFiles)
         {
             ExcludeSpectrumSourceFiles = excludeSpectrumSourceFiles;
-            ImportFileOptions = importFileOptions;
-            RetryImportAfterFailure = retryImportAfterFailure;
+            FileImportOption = fileImportOption;
+            RetryAfterImportFailure = retryAfterImportFailure;
             Prefix = prefix;
             Suffix = suffix;
+            FoundResultsFiles = foundResultsFiles;
         }
+
+        [Track]
+        public List<string> FoundResultsFiles { get; private set; }
 
         [Track]
         public bool ExcludeSpectrumSourceFiles { get; private set; }
         [Track]
-        public MultiFileLoader.ImportResultsSimultaneousFileOptions ImportFileOptions { get; private set; }
+        public MultiFileLoader.ImportResultsSimultaneousFileOptions FileImportOption { get; private set; }
         [Track]
-        public bool RetryImportAfterFailure { get; private set; }
+        public bool RetryAfterImportFailure { get; private set; }
         [Track]
         public string Prefix { get; private set; }
         [Track]

@@ -257,11 +257,11 @@
   <data name="pasted_targets" xml:space="preserve">
     <value>Pasted targets</value>
   </data>
-  <data name="edited_document_grid" xml:space="preserve">
-    <value>Edited in document in grid</value>
+  <data name="set_to_in_document_grid" xml:space="preserve">
+    <value>Set {0} to "{1}"</value>
   </data>
   <data name="pasted_document_grid" xml:space="preserve">
-    <value>Pasted into document grid</value>
+    <value>Pasted {0} values into document grid</value>
   </data>
   <data name="renamed_proteins" xml:space="preserve">
     <value>Renamed {0} proteins</value>
@@ -438,19 +438,19 @@
     <value>Removed all peaks from {0} in replicate "{1}"</value>
   </data>
   <data name="picked_peak" xml:space="preserve">
-    <value>Picked peak {0} at {1} in "{2}"</value>
+    <value>Picked peak {0} in "{1}" at {2}</value>
   </data>
   <data name="changed_peak_end" xml:space="preserve">
-    <value>Changed end time of peak {0} in {1} in file {2} to {3}</value>
+    <value>Changed end time of peak {0} in "{1}" to {2}</value>
   </data>
   <data name="changed_peak_end_all" xml:space="preserve">
-    <value>Changed end time of all peaks of {0} in {1} in file {2} to {3}</value>
+    <value>Changed end time of all peaks of {0} in "{1}" to {2}</value>
   </data>
   <data name="changed_peak_start" xml:space="preserve">
-    <value>Changed start time of peak {0} in {1} in file {2} to {3}</value>
+    <value>Changed start time of peak {0} in "{1}" to {2}</value>
   </data>
   <data name="changed_peak_start_all" xml:space="preserve">
-    <value>Changed start time of all peaks of {0} in {1} in file {2} to {3}</value>
+    <value>Changed start time of all peaks of {0} in "{1}" to {2}</value>
   </data>
   <data name="changed_peak_bounds" xml:space="preserve">
     <value>Changed peak bounds</value>
@@ -469,5 +469,26 @@
   </data>
   <data name="matched_modifications_of_library" xml:space="preserve">
     <value>Matched modifications of library "{0}"</value>
+  </data>
+  <data name="reintegrated_peaks" xml:space="preserve">
+    <value>Reintegrated peaks using "{0}"</value>
+  </data>
+  <data name="imported_peptide_search" xml:space="preserve">
+    <value>Imported peptide search</value>
+  </data>
+  <data name="fill_down_document_grid" xml:space="preserve">
+    <value>Filled {0} values down in document grid</value>
+  </data>
+  <data name="cleared_document_grid" xml:space="preserve">
+    <value>Cleared {0} cells in document grid</value>
+  </data>
+  <data name="cleared_cell_in_document_grid" xml:space="preserve">
+    <value>Cleared {0} in document grid</value>
+  </data>
+  <data name="managed_results" xml:space="preserve">
+    <value>Managed results</value>
+  </data>
+  <data name="upgraded_background_proteome" xml:space="preserve">
+    <value>Upgraded background proteome "{0}"</value>
   </data>
 </root>

@@ -251,6 +251,14 @@ namespace pwiz.Common.SystemUtil
         }
     }
 
+    public class DefaultValuesFalse : DefaultValues
+    {
+        protected override IEnumerable<object> _values
+        {
+            get { yield return false; }
+        }
+    }
+
     public class DefaultValuesNull : DefaultValues
     {
         protected override IEnumerable<object> _values

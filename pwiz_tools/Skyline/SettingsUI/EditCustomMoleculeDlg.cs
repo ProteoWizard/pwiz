@@ -23,10 +23,12 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -289,7 +291,6 @@ namespace pwiz.Skyline.SettingsUI
                 dlg.NameText, dlg.FormulaBox.DisplayFormula, dlg.FormulaBox.MonoMass, dlg.FormulaBox.AverageMass,
                 int.Parse(dlg.textCharge.Text), dlg.IsotopeLabelType, new ExplicitValues(dlg))
             {
-
             }
 
             public EditCustomMoleculeSettings(string name, string formula, double? monoisotopicMz, double? averageMz,

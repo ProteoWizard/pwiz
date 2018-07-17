@@ -63,7 +63,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get { return new BuildPeptideSearchLibrarySettings(this); }
         }
 
-        public class BuildPeptideSearchLibrarySettings
+        public class BuildPeptideSearchLibrarySettings : IAuditLogComparable
         {
             public static BuildPeptideSearchLibrarySettings DEFAULT = new BuildPeptideSearchLibrarySettings(0.0, new List<string>(), null, false,
                 false, ImportPeptideSearchDlg.Workflow.dda);
@@ -96,6 +96,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public bool FilterForDocumentPeptides { get; private set; }
             [Track(ignoreDefaultParent: true)]
             public ImportPeptideSearchDlg.Workflow WorkFlow { get; private set; }
+
+            public object GetDefaultObject(ObjectInfo<object> info)
+            {
+                return DEFAULT;
+            }
         }
 
         public event EventHandler<InputFilesChangedEventArgs> InputFilesChanged;

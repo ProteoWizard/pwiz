@@ -61,8 +61,10 @@ namespace pwiz.Skyline.Model.AuditLog
         modified,
 
         // Document grid
-        edited_document_grid,
+        set_to_in_document_grid,
         pasted_document_grid,
+        cleared_document_grid,
+        fill_down_document_grid,
 
         // Refine
         remove_empty_proteins,
@@ -132,7 +134,12 @@ namespace pwiz.Skyline.Model.AuditLog
         removed_peptides_above_cutoff,
         added_peptide_from_library,
         added_all_peptides_from_library,
-        matched_modifications_of_library
+        matched_modifications_of_library,
+        reintegrated_peaks,
+        imported_peptide_search,
+        cleared_cell_in_document_grid,
+        managed_results,
+        upgraded_background_proteome
     }
 
     [XmlRoot(XML_ROOT)]

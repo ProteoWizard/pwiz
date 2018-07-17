@@ -1473,7 +1473,7 @@ namespace pwiz.Skyline
                             Resources.SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_);
 
                     return dlg.Document;
-                }, docPair => AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.none, dlg.ReintegrateSettings));
+                }, docPair => AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.reintegrated_peaks, dlg.ReintegrateSettings, dlg.ReintegrateSettings.PeakScoringModel.Name));
             }
         }
 
@@ -2909,6 +2909,22 @@ namespace pwiz.Skyline
                         doc.ValidateResults();
 
                         return doc;
+                    }, docPair =>
+                    {
+                        var property = RootProperty.Create(typeof(MeasuredResults));
+                        var objInfo = new ObjectInfo<object>(docPair.OldDoc.MeasuredResults, docPair.NewDoc.MeasuredResults,
+                            docPair.OldDoc, docPair.NewDoc, docPair.OldDoc, docPair.NewDoc);
+                        var diffTree = Reflector<MeasuredResults>.BuildDiffTree(objInfo, property, DateTime.Now);
+
+                        if (diffTree.Root != null)
+                        {
+                            var message = new MessageTypeNamesPair(MessageType.managed_results);
+                            var entry = AuditLogEntry.CreateSettingsChangeEntry(docPair.OldDoc, diffTree)
+                                .ChangeUndoRedo(message);
+                            return entry;
+                        }
+
+                        return null;
                     });
 
                     // Modify document will have closed the streams by now.  So, it is safe to delete the files.

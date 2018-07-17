@@ -657,15 +657,24 @@ namespace pwiz.Skyline
         {
             try
             {
+                Exception logException;
+
                 using (var undo = BeginUndo(undoState))
                 {
                     AuditLogEntry entry;
-                    if (ModifyDocumentInner(act, onModifying, onModified, logFunc, out entry))
+                    if (ModifyDocumentInner(act, onModifying, onModified, logFunc, out entry, out logException))
                     {
                         undo.Commit(entry != null ? entry.UndoRedo.ToString() : description);
                         if (entry != null)
                         {
-                            var path = @"D:\Audit log test log.txt";
+                            string startTime;
+                            using (Process p = Process.GetCurrentProcess())
+                            {
+                                startTime = p.StartTime.ToString("MM_dd_yyyy_hh_mm_ss");
+                            }
+                            var path = Program.FunctionalTest
+                                ? (@"D:\Tutorial Logs\" + Program.TestName + ".txt")
+                                : @"D:\Run Logs\log_" + startTime + ".txt";
                             File.AppendAllText(path, "---\r\n");
                             File.AppendAllText(path, "Undo Redo: " + entry.UndoRedo + "\r\n");
                             File.AppendAllText(path, "Summary: " + entry.UndoRedo + "\r\n");
@@ -675,7 +684,7 @@ namespace pwiz.Skyline
                                 File.AppendAllText(path, info + "\r\n");
                             }
                             if(!string.IsNullOrEmpty(entry.ExtraInfo))
-                                File.AppendAllText(path, "Extra info:\r\n" + entry.ExtraInfo + "\r\n");
+                                File.AppendAllText(path, "Extra info:\r\n" + LogMessage.LocalizeLogStringProperties(entry.ExtraInfo) + "\r\n");
                             File.AppendAllText(path, "---\r\n");
                             var currentCount = _undoManager.UndoCount;
                             entry = entry.ChangeUndoAction(e => _undoManager.UndoRestore(_undoManager.UndoCount - currentCount));
@@ -683,6 +692,9 @@ namespace pwiz.Skyline
                         }  
                     }   
                 }
+
+                if (logException != null)
+                    Program.ReportException(logException);
             }
             catch (IdentityNotFoundException)
             {
@@ -700,17 +712,28 @@ namespace pwiz.Skyline
 
         public void ModifyDocumentNoUndo(Func<SrmDocument, SrmDocument> act)
         {
-            ModifyDocumentInner(act, null, null);
-        }
-
-        private void ModifyDocumentInner(Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified)
-        {
             AuditLogEntry unused;
-            ModifyDocumentInner(act, onModifying, onModified, null, out unused);
+            Exception lastLogException;
+            ModifyDocumentInner(act, null, null, null, out unused, out lastLogException);
+
+            if (lastLogException != null)
+                throw lastLogException;
         }
 
-        private bool ModifyDocumentInner(Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified, Func<SrmDocumentPair, AuditLogEntry> logFunc, out AuditLogEntry resultEntry)
+        public class LogException : Exception
         {
+            public LogException(Exception innerException) : base(
+                "An error occured while creating a log entry. The document was still successfully modified",
+                innerException) // TODO: localize
+            {
+            }
+        }
+
+        private bool ModifyDocumentInner(Func<SrmDocument, SrmDocument> act, Action onModifying, Action onModified, Func<SrmDocumentPair, AuditLogEntry> logFunc, out AuditLogEntry resultEntry, out Exception lastLogException)
+        {
+            lastLogException = null;
+            resultEntry = null;
+
             SrmDocument docOriginal;
             SrmDocument docNew;
             do
@@ -722,7 +745,14 @@ namespace pwiz.Skyline
                 docOriginal = Document;
                 docNew = act(docOriginal);
 
-                resultEntry = logFunc != null ? logFunc(SrmDocumentPair.Create(docOriginal, docNew)) : null;
+                try
+                {
+                    resultEntry = logFunc != null ? logFunc(SrmDocumentPair.Create(docOriginal, docNew)) : null;
+                }
+                catch(Exception ex)
+                {
+                    lastLogException = new LogException(ex);
+                }
 
                 // If no change has been made, return without committing a
                 // new undo record to the undo stack.
@@ -2356,7 +2386,7 @@ namespace pwiz.Skyline
             {
                 return;  // No selection
             }
-            if (!ViewLibraryDlg.EnsureDigested(this, DocumentUI.Settings.PeptideSettings.BackgroundProteome))
+            if (!ViewLibraryDlg.EnsureDigested(this, DocumentUI.Settings.PeptideSettings.BackgroundProteome, null))
             {
                 return;
             }

@@ -51,6 +51,20 @@ namespace pwiz.Skyline.Util
 
         public BoundDataGridView DataGridView { get; private set; }
 
+        public enum BatchModifyAction { Paste, Clear, FillDown }
+
+        public class BatchModifyInfo
+        {
+            public BatchModifyInfo(BatchModifyAction batchModifyAction, string extraInfo = null)
+            {
+                BatchModifyAction = batchModifyAction;
+                ExtraInfo = extraInfo;
+            }
+
+            public BatchModifyAction BatchModifyAction { get; private set; }
+            public string ExtraInfo { get; private set; }
+        }
+
         private void DataGridViewOnKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Handled)
@@ -71,16 +85,18 @@ namespace pwiz.Skyline.Util
                 using (var reader = new StringReader(clipboardText))
                 {
                     e.Handled = PerformUndoableOperation(Resources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste,
-                        monitor => Paste(monitor, reader));
+                        monitor => Paste(monitor, reader), new BatchModifyInfo(BatchModifyAction.Paste, clipboardText));
                 }
             }
             else if (e.KeyCode == Keys.Delete && 0 == e.Modifiers)
             {
-                e.Handled = PerformUndoableOperation(Resources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Clear_cells, ClearCells);
+                e.Handled = PerformUndoableOperation(
+                    Resources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Clear_cells, ClearCells,
+                    new BatchModifyInfo(BatchModifyAction.Clear));
             }
         }
 
-        public bool PerformUndoableOperation(string description, Func<ILongWaitBroker, bool> operation)
+        public bool PerformUndoableOperation(string description, Func<ILongWaitBroker, bool> operation, BatchModifyInfo batchModifyInfo)
         {
             var skylineDataSchema = GetDataSchema();
             if (skylineDataSchema == null)
@@ -103,7 +119,7 @@ namespace pwiz.Skyline.Util
                     };
                     if (longOperationRunner.CallFunction(operation))
                     {
-                        skylineDataSchema.CommitBatchModifyDocument(description);
+                        skylineDataSchema.CommitBatchModifyDocument(description, batchModifyInfo);
                         return true;
                     }
                 }

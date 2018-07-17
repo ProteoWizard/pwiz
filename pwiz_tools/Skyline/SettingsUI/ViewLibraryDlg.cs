@@ -59,7 +59,7 @@ namespace pwiz.Skyline.SettingsUI
     /// from a drop-down, view and search the list of peptides, and view the
     /// spectrum for peptide selected in the list.
     /// </summary>
-    public partial class ViewLibraryDlg : FormEx, IGraphContainer, ITipDisplayer
+    public partial class ViewLibraryDlg : AuditLogDialog<ViewLibraryDlg.ViewLibrarySettings>, IGraphContainer, ITipDisplayer
     {
         // Used to parse the modification string in a given sequence
         private const string COLON_SEP = ": ";  // Not L10N
@@ -1308,7 +1308,10 @@ namespace pwiz.Skyline.SettingsUI
                                                         _matcher,
                                                         _peptides);
 
-            if (!EnsureBackgroundProteome(startingDocument, pepMatcher, false))
+            var entryCreatorList = new AuditLogEntryCreatorList();
+            entryCreatorList.Add(CreateEntry);
+
+            if (!EnsureBackgroundProteome(startingDocument, pepMatcher, false, entryCreatorList))
                 return;
 
             var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
@@ -1347,7 +1350,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            if (pepMatcher.EnsureDuplicateProteinFilter(this, true) == DialogResult.Cancel)
+            if (pepMatcher.EnsureDuplicateProteinFilter(this, true, entryCreatorList) == DialogResult.Cancel)
                 return;
 
             IdentityPath toPath = Program.MainWindow.SelectedPath;
@@ -1359,7 +1362,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var newDoc = doc;
 
-                if (!ReferenceEquals(doc.Settings.PeptideSettings.Libraries, startingDocument.Settings.PeptideSettings.Libraries))
+                if (!ReferenceEquals(doc.Settings.PeptideSettings.Libraries,
+                    startingDocument.Settings.PeptideSettings.Libraries))
                     newDoc = newDoc.ChangeSettings(newDoc.Settings.ChangePeptideLibraries(old =>
                         startingDocument.Settings.PeptideSettings.Libraries));
 
@@ -1379,25 +1383,39 @@ namespace pwiz.Skyline.SettingsUI
                     return newDoc;
                 var modsNew = _matcher.GetDocModifications(newDoc);
                 return newDoc.ChangeSettings(newDoc.Settings.ChangePeptideModifications(mods => modsNew));
-            }, docPair => CreateAddPeptideEntry(docPair, MessageType.added_peptide_from_library,
+            }, docPair => CreateAddPeptideEntry(docPair, MessageType.added_peptide_from_library, entryCreatorList,
                 nodePepMatched.AuditLogText, _selectedLibName));
             
             Program.MainWindow.SelectedPath = selectedPath;
             Document.Settings.UpdateDefaultModifications(true, true);
         }
 
-        private AuditLogEntry CreateAddPeptideEntry(SrmDocumentPair docPair, MessageType type, params object[] args)
+        public override ViewLibrarySettings DialogSettings
         {
-            var settingsChanges = AuditLogEntry.SettingsLogFunction(docPair);
-            var nodeChanges = SkylineWindow.DiffDocNodes(type, docPair, args);
-
-            if (settingsChanges != null && nodeChanges != null)
-                nodeChanges = nodeChanges.AppendAllInfo(settingsChanges.AllInfoNoUndoRedo);
-
-            return nodeChanges;
+            get { return new ViewLibrarySettings(cbAssociateProteins.Checked); }
         }
 
-        private bool EnsureBackgroundProteome(SrmDocument document, ViewLibraryPepMatching pepMatcher, bool ensureDigested)
+        public class ViewLibrarySettings
+        {
+            public ViewLibrarySettings(bool associateProteins)
+            {
+                AssociateProteins = associateProteins;
+            }
+
+            [Track(defaultValues:typeof(DefaultValuesFalse))]
+            public bool AssociateProteins { get; private set; }
+        }
+
+        private AuditLogEntry CreateAddPeptideEntry(SrmDocumentPair docPair, MessageType type, AuditLogEntryCreatorList entryCreatorList, params object[] args)
+        {
+            var settingsChanges = AuditLogEntry.SettingsLogFunction(docPair);
+            var entry = AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, type, args);
+            if (settingsChanges != null)
+                entry = entry.AppendAllInfo(settingsChanges.AllInfoNoUndoRedo);
+            return entry.AppendAllInfo(entryCreatorList.AllInfoMessages(docPair));
+        }
+
+        private bool EnsureBackgroundProteome(SrmDocument document, ViewLibraryPepMatching pepMatcher, bool ensureDigested, AuditLogEntryCreatorList entryCreators)
         {
             if (cbAssociateProteins.Checked)
             {
@@ -1411,7 +1429,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 if (ensureDigested)
                 {
-                    if (!EnsureDigested(this, backgroundProteome))
+                    if (!EnsureDigested(this, backgroundProteome, entryCreators))
                     {
                         return false;
                     }
@@ -1421,7 +1439,7 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        public static bool EnsureDigested(Control owner, BackgroundProteome backgroundProteome)
+        public static bool EnsureDigested(Control owner, BackgroundProteome backgroundProteome, AuditLogEntryCreatorList entryCreators)
         {
             try
             {
@@ -1471,8 +1489,11 @@ namespace pwiz.Skyline.SettingsUI
                             finished = true;
                         }
                     });
+                    if (finished && entryCreators != null)
+                        entryCreators.Add(docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc,
+                            MessageType.upgraded_background_proteome, backgroundProteome.Name));
                     return finished;
-                }
+                } 
             }
             catch (Exception e)
             {
@@ -1548,7 +1569,9 @@ namespace pwiz.Skyline.SettingsUI
                                                         _matcher,
                                                         _peptides);
 
-            if (!EnsureBackgroundProteome(startingDocument, pepMatcher, true))
+            var entryCreatorList = new AuditLogEntryCreatorList();
+            entryCreatorList.Add(CreateEntry);
+            if (!EnsureBackgroundProteome(startingDocument, pepMatcher, true, entryCreatorList))
                 return;
             pepMatcher.AddAllPeptidesSelectedPath = Program.MainWindow.SelectedPath;
 
@@ -1560,7 +1583,7 @@ namespace pwiz.Skyline.SettingsUI
                     Message = hasSmallMolecules ? Resources.ViewLibraryDlg_AddAllPeptides_Matching_molecules_to_the_current_document_settings : Resources.ViewLibraryDlg_AddAllPeptides_Matching_peptides_to_the_current_document_settings
                 })
             {
-                longWaitDlg.PerformWork(this, 1000, pepMatcher.AddAllPeptidesToDocument);
+                longWaitDlg.PerformWork(this, 1000, broker => pepMatcher.AddAllPeptidesToDocument(broker, entryCreatorList));
                 newDocument = pepMatcher.DocAllPeptides;
                 if (longWaitDlg.IsCanceled || newDocument == null)
                     return;
@@ -1655,7 +1678,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (!_matcher.HasMatches)
                         return newDoc;
                     return newDoc.ChangeSettings(newDoc.Settings.ChangePeptideModifications(mods => modsNew));
-                }, docPair => CreateAddPeptideEntry(docPair, MessageType.added_all_peptides_from_library, pepMatcher.MatchedPeptideCount, _selectedLibName));
+                }, docPair => CreateAddPeptideEntry(docPair, MessageType.added_all_peptides_from_library, entryCreatorList, pepMatcher.MatchedPeptideCount, _selectedLibName));
 
             Program.MainWindow.SelectedPath = selectedPath;
             Document.Settings.UpdateDefaultModifications(true, true);
@@ -1719,6 +1742,7 @@ namespace pwiz.Skyline.SettingsUI
 
         // Temp variable to store a previously focused control
         private Control _focused;
+        private ViewLibrarySettings _dialogSettings;
 
         private void splitMain_MouseDown(object sender, MouseEventArgs e)
         {

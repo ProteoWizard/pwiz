@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model
     /// the <see cref="Id"/> properties of the parents to aid in node lookup
     /// in the document tree.
     /// </summary>
-    public abstract class DocNode : Immutable
+    public abstract class DocNode : Immutable, IIdentiyContainer
     {
         protected DocNode(Identity id)
             : this(id, Annotations.EMPTY)

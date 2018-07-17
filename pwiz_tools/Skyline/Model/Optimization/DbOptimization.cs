@@ -39,7 +39,6 @@ namespace pwiz.Skyline.Model.Optimization
 
     public class OptimizationKey : IComparable
     {
-        [Track]
         public OptimizationType OptType { get; set; }
         public Target PeptideModSeq { get; set; }
         public Adduct PrecursorAdduct { get; set; }

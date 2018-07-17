@@ -358,7 +358,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Changed end time of peak {0} in {1} in file {2} to {3}.
+        ///   Looks up a localized string similar to Changed end time of peak {0} in &quot;{1}&quot; to {2}.
         /// </summary>
         public static string changed_peak_end {
             get {
@@ -367,7 +367,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Changed end time of all peaks of {0} in {1} in file {2} to {3}.
+        ///   Looks up a localized string similar to Changed end time of all peaks of {0} in &quot;{1}&quot; to {2}.
         /// </summary>
         public static string changed_peak_end_all {
             get {
@@ -376,7 +376,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Changed start time of peak {0} in {1} in file {2} to {3}.
+        ///   Looks up a localized string similar to Changed start time of peak {0} in &quot;{1}&quot; to {2}.
         /// </summary>
         public static string changed_peak_start {
             get {
@@ -385,7 +385,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Changed start time of all peaks of {0} in {1} in file {2} to {3}.
+        ///   Looks up a localized string similar to Changed start time of all peaks of {0} in &quot;{1}&quot; to {2}.
         /// </summary>
         public static string changed_peak_start_all {
             get {
@@ -399,6 +399,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string changed_to {
             get {
                 return ResourceManager.GetString("changed_to", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cleared {0} in document grid.
+        /// </summary>
+        public static string cleared_cell_in_document_grid {
+            get {
+                return ResourceManager.GetString("cleared_cell_in_document_grid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cleared {0} cells in document grid.
+        /// </summary>
+        public static string cleared_document_grid {
+            get {
+                return ResourceManager.GetString("cleared_document_grid", resourceCulture);
             }
         }
         
@@ -435,15 +453,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string drag_and_dropped_nodes {
             get {
                 return ResourceManager.GetString("drag_and_dropped_nodes", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Edited in document in grid.
-        /// </summary>
-        public static string edited_document_grid {
-            get {
-                return ResourceManager.GetString("edited_document_grid", resourceCulture);
             }
         }
         
@@ -493,6 +502,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Filled {0} values down in document grid.
+        /// </summary>
+        public static string fill_down_document_grid {
+            get {
+                return ResourceManager.GetString("fill_down_document_grid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Imported annotations from &quot;{0}&quot;.
         /// </summary>
         public static string imported_annotations {
@@ -534,6 +552,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string imported_peak_boundaries {
             get {
                 return ResourceManager.GetString("imported_peak_boundaries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported peptide search.
+        /// </summary>
+        public static string imported_peptide_search {
+            get {
+                return ResourceManager.GetString("imported_peptide_search", resourceCulture);
             }
         }
         
@@ -682,6 +709,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Managed results.
+        /// </summary>
+        public static string managed_results {
+            get {
+                return ResourceManager.GetString("managed_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Matched modifications of library &quot;{0}&quot;.
         /// </summary>
         public static string matched_modifications_of_library {
@@ -718,7 +754,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pasted into document grid.
+        ///   Looks up a localized string similar to Pasted {0} values into document grid.
         /// </summary>
         public static string pasted_document_grid {
             get {
@@ -754,7 +790,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Picked peak {0} at {1} in &quot;{2}&quot;.
+        ///   Looks up a localized string similar to Picked peak {0} in &quot;{1}&quot; at {2}.
         /// </summary>
         public static string picked_peak {
             get {
@@ -777,6 +813,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string refined_targets {
             get {
                 return ResourceManager.GetString("refined_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reintegrated peaks using &quot;{0}&quot;.
+        /// </summary>
+        public static string reintegrated_peaks {
+            get {
+                return ResourceManager.GetString("reintegrated_peaks", resourceCulture);
             }
         }
         
@@ -1015,6 +1060,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Set {0} to &quot;{1}&quot;.
+        /// </summary>
+        public static string set_to_in_document_grid {
+            get {
+                return ResourceManager.GetString("set_to_in_document_grid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} targets.
         /// </summary>
         public static string SkylineWindow_EditNote__0__targets {
@@ -1110,6 +1164,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string UnrecognizedPeptides {
             get {
                 return ResourceManager.GetString("UnrecognizedPeptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upgraded background proteome &quot;{0}&quot;.
+        /// </summary>
+        public static string upgraded_background_proteome {
+            get {
+                return ResourceManager.GetString("upgraded_background_proteome", resourceCulture);
             }
         }
     }

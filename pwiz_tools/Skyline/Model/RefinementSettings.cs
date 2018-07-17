@@ -126,9 +126,13 @@ namespace pwiz.Skyline.Model
         [Track]
         public bool AutoPickTransitionsAll { get { return (AutoPickChildrenAll & PickLevel.transitions) != 0; } }
         // Results
+        [Track]
         public double? MinPeakFoundRatio { get; set; }
+        [Track]
         public double? MaxPeakFoundRatio { get; set; }
+        [Track]
         public double? MaxPepPeakRank { get; set; }
+        [Track]
         public double? MaxPeakRank { get; set; }
 
 
@@ -140,17 +144,27 @@ namespace pwiz.Skyline.Model
         
         public int? MinPrecursorsPerPeptide { get; set; }
 
-
+        [Track]
         public bool PreferLargeIons { get; set; }
+        [Track]
         public bool RemoveMissingResults { get; set; }
+        [Track]
+        public bool IgnoreMissingResults { get { return !RemoveMissingResults; } }
+        [Track]
         public double? RTRegressionThreshold { get; set; }
         public int? RTRegressionPrecision { get; set; }
+        [Track]
         public double? DotProductThreshold { get; set; }
+        [Track]
         public double? IdotProductThreshold { get; set; }
+        [Track]
+        ReplicateInclusion ReplInclusion { get { return UseBestResult ? ReplicateInclusion.best : ReplicateInclusion.all; } }
         public bool UseBestResult { get; set; }
         public bool AutoPickChildrenOff { get; set; }
         public int NumberOfDecoys { get; set; }
         public string DecoysMethod { get; set; }
+
+        public enum ReplicateInclusion { all, best }
 
         public SrmDocument Refine(SrmDocument document)
         {

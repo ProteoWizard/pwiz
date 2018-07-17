@@ -19,16 +19,16 @@
 
 using System;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public sealed partial class FilterMatchedPeptidesDlg : FormEx
+    public sealed partial class FilterMatchedPeptidesDlg : AuditLogDialog<FilterMatchedPeptidesDlg.FilterMatchedPeptidesSettings>
     {
-
         public FilterMatchedPeptidesDlg(int numWithDuplicates, int numUnmatched, int numFiltered, bool single, bool hasSmallMolecules)
         {
             InitializeComponent();
@@ -192,5 +192,52 @@ namespace pwiz.Skyline.Alerts
         public int FilteredCount { get; set; }
 
         public bool HasSmallMolecules { get; set; }
+
+        public class FilterMatchedPeptidesSettings : IAuditLogComparable
+        {
+            public FilterMatchedPeptidesSettings(bool noDuplicates, bool firstOccurence, bool addToAll,
+                bool filterUnmatched, bool addUnmatched, bool doNotAddFiltered, bool keepFiltered)
+            {
+                NoDuplicates = noDuplicates;
+                FirstOccurence = firstOccurence;
+                AddToAll = addToAll;
+                FilterUnmatched = filterUnmatched;
+                AddUnmatched = addUnmatched;
+                DoNotAddFiltered = doNotAddFiltered;
+                KeepFiltered = keepFiltered;
+            }
+
+            [Track]
+            public bool NoDuplicates { get; private set; }
+            [Track]
+            public bool FirstOccurence { get; private set; }
+            [Track]
+            public bool AddToAll { get; private set; }
+
+            [Track]
+            public bool FilterUnmatched { get; private set; }
+            [Track]
+            public bool AddUnmatched { get; private set; }
+
+            [Track]
+            public bool DoNotAddFiltered { get; private set; }
+            [Track]
+            public bool KeepFiltered { get; private set; }
+
+            public object GetDefaultObject(ObjectInfo<object> info)
+            {
+                return new FilterMatchedPeptidesSettings(false, false, false, false, false, false, false);
+            }
+        }
+
+        public override FilterMatchedPeptidesSettings DialogSettings
+        {
+            get
+            {
+                return new FilterMatchedPeptidesSettings(radioNoDuplicates.Checked, radioFirstOccurence.Checked,
+                    radioAddToAll.Checked, radioFilterUnmatched.Checked, radioAddUnmatched.Checked,
+                    radioDoNotAddFiltered.Checked, radioKeepFiltered.Checked);
+            }
+        }
     }
 }

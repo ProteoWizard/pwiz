@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using SkylineTool;
 
 namespace pwiz.Skyline.Model.Databinding
@@ -48,6 +49,7 @@ namespace pwiz.Skyline.Model.Databinding
         private readonly CachedValue<ElementRefs> _elementRefCache;
 
         private SrmDocument _batchChangesOriginalDocument;
+        private List<EditDescription> _batchEditDescriptions;
 
         private SrmDocument _document;
         public SkylineDataSchema(IDocumentContainer documentContainer, DataSchemaLocalizer dataSchemaLocalizer) : base(dataSchemaLocalizer)
@@ -265,9 +267,10 @@ namespace pwiz.Skyline.Model.Databinding
                 DocumentChangedEventHandler(_documentContainer, new DocumentChangedEventArgs(_document));
             }
             _batchChangesOriginalDocument = _document;
+            _batchEditDescriptions = new List<EditDescription>();
         }
 
-        public void CommitBatchModifyDocument(string description)
+        public void CommitBatchModifyDocument(string description, DataGridViewPasteHandler.BatchModifyInfo batchModifyInfo)
         {
             if (null == _batchChangesOriginalDocument)
             {
@@ -291,26 +294,61 @@ namespace pwiz.Skyline.Model.Databinding
                     });
                     return newDocument;
                 }
-            }, docPair => SkylineWindow.DiffDocNodes(MessageType.pasted_document_grid, docPair));
+            }, docPair =>
+            {
+                MessageType type;
+                var detailType = MessageType.set_to_in_document_grid;
+                Func<EditDescription, object[]> getArgsFunc = descr => new[] { descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.Value };
+
+                var cellCount = _batchEditDescriptions.Count;
+                switch (batchModifyInfo.BatchModifyAction)
+                {
+                    case DataGridViewPasteHandler.BatchModifyAction.Paste:
+                        type = MessageType.pasted_document_grid;
+                        break;
+                    case DataGridViewPasteHandler.BatchModifyAction.Clear:
+                        type = MessageType.cleared_document_grid;
+                        detailType = MessageType.cleared_cell_in_document_grid;
+                        getArgsFunc = descr => new[] { (object)descr.ColumnCaption.GetCaption(DataSchemaLocalizer) };
+                        break;
+                    case DataGridViewPasteHandler.BatchModifyAction.FillDown:
+                        type = MessageType.fill_down_document_grid;
+                        break;
+                    default:
+                        return null;
+                }
+
+                var extraInfo = batchModifyInfo.ExtraInfo;
+
+                return AuditLogEntry
+                    .CreateSingleMessageEntry(docPair.OldDoc, new MessageTypeNamesPair(type, cellCount), extraInfo)
+                    .ChangeAllInfo(_batchEditDescriptions.Select(descr => new MessageTypeNamesPair(detailType,
+                            getArgsFunc(descr))).ToList());
+            });
             _batchChangesOriginalDocument = null;
+            _batchEditDescriptions = null;
             DocumentChangedEventHandler(_documentContainer, new DocumentChangedEventArgs(_document));
         }
 
         public void RollbackBatchModifyDocument()
         {
             _batchChangesOriginalDocument = null;
+            _batchEditDescriptions = null;
             _document = _documentContainer.Document;
         }
 
-        public void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action, Func<SrmDocument, SrmDocument, AuditLogEntry> logFunc = null)
+        // TODO: ask nick if adding parent object to edit description would be a good idea
+        public void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action, Func<SrmDocumentPair, AuditLogEntry> logFunc = null)
         {
             if (_batchChangesOriginalDocument == null)
             {
                 SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
-                    docPair => SkylineWindow.DiffDocNodes(MessageType.edited_document_grid, docPair));
+                    logFunc ?? (docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.set_to_in_document_grid,
+                        editDescription.ColumnCaption.GetCaption(DataSchemaLocalizer), editDescription.Value)));
                 return;
             }
             VerifyDocumentCurrent(_batchChangesOriginalDocument, _documentContainer.Document);
+            _batchEditDescriptions.Add(editDescription);
             _document = action(_document.BeginDeferSettingsChanges());
         }
 
