@@ -463,11 +463,20 @@ namespace SkylineNightly
 
             // Extract log start time from log contents
             var reStartTime = new Regex(@"\n\# Nightly started (.*)\r\n", RegexOptions.Compiled); // As in "# Nightly started Thursday, May 12, 2016 8:00 PM"
+            var reStoppedTime = new Regex(@"\n\# Stopped (.*)\r\n");
             var stMatch = reStartTime.Match(log);
             if (stMatch.Success)
             {
                 var dateTimeStr = stMatch.Groups[1].Value;
                 DateTime.TryParse(dateTimeStr, out _startTime);
+            }
+            var endMatch = reStoppedTime.Match(log);
+            if (endMatch.Success)
+            {
+                var dateTimeEnd = endMatch.Groups[1].Value;
+                DateTime endTime;
+                if (DateTime.TryParse(dateTimeEnd, out endTime))
+                    _duration = (endTime - _startTime).Duration();
             }
 
             // Extract all test lines.
@@ -521,7 +530,13 @@ namespace SkylineNightly
             _nightly["revision"] = revisionInfo ?? GetRevision(buildroot);
             _nightly["git_hash"] = gitHash ?? string.Empty;
             _nightly["start"] = _startTime;
-            _nightly["duration"] = (int)_duration.TotalMinutes;
+            int durationMinutes = (int)_duration.TotalMinutes;
+            // Round down or up by 1 minute to report even hours in this common case
+            if (durationMinutes % 60 == 1)
+                durationMinutes--;
+            else if (durationMinutes % 60 == 59)
+                durationMinutes++;
+            _nightly["duration"] = durationMinutes;
             _nightly["testsrun"] = testCount;
             _nightly["failures"] = _failures.Count;
             _nightly["leaks"] = _leaks.Count;
@@ -540,7 +555,8 @@ namespace SkylineNightly
         private int ParseTests(string log, bool storeXml = true)
         {
             var startTest = new Regex(@"\r\n\[(\d\d:\d\d)\] +(\d+).(\d+) +(\S+) +\((\w\w)\) ", RegexOptions.Compiled);
-            var endTest = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, (\d+) sec\.\r\n", RegexOptions.Compiled);
+            var endTestOld = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, (\d+) sec\.\r\n", RegexOptions.Compiled);
+            var endTest = new Regex(@" \d+ failures, ([\.\d]+)/([\.\d]+) MB, ([\.\d]+)/([\.\d]+) handles, (\d+) sec\.\r\n", RegexOptions.Compiled);
 
             string lastPass = null;
             int testCount = 0;
@@ -552,10 +568,19 @@ namespace SkylineNightly
                 var name = startMatch.Groups[4].Value;
                 var language = startMatch.Groups[5].Value;
 
-                var endMatch = endTest.Match(log, startMatch.Index);
+                string user = null, gdi = null;
+                var endMatch = endTestOld.Match(log, startMatch.Index);
+                int durationIndex = 3;
+                if (!endMatch.Success)
+                {
+                    endMatch = endTest.Match(log, startMatch.Index);
+                    user = endMatch.Groups[3].Value;
+                    gdi = endMatch.Groups[4].Value;
+                    durationIndex = 5;
+                }
                 var managed = endMatch.Groups[1].Value;
                 var total = endMatch.Groups[2].Value;
-                var duration = endMatch.Groups[3].Value;
+                var duration = endMatch.Groups[durationIndex].Value;
 
                 if (string.IsNullOrEmpty(managed) || string.IsNullOrEmpty(total) || string.IsNullOrEmpty(duration))
                     continue;
@@ -580,6 +605,10 @@ namespace SkylineNightly
                     test["duration"] = duration;
                     test["managed"] = managed;
                     test["total"] = total;
+                    if (!string.IsNullOrEmpty(user))
+                        test["user"] = user;
+                    if (!string.IsNullOrEmpty(gdi))
+                        test["gdi"] = gdi;
                 }
 
                 testCount++;
@@ -625,6 +654,14 @@ namespace SkylineNightly
                 var leak = _leaks.Append("leak");
                 leak["name"] = match.Groups[1].Value;
                 leak["bytes"] = match.Groups[2].Value;
+            }
+            var leakHandlesPattern = new Regex(@"!!! (\S+) HANDLE-LEAKED ([.0-9]+) (\S+)", RegexOptions.Compiled);
+            for (var match = leakHandlesPattern.Match(log); match.Success; match = match.NextMatch())
+            {
+                var leak = _leaks.Append("leak");
+                leak["name"] = match.Groups[1].Value;
+                leak["handles"] = match.Groups[2].Value;
+                leak["type"] = match.Groups[3].Value;
             }
         }
 
