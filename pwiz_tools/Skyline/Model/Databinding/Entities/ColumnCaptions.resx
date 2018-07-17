@@ -192,6 +192,9 @@
   <data name="CleavageAa">
     <value>Cleavage Aa</value>
   </data>
+  <data name="Coeluting">
+    <value>Coeluting</value>
+  </data>
   <data name="CollisionEnergy">
     <value>Collision Energy</value>
   </data>
@@ -1015,5 +1018,37 @@
   </data>
   <data name="AbsLog2FoldChange">
     <value>Absolute Log 2 Fold Change</value>
+  </data>
+  <data name="DocumentFormat">
+    <value>Document Format Version</value>
+  </data>
+  <data name="Reason">
+    <value>Reason</value>
+  </data>
+  <data name="SkylineVersion">
+    <value>Skyline Version</value>
+  </data>
+  <data name="TimeStamp">
+    <value>Time Stamp</value>
+  </data>
+  <data name="User">
+    <value>User</value>
+  </data>
+  <data name="UndoRedoMessage">
+    <value>Undo Redo Message</value>
+  </data>
+  <data name="SummaryMessage">
+    <value>Summary Message</value>
+  </data>
+  <data name="AllInfoMessage">
+    <value>All Info Message</value>
+  </data>
+  <data name="Details">
+    <value>Details</value>
+  </data>
+  <data name="AuditLogRow">
+    <value>
+      Audit Log Row
+    </value>
   </data>
 </root>

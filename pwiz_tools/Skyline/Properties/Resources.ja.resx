@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -4002,7 +4002,7 @@
   <data name="CommandLine_ImportTransitionList_Warning__The_iRT_calculator_already_contains__0__with_the_value__1___Ignoring__2_" xml:space="preserve">
     <value>警告：iRTカルキュレータには値{1}を含む{0}が既にあります。 {2}を無視します</value>
   </data>
-  <data name="AlignmentForm_UpdateGraph_Aligned_time" xml:space="preserve">
+  <data name="AlignmentForm_UpdateGraph_Aligned_Time" xml:space="preserve">
     <value>アライン時間</value>
   </data>
   <data name="WizardBlankDocument" type="System.Resources.ResXFileRef, System.Windows.Forms">
@@ -4572,8 +4572,8 @@
   <data name="MQuestDefaultIntensityCorrelationCalc_Name_Default_dotp_or_idotp" xml:space="preserve">
     <value>デフォルト内積または同位体内積</value>
   </data>
-  <data name="StartPage_PopulateWizardPanel_Import_DIA_DDA_Peptide_Search" xml:space="preserve">
-    <value>DIA+DDAペプチド検索のインポート</value>
+  <data name="StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search" xml:space="preserve">
+    <value>DIAペプチド検索のインポート</value>
   </data>
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
     <value>ドキュメントには、機能をエクスポートするターゲットが含まれている必要があります。</value>
@@ -6815,9 +6815,6 @@
   </data>
   <data name="IonMobilityTest_TestGetIonMobilityDBErrorHandling_The_ion_mobility_library_file__0__could_not_be_found__Perhaps_you_did_not_have_sufficient_privileges_to_create_it_" xml:space="preserve">
     <value>イオン移動度ライブラリファイル{0}を見つけることができませんでした。作成するための十分な権限がないようです。</value>
-  </data>
-  <data name="CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_" xml:space="preserve">
-    <value>エラー：--import-replicate-nameを--import-allオプションとともに使用することはできません。</value>
   </data>
   <data name="SpectrumLibraryInfoDlg_SetDetailsText_Matched_spectra" xml:space="preserve">
     <value>一致したスペクトル</value>
@@ -9097,7 +9094,7 @@
 
 イオン電荷のみが分かっている場合（フラグメントではそのケースが多い）、電荷のみの付加イオン（「[M+]」 (z=1)、「[M-]」 (z=-1)、「[M+3]」 (z=3)など）が使用されます。
 
-乗数（例：「[2M+K]」の「2」）と同位体標識（例：「[M2Cl37+H]」の「2Cl37」）の表記はサポートされています。
+多量体（例：「[2M+K]」の「2」）と同位体標識（例：「[M2Cl37+H]」の「2Cl37」）の表記はサポートされています。
 
 認識された付加イオンの成分は、通常の化学記号と{0}で表記されます。
 
@@ -9281,7 +9278,7 @@
     <value>測定済み</value>
   </data>
   <data name="AddIrtPeptidesDlg_dataGridView_CellContentClick_iRT" xml:space="preserve">
-    <value>iRT</value>
+    <value>iRT(&amp;R)</value>
   </data>
   <data name="AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success" xml:space="preserve">
     <value>成功</value>
@@ -9530,7 +9527,7 @@
     <value>繰り返し測定の比較（Q値 &lt; {0}）</value>
   </data>
   <data name="ComparePeakPickingDlg_UpdateGraph__0__significance_threshold" xml:space="preserve">
-    <value>{0}有意性閾値</value>
+    <value>{0}有意水準</value>
   </data>
   <data name="ComparePeakPickingDlg_UpdateGraph__0__observed_false_positive_rate" xml:space="preserve">
     <value>{0}観測された偽陽性率</value>
@@ -9760,7 +9757,13 @@
     <value>ペプチド+電荷</value>
   </data>
   <data name="NistLibraryBase_CreateCache_" xml:space="preserve">
-    <value>インポートされたライブラリには、1つまたは複数の{0}ペア用の複数エントリが含まれています。  これはライブラリに装置タイプや衝突エネルギーなど複数パラメータが 含まれているがSkylineのキーは{0}のみであるためで、 これらのエントリは曖昧です。 ライブラリは、Skylineにインポートする前に必要に応じてフィルタしてください。  {0}のペアがあり、次の複数のエントリから構成されています： {1}</value>
+    <value>インポートされたライブラリには、1つまたは複数{0}のペアに対する複数エントリが含まれています。
+
+これはライブラリに装置タイプや衝突エネルギーなど複数のパラメータに対するエントリが含まれているせいですが、Skylineのキーは{0}だけなのでこれらのエントリは曖昧です。
+
+Skylineにインポートする前に必要に応じてライブラリをフィルタしてください。
+
+以下は、次のエントリから構成された{0}個のペアです： {1}</value>
   </data>
   <data name="CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_of__1__" xml:space="preserve">
     <value>カスタム分子{0}の質量は{1}の最大値を上回っています。</value>
@@ -9793,7 +9796,7 @@
     <value>ターゲット毎に有効な負数でないデコイ数を入力してください。</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_A_maximum_of_one_decoy_per_target_may_be_generated_when_using_reversed_decoys_" xml:space="preserve">
-    <value>反転したデコイを使用する際、ターゲット毎に最大1個のデコイを生成できます。</value>
+    <value>リバースデコイを使用する際、ターゲット毎に最大1個のデコイを生成できます。</value>
   </data>
   <data name="ImportFastaControl_ImportFasta_Importing_the_FASTA_did_not_create_any_target_proteins_" xml:space="preserve">
     <value>FASTAをインポートしても、ターゲットタンパク質は作成されませんでした。</value>
@@ -9811,10 +9814,10 @@
     <value>ペプチドの比較</value>
   </data>
   <data name="Extensions_CustomToString_Score_To_Run_Regression" xml:space="preserve">
-    <value>スコア-ラン回帰</value>
+    <value>スコアと保持時間の回帰分析</value>
   </data>
   <data name="Extensions_CustomToString_Run_To_Run_Regression" xml:space="preserve">
-    <value>ラン-ラン回帰</value>
+    <value>分析間の保持時間の回帰分析</value>
   </data>
   <data name="Extensions_CustomToString_Histogram" xml:space="preserve">
     <value>ヒストグラム</value>
@@ -9823,7 +9826,7 @@
     <value>2Dヒストグラム</value>
   </data>
   <data name="Extensions_CustomToString_Scheduling" xml:space="preserve">
-    <value>スケジュール</value>
+    <value>スケジューリング</value>
   </data>
   <data name="PeptideSettingsUI_ValidateNewSettings_The_file__0__is_missing_" xml:space="preserve">
     <value>ファイル{0}が欠損しています。</value>
@@ -9886,7 +9889,7 @@
     <value>CVカットオフを上回るペプチドを削除</value>
   </data>
   <data name="FormatSuggestion_FullPrecision_Full_Precision" xml:space="preserve">
-    <value>最大精度</value>
+    <value>完全に</value>
   </data>
   <data name="FormatSuggestion_Scientific_Scientific" xml:space="preserve">
     <value>科学的</value>
@@ -9959,7 +9962,7 @@
     <value>分子(&amp;M)</value>
   </data>
   <data name="Adduct_ParseDescription_isotope_error" xml:space="preserve">
-    <value>付加イオンの表記「{1}」内の同位体標識の表記「{0}」を構文解析できませんでした。付加イオンの表記内の同位体標識は、同位体数の形式（例：「2Cl37」または「2Cl374N15」）か、  質量シフト（例：「1.234」または「（-1.234）」）の形式にしてください。認識された同位体には次が含まれます：{2}</value>
+    <value>付加イオンの表記「{1}」内の同位体標識の表記「{0}」を解読できませんでした。付加イオンの表記内の同位体標識は、同位体数の形式（例：「2Cl37」または「2Cl374N15」）か、  質量シフト（例：「1.234」または「（-1.234）」）の形式にしてください。認識された同位体には次が含まれます：{2}</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Cannot_derive_charge_from_adduct_description___0____Use_the_corresponding_Charge_column_to_set_this_explicitly__or_change_the_adduct_description_as_needed_" xml:space="preserve">
     <value>付加イオンの表記「{0}」から電荷を計算できません。これを明確に設定するには対応する電荷列を使用するか、必要に応じて付加イオンの表記を変更します。</value>
@@ -9974,7 +9977,7 @@
     <value>名前</value>
   </data>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_Formula" xml:space="preserve">
-    <value>公式</value>
+    <value>分子式</value>
   </data>
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_InChIKey" xml:space="preserve">
     <value>InChIKey</value>

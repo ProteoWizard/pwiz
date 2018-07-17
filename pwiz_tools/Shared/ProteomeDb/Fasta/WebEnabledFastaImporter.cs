@@ -458,8 +458,8 @@ namespace pwiz.ProteomeDatabase.Fasta
         private const string STANDARD_REGEX_OUTPUT_FORMAT = "name:${name}\ndescription:${description}\naccession:${accession}\npreferredname:${preferredname}\ngene:${gene}\nspecies:${species}\nsearchterm:"; // Not L10N
 
 
-        private const string MATCH_DESCRIPTION_WITH_OPTIONAL_OS_AND_GN = // match common uniprot OS and GN format
-            @"(?<description>((.*?(((\sOS=(?<species>(.*?)))?)((\sGN=(?<gene>(.*?)))?)($|(\s\w\w\=)+).*)))|.*)"; // Not L10N
+        private const string MATCH_DESCRIPTION_WITH_OPTIONAL_OS_AND_GN = // match common uniprot OS=species (and maybe OX=speciesID) and GN=gene format
+            @"(?<description>((.*?(((\sOS=(?<species>(.*?)))?)((\sOX=(?<speciesID>(.*?)))?)((\sGN=(?<gene>(.*?)))?)($|(\s\w\w\=)+).*)))|.*)"; // Not L10N
 
         /// <summary>
         /// class for regex matching in FASTA header lines - contains a comment, a regex, and an output format to be used with Regex replace
@@ -725,6 +725,11 @@ namespace pwiz.ProteomeDatabase.Fasta
                                 prot.SetWebSearchCompleted(); // There's not going to be any gene info
                         }
                     }
+                }
+
+                if (prot.SeqLength == 0)
+                {
+                    prot.SetWebSearchCompleted(); // Searching is too ambiguous without a sequence length, so we'd have to go one by one: don't attempt it
                 }
 
                 if (prot.GetProteinMetadata().NeedsSearch())

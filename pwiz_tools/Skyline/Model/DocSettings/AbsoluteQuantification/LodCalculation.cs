@@ -21,10 +21,11 @@ using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public class LodCalculation
+    public class LodCalculation : IAuditLogObject
     {
         public static readonly LodCalculation NONE = new LodCalculation("none", // Not L10N
             () => QuantificationStrings.LodCalculation_NONE_None, (curve, fitter) => null);
@@ -53,6 +54,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         }
 
         public string Name { get; private set; }
+
+        public string AuditLogText { get { return Name; } }
+        public bool IsName { get { return true; } }
 
         public string Label { get { return _getLabelFunc(); } }
 

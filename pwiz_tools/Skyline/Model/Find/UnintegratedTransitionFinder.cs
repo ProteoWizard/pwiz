@@ -47,7 +47,8 @@ namespace pwiz.Skyline.Model.Find
             {
                 return null;
             }
-            if (transitionChromInfo.IsEmpty)
+            bool integrateAll = bookmarkEnumerator.Document.Settings.TransitionSettings.Integration.IsIntegrateAll;
+            if (!transitionChromInfo.IsGoodPeak(integrateAll))
             {
                 return new FindMatch(Resources.UnintegratedTransitionFinder_Match_Unintegrated_transition);
             }

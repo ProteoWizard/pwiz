@@ -68,7 +68,8 @@ class PepXMLreader : public BuildParser{
                   MSGF_ANALYSIS,
                   PEAKS_ANALYSIS,
                   PROTEOME_DISCOVERER_ANALYSIS,
-                  XTANDEM_ANALYSIS};
+                  XTANDEM_ANALYSIS,
+                  CRUX_ANALYSIS};
 
   vector<SeqMod> mods;      ///< mods for the current spectrum being parsed
   vector<std::string> dirs;       ///< directories where spec files might be

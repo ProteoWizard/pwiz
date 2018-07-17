@@ -33,6 +33,7 @@
 #include "boost/logic/tribool.hpp"
 
 #include <set>
+#include <string>
 
 namespace pwiz {
 namespace analysis {
@@ -125,6 +126,18 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_ScanNumberSet : public Spectrum
 };
 
 
+class PWIZ_API_DECL SpectrumList_FilterPredicate_IdSet : public SpectrumList_Filter::Predicate
+{
+public:
+    SpectrumList_FilterPredicate_IdSet(const std::set<std::string>& idSet);
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const;
+    virtual bool done() const;
+
+private:
+    std::set<std::string> idSet_;
+};
+
+
 class PWIZ_API_DECL SpectrumList_FilterPredicate_ScanEventSet : public SpectrumList_Filter::Predicate
 {
     public:
@@ -177,7 +190,14 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_ChargeStateSet : public Spectru
 class PWIZ_API_DECL SpectrumList_FilterPredicate_PrecursorMzSet : public SpectrumList_Filter::Predicate
 {
     public:
-    SpectrumList_FilterPredicate_PrecursorMzSet(const std::set<double>& precursorMzSet, chemistry::MZTolerance tolerance, FilterMode mode);
+
+    enum TargetMode
+    {
+        TargetMode_Selected,
+        TargetMode_Isolated
+    };
+
+    SpectrumList_FilterPredicate_PrecursorMzSet(const std::set<double>& precursorMzSet, chemistry::MZTolerance tolerance, FilterMode mode, TargetMode target = TargetMode_Selected);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
     virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
 
@@ -185,6 +205,7 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_PrecursorMzSet : public Spectru
     std::set<double> precursorMzSet_;
     chemistry::MZTolerance tolerance_;
     FilterMode mode_;
+    TargetMode target_;
 
     double getPrecursorMz(const msdata::Spectrum& spectrum) const;
 };

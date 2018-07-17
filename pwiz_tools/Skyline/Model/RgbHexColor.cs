@@ -21,21 +21,17 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.CompilerServices;
-using pwiz.Skyline.Model.DocSettings;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public class RgbHexColor : XmlNamedElement, INotifyPropertyChanged
+    public class RgbHexColor : IXmlSerializable, INotifyPropertyChanged
     {
         private Color _color;
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return (base.GetHashCode() * 397) ^ _color.GetHashCode();
-            }
-        }
 
         public RgbHexColor()
         {
@@ -53,6 +49,7 @@ namespace pwiz.Skyline.Model
             set { _color = value; NotifyPropertyChanged(); }
         }
 
+        [Diff]
         public string Rgb
         {
             get
@@ -168,9 +165,24 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        protected virtual void NotifyPropertyChanged([CallerMemberName] String propertyName = "") // Not L10N
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public override int GetHashCode()
+        {
+            return _color.GetHashCode();
+        }
+
         protected bool Equals(RgbHexColor other)
         {
-            return base.Equals(other) && _color.Equals(other._color);
+            return _color.Equals(other._color);
         }
 
         public override bool Equals(object obj)
@@ -181,14 +193,24 @@ namespace pwiz.Skyline.Model
             return Equals((RgbHexColor)obj);
         }
 
-        protected virtual void NotifyPropertyChanged([CallerMemberName] String propertyName = "") // Not L10N
+        public XmlSchema GetSchema()
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
+            return null;
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        private enum ATTR
+        {
+            color
+        }
+
+        public virtual void ReadXml(XmlReader reader)
+        {
+            Hex = reader.GetAttribute(ATTR.color);
+        }
+
+        public virtual void WriteXml(XmlWriter writer)
+        {
+            writer.WriteAttribute(ATTR.color, Hex);
+        }
     }
 }

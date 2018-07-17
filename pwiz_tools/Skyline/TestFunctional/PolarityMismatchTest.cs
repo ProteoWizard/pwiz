@@ -73,20 +73,21 @@ namespace pwiz.SkylineTestFunctional
             var properList = new List<string>();
 
             var i = 0;
+            bool integrateAll = docPosPolarity.Settings.TransitionSettings.Integration.IsIntegrateAll;
             foreach (var nodeGroup in docProperPolarity.MoleculeTransitionGroups)
             {
                 foreach (var trans in nodeGroup.Transitions)
                 {
-                    if ((transProperPolarity[i].GetPeakCountRatio(0) ?? 0) >= 1)
+                    if ((transProperPolarity[i].GetPeakCountRatio(0, integrateAll) ?? 0) >= 1)
                     {
                         countPeaksProperPolarity++;
                         properList.Add(string.Format("{0} {1}", nodeGroup, trans.Transition));
                     }
-                    if ((transNoPolarity[i].GetPeakCountRatio(0) ?? 0) >= 1)
+                    if ((transNoPolarity[i].GetPeakCountRatio(0, integrateAll) ?? 0) >= 1)
                     {
                         countPeaksPosPolarity++;
                     }
-                    if ((transNegPolarity[i].GetPeakCountRatio(0) ?? 0) >= 1)
+                    if ((transNegPolarity[i].GetPeakCountRatio(0, integrateAll) ?? 0) >= 1)
                     {
                         countPeaksNegPolarity++;
                     }

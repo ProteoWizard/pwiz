@@ -61,7 +61,7 @@ namespace BiblioSpec{
         vector<pwiz::identdata::SpectrumIdentificationItemPtr>::const_iterator item_iter_;
 
 
-        void collectPsms();
+        void collectPsms(std::map<pwiz::identdata::DBSequencePtr, Protein>& proteins);
         void extractModifications(pwiz::identdata::PeptidePtr peptide, PSM* psm);
         double getScore(const pwiz::identdata::SpectrumIdentificationItem& item);
         bool passThreshold(double score);

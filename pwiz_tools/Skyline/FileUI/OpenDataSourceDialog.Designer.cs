@@ -53,10 +53,10 @@ namespace pwiz.Skyline.FileUI
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.chorusButton = new System.Windows.Forms.Button();
             this.lookInImageList = new System.Windows.Forms.ImageList(this.components);
+            this.recentDocumentsButton = new System.Windows.Forms.Button();
             this.desktopButton = new System.Windows.Forms.Button();
             this.myDocumentsButton = new System.Windows.Forms.Button();
             this.myComputerButton = new System.Windows.Forms.Button();
-            this.recentDocumentsButton = new System.Windows.Forms.Button();
             this.navToolStrip.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -247,6 +247,15 @@ namespace pwiz.Skyline.FileUI
             this.lookInImageList.Images.SetKeyName(10, "File.png");
             this.lookInImageList.Images.SetKeyName(11, "Chorus.png");
             // 
+            // recentDocumentsButton
+            // 
+            this.recentDocumentsButton.FlatAppearance.BorderSize = 0;
+            resources.ApplyResources(this.recentDocumentsButton, "recentDocumentsButton");
+            this.recentDocumentsButton.ImageList = this.lookInImageList;
+            this.recentDocumentsButton.Name = "recentDocumentsButton";
+            this.recentDocumentsButton.UseVisualStyleBackColor = false;
+            this.recentDocumentsButton.Click += new System.EventHandler(this.recentDocumentsButton_Click);
+            // 
             // desktopButton
             // 
             this.desktopButton.FlatAppearance.BorderSize = 0;
@@ -273,15 +282,6 @@ namespace pwiz.Skyline.FileUI
             this.myComputerButton.Name = "myComputerButton";
             this.myComputerButton.UseVisualStyleBackColor = false;
             this.myComputerButton.Click += new System.EventHandler(this.myComputerButton_Click);
-            // 
-            // recentDocumentsButton
-            // 
-            this.recentDocumentsButton.FlatAppearance.BorderSize = 0;
-            resources.ApplyResources(this.recentDocumentsButton, "recentDocumentsButton");
-            this.recentDocumentsButton.ImageList = this.lookInImageList;
-            this.recentDocumentsButton.Name = "recentDocumentsButton";
-            this.recentDocumentsButton.UseVisualStyleBackColor = false;
-            this.recentDocumentsButton.Click += new System.EventHandler(this.recentDocumentsButton_Click);
             // 
             // OpenDataSourceDialog
             // 

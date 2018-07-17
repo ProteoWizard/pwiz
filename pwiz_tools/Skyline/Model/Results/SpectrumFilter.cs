@@ -25,6 +25,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.RemoteApi.GeneratedCode;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -163,36 +164,37 @@ namespace pwiz.Skyline.Model.Results
                             ionMobility = IonMobilityAndCCS.EMPTY;
                         }
 
-                        
+
+                        ExplicitPeakBounds peakBoundaries = null;
                         if (_fullScan.RetentionTimeFilterType != RetentionTimeFilterType.none)
                         {
-                            var peakBoundaries = document.Settings.GetExplicitPeakBounds(nodePep, msDataFileUri);
+                            peakBoundaries = document.Settings.GetExplicitPeakBounds(nodePep, msDataFileUri);
                             if (peakBoundaries != null)
                             {
                                 minTime = peakBoundaries.StartTime - _fullScan.RetentionTimeFilterLength;
                                 maxTime = peakBoundaries.EndTime + _fullScan.RetentionTimeFilterLength;
-                                canSchedule = false;
+                                _isSharedTime = false;
                             }
                         }
-                        if (canSchedule)
+                        if (canSchedule && peakBoundaries == null)
                         {
                             if (RetentionTimeFilterType.scheduling_windows == _fullScan.RetentionTimeFilterType)
                             {
                                 double? centerTime = null;
                                 double windowRT = 0;
-                                    if (retentionTimePredictor != null)
+                                if (retentionTimePredictor != null)
+                                {
+                                    centerTime = retentionTimePredictor.GetPredictedRetentionTime(nodePep);
+                                }
+                                else
+                                {
+                                    var prediction = document.Settings.PeptideSettings.Prediction;
+                                    if (prediction.RetentionTime == null || !prediction.RetentionTime.IsAutoCalculated)
                                     {
-                                        centerTime = retentionTimePredictor.GetPredictedRetentionTime(nodePep);
+                                        centerTime = document.Settings.PeptideSettings.Prediction.PredictRetentionTimeForChromImport(
+                                            document, nodePep, nodeGroup, out windowRT);
                                     }
-                                    else
-                                    {
-                                        var prediction = document.Settings.PeptideSettings.Prediction;
-                                        if (prediction.RetentionTime == null || !prediction.RetentionTime.IsAutoCalculated)
-                                        {
-                                            centerTime = document.Settings.PeptideSettings.Prediction.PredictRetentionTimeForChromImport(
-                                                document, nodePep, nodeGroup, out windowRT);
-                                        }
-                                    }
+                                }
                                 // Force the center time to be at least zero
                                 if (centerTime.HasValue && centerTime.Value < 0)
                                     centerTime = 0;
@@ -263,6 +265,7 @@ namespace pwiz.Skyline.Model.Results
                 _filterRTValues = new SpectrumFilterPair[_filterMzValues.Length];
                 Array.Copy(_filterMzValues, _filterRTValues, _filterMzValues.Length);
                 Array.Sort(_filterRTValues, CompareByRT);
+
             }
 
             InitRTLimits();
@@ -362,6 +365,11 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public bool IsFirstPass { get; private set; }
+
+        public bool IsFilteringFullGradientMs1
+        {
+            get { return !IsFirstPass; }
+        }
 
         public bool IsWatersFile
         {

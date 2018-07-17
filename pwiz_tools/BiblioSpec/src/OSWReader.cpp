@@ -64,6 +64,7 @@ bool OSWReader::parseFile() {
         "       PEPTIDE.MODIFIED_SEQUENCE, "
         "       PRECURSOR.CHARGE, "
         "       PRECURSOR.PRECURSOR_MZ, "
+        "       PROTEIN.PROTEIN_ACCESSION, "
         "       FEATURE.LEFT_WIDTH, "
         "       FEATURE.RIGHT_WIDTH, "
         "       TRANSITION.PRODUCT_MZ, "
@@ -77,7 +78,10 @@ bool OSWReader::parseFile() {
         "JOIN SCORE_MS2 ON FEATURE.ID = SCORE_MS2.FEATURE_ID "
         "JOIN FEATURE_TRANSITION ON FEATURE.ID = FEATURE_TRANSITION.FEATURE_ID "
         "JOIN TRANSITION ON FEATURE_TRANSITION.TRANSITION_ID = TRANSITION.ID "
+        "LEFT JOIN PEPTIDE_PROTEIN_MAPPING ON PRECURSOR_PEPTIDE_MAPPING.PEPTIDE_ID = PEPTIDE_PROTEIN_MAPPING.PEPTIDE_ID "
+        "LEFT JOIN PROTEIN ON PEPTIDE_PROTEIN_MAPPING.PROTEIN_ID = PROTEIN.ID "
         "WHERE PRECURSOR.DECOY = 0 "
+        "  AND SCORE_MS2.RANK = 1 "
         "  AND SCORE_MS2.QVALUE <= " + boost::lexical_cast<string>(scoreThreshold_) + " "
         "ORDER BY FEATURE.ID ASC";
     sqlite3_stmt* stmt;
@@ -86,6 +90,7 @@ bool OSWReader::parseFile() {
         return false;
     }
 
+    map<string, Protein> proteins;
     string lastFeatureId = "";
     SpecData* curSpectrum = NULL;
     vector<double> curPeakMzs;
@@ -102,8 +107,22 @@ bool OSWReader::parseFile() {
                 delete curPSM_;
                 return false;
             }
-            curPSM_->score = sqlite3_column_double(stmt, 10);
+            curPSM_->score = sqlite3_column_double(stmt, 11);
             curPSM_->specName = featureId;
+            if (sqlite3_column_type(stmt, 6) == SQLITE_TEXT) {
+                string proteinString = boost::lexical_cast<string>(sqlite3_column_text(stmt, 6));
+                vector<string> proteinNames;
+                boost::split(proteinNames, proteinString, boost::is_any_of(";"));
+                for (vector<string>::const_iterator i = proteinNames.begin(); i != proteinNames.end(); i++) {
+                    map<string, Protein>::const_iterator j = proteins.find(*i);
+                    if (j != proteins.end()) {
+                        curPSM_->proteins.insert(&j->second);
+                    } else {
+                        proteins[*i] = Protein(*i);
+                        curPSM_->proteins.insert(&proteins[*i]);
+                    }
+                }
+            }
 
             string filename = boost::lexical_cast<string>(sqlite3_column_text(stmt, 1));
             map< string, vector<PSM*> >::iterator i = fileMap_.find(filename);
@@ -116,13 +135,13 @@ bool OSWReader::parseFile() {
             transferPeaks(curSpectrum, curPeakMzs, curPeakIntensities); // set peaks for previous spectrum
 
             curSpectrum = &(spectra_.insert(make_pair(featureId, SpecData())).first->second);
-            curSpectrum->retentionTime = sqlite3_column_double(stmt, 2);
-            curSpectrum->startTime = sqlite3_column_double(stmt, 6);
-            curSpectrum->endTime = sqlite3_column_double(stmt, 7);
+            curSpectrum->retentionTime = sqlite3_column_double(stmt, 2)/60;
+            curSpectrum->startTime = sqlite3_column_double(stmt, 7)/60;
+            curSpectrum->endTime = sqlite3_column_double(stmt, 8)/60;
             curSpectrum->mz = sqlite3_column_double(stmt, 5);
         }
-        curPeakMzs.push_back(sqlite3_column_double(stmt, 8));
-        curPeakIntensities.push_back(sqlite3_column_double(stmt, 9));
+        curPeakMzs.push_back(sqlite3_column_double(stmt, 9));
+        curPeakIntensities.push_back(sqlite3_column_double(stmt, 10));
     }
     transferPeaks(curSpectrum, curPeakMzs, curPeakIntensities); // set peaks for last spectrum
 

@@ -1093,22 +1093,22 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSetting]
-        public ChorusAccountList ChorusAccountList
+        public RemoteAccountList RemoteAccountList
         {
             get 
-            { 
-                var list = (ChorusAccountList) this["ChorusAccountList"]; // Not L10N
+            {
+                var list = (RemoteAccountList)this["RemoteAccountList"]; // Not L10N
                 if (list == null)
                 {
-                    list = new ChorusAccountList();
+                    list = new RemoteAccountList();
                     list.AddDefaults();
-                    ChorusAccountList = list;
+                    RemoteAccountList = list;
                 }
                 return list;
             }
             set
             {
-                this["ChorusAccountList"] = value; // Not L10N
+                this["RemoteAccountList"] = value; // Not L10N
             }
         }
 
@@ -1535,7 +1535,7 @@ namespace pwiz.Skyline.Properties
         public static readonly CollisionEnergyRegression NONE =
             new CollisionEnergyRegression(ELEMENT_NONE, new [] { new ChargeRegressionLine(2, 0, 0) });
 
-        public override int RevisionIndexCurrent { get { return 8; } }
+        public override int RevisionIndexCurrent { get { return 9; } }
 
         public static CollisionEnergyRegression GetDefault()
         {
@@ -1737,11 +1737,24 @@ namespace pwiz.Skyline.Properties
                         list6.Insert(0, GetDefault3_6());
                         return list6.ToArray();
                     }
-                default:    // v3.7.1 - add None as default
+                case 8:    // v3.7.1 - add None as default
+                    {
+                        var list7 = GetDefaults(7).ToList();
+                        list7.Insert(0, GetDefault());
+                        return list7.ToArray();
+                    }
+                default:    // v4.1.1 - SCIEX request to replace ABI entries with one new SCIEX entry
                 {
-                    var list6 = GetDefaults(7).ToList();
-                    list6.Insert(0, GetDefault());
-                    return list6.ToArray();
+                    var list7 = GetDefaults(7).Select(cr => cr.Name.Contains("ABI") // Not L10N
+                        ? new CollisionEnergyRegression("SCIEX", new[]  // Not L10N
+                        {
+                            new ChargeRegressionLine(2, 0.049, -1),
+                            new ChargeRegressionLine(3, 0.048, -2),
+                            new ChargeRegressionLine(4, 0.05, -2),
+                        }, 3, 3)
+                        : cr).Distinct().OrderBy(cr => cr.Name).ToList();
+                    list7.Insert(0, GetDefault());
+                    return list7.ToArray();
                 }
             }
         }
@@ -1822,6 +1835,8 @@ namespace pwiz.Skyline.Properties
         private static readonly DeclusteringPotentialRegression NONE =
             new DeclusteringPotentialRegression(ELEMENT_NONE, 0, 0);
 
+        public override int RevisionIndexCurrent { get { return 1; } }
+
         public override string GetDisplayName(DeclusteringPotentialRegression item)
         {
             // Use the localized text in the UI
@@ -1835,11 +1850,21 @@ namespace pwiz.Skyline.Properties
 
         public override IEnumerable<DeclusteringPotentialRegression> GetDefaults(int revisionIndex)
         {
-            return new[]
+            switch (revisionIndex)
             {
-               GetDefault(),
-               new DeclusteringPotentialRegression("ABI", 0.0729, 31.117), // Not L10N
-            };
+                case 0:
+                    return new[]
+                    {
+                        GetDefault(),
+                        new DeclusteringPotentialRegression("ABI", 0.0729, 31.117), // Not L10N
+                    };
+                default:    // v4.1.1 - SCIEX request to replace ABI with SCIEX
+                    return new[]
+                    {
+                        GetDefault(),
+                        new DeclusteringPotentialRegression("SCIEX", 0, 80, 10, 3), // Not L10N
+                    };
+            }
         }
 
         public void EnsureDefault()
@@ -1878,6 +1903,8 @@ namespace pwiz.Skyline.Properties
     {
         private static readonly CompensationVoltageParameters NONE = new CompensationVoltageParameters(ELEMENT_NONE, 0, 0, 0, 0, 0);
 
+        public override int RevisionIndexCurrent { get { return 1; } }
+
         public override string GetDisplayName(CompensationVoltageParameters item)
         {
             // Use the localized text in the UI
@@ -1891,11 +1918,21 @@ namespace pwiz.Skyline.Properties
 
         public override IEnumerable<CompensationVoltageParameters> GetDefaults(int revisionIndex)
         {
-            return new[]
+            switch (revisionIndex)
             {
-               GetDefault(),
-               new CompensationVoltageParameters("ABI", 6, 30, 3, 3, 3), // Not L10N
-            };
+                case 0:
+                    return new[]
+                    {
+                        GetDefault(),
+                        new CompensationVoltageParameters("ABI", 6, 30, 3, 3, 3), // Not L10N
+                    };
+                default:    // v4.1.1 - SCIEX request to replace ABI with new SCIEX entry
+                    return new[]
+                    {
+                        GetDefault(),
+                        new CompensationVoltageParameters("SCIEX", 6, 30, 3, 3, 3), // Not L10N
+                    };
+            }
         }
 
         public void EnsureDefault()

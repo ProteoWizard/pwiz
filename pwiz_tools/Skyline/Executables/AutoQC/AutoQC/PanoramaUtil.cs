@@ -17,6 +17,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Net;
 using System.Text;
 using Newtonsoft.Json.Linq;
@@ -25,6 +26,7 @@ namespace AutoQC
 {
     public class PanoramaUtil
     {
+        public const string PANORAMA_WEB = "https://panoramaweb.org/"; // Not L10N
         public const string FORM_POST = "POST"; // Not L10N
         public const string LABKEY_CTX = "/labkey/"; // Not L10N
         public const string ENSURE_LOGIN_PATH = "security/home/ensureLogin.view"; // Not L10N
@@ -83,7 +85,7 @@ namespace AutoQC
                     throw new PanoramaServerException(string.Format("The server {0} is not a Panorama server", uriServer.AbsoluteUri));
                 case PanoramaState.unknown:
                     throw new PanoramaServerException(string.Format("Unknown error connecting to the server {0}", uriServer.AbsoluteUri));
-            }    
+            }
         }
 
         public static UserState ValidateServerAndUser(ref Uri serverUri, string username, string password)
@@ -302,7 +304,7 @@ namespace AutoQC
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is Server && Equals((Server) obj);
+            return obj is Server && Equals((Server)obj);
         }
 
         public override int GetHashCode()
@@ -310,8 +312,8 @@ namespace AutoQC
             unchecked
             {
                 int hashCode = (Username != null ? Username.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (Password != null ? Password.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (URI != null ? URI.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Password != null ? Password.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (URI != null ? URI.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -401,13 +403,17 @@ namespace AutoQC
 
         public PanoramaState IsPanorama()
         {
+            return TryIsPanorama();
+        }
+
+        private PanoramaState TryIsPanorama(bool tryNewProtocol = true)
+        {
             try
             {
                 Uri uri = new Uri(ServerUri, "project/home/getContainers.view"); // Not L10N
-                using (var webClient = new WebClient())
+                using (var webClient = new UTF8WebClient())
                 {
-                    string response = webClient.UploadString(uri, "POST", string.Empty); // Not L10N
-                    JObject jsonResponse = JObject.Parse(response);
+                    JObject jsonResponse = webClient.Get(uri);
                     string type = (string)jsonResponse["type"]; // Not L10N
                     if (string.Equals(type, "project")) // Not L10N
                     {
@@ -427,18 +433,18 @@ namespace AutoQC
                 {
                     return PanoramaState.other;
                 }
-                else
+                else if (tryNewProtocol)
                 {
-                    if (TryNewProtocol(() => IsPanorama() == PanoramaState.panorama))
+                    if (TryNewProtocol(() => TryIsPanorama(false) == PanoramaState.panorama))
                         return PanoramaState.panorama;
-
-                    return PanoramaState.unknown;
                 }
             }
             catch
             {
                 return PanoramaState.unknown;
             }
+
+            return PanoramaState.unknown;
         }
 
         public UserState IsValidUser(string username, string password)
@@ -458,10 +464,9 @@ namespace AutoQC
             {
                 var uri = PanoramaUtil.GetContainersUri(ServerUri, folderPath, false);
 
-                using (var webClient = new WebClientWithCredentials(username, password))
+                using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
                 {
-                    var folderInfo = webClient.UploadString(uri, PanoramaUtil.FORM_POST, string.Empty);
-                    JToken response = JObject.Parse(folderInfo);
+                    JToken response = webClient.Get(uri);
 
                     // User needs write permissions to publish to the folder
                     if (!PanoramaUtil.CheckFolderPermissions(response))
@@ -494,10 +499,9 @@ namespace AutoQC
             {
                 var uri = PanoramaUtil.Call(ServerUri, "targetedms", folderPath, "autoQCPing", "", true);
 
-                using (var webClient = new WebClient())
+                using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
                 {
-                    webClient.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
-                    webClient.UploadString(uri, PanoramaUtil.FORM_POST, string.Empty);                  
+                    webClient.Post(uri, null);
                 }
             }
             catch (WebException ex)
@@ -512,6 +516,7 @@ namespace AutoQC
             return true;
         }
     }
+
     public class PanoramaServerException : Exception
     {
         public PanoramaServerException(string message)
@@ -526,14 +531,90 @@ namespace AutoQC
         {
             Encoding = Encoding.UTF8;
         }
+
+        public JObject Get(Uri uri)
+        {
+            var response = DownloadString(uri);
+            return JObject.Parse(response);
+        }
     }
 
     internal class WebClientWithCredentials : UTF8WebClient
     {
-        public WebClientWithCredentials(string username, string password)
+        private CookieContainer _cookies = new CookieContainer();
+        private string _csrfToken;
+        private Uri _serverUri;
+
+        private static string LABKEY_CSRF = "X-LABKEY-CSRF"; // Not L10N
+
+        public WebClientWithCredentials(Uri serverUri, string username, string password)
         {
             // Add the Authorization header
             Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
+            _serverUri = serverUri;
+        }
+
+        public JObject Post(Uri uri, NameValueCollection postData)
+        {
+            if (string.IsNullOrEmpty(_csrfToken))
+            {
+                // After this the client should have the X-LABKEY-CSRF token 
+                DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
+            }
+            if (postData == null)
+            {
+                postData = new NameValueCollection();
+            }
+            var responseBytes = UploadValues(uri, PanoramaUtil.FORM_POST, postData);
+            var response = Encoding.UTF8.GetString(responseBytes);
+            return JObject.Parse(response);
+        }
+
+        protected override WebRequest GetWebRequest(Uri address)
+        {
+            var request = base.GetWebRequest(address);
+
+            var httpWebRequest = request as HttpWebRequest;
+            if (httpWebRequest != null)
+            {
+                httpWebRequest.CookieContainer = _cookies;
+
+                if (request.Method == PanoramaUtil.FORM_POST)
+                {
+                    if (!string.IsNullOrEmpty(_csrfToken))
+                    {
+                        // All POST requests to LabKey Server will be checked for a CSRF token
+                        request.Headers.Add(LABKEY_CSRF, _csrfToken);
+                    }
+                }
+            }
+            return request;
+        }
+
+        protected override WebResponse GetWebResponse(WebRequest request)
+        {
+            var response = base.GetWebResponse(request);
+            var httpResponse = response as HttpWebResponse;
+            if (httpResponse != null)
+            {
+                GetCsrfToken(httpResponse);
+            }
+            return response;
+        }
+
+        private void GetCsrfToken(HttpWebResponse response)
+        {
+            if (!string.IsNullOrEmpty(_csrfToken))
+            {
+                return;
+            }
+
+            var csrf = response.Cookies[LABKEY_CSRF];
+            if (csrf != null)
+            {
+                // The server set a cookie called X-LABKEY-CSRF, get its value
+                _csrfToken = csrf.Value;
+            }
         }
     }
 

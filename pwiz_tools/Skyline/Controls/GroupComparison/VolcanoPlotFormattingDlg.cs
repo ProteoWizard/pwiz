@@ -243,7 +243,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 using (var createMatchExpression =
                     new CreateMatchExpressionDlg(this, _foldChangeRows, _bindingList[row]))
                 {
-                    if (createMatchExpression.ShowDialog() == DialogResult.OK)
+                    if (createMatchExpression.ShowDialog(this) == DialogResult.OK)
                     {
                         _bindingList[row].Expression = createMatchExpression.GetCurrentMatchExpression().ToString();
                         CommitCellChanges();

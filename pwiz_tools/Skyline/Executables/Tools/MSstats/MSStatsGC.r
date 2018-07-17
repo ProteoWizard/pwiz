@@ -23,32 +23,22 @@ runComparison <- function() {
 
 	raw <- read.csv(arguments[1])
 
-	filter.qvalue <- FALSE;
-	if( is.element(c('DetectionQValue'), colnames(raw))) {
-	  detectionQValues<-as.numeric(as.character(raw$DetectionQValue));
-	  if (!all(is.na(detectionQValues))) {
-	    # Replace internal standard NA values with 0
-	    detectionQValues[is.na(detectionQValues) & "" != raw$StandardType] <- 0;
-	    if (any(is.na(detectionQValues))) 
-	    {
-	      message("Some NA values were found in DetectionQValue column. No qvalue_cutoff will be applied.")
-	    }
-	    else
-	    {
-	      raw$DetectionQValue<-detectionQValues;
-	      filter.qvalue <- TRUE;
-	    }
-	  }
+	if( !is.element(c('DetectionQValue'), colnames(raw)) | 
+	    !is.element(c('Detection.Q.Value'), colnames(raw))){
+	    filter.qvalue <- FALSE
+	} else {
+	    filter.qvalue <- TRUE
 	}
 	
 	## remove the rows for iRT peptides
 	raw <- SkylinetoMSstatsFormat(raw,
+	                              removeProtein_with1Feature = TRUE,
 	                              filter_with_Qvalue = filter.qvalue)
 	
 	## get standard protein name from StandardType column
 	standardpepname <- ""
-	if(sum(unique(raw$StandardType) %in% "Normalization") !=0 ){
-	    standardpepname <- as.character(unique(raw[raw$StandardType == "Normalization", "PeptideSequence"]))
+	if(sum(unique(raw$StandardType) %in% c("Normalization", "Global Standard")) !=0 ){
+	    standardpepname <- as.character(unique(raw[raw$StandardType %in% c("Normalization", "Global Standard"), "PeptideSequence"]))
 	}
 
 	## check result grid missing or not
@@ -112,7 +102,14 @@ runComparison <- function() {
 	inputremoveproteins <- arguments[6]
 		
 
-	quantData <- try(dataProcess(raw, normalization=inputnormalize, nameStandards=standardpepname, fillIncompleteRows=(inputmissingpeaks=="TRUE"), featureSubset=input_feature_selection, remove_proteins_with_interference=(inputremoveproteins=="TRUE"), summaryMethod = "TMP", censoredInt="0"))
+	quantData <- try(dataProcess(raw, 
+	                             normalization=inputnormalize, 
+	                             nameStandards=standardpepname, 
+	                             fillIncompleteRows=(inputmissingpeaks=="TRUE"), 
+	                             featureSubset=input_feature_selection, 
+	                             remove_noninformative_feature_outlier=(inputremoveproteins=="TRUE"), 
+	                             summaryMethod = "TMP", 
+	                             censoredInt="0"))
 
 	if (class(quantData) != "try-error") {
 

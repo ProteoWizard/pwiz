@@ -163,14 +163,14 @@ namespace pwiz.Skyline.Model
     public static class ExportInstrumentType
     {
         // ReSharper disable NonLocalizedString
-        public const string ABI = "AB SCIEX";
-        public const string ABI_QTRAP = "AB SCIEX QTRAP";
-        public const string ABI_TOF = "AB SCIEX TOF";
+        public const string ABI = "SCIEX";
+        public const string ABI_QTRAP = "SCIEX QTRAP";
+        public const string ABI_TOF = "SCIEX QTOF";
         public const string AGILENT = "Agilent";
-        public const string AGILENT_TOF = "Agilent TOF";
+        public const string AGILENT_TOF = "Agilent QTOF";
         public const string AGILENT6400 = "Agilent 6400 Series";
         public const string BRUKER = "Bruker";
-        public const string BRUKER_TOF = "Bruker TOF";
+        public const string BRUKER_TOF = "Bruker QTOF";
         public const string SHIMADZU = "Shimadzu";
         public const string THERMO = "Thermo";
         public const string THERMO_TSQ = "Thermo TSQ";
@@ -196,10 +196,10 @@ namespace pwiz.Skyline.Model
 
         public static readonly string[] METHOD_TYPES =
             {
-                ABI_QTRAP,
-                ABI_TOF,
                 AGILENT6400,
                 BRUKER_TOF,
+                ABI_QTRAP,
+                ABI_TOF,
                 SHIMADZU,
                 THERMO_TSQ,
                 THERMO_LTQ,
@@ -211,9 +211,9 @@ namespace pwiz.Skyline.Model
 
         public static readonly string[] TRANSITION_LIST_TYPES =
             {
-                ABI,
                 AGILENT,
                 BRUKER,
+                ABI,
                 SHIMADZU,
                 THERMO,
                 THERMO_QUANTIVA,
@@ -222,8 +222,8 @@ namespace pwiz.Skyline.Model
 
         public static readonly string[] ISOLATION_LIST_TYPES =
             {
-                ABI_TOF,
                 AGILENT_TOF,
+                ABI_TOF,
                 THERMO_Q_EXACTIVE,
                 THERMO_FUSION,
                 WATERS_SYNAPT_TRAP,
@@ -356,6 +356,7 @@ namespace pwiz.Skyline.Model
         public virtual int PrimaryTransitionCount { get; set; }
         public virtual int DwellTime { get; set; }
         public virtual bool UseSlens { get; set; }
+        public virtual bool WriteCompensationVoltages { get; set; }
         public virtual bool AddEnergyRamp { get; set; }
         public virtual bool AddTriggerReference { get; set; }
         public virtual double RunLength { get; set; }
@@ -601,6 +602,7 @@ namespace pwiz.Skyline.Model
         {
             var exporter = InitExporter(new ThermoQuantivaMassListExporter(document));
             exporter.UseSlens = UseSlens;
+            exporter.WriteFaimsCv = WriteCompensationVoltages;
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
@@ -984,6 +986,8 @@ namespace pwiz.Skyline.Model
 
         protected bool USE_COMPOUND_COUNT_WORKAROUND { get { return true; } }
 
+        public bool WriteFaimsCv { get; set; }
+
         public ThermoQuantivaMassListExporter(SrmDocument document)
             : base(document)
         {
@@ -1026,8 +1030,11 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.Write("S-lens"); // Not L10N
             }
-            writer.Write(FieldSeparator);
-            writer.Write("FAIMS CV (V)"); // Not L10N
+            if (WriteFaimsCv)
+            {
+                writer.Write(FieldSeparator);
+                writer.Write("FAIMS CV (V)"); // Not L10N
+            }
             writer.WriteLine();
         }
 
@@ -1130,9 +1137,9 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.Write((nodeTranGroup.ExplicitValues.SLens ?? DEFAULT_SLENS).ToString(CultureInfo));
             }
-            writer.Write(FieldSeparator);
-            if (Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null)
+            if (WriteFaimsCv)
             {
+                writer.Write(FieldSeparator);
                 writer.Write(GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step));
             }
             writer.WriteLine();
@@ -1947,8 +1954,17 @@ namespace pwiz.Skyline.Model
             string extGroupId;
             GetPeptideAndGroupNames(nodePepGroup, nodePep, nodeTranGroup, nodeTran, step, out extPeptideId, out extGroupId);
 
-            string dp = Math.Round(GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo);
-            string ce = Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo);
+            double ceValue = GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step);
+            if (ceValue < 10) // SCIEX does not allow CE below 10
+            {
+                if (OptimizeType == ExportOptimize.CE)
+                    return;
+                ceValue = 10;
+            }
+            string ce = Math.Round(ceValue, 1).ToString(CultureInfo);
+            double dpValue = GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step);
+            // CONSIDER: Is there a minimum DP value?
+            string dp = Math.Round(dpValue, 1).ToString(CultureInfo);
 
             string precursorWindow = string.Empty;
             string productWindow = string.Empty;
@@ -1978,7 +1994,7 @@ namespace pwiz.Skyline.Model
 
             // TODO: Need better way to handle case where user give all CoV as explicit
             string compensationVoltage = Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null
-                ? string.Format(",{0}", GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step).ToString("0.00", CultureInfo)) // Not L10N
+                ? string.Format(",{0}", GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step).GetValueOrDefault().ToString("0.00", CultureInfo)) // Not L10N
                 : null;
 
            string oneLine = string.Format("{0},{1},{2},{3}{4}{5}", q1, q3, dwellOrRt, extPeptideId, // Not L10N
@@ -2063,46 +2079,16 @@ namespace pwiz.Skyline.Model
 
             var charge = nodeTranGroup.TransitionGroup.PrecursorAdduct;
             var pepGroupName = nodePepGroup.Name.Replace('.', '_');
-            if (OptimizeType == null)
-            {
-                extPeptideId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
-                    pepGroupName,
-                    modifiedPepSequence,
-                    GetTransitionName(charge, nodeTran),
-                    nodeTranGroup.TransitionGroup.LabelType);
-                extGroupId = string.Format("{0}.{1}.{2}", // Not L10N
-                    pepGroupName,
-                    modifiedPepSequence,
-                    nodeTranGroup.TransitionGroup.LabelType);
-            }
-            else if (ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType))
-            {
-                extPeptideId = string.Format("{0}.{1}.{2}.CoV_{3}.{4}", // Not L10N
-                    pepGroupName,
-                    modifiedPepSequence,
-                    GetTransitionName(charge, nodeTran),
-                    GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step).ToString("0.0", CultureInfo.InvariantCulture), // Not L10N
-                    nodeTranGroup.TransitionGroup.LabelType);
-                extGroupId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
-                    pepGroupName,
-                    modifiedPepSequence,
-                    GetTransitionName(charge, nodeTran),
-                    nodeTranGroup.TransitionGroup.LabelType);
-            }
-            else
-            {
-                extPeptideId = string.Format("{0}.{1}.{2}.CE_{3}.{4}", // Not L10N
-                    pepGroupName,
-                    modifiedPepSequence,
-                    GetTransitionName(charge, nodeTran),
-                    GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step).ToString("0.0", CultureInfo.InvariantCulture), // Not L10N
-                    nodeTranGroup.TransitionGroup.LabelType);
-                extGroupId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
-                    pepGroupName,
-                    modifiedPepSequence,
-                    GetTransitionName(charge, nodeTran),
-                    nodeTranGroup.TransitionGroup.LabelType);
-            }
+            extPeptideId = string.Format("{0}.{1}.{2}.{3}{4}", // Not L10N
+                pepGroupName,
+                modifiedPepSequence,
+                GetTransitionName(charge, nodeTran),
+                GetOptValueText(nodePepGroup, nodePep, nodeTranGroup, nodeTran, step),
+                nodeTranGroup.TransitionGroup.LabelType);
+            extGroupId = string.Format("{0}.{1}.{2}", // Not L10N
+                pepGroupName,
+                modifiedPepSequence,
+                nodeTranGroup.TransitionGroup.LabelType);
 
             // remove commas to prevent addition of extra columns that will be misinterpretted in method builder exe 
             extPeptideId = extPeptideId.Replace(',', '_').Replace('/', '_').Replace(@"\", "_"); // Not L10N
@@ -2117,6 +2103,38 @@ namespace pwiz.Skyline.Model
             {
                 extGroupId = string.Format("{0} {1}", extGroupId, charge.AsFormulaOrSignedInt()); // Not L10N
             }
+        }
+
+        private string GetOptValueText(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, TransitionDocNode nodeTran, int step)
+        {
+            if (OptimizeType != null)
+            {
+                string optPrefix = null;
+                double optValue = 0;
+                if (ExportOptimize.CE == OptimizeType)
+                {
+                    optPrefix = "CE";   // Not L10N
+                    optValue = GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step);
+                }
+                else if (ExportOptimize.DP == OptimizeType)
+                {
+                    optPrefix = "DP";   // Not L10N
+                    optValue = GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step);
+                }
+                else if (ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType))
+                {
+                    optPrefix = "CoV";  // Not L10N
+                    optValue = GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step).GetValueOrDefault();
+                }
+                else
+                {
+                    Assume.Fail(string.Format("Unexpected optimization type {0}", OptimizeType));   // Not L10N
+                }
+
+                if (optPrefix != null)
+                    return string.Format("{0}_{1}.", optPrefix, optValue.ToString("0.0", CultureInfo.InvariantCulture));  // Not L10N
+            }
+            return string.Empty;
         }
 
         private void GetTransitionTimeValues(PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, out double? predictedRT, out string dwellOrRt)

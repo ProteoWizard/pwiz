@@ -66,6 +66,8 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteEndElement();
             }
 
+            if (SkylineVersion.SrmDocumentVersion >= DocumentFormat.VERSION_4_12 && Document.AuditLog.AuditLogEntries.Any())
+                writer.WriteElement(Document.AuditLog);
         }
         private void WriteProteinMetadataXML(XmlWriter writer, ProteinMetadata proteinMetadata, bool skipNameAndDescription) // Not L10N
         {
@@ -748,6 +750,7 @@ namespace pwiz.Skyline.Model.Serialization
                     writer.WriteAttribute(ATTR.rank_by_level, chromInfo.RankByLevel);
             }
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
+            writer.WriteAttribute(ATTR.forced_integration, chromInfo.IsForcedIntegration, false);
             WriteAnnotations(writer, chromInfo.Annotations);
         }
 

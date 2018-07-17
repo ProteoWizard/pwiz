@@ -135,7 +135,7 @@
     <value>17</value>
   </data>
   <data name="textIonMobility.ToolTip" xml:space="preserve">
-    <value>忽略任何预测漂移时间值</value>
+    <value>忽略任何预测的漂移时间值</value>
   </data>
   <data name="&gt;&gt;textIonMobility.Name" xml:space="preserve">
     <value>textIonMobility</value>
@@ -162,7 +162,7 @@
     <value>19</value>
   </data>
   <data name="textIonMobilityHighEnergyOffset.ToolTip" xml:space="preserve">
-    <value>应用小（通常为负）值以产生离子，来补偿因添加在后漂移分裂中的动能而导致的稍快的飞行</value>
+    <value>一个小（通常为负）的值被用在离子上，来补偿因添加在后漂移分裂中的动能而导致的稍快的飞行</value>
   </data>
   <data name="&gt;&gt;textIonMobilityHighEnergyOffset.Name" xml:space="preserve">
     <value>textIonMobilityHighEnergyOffset</value>

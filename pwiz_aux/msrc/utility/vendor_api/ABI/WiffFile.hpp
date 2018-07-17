@@ -180,8 +180,12 @@ struct PWIZ_API_DECL Experiment
     virtual int getPeriodNumber() const = 0;
     virtual int getExperimentNumber() const = 0;
 
+    virtual size_t getSIMSize() const = 0;
+    virtual void getSIM(size_t index, Target& target) const = 0;
+
     virtual size_t getSRMSize() const = 0;
     virtual void getSRM(size_t index, Target& target) const = 0;
+
     virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities) const = 0;
     virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities,
                         double& basePeakX, double& basePeakY) const = 0;

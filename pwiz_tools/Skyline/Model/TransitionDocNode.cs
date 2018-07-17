@@ -203,7 +203,7 @@ namespace pwiz.Skyline.Model
             return HasResults && Results.Count > i ? Results[i] : default(ChromInfoList<TransitionChromInfo>);
         }
 
-        private TransitionChromInfo GetChromInfoEntry(int i)
+        public TransitionChromInfo GetChromInfoEntry(int i)
         {
             var result = GetSafeChromInfo(i);
             // CONSIDER: Also specify the file index and/or optimization step?
@@ -218,31 +218,28 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
-        public float? GetPeakCountRatio(int i)
+        public float? GetPeakCountRatio(int i, bool integrateAll)
         {
             if (i == -1)
-                return AveragePeakCountRatio;
+                return GetAveragePeakCountRatio(integrateAll);
 
             // CONSIDER: Also specify the file index?
             var chromInfo = GetChromInfoEntry(i);
             if (chromInfo == null)
                 return null;
-            return GetPeakCountRatio(chromInfo);
+            return GetPeakCountRatio(chromInfo, integrateAll);
         }
 
-        public float? AveragePeakCountRatio
+        public float? GetAveragePeakCountRatio(bool integrateAll)
         {
-            get
-            {
-                return GetAverageResultValue(chromInfo =>
-                                             chromInfo.OptimizationStep != 0 ?
-                                                                                 (float?)null : GetPeakCountRatio(chromInfo));
-            }
+            return GetAverageResultValue(chromInfo =>
+                chromInfo.OptimizationStep != 0 ?
+                    (float?)null : GetPeakCountRatio(chromInfo, integrateAll));
         }
 
-        private static float GetPeakCountRatio(TransitionChromInfo chromInfo)
+        private static float GetPeakCountRatio(TransitionChromInfo chromInfo, bool integrateAll)
         {
-            return chromInfo.Area > 0 ? 1 : 0;            
+            return chromInfo.IsGoodPeak(integrateAll) ? 1 : 0;
         }
 
         public float? GetPeakArea(int i)
@@ -616,6 +613,7 @@ namespace pwiz.Skyline.Model
                     transitionPeak.IsFwhmDegenerate = transitionChromInfo.IsFwhmDegenerate;
                     transitionPeak.Truncated = DataValues.ToOptional(transitionChromInfo.IsTruncated);
                     transitionPeak.UserSet = DataValues.ToUserSet(transitionChromInfo.UserSet);
+                    transitionPeak.ForcedIntegration = transitionChromInfo.IsForcedIntegration;
                     switch (transitionChromInfo.Identified)
                     {
                         case PeakIdentification.ALIGNED:

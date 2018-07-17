@@ -77,7 +77,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.ChorusAccountList)
+            using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.RemoteAccountList)
             {
                 Text = Resources.ImportResultsDIAControl_btnBrowse_Click_Browse_for_Results_Files
             })

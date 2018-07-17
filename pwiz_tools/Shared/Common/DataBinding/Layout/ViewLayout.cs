@@ -24,7 +24,7 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Layout
 {
-    public class ViewLayout : Immutable
+    public class ViewLayout : Immutable, IAuditLogObject
     {
         public ViewLayout(string name)
         {
@@ -39,11 +39,22 @@ namespace pwiz.Common.DataBinding.Layout
         {
             return ChangeProp(ImClone(this), im => im.ColumnFormats = ImmutableList.ValueOf(formats));
         }
-        public ImmutableList<IRowTransform> RowTransforms { get; private set; }
+        [Diff(ignoreName:true)]
+        public ImmutableList<IRowTransform> RowTransforms { get; private set; } // PivotSpec, RowFilter
 
         public ViewLayout ChangeRowTransforms(IEnumerable<IRowTransform> rowTransforms)
         {
             return ChangeProp(ImClone(this), im => im.RowTransforms = ImmutableList.ValueOf(rowTransforms));
+        }
+
+        public string AuditLogText
+        {
+            get { return Name; }
+        }
+
+        public bool IsName
+        {
+            get { return true; }
         }
 
         protected bool Equals(ViewLayout other)

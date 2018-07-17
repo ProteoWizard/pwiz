@@ -423,8 +423,8 @@ namespace pwiz.Skyline.Model.Results
                    peak.IsFwhmDegenerate, peak.IsTruncated, 
                    peak.PointsAcross, 
                    peak.Identified, 0, 0,
-                   ratios, annotations, userSet)
-        {            
+                   ratios, annotations, userSet, peak.IsForcedIntegration)
+        {
         }
 
         public TransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, float? massError,
@@ -433,7 +433,7 @@ namespace pwiz.Skyline.Model.Results
                                    float area, float backgroundArea, float height,
                                    float fwhm, bool fwhmDegenerate, bool? truncated, short? pointsAcrossPeak,
                                    PeakIdentification identified, short rank, short rankByLevel,
-                                   IList<float?> ratios, Annotations annotations, UserSet userSet)
+                                   IList<float?> ratios, Annotations annotations, UserSet userSet, bool isForcedIntegration)
             : base(fileId)
         {
             OptimizationStep = optimizationStep;
@@ -458,6 +458,7 @@ namespace pwiz.Skyline.Model.Results
             Annotations = annotations;
             UserSet = userSet;
             PointsAcrossPeak = pointsAcrossPeak;
+            IsForcedIntegration = isForcedIntegration;
         }
 
         /// <summary>
@@ -483,6 +484,16 @@ namespace pwiz.Skyline.Model.Results
         public short Rank { get; private set; }
         public short RankByLevel { get; private set; }
         public short? PointsAcrossPeak { get; private set; }
+        public bool IsForcedIntegration { get; private set; }
+
+        public bool IsGoodPeak(bool integrateAll)
+        {
+            if (integrateAll)
+            {
+                return Area > 0;
+            }
+            return Area > 0 && !IsForcedIntegration;
+        }
 
         /// <summary>
         /// Set after creation at the peptide results calculation level
@@ -600,6 +611,7 @@ namespace pwiz.Skyline.Model.Results
             chromInfo.Identified = peak.Identified;
             chromInfo.UserSet = userSet;
             chromInfo.PointsAcrossPeak = peak.PointsAcross;
+            chromInfo.IsForcedIntegration = peak.IsForcedIntegration;
             return chromInfo;
         }
 
@@ -650,6 +662,11 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.UserSet = prop);
         }
 
+        public TransitionChromInfo ChangeIsForcedIntegration(bool isForcedCoelution)
+        {
+            return ChangeProp(ImClone(this), im => im.IsForcedIntegration = isForcedCoelution);
+        }
+
         #endregion
 
         #region object overrides
@@ -677,7 +694,8 @@ namespace pwiz.Skyline.Model.Results
                    other.Annotations.Equals(Annotations) &&
                    other.UserSet.Equals(UserSet) &&
                    Equals(other.IonMobility, IonMobility) &&
-                   other.PointsAcrossPeak.Equals(PointsAcrossPeak);
+                   other.PointsAcrossPeak.Equals(PointsAcrossPeak) &&
+                   Equals(IsForcedIntegration, other.IsForcedIntegration);
         }
 
         public override bool Equals(object obj)
@@ -711,6 +729,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ UserSet.GetHashCode();
                 result = (result*397) ^ IonMobility.GetHashCode();
                 result = (result*397) ^ PointsAcrossPeak.GetHashCode();
+                result = (result*397) ^ IsForcedIntegration.GetHashCode();
                 return result;
             }
         }
@@ -786,7 +805,8 @@ namespace pwiz.Skyline.Model.Results
                 (short) transitionPeak.RankByLevel,
                 GetEmptyRatios(settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count),
                 Annotations.FromProtoAnnotations(stringPool, transitionPeak.Annotations), 
-                DataValues.FromUserSet(transitionPeak.UserSet) 
+                DataValues.FromUserSet(transitionPeak.UserSet),
+                transitionPeak.ForcedIntegration
                 );
         }
     }

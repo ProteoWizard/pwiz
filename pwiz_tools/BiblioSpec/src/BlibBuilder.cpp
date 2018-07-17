@@ -101,7 +101,9 @@ static vector<string> supportedTypes = {
     ".ssl",
     ".mlb",
     ".tsv",
-    ".osw"
+    ".osw",
+    ".mzTab",
+    "mztab.txt"
 };
 
 void BlibBuilder::usage()

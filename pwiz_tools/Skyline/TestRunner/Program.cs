@@ -44,8 +44,11 @@ namespace TestRunner
     {
         private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestConnected.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll", "TestPerf.dll" };
         private const int LeakThreshold = 250000;
+        // TODO: Turn on leak detection for handles by lowering the limits below
+        private const double LeakGdiThreshold = 2;
+        private const double LeakUserThreshold = 2;
         private const int CrtLeakThreshold = 1000;
-        private const int LeakCheckIterations = 20;
+        private const int LeakCheckIterations = 24;
 
         [STAThread]
         static int Main(string[] args)
@@ -402,24 +405,14 @@ namespace TestRunner
                         continue;  
                     }
 
-                    // Warm up memory by running the test in each language.
-                    for (int i = 0; i < qualityLanguages.Length; i++)
-                    {
-                        runTests.Language =  new CultureInfo(qualityLanguages[i]);
-                        if (!runTests.Run(test, 1, testNumber))
-                        {
-                            failed = true;
-                            removeList.Add(test);
-                            break;
-                        }
-                    }
-
                     if (failed)
                         continue;
 
                     // Run test repeatedly until we can confidently assess the leak status.
                     double slope = 0;
                     var memoryPoints = new List<double> {runTests.TotalMemoryBytes};
+                    var gdiPoints = new List<int> {runTests.LastGdiHandleCount};
+                    var userPoints = new List<int> {runTests.LastUserHandleCount};
                     for (int i = 0; i < LeakCheckIterations; i++)
                     {
                         // Run the test in the next language.
@@ -433,16 +426,25 @@ namespace TestRunner
                         }
 
                         // Run linear regression on memory size samples.
-                        var memoryBytes = runTests.TotalMemoryBytes;
-                        memoryPoints.Add(memoryBytes);
+                        memoryPoints.Add(runTests.TotalMemoryBytes);
+                        gdiPoints.Add(runTests.LastGdiHandleCount);
+                        userPoints.Add(runTests.LastUserHandleCount);
                         if (memoryPoints.Count < 8)
                             continue;
 
                         // Stop if the leak magnitude is below our threshold.
                         slope = CalculateSlope(memoryPoints); 
-                        if (slope < LeakThreshold)
+                        if (slope < LeakThreshold && MeanDelta(gdiPoints) < LeakGdiThreshold && MeanDelta(userPoints) < LeakUserThreshold)
                             break;
-                        memoryPoints.RemoveAt(0);
+                        // Remove the oldest point unless this is the last iteration
+                        // So that the report below will be based on the set that just
+                        // failed the leak check
+                        if (i < LeakCheckIterations - 1)
+                        {
+                            memoryPoints.RemoveAt(0);
+                            gdiPoints.RemoveAt(0);
+                            userPoints.RemoveAt(0);
+                        }
                     }
 
                     if (failed)
@@ -451,6 +453,16 @@ namespace TestRunner
                     if (slope >= LeakThreshold)
                     {
                         runTests.Log("!!! {0} LEAKED {1} bytes\r\n", test.TestMethod.Name, Math.Floor(slope));
+                        removeList.Add(test);
+                    }
+                    else if (MeanDelta(gdiPoints) >= LeakGdiThreshold)
+                    {
+                        runTests.Log("!!! {0} HANDLE-LEAKED {1:0.#} GDI ({2:0.#} User)\r\n", test.TestMethod.Name, MeanDelta(gdiPoints), MeanDelta(userPoints));
+                        removeList.Add(test);
+                    }
+                    else if (MeanDelta(userPoints) >= LeakUserThreshold)
+                    {
+                        runTests.Log("!!! {0} HANDLE-LEAKED {1:0.#} User\r\n", test.TestMethod.Name, MeanDelta(userPoints));
                         removeList.Add(test);
                     }
                 }
@@ -554,6 +566,14 @@ namespace TestRunner
             }
 
             return runTests.FailureCount == 0;
+        }
+
+        private static double MeanDelta(List<int> gdiPoints)
+        {
+            var listDelta = new List<int>();
+            for (int i = 1; i < gdiPoints.Count; i++)
+                listDelta.Add(gdiPoints[i] - gdiPoints[i - 1]);
+            return listDelta.Average();
         }
 
         private static double CalculateSlope(IEnumerable<double> points)
@@ -701,7 +721,7 @@ namespace TestRunner
         private class LeakingTest
         {
             public string TestName;
-            public long LeakSize;
+            public double LeakSize;
         }
 
         // Generate a summary report of errors and memory leaks from a log file.
@@ -711,6 +731,7 @@ namespace TestRunner
 
             var errorList = new List<string>();
             var leakList = new List<LeakingTest>();
+            var handleLeakList = new List<LeakingTest>();
             var crtLeakList = new List<LeakingTest>();
 
             string error = null;
@@ -740,12 +761,17 @@ namespace TestRunner
                    
                     if (failureType == "LEAKED")
                     {
-                        var leakSize = long.Parse(parts[3]);
+                        var leakSize = double.Parse(parts[3]);
                         leakList.Add(new LeakingTest { TestName = test, LeakSize = leakSize });
                         continue;
                     }
-                   
-                    if (failureType == "CRT-LEAKED")
+                    else if (failureType == "HANDLE-LEAKED")
+                    {
+                        var leakSize = double.Parse(parts[3]);
+                        handleLeakList.Add(new LeakingTest { TestName = test, LeakSize = leakSize });
+                        continue;
+                    }
+                    else if (failureType == "CRT-LEAKED")
                     {
                         var leakSize = long.Parse(parts[3]);
                         crtLeakList.Add(new LeakingTest { TestName = test, LeakSize = leakSize });
@@ -770,6 +796,13 @@ namespace TestRunner
                 ReportLeaks(leakList);
             }
 
+            if (handleLeakList.Count > 0)
+            {
+                Console.WriteLine();
+                Console.WriteLine("# Leaking handles tests (handles per run):");
+                ReportLeaks(handleLeakList);
+            }
+
             if (crtLeakList.Count > 0)
             {
                 Console.WriteLine();
@@ -782,7 +815,7 @@ namespace TestRunner
         {
             foreach (var leakTest in leakList.OrderByDescending(test => test.LeakSize))
             {
-                Console.WriteLine("#    {0,-36} {1,10:N0}",
+                Console.WriteLine("#    {0,-36} {1,10:0.#}",
                     leakTest.TestName.Substring(0, Math.Min(36, leakTest.TestName.Length)),
                     leakTest.LeakSize);
             }

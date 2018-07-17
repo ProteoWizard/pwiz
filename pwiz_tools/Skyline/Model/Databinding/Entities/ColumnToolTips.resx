@@ -189,6 +189,9 @@ maximum intensity for the precursor.</value>
     <value>Type of scans from which the chromatogram was extracted: one of "fragment", "sim", "ms1", or "unknown"</value>
     <comment>Keep the english form of "fragment", "sim", "ms1", or "unknown" because that is what users see in the Document Grid. However, maybe put the localized translation in parentheses: "fragment" (translation of fragment), "sim" (translation of selected ion monitoring), etc. </comment>
   </data>
+  <data name="Coeluting">
+    <value>True if this transition's peak has similar apex and extents as the other transitions within the peak group.</value>
+  </data>
   <data name="ConfidenceLevel">
     <value>Confidence level which was used to determine the confidence interval around the fold change.</value>
   </data>
@@ -1138,5 +1141,37 @@ higher than the other extent.</value>
   </data>
   <data name="SMILES" xml:space="preserve">
     <value>Standardized molecular identifier</value>
+  </data>
+  <data name="TimeStamp">
+    <value>Time at which this change was made</value>
+  </data>
+  <data name="UndoRedoMessage">
+    <value>Description of the change</value>
+  </data>
+  <data name="SummaryMessage">
+    <value>Description of the change</value>
+  </data>
+  <data name="AllInfoMessage">
+    <value>Detailed description of the change</value>
+  </data>
+  <data name="DocumentFormat" xml:space="preserve">
+    <value>Document format version at the time the change was made</value>
+  </data>
+  <data name="User">
+    <value>User who made the change</value>
+  </data>
+  <data name="Reason">
+    <value>Reason the user gave for making the change</value>
+  </data>
+  <data name="SkylineVersion">
+    <value>Version of Skyline in which the change was made</value>
+  </data>
+  <data name="Details">
+    <value>List of detailed change messages and reasons</value>
+  </data>
+  <data name="AuditLogRow">
+    <value>
+      Row of audit log information
+    </value>
   </data>
 </root>

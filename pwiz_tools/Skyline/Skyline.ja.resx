@@ -525,7 +525,7 @@
     <value>173, 22</value>
   </data>
   <data name="rawTimesContextMenuItem.Text" xml:space="preserve">
-    <value>生データ時間を表示</value>
+    <value>生データの時間を表示</value>
   </data>
   <data name="retentionTimesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
@@ -1954,7 +1954,7 @@
     <value>284, 22</value>
   </data>
   <data name="applyPeakSubsequentToolStripMenuItem.Text" xml:space="preserve">
-    <value>ピークを後続に適用</value>
+    <value>ピークを後に適用</value>
   </data>
   <data name="removePeakToolStripMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+Shift+R</value>

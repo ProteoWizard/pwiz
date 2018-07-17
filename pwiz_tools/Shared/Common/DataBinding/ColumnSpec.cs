@@ -29,7 +29,7 @@ using pwiz.Common.SystemUtil;
 namespace pwiz.Common.DataBinding
 {
     [XmlRoot("column")]
-    public class ColumnSpec
+    public class ColumnSpec : IAuditLogObject
     {
         public ColumnSpec()
         {
@@ -169,6 +169,16 @@ namespace pwiz.Common.DataBinding
         }
         // ReSharper restore NonLocalizedString
 
+        public string AuditLogText
+        {
+            get { return Caption ?? Name; }
+        }
+
+        public bool IsName
+        {
+            get { return true; }
+        }
+
         public bool Equals(ColumnSpec other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -221,6 +231,8 @@ namespace pwiz.Common.DataBinding
             Column = that.Column;
             Predicate = that.Predicate;
         }
+
+        [Diff]
         public string Column { get; private set; }
         public FilterSpec SetColumn(string column)
         {
@@ -231,6 +243,8 @@ namespace pwiz.Common.DataBinding
         {
             return SetColumn(columnId.ToString());
         }
+
+        [DiffParent(ignoreName:true)]
         public FilterPredicate Predicate { get; private set; }
 
         public FilterSpec SetPredicate(FilterPredicate predicate)
@@ -318,11 +332,13 @@ namespace pwiz.Common.DataBinding
         }
 
 
+        [Diff]
         public ImmutableList<ColumnSpec> Columns { get; private set; }
         public ViewSpec SetColumns(IEnumerable<ColumnSpec> value)
         {
             return ChangeProp(ImClone(this), im => im.Columns = ImmutableList.ValueOf(value));
         }
+        [Diff]
         public ImmutableList<FilterSpec> Filters { get; private set; }
         public ViewSpec SetFilters(IEnumerable<FilterSpec> value)
         {
