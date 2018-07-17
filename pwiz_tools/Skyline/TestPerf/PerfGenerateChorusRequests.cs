@@ -83,7 +83,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 SkyZipUrl = CHORUS_DATASET_URL + "Waters/Hoofnagle_MSe_targeted.sky.zip",
             }
         });
-        [TestMethod]
+        //[TestMethod]
         public void TestGenerateChorusRequests()
         {
             List<string> testFilesZipPaths = new List<string>();
