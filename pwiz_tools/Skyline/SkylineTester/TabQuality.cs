@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace SkylineTester
@@ -157,28 +156,15 @@ namespace SkylineTester
 
             if (lastTestResult != null)
             {
-                // Deal with 
-                // "[14:38] 2.2 AgilentMseChromatogramTestAsSmallMolecules (zh) 0 failures, 1.25/51.5 MB, 20/40 handels, 0 sec."
-                // or
-                // "[14:38] 2.2 AgilentMseChromatogramTestAsSmallMolecules (zh) (RunSmallMoleculeTestVersions=False, skipping.) 0 failures, 1.25/51.5 MB, 20/40 handles, 0 sec."
-                var line = Regex.Replace(lastTestResult, @"\s+", " ").Trim();
-                line = line.Replace(pwiz.SkylineTestUtil.AbstractUnitTest.MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION, " ");
-                var parts = line.Split(' ');
-                var failures = int.Parse(parts[4]);
-                var memoryParts = parts[6].Split('/');
-                var managedMemory = Double.Parse(memoryParts[0]);
-                var totalMemory = Double.Parse(memoryParts[1]);
-                var handleParts = parts[8].Split('/');
-                var userHandles = Int32.Parse(handleParts[0]);
-                var gdiHandles = Int32.Parse(handleParts[1]);
+                var runFromLine = Summary.ParseRunFromStatusLine(lastTestResult);
 
-                _lastRun.RunMinutes = (int)(DateTime.Now - _lastRun.Date).TotalMinutes;
+                _lastRun.RunMinutes = (int)(runFromLine.Date - _lastRun.Date).TotalMinutes;
                 _lastRun.TestsRun = MainWindow.TestsRun;
-                _lastRun.Failures = failures;
-                _lastRun.ManagedMemory = (int)managedMemory;
-                _lastRun.TotalMemory = (int)totalMemory;
-                _lastRun.UserHandles = userHandles;
-                _lastRun.GdiHandles = gdiHandles;
+                _lastRun.Failures = runFromLine.Failures;
+                _lastRun.ManagedMemory = runFromLine.ManagedMemory;
+                _lastRun.TotalMemory = runFromLine.TotalMemory;
+                _lastRun.UserHandles = runFromLine.UserHandles;
+                _lastRun.GdiHandles = runFromLine.GdiHandles;
             }
         }
 

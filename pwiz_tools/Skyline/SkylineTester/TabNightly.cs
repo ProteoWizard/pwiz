@@ -25,7 +25,6 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.Win32.TaskScheduler;
 using ZedGraph;
@@ -375,25 +374,16 @@ namespace SkylineTester
 
             if (lastTestResult != null)
             {
-                try
-                {
-                    var line = Regex.Replace(lastTestResult, @"\s+", " ").Trim();
-                    var parts = line.Split(' ');
-                    var failures = int.Parse(parts[parts.Length - 6]);
-                    var managedMemory = ParseMemory(parts[parts.Length - 4].Split('/')[0]);
-                    var totalMemory = ParseMemory(parts[parts.Length - 4].Split('/')[1]);
+                var runFromLine = Summary.ParseRunFromStatusLine(lastTestResult);
 
-                    MainWindow.NewNightlyRun.Revision = _revision;
-                    MainWindow.NewNightlyRun.RunMinutes = (int)(DateTime.Now - MainWindow.NewNightlyRun.Date).TotalMinutes;
-                    MainWindow.NewNightlyRun.TestsRun = MainWindow.TestsRun;
-                    MainWindow.NewNightlyRun.Failures = failures;
-                    MainWindow.NewNightlyRun.ManagedMemory = (int)(managedMemory ?? 0);
-                    MainWindow.NewNightlyRun.TotalMemory = (int)(totalMemory ?? 0);
-                }
-                // ReSharper disable once EmptyGeneralCatchClause
-                catch (Exception)
-                {
-                }
+                var lastRun = MainWindow.NewNightlyRun;
+                lastRun.Revision = _revision;
+                lastRun.RunMinutes = (int)(runFromLine.Date - lastRun.Date).TotalMinutes;
+                lastRun.TestsRun = MainWindow.TestsRun;
+                lastRun.ManagedMemory = runFromLine.ManagedMemory;
+                lastRun.TotalMemory = runFromLine.TotalMemory;
+                lastRun.UserHandles = runFromLine.UserHandles;
+                lastRun.GdiHandles = runFromLine.GdiHandles;
             }
         }
 

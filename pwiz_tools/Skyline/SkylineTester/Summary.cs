@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace SkylineTester
@@ -38,6 +39,56 @@ namespace SkylineTester
             public int TotalMemory;
             public int UserHandles;
             public int GdiHandles;
+        }
+
+        public static Run ParseRunFromStatusLine(string statusLine)
+        {
+            // Deal with 
+            // "[14:38] 2.2 AgilentMseChromatogramTestAsSmallMolecules (zh) 0 failures, 1.25/51.5 MB, 20/40 handels, 0 sec."
+            // or
+            // "[14:38] 2.2 AgilentMseChromatogramTestAsSmallMolecules (zh) (RunSmallMoleculeTestVersions=False, skipping.) 0 failures, 1.25/51.5 MB, 20/40 handles, 0 sec."
+            var line = Regex.Replace(statusLine, @"\s+", " ").Trim();
+            line = line.Replace(pwiz.SkylineTestUtil.AbstractUnitTest.MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION, " ");
+            var parts = line.Split(' ');
+
+            var run = new Run { Date = DateTime.Now };
+            const int failuresIndex = 4;
+            const int memoryIndex = 6;
+            const int handlesIndex = 8;
+            int failures;
+            if (failuresIndex < parts.Length && int.TryParse(parts[failuresIndex], out failures))
+                run.Failures = failures;
+
+            int managedMemory, totalMemory;
+            if (memoryIndex < parts.Length && ParseMemoryPart(parts[memoryIndex], out managedMemory, out totalMemory))
+            {
+                run.ManagedMemory = managedMemory;
+                run.TotalMemory = totalMemory;
+            }
+            int userHandles, gdiHandles;
+            if (handlesIndex < parts.Length && ParseMemoryPart(parts[handlesIndex], out userHandles, out gdiHandles))
+            {
+                run.UserHandles = userHandles;
+                run.GdiHandles = gdiHandles;
+            }
+            return run;
+        }
+
+        private static bool ParseMemoryPart(string memoryPart, out int firstValue, out int secondValue)
+        {
+            var memoryParts = memoryPart.Split('/');
+            double firstPart, secondPart;
+            if (memoryParts.Length == 2 &&
+                double.TryParse(memoryParts[0], out firstPart) &&
+                double.TryParse(memoryParts[1], out secondPart))
+            {
+                firstValue = (int) firstPart;
+                secondValue = (int) secondPart;
+                return true;
+            }
+
+            firstValue = secondValue = 0;
+            return false;
         }
 
         public List<Run> Runs { get; private set; }
