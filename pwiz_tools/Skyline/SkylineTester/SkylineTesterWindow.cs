@@ -29,7 +29,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
@@ -683,11 +682,15 @@ namespace SkylineTester
             bool memoryGraphType)
         {
             var pane = graphControl.GraphPane;
-            pane.CurveList.Clear();
+            pane.Title.FontSpec.Size = 13;
+            pane.Title.Text = memoryGraphType ? "Memory Used" : "Handles Held";
+            pane.YAxis.Title.Text = memoryGraphType ? "MB" : "Handles";
 
             var run = graphContainer.CurrentRun;
             if (run == null)
             {
+                pane.CurveList.Clear();
+                pane.XAxis.Scale.TextLabels = new string[0];
                 duration.Text = testsRun.Text = failures.Text = leaks.Text = "";
                 graphControl.Refresh();
                 return;
@@ -741,15 +744,13 @@ namespace SkylineTester
                     try
                     {
                         pane.XAxis.Scale.Min = 1;
-                        pane.XAxis.Scale.Max = minorMemoryPoints.Count;
+                        pane.XAxis.Scale.Max = labels.Count;
                         pane.XAxis.Scale.MinGrace = 0;
                         pane.XAxis.Scale.MaxGrace = 0;
                         pane.YAxis.Scale.MinGrace = 0.05;
                         pane.YAxis.Scale.MaxGrace = 0.05;
                         pane.XAxis.Scale.TextLabels = labels.ToArray();
                         pane.Legend.FontSpec.Size = 11;
-                        pane.Title.FontSpec.Size = 13;
-                        pane.Title.Text = memoryGraphType ? "Memory Used" : "Handles Held";
                         pane.XAxis.Title.FontSpec.Size = 11;
                         pane.XAxis.Scale.FontSpec.Size = 11;
 
@@ -1291,7 +1292,7 @@ namespace SkylineTester
         public Label            NightlyTestName             { get { return nightlyTestName; } }
         public WindowThumbnail  NightlyThumbnail            { get { return nightlyThumbnail; } }
         public Button           NightlyViewLog              { get { return nightlyViewLog; } }
-        public bool             NightlyMemoryGraphType      { get { return radioNightlyHandles.Checked; } }
+        public bool             NightlyMemoryGraphType      { get { return radioNightlyMemory.Checked; } }
         public RadioButton      NukeBuild                   { get { return nukeBuild; } }
         public CheckBox         Offscreen                   { get { return offscreen; } }
         public ComboBox         OutputJumpTo                { get { return outputJumpTo; } }
@@ -1369,11 +1370,6 @@ namespace SkylineTester
         private void nightlyBrowseBuild_Click(object sender, EventArgs e)
         {
             _tabNightly.BrowseBuild();
-        }
-
-        private void nightlyDeleteBuild_Click(object sender, EventArgs e)
-        {
-            _tabNightly.DeleteBuild();
         }
 
         private void comboRunDate_SelectedIndexChanged(object sender, EventArgs e)
