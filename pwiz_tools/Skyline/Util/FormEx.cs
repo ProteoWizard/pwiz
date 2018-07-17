@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Util
         public DialogResult ShowParentlessDialog()
         {
             // WINDOWS 10 UPDATE HACK: Because Windows 10 update version 1803 causes unparented non-ShowInTaskbar windows to leak GDI and User handles
-            ShowInTaskbar = Program.FunctionalTest;
+            ShowInTaskbar = ShowInTaskbar || Program.FunctionalTest;
 
             return base.ShowDialog();
         }
