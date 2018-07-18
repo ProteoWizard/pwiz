@@ -360,7 +360,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 for (int i = 0; i < 4; i ++)
                 {
-                    if (tran.GetPeakCountRatio(i) > 0)
+                    if (tran.GetPeakCountRatio(i, importDoc.Settings.TransitionSettings.Integration.IsIntegrateAll) > 0)
                         return true;
                 }
                 return false;

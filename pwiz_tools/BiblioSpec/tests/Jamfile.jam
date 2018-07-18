@@ -269,6 +269,10 @@ blib-test-build byonic : -o : output/byonic.blib : byonic.check byonic.skip-line
 # Test mzid format from MSGF+
 
 blib-test-build msgf-mzid : -o : output/msgf-mzid.blib : msgf-mzid.check : inputs/msgf-test.mzid ;
+blib-test-build msgf-mzid-nativeid : -o : output/msgf-mzid-nativeid.blib : msgf-mzid-nativeid.check : inputs/msgf-test-nativeid.mzid ;
+
+# Test mzid format from MetaMorpheus and WIFF
+blib-test-build metamorpheus-mzid : -o : output/metamorpheus.blib : metamorpheus.check : inputs/metamorpheus.mzid ;
 
 # Test waters csv format
 

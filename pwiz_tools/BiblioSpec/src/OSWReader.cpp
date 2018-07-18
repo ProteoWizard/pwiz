@@ -81,6 +81,7 @@ bool OSWReader::parseFile() {
         "LEFT JOIN PEPTIDE_PROTEIN_MAPPING ON PRECURSOR_PEPTIDE_MAPPING.PEPTIDE_ID = PEPTIDE_PROTEIN_MAPPING.PEPTIDE_ID "
         "LEFT JOIN PROTEIN ON PEPTIDE_PROTEIN_MAPPING.PROTEIN_ID = PROTEIN.ID "
         "WHERE PRECURSOR.DECOY = 0 "
+        "  AND SCORE_MS2.RANK = 1 "
         "  AND SCORE_MS2.QVALUE <= " + boost::lexical_cast<string>(scoreThreshold_) + " "
         "ORDER BY FEATURE.ID ASC";
     sqlite3_stmt* stmt;
@@ -134,9 +135,9 @@ bool OSWReader::parseFile() {
             transferPeaks(curSpectrum, curPeakMzs, curPeakIntensities); // set peaks for previous spectrum
 
             curSpectrum = &(spectra_.insert(make_pair(featureId, SpecData())).first->second);
-            curSpectrum->retentionTime = sqlite3_column_double(stmt, 2);
-            curSpectrum->startTime = sqlite3_column_double(stmt, 7);
-            curSpectrum->endTime = sqlite3_column_double(stmt, 8);
+            curSpectrum->retentionTime = sqlite3_column_double(stmt, 2)/60;
+            curSpectrum->startTime = sqlite3_column_double(stmt, 7)/60;
+            curSpectrum->endTime = sqlite3_column_double(stmt, 8)/60;
             curSpectrum->mz = sqlite3_column_double(stmt, 5);
         }
         curPeakMzs.push_back(sqlite3_column_double(stmt, 9));

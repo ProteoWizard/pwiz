@@ -192,6 +192,9 @@
   <data name="CleavageAa">
     <value>Cleavage Aa</value>
   </data>
+  <data name="Coeluting">
+    <value>Coeluting</value>
+  </data>
   <data name="CollisionEnergy">
     <value>Collision Energy</value>
   </data>

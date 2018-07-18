@@ -155,6 +155,7 @@
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromTransitionTest.cs" />
     <Compile Include="CommandLineImportAnnotationsTest.cs" />
+    <Compile Include="CommandLineImportDocTest.cs" />
     <Compile Include="CommandLineMProphetTest.cs" />
     <Compile Include="CommandLineNoJoinTest.cs" />
     <Compile Include="CommandLineTest.cs" />

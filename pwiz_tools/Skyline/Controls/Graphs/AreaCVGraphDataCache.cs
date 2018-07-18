@@ -131,7 +131,9 @@ namespace pwiz.Skyline.Controls.Graphs
                             settings.QValueCutoff,
                             settings.CVCutoff,
                             properties.MinimumDetections,
-                            settings.BinWidth));
+                            settings.BinWidth,
+                            settings.MsLevel,
+                            settings.Transitions));
 
                     lock (_cacheInfo)
                     {

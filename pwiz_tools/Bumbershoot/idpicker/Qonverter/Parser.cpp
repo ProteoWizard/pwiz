@@ -616,7 +616,9 @@ struct ParserImpl
                 {
                     if (!sii) throw runtime_error("[Parser::insertSpectrumResults] null spectrumIdentificationItem");
 
-                    if (!sii->peptidePtr || sii->peptidePtr->empty())
+                    PeptidePtr peptidePtr = sii->peptidePtr;
+                    if (!peptidePtr && !sii->peptideEvidencePtr.empty()) peptidePtr = sii->peptideEvidencePtr.front()->peptidePtr;
+                    if (!peptidePtr || peptidePtr->empty())
                         throw runtime_error("SII with a missing or empty peptide reference (" + sii->id + ")");
 
                     // skip low ranking results according to import settings
@@ -625,7 +627,7 @@ struct ParserImpl
                         continue;
 
                     // insert distinct peptide
-                    const string& sequence = sii->peptidePtr->peptideSequence;
+                    const string& sequence = peptidePtr->peptideSequence;
 
                     // skip short peptides
                     if (analysis.importSettings.minPeptideLength > sequence.length())
@@ -719,7 +721,7 @@ struct ParserImpl
                     // build map of mod offset to total mod mass (in order to merge mods at the same offset)
                     typedef pair<double, double> MassPair;
                     map<int, MassPair> modMassByOffset;
-                    for(ModificationPtr& mod : sii->peptidePtr->modification)
+                    for(ModificationPtr& mod : peptidePtr->modification)
                     {
                         if (!mod) throw runtime_error("[Parser::insertSpectrumResults] null modification");
 

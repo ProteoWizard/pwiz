@@ -228,6 +228,12 @@ namespace pwiz.Skyline
                     return false;
             }
 
+            if (commandArgs.ImportingDocuments)
+            {
+                if (!ImportDocuments(commandArgs))
+                    return false;
+            }
+
             if (commandArgs.AddDecoys)
             {
                 if (!AddDecoys(commandArgs))
@@ -338,7 +344,9 @@ namespace pwiz.Skyline
             {
                 // If expected results are not imported successfully, terminate
                 if (!ImportResultsInDir(commandArgs.ImportSourceDirectory,
+                        commandArgs.ImportRecursive,
                         commandArgs.ImportNamingPattern,
+                        commandArgs.ReplicateName,
                         commandArgs.LockMassParameters,
                         commandArgs.ImportBeforeDate,
                         commandArgs.ImportOnOrAfterDate,
@@ -772,17 +780,21 @@ namespace pwiz.Skyline
             return BackgroundProteomeList.GetDefault();
         }
 
-        public bool ImportResultsInDir(string sourceDir, Regex namingPattern, 
+        public bool ImportResultsInDir(string sourceDir, bool recursive, Regex namingPattern, string replicateName,
             LockMassParameters lockMassParameters,
             DateTime? importBefore, DateTime? importOnOrAfter,
             OptimizableRegression optimize, bool disableJoining, bool warnOnFailure)
         {
-            var listNamedPaths = GetDataSources(sourceDir, namingPattern, lockMassParameters);
+            var listNamedPaths = GetDataSources(sourceDir, recursive, namingPattern, lockMassParameters);
             if (listNamedPaths == null)
             {
                 return false;
             }
-
+            // If there is a single name for everything then it should override any naming from GetDataSources
+            if (!string.IsNullOrEmpty(replicateName))
+            {
+                listNamedPaths = new[] { new KeyValuePair<string, MsDataFileUri[]>(replicateName, listNamedPaths.SelectMany(s => s.Value).ToArray()) };
+            }
             return ImportDataFiles(listNamedPaths, lockMassParameters, importBefore, importOnOrAfter, optimize, disableJoining, warnOnFailure);
         }
 
@@ -924,13 +936,13 @@ namespace pwiz.Skyline
             public MsDataFileUri FilePath { get; private set; }
         }
 
-        private IList<KeyValuePair<string, MsDataFileUri[]>> GetDataSources(string sourceDir, Regex namingPattern, LockMassParameters lockMassParameters)
+        private IList<KeyValuePair<string, MsDataFileUri[]>> GetDataSources(string sourceDir, bool recursive, Regex namingPattern, LockMassParameters lockMassParameters)
         {   
             // get all the valid data sources (files and sub directories) in this directory.
             IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths;
             try
             {
-                listNamedPaths = DataSourceUtil.GetDataSources(sourceDir).ToArray();
+                listNamedPaths = DataSourceUtil.GetDataSources(sourceDir, recursive).ToArray();
             }
             catch(IOException e)
             {
@@ -1353,6 +1365,39 @@ namespace pwiz.Skyline
             _doc = doc;
             ImportFoundResultsFiles(commandArgs, import);
             return true;
+        }
+
+        private bool ImportDocuments(CommandArgs commandArgs)
+        {
+            // Add files to the end in the order they were given.
+            foreach (var filePath in commandArgs.DocImportPaths)
+            {
+                _out.WriteLine(Resources.SkylineWindow_ImportFiles_Importing__0__, Path.GetFileName(filePath));
+
+                using (var reader = new StreamReader(filePath))
+                {
+                    IdentityPath firstAddedForFile, nextAdd;
+                    _doc = _doc.ImportDocumentXml(reader,
+                                                filePath,
+                                                commandArgs.DocImportResultsMerge.Value,
+                                                commandArgs.DocImportMergePeptides,
+                                                FindSpectralLibrary,
+                                                Settings.Default.StaticModList,
+                                                Settings.Default.HeavyModList,
+                                                null,   // Always add to the end
+                                                out firstAddedForFile,
+                                                out nextAdd,
+                                                false);
+                }
+            }
+            return true;
+        }
+
+        private string FindSpectralLibrary(string libraryName, string fileName)
+        {
+            // No ability to ask the user for the location of the library, so just warn
+            _out.WriteLine(Resources.CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_, libraryName);
+            return null;
         }
 
         private bool AddDecoys(CommandArgs commandArgs)
