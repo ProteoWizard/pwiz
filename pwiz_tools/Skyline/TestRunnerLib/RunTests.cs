@@ -273,8 +273,6 @@ namespace TestRunnerLib
                 // Test succeeded.
                 Log(
                     "{0,3} failures, {1:F2}/{2:F1} MB, {3}/{4} handles, {5} sec.\r\n",
-                    // Fake handles as bytes
-//                    "{0,3} failures, {3}/{4} MB, {5} sec.\r\n",
                     FailureCount, 
                     managedMemory, 
                     TotalMemory,
@@ -311,8 +309,9 @@ namespace TestRunnerLib
                 ErrorCounts[failureInfo] = 1;
 
             Log(
-                "{0,3} failures, {1:F2}/{2:F1} MB\r\n\r\n!!! {3} FAILED\r\n{4}\r\n{5}\r\n!!!\r\n\r\n",
-                FailureCount, managedMemory, TotalMemory, test.TestMethod.Name,
+                "{0,3} failures, {1:F2}/{2:F1} MB, {3}/{4} handles, {5} sec.\r\n\r\n!!! {6} FAILED\r\n{7}\r\n{8}\r\n!!!\r\n\r\n",
+                FailureCount, managedMemory, TotalMemory, LastUserHandleCount, LastGdiHandleCount, LastTestDuration,
+                test.TestMethod.Name,
                 message,
                 exception);
             return false;
