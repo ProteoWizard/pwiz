@@ -10144,4 +10144,88 @@ Recognized isotopes include: {2}</value>
   <data name="AlignmentForm_UpdateGraph_Time_from_Regression" xml:space="preserve">
     <value>Time from Regression</value>
   </data>
+  <data name="ListDesigner_OkDialog_There_is_already_a_list_named___0___" xml:space="preserve">
+    <value>There is already a list named '{0}'.</value>
+  </data>
+  <data name="ListDesigner_OkDialog_Duplicate_property_name" xml:space="preserve">
+    <value>Duplicate property name</value>
+  </data>
+  <data name="ListDesigner_OkDialog_No_such_property" xml:space="preserve">
+    <value>No such property</value>
+  </data>
+  <data name="ListDesigner_OkDialog_There_was_an_error_trying_to_apply_this_list_definition_to_the_original_data_" xml:space="preserve">
+    <value>There was an error trying to apply this list definition to the original data:</value>
+  </data>
+  <data name="ListGridForm_BindingListSourceOnListChanged_List__" xml:space="preserve">
+    <value>List: </value>
+  </data>
+  <data name="ListColumnPropertyDescriptor_SetValue_List_has_been_deleted" xml:space="preserve">
+    <value>List has been deleted</value>
+  </data>
+  <data name="ListColumnPropertyDescriptor_SetValue_List_item_has_been_deleted_" xml:space="preserve">
+    <value>List item has been deleted.</value>
+  </data>
+  <data name="ListColumnPropertyDescriptor_ChangeListData_No_such_list__0_" xml:space="preserve">
+    <value>No such list {0}</value>
+  </data>
+  <data name="ListPropertyType_Label_Lookup__" xml:space="preserve">
+    <value>Lookup: </value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Number" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_True_False" xml:space="preserve">
+    <value>True/False</value>
+  </data>
+  <data name="ListPropertyType_GetAnnotationTypeName_Value_List" xml:space="preserve">
+    <value>Value List</value>
+  </data>
+  <data name="ListDefList_Label_Lists" xml:space="preserve">
+    <value>Lists</value>
+  </data>
+  <data name="ListDefList_Title_Define_Lists" xml:space="preserve">
+    <value>Define Lists</value>
+  </data>
+  <data name="ListExceptionDetail_ColumnNotFound_Column___0___does_not_exist_" xml:space="preserve">
+    <value>Column '{0}' does not exist.</value>
+  </data>
+  <data name="ListExceptionDetail_DuplicateValue_Duplicate_value___1___found_in_column___0___" xml:space="preserve">
+    <value>Duplicate value '{1}' found in column '{0}'.</value>
+  </data>
+  <data name="ListExceptionDetail_NullValue_Column___0___cannot_be_blank_" xml:space="preserve">
+    <value>Column '{0}' cannot be blank.</value>
+  </data>
+  <data name="ListExceptionDetail_InvalidValue_Invalid_value___1___for_column___0___" xml:space="preserve">
+    <value>Invalid value '{1}' for column '{0}'.</value>
+  </data>
+  <data name="ListViewContext_CommitAddNew_Add_new_item_to_list___0__" xml:space="preserve">
+    <value>Add new item to list '{0}'</value>
+  </data>
+  <data name="ListViewContext_ValidateNewRow_The_new_row_could_not_be_added_because_of_the_following_error_" xml:space="preserve">
+    <value>The new row could not be added because of the following error:</value>
+  </data>
+  <data name="ListViewContext_ValidateNewRow_Press_OK_to_continue_editing_your_row__or_Cancel_to_throw_away_the_new_row_" xml:space="preserve">
+    <value>Press OK to continue editing your row, or Cancel to throw away the new row.</value>
+  </data>
+  <data name="ListViewContext_Delete_Are_you_sure_you_want_to_delete_the__0__selected_items_from_the_list___1___" xml:space="preserve">
+    <value>Are you sure you want to delete the {0} selected items from the list '{1}'?</value>
+  </data>
+  <data name="ListViewContext_Delete_Delete_from_list___0__" xml:space="preserve">
+    <value>Delete from list '{0}'</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_The_list___0___has__1__items_in_it__If_you_remove_that_list_from_your_document__those_items_will_be_deleted__Are_you_sure_you_want_to_delete_those_items_from_that_list_" xml:space="preserve">
+    <value>The list '{0}' has {1} items in it. If you remove that list from your document, those items will be deleted. Are you sure you want to delete those items from that list?</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_The_following_lists_have_items_in_them_which_will_be_deleted_when_you_remove_the_lists_from_your_document_" xml:space="preserve">
+    <value>The following lists have items in them which will be deleted when you remove the lists from your document:</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_List___0___with__1__items" xml:space="preserve">
+    <value>List '{0}' with {1} items</value>
+  </data>
+  <data name="DocumentSettingsDlg_OkDialog_Are_you_sure_you_want_to_delete_those_items_from_those_lists_" xml:space="preserve">
+    <value>Are you sure you want to delete those items from those lists?</value>
+  </data>
 </root>

@@ -30,19 +30,11 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ListDesigner));
-            this.label1 = new System.Windows.Forms.Label();
-            this.tbxListName = new System.Windows.Forms.TextBox();
+            this.bindingSourceListProperties = new System.Windows.Forms.BindingSource(this.components);
+            this.panel1 = new System.Windows.Forms.Panel();
             this.dataGridViewProperties = new System.Windows.Forms.DataGridView();
             this.colPropertyName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPropertyType = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.bindingSourceListProperties = new System.Windows.Forms.BindingSource(this.components);
-            this.comboIdProperty = new System.Windows.Forms.ComboBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.comboDisplayProperty = new System.Windows.Forms.ComboBox();
-            this.btnSave = new System.Windows.Forms.Button();
-            this.btnCancel = new System.Windows.Forms.Button();
-            this.panel1 = new System.Windows.Forms.Panel();
             this.bindingNavigator1 = new System.Windows.Forms.BindingNavigator(this.components);
             this.bindingNavigatorAddNewItem = new System.Windows.Forms.ToolStripButton();
             this.bindingNavigatorCountItem = new System.Windows.Forms.ToolStripLabel();
@@ -55,28 +47,32 @@
             this.bindingNavigatorMoveNextItem = new System.Windows.Forms.ToolStripButton();
             this.bindingNavigatorMoveLastItem = new System.Windows.Forms.ToolStripButton();
             this.bindingNavigatorSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewProperties)).BeginInit();
+            this.btnCancel = new System.Windows.Forms.Button();
+            this.btnSave = new System.Windows.Forms.Button();
+            this.comboDisplayProperty = new System.Windows.Forms.ComboBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.comboIdProperty = new System.Windows.Forms.ComboBox();
+            this.tbxListName = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceListProperties)).BeginInit();
             this.panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewProperties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator1)).BeginInit();
             this.bindingNavigator1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // label1
+            // panel1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 9);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(57, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "List Name:";
-            // 
-            // tbxListName
-            // 
-            this.tbxListName.Location = new System.Drawing.Point(75, 6);
-            this.tbxListName.Name = "tbxListName";
-            this.tbxListName.Size = new System.Drawing.Size(219, 20);
-            this.tbxListName.TabIndex = 1;
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel1.Controls.Add(this.dataGridViewProperties);
+            this.panel1.Controls.Add(this.bindingNavigator1);
+            this.panel1.Location = new System.Drawing.Point(12, 32);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(661, 229);
+            this.panel1.TabIndex = 2;
             // 
             // dataGridViewProperties
             // 
@@ -107,80 +103,6 @@
             this.colPropertyType.Name = "colPropertyType";
             this.colPropertyType.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.colPropertyType.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // comboIdProperty
-            // 
-            this.comboIdProperty.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.comboIdProperty.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboIdProperty.FormattingEnabled = true;
-            this.comboIdProperty.Location = new System.Drawing.Point(12, 280);
-            this.comboIdProperty.Name = "comboIdProperty";
-            this.comboIdProperty.Size = new System.Drawing.Size(228, 21);
-            this.comboIdProperty.TabIndex = 4;
-            // 
-            // label2
-            // 
-            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 264);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(60, 13);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "ID Property";
-            // 
-            // label3
-            // 
-            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(266, 264);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(83, 13);
-            this.label3.TabIndex = 5;
-            this.label3.Text = "Display Property";
-            // 
-            // comboDisplayProperty
-            // 
-            this.comboDisplayProperty.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.comboDisplayProperty.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboDisplayProperty.FormattingEnabled = true;
-            this.comboDisplayProperty.Location = new System.Drawing.Point(269, 280);
-            this.comboDisplayProperty.Name = "comboDisplayProperty";
-            this.comboDisplayProperty.Size = new System.Drawing.Size(197, 21);
-            this.comboDisplayProperty.TabIndex = 6;
-            // 
-            // btnSave
-            // 
-            this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSave.Location = new System.Drawing.Point(517, 280);
-            this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(75, 23);
-            this.btnSave.TabIndex = 7;
-            this.btnSave.Text = "Save";
-            this.btnSave.UseVisualStyleBackColor = true;
-            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
-            // 
-            // btnCancel
-            // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(598, 280);
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 8;
-            this.btnCancel.Text = "Cancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
-            // 
-            // panel1
-            // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel1.Controls.Add(this.dataGridViewProperties);
-            this.panel1.Controls.Add(this.bindingNavigator1);
-            this.panel1.Location = new System.Drawing.Point(12, 32);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(661, 229);
-            this.panel1.TabIndex = 2;
             // 
             // bindingNavigator1
             // 
@@ -296,6 +218,84 @@
             this.bindingNavigatorSeparator2.Name = "bindingNavigatorSeparator2";
             this.bindingNavigatorSeparator2.Size = new System.Drawing.Size(6, 25);
             // 
+            // btnCancel
+            // 
+            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Location = new System.Drawing.Point(598, 280);
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.Size = new System.Drawing.Size(75, 23);
+            this.btnCancel.TabIndex = 8;
+            this.btnCancel.Text = "Cancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            // 
+            // btnSave
+            // 
+            this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSave.Location = new System.Drawing.Point(517, 280);
+            this.btnSave.Name = "btnSave";
+            this.btnSave.Size = new System.Drawing.Size(75, 23);
+            this.btnSave.TabIndex = 7;
+            this.btnSave.Text = "Save";
+            this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
+            // 
+            // comboDisplayProperty
+            // 
+            this.comboDisplayProperty.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.comboDisplayProperty.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboDisplayProperty.FormattingEnabled = true;
+            this.comboDisplayProperty.Location = new System.Drawing.Point(269, 280);
+            this.comboDisplayProperty.Name = "comboDisplayProperty";
+            this.comboDisplayProperty.Size = new System.Drawing.Size(197, 21);
+            this.comboDisplayProperty.TabIndex = 6;
+            // 
+            // label3
+            // 
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(266, 264);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(83, 13);
+            this.label3.TabIndex = 5;
+            this.label3.Text = "Display Property";
+            // 
+            // label2
+            // 
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(12, 264);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(60, 13);
+            this.label2.TabIndex = 3;
+            this.label2.Text = "ID Property";
+            // 
+            // comboIdProperty
+            // 
+            this.comboIdProperty.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.comboIdProperty.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboIdProperty.FormattingEnabled = true;
+            this.comboIdProperty.Location = new System.Drawing.Point(12, 280);
+            this.comboIdProperty.Name = "comboIdProperty";
+            this.comboIdProperty.Size = new System.Drawing.Size(228, 21);
+            this.comboIdProperty.TabIndex = 4;
+            // 
+            // tbxListName
+            // 
+            this.tbxListName.Location = new System.Drawing.Point(75, 6);
+            this.tbxListName.Name = "tbxListName";
+            this.tbxListName.Size = new System.Drawing.Size(219, 20);
+            this.tbxListName.TabIndex = 1;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 9);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(57, 13);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "List Name:";
+            // 
             // ListDesigner
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -311,11 +311,13 @@
             this.Controls.Add(this.tbxListName);
             this.Controls.Add(this.label1);
             this.Name = "ListDesigner";
-            this.Text = "ListDesigner";
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewProperties)).EndInit();
+            this.ShowIcon = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.Text = "List Designer";
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceListProperties)).EndInit();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewProperties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator1)).EndInit();
             this.bindingNavigator1.ResumeLayout(false);
             this.bindingNavigator1.PerformLayout();
