@@ -35,6 +35,8 @@ namespace pwiz.Skyline.Model.AuditLog
     {
         none,
 
+        empty_single_arg,
+
         // Settings
         is_,
         changed_from_to,
@@ -102,7 +104,7 @@ namespace pwiz.Skyline.Model.AuditLog
         imported_assay_library,
         imported_transition_list,
         imported_spectral_library_intensities,
-        imported_doc,
+        imported_docs,
         imported_annotations,
 
         set_included_standard,
@@ -139,9 +141,95 @@ namespace pwiz.Skyline.Model.AuditLog
         imported_peptide_search,
         cleared_cell_in_document_grid,
         managed_results,
-        upgraded_background_proteome
+        upgraded_background_proteome,
+        added_new_peptide_group_from_background_proteome,
+        added_peptides_to_peptide_group_from_background_proteome,
+        imported_single_document,
+        imported_assay_library_from_file,
+        imported_transition_list_from_file,
+
+        log_error,
+        log_error_old_msg,
+        deleted_target,
+        imported_doc
     }
 
+    /// <summary>
+    /// Container for type and parameters of message. The names
+    /// are used as format arguments for the string corresponding the the message type
+    /// </summary>
+    public class MessageInfo : Immutable
+    {
+        public MessageInfo(MessageType type, params object[] names)
+        {
+            Type = type;
+            Names = ImmutableList.ValueOf(names.Select(obj => (obj == null ? string.Empty : obj.ToString())));
+        }
+
+        public LogMessage ToMessage(LogLevel logLevel)
+        {
+            return new LogMessage(logLevel, Type, string.Empty, false, Names.Select(s => (object)s).ToArray());
+        }
+
+        public MessageType Type { get; private set; }
+        public IList<string> Names { get; private set; }
+
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        private enum EL
+        {
+            type,
+            name
+        }
+
+        public static MessageInfo ReadXml(XmlReader reader)
+        {
+            var type = (MessageType)Enum.Parse(typeof(MessageType), reader.ReadElementString());
+
+            var names = new List<object>();
+            while (reader.IsStartElement(EL.name))
+                names.Add(reader.ReadElementString());
+
+            return new MessageInfo(type, names.ToArray());
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            writer.WriteElementString(EL.type, Type.ToString());
+
+            foreach (var name in Names)
+                writer.WriteElementString(EL.name, name);
+        }
+
+        protected bool Equals(MessageInfo other)
+        {
+            return Type == other.Type && ArrayUtil.EqualsDeep(Names, other.Names);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((MessageInfo) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((int) Type * 397) ^ (Names != null ? Names.GetHashCode() : 0);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Log message that gets written to the skyline document and displayed
+    /// in the audit log form. (Corresponds to a single row)
+    /// </summary>
     [XmlRoot(XML_ROOT)]
     public class LogMessage : Immutable, IXmlSerializable
     {
@@ -149,34 +237,42 @@ namespace pwiz.Skyline.Model.AuditLog
         public const string MISSING = "{2:Missing}"; // Not L10N
         public const string EMPTY = "{2:Empty}"; // Not L10N
 
-        public LogMessage(LogLevel level, MessageType type, string reason, bool expanded, params string[] names)
+        // These are referred to by index in log strings.
+        // For instance, the string "{2:Missing}" (above) would get localized by
+        // passing "Missing" into the function at index 2.
+        private static readonly Func<string, string>[] LOCALIZER_FUNCTIONS =
+        {
+            s => PropertyNames.ResourceManager.GetString(s),
+            s => PropertyElementNames.ResourceManager.GetString(s),
+            s => AuditLogStrings.ResourceManager.GetString(s),
+            LocalizeValue,
+            s => Resources.ResourceManager.GetString(s)
+        };
+
+        public LogMessage(LogLevel level, MessageInfo info, string reason, bool expanded)
         {
             Level = level;
-            Type = type;
-            Names = ImmutableList.ValueOf(names);
+            MessageInfo = info;
             Reason = reason;
             Expanded = expanded;
+            
         }
 
+        public LogMessage(LogLevel level, MessageType type, string reason, bool expanded, params object[] names) :
+            this(level, new MessageInfo(type, names), reason, expanded)
+        {
+        }
+
+        public MessageInfo MessageInfo { get; private set; }
+        public IList<string> Names { get { return MessageInfo.Names; } }
+        public MessageType Type { get { return MessageInfo.Type; } }
         public LogLevel Level { get; private set; }
-        public MessageType Type { get; private set; }
         public string Reason { get; private set; }
         public bool Expanded { get; private set; }
-        public IList<string> Names { get; private set; }
-
-        public LogMessage ChangeType(MessageType type)
-        {
-            return ChangeProp(ImClone(this), im => im.Type = type);
-        }
 
         public LogMessage ChangeReason(string reason)
         {
             return ChangeProp(ImClone(this), im => im.Reason = reason);
-        }
-
-        public LogMessage ChangeNames(IList<string> names)
-        {
-            return ChangeProp(ImClone(this), im => im.Names = names);
         }
 
         public static string Quote(string s)
@@ -189,31 +285,22 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public override string ToString()
         {
-            var names = Names.Select(s => (object) LocalizeLogStringProperties(s)).ToArray();
+            var names = Names.Select(s => (object)LocalizeLogStringProperties(s)).ToArray();
 
+            // If the string could not be found, list the names in brackets and separated by commas
             var format = AuditLogStrings.ResourceManager.GetString(Type.ToString());
-            if (string.IsNullOrEmpty(format))
-                return string.Format("<" + string.Join(", ", Enumerable.Range(0, names.Length).Select(i => "{" + i + "}")) + ">", names); // Not L10N
-
-            return string.Format(format, names);
+            return string.IsNullOrEmpty(format)
+                ? string.Format("[" + string.Join(", ", Enumerable.Range(0, names.Length).Select(i => "{" + i + "}")) + "]", names) // Not L10N
+                : string.Format(format, names);
         }
 
-        private static readonly Func<string, string>[] LOCALIZER_FUNCTIONS =
-        {
-            s => PropertyNames.ResourceManager.GetString(s),
-            s => PropertyElementNames.ResourceManager.GetString(s),
-            s => AuditLogStrings.ResourceManager.GetString(s),
-            LocalizeValue,
-            s => Resources.ResourceManager.GetString(s)
-        };
-
+        // bools, ints and doubles are localized
+        // TODO: localize enums
         private static string LocalizeValue(string s)
         {
             var result = s;
 
-            bool b;
-            int i;
-            double d;
+            bool b; int i; double d;
             if (bool.TryParse(s, out b))
                 result = b ? AuditLogStrings.LogMessage_LocalizeValue_True : AuditLogStrings.LogMessage_LocalizeValue_False;
             else if (int.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out i))
@@ -224,8 +311,12 @@ namespace pwiz.Skyline.Model.AuditLog
             return Quote(result);
         }
 
-        // Replaces all unlocalized strings (e.g {0:PropertyName}) with their
-        // corresponding localized string
+        /// <summary>
+        /// Replaces all unlocalized strings (e.g {0:PropertyName}) with their
+        /// corresponding localized string
+        /// </summary>
+        /// <param name="str">string to localize</param>
+        /// <returns>localized string</returns>
         public static string LocalizeLogStringProperties(string str)
         {
             if (string.IsNullOrEmpty(str))
@@ -269,8 +360,8 @@ namespace pwiz.Skyline.Model.AuditLog
 
         protected bool Equals(LogMessage other)
         {
-            return Type == other.Type && CollectionUtil.EqualsDeep(Names, other.Names) &&
-                   Expanded == other.Expanded;
+            return Equals(MessageInfo, other.MessageInfo) && Level == other.Level &&
+                   string.Equals(Reason, other.Reason) && Expanded == other.Expanded;
         }
 
         public override bool Equals(object obj)
@@ -285,8 +376,9 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             unchecked
             {
-                int hashCode = Type.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Names != null ? Names.GetHashCode() : 0);
+                var hashCode = (MessageInfo != null ? MessageInfo.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (int) Level;
+                hashCode = (hashCode * 397) ^ (Reason != null ? Reason.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ Expanded.GetHashCode();
                 return hashCode;
             }
@@ -303,15 +395,9 @@ namespace pwiz.Skyline.Model.AuditLog
             return null;
         }
 
-        private enum ATTR
-        {
-            type
-        }
-
         private enum EL
         {
             reason,
-            name
         }
 
         public static LogMessage Deserialize(XmlReader reader)
@@ -321,34 +407,23 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteAttribute(ATTR.type, Type);
+            MessageInfo.WriteXml(writer);
 
             if(!string.IsNullOrEmpty(Reason))
                 writer.WriteElementString(EL.reason, Reason);
-
-            foreach (var name in Names)
-                writer.WriteElementString(EL.name, name);
         }
 
         public void ReadXml(XmlReader reader)
         {
-            Type = (MessageType) Enum.Parse(typeof(MessageType), reader.GetAttribute(ATTR.type));
             reader.ReadStartElement();
 
-            var names = new List<string>();
-            
+            MessageInfo = MessageInfo.ReadXml(reader);
+
             Reason = reader.IsStartElement(EL.reason)
                 ? reader.ReadElementString()
                 : string.Empty;
 
-            while (reader.IsStartElement(EL.name))
-                names.Add(reader.ReadElementString());
-
-            Names = ImmutableList.ValueOf(names);
-
-            // Some messages have no names, so they don't have an end element
-            if (reader.NodeType == XmlNodeType.EndElement && reader.Name == XML_ROOT)
-                reader.ReadEndElement();
+            reader.ReadEndElement();
         }
         #endregion
     }

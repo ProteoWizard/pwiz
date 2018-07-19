@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public string AuditLogText
+        public override string AuditLogText
         {
             get
             {
@@ -102,8 +102,6 @@ namespace pwiz.Skyline.Model
                 return (CustomMolecule != null && !string.IsNullOrEmpty(CustomMolecule.Formula)) ? string.Format("{0} ({1})", label, CustomMolecule.Formula) : label; // Not L10N
             }
         }
-
-        public bool IsName { get { return true; } }
 
         protected override IList<DocNode> OrderedChildren(IList<DocNode> children)
         {

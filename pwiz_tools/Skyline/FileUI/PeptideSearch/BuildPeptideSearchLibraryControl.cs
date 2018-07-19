@@ -29,6 +29,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -63,10 +64,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get { return new BuildPeptideSearchLibrarySettings(this); }
         }
 
-        public class BuildPeptideSearchLibrarySettings : IAuditLogComparable
+        public class BuildPeptideSearchLibrarySettings : AuditLogFormSettings<BuildPeptideSearchLibrarySettings>
         {
             public static BuildPeptideSearchLibrarySettings DEFAULT = new BuildPeptideSearchLibrarySettings(0.0, new List<string>(), null, false,
                 false, ImportPeptideSearchDlg.Workflow.dda);
+
+            public override MessageInfo MessageInfo
+            {
+                get
+                {
+                    return new MessageInfo(MessageType.added_spectral_library,
+                        Settings.Default.SpectralLibraryList.First().Name);
+                }
+            }
+
 
             public BuildPeptideSearchLibrarySettings(BuildPeptideSearchLibraryControl control) : this(control.CutOffScore,
                 control.SearchFilenames, control.IrtStandards, control.IncludeAmbiguousMatches,

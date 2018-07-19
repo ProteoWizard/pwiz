@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.IonMobility;
@@ -57,9 +58,14 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public sealed class RefinementSettings : IAuditLogComparable
+    public sealed class RefinementSettings : AuditLogFormSettings<RefinementSettings>, IAuditLogComparable
     {
         private bool _removeDuplicatePeptides;
+
+        public override MessageInfo MessageInfo
+        {
+            get { return new MessageInfo(MessageType.refined_targets); }
+        }
 
         public struct PeptideCharge
         {

@@ -59,7 +59,7 @@ namespace pwiz.Skyline.SettingsUI
     /// from a drop-down, view and search the list of peptides, and view the
     /// spectrum for peptide selected in the list.
     /// </summary>
-    public partial class ViewLibraryDlg : AuditLogDialog<ViewLibraryDlg.ViewLibrarySettings>, IGraphContainer, ITipDisplayer
+    public partial class ViewLibraryDlg : AuditLogForm<ViewLibraryDlg.ViewLibrarySettings>, IGraphContainer, ITipDisplayer
     {
         // Used to parse the modification string in a given sequence
         private const string COLON_SEP = ": ";  // Not L10N
@@ -416,7 +416,7 @@ namespace pwiz.Skyline.SettingsUI
                         doc.Settings.UpdateDefaultModifications(false);
                         return doc;
                     }, docPair => AuditLogEntry.SettingsLogFunction(docPair)
-                        .ChangeUndoRedo(new MessageTypeNamesPair(MessageType.matched_modifications_of_library,
+                        .ChangeUndoRedo(new MessageInfo(MessageType.matched_modifications_of_library,
                             _selectedLibName)));
                 }
                 return true;
@@ -1309,7 +1309,7 @@ namespace pwiz.Skyline.SettingsUI
                                                         _peptides);
 
             var entryCreatorList = new AuditLogEntryCreatorList();
-            entryCreatorList.Add(CreateEntry);
+            entryCreatorList.Add(EntryCreator);
 
             if (!EnsureBackgroundProteome(startingDocument, pepMatcher, false, entryCreatorList))
                 return;
@@ -1358,6 +1358,8 @@ namespace pwiz.Skyline.SettingsUI
 
             string message = string.Format(Resources.ViewLibraryDlg_AddPeptide_Add_library_peptide__0__,
                                            nodePepMatched.Peptide.Target);
+
+            entryCreatorList.Add(AuditLogEntry.SettingsLogFunction);
             Program.MainWindow.ModifyDocument(message, doc =>
             {
                 var newDoc = doc;
@@ -1390,12 +1392,12 @@ namespace pwiz.Skyline.SettingsUI
             Document.Settings.UpdateDefaultModifications(true, true);
         }
 
-        public override ViewLibrarySettings DialogSettings
+        public override ViewLibrarySettings FormSettings
         {
             get { return new ViewLibrarySettings(cbAssociateProteins.Checked); }
         }
 
-        public class ViewLibrarySettings
+        public class ViewLibrarySettings : AuditLogFormSettings<ViewLibrarySettings>//, IAuditLogComparable
         {
             public ViewLibrarySettings(bool associateProteins)
             {
@@ -1404,15 +1406,16 @@ namespace pwiz.Skyline.SettingsUI
 
             [Track(defaultValues:typeof(DefaultValuesFalse))]
             public bool AssociateProteins { get; private set; }
+
+            /*public object GetDefaultObject(ObjectInfo<object> info)
+            {
+                return new ViewLibrarySettings(false);
+            }*/
         }
 
-        private AuditLogEntry CreateAddPeptideEntry(SrmDocumentPair docPair, MessageType type, AuditLogEntryCreatorList entryCreatorList, params object[] args)
+        private static AuditLogEntry CreateAddPeptideEntry(SrmDocumentPair docPair, MessageType type, AuditLogEntryCreatorList entryCreatorList, params object[] args)
         {
-            var settingsChanges = AuditLogEntry.SettingsLogFunction(docPair);
-            var entry = AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, type, args);
-            if (settingsChanges != null)
-                entry = entry.AppendAllInfo(settingsChanges.AllInfoNoUndoRedo);
-            return entry.AppendAllInfo(entryCreatorList.AllInfoMessages(docPair));
+            return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, type, args).Merge(docPair, entryCreatorList);
         }
 
         private bool EnsureBackgroundProteome(SrmDocument document, ViewLibraryPepMatching pepMatcher, bool ensureDigested, AuditLogEntryCreatorList entryCreators)
@@ -1570,7 +1573,7 @@ namespace pwiz.Skyline.SettingsUI
                                                         _peptides);
 
             var entryCreatorList = new AuditLogEntryCreatorList();
-            entryCreatorList.Add(CreateEntry);
+            entryCreatorList.Add(EntryCreator);
             if (!EnsureBackgroundProteome(startingDocument, pepMatcher, true, entryCreatorList))
                 return;
             pepMatcher.AddAllPeptidesSelectedPath = Program.MainWindow.SelectedPath;
@@ -1654,6 +1657,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // If the user chooses to continue with the operation, call AddPeptides again in case the document has changed.
             var toPath = Program.MainWindow.SelectedPath;
+            entryCreatorList.Add(AuditLogEntry.SettingsLogFunction);
             Program.MainWindow.ModifyDocument(string.Format(Resources.ViewLibraryDlg_AddAllPeptides_Add_all_peptides_from__0__library, SelectedLibraryName), 
                 doc =>
                 {
@@ -1678,7 +1682,8 @@ namespace pwiz.Skyline.SettingsUI
                     if (!_matcher.HasMatches)
                         return newDoc;
                     return newDoc.ChangeSettings(newDoc.Settings.ChangePeptideModifications(mods => modsNew));
-                }, docPair => CreateAddPeptideEntry(docPair, MessageType.added_all_peptides_from_library, entryCreatorList, pepMatcher.MatchedPeptideCount, _selectedLibName));
+                }, docPair => CreateAddPeptideEntry(docPair, MessageType.added_all_peptides_from_library, entryCreatorList,
+                    pepMatcher.MatchedPeptideCount, _selectedLibName));
 
             Program.MainWindow.SelectedPath = selectedPath;
             Document.Settings.UpdateDefaultModifications(true, true);
@@ -1742,7 +1747,6 @@ namespace pwiz.Skyline.SettingsUI
 
         // Temp variable to store a previously focused control
         private Control _focused;
-        private ViewLibrarySettings _dialogSettings;
 
         private void splitMain_MouseDown(object sender, MouseEventArgs e)
         {

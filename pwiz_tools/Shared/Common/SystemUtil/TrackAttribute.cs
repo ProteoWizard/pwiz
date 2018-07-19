@@ -37,7 +37,7 @@ namespace pwiz.Common.SystemUtil
             NewRootObject = newRootObject;
         }
 
-        public ObjectInfo(ObjectPair<ObjectGroup<T>> groupPair) : this()
+        /*public ObjectInfo(ObjectPair<ObjectGroup<T>> groupPair) : this()
         {
             GroupPair = groupPair;
         }
@@ -45,7 +45,7 @@ namespace pwiz.Common.SystemUtil
         public ObjectInfo(ObjectGroup<ObjectPair<T>> pairGroup) : this()
         {
             PairGroup = pairGroup;
-        }
+        }*/
 
         public T OldObject { get; private set; }
         public T NewObject { get; private set; }
@@ -64,7 +64,7 @@ namespace pwiz.Common.SystemUtil
             return ChangeProp(ImClone(this), im => im.NewObject = newObject);
         }
 
-        public ObjectInfo<T> ChangeOldParentObject(T oldParentObject)
+        /*public ObjectInfo<T> ChangeOldParentObject(T oldParentObject)
         {
             return ChangeProp(ImClone(this), im => im.OldParentObject = oldParentObject);
         }
@@ -72,7 +72,7 @@ namespace pwiz.Common.SystemUtil
         public ObjectInfo<T> ChangeNewParentObject(T newParentObject)
         {
             return ChangeProp(ImClone(this), im => im.NewParentObject = newParentObject);
-        }
+        }*/
 
         public ObjectInfo<T> ChangeObjectPair(ObjectPair<T> objectPair)
         {
@@ -110,7 +110,6 @@ namespace pwiz.Common.SystemUtil
         public ObjectGroup<T> OldObjectGroup
         {
             get { return ObjectGroup<T>.Create(OldObject, OldParentObject, OldRootObject); }
-            private set { OldObject = value.Object; OldParentObject = value.ParentObject; OldRootObject = value.RootObject; }
         }
 
         public ObjectGroup<T> NewObjectGroup
@@ -119,9 +118,9 @@ namespace pwiz.Common.SystemUtil
             private set { NewObject = value.Object; NewParentObject = value.ParentObject; NewRootObject = value.RootObject; }
         }
 
-        public ObjectPair<ObjectGroup<T>> GroupPair
+        /*public ObjectPair<ObjectGroup<T>> GroupPair
         {
-            get { return new ObjectPair<ObjectGroup<T>>(OldObjectGroup, NewObjectGroup); }
+            get => new ObjectPair<ObjectGroup<T>>(OldObjectGroup, NewObjectGroup);
             private set
             {
                 OldObjectGroup = value.OldObject;
@@ -131,14 +130,14 @@ namespace pwiz.Common.SystemUtil
 
         public ObjectGroup<ObjectPair<T>> PairGroup
         {
-            get { return new ObjectGroup<ObjectPair<T>>(ObjectPair, ParentObjectPair, RootObjectPair); }
+            get => new ObjectGroup<ObjectPair<T>>(ObjectPair, ParentObjectPair, RootObjectPair);
             private set
             {
                 ObjectPair = value.Object;
                 ParentObjectPair = value.ParentObject;
                 RootObjectPair = value.RootObject;
             }
-        }
+        }*/
     }
 
     public class ObjectPair<T> : Immutable
@@ -296,12 +295,9 @@ namespace pwiz.Common.SystemUtil
 
         public bool IsTab { get; protected set; }
         public bool IgnoreName { get; protected set; }
-        
         public bool IgnoreNull { get; protected set; }
         public virtual bool DiffProperties { get { return false; } }
-
         public bool IgnoreDefaultParent { get; protected set; }
-
         public Type DefaultValues { get; protected set; }
         public Type CustomLocalizer { get; protected set; }
     }

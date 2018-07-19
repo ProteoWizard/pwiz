@@ -2715,19 +2715,19 @@ namespace pwiz.Skyline
             }
         }
 
-        private List<MessageTypeNamesPair> GetMessagesForPeakBoundsChange(PropertyName name, ChangedPeakBoundsEventArgs args)
+        private List<MessageInfo> GetMessagesForPeakBoundsChange(PropertyName name, ChangedPeakBoundsEventArgs args)
         {
             // TODO: handle PeakBoundsChangeType.both separately?
             var singleTransitionDisplay = args.Transition != null;
-            var result = new List<MessageTypeNamesPair>();
+            var result = new List<MessageInfo>();
             if (args.ChangeType == PeakBoundsChangeType.start || args.ChangeType == PeakBoundsChangeType.both)
-                result.Add(new MessageTypeNamesPair(
+                result.Add(new MessageInfo(
                     singleTransitionDisplay ? MessageType.changed_peak_start : MessageType.changed_peak_start_all,
                     name, args.NameSet, args.StartTime));
 
             if (args.ChangeType == PeakBoundsChangeType.end || args.ChangeType == PeakBoundsChangeType.both)
             {
-                result.Add(new MessageTypeNamesPair(
+                result.Add(new MessageInfo(
                     singleTransitionDisplay ? MessageType.changed_peak_end : MessageType.changed_peak_end_all, name,
                     args.NameSet, args.EndTime));
             }

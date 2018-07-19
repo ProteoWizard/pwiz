@@ -18,7 +18,9 @@
  */
 
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Databinding
@@ -27,11 +29,12 @@ namespace pwiz.Skyline.Model.Databinding
     /// Generates a description string of the form "Set COLUMNNAME to 'value'", suitable for display
     /// in the undo user interface. 
     /// </summary>
-    public class EditDescription
+    public class EditDescription : Immutable
     {
-        public EditDescription(IColumnCaption columnCaption, object value)
+        public EditDescription(IColumnCaption columnCaption, ElementRef elementRef, object value)
         {
             ColumnCaption = columnCaption;
+            ElementRef = elementRef;
             Value = value;
         }
 
@@ -40,7 +43,7 @@ namespace pwiz.Skyline.Model.Databinding
         /// </summary>
         public static EditDescription SetAnnotation(AnnotationDef annotationDef, object value)
         {
-            return new EditDescription(new ConstantCaption(annotationDef.Name), value);
+            return new EditDescription(new ConstantCaption(annotationDef.Name), null, value);
         }
 
         /// <summary>
@@ -50,10 +53,17 @@ namespace pwiz.Skyline.Model.Databinding
         /// <param name="value">The new value that the user changed the property to.</param>
         public static EditDescription SetColumn(string column, object value)
         {
-            return new EditDescription(new ColumnCaption(column), value);
+            return new EditDescription(new ColumnCaption(column), null, value);
+        }
+
+        public EditDescription ChangeElementRef(ElementRef elementRef)
+        {
+            return ChangeProp(ImClone(this), im => im.ElementRef = elementRef);
         }
 
         public IColumnCaption ColumnCaption { get; private set; }
+        public ElementRef ElementRef { get; private set; }
+        public string ElementRefName { get { return ElementRef != null ? ElementRef.Name : null;} }
         public object Value { get; private set; }
 
         public string GetUndoText(DataSchemaLocalizer dataSchemaLocalizer)

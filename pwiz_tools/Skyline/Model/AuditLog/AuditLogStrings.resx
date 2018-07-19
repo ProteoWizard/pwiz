@@ -258,7 +258,7 @@
     <value>Pasted targets</value>
   </data>
   <data name="set_to_in_document_grid" xml:space="preserve">
-    <value>Set {0} to "{1}"</value>
+    <value>Set {0} of {1} to "{2}"</value>
   </data>
   <data name="pasted_document_grid" xml:space="preserve">
     <value>Pasted {0} values into document grid</value>
@@ -359,17 +359,17 @@
   <data name="removed_empty_proteins" xml:space="preserve">
     <value>Removed {0} empty proteins</value>
   </data>
-  <data name="imported_assay_library" xml:space="preserve">
+  <data name="imported_assay_library_from_file" xml:space="preserve">
     <value>Imported assay library form "{0}"</value>
   </data>
-  <data name="imported_transition_list" xml:space="preserve">
+  <data name="imported_transition_list_from_file" xml:space="preserve">
     <value>Imported transition list from "{0}"</value>
   </data>
   <data name="imported_spectral_library_intensities" xml:space="preserve">
     <value>Imported spectral library intensities</value>
   </data>
   <data name="imported_doc" xml:space="preserve">
-    <value>Imported documents from "{0}"</value>
+    <value>Imported document "{0}"</value>
   </data>
   <data name="imported_annotations" xml:space="preserve">
     <value>Imported annotations from "{0}"</value>
@@ -423,7 +423,7 @@
     <value>Drag and dropped {0} nodes to {1}</value>
   </data>
   <data name="pasted_small_molecule_transition_list" xml:space="preserve">
-    <value>Pasted small molecule transition list</value>
+    <value>Pasted {0} small molecule transitions</value>
   </data>
   <data name="applied_peak_all" xml:space="preserve">
     <value>Applied peak {0} to all</value>
@@ -477,18 +477,48 @@
     <value>Imported peptide search</value>
   </data>
   <data name="fill_down_document_grid" xml:space="preserve">
-    <value>Filled {0} values down in document grid</value>
+    <value>Filled down {0} values in document grid</value>
   </data>
   <data name="cleared_document_grid" xml:space="preserve">
     <value>Cleared {0} cells in document grid</value>
   </data>
   <data name="cleared_cell_in_document_grid" xml:space="preserve">
-    <value>Cleared {0} in document grid</value>
+    <value>Cleared {0} of {1} in document grid</value>
   </data>
   <data name="managed_results" xml:space="preserve">
     <value>Managed results</value>
   </data>
   <data name="upgraded_background_proteome" xml:space="preserve">
     <value>Upgraded background proteome "{0}"</value>
+  </data>
+  <data name="added_new_peptide_group_from_background_proteome" xml:space="preserve">
+    <value>Added peptide group {0} from background proteome in Targets window</value>
+  </data>
+  <data name="added_peptides_to_peptide_group_from_background_proteome" xml:space="preserve">
+    <value>Added peptides to peptide group {0} from background proteome in Targets window</value>
+  </data>
+  <data name="imported_single_document" xml:space="preserve">
+    <value>Imported document "{0}"</value>
+  </data>
+  <data name="imported_assay_library" xml:space="preserve">
+    <value>Imported assay library from clipboard</value>
+  </data>
+  <data name="imported_transition_list" xml:space="preserve">
+    <value>Imported transition list from clipboard</value>
+  </data>
+  <data name="log_error" xml:space="preserve">
+    <value>An exception of type {0} was thrown</value>
+  </data>
+  <data name="log_error_old_msg" xml:space="preserve">
+    <value>An exception of type {0} was thrown while performing action "{1}"</value>
+  </data>
+  <data name="empty_single_arg" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="deleted_target" xml:space="preserve">
+    <value>Deleted {0}</value>
+  </data>
+  <data name="imported_docs" xml:space="preserve">
+    <value>Imported {0} documents</value>
   </data>
 </root>

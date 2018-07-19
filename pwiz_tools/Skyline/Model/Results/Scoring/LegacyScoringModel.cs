@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     im.UsesDecoys = decoys.Count > 0;
                     im.UsesSecondBest = includeSecondBest;
                     im.Parameters = parameters.RescaleParameters(decoyTransitionGroups.Mean, decoyTransitionGroups.Stdev);
-                    im.Parameters = parameters.CalculatePercentContributions(im, targetDecoyGenerator);
+                    im.Parameters = im.Parameters.CalculatePercentContributions(im, targetDecoyGenerator);
             });
         }
 

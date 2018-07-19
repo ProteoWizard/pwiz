@@ -41,7 +41,7 @@ namespace pwiz.Skyline.EditUI
     /// Dialog box which shows the user which of their peptides match more than one protein in the database,
     /// and allows them to selectively remove peptides from the document.
     /// </summary>
-    public partial class UniquePeptidesDlg : AuditLogDialog<UniquePeptidesDlg.UniquePeptideSettings>
+    public partial class UniquePeptidesDlg : AuditLogForm<UniquePeptidesDlg.UniquePeptideSettings>
     {
         private readonly CheckBox _checkBoxPeptideIncludedColumnHeader = new CheckBox
         {
@@ -543,7 +543,7 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            Program.MainWindow.ModifyDocument(Resources.UniquePeptidesDlg_OkDialog_Exclude_peptides, ExcludePeptidesFromDocument, CreateEntry);
+            Program.MainWindow.ModifyDocument(Resources.UniquePeptidesDlg_OkDialog_Exclude_peptides, ExcludePeptidesFromDocument, EntryCreator.Create);
             Close();
         }
 
@@ -593,22 +593,20 @@ namespace pwiz.Skyline.EditUI
             public bool IsName { get { return true; } }
         }
 
-        public override UniquePeptideSettings DialogSettings
+        public override UniquePeptideSettings FormSettings
         {
             get { return new UniquePeptideSettings(this); }
         }
 
-        public override MessageTypeNamesPair MessageInfo
+        public class UniquePeptideSettings : AuditLogFormSettings<UniquePeptideSettings>
         {
-            get
-            {
-                var count = dataGridView1.Rows.OfType<DataGridViewRow>().Count(row => !(bool)row.Cells[PeptideIncludedColumn.Name].Value);
-                return new MessageTypeNamesPair(MessageType.excluded_peptides, count);
-            }
-        }
+            private readonly int _excludedCount;
 
-        public class UniquePeptideSettings
-        {
+            public override MessageInfo MessageInfo
+            {
+                get { return new MessageInfo(MessageType.excluded_peptides, _excludedCount); }
+            }
+
             public UniquePeptideSettings(UniquePeptidesDlg dlg)
             {
                 ProteinPeptideSelections = new Dictionary<int, ProteinPeptideSelection>();
@@ -627,6 +625,7 @@ namespace pwiz.Skyline.EditUI
 
                         var item = ProteinPeptideSelections[id.GlobalIndex];
                         item.Peptides.Add(PeptideTreeNode.GetLabel(rowTag.Item2, string.Empty));
+                        ++_excludedCount;
                     }
                 }
             }

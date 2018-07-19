@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using pwiz.Common.Collections;
@@ -206,6 +207,38 @@ namespace pwiz.Common.SystemUtil
             // ReSharper restore ExpressionIsAlwaysNull
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore SuspiciousTypeConversion.Global
+        }
+
+        public TIm With<TIm>(Action<TIm> set) where TIm : Immutable
+        {
+            var clone = (TIm) ImClone(this);
+            set(clone);
+            var validating = clone as IValidating;
+            if (validating != null)
+                validating.Validate();
+            return clone;
+        }
+
+        /// <summary>
+        /// Creates a clone with a single property changed
+        /// </summary>
+        /// <typeparam name="TIm">Type of the object itself</typeparam>
+        /// <param name="propertyName">Name of the property to change. Use nameof in C# 6.0</param>
+        /// <param name="propertyValue">Value to change property to</param>
+        /// <returns>The modified clone instance</returns>
+        public TIm With<TIm>(string propertyName, object propertyValue) where TIm : Immutable
+        {
+            var property = typeof(TIm).GetProperty(propertyName);
+            if (property == null || property.SetMethod == null || !property.PropertyType.IsInstanceOfType(propertyValue))
+                throw new ArgumentException(string.Format("Cannot set property \"{0}\" to object of type {1}", // Not L10N
+                    propertyName, propertyValue.GetType().FullName));
+
+            var clone = (TIm) ImClone(this);
+            property.SetMethod.Invoke(clone, new [] { propertyValue });
+            var validating = clone as IValidating;
+            if (validating != null)
+                validating.Validate();
+            return clone;
         }
     }
 }

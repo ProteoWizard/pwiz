@@ -915,13 +915,9 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public string AuditLogText
+        public override string AuditLogText
         {
             get { return TransitionTreeNode.GetLabel(this, string.Empty); }
-        }
-        public bool IsName
-        {
-            get { return true; }
         }
     }
 }

@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model
             : this(id, Annotations.EMPTY, name, description, children)
         {
         }
-
+        
         public PeptideGroupDocNode(PeptideGroup id, ProteinMetadata proteinMetadata, PeptideDocNode[] children)
             : this(id, Annotations.EMPTY, proteinMetadata, children, true)
         {
@@ -69,8 +69,7 @@ namespace pwiz.Skyline.Model
             _proteinMetadata = proteinMetadata;
         }
 
-        public bool IsName { get { return true; } }
-        public string AuditLogText { get { return Name; } }
+        public override string AuditLogText { get { return Name; } }
         public PeptideGroup PeptideGroup { get { return (PeptideGroup)Id; } }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget

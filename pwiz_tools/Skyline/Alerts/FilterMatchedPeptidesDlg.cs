@@ -27,7 +27,7 @@ using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.Skyline.Alerts
 {
-    public sealed partial class FilterMatchedPeptidesDlg : AuditLogDialog<FilterMatchedPeptidesDlg.FilterMatchedPeptidesSettings>
+    public sealed partial class FilterMatchedPeptidesDlg : AuditLogForm<FilterMatchedPeptidesDlg.FilterMatchedPeptidesSettings>
     {
         public FilterMatchedPeptidesDlg(int numWithDuplicates, int numUnmatched, int numFiltered, bool single, bool hasSmallMolecules)
         {
@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Alerts
 
         public bool HasSmallMolecules { get; set; }
 
-        public class FilterMatchedPeptidesSettings : IAuditLogComparable
+        public class FilterMatchedPeptidesSettings : AuditLogFormSettings<FilterMatchedPeptidesSettings>, IAuditLogComparable
         {
             public FilterMatchedPeptidesSettings(bool noDuplicates, bool firstOccurence, bool addToAll,
                 bool filterUnmatched, bool addUnmatched, bool doNotAddFiltered, bool keepFiltered)
@@ -230,7 +230,7 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        public override FilterMatchedPeptidesSettings DialogSettings
+        public override FilterMatchedPeptidesSettings FormSettings
         {
             get
             {

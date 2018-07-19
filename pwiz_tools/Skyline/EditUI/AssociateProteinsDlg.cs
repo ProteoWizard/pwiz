@@ -312,11 +312,11 @@ namespace pwiz.Skyline.EditUI
                 doc => CreateDocTree(_parent.Document, selectedProteins), docPair =>
                 {
                     var msgType = _isFasta ? MessageType.associated_proteins_fasta : MessageType.associated_proteins_bg;
-                    var message = new MessageTypeNamesPair(msgType, selectedProteins.Count.ToString(), Path.GetFileName(_fileName));
+                    var message = new MessageInfo(msgType, selectedProteins.Count.ToString(), Path.GetFileName(_fileName));
                     var extraText = TextUtil.LineSeparate(selectedProteins.Select(protein => protein.Key.Name));
 
                     var allInfo = selectedProteins.SelectMany(protein => protein.Value.Select(peptide =>
-                        new MessageTypeNamesPair(MessageType.associated_peptide_with_protein,
+                        new MessageInfo(MessageType.associated_peptide_with_protein,
                             PeptideTreeNode.GetLabel(peptide, string.Empty), protein.Key.Name)));
 
                     return AuditLogEntry

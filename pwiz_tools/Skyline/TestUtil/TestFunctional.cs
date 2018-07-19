@@ -912,7 +912,7 @@ namespace pwiz.SkylineTestUtil
 
         private void PauseForScreenShot(string description, int? pageNum, Type formType)
         {
-            var path = @"D:\Tutorial Logs\" + Program.TestName + ".txt";
+            var path = @"D:\Test Logs\" + Program.TestName + ".txt";
             if (pageNum.HasValue)
                 description = string.Format("page {0} - {1}", pageNum, description);
             File.AppendAllText(path, description + "\r\n");

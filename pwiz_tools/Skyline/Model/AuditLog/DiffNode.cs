@@ -27,7 +27,9 @@ namespace pwiz.Skyline.Model.AuditLog
 {
     public enum LogLevel { undo_redo, summary, all_info };
 
-    // Base class for all nodes
+    /// <summary>
+    /// Base class for all diff nodes
+    /// </summary>
     public abstract class DiffNode : Immutable
     {
         protected DiffNode(Property property, PropertyPath propertyPath, IEnumerable<DiffNode> nodes = null, bool expanded = false)
@@ -185,7 +187,9 @@ namespace pwiz.Skyline.Model.AuditLog
         }
     }
 
-    // Property change
+    /// <summary>
+    /// Property change
+    /// </summary>
     public class PropertyDiffNode : DiffNode
     {
         public PropertyDiffNode(Property property, PropertyPath propertyPath, ObjectPair<object> value, IEnumerable<DiffNode> nodes = null, bool expanded = false)
@@ -244,7 +248,9 @@ namespace pwiz.Skyline.Model.AuditLog
         }
     }
 
-    // Collection element was changed
+    /// <summary>
+    ///  Collection element was changed
+    /// </summary>
     public class ElementPropertyDiffNode : PropertyDiffNode
     {
         public ElementPropertyDiffNode(Property property, PropertyPath propertyPath, ObjectPair<object> value, object elementKey, IEnumerable<DiffNode> nodes = null, bool expanded = false)
@@ -257,7 +263,9 @@ namespace pwiz.Skyline.Model.AuditLog
         public override bool IsCollectionElement { get { return true; } }
     }
 
-    // Collection element was added or removed
+    /// <summary>
+    ///  Collection element was added or removed
+    /// </summary>
     public class ElementDiffNode : DiffNode
     {
         public ElementDiffNode(Property property, PropertyPath propertyPath, object element, object elementKey, bool removed, IEnumerable<DiffNode> nodes = null, bool expanded = false)
@@ -287,6 +295,9 @@ namespace pwiz.Skyline.Model.AuditLog
         }
     }
 
+    /// <summary>
+    /// Pair of node and name of property that changed
+    /// </summary>
     public class DiffNodeNamePair : Immutable
     {
         public DiffNodeNamePair(DiffNode node, PropertyName name, bool allowReflection)

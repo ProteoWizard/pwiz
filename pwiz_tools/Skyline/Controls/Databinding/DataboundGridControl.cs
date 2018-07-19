@@ -438,10 +438,6 @@ namespace pwiz.Skyline.Controls.Databinding
                 var row = BindingListSource[iRow];
                 for (int icol = 0; icol < propertyDescriptors.Length; icol++)
                 {
-                    var skyDocNode = (SkylineDocNode)((RowItem)row).Value;
-                    var docNode = skyDocNode.DataSchema.Document.FindNode(skyDocNode.IdentityPath);
-                    var name = AuditLogEntry.GetNodeName(skyDocNode.DataSchema.Document, docNode);
-                    Assume.IsNotNull(name);
                     var propertyDescriptor = propertyDescriptors[icol];
                     try
                     {

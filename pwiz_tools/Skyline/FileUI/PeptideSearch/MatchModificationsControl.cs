@@ -215,7 +215,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 peptideModifications = peptideModifications.AddHeavyModifications(new[] {mod});
             }
 
-            throw new NotImplementedException(); // TODO: log newly added mods
             DocumentContainer.ModifyDocumentNoUndo(doc => doc.ChangeSettings(DocumentContainer.Document.Settings.ChangePeptideSettings(
                     DocumentContainer.Document.Settings.PeptideSettings.ChangeModifications(peptideModifications))));
 

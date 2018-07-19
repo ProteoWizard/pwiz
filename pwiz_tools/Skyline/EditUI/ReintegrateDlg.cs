@@ -26,6 +26,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -35,7 +36,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class ReintegrateDlg : FormEx, IFeatureScoreProvider
+    public partial class ReintegrateDlg : AuditLogForm<ReintegrateDlg.ReintegrateDlgSettings>, IFeatureScoreProvider
     {
         /// <summary>
         /// For performance tests only: add an annotation for combined score?
@@ -153,13 +154,18 @@ namespace pwiz.Skyline.EditUI
             DialogResult = DialogResult.OK;
         }
 
-        public ReintegrateDlgSettings ReintegrateSettings
+        public override ReintegrateDlgSettings FormSettings
         {
             get { return new ReintegrateDlgSettings(this); }
         }
 
-        public class ReintegrateDlgSettings : IAuditLogComparable
+        public class ReintegrateDlgSettings : AuditLogFormSettings<ReintegrateDlgSettings>, IAuditLogComparable
         {
+            public override MessageInfo MessageInfo
+            {
+                get { return new MessageInfo(MessageType.reintegrated_peaks, PeakScoringModel.Name); }
+            }
+
             public ReintegrateDlgSettings(ReintegrateDlg dlg)
                 : this(dlg._driverPeakScoringModel.SelectedItem, dlg.ReintegrateAll, !dlg.ReintegrateAll, dlg.QValueCutoff, dlg.OverwriteManual)
             {
@@ -288,6 +294,5 @@ namespace pwiz.Skyline.EditUI
             }
             _driverPeakScoringModel.SelectedIndexChangedEvent(sender, e);
         }
-
     }
 }

@@ -336,17 +336,38 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public MassType FragmentMassType { get; private set; }
 
-        [TrackChildren]
+        
         public CollisionEnergyRegression CollisionEnergy { get; private set; }
 
         [TrackChildren]
+        public CollisionEnergyRegression NonNullCollisionEnergy
+        {
+            get { return CollisionEnergy ?? CollisionEnergyList.GetDefault(); }
+        }
+
         public DeclusteringPotentialRegression DeclusteringPotential { get; private set; }
 
         [TrackChildren]
+        public DeclusteringPotentialRegression NonNullDeclusteringPotentialRegression
+        {
+            get { return DeclusteringPotential ?? DeclusterPotentialList.GetDefault(); }
+        }
+
         public CompensationVoltageParameters CompensationVoltage { get; private set; }
 
         [TrackChildren]
+        public CompensationVoltageParameters NonNullCompensationVoltage
+        {
+            get { return CompensationVoltage ?? CompensationVoltageList.GetDefault(); }
+        }
+
         public OptimizationLibrary OptimizedLibrary { get; set; }
+
+        [TrackChildren]
+        public OptimizationLibrary NonNullOptimizedLibrary
+        {
+            get { return OptimizedLibrary ?? OptimizationLibraryList.GetDefault(); }
+        }
 
         [Track]
         public OptimizedMethodType OptimizedMethodType { get; private set; }

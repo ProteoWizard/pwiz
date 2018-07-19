@@ -19,6 +19,7 @@
 
 using System;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 
@@ -39,10 +40,9 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private string[] PropertyPathToArray(PropertyPath path)
         {
-            if (path.IsRoot)
-                return new string[0];
-            else
-                return PropertyPathToArray(path.Parent).Concat(new[] { path.Name }).ToArray();
+            return path.IsRoot
+                ? new string[0]
+                : PropertyPathToArray(path.Parent).Concat(CollectionUtil.FromSingleItem(path.Name)).ToArray();
         }
 
         protected object FindObjectByPath(string[] pathArray, int index, object obj)
@@ -71,17 +71,15 @@ namespace pwiz.Skyline.Model.AuditLog
 
             if (!Relative)
             {
-                if (objectGroup.RootObject == null)
-                    return null;
-
-                return FindObjectByPath(pathArrary, 0, objectGroup.RootObject);
+                return objectGroup.RootObject == null
+                    ? null
+                    : FindObjectByPath(pathArrary, 0, objectGroup.RootObject);
             }
             else
             {
-                if (objectGroup.ParentObject == null)
-                    return null;
-
-                return FindObjectByPath(pathArrary, 0, objectGroup.ParentObject);
+                return objectGroup.ParentObject == null
+                    ? null
+                    : FindObjectByPath(pathArrary, 0, objectGroup.ParentObject);
             }
         }
 

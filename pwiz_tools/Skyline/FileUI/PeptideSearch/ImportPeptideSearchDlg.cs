@@ -45,7 +45,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc);
     }
 
-    public sealed partial class ImportPeptideSearchDlg : FormEx, IMultipleViewProvider, IModifyDocumentContainer
+    public sealed partial class ImportPeptideSearchDlg : AuditLogForm<ImportPeptideSearchDlg.ImportPeptideSearchSettings>, IMultipleViewProvider, IModifyDocumentContainer
     {
         public enum Pages
         {
@@ -211,7 +211,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 doc => doc.ChangeSettings(newSettings));
         }*/
 
-        public ImportPeptideSearchSettings ImportSettings
+        public override ImportPeptideSearchSettings FormSettings
         {
             get
             {
@@ -224,8 +224,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        public class ImportPeptideSearchSettings : IAuditLogComparable
+        public class ImportPeptideSearchSettings : AuditLogFormSettings<ImportPeptideSearchSettings>, IAuditLogComparable
         {
+            public override MessageInfo MessageInfo
+            {
+                get { return new MessageInfo(MessageType.imported_peptide_search); }
+            }
+
             public ImportPeptideSearchSettings(
                 ImportResultsSettings importResultsSettings,
                 MatchModificationsControl.MatchModificationsSettings modificationsSettings,
@@ -305,9 +310,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public IImportResultsControl ImportResultsControl { get; private set; }
         public MatchModificationsControl MatchModificationsControl { get; private set; }
 
-        public Workflow WorkflowType { get { return BuildPepSearchLibControl.WorkflowType; } }
+        public Workflow WorkflowType
+        {
+            get { return BuildPepSearchLibControl.WorkflowType; }
+        }
 
-        private bool FastaOptional { get { return !BuildPepSearchLibControl.FilterForDocumentPeptides && Document.PeptideCount > 0; } }
+        private bool FastaOptional
+        {
+            get { return !BuildPepSearchLibControl.FilterForDocumentPeptides && Document.PeptideCount > 0; }
+        }
+
         private Pages LastPage
         {
             get
@@ -750,9 +762,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 SkylineWindow.ModifyDocument(
                     Resources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
-                    doc => SkylineWindow.ImportResults(Document, namedResults, ExportOptimize.NONE),
-                    docPair => AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.imported_peptide_search,
-                        ImportSettings));
+                    doc => SkylineWindow.ImportResults(Document, namedResults, ExportOptimize.NONE), EntryCreator.Create);
                 
                 CloseWizard(DialogResult.OK);
             }
@@ -765,13 +775,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 SkylineWindow.ModifyDocument(
                     Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library,
-                    doc => Document, docPair =>
-                    {
-                        var libName = Settings.Default.SpectralLibraryList.First().Name;
-
-                        return AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.added_spectral_library,
-                            BuildPepSearchLibControl.BuildLibrarySettings, libName);
-                    });
+                    doc => Document, BuildPepSearchLibControl.BuildLibrarySettings.EntryCreator.Create);
                 SetDocument(SkylineWindow.Document, _documents.Peek());
             }
 

@@ -19,13 +19,13 @@
 using System;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class ImportDocResultsDlg : FormEx
+    public partial class ImportDocResultsDlg : AuditLogForm<ImportDocResultsDlg.ImportDocResultsSettings>
     {
         public ImportDocResultsDlg(bool canImportResults)
         {
@@ -36,13 +36,12 @@ namespace pwiz.Skyline.Alerts
             CanImportResults = canImportResults;
         }
 
-
-        public ImportDocResultsSettings ImportSettings
+        public override ImportDocResultsSettings FormSettings
         {
             get { return new ImportDocResultsSettings(this); }
         }
 
-        public class ImportDocResultsSettings : IAuditLogComparable
+        public class ImportDocResultsSettings : AuditLogFormSettings<ImportDocResultsSettings>, IAuditLogComparable
         {
             private readonly MeasuredResults.MergeAction _action;
             private bool _mergeOverride;

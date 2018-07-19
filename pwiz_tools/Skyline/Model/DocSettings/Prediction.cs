@@ -1368,7 +1368,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// SRM experiments.
     /// </summary>
     [XmlRoot("predict_collision_energy")]
-    public sealed class CollisionEnergyRegression : OptimizableRegression
+    public sealed class CollisionEnergyRegression : OptimizableRegression, IAuditLogComparable
     {
         public const double DEFAULT_STEP_SIZE = 1.0;
         public const int DEFAULT_STEP_COUNT = 5;
@@ -1575,6 +1575,11 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return CollisionEnergyList.NONE;
+        }
     }
 
     /// <summary>
@@ -1866,7 +1871,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// be associated with it.
     /// </summary>
     [XmlRoot("predict_declustering_potential")]    
-    public sealed class DeclusteringPotentialRegression : NamedRegressionLine
+    public sealed class DeclusteringPotentialRegression : NamedRegressionLine, IAuditLogComparable
     {
         public const double DEFAULT_STEP_SIZE = 1.0;
         public const int DEFAULT_STEP_COUNT = 5;
@@ -1923,10 +1928,15 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return DeclusterPotentialList.GetDefault();
+        }
     }
 
     [XmlRoot("predict_compensation_voltage")]
-    public class CompensationVoltageParameters : OptimizableRegression
+    public class CompensationVoltageParameters : OptimizableRegression, IAuditLogComparable
     {
         public enum Tuning { none = 0, rough = 1, medium = 2, fine = 3 }
 
@@ -2137,6 +2147,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ StepCountFine.GetHashCode();
                 return result;
             }
+        }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return CompensationVoltageList.GetDefault();
         }
 
         #endregion

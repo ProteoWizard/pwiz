@@ -25,9 +25,9 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -36,7 +36,7 @@ namespace pwiz.Skyline.FileUI
     /// window for extracted chromatograms.  Sets the <see cref="ChromatogramSet.UseForRetentionTimeFilter"/>a
     /// property.
     /// </summary>
-    public partial class ChooseSchedulingReplicatesDlg : FormEx
+    public partial class ChooseSchedulingReplicatesDlg : AuditLogForm<ChooseSchedulingReplicatesSettings>
     {
         public ChooseSchedulingReplicatesDlg(SkylineWindow skylineWindow)
         {
@@ -117,7 +117,7 @@ namespace pwiz.Skyline.FileUI
                                 chromatogramSet.ChangeUseForRetentionTimeFilter(useForFilter);
                         }
                     }
-                    //throw new NotImplementedException(); // TODO: is this ok? Modifying the doc here means we either dont log here but in the other ModifyDoc
+                    // TODO: is this ok? Modifying the doc here means we either dont log here but in the other ModifyDoc
                     // TODO: or we create an entry here, which means choosing scheduling replicates is considered a separate action from importing results
                     SchedulingReplicates = new ChooseSchedulingReplicatesSettings(replicateNames);
                     document = document.ChangeMeasuredResults(measuredResults.ChangeChromatograms(chromatogramSets));
@@ -220,9 +220,14 @@ namespace pwiz.Skyline.FileUI
             btnOk_Click(btnOk, new EventArgs());
         }
         #endregion
+
+        public override ChooseSchedulingReplicatesSettings FormSettings
+        {
+            get { return SchedulingReplicates; }
+        }
     }
 
-    public class ChooseSchedulingReplicatesSettings
+    public class ChooseSchedulingReplicatesSettings : AuditLogFormSettings<ChooseSchedulingReplicatesSettings>
     {
         public ChooseSchedulingReplicatesSettings(List<string> replicateNames)
         {

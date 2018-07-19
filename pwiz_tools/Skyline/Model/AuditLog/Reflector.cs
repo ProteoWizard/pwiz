@@ -60,26 +60,41 @@ namespace pwiz.Skyline.Model.AuditLog
             return new[] { typeof(T) }.Concat(typeof(T).GetInterfaces()).SelectMany(t => t.GetProperties());
         }
 
+        /// <summary>
+        /// Gets all properties of the current type that are diffed
+        /// </summary>
         public static IList<Property> Properties
         {
             get { return ImmutableList<Property>.ValueOf(_properties); }
         }
 
-        public static DiffTree BuildDiffTree(ObjectInfo<object> objectInfo, Property thisProperty, DateTime? timeStamp)
+        /// <summary>
+        /// Diffs the <see cref="ObjectInfo&lt;T&gt;.ObjectPair"/> contained in the given objectinfo 
+        /// </summary>
+        /// <param name="objectInfo">The set of objects to compare</param>
+        /// <param name="rootProperty">The property of the initial <see cref="ObjectInfo&lt;T&gt;.ObjectPair"/></param>
+        /// <param name="timeStamp">Time at which the tree was created (usually DateTime.Now)</param>
+        /// <returns>Tree representing all differences found</returns>
+        public static DiffTree BuildDiffTree(ObjectInfo<object> objectInfo, Property rootProperty, DateTime? timeStamp)
         {
-            return new DiffTree(BuildDiffTree(objectInfo, thisProperty), timeStamp ?? DateTime.Now);
+            return new DiffTree(
+                BuildDiffTree(objectInfo, rootProperty, PropertyPath.Root.Property(rootProperty.PropertyName), null),
+                timeStamp ?? DateTime.Now);
         }
 
-        public static DiffNode BuildDiffTree(ObjectInfo<object> objectInfo, Property thisProperty)
-        {
-            return BuildDiffTree(objectInfo, thisProperty, PropertyPath.Root.Property(thisProperty.PropertyName), null);
-        }
-
-        public static DiffTree BuildDiffTree(ObjectPair<object> rootPair, Property thisProperty, T obj, DateTime? timeStamp = null)
+        /// <summary>
+        /// Creates an expanded diff tree for the given object
+        /// </summary>
+        /// <param name="rootPair">The root objects for the object</param>
+        /// <param name="rootProperty">The property of the initial object</param>
+        /// <param name="obj">The object to diff</param>
+        /// <param name="timeStamp">Time at which the tree was created (usually DateTime.Now)</param>
+        /// <returns></returns>
+        public static DiffTree BuildDiffTree(ObjectPair<object> rootPair, Property rootProperty, T obj, DateTime? timeStamp = null)
         {
             var objInfo = new ObjectInfo<object>(null, obj, null, null, rootPair.OldObject, rootPair.NewObject);
 
-            return new DiffTree(BuildDiffTree(objInfo, thisProperty, PropertyPath.Root.Property(thisProperty.PropertyName), null, true),
+            return new DiffTree(BuildDiffTree(objInfo, rootProperty, PropertyPath.Root.Property(rootProperty.PropertyName), null, true),
                 timeStamp ?? DateTime.Now);
         }
 
@@ -92,7 +107,6 @@ namespace pwiz.Skyline.Model.AuditLog
                 ? new ElementPropertyDiffNode(thisProperty, propertyPath, objectInfo.ObjectPair, elementKey, null, expand)
                 : new PropertyDiffNode(thisProperty, propertyPath, objectInfo.ObjectPair, null, expand);
 
-
             var expandAnyways = false;
             var auditObjPair = objectInfo.ObjectPair.Transform(AuditLogObject.GetAuditLogObject);
             var nameChanged = auditObjPair.OldObject.IsName && auditObjPair.NewObject.IsName &&
@@ -100,7 +114,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             if (ReferenceEquals(objectInfo.OldObject, null) && !ReferenceEquals(objectInfo.NewObject, null) &&
                 auditObjPair.NewObject.IsName || nameChanged &&
-                !typeof(DocNode).IsAssignableFrom(thisProperty.GetPropertyType(objectInfo.ObjectPair))) // DocNode name changes are actually displayed, since we match DocNodes by their global index
+                !typeof(IIdentiyContainer).IsAssignableFrom(thisProperty.GetPropertyType(objectInfo.ObjectPair))) // IIdentiyContainer name changes are actually displayed, since we match IIdentiyContainers by their global indices
             {
                 if (!thisProperty.IsRoot)
                 {
@@ -113,15 +127,14 @@ namespace pwiz.Skyline.Model.AuditLog
 
             defaults = defaults ?? new List<object>();
             if (expand && Reflector.ProcessDefaults(objectInfo, thisProperty, ref defaults))
-                return null;
+            {
+                return expandAnyways ? resultNode : null; // Don't expand if we changed to a default object
+            }
 
             // We only compare sub properties if both objects are non null, unless we're expanding
             // and only the old object is null
             if (ReferenceEquals(objectInfo.OldObject, null) && !expand || ReferenceEquals(objectInfo.NewObject, null))
-            {
                 return resultNode;
-            }
-                
 
             // Deal with Collections
             var collection = Reflector.GetCollectionInfo(thisProperty.GetPropertyType(objectInfo.ObjectPair),
@@ -129,7 +142,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             if (collection != null)
             {
-                var result = Reflector.CompareCollections(objectInfo.ChangeObjectPair(collection.Collections), collection,
+                var result = Reflector.DiffCollections(objectInfo.ChangeObjectPair(collection.Collections), collection,
                     thisProperty, propertyPath, expand, defaults);
 
                 if (result != null && resultNode.IsFirstExpansionNode)
@@ -141,7 +154,7 @@ namespace pwiz.Skyline.Model.AuditLog
             // Properties that should directly be checked for equality -- stop recursion
             if (!thisProperty.DiffProperties)
             {
-                // Properties that are not DiffParent's and not collections are simply compared
+                // Properties that are not TrackParents and not collections are simply compared
                 // Also make sure that new val doesn't equal any of the default objects
                 if ((!objectInfo.ObjectPair.Equals() || expand) &&
                         (!expand || thisProperty.IgnoreDefaultParent || !defaults.Any(d => Equals(d, objectInfo.ObjectPair.NewObject))))
@@ -179,8 +192,10 @@ namespace pwiz.Skyline.Model.AuditLog
             return resultNode;
         }
 
-        // Compares two objects based on their properties which are marked with Diff attributes
-        // Structurally similar to BuildDiffTree, but no nodes are created, it simply checks for equality
+        /// <summary>
+        /// Compares two objects based on their properties which are marked with Diff attributes
+        /// Structurally similar to BuildDiffTree, but no nodes are created, it simply checks for equality
+        /// </summary>
         public static bool Equals(ObjectPair<T> objectPair)
         {
             if (objectPair.ReferenceEquals())
@@ -230,7 +245,9 @@ namespace pwiz.Skyline.Model.AuditLog
                             return false;
                     }
                     else if (!Reflector.Equals(valType, pair))
+                    {
                         return false;
+                    }                      
                 }
             }
 
@@ -264,13 +281,14 @@ namespace pwiz.Skyline.Model.AuditLog
                     return true;
             }
 
-            // TODO: warning this will exlude DefaultValues.Values and their children if IgnoreDefaultParent is true. Intended?
             return !property.IgnoreDefaultParent && defaults.Any(d => ReferenceEquals(d, objectInfo.NewObject));
         }
 
-        // Determines whether two IAuditLogObjects (most likely from two different
-        // collections) match, meaning either their name or global index are the same
-        public static bool Matches(Type type, ObjectPair<IAuditLogObject> element, bool diffProperties)
+        /// <summary>
+        /// Determines whether two IAuditLogObjects (most likely from two different
+        /// collections) match, meaning either their name or global index are the same
+        /// </summary>
+        private static bool Matches(Type type, ObjectPair<IAuditLogObject> element, bool diffProperties)
         {
             if (element.ReferenceEquals())
                 return true;
@@ -307,7 +325,7 @@ namespace pwiz.Skyline.Model.AuditLog
             }
         }
 
-        public static DiffNode CompareCollections(ObjectInfo<object> objectInfo, Collection collection, Property property,
+        private static DiffNode DiffCollections(ObjectInfo<object> objectInfo, Collection collection, Property property,
             PropertyPath propertyPath, bool expand, IList<object> defaults,
             Func<Type, ObjectInfo<object>, Property, PropertyPath, object, bool, IList<object>, DiffNode> func)
         {
@@ -346,9 +364,9 @@ namespace pwiz.Skyline.Model.AuditLog
                         var valuePair = ObjectPair.Create(collection.Info.GetItemValueFromKey(defaultCollection, key),
                             collection.Info.GetItemValueFromKey(collection.Collections.NewObject, key));
 
-                        if (property.DiffProperties)
-                            return Equals(property.GetPropertyType(valuePair.NewObject), valuePair);
-                        return Equals(collection.Info.ElementValueType, valuePair);
+                        return property.DiffProperties
+                            ? Equals(collection.Info.ElementValueType, valuePair)
+                            : valuePair.Equals();
                     });
                 });
 
@@ -358,9 +376,12 @@ namespace pwiz.Skyline.Model.AuditLog
                 oldKeys = new object[0];
             }
 
+            // We can't go deeper into collection defaults
+            if(defaults.Count > 0)
+                defaults = null;
+
             var newElemObjs = newKeys
                 .Select(k => AuditLogObject.GetAuditLogObject(collection.Info.GetItemValueFromKey(collection.Collections.NewObject, k))).ToList();
-
 
             // Collection is now the parent
             objectInfo = objectInfo.ChangeParentPair(objectInfo.ObjectPair);
@@ -423,7 +444,17 @@ namespace pwiz.Skyline.Model.AuditLog
             return resultNode;
         }
 
-        public static DiffNode CompareCollections(ObjectInfo<object> objectInfo, Collection collection, Property property,
+        /// <summary>
+        /// Diffs two collections
+        /// </summary>
+        /// <param name="objectInfo">The collection objects</param>
+        /// <param name="collection">Collection object to retrieve elements from collection</param>
+        /// <param name="property">The property of the collection</param>
+        /// <param name="propertyPath">The path to the collectins property</param>
+        /// <param name="expand">Whether to expand subproperties</param>
+        /// <param name="defaults">Default collections</param>
+        /// <returns>A node representing the differences found in the collections</returns>
+        public static DiffNode DiffCollections(ObjectInfo<object> objectInfo, Collection collection, Property property,
             PropertyPath propertyPath, bool expand, IList<object> defaults)
         {
             if (objectInfo.ObjectPair.ReferenceEquals() && !expand)
@@ -433,7 +464,7 @@ namespace pwiz.Skyline.Model.AuditLog
             {
                 // Here we just want to diff the collection elements and dont recurse further,
                 // so the callback simply checks for equality
-                return CompareCollections(objectInfo, collection, property, propertyPath,
+                return DiffCollections(objectInfo, collection, property, propertyPath,
                     expand, defaults,
                     (type, objInfo, prop, propPath, key, exp, def) =>
                     {
@@ -449,13 +480,15 @@ namespace pwiz.Skyline.Model.AuditLog
             else
             {
                 // Since the collection is DiffParent, we have to go into the elements and compare their properties
-                return CompareCollections(objectInfo, collection, property, propertyPath,
+                return DiffCollections(objectInfo, collection, property, propertyPath,
                     expand, defaults, BuildDiffTree);
             }
         }
 
-        // Checks whether two collections are exactly equal, meaning all elements are the same and at the same
-        // indices/keys.
+        /// <summary>
+        /// Checks whether two collections are exactly equal, meaning all elements are the same and at the same
+        /// indices/keys.
+        /// </summary>
         public static bool CollectionEquals(Collection collection, Func<Type, ObjectPair<object>, bool> func)
         {
             var oldKeys = collection.Info.GetKeys(collection.Collections.OldObject).OfType<object>().ToArray();
@@ -556,19 +589,6 @@ namespace pwiz.Skyline.Model.AuditLog
             return (IList<Property>) property.GetValue(reflector);
         }
 
-        public static DiffTree BuildDiffTree(Type objectType, ObjectInfo<object> objectInfo, Property thisProperty, DateTime? timeStamp)
-        {
-            var type = typeof(Reflector<>).MakeGenericType(objectType);
-            var buildDiffTree = type.GetMethod("BuildDiffTree", BindingFlags.Public | BindingFlags.Static, null, // Not L10N
-                new[] { typeof(ObjectInfo<object>), typeof(Property), typeof(DateTime?) }, null);
-
-            Assume.IsNotNull(buildDiffTree); 
-
-            var reflector = Activator.CreateInstance(type);
-
-            return (DiffTree)buildDiffTree.Invoke(reflector, new object[] { objectInfo, thisProperty, timeStamp });
-        }
-
         public static DiffNode BuildDiffTree(Type objectType, ObjectInfo<object> objectInfo, Property thisProperty, PropertyPath propertyPath, object elementKey, bool expand, IList<object> defaults)
         {
             var type = typeof(Reflector<>).MakeGenericType(objectType);
@@ -586,19 +606,6 @@ namespace pwiz.Skyline.Model.AuditLog
             var reflector = Activator.CreateInstance(type);
 
             return (DiffNode)buildDiffTree.Invoke(reflector, new[] { objectInfo, thisProperty, propertyPath, elementKey, expand, defaults });
-        }
-
-        public static DiffTree BuildDiffTree(Type objectType, ObjectPair<object> rootPair, Property thisProperty, IAuditLogComparable comparable, DateTime? timeStamp = null)
-        {
-            var type = typeof(Reflector<>).MakeGenericType(objectType);
-            var buildDiffTree = type.GetMethod("BuildDiffTree", BindingFlags.Public | BindingFlags.Static, null, // Not L10N
-                new[] { typeof(ObjectPair<object>), typeof(Property), typeof(IAuditLogComparable), typeof(DateTime?) }, null);
-
-            Assume.IsNotNull(buildDiffTree);
-
-            var reflector = Activator.CreateInstance(type);
-
-            return (DiffTree)buildDiffTree.Invoke(reflector, new object[] { rootPair, thisProperty, comparable, timeStamp });
         }
 
         public static bool Equals(Type objectType, ObjectPair<object> objPair)

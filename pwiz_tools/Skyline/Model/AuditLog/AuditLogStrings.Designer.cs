@@ -115,6 +115,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Added peptide group {0} from background proteome in Targets window.
+        /// </summary>
+        public static string added_new_peptide_group_from_background_proteome {
+            get {
+                return ResourceManager.GetString("added_new_peptide_group_from_background_proteome", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Added {0} peptide decoys using {1} method.
         /// </summary>
         public static string added_peptide_decoys {
@@ -138,6 +147,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string added_peptides_to_peptide_group {
             get {
                 return ResourceManager.GetString("added_peptides_to_peptide_group", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added peptides to peptide group {0} from background proteome in Targets window.
+        /// </summary>
+        public static string added_peptides_to_peptide_group_from_background_proteome {
+            get {
+                return ResourceManager.GetString("added_peptides_to_peptide_group_from_background_proteome", resourceCulture);
             }
         }
         
@@ -403,7 +421,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cleared {0} in document grid.
+        ///   Looks up a localized string similar to Cleared {0} of {1} in document grid.
         /// </summary>
         public static string cleared_cell_in_document_grid {
             get {
@@ -435,6 +453,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string Default {
             get {
                 return ResourceManager.GetString("Default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deleted {0}.
+        /// </summary>
+        public static string deleted_target {
+            get {
+                return ResourceManager.GetString("deleted_target", resourceCulture);
             }
         }
         
@@ -475,6 +502,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}.
+        /// </summary>
+        public static string empty_single_arg {
+            get {
+                return ResourceManager.GetString("empty_single_arg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Excluded {0} peptides (Unique Peptides...).
         /// </summary>
         public static string excluded_peptides {
@@ -502,7 +538,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Filled {0} values down in document grid.
+        ///   Looks up a localized string similar to Filled down {0} values in document grid.
         /// </summary>
         public static string fill_down_document_grid {
             get {
@@ -520,7 +556,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Imported assay library form &quot;{0}&quot;.
+        ///   Looks up a localized string similar to Imported assay library from clipboard.
         /// </summary>
         public static string imported_assay_library {
             get {
@@ -529,11 +565,29 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Imported documents from &quot;{0}&quot;.
+        ///   Looks up a localized string similar to Imported assay library form &quot;{0}&quot;.
+        /// </summary>
+        public static string imported_assay_library_from_file {
+            get {
+                return ResourceManager.GetString("imported_assay_library_from_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported document &quot;{0}&quot;.
         /// </summary>
         public static string imported_doc {
             get {
                 return ResourceManager.GetString("imported_doc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported {0} documents.
+        /// </summary>
+        public static string imported_docs {
+            get {
+                return ResourceManager.GetString("imported_docs", resourceCulture);
             }
         }
         
@@ -574,6 +628,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Imported document &quot;{0}&quot;.
+        /// </summary>
+        public static string imported_single_document {
+            get {
+                return ResourceManager.GetString("imported_single_document", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Imported spectral library intensities.
         /// </summary>
         public static string imported_spectral_library_intensities {
@@ -583,11 +646,20 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Imported transition list from &quot;{0}&quot;.
+        ///   Looks up a localized string similar to Imported transition list from clipboard.
         /// </summary>
         public static string imported_transition_list {
             get {
                 return ResourceManager.GetString("imported_transition_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Imported transition list from &quot;{0}&quot;.
+        /// </summary>
+        public static string imported_transition_list_from_file {
+            get {
+                return ResourceManager.GetString("imported_transition_list_from_file", resourceCulture);
             }
         }
         
@@ -682,6 +754,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An exception of type {0} was thrown.
+        /// </summary>
+        public static string log_error {
+            get {
+                return ResourceManager.GetString("log_error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An exception of type {0} was thrown while performing action &quot;{1}&quot;.
+        /// </summary>
+        public static string log_error_old_msg {
+            get {
+                return ResourceManager.GetString("log_error_old_msg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} unlogged changes.
         /// </summary>
         public static string log_unlogged_changes {
@@ -763,7 +853,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pasted small molecule transition list.
+        ///   Looks up a localized string similar to Pasted {0} small molecule transitions.
         /// </summary>
         public static string pasted_small_molecule_transition_list {
             get {
@@ -1060,7 +1150,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Set {0} to &quot;{1}&quot;.
+        ///   Looks up a localized string similar to Set {0} of {1} to &quot;{2}&quot;.
         /// </summary>
         public static string set_to_in_document_grid {
             get {

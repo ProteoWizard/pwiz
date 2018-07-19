@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -41,6 +42,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                 Enumerable.Range(0, entry.AllInfo.Count).Select(i => new AuditLogDetailRow(this, i)));
         }
 
+        [Browsable(false)]
         public AuditLogEntry Entry
         {
             get { return _entry; }
@@ -104,16 +106,16 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             }
             set
             {
-                var newEntry = _entry.ChangeReason(value);
+                var newEntry = Entry.ChangeReason(value);
                 ModifyDocument(EditDescription.SetColumn("Reason", // Not L10N
-                        value), d => ChangeEntry(d, newEntry));
+                        value).ChangeElementRef(null), d => ChangeEntry(d, newEntry));
             }
         }
 
         public SrmDocument ChangeEntry(SrmDocument document, AuditLogEntry auditLogEntry)
         {
             var copy = new List<AuditLogEntry>(document.AuditLog.AuditLogEntries);
-            var index = copy.FindIndex(e => ReferenceEquals(e, _entry));
+            var index = copy.FindIndex(e => ReferenceEquals(e, Entry));
             if (index >= 0)
             {
                 copy[index] = auditLogEntry;

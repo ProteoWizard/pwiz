@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model
     /// the <see cref="Id"/> properties of the parents to aid in node lookup
     /// in the document tree.
     /// </summary>
-    public abstract class DocNode : Immutable, IIdentiyContainer
+    public abstract class DocNode : Immutable, IIdentiyContainer, IAuditLogObject
     {
         protected DocNode(Identity id)
             : this(id, Annotations.EMPTY)
@@ -322,6 +322,16 @@ namespace pwiz.Skyline.Model
                 result = true;
             }
             return result;
+        }
+
+        public virtual string AuditLogText
+        {
+            get { return null; }
+        }
+
+        public bool IsName
+        {
+            get { return true; }
         }
     }
 

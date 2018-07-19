@@ -2963,11 +2963,9 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public string AuditLogText
+        public override string AuditLogText
         {
             get { return TransitionGroupTreeNode.GetLabel(TransitionGroup, PrecursorMz, string.Empty); }
         }
-
-        public bool IsName { get { return true; } }
     }
 }

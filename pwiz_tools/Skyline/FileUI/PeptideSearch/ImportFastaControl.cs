@@ -294,8 +294,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 var digest = new DigestSettings(missedCleavages, peptideSettings.DigestSettings.ExcludeRaggedEnds);
                 peptideSettings = peptideSettings.ChangeDigestSettings(digest).ChangeEnzyme(enzyme);
-                DocumentContainer.ModifyDocument(string.Format(Resources.ImportFastaControl_ImportFasta_Change_digestion_settings), doc =>
-                    doc.ChangeSettings(settings.ChangePeptideSettings(peptideSettings)), AuditLogEntry.SettingsLogFunction);
+                DocumentContainer.ModifyDocumentNoUndo(doc =>
+                    doc.ChangeSettings(settings.ChangePeptideSettings(peptideSettings)));
             }
 
             if (!string.IsNullOrEmpty(DecoyGenerationMethod))

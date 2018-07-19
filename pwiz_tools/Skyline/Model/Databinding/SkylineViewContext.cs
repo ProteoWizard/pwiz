@@ -848,15 +848,17 @@ namespace pwiz.Skyline.Model.Databinding
             var skylineWindow = ((SkylineDataSchema)DataSchema).SkylineWindow;
             if (null != skylineWindow)
             {
+                List<IdentityPath> deletedNodePaths = null;
                 skylineWindow.ModifyDocument(Resources.SkylineViewContext_DeleteDocNodes_Delete_items,
-                    doc => DeleteNodes(doc, identityPaths),
-                    docPair => SkylineWindow.DiffDocNodes(MessageType.deleted_targets, docPair, identityPaths.Count));
+                    doc => DeleteNodes(doc, identityPaths, out deletedNodePaths),
+                    docPair => SkylineWindow.CreateDeleteNodesEntry(docPair,
+                        deletedNodePaths.Select(i => docPair.OldDoc.FindNode(i).AuditLogText), deletedNodePaths.Count));
             }
         }
 
-        protected SrmDocument DeleteNodes(SrmDocument document, HashSet<IdentityPath> identityPathsToDelete)
+        protected SrmDocument DeleteNodes(SrmDocument document, HashSet<IdentityPath> identityPathsToDelete, out List<IdentityPath> deletedPaths)
         {
-            var newDocument = (SrmDocument) DeleteChildren(document, IdentityPath.ROOT, identityPathsToDelete);
+            var newDocument = (SrmDocument)DeleteChildren(document, IdentityPath.ROOT, identityPathsToDelete, out deletedPaths);
             if (newDocument != null)
             {
                 return newDocument;
@@ -864,8 +866,9 @@ namespace pwiz.Skyline.Model.Databinding
             return (SrmDocument) document.ChangeChildren(new DocNode[0]);
         }
 
-        protected DocNode DeleteChildren(DocNode parent, IdentityPath identityPath, HashSet<IdentityPath> pathsToDelete)
+        protected DocNode DeleteChildren(DocNode parent, IdentityPath identityPath, HashSet<IdentityPath> pathsToDelete, out List<IdentityPath> deletedPaths)
         {
+            deletedPaths = new List<IdentityPath>();
             var docNodeParent = parent as DocNodeParent;
             if (docNodeParent == null)
             {
@@ -881,16 +884,20 @@ namespace pwiz.Skyline.Model.Databinding
                 var childPath = new IdentityPath(identityPath, child.Id);
                 if (pathsToDelete.Contains(childPath))
                 {
+                    deletedPaths.Add(childPath);
                     continue;
                 }
-                var newChild = DeleteChildren(child, childPath, pathsToDelete);
+
+                List<IdentityPath> deletedChildPaths;
+                var newChild = DeleteChildren(child, childPath, pathsToDelete, out deletedChildPaths);
                 if (newChild != null)
-                {
-                    newChildren.Add(newChild);
-                }
+                    newChildren.Add(newChild); 
+                deletedPaths.AddRange(deletedChildPaths);
             }
             if (newChildren.Count == 0)
             {
+                deletedPaths.Clear();
+                deletedPaths.Add(identityPath);
                 return null;
             }
             return docNodeParent.ChangeChildren(newChildren);

@@ -520,7 +520,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                             ? MessageType.set_included_standard
                             : MessageType.set_excluded_standard;
                         return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                            new MessageTypeNamesPair(msgType, PeptideTreeNode.GetLabel(peptideDocNode, string.Empty), chromatogramSet.Name));
+                            new MessageInfo(msgType, PeptideTreeNode.GetLabel(peptideDocNode, string.Empty), chromatogramSet.Name));
                     });
             });
             return menuItem;

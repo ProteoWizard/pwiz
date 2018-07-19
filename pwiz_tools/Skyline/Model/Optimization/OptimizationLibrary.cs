@@ -30,7 +30,7 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Model.Optimization
 {
     [XmlRoot("optimized_library")]
-    public class OptimizationLibrary : XmlNamedElement
+    public class OptimizationLibrary : XmlNamedElement, IAuditLogComparable
     {
         public static readonly OptimizationLibrary NONE = new OptimizationLibrary("None", string.Empty); // Not L10N
 
@@ -236,6 +236,11 @@ namespace pwiz.Skyline.Model.Optimization
                 result = (result*397) ^ (_database != null ? _database.GetHashCode() : 0);
                 return result;
             }
+        }
+
+        public object GetDefaultObject(ObjectInfo<object> info)
+        {
+            return OptimizationLibraryList.GetDefault();
         }
 
         #endregion

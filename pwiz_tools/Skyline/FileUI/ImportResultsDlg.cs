@@ -27,6 +27,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -35,7 +36,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ImportResultsDlg : FormEx
+    public partial class ImportResultsDlg : AuditLogForm<ImportResultsDlg.ImportResultsSettings>
     {
         public const int MIN_COMMON_PREFIX_LENGTH = 3;
 
@@ -651,15 +652,19 @@ namespace pwiz.Skyline.FileUI
             set { comboSimultaneousFiles.SelectedIndex = value;}
         }
 
-        public class ImportResultsSettings : IAuditLogComparable
+        public class ImportResultsSettings : AuditLogFormSettings<ImportResultsSettings>, IAuditLogComparable
         {
+            public override MessageInfo MessageInfo
+            {
+                get { return new MessageInfo(MessageType.imported_results, FileNames.Count); }
+            }
+
             public static ImportResultsSettings EMPTY = new ImportResultsSettings(null, false, false, false, string.Empty, false, ExportOptimize.NONE,
-                MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time, false, false, null, null);
+                MultiFileLoader.ImportResultsSimultaneousFileOptions.one_at_a_time, null, null);
 
             public ImportResultsSettings(List<string> fileNames, bool singleInjectionReplicates, bool multiInjectionReplicates,
                 bool addNewReplicate, string replicateName, bool addToExistingReplicate, string optimization,
-                MultiFileLoader.ImportResultsSimultaneousFileOptions fileImportOption,
-                bool showChromatogramsDuringImport, bool retryAfterImportFailure, string prefix, string suffix)
+                MultiFileLoader.ImportResultsSimultaneousFileOptions fileImportOption, string prefix, string suffix)
             {
                 FileNames = fileNames;
                 SingleInjectionReplicates = singleInjectionReplicates;
@@ -669,8 +674,6 @@ namespace pwiz.Skyline.FileUI
                 AddToExistingReplicate = addToExistingReplicate;
                 Optimization = optimization;
                 FileImportOption = fileImportOption;
-                ShowChromatogramsDuringImport = showChromatogramsDuringImport;
-                RetryAfterImportFailure = retryAfterImportFailure;
                 Prefix = prefix;
                 Suffix = suffix;
             }
@@ -691,10 +694,6 @@ namespace pwiz.Skyline.FileUI
             public string Optimization { get; private set; }
             [Track(ignoreDefaultParent:true)]
             public MultiFileLoader.ImportResultsSimultaneousFileOptions FileImportOption { get; private set; }
-            [Track(ignoreDefaultParent: true)]
-            public bool ShowChromatogramsDuringImport { get; private set; }
-            [Track(ignoreDefaultParent: true)]
-            public bool RetryAfterImportFailure { get; private set; }
             [Track]
             public string Prefix { get; private set; }
             [Track]
@@ -706,14 +705,14 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        public ImportResultsSettings ImportSettings
+        public override ImportResultsSettings FormSettings
         {
             get
             {
                 return new ImportResultsSettings(NamedPathSets.SelectMany(pair => pair.Value.Select(fileUri => fileUri.GetFileName())).ToList(), radioCreateMultiple.Checked, radioCreateMultipleMulti.Checked,
                     radioCreateNew.Checked, ReplicateName, radioAddExisting.Checked, OptimizationName,
                     (MultiFileLoader.ImportResultsSimultaneousFileOptions) ImportSimultaneousIndex,
-                    cbShowAllChromatograms.Checked, cbAutoRetry.Checked, Prefix, Suffix);
+                    Prefix, Suffix);
             }
         }
 

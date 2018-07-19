@@ -1473,7 +1473,7 @@ namespace pwiz.Skyline
                             Resources.SkylineWindow_ShowReintegrateDialog_Unexpected_document_change_during_operation_);
 
                     return dlg.Document;
-                }, docPair => AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.reintegrated_peaks, dlg.ReintegrateSettings, dlg.ReintegrateSettings.PeakScoringModel.Name));
+                }, dlg.EntryCreator.Create);
             }
         }
 
@@ -1560,7 +1560,7 @@ namespace pwiz.Skyline
             }         
         }
 
-        private string InsertMessagePairIfNonEmpty<T>(PeakBoundaryImporter importer, List<MessageTypeNamesPair> messagePairs, MessageType type, string extraInfoString,
+        private string InsertMessagePairIfNonEmpty<T>(PeakBoundaryImporter importer, List<MessageInfo> messagePairs, MessageType type, string extraInfoString,
             HashSet<T> items)
         {
             var result = string.Empty;
@@ -1568,7 +1568,7 @@ namespace pwiz.Skyline
             {
                 result += string.Format("{0}:\r\n{1}", extraInfoString, // Not L10N
                                  string.Join(",\r\n", items.Select(item => item.ToString()))) + "\r\n"; // Not L10N
-                messagePairs.Add(new MessageTypeNamesPair(type, items.Count.ToString()));
+                messagePairs.Add(new MessageInfo(type, items.Count.ToString()));
             }
 
             return result;
@@ -1604,9 +1604,9 @@ namespace pwiz.Skyline
                 return docNew;
             }, docPair =>
             {
-                var allInfo = new List<MessageTypeNamesPair>
+                var allInfo = new List<MessageInfo>
                 {
-                    new MessageTypeNamesPair(MessageType.imported_peak_boundaries,
+                    new MessageInfo(MessageType.imported_peak_boundaries,
                         fileName)
                 };
 
@@ -1622,7 +1622,7 @@ namespace pwiz.Skyline
                     peakBoundaryImporter.UnrecognizedChargeStates);
 
                 var entry = AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                    new MessageTypeNamesPair(MessageType.imported_peak_boundaries, Path.GetFileName(fileName)), extraInfo);
+                    new MessageInfo(MessageType.imported_peak_boundaries, Path.GetFileName(fileName)), extraInfo);
                 
                 return entry.ChangeAllInfo(allInfo);
             });
@@ -1763,11 +1763,11 @@ namespace pwiz.Skyline
             }, docPair =>
             {
                 var entry = AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                    new MessageTypeNamesPair(MessageType.imported_fasta, filePath));
+                    new MessageInfo(MessageType.imported_fasta, filePath));
 
                 if (emptyPeptideGroups > 0)
                 {
-                    entry = entry.AppendAllInfo(CollectionUtil.FromSingleItem(new MessageTypeNamesPair(
+                    entry = entry.AppendAllInfo(CollectionUtil.FromSingleItem(new MessageInfo(
                         kept
                             ? MessageType.kept_empty_proteins
                             : MessageType.removed_empty_proteins, emptyPeptideGroups).ToMessage(LogLevel.all_info)));
@@ -1804,6 +1804,7 @@ namespace pwiz.Skyline
         {
             IdentityPath selectPath = null;
             Exception modifyingDocumentException = null;
+            var transitionCount = 0;
             ModifyDocument(description, doc =>
             {
                 try
@@ -1818,6 +1819,7 @@ namespace pwiz.Skyline
                             () => docNew = smallMoleculeTransitionListReader.CreateTargets(doc, null, out firstAdded));
                             // CONSIDER: cancelable / progress monitor ?  This is normally pretty quick.
 
+                        transitionCount = smallMoleculeTransitionListReader.RowCount;
                         if (docNew == null)
                             return doc;
                     }
@@ -1842,7 +1844,7 @@ namespace pwiz.Skyline
                     modifyingDocumentException = x;
                     return doc;
                 }
-            }, docPair => DiffDocNodesWithExtraInfo(MessageType.pasted_small_molecule_transition_list, docPair, csvText));
+            }, docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, new MessageInfo(MessageType.pasted_small_molecule_transition_list, transitionCount), csvText));
             if (modifyingDocumentException != null)
             {
                 // If the exception is an IOException, we rethrow it in case it has line/col information
@@ -2004,6 +2006,8 @@ namespace pwiz.Skyline
             BiblioSpecLiteLibrary docLibrary = null;
             var indexOldLibrary = -1;
 
+            var entryCreators = new AuditLogEntryCreatorList();
+
             var importIntensities = true;
             if (librarySpectra.Any())
             {
@@ -2015,6 +2019,10 @@ namespace pwiz.Skyline
                     if (addLibraryResult == DialogResult.Cancel)
                         return;
                     importIntensities = addLibraryResult == DialogResult.Yes;
+
+                    if(importIntensities)
+                        entryCreators.Add(new MessageInfo(MessageType.imported_spectral_library_intensities));
+
                 }
                 if (importIntensities && !ImportMassListIntensities(ref docNew, librarySpectra, assayLibrary, out docLibrarySpec, out docLibrary, out indexOldLibrary))
                     return;
@@ -2055,20 +2063,25 @@ namespace pwiz.Skyline
                 return doc;
             }, docPair =>
             {
+                MessageType msgType;
+                object[] args;
+                string extraInfo = null;
 
-                var entry = AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                    new MessageTypeNamesPair(
-                        assayLibrary ? MessageType.imported_assay_library : MessageType.imported_transition_list,
-                        inputs.InputFilename));
-
-                if (!assayLibrary && importIntensities)
+                // Imported from file
+                if (inputs.InputFilename != null)
                 {
-                    entry = entry.AppendAllInfo(CollectionUtil.FromSingleItem(
-                        new MessageTypeNamesPair(MessageType.imported_spectral_library_intensities)
-                            .ToMessage(LogLevel.all_info)));
+                    msgType = assayLibrary ? MessageType.imported_assay_library_from_file : MessageType.imported_transition_list_from_file;
+                    args = new object[] { inputs.InputFilename };
+                }
+                else
+                {
+                    msgType = assayLibrary ? MessageType.imported_assay_library : MessageType.imported_transition_list;
+                    args = new object[0];
+                    extraInfo = inputs.InputText;
                 }
 
-                return entry;
+                return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
+                    new MessageInfo(msgType, args), extraInfo).Merge(docPair, entryCreators);
             });
 
             if (selectPath != null)
@@ -2337,7 +2350,10 @@ namespace pwiz.Skyline
             var resultsAction = MeasuredResults.MergeAction.remove;
             var mergePeptides = false;
 
-            ImportDocResultsDlg.ImportDocResultsSettings importDocSettings = null;
+            var entryCreatorList = new AuditLogEntryCreatorList();
+            entryCreatorList.Add(docPair =>
+                AuditLogEntry.CreateEmptyEntry(docPair.OldDoc).ChangeAllInfo(filePaths.Select(path =>
+                    new MessageInfo(MessageType.imported_single_document, path)).ToList()));
 
             if (HasResults(filePaths))
             {
@@ -2348,7 +2364,7 @@ namespace pwiz.Skyline
                     resultsAction = dlgResults.Action;
                     mergePeptides = dlgResults.IsMergePeptides;
 
-                    importDocSettings = dlgResults.ImportSettings;
+                    entryCreatorList.Add(dlgResults.EntryCreator);
                 }
             }
             SrmTreeNode nodeSel = SequenceTree.SelectedNode as SrmTreeNode;
@@ -2386,21 +2402,8 @@ namespace pwiz.Skyline
                 if (!ReferenceEquals(doc, docCurrent))
                     throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
                 return docNew;
-            }, docPair =>
-            {
-                var entry = AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                    new MessageTypeNamesPair(MessageType.imported_doc, string.Join(", ", filePaths))); // Not L10N
-
-                if (importDocSettings != null)
-                {
-                    var dialogEntry =
-                        AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.none, importDocSettings);
-
-                    entry = entry.AppendAllInfo(dialogEntry.AllInfoNoUndoRedo).ChangeExtraInfo(dialogEntry.ExtraInfo);
-                }
-
-                return entry;
-            });
+            }, docPair => AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.imported_doc, MessageType.imported_docs, filePaths)
+                .Merge(docPair, entryCreatorList, false));
 
             if (selectPath != null)
                 SequenceTree.SelectedPath = selectPath;
@@ -2526,8 +2529,8 @@ namespace pwiz.Skyline
                 return;
             }
 
-            ChooseSchedulingReplicatesSettings chosenSchedulingReps;
-            if (!CheckRetentionTimeFilter(DocumentUI, out chosenSchedulingReps))
+            var entryCreatorList = new AuditLogEntryCreatorList();
+            if (!CheckRetentionTimeFilter(DocumentUI, entryCreatorList))
             {
                 return;
             }
@@ -2598,21 +2601,8 @@ namespace pwiz.Skyline
                         return; // User cancelled, no change
 
                     ModifyDocument(description,
-                        doc => ImportResults(doc, namedResults, dlg.OptimizationName), docPair =>
-                        {
-                            var entry = AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.imported_results,
-                                dlg.ImportSettings,
-                                dlg.NamedPathSets.Length.ToString());
-
-                            if (chosenSchedulingReps != null)
-                            {
-                                var dialogEntry = AuditLogEntry.CreateDialogLogEntry(docPair, MessageType.none, chosenSchedulingReps);
-                                entry = entry.ChangeExtraInfo(dialogEntry.ExtraInfo)
-                                    .AppendAllInfo(dialogEntry.AllInfoNoUndoRedo);
-                            }
-
-                            return entry;
-                        });
+                        doc => ImportResults(doc, namedResults, dlg.OptimizationName),
+                        docPair => dlg.EntryCreator.Create(docPair).Merge(docPair, entryCreatorList));
 
                     // Select the first replicate to which results were added.
                     if (ComboResults.Visible)
@@ -2627,10 +2617,8 @@ namespace pwiz.Skyline
         /// ChooseSchedulingReplicatesDlg.
         /// Returns false if the user cancels the dialog, or cannot import chromatograms.
         /// </summary>
-        public bool CheckRetentionTimeFilter(SrmDocument document, out ChooseSchedulingReplicatesSettings chosenSchedulingReplicates)
+        public bool CheckRetentionTimeFilter(SrmDocument document, AuditLogEntryCreatorList creatorList)
         {
-            chosenSchedulingReplicates = null;
-
             var settings = document.Settings;
             var fullScan = settings.TransitionSettings.FullScan;
             if (!fullScan.IsEnabled)
@@ -2680,8 +2668,10 @@ namespace pwiz.Skyline
             }
             using (var dlg = new ChooseSchedulingReplicatesDlg(this))
             {
-                chosenSchedulingReplicates = dlg.SchedulingReplicates;
-                return dlg.ShowDialog(this) == DialogResult.OK;
+                var ok = dlg.ShowDialog(this) == DialogResult.OK;
+                if(ok)
+                    creatorList.Add(dlg.EntryCreator);
+                return ok;
             }
         }
 
@@ -2918,7 +2908,7 @@ namespace pwiz.Skyline
 
                         if (diffTree.Root != null)
                         {
-                            var message = new MessageTypeNamesPair(MessageType.managed_results);
+                            var message = new MessageInfo(MessageType.managed_results);
                             var entry = AuditLogEntry.CreateSettingsChangeEntry(docPair.OldDoc, diffTree)
                                 .ChangeUndoRedo(message);
                             return entry;
@@ -3295,7 +3285,7 @@ namespace pwiz.Skyline
                             }
                             return newDocument;
                         }, docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                            new MessageTypeNamesPair(MessageType.imported_annotations, filename)));
+                            new MessageInfo(MessageType.imported_annotations, filename)));
                     }
                 }
             }

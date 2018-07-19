@@ -1273,7 +1273,8 @@ namespace pwiz.Skyline.EditUI
                     var args = new string[0];
                     if (arg > 0)
                         args = new[] { arg.ToString() };
-                    return SkylineWindow.DiffDocNodesWithExtraInfo(type, docPair, extraInfo, args);
+                    return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, new MessageInfo(type, args),
+                        extraInfo);
                 });
             if (error)
             {

@@ -298,7 +298,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 MessageType type;
                 var detailType = MessageType.set_to_in_document_grid;
-                Func<EditDescription, object[]> getArgsFunc = descr => new[] { descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.Value };
+                Func<EditDescription, object[]> getArgsFunc = descr => new[] { descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.ElementRefName ?? "UNKNOWN", descr.Value };
 
                 var cellCount = _batchEditDescriptions.Count;
                 switch (batchModifyInfo.BatchModifyAction)
@@ -309,7 +309,7 @@ namespace pwiz.Skyline.Model.Databinding
                     case DataGridViewPasteHandler.BatchModifyAction.Clear:
                         type = MessageType.cleared_document_grid;
                         detailType = MessageType.cleared_cell_in_document_grid;
-                        getArgsFunc = descr => new[] { (object)descr.ColumnCaption.GetCaption(DataSchemaLocalizer) };
+                        getArgsFunc = descr => new[] { (object)descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.ElementRefName ?? "UNKNOWN" };
                         break;
                     case DataGridViewPasteHandler.BatchModifyAction.FillDown:
                         type = MessageType.fill_down_document_grid;
@@ -321,8 +321,8 @@ namespace pwiz.Skyline.Model.Databinding
                 var extraInfo = batchModifyInfo.ExtraInfo;
 
                 return AuditLogEntry
-                    .CreateSingleMessageEntry(docPair.OldDoc, new MessageTypeNamesPair(type, cellCount), extraInfo)
-                    .ChangeAllInfo(_batchEditDescriptions.Select(descr => new MessageTypeNamesPair(detailType,
+                    .CreateSingleMessageEntry(docPair.OldDoc, new MessageInfo(type, cellCount), extraInfo)
+                    .ChangeAllInfo(_batchEditDescriptions.Select(descr => new MessageInfo(detailType,
                             getArgsFunc(descr))).ToList());
             });
             _batchChangesOriginalDocument = null;
@@ -337,14 +337,13 @@ namespace pwiz.Skyline.Model.Databinding
             _document = _documentContainer.Document;
         }
 
-        // TODO: ask nick if adding parent object to edit description would be a good idea
         public void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action, Func<SrmDocumentPair, AuditLogEntry> logFunc = null)
         {
             if (_batchChangesOriginalDocument == null)
             {
                 SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
                     logFunc ?? (docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.set_to_in_document_grid,
-                        editDescription.ColumnCaption.GetCaption(DataSchemaLocalizer), editDescription.Value)));
+                        editDescription.ColumnCaption.GetCaption(DataSchemaLocalizer), editDescription.ElementRefName ?? "UNKNOWN", editDescription.Value)));
                 return;
             }
             VerifyDocumentCurrent(_batchChangesOriginalDocument, _documentContainer.Document);

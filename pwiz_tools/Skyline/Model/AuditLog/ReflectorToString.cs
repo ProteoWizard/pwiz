@@ -8,6 +8,9 @@ namespace pwiz.Skyline.Model.AuditLog
 {
     public partial class Reflector
     {
+        /// <summary>
+        /// Checks whether the given object can safely be converted to a string by simply calling ToString
+        /// </summary>
         public static bool HasToString(object obj)
         {
             if (obj == null)
@@ -94,16 +97,47 @@ namespace pwiz.Skyline.Model.AuditLog
                 : ToString(new DiffNodePropertyObjectSelector(diffTree.Root), true, true, 0);
         }*/
 
+
+        /// <summary>
+        /// Converts the given object to a string, showing each of its properties values.
+        /// Note that default values of properties might not work with this function
+        /// since no parent or root objects are provided
+        /// </summary>
+        /// <param name="obj">Object to convert</param>
+        /// <param name="formatWhitespace">Whether to use tabs and new lines or not</param>
+        /// <returns>String representation</returns>
         public static string ToString(object obj, bool formatWhitespace = false)
         {
             var objectInfo = new ObjectInfo<object>().ChangeNewObject(obj);
             var rootProp = RootProperty.Create(obj.GetType());
-            return ToString(objectInfo, rootProp);
+            return ToString(objectInfo, rootProp, formatWhitespace);
         }
 
+        /// <summary>
+        /// Converts the given object to a string, showing each of its properties values 
+        /// </summary>
+        /// <param name="objectInfo">Object to convert and related objects</param>
+        /// <param name="rootProperty">Property of the initial <see cref="ObjectInfo&lt;T&gt;.ObjectPair"/></param>
+        /// <param name="formatWhitespace"></param>
+        /// <returns>String representation of <see cref="ObjectInfo&lt;T&gt;.NewObject"/></returns>
         public static string ToString(ObjectInfo<object> objectInfo, Property rootProperty, bool formatWhitespace = false)
         {
-            return ToString(objectInfo, rootProperty, true, formatWhitespace, 0).Trim();
+            var result = ToString(objectInfo, rootProperty, true, formatWhitespace, 0);
+            return result == null ? null : result.Trim();
+        }
+
+        private static string GetIndentation(int indentLevel)
+        {
+            return new StringBuilder(4 * indentLevel).Insert(0, "    ", indentLevel).ToString(); // Not L10N
+        }
+
+        private static string Indent(bool indent, string s, int indentLevel)
+        {
+            if (!indent || s == null || indentLevel <= 0)
+                return s;
+
+            s = GetIndentation(indentLevel) + s;
+            return s;
         }
 
         private static string ToStringInternal(ObjectInfo<object> objectInfo, Property property, bool wrapProperties, bool formatWhitespace,
@@ -133,22 +167,7 @@ namespace pwiz.Skyline.Model.AuditLog
             return ToString(objectInfo, property, wrapProperties, formatWhitespace, indentLevel + 1, defaults);
         }
 
-        private static string GetIndentation(int indentLevel)
-        {
-            return new StringBuilder(4 * indentLevel).Insert(0, "    ", indentLevel).ToString(); // Not L10N
-        }
-
-        private static string Indent(bool indent, string s, int indentLevel)
-        {
-            if (!indent || s == null || indentLevel <= 0)
-                return s;
-
-            s = GetIndentation(indentLevel) + s;
-            return s;
-        }
-
-
-        // TODO: make this more similar to BuildDiffTree, do collection stuff in loop
+        // TODO: make this more similar to BuildDiffTree
         private static string ToString(ObjectInfo<object> objectInfo, Property property, bool wrapProperties, bool formatWhiteSpace, int indentLevel, List<object> defaults = null)
         {
             if (objectInfo.NewObject == null)
@@ -210,10 +229,10 @@ namespace pwiz.Skyline.Model.AuditLog
 
                 strings.Capacity = collectionKeys.Length;
 
-                for (var i = 0; i < collectionKeys.Length; ++i)
+                foreach (var key in collectionKeys)
                 {
                     var newInfo = objectInfo.ChangeObjectPair(ObjectPair.Create(null,
-                        collection.Info.GetItemValueFromKey(objectInfo.NewObject, collectionKeys[i])));
+                        collection.Info.GetItemValueFromKey(objectInfo.NewObject, key)));
                     strings.Add(ToStringInternal(newInfo, property.ChangeTypeOverride(collection.Info.ElementValueType), wrapProperties,
                         formatWhiteSpace, indentLevel, null));
                 }
@@ -249,27 +268,30 @@ namespace pwiz.Skyline.Model.AuditLog
                         propertyDefaults.AddRange(defaultValues.Values);
                     }
 
-                    if (subProperty.DiffProperties)
+                    if (!subProperty.IgnoreDefaultParent)
                     {
-                        if (propertyDefaults.Any(d => ReferenceEquals(d, newInfo.NewObject)))
-                            continue;
-                    }
-                    else
-                    {
-                        if (propertyDefaults.Any(d => Equals(d, newInfo.NewObject)))
-                            continue;
+                        if (subProperty.DiffProperties)
+                        {
+                            if (propertyDefaults.Any(d => ReferenceEquals(d, newInfo.NewObject)))
+                                continue;
+                        }
+                        else
+                        {
+                            if (propertyDefaults.Any(d => Equals(d, newInfo.NewObject)))
+                                continue;
+                        }
                     }
 
                     if (subProperty.IgnoreName)
                     {
                         var str = ToStringInternal(newInfo, subProperty, false, formatWhiteSpace, indentLevel - 1, propertyDefaults);
-                        if (str != null)
+                        if (!string.IsNullOrEmpty(str))
                             strings.Add(str);
                     }
                     else
                     {
                         var str = ToStringInternal(newInfo, subProperty, true, formatWhiteSpace, indentLevel, propertyDefaults);
-                        if (str != null)
+                        if (!string.IsNullOrEmpty(str))
                             strings.Add(Indent(formatWhiteSpace, subProperty.GetName(newInfo) + " = " + str, indentLevel)); // Not L10N
                     }
                 }
@@ -289,7 +311,7 @@ namespace pwiz.Skyline.Model.AuditLog
             }
 
             if (strings.Count == 0)
-                return null;
+                return string.Empty;
 
             var separator = formatWhiteSpace ? ",\r\n" : ", "; // Not L10N
             return string.Format(result, string.Format(format, string.Join(separator, strings))); // Not L10N

@@ -132,7 +132,7 @@
   <data name="SrmSettings_DataSettings" xml:space="preserve">
     <value>Document Settings</value>
   </data>
-  <data name="TransitionPrediction_DeclusteringPotential" xml:space="preserve">
+  <data name="TransitionPrediction_NonNullDeclusteringPotential" xml:space="preserve">
     <value>Declustering potential</value>
   </data>
   <data name="TransitionPrediction_FragmentMassType" xml:space="preserve">
@@ -153,7 +153,7 @@
   <data name="Name" xml:space="preserve">
     <value>Name</value>
   </data>
-  <data name="TransitionPrediction_OptimizedLibrary" xml:space="preserve">
+  <data name="TransitionPrediction_NonNullOptimizedLibrary" xml:space="preserve">
     <value>Optimization library</value>
   </data>
   <data name="SrmSettings_PeptideSettings" xml:space="preserve">
@@ -330,7 +330,7 @@
   <data name="TransitionPrediction_OptimizedMethodType" xml:space="preserve">
     <value>Optimization method</value>
   </data>
-  <data name="TransitionPrediction_CompensationVoltage" xml:space="preserve">
+  <data name="TransitionPrediction_NonNullCompensationVoltage" xml:space="preserve">
     <value>Compensation voltage</value>
   </data>
   <data name="PeptideSettings_Filter" xml:space="preserve">
@@ -360,7 +360,7 @@
   <data name="IsolationScheme_PrecursorFilter" xml:space="preserve">
     <value>Precursor filter m/z</value>
   </data>
-  <data name="TransitionPrediction_CollisionEnergy" xml:space="preserve">
+  <data name="TransitionPrediction_NonNullCollisionEnergy" xml:space="preserve">
     <value>Collision energy</value>
   </data>
   <data name="TransitionPrediction_UseOptimizationValues" xml:space="preserve">
@@ -1082,7 +1082,7 @@
   <data name="PropertiesCutoffSettings_PValueCutoff" xml:space="preserve">
     <value>PValue cutoff</value>
   </data>
-  <data name="AddIrtStandardsToDocumentDlg_NumTransitions" xml:space="preserve">
+  <data name="AddIrtStandardsToDocumentSettings_NumTransitions" xml:space="preserve">
     <value>Maximum transitions per peptide</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings" xml:space="preserve">
@@ -1231,5 +1231,8 @@
   </data>
   <data name="ViewLibrarySettings" xml:space="preserve">
     <value>Spectral Library Explorer</value>
+  </data>
+  <data name="UniquePeptideSettings" xml:space="preserve">
+    <value>Unique peptide settings</value>
   </data>
 </root>

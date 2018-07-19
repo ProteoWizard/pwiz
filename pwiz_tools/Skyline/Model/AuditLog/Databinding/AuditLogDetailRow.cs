@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                 }
                     
                 var allInfoCopy = list.ToArray();
-                allInfoCopy[index] = entry.AllInfo[_detailIndex].ChangeReason(value);
+                allInfoCopy[index] = entry.AllInfo[_detailIndex].With<LogMessage>("Reason", value);
                 entry = entry.ChangeAllInfo(allInfoCopy);
 
                 ModifyDocument(EditDescription.SetColumn("Reason", value), // Not L10N

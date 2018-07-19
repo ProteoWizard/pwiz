@@ -89,7 +89,7 @@
     <OutputPath>bin\x64\Release\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
@@ -355,7 +355,9 @@
     <Compile Include="Controls\AuditLog\AuditLogForm.Designer.cs">
       <DependentUpon>AuditLogForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Model\AuditLog\AuditLogEntry.cs" />
+    <Compile Include="Model\AuditLog\AuditLogEntry.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Model\AuditLog\DiffNode.cs" />
     <Compile Include="Model\AuditLog\PropertyName.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
@@ -2178,8 +2180,8 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\PropertyNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>PropertyNames.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>PropertyNames1.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnCaptions.ja.resx">
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
