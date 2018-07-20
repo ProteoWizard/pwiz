@@ -21,6 +21,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -44,6 +45,7 @@ namespace pwiz.Skyline.SettingsUI
         private const int ANIMATION_DURATION = 1000;
         private const int DISPLAY_DURATION = 10000;
 
+        private readonly Thread _thread;
         private readonly FormAnimator _animator;
         private readonly Timer _displayTimer;
         private readonly String _libraryName;
@@ -76,6 +78,10 @@ namespace pwiz.Skyline.SettingsUI
             // appear without it.
             Opacity = 1;
 
+            _thread = BackgroundEventThreads.CreateThreadForAction(Notify);
+            _thread.Name = "BuildLibraryNotification"; // Not L10N
+            _thread.IsBackground = true;
+
             _displayTimer = new Timer();
             _displayTimer.Tick += OnDisplayTimerEvent;
             _displayTimer.Interval = DISPLAY_DURATION;
@@ -88,6 +94,13 @@ namespace pwiz.Skyline.SettingsUI
         protected override bool ShowWithoutActivation
         {
             get { return true; }
+        }
+
+        public void Start()
+        {
+            Assume.IsFalse(_thread.IsAlive);    // Called only once
+
+            _thread.Start();
         }
 
         public void Notify()
@@ -110,6 +123,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // Make sure this happens on the right thread.
                     BeginInvoke((Action) OnRemove);
+
+                    _thread.Join(); // Wait for the thread to complete
                 }
                 catch
                 {
@@ -313,7 +328,7 @@ namespace pwiz.Skyline.SettingsUI
             var buildState = (LibraryManager.BuildState)ar.AsyncState;
             bool success = buildState.BuildFunc.EndInvoke(ar);
 
-            if (success)
+            if (success && NotificationContainerForm.IsHandleCreated)
             {
                 lock (this)
                 {
@@ -338,10 +353,7 @@ namespace pwiz.Skyline.SettingsUI
                             AddRetentionTimePredictor(buildState);
                         }
                     }));
-                    var thread = BackgroundEventThreads.CreateThreadForAction(frm.Notify);
-                    thread.Name = "BuildLibraryNotification"; // Not L10N
-                    thread.IsBackground = true;
-                    thread.Start();
+                    frm.Start();
                     Notification = frm;
                 }
             }

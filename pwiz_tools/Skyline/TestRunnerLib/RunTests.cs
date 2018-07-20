@@ -265,8 +265,8 @@ namespace TestRunnerLib
             const int mb = 1024*1024;
             var managedMemory = (double) GC.GetTotalMemory(true) / mb;
 
-            LastGdiHandleCount = GetHandleCount(HandleType.gdi);
-            LastUserHandleCount = GetHandleCount(HandleType.user);
+            LastGdiHandleCount = GetHandleCount(HandleType.total);
+            LastUserHandleCount = GetHandleCount(HandleType.user) + GetHandleCount(HandleType.gdi);
 
             if (exception == null)
             {
@@ -340,12 +340,15 @@ namespace TestRunnerLib
         [DllImport("User32")]
         private static extern int GetGuiResources(IntPtr hProcess, int uiFlags);
 
-        private enum HandleType { gdi, user }
+        private enum HandleType { total = -1, gdi = 0, user = 1 }
 
         private static int GetHandleCount(HandleType handleType)
         {
             using (var process = Process.GetCurrentProcess())
             {
+                if (handleType == HandleType.total)
+                    return process.HandleCount;
+
                 return GetGuiResources(process.Handle, (int)handleType);
             }
         }
