@@ -43,13 +43,14 @@ namespace TestRunner
     internal static class Program
     {
         private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestConnected.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll", "TestPerf.dll" };
-        private const int LeakThreshold = 250000;
-        // TODO: Turn on leak detection for handles by lowering the limits below (2 is enough to trigger on some test machines)
-        private const int LEAKED_HANDLES_THRESHOLD = 5;
-        private const double LeakGdiThreshold = LEAKED_HANDLES_THRESHOLD;
-        private const double LeakUserThreshold = LEAKED_HANDLES_THRESHOLD;
-        private const int CrtLeakThreshold = 1000;
-        private const int LeakCheckIterations = 24;
+        private const int LeakTrailingDeltas = 7;   // Number of trailing deltas to average and check against thresholds below
+        // CONSIDER: Ideally these thresholds would be zero, but memory and handle retention are not stable enough to support that
+        //           The problem is that we don't reliably return to exactly the same state during EndTest and these numbers go both up and down
+        private const int LeakThreshold = 50*1024;  // 50 KB
+        private const double LeakGdiThreshold = 1;  // 1 GDI handle
+        private const double LeakUserThreshold = 1; // 1 User handle
+        private const int CrtLeakThreshold = 1000;  // No longer used
+        private const int LeakCheckIterations = 24; // Maximum number of runs to try to achieve below thresholds for trailing deltas
 
         [STAThread]
         static int Main(string[] args)
@@ -410,11 +411,12 @@ namespace TestRunner
                         continue;
 
                     // Run test repeatedly until we can confidently assess the leak status.
-                    double slope = 0;
                     var memoryPoints = new List<double> {runTests.TotalMemoryBytes};
                     var gdiPoints = new List<int> {runTests.LastGdiHandleCount};
                     var userPoints = new List<int> {runTests.LastUserHandleCount};
-                    for (int i = 0; i < LeakCheckIterations; i++)
+                    double lastMemoryDelta = 0, lastGdiDelta = 0, lastUserDelta = 0;
+                    int i;
+                    for (i = 0; i < LeakCheckIterations; i++)
                     {
                         // Run the test in the next language.
                         runTests.Language =
@@ -430,12 +432,15 @@ namespace TestRunner
                         memoryPoints.Add(runTests.TotalMemoryBytes);
                         gdiPoints.Add(runTests.LastGdiHandleCount);
                         userPoints.Add(runTests.LastUserHandleCount);
-                        if (memoryPoints.Count < 8)
+                        if (memoryPoints.Count <= LeakTrailingDeltas)
                             continue;
 
                         // Stop if the leak magnitude is below our threshold.
-                        slope = CalculateSlope(memoryPoints); 
-                        if (slope < LeakThreshold && MeanDelta(gdiPoints) < LeakGdiThreshold && MeanDelta(userPoints) < LeakUserThreshold)
+                        // slope = CalculateSlope(memoryPoints); 
+                        lastMemoryDelta = MeanDelta(memoryPoints);
+                        lastGdiDelta = MeanDelta(gdiPoints);
+                        lastUserDelta = MeanDelta(userPoints);
+                        if (lastMemoryDelta < LeakThreshold && lastGdiDelta < LeakGdiThreshold && lastUserDelta < LeakUserThreshold)
                             break;
                         // Remove the oldest point unless this is the last iteration
                         // So that the report below will be based on the set that just
@@ -451,20 +456,26 @@ namespace TestRunner
                     if (failed)
                         continue;
 
-                    if (slope >= LeakThreshold)
+                    if (lastMemoryDelta >= LeakThreshold)
                     {
-                        runTests.Log("!!! {0} LEAKED {1} bytes\r\n", test.TestMethod.Name, Math.Floor(slope));
+                        runTests.Log("!!! {0} LEAKED {1:0.#} bytes\r\n", test.TestMethod.Name, lastMemoryDelta);
                         removeList.Add(test);
                     }
-                    else if (MeanDelta(gdiPoints) >= LeakGdiThreshold)
+                    else if (lastGdiDelta >= LeakGdiThreshold)
                     {
-                        runTests.Log("!!! {0} HANDLE-LEAKED {1:0.#} GDI ({2:0.#} User)\r\n", test.TestMethod.Name, MeanDelta(gdiPoints), MeanDelta(userPoints));
+                        runTests.Log("!!! {0} HANDLE-LEAKED {1:0.#} GDI ({2:0.#} User)\r\n", test.TestMethod.Name, lastGdiDelta, lastMemoryDelta);
                         removeList.Add(test);
                     }
-                    else if (MeanDelta(userPoints) >= LeakUserThreshold)
+                    else if (lastUserDelta >= LeakUserThreshold)
                     {
-                        runTests.Log("!!! {0} HANDLE-LEAKED {1:0.#} User\r\n", test.TestMethod.Name, MeanDelta(userPoints));
+                        runTests.Log("!!! {0} HANDLE-LEAKED {1:0.#} User\r\n", test.TestMethod.Name, lastUserDelta);
                         removeList.Add(test);
+                    }
+                    else
+                    {
+                        // Report the final mean average deltas over the prior 8 runs (7 deltas)
+                        runTests.Log("# {0} deltas ({1}): memory = {2:0.#} KB, user = {3:0.#}, gdi = {4:0.#}\r\n",
+                            test.TestMethod.Name, i+1, lastMemoryDelta / 1024, lastUserDelta, lastGdiDelta);
                     }
                 }
 
@@ -573,6 +584,14 @@ namespace TestRunner
         private static double MeanDelta(List<int> gdiPoints)
         {
             var listDelta = new List<int>();
+            for (int i = 1; i < gdiPoints.Count; i++)
+                listDelta.Add(gdiPoints[i] - gdiPoints[i - 1]);
+            return listDelta.Average();
+        }
+
+        private static double MeanDelta(List<double> gdiPoints)
+        {
+            var listDelta = new List<double>();
             for (int i = 1; i < gdiPoints.Count; i++)
                 listDelta.Add(gdiPoints[i] - gdiPoints[i - 1]);
             return listDelta.Average();
