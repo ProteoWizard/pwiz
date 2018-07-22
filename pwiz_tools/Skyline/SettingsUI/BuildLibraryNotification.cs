@@ -122,9 +122,15 @@ namespace pwiz.Skyline.SettingsUI
                 try
                 {
                     // Make sure this happens on the right thread.
-                    BeginInvoke((Action) OnRemove);
-
-                    _thread.Join(); // Wait for the thread to complete
+                    if (InvokeRequired)
+                    {
+                        BeginInvoke((Action)OnRemove);
+                        _thread.Join(); // Wait for the thread to complete
+                    }
+                    else
+                    {
+                        OnRemove();
+                    }
                 }
                 catch
                 {
@@ -135,10 +141,17 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OnRemove()
         {
-            _displayTimer.Stop();
-            _animator.Release();
-            Close();
-            Dispose();
+            try
+            {
+                _displayTimer.Stop();
+                _animator.Release();
+                Close();
+                Dispose();
+            }
+            finally 
+            {
+                Application.ExitThread();
+            }
         }
 
         private void CloseNotification(bool animate)

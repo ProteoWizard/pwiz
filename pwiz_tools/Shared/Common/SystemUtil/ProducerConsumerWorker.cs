@@ -40,7 +40,7 @@ namespace pwiz.Common.SystemUtil
         public BagWorker(Func<int, TItem> produce = null, Action<TItem, int> consume = null) : base(produce, consume) { }
     }*/
 
-    public class ProducerConsumerWorker<TItem, TProducerConsumerCollection> where TItem : class where TProducerConsumerCollection : IProducerConsumerCollection<TItem>, new()
+    public class ProducerConsumerWorker<TItem, TProducerConsumerCollection> : IDisposable where TItem : class where TProducerConsumerCollection : IProducerConsumerCollection<TItem>, new()
     {
         private readonly Func<int, TItem> _produce; 
         private readonly Action<TItem, int> _consume;
@@ -205,14 +205,16 @@ namespace pwiz.Common.SystemUtil
             lock (_exceptionLock)
             {
                 if (Exception == null)
-                {
                     Exception = ex;
-                    Abort();
-                }
+                else
+                    ex = null;
             }
+
+            if (ex != null)
+                Abort();
         }
 
-        public void Abort(bool wait = false)
+        private void Abort(bool wait = false)
         {
             if (_consumeThreads == null)
                 return;
@@ -304,6 +306,13 @@ namespace pwiz.Common.SystemUtil
                 _queue.Add(null);
             if (wait)
                 _threadExit.Wait();
+        }
+
+        public void Dispose()
+        {
+            Abort(true);
+            if (_queue != null) _queue.Dispose();
+            if (_threadExit != null) _threadExit.Dispose();
         }
     }
 }
