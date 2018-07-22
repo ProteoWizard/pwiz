@@ -292,7 +292,7 @@ namespace pwiz.Skyline
                     ReportExceptionUI(x, new StackTrace(1, true));
                 }
 
-                ConcurrencyVisualizer.StartEvents(MainWindow);
+//                ConcurrencyVisualizer.StartEvents(MainWindow);
 
                 // Position window offscreen for stress testing.
                 if (SkylineOffscreen)

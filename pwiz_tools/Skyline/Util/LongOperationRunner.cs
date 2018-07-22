@@ -67,6 +67,7 @@ namespace pwiz.Skyline.Util
             AutoResetEvent workFinished = new AutoResetEvent(false);
             Thread monitoringThread = BackgroundEventThreads.CreateThreadForAction(() =>
             {
+                var dlgCreatedEvent = dlgCreated;
                 try
                 {
                     using (longWaitDlg = new BackgroundThreadLongWaitDlg())
@@ -83,19 +84,23 @@ namespace pwiz.Skyline.Util
                         progressWaitBroker = new ProgressWaitBroker(lwb =>
                         {
                             workFinished.WaitOne();
+                            workFinished.Dispose();
                         });
-                        dlgCreated.Set();
+                        dlgCreatedEvent.Set();
+                        dlgCreatedEvent = null;
                         longWaitDlg.PerformWork(null, DelayMillis, progressWaitBroker.PerformWork);
                     }
                 }
                 finally
                 {
-                    dlgCreated.Set();
+                    if (dlgCreatedEvent != null)
+                        dlgCreated.Set();
                 }
             });
             monitoringThread.Name = "LongOperationRunnerBackgroundThread"; // Not L10N
             monitoringThread.Start();
             dlgCreated.WaitOne();
+            dlgCreated.Dispose();
             try
             {
                 performWork(longWaitDlg);
