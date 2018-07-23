@@ -101,7 +101,26 @@ namespace pwiz.Skyline.Model
 
         public bool Quantitative { get; private set; }
 
-        public TransitionQuantInfo QuantInfo { get { return new TransitionQuantInfo(IsotopeDistInfo, LibInfo, Quantitative);} }
+        public bool IsQuantitative(SrmSettings settings)
+        {
+            if (!Quantitative)
+            {
+                return false;
+            }
+            if (!IsMs1 && FullScanAcquisitionMethod.DDA.Equals(settings.TransitionSettings.FullScan.AcquisitionMethod))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public TransitionQuantInfo QuantInfo
+        {
+            get
+            {
+                return new TransitionQuantInfo(IsotopeDistInfo, LibInfo, Quantitative);
+            }
+        }
 
         public bool IsLossPossible(int maxLossMods, IList<StaticMod> modsLossAvailable)
         {

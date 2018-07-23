@@ -2131,7 +2131,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             ProductMassAnalyzer = FullScanMassAnalyzerType.none;
             PrecursorMassAnalyzer = FullScanMassAnalyzerType.none;
-
+            AcquisitionMethod = FullScanAcquisitionMethod.None;
             DoValidate();
         }
         public TransitionFullScan(FullScanAcquisitionMethod acquisitionMethod,
@@ -2624,6 +2624,11 @@ namespace pwiz.Skyline.Model.DocSettings
             else
             {
                 if (AcquisitionMethod == FullScanAcquisitionMethod.Targeted)
+                {
+                    if (IsolationScheme != null)
+                        throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_Targeted_mode);
+                }
+                else if (AcquisitionMethod == FullScanAcquisitionMethod.DDA)
                 {
                     if (IsolationScheme != null)
                         throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_Targeted_mode);

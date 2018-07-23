@@ -109,9 +109,9 @@ namespace pwiz.Skyline.Model
 
         public IEnumerable<TransitionDocNode> Transitions { get { return Children.Cast<TransitionDocNode>(); } }
 
-        public IEnumerable<TransitionDocNode> QuantitativeTransitions
+        public IEnumerable<TransitionDocNode> GetQuantitativeTransitions(SrmSettings settings)
         {
-            get { return Transitions.Where(tran => tran.Quantitative); }
+            return Transitions.Where(tran => tran.IsQuantitative(settings));
         }
 
         protected override IList<DocNode> OrderedChildren(IList<DocNode> children)

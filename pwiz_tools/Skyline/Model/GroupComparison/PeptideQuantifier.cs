@@ -102,9 +102,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             return false;
         }
 
-        public bool SkipTransition(TransitionDocNode transitionDocNode)
+        public bool SkipTransition(SrmSettings settings, TransitionDocNode transitionDocNode)
         {
-            if (!transitionDocNode.Quantitative)
+            if (!transitionDocNode.IsQuantitative(settings))
             {
                 return true;
             }
@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         public IDictionary<IdentityPath, Quantity> GetTransitionIntensities(SrmSettings srmSettings, int replicateIndex, bool treatMissingAsZero)
         {
             var quantities = new Dictionary<IdentityPath, Quantity>();
-            var transitionsToNormalizeAgainst = GetTransitionsToNormalizeAgainst(PeptideDocNode, replicateIndex);
+            var transitionsToNormalizeAgainst = GetTransitionsToNormalizeAgainst(srmSettings, PeptideDocNode, replicateIndex);
             foreach (var precursor in PeptideDocNode.TransitionGroups)
             {
                 if (SkipTransitionGroup(precursor))
@@ -131,7 +131,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 foreach (var transition in precursor.Transitions)
                 {
-                    if (SkipTransition(transition))
+                    if (SkipTransition(srmSettings, transition))
                     {
                         continue;
                     }
@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         private Dictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> GetTransitionsToNormalizeAgainst(
-            PeptideDocNode peptideDocNode, int replicateIndex)
+            SrmSettings settings, PeptideDocNode peptideDocNode, int replicateIndex)
         {
             NormalizationMethod.RatioToLabel ratioToLabel = NormalizationMethod as NormalizationMethod.RatioToLabel;
             if (ratioToLabel == null)
@@ -273,7 +273,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 foreach (var transition in transitionGroup.Transitions)
                 {
-                    if (!transition.Quantitative)
+                    if (!transition.IsQuantitative(settings))
                     {
                         continue;
                     }

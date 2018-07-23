@@ -1299,7 +1299,7 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < numTrans; i++)
             {
                 var nodeTran = displayTrans[i];
-                if (!nodeTran.Quantitative)
+                if (!IsQuantitative(nodeTran))
                 {
                     continue;
                 }
@@ -1320,7 +1320,7 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < numTrans; i++)
             {
                 var nodeTran = displayTrans[i];
-                if (!nodeTran.Quantitative)
+                if (!IsQuantitative(nodeTran))
                 {
                     continue;
                 }
@@ -1429,7 +1429,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     continue;
 
                 var nodeTran = displayTrans[i];
-                if (!nodeTran.Quantitative && Settings.Default.ShowQuantitativeOnly)
+                if (!IsQuantitative(nodeTran) && Settings.Default.ShowQuantitativeOnly)
                 {
                     continue;
                 }
@@ -1477,7 +1477,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     };
                 }
 
-                DashStyle dashStyle = nodeTran.Quantitative ? DashStyle.Solid : DashStyle.Dot;
+                DashStyle dashStyle = IsQuantitative(nodeTran) ? DashStyle.Solid : DashStyle.Dot;
                 var graphItem = new ChromGraphItem(nodeGroup,
                     nodeTran,
                     info,
@@ -1916,10 +1916,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 TransitionChromInfo tranPeakInfo = null;
                 float maxPeakHeight = float.MinValue;
                 var listChromInfo = new List<ChromatogramInfo>();
-                bool anyQuantitative = nodeGroup.Transitions.Any(transition => transition.Quantitative);
+                bool anyQuantitative = nodeGroup.Transitions.Any(IsQuantitative);
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
-                    if (anyQuantitative && !nodeTran.Quantitative)
+                    if (anyQuantitative && !IsQuantitative(nodeTran))
                     {
                         continue;
                     }
@@ -1998,6 +1998,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     _graphHelper.AddChromatogram(graphPaneKey, graphItem);
                 }
             }
+        }
+
+        private bool IsQuantitative(TransitionDocNode transitionDocNode)
+        {
+            return transitionDocNode.IsQuantitative(DocumentUI.Settings);
         }
 
         private class DisplayPeptide

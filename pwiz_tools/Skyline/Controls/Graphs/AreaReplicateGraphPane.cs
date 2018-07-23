@@ -487,7 +487,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var barItem = (BarItem) curveItem;
                         barItem.Bar.Border.IsVisible = false;
-                        barItem.Bar.Fill.Brush = GetBrushForNode(docNode, color);
+                        barItem.Bar.Fill.Brush = GetBrushForNode(document.Settings, docNode, color);
                         barItem.Tag = new IdentityPath(identityPath, docNode.Id);
                         CurveList.Add(barItem);
                     }

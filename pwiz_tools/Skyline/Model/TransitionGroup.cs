@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Model
                 massH = calc.GetFragmentMass(tranNew, isotopeDist);
             }
             var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tranNew, losses, isotopeDist);
-            var nodeTranMatching = new TransitionDocNode(tranNew, losses, massH, new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, libInfo, nodeTran.Quantitative));
+            var nodeTranMatching = new TransitionDocNode(tranNew, losses, massH, new TransitionDocNode.TransitionQuantInfo(isotopeDistInfo, libInfo, nodeTran.IsQuantitative(settings)));
             return nodeTranMatching;
         }
 
