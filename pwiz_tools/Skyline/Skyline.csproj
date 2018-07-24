@@ -2030,6 +2030,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\StartPage.resx">
       <DependentUpon>StartPage.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\StartPage.zh-CHS.resx">
       <DependentUpon>StartPage.cs</DependentUpon>
@@ -2662,6 +2663,9 @@
     <None Include="Resources\StartPage\GroupedStudies_thumb.jpg" />
     <None Include="Resources\StartPage\DIA_thumb.jpg" />
     <None Include="Resources\StartPage\SmallMolecule_thumb.jpg" />
+    <EmbeddedResource Include="Resources\StartPage\HiResMetabolomics_thumb.png" />
+    <EmbeddedResource Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_thumb.png" />
+    <EmbeddedResource Include="Resources\StartPage\SmallMoleculeQuantification_thumb.png" />
     <Content Include="Resources\Unlocked.bmp" />
     <Content Include="Resources\warning.png" />
     <Content Include="SkylineProcessRunner.exe">
