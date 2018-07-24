@@ -69,8 +69,11 @@ namespace TestRunnerLib
         public readonly Dictionary<string, int> FailureCounts = new Dictionary<string, int>();
         public InvokeSkyline Skyline { get; private set; }
         public int LastTestDuration { get; private set; }
+        public int LastTotalHandleCount { get; private set; }
         public int LastGdiHandleCount { get; private set; }
         public int LastUserHandleCount { get; private set; }
+        public long TotalMemoryBytes { get; private set; }
+        public long ManagedMemoryBytes { get; private set; }
         public bool AccessInternet { get; set; }
         public bool RunPerfTests { get; set; }
         public bool AddSmallMoleculeNodes{ get; set; }
@@ -261,28 +264,25 @@ namespace TestRunnerLib
             Thread.CurrentThread.CurrentUICulture = saveUICulture;
 
             MemoryManagement.FlushMemory();
-
-            const int mb = 1024*1024;
-            var managedMemory = (double) GC.GetTotalMemory(true) / mb;
-
-            LastGdiHandleCount = GetHandleCount(HandleType.total);
-            LastUserHandleCount = GetHandleCount(HandleType.user) + GetHandleCount(HandleType.gdi);
+            _process.Refresh();
+            ManagedMemoryBytes = GC.GetTotalMemory(true);
+            TotalMemoryBytes = _process.PrivateMemorySize64;
+            LastTotalHandleCount = GetHandleCount(HandleType.total);
+            LastUserHandleCount = GetHandleCount(HandleType.user);
+            LastGdiHandleCount = GetHandleCount(HandleType.gdi);
 
             if (exception == null)
             {
                 // Test succeeded.
-                Log(
-                    "{0,3} failures, {1:F2}/{2:F1} MB, {3}/{4} handles, {5} sec.\r\n",
+                Log("{0,3} failures, {1:F2}/{2:F1} MB, {3}/{4} handles, {5} sec.\r\n",
                     FailureCount, 
-                    managedMemory, 
+                    ManagedMemory, 
                     TotalMemory,
-                    LastUserHandleCount,
-                    LastGdiHandleCount,
+                    LastUserHandleCount + LastGdiHandleCount,
+                    LastTotalHandleCount,
                     LastTestDuration);
                 if (crtLeakedBytes > CheckCrtLeaks)
                     Log("!!! {0} CRT-LEAKED {1} bytes\r\n", test.TestMethod.Name, crtLeakedBytes);
-//                if (LastGdiHandleDelta != 0 || LastUserHandleDelta != 0)
-//                    Console.Write(@"!!! {0} HANDLES-LEAKED {1} gdi, {2} user\r\n", test.TestMethod.Name, LastGdiHandleDelta, LastUserHandleDelta);
 
                 using (var writer = new FileStream("TestRunnerMemory.log", FileMode.Append, FileAccess.Write, FileShare.Read))
                 using (var stringWriter = new StreamWriter(writer))
@@ -308,9 +308,13 @@ namespace TestRunnerLib
             else
                 ErrorCounts[failureInfo] = 1;
 
-            Log(
-                "{0,3} failures, {1:F2}/{2:F1} MB, {3}/{4} handles, {5} sec.\r\n\r\n!!! {6} FAILED\r\n{7}\r\n{8}\r\n!!!\r\n\r\n",
-                FailureCount, managedMemory, TotalMemory, LastUserHandleCount, LastGdiHandleCount, LastTestDuration,
+            Log("{0,3} failures, {1:F2}/{2:F1} MB, {3}/{4} handles, {5} sec.\r\n\r\n!!! {6} FAILED\r\n{7}\r\n{8}\r\n!!!\r\n\r\n",
+                FailureCount,
+                ManagedMemory,
+                TotalMemory,
+                LastUserHandleCount + LastGdiHandleCount,
+                LastTotalHandleCount,
+                LastTestDuration,
                 test.TestMethod.Name,
                 message,
                 exception);
@@ -330,6 +334,7 @@ namespace TestRunnerLib
                 GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
+                GC.Collect();
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 {
                     SetProcessWorkingSetSize(Process.GetCurrentProcess().Handle, -1, -1);
@@ -342,15 +347,12 @@ namespace TestRunnerLib
 
         private enum HandleType { total = -1, gdi = 0, user = 1 }
 
-        private static int GetHandleCount(HandleType handleType)
+        private int GetHandleCount(HandleType handleType)
         {
-            using (var process = Process.GetCurrentProcess())
-            {
-                if (handleType == HandleType.total)
-                    return process.HandleCount;
+            if (handleType == HandleType.total)
+                return _process.HandleCount;
 
-                return GetGuiResources(process.Handle, (int)handleType);
-            }
+            return GetGuiResources(_process.Handle, (int)handleType);
         }
 
         private static void Try<TEx>(Action action, int loopCount, bool throwOnFailure = true, int milliseconds = 500) 
@@ -374,24 +376,11 @@ namespace TestRunnerLib
                 action();
         }
 
-        public double TotalMemory
-        {
-            get
-            {
-                const int mb = 1024*1024;
-                return (double) TotalMemoryBytes / mb;
-            }
-        }
+        private const int MB = 1024 * 1024;
 
-        public long TotalMemoryBytes
-        {
-            get
-            {
-                MemoryManagement.FlushMemory();
-                _process.Refresh();
-                return _process.PrivateMemorySize64;
-            }
-        }
+        public double TotalMemory { get { return TotalMemoryBytes / (double) MB; } }
+
+        public double ManagedMemory { get { return ManagedMemoryBytes / (double) MB; } }
 
         public void Log(string info, params object[] args)
         {
