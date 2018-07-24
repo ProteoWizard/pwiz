@@ -205,13 +205,11 @@ namespace pwiz.Common.SystemUtil
             lock (_exceptionLock)
             {
                 if (Exception == null)
+                {
                     Exception = ex;
-                else
-                    ex = null;
+                    Abort();
+                }
             }
-
-            if (ex != null)
-                Abort();
         }
 
         private void Abort(bool wait = false)
