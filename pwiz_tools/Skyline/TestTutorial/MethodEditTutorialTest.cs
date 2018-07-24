@@ -20,8 +20,11 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline;
@@ -416,6 +419,11 @@ namespace pwiz.SkylineTestTutorial
             });
 
             FindNode(string.Format("L [b5] - {0:F04}+", 484.3130)); // Not L10N - may be localized " (rank 3)"
+            MoveOver("YBL087C");
+            Thread.Sleep(NodeTip.TipDelayMs*3);
+            MoveOver(string.Format("{0:F04}+++", 672.6716));
+            Thread.Sleep(NodeTip.TipDelayMs*3);
+            MoveOver(null);
             PauseForScreenShot("For Screenshots, First hover over YBL087C, then over 672.671+++", 23); // Not L10N
 
             // Preparing to Measure, p. 25
@@ -454,6 +462,41 @@ namespace pwiz.SkylineTestTutorial
                     AssertEx.FieldsEqual(target, actual, 6, null, true, TestSmallMolecules ? 3 : 0);
                 }
             }
+        }
+        private static void MoveOver(string nodeText)
+        {
+            RunUI(() =>
+            {
+                var pt = new Point(-1, -1);
+                if (!string.IsNullOrEmpty(nodeText))
+                {                    
+                    var node = FindSequenceTreeNode(nodeText);
+                    if (node != null)
+                    {
+                        var rect = node.Bounds;
+                        pt = new Point((rect.Left + rect.Right)/2, (rect.Top + rect.Bottom)/2);
+                    }
+                }
+                SkylineWindow.SequenceTree.MoveMouse(pt, true);
+            });
+        }
+
+        private static SrmTreeNode FindSequenceTreeNode(string nodeText)
+        {
+            return FindSequenceTreeNode(nodeText, SkylineWindow.SequenceTree.Nodes);
+        }
+
+        private static SrmTreeNode FindSequenceTreeNode(string nodeText, TreeNodeCollection nodes)
+        {
+            foreach (TreeNode node in nodes)
+            {
+                if (node.Text == nodeText)
+                    return (SrmTreeNode) node;
+                var childNode = FindSequenceTreeNode(nodeText, node.Nodes);
+                if (childNode != null)
+                    return childNode;
+            }
+            return null;
         }
 
         private class DocChangeLogger : StackTraceLogger, IDisposable

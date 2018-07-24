@@ -994,6 +994,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         public static string FontFace { get { return "Arial"; } } // Not L10N
         public static float FontSize { get { return 8f; } }
 
+        public static int TipDelayMs { get { return 500; } }
+
         private ITipProvider _tipProvider;
         private readonly ITipDisplayer _tipDisplayer;
         private Rectangle _rectItem;
@@ -1004,7 +1006,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public NodeTip(ITipDisplayer tipDisplayer)
         {
-            _timer = new Timer { Interval = 500 };
+            _timer = new Timer { Interval = TipDelayMs };
             _timer.Tick += Timer_Tick;
             _tipDisplayer = tipDisplayer;
         }

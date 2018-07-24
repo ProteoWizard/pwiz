@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Controls
             cbItems.Text = childHeading;
 
             _modFonts = new ModFontHolder(pickListMulti);
-            _nodeTip = new NodeTip(this);
+            _nodeTip = new NodeTip(this) {Parent = this};
 
             _picker = picker;
             _chosenAtStart = new List<DocNode>(picker.Chosen);
