@@ -2027,7 +2027,11 @@ namespace pwiz.Skyline.Util
                     int threadCount = SINGLE_THREADED ? 1 : Math.Min(toExclusive - fromInclusive, Environment.ProcessorCount);
                     worker.RunAsync(threadCount, typeof(ParallelEx).Name);
                     for (int i = fromInclusive; i < toExclusive; i++)
+                    {
+                        if (worker.Exception != null)
+                            break;
                         worker.Add(new IntHolder(i));
+                    }
                     worker.DoneAdding(true);
                     if (worker.Exception != null)
                         throw new AggregateException("Exception in Parallel.For", worker.Exception);    // Not L10N
@@ -2050,7 +2054,11 @@ namespace pwiz.Skyline.Util
                     int threadCount = SINGLE_THREADED ? 1 : Environment.ProcessorCount;
                     worker.RunAsync(threadCount, typeof(ParallelEx).Name);
                     foreach (TSource s in source)
+                    {
+                        if (worker.Exception != null)
+                            break;
                         worker.Add(s);
+                    }
                     worker.DoneAdding(true);
                     if (worker.Exception != null)
                         throw new AggregateException("Exception in Parallel.ForEx", worker.Exception);  // Not L10N
