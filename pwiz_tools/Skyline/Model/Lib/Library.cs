@@ -231,7 +231,7 @@ namespace pwiz.Skyline.Model.Lib
                         }
                         catch (InvalidDataException x)
                         {
-                            UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(x));
+                            settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
                             break;
                         }
                         catch (OperationCanceledException)
