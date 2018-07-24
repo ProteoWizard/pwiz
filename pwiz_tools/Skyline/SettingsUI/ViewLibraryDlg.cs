@@ -150,7 +150,7 @@ namespace pwiz.Skyline.SettingsUI
             _moleculeImg = Resources.MoleculeLib;
 
             // Tip for peptides in list
-            _nodeTip = new NodeTip(this);
+            _nodeTip = new NodeTip(this) {Parent = this};
 
             // Restore window placement.
             Size size = Settings.Default.ViewLibrarySize;

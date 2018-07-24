@@ -172,7 +172,7 @@ namespace pwiz.Skyline.Controls
             _pickTimer = new Timer { Interval = 1 };
             _pickTimer.Tick += tick_ShowPickList;
 
-            _nodeTip = new NodeTip(this);
+            _nodeTip = new NodeTip(this) {Parent = TopLevelControl};
 
             OnTextZoomChanged();
             OnDocumentChanged(this, new DocumentChangedEventArgs(null));
@@ -933,7 +933,11 @@ namespace pwiz.Skyline.Controls
         {
             base.OnMouseMove(e);
 
-            Point pt = e.Location;
+            MoveMouse(e.Location);
+        }
+
+        public void MoveMouse(Point pt, bool ignoreFocus = false)
+        {
             if (!_moveThreshold.Moved(pt))
                 return;
             _moveThreshold.Location = null;
@@ -946,7 +950,7 @@ namespace pwiz.Skyline.Controls
                 ((SrmTreeNode) node).ShowAnnotationTipOnly = GetNoteRect(node).Contains(pt);
             if (tipProvider != null && !tipProvider.HasTip)
                 tipProvider = null;
-            if (_focus &&  (picker != null || tipProvider != null))
+            if ((_focus || ignoreFocus) && (picker != null || tipProvider != null))
             {
                 Rectangle rectCapture = node.BoundsMS;
                 if (tipProvider == null || !rectCapture.Contains(pt))
@@ -963,7 +967,7 @@ namespace pwiz.Skyline.Controls
             {
                 node = null;
                 if (_nodeTip != null)
-                    _nodeTip.HideTip();                
+                    _nodeTip.HideTip();
             }
             NodeCapture = node;
         }
