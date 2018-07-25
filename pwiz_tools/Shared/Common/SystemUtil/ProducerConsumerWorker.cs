@@ -50,7 +50,7 @@ namespace pwiz.Common.SystemUtil
         private readonly object _queueLock = new object();
         private CountdownEvent _threadExit;
         private int _itemsWaiting;
-        private readonly object _exceptionLock = new object();
+        private Exception _exception;
 
         /// <summary>
         /// Construct a QueueWorker with optional "produce" and "consume" callback functions.
@@ -63,7 +63,10 @@ namespace pwiz.Common.SystemUtil
             _consume = consume;
         }
 
-        public Exception Exception { get; private set; }
+        public Exception Exception
+        {
+            get { return _exception; }
+        }
 
         /// <summary>
         /// Run this worker asynchronously, starting threads to consume work items.
@@ -202,14 +205,9 @@ namespace pwiz.Common.SystemUtil
 
         private void SetException(Exception ex)
         {
-            lock (_exceptionLock)
-            {
-                if (Exception == null)
-                {
-                    Exception = ex;
-                    Abort();
-                }
-            }
+            // The first exception in wins
+            if (Interlocked.CompareExchange(ref _exception, ex, null) == null)
+                Abort();
         }
 
         private void Abort(bool wait = false)

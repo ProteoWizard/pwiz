@@ -218,7 +218,7 @@ namespace pwiz.Skyline.SettingsUI
         private Form NotificationContainerForm { get; set; }
         private ILibraryBuildNotificationContainer NotificationContainer { get; set; }
 
-        private BuildLibraryNotification Notification { get; set; }
+        private BuildLibraryNotification _notification;
 
         private Point NotificationAnchor
         {
@@ -324,15 +324,18 @@ namespace pwiz.Skyline.SettingsUI
 
         public void RemoveLibraryBuildNotification()
         {
-            lock (this)
+            // Avoid blocking here, because notification.Remove() requires the form's
+            // event thread, which can result in a deadlock if the test thread tries to
+            // remove the form just before the event thread begins removing it.
+            // Unfortunately, this means the function cannot guarantee the form is
+            // actually removed when it returns. Just that the process of removing it
+            // has started.
+            var notification = Interlocked.Exchange(ref _notification, null);
+            if (notification != null)
             {
-                if (Notification != null)
-                {
-                    Notification.Shown -= notification_Shown;
-                    Notification.Activated -= notification_Activated;
-                    Notification.Remove();
-                    Notification = null;
-                }
+                notification.Shown -= notification_Shown;
+                notification.Activated -= notification_Activated;
+                notification.Remove();
             }
         }
 
@@ -343,6 +346,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (success && NotificationContainerForm.IsHandleCreated)
             {
+                // Only one form showing at a time
                 lock (this)
                 {
                     RemoveLibraryBuildNotification();
@@ -367,7 +371,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
                     }));
                     frm.Start();
-                    Notification = frm;
+                    Assume.IsNull(Interlocked.Exchange(ref _notification, frm));
                 }
             }
         }

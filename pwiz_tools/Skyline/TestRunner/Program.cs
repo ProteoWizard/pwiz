@@ -48,6 +48,7 @@ namespace TestRunner
         //           The problem is that we don't reliably return to exactly the same state during EndTest and these numbers go both up and down
         private const int LeakThreshold = 50*1024;  // 50 KB
         private const double LeakHandleThreshold = 1; // 1 handle of any kind
+        private const double LeakGdiUserThreshold = 1;  // 1 handle gdi+user (not all included in the total handle count)
         private const int CrtLeakThreshold = 1000;  // No longer used
         private const int LeakCheckIterations = 24; // Maximum number of runs to try to achieve below thresholds for trailing deltas
 
@@ -414,7 +415,7 @@ namespace TestRunner
                     var handlePoints = new List<int> {runTests.LastTotalHandleCount};
                     var gdiPoints = new List<int> { runTests.LastGdiHandleCount };
                     var userPoints = new List<int> { runTests.LastUserHandleCount };
-                    double lastMemoryDelta = 0, lastHandleDelta = 0;
+                    double lastMemoryDelta = 0, lastHandleDelta = 0, lastGdiUserDelta = 0;
                     int i;
                     for (i = 0; i < LeakCheckIterations; i++)
                     {
@@ -439,7 +440,8 @@ namespace TestRunner
                         // Stop if the leak magnitude is below our threshold.
                         // slope = CalculateSlope(memoryPoints); 
                         lastMemoryDelta = MeanDelta(memoryPoints);
-                        lastHandleDelta = MeanDelta(gdiPoints);
+                        lastHandleDelta = MeanDelta(handlePoints);
+                        lastGdiUserDelta = MeanDelta(gdiPoints) + MeanDelta(userPoints);
                         if (lastMemoryDelta < LeakThreshold && lastHandleDelta < LeakHandleThreshold)
                             break;
                         // Remove the oldest point unless this is the last iteration
@@ -462,23 +464,16 @@ namespace TestRunner
                         runTests.Log("!!! {0} LEAKED {1:0.#} bytes\r\n", test.TestMethod.Name, lastMemoryDelta);
                         removeList.Add(test);
                     }
-                    else if (lastHandleDelta >= LeakHandleThreshold)
+                    else if (lastHandleDelta >= LeakHandleThreshold || lastGdiUserDelta >= LeakGdiUserThreshold)
                     {
-                        if (MeanDelta(userPoints) >= LeakHandleThreshold)
-                        {
-                            runTests.Log("!!! {0} HANDLE-LEAKED {1:0.#} User ({2:0.#} Total)\r\n", test.TestMethod.Name, MeanDelta(userPoints), lastHandleDelta);
-                            removeList.Add(test);
-                        }
-                        else if (MeanDelta(gdiPoints) >= LeakHandleThreshold)
-                        {
-                            runTests.Log("!!! {0} HANDLE-LEAKED {1:0.#} GDI ({2:0.#} Total)\r\n", test.TestMethod.Name, MeanDelta(gdiPoints), lastHandleDelta);
-                            removeList.Add(test);
-                        }
-                        else
-                        {
+                        if (lastGdiUserDelta < LeakGdiUserThreshold)
                             runTests.Log("!!! {0} HANDLE-LEAKED {1:0.#} Total\r\n", test.TestMethod.Name, lastHandleDelta);
-                            removeList.Add(test);
-                        }
+                        else if (MeanDelta(userPoints) >= LeakGdiUserThreshold)
+                            runTests.Log("!!! {0} HANDLE-LEAKED {1:0.#} User ({2:0.#} Total)\r\n", test.TestMethod.Name, MeanDelta(userPoints), lastHandleDelta);
+                        else if (MeanDelta(gdiPoints) >= LeakGdiUserThreshold)
+                            runTests.Log("!!! {0} HANDLE-LEAKED {1:0.#} GDI ({2:0.#} Total)\r\n", test.TestMethod.Name, MeanDelta(gdiPoints), lastHandleDelta);
+                        else
+                            runTests.Log("!!! {0} HANDLE-LEAKED {1:0.#} GDI+User ({2:0.#} Total)\r\n", test.TestMethod.Name, lastGdiUserDelta, lastHandleDelta);
                         removeList.Add(test);
                     }
                     else

@@ -1099,7 +1099,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 }
             }
 
-            ShowAnimate(X, Y, animate);
+            ShowAnimate(X, Y, animate); // Not really animated anymore, because of GDI handle leak on Windows 10
         }
     }
 
