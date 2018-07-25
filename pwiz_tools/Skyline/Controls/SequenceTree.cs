@@ -190,6 +190,11 @@ namespace pwiz.Skyline.Controls
             base.Dispose(disposing);
         }
 
+        public bool IsTipVisible
+        {
+            get { return _nodeTip.Visible; }
+        }
+
         [Browsable(true)]
         public event EventHandler<PickedChildrenEventArgs> PickedChildrenEvent;
 
@@ -766,6 +771,9 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         public void HideEffects()
         {
+            if (IgnoreFocus)
+                return;
+
             // Clear capture node to hide drop arrow
             NodeCapture = null;
 
@@ -902,6 +910,8 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        public bool IgnoreFocus { get; set; }
+
         protected override void OnGotFocus(EventArgs e)
         {
             base.OnGotFocus(e);
@@ -936,7 +946,7 @@ namespace pwiz.Skyline.Controls
             MoveMouse(e.Location);
         }
 
-        public void MoveMouse(Point pt, bool ignoreFocus = false)
+        public void MoveMouse(Point pt)
         {
             if (!_moveThreshold.Moved(pt))
                 return;
@@ -950,7 +960,7 @@ namespace pwiz.Skyline.Controls
                 ((SrmTreeNode) node).ShowAnnotationTipOnly = GetNoteRect(node).Contains(pt);
             if (tipProvider != null && !tipProvider.HasTip)
                 tipProvider = null;
-            if ((_focus || ignoreFocus) && (picker != null || tipProvider != null))
+            if ((_focus || IgnoreFocus) && (picker != null || tipProvider != null))
             {
                 Rectangle rectCapture = node.BoundsMS;
                 if (tipProvider == null || !rectCapture.Contains(pt))
@@ -1284,7 +1294,7 @@ namespace pwiz.Skyline.Controls
 
         public bool AllowDisplayTip
         {
-            get { return Focused || ToolTipOwner != null; }
+            get { return IgnoreFocus || Focused || ToolTipOwner != null; }
         }
 
         public static ProteinMetadataManager.ProteinDisplayMode ProteinsDisplayMode
