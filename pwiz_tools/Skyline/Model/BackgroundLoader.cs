@@ -80,8 +80,8 @@ namespace pwiz.Skyline.Model
                         }
                     }
 
-                    Action<IDocumentContainer, SrmDocument> loader = OnLoadBackground;
-                    loader.BeginInvoke(container, document, loader.EndInvoke, null);
+                    var loadThread = new Thread(() => OnLoadBackground(container, document));
+                    loadThread.Start();
                 }
             }
         }
