@@ -270,7 +270,17 @@ class ShimadzuReaderImpl : public ShimadzuReader
                         unsigned int eventLastScanNumber;
                         result2 = dataObject_->MS->Spectrum->RetTimeToScan(eventLastScanNumber, endTime, eventNumbers[j - 1]);
                         if (ShimadzuUtil::Failed(result2))
-                            throw runtime_error("[ShimadzuReader::ctor] RetTimeToScan error: " + ToStdString(System::Enum::GetName(result2.GetType(), (System::Object^) result2)));
+                        {
+                            cerr << ("[ShimadzuReader::ctor] RetTimeToScan error for time " + lexical_cast<string>(endTime) + " and event " + lexical_cast<string>(eventNumbers[j - 1]) + ": " +
+                                                ToStdString(System::Enum::GetName(result2.GetType(), (System::Object^) result2))) << endl;
+                            continue;
+                        }
+
+                        if (msLevels_.size() < 2)
+                        {
+                            auto spectrumPtr = getSpectrum(eventLastScanNumber);
+                            msLevels_.insert(spectrumPtr->getMSLevel());
+                        }
 
                         if (eventLastScanNumber > lastScanNumber)
                             lastScanNumber = eventLastScanNumber;
@@ -365,6 +375,11 @@ class ShimadzuReaderImpl : public ShimadzuReader
         CATCH_AND_FORWARD
     }
 
+    virtual const set<int>& getMSLevels() const
+    {
+        return msLevels_;
+    }
+
     private:
     friend class TICChromatogramImpl;
     gcroot<ShimadzuAPI::MassDataReader^> reader_;
@@ -373,6 +388,7 @@ class ShimadzuReaderImpl : public ShimadzuReader
     //gcroot<MethodObject^> methodObject_;
     int segmentCount_;
     int scanCount_;
+    set<int> msLevels_;
     vector<vector<int>> eventNumbersBySegment_;
     mutable map<short, gcroot<ShimadzuAPI::MrmTransition^> > transitions_;
     mutable set<SRMTransition> transitionSet_;

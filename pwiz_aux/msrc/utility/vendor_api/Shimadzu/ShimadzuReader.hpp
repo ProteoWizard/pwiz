@@ -129,6 +129,8 @@ public:
     virtual int getScanCount() const = 0;
     virtual SpectrumPtr getSpectrum(int scanNumber) const = 0;
 
+    virtual const std::set<int>& getMSLevels() const = 0;
+
     virtual ~ShimadzuReader() {}
 };
 

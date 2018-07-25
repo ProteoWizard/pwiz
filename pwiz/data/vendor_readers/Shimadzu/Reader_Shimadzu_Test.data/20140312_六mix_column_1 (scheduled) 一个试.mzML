@@ -20,13 +20,31 @@
     <software id="Shimadzu_x0020_software" version="4.0">
       <cvParam cvRef="MS" accession="MS:1001557" name="Shimadzu Corporation software" value=""/>
     </software>
-    <software id="pwiz" version="3.0.18149">
+    <software id="pwiz" version="3.0.18206">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
   <instrumentConfigurationList count="1">
     <instrumentConfiguration id="IC1">
       <cvParam cvRef="MS" accession="MS:1000124" name="Shimadzu instrument model" value=""/>
+      <componentList count="5">
+        <source order="1">
+          <cvParam cvRef="MS" accession="MS:1000073" name="electrospray ionization" value=""/>
+        </source>
+        <analyzer order="2">
+          <cvParam cvRef="MS" accession="MS:1000081" name="quadrupole" value=""/>
+        </analyzer>
+        <analyzer order="3">
+          <cvParam cvRef="MS" accession="MS:1000081" name="quadrupole" value=""/>
+        </analyzer>
+        <analyzer order="4">
+          <cvParam cvRef="MS" accession="MS:1000081" name="quadrupole" value=""/>
+        </analyzer>
+        <detector order="5">
+          <cvParam cvRef="MS" accession="MS:1000108" name="conversion dynode electron multiplier" value=""/>
+          <cvParam cvRef="MS" accession="MS:1000118" name="pulse counting" value=""/>
+        </detector>
+      </componentList>
       <softwareRef ref="Shimadzu_x0020_software"/>
     </instrumentConfiguration>
   </instrumentConfigurationList>
