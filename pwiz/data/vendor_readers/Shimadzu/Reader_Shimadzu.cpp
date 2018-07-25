@@ -78,6 +78,25 @@ void initializeInstrumentConfigurationPtrs(MSData& msd,
         ic->softwarePtr = instrumentSoftware;
         ic->set(MS_Shimadzu_instrument_model);
 
+        ic->componentList.emplace_back(Component(MS_ESI, 1));
+
+        if (rawfile->getScanCount() == 0)
+        {
+            ic->componentList.emplace_back(Component(MS_quadrupole, 2));
+            ic->componentList.emplace_back(Component(MS_quadrupole, 3));
+            ic->componentList.emplace_back(Component(MS_quadrupole, 4));
+            ic->componentList.emplace_back(Component(MS_conversion_dynode_electron_multiplier, 5));
+            ic->componentList[4].set(MS_pulse_counting);
+        }
+        else
+        {
+            ic->componentList.emplace_back(Component(MS_quadrupole, 2));
+            ic->componentList.emplace_back(Component(MS_quadrupole, 3));
+            ic->componentList.emplace_back(Component(MS_TOF, 4));
+            ic->componentList.emplace_back(Component(MS_microchannel_plate_detector, 5));
+            ic->componentList[4].set(MS_pulse_counting);
+        }
+
         msd.instrumentConfigurationPtrs.push_back(ic);
     }
 }
@@ -87,7 +106,17 @@ void fillInMetadata(const string& rawpath, Shimadzu::ShimadzuReaderPtr rawfile, 
 {
     msd.cvs = defaultCVList();
 
-    msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
+    if (rawfile->getScanCount() == 0)
+        msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
+    else
+    {
+        if (rawfile->getMSLevels().count(1) > 0)
+            msd.fileDescription.fileContent.set(MS_MS1_spectrum);
+        if (rawfile->getMSLevels().count(2) > 0)
+            msd.fileDescription.fileContent.set(MS_MSn_spectrum);
+        if (msd.fileDescription.fileContent.empty())
+            throw runtime_error("[Reader_Shimadzu::fillInMetadata] unexpected values from getMSLevels()");
+    }
 
     boost::filesystem::detail::utf8_codecvt_facet utf8;
     bfs::path p(rawpath, utf8);

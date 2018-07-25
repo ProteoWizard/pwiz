@@ -6,7 +6,7 @@
   </cvList>
   <fileDescription>
     <fileContent>
-      <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
+      <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
     </fileContent>
     <sourceFileList count="1">
       <sourceFile id="_x0031_0nmol_Negative_MS_ID_ON_055.lcd" name="10nmol_Negative_MS_ID_ON_055.lcd" location="file:///C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu_Test.data">
@@ -20,13 +20,31 @@
     <software id="Shimadzu_x0020_software" version="4.0">
       <cvParam cvRef="MS" accession="MS:1001557" name="Shimadzu Corporation software" value=""/>
     </software>
-    <software id="pwiz" version="3.0.18149">
+    <software id="pwiz" version="3.0.18206">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
   <instrumentConfigurationList count="1">
     <instrumentConfiguration id="IC1">
       <cvParam cvRef="MS" accession="MS:1000124" name="Shimadzu instrument model" value=""/>
+      <componentList count="5">
+        <source order="1">
+          <cvParam cvRef="MS" accession="MS:1000073" name="electrospray ionization" value=""/>
+        </source>
+        <analyzer order="2">
+          <cvParam cvRef="MS" accession="MS:1000081" name="quadrupole" value=""/>
+        </analyzer>
+        <analyzer order="3">
+          <cvParam cvRef="MS" accession="MS:1000081" name="quadrupole" value=""/>
+        </analyzer>
+        <analyzer order="4">
+          <cvParam cvRef="MS" accession="MS:1000084" name="time-of-flight" value=""/>
+        </analyzer>
+        <detector order="5">
+          <cvParam cvRef="MS" accession="MS:1000114" name="microchannel plate detector" value=""/>
+          <cvParam cvRef="MS" accession="MS:1000118" name="pulse counting" value=""/>
+        </detector>
+      </componentList>
       <softwareRef ref="Shimadzu_x0020_software"/>
     </instrumentConfiguration>
   </instrumentConfigurationList>

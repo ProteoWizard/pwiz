@@ -140,12 +140,26 @@ namespace pwiz.SkylineTestUtil
             get { return CanImportAgilentRaw ? ".d" : ExtMzml; }
         }
 
+        public static bool CanImportShimadzuRaw
+        {
+            get
+            {
+                // return false to import mzML
+                return AllowVendorReaders;
+            }
+        }
+
+        public static string ExtShimadzuRaw
+        {
+            get { return CanImportShimadzuRaw ? ".lcd" : ExtMzml; }
+        }
+
         public static bool CanImportWatersRaw
         {
             get
             {
                 // return false to import mzML
-                return AllowVendorReaders && !IsDebugMode;  // no waters library for debug build
+                return AllowVendorReaders;
             }
         }
 
