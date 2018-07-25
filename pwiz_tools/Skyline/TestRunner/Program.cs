@@ -442,7 +442,7 @@ namespace TestRunner
                         lastMemoryDelta = MeanDelta(memoryPoints);
                         lastHandleDelta = MeanDelta(handlePoints);
                         lastGdiUserDelta = MeanDelta(gdiPoints) + MeanDelta(userPoints);
-                        if (lastMemoryDelta < LeakThreshold && lastHandleDelta < LeakHandleThreshold)
+                        if (lastMemoryDelta < LeakThreshold && lastHandleDelta < LeakHandleThreshold && lastGdiUserDelta < LeakGdiUserThreshold)
                             break;
                         // Remove the oldest point unless this is the last iteration
                         // So that the report below will be based on the set that just
