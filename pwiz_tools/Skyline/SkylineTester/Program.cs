@@ -58,9 +58,17 @@ namespace SkylineTester
 
             if (args.Length == 1 && args[0].EndsWith(".zip"))
             {
-                AllocConsole();
-                CreateZipInstallerWindow.CreateZipFile(args[0]);
-                Thread.Sleep(2000);
+                try
+                {
+                    AllocConsole();
+                    CreateZipInstallerWindow.CreateZipFile(args[0]);
+                    Thread.Sleep(2000);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("FAILURE: Installer zip file \"{0}\" not created:", args[0]);
+                    Console.WriteLine(e);
+                }
                 return;
             }
 
