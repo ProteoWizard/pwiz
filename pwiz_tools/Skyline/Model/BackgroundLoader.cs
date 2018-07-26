@@ -302,7 +302,15 @@ namespace pwiz.Skyline.Model
             /// </summary>
             public virtual bool IsCanceled
             {
-                get { return IsCanceledItem(_tag); }
+                get
+                {
+                    // Check for global cancelation of the progress monitor
+                    var monitor = _container as IProgressMonitor;
+                    if (monitor != null && monitor.IsCanceled)
+                        return true;
+                    // Check for cancelation of just this item
+                    return IsCanceledItem(_tag);
+                }
             }
 
             protected bool IsCanceledItem(object tag)
