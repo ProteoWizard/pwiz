@@ -4599,7 +4599,7 @@ namespace pwiz.Skyline
             get
             {
                 // CONSIDER: Add a generic cancel button to the status bar that allows cancelling operations with progress?
-                return false;
+                return _closing;    // Once the main window is closing tell anything listening for progress to cancel
             }
         }
 
