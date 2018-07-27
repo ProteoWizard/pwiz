@@ -141,6 +141,7 @@
     <Compile Include="PeakSortingTest.cs" />
     <Compile Include="PerfChorusGenerateChromatograms.cs" />
     <Compile Include="PerfDecoysMatchTest.cs" />
+    <Compile Include="PerfElectronIonizationAllIonsTest.cs" />
     <Compile Include="PerfGenerateChorusRequests.cs" />
     <Compile Include="PerfImportAgilentSpectrumMillRampedIMSTest.cs" />
     <Compile Include="PerfImportResultsAgilentIMSTest.cs" />
