@@ -46,6 +46,7 @@ namespace pwiz.Skyline.SettingsUI
         private const int DISPLAY_DURATION = 10000;
 
         private readonly Thread _thread;
+        private readonly ManualResetEvent _windowCreatedEvent;
         private readonly FormAnimator _animator;
         private readonly Timer _displayTimer;
         private readonly String _libraryName;
@@ -82,9 +83,17 @@ namespace pwiz.Skyline.SettingsUI
             _thread.Name = "BuildLibraryNotification"; // Not L10N
             _thread.IsBackground = true;
 
+            _windowCreatedEvent = new ManualResetEvent(false);
+            HandleCreated += Notification_HandleCreated;
+
             _displayTimer = new Timer();
             _displayTimer.Tick += OnDisplayTimerEvent;
             _displayTimer.Interval = DISPLAY_DURATION;
+        }
+
+        private void Notification_HandleCreated(object sender, EventArgs e)
+        {
+            _windowCreatedEvent.Set();
         }
 
         /// <summary>
@@ -117,6 +126,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public void Remove()
         {
+            _windowCreatedEvent.WaitOne();
+
             if (IsHandleCreated)
             {
                 try
@@ -144,7 +155,9 @@ namespace pwiz.Skyline.SettingsUI
             try
             {
                 _displayTimer.Stop();
+                _displayTimer.Dispose();
                 _animator.Release();
+                _windowCreatedEvent.Dispose();
                 Close();
                 Dispose();
             }
