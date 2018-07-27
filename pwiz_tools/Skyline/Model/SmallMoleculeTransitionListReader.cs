@@ -1098,26 +1098,8 @@ namespace pwiz.Skyline.Model
                 countValues++;
                 if (adduct.IsEmpty)
                 {
-                    // No adduct given, just charge. Either it's implied (de)protonation, or formula is inherently charged
-                    if (string.IsNullOrEmpty(formula))
-                    {
-                        adduct = Adduct.FromChargeNoMass(charge.Value); // If all we have is mz, don't make guesses at proton gain or loss
-                    }
-                    else if (mz == 0)
-                    {
-                        adduct = Adduct.NonProteomicProtonatedFromCharge(charge.Value); // Formula but no mz, just assume protonation
-                    }
-                    else
-                    {
-                        // Get mass from formula, then look at declared mz to decide if protonation is implied by charge
-                        var adductH = Adduct.NonProteomicProtonatedFromCharge(charge.Value); // [M-H] etc
-                        var adductM = Adduct.FromChargeNoMass(charge.Value);                 // [M-] etc
-                        var ionH = new CustomMolecule(adductH.ApplyToFormula(formula));
-                        var ionM = new CustomMolecule(adductM.ApplyToFormula(formula));
-                        var mass = mz * Math.Abs(charge.Value);
-                        adduct = Math.Abs(ionH.GetMass(MassType.Monoisotopic) - mass) < Math.Abs(ionM.GetMass(MassType.Monoisotopic) - mass)
-                            ? adductH : adductM;
-                    }
+                    // When no adduct is given, either it's implied (de)protonation, or formula is inherently charged. Formula and mz are a clue.
+                    adduct = DetermineAdductFromFormulaChargeAndMz(formula, charge.Value, mz);
                     row.SetCell(indexAdduct, adduct.AdductFormula);
                 }
             }
@@ -1312,6 +1294,35 @@ namespace pwiz.Skyline.Model
                 Message = errMessage
             });
             return null;
+        }
+
+        // When a charge but no adduct is given, either it's implied (de)protonation, or formula is inherently charged. Formula and mz are a clue.
+        private static Adduct DetermineAdductFromFormulaChargeAndMz(string formula, int charge, TypedMass mz)
+        {
+            Adduct adduct;
+            if (string.IsNullOrEmpty(formula))
+            {
+                adduct = Adduct.FromChargeNoMass(charge); // If all we have is mz, don't make guesses at proton gain or loss
+            }
+            else if (mz == 0)
+            {
+                adduct = Adduct.NonProteomicProtonatedFromCharge(charge); // Formula but no mz, just assume protonation
+            }
+            else
+            {
+                // Get mass from formula, then look at declared mz to decide if protonation is implied by charge
+                var adductH = Adduct.NonProteomicProtonatedFromCharge(charge); // [M-H] etc
+                var adductM = Adduct.FromChargeNoMass(charge); // [M-] etc
+                var ionH = new CustomMolecule(adductH.ApplyToFormula(formula));
+                var ionM = new CustomMolecule(adductM.ApplyToFormula(formula));
+                var mass = mz * Math.Abs(charge);
+                adduct = Math.Abs(ionH.GetMass(MassType.Monoisotopic) - mass) <
+                         Math.Abs(ionM.GetMass(MassType.Monoisotopic) - mass)
+                    ? adductH
+                    : adductM;
+            }
+
+            return adduct;
         }
 
         private PeptideGroupDocNode GetMoleculePeptideGroup(SrmDocument document, Row row, bool requireProductInfo)
