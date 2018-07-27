@@ -997,13 +997,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        [TrackChildren(defaultValues: typeof(DefaultValuesNullOrEmpty))]
         public IList<ExplicitMod> StaticModifications
         {
             get { return GetModifications(IsotopeLabelType.light); }
         }
 
-        [TrackChildren(defaultValues: typeof(DefaultValuesNullOrEmpty))]
         public IList<ExplicitMod> HeavyModifications
         {
             get { return GetModifications(IsotopeLabelType.heavy); }

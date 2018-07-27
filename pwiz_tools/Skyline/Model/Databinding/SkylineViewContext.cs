@@ -852,7 +852,7 @@ namespace pwiz.Skyline.Model.Databinding
                 skylineWindow.ModifyDocument(Resources.SkylineViewContext_DeleteDocNodes_Delete_items,
                     doc => DeleteNodes(doc, identityPaths, out deletedNodePaths),
                     docPair => SkylineWindow.CreateDeleteNodesEntry(docPair,
-                        deletedNodePaths.Select(i => docPair.OldDoc.FindNode(i).AuditLogText), deletedNodePaths.Count));
+                        deletedNodePaths.Select(i => AuditLogEntry.GetNodeName(docPair.OldDoc, docPair.OldDoc.FindNode(i)).ToString()), deletedNodePaths.Count));
             }
         }
 

@@ -35,7 +35,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public class PeptideDocNode : DocNodeParent, IAuditLogObject
+    public class PeptideDocNode : DocNodeParent
     {
         public static readonly StandardType STANDARD_TYPE_IRT = StandardType.IRT;  // Not L10N
         public static readonly StandardType STANDARD_TYPE_QC = StandardType.QC;    // Not L10N
@@ -127,7 +127,26 @@ namespace pwiz.Skyline.Model
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.peptide; } }
 
-        [TrackChildren(defaultValues:typeof(DefaultValuesNull))]
+        private static IList<ExplicitMod> EmptyIfDefault(ExplicitMods mods)
+        {
+            if (mods == null || mods.Equals(ExplicitMods.EMPTY))
+                return new ExplicitMod[0];
+
+            return null;
+        }
+
+        [TrackChildren]
+        public IList<ExplicitMod> ExplicitModsStatic
+        {
+            get { return EmptyIfDefault(ExplicitMods) ?? ExplicitMods.StaticModifications ?? new ExplicitMod[0]; }
+        }
+
+        [TrackChildren]
+        public IList<ExplicitMod> ExplicitModsHeavy
+        {
+            get { return EmptyIfDefault(ExplicitMods) ?? ExplicitMods.HeavyModifications ?? new ExplicitMod[0]; }
+        }
+
         public ExplicitMods ExplicitMods { get; private set; }
 
         public ModifiedSequenceMods SourceKey { get; private set; }

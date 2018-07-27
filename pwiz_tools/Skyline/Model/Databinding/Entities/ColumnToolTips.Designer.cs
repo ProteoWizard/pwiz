@@ -155,13 +155,29 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///      Row of audit log information
-        ///    .
+        ///   Looks up a localized string similar to Id of the detailed message.
+        /// </summary>
+        public static string AuditLogDetailRowId {
+            get {
+                return ResourceManager.GetString("AuditLogDetailRowId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Row of audit log information.
         /// </summary>
         public static string AuditLogRow {
             get {
                 return ResourceManager.GetString("AuditLogRow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Id of the entry.
+        /// </summary>
+        public static string AuditLogRowId {
+            get {
+                return ResourceManager.GetString("AuditLogRowId", resourceCulture);
             }
         }
         

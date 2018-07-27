@@ -328,7 +328,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>PropertyNames.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\AuditLog\Reflector.cs" />
+    <Compile Include="Model\AuditLog\ReflectorEnumerator.cs" />
     <Compile Include="Model\AuditLog\ReflectorToString.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -1743,6 +1743,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\FilterMatchedPeptidesDlg.zh-CHS.resx">
       <DependentUpon>FilterMatchedPeptidesDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ImportDocResultsDlg.ja.resx">
       <DependentUpon>ImportDocResultsDlg.cs</DependentUpon>
@@ -2656,6 +2657,7 @@
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchDIA.png" />
     <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
     <EmbeddedResource Include="Resources\Ions_fragments.bmp" />
+    <None Include="Resources\Edit_Undo_Multiple.bmp" />
     <Content Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <Content Include="Resources\MoleculeStandard.bmp" />

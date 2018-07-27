@@ -79,7 +79,16 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        [Track]
+        private class AnnotationDefValuesDefault : DefaultValues
+        {
+            public override bool IsDefault(object obj, object parentObject)
+            {
+                var def = (AnnotationDef) parentObject;
+                return def.Type != AnnotationType.value_list;
+            }
+        }
+
+        [Track(defaultValues: typeof(AnnotationDefValuesDefault))]
         public ImmutableList<String> Items
         {
             get { return _items; }

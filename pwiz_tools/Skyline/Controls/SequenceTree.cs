@@ -857,9 +857,6 @@ namespace pwiz.Skyline.Controls
 
         protected Point GetPickerLocation(TreeNode node)
         {
-            Bitmap bmp;
-            Brush b;
-           
             return GetPickerLocation(GetDropRect(node));
         }
 

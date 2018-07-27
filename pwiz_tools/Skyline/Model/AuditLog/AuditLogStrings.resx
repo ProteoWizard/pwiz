@@ -266,9 +266,6 @@
   <data name="renamed_proteins" xml:space="preserve">
     <value>Renamed {0} proteins</value>
   </data>
-  <data name="inserted_fasta" xml:space="preserve">
-    <value>Inserted {0} proteins from FASTA</value>
-  </data>
   <data name="inserted_peptides" xml:space="preserve">
     <value>Inserted {0} peptides</value>
   </data>
@@ -308,38 +305,29 @@
   <data name="refined_targets" xml:space="preserve">
     <value>Refined targets</value>
   </data>
-  <data name="associated_proteins_bg" xml:space="preserve">
-    <value>Associated peptides with {0} proteins using background proteome "{1}"</value>
-  </data>
-  <data name="associated_proteins_fasta" xml:space="preserve">
-    <value>Associated peptides with {0} proteins using fasta "{1}"</value>
-  </data>
-  <data name="associated_peptide_with_protein" xml:space="preserve">
-    <value>Associated peptide {0} with protein {1}</value>
-  </data>
   <data name="remove_missing_results" xml:space="preserve">
     <value>Removed missing results</value>
   </data>
   <data name="renamed_single_protein" xml:space="preserve">
-    <value>Renamed protein {0}</value>
+    <value>Renamed protein {0} to {1}</value>
   </data>
   <data name="set_standard_type_peptides" xml:space="preserve">
     <value>Set standard type for {0} peptides</value>
   </data>
   <data name="imported_results" xml:space="preserve">
-    <value>Imported {0} replicates</value>
+    <value>Imported results from {0} files</value>
   </data>
   <data name="imported_peak_boundaries" xml:space="preserve">
     <value>Imported peak boundaries from "{0}"</value>
   </data>
-  <data name="removed_unrecognized_charge_states" xml:space="preserve">
-    <value>Removed {0} unrecognized charge states</value>
+  <data name="removed_unrecognized_charge_state" xml:space="preserve">
+    <value>Removed unrecognized charge state {0}</value>
   </data>
-  <data name="removed_unrecognized_files" xml:space="preserve">
-    <value>Removed {0} unrecognized files</value>
+  <data name="removed_unrecognized_file" xml:space="preserve">
+    <value>Removed unrecognized file {0}</value>
   </data>
-  <data name="removed_unrecognized_peptides" xml:space="preserve">
-    <value>Removed {0} unrecognized peptides</value>
+  <data name="removed_unrecognized_peptide" xml:space="preserve">
+    <value>Removed unrecognized peptide {0}</value>
   </data>
   <data name="UnrecognizedChargeStates" xml:space="preserve">
     <value>Unrecognized charge states</value>
@@ -354,10 +342,10 @@
     <value>Imported FASTA from "{0}"</value>
   </data>
   <data name="kept_empty_proteins" xml:space="preserve">
-    <value>Kept {0} empty proteins</value>
+    <value>Kept empty proteins</value>
   </data>
   <data name="removed_empty_proteins" xml:space="preserve">
-    <value>Removed {0} empty proteins</value>
+    <value>Removed empty proteins</value>
   </data>
   <data name="imported_assay_library_from_file" xml:space="preserve">
     <value>Imported assay library form "{0}"</value>
@@ -497,9 +485,6 @@
   <data name="added_peptides_to_peptide_group_from_background_proteome" xml:space="preserve">
     <value>Added peptides to peptide group {0} from background proteome in Targets window</value>
   </data>
-  <data name="imported_single_document" xml:space="preserve">
-    <value>Imported document "{0}"</value>
-  </data>
   <data name="imported_assay_library" xml:space="preserve">
     <value>Imported assay library from clipboard</value>
   </data>
@@ -516,9 +501,99 @@
     <value>{0}</value>
   </data>
   <data name="deleted_target" xml:space="preserve">
-    <value>Deleted {0}</value>
+    <value>Deleted target {0}</value>
   </data>
   <data name="imported_docs" xml:space="preserve">
     <value>Imported {0} documents</value>
+  </data>
+  <data name="LogException_Message_An_error_occured_while_creating_a_log_entry__The_document_was_still_successfully_modified" xml:space="preserve">
+    <value>An error occured while creating a log entry. The document was still successfully modified</value>
+  </data>
+  <data name="LogException_Message_An_error_occured_while_creating_a_log_entry__Action___0___was_still_successfull" xml:space="preserve">
+    <value>An error occured while creating a log entry. Action "{0}" was still successfull</value>
+  </data>
+  <data name="removed_all" xml:space="preserve">
+    <value>{0}: removed all</value>
+  </data>
+  <data name="removed_all_libraries" xml:space="preserve">
+    <value>Removed all library runs</value>
+  </data>
+  <data name="removed_all_replicates" xml:space="preserve">
+    <value>Removed all replicates</value>
+  </data>
+  <data name="removed_library_run" xml:space="preserve">
+    <value>Removed library run "{0}"</value>
+  </data>
+  <data name="removed_replicate" xml:space="preserve">
+    <value>Removed replicate "{0}"</value>
+  </data>
+  <data name="accepted_peptide" xml:space="preserve">
+    <value>Accepted peptide {0}</value>
+  </data>
+  <data name="accepted_protein" xml:space="preserve">
+    <value>Accepted protein {0}</value>
+  </data>
+  <data name="associated_peptides_with_protein" xml:space="preserve">
+    <value>Associated peptides with {0}</value>
+  </data>
+  <data name="associated_peptides_with_proteins" xml:space="preserve">
+    <value>Associated peptides with {0} proteins</value>
+  </data>
+  <data name="drag_and_dropped_node" xml:space="preserve">
+    <value>Drag and dropped {0} to {1}</value>
+  </data>
+  <data name="imported_result" xml:space="preserve">
+    <value>Imported results from "{0}"</value>
+  </data>
+  <data name="inserted_peptide" xml:space="preserve">
+    <value>Inserted peptide {0}</value>
+  </data>
+  <data name="inserted_protein" xml:space="preserve">
+    <value>Inserted protein {0}</value>
+  </data>
+  <data name="inserted_proteins_fasta" xml:space="preserve">
+    <value>Inserted {0} proteins from FASTA</value>
+  </data>
+  <data name="inserted_transition" xml:space="preserve">
+    <value>Inserted transition into {0}</value>
+  </data>
+  <data name="kept_empty_protein" xml:space="preserve">
+    <value>Kept {0} empty protein</value>
+  </data>
+  <data name="removed_empty_protein" xml:space="preserve">
+    <value>Removed {0} empty protein</value>
+  </data>
+  <data name="log_cleared_single" xml:space="preserve">
+    <value>{0} change cleared</value>
+  </data>
+  <data name="log_unlogged_change" xml:space="preserve">
+    <value>{0} unlogged change</value>
+  </data>
+  <data name="cleared_document_grid_single" xml:space="preserve">
+    <value>Cleared {0} value in document grid</value>
+  </data>
+  <data name="pasted_document_grid_single" xml:space="preserve">
+    <value>Pasted {0} value into document grid</value>
+  </data>
+  <data name="fill_down_document_grid_single" xml:space="preserve">
+    <value>Filled down {0} value in document grid</value>
+  </data>
+  <data name="added_peptide_decoy" xml:space="preserve">
+    <value>Added {0} peptide decoy using {1} method</value>
+  </data>
+  <data name="picked_child" xml:space="preserve">
+    <value>Picked child {0} for {1}</value>
+  </data>
+  <data name="removed_rt_outlier" xml:space="preserve">
+    <value>Removed {0} RT outlier</value>
+  </data>
+  <data name="AuditLogForm_AuditLogForm_Audit_Log" xml:space="preserve">
+    <value>Audit Log</value>
+  </data>
+  <data name="imported_fasta_paste" xml:space="preserve">
+    <value>Imported FASTA from clipboard</value>
+  </data>
+  <data name="pasted_single_small_molecule_transition" xml:space="preserve">
+    <value>Pasted {0} small molecule transition</value>
   </data>
 </root>

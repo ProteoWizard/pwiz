@@ -59,12 +59,6 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public abstract LogMessage ToMessage(PropertyName name, LogLevel level, bool allowReflection);
 
-        // For debugging
-        public override string ToString()
-        {
-            return ToMessage(new PropertyName(PropertyPath.ToString()), LogLevel.all_info, true).ToString();
-        }
-
         protected virtual string ObjectToString(bool allowReflection)
         {
             bool isName;
@@ -179,11 +173,25 @@ namespace pwiz.Skyline.Model.AuditLog
             }
             else
             {
-                foreach (var n in Nodes)
-                    result.AddRange(n.FindAllLeafNodes(tree, name, allowReflection, this));
+                var collectionPropDiffNode = this as CollectionPropertyDiffNode;
+                if (collectionPropDiffNode != null && collectionPropDiffNode.RemovedAll)
+                {
+                    result.Add(new DiffNodeNamePair(this, name, allowReflection));
+                }
+                else
+                {
+                    foreach (var n in Nodes)
+                        result.AddRange(n.FindAllLeafNodes(tree, name, allowReflection, this));
+                }
             }
 
             return result;
+        }
+
+        // For debugging
+        public override string ToString()
+        {
+            return ToMessage(new PropertyName(PropertyPath.ToString()), LogLevel.all_info, true).ToString();
         }
     }
 
@@ -209,7 +217,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public override bool IsCollectionElement { get { return false; } }
 
-        public ObjectPair<object> Value { get; private set; }
+        public ObjectPair<object> Value { get; protected set; }
 
         public override LogMessage ToMessage(PropertyName name, LogLevel level, bool allowReflection)
         {
@@ -246,6 +254,40 @@ namespace pwiz.Skyline.Model.AuditLog
 
             return new LogMessage(level, MessageType.changed, string.Empty, Expanded, name.ToString());
         }
+    }
+
+    public class CollectionPropertyDiffNode : PropertyDiffNode
+    {
+        public CollectionPropertyDiffNode(Property property, PropertyPath propertyPath, ObjectPair<object> value,
+            IEnumerable<DiffNode> nodes = null, bool expanded = false) : base(property, propertyPath, value, nodes,
+            expanded)
+        {
+        }
+
+        public CollectionPropertyDiffNode(PropertyDiffNode copyNode) : this(copyNode.Property, copyNode.PropertyPath,
+            copyNode.Value, copyNode.Nodes, copyNode.Expanded)
+        {
+        }
+
+        public static CollectionPropertyDiffNode FromPropertyDiffNode(PropertyDiffNode copyNode)
+        {
+            return copyNode == null ? null : new CollectionPropertyDiffNode(copyNode);
+        }
+
+        public override LogMessage ToMessage(PropertyName name, LogLevel level, bool allowReflection)
+        {
+            if (!RemovedAll)
+                return base.ToMessage(name, level, allowReflection);
+
+            return new LogMessage(level, MessageType.removed_all, string.Empty, Expanded, name.ToString());
+        }
+
+        public CollectionPropertyDiffNode SetRemovedAll()
+        {
+            return ChangeProp(ImClone(this), im => im.RemovedAll = true);
+        }
+
+        public bool RemovedAll { get; private set; }
     }
 
     /// <summary>
@@ -329,10 +371,19 @@ namespace pwiz.Skyline.Model.AuditLog
 
     public class DiffTree
     {
-        public DiffTree(DiffNode root, DateTime timeStamp)
+        public DiffTree(DiffNode root, DateTime? timeStamp = null)
         {
             Root = root;
-            TimeStamp = timeStamp;
+            TimeStamp = timeStamp ?? DateTime.Now;
+        }
+
+        public static DiffTree FromEnumerator(IEnumerator<DiffNode> treeEnumerator, DateTime? timeStamp = null)
+        {
+            DiffNode current = null;
+            while (treeEnumerator.MoveNext())
+                current = treeEnumerator.Current;
+
+            return new DiffTree(current, timeStamp ?? DateTime.Now);
         }
 
         public DiffNode Root { get; private set; }

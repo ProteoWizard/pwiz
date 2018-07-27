@@ -76,7 +76,6 @@ namespace pwiz.Skyline.Model.AuditLog
         remove_missing_results,
         renamed_proteins,
         renamed_single_protein,
-        inserted_fasta,
         inserted_proteins,
         inserted_peptides,
         inserted_transitions,
@@ -88,16 +87,10 @@ namespace pwiz.Skyline.Model.AuditLog
         sort_protein_gene,
         added_peptide_decoys,
         refined_targets,
-        associated_proteins_fasta,
-        associated_proteins_bg,
-        associated_peptide_with_protein,
 
         // File > Import
         imported_results,
         imported_peak_boundaries,
-        removed_unrecognized_peptides,
-        removed_unrecognized_files,
-        removed_unrecognized_charge_states,
         imported_fasta,
         kept_empty_proteins,
         removed_empty_proteins,
@@ -144,14 +137,43 @@ namespace pwiz.Skyline.Model.AuditLog
         upgraded_background_proteome,
         added_new_peptide_group_from_background_proteome,
         added_peptides_to_peptide_group_from_background_proteome,
-        imported_single_document,
         imported_assay_library_from_file,
         imported_transition_list_from_file,
 
         log_error,
         log_error_old_msg,
         deleted_target,
-        imported_doc
+        imported_doc,
+        removed_all,
+        removed_all_libraries,
+        removed_replicate,
+        removed_library_run,
+        removed_all_replicates,
+        accepted_peptide,
+        accepted_protein,
+        associated_peptides_with_protein,
+        associated_peptides_with_proteins,
+        drag_and_dropped_node,
+        imported_result,
+        kept_empty_protein,
+        removed_empty_protein,
+        inserted_proteins_fasta,
+        inserted_protein,
+        inserted_peptide,
+        inserted_transition,
+        log_cleared_single,
+        log_unlogged_change,
+        pasted_document_grid_single,
+        cleared_document_grid_single,
+        fill_down_document_grid_single,
+        added_peptide_decoy,
+        picked_child,
+        removed_rt_outlier,
+        removed_unrecognized_peptide,
+        removed_unrecognized_file,
+        removed_unrecognized_charge_state,
+        imported_fasta_paste,
+        pasted_single_small_molecule_transition
     }
 
     /// <summary>
@@ -255,7 +277,6 @@ namespace pwiz.Skyline.Model.AuditLog
             MessageInfo = info;
             Reason = reason;
             Expanded = expanded;
-            
         }
 
         public LogMessage(LogLevel level, MessageType type, string reason, bool expanded, params object[] names) :
@@ -289,6 +310,8 @@ namespace pwiz.Skyline.Model.AuditLog
 
             // If the string could not be found, list the names in brackets and separated by commas
             var format = AuditLogStrings.ResourceManager.GetString(Type.ToString());
+            if (string.IsNullOrEmpty(format))
+                System.Diagnostics.Debugger.Break();
             return string.IsNullOrEmpty(format)
                 ? string.Format("[" + string.Join(", ", Enumerable.Range(0, names.Length).Select(i => "{" + i + "}")) + "]", names) // Not L10N
                 : string.Format(format, names);

@@ -436,7 +436,7 @@
     <value>Expression</value>
   </data>
   <data name="GroupComparisonDef_IdentityAnnotation" xml:space="preserve">
-    <value>Identity Annotation (for technical replicates)</value>
+    <value>Identity Annotation</value>
   </data>
   <data name="AnnotationDef_Items" xml:space="preserve">
     <value>Values</value>
@@ -734,11 +734,11 @@
   <data name="Annotations_ColorBrush" xml:space="preserve">
     <value>Color</value>
   </data>
-  <data name="ExplicitMods_HeavyModifications" xml:space="preserve">
-    <value>Heavy</value>
+  <data name="PeptideDocNode_ExplicitModsHeavy" xml:space="preserve">
+    <value>Heavy modifications</value>
   </data>
-  <data name="ExplicitMods_StaticModifications" xml:space="preserve">
-    <value>Structural</value>
+  <data name="PeptideDocNode_ExplicitModsStatic" xml:space="preserve">
+    <value>Structural modifications</value>
   </data>
   <data name="ExplicitMod_IndexAA" xml:space="preserve">
     <value>Amino Acid index</value>
@@ -858,7 +858,7 @@
     <value>Regression</value>
   </data>
   <data name="OptimizableRegression_StepCount" xml:space="preserve">
-    <value>Count</value>
+    <value>Step count</value>
   </data>
   <data name="OptimizableRegression_StepSize" xml:space="preserve">
     <value>Step size</value>
@@ -1226,13 +1226,85 @@
   <data name="ImportResultsSettings_FoundResultsFiles" xml:space="preserve">
     <value>Found results files</value>
   </data>
-  <data name="FilterMatchedPeptideSettings" xml:space="preserve">
-    <value>Filter peptides</value>
-  </data>
   <data name="ViewLibrarySettings" xml:space="preserve">
     <value>Spectral Library Explorer</value>
   </data>
   <data name="UniquePeptideSettings" xml:space="preserve">
     <value>Unique peptide settings</value>
+  </data>
+  <data name="ManageResultsSettings_RemoveCorrespondingLibraryRuns" xml:space="preserve">
+    <value>Remove corresponding library runs</value>
+  </data>
+  <data name="ManageResultsSettings_RemoveCorrespondingReplicates" xml:space="preserve">
+    <value>Remove corresponding replicates</value>
+  </data>
+  <data name="RefineListSettings" xml:space="preserve">
+    <value>Accept Peptides</value>
+  </data>
+  <data name="RefineListSettings_AcceptedPeptides" xml:space="preserve">
+    <value>Peptides to keep</value>
+  </data>
+  <data name="RefineListSettings_MatchModified" xml:space="preserve">
+    <value>Match modified sequence</value>
+  </data>
+  <data name="RefineListSettings_RemoveEmptyProteins" xml:space="preserve">
+    <value>Remove empty proteins</value>
+  </data>
+  <data name="RefineProteinListSettings" xml:space="preserve">
+    <value>Accept proteins</value>
+  </data>
+  <data name="RefineProteinListSettings_AcceptedProteins" xml:space="preserve">
+    <value>Proteins to keep</value>
+  </data>
+  <data name="RefineProteinListSettings_Accessions" xml:space="preserve">
+    <value>Accessions</value>
+  </data>
+  <data name="RefineProteinListSettings_Names" xml:space="preserve">
+    <value>Names</value>
+  </data>
+  <data name="RefineProteinListSettings_PreferredNames" xml:space="preserve">
+    <value>Preferred names</value>
+  </data>
+  <data name="RenameProteinsSettings" xml:space="preserve">
+    <value>Rename proteins</value>
+  </data>
+  <data name="RenameProteinsSettings_RenamedProteins" xml:space="preserve">
+    <value>Renamed</value>
+  </data>
+  <data name="RenameProteins_CurrentName" xml:space="preserve">
+    <value>Current Name</value>
+  </data>
+  <data name="RenameProteins_NewName" xml:space="preserve">
+    <value>New Name</value>
+  </data>
+  <data name="AssociateProteinsSettings" xml:space="preserve">
+    <value>Associate Proteins</value>
+  </data>
+  <data name="AssociateProteinsSettings_BackgroundProteome" xml:space="preserve">
+    <value>Background Proteome</value>
+  </data>
+  <data name="AssociateProteinsSettings_FASTA" xml:space="preserve">
+    <value>FASTA</value>
+  </data>
+  <data name="AssociateProteinsSettings_Proteins" xml:space="preserve">
+    <value>Proteins</value>
+  </data>
+  <data name="ChooseSchedulingReplicatesSettings" xml:space="preserve">
+    <value>Choose RT Prediction Replicates</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings" xml:space="preserve">
+    <value>Filter Peptides</value>
+  </data>
+  <data name="AddIrtStandardsToDocumentSettings" xml:space="preserve">
+    <value>Add Standard Peptides</value>
+  </data>
+  <data name="EmptyProteinsSettings" xml:space="preserve">
+    <value>Empty Proteins</value>
+  </data>
+  <data name="ManageResultsSettings" xml:space="preserve">
+    <value>Manage Results</value>
+  </data>
+  <data name="PropertiesCutoffSettings" xml:space="preserve">
+    <value>Volcano plot cutoff settings</value>
   </data>
 </root>

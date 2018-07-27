@@ -45,6 +45,7 @@ using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Find;
@@ -882,6 +883,16 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public bool IsTutorialTest
+        {
+            get { return TestContext.TestName.Contains("Tutorial"); }
+        }
+
+        public static bool IsRecordAuditLogForTutorials
+        {
+            get { return false; }
+        }
+
         public static bool IsShowMatchingTutorialPages { get; set; }
 
         public static bool IsDemoMode { get { return Program.DemoMode; } }
@@ -912,11 +923,6 @@ namespace pwiz.SkylineTestUtil
 
         private void PauseForScreenShot(string description, int? pageNum, Type formType)
         {
-            var path = @"D:\Test Logs\" + Program.TestName + ".txt";
-            if (pageNum.HasValue)
-                description = string.Format("page {0} - {1}", pageNum, description);
-            File.AppendAllText(path, description + "\r\n");
-
             if (Program.SkylineOffscreen)
                 return;
 
@@ -982,6 +988,7 @@ namespace pwiz.SkylineTestUtil
                 Settings.Default.RetentionTimeList[0] = RetentionTimeList.GetDefault();
                 Settings.Default.ShowStartupForm = ShowStartPage;
                 Settings.Default.MruList = SetMru;
+                AuditLogEntry.OnAuditLogEntryAdded += OnAuditLogEntryAdded;
                 // For automated demos, start with the main window maximized
                 if (IsDemoMode)
                     Settings.Default.MainWindowMaximized = true;
@@ -990,6 +997,8 @@ namespace pwiz.SkylineTestUtil
                 threadTest.Start();
                 Program.Main();
                 threadTest.Join();
+                AuditLogEntry.OnAuditLogEntryAdded -= OnAuditLogEntryAdded;
+                VerifyAuditLogCorrect();
 
                 // Were all windows disposed?
                 FormEx.CheckAllFormsDisposed();
@@ -1037,6 +1046,88 @@ namespace pwiz.SkylineTestUtil
                 //Log<AbstractFunctionalTest>.Fail("Functional test did not complete"); // Not L10N
                 Assert.Fail("Functional test did not complete");
             }
+
+            CopyAuditLog();
+        }
+
+        private string AuditLogDir
+        {
+            get { return Path.Combine(TestContext.TestRunResultsDirectory, "AuditLog"); }
+        }
+
+        private string AuditLogTutorialDir
+        {
+            get { return Path.Combine(TestContext.TestDir, @"..\..\TutorialAuditLogs"); }
+        }
+
+        private void OnAuditLogEntryAdded(object sender, AuditLogEntry.AuditLogEntryAddedEventArgs e)
+        {
+            WriteEntryToFile(AuditLogDir, e.Entry);
+        }
+
+        private void CopyAuditLog()
+        {
+            if (!IsTutorialTest || !IsRecordAuditLogForTutorials)
+                return;
+
+            var fromFile = GetLogFilePath(AuditLogDir);
+            var toFile = GetLogFilePath(AuditLogTutorialDir);
+
+            File.Copy(fromFile, toFile, true);
+        }
+
+        private void VerifyAuditLogCorrect()
+        {
+            if (!IsTutorialTest || IsRecordAuditLogForTutorials)
+                return;
+
+            // Ensure expected tutorial log file exists
+            var expectedFilePath = GetLogFilePath(AuditLogTutorialDir);
+            Assert.IsTrue(File.Exists(expectedFilePath),
+                "Log file for test \"{0}\" does not exist, set IsRecordAuditLogForTutorials=true to create it",
+                TestContext.TestName);
+
+            // Compare file contents
+            var expected = File.ReadAllText(expectedFilePath);
+            var actual = File.ReadAllText(GetLogFilePath(AuditLogDir));
+            Assert.AreEqual(expected, actual);
+        }
+
+        private string GetLogFilePath(string folderPath)
+        {
+            var language = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+            var path = Path.Combine(folderPath, language);
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            return Path.Combine(path, TestContext.TestName + ".log");
+        }
+
+        private void WriteEntryToFile(string folderPath, AuditLogEntry entry)
+        {
+            var filePath = GetLogFilePath(folderPath);
+            using (var fs = File.Open(filePath, FileMode.Append))
+            {
+                using (var sw = new StreamWriter(fs))
+                {
+                    sw.WriteLine(AuditLogEntryToString(entry));
+                }
+            }
+        }
+
+        private string AuditLogEntryToString(AuditLogEntry entry)
+        {
+            var result = string.Format("Undo Redo : {0}\r\n", entry.UndoRedo);
+            result += string.Format("Summary   : {0}\r\n", entry.Summary);
+            result += "All Info  :\r\n";
+
+            foreach (var allInfoItem in entry.AllInfo)
+                result += allInfoItem + "\r\n";
+
+            if (entry.ExtraInfo != null)
+                result += string.Format("Extra Info: {0}\r\n", LogMessage.LocalizeLogStringProperties(entry.ExtraInfo));
+
+            return result;
         }
 
         private void WaitForSkyline()

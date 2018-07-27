@@ -292,7 +292,7 @@ namespace pwiz.Skyline.Model
             Program.MainWindow.Invoke(new Action(() =>
             {
                 _skylineWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
-                    false, Resources.ToolService_ImportFasta_Insert_proteins);
+                    false, Resources.ToolService_ImportFasta_Insert_proteins, new SkylineWindow.ImportFastaInfo(false, textFasta));
             }));
         }
 

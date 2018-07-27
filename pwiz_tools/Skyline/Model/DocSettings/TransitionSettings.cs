@@ -348,7 +348,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public DeclusteringPotentialRegression DeclusteringPotential { get; private set; }
 
         [TrackChildren]
-        public DeclusteringPotentialRegression NonNullDeclusteringPotentialRegression
+        public DeclusteringPotentialRegression NonNullDeclusteringPotential
         {
             get { return DeclusteringPotential ?? DeclusterPotentialList.GetDefault(); }
         }

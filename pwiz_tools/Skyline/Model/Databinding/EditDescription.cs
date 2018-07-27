@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -63,7 +64,18 @@ namespace pwiz.Skyline.Model.Databinding
 
         public IColumnCaption ColumnCaption { get; private set; }
         public ElementRef ElementRef { get; private set; }
-        public string ElementRefName { get { return ElementRef != null ? ElementRef.Name : null;} }
+
+        public string ElementRefName
+        {
+            get
+            {
+                if (ElementRef == null)
+                    throw new NotImplementedException();
+
+                return ElementRef.Name;
+            }
+        }
+
         public object Value { get; private set; }
 
         public string GetUndoText(DataSchemaLocalizer dataSchemaLocalizer)

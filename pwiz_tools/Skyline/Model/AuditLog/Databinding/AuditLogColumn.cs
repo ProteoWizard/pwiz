@@ -32,7 +32,14 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
         {
             var undoRedoImage = new Bitmap(Resources.Edit_Undo);
             undoRedoImage.MakeTransparent(Color.Magenta);
-            _images = new Image[] { undoRedoImage, Resources.magnifier_zoom_in };
+            var undoRedoMultipleImage = new Bitmap(Resources.Edit_Undo_Multiple);
+            undoRedoMultipleImage.MakeTransparent(Color.Magenta);
+            _images = new Image[]
+            {
+                undoRedoImage,
+                undoRedoMultipleImage,
+                Resources.magnifier_zoom_in
+            };
         }
 
         public override bool ShouldDisplay(object cellValue, int imageIndex)
@@ -44,8 +51,10 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             switch (imageIndex)
             {
                 case 0:
-                    return value.UndoAction != null;
+                    return value.UndoAction != null && !value.IsMultipleUndo;
                 case 1:
+                    return value.UndoAction != null && value.IsMultipleUndo;
+                case 2:
                     return !string.IsNullOrEmpty(value.ExtraInfo);
                 default:
                     return false;
@@ -61,11 +70,12 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             switch (imageIndex)
             {
                 case 0:
+                case 1:
                 {
                     value.UndoAction();
                     break;
                 }
-                case 1:
+                case 2:
                 {
                     using (var form = new AuditLogExtraInfoForm(value.Text, value.ExtraInfo))
                     {

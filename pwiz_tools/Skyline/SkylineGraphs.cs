@@ -3728,7 +3728,8 @@ namespace pwiz.Skyline
 
             ModifyDocument(Resources.SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers,
                 doc => (SrmDocument) doc.RemoveAll(outlierIds),
-                docPair => DiffDocNodes(MessageType.removed_rt_outliers, docPair, outlierIds.Count));
+                docPair => AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.removed_rt_outlier,
+                    MessageType.removed_rt_outliers, RTGraphController.Outliers, outlier =>  AuditLogEntry.MessageArgs.Create(AuditLogEntry.GetNodeName(docPair.OldDoc, outlier)), null));
         }
 
         private void removeRTContextMenuItem_Click(object sender, EventArgs e)

@@ -53,7 +53,6 @@ namespace pwiz.Skyline.EditUI
         private List<Tuple<IdentityPath, PeptideDocNode>> _peptideDocNodes;
         private List<HashSet<Protein>> _peptideProteins;
         private readonly HashSet<IdentityPath> _peptidesInBackgroundProteome;
-        private UniquePeptideSettings _dialogSettings;
 
         // Support multiple selection (though using peptide settings is more efficient way to do this filtering)
         public static List<PeptideGroupTreeNode> PeptideSelection(SequenceTree sequenceTree)

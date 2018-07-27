@@ -86,6 +86,21 @@ namespace pwiz.SkylineTestFunctional
                     if (classType.ContainsGenericParameters)
                         continue;
 
+                    try
+                    {
+                        if (typeof(AuditLogFormSettings<>).MakeGenericType(classType).IsAssignableFrom(classType))
+                        {
+                            var localized = PropertyNames.ResourceManager.GetString(classType.Name);
+                            if (localized == null)
+                                unlocalizedProperties.Add(new UnlocalizedProperty(classType.Name));
+                        }
+                    }
+                    catch(ArgumentException)
+                    {
+                        // ignored
+                    }
+
+
                     var properties = Reflector.GetProperties(classType);
 
                     if (properties == null)
@@ -122,8 +137,7 @@ namespace pwiz.SkylineTestFunctional
                 }
                 catch (Exception ex)
                 {
-                    if(ex.Message != string.Empty)
-                        System.Diagnostics.Debugger.Break();
+                    Assert.Fail(ex.Message);
                 }
             }
 
@@ -620,66 +634,66 @@ namespace pwiz.SkylineTestFunctional
                 }),
             new LogEntryMessages(
                 new LogMessage(LogLevel.undo_redo, MessageType.changed_from_to, string.Empty, false,
-                    "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}",
+                    "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}",
                     "\"Thermo\"",
                     "\"Thermo TSQ Quantiva\""),
                 new LogMessage(LogLevel.summary, MessageType.changed_from_to, string.Empty, false,
-                    "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}",
+                    "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}",
                     "\"Thermo\"",
                     "\"Thermo TSQ Quantiva\""),
                 new[]
                 {
                     new LogMessage(LogLevel.undo_redo, MessageType.changed_from_to, string.Empty, false,
-                        "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}",
+                        "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}",
                         "\"Thermo\"",
                         "\"Thermo TSQ Quantiva\""),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}",
                         "\"Thermo\"",
                         "\"Thermo TSQ Quantiva\""),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}{2:PropertySeparator}{0:CollisionEnergyRegression_Conversions}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}{2:PropertySeparator}{0:CollisionEnergyRegression_Conversions}",
                         "{ {0:ChargeRegressionLine_Charge} = {3:2}, {0:ChargeRegressionLine_Slope} = {3:0.0339}, {0:ChargeRegressionLine_Intercept} = {3:2.3597} }"),
                     new LogMessage(LogLevel.all_info, MessageType.contains, string.Empty, true,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}{2:PropertySeparator}{0:CollisionEnergyRegression_Conversions}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}{2:PropertySeparator}{0:CollisionEnergyRegression_Conversions}",
                         "{ {0:ChargeRegressionLine_Charge} = {3:3}, {0:ChargeRegressionLine_Slope} = {3:0.0295}, {0:ChargeRegressionLine_Intercept} = {3:1.5123} }"),
-                    new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}{2:PropertySeparator}{0:OptimizableRegression_StepSize}",
+                    /*new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}{2:PropertySeparator}{0:OptimizableRegression_StepSize}",
                         "{3:1}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_CollisionEnergy}{2:PropertySeparator}{0:OptimizableRegression_StepCount}",
-                        "{3:5}"),
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullCollisionEnergy}{2:PropertySeparator}{0:OptimizableRegression_StepCount}",
+                        "{3:5}"),*/
                 }),
             new LogEntryMessages(
                 new LogMessage(LogLevel.undo_redo, MessageType.changed_from_to, string.Empty, false,
-                    "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}",
-                    "{2:Missing}",
+                    "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}",
+                    "\"None\"",
                     "\"SCIEX\""),
                 new LogMessage(LogLevel.summary, MessageType.changed_from_to, string.Empty, false,
-                    "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}",
-                    "{2:Missing}",
+                    "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}",
+                    "\"None\"",
                     "\"SCIEX\""),
                 new[]
                 {
                     new LogMessage(LogLevel.undo_redo, MessageType.changed_from_to, string.Empty, false,
-                        "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}",
-                        "{2:Missing}",
+                        "{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}",
+                        "\"None\"",
                         "\"SCIEX\""),
                     new LogMessage(LogLevel.all_info, MessageType.changed_from_to, string.Empty, false,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}",
-                        "{2:Missing}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}",
+                        "\"None\"",
                         "\"SCIEX\""),
+                    /*new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}{2:PropertySeparator}{0:NamedRegressionLine_Slope}",
+                        "{3:0}"),*/
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}{2:PropertySeparator}{0:NamedRegressionLine_Slope}",
-                        "{3:0}"),
-                    new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}{2:PropertySeparator}{0:NamedRegressionLine_Intercept}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}{2:PropertySeparator}{0:NamedRegressionLine_Intercept}",
                         "{3:80}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}{2:PropertySeparator}{0:OptimizableRegression_StepSize}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}{2:PropertySeparator}{0:OptimizableRegression_StepSize}",
                         "{3:10}"),
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_DeclusteringPotential}{2:PropertySeparator}{0:OptimizableRegression_StepCount}",
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Prediction}{2:PropertySeparator}{0:TransitionPrediction_NonNullDeclusteringPotential}{2:PropertySeparator}{0:OptimizableRegression_StepCount}",
                         "{3:3}"),
                 }),
             new LogEntryMessages(
@@ -771,9 +785,6 @@ namespace pwiz.SkylineTestFunctional
                     new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}\"SubjectId\"{2:PropertySeparator}{0:AnnotationDef_Type}",
                         "\"text\""),
-                    new LogMessage(LogLevel.all_info, MessageType.is_, string.Empty, true,
-                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}\"SubjectId\"{2:PropertySeparator}{0:AnnotationDef_Items}",
-                        "{2:Empty}"),
                 }),
             new LogEntryMessages(
                 new LogMessage(LogLevel.undo_redo, MessageType.changed, string.Empty, false,

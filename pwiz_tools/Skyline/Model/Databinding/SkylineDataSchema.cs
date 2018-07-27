@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model.Databinding
         {
             return base.IsScalar(type) || type == typeof(IsotopeLabelType) || type == typeof(DocumentLocation) ||
                    type == typeof(SampleType) || type == typeof(GroupIdentifier) || type == typeof(StandardType) ||
-                   type == typeof(NormalizationMethod) || type == typeof(AuditLogRow.AuditLogRowText);
+                   type == typeof(NormalizationMethod) || type == typeof(AuditLogRow.AuditLogRowText) || type == typeof(AuditLogRow.AuditLogRowId);
         }
 
         public override bool IsRootTypeSelectable(Type type)
@@ -296,34 +296,36 @@ namespace pwiz.Skyline.Model.Databinding
                 }
             }, docPair =>
             {
-                MessageType type;
+                MessageType singular, plural;
                 var detailType = MessageType.set_to_in_document_grid;
-                Func<EditDescription, object[]> getArgsFunc = descr => new[] { descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.ElementRefName ?? "UNKNOWN", descr.Value };
+                Func<EditDescription, object[]> getArgsFunc = descr => new[] { descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.ElementRefName, descr.Value };
 
-                var cellCount = _batchEditDescriptions.Count;
                 switch (batchModifyInfo.BatchModifyAction)
                 {
                     case DataGridViewPasteHandler.BatchModifyAction.Paste:
-                        type = MessageType.pasted_document_grid;
+                        singular = MessageType.pasted_document_grid_single;
+                        plural = MessageType.pasted_document_grid;
                         break;
                     case DataGridViewPasteHandler.BatchModifyAction.Clear:
-                        type = MessageType.cleared_document_grid;
+                        singular = MessageType.cleared_document_grid_single;
+                        plural = MessageType.cleared_document_grid;
                         detailType = MessageType.cleared_cell_in_document_grid;
-                        getArgsFunc = descr => new[] { (object)descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.ElementRefName ?? "UNKNOWN" };
+                        getArgsFunc = descr => new[] { (object)descr.ColumnCaption.GetCaption(DataSchemaLocalizer), descr.ElementRefName };
                         break;
                     case DataGridViewPasteHandler.BatchModifyAction.FillDown:
-                        type = MessageType.fill_down_document_grid;
+                        singular = MessageType.fill_down_document_grid_single;
+                        plural = MessageType.fill_down_document_grid;
                         break;
                     default:
                         return null;
                 }
 
-                var extraInfo = batchModifyInfo.ExtraInfo;
+                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, singular, plural, _batchEditDescriptions,
+                    descr => AuditLogEntry.MessageArgs.Create(descr.ColumnCaption.GetCaption(DataSchemaLocalizer)),
+                    null).ChangeExtraInfo(batchModifyInfo.ExtraInfo);
 
-                return AuditLogEntry
-                    .CreateSingleMessageEntry(docPair.OldDoc, new MessageInfo(type, cellCount), extraInfo)
-                    .ChangeAllInfo(_batchEditDescriptions.Select(descr => new MessageInfo(detailType,
-                            getArgsFunc(descr))).ToList());
+                return entry.ChangeAllInfo(_batchEditDescriptions.Select(descr => new MessageInfo(detailType,
+                    getArgsFunc(descr))).ToList());
             });
             _batchChangesOriginalDocument = null;
             _batchEditDescriptions = null;
@@ -343,7 +345,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 SkylineWindow.ModifyDocument(editDescription.GetUndoText(DataSchemaLocalizer), action,
                     logFunc ?? (docPair => AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.set_to_in_document_grid,
-                        editDescription.ColumnCaption.GetCaption(DataSchemaLocalizer), editDescription.ElementRefName ?? "UNKNOWN", editDescription.Value)));
+                        editDescription.ColumnCaption.GetCaption(DataSchemaLocalizer), editDescription.ElementRefName, editDescription.Value)));
                 return;
             }
             VerifyDocumentCurrent(_batchChangesOriginalDocument, _documentContainer.Document);

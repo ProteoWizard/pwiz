@@ -21,15 +21,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RefineProteinListDlg : FormEx
+    public partial class RefineProteinListDlg : AuditLogForm<RefineProteinListDlg.RefineProteinListSettings>
     {
         private readonly SrmDocument _document;
 
@@ -57,6 +59,54 @@ namespace pwiz.Skyline.EditUI
         {
             get { return proteinPreferredNames.Checked; }
             set { proteinPreferredNames.Checked = value; }
+        }
+
+        public bool Names
+        {
+            get { return !(Accession || Preferred); }
+        }
+
+        public override RefineProteinListSettings FormSettings
+        {
+            get { return new RefineProteinListSettings(AcceptedProteins, Names, Accession, Preferred, ProteinsText); }
+        }
+
+        public class RefineProteinListSettings : AuditLogFormSettings<RefineProteinListSettings>, IAuditLogComparable
+        {
+            public RefineProteinListSettings(HashSet<string> acceptedProteins, bool names, bool accessions, bool preferredNames, string proteinsText)
+            {
+                AcceptedProteins = acceptedProteins;
+                Names = names;
+                Accessions = accessions;
+                PreferredNames = preferredNames;
+                ProteinsText = proteinsText;
+            }
+
+            protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
+            {
+                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.accepted_protein,
+                        MessageType.accepted_proteins, AcceptedProteins)
+                    .ChangeAllInfo(new LogMessage[0]);
+
+                // TODO: if this happens more often, consider adding something like "reverse merge"
+                entry = entry.Merge(base.CreateEntry(docPair));
+                return entry.ChangeExtraInfo(entry.ExtraInfo + "\r\n\r\n" + ProteinsText); // Not L10N
+            }
+
+            [Track]
+            public HashSet<string> AcceptedProteins { get; private set; }
+            [Track]
+            public bool Names { get; private set; }
+            [Track]
+            public bool Accessions { get; private set; }
+            [Track]
+            public bool PreferredNames { get; private set; }
+            public string ProteinsText { get; private set; }
+
+            public object GetDefaultObject(ObjectInfo<object> info)
+            {
+                return new RefineProteinListSettings(new HashSet<string>(), false, false, false, null);
+            }
         }
    
         public void OkDialog()

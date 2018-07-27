@@ -31,13 +31,17 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
     {
         private readonly int _detailIndex;
 
-        public AuditLogDetailRow(AuditLogRow row, int index) : base(row.DataSchema)
+        public AuditLogDetailRow(AuditLogRow row, AuditLogRow.AuditLogRowId id) : base(row.DataSchema)
         {
             AuditLogRow = row;
-            _detailIndex = index;
+            Id = id;
+            _detailIndex = id.Minor - 1;
         }
 
         public AuditLogRow AuditLogRow { get; private set; }
+
+        [InvariantDisplayName("AuditLogDetailRowId")]
+        public AuditLogRow.AuditLogRowId Id { get; private set; }
 
         [DataGridViewColumnType(typeof(AuditLogColumn))]
         [Format(Width = 512)]
@@ -54,7 +58,8 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                     undoAction = AuditLogRow.Entry.UndoAction;
                 }
 
-                return new AuditLogRow.AuditLogRowText(AuditLogRow.Entry.AllInfo[_detailIndex].ToString(), extraText, undoAction);
+                return new AuditLogRow.AuditLogRowText(AuditLogRow.Entry.AllInfo[_detailIndex].ToString(), extraText,
+                    undoAction, AuditLogRow.IsMultipleUndo);
             }
         }
 
@@ -92,7 +97,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                 entry = entry.ChangeAllInfo(allInfoCopy);
 
                 ModifyDocument(EditDescription.SetColumn("Reason", value), // Not L10N
-                    doc => AuditLogRow.ChangeEntry(doc, entry));
+                    doc => AuditLogRow.ChangeEntry(doc, entry), docPair => null);
             }
         }
 

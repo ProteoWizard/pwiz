@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Controls.AuditLog
         private readonly CheckBox _enableAuditLogging;
 
         public AuditLogForm(SkylineViewContext viewContext)
-            : base(viewContext)
+            : base(viewContext, AuditLogStrings.AuditLogForm_AuditLogForm_Audit_Log)
         {
             InitializeComponent();
 
@@ -109,7 +109,7 @@ namespace pwiz.Skyline.Controls.AuditLog
                 return;
 
             var auditLogRow = rowItem.Value as AuditLogRow;
-            if (auditLogRow == null || rowItem.RowKey.Length == 0 || !rowItem.RowKey.Last.Key.Equals(PropertyPath.Root.Property("Details").LookupAllItems()))
+            if (auditLogRow == null || rowItem.RowKey.Length == 0 || !rowItem.RowKey.Last.Key.Equals(PropertyPath.Root.Property("Details").LookupAllItems())) // Not L10N
                 return;
 
             if ((int)rowItem.RowKey.Last.Value == 0)
@@ -176,14 +176,14 @@ namespace pwiz.Skyline.Controls.AuditLog
                 throw new InvalidOperationException();
             }
 
-            private AuditLogRow GetRow(AuditLogEntry entry, SkylineDataSchema skylineDataSchema)
+            private static AuditLogRow GetRow(AuditLogEntry entry, SkylineDataSchema skylineDataSchema, int id)
             {
-                return new AuditLogRow(skylineDataSchema, entry);
+                return new AuditLogRow(skylineDataSchema, entry, id);
             }
 
             public override IEnumerable GetItems()
             {
-                return DataSchema.Document.AuditLog.AuditLogEntries.Select(e => GetRow(e, DataSchema));
+                return DataSchema.Document.AuditLog.AuditLogEntries.Select((e, i) => GetRow(e, DataSchema, i + 1));
             }
         }
     }

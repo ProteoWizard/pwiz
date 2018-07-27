@@ -33,13 +33,37 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
     public class AuditLogRow : SkylineObject
     {
         private readonly AuditLogEntry _entry;
+        private readonly bool _isMultipleUndo;
 
-        public AuditLogRow(SkylineDataSchema dataSchema, AuditLogEntry entry) : base(dataSchema)
+        public class AuditLogRowId
+        {
+            public AuditLogRowId(int major, int minor)
+            {
+                Major = major;
+                Minor = minor;
+            }
+
+            public override string ToString()
+            {
+                if (Minor == 0)
+                    return Major.ToString();
+                else
+                    return string.Format("{0}.{1}", Major, Minor); // Not L10N
+            }
+
+            public int Major { get; private set; }
+            public int Minor { get; private set; }
+        }
+
+
+        public AuditLogRow(SkylineDataSchema dataSchema, AuditLogEntry entry, int id) : base(dataSchema)
         {
             Assume.IsNotNull(entry);
             _entry = entry;
-            Details = ImmutableList.ValueOf(
-                Enumerable.Range(0, entry.AllInfo.Count).Select(i => new AuditLogDetailRow(this, i)));
+            Id = new AuditLogRowId(id, 0);
+            Details = ImmutableList.ValueOf(entry.AllInfo.Select((l, i) =>
+                new AuditLogDetailRow(this, new AuditLogRowId(id, i + 1))));
+            _isMultipleUndo = GetIsMultipleUndo();
         }
 
         [Browsable(false)]
@@ -48,25 +72,49 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             get { return _entry; }
         }
 
+        [InvariantDisplayName("AuditLogRowId")]
+        public AuditLogRowId Id { get; private set; }
+
         public string TimeStamp { get { return _entry.TimeStamp.ToString(CultureInfo.CurrentCulture); } }
 
         public class AuditLogRowText
         {
-            public AuditLogRowText(string text, string extraInfo, Action undoAction)
+            public AuditLogRowText(string text, string extraInfo, Action undoAction, bool isMultipleUndo)
             {
                 Text = text;
                 ExtraInfo = extraInfo;
                 UndoAction = undoAction;
+                IsMultipleUndo = isMultipleUndo;
             }
 
             public string Text { get; private set; }
             public string ExtraInfo { get; private set; }
             public Action UndoAction { get; private set; }
+            public bool IsMultipleUndo { get; private set; }
 
             public override string ToString()
             {
                 return Text;
             }
+        }
+
+        private bool GetIsMultipleUndo()
+        {
+            var foundUndoableEntry = false;
+            foreach (var entry in SrmDocument.AuditLog.AuditLogEntries.Reverse())
+            {
+                if (ReferenceEquals(entry, _entry))
+                    return foundUndoableEntry;
+
+                if (entry.UndoAction != null)
+                    foundUndoableEntry = true;
+            }
+            return false;
+        }
+
+        public bool IsMultipleUndo
+        {
+            get { return _isMultipleUndo; }
         }
 
         [DataGridViewColumnType(typeof(AuditLogColumn))]
@@ -76,7 +124,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             get
             {
                 return new AuditLogRowText(_entry.UndoRedo.ToString(),
-                    LogMessage.LocalizeLogStringProperties(_entry.ExtraInfo), _entry.UndoAction);
+                    LogMessage.LocalizeLogStringProperties(_entry.ExtraInfo), _entry.UndoAction, IsMultipleUndo);
             }
         }
 
@@ -87,7 +135,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             get
             {
                 return new AuditLogRowText(_entry.Summary.ToString(),
-                    LogMessage.LocalizeLogStringProperties(_entry.ExtraInfo), _entry.UndoAction);
+                    LogMessage.LocalizeLogStringProperties(_entry.ExtraInfo), _entry.UndoAction, IsMultipleUndo);
             }
         }
 
@@ -108,7 +156,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             {
                 var newEntry = Entry.ChangeReason(value);
                 ModifyDocument(EditDescription.SetColumn("Reason", // Not L10N
-                        value).ChangeElementRef(null), d => ChangeEntry(d, newEntry));
+                        value), d => ChangeEntry(d, newEntry), docPair => null);
             }
         }
 

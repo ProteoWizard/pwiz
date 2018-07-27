@@ -1,13 +1,57 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
+    public partial class Reflector<T>
+    {
+        private static string ToString(ObjectPair<object> rootPair, T obj, bool wrapProperties = true, bool formatWhitespace = false, int indentLevel = 0, int stackDepth = 0)
+        {
+            var objectInfo = new ObjectInfo<object>().ChangeNewObject(obj)
+                .ChangeRootObjectPair(rootPair ?? ObjectPair<object>.Create(null, null));
+            var rootProp = RootProperty.Create(typeof(T));
+
+            var enumerator = EnumerateDiffNodes(objectInfo, rootProp, true);
+
+            return ToString(objectInfo.ParentObjectPair, DiffTree.FromEnumerator(enumerator, DateTime.Now).Root, wrapProperties,
+                formatWhitespace, indentLevel, stackDepth);
+        }
+
+        /// <summary>
+        /// Converts the given object to a string, showing each of its properties values.
+        /// </summary>
+        /// <param name="rootPair">old and new document, can be null</param>
+        /// <param name="rootNode">diff node describing root object change</param>
+        /// <param name="wrapProperties">true if properties should be surrounded by curly braces/brackets</param>
+        /// <param name="formatWhitespace">Whether to use tabs and new lines or not</param>
+        /// <param name="indentLevel">level of indentation</param>
+        /// <param name="stackDepth">depth of stack, used for stack overflow detection</param>
+        /// <returns>String representation</returns>
+        public static string ToString(ObjectPair<object> rootPair, DiffNode rootNode, bool wrapProperties, bool formatWhitespace, int indentLevel = 0, int stackDepth = 0)
+        {
+            return Reflector.ToString(rootPair, rootNode, wrapProperties, formatWhitespace, null, indentLevel, stackDepth).Trim();
+        }
+
+        /// <summary>
+        /// Converts the given object to a string, showing each of its properties values.
+        /// Note that default values of properties might not work with this function
+        /// since no parent or root objects are provided
+        /// </summary>
+        public static string ToString(T obj, bool formatWhitespace = false)
+        {
+            return ToString(null, obj, true, formatWhitespace);
+        }
+    }
+
     public partial class Reflector
     {
+        private const int MAX_STACK_DEPTH = 64;
+
         /// <summary>
         /// Checks whether the given object can safely be converted to a string by simply calling ToString
         /// </summary>
@@ -20,114 +64,11 @@ namespace pwiz.Skyline.Model.AuditLog
                    (obj.GetType().Namespace == "System" && !IsCollectionType(obj.GetType())); // Not L10N
         }
 
-        /*
-        /// <summary>
-        /// Used by the ToString function to select properties to include in the string representation.
-        /// Each selector contains an <see cref="ObjectContainer"/> from which the actual <see cref="Object"/> can be retrieved,
-        /// the <see cref="AuditLog.Property"/> corresponding to the <see cref="Object"/> and a list of <see cref="SubSelectors"/>
-        /// that are used to iterate over the objects properties or sub elements.
-        /// </summary>
-        private abstract class ObjectSelector
-        {
-            protected ObjectSelector(Property property, object objectContainer)
-            {
-                Property = property;
-                ObjectContainer = objectContainer;
-            }
-
-            public abstract IEnumerable<ObjectSelector> SubSelectors { get; }
-            public abstract object Object { get; }
-
-            public Property Property { get; private set; }
-            public object ObjectContainer { get; private set; }
-        }
-
-        private class PropertyObjectSelector : ObjectSelector
-        {
-            public PropertyObjectSelector(Property property, object objectContainer)
-                : base(property, objectContainer)
-            {
-            }
-
-            public override IEnumerable<ObjectSelector> SubSelectors
-            {
-                get
-                {
-                    var type = Property.GetPropertyType(Object);
-
-                    if (!Property.IsCollectionType(Object))
-                        return GetProperties(type).Select(p => new PropertyObjectSelector(p, p.GetValue(Object)));
-
-                    var collection = GetCollectionInfo(type, ObjectPair.Create(null, Object));
-                    return collection.Info.GetItems(collection.Collections.NewObject).OfType<object>().Select(obj =>
-                        new PropertyObjectSelector(
-                            Property.ChangeTypeOverride(collection.Info.ElementValueType), obj));
-                }
-            }
-
-            public override object Object
-            {
-                get { return ObjectContainer; }
-            }
-        }
-
-        private sealed class DiffNodePropertyObjectSelector : PropertyObjectSelector
-        {
-            public DiffNodePropertyObjectSelector(DiffNode node) :
-                base(node.Property, node)
-            {
-            }
-
-            public override IEnumerable<ObjectSelector> SubSelectors
-            {
-                get { return ((DiffNode) ObjectContainer).Nodes.Select(n => new DiffNodePropertyObjectSelector(n)); }
-            }
-
-            public override object Object
-            {
-                get { return ((DiffNode) ObjectContainer).Objects.FirstOrDefault(); }
-            }
-        }
-
-        public static string ToString(ObjectPair<object> rootPair, Property property, IAuditLogComparable obj)
-        {
-            var diffTree = BuildDiffTree(property.GetPropertyType(obj), rootPair, property, obj);
-            return diffTree.Root == null
-                ? null
-                : ToString(new DiffNodePropertyObjectSelector(diffTree.Root), true, true, 0);
-        }*/
-
-
-        /// <summary>
-        /// Converts the given object to a string, showing each of its properties values.
-        /// Note that default values of properties might not work with this function
-        /// since no parent or root objects are provided
-        /// </summary>
-        /// <param name="obj">Object to convert</param>
-        /// <param name="formatWhitespace">Whether to use tabs and new lines or not</param>
-        /// <returns>String representation</returns>
-        public static string ToString(object obj, bool formatWhitespace = false)
-        {
-            var objectInfo = new ObjectInfo<object>().ChangeNewObject(obj);
-            var rootProp = RootProperty.Create(obj.GetType());
-            return ToString(objectInfo, rootProp, formatWhitespace);
-        }
-
-        /// <summary>
-        /// Converts the given object to a string, showing each of its properties values 
-        /// </summary>
-        /// <param name="objectInfo">Object to convert and related objects</param>
-        /// <param name="rootProperty">Property of the initial <see cref="ObjectInfo&lt;T&gt;.ObjectPair"/></param>
-        /// <param name="formatWhitespace"></param>
-        /// <returns>String representation of <see cref="ObjectInfo&lt;T&gt;.NewObject"/></returns>
-        public static string ToString(ObjectInfo<object> objectInfo, Property rootProperty, bool formatWhitespace = false)
-        {
-            var result = ToString(objectInfo, rootProperty, true, formatWhitespace, 0);
-            return result == null ? null : result.Trim();
-        }
-
         private static string GetIndentation(int indentLevel)
         {
+            if (indentLevel <= 0)
+                return string.Empty;
+
             return new StringBuilder(4 * indentLevel).Insert(0, "    ", indentLevel).ToString(); // Not L10N
         }
 
@@ -140,175 +81,119 @@ namespace pwiz.Skyline.Model.AuditLog
             return s;
         }
 
-        private static string ToStringInternal(ObjectInfo<object> objectInfo, Property property, bool wrapProperties, bool formatWhitespace,
-            int indentLevel, List<object> defaults)
+        public static string ToString(ObjectPair<object> rootPair, DiffNode node, bool wrapProperties, bool formatWhitespace, DiffNode parentNode,
+            int indentLevel, int stackDepth)
         {
-            if (objectInfo.NewObject == null)
-                return LogMessage.MISSING;
+            if (node == null)
+                return string.Empty;
+
+            var property = node.Property;
 
             // If the name is not getting ignored there will be an equal sign in front of this text,
             // so dont indent, unless the object is a collection element, in which case it has no equal sign
-            var indent =
-                (property.IgnoreName || property.IsCollectionElement) &&
-                formatWhitespace;
+            var indent = (property.IgnoreName || property.IsCollectionElement) && formatWhitespace;
 
-            var auditLogObj = objectInfo.NewObject as IAuditLogObject;
-            if (auditLogObj != null && !(auditLogObj.IsName && property.DiffProperties))
-                return Indent(indent, LogMessage.Quote(auditLogObj.AuditLogText), indentLevel);
-
-            if (!property.DiffProperties &&
-                !IsCollectionType(property.GetPropertyType(objectInfo.NewObject)))
+            if (node.Nodes.Count == 0)
             {
-                return Indent(indent,
-                    AuditLogToStringHelper.InvariantToString(objectInfo.NewObject) ??
-                    AuditLogToStringHelper.KnownTypeToString(objectInfo.NewObject), indentLevel);
+                var obj = node.Objects.First();
+                var auditLogObj = obj as IAuditLogObject;
+                if (auditLogObj != null && auditLogObj.IsName)
+                {
+                    return Indent(indent, LogMessage.Quote(auditLogObj.AuditLogText), indentLevel);
+                } 
+                else
+                {
+                    if (node is CollectionPropertyDiffNode)
+                        return LogMessage.EMPTY;
+
+                    if (obj == null)
+                        return LogMessage.MISSING;
+
+                    return Indent(indent,
+                        AuditLogToStringHelper.InvariantToString(obj) ??
+                        AuditLogToStringHelper.KnownTypeToString(obj) ?? ToString(
+                            node.Property.GetPropertyType(obj), rootPair, obj, wrapProperties, formatWhitespace, indentLevel, stackDepth), indentLevel - 1);
+                }
             }
 
-            return ToString(objectInfo, property, wrapProperties, formatWhitespace, indentLevel + 1, defaults);
+            return ToStringInternal(rootPair, node, wrapProperties, formatWhitespace, indentLevel, parentNode, stackDepth);
         }
 
-        // TODO: make this more similar to BuildDiffTree
-        private static string ToString(ObjectInfo<object> objectInfo, Property property, bool wrapProperties, bool formatWhiteSpace, int indentLevel, List<object> defaults = null)
+        private static string ToStringInternal(ObjectPair<object> rootPair, DiffNode node, bool wrapProperties, bool formatWhiteSpace, int indentLevel, DiffNode parentNode, int stackDepth)
         {
-            if (objectInfo.NewObject == null)
-                return LogMessage.MISSING;
+            if (node == null)
+                return string.Empty;
 
-            defaults = defaults ?? new List<object>();
-            var comparable = objectInfo.NewObject as IAuditLogComparable;
-            if (comparable != null)
-            {
-                var defaultObj = comparable.GetDefaultObject(objectInfo);
-                defaults.Add(defaultObj);
-            }
+            if (++stackDepth > MAX_STACK_DEPTH)
+                throw new StackOverflowException();
 
-            var propType = property.GetPropertyType(objectInfo.NewObject);
-            var collection = GetCollectionInfo(propType, objectInfo.ObjectPair);
+            var obj = node.Objects.First();
+            var property = node.Property;
+            var auditLogObj = AuditLogObject.GetAuditLogObject(obj);
 
-            IList<Property> properties = new Property[0];
-            var collectionKeys = new object[0];
-
-            if (collection != null)
-            {
-                objectInfo = objectInfo.ChangeObjectPair(collection.Collections);
-                collectionKeys = collection.Info.GetKeys(objectInfo.NewObject).Cast<object>().ToArray();
-            }
-            else
-            {
-                properties = GetProperties(propType);
-            }   
-
-            var auditLogObj = AuditLogObject.GetAuditLogObject(objectInfo.NewObject);
-
-            string result;
+            var result = "{0}"; // Not L10N
+            string format;
 
             if (!property.IgnoreName && auditLogObj.IsName)
             {
                 var name = LogMessage.Quote(auditLogObj.AuditLogText);
-                if (collection != null)
-                    System.Diagnostics.Debugger.Break();
-
-                if (properties.Count != 0 || collectionKeys.Length != 0)
-                    result = Indent(formatWhiteSpace, string.Format("{0}: {{0}}", name), indentLevel - 1); // Not L10N
+                var indent = formatWhiteSpace && (node.Property.IgnoreName || parentNode is CollectionPropertyDiffNode);
+                if (node.Nodes.Count != 0)
+                    result = Indent(indent, string.Format("{0}: {{0}}", name), indentLevel - 1); // Not L10N
                 else
                     return name;
             }
+
+            string start, end;
+            var isCollection = node is CollectionPropertyDiffNode;
+            if (isCollection)
+            {
+                if (node.Nodes.Count == 0)
+                    return LogMessage.EMPTY;
+
+                start = "["; // Not L10N
+                end = "]"; // Not L10N
+            }
             else
             {
-                result = "{0}"; // Not L10N
+                start = "{{"; // Not L10N
+                end = "}}"; // Not L10N
+            }
+
+            // If we don't want to wrap properties or this is the "root" text, we don't
+            // show curly braces
+            if (wrapProperties && (!formatWhiteSpace || indentLevel != 0))
+            {
+                var prepend = parentNode is CollectionPropertyDiffNode ? string.Empty : "\r\n"; // Not L10N
+                var indentation = GetIndentation(indentLevel - 1);
+                var openingIndent = auditLogObj.IsName ? string.Empty : indentation;
+                format = formatWhiteSpace
+                    ? string.Format("{0}{3}{1}\r\n{{0}}\r\n{4}{2}", prepend, start, end, openingIndent, indentation) // Not L10N
+                    : string.Format("{0} {{0}} {1}", start, end); // Not L10N
+            }
+            else
+            {
+                format = "{0}"; // Not L10N
             }
 
             var strings = new List<string>();
-            string format;
-
-            objectInfo = objectInfo.ChangeParentPair(objectInfo.ObjectPair);
-
-            if (collection != null)
+            foreach (var subNode in node.Nodes)
             {
-                if (collectionKeys.Length == 0)
-                    return LogMessage.EMPTY;
-
-                strings.Capacity = collectionKeys.Length;
-
-                foreach (var key in collectionKeys)
+                if (subNode.Property.IgnoreName || isCollection)
                 {
-                    var newInfo = objectInfo.ChangeObjectPair(ObjectPair.Create(null,
-                        collection.Info.GetItemValueFromKey(objectInfo.NewObject, key)));
-                    strings.Add(ToStringInternal(newInfo, property.ChangeTypeOverride(collection.Info.ElementValueType), wrapProperties,
-                        formatWhiteSpace, indentLevel, null));
-                }
-
-
-                if (formatWhiteSpace)
-                {
-                    format = indentLevel == 0
-                        ? "{0}" // Not L10N
-                        : string.Format("\r\n{0}[\r\n{{0}}\r\n{0}]", GetIndentation(indentLevel - 1)); // Not L10N
+                    var str = ToString(rootPair, subNode, wrapProperties && !subNode.Property.IgnoreName, formatWhiteSpace, node, indentLevel + 1, stackDepth);
+                    if (!string.IsNullOrEmpty(str))
+                        strings.Add(str);
                 }
                 else
                 {
-                    format = "[ {0} ]"; // Not L10N
+                    var str = ToString(rootPair, subNode, true, formatWhiteSpace, node, indentLevel + 1, stackDepth);
+                    if (!string.IsNullOrEmpty(str))
+                        strings.Add(Indent(formatWhiteSpace,
+                            subNode.Property.GetName(rootPair, subNode, node) + " = " + str, indentLevel)); // Not L10N
                 }
             }
-            else
-            {
-                foreach (var subProperty in properties)
-                {
-                    var value = subProperty.GetValue(objectInfo.NewParentObject);
-                    var newInfo = objectInfo.ChangeNewObject(value);
 
-                    // For non-null default values, find the default value for the sub property
-                    var propertyDefaults = defaults.Where(d => d != null).Select(d => subProperty.GetValue(d)).ToList();
-
-                    var defaultValues = subProperty.DefaultValues;
-                    if (defaultValues != null)
-                    {
-                        if (defaultValues.IsDefault(value, newInfo.NewParentObject))
-                            continue;
-
-                        propertyDefaults.AddRange(defaultValues.Values);
-                    }
-
-                    if (!subProperty.IgnoreDefaultParent)
-                    {
-                        if (subProperty.DiffProperties)
-                        {
-                            if (propertyDefaults.Any(d => ReferenceEquals(d, newInfo.NewObject)))
-                                continue;
-                        }
-                        else
-                        {
-                            if (propertyDefaults.Any(d => Equals(d, newInfo.NewObject)))
-                                continue;
-                        }
-                    }
-
-                    if (subProperty.IgnoreName)
-                    {
-                        var str = ToStringInternal(newInfo, subProperty, false, formatWhiteSpace, indentLevel - 1, propertyDefaults);
-                        if (!string.IsNullOrEmpty(str))
-                            strings.Add(str);
-                    }
-                    else
-                    {
-                        var str = ToStringInternal(newInfo, subProperty, true, formatWhiteSpace, indentLevel, propertyDefaults);
-                        if (!string.IsNullOrEmpty(str))
-                            strings.Add(Indent(formatWhiteSpace, subProperty.GetName(newInfo) + " = " + str, indentLevel)); // Not L10N
-                    }
-                }
-
-                // If we don't want to wrap properties or this is the "root" text, we don't
-                // show curly braces
-                if (wrapProperties && (!formatWhiteSpace || indentLevel != 0))
-                {
-                    format = formatWhiteSpace
-                        ? string.Format("\r\n{0}{{{{\r\n{{0}}\r\n{0}}}}}", GetIndentation(indentLevel - 1)) // Not L10N
-                        : "{{ {0} }}"; // Not L10N
-                }
-                else
-                {
-                    format = "{0}"; // Not L10N
-                }
-            }
 
             if (strings.Count == 0)
                 return string.Empty;
@@ -316,5 +201,23 @@ namespace pwiz.Skyline.Model.AuditLog
             var separator = formatWhiteSpace ? ",\r\n" : ", "; // Not L10N
             return string.Format(result, string.Format(format, string.Join(separator, strings))); // Not L10N
         }
+
+        #region Wrapper functions
+
+        public static string ToString(Type objectType, ObjectPair<object> rootPair, object obj, bool wrapProperties, bool formatWhitespace, int indentLevel, int stackDepth)
+        {
+            var type = typeof(Reflector<>).MakeGenericType(objectType);
+            var toString = type.GetMethod("ToString", BindingFlags.NonPublic | BindingFlags.Static, null, new[] { typeof(ObjectPair<object>), objectType, typeof(bool), typeof(bool), typeof(int), typeof(int) },
+                null);
+
+            Assume.IsNotNull(toString);
+
+            var reflector = Activator.CreateInstance(type);
+
+            // ReSharper disable once PossibleNullReferenceException
+            return (string)toString.Invoke(reflector, new[] { rootPair, obj, wrapProperties, formatWhitespace, indentLevel, stackDepth });
+        }
+
+        #endregion
     }
 }

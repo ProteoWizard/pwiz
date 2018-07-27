@@ -77,7 +77,7 @@ namespace pwiz.SkylineTestUtil
         private static string[] SmallMoleculeDevelopers = {"BSPRATT"}; 
         protected bool RunSmallMoleculeTestVersions
         {
-            get { return GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
+            get { return true || GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
             set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value ? "true" : "false"; }
         }
 

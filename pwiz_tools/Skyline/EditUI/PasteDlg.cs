@@ -46,6 +46,7 @@ namespace pwiz.Skyline.EditUI
     {
         private readonly StatementCompletionTextBox _statementCompletionEditBox;
         private bool _noErrors;
+        private readonly AuditLogEntryCreatorList _entryCreators;
 
         public PasteDlg(IDocumentUIContainer documentUiContainer)
         {
@@ -54,6 +55,7 @@ namespace pwiz.Skyline.EditUI
             Icon = Resources.Skyline;
 
             DocumentUiContainer = documentUiContainer;
+            _entryCreators = new AuditLogEntryCreatorList();
 
             _statementCompletionEditBox = new StatementCompletionTextBox(DocumentUiContainer)
                                               {
@@ -1199,13 +1201,12 @@ namespace pwiz.Skyline.EditUI
             bool error = false;
             IdentityPath newSelectedPath = SelectedPath;
             bool? keepEmptyProteins = null;
-            int proteinCount = -1;
+            List<PeptideGroupDocNode> newPeptideGroups = null;
             Program.MainWindow.ModifyDocument(
                 Description,
                 document =>
                 {
-                    newSelectedPath = SelectedPath;
-                    List<PeptideGroupDocNode> newPeptideGroups;
+                    newSelectedPath = SelectedPath;                 
                     var newDocument = GetNewDocument(document, false, ref newSelectedPath, out newPeptideGroups);
 
                     if (newDocument == null)
@@ -1215,7 +1216,8 @@ namespace pwiz.Skyline.EditUI
                     }
                     if (!keepEmptyProteins.HasValue)
                     {
-                        keepEmptyProteins = ImportFastaHelper.AskWhetherToKeepEmptyProteins(this, newPeptideGroups.Count(pepGroup => pepGroup.PeptideCount == 0));
+                        keepEmptyProteins = ImportFastaHelper.AskWhetherToKeepEmptyProteins(this,
+                            newPeptideGroups.Count(pepGroup => pepGroup.PeptideCount == 0), _entryCreators);
                         if (!keepEmptyProteins.HasValue)
                         {
                             // Cancelled
@@ -1224,7 +1226,6 @@ namespace pwiz.Skyline.EditUI
                         }
                     }
 
-                    proteinCount = newPeptideGroups.Count;
                     if (!keepEmptyProteins.Value)
                     {
                         newDocument = ImportPeptideSearch.RemoveProteinsByPeptideCount(newDocument, 1);
@@ -1235,46 +1236,63 @@ namespace pwiz.Skyline.EditUI
                     if (error)
                         return null;
 
-                    MessageType type;
-                    var arg = 0;
+                    MessageType singular;
+                    MessageType plural;
+                    
                     string extraInfo = null;
                     DataGridViewEx grid = null;
+
+                    IEnumerable<string> added = null;
+                    DataGridViewColumn col = null;
+                    var count = 0;
 
                     switch (PasteFormat)
                     {
                         case PasteFormat.fasta:
-                            type = MessageType.inserted_fasta;
+                        {
+                            singular = MessageType.inserted_proteins_fasta; 
+                            plural = MessageType.inserted_proteins_fasta;
                             extraInfo = tbxFasta.Text;
-                            arg = proteinCount;
+                            added = newPeptideGroups.Select(group => group.AuditLogText);
+                            count = newPeptideGroups.Count;
                             break;
+                        }
                         case PasteFormat.protein_list:
-                            type = MessageType.inserted_proteins;
+                            singular = MessageType.inserted_protein;
+                            plural = MessageType.inserted_proteins;
                             grid = gridViewProteins;
+                            col = colProteinName;
                             break;
                         case PasteFormat.peptide_list:
-                            type = MessageType.inserted_peptides;
+                            singular = MessageType.inserted_peptide;
+                            plural = MessageType.inserted_peptides;
                             grid = gridViewPeptides;
+                            col = colPeptideSequence;
                             break;
                         case PasteFormat.transition_list:
-                            type = MessageType.inserted_transitions;
+                            singular = MessageType.inserted_transition;
+                            plural = MessageType.inserted_transitions;
                             grid = gridViewTransitionList;
+                            col = colTransitionPeptide;
                             break;
                         default:
-                            System.Diagnostics.Debugger.Break();
                             return null;
                     }
 
                     if (grid != null)
                     {
-                        arg = grid.RowCount - 1;
                         extraInfo = grid.GetCopyText();
+
+                        if (col != null)
+                        {
+                            added = grid.Rows.OfType<DataGridViewRow>().Select(row => row.Cells[col.Index].Value as string);
+                            count = grid.RowCount - 1;
+                        }        
                     }
 
-                    var args = new string[0];
-                    if (arg > 0)
-                        args = new[] { arg.ToString() };
-                    return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, new MessageInfo(type, args),
-                        extraInfo);
+                    return AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, singular, plural, added, count)
+                        .ChangeExtraInfo(extraInfo)
+                        .Merge(docPair, _entryCreators, false);
                 });
             if (error)
             {
@@ -1428,8 +1446,11 @@ namespace pwiz.Skyline.EditUI
                     RemoveLastRows(dataGridView, dataGridView.RowCount - prevRowCount);
                 // Redo the paste with the new filter settings.
                 if (result != DialogResult.Cancel && !keepAllPeptides)
+                {
                     Paste(dataGridView, text, enumerateProteins, !enumerateProteins, out numUnmatched,
-                          out numMultipleMatches, out numFiltered);
+                        out numMultipleMatches, out numFiltered);
+                    _entryCreators.Add(filterPeptidesDlg.EntryCreator);
+                }
             }
         }
 
@@ -2050,18 +2071,15 @@ namespace pwiz.Skyline.EditUI
             return true;
         }
 
-        public static SrmDocument HandleEmptyPeptideGroups(IWin32Window parent, int emptyPeptideGroups, SrmDocument docCurrent, out bool kept)
+        public static SrmDocument HandleEmptyPeptideGroups(IWin32Window parent, int emptyPeptideGroups, SrmDocument docCurrent, AuditLogEntryCreatorList entryCreatorList = null)
         {
-            kept = true;
-
-            switch (AskWhetherToKeepEmptyProteins(parent, emptyPeptideGroups))
+            switch (AskWhetherToKeepEmptyProteins(parent, emptyPeptideGroups, entryCreatorList))
             {
                 case null:
                     return null;
                 case true:
                     return docCurrent;
                 case false:
-                    kept = false;
                     return ImportPeptideSearch.RemoveProteinsByPeptideCount(docCurrent, 1);
                 default:
                     throw new InvalidOperationException();
@@ -2075,7 +2093,7 @@ namespace pwiz.Skyline.EditUI
         /// null if the user cancels, true/false for whether the user says whether they want to keep empty proteins.
         /// Also returns true if there were so many empty peptide groups that they have already been removed.
         /// </returns>
-        public static bool? AskWhetherToKeepEmptyProteins(IWin32Window parent, int numberOfEmptyPeptideGroups)
+        public static bool? AskWhetherToKeepEmptyProteins(IWin32Window parent, int numberOfEmptyPeptideGroups, AuditLogEntryCreatorList entryCreatorList = null)
         {
             if (numberOfEmptyPeptideGroups > FastaImporter.MaxEmptyPeptideGroupCount)
             {
@@ -2088,6 +2106,8 @@ namespace pwiz.Skyline.EditUI
                 {
                     if (dlg.ShowDialog(parent) == DialogResult.Cancel)
                         return null;
+                    if(entryCreatorList != null)
+                        entryCreatorList.Add(dlg.EntryCreator);
                     // Remove all empty proteins, if requested by the user.
                     return dlg.IsKeepEmptyProteins;
                 }

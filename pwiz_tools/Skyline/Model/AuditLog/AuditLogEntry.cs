@@ -137,12 +137,12 @@ namespace pwiz.Skyline.Model.AuditLog
             {
                 if (OldUndoRedoMessage == null)
                 {
-                    return "An error occured while creating a log entry. The document was still successfully modified"; // Not L10N
+                    return AuditLogStrings.LogException_Message_An_error_occured_while_creating_a_log_entry__The_document_was_still_successfully_modified;
                 }
                 else
                 {
                     return string.Format(
-                        "An error occured while creating a log entry. Action \"{0}\" was still successfull", // Not L10N
+                        AuditLogStrings.LogException_Message_An_error_occured_while_creating_a_log_entry__Action___0___was_still_successfull,
                         OldUndoRedoMessage);
                 }
             }
@@ -268,6 +268,11 @@ namespace pwiz.Skyline.Model.AuditLog
                     .Concat(allInfo.Select(msgInfo => msgInfo.ToMessage(LogLevel.all_info))).ToList());
         }
 
+        public AuditLogEntry ClearAllInfo()
+        {
+            return ChangeAllInfo(new LogMessage[0]);
+        }
+
         public AuditLogEntry ChangeUndoAction(Action<AuditLogEntry> undoAction)
         {
             return ChangeProp(ImClone(this), im => im._undoAction = undoAction);
@@ -281,6 +286,38 @@ namespace pwiz.Skyline.Model.AuditLog
         #endregion
 
         #region Functions to create log entries
+
+        private static MessageInfo GetLogClearedInfo(int clearedCount)
+        {
+            return new MessageInfo(clearedCount > 1 ? MessageType.log_cleared : MessageType.log_cleared_single,
+                clearedCount);
+        }
+
+        private static MessageInfo GetUnloggedMessages(int unloggedCount)
+        {
+            return new MessageInfo(
+                unloggedCount == 1 ? MessageType.log_unlogged_change : MessageType.log_unlogged_changes,
+                unloggedCount);
+        }
+
+        private AuditLogEntry CreateUnloggedEntry(SrmDocument doc, out bool replace)
+        {
+            var logEntries = new List<AuditLogEntry>(doc.AuditLog.AuditLogEntries);
+
+            var countEntry = logEntries.LastOrDefault();
+
+            replace = countEntry != null && countEntry.CountEntryType == MessageType.log_unlogged_changes;
+            if (!replace)
+            {
+                countEntry = CreateSimpleEntry(doc, MessageType.log_unlogged_changes, 0);
+                countEntry.CountEntryType = MessageType.log_unlogged_changes;
+            }
+            return countEntry.ChangeUndoRedo(GetUnloggedMessages(int.Parse(countEntry.UndoRedo.Names[0]) + 1))
+                .ChangeSummary(GetUnloggedMessages(int.Parse(countEntry.Summary.Names[0]) + 1))
+                .ChangeAllInfo(CollectionUtil.FromSingleItem(GetUnloggedMessages(
+                    int.Parse(countEntry.AllInfoNoUndoRedo.First().Names[0]) + AllInfo.Count())));
+        }
+
         /// <summary>
         /// Creates a log entry that- and how many changes were cleared
         /// </summary>
@@ -302,15 +339,14 @@ namespace pwiz.Skyline.Model.AuditLog
             undoRedoCount += entries.Count - countEntries.Length;
             allInfoCount += entries.Sum(e => e.AllInfoNoUndoRedo.Count()) - countEntries.Length;
 
-            var entry = CreateSimpleEntry(doc, MessageType.log_cleared);
+            var entry = CreateEmptyEntry(doc);
             entry.CountEntryType = MessageType.log_cleared;
 
-            return entry.ChangeUndoRedo(new MessageInfo(MessageType.log_cleared,
-                    undoRedoCount))
-                .ChangeSummary(new MessageInfo(MessageType.log_cleared,
-                    undoRedoCount))
-                .ChangeAllInfo(CollectionUtil.FromSingleItem(new MessageInfo(MessageType.log_cleared,
-                    allInfoCount)));
+            var msgInfoUndoRedo = GetLogClearedInfo(undoRedoCount);
+
+            return entry.ChangeUndoRedo(msgInfoUndoRedo)
+                .ChangeSummary(msgInfoUndoRedo)
+                .ChangeAllInfo(CollectionUtil.FromSingleItem(GetLogClearedInfo(allInfoCount)));
         }
 
         /// <summary>
@@ -319,7 +355,8 @@ namespace pwiz.Skyline.Model.AuditLog
         /// </summary>
         public static AuditLogEntry CreateEmptyEntry(SrmDocument document)
         {
-            return new AuditLogEntry(document, DateTime.Now, string.Empty);
+            return new AuditLogEntry(document, DateTime.Now, string.Empty)
+                .ChangeAllInfo(new LogMessage[0]);
         }
 
         /// <summary>
@@ -331,6 +368,21 @@ namespace pwiz.Skyline.Model.AuditLog
             return CreateSingleMessageEntry(document, new MessageInfo(type, args));
         }
 
+        public class MessageArgs
+        {
+            public MessageArgs(params object[] args)
+            {
+                Args = args;
+            }
+
+            public static MessageArgs Create(params object[] args)
+            {
+                return new MessageArgs(args);
+            }
+
+            public object[] Args { get; set; }
+        }
+
         /// <summary>
         /// Creates an entry that depends on whether there are 1 or multiple elements
         /// in a collection.
@@ -339,22 +391,70 @@ namespace pwiz.Skyline.Model.AuditLog
         /// <param name="singular">Message to show if there's 1 element in the collection. Only element gets passed as argument to the message</param>
         /// <param name="plural">Message to show if there are multiple elements. The count gets passed to the message</param>
         /// <param name="items">Items to consider</param>
-        /// <param name="count">Count to use instead of enumerating items, can be used if enumerating is expensive</param>
-        /// <returns></returns>
-        public static AuditLogEntry CreateCountChangeEntry(SrmDocument document, MessageType singular,
-            MessageType plural, IEnumerable<string> items, int? count = null)
+        /// <param name="singularArgsFunc">Converts the element to MessageArgs that get passed to the singular message</param>
+        /// <param name="pluralArgs">Args to be passed to plural. If null, count is passed as single arg</param>
+        public static AuditLogEntry CreateCountChangeEntry<T>(SrmDocument document, MessageType singular,
+            MessageType plural, ICollection<T> items, Func<T, MessageArgs> singularArgsFunc, MessageArgs pluralArgs)
         {
-            // ReSharper disable once PossibleMultipleEnumeration
-            count = count ?? items.Count();
+            var singularArgs = items.Count == 1 ? singularArgsFunc(items.FirstOrDefault()) : null;
+            return CreateCountChangeEntry(document, singular, plural, items.Count, singularArgs,
+                pluralArgs);
+        }
+
+        /// <summary>
+        /// Creates an entry that depends on whether there are 1 or multiple elements
+        /// in a collection.
+        /// </summary>
+        /// <param name="document">Document change was made to</param>
+        /// <param name="singular">Message to show if there's 1 element in the collection. Only element gets passed as argument to the message</param>
+        /// <param name="plural">Message to show if there are multiple elements. The count gets passed to the message</param>
+        /// <param name="items">Items to consider</param>
+        /// <param name="count">Number of elements in IEnumerable. If null, all items are enumerated</param>
+        /// <param name="singularArgsFunc">Converts the element to MessageArgs that get passed to the singular message</param>
+        /// <param name="pluralArgs">Args to be passed to plural. If null, count is passed as single arg</param>
+        public static AuditLogEntry CreateCountChangeEntry<T>(SrmDocument document, MessageType singular,
+            MessageType plural, IEnumerable<T> items, int? count, Func<T, MessageArgs> singularArgsFunc, MessageArgs pluralArgs)
+        {
+            if (!count.HasValue)
+            {
+                var collection = items as ICollection<T> ?? items.ToArray();
+                return CreateCountChangeEntry(document, singular, plural, collection, singularArgsFunc, pluralArgs);
+            }
+
+            var singularArgs = count.Value == 1 ? singularArgsFunc(items.FirstOrDefault()) : null;
+            return CreateCountChangeEntry(document, singular, plural, count.Value, singularArgs, pluralArgs);
+        }
+
+        // Overload for common case
+        public static AuditLogEntry CreateCountChangeEntry(SrmDocument document, MessageType singular,
+            MessageType plural, ICollection<string> items)
+        {
+            return CreateCountChangeEntry(document, singular, plural, items, str => MessageArgs.Create(str), MessageArgs.Create(items.Count));
+        }
+
+        // Overload for common case
+        public static AuditLogEntry CreateCountChangeEntry(SrmDocument document, MessageType singular,
+            MessageType plural, IEnumerable<string> items, int? count)
+        {
+            if (!count.HasValue)
+            {
+                var collection = items as ICollection<string> ?? items.ToArray();
+                return CreateCountChangeEntry(document, singular, plural, collection, str => MessageArgs.Create(str), MessageArgs.Create(collection.Count));
+            }
+
+            return CreateCountChangeEntry(document, singular, plural, items, count, str => MessageArgs.Create(str), MessageArgs.Create(count));
+        }
+
+        private static AuditLogEntry CreateCountChangeEntry(SrmDocument document, MessageType singular,
+            MessageType plural, int count, MessageArgs singularArgs, MessageArgs pluralArgs)
+        {
             switch (count)
             {
-                case 0:
-                    return null;
                 case 1:
-                    // ReSharper disable once PossibleMultipleEnumeration
-                    return CreateSimpleEntry(document, singular, items.First());
+                    return CreateSimpleEntry(document, singular, singularArgs.Args);
                 default:
-                    return CreateSimpleEntry(document, plural, count);
+                    return CreateSimpleEntry(document, plural,
+                        pluralArgs != null ? pluralArgs.Args : MessageArgs.Create(count).Args);
             }
         }
 
@@ -425,6 +525,9 @@ namespace pwiz.Skyline.Model.AuditLog
             return result;
         }
 
+        /// <summary>
+        /// Creates a log entry indicating that logging was enabled or disabled
+        /// </summary>
         public static AuditLogEntry CreateLogEnabledDisabledEntry(SrmDocument document)
         {
             var result = new AuditLogEntry(document, DateTime.Now, string.Empty);
@@ -436,27 +539,6 @@ namespace pwiz.Skyline.Model.AuditLog
             result.AllInfo = new List<LogMessage> { new LogMessage(LogLevel.all_info, type, string.Empty, false) };
 
             return result;
-        }
-
-        private AuditLogEntry CreateUnloggedEntry(SrmDocument doc, out bool replace)
-        {
-            var logEntries = new List<AuditLogEntry>(doc.AuditLog.AuditLogEntries);
-
-            var countEntry = logEntries.LastOrDefault();
-
-            replace = countEntry != null && countEntry.CountEntryType == MessageType.log_unlogged_changes;
-            if (!replace)
-            {
-                countEntry = CreateSimpleEntry(doc, MessageType.log_unlogged_changes, 0);
-                countEntry.CountEntryType = MessageType.log_unlogged_changes;
-            }
-
-            return countEntry.ChangeUndoRedo(new MessageInfo(MessageType.log_unlogged_changes,
-                    int.Parse(countEntry.UndoRedo.Names[0]) + 1))
-                .ChangeSummary(new MessageInfo(MessageType.log_unlogged_changes,
-                    int.Parse(countEntry.Summary.Names[0]) + 1))
-                .ChangeAllInfo(CollectionUtil.FromSingleItem(new MessageInfo(MessageType.log_unlogged_changes,
-                    int.Parse(countEntry.AllInfoNoUndoRedo.First().Names[0]) + AllInfoNoUndoRedo.Count())));
         }
 
         public static AuditLogEntry CreateExceptionEntry(SrmDocument doc, LogException ex)
@@ -514,6 +596,18 @@ namespace pwiz.Skyline.Model.AuditLog
             return creatorList.EntryCreators.Aggregate(this, (e, c) => e.Merge(c.Create(docPair), append));
         }
 
+        public class AuditLogEntryAddedEventArgs : EventArgs
+        {
+            public AuditLogEntryAddedEventArgs(AuditLogEntry entry)
+            {
+                Entry = entry;
+            }
+
+            public AuditLogEntry Entry { get; private set; }
+        }
+
+        public static event EventHandler<AuditLogEntryAddedEventArgs> OnAuditLogEntryAdded;
+
         /// <summary>
         /// Adds the current entry to the given document
         /// </summary>
@@ -523,9 +617,10 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             modifyDocument(d =>
             {
+                SrmDocument newDoc;
                 if (Settings.Default.AuditLogging || CountEntryType == MessageType.log_cleared)
                 {
-                    return d.ChangeAuditLog(
+                    newDoc = d.ChangeAuditLog(
                         ImmutableList.ValueOf(d.AuditLog.AuditLogEntries.Concat(new[] { this })));
                 }
                 else
@@ -538,8 +633,12 @@ namespace pwiz.Skyline.Model.AuditLog
                         ? oldEntries.ReplaceAt(oldEntries.Count - 1, entry)
                         : oldEntries.Concat(CollectionUtil.FromSingleItem(entry));
 
-                    return d.ChangeAuditLog(ImmutableList.ValueOf(newEntries));
+                    newDoc = d.ChangeAuditLog(ImmutableList.ValueOf(newEntries));
                 }
+
+                if (OnAuditLogEntryAdded != null)
+                    OnAuditLogEntryAdded(this, new AuditLogEntryAddedEventArgs(this));
+                return newDoc;
             });
         }
 
@@ -554,7 +653,8 @@ namespace pwiz.Skyline.Model.AuditLog
             var property = RootProperty.Create(typeof(SrmSettings), "Settings"); // Not L10N
             var objInfo = new ObjectInfo<object>(documentPair.OldDoc.Settings, documentPair.NewDoc.Settings,
                 documentPair.OldDoc, documentPair.NewDoc, documentPair.OldDoc, documentPair.NewDoc);
-            var tree = Reflector<SrmSettings>.BuildDiffTree(objInfo, property, DateTime.Now);
+
+            var tree = DiffTree.FromEnumerator(Reflector<SrmSettings>.EnumerateDiffNodes(objInfo, property, false));
             return tree.Root != null ? CreateSettingsChangeEntry(documentPair.OldDoc, tree) : null;
         }
 
@@ -748,19 +848,30 @@ namespace pwiz.Skyline.Model.AuditLog
             get { return new AuditLogEntryCreator(ImClone(this).CreateEntry); }
         }
 
-        private AuditLogEntry CreateEntry(SrmDocumentPair docPair)
+        protected virtual AuditLogEntry CreateBaseEntry(SrmDocumentPair docPair)
         {
+            return MessageInfo.Type == MessageType.none
+                ? AuditLogEntry.CreateEmptyEntry(docPair.OldDoc)
+                : AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, MessageInfo);
+        }
+
+        protected virtual AuditLogEntry CreateEntry(SrmDocumentPair docPair)
+        {
+            var baseEntry = CreateBaseEntry(docPair);
             var rootProp = RootProperty.Create(typeof(T));
 
             var objectInfo = new ObjectInfo<object>()
                     .ChangeObjectPair(ObjectPair<object>.Create(null, this))
                     .ChangeRootObjectPair(docPair.ToObjectType());
 
-            var settings = Reflector.ToString(objectInfo, rootProp, true);
-            var tree = Reflector<T>.BuildDiffTree(docPair.ToObjectType(), rootProp, (T)this);
+            var diffTree =
+                DiffTree.FromEnumerator(Reflector<T>.EnumerateDiffNodes(docPair.ToObjectType(), rootProp, (T)this), DateTime.Now);
+            if (diffTree.Root == null)
+                return baseEntry;
 
-            var entry = AuditLogEntry.CreateSettingsChangeEntry(docPair.OldDoc, tree, settings);
-            return entry == null ? null : entry.ChangeUndoRedo(MessageInfo).ChangeSummary(MessageInfo);
+            var settingsString = Reflector<T>.ToString(objectInfo.RootObjectPair, diffTree.Root, true, true);
+            var entry = AuditLogEntry.CreateSettingsChangeEntry(docPair.OldDoc, diffTree, settingsString);
+            return baseEntry.Merge(entry);
         }
     }
     
@@ -774,7 +885,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public abstract T FormSettings { get; }
 
         /// <summary>
-        /// <see cref="AuditLogFormSettings{T}.EntryCreator"/>
+        /// <see cref="AuditLogFormSettings&lt;T&gt;.EntryCreator"/>
         /// </summary>
         public AuditLogEntryCreator EntryCreator
         {

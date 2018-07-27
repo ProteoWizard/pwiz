@@ -1856,7 +1856,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public string AuditLogText
         {
-            get { return Reflector.ToString(this); }
+            get { return Reflector<ChargeRegressionLine>.ToString(this); }
         }
 
         public bool IsName

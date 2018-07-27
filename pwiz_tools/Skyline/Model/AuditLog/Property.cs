@@ -85,9 +85,6 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             get
             {
-                if (_trackAttribute.DefaultValues == null)
-                    return null;
-
                 return DefaultValues.CreateInstance(_trackAttribute.DefaultValues);
             }
         }
@@ -149,9 +146,14 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public string GetName(DiffNode root, DiffNode node, DiffNode parent)
         {
+            return GetName(ObjectPair.Create(root.Objects.LastOrDefault(), root.Objects.FirstOrDefault()), node, parent);
+        }
+
+        public string GetName(ObjectPair<object> docPair, DiffNode node, DiffNode parent)
+        {
             return GetName(new ObjectInfo<object>(node.Objects.LastOrDefault(), node.Objects.FirstOrDefault(),
                 parent != null ? parent.Objects.LastOrDefault() : null, parent != null ? parent.Objects.FirstOrDefault() : null,
-                root.Objects.LastOrDefault(), root.Objects.FirstOrDefault()));
+                docPair.OldObject, docPair.NewObject));
         }
 
         public string GetName(ObjectInfo<object> objectInfo)

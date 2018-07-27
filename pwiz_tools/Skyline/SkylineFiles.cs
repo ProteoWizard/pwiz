@@ -1560,18 +1560,9 @@ namespace pwiz.Skyline
             }         
         }
 
-        private string InsertMessagePairIfNonEmpty<T>(PeakBoundaryImporter importer, List<MessageInfo> messagePairs, MessageType type, string extraInfoString,
-            HashSet<T> items)
+        private static void AddMessageInfo<T>(IList<MessageInfo> messageInfos, MessageType type, HashSet<T> items)
         {
-            var result = string.Empty;
-            if (items.Count != 0)
-            {
-                result += string.Format("{0}:\r\n{1}", extraInfoString, // Not L10N
-                                 string.Join(",\r\n", items.Select(item => item.ToString()))) + "\r\n"; // Not L10N
-                messagePairs.Add(new MessageInfo(type, items.Count.ToString()));
-            }
-
-            return result;
+            messageInfos.AddRange(items.Select(item => new MessageInfo(type, item)));
         }
 
         private void ImportPeakBoundaries(string fileName, long lineCount, string description)
@@ -1604,27 +1595,14 @@ namespace pwiz.Skyline
                 return docNew;
             }, docPair =>
             {
-                var allInfo = new List<MessageInfo>
-                {
-                    new MessageInfo(MessageType.imported_peak_boundaries,
-                        fileName)
-                };
+                var allInfo = new List<MessageInfo>();
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, peakBoundaryImporter.UnrecognizedPeptides);
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_file, peakBoundaryImporter.UnrecognizedFiles);
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, peakBoundaryImporter.UnrecognizedChargeStates);
 
-                var extraInfo = string.Empty;
-                extraInfo += InsertMessagePairIfNonEmpty(peakBoundaryImporter, allInfo,
-                    MessageType.removed_unrecognized_peptides, "{2:UnrecognizedPeptides}", // Not L10N
-                    peakBoundaryImporter.UnrecognizedPeptides);
-                extraInfo += InsertMessagePairIfNonEmpty(peakBoundaryImporter, allInfo,
-                    MessageType.removed_unrecognized_files, "{2:UnrecognizedFiles}", // Not L10N
-                    peakBoundaryImporter.UnrecognizedFiles);
-                extraInfo += InsertMessagePairIfNonEmpty(peakBoundaryImporter, allInfo,
-                    MessageType.removed_unrecognized_charge_states, "{2:UnrecognizedChargeStates}", // Not L10N
-                    peakBoundaryImporter.UnrecognizedChargeStates);
-
-                var entry = AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                    new MessageInfo(MessageType.imported_peak_boundaries, Path.GetFileName(fileName)), extraInfo);
-                
-                return entry.ChangeAllInfo(allInfo);
+                return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.imported_peak_boundaries,
+                        Path.GetFileName(fileName))
+                    .AppendAllInfo(allInfo);
             });
         }
 
@@ -1653,7 +1631,7 @@ namespace pwiz.Skyline
                 long lineCount = Helpers.CountLinesInFile(fastaFile);
                 using (var readerFasta = new StreamReader(fastaFile))
                 {
-                    ImportFasta(readerFasta, lineCount, false, Resources.SkylineWindow_ImportFastaFile_Import_FASTA, fastaFile);
+                    ImportFasta(readerFasta, lineCount, false, Resources.SkylineWindow_ImportFastaFile_Import_FASTA, new ImportFastaInfo(true, fastaFile));
                 }
             }
             catch (Exception x)
@@ -1663,7 +1641,20 @@ namespace pwiz.Skyline
             }
         }
 
-        public void ImportFasta(TextReader reader, long lineCount, bool peptideList, string description, string filePath = null)
+
+        public class ImportFastaInfo
+        {
+            public ImportFastaInfo(bool file, string text)
+            {
+                File = file;
+                Text = text;
+            }
+
+            public bool File { get; private set; }
+            public string Text { get; private set;}
+        }
+
+        public void ImportFasta(TextReader reader, long lineCount, bool peptideList, string description, ImportFastaInfo importInfo)
         {
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath selectPath = null;
@@ -1725,10 +1716,9 @@ namespace pwiz.Skyline
                 }
             }
 
-            bool kept;
-
+            var entryCreatorList = new AuditLogEntryCreatorList();
             // If importing the FASTA produced any childless proteins
-            docNew = ImportFastaHelper.HandleEmptyPeptideGroups(this, emptyPeptideGroups, docNew, out kept);
+            docNew = ImportFastaHelper.HandleEmptyPeptideGroups(this, emptyPeptideGroups, docNew, entryCreatorList);
             if (docNew == null || Equals(docCurrent, docNew))
                 return;
 
@@ -1762,18 +1752,23 @@ namespace pwiz.Skyline
                 return docNew;
             }, docPair =>
             {
-                var entry = AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
-                    new MessageInfo(MessageType.imported_fasta, filePath));
+                if (importInfo == null)
+                    return null;
 
-                if (emptyPeptideGroups > 0)
+                MessageInfo info;
+                string extraInfo = null;
+                if (importInfo.File)
                 {
-                    entry = entry.AppendAllInfo(CollectionUtil.FromSingleItem(new MessageInfo(
-                        kept
-                            ? MessageType.kept_empty_proteins
-                            : MessageType.removed_empty_proteins, emptyPeptideGroups).ToMessage(LogLevel.all_info)));
+                    info = new MessageInfo(MessageType.imported_fasta, importInfo.Text);
+                }
+                else
+                {
+                    info = new MessageInfo(MessageType.imported_fasta_paste);
+                    extraInfo = importInfo.Text;
                 }
 
-                return entry;
+                return AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, info, extraInfo)
+                    .Merge(docPair, entryCreatorList);
             });
 
             if (selectPath != null)
@@ -1819,7 +1814,7 @@ namespace pwiz.Skyline
                             () => docNew = smallMoleculeTransitionListReader.CreateTargets(doc, null, out firstAdded));
                             // CONSIDER: cancelable / progress monitor ?  This is normally pretty quick.
 
-                        transitionCount = smallMoleculeTransitionListReader.RowCount;
+                        transitionCount = smallMoleculeTransitionListReader.RowCount - 1;
                         if (docNew == null)
                             return doc;
                     }
@@ -1844,7 +1839,12 @@ namespace pwiz.Skyline
                     modifyingDocumentException = x;
                     return doc;
                 }
-            }, docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc, new MessageInfo(MessageType.pasted_small_molecule_transition_list, transitionCount), csvText));
+            }, docPair => AuditLogEntry.CreateSingleMessageEntry(docPair.OldDoc,
+                new MessageInfo(
+                    transitionCount == 1
+                        ? MessageType.pasted_single_small_molecule_transition
+                        : MessageType.pasted_small_molecule_transition_list, transitionCount), csvText));
+
             if (modifyingDocumentException != null)
             {
                 // If the exception is an IOException, we rethrow it in case it has line/col information
@@ -2071,7 +2071,7 @@ namespace pwiz.Skyline
                 if (inputs.InputFilename != null)
                 {
                     msgType = assayLibrary ? MessageType.imported_assay_library_from_file : MessageType.imported_transition_list_from_file;
-                    args = new object[] { inputs.InputFilename };
+                    args = new object[] { Path.GetFileName(inputs.InputFilename) };
                 }
                 else
                 {
@@ -2351,10 +2351,6 @@ namespace pwiz.Skyline
             var mergePeptides = false;
 
             var entryCreatorList = new AuditLogEntryCreatorList();
-            entryCreatorList.Add(docPair =>
-                AuditLogEntry.CreateEmptyEntry(docPair.OldDoc).ChangeAllInfo(filePaths.Select(path =>
-                    new MessageInfo(MessageType.imported_single_document, path)).ToList()));
-
             if (HasResults(filePaths))
             {
                 using (var dlgResults = new ImportDocResultsDlg(!string.IsNullOrEmpty(DocumentFilePath)))
@@ -2400,10 +2396,20 @@ namespace pwiz.Skyline
             {
                 docNew.ValidateResults();
                 if (!ReferenceEquals(doc, docCurrent))
-                    throw new InvalidDataException(Resources.SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
+                    throw new InvalidDataException(Resources
+                        .SkylineWindow_ImportFasta_Unexpected_document_change_during_operation);
                 return docNew;
-            }, docPair => AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.imported_doc, MessageType.imported_docs, filePaths)
-                .Merge(docPair, entryCreatorList, false));
+            }, docPair =>
+            {
+                var files = filePaths.Select(Path.GetFileName).ToArray();
+                var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.imported_doc,
+                        MessageType.imported_docs, files, files.Length);
+
+                if (files.Length > 1)
+                    entry.AppendAllInfo(files.Select(file => new MessageInfo(MessageType.imported_doc, file)));
+
+                return entry.Merge(docPair, entryCreatorList, false);
+            });
 
             if (selectPath != null)
                 SequenceTree.SelectedPath = selectPath;
@@ -2899,23 +2905,7 @@ namespace pwiz.Skyline
                         doc.ValidateResults();
 
                         return doc;
-                    }, docPair =>
-                    {
-                        var property = RootProperty.Create(typeof(MeasuredResults));
-                        var objInfo = new ObjectInfo<object>(docPair.OldDoc.MeasuredResults, docPair.NewDoc.MeasuredResults,
-                            docPair.OldDoc, docPair.NewDoc, docPair.OldDoc, docPair.NewDoc);
-                        var diffTree = Reflector<MeasuredResults>.BuildDiffTree(objInfo, property, DateTime.Now);
-
-                        if (diffTree.Root != null)
-                        {
-                            var message = new MessageInfo(MessageType.managed_results);
-                            var entry = AuditLogEntry.CreateSettingsChangeEntry(docPair.OldDoc, diffTree)
-                                .ChangeUndoRedo(message);
-                            return entry;
-                        }
-
-                        return null;
-                    });
+                    }, dlg.EntryCreator.Create);
 
                     // Modify document will have closed the streams by now.  So, it is safe to delete the files.
                     if (dlg.IsRemoveAllLibraryRuns)

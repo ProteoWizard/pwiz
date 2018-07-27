@@ -37,15 +37,11 @@ namespace pwiz.Common.SystemUtil
             NewRootObject = newRootObject;
         }
 
-        /*public ObjectInfo(ObjectPair<ObjectGroup<T>> groupPair) : this()
+        public ObjectInfo<object> ToObjectType()
         {
-            GroupPair = groupPair;
+            return new ObjectInfo<object>(OldObject, NewObject, OldParentObject, NewParentObject, OldRootObject,
+                NewRootObject);
         }
-
-        public ObjectInfo(ObjectGroup<ObjectPair<T>> pairGroup) : this()
-        {
-            PairGroup = pairGroup;
-        }*/
 
         public T OldObject { get; private set; }
         public T NewObject { get; private set; }
@@ -63,16 +59,6 @@ namespace pwiz.Common.SystemUtil
         {
             return ChangeProp(ImClone(this), im => im.NewObject = newObject);
         }
-
-        /*public ObjectInfo<T> ChangeOldParentObject(T oldParentObject)
-        {
-            return ChangeProp(ImClone(this), im => im.OldParentObject = oldParentObject);
-        }
-
-        public ObjectInfo<T> ChangeNewParentObject(T newParentObject)
-        {
-            return ChangeProp(ImClone(this), im => im.NewParentObject = newParentObject);
-        }*/
 
         public ObjectInfo<T> ChangeObjectPair(ObjectPair<T> objectPair)
         {
@@ -117,27 +103,6 @@ namespace pwiz.Common.SystemUtil
             get { return ObjectGroup<T>.Create(NewObject, NewParentObject, NewRootObject); }
             private set { NewObject = value.Object; NewParentObject = value.ParentObject; NewRootObject = value.RootObject; }
         }
-
-        /*public ObjectPair<ObjectGroup<T>> GroupPair
-        {
-            get => new ObjectPair<ObjectGroup<T>>(OldObjectGroup, NewObjectGroup);
-            private set
-            {
-                OldObjectGroup = value.OldObject;
-                NewObjectGroup = value.NewObject;
-            }
-        }
-
-        public ObjectGroup<ObjectPair<T>> PairGroup
-        {
-            get => new ObjectGroup<ObjectPair<T>>(ObjectPair, ParentObjectPair, RootObjectPair);
-            private set
-            {
-                ObjectPair = value.Object;
-                ParentObjectPair = value.ParentObject;
-                RootObjectPair = value.RootObject;
-            }
-        }*/
     }
 
     public class ObjectPair<T> : Immutable
@@ -246,7 +211,21 @@ namespace pwiz.Common.SystemUtil
 
         public static DefaultValues CreateInstance(Type defaultValuesType)
         {
+            if (defaultValuesType == null)
+                return null;
+
             return (DefaultValues) Activator.CreateInstance(defaultValuesType);
+        }
+    }
+
+    public class DefaultValuesStringNullOrEmpty : DefaultValues
+    {
+        public override bool IsDefault(object obj, object parentObject)
+        {
+            var str = obj as string;
+            if (obj != null && str == null)
+                return false;
+            return string.IsNullOrEmpty(str);
         }
     }
 
@@ -268,17 +247,19 @@ namespace pwiz.Common.SystemUtil
 
     public class DefaultValuesNullOrEmpty : DefaultValues
     {
-        public override bool IsDefault(object obj, object parentObject)
+        public static bool IsEmpty(object obj)
         {
-            if (obj == null)
-                return true;
-
             var enumerable = obj as IEnumerable;
             if (enumerable == null)
                 return false;
 
             // If the collection is empty the first call to MoveNext will return false
             return !enumerable.GetEnumerator().MoveNext();
+        }
+
+        public override bool IsDefault(object obj, object parentObject)
+        {
+            return obj == null || IsEmpty(obj);
         }
     }
 

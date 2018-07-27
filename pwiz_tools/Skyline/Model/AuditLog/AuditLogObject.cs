@@ -18,7 +18,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
                 return AuditLogToStringHelper.InvariantToString(Object) ??
                        AuditLogToStringHelper.KnownTypeToString(Object) ??
-                       Reflector.ToString(Object); // This will always return some non-null string representation
+                       Reflector.ToString(Object.GetType(), null, Object, true, false, 0, 0); // This will always return some non-null string representation
             }
         }
 
