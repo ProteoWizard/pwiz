@@ -2575,22 +2575,12 @@ namespace pwiz.Skyline
 
         private static PropertyName GetPropertyName(SrmDocument doc, IdentityPath groupPath, Identity transitionId)
         {
-            TransitionDocNode transitionDocNode = null;
-            var transitionGroupDocNode = (TransitionGroupDocNode)doc.FindNode(groupPath);
-            var peptideDocNode = (PeptideDocNode)doc.FindNode(groupPath.Parent);
-            var peptideGroupDocNode = (PeptideGroupDocNode)doc.FindNode(groupPath.Parent.Parent);
+            var node = doc.FindNode(groupPath);
 
             if (transitionId != null)
-                transitionDocNode = (TransitionDocNode)transitionGroupDocNode.FindNode(transitionId);
+                node = ((TransitionGroupDocNode)node).FindNode(transitionId);
 
-            var name = PropertyName.ROOT.SubProperty(peptideGroupDocNode.AuditLogText)
-                .SubProperty(peptideDocNode.AuditLogText)
-                .SubProperty(transitionGroupDocNode.AuditLogText);
-
-            if (transitionDocNode != null)
-                name = name.SubProperty(transitionDocNode.AuditLogText);
-
-            return name;
+            return AuditLogEntry.GetNodeName(doc, node);
         }
 
         private void graphChromatogram_ClickedChromatogram(object sender, ClickedChromatogramEventArgs e)
@@ -3729,7 +3719,7 @@ namespace pwiz.Skyline
             ModifyDocument(Resources.SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers,
                 doc => (SrmDocument) doc.RemoveAll(outlierIds),
                 docPair => AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.removed_rt_outlier,
-                    MessageType.removed_rt_outliers, RTGraphController.Outliers, outlier =>  AuditLogEntry.MessageArgs.Create(AuditLogEntry.GetNodeName(docPair.OldDoc, outlier)), null));
+                    MessageType.removed_rt_outliers, RTGraphController.Outliers, outlier =>  MessageArgs.Create(AuditLogEntry.GetNodeName(docPair.OldDoc, outlier)), null));
         }
 
         private void removeRTContextMenuItem_Click(object sender, EventArgs e)

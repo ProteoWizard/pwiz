@@ -883,9 +883,19 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public bool IsTutorialTest
+        private bool IsTutorial
         {
             get { return TestContext.TestName.Contains("Tutorial"); }
+        }
+
+        public virtual bool AuditLogCompareLogs
+        {
+            get { return IsTutorial; }
+        }
+
+        public virtual bool AuditLogConvertPathsToFileNames
+        {
+            get { return IsTutorial; }
         }
 
         public static bool IsRecordAuditLogForTutorials
@@ -964,7 +974,6 @@ namespace pwiz.SkylineTestUtil
                     return;  // Don't want to run this lengthy test right now
                 }
 
-                Program.TestName = TestContext.TestName;
                 Program.FunctionalTest = true;
                 Program.TestExceptions = new List<Exception>();
                 LocalizationHelper.InitThread();
@@ -989,6 +998,7 @@ namespace pwiz.SkylineTestUtil
                 Settings.Default.ShowStartupForm = ShowStartPage;
                 Settings.Default.MruList = SetMru;
                 AuditLogEntry.OnAuditLogEntryAdded += OnAuditLogEntryAdded;
+                AuditLogEntry.ConvertPathsToFileNames = AuditLogConvertPathsToFileNames;
                 // For automated demos, start with the main window maximized
                 if (IsDemoMode)
                     Settings.Default.MainWindowMaximized = true;
@@ -997,6 +1007,7 @@ namespace pwiz.SkylineTestUtil
                 threadTest.Start();
                 Program.Main();
                 threadTest.Join();
+                AuditLogEntry.ConvertPathsToFileNames = false;
                 AuditLogEntry.OnAuditLogEntryAdded -= OnAuditLogEntryAdded;
                 VerifyAuditLogCorrect();
 
@@ -1067,18 +1078,19 @@ namespace pwiz.SkylineTestUtil
 
         private void CopyAuditLog()
         {
-            if (!IsTutorialTest || !IsRecordAuditLogForTutorials)
+            if (!AuditLogCompareLogs || !IsRecordAuditLogForTutorials)
                 return;
 
             var fromFile = GetLogFilePath(AuditLogDir);
             var toFile = GetLogFilePath(AuditLogTutorialDir);
 
             File.Copy(fromFile, toFile, true);
+            Assert.Fail("Successfully record tutorial audit log");
         }
 
         private void VerifyAuditLogCorrect()
         {
-            if (!IsTutorialTest || IsRecordAuditLogForTutorials)
+            if (!AuditLogCompareLogs || IsRecordAuditLogForTutorials)
                 return;
 
             // Ensure expected tutorial log file exists
@@ -1125,7 +1137,7 @@ namespace pwiz.SkylineTestUtil
                 result += allInfoItem + "\r\n";
 
             if (entry.ExtraInfo != null)
-                result += string.Format("Extra Info: {0}\r\n", LogMessage.LocalizeLogStringProperties(entry.ExtraInfo));
+                result += string.Format("Extra Info: {0}\r\n", LogMessage.ParseLogString(entry.ExtraInfo, LogLevel.all_info));
 
             return result;
         }

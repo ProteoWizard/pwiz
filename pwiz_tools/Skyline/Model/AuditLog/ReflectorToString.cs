@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 var auditLogObj = obj as IAuditLogObject;
                 if (auditLogObj != null && auditLogObj.IsName)
                 {
-                    return Indent(indent, LogMessage.Quote(auditLogObj.AuditLogText), indentLevel);
+                    return Indent(indent, LogMessage.Quote(auditLogObj.AuditLogText), indentLevel - 1);
                 } 
                 else
                 {
@@ -112,7 +112,8 @@ namespace pwiz.Skyline.Model.AuditLog
                     return Indent(indent,
                         AuditLogToStringHelper.InvariantToString(obj) ??
                         AuditLogToStringHelper.KnownTypeToString(obj) ?? ToString(
-                            node.Property.GetPropertyType(obj), rootPair, obj, wrapProperties, formatWhitespace, indentLevel, stackDepth), indentLevel - 1);
+                            node.Property.GetPropertyType(obj), rootPair, obj, wrapProperties, formatWhitespace,
+                            indentLevel, stackDepth), indentLevel - 1);
                 }
             }
 
@@ -207,7 +208,8 @@ namespace pwiz.Skyline.Model.AuditLog
         public static string ToString(Type objectType, ObjectPair<object> rootPair, object obj, bool wrapProperties, bool formatWhitespace, int indentLevel, int stackDepth)
         {
             var type = typeof(Reflector<>).MakeGenericType(objectType);
-            var toString = type.GetMethod("ToString", BindingFlags.NonPublic | BindingFlags.Static, null, new[] { typeof(ObjectPair<object>), objectType, typeof(bool), typeof(bool), typeof(int), typeof(int) },
+            var toString = type.GetMethod("ToString", BindingFlags.NonPublic | BindingFlags.Static, null,
+                new[] {typeof(ObjectPair<object>), objectType, typeof(bool), typeof(bool), typeof(int), typeof(int)},
                 null);
 
             Assume.IsNotNull(toString);

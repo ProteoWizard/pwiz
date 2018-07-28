@@ -4397,8 +4397,8 @@ namespace pwiz.Skyline
                     var nodeName = AuditLogEntry.GetNodeName(docPair.OldDoc, node.Model);
                     var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.picked_child,
                         MessageType.picked_children, chosen,
-                        n => AuditLogEntry.MessageArgs.Create(n.AuditLogText, nodeName),
-                        AuditLogEntry.MessageArgs.Create(chosen.Length, nodeName));
+                        n => MessageArgs.Create(n.AuditLogText, nodeName),
+                        MessageArgs.Create(chosen.Length, nodeName));
 
                     return entry.AppendAllInfo(chosen.Select(n => new MessageInfo(MessageType.picked_child,
                         n.AuditLogText, nodeName)).ToList());
@@ -4528,8 +4528,8 @@ namespace pwiz.Skyline
                     MessageType.drag_and_dropped_node, MessageType.drag_and_dropped_nodes,
                     nodeSources.Select(node =>
                         AuditLogEntry.GetNodeName(docPair.OldDoc, node.Model).ToString()), nodeSources.Count,
-                    str => AuditLogEntry.MessageArgs.Create(str, pepGroup.Name),
-                    AuditLogEntry.MessageArgs.Create(nodeSources.Count, pepGroup.Name));
+                    str => MessageArgs.Create(str, pepGroup.Name),
+                    MessageArgs.Create(nodeSources.Count, pepGroup.Name));
 
                 if (nodeSources.Count > 1)
                 {

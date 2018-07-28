@@ -1,0 +1,14 @@
+Undo Redo : Annotations changed
+Summary   : Settings > Document Settings -- Annotations changed
+All Info  :
+Annotations changed
+Settings > Document Settings -- Annotations : "SampleGroup" was added
+Settings > Document Settings -- Annotations > "SampleGroup" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "SampleGroup" > Type is "text"
+Settings > Document Settings -- Annotations : "Concentration" was added
+Settings > Document Settings -- Annotations > "Concentration" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "Concentration" > Type is "text"
+Settings > Document Settings -- Annotations : "IS Spike" was added
+Settings > Document Settings -- Annotations > "IS Spike" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "IS Spike" > Type is "text"
+

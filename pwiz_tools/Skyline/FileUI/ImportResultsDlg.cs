@@ -661,7 +661,9 @@ namespace pwiz.Skyline.FileUI
                 bool addNewReplicate, string replicateName, bool addToExistingReplicate, string optimization,
                 MultiFileLoader.ImportResultsSimultaneousFileOptions fileImportOption, string prefix, string suffix)
             {
-                FileNames = fileNames;
+                FileNames = fileNames == null
+                    ? new List<AuditLogPath>()
+                    : fileNames.Select(AuditLogPath.Create).ToList();
                 SingleInjectionReplicates = singleInjectionReplicates;
                 MultiInjectionReplicates = multiInjectionReplicates;
                 AddNewReplicate = addNewReplicate;
@@ -676,13 +678,13 @@ namespace pwiz.Skyline.FileUI
             protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
             {
                 var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.imported_result,
-                    MessageType.imported_results, FileNames);
+                    MessageType.imported_results, FileNames, MessageArgs.DefaultSingular, null);
 
                 return entry.Merge(base.CreateEntry(docPair), false);
             }
 
             [Track]
-            public List<string> FileNames { get; private set; }
+            public List<AuditLogPath> FileNames { get; private set; }
             [Track]
             public bool SingleInjectionReplicates { get; private set; }
             [Track]
@@ -720,7 +722,7 @@ namespace pwiz.Skyline.FileUI
                         : ReplicateName;
                 }
 
-                return new ImportResultsSettings(NamedPathSets.SelectMany(pair => pair.Value.Select(fileUri => fileUri.GetFileName())).ToList(), RadioCreateMultipleChecked, RadioCreateMultipleMultiChecked,
+                return new ImportResultsSettings(NamedPathSets.SelectMany(pair => pair.Value.Select(fileUri => fileUri.GetFilePath())).ToList(), RadioCreateMultipleChecked, RadioCreateMultipleMultiChecked,
                     RadioAddNewChecked, name, RadioAddExistingChecked, OptimizationName,
                     (MultiFileLoader.ImportResultsSimultaneousFileOptions) ImportSimultaneousIndex,
                     Prefix, Suffix);

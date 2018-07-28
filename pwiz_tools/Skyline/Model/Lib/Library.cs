@@ -28,6 +28,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
@@ -1407,6 +1408,11 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         [Track]
+        public AuditLogPath FilePathAuditLog
+        {
+            get { return AuditLogPath.Create(FilePath); }
+        }
+
         public string FilePath { get; private set; }
 
         /// <summary>

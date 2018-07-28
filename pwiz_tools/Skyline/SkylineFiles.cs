@@ -1560,7 +1560,7 @@ namespace pwiz.Skyline
             }         
         }
 
-        private static void AddMessageInfo<T>(IList<MessageInfo> messageInfos, MessageType type, HashSet<T> items)
+        private static void AddMessageInfo<T>(IList<MessageInfo> messageInfos, MessageType type, IEnumerable<T> items)
         {
             messageInfos.AddRange(items.Select(item => new MessageInfo(type, item)));
         }
@@ -1597,7 +1597,8 @@ namespace pwiz.Skyline
             {
                 var allInfo = new List<MessageInfo>();
                 AddMessageInfo(allInfo, MessageType.removed_unrecognized_peptide, peakBoundaryImporter.UnrecognizedPeptides);
-                AddMessageInfo(allInfo, MessageType.removed_unrecognized_file, peakBoundaryImporter.UnrecognizedFiles);
+                AddMessageInfo(allInfo, MessageType.removed_unrecognized_file,
+                    peakBoundaryImporter.UnrecognizedFiles.Select(AuditLogPath.Create));
                 AddMessageInfo(allInfo, MessageType.removed_unrecognized_charge_state, peakBoundaryImporter.UnrecognizedChargeStates);
 
                 return AuditLogEntry.CreateSimpleEntry(docPair.OldDoc, MessageType.imported_peak_boundaries,
@@ -2071,7 +2072,7 @@ namespace pwiz.Skyline
                 if (inputs.InputFilename != null)
                 {
                     msgType = assayLibrary ? MessageType.imported_assay_library_from_file : MessageType.imported_transition_list_from_file;
-                    args = new object[] { Path.GetFileName(inputs.InputFilename) };
+                    args = new object[] { AuditLogPath.Create(inputs.InputFilename) };
                 }
                 else
                 {
@@ -2401,12 +2402,13 @@ namespace pwiz.Skyline
                 return docNew;
             }, docPair =>
             {
-                var files = filePaths.Select(Path.GetFileName).ToArray();
                 var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.imported_doc,
-                        MessageType.imported_docs, files, files.Length);
+                    MessageType.imported_docs, filePaths.Select(AuditLogPath.Create), filePaths.Length,
+                    MessageArgs.DefaultSingular, null);
 
-                if (files.Length > 1)
-                    entry.AppendAllInfo(files.Select(file => new MessageInfo(MessageType.imported_doc, file)));
+                if (filePaths.Length > 1)
+                    entry.AppendAllInfo(filePaths.Select(file =>
+                        new MessageInfo(MessageType.imported_doc, AuditLogPath.Create(file))));
 
                 return entry.Merge(docPair, entryCreatorList, false);
             });

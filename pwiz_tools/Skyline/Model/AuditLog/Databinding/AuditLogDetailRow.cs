@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
 
                 if (AuditLogRow.Entry.InsertUndoRedoIntoAllInfo && _detailIndex == 0)
                 {
-                    extraText = LogMessage.LocalizeLogStringProperties(AuditLogRow.Entry.ExtraInfo);
+                    extraText = LogMessage.ParseLogString(AuditLogRow.Entry.ExtraInfo, LogLevel.all_info);
                     undoAction = AuditLogRow.Entry.UndoAction;
                 }
 
@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
                 }
                     
                 var allInfoCopy = list.ToArray();
-                allInfoCopy[index] = entry.AllInfo[_detailIndex].With<LogMessage>("Reason", value);
+                allInfoCopy[index] = entry.AllInfo[_detailIndex].ChangeReason(value);
                 entry = entry.ChangeAllInfo(allInfoCopy);
 
                 ModifyDocument(EditDescription.SetColumn("Reason", value), // Not L10N

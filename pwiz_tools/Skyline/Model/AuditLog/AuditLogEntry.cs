@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Security.Principal;
+using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -151,6 +152,26 @@ namespace pwiz.Skyline.Model.AuditLog
         public string OldUndoRedoMessage { get; set; }
     }
 
+    public class MessageArgs
+    {
+        public MessageArgs(params object[] args)
+        {
+            Args = args;
+        }
+
+        public static MessageArgs Create(params object[] args)
+        {
+            return new MessageArgs(args);
+        }
+
+        public static MessageArgs DefaultSingular(object obj)
+        {
+            return Create(obj);
+        }
+
+        public object[] Args { get; set; }
+    }
+
     [XmlRoot(XML_ROOT)]
     public class AuditLogEntry : Immutable, IXmlSerializable
     {
@@ -158,9 +179,12 @@ namespace pwiz.Skyline.Model.AuditLog
 
         private ImmutableList<LogMessage> _allInfo;
         private Action<AuditLogEntry> _undoAction;
+        private static int _globalIndexCounter;
 
         private AuditLogEntry(SrmDocument document, DateTime timeStamp, string reason, bool insertIntoUndoRedo = false, string extraInfo = null)
         {
+            GlobalIndex = Interlocked.Increment(ref _globalIndexCounter);
+
             SkylineVersion = Install.Version;
             if (Install.Is64Bit)
                 SkylineVersion += " (64-Bit)"; // Not L10N
@@ -216,6 +240,8 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             get { return _allInfo.Count == (InsertUndoRedoIntoAllInfo ? 2 : 1); }
         }
+
+        public int GlobalIndex { get; private set; }
 
         #region Property change functions
 
@@ -368,21 +394,6 @@ namespace pwiz.Skyline.Model.AuditLog
             return CreateSingleMessageEntry(document, new MessageInfo(type, args));
         }
 
-        public class MessageArgs
-        {
-            public MessageArgs(params object[] args)
-            {
-                Args = args;
-            }
-
-            public static MessageArgs Create(params object[] args)
-            {
-                return new MessageArgs(args);
-            }
-
-            public object[] Args { get; set; }
-        }
-
         /// <summary>
         /// Creates an entry that depends on whether there are 1 or multiple elements
         /// in a collection.
@@ -429,7 +440,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public static AuditLogEntry CreateCountChangeEntry(SrmDocument document, MessageType singular,
             MessageType plural, ICollection<string> items)
         {
-            return CreateCountChangeEntry(document, singular, plural, items, str => MessageArgs.Create(str), MessageArgs.Create(items.Count));
+            return CreateCountChangeEntry(document, singular, plural, items, MessageArgs.DefaultSingular, null);
         }
 
         // Overload for common case
@@ -439,10 +450,10 @@ namespace pwiz.Skyline.Model.AuditLog
             if (!count.HasValue)
             {
                 var collection = items as ICollection<string> ?? items.ToArray();
-                return CreateCountChangeEntry(document, singular, plural, collection, str => MessageArgs.Create(str), MessageArgs.Create(collection.Count));
+                return CreateCountChangeEntry(document, singular, plural, collection, MessageArgs.DefaultSingular, null);
             }
 
-            return CreateCountChangeEntry(document, singular, plural, items, count, str => MessageArgs.Create(str), MessageArgs.Create(count));
+            return CreateCountChangeEntry(document, singular, plural, items, count, MessageArgs.DefaultSingular, null);
         }
 
         private static AuditLogEntry CreateCountChangeEntry(SrmDocument document, MessageType singular,
@@ -596,18 +607,6 @@ namespace pwiz.Skyline.Model.AuditLog
             return creatorList.EntryCreators.Aggregate(this, (e, c) => e.Merge(c.Create(docPair), append));
         }
 
-        public class AuditLogEntryAddedEventArgs : EventArgs
-        {
-            public AuditLogEntryAddedEventArgs(AuditLogEntry entry)
-            {
-                Entry = entry;
-            }
-
-            public AuditLogEntry Entry { get; private set; }
-        }
-
-        public static event EventHandler<AuditLogEntryAddedEventArgs> OnAuditLogEntryAdded;
-
         /// <summary>
         /// Adds the current entry to the given document
         /// </summary>
@@ -641,6 +640,21 @@ namespace pwiz.Skyline.Model.AuditLog
                 return newDoc;
             });
         }
+
+        // For testing
+        public class AuditLogEntryAddedEventArgs : EventArgs
+        {
+            public AuditLogEntryAddedEventArgs(AuditLogEntry entry)
+            {
+                Entry = entry;
+            }
+
+            public AuditLogEntry Entry { get; private set; }
+        }
+
+        public static event EventHandler<AuditLogEntryAddedEventArgs> OnAuditLogEntryAdded;
+
+        public static bool ConvertPathsToFileNames { get; set; }
 
         /// <summary>
         /// Compares the settings objects of the given documents and creates an entry
@@ -677,7 +691,9 @@ namespace pwiz.Skyline.Model.AuditLog
                     group.Molecules.Any(m => ReferenceEquals(m.Id, docNode.Id)));
             }
 
-            var auditLogObj = docNode as IAuditLogObject; // TODO: add other interface to these doc nodes?
+            // TODO: add other interface to these doc nodes?
+            var auditLogObj = docNode as IAuditLogObject;
+            
             if (auditLogObj == null)
                 return null;
 
@@ -791,6 +807,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public void ReadXml(XmlReader reader)
         {
+            GlobalIndex = Interlocked.Increment(ref _globalIndexCounter);
             FormatVersion = new DocumentFormat(reader.GetDoubleAttribute(ATTR.format_version));
             var time = DateTime.Parse(reader.GetAttribute(ATTR.time_stamp), CultureInfo.InvariantCulture);
             TimeStamp = DateTime.SpecifyKind(time, DateTimeKind.Utc).ToLocalTime();

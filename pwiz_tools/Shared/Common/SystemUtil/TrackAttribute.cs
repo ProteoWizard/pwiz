@@ -265,7 +265,8 @@ namespace pwiz.Common.SystemUtil
 
     public abstract class TrackAttributeBase : Attribute
     {
-        protected TrackAttributeBase(bool isTab, bool ignoreName, bool ignoreDefaultParent, Type defaultValues, Type customLocalizer)
+        protected TrackAttributeBase(bool isTab, bool ignoreName, bool ignoreDefaultParent, Type defaultValues,
+            Type customLocalizer)
         {
             IsTab = isTab;
             IgnoreName = ignoreName;

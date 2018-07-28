@@ -103,7 +103,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             var foundUndoableEntry = false;
             foreach (var entry in SrmDocument.AuditLog.AuditLogEntries.Reverse())
             {
-                if (ReferenceEquals(entry, _entry))
+                if (entry.GlobalIndex == _entry.GlobalIndex)
                     return foundUndoableEntry;
 
                 if (entry.UndoAction != null)
@@ -112,6 +112,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             return false;
         }
 
+        [Browsable(false)]
         public bool IsMultipleUndo
         {
             get { return _isMultipleUndo; }
@@ -124,7 +125,8 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             get
             {
                 return new AuditLogRowText(_entry.UndoRedo.ToString(),
-                    LogMessage.LocalizeLogStringProperties(_entry.ExtraInfo), _entry.UndoAction, IsMultipleUndo);
+                    LogMessage.ParseLogString(_entry.ExtraInfo, LogLevel.all_info), _entry.UndoAction,
+                    IsMultipleUndo);
             }
         }
 
@@ -135,7 +137,8 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
             get
             {
                 return new AuditLogRowText(_entry.Summary.ToString(),
-                    LogMessage.LocalizeLogStringProperties(_entry.ExtraInfo), _entry.UndoAction, IsMultipleUndo);
+                    LogMessage.ParseLogString(_entry.ExtraInfo, LogLevel.all_info), _entry.UndoAction,
+                    IsMultipleUndo);
             }
         }
 
@@ -163,7 +166,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
         public SrmDocument ChangeEntry(SrmDocument document, AuditLogEntry auditLogEntry)
         {
             var copy = new List<AuditLogEntry>(document.AuditLog.AuditLogEntries);
-            var index = copy.FindIndex(e => ReferenceEquals(e, Entry));
+            var index = copy.FindIndex(e => e.GlobalIndex == Entry.GlobalIndex);
             if (index >= 0)
             {
                 copy[index] = auditLogEntry;

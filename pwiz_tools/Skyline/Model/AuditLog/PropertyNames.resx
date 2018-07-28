@@ -126,7 +126,7 @@
   <data name="CollisionEnergyRegression_Conversions" xml:space="preserve">
     <value>Regression parameters</value>
   </data>
-  <data name="BackgroundProteomeSpec_DatabasePath" xml:space="preserve">
+  <data name="BackgroundProteomeSpec_DatabasePathAuditLog" xml:space="preserve">
     <value>Background proteome database path</value>
   </data>
   <data name="SrmSettings_DataSettings" xml:space="preserve">
@@ -626,7 +626,7 @@
   <data name="PeptidePrediction_MeasuredRTWindow" xml:space="preserve">
     <value>Time window</value>
   </data>
-  <data name="LibrarySpec_FilePath" xml:space="preserve">
+  <data name="LibrarySpec_FilePathAuditLog" xml:space="preserve">
     <value>Path</value>
   </data>
   <data name="PeptideLibraries_LibrarySpecs" xml:space="preserve">
@@ -662,7 +662,7 @@
   <data name="GroupComparisonDef_NormalizationMethod" xml:space="preserve">
     <value>Normalization method</value>
   </data>
-  <data name="OptimizationLibrary_DatabasePath" xml:space="preserve">
+  <data name="OptimizationLibrary_DatabasePathAuditLog" xml:space="preserve">
     <value>Optimization library path</value>
   </data>
   <data name="ResolvingPower" xml:space="preserve">

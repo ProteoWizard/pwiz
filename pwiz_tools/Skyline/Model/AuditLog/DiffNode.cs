@@ -244,15 +244,18 @@ namespace pwiz.Skyline.Model.AuditLog
                 // case it gets set to "Missing"
                 if (oldIsName || newIsName || (level == LogLevel.all_info && !Expanded))
                 {
-                    return new LogMessage(level, MessageType.changed_from_to, string.Empty, Expanded, name.ToString(), stringPair.OldObject, stringPair.NewObject);
+                    return new LogMessage(level, MessageType.changed_from_to, string.Empty, Expanded,
+                        name.ToString(), stringPair.OldObject, stringPair.NewObject);
                 }
                 else if (stringPair.NewObject != null)
                 {
-                    return new LogMessage(level, MessageType.changed_to, string.Empty, Expanded, name.ToString(), stringPair.NewObject);
+                    return new LogMessage(level, MessageType.changed_to, string.Empty, Expanded,
+                        name.ToString(), stringPair.NewObject);
                 }
             }
 
-            return new LogMessage(level, MessageType.changed, string.Empty, Expanded, name.ToString());
+            return new LogMessage(level, MessageType.changed, string.Empty, Expanded,
+                name.ToString());
         }
     }
 
@@ -279,7 +282,8 @@ namespace pwiz.Skyline.Model.AuditLog
             if (!RemovedAll)
                 return base.ToMessage(name, level, allowReflection);
 
-            return new LogMessage(level, MessageType.removed_all, string.Empty, Expanded, name.ToString());
+            return new LogMessage(level, MessageType.removed_all, string.Empty, Expanded,
+                name.ToString());
         }
 
         public CollectionPropertyDiffNode SetRemovedAll()
@@ -333,7 +337,9 @@ namespace pwiz.Skyline.Model.AuditLog
             if (IsCollectionElement)
                 name = name.Parent;
 
-            return new LogMessage(level, Removed ? MessageType.removed_from : Expanded ? MessageType.contains : MessageType.added_to, string.Empty, Expanded, name.ToString(), value);
+            return new LogMessage(level,
+                Removed ? MessageType.removed_from : Expanded ? MessageType.contains : MessageType.added_to,
+                string.Empty, Expanded, name.ToString(), value);
         }
     }
 

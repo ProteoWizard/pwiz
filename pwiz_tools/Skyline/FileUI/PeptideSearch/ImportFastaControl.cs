@@ -108,7 +108,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 Enzyme = enzyme;
                 MaxMissedCleavages = maxMissedCleavages;
-                FastaFile = fastaFile;
+                FastaFile = AuditLogPath.Create(fastaFile);
                 FastaText = fastaText;
                 DecoyGenerationMethod = decoyGenerationMethod;
                 NumDecoys = numDecoys;
@@ -127,8 +127,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public Enzyme Enzyme { get; private set; }
             [Track]
             public int MaxMissedCleavages { get; private set; }
-            [Track]
-            public string FastaFile { get; private set; }
+            [Track(defaultValues:typeof(DefaultValuesNull))]
+            public AuditLogPath FastaFile { get; private set; }
             [Track(defaultValues: typeof(FastaTextDefault))]
             public string FastaText { get; private set; }
             [Track]

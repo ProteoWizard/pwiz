@@ -73,7 +73,7 @@ namespace pwiz.Skyline.EditUI
 
                 var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, MessageType.renamed_single_protein,
                     MessageType.renamed_proteins, RenamedProteins,
-                    rename => AuditLogEntry.MessageArgs.Create(rename.CurrentName, rename.NewName), null);
+                    rename => MessageArgs.Create(rename.CurrentName, rename.NewName), null);
 
                 return entry.Merge(baseEntry, false);
             }

@@ -321,7 +321,7 @@ namespace pwiz.Skyline.Model.Databinding
                 }
 
                 var entry = AuditLogEntry.CreateCountChangeEntry(docPair.OldDoc, singular, plural, _batchEditDescriptions,
-                    descr => AuditLogEntry.MessageArgs.Create(descr.ColumnCaption.GetCaption(DataSchemaLocalizer)),
+                    descr => MessageArgs.Create(descr.ColumnCaption.GetCaption(DataSchemaLocalizer)),
                     null).ChangeExtraInfo(batchModifyInfo.ExtraInfo);
 
                 return entry.ChangeAllInfo(_batchEditDescriptions.Select(descr => new MessageInfo(detailType,

@@ -88,7 +88,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public BuildPeptideSearchLibrarySettings(double cutoffScore, IList<string> searchFileNames, IrtStandard standard, bool includeAmbiguousMatches, bool filterForDocumentPeptides, ImportPeptideSearchDlg.Workflow workFlow)
             {
                 CutoffScore = cutoffScore;
-                SearchFileNames = searchFileNames;
+                SearchFileNames = searchFileNames == null
+                    ? new List<AuditLogPath>()
+                    : searchFileNames.Select(AuditLogPath.Create).ToList();
                 Standard = standard;
                 IncludeAmbiguousMatches = includeAmbiguousMatches;
                 FilterForDocumentPeptides = filterForDocumentPeptides;
@@ -98,7 +100,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             [Track(ignoreDefaultParent: true)]
             public double CutoffScore { get; private set; }
             [Track]
-            public IList<string> SearchFileNames { get; private set; }
+            public List<AuditLogPath> SearchFileNames { get; private set; }
             [Track]
             public IrtStandard Standard { get; private set; }
             [Track]

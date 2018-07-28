@@ -145,7 +145,8 @@ namespace pwiz.Skyline.Model.AuditLog
 
             if (ReferenceEquals(objectInfo.OldObject, null) && !ReferenceEquals(objectInfo.NewObject, null) &&
                 auditObjPair.NewObject.IsName || nameChanged &&
-                !typeof(IIdentiyContainer).IsAssignableFrom(thisProperty.GetPropertyType(objectInfo.ObjectPair))) // IIdentiyContainer name changes are actually displayed, since we match IIdentiyContainers by their global indices
+                // IIdentiyContainer name changes are actually displayed, since we match IIdentiyContainers by their global indices
+                !typeof(IIdentiyContainer).IsAssignableFrom(thisProperty.GetPropertyType(objectInfo.ObjectPair)))
             {
                 if (!thisProperty.IsRoot)
                 {

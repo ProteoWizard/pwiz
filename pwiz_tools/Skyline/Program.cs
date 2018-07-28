@@ -80,7 +80,6 @@ namespace pwiz.Skyline
         public static IList<string> PauseForms { get; set; }        // List of forms to pause after displaying.
         public static string ExtraRawFileSearchFolder { get; set; } // Perf test support for avoiding extra copying of large raw files
         public static List<Exception> TestExceptions { get; set; }  // To avoid showing unexpected exception UI during tests and instead log them as failures
-        public static string TestName { get; set; }
 
         // Command-line results import support
         public static bool DisableJoining { get; set; }

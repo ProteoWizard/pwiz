@@ -61,11 +61,20 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add Standard Peptides.
+        /// </summary>
+        public static string AddIrtStandardsToDocumentSettings {
+            get {
+                return ResourceManager.GetString("AddIrtStandardsToDocumentSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Maximum transitions per peptide.
         /// </summary>
-        public static string AddIrtStandardsToDocumentDlg_NumTransitions {
+        public static string AddIrtStandardsToDocumentSettings_NumTransitions {
             get {
-                return ResourceManager.GetString("AddIrtStandardsToDocumentDlg_NumTransitions", resourceCulture);
+                return ResourceManager.GetString("AddIrtStandardsToDocumentSettings_NumTransitions", resourceCulture);
             }
         }
         
@@ -160,11 +169,47 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Associate Proteins.
+        /// </summary>
+        public static string AssociateProteinsSettings {
+            get {
+                return ResourceManager.GetString("AssociateProteinsSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Background Proteome.
+        /// </summary>
+        public static string AssociateProteinsSettings_BackgroundProteome {
+            get {
+                return ResourceManager.GetString("AssociateProteinsSettings_BackgroundProteome", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to FASTA.
+        /// </summary>
+        public static string AssociateProteinsSettings_FASTA {
+            get {
+                return ResourceManager.GetString("AssociateProteinsSettings_FASTA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Proteins.
+        /// </summary>
+        public static string AssociateProteinsSettings_Proteins {
+            get {
+                return ResourceManager.GetString("AssociateProteinsSettings_Proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Background proteome database path.
         /// </summary>
-        public static string BackgroundProteomeSpec_DatabasePath {
+        public static string BackgroundProteomeSpec_DatabasePathAuditLog {
             get {
-                return ResourceManager.GetString("BackgroundProteomeSpec_DatabasePath", resourceCulture);
+                return ResourceManager.GetString("BackgroundProteomeSpec_DatabasePathAuditLog", resourceCulture);
             }
         }
         
@@ -255,6 +300,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ChargeRegressionLine_Slope {
             get {
                 return ResourceManager.GetString("ChargeRegressionLine_Slope", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Choose RT Prediction Replicates.
+        /// </summary>
+        public static string ChooseSchedulingReplicatesSettings {
+            get {
+                return ResourceManager.GetString("ChooseSchedulingReplicatesSettings", resourceCulture);
             }
         }
         
@@ -493,6 +547,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Empty Proteins.
+        /// </summary>
+        public static string EmptyProteinsSettings {
+            get {
+                return ResourceManager.GetString("EmptyProteinsSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Score Name.
         /// </summary>
         public static string EnabledFeatureScores_Calculator {
@@ -588,24 +651,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ExplicitMod_Modification {
             get {
                 return ResourceManager.GetString("ExplicitMod_Modification", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Heavy.
-        /// </summary>
-        public static string ExplicitMods_HeavyModifications {
-            get {
-                return ResourceManager.GetString("ExplicitMods_HeavyModifications", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Structural.
-        /// </summary>
-        public static string ExplicitMods_StaticModifications {
-            get {
-                return ResourceManager.GetString("ExplicitMods_StaticModifications", resourceCulture);
             }
         }
         
@@ -709,11 +754,11 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Filter peptides.
+        ///   Looks up a localized string similar to Filter Peptides.
         /// </summary>
-        public static string FilterMatchedPeptideSettings {
+        public static string FilterMatchedPeptidesSettings {
             get {
-                return ResourceManager.GetString("FilterMatchedPeptideSettings", resourceCulture);
+                return ResourceManager.GetString("FilterMatchedPeptidesSettings", resourceCulture);
             }
         }
         
@@ -880,7 +925,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Identity Annotation (for technical replicates).
+        ///   Looks up a localized string similar to Identity Annotation.
         /// </summary>
         public static string GroupComparisonDef_IdentityAnnotation {
             get {
@@ -1503,9 +1548,9 @@ namespace pwiz.Skyline.Model.AuditLog {
         /// <summary>
         ///   Looks up a localized string similar to Path.
         /// </summary>
-        public static string LibrarySpec_FilePath {
+        public static string LibrarySpec_FilePathAuditLog {
             get {
-                return ResourceManager.GetString("LibrarySpec_FilePath", resourceCulture);
+                return ResourceManager.GetString("LibrarySpec_FilePathAuditLog", resourceCulture);
             }
         }
         
@@ -1515,6 +1560,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string LibrarySpec_UseExplicitPeakBounds {
             get {
                 return ResourceManager.GetString("LibrarySpec_UseExplicitPeakBounds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Manage Results.
+        /// </summary>
+        public static string ManageResultsSettings {
+            get {
+                return ResourceManager.GetString("ManageResultsSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove corresponding library runs.
+        /// </summary>
+        public static string ManageResultsSettings_RemoveCorrespondingLibraryRuns {
+            get {
+                return ResourceManager.GetString("ManageResultsSettings_RemoveCorrespondingLibraryRuns", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove corresponding replicates.
+        /// </summary>
+        public static string ManageResultsSettings_RemoveCorrespondingReplicates {
+            get {
+                return ResourceManager.GetString("ManageResultsSettings_RemoveCorrespondingReplicates", resourceCulture);
             }
         }
         
@@ -1699,7 +1771,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Count.
+        ///   Looks up a localized string similar to Step count.
         /// </summary>
         public static string OptimizableRegression_StepCount {
             get {
@@ -1719,9 +1791,9 @@ namespace pwiz.Skyline.Model.AuditLog {
         /// <summary>
         ///   Looks up a localized string similar to Optimization library path.
         /// </summary>
-        public static string OptimizationLibrary_DatabasePath {
+        public static string OptimizationLibrary_DatabasePathAuditLog {
             get {
-                return ResourceManager.GetString("OptimizationLibrary_DatabasePath", resourceCulture);
+                return ResourceManager.GetString("OptimizationLibrary_DatabasePathAuditLog", resourceCulture);
             }
         }
         
@@ -1758,6 +1830,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string PeptideDocNode_ExplicitMods {
             get {
                 return ResourceManager.GetString("PeptideDocNode_ExplicitMods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Heavy modifications.
+        /// </summary>
+        public static string PeptideDocNode_ExplicitModsHeavy {
+            get {
+                return ResourceManager.GetString("PeptideDocNode_ExplicitModsHeavy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Structural modifications.
+        /// </summary>
+        public static string PeptideDocNode_ExplicitModsStatic {
+            get {
+                return ResourceManager.GetString("PeptideDocNode_ExplicitModsStatic", resourceCulture);
             }
         }
         
@@ -2095,6 +2185,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Volcano plot cutoff settings.
+        /// </summary>
+        public static string PropertiesCutoffSettings {
+            get {
+                return ResourceManager.GetString("PropertiesCutoffSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Log2 Fold change cutoff.
         /// </summary>
         public static string PropertiesCutoffSettings_Log2FoldChangeCutoff {
@@ -2244,6 +2343,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string QuantificationSettings_Units {
             get {
                 return ResourceManager.GetString("QuantificationSettings_Units", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Accept Peptides.
+        /// </summary>
+        public static string RefineListSettings {
+            get {
+                return ResourceManager.GetString("RefineListSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peptides to keep.
+        /// </summary>
+        public static string RefineListSettings_AcceptedPeptides {
+            get {
+                return ResourceManager.GetString("RefineListSettings_AcceptedPeptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Match modified sequence.
+        /// </summary>
+        public static string RefineListSettings_MatchModified {
+            get {
+                return ResourceManager.GetString("RefineListSettings_MatchModified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove empty proteins.
+        /// </summary>
+        public static string RefineListSettings_RemoveEmptyProteins {
+            get {
+                return ResourceManager.GetString("RefineListSettings_RemoveEmptyProteins", resourceCulture);
             }
         }
         
@@ -2446,6 +2581,51 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Accept proteins.
+        /// </summary>
+        public static string RefineProteinListSettings {
+            get {
+                return ResourceManager.GetString("RefineProteinListSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Proteins to keep.
+        /// </summary>
+        public static string RefineProteinListSettings_AcceptedProteins {
+            get {
+                return ResourceManager.GetString("RefineProteinListSettings_AcceptedProteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Accessions.
+        /// </summary>
+        public static string RefineProteinListSettings_Accessions {
+            get {
+                return ResourceManager.GetString("RefineProteinListSettings_Accessions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Names.
+        /// </summary>
+        public static string RefineProteinListSettings_Names {
+            get {
+                return ResourceManager.GetString("RefineProteinListSettings_Names", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preferred names.
+        /// </summary>
+        public static string RefineProteinListSettings_PreferredNames {
+            get {
+                return ResourceManager.GetString("RefineProteinListSettings_PreferredNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Intercept.
         /// </summary>
         public static string RegressionLine_Intercept {
@@ -2532,6 +2712,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ReintegrateDlgSettings_ReintegrateQCutoff {
             get {
                 return ResourceManager.GetString("ReintegrateDlgSettings_ReintegrateQCutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Current Name.
+        /// </summary>
+        public static string RenameProteins_CurrentName {
+            get {
+                return ResourceManager.GetString("RenameProteins_CurrentName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New Name.
+        /// </summary>
+        public static string RenameProteins_NewName {
+            get {
+                return ResourceManager.GetString("RenameProteins_NewName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rename proteins.
+        /// </summary>
+        public static string RenameProteinsSettings {
+            get {
+                return ResourceManager.GetString("RenameProteinsSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Renamed.
+        /// </summary>
+        public static string RenameProteinsSettings_RenamedProteins {
+            get {
+                return ResourceManager.GetString("RenameProteinsSettings_RenamedProteins", resourceCulture);
             }
         }
         
@@ -3220,33 +3436,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Collision energy.
-        /// </summary>
-        public static string TransitionPrediction_CollisionEnergy {
-            get {
-                return ResourceManager.GetString("TransitionPrediction_CollisionEnergy", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Compensation voltage.
-        /// </summary>
-        public static string TransitionPrediction_CompensationVoltage {
-            get {
-                return ResourceManager.GetString("TransitionPrediction_CompensationVoltage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Declustering potential.
-        /// </summary>
-        public static string TransitionPrediction_DeclusteringPotential {
-            get {
-                return ResourceManager.GetString("TransitionPrediction_DeclusteringPotential", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Product ion mass.
         /// </summary>
         public static string TransitionPrediction_FragmentMassType {
@@ -3256,11 +3445,38 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Collision energy.
+        /// </summary>
+        public static string TransitionPrediction_NonNullCollisionEnergy {
+            get {
+                return ResourceManager.GetString("TransitionPrediction_NonNullCollisionEnergy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compensation voltage.
+        /// </summary>
+        public static string TransitionPrediction_NonNullCompensationVoltage {
+            get {
+                return ResourceManager.GetString("TransitionPrediction_NonNullCompensationVoltage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Declustering potential.
+        /// </summary>
+        public static string TransitionPrediction_NonNullDeclusteringPotential {
+            get {
+                return ResourceManager.GetString("TransitionPrediction_NonNullDeclusteringPotential", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Optimization library.
         /// </summary>
-        public static string TransitionPrediction_OptimizedLibrary {
+        public static string TransitionPrediction_NonNullOptimizedLibrary {
             get {
-                return ResourceManager.GetString("TransitionPrediction_OptimizedLibrary", resourceCulture);
+                return ResourceManager.GetString("TransitionPrediction_NonNullOptimizedLibrary", resourceCulture);
             }
         }
         
@@ -3333,6 +3549,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionSettings_Prediction {
             get {
                 return ResourceManager.GetString("TransitionSettings_Prediction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unique peptide settings.
+        /// </summary>
+        public static string UniquePeptideSettings {
+            get {
+                return ResourceManager.GetString("UniquePeptideSettings", resourceCulture);
             }
         }
         

@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
@@ -46,11 +47,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             RetryAfterImportFailure = retryAfterImportFailure;
             Prefix = prefix;
             Suffix = suffix;
-            FoundResultsFiles = foundResultsFiles;
+            FoundResultsFiles = foundResultsFiles != null
+                ? foundResultsFiles.Select(AuditLogPath.Create).ToList()
+                : null;
         }
 
         [Track]
-        public List<string> FoundResultsFiles { get; private set; }
+        public List<AuditLogPath> FoundResultsFiles { get; private set; }
 
         [Track]
         public bool ExcludeSpectrumSourceFiles { get; private set; }

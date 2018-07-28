@@ -20,13 +20,13 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.AuditLog
@@ -34,10 +34,7 @@ namespace pwiz.Skyline.Model.AuditLog
     public enum MessageType
     {
         none,
-
         empty_single_arg,
-
-        // Settings
         is_,
         changed_from_to,
         changed_to,
@@ -45,14 +42,10 @@ namespace pwiz.Skyline.Model.AuditLog
         contains,
         removed_from,
         added_to,
-
-        // Log
         log_disabled,
         log_enabled,
         log_unlogged_changes,
         log_cleared,
-
-        // Targets window
         deleted_targets,
         pasted_targets,
         picked_children,
@@ -61,14 +54,10 @@ namespace pwiz.Skyline.Model.AuditLog
         set_standard_type,
         set_standard_type_peptides,
         modified,
-
-        // Document grid
         set_to_in_document_grid,
         pasted_document_grid,
         cleared_document_grid,
         fill_down_document_grid,
-
-        // Refine
         remove_empty_proteins,
         remove_empty_peptides,
         remove_duplicate_peptides,
@@ -87,8 +76,6 @@ namespace pwiz.Skyline.Model.AuditLog
         sort_protein_gene,
         added_peptide_decoys,
         refined_targets,
-
-        // File > Import
         imported_results,
         imported_peak_boundaries,
         imported_fasta,
@@ -99,7 +86,6 @@ namespace pwiz.Skyline.Model.AuditLog
         imported_spectral_library_intensities,
         imported_docs,
         imported_annotations,
-
         set_included_standard,
         set_excluded_standard,
         canceled_import,
@@ -139,7 +125,6 @@ namespace pwiz.Skyline.Model.AuditLog
         added_peptides_to_peptide_group_from_background_proteome,
         imported_assay_library_from_file,
         imported_transition_list_from_file,
-
         log_error,
         log_error_old_msg,
         deleted_target,
@@ -190,7 +175,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public LogMessage ToMessage(LogLevel logLevel)
         {
-            return new LogMessage(logLevel, Type, string.Empty, false, Names.Select(s => (object)s).ToArray());
+            return new LogMessage(logLevel, Type, string.Empty, false, Names.Select(s => (object) s).ToArray());
         }
 
         public MessageType Type { get; private set; }
@@ -262,13 +247,13 @@ namespace pwiz.Skyline.Model.AuditLog
         // These are referred to by index in log strings.
         // For instance, the string "{2:Missing}" (above) would get localized by
         // passing "Missing" into the function at index 2.
-        private static readonly Func<string, string>[] LOCALIZER_FUNCTIONS =
+        private static readonly Func<string, LogLevel, string>[] PARSE_FUNCTIONS =
         {
-            s => PropertyNames.ResourceManager.GetString(s),
-            s => PropertyElementNames.ResourceManager.GetString(s),
-            s => AuditLogStrings.ResourceManager.GetString(s),
-            LocalizeValue,
-            s => Resources.ResourceManager.GetString(s)
+            (s,l) => PropertyNames.ResourceManager.GetString(s),
+            (s,l) => PropertyElementNames.ResourceManager.GetString(s),
+            (s,l) => AuditLogStrings.ResourceManager.GetString(s),
+            (s,l) => ParsePrimitive(s),
+            ParsePath
         };
 
         public LogMessage(LogLevel level, MessageInfo info, string reason, bool expanded)
@@ -291,6 +276,14 @@ namespace pwiz.Skyline.Model.AuditLog
         public string Reason { get; private set; }
         public bool Expanded { get; private set; }
 
+        private static string ParsePath(string s, LogLevel logLevel)
+        {
+            if (logLevel == LogLevel.all_info && !AuditLogEntry.ConvertPathsToFileNames)
+                return s;
+
+            return new DirectoryInfo(s).Name;
+        }
+
         public LogMessage ChangeReason(string reason)
         {
             return ChangeProp(ImClone(this), im => im.Reason = reason);
@@ -306,12 +299,10 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public override string ToString()
         {
-            var names = Names.Select(s => (object)LocalizeLogStringProperties(s)).ToArray();
+            var names = Names.Select(s => (object)ParseLogString(s, Level)).ToArray();
 
             // If the string could not be found, list the names in brackets and separated by commas
             var format = AuditLogStrings.ResourceManager.GetString(Type.ToString());
-            if (string.IsNullOrEmpty(format))
-                System.Diagnostics.Debugger.Break();
             return string.IsNullOrEmpty(format)
                 ? string.Format("[" + string.Join(", ", Enumerable.Range(0, names.Length).Select(i => "{" + i + "}")) + "]", names) // Not L10N
                 : string.Format(format, names);
@@ -319,7 +310,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
         // bools, ints and doubles are localized
         // TODO: localize enums
-        private static string LocalizeValue(string s)
+        private static string ParsePrimitive(string s)
         {
             var result = s;
 
@@ -339,8 +330,9 @@ namespace pwiz.Skyline.Model.AuditLog
         /// corresponding localized string
         /// </summary>
         /// <param name="str">string to localize</param>
+        /// <param name="logLevel">Log level used when parsing log level dependent values such as Paths</param>
         /// <returns>localized string</returns>
-        public static string LocalizeLogStringProperties(string str)
+        public static string ParseLogString(string str, LogLevel logLevel)
         {
             if (string.IsNullOrEmpty(str))
                 return str;
@@ -363,13 +355,13 @@ namespace pwiz.Skyline.Model.AuditLog
                         // name the name of the resource
                         int index;
                         if (int.TryParse(subStr[0].ToString(), out index) && index >= 0 &&
-                            index < LOCALIZER_FUNCTIONS.Length)
+                            index < PARSE_FUNCTIONS.Length)
                         {
-                            var localized = LOCALIZER_FUNCTIONS[index](subStr.Substring(2));
-                            if (localized != null)
+                            var parsed = PARSE_FUNCTIONS[index](subStr.Substring(2), logLevel);
+                            if (parsed != null)
                             {
-                                str = str.Substring(0, expressionStartIndex) + localized + str.Substring(i + 1);
-                                i = expressionStartIndex + localized.Length - 1;
+                                str = str.Substring(0, expressionStartIndex) + parsed + str.Substring(i + 1);
+                                i = expressionStartIndex + parsed.Length - 1;
                             }
                         } 
                     }
@@ -410,7 +402,6 @@ namespace pwiz.Skyline.Model.AuditLog
         #region Implementation of IXmlSerializable
         private LogMessage()
         {
-
         }
 
         public XmlSchema GetSchema()

@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void VerifyStringLocalization(string expected, string unlocalized)
         {
-            Assert.AreEqual(expected, LogMessage.LocalizeLogStringProperties(unlocalized));
+            Assert.AreEqual(expected, LogMessage.ParseLogString(unlocalized, LogLevel.all_info));
         }
 
         public List<UnlocalizedProperty> GetAllUnlocalizedProperties()
