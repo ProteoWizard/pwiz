@@ -2013,7 +2013,16 @@ namespace pwiz.Skyline.Util
             public int TheInt { get; private set; }
         }
 
-        public static void For(int fromInclusive, int toExclusive, Action<int> body, Action<AggregateException> catchClause = null)
+        private static int GetThreadCount(int? maxThreads)
+        {
+            int threadCount = SINGLE_THREADED ? 1 : Environment.ProcessorCount;
+            maxThreads = maxThreads ?? 8; // Trial with maximum of 8
+            if (maxThreads.HasValue && threadCount > maxThreads.Value)
+                threadCount = maxThreads.Value;
+            return threadCount;
+        }
+
+        public static void For(int fromInclusive, int toExclusive, Action<int> body, Action<AggregateException> catchClause = null, int? maxThreads = null)
         {
             Action<int> localBody = i =>
             {
@@ -2024,8 +2033,7 @@ namespace pwiz.Skyline.Util
             {
                 using (var worker = new QueueWorker<IntHolder>(null, (h, i) => localBody(h.TheInt)))
                 {
-                    int threadCount = SINGLE_THREADED ? 1 : Math.Min(toExclusive - fromInclusive, Environment.ProcessorCount);
-                    worker.RunAsync(threadCount, typeof(ParallelEx).Name);
+                    worker.RunAsync(GetThreadCount(maxThreads), typeof(ParallelEx).Name);
                     for (int i = fromInclusive; i < toExclusive; i++)
                     {
                         if (worker.Exception != null)
@@ -2040,7 +2048,7 @@ namespace pwiz.Skyline.Util
 //            LoopWithExceptionHandling(() => Parallel.For(fromInclusive, toExclusive, PARALLEL_OPTIONS, localBody), catchClause);
         }
 
-        public static void ForEach<TSource>(IEnumerable<TSource> source, Action<TSource> body, Action<AggregateException> catchClause = null) where TSource : class
+        public static void ForEach<TSource>(IEnumerable<TSource> source, Action<TSource> body, Action<AggregateException> catchClause = null, int? maxThreads = null) where TSource : class
         {
             Action<TSource> localBody = o =>
             {
@@ -2051,8 +2059,7 @@ namespace pwiz.Skyline.Util
             {
                 using (var worker = new QueueWorker<TSource>(null, (s, i) => localBody(s)))
                 {
-                    int threadCount = SINGLE_THREADED ? 1 : Environment.ProcessorCount;
-                    worker.RunAsync(threadCount, typeof(ParallelEx).Name);
+                    worker.RunAsync(GetThreadCount(maxThreads), typeof(ParallelEx).Name);
                     foreach (TSource s in source)
                     {
                         if (worker.Exception != null)
