@@ -1456,7 +1456,7 @@ namespace SkylineTester
             this.branchUrl.Name = "branchUrl";
             this.branchUrl.Size = new System.Drawing.Size(595, 20);
             this.branchUrl.TabIndex = 2;
-            this.branchUrl.Text = "https://svn.code.sf.net/p/proteowizard/code/branches/work/BRANCHNAME";
+            this.branchUrl.Text = "https://github.com/ProteoWizard/pwiz.git/tree/BRANCHNAME";
             // 
             // groupBox5
             // 
@@ -2119,7 +2119,7 @@ namespace SkylineTester
             this.nightlyBranchUrl.Name = "nightlyBranchUrl";
             this.nightlyBranchUrl.Size = new System.Drawing.Size(159, 20);
             this.nightlyBranchUrl.TabIndex = 2;
-            this.nightlyBranchUrl.Text = "https://svn.code.sf.net/p/proteowizard/code/branches/work/BRANCHNAME";
+            this.nightlyBranchUrl.Text = "https://github.com/ProteoWizard/pwiz.git/tree/BRANCHNAME";
             // 
             // groupBox18
             // 
