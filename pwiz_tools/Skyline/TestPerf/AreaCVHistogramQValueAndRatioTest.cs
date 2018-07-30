@@ -163,7 +163,7 @@ namespace TestPerf
             T pane;
             Assert.IsTrue(graph.TryGetGraphPane(out pane));
             Assert.IsTrue(pane.HasToolbar);
-            CollectionAssert.AreEqual(new[] { "Light", "Heavy", "All 15N", "Medians", "None" }, toolbar.NormalizationMethods.ToArray());
+            CollectionAssert.AreEqual(new[] { "Light", "Heavy", "All 15N", Resources.AreaCVToolbar_UpdateUI_Medians, Resources.AreaCVToolbar_UpdateUI_None}, toolbar.NormalizationMethods.ToArray());
             AssertDataCorrect(pane, statsStartIndex++); // Light
 
             RunUI(() => SkylineWindow.SetNormalizationMethod(AreaCVNormalizationMethod.ratio, 1));
