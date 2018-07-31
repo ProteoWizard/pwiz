@@ -1732,7 +1732,7 @@ namespace pwiz.Skyline.Model
                         knownColumnHeadersAllCultures.Add(pair.Item2, pair.Item1);
                     }
 
-                    var mz = pair.Item2.Replace("m/z", "mz"); // Accept either m/z or mz
+                    var mz = pair.Item2.Replace("m/z", "mz"); // Accept either m/z or mz  // Not L10N
                     if (!knownColumnHeadersAllCultures.ContainsKey(mz))
                     {
                         knownColumnHeadersAllCultures.Add(mz, pair.Item1);
