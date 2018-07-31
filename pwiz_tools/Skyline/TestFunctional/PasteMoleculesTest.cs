@@ -1039,7 +1039,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);
 
             // Check case insensitivity, m/z vs mz
-            textCSV7 =
+            var textCSV8 =
                 "MOLECULE LIST NAME,PRECURSOR NAME,PRECURSOR FORMULA,PRECURSOR ADDUCT,EXPLICIT RETENTION TIME,COLLISIONAL CROSS SECTION (SQ A),PRODUCT MZ,PRODUCT CHARGE\n" +
                 "Lipid,L1,C41H74NO8P,[M+H],6.75,273.41,,\n" +
                 "Lipid,L1,C41H74NO8P,[M+H],6.75,273.41,263.2371,1\n" +
@@ -1048,7 +1048,7 @@ namespace pwiz.SkylineTestFunctional
             NewDocument();
             RunUI(() =>
             {
-                SetClipboardText(textCSV7);
+                SetClipboardText(textCSV8);
                 SkylineWindow.Paste();
             });
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);
