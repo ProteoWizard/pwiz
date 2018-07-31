@@ -109,6 +109,32 @@ namespace SkylineTester
             var skytFile = Path.Combine(MainWindow.ExeDir, "SkylineNightly.skytr");
             MainWindow.Save(skytFile);
 
+            ScheduleTask(startTime, skytFile);
+
+            if (MainWindow.ShiftKeyPressed)
+            {
+                MainWindow.Close();
+                return false;
+            }
+
+            if (startTime <= DateTime.Now && startTime + TimeSpan.FromMinutes(5) > DateTime.Now)
+            {
+                RunUI(StartNightly, 500);
+                return true;
+            }
+
+            var hours = (startTime - DateTime.Now).Hours;
+            var minutes = (startTime - DateTime.Now).Minutes;
+            if (hours < 0)
+                hours += 24;
+            var delay = (hours > 0) ? hours : minutes;
+            var units = (hours > 0) ? "hours" : "minutes";
+            MainWindow.SetStatus("SkylineTester scheduled build will start about {0} {1} from now ({2}).  If you also have a scheduled SkylineNightly run on this machine make sure they don't overlap.".With(delay, units, DateTime.Now.ToString(CultureInfo.InvariantCulture)));
+            return false;
+        }
+
+        private static void ScheduleTask(DateTime startTime, string skytFile)
+        {
             using (TaskService ts = new TaskService())
             {
                 // Create a new task definition and assign properties
@@ -127,10 +153,10 @@ namespace SkylineTester
                 //   TaskPriority = 13, I/O Priority = Normal, Memory Priority = 5
                 // but gives TestRunner the standard user values of
                 //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 5
-                td.Settings.Priority = ProcessPriorityClass.High; 
+                td.Settings.Priority = ProcessPriorityClass.High;
 
                 // Add a trigger that will fire the task every other day
-                DailyTrigger dt = (DailyTrigger)td.Triggers.Add(new DailyTrigger { DaysInterval = 1 });
+                DailyTrigger dt = (DailyTrigger) td.Triggers.Add(new DailyTrigger {DaysInterval = 1});
                 dt.StartBoundary = startTime;
                 dt.ExecutionTimeLimit = new TimeSpan(23, 30, 0);
                 dt.Enabled = true;
@@ -156,30 +182,8 @@ namespace SkylineTester
 
                 // Register the task in the root folder
                 ts.RootFolder.RegisterTaskDefinition(NIGHTLY_TASK_NAME, td);
-
             }
             MainWindow.DeleteNightlyTask.Enabled = true;
-
-            if (MainWindow.ShiftKeyPressed)
-            {
-                MainWindow.Close();
-                return false;
-            }
-
-            if (startTime <= DateTime.Now && startTime + TimeSpan.FromMinutes(5) > DateTime.Now)
-            {
-                RunUI(StartNightly, 500);
-                return true;
-            }
-
-            var hours = (startTime - DateTime.Now).Hours;
-            var minutes = (startTime - DateTime.Now).Minutes;
-            if (hours < 0)
-                hours += 24;
-            var delay = (hours > 0) ? hours : minutes;
-            var units = (hours > 0) ? "hours" : "minutes";
-            MainWindow.SetStatus("SkylineTester scheduled build will start about {0} {1} from now ({2}).  If you also have a scheduled SkylineNightly run on this machine make sure they don't overlap.".With(delay, units, DateTime.Now.ToString(CultureInfo.InvariantCulture)));
-            return false;
         }
 
         public override bool Stop(bool success)
