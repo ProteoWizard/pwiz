@@ -23,18 +23,13 @@
 // Accepts same argmuments as SkylineNightly, but first updates local SkylineNightly.exe from GitHub artifacts before invoking it
 // 
 
+// ReSharper disable NonLocalizedString
+
 using System;
 using System.Diagnostics;
-using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Xml.Linq;
 using Ionic.Zip;
 
 namespace SkylineNightlyShim
