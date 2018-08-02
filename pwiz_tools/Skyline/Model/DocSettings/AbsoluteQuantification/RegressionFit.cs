@@ -23,6 +23,7 @@ using MathNet.Numerics.LinearRegression;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
@@ -37,8 +38,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static readonly RegressionFit LINEAR_THROUGH_ZERO = new SimpleRegressionFit("linear_through_zero", // Not L10N
             () => QuantificationStrings.RegressionFit_LINEAR_THROUGH_ZERO_Linear_through_zero, LinearFitThroughZero);
 
-        public static readonly RegressionFit QUADRATIC = new SimpleRegressionFit("quadratic", // Not L10N
-            () => QuantificationStrings.RegressionFit_QUADRATIC_Quadratic, QuadraticFit);
+        public static readonly RegressionFit QUADRATIC = new QuadraticFit();
 
         public static readonly RegressionFit BILINEAR = new BilinearFit();
 
@@ -83,44 +83,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public virtual double? GetY(CalibrationCurve calibrationCurve, double? x)
         {
-            if (calibrationCurve.TurningPoint.HasValue && x < calibrationCurve.TurningPoint)
-            {
-                x = calibrationCurve.TurningPoint;
-            }
-            if (calibrationCurve.QuadraticCoefficient.HasValue)
-            {
-                return x * x * calibrationCurve.QuadraticCoefficient.Value + x * calibrationCurve.Slope + calibrationCurve.Intercept.GetValueOrDefault();
-            }
             return x * calibrationCurve.Slope + calibrationCurve.Intercept.GetValueOrDefault();
         }
 
         public virtual double? GetFittedX(CalibrationCurve calibrationCurve, double? y)
         {
-            if (calibrationCurve.QuadraticCoefficient.HasValue)
-            {
-                var discriminant = calibrationCurve.Slope * calibrationCurve.Slope - 4 * calibrationCurve.QuadraticCoefficient * (calibrationCurve.Intercept - y);
-                if (!discriminant.HasValue)
-                {
-                    return null;
-                }
-                if (discriminant < 0)
-                {
-                    return double.NaN;
-                }
-                double sqrtDiscriminant = Math.Sqrt(discriminant.Value);
-                return (-calibrationCurve.Slope.Value + sqrtDiscriminant) / 2 / calibrationCurve.QuadraticCoefficient.Value;
-            }
             return (y - calibrationCurve.Intercept.GetValueOrDefault()) / calibrationCurve.Slope;
         }
 
         public virtual double? GetX(CalibrationCurve calibrationCurve, double? y)
         {
-            double? x = GetFittedX(calibrationCurve, y);
-            if (x.HasValue && calibrationCurve.TurningPoint.HasValue && x < calibrationCurve.TurningPoint)
-            {
-                return null;
-            }
-            return x;
+            return GetFittedX(calibrationCurve, y);
         }
 
         protected abstract CalibrationCurve FitPoints(IList<WeightedPoint> points);
@@ -202,7 +175,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return new CalibrationCurve().ChangePointCount(points.Count).ChangeSlope(values[0]);
         }
 
-        public static CalibrationCurve QuadraticFit(IList<WeightedPoint> points)
+        public static CalibrationCurve QuadraticFit2(IList<WeightedPoint> points)
         {
             double[] result = MathNet.Numerics.Fit.PolynomialWeighted(
                 points.Select(p => p.X).ToArray(),
@@ -223,6 +196,58 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return NONE;
             }
             return All.FirstOrDefault(fit => fit.Name == name) ?? LINEAR;
+        }
+
+        private class QuadraticFit : RegressionFit
+        {
+            public QuadraticFit() : base("quadratic") // Not L10N
+            {
+                
+            }
+
+            protected override CalibrationCurve FitPoints(IList<WeightedPoint> points)
+            {
+                double[] result = MathNet.Numerics.Fit.PolynomialWeighted(
+                    points.Select(p => p.X).ToArray(),
+                    points.Select(p => p.Y).ToArray(),
+                    points.Select(p => p.Weight).ToArray(),
+                    2
+                );
+                return new CalibrationCurve().ChangePointCount(points.Count)
+                    .ChangeQuadraticCoefficient(result[2])
+                    .ChangeSlope(result[1])
+                    .ChangeIntercept(result[0]);
+            }
+
+            public override string Label
+            {
+                get { return QuantificationStrings.RegressionFit_QUADRATIC_Quadratic; }
+            }
+
+            public override double? GetFittedX(CalibrationCurve calibrationCurve, double? y)
+            {
+                // Quadratic formula: x = (-b +/- sqrt(b^2-4ac))/2a
+                double? a = calibrationCurve.QuadraticCoefficient;
+                double? b = calibrationCurve.Slope;
+                double? c = calibrationCurve.Intercept - y;
+
+                double? discriminant = b * b - 4 * a * c;
+                if (!discriminant.HasValue)
+                {
+                    return null;
+                }
+                if (discriminant < 0)
+                {
+                    return double.NaN;
+                }
+                double sqrtDiscriminant = Math.Sqrt(discriminant.Value);
+                return (-b + sqrtDiscriminant) / 2 / a;
+            }
+
+            public override double? GetY(CalibrationCurve calibrationCurve, double? x)
+            {
+                return x * x * calibrationCurve.QuadraticCoefficient.Value + x * calibrationCurve.Slope + calibrationCurve.Intercept.GetValueOrDefault();
+            }
         }
 
         private class BilinearFit : RegressionFit
@@ -295,11 +320,30 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 }
                 return totalDelta / totalWeight;
             }
+
+            public override double? GetX(CalibrationCurve calibrationCurve, double? y)
+            {
+                double? x = GetFittedX(calibrationCurve, y);
+                if (x.HasValue && calibrationCurve.TurningPoint.HasValue && x < calibrationCurve.TurningPoint)
+                {
+                    return null;
+                }
+                return x;
+            }
+
+            public override double? GetY(CalibrationCurve calibrationCurve, double? x)
+            {
+                if (calibrationCurve.TurningPoint.HasValue && x < calibrationCurve.TurningPoint)
+                {
+                    x = calibrationCurve.TurningPoint;
+                }
+                return base.GetY(calibrationCurve, x);
+            }
         }
 
         private class LinearInLogSpace : RegressionFit
         {
-            public LinearInLogSpace() : base("linear_in_log_space")
+            public LinearInLogSpace() : base("linear_in_log_space") // Not L10N
             {
                 
             }
@@ -314,7 +358,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
             public override string Label
             {
-                get { return "Linear in Log Space"; }
+                get { return Resources.LinearInLogSpace_Label_Linear_in_Log_Space; }
             }
 
             public override double? GetFittedX(CalibrationCurve calibrationCurve, double? y)
