@@ -39,8 +39,6 @@ namespace SkylineNightly
     // ReSharper disable NonLocalizedString
     public class Nightly
     {
-        private const bool SUPPORT_HANDLE_LEAK_TRACKING = false; // TODO restore this once test server is updated to deal with handle leak info
-
 
         private const string NIGHTLY_TASK_NAME = "Skyline nightly build";
 
@@ -605,13 +603,10 @@ namespace SkylineNightly
                     test["duration"] = duration;
                     test["managed"] = managed;
                     test["total"] = total;
-                    if (SUPPORT_HANDLE_LEAK_TRACKING) // TODO restore this once test server is updated to deal with handle leak info
-                    {
-                        if (!string.IsNullOrEmpty(user))
-                            test["user"] = user;
-                        if (!string.IsNullOrEmpty(gdi))
-                            test["gdi"] = gdi;
-                    }
+                    if (!string.IsNullOrEmpty(user))
+                        test["user"] = user;
+                    if (!string.IsNullOrEmpty(gdi))
+                        test["gdi"] = gdi;
                 }
 
                 testCount++;
@@ -658,16 +653,13 @@ namespace SkylineNightly
                 leak["name"] = match.Groups[1].Value;
                 leak["bytes"] = match.Groups[2].Value;
             }
-            if (SUPPORT_HANDLE_LEAK_TRACKING) // TODO restore this once test server is updated to deal with handle leak info
+            var leakHandlesPattern = new Regex(@"!!! (\S+) HANDLE-LEAKED ([.0-9]+) (\S+)", RegexOptions.Compiled);
+            for (var match = leakHandlesPattern.Match(log); match.Success; match = match.NextMatch())
             {
-                var leakHandlesPattern = new Regex(@"!!! (\S+) HANDLE-LEAKED ([.0-9]+) (\S+)", RegexOptions.Compiled);
-                for (var match = leakHandlesPattern.Match(log); match.Success; match = match.NextMatch())
-                {
-                    var leak = _leaks.Append("leak");
-                    leak["name"] = match.Groups[1].Value;
-                    leak["handles"] = match.Groups[2].Value;
-                    leak["type"] = match.Groups[3].Value;
-                }
+                var leak = _leaks.Append("leak");
+                leak["name"] = match.Groups[1].Value;
+                leak["handles"] = match.Groups[2].Value;
+                leak["type"] = match.Groups[3].Value;
             }
         }
 
