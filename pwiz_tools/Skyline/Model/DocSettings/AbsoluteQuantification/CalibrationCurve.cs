@@ -30,7 +30,16 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
     {
         // The CalibrationCurve that you get if you have no external standards.
         public static readonly CalibrationCurve NO_EXTERNAL_STANDARDS
-            = new CalibrationCurve().ChangePointCount(0).ChangeSlope(1.0);
+            = new CalibrationCurve(RegressionFit.NONE).ChangePointCount(0).ChangeSlope(1.0);
+
+        public CalibrationCurve(RegressionFit regressionFit)
+        {
+            RegressionFit = regressionFit;
+        }
+
+        public CalibrationCurve() : this(RegressionFit.NONE)
+        {
+        }
 
         [Format(Formats.CalibrationCurve, NullValue = TextUtil.EXCEL_NA)]
         public double? Slope { get; private set; }
@@ -71,6 +80,13 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.QuadraticCoefficient = quadraticCoefficient);
         }
 
+        public RegressionFit RegressionFit { get; private set; }
+
+        public CalibrationCurve ChangeRegressionFit(RegressionFit regressionFit)
+        {
+            return ChangeProp(ImClone(this), im => im.RegressionFit = regressionFit);
+        }
+
         [Format("0.####", NullValue = TextUtil.EXCEL_NA)]
         public double? RSquared { get; private set; }
 
@@ -88,44 +104,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public double? GetY(double? x)
         {
-            if (TurningPoint.HasValue && x < TurningPoint)
-            {
-                x = TurningPoint;
-            }
-            if (QuadraticCoefficient.HasValue)
-            {
-                return x*x*QuadraticCoefficient.Value + x*Slope + Intercept.GetValueOrDefault();
-            }
-            return x*Slope + Intercept.GetValueOrDefault();
+            return RegressionFit.GetY(this, x);
         }
 
         public double? GetFittedX(double? y)
         {
-            if (QuadraticCoefficient.HasValue)
-            {
-                var discriminant = Slope*Slope - 4*QuadraticCoefficient*(Intercept - y);
-                if (!discriminant.HasValue)
-                {
-                    return null;
-                }
-                if (discriminant < 0)
-                {
-                    return double.NaN;
-                }
-                double sqrtDiscriminant = Math.Sqrt(discriminant.Value);
-                return (-Slope.Value + sqrtDiscriminant)/2/QuadraticCoefficient.Value;
-            }
-            return (y - Intercept.GetValueOrDefault())/Slope;
+            return RegressionFit.GetFittedX(this, y);
         }
 
         public double? GetX(double? y)
         {
-            double? x = GetFittedX(y);
-            if (x.HasValue && TurningPoint.HasValue && x < TurningPoint)
-            {
-                return null;
-            }
-            return x;
+            return RegressionFit.GetX(this, y);
         }
 
         public override string ToString()
