@@ -39,6 +39,7 @@ namespace SkylineNightly
     // ReSharper disable NonLocalizedString
     public class Nightly
     {
+
         private const string NIGHTLY_TASK_NAME = "Skyline nightly build";
 
         private const string TEAM_CITY_ZIP_URL = "https://teamcity.labkey.org/guestAuth/repository/download/{0}/.lastFinished/SkylineTester.zip{1}";
