@@ -2340,6 +2340,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Regression Fit.
+        /// </summary>
+        public static string RegressionFit {
+            get {
+                return ResourceManager.GetString("RegressionFit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Replicate.
         /// </summary>
         public static string Replicate {

@@ -297,7 +297,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 {
                     return null;
                 }
-                return linearCalibrationCurve.ChangeTurningPoint(lod);
+                return linearCalibrationCurve.ChangeTurningPoint(lod).ChangeRegressionFit(BILINEAR);
             }
 
             /// <summary>
