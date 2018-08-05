@@ -50,7 +50,7 @@ namespace TestRunner
         private const double LeakHandleThreshold = 1; // 1 handle of any kind
         private const double LeakGdiUserThreshold = 1;  // 1 handle gdi+user (not all included in the total handle count)
         private const int CrtLeakThreshold = 1000;  // No longer used
-        private const int LeakCheckIterations = 24; // Maximum number of runs to try to achieve below thresholds for trailing deltas
+        private const int LeakCheckIterations = 16; // Maximum number of runs to try to achieve below thresholds for trailing deltas
 
         [STAThread]
         static int Main(string[] args)
@@ -416,8 +416,8 @@ namespace TestRunner
                     var gdiPoints = new List<int> { runTests.LastGdiHandleCount };
                     var userPoints = new List<int> { runTests.LastUserHandleCount };
                     double lastMemoryDelta = 0, lastHandleDelta = 0, lastGdiUserDelta = 0;
-                    int i;
-                    for (i = 0; i < LeakCheckIterations; i++)
+                    int? passedIndex = null;
+                    for (int i = 0; i < LeakCheckIterations; i++)
                     {
                         // Run the test in the next language.
                         runTests.Language =
@@ -429,6 +429,11 @@ namespace TestRunner
                             break;
                         }
 
+                        // If already passed, no need to collect more points, but continue
+                        // running tests to keep test count variance more predictable
+                        if (passedIndex.HasValue)
+                            continue;
+
                         // Run linear regression on memory size samples.
                         memoryPoints.Add(runTests.TotalMemoryBytes);
                         handlePoints.Add(runTests.LastTotalHandleCount);
@@ -437,17 +442,21 @@ namespace TestRunner
                         if (memoryPoints.Count <= LeakTrailingDeltas)
                             continue;
 
-                        // Stop if the leak magnitude is below our threshold.
-                        // slope = CalculateSlope(memoryPoints); 
+                        // Stop accumulating points if the leak magnitude is below our threshold.
                         lastMemoryDelta = MeanDelta(memoryPoints);
                         lastHandleDelta = MeanDelta(handlePoints);
                         lastGdiUserDelta = MeanDelta(gdiPoints) + MeanDelta(userPoints);
-                        if (lastMemoryDelta < LeakThreshold && lastHandleDelta < LeakHandleThreshold && lastGdiUserDelta < LeakGdiUserThreshold)
-                            break;
+                        if (lastMemoryDelta < LeakThreshold &&
+                            lastHandleDelta < LeakHandleThreshold &&
+                            lastGdiUserDelta < LeakGdiUserThreshold)
+                        {
+                            passedIndex = i;
+                        }
+
                         // Remove the oldest point unless this is the last iteration
                         // So that the report below will be based on the set that just
                         // failed the leak check
-                        if (i < LeakCheckIterations - 1)
+                        if (!passedIndex.HasValue && i < LeakCheckIterations - 1)
                         {
                             memoryPoints.RemoveAt(0);
                             handlePoints.RemoveAt(0);
@@ -478,9 +487,9 @@ namespace TestRunner
                     }
                     else
                     {
-                        // Report the final mean average deltas over the prior 8 runs (7 deltas)
+                        // Report the final mean average deltas over the passing or final 8 runs (7 deltas)
                         runTests.Log("# {0} deltas ({1}): memory = {2:0.#} KB, user = {3:0.#}, gdi = {4:0.#}, total = {5:0.#}\r\n",
-                            test.TestMethod.Name, i+1, lastMemoryDelta / 1024, MeanDelta(userPoints), MeanDelta(gdiPoints), lastHandleDelta);
+                            test.TestMethod.Name, passedIndex+1 ?? LeakCheckIterations, lastMemoryDelta / 1024, MeanDelta(userPoints), MeanDelta(gdiPoints), lastHandleDelta);
                     }
                 }
 
