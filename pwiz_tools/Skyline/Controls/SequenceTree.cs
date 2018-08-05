@@ -979,7 +979,9 @@ namespace pwiz.Skyline.Controls
                 if (_nodeTip != null)
                     _nodeTip.HideTip();
             }
-            NodeCapture = node;
+            // Capture the mouse cursor, if not in test mode ignoring focus
+            if (!IgnoreFocus)
+                NodeCapture = node;
         }
 
         protected override void OnMouseClick(MouseEventArgs e)
