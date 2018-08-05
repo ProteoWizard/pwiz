@@ -352,41 +352,45 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public void LibraryBuildCompleteCallback(IAsyncResult ar)
+        public void LibraryBuildCompleteCallback(LibraryManager.BuildState buildState, bool success)
         {
-            var buildState = (LibraryManager.BuildState)ar.AsyncState;
-            bool success = buildState.BuildFunc.EndInvoke(ar);
-
-            if (success && NotificationContainerForm.IsHandleCreated)
+            // Completion needs to happen on a separate thread because of the access to UI elements
+            // In order to make sure the thread handle is released, it needs to call Application.ThreadExit()
+            var threadComplete = BackgroundEventThreads.CreateThreadForAction(() =>
             {
-                // Only one form showing at a time
-                lock (this)
+                if (success && NotificationContainerForm.IsHandleCreated)
                 {
-                    RemoveLibraryBuildNotification();
-
-                    var frm = new BuildLibraryNotification(buildState.LibrarySpec.Name);
-                    frm.Activated += notification_Activated;
-                    frm.Shown += notification_Shown;
-                    frm.ExploreLibrary += notification_ExploreLibrary;
-                    frm.NotificationComplete += notification_NotificationComplete;
-                    Point anchor = NotificationAnchor;
-                    frm.Left = anchor.X;
-                    frm.Top = anchor.Y - frm.Height;
-                    NotificationContainerForm.BeginInvoke(new Action(() =>
+                    // Only one form showing at a time
+                    lock (this)
                     {
-                        if (!string.IsNullOrEmpty(buildState.ExtraMessage))
+                        RemoveLibraryBuildNotification();
+
+                        var frm = new BuildLibraryNotification(buildState.LibrarySpec.Name);
+                        frm.Activated += notification_Activated;
+                        frm.Shown += notification_Shown;
+                        frm.ExploreLibrary += notification_ExploreLibrary;
+                        frm.NotificationComplete += notification_NotificationComplete;
+                        Point anchor = NotificationAnchor;
+                        frm.Left = anchor.X;
+                        frm.Top = anchor.Y - frm.Height;
+                        NotificationContainerForm.BeginInvoke(new Action(() =>
                         {
-                            MessageDlg.Show(TopMostApplicationForm, buildState.ExtraMessage);
-                        }
-                        if (buildState.IrtStandard != null && buildState.IrtStandard != IrtStandard.NULL && AddIrts(buildState))
-                        {
-                            AddRetentionTimePredictor(buildState);
-                        }
-                    }));
-                    frm.Start();
-                    Assume.IsNull(Interlocked.Exchange(ref _notification, frm));
+                            if (!string.IsNullOrEmpty(buildState.ExtraMessage))
+                            {
+                                MessageDlg.Show(TopMostApplicationForm, buildState.ExtraMessage);
+                            }
+                            if (buildState.IrtStandard != null && buildState.IrtStandard != IrtStandard.NULL && AddIrts(buildState))
+                            {
+                                AddRetentionTimePredictor(buildState);
+                            }
+                        }));
+                        frm.Start();
+                        Assume.IsNull(Interlocked.Exchange(ref _notification, frm));
+                    }
                 }
-            }
+            });
+            threadComplete.Name = "Library Build Completion";   // Not L10N
+            threadComplete.Start();
         }
 
         private bool AddIrts(LibraryManager.BuildState buildState)
