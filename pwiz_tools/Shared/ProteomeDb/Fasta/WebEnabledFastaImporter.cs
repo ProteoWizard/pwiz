@@ -486,6 +486,13 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// </summary>
         public class WebSearchProvider 
         {
+            /// <summary>
+            /// Test overrides should return false to avoid slowing down the tests
+            /// </summary>
+            public virtual bool IsPolite
+            {
+                get { return true; }
+            }
 
             public virtual XmlTextReader GetXmlTextReader(string url)
             {
@@ -578,6 +585,11 @@ namespace pwiz.ProteomeDatabase.Fasta
         /// </summary>
         public class FakeWebSearchProvider : WebSearchProvider
         {
+            public override bool IsPolite
+            {
+                get { return false; }
+            }
+
             public override int GetTimeoutMsec(int searchTermCount)
             {
                 return 10 * (10 + (searchTermCount / 5));
@@ -793,7 +805,8 @@ namespace pwiz.ProteomeDatabase.Fasta
                     }
 
                     // Be a good citizen - no more than three hits per second for Entrez
-                    var snoozeMs = politenessIntervalMsec - politeStopwatch.ElapsedMilliseconds;
+                    var snoozeMs = _webSearchProvider.IsPolite ?
+                        politenessIntervalMsec - politeStopwatch.ElapsedMilliseconds : 0;
                     if (snoozeMs > 0)
                         Thread.Sleep((int)snoozeMs);
                     politeStopwatch.Restart();
