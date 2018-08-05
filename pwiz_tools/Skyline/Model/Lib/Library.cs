@@ -383,12 +383,11 @@ namespace pwiz.Skyline.Model.Lib
             public IrtStandard IrtStandard { get; set; }
         }
 
-        public void BuildLibrary(IDocumentContainer container, ILibraryBuilder builder, AsyncCallback callback)
+        public void BuildLibrary(IDocumentContainer container, ILibraryBuilder builder, Action<BuildState, bool> callback)
         {
-            BuildFunction buildFunc = BuildLibraryBackground;
             var monitor = new LibraryBuildMonitor(this, container);
-            BuildState buildState = new BuildState(builder.LibrarySpec, buildFunc);
-            buildFunc.BeginInvoke(container, builder, monitor, buildState, callback, buildState);
+            var buildState = new BuildState(builder.LibrarySpec, BuildLibraryBackground);
+            ActionUtil.RunAsync(() => callback(buildState, BuildLibraryBackground(container, builder, monitor, buildState)), "Library Build");
         }
 
         public bool BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder, IProgressMonitor monitor, BuildState buildState)
