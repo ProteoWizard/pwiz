@@ -2967,7 +2967,7 @@ first occurrence of any peptide.</value>
     <value>Alt+3</value>
   </data>
   <data name="documentGridMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>273, 30</value>
+    <value>191, 22</value>
   </data>
   <data name="documentGridMenuItem.Text" xml:space="preserve">
     <value>&amp;Document Grid</value>
@@ -2976,7 +2976,7 @@ first occurrence of any peptide.</value>
     <value>Alt+4</value>
   </data>
   <data name="auditLogMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
+    <value>273, 30</value>
   </data>
   <data name="auditLogMenuItem.Text" xml:space="preserve">
     <value>Au&amp;dit Log</value>
