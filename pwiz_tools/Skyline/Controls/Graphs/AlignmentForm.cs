@@ -22,8 +22,8 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 using ZedGraph;
 using pwiz.Skyline.Model;
@@ -43,7 +43,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                   AllowNew = false,
                                                                   AllowRemove = false,
                                                               };
+        private readonly QueueWorker<Action> _rowUpdateQueue = new QueueWorker<Action>(null, (a, i) => a());
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
         public AlignmentForm(SkylineWindow skylineWindow)
         {
             InitializeComponent();
@@ -63,6 +65,8 @@ namespace pwiz.Skyline.Controls.Graphs
             zedGraphControl.GraphPane.XAxis.MajorTic.IsOpposite = false;
             zedGraphControl.GraphPane.XAxis.MinorTic.IsOpposite = false;
             zedGraphControl.GraphPane.Chart.Border.IsVisible = false;
+
+            _rowUpdateQueue.RunAsync(ParallelEx.GetThreadCount(), "Alignment Rows");
         }
 
         private PlotTypeRT _plotType;
@@ -88,6 +92,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 SkylineWindow.DocumentUIChangedEvent -= SkylineWindowOnDocumentUIChangedEvent;
             }
             _cancellationTokenSource.Cancel();
+            _rowUpdateQueue.Dispose();
             base.OnHandleDestroyed(e);
         }
 
@@ -187,35 +192,40 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return;
             }
-            Task.Factory.StartNew(
-                () => {
-                    try
-                    {
-                        return AlignedRetentionTimes.AlignLibraryRetentionTimes(
-                            dataRow.TargetTimes, dataRow.SourceTimes,
-                            DocumentRetentionTimes.REFINEMENT_THRESHHOLD,
-                            RegressionMethodRT.linear, 
-                            () => cancellationToken.IsCancellationRequested);
-                    }
-                    catch (OperationCanceledException operationCanceledException)
-                    {
-                        throw new OperationCanceledException(operationCanceledException.Message, operationCanceledException, cancellationToken);
-                    }
-                }, cancellationToken)
-                .ContinueWith(alignedTimesTask => UpdateDataRow(index, alignedTimesTask), TaskScheduler.FromCurrentSynchronizationContext());
+
+            _rowUpdateQueue.Add(() => UpdateRow(dataRow, index, cancellationToken));
         }
 
-        private void UpdateDataRow(int iRow, Task<AlignedRetentionTimes> alignedTimesTask)
+        private void UpdateRow(DataRow dataRow, int index, CancellationToken cancellationToken)
         {
-            if (alignedTimesTask.IsCanceled)
+            try
             {
-                return;
+                var alignedTimes = AlignedRetentionTimes.AlignLibraryRetentionTimes(
+                    dataRow.TargetTimes, dataRow.SourceTimes,
+                    DocumentRetentionTimes.REFINEMENT_THRESHHOLD,
+                    RegressionMethodRT.linear,
+                    () => cancellationToken.IsCancellationRequested);
+
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    RunUI(() =>
+                    {
+                        dataRow.AlignedRetentionTimes = alignedTimes;
+                        _dataRows[index] = dataRow;
+                    });
+                }
             }
-            var dataRow = _dataRows[iRow];
-            dataRow.AlignedRetentionTimes = alignedTimesTask.Result;
-            _dataRows[iRow] = dataRow;
+            catch (OperationCanceledException operationCanceledException)
+            {
+                throw new OperationCanceledException(operationCanceledException.Message, operationCanceledException, cancellationToken);
+            }
         }
-        
+
+        private void RunUI(Action action)
+        {
+            BeginInvoke(action);
+        }
+
         public void UpdateRows()
         {
             var newRows = GetRows();

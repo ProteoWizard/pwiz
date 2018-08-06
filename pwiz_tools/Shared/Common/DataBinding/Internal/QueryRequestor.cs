@@ -118,7 +118,7 @@ namespace pwiz.Common.DataBinding.Internal
                 }
                 else
                 {
-                    new BackgroundQuery(RowSourceWrapper, EventTaskScheduler, this).Start();
+                    new BackgroundQuery(RowSourceWrapper, this).Start();
                 }
             }
 
