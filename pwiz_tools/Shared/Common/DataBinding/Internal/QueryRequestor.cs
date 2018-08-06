@@ -19,7 +19,6 @@
 
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace pwiz.Common.DataBinding.Internal
 {
@@ -104,7 +103,7 @@ namespace pwiz.Common.DataBinding.Internal
                 QueryLock = queryLock;
             }
 
-            public TaskScheduler EventTaskScheduler { get { return _queryRequestor._bindingListView.EventTaskScheduler; } }
+            public EventTaskScheduler EventTaskScheduler { get { return _queryRequestor._bindingListView.EventTaskScheduler; } }
             public RowSourceWrapper RowSourceWrapper { get; private set; }
             public CancellationToken CancellationToken { get { return _cancellationTokenSource.Token; } }
             public QueryParameters QueryParameters { get; private set; }
@@ -142,7 +141,7 @@ namespace pwiz.Common.DataBinding.Internal
                 }
                 else
                 {
-                    Task.Factory.StartNew(action, _cancellationTokenSource.Token, TaskCreationOptions.None, EventTaskScheduler);
+                    EventTaskScheduler.Run(action);
                 }
             }
 

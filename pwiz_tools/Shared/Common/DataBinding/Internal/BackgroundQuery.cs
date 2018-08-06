@@ -84,8 +84,7 @@ namespace pwiz.Common.DataBinding.Internal
                 {
                     _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(new[]{QueryRequest.CancellationToken});
                     var token = _cancellationTokenSource.Token;
-                    var thread = new Thread(() => Run(token)) {Name = "Background Query"};
-                    thread.Start();
+                    CommonActionUtil.RunAsync(()=>Run(token));
                 }
             }
         }
