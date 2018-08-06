@@ -64,7 +64,10 @@ namespace pwiz.SkylineTestFunctional
 
         private ProcessStartInfo GetProcessStartInfo(string arguments)
         {
-            var processStartInfo = new ProcessStartInfo(FindSkylineCmdExe(), arguments);
+            var processStartInfo = new ProcessStartInfo(FindSkylineCmdExe(), arguments)
+            {
+                UseShellExecute = false
+            };
             if (Program.SkylineOffscreen)
             {
                 processStartInfo.WindowStyle = ProcessWindowStyle.Hidden;
