@@ -2064,11 +2064,19 @@
   <data name="removeDuplicatePeptidesMenuItem.Text" xml:space="preserve">
     <value>Remove &amp;Duplicate Peptides</value>
   </data>
+  <data name="removeDuplicatePeptidesMenuItem.ToolTipText" xml:space="preserve">
+    <value>All peptides that are not unique within the document
+will be removed.</value>
+  </data>
   <data name="removeRepeatedPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
   <data name="removeRepeatedPeptidesMenuItem.Text" xml:space="preserve">
     <value>&amp;Remove Repeated Peptides</value>
+  </data>
+  <data name="removeRepeatedPeptidesMenuItem.ToolTipText" xml:space="preserve">
+    <value>All repeated peptides will be removed to leave only the
+first occurrence of any peptide.</value>
   </data>
   <data name="removeMissingResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
@@ -2968,7 +2976,7 @@
     <value>Alt+4</value>
   </data>
   <data name="auditLogMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>273, 30</value>
+    <value>191, 22</value>
   </data>
   <data name="auditLogMenuItem.Text" xml:space="preserve">
     <value>Au&amp;dit Log</value>
