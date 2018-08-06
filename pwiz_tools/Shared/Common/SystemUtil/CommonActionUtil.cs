@@ -19,6 +19,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -53,6 +54,23 @@ namespace pwiz.Common.SystemUtil
                 return;
             }
             Trace.TraceWarning("Unhandled Exception: {0}", exception); // Not L10N
+        }
+
+        public static bool SafeBeginInvoke(Control control, Action action)
+        {
+            if (control == null || !control.IsHandleCreated)
+            {
+                return false;
+            }
+            try
+            {
+                control.BeginInvoke(action);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }
