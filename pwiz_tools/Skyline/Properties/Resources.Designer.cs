@@ -12685,6 +12685,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DDA.
+        /// </summary>
+        public static string FullScanAcquisitionMethod_DDA_DDA {
+            get {
+                return ResourceManager.GetString("FullScanAcquisitionMethod_DDA_DDA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Count.
         /// </summary>
         public static string FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Count {

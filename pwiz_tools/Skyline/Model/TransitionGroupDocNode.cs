@@ -2271,7 +2271,7 @@ namespace pwiz.Skyline.Model
                 {
                     if (info.IsGoodPeak(Settings.TransitionSettings.Integration.IsIntegrateAll))
                         PeakCount++;
-                    if (nodeTran.Quantitative)
+                    if (nodeTran.ExplicitQuantitative)
                     {
                         Area = (Area ?? 0) + info.Area;
                         BackgroundArea = (BackgroundArea ?? 0) + info.BackgroundArea;

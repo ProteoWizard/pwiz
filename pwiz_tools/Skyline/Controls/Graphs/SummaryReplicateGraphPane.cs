@@ -375,7 +375,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected virtual bool IncludeTransition(TransitionDocNode transitionDocNode)
             {
-                return transitionDocNode.Quantitative || !Settings.Default.ShowQuantitativeOnly;
+                return transitionDocNode.ExplicitQuantitative || !Settings.Default.ShowQuantitativeOnly;
             }
 
             private void InsertAllGroupsAndPointPairLists(string[] uniqueGroupNames, int docNodeCount)
