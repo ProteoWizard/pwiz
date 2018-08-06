@@ -132,6 +132,7 @@
     <Compile Include="Collections\StructSerializer.cs" />
     <Compile Include="Collections\UniqueList.cs" />
     <Compile Include="SystemUtil\CenterWinDialog.cs" />
+    <Compile Include="SystemUtil\CommonActionUtil.cs" />
     <Compile Include="SystemUtil\DiffAttribute.cs" />
     <Compile Include="SystemUtil\ValueCache.cs" />
     <Compile Include="Collections\ValueSet.cs" />
