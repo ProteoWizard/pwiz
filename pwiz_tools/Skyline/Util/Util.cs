@@ -2013,12 +2013,14 @@ namespace pwiz.Skyline.Util
             public int TheInt { get; private set; }
         }
 
-        private static int GetThreadCount(int? maxThreads)
+        public static int GetThreadCount(int? maxThreads = null)
         {
-            int threadCount = SINGLE_THREADED ? 1 : Environment.ProcessorCount;
-            maxThreads = maxThreads ?? 8; // Trial with maximum of 8
-            if (maxThreads.HasValue && threadCount > maxThreads.Value)
-                threadCount = maxThreads.Value;
+            if (SINGLE_THREADED)
+                return 1;
+            int threadCount = Environment.ProcessorCount;
+            int maxThreadCount = maxThreads ?? 8; // Trial with maximum of 8
+            if (threadCount > maxThreadCount)
+                threadCount = maxThreadCount;
             return threadCount;
         }
 
