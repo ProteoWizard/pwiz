@@ -116,8 +116,9 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         private void DisplayCalibrationCurve()
         {
             CalibrationCurveOptions options = Settings.Default.CalibrationCurveOptions;
-            zedGraphControl.GraphPane.YAxis.Type = zedGraphControl.GraphPane.XAxis.Type
-                = options.LogPlot ? AxisType.Log : AxisType.Linear;
+            zedGraphControl.GraphPane.YAxis.Type = options.LogYAxis ? AxisType.Log : AxisType.Linear;
+            zedGraphControl.GraphPane.XAxis.Type = options.LogXAxis ? AxisType.Log : AxisType.Linear;
+            bool logPlot = options.LogXAxis || options.LogYAxis;
             zedGraphControl.GraphPane.Legend.IsVisible = options.ShowLegend;
             _scatterPlots = null;
             CalibrationCurve = null;
@@ -218,24 +219,23 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         {
                             pointPairList.Add(point);
                         }
-                        if (double.IsNaN(x.Value) || double.IsInfinity(x.Value)
-                            || double.IsNaN(y.Value) || double.IsInfinity(y.Value))
+                        if (!IsNumber(x) || !IsNumber(y))
                         {
                             continue;
                         }
-                        if (!Options.LogPlot || x.Value > 0)
+                        if (!logPlot || x.Value > 0)
                         {
                             minX = Math.Min(minX, x.Value);
                         }
-                        if (!Options.LogPlot || y.Value > 0)
+                        if (!logPlot || y.Value > 0)
                         {
                             minY = Math.Min(minY, y.Value);
                         }
                         maxX = Math.Max(maxX, x.Value);
-                        if (xCalculated.HasValue)
+                        if (IsNumber(xCalculated))
                         {
                             maxX = Math.Max(maxX, xCalculated.Value);
-                            if (!Options.LogPlot || xCalculated.Value > 0)
+                            if (!logPlot || xCalculated.Value > 0)
                             {
                                 minX = Math.Min(minX, xCalculated.Value);
                             }
@@ -266,7 +266,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 if (minX <= maxX)
                 {
                     int interpolatedLinePointCount = 100;
-                    if (!options.LogPlot)
+                    if (!logPlot && regressionFit != RegressionFit.LINEAR_IN_LOG_SPACE)
                     {
                         if (regressionFit == RegressionFit.LINEAR_THROUGH_ZERO)
                         {
@@ -288,7 +288,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     }
                     Array.Sort(xValues);
                     LineItem interpolatedLine = CreateInterpolatedLine(CalibrationCurve, xValues,
-                        interpolatedLinePointCount, Options.LogPlot);
+                        interpolatedLinePointCount, logPlot);
                     if (null != interpolatedLine)
                     {
                         zedGraphControl.GraphPane.CurveList.Add(interpolatedLine);
@@ -316,34 +316,61 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             if (options.ShowSelection)
             {
                 double? ySelected = curveFitter.GetYValue(_skylineWindow.SelectedResultsIndex);
-                double? xSelected = curveFitter.GetCalculatedXValue(CalibrationCurve, _skylineWindow.SelectedResultsIndex);
-                if (xSelected.HasValue && ySelected.HasValue)
+                if (IsNumber(ySelected))
                 {
-                    const float selectedLineWidth = 2;
-                    ArrowObj arrow = new ArrowObj(xSelected.Value, ySelected.Value, xSelected.Value,
-                        ySelected.Value) { Line = { Color = GraphSummary.ColorSelected } };
-                    zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
+                    double? xSelected = curveFitter.GetCalculatedXValue(CalibrationCurve, _skylineWindow.SelectedResultsIndex);
                     var selectedLineColor = Color.FromArgb(128, GraphSummary.ColorSelected);
-                    var verticalLine = new LineObj(xSelected.Value, ySelected.Value, xSelected.Value, options.LogPlot ? double.MinValue : 0)
-                    {
-                        Line = { Color = selectedLineColor, Width = selectedLineWidth },
-                        Location = { CoordinateFrame = CoordType.AxisXYScale },
-                        ZOrder = ZOrder.E_BehindCurves,
-                        IsClippedToChartRect = true
-                    };
-                    zedGraphControl.GraphPane.GraphObjList.Add(verticalLine);
+                    const float selectedLineWidth = 2;
                     double? xSpecified = curveFitter.GetSpecifiedXValue(_skylineWindow.SelectedResultsIndex);
-                    if (xSpecified.HasValue)
+                    if (IsNumber(xSelected))
                     {
-                        var horizontalLine = new LineObj(xSpecified.Value, ySelected.Value, xSelected.Value,
-                            ySelected.Value)
+                        ArrowObj arrow = new ArrowObj(xSelected.Value, ySelected.Value, xSelected.Value,
+                            ySelected.Value) {Line = {Color = GraphSummary.ColorSelected}};
+                        zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
+                        var verticalLine = new LineObj(xSelected.Value, ySelected.Value, xSelected.Value,
+                            options.LogYAxis ? double.MinValue : 0)
                         {
-                            Line = { Color = selectedLineColor, Width = selectedLineWidth },
-                            Location = { CoordinateFrame = CoordType.AxisXYScale },
+                            Line = {Color = selectedLineColor, Width = selectedLineWidth},
+                            Location = {CoordinateFrame = CoordType.AxisXYScale},
                             ZOrder = ZOrder.E_BehindCurves,
                             IsClippedToChartRect = true
                         };
-                        zedGraphControl.GraphPane.GraphObjList.Add(horizontalLine);
+                        zedGraphControl.GraphPane.GraphObjList.Add(verticalLine);
+                        if (IsNumber(xSpecified))
+                        {
+                            var horizontalLine = new LineObj(xSpecified.Value, ySelected.Value, xSelected.Value,
+                                ySelected.Value)
+                            {
+                                Line = {Color = selectedLineColor, Width = selectedLineWidth},
+                                Location = {CoordinateFrame = CoordType.AxisXYScale},
+                                ZOrder = ZOrder.E_BehindCurves,
+                                IsClippedToChartRect = true
+                            };
+                            zedGraphControl.GraphPane.GraphObjList.Add(horizontalLine);
+                        }
+                    }
+                    else
+                    {
+                        // We were not able to map the observed intensity back to the calibration curve, but we still want to
+                        // indicate where the currently selected point is.
+                        if (IsNumber(xSpecified))
+                        {
+                            // If the point has a specified concentration, then use that.
+                            ArrowObj arrow = new ArrowObj(xSpecified.Value, ySelected.Value, xSpecified.Value,
+                                ySelected.Value) {Line = {Color = GraphSummary.ColorSelected}};
+                            zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
+                        }
+                        else
+                        {
+                            // Otherwise, draw a horizontal line at the appropriate y-value.
+                            var horizontalLine = new LineObj(minX, ySelected.Value, maxX, ySelected.Value)
+                            {
+                                Line = {Color = selectedLineColor, Width = selectedLineWidth},
+                                Location = {CoordinateFrame = CoordType.AxisXYScale},
+                                IsClippedToChartRect = true,
+                            };
+                            ZedGraphControl.GraphPane.GraphObjList.Add(horizontalLine);
+                        }
                     }
                 }
 
@@ -356,6 +383,27 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 else if (!quantificationResult.NormalizedArea.HasValue)
                 {
                     labelLines.Add(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions);
+                }
+            }
+            if (Options.ShowFiguresOfMerit)
+            {
+                if (IsNumber(FiguresOfMerit.LimitOfDetection))
+                {
+                    var lodLine = new LineObj(Color.Magenta, FiguresOfMerit.LimitOfDetection.Value, 0,
+                        FiguresOfMerit.LimitOfDetection.Value, 1)
+                    {
+                        Location = { CoordinateFrame = CoordType.XScaleYChartFraction }
+                    };
+                    zedGraphControl.GraphPane.GraphObjList.Add(lodLine);
+                }
+                if (IsNumber(FiguresOfMerit.LimitOfQuantification))
+                {
+                    var loqLine = new LineObj(Color.Cyan, FiguresOfMerit.LimitOfQuantification.Value, 0,
+                        FiguresOfMerit.LimitOfQuantification.Value, 1)
+                    {
+                        Location = { CoordinateFrame = CoordType.XScaleYChartFraction }
+                    };
+                    zedGraphControl.GraphPane.GraphObjList.Add(loqLine);
                 }
             }
             if (labelLines.Any())
@@ -465,17 +513,21 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             {
                 showSampleTypesContextMenuItem.DropDownItems.Add(MakeShowSampleTypeMenuItem(sampleType));
             }
-            logPlotContextMenuItem.Checked = Options.LogPlot;
+            logXContextMenuItem.Checked = Options.LogXAxis;
+            logYAxisContextMenuItem.Checked = Options.LogYAxis;
             showLegendContextMenuItem.Checked = Options.ShowLegend;
             showSelectionContextMenuItem.Checked = Options.ShowSelection;
+            showFiguresOfMeritContextMenuItem.Checked = Options.ShowFiguresOfMerit;
             ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
-            if (!menuStrip.Items.Contains(logPlotContextMenuItem))
+            if (!menuStrip.Items.Contains(logXContextMenuItem))
             {
                 int index = 0;
-                menuStrip.Items.Insert(index++, logPlotContextMenuItem);
+                menuStrip.Items.Insert(index++, logXContextMenuItem);
+                menuStrip.Items.Insert(index++, logYAxisContextMenuItem);
                 menuStrip.Items.Insert(index++, showSampleTypesContextMenuItem);
                 menuStrip.Items.Insert(index++, showLegendContextMenuItem);
                 menuStrip.Items.Insert(index++, showSelectionContextMenuItem);
+                menuStrip.Items.Insert(index++, showFiguresOfMeritContextMenuItem);
                 menuStrip.Items.Insert(index++, new ToolStripSeparator());
             }
         }
@@ -548,11 +600,18 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             Dispose();
         }
 
-        private void logPlotToolStripMenuItem_Click(object sender, EventArgs e)
+        private void logXAxisContextMenuItem_Click(object sender, EventArgs e)
         {
-            Options.LogPlot = !Options.LogPlot;
+            Options.LogXAxis = !Options.LogXAxis;
             UpdateUI(false);
         }
+
+        private void logYAxisContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Options.LogYAxis = !Options.LogYAxis;
+            UpdateUI(false);
+        }
+
 
         private LineItem CreateInterpolatedLine(CalibrationCurve calibrationCurve, double[] xValues, int pointCount, bool logPlot)
         {
@@ -598,6 +657,14 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             UpdateUI(false);
         }
 
+
+        private void showFiguresOfMeritContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Options.ShowFiguresOfMerit = !Options.ShowFiguresOfMerit;
+            UpdateUI(false);
+        }
+
+
         private void CalibrationForm_KeyDown(object sender, KeyEventArgs e)
         {
             switch (e.KeyCode)
@@ -607,6 +674,19 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     e.Handled = true;
                     break;
             }
+        }
+
+        public static bool IsNumber(double? value)
+        {
+            if (!value.HasValue)
+            {
+                return false;
+            }
+            if (double.IsNaN(value.Value) || double.IsInfinity(value.Value))
+            {
+                return false;
+            }
+            return true;
         }
 
         #region Test Methods
@@ -632,5 +712,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             return (SrmDocument) document.ReplaceChild(peptideIdPath.Parent,
                 peptideDocNode.ChangeExcludeFromCalibration(resultsIndex, !wasExcluded));
         }
+
     }
 }

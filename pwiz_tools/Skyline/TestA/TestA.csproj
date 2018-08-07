@@ -183,6 +183,7 @@
     <Compile Include="ListDataTest.cs" />
     <Compile Include="ListDefTest.cs" />
     <Compile Include="ListItemTest.cs" />
+    <Compile Include="LinearInLogSpaceTest.cs" />
     <Compile Include="LossesTest.cs" />
     <Compile Include="MassCalcTest.cs" />
     <Compile Include="ModEquivalentTest.cs" />

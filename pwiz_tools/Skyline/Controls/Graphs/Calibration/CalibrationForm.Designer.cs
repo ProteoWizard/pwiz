@@ -32,11 +32,13 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CalibrationForm));
             this.zedGraphControl = new ZedGraph.ZedGraphControl();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.logPlotContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.logXContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showSampleTypesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showLegendContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showSelectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showFiguresOfMeritContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.logYAxisContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -62,19 +64,21 @@
             // contextMenuStrip1
             // 
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.logPlotContextMenuItem,
+            this.logXContextMenuItem,
+            this.logYAxisContextMenuItem,
             this.showToolStripMenuItem,
             this.showSampleTypesContextMenuItem,
             this.showLegendContextMenuItem,
-            this.showSelectionContextMenuItem});
+            this.showSelectionContextMenuItem,
+            this.showFiguresOfMeritContextMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             resources.ApplyResources(this.contextMenuStrip1, "contextMenuStrip1");
             // 
-            // logPlotContextMenuItem
+            // logXContextMenuItem
             // 
-            this.logPlotContextMenuItem.Name = "logPlotContextMenuItem";
-            resources.ApplyResources(this.logPlotContextMenuItem, "logPlotContextMenuItem");
-            this.logPlotContextMenuItem.Click += new System.EventHandler(this.logPlotToolStripMenuItem_Click);
+            this.logXContextMenuItem.Name = "logXContextMenuItem";
+            resources.ApplyResources(this.logXContextMenuItem, "logXContextMenuItem");
+            this.logXContextMenuItem.Click += new System.EventHandler(this.logXAxisContextMenuItem_Click);
             // 
             // showToolStripMenuItem
             // 
@@ -98,6 +102,18 @@
             resources.ApplyResources(this.showSelectionContextMenuItem, "showSelectionContextMenuItem");
             this.showSelectionContextMenuItem.Click += new System.EventHandler(this.showSelectionContextMenuItem_Click);
             // 
+            // showFiguresOfMeritContextMenuItem
+            // 
+            this.showFiguresOfMeritContextMenuItem.Name = "showFiguresOfMeritContextMenuItem";
+            resources.ApplyResources(this.showFiguresOfMeritContextMenuItem, "showFiguresOfMeritContextMenuItem");
+            this.showFiguresOfMeritContextMenuItem.Click += new System.EventHandler(this.showFiguresOfMeritContextMenuItem_Click);
+            // 
+            // logYAxisContextMenuItem
+            // 
+            this.logYAxisContextMenuItem.Name = "logYAxisContextMenuItem";
+            resources.ApplyResources(this.logYAxisContextMenuItem, "logYAxisContextMenuItem");
+            this.logYAxisContextMenuItem.Click += new System.EventHandler(this.logYAxisContextMenuItem_Click);
+            // 
             // CalibrationForm
             // 
             resources.ApplyResources(this, "$this");
@@ -116,10 +132,12 @@
 
         private ZedGraph.ZedGraphControl zedGraphControl;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
-        private System.Windows.Forms.ToolStripMenuItem logPlotContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem logXContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showSampleTypesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showLegendContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showSelectionContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showFiguresOfMeritContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem logYAxisContextMenuItem;
     }
 }
