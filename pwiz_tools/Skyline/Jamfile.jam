@@ -159,10 +159,18 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(MSVC_CURRENT_SETUP_SCRIPT)
         echo Building Skyline TestConnected, TestTutorial, TestPerf, SkylineTester, SkylineNightly in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestConnected /t:TestTutorial /t:TestPerf /t:SkylineTester /t:SkylineNightly /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
-        IF NOT ERRORLEVEL 1 $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)SkylineTester.zip
-        IF NOT ERRORLEVEL 1 $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)SkylineNightly.zip
-        IF NOT ERRORLEVEL 1 $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)BiblioSpec.zip
+        echo Creating SkylineTester.zip
+        $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)SkylineTester.zip
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
+        echo Creating SkylineNightly.zip
+        $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)SkylineNightly.zip
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
+        echo Creating BiblioSpec.zip
+        $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)BiblioSpec.zip
     }
     
     rule build-location ( properties * )
