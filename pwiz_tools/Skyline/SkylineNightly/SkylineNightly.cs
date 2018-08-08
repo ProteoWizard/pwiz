@@ -102,7 +102,7 @@ namespace SkylineNightly
                     td.RegistrationInfo.Description = "Skyline nightly build/test"; // Not L10N
                     td.Principal.LogonType = TaskLogonType.InteractiveToken;
 
-                    // Add a trigger that will fire the task every other day
+                    // Add a trigger that will fire the task every day
                     var dt = (DailyTrigger) td.Triggers.Add(new DailyTrigger { DaysInterval = 1 });
                     var scheduledTime = startTime.Value;
                     var now = DateTime.Now;
@@ -129,9 +129,9 @@ namespace SkylineNightly
                     //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 5
                     td.Settings.Priority = ProcessPriorityClass.High; 
 
-                    // Add an action that will launch SkylineTester whenever the trigger fires
+                    // Add an action that will launch SkylineNightlyShim whenever the trigger fires
                     var assembly = Assembly.GetExecutingAssembly();
-                    td.Actions.Add(new ExecAction(assembly.Location, runType)); // Not L10N
+                    td.Actions.Add(new ExecAction(assembly.Location.Replace(".exe", "Shim.exe"), runType)); // Not L10N
 
                     // Register the task in the root folder
                     ts.RootFolder.RegisterTaskDefinition(Nightly.NightlyTaskNameWithUser, td);

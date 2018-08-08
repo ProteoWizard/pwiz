@@ -44,9 +44,10 @@ namespace TestRunner
     {
         private static readonly string[] TEST_DLLS = { "Test.dll", "TestA.dll", "TestConnected.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll", "TestPerf.dll" };
         private const int LeakThreshold = 250000;
-        // TODO: Turn on leak detection for handles by lowering the limits below
-        private const double LeakGdiThreshold = 2;
-        private const double LeakUserThreshold = 2;
+        // TODO: Turn on leak detection for handles by lowering the limits below (2 is enough to trigger on some test machines)
+        private const int LEAKED_HANDLES_THRESHOLD = 5;
+        private const double LeakGdiThreshold = LEAKED_HANDLES_THRESHOLD;
+        private const double LeakUserThreshold = LEAKED_HANDLES_THRESHOLD;
         private const int CrtLeakThreshold = 1000;
         private const int LeakCheckIterations = 24;
 
