@@ -742,7 +742,7 @@ rule copy
 
 actions copy
 {
-    $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)"
+    $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)" $(NULL_OUT)
 }
 
 

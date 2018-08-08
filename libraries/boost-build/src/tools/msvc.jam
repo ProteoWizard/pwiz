@@ -417,7 +417,10 @@ toolset.flags msvc YLOPTION : "-Yl" ;
 #
 actions compile-c-c++ bind PDB_NAME
 {
-    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
+    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER) > "$(<[1]:W).out"
+    set status=%ERRORLEVEL%
+    findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
+    exit %status%
 }
 
 actions preprocess-c-c++ bind PDB_NAME
@@ -427,7 +430,10 @@ actions preprocess-c-c++ bind PDB_NAME
 
 actions compile-c++clr
 {
-    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" /clr $(ASSEMBLY_INCLUDE_PATHS) $(ASSEMBLIES) $(CC_RSPLINE))" $(.CC.FILTER)"
+    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" /clr $(ASSEMBLY_INCLUDE_PATHS) $(ASSEMBLIES) $(CC_RSPLINE))" $(.CC.FILTER)" > "$(<[1]:W).out"
+    set status=%ERRORLEVEL%
+    findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
+    exit %status%
 }
 
 rule compile-c-c++ ( targets + : sources * )
@@ -454,7 +460,10 @@ rule preprocess-c-c++ ( targets + : sources * )
 # syntax highlighting in the messy N-quoted code below.
 actions compile-c-c++-pch
 {
-    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote)$(.nl))" $(.CC.FILTER)
+    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote)$(.nl))" $(.CC.FILTER) > "$(<[1]:W).out"
+    set status=%ERRORLEVEL%
+    findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
+    exit %status%
 }
 
 
@@ -463,7 +472,10 @@ actions compile-c-c++-pch
 # given as one of the source parameters.
 actions compile-c-c++-pch-s
 {
-    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
+    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" $(.CC.FILTER) > "$(<[1]:W).out"
+    set status=%ERRORLEVEL%
+    findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
+    exit %status%
 }
 
 
